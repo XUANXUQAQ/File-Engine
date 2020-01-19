@@ -55,8 +55,7 @@ public class SettingsFrame {
     private static File settings = new File("settings.json");
 
     public static void initCacheLimit(){
-        try {
-            BufferedReader buffR = new BufferedReader(new FileReader(settings));
+        try(BufferedReader buffR = new BufferedReader(new FileReader(settings))) {
             String line;
             StringBuilder result = new StringBuilder();
             while (null != (line = buffR.readLine())){
