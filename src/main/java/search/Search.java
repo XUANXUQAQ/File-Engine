@@ -87,7 +87,7 @@ public class Search {
 		if ( exist && !isIgnore(path.getAbsolutePath().toUpperCase(), ignorePath)) {
 			File[] files = path.listFiles();
 			if (null == files || files.length == 0) {
-				//System.out.println("¿Õ°×Ä¿Â¼");
+				//System.out.println("ç©ºç™½ç›®å½•");
 			} else if (searchDepth >= count(path.getAbsolutePath(), "\\")||(path.getAbsolutePath().equals(startMenu))||path.getAbsolutePath().equals(desktop)) {
 				for (File file2 : files) {
 					String fileFullName = file2.getAbsolutePath();
@@ -313,8 +313,8 @@ public class Search {
 	}
 	/**
 	 *
-	 * @param srcText Ô´×Ö·û´®
-	 * @param findText ĞèÒª¼ÆÊıµÄ×Ö·û´®
+	 * @param srcText æºå­—ç¬¦ä¸²
+	 * @param findText éœ€è¦è®¡æ•°çš„å­—ç¬¦ä¸²
 	 * @return count
 	 */
 	public static int count(String srcText, String findText){
@@ -329,7 +329,7 @@ public class Search {
 
 	/**
 	 * @param target txt
-	 * txtÊÇ·ñÊôÓÚtargetµÄ×Ó×Ö·û´®
+	 * txtæ˜¯å¦å±äºtargetçš„å­å­—ç¬¦ä¸²
 	 * @return true false
 	 */
 	private static boolean isIgnore(String txt, String target) {
