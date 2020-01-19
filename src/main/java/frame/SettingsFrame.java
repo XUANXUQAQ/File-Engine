@@ -28,7 +28,7 @@ public class SettingsFrame {
         frame.setIconImage(new ImageIcon(frameIcon).getImage());
         frame.setContentPane(new SettingsFrame().panel);
         frame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
-        Dimension screenSize =Toolkit.getDefaultToolkit().getScreenSize(); // »ñÈ¡µ±Ç°·Ö±æÂÊ
+        Dimension screenSize =Toolkit.getDefaultToolkit().getScreenSize(); // èŽ·å–å½“å‰åˆ†è¾¨çŽ‡
         int width = screenSize.width;
         int height = screenSize.height;
         frame.setLocation((int)(width*0.25), (int)(height*0.3));
@@ -76,14 +76,14 @@ public class SettingsFrame {
         } catch (ClassNotFoundException | UnsupportedLookAndFeelException | IllegalAccessException | InstantiationException e) {
             //e.printStackTrace();
         }
-        //¶ÁÈ¡ËùÓÐÉèÖÃ²¢ÉèÖÃcheckBox×´Ì¬
-        label1.setText("ÎÄ¼þË÷Òý¸üÐÂÊ±¼ä£º");
-        label2.setText("¿ì½Ý¼ü£ºCTRL+ALT+J");
-        label3.setText("ÉèÖÃºöÂÔÎÄ¼þ¼Ð£º");
-        label4.setText("ÉèÖÃ×î´ó»º´æÊýÁ¿£º");
-        label6.setText("ËÑË÷Éî¶È£º");
-        button1.setText("±£´æ");
-        button2.setText("±¸·Ý²¢ÒÆ³ýËùÓÐ×ÀÃæÎÄ¼þ");
+        //è¯»å–æ‰€æœ‰è®¾ç½®å¹¶è®¾ç½®checkBoxçŠ¶æ€
+        label1.setText("æ–‡ä»¶ç´¢å¼•æ›´æ–°æ—¶é—´ï¼š");
+        label2.setText("å¿«æ·é”®ï¼šCTRL+ALT+J");
+        label3.setText("è®¾ç½®å¿½ç•¥æ–‡ä»¶å¤¹ï¼š");
+        label4.setText("è®¾ç½®æœ€å¤§ç¼“å­˜æ•°é‡ï¼š");
+        label6.setText("æœç´¢æ·±åº¦ï¼š");
+        button1.setText("ä¿å­˜");
+        button2.setText("å¤‡ä»½å¹¶ç§»é™¤æ‰€æœ‰æ¡Œé¢æ–‡ä»¶");
         textArea1.setLineWrap(true);
         textArea1.setWrapStyleWord(true);
 
@@ -126,10 +126,10 @@ public class SettingsFrame {
             try {
                 updateTimeLimit = Integer.parseInt(MaxUpdateTime);
             }catch (Exception e1){
-                updateTimeLimit = -1; // ÊäÈë²»ÕýÈ·
+                updateTimeLimit = -1; // è¾“å…¥ä¸æ­£ç¡®
             }
             if (updateTimeLimit > 3600 || updateTimeLimit <= 0){
-                JOptionPane.showMessageDialog(null, "ÎÄ¼þË÷Òý¸üÐÂÉèÖÃ´íÎó£¬Çë¸ü¸Ä");
+                JOptionPane.showMessageDialog(null, "æ–‡ä»¶ç´¢å¼•æ›´æ–°è®¾ç½®é”™è¯¯ï¼Œè¯·æ›´æ”¹");
                 return;
             }
             isStartup = checkBox1.isSelected();
@@ -140,7 +140,7 @@ public class SettingsFrame {
                 cacheNumLimit = -1;
             }
             if (cacheNumLimit > 10000 || cacheNumLimit <= 0){
-                JOptionPane.showMessageDialog(null, "»º´æÈÝÁ¿ÉèÖÃ´íÎó£¬Çë¸ü¸Ä");
+                JOptionPane.showMessageDialog(null, "ç¼“å­˜å®¹é‡è®¾ç½®é”™è¯¯ï¼Œè¯·æ›´æ”¹");
                 return;
             }
             ignorePath = textArea1.getText();
@@ -149,7 +149,7 @@ public class SettingsFrame {
             if (!ignorePath.equals("")) {
                 for (String each : paths) {
                     if (each.charAt(0) == ' ' || each.charAt(each.length() - 1) == ' ') {
-                        JOptionPane.showMessageDialog(null, "ºöÂÔÎÄ¼þ¼Ð¸ñÊ½´íÎó£¬¸ñÊ½Îª   \nC:\\Windows,\nD\\Test,");
+                        JOptionPane.showMessageDialog(null, "å¿½ç•¥æ–‡ä»¶å¤¹æ ¼å¼é”™è¯¯ï¼Œæ ¼å¼ä¸º   \nC:\\Windows,\nD\\Test,");
                         return;
                     }
                 }
@@ -162,7 +162,7 @@ public class SettingsFrame {
             }
 
             if (searchDepth > 10 || searchDepth <= 0){
-                JOptionPane.showMessageDialog(null, "ËÑË÷Éî¶ÈÉèÖÃ´íÎó£¬Çë¸ü¸Ä");
+                JOptionPane.showMessageDialog(null, "æœç´¢æ·±åº¦è®¾ç½®é”™è¯¯ï¼Œè¯·æ›´æ”¹");
                 return;
             }
             allSettings.put("isStartup", isStartup);
@@ -180,7 +180,7 @@ public class SettingsFrame {
             Process p;
             if (checkBox1.isSelected()){
                 try {
-                    File superSearch = new File("search_x64.exe"); //TODO ¸ü¸Ä°æ±¾ºÅ
+                    File superSearch = new File("search_x64.exe"); //TODO æ›´æ”¹ç‰ˆæœ¬å·
                     p = Runtime.getRuntime().exec("reg add \"HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run\" /v superSearch /t REG_SZ /d "+"\"" + superSearch.getAbsolutePath() +"\"" + " /f");
                     p.waitFor();
                     BufferedReader outPut = new BufferedReader(new InputStreamReader(p.getErrorStream()));
@@ -191,7 +191,7 @@ public class SettingsFrame {
                     }
                     if (!result.toString().equals("")){
                         checkBox1.setSelected(false);
-                        JOptionPane.showMessageDialog(null, "Ìí¼Óµ½¿ª»úÆô¶¯Ê§°Ü£¬Çë³¢ÊÔÒÔ¹ÜÀíÔ±Éí·ÝÔËÐÐ");
+                        JOptionPane.showMessageDialog(null, "æ·»åŠ åˆ°å¼€æœºå¯åŠ¨å¤±è´¥ï¼Œè¯·å°è¯•ä»¥ç®¡ç†å‘˜èº«ä»½è¿è¡Œ");
                     }
                 } catch (IOException | InterruptedException ex) {
                     //ex.printStackTrace();
@@ -207,7 +207,7 @@ public class SettingsFrame {
                     }
                     if (!result.toString().equals("")){
                         checkBox1.setSelected(true);
-                        JOptionPane.showMessageDialog(null, "É¾³ý¿ª»úÆô¶¯Ê§°Ü£¬Çë³¢ÊÔÒÔ¹ÜÀíÔ±Éí·ÝÔËÐÐ");
+                        JOptionPane.showMessageDialog(null, "åˆ é™¤å¼€æœºå¯åŠ¨å¤±è´¥ï¼Œè¯·å°è¯•ä»¥ç®¡ç†å‘˜èº«ä»½è¿è¡Œ");
                     }
                 } catch (IOException ex) {
                     //ex.printStackTrace();
@@ -254,10 +254,10 @@ public class SettingsFrame {
         button2.addActionListener(e -> {
             String currentFolder = new File("").getAbsolutePath();
             if (currentFolder.equals(Search.desktop) || currentFolder.equals("C:\\Users\\Public\\Desktop")){
-                JOptionPane.showMessageDialog(null, "¼ì²âµ½¸Ã³ÌÐòÔÚ×ÀÃæ£¬ÎÞ·¨ÒÆ¶¯");
+                JOptionPane.showMessageDialog(null, "æ£€æµ‹åˆ°è¯¥ç¨‹åºåœ¨æ¡Œé¢ï¼Œæ— æ³•ç§»åŠ¨");
                 return;
             }
-            int isConfirmed = JOptionPane.showConfirmDialog(null, "ÊÇ·ñÒÆ³ý²¢±¸·Ý×ÀÃæÉÏµÄËùÓÐÎÄ¼þ\nËüÃÇ»áÔÚ¸Ã³ÌÐòµÄFilesÎÄ¼þ¼ÐÖÐ\nÕâ¿ÉÄÜÐèÒª¼¸·ÖÖÓÊ±¼ä");
+            int isConfirmed = JOptionPane.showConfirmDialog(null, "æ˜¯å¦ç§»é™¤å¹¶å¤‡ä»½æ¡Œé¢ä¸Šçš„æ‰€æœ‰æ–‡ä»¶\nå®ƒä»¬ä¼šåœ¨è¯¥ç¨‹åºçš„Filesæ–‡ä»¶å¤¹ä¸­\nè¿™å¯èƒ½éœ€è¦å‡ åˆ†é’Ÿæ—¶é—´");
             if (isConfirmed == 0) {
                 Thread fileMover = new Thread(new moveDesktopFiles());
                 fileMover.start();
@@ -266,7 +266,7 @@ public class SettingsFrame {
         Button3.addActionListener(e -> {
             JFileChooser fileChooser = new JFileChooser();
             fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-            fileChooser.showDialog(new JLabel(), "Ñ¡Ôñ");
+            fileChooser.showDialog(new JLabel(), "é€‰æ‹©");
             File file = fileChooser.getSelectedFile();
             if (file != null) {
                 textArea1.append(file.getAbsolutePath() + ",\n");

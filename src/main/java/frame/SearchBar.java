@@ -246,7 +246,7 @@ public class SearchBar {
 
 
     public SearchBar() {
-        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize(); // »ñÈ¡ÆÁÄ»´óĞ¡
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize(); // è·å–å±å¹•å¤§å°
         int width = screenSize.width;
         int height = screenSize.height;
         int positionX = (int) (width * 0.15);
@@ -267,7 +267,7 @@ public class SearchBar {
         //TextField
         textField = new JTextField(300);
         textField.setSize(searchBarWidth, (int) (searchBarHeight * 0.2));
-        textField.setFont(new Font("Î¢ÈíÑÅºÚ", Font.BOLD, (int) ((height * 0.1) / 96 * 72)));
+        textField.setFont(new Font("å¾®è½¯é›…é»‘", Font.BOLD, (int) ((height * 0.1) / 96 * 72)));
         textField.setForeground(Color.white);
         textField.setHorizontalAlignment(JTextField.LEFT);
         textField.setBorder(null);
@@ -289,13 +289,13 @@ public class SearchBar {
                 textField.setText(null);
             }
         });
-        //µ±textFieldÎÄ±¾±ä¶¯Ê±¿ªÊ¼
+        //å½“textFieldæ–‡æœ¬å˜åŠ¨æ—¶å¼€å§‹
         textField.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
             @Override
             public void insertUpdate(DocumentEvent arg0) {
                 if (new Search().isSearch()) {
                     clearLabel();
-                    label1.setText("ËÑË÷ÖĞ£¬ÇëÉÔºóÔÙÊÔ");
+                    label1.setText("æœç´¢ä¸­ï¼Œè¯·ç¨åå†è¯•");
                     return;
                 }
                 labelCount = 0;
@@ -466,7 +466,7 @@ public class SearchBar {
             public void changedUpdate(DocumentEvent e) {
                 if (new Search().isSearch()){
                     clearLabel();
-                    label1.setText("ËÑË÷ÖĞ£¬ÇëÉÔºóÔÙÊÔ");
+                    label1.setText("æœç´¢ä¸­ï¼Œè¯·ç¨åå†è¯•");
                     return;
                 }
                 labelCount = 0;
@@ -479,7 +479,7 @@ public class SearchBar {
 
                 if (new Search().isSearch()) {
                     clearLabel();
-                    label1.setText("ËÑË÷ÖĞ£¬ÇëÉÔºóÔÙÊÔ");
+                    label1.setText("æœç´¢ä¸­ï¼Œè¯·ç¨åå†è¯•");
                     return;
                 }
                 labelCount = 0;
@@ -660,7 +660,7 @@ public class SearchBar {
                     if (!listResult.isEmpty()) {
                         int key = arg0.getKeyCode();
                         if (38 == key) {
-                            //ÉÏ¼ü±»µã»÷
+                            //ä¸Šé”®è¢«ç‚¹å‡»
                             labelCount--;
                             if (labelCount < 0) {
                                 labelCount = 0;
@@ -671,7 +671,7 @@ public class SearchBar {
                                 labelCount = listResult.size() - 1;
                             }
                             if (labelCount < 3) {
-                                //Î´µ½×îÏÂ²ã
+                                //æœªåˆ°æœ€ä¸‹å±‚
                                 if (0 == labelCount) {
                                     label1.setBackground(new Color(255, 125, 29, 255));
                                     label2.setBackground(null);
@@ -692,7 +692,7 @@ public class SearchBar {
                                     showResult();
                                 }
                             } else {
-                                //µ½´ï×îÏÂ²ã
+                                //åˆ°è¾¾æœ€ä¸‹å±‚
                                 label1.setBackground(null);
                                 label2.setBackground(null);
                                 label3.setBackground(null);
@@ -710,7 +710,7 @@ public class SearchBar {
                                     label1.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
                                 } else {
                                     label1.setIcon(null);
-                                    label1.setText("ÎŞĞ§ÎÄ¼ş");
+                                    label1.setText("æ— æ•ˆæ–‡ä»¶");
                                 }
                                 path = listResult.get(labelCount - 2);
                                 name = getFileName(listResult.get(labelCount - 2));
@@ -724,7 +724,7 @@ public class SearchBar {
                                     label2.setIcon(icon);
                                 } else {
                                     label2.setIcon(null);
-                                    label2.setText("ÎŞĞ§ÎÄ¼ş");
+                                    label2.setText("æ— æ•ˆæ–‡ä»¶");
                                 }
                                 path = listResult.get(labelCount - 1);
                                 name = getFileName(listResult.get(labelCount - 1));
@@ -738,7 +738,7 @@ public class SearchBar {
                                     label3.setIcon(icon);
                                 } else {
                                     label3.setIcon(null);
-                                    label3.setText("ÎŞĞ§ÎÄ¼ş");
+                                    label3.setText("æ— æ•ˆæ–‡ä»¶");
                                 }
                                 path = listResult.get(labelCount);
                                 name = getFileName(listResult.get(labelCount));
@@ -752,11 +752,11 @@ public class SearchBar {
                                     label4.setIcon(icon);
                                 } else {
                                     label4.setIcon(null);
-                                    label4.setText("ÎŞĞ§ÎÄ¼ş");
+                                    label4.setText("æ— æ•ˆæ–‡ä»¶");
                                 }
                             }
                         } else if (40 == key) {
-                            //ÏÂ¼ü±»µã»÷
+                            //ä¸‹é”®è¢«ç‚¹å‡»
                             labelCount++;
                             if (labelCount < 0) {
                                 labelCount = 0;
@@ -767,7 +767,7 @@ public class SearchBar {
                                 labelCount = listResult.size() - 1;
                             }
                             if (labelCount < 3) {
-                                //Î´µ½×îÏÂ²ã
+                                //æœªåˆ°æœ€ä¸‹å±‚
                                 if (0 == labelCount) {
                                     label1.setBackground(new Color(255, 125, 29, 255));
                                     label2.setBackground(null);
@@ -788,7 +788,7 @@ public class SearchBar {
                                     showResult();
                                 }
                             } else {
-                                //µ½´ï×îÏÂ²ã
+                                //åˆ°è¾¾æœ€ä¸‹å±‚
                                 label1.setBackground(null);
                                 label2.setBackground(null);
                                 label3.setBackground(null);
@@ -805,7 +805,7 @@ public class SearchBar {
                                     label1.setIcon(icon);
                                     label1.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
                                 } else {
-                                    label1.setText("ÎŞĞ§ÎÄ¼ş");
+                                    label1.setText("æ— æ•ˆæ–‡ä»¶");
                                 }
                                 path = listResult.get(labelCount - 2);
                                 name = getFileName(listResult.get(labelCount - 2));
@@ -818,7 +818,7 @@ public class SearchBar {
                                     label2.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
                                     label2.setIcon(icon);
                                 } else {
-                                    label2.setText("ÎŞĞ§ÎÄ¼ş");
+                                    label2.setText("æ— æ•ˆæ–‡ä»¶");
                                 }
                                 path = listResult.get(labelCount - 1);
                                 name = getFileName(listResult.get(labelCount - 1));
@@ -831,7 +831,7 @@ public class SearchBar {
                                     label3.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
                                     label3.setIcon(icon);
                                 } else {
-                                    label3.setText("ÎŞĞ§ÎÄ¼ş");
+                                    label3.setText("æ— æ•ˆæ–‡ä»¶");
                                 }
                                 path = listResult.get(labelCount);
                                 name = getFileName(listResult.get(labelCount));
@@ -844,14 +844,14 @@ public class SearchBar {
                                     label4.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
                                     label4.setIcon(icon);
                                 } else {
-                                    label4.setText("ÎŞĞ§ÎÄ¼ş");
+                                    label4.setText("æ— æ•ˆæ–‡ä»¶");
                                 }
                             }
                         } else if (10 == key) {
-                            //enter±»µã»÷
+                            //enterè¢«ç‚¹å‡»
                             searchBar.setVisible(false);
                             if (isCtrlPressed) {
-                                //´ò¿ªÉÏ¼¶ÎÄ¼ş¼Ğ
+                                //æ‰“å¼€ä¸Šçº§æ–‡ä»¶å¤¹
                                 File open = new File(listResult.get(labelCount));
                                 try {
                                     Runtime.getRuntime().exec("explorer.exe /select, \"" + open.getAbsolutePath() + "\"");
@@ -863,7 +863,7 @@ public class SearchBar {
                             }
                             saveCache(listResult.get(labelCount) + ';');
                         } else if (17 == key) {
-                            //ctrl±»µã»÷
+                            //ctrlè¢«ç‚¹å‡»
                             isCtrlPressed = true;
                         }
                     }
@@ -874,7 +874,7 @@ public class SearchBar {
             public void keyReleased(KeyEvent arg0) {
                 int key = arg0.getKeyCode();
                 if (17 == key) {
-                    //¸´Î»CTRL×´Ì¬
+                    //å¤ä½CTRLçŠ¶æ€
                     isCtrlPressed = false;
                 }
             }
@@ -889,7 +889,7 @@ public class SearchBar {
 
         label1.setSize(searchBarWidth, (int) (searchBarHeight * 0.2));
         label1.setLocation(0, (int) (searchBarHeight * 0.2));
-        label1.setFont(new Font("Î¢ÈíÑÅºÚ", Font.BOLD, (int) ((height * 0.05) / 96 * 72 * 0.5)));
+        label1.setFont(new Font("å¾®è½¯é›…é»‘", Font.BOLD, (int) ((height * 0.05) / 96 * 72 * 0.5)));
         label1.setForeground(new Color(73, 162, 255, 255));
         label1.setBackground(null);
         label1.setOpaque(true);
@@ -897,7 +897,7 @@ public class SearchBar {
 
         label2.setSize(searchBarWidth, (int) (searchBarHeight * 0.2));
         label2.setLocation(0, (int) (searchBarHeight * 0.4));
-        label2.setFont(new Font("Î¢ÈíÑÅºÚ", Font.BOLD, (int) ((height * 0.05) / 96 * 72 * 0.5)));
+        label2.setFont(new Font("å¾®è½¯é›…é»‘", Font.BOLD, (int) ((height * 0.05) / 96 * 72 * 0.5)));
         label2.setForeground(new Color(73, 162, 255, 255));
         label2.setBackground(null);
         label2.setOpaque(true);
@@ -905,7 +905,7 @@ public class SearchBar {
 
         label3.setSize(searchBarWidth, (int) (searchBarHeight * 0.2));
         label3.setLocation(0, (int) (searchBarHeight * 0.6));
-        label3.setFont(new Font("Î¢ÈíÑÅºÚ", Font.BOLD, (int) ((height * 0.05) / 96 * 72 * 0.5)));
+        label3.setFont(new Font("å¾®è½¯é›…é»‘", Font.BOLD, (int) ((height * 0.05) / 96 * 72 * 0.5)));
         label3.setForeground(new Color(73, 162, 255, 255));
         label3.setBackground(null);
         label3.setOpaque(true);
@@ -913,7 +913,7 @@ public class SearchBar {
 
         label4.setSize(searchBarWidth, (int) (searchBarHeight * 0.2));
         label4.setLocation(0, (int) (searchBarHeight * 0.8));
-        label4.setFont(new Font("Î¢ÈíÑÅºÚ", Font.BOLD, (int) ((height * 0.05) / 96 * 72 * 0.5)));
+        label4.setFont(new Font("å¾®è½¯é›…é»‘", Font.BOLD, (int) ((height * 0.05) / 96 * 72 * 0.5)));
         label4.setForeground(new Color(73, 162, 255, 255));
         label4.setBackground(null);
         label4.setOpaque(true);
@@ -955,7 +955,7 @@ public class SearchBar {
                 label1.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
             }else{
                 label1.setIcon(null);
-                label1.setText("ÎŞĞ§ÎÄ¼ş");
+                label1.setText("æ— æ•ˆæ–‡ä»¶");
             }
             path = listResult.get(1);
             name = getFileName(listResult.get(1));
@@ -969,7 +969,7 @@ public class SearchBar {
                 label2.setIcon(icon);
             }else{
                 label2.setIcon(null);
-                label2.setText("ÎŞĞ§ÎÄ¼ş");
+                label2.setText("æ— æ•ˆæ–‡ä»¶");
             }
             path = listResult.get(2);
             name = getFileName(listResult.get(2));
@@ -983,7 +983,7 @@ public class SearchBar {
                 label3.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
             }else{
                 label3.setIcon(null);
-                label3.setText("ÎŞĞ§ÎÄ¼ş");
+                label3.setText("æ— æ•ˆæ–‡ä»¶");
             }
             path = listResult.get(3);
             name = getFileName(listResult.get(3));
@@ -997,7 +997,7 @@ public class SearchBar {
                 label4.setIcon(icon);
             }else{
                 label4.setIcon(null);
-                label4.setText("ÎŞĞ§ÎÄ¼ş");
+                label4.setText("æ— æ•ˆæ–‡ä»¶");
             }
         } catch (java.lang.IndexOutOfBoundsException e) {
             //e.printStackTrace();
@@ -1031,7 +1031,7 @@ public class SearchBar {
                 assert desktop != null;
                 desktop.open(name);
             } catch (IOException e) {
-                //´ò¿ªÉÏ¼¶ÎÄ¼ş¼Ğ
+                //æ‰“å¼€ä¸Šçº§æ–‡ä»¶å¤¹
                 try {
                     Runtime.getRuntime().exec("explorer.exe /select, \"" + name.getAbsolutePath() + "\"");
                 } catch (IOException ex) {
@@ -1056,9 +1056,9 @@ public class SearchBar {
 
 
     /**
-     * »ñÈ¡³ÌĞòĞ¡Í¼±ê
+     * è·å–ç¨‹åºå°å›¾æ ‡
      *
-     * @param f ÎÄ¼şÂ·¾¶
+     * @param f æ–‡ä»¶è·¯å¾„
      * @return icon
      */
     private static Icon getSmallIcon(File f) {

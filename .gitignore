@@ -5,11 +5,6 @@ target/
 .idea/
 *.iml
 
-# Eclipse #
-.settings/
-.classpath
-.project
-
 *.json
 Files/
 cache.dat

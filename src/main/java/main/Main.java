@@ -5,6 +5,7 @@ import java.awt.*;
 import java.io.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import frame.*;
 import com.alibaba.fastjson.*;
@@ -84,7 +85,7 @@ public class Main {
 
 		ExecutorService fixedThreadPool = Executors.newFixedThreadPool(3);
 		fixedThreadPool.execute(() -> {
-			// Ê±¼ä¼ì²âÏß³Ì
+			// æ—¶é—´æ£€æµ‹çº¿ç¨‹
 			int count = 0;
 			updateTimeLimit = updateTimeLimit * 1000;
 			while (!mainExit) {
@@ -102,7 +103,7 @@ public class Main {
 		});
 
 
-		//Ë¢ÐÂÆÁÄ»Ïß³Ì
+		//åˆ·æ–°å±å¹•çº¿ç¨‹
 		fixedThreadPool.execute(() ->{
 			Container panel = searchBar.getPanel();
 			while (!mainExit) {
@@ -116,12 +117,12 @@ public class Main {
 		});
 
 
-		//ËÑË÷Ïß³Ì
+		//æœç´¢çº¿ç¨‹
 		fixedThreadPool.execute(() ->{
 			Search search = new Search();
 			while (!mainExit){
 				if (search.isSearch()){
-					System.out.println("ÒÑÊÕµ½¸üÐÂÇëÇó");
+					System.out.println("å·²æ”¶åˆ°æ›´æ–°è¯·æ±‚");
 					Search.updateLists(ignorePath, searchDepth);
 				}
 				try {
@@ -134,7 +135,7 @@ public class Main {
 
 
 		while (true) {
-			// Ö÷Ñ­»·¿ªÊ¼
+			// ä¸»å¾ªçŽ¯å¼€å§‹
 			//System.out.println("isShowSearchBar:"+CheckHotKey.isShowSearachBar);
 			if (CheckHotKey.isShowSearachBar){
 				CheckHotKey.isShowSearachBar = false;
@@ -147,6 +148,13 @@ public class Main {
 			}
 			if (mainExit){
 				fixedThreadPool.shutdown();
+				while (!fixedThreadPool.isTerminated()) {
+					try {
+						TimeUnit.SECONDS.sleep(1);
+					} catch (InterruptedException ignored) {
+
+					}
+				}
 				System.exit(0);
 			}
 		}
