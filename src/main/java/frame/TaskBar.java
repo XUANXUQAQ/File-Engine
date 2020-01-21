@@ -7,37 +7,37 @@ import javax.swing.*;
 public class TaskBar {
     public TaskBar()
     {
-        // åˆ¤æ–­æ˜¯å¦æ”¯æŒç³»ç»Ÿæ‰˜ç›˜
+        // ÅĞ¶ÏÊÇ·ñÖ§³ÖÏµÍ³ÍĞÅÌ
         if (SystemTray.isSupported())
         {
             Image image;
             URL icon;
             icon = getClass().getResource("/icons/taskbar.png");
             image = new ImageIcon(icon).getImage();
-            // åˆ›å»ºæ‰˜ç›˜å›¾æ ‡
+            // ´´½¨ÍĞÅÌÍ¼±ê
             TrayIcon trayIcon = new TrayIcon(image);
-            // æ·»åŠ å·¥å…·æç¤ºæ–‡æœ¬
-            trayIcon.setToolTip("è¶…çº§æœç´¢");
-            // åˆ›å»ºå¼¹å‡ºèœå•
+            // Ìí¼Ó¹¤¾ßÌáÊ¾ÎÄ±¾
+            trayIcon.setToolTip("³¬¼¶ËÑË÷");
+            // ´´½¨µ¯³ö²Ëµ¥
             PopupMenu popupMenu = new PopupMenu();
 
-            MenuItem settings = new MenuItem("è®¾ç½®");
+            MenuItem settings = new MenuItem("ÉèÖÃ");
             settings.addActionListener(e -> {
                 SettingsFrame settingsFrame = new SettingsFrame();
                 settingsFrame.showWindow();
             });
-            MenuItem close = new MenuItem("é€€å‡º");
+            MenuItem close = new MenuItem("ÍË³ö");
             close.addActionListener(e -> System.exit(0));
             popupMenu.add(settings);
             popupMenu.add(close);
 
-            // ä¸ºæ‰˜ç›˜å›¾æ ‡åŠ å¼¹å‡ºèœå¼¹
+            // ÎªÍĞÅÌÍ¼±ê¼Óµ¯³ö²Ëµ¯
             trayIcon.setPopupMenu(popupMenu);
-            // è·å¾—ç³»ç»Ÿæ‰˜ç›˜å¯¹è±¡
+            // »ñµÃÏµÍ³ÍĞÅÌ¶ÔÏó
             SystemTray systemTray = SystemTray.getSystemTray();
             try
             {
-                // ä¸ºç³»ç»Ÿæ‰˜ç›˜åŠ æ‰˜ç›˜å›¾æ ‡
+                // ÎªÏµÍ³ÍĞÅÌ¼ÓÍĞÅÌÍ¼±ê
                 systemTray.add(trayIcon);
             }
             catch (Exception e)

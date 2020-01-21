@@ -14,8 +14,6 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import search.*;
 
@@ -31,15 +29,18 @@ public class SearchBar {
     private int labelCount = 0;
     private JTextField textField;
     private Container panel;
-    private ExecutorService fixedThreadPool = Executors.newFixedThreadPool(1);
+    private Thread thread;
+    private boolean isFirstRun = true;
 
 
 
     private void addResult(ArrayList<String> list, String text) {
-        for (String fileInList : list) {
-            if (match(getFileName(fileInList).toUpperCase(), text.toUpperCase()) ) {
-                listResult.add(fileInList);
-                //System.out.println("adding "+fileInList.toString());
+        if (!new Search().isSearch()) {
+            for (String fileInList : list) {
+                if (match(getFileName(fileInList).toUpperCase(), text.toUpperCase())) {
+                    listResult.add(fileInList);
+                    //System.out.println("adding "+fileInList.toString());
+                }
             }
         }
         delRepeated(listResult);
@@ -56,197 +57,267 @@ public class SearchBar {
 
         @Override
         public void run() {
-            if (!this.text.equals("")) {
-                for (String fileInList : Search.listA) {
-                    if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase()) ) {
-                        listResult.add(fileInList);
-                        //System.out.println("adding "+fileInList.toString());
+            if (!new Search().isSearch()) {
+                if (!this.text.equals("")) {
+                    for (String fileInList : Search.listA) {
+                        if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase())) {
+                            listResult.add(fileInList);
+                            //System.out.println("adding "+fileInList.toString());
+                        }
+                        if (Thread.currentThread().isInterrupted()){
+                            return;
+                        }
                     }
-                }
-                for (String fileInList : Search.listB) {
-                    if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase()) ) {
-                        listResult.add(fileInList);
-                        //System.out.println("adding "+fileInList.toString());
+                    for (String fileInList : Search.listB) {
+                        if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase())) {
+                            listResult.add(fileInList);
+                            //System.out.println("adding "+fileInList.toString());
+                        }
+                        if (Thread.currentThread().isInterrupted()){
+                            return;
+                        }
                     }
-                }
-                for (String fileInList : Search.listC) {
-                    if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase()) ) {
-                        listResult.add(fileInList);
-                        //System.out.println("adding "+fileInList.toString());
+                    for (String fileInList : Search.listC) {
+                        if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase())) {
+                            listResult.add(fileInList);
+                            //System.out.println("adding "+fileInList.toString());
+                        }
+                        if (Thread.currentThread().isInterrupted()){
+                            return;
+                        }
                     }
-                }
-                for (String fileInList : Search.listD) {
-                    if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase()) ) {
-                        listResult.add(fileInList);
-                        //System.out.println("adding "+fileInList.toString());
+                    for (String fileInList : Search.listD) {
+                        if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase())) {
+                            listResult.add(fileInList);
+                            //System.out.println("adding "+fileInList.toString());
+                        }
+                        if (Thread.currentThread().isInterrupted()){
+                            return;
+                        }
                     }
-                }
-                for (String fileInList : Search.listE) {
-                    if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase()) ) {
-                        listResult.add(fileInList);
-                        //System.out.println("adding "+fileInList.toString());
+                    for (String fileInList : Search.listE) {
+                        if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase())) {
+                            listResult.add(fileInList);
+                            //System.out.println("adding "+fileInList.toString());
+                        }
+                        if (Thread.currentThread().isInterrupted()){
+                            return;
+                        }
                     }
-                }
-                for (String fileInList : Search.listF) {
-                    if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase()) ) {
-                        listResult.add(fileInList);
-                        //System.out.println("adding "+fileInList.toString());
+                    for (String fileInList : Search.listF) {
+                        if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase())) {
+                            listResult.add(fileInList);
+                            //System.out.println("adding "+fileInList.toString());
+                        }
+                        if (Thread.currentThread().isInterrupted()){
+                            return;
+                        }
                     }
-                }
-                for (String fileInList : Search.listG) {
-                    if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase()) ) {
-                        listResult.add(fileInList);
-                        //System.out.println("adding "+fileInList.toString());
+                    for (String fileInList : Search.listG) {
+                        if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase())) {
+                            listResult.add(fileInList);
+                            //System.out.println("adding "+fileInList.toString());
+                        }if (Thread.currentThread().isInterrupted()){
+                            return;
+                        }
                     }
-                }
-                for (String fileInList : Search.listH) {
-                    if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase()) ) {
-                        listResult.add(fileInList);
-                        //System.out.println("adding "+fileInList.toString());
+                    for (String fileInList : Search.listH) {
+                        if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase())) {
+                            listResult.add(fileInList);
+                            //System.out.println("adding "+fileInList.toString());
+                        }if (Thread.currentThread().isInterrupted()){
+                            return;
+                        }
                     }
-                }
-                for (String fileInList : Search.listI) {
-                    if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase()) ) {
-                        listResult.add(fileInList);
-                        //System.out.println("adding "+fileInList.toString());
+                    for (String fileInList : Search.listI) {
+                        if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase())) {
+                            listResult.add(fileInList);
+                            //System.out.println("adding "+fileInList.toString());
+                        }if (Thread.currentThread().isInterrupted()){
+                            return;
+                        }
                     }
-                }
-                for (String fileInList : Search.listJ) {
-                    if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase()) ) {
-                        listResult.add(fileInList);
-                        //System.out.println("adding "+fileInList.toString());
+                    for (String fileInList : Search.listJ) {
+                        if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase())) {
+                            listResult.add(fileInList);
+                            //System.out.println("adding "+fileInList.toString());
+                        }if (Thread.currentThread().isInterrupted()){
+                            return;
+                        }
                     }
-                }
-                for (String fileInList : Search.listK) {
-                    if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase()) ) {
-                        listResult.add(fileInList);
-                        //System.out.println("adding "+fileInList.toString());
+                    for (String fileInList : Search.listK) {
+                        if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase())) {
+                            listResult.add(fileInList);
+                            //System.out.println("adding "+fileInList.toString());
+                        }if (Thread.currentThread().isInterrupted()){
+                            return;
+                        }
                     }
-                }
-                for (String fileInList : Search.listL) {
-                    if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase()) ) {
-                        listResult.add(fileInList);
-                        //System.out.println("adding "+fileInList.toString());
+                    for (String fileInList : Search.listL) {
+                        if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase())) {
+                            listResult.add(fileInList);
+                            //System.out.println("adding "+fileInList.toString());
+                        }if (Thread.currentThread().isInterrupted()){
+                            return;
+                        }
                     }
-                }
-                for (String fileInList : Search.listM) {
-                    if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase()) ) {
-                        listResult.add(fileInList);
-                        //System.out.println("adding "+fileInList.toString());
+                    for (String fileInList : Search.listM) {
+                        if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase())) {
+                            listResult.add(fileInList);
+                            //System.out.println("adding "+fileInList.toString());
+                        }if (Thread.currentThread().isInterrupted()){
+                            return;
+                        }
                     }
-                }
-                for (String fileInList : Search.listN) {
-                    if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase()) ) {
-                        listResult.add(fileInList);
-                        //System.out.println("adding "+fileInList.toString());
+                    for (String fileInList : Search.listN) {
+                        if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase())) {
+                            listResult.add(fileInList);
+                            //System.out.println("adding "+fileInList.toString());
+                        }if (Thread.currentThread().isInterrupted()){
+                            return;
+                        }
                     }
-                }
-                for (String fileInList : Search.listO) {
-                    if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase()) ) {
-                        listResult.add(fileInList);
-                        //System.out.println("adding "+fileInList.toString());
+                    for (String fileInList : Search.listO) {
+                        if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase())) {
+                            listResult.add(fileInList);
+                            //System.out.println("adding "+fileInList.toString());
+                        }if (Thread.currentThread().isInterrupted()){
+                            return;
+                        }
                     }
-                }
-                for (String fileInList : Search.listP) {
-                    if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase()) ) {
-                        listResult.add(fileInList);
-                        //System.out.println("adding "+fileInList.toString());
+                    for (String fileInList : Search.listP) {
+                        if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase())) {
+                            listResult.add(fileInList);
+                            //System.out.println("adding "+fileInList.toString());
+                        }if (Thread.currentThread().isInterrupted()){
+                            return;
+                        }
                     }
-                }
-                for (String fileInList : Search.listQ) {
-                    if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase()) ) {
-                        listResult.add(fileInList);
-                        //System.out.println("adding "+fileInList.toString());
+                    for (String fileInList : Search.listQ) {
+                        if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase())) {
+                            listResult.add(fileInList);
+                            //System.out.println("adding "+fileInList.toString());
+                        }if (Thread.currentThread().isInterrupted()){
+                            return;
+                        }
                     }
-                }
-                for (String fileInList : Search.listR) {
-                    if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase()) ) {
-                        listResult.add(fileInList);
-                        //System.out.println("adding "+fileInList.toString());
+                    for (String fileInList : Search.listR) {
+                        if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase())) {
+                            listResult.add(fileInList);
+                            //System.out.println("adding "+fileInList.toString());
+                        }if (Thread.currentThread().isInterrupted()){
+                            return;
+                        }
                     }
-                }
-                for (String fileInList : Search.listS) {
-                    if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase()) ) {
-                        listResult.add(fileInList);
-                        //System.out.println("adding "+fileInList.toString());
+                    for (String fileInList : Search.listS) {
+                        if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase())) {
+                            listResult.add(fileInList);
+                            //System.out.println("adding "+fileInList.toString());
+                        }if (Thread.currentThread().isInterrupted()){
+                            return;
+                        }
                     }
-                }
-                for (String fileInList : Search.listT) {
-                    if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase()) ) {
-                        listResult.add(fileInList);
-                        //System.out.println("adding "+fileInList.toString());
+                    for (String fileInList : Search.listT) {
+                        if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase())) {
+                            listResult.add(fileInList);
+                            //System.out.println("adding "+fileInList.toString());
+                        }if (Thread.currentThread().isInterrupted()){
+                            return;
+                        }
                     }
-                }
-                for (String fileInList : Search.listU) {
-                    if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase()) ) {
-                        listResult.add(fileInList);
-                        //System.out.println("adding "+fileInList.toString());
+                    for (String fileInList : Search.listU) {
+                        if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase())) {
+                            listResult.add(fileInList);
+                            //System.out.println("adding "+fileInList.toString());
+                        }if (Thread.currentThread().isInterrupted()){
+                            return;
+                        }
                     }
-                }
-                for (String fileInList : Search.listV) {
-                    if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase()) ) {
-                        listResult.add(fileInList);
-                        //System.out.println("adding "+fileInList.toString());
+                    for (String fileInList : Search.listV) {
+                        if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase())) {
+                            listResult.add(fileInList);
+                            //System.out.println("adding "+fileInList.toString());
+                        }if (Thread.currentThread().isInterrupted()){
+                            return;
+                        }
                     }
-                }
-                for (String fileInList : Search.listW) {
-                    if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase()) ) {
-                        listResult.add(fileInList);
-                        //System.out.println("adding "+fileInList.toString());
+                    for (String fileInList : Search.listW) {
+                        if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase())) {
+                            listResult.add(fileInList);
+                            //System.out.println("adding "+fileInList.toString());
+                        }if (Thread.currentThread().isInterrupted()){
+                            return;
+                        }
                     }
-                }
-                for (String fileInList : Search.listX) {
-                    if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase()) ) {
-                        listResult.add(fileInList);
-                        //System.out.println("adding "+fileInList.toString());
+                    for (String fileInList : Search.listX) {
+                        if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase())) {
+                            listResult.add(fileInList);
+                            //System.out.println("adding "+fileInList.toString());
+                        }if (Thread.currentThread().isInterrupted()){
+                            return;
+                        }
                     }
-                }
-                for (String fileInList : Search.listY) {
-                    if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase()) ) {
-                        listResult.add(fileInList);
-                        //System.out.println("adding "+fileInList.toString());
+                    for (String fileInList : Search.listY) {
+                        if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase())) {
+                            listResult.add(fileInList);
+                            //System.out.println("adding "+fileInList.toString());
+                        }if (Thread.currentThread().isInterrupted()){
+                            return;
+                        }
                     }
-                }
-                for (String fileInList : Search.listZ) {
-                    if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase()) ) {
-                        listResult.add(fileInList);
-                        //System.out.println("adding "+fileInList.toString());
+                    for (String fileInList : Search.listZ) {
+                        if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase())) {
+                            listResult.add(fileInList);
+                            //System.out.println("adding "+fileInList.toString());
+                        }if (Thread.currentThread().isInterrupted()){
+                            return;
+                        }
                     }
-                }
-                for (String fileInList : Search.listNum) {
-                    if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase()) ) {
-                        listResult.add(fileInList);
-                        //System.out.println("adding "+fileInList.toString());
+                    for (String fileInList : Search.listNum) {
+                        if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase())) {
+                            listResult.add(fileInList);
+                            //System.out.println("adding "+fileInList.toString());
+                        }if (Thread.currentThread().isInterrupted()){
+                            return;
+                        }
                     }
-                }
-                for (String fileInList : Search.listPercentSign) {
-                    if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase()) ) {
-                        listResult.add(fileInList);
-                        //System.out.println("adding "+fileInList.toString());
+                    for (String fileInList : Search.listPercentSign) {
+                        if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase())) {
+                            listResult.add(fileInList);
+                            //System.out.println("adding "+fileInList.toString());
+                        }if (Thread.currentThread().isInterrupted()){
+                            return;
+                        }
                     }
-                }
-                for (String fileInList : Search.listUnderline) {
-                    if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase()) ) {
-                        listResult.add(fileInList);
-                        //System.out.println("adding "+fileInList.toString());
+                    for (String fileInList : Search.listUnderline) {
+                        if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase())) {
+                            listResult.add(fileInList);
+                            //System.out.println("adding "+fileInList.toString());
+                        }if (Thread.currentThread().isInterrupted()){
+                            return;
+                        }
                     }
-                }
-                for (String fileInList : Search.listUnique) {
-                    if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase()) ) {
-                        listResult.add(fileInList);
-                        //System.out.println("adding "+fileInList.toString());
+                    for (String fileInList : Search.listUnique) {
+                        if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase())) {
+                            listResult.add(fileInList);
+                            //System.out.println("adding "+fileInList.toString());
+                        }if (Thread.currentThread().isInterrupted()){
+                            return;
+                        }
                     }
                 }
             }
-            delRepeated(listResult);
-            showResult();
+            if (!Thread.currentThread().isInterrupted()) {
+                delRepeated(listResult);
+                showResult();
+            }
         }
     }
 
 
 
     public SearchBar() {
-        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize(); // Ëé∑ÂèñÂ±èÂπïÂ§ßÂ∞è
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize(); // ªÒ»°∆¡ƒª¥Û–°
         int width = screenSize.width;
         int height = screenSize.height;
         int positionX = (int) (width * 0.15);
@@ -267,7 +338,7 @@ public class SearchBar {
         //TextField
         textField = new JTextField(300);
         textField.setSize(searchBarWidth, (int) (searchBarHeight * 0.2));
-        textField.setFont(new Font("ÂæÆËΩØÈõÖÈªë", Font.BOLD, (int) ((height * 0.1) / 96 * 72)));
+        textField.setFont(new Font("Œ¢»Ì—≈∫⁄", Font.BOLD, (int) ((height * 0.1) / 96 * 72)));
         textField.setForeground(Color.white);
         textField.setHorizontalAlignment(JTextField.LEFT);
         textField.setBorder(null);
@@ -289,15 +360,10 @@ public class SearchBar {
                 textField.setText(null);
             }
         });
-        //ÂΩìtextFieldÊñáÊú¨ÂèòÂä®Êó∂ÂºÄÂßã
+        //µ±textFieldŒƒ±æ±‰∂Ø ±ø™ º
         textField.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
             @Override
             public void insertUpdate(DocumentEvent arg0) {
-                if (new Search().isSearch()) {
-                    clearLabel();
-                    label1.setText("ÊêúÁ¥¢‰∏≠ÔºåËØ∑Á®çÂêéÂÜçËØï");
-                    return;
-                }
                 labelCount = 0;
                 clearLabel();
                 label1.setBackground(new Color(255, 125, 29, 255));
@@ -314,7 +380,14 @@ public class SearchBar {
                     searchCache(text);
                     char firstWord = text.charAt(0);
                     if ('?' == firstWord) {
-                        fixedThreadPool.execute(new Thread(new AddAllResult(text)));
+                        if (isFirstRun || !thread.isAlive()) {
+                            isFirstRun = false;
+                        }else{
+                            thread.interrupt();
+                        }
+                        thread = new Thread(new AddAllResult(text));
+                        thread.start();
+
                     } else {
                         if (19968 <= (int) firstWord && (int) firstWord < 40869) {
                             addResult(Search.listUnique, text);
@@ -464,11 +537,6 @@ public class SearchBar {
 
             @Override
             public void changedUpdate(DocumentEvent e) {
-                if (new Search().isSearch()){
-                    clearLabel();
-                    label1.setText("ÊêúÁ¥¢‰∏≠ÔºåËØ∑Á®çÂêéÂÜçËØï");
-                    return;
-                }
                 labelCount = 0;
                 clearLabel();
                 listResult.clear();
@@ -476,12 +544,6 @@ public class SearchBar {
 
             @Override
             public void removeUpdate(DocumentEvent e) {
-
-                if (new Search().isSearch()) {
-                    clearLabel();
-                    label1.setText("ÊêúÁ¥¢‰∏≠ÔºåËØ∑Á®çÂêéÂÜçËØï");
-                    return;
-                }
                 labelCount = 0;
                 clearLabel();
                 label1.setBackground(new Color(255, 125, 29, 255));
@@ -501,7 +563,13 @@ public class SearchBar {
                     firstWord = text.charAt(0);
 
                     if ('?' == firstWord) {
-                        fixedThreadPool.execute(new Thread(new AddAllResult(text)));
+                        if (isFirstRun || !thread.isAlive()) {
+                            isFirstRun = false;
+                        }else{
+                            thread.interrupt();
+                        }
+                        thread = new Thread(new AddAllResult(text));
+                        thread.start();
                     } else {
                         if (19968 <= (int) firstWord && (int) firstWord < 40869) {
                             addResult(Search.listUnique, text);
@@ -660,7 +728,7 @@ public class SearchBar {
                     if (!listResult.isEmpty()) {
                         int key = arg0.getKeyCode();
                         if (38 == key) {
-                            //‰∏äÈîÆË¢´ÁÇπÂáª
+                            //…œº¸±ªµ„ª˜
                             labelCount--;
                             if (labelCount < 0) {
                                 labelCount = 0;
@@ -671,7 +739,7 @@ public class SearchBar {
                                 labelCount = listResult.size() - 1;
                             }
                             if (labelCount < 3) {
-                                //Êú™Âà∞ÊúÄ‰∏ãÂ±Ç
+                                //Œ¥µΩ◊Óœ¬≤„
                                 if (0 == labelCount) {
                                     label1.setBackground(new Color(255, 125, 29, 255));
                                     label2.setBackground(null);
@@ -692,7 +760,7 @@ public class SearchBar {
                                     showResult();
                                 }
                             } else {
-                                //Âà∞ËææÊúÄ‰∏ãÂ±Ç
+                                //µΩ¥Ô◊Óœ¬≤„
                                 label1.setBackground(null);
                                 label2.setBackground(null);
                                 label3.setBackground(null);
@@ -710,7 +778,7 @@ public class SearchBar {
                                     label1.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
                                 } else {
                                     label1.setIcon(null);
-                                    label1.setText("Êó†ÊïàÊñá‰ª∂");
+                                    label1.setText("Œﬁ–ßŒƒº˛");
                                 }
                                 path = listResult.get(labelCount - 2);
                                 name = getFileName(listResult.get(labelCount - 2));
@@ -724,7 +792,7 @@ public class SearchBar {
                                     label2.setIcon(icon);
                                 } else {
                                     label2.setIcon(null);
-                                    label2.setText("Êó†ÊïàÊñá‰ª∂");
+                                    label2.setText("Œﬁ–ßŒƒº˛");
                                 }
                                 path = listResult.get(labelCount - 1);
                                 name = getFileName(listResult.get(labelCount - 1));
@@ -738,7 +806,7 @@ public class SearchBar {
                                     label3.setIcon(icon);
                                 } else {
                                     label3.setIcon(null);
-                                    label3.setText("Êó†ÊïàÊñá‰ª∂");
+                                    label3.setText("Œﬁ–ßŒƒº˛");
                                 }
                                 path = listResult.get(labelCount);
                                 name = getFileName(listResult.get(labelCount));
@@ -752,11 +820,11 @@ public class SearchBar {
                                     label4.setIcon(icon);
                                 } else {
                                     label4.setIcon(null);
-                                    label4.setText("Êó†ÊïàÊñá‰ª∂");
+                                    label4.setText("Œﬁ–ßŒƒº˛");
                                 }
                             }
                         } else if (40 == key) {
-                            //‰∏ãÈîÆË¢´ÁÇπÂáª
+                            //œ¬º¸±ªµ„ª˜
                             labelCount++;
                             if (labelCount < 0) {
                                 labelCount = 0;
@@ -767,7 +835,7 @@ public class SearchBar {
                                 labelCount = listResult.size() - 1;
                             }
                             if (labelCount < 3) {
-                                //Êú™Âà∞ÊúÄ‰∏ãÂ±Ç
+                                //Œ¥µΩ◊Óœ¬≤„
                                 if (0 == labelCount) {
                                     label1.setBackground(new Color(255, 125, 29, 255));
                                     label2.setBackground(null);
@@ -788,7 +856,7 @@ public class SearchBar {
                                     showResult();
                                 }
                             } else {
-                                //Âà∞ËææÊúÄ‰∏ãÂ±Ç
+                                //µΩ¥Ô◊Óœ¬≤„
                                 label1.setBackground(null);
                                 label2.setBackground(null);
                                 label3.setBackground(null);
@@ -805,7 +873,7 @@ public class SearchBar {
                                     label1.setIcon(icon);
                                     label1.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
                                 } else {
-                                    label1.setText("Êó†ÊïàÊñá‰ª∂");
+                                    label1.setText("Œﬁ–ßŒƒº˛");
                                 }
                                 path = listResult.get(labelCount - 2);
                                 name = getFileName(listResult.get(labelCount - 2));
@@ -818,7 +886,7 @@ public class SearchBar {
                                     label2.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
                                     label2.setIcon(icon);
                                 } else {
-                                    label2.setText("Êó†ÊïàÊñá‰ª∂");
+                                    label2.setText("Œﬁ–ßŒƒº˛");
                                 }
                                 path = listResult.get(labelCount - 1);
                                 name = getFileName(listResult.get(labelCount - 1));
@@ -831,7 +899,7 @@ public class SearchBar {
                                     label3.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
                                     label3.setIcon(icon);
                                 } else {
-                                    label3.setText("Êó†ÊïàÊñá‰ª∂");
+                                    label3.setText("Œﬁ–ßŒƒº˛");
                                 }
                                 path = listResult.get(labelCount);
                                 name = getFileName(listResult.get(labelCount));
@@ -844,14 +912,14 @@ public class SearchBar {
                                     label4.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
                                     label4.setIcon(icon);
                                 } else {
-                                    label4.setText("Êó†ÊïàÊñá‰ª∂");
+                                    label4.setText("Œﬁ–ßŒƒº˛");
                                 }
                             }
                         } else if (10 == key) {
-                            //enterË¢´ÁÇπÂáª
+                            //enter±ªµ„ª˜
                             searchBar.setVisible(false);
                             if (isCtrlPressed) {
-                                //ÊâìÂºÄ‰∏äÁ∫ßÊñá‰ª∂Â§π
+                                //¥Úø™…œº∂Œƒº˛º–
                                 File open = new File(listResult.get(labelCount));
                                 try {
                                     Runtime.getRuntime().exec("explorer.exe /select, \"" + open.getAbsolutePath() + "\"");
@@ -863,7 +931,7 @@ public class SearchBar {
                             }
                             saveCache(listResult.get(labelCount) + ';');
                         } else if (17 == key) {
-                            //ctrlË¢´ÁÇπÂáª
+                            //ctrl±ªµ„ª˜
                             isCtrlPressed = true;
                         }
                     }
@@ -874,7 +942,7 @@ public class SearchBar {
             public void keyReleased(KeyEvent arg0) {
                 int key = arg0.getKeyCode();
                 if (17 == key) {
-                    //Â§ç‰ΩçCTRLÁä∂ÊÄÅ
+                    //∏¥ŒªCTRL◊¥Ã¨
                     isCtrlPressed = false;
                 }
             }
@@ -889,7 +957,7 @@ public class SearchBar {
 
         label1.setSize(searchBarWidth, (int) (searchBarHeight * 0.2));
         label1.setLocation(0, (int) (searchBarHeight * 0.2));
-        label1.setFont(new Font("ÂæÆËΩØÈõÖÈªë", Font.BOLD, (int) ((height * 0.05) / 96 * 72 * 0.5)));
+        label1.setFont(new Font("Œ¢»Ì—≈∫⁄", Font.BOLD, (int) ((height * 0.05) / 96 * 72 * 0.5)));
         label1.setForeground(new Color(73, 162, 255, 255));
         label1.setBackground(null);
         label1.setOpaque(true);
@@ -897,7 +965,7 @@ public class SearchBar {
 
         label2.setSize(searchBarWidth, (int) (searchBarHeight * 0.2));
         label2.setLocation(0, (int) (searchBarHeight * 0.4));
-        label2.setFont(new Font("ÂæÆËΩØÈõÖÈªë", Font.BOLD, (int) ((height * 0.05) / 96 * 72 * 0.5)));
+        label2.setFont(new Font("Œ¢»Ì—≈∫⁄", Font.BOLD, (int) ((height * 0.05) / 96 * 72 * 0.5)));
         label2.setForeground(new Color(73, 162, 255, 255));
         label2.setBackground(null);
         label2.setOpaque(true);
@@ -905,7 +973,7 @@ public class SearchBar {
 
         label3.setSize(searchBarWidth, (int) (searchBarHeight * 0.2));
         label3.setLocation(0, (int) (searchBarHeight * 0.6));
-        label3.setFont(new Font("ÂæÆËΩØÈõÖÈªë", Font.BOLD, (int) ((height * 0.05) / 96 * 72 * 0.5)));
+        label3.setFont(new Font("Œ¢»Ì—≈∫⁄", Font.BOLD, (int) ((height * 0.05) / 96 * 72 * 0.5)));
         label3.setForeground(new Color(73, 162, 255, 255));
         label3.setBackground(null);
         label3.setOpaque(true);
@@ -913,7 +981,7 @@ public class SearchBar {
 
         label4.setSize(searchBarWidth, (int) (searchBarHeight * 0.2));
         label4.setLocation(0, (int) (searchBarHeight * 0.8));
-        label4.setFont(new Font("ÂæÆËΩØÈõÖÈªë", Font.BOLD, (int) ((height * 0.05) / 96 * 72 * 0.5)));
+        label4.setFont(new Font("Œ¢»Ì—≈∫⁄", Font.BOLD, (int) ((height * 0.05) / 96 * 72 * 0.5)));
         label4.setForeground(new Color(73, 162, 255, 255));
         label4.setBackground(null);
         label4.setOpaque(true);
@@ -955,7 +1023,7 @@ public class SearchBar {
                 label1.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
             }else{
                 label1.setIcon(null);
-                label1.setText("Êó†ÊïàÊñá‰ª∂");
+                label1.setText("Œﬁ–ßŒƒº˛");
             }
             path = listResult.get(1);
             name = getFileName(listResult.get(1));
@@ -969,7 +1037,7 @@ public class SearchBar {
                 label2.setIcon(icon);
             }else{
                 label2.setIcon(null);
-                label2.setText("Êó†ÊïàÊñá‰ª∂");
+                label2.setText("Œﬁ–ßŒƒº˛");
             }
             path = listResult.get(2);
             name = getFileName(listResult.get(2));
@@ -983,7 +1051,7 @@ public class SearchBar {
                 label3.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
             }else{
                 label3.setIcon(null);
-                label3.setText("Êó†ÊïàÊñá‰ª∂");
+                label3.setText("Œﬁ–ßŒƒº˛");
             }
             path = listResult.get(3);
             name = getFileName(listResult.get(3));
@@ -997,7 +1065,7 @@ public class SearchBar {
                 label4.setIcon(icon);
             }else{
                 label4.setIcon(null);
-                label4.setText("Êó†ÊïàÊñá‰ª∂");
+                label4.setText("Œﬁ–ßŒƒº˛");
             }
         } catch (java.lang.IndexOutOfBoundsException e) {
             //e.printStackTrace();
@@ -1031,13 +1099,12 @@ public class SearchBar {
                 assert desktop != null;
                 desktop.open(name);
             } catch (IOException e) {
-                //ÊâìÂºÄ‰∏äÁ∫ßÊñá‰ª∂Â§π
+                //¥Úø™…œº∂Œƒº˛º–
                 try {
                     Runtime.getRuntime().exec("explorer.exe /select, \"" + name.getAbsolutePath() + "\"");
                 } catch (IOException ex) {
                     //ex.printStackTrace();
                 }
-
             }
         }
     }
@@ -1056,9 +1123,9 @@ public class SearchBar {
 
 
     /**
-     * Ëé∑ÂèñÁ®ãÂ∫èÂ∞èÂõæÊ†á
+     * ªÒ»°≥Ã–Ú–°Õº±Í
      *
-     * @param f Êñá‰ª∂Ë∑ØÂæÑ
+     * @param f Œƒº˛¬∑æ∂
      * @return icon
      */
     private static Icon getSmallIcon(File f) {
@@ -1071,8 +1138,12 @@ public class SearchBar {
 
 
     private ImageIcon changeIcon(ImageIcon icon, int width, int height) {
-        Image image = icon.getImage().getScaledInstance(width, height, Image.SCALE_DEFAULT);
-        return new ImageIcon(image);
+        try {
+            Image image = icon.getImage().getScaledInstance(width, height, Image.SCALE_DEFAULT);
+            return new ImageIcon(image);
+        }catch (NullPointerException e){
+            return null;
+        }
     }
 
     private void saveCache(String content) {
