@@ -6,12 +6,12 @@ public class CheckHotKey extends JFrame{
     public static boolean isShowSearachBar = false;
 
     /**
-     * åˆ©ç”¨JIntellitypeå®žçŽ°å…¨å±€çƒ­é”®è®¾ç½®
+     * ÀûÓÃJIntellitypeÊµÏÖÈ«¾ÖÈÈ¼üÉèÖÃ
      *
      */
         private static final long serialVersionUID = 1L;
 
-        //å®šä¹‰çƒ­é”®æ ‡è¯†ï¼Œç”¨äºŽåœ¨è®¾ç½®å¤šä¸ªçƒ­é”®æ—¶ï¼Œåœ¨äº‹ä»¶å¤„ç†ä¸­åŒºåˆ†ç”¨æˆ·æŒ‰ä¸‹çš„çƒ­é”®
+        //¶¨ÒåÈÈ¼ü±êÊ¶£¬ÓÃÓÚÔÚÉèÖÃ¶à¸öÈÈ¼üÊ±£¬ÔÚÊÂ¼þ´¦ÀíÖÐÇø·ÖÓÃ»§°´ÏÂµÄÈÈ¼ü
         public static final int FUNC_KEY_MARK = 1;
 
         public CheckHotKey() {
@@ -19,10 +19,10 @@ public class CheckHotKey extends JFrame{
             this.setLayout(null);
             this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-            //ç¬¬ä¸€æ­¥ï¼šæ³¨å†Œçƒ­é”®ï¼Œç¬¬ä¸€ä¸ªå‚æ•°è¡¨ç¤ºè¯¥çƒ­é”®çš„æ ‡è¯†ï¼Œç¬¬äºŒä¸ªå‚æ•°è¡¨ç¤ºç»„åˆé”®ï¼Œå¦‚æžœæ²¡æœ‰åˆ™ä¸º0ï¼Œç¬¬ä¸‰ä¸ªå‚æ•°ä¸ºå®šä¹‰çš„ä¸»è¦çƒ­é”®
+            //µÚÒ»²½£º×¢²áÈÈ¼ü£¬µÚÒ»¸ö²ÎÊý±íÊ¾¸ÃÈÈ¼üµÄ±êÊ¶£¬µÚ¶þ¸ö²ÎÊý±íÊ¾×éºÏ¼ü£¬Èç¹ûÃ»ÓÐÔòÎª0£¬µÚÈý¸ö²ÎÊýÎª¶¨ÒåµÄÖ÷ÒªÈÈ¼ü
             JIntellitype.getInstance().registerHotKey(FUNC_KEY_MARK, JIntellitype.MOD_CONTROL + JIntellitype.MOD_ALT, 'J');
 
-            //ç¬¬äºŒæ­¥ï¼šæ·»åŠ çƒ­é”®ç›‘å¬å™¨
+            //µÚ¶þ²½£ºÌí¼ÓÈÈ¼ü¼àÌýÆ÷
             JIntellitype.getInstance().addHotKeyListener(markCode -> {
                 if (markCode == FUNC_KEY_MARK) {
                     CheckHotKey.this.changeShowSearchBarStatus();

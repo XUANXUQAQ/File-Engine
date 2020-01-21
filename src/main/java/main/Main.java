@@ -13,7 +13,6 @@ import com.alibaba.fastjson.*;
 
 
 public class Main {
-	private static BufferedReader settingReader;
 	private static int updateTimeLimit = 600;
 	private static boolean mainExit = false;
 	private static String ignorePath;
@@ -51,8 +50,7 @@ public class Main {
 		TaskBar taskBar = new TaskBar();
 		ignorePath = "";
 		searchDepth = 0;
-		try {
-			settingReader = new BufferedReader(new FileReader(settings));
+		try(BufferedReader settingReader = new BufferedReader(new FileReader(settings));) {
 			String line;
 			StringBuilder result = new StringBuilder();
 			while ((line = settingReader.readLine()) != null){
@@ -66,12 +64,6 @@ public class Main {
 			//e1.printStackTrace();
 		} catch (IOException e) {
 			//e.printStackTrace();
-		}finally {
-			try {
-				settingReader.close();
-			} catch (IOException e) {
-				//e.printStackTrace();
-			}
 		}
 		ignorePath = ignorePath + "C:\\Config.Msi,C:\\Windows";
 
@@ -83,9 +75,9 @@ public class Main {
 
 
 
-		ExecutorService fixedThreadPool = Executors.newFixedThreadPool(3);
+		ExecutorService fixedThreadPool = Executors.newFixedThreadPool(4);
 		fixedThreadPool.execute(() -> {
-			// æ—¶é—´æ£€æµ‹çº¿ç¨‹
+			// Ê±¼ä¼ì²âÏß³Ì
 			int count = 0;
 			updateTimeLimit = updateTimeLimit * 1000;
 			while (!mainExit) {
@@ -103,7 +95,7 @@ public class Main {
 		});
 
 
-		//åˆ·æ–°å±å¹•çº¿ç¨‹
+		//Ë¢ÐÂÆÁÄ»Ïß³Ì
 		fixedThreadPool.execute(() ->{
 			Container panel = searchBar.getPanel();
 			while (!mainExit) {
@@ -117,12 +109,12 @@ public class Main {
 		});
 
 
-		//æœç´¢çº¿ç¨‹
+		//ËÑË÷Ïß³Ì
 		fixedThreadPool.execute(() ->{
 			Search search = new Search();
 			while (!mainExit){
 				if (search.isSearch()){
-					System.out.println("å·²æ”¶åˆ°æ›´æ–°è¯·æ±‚");
+					System.out.println("ÒÑÊÕµ½¸üÐÂÇëÇó");
 					Search.updateLists(ignorePath, searchDepth);
 				}
 				try {
@@ -133,9 +125,29 @@ public class Main {
 			}
 		});
 
+		/*
+		//¼à¿Øµ±Ç°Ïß³ÌÊý TODO ²âÊÔÊ±Ê¹ÓÃ
+		fixedThreadPool.execute(() -> {
+			while (!mainExit) {
+				ThreadGroup threadGroup = Thread.currentThread().getThreadGroup();
+				while (threadGroup.getParent() != null) {
+					threadGroup = threadGroup.getParent();
+				}
+				int totalThread = threadGroup.activeCount();
+				System.out.println("µ±Ç°Ïß³ÌÊý" + totalThread);
+				try {
+					Thread.sleep(100);
+				} catch (InterruptedException ignored) {
+
+				}
+			}
+		});
+
+		 */
+
 
 		while (true) {
-			// ä¸»å¾ªçŽ¯å¼€å§‹
+			// Ö÷Ñ­»·¿ªÊ¼
 			//System.out.println("isShowSearchBar:"+CheckHotKey.isShowSearachBar);
 			if (CheckHotKey.isShowSearachBar){
 				CheckHotKey.isShowSearachBar = false;

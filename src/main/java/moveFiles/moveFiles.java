@@ -8,11 +8,11 @@ import java.io.FileOutputStream;
 public class moveFiles {
     private String origin;
     private boolean deleteDir(File dir) {
-        // å¦‚æœæ˜¯æ–‡ä»¶å¤¹
+        // Èç¹ûÊÇÎÄ¼ş¼Ğ
         if (dir.isDirectory()) {
-            // åˆ™è¯»å‡ºè¯¥æ–‡ä»¶å¤¹ä¸‹çš„çš„æ‰€æœ‰æ–‡ä»¶
+            // Ôò¶Á³ö¸ÃÎÄ¼ş¼ĞÏÂµÄµÄËùÓĞÎÄ¼ş
             String[] children = dir.list();
-            // é€’å½’åˆ é™¤ç›®å½•ä¸­çš„å­ç›®å½•ä¸‹
+            // µİ¹éÉ¾³ıÄ¿Â¼ÖĞµÄ×ÓÄ¿Â¼ÏÂ
             assert children != null;
             for (String child : children) {
                 boolean isDelete = deleteDir(new File(dir, child));
@@ -28,17 +28,17 @@ public class moveFiles {
         }
     }
 
-    // å¤åˆ¶æŸä¸ªç›®å½•åŠç›®å½•ä¸‹çš„æ‰€æœ‰å­ç›®å½•å’Œæ–‡ä»¶åˆ°æ–°æ–‡ä»¶å¤¹
+    // ¸´ÖÆÄ³¸öÄ¿Â¼¼°Ä¿Â¼ÏÂµÄËùÓĞ×ÓÄ¿Â¼ºÍÎÄ¼şµ½ĞÂÎÄ¼ş¼Ğ
     private void copyFolder(String oldPath, String newPath) {
         try {
             (new File(newPath)).mkdirs();
-            // è¯»å–æ•´ä¸ªæ–‡ä»¶å¤¹çš„å†…å®¹åˆ°fileå­—ç¬¦ä¸²æ•°ç»„ï¼Œä¸‹é¢è®¾ç½®ä¸€ä¸ªæ¸¸æ ‡iï¼Œä¸åœåœ°å‘ä¸‹ç§»å¼€å§‹è¯»è¿™ä¸ªæ•°ç»„
+            // ¶ÁÈ¡Õû¸öÎÄ¼ş¼ĞµÄÄÚÈİµ½file×Ö·û´®Êı×é£¬ÏÂÃæÉèÖÃÒ»¸öÓÎ±êi£¬²»Í£µØÏòÏÂÒÆ¿ªÊ¼¶ÁÕâ¸öÊı×é
             File filelist = new File(oldPath);
             String[] file = filelist.list();
             File temp;
             assert file != null;
             for (String s : file) {
-                // å¦‚æœoldPathä»¥è·¯å¾„åˆ†éš”ç¬¦/æˆ–è€…\ç»“å°¾ï¼Œé‚£ä¹ˆåˆ™oldPath/æ–‡ä»¶åå°±å¯ä»¥äº†
+                // Èç¹ûoldPathÒÔÂ·¾¶·Ö¸ô·û/»òÕß\½áÎ²£¬ÄÇÃ´ÔòoldPath/ÎÄ¼şÃû¾Í¿ÉÒÔÁË
                 if (oldPath.endsWith(File.separator)) {
                     temp = new File(oldPath + s);
                 } else {
@@ -63,12 +63,12 @@ public class moveFiles {
                 }
             }
         } catch (Exception e) {
-            System.out.println("å¤åˆ¶æ•´ä¸ªæ–‡ä»¶å¤¹å†…å®¹æ“ä½œå‡ºé”™");
+            System.out.println("¸´ÖÆÕû¸öÎÄ¼ş¼ĞÄÚÈİ²Ù×÷³ö´í");
         }
     }
 
     public void moveFolder(String oldPath, String newPath) {
-        // å…ˆå¤åˆ¶æ–‡ä»¶
+        // ÏÈ¸´ÖÆÎÄ¼ş
         copyFolder(oldPath, newPath);
         origin = oldPath;
         deleteDir(new File(oldPath));

@@ -43,9 +43,8 @@ public class Search {
 	public static ArrayList<String> listUnderline = new ArrayList<>();
 	public static String startMenu = getStartMenu();
 	public static String desktop = FileSystemView.getFileSystemView().getHomeDirectory().getAbsolutePath();
-	public static String programs = "C:\\Program Files";
-	public static String programs86 = "C:\\Program Files (x86)";
 	private static boolean isSearch = false;
+	private static boolean isFirstRun = true;
 
 
 	public boolean isSearch(){
@@ -60,16 +59,6 @@ public class Search {
 		for (File root: roots) {
 			listRemain.add(root.getAbsolutePath());
 		}
-
-		File fileDesktop = FileSystemView.getFileSystemView().getHomeDirectory();
-		String startMenu = getStartMenu();
-		listRemain.add(startMenu);
-		listRemain.add(fileDesktop.getAbsolutePath());
-		listRemain.add(programs);
-		listRemain.add(programs86);
-		listRemain.add("C:\\Users\\Public\\Desktop");
-		String users = "C:\\Users";
-		listRemain.add(users);
 
 
 		while (!listRemain.isEmpty()) {
@@ -87,7 +76,7 @@ public class Search {
 		if ( exist && !isIgnore(path.getAbsolutePath().toUpperCase(), ignorePath)) {
 			File[] files = path.listFiles();
 			if (null == files || files.length == 0) {
-				//System.out.println("ç©ºç™½ç›®å½•");
+				//System.out.println("¿Õ°×Ä¿Â¼");
 			} else if (searchDepth >= count(path.getAbsolutePath(), "\\")||(path.getAbsolutePath().equals(startMenu))||path.getAbsolutePath().equals(desktop)) {
 				for (File file2 : files) {
 					String fileFullName = file2.getAbsolutePath();
@@ -313,8 +302,8 @@ public class Search {
 	}
 	/**
 	 *
-	 * @param srcText æºå­—ç¬¦ä¸²
-	 * @param findText éœ€è¦è®¡æ•°çš„å­—ç¬¦ä¸²
+	 * @param srcText Ô´×Ö·û´®
+	 * @param findText ĞèÒª¼ÆÊıµÄ×Ö·û´®
 	 * @return count
 	 */
 	public static int count(String srcText, String findText){
@@ -329,13 +318,13 @@ public class Search {
 
 	/**
 	 * @param target txt
-	 * txtæ˜¯å¦å±äºtargetçš„å­å­—ç¬¦ä¸²
+	 * txtÊÇ·ñÊôÓÚtargetµÄ×Ó×Ö·û´®
 	 * @return true false
 	 */
 	private static boolean isIgnore(String txt, String target) {
-		String[] list = target.split(",", count(target, ","));
+		String[] list = target.split(",");
 		for (String each : list) {
-			if (each.contains(txt)) {
+			if (txt.contains(each)) {
 				return true;
 			}
 		}
@@ -344,36 +333,40 @@ public class Search {
 
 
 	public static void updateLists(String ignorePath, int searchDepth) {
-		listA.clear();
-		listB.clear();
-		listC.clear();
-		listD.clear();
-		listE.clear();
-		listF.clear();
-		listG.clear();
-		listH.clear();
-		listI.clear();
-		listJ.clear();
-		listK.clear();
-		listL.clear();
-		listM.clear();
-		listN.clear();
-		listO.clear();
-		listP.clear();
-		listQ.clear();
-		listR.clear();
-		listS.clear();
-		listT.clear();
-		listU.clear();
-		listV.clear();
-		listW.clear();
-		listX.clear();
-		listY.clear();
-		listZ.clear();
-		listNum.clear();
-		listPercentSign.clear();
-		listUnique.clear();
-		listUnderline.clear();
+		if (!isFirstRun) {
+			listA.clear();
+			listB.clear();
+			listC.clear();
+			listD.clear();
+			listE.clear();
+			listF.clear();
+			listG.clear();
+			listH.clear();
+			listI.clear();
+			listJ.clear();
+			listK.clear();
+			listL.clear();
+			listM.clear();
+			listN.clear();
+			listO.clear();
+			listP.clear();
+			listQ.clear();
+			listR.clear();
+			listS.clear();
+			listT.clear();
+			listU.clear();
+			listV.clear();
+			listW.clear();
+			listX.clear();
+			listY.clear();
+			listZ.clear();
+			listNum.clear();
+			listPercentSign.clear();
+			listUnique.clear();
+			listUnderline.clear();
+		}else{
+			isFirstRun = false;
+		}
 		searchFile(ignorePath, searchDepth);
 	}
 }
