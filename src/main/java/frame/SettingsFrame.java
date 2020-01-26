@@ -21,6 +21,7 @@ public class SettingsFrame {
     private JLabel label1;
     private JLabel label2;
     JFrame frame = new JFrame("SettingsFrame");
+    private Search searchObj = new Search();
 
 
     public void showWindow() {
@@ -63,8 +64,8 @@ public class SettingsFrame {
             }
             JSONObject settings = JSON.parseObject(result.toString());
             cacheNumLimit = settings.getInteger("cacheNumLimit");
-        } catch (IOException e) {
-            //e.printStackTrace();
+        } catch (IOException ignored) {
+
         }
     }
 
@@ -115,8 +116,8 @@ public class SettingsFrame {
             int searchDepthInSettings = settings.getInteger("searchDepth");
             searchDepth = searchDepth + searchDepthInSettings;
             textField4.setText(searchDepth);
-        } catch (IOException e) {
-            //e.printStackTrace();
+        } catch (IOException ignored) {
+
         }
 
 
@@ -147,6 +148,10 @@ public class SettingsFrame {
             ignorePath = ignorePath.replaceAll("\n", "");
             String[] paths = ignorePath.split(",");
             if (!ignorePath.equals("")) {
+                if (ignorePath.contains("\\")){
+                    JOptionPane.showMessageDialog(null, "忽略文件夹格式错误，格式为   \nC:\\Windows,\nD\\Test,");
+                    return;
+                }
                 for (String each : paths) {
                     if (each.charAt(0) == ' ' || each.charAt(each.length() - 1) == ' ') {
                         JOptionPane.showMessageDialog(null, "忽略文件夹格式错误，格式为   \nC:\\Windows,\nD\\Test,");
@@ -172,8 +177,8 @@ public class SettingsFrame {
             allSettings.put("searchDepth", searchDepth);
             try(BufferedWriter buffW = new BufferedWriter(new FileWriter(settings))) {
                 buffW.write(allSettings.toJSONString());
-            } catch (IOException ex) {
-                //ex.printStackTrace();
+            } catch (IOException ignored) {
+
             }
         });
         checkBox1.addActionListener(e -> {
@@ -193,8 +198,8 @@ public class SettingsFrame {
                         checkBox1.setSelected(false);
                         JOptionPane.showMessageDialog(null, "添加到开机启动失败，请尝试以管理员身份运行");
                     }
-                } catch (IOException | InterruptedException ex) {
-                    //ex.printStackTrace();
+                } catch (IOException | InterruptedException ignored) {
+
                 }
             }else{
                 try {
@@ -235,7 +240,7 @@ public class SettingsFrame {
         });
         button2.addActionListener(e -> {
             String currentFolder = new File("").getAbsolutePath();
-            if (currentFolder.equals(Search.desktop) || currentFolder.equals("C:\\Users\\Public\\Desktop")){
+            if (currentFolder.equals(FileSystemView.getFileSystemView().getHomeDirectory().getAbsolutePath()) || currentFolder.equals("C:\\Users\\Public\\Desktop")){
                 JOptionPane.showMessageDialog(null, "检测到该程序在桌面，无法移动");
                 return;
             }
@@ -248,14 +253,14 @@ public class SettingsFrame {
         Button3.addActionListener(e -> {
             JFileChooser fileChooser = new JFileChooser();
             fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-            fileChooser.showDialog(new JLabel(), "选择");
+            int returnValue = fileChooser.showDialog(new JLabel(), "选择");
             File file = fileChooser.getSelectedFile();
-            if (file != null) {
+            if (file != null && returnValue == JFileChooser.APPROVE_OPTION) {
                 textArea1.append(file.getAbsolutePath() + ",\n");
             }
         });
     }
-    static class moveDesktopFiles implements Runnable{
+    class moveDesktopFiles implements Runnable{
 
         @Override
         public void run() {
@@ -267,7 +272,7 @@ public class SettingsFrame {
             moveFiles moveFiles = new moveFiles();
             moveFiles.moveFolder(fileDesktop.toString(), fileBackUp.getAbsolutePath());
             moveFiles.moveFolder("C:\\Users\\Public\\Desktop", fileBackUp.getAbsolutePath());
-            new Search().setSearch(true);
+            searchObj.setSearch(true);
         }
     }
 }

@@ -5,11 +5,11 @@ import java.awt.*;
 import java.io.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 import frame.*;
 import com.alibaba.fastjson.*;
 
+import javax.swing.*;
 
 
 public class Main {
@@ -17,6 +17,8 @@ public class Main {
 	private static boolean mainExit = false;
 	private static String ignorePath;
 	private static int searchDepth;
+	private static SearchBar searchBar;
+	private static Search search = new Search();
 	
 	
 	public static void main(String[] args) {
@@ -40,17 +42,20 @@ public class Main {
 		if (!caches.exists()){
 			try {
 				caches.createNewFile();
-			} catch (IOException ignored) {
-
+			} catch (IOException e) {
+				JOptionPane.showMessageDialog(null, "创建缓存文件失败，程序正在退出");
+				mainExit = true;
 			}
+
 		}
 		if (!files.exists()){
 			files.mkdir();
 		}
 		TaskBar taskBar = new TaskBar();
+		taskBar.showTaskBar();
 		ignorePath = "";
 		searchDepth = 0;
-		try(BufferedReader settingReader = new BufferedReader(new FileReader(settings));) {
+		try(BufferedReader settingReader = new BufferedReader(new FileReader(settings))) {
 			String line;
 			StringBuilder result = new StringBuilder();
 			while ((line = settingReader.readLine()) != null){
@@ -60,31 +65,30 @@ public class Main {
 			searchDepth = allSettings.getInteger("searchDepth");
 			ignorePath = allSettings.getString("ignorePath");
 			updateTimeLimit = allSettings.getInteger("updateTimeLimit");
-		} catch (FileNotFoundException e1) {
-			//e1.printStackTrace();
-		} catch (IOException e) {
-			//e.printStackTrace();
+		} catch (IOException ignored) {
+
 		}
 		ignorePath = ignorePath + "C:\\Config.Msi,C:\\Windows";
 
-		SearchBar searchBar = new SearchBar();
 		CheckHotKey HotKeyListener = new CheckHotKey();
 		SettingsFrame.initCacheLimit();
 
-		new Search().setSearch(true);
+		search.setSearch(true);
 
 
 
 		ExecutorService fixedThreadPool = Executors.newFixedThreadPool(4);
 		fixedThreadPool.execute(() -> {
-			// 时间检测线程
+			// 时间检测线程 兼 内存释放线程
 			int count = 0;
 			updateTimeLimit = updateTimeLimit * 1000;
 			while (!mainExit) {
 				count++;
 				if (count >= updateTimeLimit) {
 					count = 0;
-					new Search().setSearch(true);
+					System.out.println("正在发送更新请求并清理内存空间");
+					System.gc();
+					search.setSearch(true);
 				}
 				try {
 					Thread.sleep(1);
@@ -96,14 +100,20 @@ public class Main {
 
 
 		//刷新屏幕线程
-		fixedThreadPool.execute(() ->{
-			Container panel = searchBar.getPanel();
+		fixedThreadPool.execute(() -> {
+			Container panel;
 			while (!mainExit) {
-				panel.repaint();
 				try {
-					Thread.sleep(8);
-				} catch (InterruptedException e) {
-					//e.printStackTrace();
+					panel = searchBar.getPanel();
+					panel.repaint();
+				} catch (Exception ignored) {
+
+				}finally {
+					try {
+						Thread.sleep(50);
+					} catch (InterruptedException ignored) {
+
+					}
 				}
 			}
 		});
@@ -111,11 +121,10 @@ public class Main {
 
 		//搜索线程
 		fixedThreadPool.execute(() ->{
-			Search search = new Search();
 			while (!mainExit){
 				if (search.isSearch()){
 					System.out.println("已收到更新请求");
-					Search.updateLists(ignorePath, searchDepth);
+					search.updateLists(ignorePath, searchDepth);
 				}
 				try {
 					Thread.sleep(16);
@@ -125,50 +134,48 @@ public class Main {
 			}
 		});
 
-		/*
-		//监控当前线程数 TODO 测试时使用
-		fixedThreadPool.execute(() -> {
-			while (!mainExit) {
-				ThreadGroup threadGroup = Thread.currentThread().getThreadGroup();
-				while (threadGroup.getParent() != null) {
-					threadGroup = threadGroup.getParent();
+		fixedThreadPool.execute(()->{
+			//垃圾回收线程
+			int count = 1;
+			while (!mainExit){
+				if (search.isIsFocusLost() && count == 0){
+					count+=1;
+					System.out.println("检测到窗口失去焦点，进行垃圾回收");
+					System.gc();
+				}else if (!search.isIsFocusLost()){
+					count = 0;
 				}
-				int totalThread = threadGroup.activeCount();
-				System.out.println("当前线程数" + totalThread);
 				try {
-					Thread.sleep(100);
+					Thread.sleep(20);
 				} catch (InterruptedException ignored) {
 
 				}
 			}
 		});
 
-		 */
 
 
-		while (true) {
+		do {
 			// 主循环开始
-			//System.out.println("isShowSearchBar:"+CheckHotKey.isShowSearachBar);
-			if (CheckHotKey.isShowSearachBar){
-				CheckHotKey.isShowSearachBar = false;
-				searchBar.showSearchbar();
+			if (!search.isIsFocusLost()){
+				if (searchBar == null) {
+					searchBar = new SearchBar();
+					searchBar.showSearchbar();
+				}
+			}else{
+				if (searchBar != null) {
+					searchBar = null;
+				}
 			}
 			try {
-			Thread.sleep(100);
+				Thread.sleep(100);
 			} catch (InterruptedException e) {
 				//e.printStackTrace();
 			}
 			if (mainExit){
-				fixedThreadPool.shutdown();
-				while (!fixedThreadPool.isTerminated()) {
-					try {
-						TimeUnit.SECONDS.sleep(1);
-					} catch (InterruptedException ignored) {
-
-					}
-				}
-				System.exit(0);
+				fixedThreadPool.shutdownNow();
+				search.clearAll();
 			}
-		}
+		}while(!mainExit);
 	}
 }

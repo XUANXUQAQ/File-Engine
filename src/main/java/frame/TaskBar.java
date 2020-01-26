@@ -5,7 +5,7 @@ import javax.swing.*;
 
 
 public class TaskBar {
-    public TaskBar()
+    public void showTaskBar()
     {
         // 判断是否支持系统托盘
         if (SystemTray.isSupported())
