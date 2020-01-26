@@ -3,7 +3,6 @@ package frame;
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.filechooser.FileSystemView;
-
 import java.awt.*;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
@@ -11,15 +10,14 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.io.*;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
-
 import search.*;
 
 
 public class SearchBar {
     private JFrame searchBar = new JFrame();
+    private Container panel;
     private LinkedList<String> listResult = new LinkedList<>();
     private JLabel label1 = new JLabel();
     private JLabel label2 = new JLabel();
@@ -28,18 +26,32 @@ public class SearchBar {
     private boolean isCtrlPressed = false;
     private int labelCount = 0;
     private JTextField textField;
-    private Container panel;
+    private String path;
+    private Search search = new Search();
+    private Color labelColor = new Color(255, 125, 29, 255);
+    private LinkedList<String> list = new LinkedList<>();
     private Thread thread;
     private boolean isFirstRun = true;
 
 
-
-    private void addResult(ArrayList<String> list, String text) {
-        if (!new Search().isSearch()) {
+    private void addResult(LinkedList<String> list, String text) {
+        String[] strings = text.split(";");
+        String searchText = strings[0];
+        int length = strings.length;
+        if (!search.isSearch()) {
             for (String fileInList : list) {
-                if (match(getFileName(fileInList).toUpperCase(), text.toUpperCase())) {
+                if (length != 2 && match(getFileName(fileInList).toUpperCase(), searchText.toUpperCase())) {
                     listResult.add(fileInList);
-                    //System.out.println("adding "+fileInList.toString());
+                }else if (match(getFileName(fileInList).toUpperCase(), searchText.toUpperCase()) && length == 2){
+                    if (strings[1].toUpperCase().equals("FILE")){
+                        if (new File(fileInList).isFile()){
+                            listResult.add(fileInList);
+                        }
+                    }else if (strings[1].toUpperCase().equals("FOLDER")){
+                        if (new File(fileInList).isDirectory()){
+                            listResult.add(fileInList);
+                        }
+                    }
                 }
             }
         }
@@ -47,261 +59,559 @@ public class SearchBar {
         showResult();
     }
 
-
     class AddAllResult implements Runnable {
         private String text;
+        private String searchText;
+        private int length;
+        private String[] strings;
 
         AddAllResult(String txt) {
             this.text = txt.substring(1);
+            strings = this.text.split(";");
+            searchText = strings[0];
+            length = strings.length;
         }
 
         @Override
         public void run() {
-            if (!new Search().isSearch()) {
+            if (!search.isSearch()) {
                 if (!this.text.equals("")) {
-                    for (String fileInList : Search.listA) {
-                        if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase())) {
+                    for (String fileInList : search.getListA()) {
+                        if (length != 2 && match(getFileName(fileInList).toUpperCase(), searchText.toUpperCase())) {
                             listResult.add(fileInList);
-                            //System.out.println("adding "+fileInList.toString());
+                        }else if (match(getFileName(fileInList).toUpperCase(), searchText.toUpperCase()) && length == 2){
+                            if (strings[1].toUpperCase().equals("FILE")){
+                                if (new File(fileInList).isFile()){
+                                    listResult.add(fileInList);
+                                }
+                            }else if (strings[1].toUpperCase().equals("FOLDER")){
+                                if (new File(fileInList).isDirectory()){
+                                    listResult.add(fileInList);
+                                }
+                            }
                         }
                         if (Thread.currentThread().isInterrupted()){
                             return;
                         }
                     }
-                    for (String fileInList : Search.listB) {
-                        if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase())) {
+                    for (String fileInList : search.getListB()) {
+                        if (length != 2 && match(getFileName(fileInList).toUpperCase(), searchText.toUpperCase())) {
                             listResult.add(fileInList);
-                            //System.out.println("adding "+fileInList.toString());
+                        }else if (match(getFileName(fileInList).toUpperCase(), searchText.toUpperCase()) && length == 2){
+                            if (strings[1].toUpperCase().equals("FILE")){
+                                if (new File(fileInList).isFile()){
+                                    listResult.add(fileInList);
+                                }
+                            }else if (strings[1].toUpperCase().equals("FOLDER")){
+                                if (new File(fileInList).isDirectory()){
+                                    listResult.add(fileInList);
+                                }
+                            }
                         }
                         if (Thread.currentThread().isInterrupted()){
                             return;
                         }
                     }
-                    for (String fileInList : Search.listC) {
-                        if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase())) {
+                    for (String fileInList : search.getListC()) {
+                        if (length != 2 && match(getFileName(fileInList).toUpperCase(), searchText.toUpperCase())) {
                             listResult.add(fileInList);
-                            //System.out.println("adding "+fileInList.toString());
+                        }else if (match(getFileName(fileInList).toUpperCase(), searchText.toUpperCase()) && length == 2){
+                            if (strings[1].toUpperCase().equals("FILE")){
+                                if (new File(fileInList).isFile()){
+                                    listResult.add(fileInList);
+                                }
+                            }else if (strings[1].toUpperCase().equals("FOLDER")){
+                                if (new File(fileInList).isDirectory()){
+                                    listResult.add(fileInList);
+                                }
+                            }
                         }
                         if (Thread.currentThread().isInterrupted()){
                             return;
                         }
                     }
-                    for (String fileInList : Search.listD) {
-                        if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase())) {
+                    for (String fileInList : search.getListD()) {
+                        if (length != 2 && match(getFileName(fileInList).toUpperCase(), searchText.toUpperCase())) {
                             listResult.add(fileInList);
-                            //System.out.println("adding "+fileInList.toString());
+                        }else if (match(getFileName(fileInList).toUpperCase(), searchText.toUpperCase()) && length == 2){
+                            if (strings[1].toUpperCase().equals("FILE")){
+                                if (new File(fileInList).isFile()){
+                                    listResult.add(fileInList);
+                                }
+                            }else if (strings[1].toUpperCase().equals("FOLDER")){
+                                if (new File(fileInList).isDirectory()){
+                                    listResult.add(fileInList);
+                                }
+                            }
                         }
                         if (Thread.currentThread().isInterrupted()){
                             return;
                         }
                     }
-                    for (String fileInList : Search.listE) {
-                        if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase())) {
+                    for (String fileInList : search.getListE()) {
+                        if (length != 2 && match(getFileName(fileInList).toUpperCase(), searchText.toUpperCase())) {
                             listResult.add(fileInList);
-                            //System.out.println("adding "+fileInList.toString());
+                        }else if (match(getFileName(fileInList).toUpperCase(), searchText.toUpperCase()) && length == 2){
+                            if (strings[1].toUpperCase().equals("FILE")){
+                                if (new File(fileInList).isFile()){
+                                    listResult.add(fileInList);
+                                }
+                            }else if (strings[1].toUpperCase().equals("FOLDER")){
+                                if (new File(fileInList).isDirectory()){
+                                    listResult.add(fileInList);
+                                }
+                            }
                         }
                         if (Thread.currentThread().isInterrupted()){
                             return;
                         }
                     }
-                    for (String fileInList : Search.listF) {
-                        if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase())) {
+                    for (String fileInList : search.getListF()) {
+                        if (length != 2 && match(getFileName(fileInList).toUpperCase(), searchText.toUpperCase())) {
                             listResult.add(fileInList);
-                            //System.out.println("adding "+fileInList.toString());
+                        }else if (match(getFileName(fileInList).toUpperCase(), searchText.toUpperCase()) && length == 2){
+                            if (strings[1].toUpperCase().equals("FILE")){
+                                if (new File(fileInList).isFile()){
+                                    listResult.add(fileInList);
+                                }
+                            }else if (strings[1].toUpperCase().equals("FOLDER")){
+                                if (new File(fileInList).isDirectory()){
+                                    listResult.add(fileInList);
+                                }
+                            }
                         }
                         if (Thread.currentThread().isInterrupted()){
                             return;
                         }
                     }
-                    for (String fileInList : Search.listG) {
-                        if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase())) {
+                    for (String fileInList : search.getListG()) {
+                        if (length != 2 && match(getFileName(fileInList).toUpperCase(), searchText.toUpperCase())) {
                             listResult.add(fileInList);
-                            //System.out.println("adding "+fileInList.toString());
+                        }else if (match(getFileName(fileInList).toUpperCase(), searchText.toUpperCase()) && length == 2){
+                            if (strings[1].toUpperCase().equals("FILE")){
+                                if (new File(fileInList).isFile()){
+                                    listResult.add(fileInList);
+                                }
+                            }else if (strings[1].toUpperCase().equals("FOLDER")){
+                                if (new File(fileInList).isDirectory()){
+                                    listResult.add(fileInList);
+                                }
+                            }
+                        }
+                        if (Thread.currentThread().isInterrupted()){
+                            return;
+                        }
+                    }
+                    for (String fileInList : search.getListH()) {
+                        if (length != 2 && match(getFileName(fileInList).toUpperCase(), searchText.toUpperCase())) {
+                            listResult.add(fileInList);
+                        }else if (match(getFileName(fileInList).toUpperCase(), searchText.toUpperCase()) && length == 2){
+                            if (strings[1].toUpperCase().equals("FILE")){
+                                if (new File(fileInList).isFile()){
+                                    listResult.add(fileInList);
+                                }
+                            }else if (strings[1].toUpperCase().equals("FOLDER")){
+                                if (new File(fileInList).isDirectory()){
+                                    listResult.add(fileInList);
+                                }
+                            }
+                        }
+                        if (Thread.currentThread().isInterrupted()){
+                            return;
+                        }
+                    }
+                    for (String fileInList : search.getListI()) {
+                        if (length != 2 && match(getFileName(fileInList).toUpperCase(), searchText.toUpperCase())) {
+                            listResult.add(fileInList);
+                        }else if (match(getFileName(fileInList).toUpperCase(), searchText.toUpperCase()) && length == 2){
+                            if (strings[1].toUpperCase().equals("FILE")){
+                                if (new File(fileInList).isFile()){
+                                    listResult.add(fileInList);
+                                }
+                            }else if (strings[1].toUpperCase().equals("FOLDER")){
+                                if (new File(fileInList).isDirectory()){
+                                    listResult.add(fileInList);
+                                }
+                            }
+                        }
+                        if (Thread.currentThread().isInterrupted()){
+                            return;
+                        }
+                    }
+                    for (String fileInList : search.getListJ()) {
+                        if (length != 2 && match(getFileName(fileInList).toUpperCase(), searchText.toUpperCase())) {
+                            listResult.add(fileInList);
+                        }else if (match(getFileName(fileInList).toUpperCase(), searchText.toUpperCase()) && length == 2){
+                            if (strings[1].toUpperCase().equals("FILE")){
+                                if (new File(fileInList).isFile()){
+                                    listResult.add(fileInList);
+                                }
+                            }else if (strings[1].toUpperCase().equals("FOLDER")){
+                                if (new File(fileInList).isDirectory()){
+                                    listResult.add(fileInList);
+                                }
+                            }
+                        }
+                        if (Thread.currentThread().isInterrupted()){
+                            return;
+                        }
+                    }
+                    for (String fileInList : search.getListK()) {
+                        if (length != 2 && match(getFileName(fileInList).toUpperCase(), searchText.toUpperCase())) {
+                            listResult.add(fileInList);
+                        }else if (match(getFileName(fileInList).toUpperCase(), searchText.toUpperCase()) && length == 2){
+                            if (strings[1].toUpperCase().equals("FILE")){
+                                if (new File(fileInList).isFile()){
+                                    listResult.add(fileInList);
+                                }
+                            }else if (strings[1].toUpperCase().equals("FOLDER")){
+                                if (new File(fileInList).isDirectory()){
+                                    listResult.add(fileInList);
+                                }
+                            }
+                        }
+                        if (Thread.currentThread().isInterrupted()){
+                            return;
+                        }
+                    }
+                    for (String fileInList : search.getListL()) {
+                        if (length != 2 && match(getFileName(fileInList).toUpperCase(), searchText.toUpperCase())) {
+                            listResult.add(fileInList);
+                        }else if (match(getFileName(fileInList).toUpperCase(), searchText.toUpperCase()) && length == 2){
+                            if (strings[1].toUpperCase().equals("FILE")){
+                                if (new File(fileInList).isFile()){
+                                    listResult.add(fileInList);
+                                }
+                            }else if (strings[1].toUpperCase().equals("FOLDER")){
+                                if (new File(fileInList).isDirectory()){
+                                    listResult.add(fileInList);
+                                }
+                            }
+                        }
+                        if (Thread.currentThread().isInterrupted()){
+                            return;
+                        }
+                    }
+                    for (String fileInList : search.getListM()) {
+                        if (length != 2 && match(getFileName(fileInList).toUpperCase(), searchText.toUpperCase())) {
+                            listResult.add(fileInList);
+                        }else if (match(getFileName(fileInList).toUpperCase(), searchText.toUpperCase()) && length == 2){
+                            if (strings[1].toUpperCase().equals("FILE")){
+                                if (new File(fileInList).isFile()){
+                                    listResult.add(fileInList);
+                                }
+                            }else if (strings[1].toUpperCase().equals("FOLDER")){
+                                if (new File(fileInList).isDirectory()){
+                                    listResult.add(fileInList);
+                                }
+                            }
+                        }
+                        if (Thread.currentThread().isInterrupted()){
+                            return;
+                        }
+                    }
+                    for (String fileInList : search.getListN()) {
+                        if (length != 2 && match(getFileName(fileInList).toUpperCase(), searchText.toUpperCase())) {
+                            listResult.add(fileInList);
+                        }else if (match(getFileName(fileInList).toUpperCase(), searchText.toUpperCase()) && length == 2){
+                            if (strings[1].toUpperCase().equals("FILE")){
+                                if (new File(fileInList).isFile()){
+                                    listResult.add(fileInList);
+                                }
+                            }else if (strings[1].toUpperCase().equals("FOLDER")){
+                                if (new File(fileInList).isDirectory()){
+                                    listResult.add(fileInList);
+                                }
+                            }
+                        }
+                        if (Thread.currentThread().isInterrupted()){
+                            return;
+                        }
+                    }
+                    for (String fileInList : search.getListO()) {
+                        if (length != 2 && match(getFileName(fileInList).toUpperCase(), searchText.toUpperCase())) {
+                            listResult.add(fileInList);
+                        }else if (match(getFileName(fileInList).toUpperCase(), searchText.toUpperCase()) && length == 2){
+                            if (strings[1].toUpperCase().equals("FILE")){
+                                if (new File(fileInList).isFile()){
+                                    listResult.add(fileInList);
+                                }
+                            }else if (strings[1].toUpperCase().equals("FOLDER")){
+                                if (new File(fileInList).isDirectory()){
+                                    listResult.add(fileInList);
+                                }
+                            }
+                        }
+                        if (Thread.currentThread().isInterrupted()){
+                            return;
+                        }
+                    }
+                    for (String fileInList : search.getListP()) {
+                        if (length != 2 && match(getFileName(fileInList).toUpperCase(), searchText.toUpperCase())) {
+                            listResult.add(fileInList);
+                        }else if (match(getFileName(fileInList).toUpperCase(), searchText.toUpperCase()) && length == 2){
+                            if (strings[1].toUpperCase().equals("FILE")){
+                                if (new File(fileInList).isFile()){
+                                    listResult.add(fileInList);
+                                }
+                            }else if (strings[1].toUpperCase().equals("FOLDER")){
+                                if (new File(fileInList).isDirectory()){
+                                    listResult.add(fileInList);
+                                }
+                            }
+                        }
+                        if (Thread.currentThread().isInterrupted()){
+                            return;
+                        }
+                    }
+                    for (String fileInList : search.getListQ()) {
+                        if (length != 2 && match(getFileName(fileInList).toUpperCase(), searchText.toUpperCase())) {
+                            listResult.add(fileInList);
+                        }else if (match(getFileName(fileInList).toUpperCase(), searchText.toUpperCase()) && length == 2){
+                            if (strings[1].toUpperCase().equals("FILE")){
+                                if (new File(fileInList).isFile()){
+                                    listResult.add(fileInList);
+                                }
+                            }else if (strings[1].toUpperCase().equals("FOLDER")){
+                                if (new File(fileInList).isDirectory()){
+                                    listResult.add(fileInList);
+                                }
+                            }
+                        }
+                        if (Thread.currentThread().isInterrupted()){
+                            return;
+                        }
+                    }
+                    for (String fileInList : search.getListR()) {
+                        if (length != 2 && match(getFileName(fileInList).toUpperCase(), searchText.toUpperCase())) {
+                            listResult.add(fileInList);
+                        }else if (match(getFileName(fileInList).toUpperCase(), searchText.toUpperCase()) && length == 2){
+                            if (strings[1].toUpperCase().equals("FILE")){
+                                if (new File(fileInList).isFile()){
+                                    listResult.add(fileInList);
+                                }
+                            }else if (strings[1].toUpperCase().equals("FOLDER")){
+                                if (new File(fileInList).isDirectory()){
+                                    listResult.add(fileInList);
+                                }
+                            }
+                        }
+                        if (Thread.currentThread().isInterrupted()){
+                            return;
+                        }
+                    }
+                    for (String fileInList : search.getListS()) {
+                        if (length != 2 && match(getFileName(fileInList).toUpperCase(), searchText.toUpperCase())) {
+                            listResult.add(fileInList);
+                        }else if (match(getFileName(fileInList).toUpperCase(), searchText.toUpperCase()) && length == 2){
+                            if (strings[1].toUpperCase().equals("FILE")){
+                                if (new File(fileInList).isFile()){
+                                    listResult.add(fileInList);
+                                }
+                            }else if (strings[1].toUpperCase().equals("FOLDER")){
+                                if (new File(fileInList).isDirectory()){
+                                    listResult.add(fileInList);
+                                }
+                            }
+                        }
+                        if (Thread.currentThread().isInterrupted()){
+                            return;
+                        }
+                    }
+                    for (String fileInList : search.getListT()) {
+                        if (length != 2 && match(getFileName(fileInList).toUpperCase(), searchText.toUpperCase())) {
+                            listResult.add(fileInList);
+                        }else if (match(getFileName(fileInList).toUpperCase(), searchText.toUpperCase()) && length == 2){
+                            if (strings[1].toUpperCase().equals("FILE")){
+                                if (new File(fileInList).isFile()){
+                                    listResult.add(fileInList);
+                                }
+                            }else if (strings[1].toUpperCase().equals("FOLDER")){
+                                if (new File(fileInList).isDirectory()){
+                                    listResult.add(fileInList);
+                                }
+                            }
+                        }
+                        if (Thread.currentThread().isInterrupted()){
+                            return;
+                        }
+                    }
+                    for (String fileInList : search.getListU()) {
+                        if (length != 2 && match(getFileName(fileInList).toUpperCase(), searchText.toUpperCase())) {
+                            listResult.add(fileInList);
+                        }else if (match(getFileName(fileInList).toUpperCase(), searchText.toUpperCase()) && length == 2){
+                            if (strings[1].toUpperCase().equals("FILE")){
+                                if (new File(fileInList).isFile()){
+                                    listResult.add(fileInList);
+                                }
+                            }else if (strings[1].toUpperCase().equals("FOLDER")){
+                                if (new File(fileInList).isDirectory()){
+                                    listResult.add(fileInList);
+                                }
+                            }
+                        }
+                        if (Thread.currentThread().isInterrupted()){
+                            return;
+                        }
+                    }
+                    for (String fileInList : search.getListV()) {
+                        if (length != 2 && match(getFileName(fileInList).toUpperCase(), searchText.toUpperCase())) {
+                            listResult.add(fileInList);
+                        }else if (match(getFileName(fileInList).toUpperCase(), searchText.toUpperCase()) && length == 2){
+                            if (strings[1].toUpperCase().equals("FILE")){
+                                if (new File(fileInList).isFile()){
+                                    listResult.add(fileInList);
+                                }
+                            }else if (strings[1].toUpperCase().equals("FOLDER")){
+                                if (new File(fileInList).isDirectory()){
+                                    listResult.add(fileInList);
+                                }
+                            }
+                        }
+                        if (Thread.currentThread().isInterrupted()){
+                            return;
+                        }
+                    }
+                    for (String fileInList : search.getListW()) {
+                        if (length != 2 && match(getFileName(fileInList).toUpperCase(), searchText.toUpperCase())) {
+                            listResult.add(fileInList);
+                        }else if (match(getFileName(fileInList).toUpperCase(), searchText.toUpperCase()) && length == 2){
+                            if (strings[1].toUpperCase().equals("FILE")){
+                                if (new File(fileInList).isFile()){
+                                    listResult.add(fileInList);
+                                }
+                            }else if (strings[1].toUpperCase().equals("FOLDER")){
+                                if (new File(fileInList).isDirectory()){
+                                    listResult.add(fileInList);
+                                }
+                            }
+                        }
+                        if (Thread.currentThread().isInterrupted()){
+                            return;
+                        }
+                    }
+                    for (String fileInList : search.getListX()) {
+                        if (length != 2 && match(getFileName(fileInList).toUpperCase(), searchText.toUpperCase())) {
+                            listResult.add(fileInList);
+                        }else if (match(getFileName(fileInList).toUpperCase(), searchText.toUpperCase()) && length == 2){
+                            if (strings[1].toUpperCase().equals("FILE")){
+                                if (new File(fileInList).isFile()){
+                                    listResult.add(fileInList);
+                                }
+                            }else if (strings[1].toUpperCase().equals("FOLDER")){
+                                if (new File(fileInList).isDirectory()){
+                                    listResult.add(fileInList);
+                                }
+                            }
                         }if (Thread.currentThread().isInterrupted()){
                             return;
                         }
                     }
-                    for (String fileInList : Search.listH) {
-                        if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase())) {
+                    for (String fileInList : search.getListY()) {
+                        if (length != 2 && match(getFileName(fileInList).toUpperCase(), searchText.toUpperCase())) {
                             listResult.add(fileInList);
-                            //System.out.println("adding "+fileInList.toString());
-                        }if (Thread.currentThread().isInterrupted()){
+                        }else if (match(getFileName(fileInList).toUpperCase(), searchText.toUpperCase()) && length == 2){
+                            if (strings[1].toUpperCase().equals("FILE")){
+                                if (new File(fileInList).isFile()){
+                                    listResult.add(fileInList);
+                                }
+                            }else if (strings[1].toUpperCase().equals("FOLDER")){
+                                if (new File(fileInList).isDirectory()){
+                                    listResult.add(fileInList);
+                                }
+                            }
+                        }
+                        if (Thread.currentThread().isInterrupted()){
                             return;
                         }
                     }
-                    for (String fileInList : Search.listI) {
-                        if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase())) {
+                    for (String fileInList : search.getListZ()) {
+                        if (length != 2 && match(getFileName(fileInList).toUpperCase(), searchText.toUpperCase())) {
                             listResult.add(fileInList);
-                            //System.out.println("adding "+fileInList.toString());
-                        }if (Thread.currentThread().isInterrupted()){
+                        }else if (match(getFileName(fileInList).toUpperCase(), searchText.toUpperCase()) && length == 2){
+                            if (strings[1].toUpperCase().equals("FILE")){
+                                if (new File(fileInList).isFile()){
+                                    listResult.add(fileInList);
+                                }
+                            }else if (strings[1].toUpperCase().equals("FOLDER")){
+                                if (new File(fileInList).isDirectory()){
+                                    listResult.add(fileInList);
+                                }
+                            }
+                        }
+                        if (Thread.currentThread().isInterrupted()){
                             return;
                         }
                     }
-                    for (String fileInList : Search.listJ) {
-                        if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase())) {
+                    for (String fileInList : search.getListNum()) {
+                        if (length != 2 && match(getFileName(fileInList).toUpperCase(), searchText.toUpperCase())) {
                             listResult.add(fileInList);
-                            //System.out.println("adding "+fileInList.toString());
-                        }if (Thread.currentThread().isInterrupted()){
+                        }else if (match(getFileName(fileInList).toUpperCase(), searchText.toUpperCase()) && length == 2){
+                            if (strings[1].toUpperCase().equals("FILE")){
+                                if (new File(fileInList).isFile()){
+                                    listResult.add(fileInList);
+                                }
+                            }else if (strings[1].toUpperCase().equals("FOLDER")){
+                                if (new File(fileInList).isDirectory()){
+                                    listResult.add(fileInList);
+                                }
+                            }
+                        }
+                        if (Thread.currentThread().isInterrupted()){
                             return;
                         }
                     }
-                    for (String fileInList : Search.listK) {
-                        if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase())) {
+                    for (String fileInList : search.getListPercentSign()) {
+                        if (length != 2 && match(getFileName(fileInList).toUpperCase(), searchText.toUpperCase())) {
                             listResult.add(fileInList);
-                            //System.out.println("adding "+fileInList.toString());
-                        }if (Thread.currentThread().isInterrupted()){
+                        }else if (match(getFileName(fileInList).toUpperCase(), searchText.toUpperCase()) && length == 2){
+                            if (strings[1].toUpperCase().equals("FILE")){
+                                if (new File(fileInList).isFile()){
+                                    listResult.add(fileInList);
+                                }
+                            }else if (strings[1].toUpperCase().equals("FOLDER")){
+                                if (new File(fileInList).isDirectory()){
+                                    listResult.add(fileInList);
+                                }
+                            }
+                        }
+                        if (Thread.currentThread().isInterrupted()){
                             return;
                         }
                     }
-                    for (String fileInList : Search.listL) {
-                        if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase())) {
+                    for (String fileInList : search.getListUnderline()) {
+                        if (length != 2 && match(getFileName(fileInList).toUpperCase(), searchText.toUpperCase())) {
                             listResult.add(fileInList);
-                            //System.out.println("adding "+fileInList.toString());
-                        }if (Thread.currentThread().isInterrupted()){
+                        }else if (match(getFileName(fileInList).toUpperCase(), searchText.toUpperCase()) && length == 2){
+                            if (strings[1].toUpperCase().equals("FILE")){
+                                if (new File(fileInList).isFile()){
+                                    listResult.add(fileInList);
+                                }
+                            }else if (strings[1].toUpperCase().equals("FOLDER")){
+                                if (new File(fileInList).isDirectory()){
+                                    listResult.add(fileInList);
+                                }
+                            }
+                        }
+                        if (Thread.currentThread().isInterrupted()){
                             return;
                         }
                     }
-                    for (String fileInList : Search.listM) {
-                        if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase())) {
+                    for (String fileInList : search.getListUnique()) {
+                        if (length != 2 && match(getFileName(fileInList).toUpperCase(), searchText.toUpperCase())) {
                             listResult.add(fileInList);
-                            //System.out.println("adding "+fileInList.toString());
-                        }if (Thread.currentThread().isInterrupted()){
-                            return;
+                        }else if (match(getFileName(fileInList).toUpperCase(), searchText.toUpperCase()) && length == 2){
+                            if (strings[1].toUpperCase().equals("FILE")){
+                                if (new File(fileInList).isFile()){
+                                    listResult.add(fileInList);
+                                }
+                            }else if (strings[1].toUpperCase().equals("FOLDER")){
+                                if (new File(fileInList).isDirectory()){
+                                    listResult.add(fileInList);
+                                }
+                            }
                         }
-                    }
-                    for (String fileInList : Search.listN) {
-                        if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase())) {
-                            listResult.add(fileInList);
-                            //System.out.println("adding "+fileInList.toString());
-                        }if (Thread.currentThread().isInterrupted()){
-                            return;
-                        }
-                    }
-                    for (String fileInList : Search.listO) {
-                        if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase())) {
-                            listResult.add(fileInList);
-                            //System.out.println("adding "+fileInList.toString());
-                        }if (Thread.currentThread().isInterrupted()){
-                            return;
-                        }
-                    }
-                    for (String fileInList : Search.listP) {
-                        if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase())) {
-                            listResult.add(fileInList);
-                            //System.out.println("adding "+fileInList.toString());
-                        }if (Thread.currentThread().isInterrupted()){
-                            return;
-                        }
-                    }
-                    for (String fileInList : Search.listQ) {
-                        if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase())) {
-                            listResult.add(fileInList);
-                            //System.out.println("adding "+fileInList.toString());
-                        }if (Thread.currentThread().isInterrupted()){
-                            return;
-                        }
-                    }
-                    for (String fileInList : Search.listR) {
-                        if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase())) {
-                            listResult.add(fileInList);
-                            //System.out.println("adding "+fileInList.toString());
-                        }if (Thread.currentThread().isInterrupted()){
-                            return;
-                        }
-                    }
-                    for (String fileInList : Search.listS) {
-                        if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase())) {
-                            listResult.add(fileInList);
-                            //System.out.println("adding "+fileInList.toString());
-                        }if (Thread.currentThread().isInterrupted()){
-                            return;
-                        }
-                    }
-                    for (String fileInList : Search.listT) {
-                        if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase())) {
-                            listResult.add(fileInList);
-                            //System.out.println("adding "+fileInList.toString());
-                        }if (Thread.currentThread().isInterrupted()){
-                            return;
-                        }
-                    }
-                    for (String fileInList : Search.listU) {
-                        if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase())) {
-                            listResult.add(fileInList);
-                            //System.out.println("adding "+fileInList.toString());
-                        }if (Thread.currentThread().isInterrupted()){
-                            return;
-                        }
-                    }
-                    for (String fileInList : Search.listV) {
-                        if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase())) {
-                            listResult.add(fileInList);
-                            //System.out.println("adding "+fileInList.toString());
-                        }if (Thread.currentThread().isInterrupted()){
-                            return;
-                        }
-                    }
-                    for (String fileInList : Search.listW) {
-                        if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase())) {
-                            listResult.add(fileInList);
-                            //System.out.println("adding "+fileInList.toString());
-                        }if (Thread.currentThread().isInterrupted()){
-                            return;
-                        }
-                    }
-                    for (String fileInList : Search.listX) {
-                        if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase())) {
-                            listResult.add(fileInList);
-                            //System.out.println("adding "+fileInList.toString());
-                        }if (Thread.currentThread().isInterrupted()){
-                            return;
-                        }
-                    }
-                    for (String fileInList : Search.listY) {
-                        if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase())) {
-                            listResult.add(fileInList);
-                            //System.out.println("adding "+fileInList.toString());
-                        }if (Thread.currentThread().isInterrupted()){
-                            return;
-                        }
-                    }
-                    for (String fileInList : Search.listZ) {
-                        if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase())) {
-                            listResult.add(fileInList);
-                            //System.out.println("adding "+fileInList.toString());
-                        }if (Thread.currentThread().isInterrupted()){
-                            return;
-                        }
-                    }
-                    for (String fileInList : Search.listNum) {
-                        if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase())) {
-                            listResult.add(fileInList);
-                            //System.out.println("adding "+fileInList.toString());
-                        }if (Thread.currentThread().isInterrupted()){
-                            return;
-                        }
-                    }
-                    for (String fileInList : Search.listPercentSign) {
-                        if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase())) {
-                            listResult.add(fileInList);
-                            //System.out.println("adding "+fileInList.toString());
-                        }if (Thread.currentThread().isInterrupted()){
-                            return;
-                        }
-                    }
-                    for (String fileInList : Search.listUnderline) {
-                        if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase())) {
-                            listResult.add(fileInList);
-                            //System.out.println("adding "+fileInList.toString());
-                        }if (Thread.currentThread().isInterrupted()){
-                            return;
-                        }
-                    }
-                    for (String fileInList : Search.listUnique) {
-                        if (match(getFileName(fileInList).toUpperCase(), this.text.toUpperCase())) {
-                            listResult.add(fileInList);
-                            //System.out.println("adding "+fileInList.toString());
-                        }if (Thread.currentThread().isInterrupted()){
+                        if (Thread.currentThread().isInterrupted()){
                             return;
                         }
                     }
@@ -315,7 +625,6 @@ public class SearchBar {
     }
 
 
-
     public SearchBar() {
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize(); // 获取屏幕大小
         int width = screenSize.width;
@@ -325,20 +634,23 @@ public class SearchBar {
         int searchBarWidth = (int) (width * 0.7);
         int searchBarHeight = (int) (height * 0.5);
 
+
+
+
         //frame
         searchBar.setBounds(positionX, positionY, searchBarWidth, searchBarHeight);
         searchBar.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
         searchBar.setUndecorated(true);
         searchBar.setBackground(null);
         searchBar.setOpacity(0.8f);
-
         panel = searchBar.getContentPane();
 
 
         //TextField
         textField = new JTextField(300);
         textField.setSize(searchBarWidth, (int) (searchBarHeight * 0.2));
-        textField.setFont(new Font("微软雅黑", Font.BOLD, (int) ((height * 0.1) / 96 * 72)));
+        Font textFieldFont = new Font("Microsoft JhengHei", Font.BOLD, (int) ((height * 0.1) / 96 * 72));
+        textField.setFont(textFieldFont);
         textField.setForeground(Color.white);
         textField.setHorizontalAlignment(JTextField.LEFT);
         textField.setBorder(null);
@@ -354,25 +666,23 @@ public class SearchBar {
             @Override
             public void focusLost(FocusEvent arg0) {
                 searchBar.setVisible(false);
-                clearLabel();
-                labelCount = 0;
-                listResult.clear();
-                textField.setText(null);
+                search.setFocusLostStatus(true);
+                search = null;
             }
         });
-        //当textField文本变动时开始
+        //当textField文件变动时开始
         textField.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
             @Override
             public void insertUpdate(DocumentEvent arg0) {
                 labelCount = 0;
                 clearLabel();
-                label1.setBackground(new Color(255, 125, 29, 255));
+                label1.setBackground(labelColor);
                 listResult.clear();
                 String text = textField.getText();
                 if (!text.equals("")) {
                     if (text.equals("#*update*#")) {
                         clearTextFieldText();
-                        new Search().setSearch(true);
+                        search.setSearch(true);
                         return;
                     }
                     text = text.toUpperCase();
@@ -382,157 +692,172 @@ public class SearchBar {
                     if ('?' == firstWord) {
                         if (isFirstRun || !thread.isAlive()) {
                             isFirstRun = false;
-                        }else{
+                        } else {
                             thread.interrupt();
                         }
                         thread = new Thread(new AddAllResult(text));
                         thread.start();
+                    } else if (19968 <= (int) firstWord && (int) firstWord < 40869) {
+                        list = (search.getListUnique());
+                        addResult(list, text);
 
-                    } else {
-                        if (19968 <= (int) firstWord && (int) firstWord < 40869) {
-                            addResult(Search.listUnique, text);
+                    } else if ('%' == firstWord) {
+                        list = (search.getListPercentSign());
+                        addResult(list, text);
+                    } else if ('_' == firstWord) {
+                        list = (search.getListUnderline());
+                        addResult(list, text);
 
-                        } else if ('%' == firstWord) {
+                    } else if (Character.isDigit(firstWord)) {
+                        list = (search.getListNum());
+                        addResult(list, text);
 
-                            addResult(Search.listPercentSign, text);
+                    } else if (Character.isAlphabetic(firstWord)) {
+                        firstWord = Character.toUpperCase(firstWord);
+                        if ('A' == firstWord) {
+                            list = (search.getListA());
+                            addResult(list, text);
 
-                        } else if ('_' == firstWord) {
 
-                            addResult(Search.listUnderline, text);
+                        } else if ('B' == firstWord) {
+                            list = (search.getListB());
 
-                        } else if (Character.isDigit(firstWord)) {
+                            addResult(list, text);
 
-                            addResult(Search.listNum, text);
 
+                        } else if ('C' == firstWord) {
+                            list = (search.getListC());
 
-                        } else if (Character.isAlphabetic(firstWord)) {
-                            firstWord = Character.toUpperCase(firstWord);
-                            if ('A' == firstWord) {
-                                addResult(Search.listA, text);
+                            addResult(list, text);
 
 
-                            } else if ('B' == firstWord) {
+                        } else if ('D' == firstWord) {
+                            list = (search.getListD());
 
-                                addResult(Search.listB, text);
+                            addResult(list, text);
 
 
-                            } else if ('C' == firstWord) {
+                        } else if ('E' == firstWord) {
+                            list = (search.getListE());
+                            addResult(list, text);
 
-                                addResult(Search.listC, text);
 
+                        } else if ('F' == firstWord) {
+                            list = (search.getListF());
 
-                            } else if ('D' == firstWord) {
+                            addResult(list, text);
 
-                                addResult(Search.listD, text);
 
+                        } else if ('G' == firstWord) {
+                            list = (search.getListG());
 
-                            } else if ('E' == firstWord) {
-                                addResult(Search.listE, text);
+                            addResult(list, text);
 
 
-                            } else if ('F' == firstWord) {
+                        } else if ('H' == firstWord) {
+                            list = (search.getListH());
+                            addResult(list, text);
 
-                                addResult(Search.listF, text);
 
+                        } else if ('I' == firstWord) {
+                            list = (search.getListI());
 
-                            } else if ('G' == firstWord) {
+                            addResult(list, text);
 
-                                addResult(Search.listG, text);
 
+                        } else if ('J' == firstWord) {
+                            list = (search.getListJ());
+                            addResult(list, text);
 
-                            } else if ('H' == firstWord) {
 
-                                addResult(Search.listH, text);
+                        } else if ('K' == firstWord) {
+                            list = (search.getListK());
 
+                            addResult(list, text);
 
-                            } else if ('I' == firstWord) {
 
-                                addResult(Search.listI, text);
+                        } else if ('L' == firstWord) {
+                            list = (search.getListL());
 
+                            addResult(list, text);
 
-                            } else if ('J' == firstWord) {
-                                addResult(Search.listJ, text);
 
+                        } else if ('M' == firstWord) {
+                            list = (search.getListM());
 
-                            } else if ('K' == firstWord) {
+                            addResult(list, text);
 
-                                addResult(Search.listK, text);
 
+                        } else if ('N' == firstWord) {
+                            list = (search.getListN());
 
-                            } else if ('L' == firstWord) {
+                            addResult(list, text);
 
-                                addResult(Search.listL, text);
 
+                        } else if ('O' == firstWord) {
+                            list = (search.getListO());
+                            addResult(list, text);
 
-                            } else if ('M' == firstWord) {
 
-                                addResult(Search.listM, text);
+                        } else if ('P' == firstWord) {
+                            list = (search.getListP());
 
+                            addResult(list, text);
 
-                            } else if ('N' == firstWord) {
 
-                                addResult(Search.listN, text);
+                        } else if ('Q' == firstWord) {
+                            list = (search.getListQ());
 
+                            addResult(list, text);
 
-                            } else if ('O' == firstWord) {
-                                addResult(Search.listO, text);
 
+                        } else if ('R' == firstWord) {
+                            list = (search.getListR());
 
-                            } else if ('P' == firstWord) {
+                            addResult(list, text);
 
-                                addResult(Search.listP, text);
 
+                        } else if ('S' == firstWord) {
+                            list = (search.getListS());
 
-                            } else if ('Q' == firstWord) {
+                            addResult(list, text);
+                        } else if ('T' == firstWord) {
+                            list = (search.getListT());
 
-                                addResult(Search.listQ, text);
+                            addResult(list, text);
 
+                        } else if ('U' == firstWord) {
+                            list = (search.getListU());
+                            addResult(list, text);
 
-                            } else if ('R' == firstWord) {
 
-                                addResult(Search.listR, text);
+                        } else if ('V' == firstWord) {
+                            list = (search.getListV());
 
+                            addResult(list, text);
 
-                            } else if ('S' == firstWord) {
+                        } else if ('W' == firstWord) {
+                            list = (search.getListW());
 
-                                addResult(Search.listS, text);
+                            addResult(list, text);
 
+                        } else if ('X' == firstWord) {
+                            list = (search.getListX());
 
-                            } else if ('T' == firstWord) {
+                            addResult(list, text);
 
-                                addResult(Search.listT, text);
+                        } else if ('Y' == firstWord) {
+                            list = (search.getListY());
+                            addResult(list, text);
 
+                        } else if ('Z' == firstWord) {
+                            list = (search.getListZ());
+                            addResult(list, text);
 
-                            } else if ('U' == firstWord) {
-
-                                addResult(Search.listU, text);
-
-
-                            } else if ('V' == firstWord) {
-
-                                addResult(Search.listV, text);
-
-                            } else if ('W' == firstWord) {
-
-                                addResult(Search.listW, text);
-
-                            } else if ('X' == firstWord) {
-
-                                addResult(Search.listX, text);
-
-
-                            } else if ('Y' == firstWord) {
-
-                                addResult(Search.listY, text);
-
-                            } else if ('Z' == firstWord) {
-
-                                addResult(Search.listZ, text);
-
-                            }
                         }
                     }
                 }
+
             }
 
             @Override
@@ -546,13 +871,13 @@ public class SearchBar {
             public void removeUpdate(DocumentEvent e) {
                 labelCount = 0;
                 clearLabel();
-                label1.setBackground(new Color(255, 125, 29, 255));
+                label1.setBackground(labelColor);
                 listResult.clear();
                 String text = textField.getText();
                 if (!text.equals("")) {
                     if (text.equals("#*update*#")) {
                         clearTextFieldText();
-                        new Search().setSearch(true);
+                        search.setSearch(true);
                         return;
                     }
                     text = text.toUpperCase();
@@ -561,7 +886,6 @@ public class SearchBar {
 
                     searchFilesFolder(text);
                     firstWord = text.charAt(0);
-
                     if ('?' == firstWord) {
                         if (isFirstRun || !thread.isAlive()) {
                             isFirstRun = false;
@@ -570,148 +894,163 @@ public class SearchBar {
                         }
                         thread = new Thread(new AddAllResult(text));
                         thread.start();
-                    } else {
-                        if (19968 <= (int) firstWord && (int) firstWord < 40869) {
-                            addResult(Search.listUnique, text);
+                    } else if (19968 <= (int) firstWord && (int) firstWord < 40869) {
+                        list = (search.getListUnique());
+                        addResult(list, text);
 
-                        } else if ('%' == firstWord) {
+                    } else if ('%' == firstWord) {
+                        list = (search.getListPercentSign());
+                        addResult(list, text);
+                    } else if ('_' == firstWord) {
+                        list = (search.getListUnderline());
+                        addResult(list, text);
 
-                            addResult(Search.listPercentSign, text);
+                    } else if (Character.isDigit(firstWord)) {
+                        list = (search.getListNum());
+                        addResult(list, text);
 
-                        } else if ('_' == firstWord) {
+                    } else if (Character.isAlphabetic(firstWord)) {
+                        firstWord = Character.toUpperCase(firstWord);
+                        if ('A' == firstWord) {
+                            list = (search.getListA());
+                            addResult(list, text);
 
-                            addResult(Search.listUnderline, text);
 
-                        } else if (Character.isDigit(firstWord)) {
+                        } else if ('B' == firstWord) {
+                            list = (search.getListB());
 
-                            addResult(Search.listNum, text);
+                            addResult(list, text);
 
 
-                        } else if (Character.isAlphabetic(firstWord)) {
-                            firstWord = Character.toUpperCase(firstWord);
-                            if ('A' == firstWord) {
-                                addResult(Search.listA, text);
+                        } else if ('C' == firstWord) {
+                            list = (search.getListC());
 
+                            addResult(list, text);
 
-                            } else if ('B' == firstWord) {
 
-                                addResult(Search.listB, text);
+                        } else if ('D' == firstWord) {
+                            list = (search.getListD());
 
+                            addResult(list, text);
 
-                            } else if ('C' == firstWord) {
 
-                                addResult(Search.listC, text);
+                        } else if ('E' == firstWord) {
+                            list = (search.getListE());
+                            addResult(list, text);
 
 
-                            } else if ('D' == firstWord) {
+                        } else if ('F' == firstWord) {
+                            list = (search.getListF());
 
-                                addResult(Search.listD, text);
+                            addResult(list, text);
 
 
-                            } else if ('E' == firstWord) {
-                                addResult(Search.listE, text);
+                        } else if ('G' == firstWord) {
+                            list = (search.getListG());
 
+                            addResult(list, text);
 
-                            } else if ('F' == firstWord) {
 
-                                addResult(Search.listF, text);
+                        } else if ('H' == firstWord) {
+                            list = (search.getListH());
+                            addResult(list, text);
 
 
-                            } else if ('G' == firstWord) {
+                        } else if ('I' == firstWord) {
+                            list = (search.getListI());
 
-                                addResult(Search.listG, text);
+                            addResult(list, text);
 
 
-                            } else if ('H' == firstWord) {
+                        } else if ('J' == firstWord) {
+                            list = (search.getListJ());
+                            addResult(list, text);
 
-                                addResult(Search.listH, text);
 
+                        } else if ('K' == firstWord) {
+                            list = (search.getListK());
 
-                            } else if ('I' == firstWord) {
+                            addResult(list, text);
 
-                                addResult(Search.listI, text);
 
+                        } else if ('L' == firstWord) {
+                            list = (search.getListL());
 
-                            } else if ('J' == firstWord) {
-                                addResult(Search.listJ, text);
+                            addResult(list, text);
 
 
-                            } else if ('K' == firstWord) {
+                        } else if ('M' == firstWord) {
+                            list = (search.getListM());
 
-                                addResult(Search.listK, text);
+                            addResult(list, text);
 
 
-                            } else if ('L' == firstWord) {
+                        } else if ('N' == firstWord) {
+                            list = (search.getListN());
 
-                                addResult(Search.listL, text);
+                            addResult(list, text);
 
 
-                            } else if ('M' == firstWord) {
+                        } else if ('O' == firstWord) {
+                            list = (search.getListO());
+                            addResult(list, text);
 
-                                addResult(Search.listM, text);
 
+                        } else if ('P' == firstWord) {
+                            list = (search.getListP());
 
-                            } else if ('N' == firstWord) {
+                            addResult(list, text);
 
-                                addResult(Search.listN, text);
 
+                        } else if ('Q' == firstWord) {
+                            list = (search.getListQ());
 
-                            } else if ('O' == firstWord) {
-                                addResult(Search.listO, text);
+                            addResult(list, text);
 
 
-                            } else if ('P' == firstWord) {
+                        } else if ('R' == firstWord) {
+                            list = (search.getListR());
 
-                                addResult(Search.listP, text);
+                            addResult(list, text);
 
 
-                            } else if ('Q' == firstWord) {
+                        } else if ('S' == firstWord) {
+                            list = (search.getListS());
 
-                                addResult(Search.listQ, text);
+                            addResult(list, text);
+                        } else if ('T' == firstWord) {
+                            list = (search.getListT());
 
+                            addResult(list, text);
 
-                            } else if ('R' == firstWord) {
+                        } else if ('U' == firstWord) {
+                            list = (search.getListU());
+                            addResult(list, text);
 
-                                addResult(Search.listR, text);
 
+                        } else if ('V' == firstWord) {
+                            list = (search.getListV());
 
-                            } else if ('S' == firstWord) {
+                            addResult(list, text);
 
-                                addResult(Search.listS, text);
+                        } else if ('W' == firstWord) {
+                            list = (search.getListW());
 
+                            addResult(list, text);
 
-                            } else if ('T' == firstWord) {
+                        } else if ('X' == firstWord) {
+                            list = (search.getListX());
 
-                                addResult(Search.listT, text);
+                            addResult(list, text);
 
+                        } else if ('Y' == firstWord) {
+                            list = (search.getListY());
+                            addResult(list, text);
 
-                            } else if ('U' == firstWord) {
+                        } else if ('Z' == firstWord) {
+                            list = (search.getListZ());
+                            addResult(list, text);
 
-                                addResult(Search.listU, text);
-
-
-                            } else if ('V' == firstWord) {
-
-                                addResult(Search.listV, text);
-
-                            } else if ('W' == firstWord) {
-
-                                addResult(Search.listW, text);
-
-                            } else if ('X' == firstWord) {
-
-                                addResult(Search.listX, text);
-
-
-                            } else if ('Y' == firstWord) {
-
-                                addResult(Search.listY, text);
-
-                            } else if ('Z' == firstWord) {
-
-                                addResult(Search.listZ, text);
-
-                            }
                         }
                     }
                 }else{
@@ -725,216 +1064,206 @@ public class SearchBar {
 
             @Override
             public void keyPressed(KeyEvent arg0) {
-                    if (!listResult.isEmpty()) {
-                        int key = arg0.getKeyCode();
-                        if (38 == key) {
-                            //上键被点击
-                            labelCount--;
-                            if (labelCount < 0) {
-                                labelCount = 0;
-                            }
-
-                            System.out.println(labelCount);
-                            if (labelCount >= listResult.size()) {
-                                labelCount = listResult.size() - 1;
-                            }
-                            if (labelCount < 3) {
-                                //未到最下层
-                                if (0 == labelCount) {
-                                    label1.setBackground(new Color(255, 125, 29, 255));
-                                    label2.setBackground(null);
-                                    label3.setBackground(null);
-                                    label4.setBackground(null);
-                                    showResult();
-                                } else if (1 == labelCount) {
-                                    label1.setBackground(null);
-                                    label2.setBackground(new Color(255, 125, 29, 255));
-                                    label3.setBackground(null);
-                                    label4.setBackground(null);
-                                    showResult();
-                                } else if (2 == labelCount) {
-                                    label1.setBackground(null);
-                                    label2.setBackground(null);
-                                    label3.setBackground(new Color(255, 125, 29, 255));
-                                    label4.setBackground(null);
-                                    showResult();
-                                }
-                            } else {
-                                //到达最下层
-                                label1.setBackground(null);
-                                label2.setBackground(null);
-                                label3.setBackground(null);
-                                label4.setBackground(new Color(255, 125, 29, 255));
-                                String path = listResult.get(labelCount - 3);
-                                String name = getFileName(listResult.get(labelCount - 3));
-                                if (name.indexOf(':') != -1) {
-                                    name = name.substring(name.indexOf(':') + 2);
-                                }
-                                ImageIcon icon;
-                                if (new File(path).isDirectory() || new File(path).isFile()) {
-                                    icon = (ImageIcon) getSmallIcon(new File(path));
-                                    icon = changeIcon(icon, label1.getHeight() - 60, label1.getHeight() - 60);
-                                    label1.setIcon(icon);
-                                    label1.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
-                                } else {
-                                    label1.setIcon(null);
-                                    label1.setText("无效文件");
-                                }
-                                path = listResult.get(labelCount - 2);
-                                name = getFileName(listResult.get(labelCount - 2));
-                                if (name.indexOf(':') != -1) {
-                                    name = name.substring(name.indexOf(':') + 2);
-                                }
-                                if (new File(path).isDirectory() || new File(path).isFile()) {
-                                    icon = (ImageIcon) getSmallIcon(new File(path));
-                                    icon = changeIcon(icon, label1.getHeight() - 60, label1.getHeight() - 60);
-                                    label2.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
-                                    label2.setIcon(icon);
-                                } else {
-                                    label2.setIcon(null);
-                                    label2.setText("无效文件");
-                                }
-                                path = listResult.get(labelCount - 1);
-                                name = getFileName(listResult.get(labelCount - 1));
-                                if (name.indexOf(':') != -1) {
-                                    name = name.substring(name.indexOf(':') + 2);
-                                }
-                                if (new File(path).isDirectory() || new File(path).isFile()) {
-                                    icon = (ImageIcon) getSmallIcon(new File(path));
-                                    icon = changeIcon(icon, label1.getHeight() - 60, label1.getHeight() - 60);
-                                    label3.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
-                                    label3.setIcon(icon);
-                                } else {
-                                    label3.setIcon(null);
-                                    label3.setText("无效文件");
-                                }
-                                path = listResult.get(labelCount);
-                                name = getFileName(listResult.get(labelCount));
-                                if (name.indexOf(':') != -1) {
-                                    name = name.substring(name.indexOf(':') + 2);
-                                }
-                                if (new File(path).isDirectory() || new File(path).isFile()) {
-                                    icon = (ImageIcon) getSmallIcon(new File(path));
-                                    icon = changeIcon(icon, label1.getHeight() - 60, label1.getHeight() - 60);
-                                    label4.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
-                                    label4.setIcon(icon);
-                                } else {
-                                    label4.setIcon(null);
-                                    label4.setText("无效文件");
-                                }
-                            }
-                        } else if (40 == key) {
-                            //下键被点击
-                            labelCount++;
-                            if (labelCount < 0) {
-                                labelCount = 0;
-                            }
-
-                            System.out.println(labelCount);
-                            if (labelCount >= listResult.size()) {
-                                labelCount = listResult.size() - 1;
-                            }
-                            if (labelCount < 3) {
-                                //未到最下层
-                                if (0 == labelCount) {
-                                    label1.setBackground(new Color(255, 125, 29, 255));
-                                    label2.setBackground(null);
-                                    label3.setBackground(null);
-                                    label4.setBackground(null);
-                                    showResult();
-                                } else if (1 == labelCount) {
-                                    label1.setBackground(null);
-                                    label2.setBackground(new Color(255, 125, 29, 255));
-                                    label3.setBackground(null);
-                                    label4.setBackground(null);
-                                    showResult();
-                                } else if (2 == labelCount) {
-                                    label1.setBackground(null);
-                                    label2.setBackground(null);
-                                    label3.setBackground(new Color(255, 125, 29, 255));
-                                    label4.setBackground(null);
-                                    showResult();
-                                }
-                            } else {
-                                //到达最下层
-                                label1.setBackground(null);
-                                label2.setBackground(null);
-                                label3.setBackground(null);
-                                label4.setBackground(new Color(255, 125, 29, 255));
-                                String path = listResult.get(labelCount - 3);
-                                String name = getFileName(listResult.get(labelCount - 3));
-                                if (name.indexOf(':') != -1) {
-                                    name = name.substring(name.indexOf(':') + 2);
-                                }
-                                ImageIcon icon;
-                                if (new File(path).isDirectory() || new File(path).isFile()) {
-                                    icon = (ImageIcon) getSmallIcon(new File(path));
-                                    icon = changeIcon(icon, label1.getHeight() - 60, label1.getHeight() - 60);
-                                    label1.setIcon(icon);
-                                    label1.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
-                                } else {
-                                    label1.setText("无效文件");
-                                }
-                                path = listResult.get(labelCount - 2);
-                                name = getFileName(listResult.get(labelCount - 2));
-                                if (name.indexOf(':') != -1) {
-                                    name = name.substring(name.indexOf(':') + 2);
-                                }
-                                if (new File(path).isDirectory() || new File(path).isFile()) {
-                                    icon = (ImageIcon) getSmallIcon(new File(path));
-                                    icon = changeIcon(icon, label1.getHeight() - 60, label1.getHeight() - 60);
-                                    label2.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
-                                    label2.setIcon(icon);
-                                } else {
-                                    label2.setText("无效文件");
-                                }
-                                path = listResult.get(labelCount - 1);
-                                name = getFileName(listResult.get(labelCount - 1));
-                                if (name.indexOf(':') != -1) {
-                                    name = name.substring(name.indexOf(':') + 2);
-                                }
-                                if (new File(path).isDirectory() || new File(path).isFile()) {
-                                    icon = (ImageIcon) getSmallIcon(new File(path));
-                                    icon = changeIcon(icon, label1.getHeight() - 60, label1.getHeight() - 60);
-                                    label3.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
-                                    label3.setIcon(icon);
-                                } else {
-                                    label3.setText("无效文件");
-                                }
-                                path = listResult.get(labelCount);
-                                name = getFileName(listResult.get(labelCount));
-                                if (name.indexOf(':') != -1) {
-                                    name = name.substring(name.indexOf(':') + 2);
-                                }
-                                if (new File(path).isDirectory() || new File(path).isFile()) {
-                                    icon = (ImageIcon) getSmallIcon(new File(path));
-                                    icon = changeIcon(icon, label1.getHeight() - 60, label1.getHeight() - 60);
-                                    label4.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
-                                    label4.setIcon(icon);
-                                } else {
-                                    label4.setText("无效文件");
-                                }
-                            }
-                        } else if (10 == key) {
-                            //enter被点击
-                            searchBar.setVisible(false);
-                            if (isCtrlPressed) {
-                                //打开上级文件夹
-                                File open = new File(listResult.get(labelCount));
-                                try {
-                                    Runtime.getRuntime().exec("explorer.exe /select, \"" + open.getAbsolutePath() + "\"");
-                                } catch (IOException e) {
-                                    e.printStackTrace();
-                                }
-                            } else {
-                                open(listResult.get(labelCount));
-                            }
-                            saveCache(listResult.get(labelCount) + ';');
-                        } else if (17 == key) {
-                            //ctrl被点击
-                            isCtrlPressed = true;
+                if (!listResult.isEmpty()) {
+                    int key = arg0.getKeyCode();
+                    if (38 == key) {
+                        //上键被点击
+                        labelCount--;
+                        if (labelCount < 0) {
+                            labelCount = 0;
                         }
+
+                        System.out.println(labelCount);
+                        if (labelCount >= listResult.size()) {
+                            labelCount = listResult.size() - 1;
+                        }
+                        if (labelCount < 3) {
+                            //未到最上端
+                            if (0 == labelCount) {
+                                label1.setBackground(labelColor);
+                                label2.setBackground(null);
+                                label3.setBackground(null);
+                                label4.setBackground(null);
+                                showResult();
+                            } else if (1 == labelCount) {
+                                label1.setBackground(null);
+                                label2.setBackground(labelColor);
+                                label3.setBackground(null);
+                                label4.setBackground(null);
+                                showResult();
+                            } else if (2 == labelCount) {
+                                label1.setBackground(null);
+                                label2.setBackground(null);
+                                label3.setBackground(labelColor);
+                                label4.setBackground(null);
+                                showResult();
+                            }
+                        } else {
+                            //到达最下端
+                            label1.setBackground(null);
+                            label2.setBackground(null);
+                            label3.setBackground(null);
+                            label4.setBackground(labelColor);
+                            path = listResult.get(labelCount - 3);
+                            String name = getFileName(listResult.get(labelCount - 3));
+                            File file = new File(path);
+                            ImageIcon icon;
+                            if (file.isDirectory() || file.isFile()) {
+                                icon = (ImageIcon) getSmallIcon(file);
+                                icon = changeIcon(icon, label1.getHeight() - 60, label1.getHeight() - 60);
+                                label1.setIcon(icon);
+                                label1.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
+                            } else {
+                                label1.setIcon(null);
+                                label1.setText("无效文件");
+                            }
+                            path = listResult.get(labelCount - 2);
+                            name = getFileName(listResult.get(labelCount - 2));
+                            file = new File(path);
+
+                            if (file.isDirectory() || file.isFile()) {
+                                icon = (ImageIcon) getSmallIcon(file);
+                                icon = changeIcon(icon, label1.getHeight() - 60, label1.getHeight() - 60);
+                                label2.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
+                                label2.setIcon(icon);
+                            } else {
+                                label2.setIcon(null);
+                                label2.setText("无效文件");
+                            }
+                            path = listResult.get(labelCount - 1);
+                            name = getFileName(listResult.get(labelCount - 1));
+                            file = new File(path);
+
+                            if (file.isDirectory() || file.isFile()) {
+                                icon = (ImageIcon) getSmallIcon(file);
+                                icon = changeIcon(icon, label1.getHeight() - 60, label1.getHeight() - 60);
+                                label3.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
+                                label3.setIcon(icon);
+                            } else {
+                                label3.setIcon(null);
+                                label3.setText("无效文件");
+                            }
+                            path = listResult.get(labelCount);
+                            name = getFileName(listResult.get(labelCount));
+                            file = new File(path);
+
+                            if (file.isDirectory() || file.isFile()) {
+                                icon = (ImageIcon) getSmallIcon(file);
+                                icon = changeIcon(icon, label1.getHeight() - 60, label1.getHeight() - 60);
+                                label4.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
+                                label4.setIcon(icon);
+                            } else {
+                                label4.setIcon(null);
+                                label4.setText("无效文件");
+                            }
+                        }
+                    } else if (40 == key) {
+                        //下键被点击
+                        labelCount++;
+                        if (labelCount < 0) {
+                            labelCount = 0;
+                        }
+
+                        System.out.println(labelCount);
+                        if (labelCount >= listResult.size()) {
+                            labelCount = listResult.size() - 1;
+                        }
+                        if (labelCount < 3) {
+                            //未到最下端
+                            if (0 == labelCount) {
+                                label1.setBackground(labelColor);
+                                label2.setBackground(null);
+                                label3.setBackground(null);
+                                label4.setBackground(null);
+                                showResult();
+                            } else if (1 == labelCount) {
+                                label1.setBackground(null);
+                                label2.setBackground(labelColor);
+                                label3.setBackground(null);
+                                label4.setBackground(null);
+                                showResult();
+                            } else if (2 == labelCount) {
+                                label1.setBackground(null);
+                                label2.setBackground(null);
+                                label3.setBackground(labelColor);
+                                label4.setBackground(null);
+                                showResult();
+                            }
+                        } else {
+                            //到最下端
+                            label1.setBackground(null);
+                            label2.setBackground(null);
+                            label3.setBackground(null);
+                            label4.setBackground(labelColor);
+                            path = listResult.get(labelCount - 3);
+                            String name = getFileName(listResult.get(labelCount - 3));
+                            ImageIcon icon;
+                            File file = new File(path);
+                            if (file.isDirectory() || file.isFile()) {
+                                icon = (ImageIcon) getSmallIcon(file);
+                                icon = changeIcon(icon, label1.getHeight() - 60, label1.getHeight() - 60);
+                                label1.setIcon(icon);
+                                label1.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
+                            } else {
+                                label1.setText("无效文件");
+                            }
+                            path = listResult.get(labelCount - 2);
+                            name = getFileName(listResult.get(labelCount - 2));
+                            file = new File(path);
+
+                            if (file.isDirectory() || file.isFile()) {
+                                icon = (ImageIcon) getSmallIcon(file);
+                                icon = changeIcon(icon, label1.getHeight() - 60, label1.getHeight() - 60);
+                                label2.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
+                                label2.setIcon(icon);
+                            } else {
+                                label2.setText("无效文件");
+                            }
+                            path = listResult.get(labelCount - 1);
+                            name = getFileName(listResult.get(labelCount - 1));
+                            file = new File(path);
+
+                            if (file.isDirectory() || file.isFile()) {
+                                icon = (ImageIcon) getSmallIcon(file);
+                                icon = changeIcon(icon, label1.getHeight() - 60, label1.getHeight() - 60);
+                                label3.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
+                                label3.setIcon(icon);
+                            } else {
+                                label3.setText("无效文件");
+                            }
+                            path = listResult.get(labelCount);
+                            name = getFileName(listResult.get(labelCount));
+                            file = new File(path);
+
+                            if (file.isDirectory() || file.isFile()) {
+                                icon = (ImageIcon) getSmallIcon(file);
+                                icon = changeIcon(icon, label1.getHeight() - 60, label1.getHeight() - 60);
+                                label4.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
+                                label4.setIcon(icon);
+                            } else {
+                                label4.setText("无效文件");
+                            }
+                        }
+                    } else if (10 == key) {
+                        //enter被点击
+                        searchBar.setVisible(false);
+                        if (isCtrlPressed) {
+                            //打开上级文件夹
+                            File open = new File(listResult.get(labelCount));
+                            try {
+                                Runtime.getRuntime().exec("explorer.exe /select, \"" + open.getAbsolutePath() + "\"");
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        } else {
+                            open(listResult.get(labelCount));
+                        }
+                        saveCache(listResult.get(labelCount) + ';');
+                    } else if (17 == key) {
+                        //ctrl被点击
+                        isCtrlPressed = true;
                     }
+                }
 
             }
 
@@ -954,42 +1283,43 @@ public class SearchBar {
 
 
         //labels
-
+        Font font = new Font("Microsoft JhengHei", Font.BOLD, (int) ((height * 0.1) / 96 * 72) / 4);
+        Color fontColor = new Color(73, 162, 255, 255);
         label1.setSize(searchBarWidth, (int) (searchBarHeight * 0.2));
         label1.setLocation(0, (int) (searchBarHeight * 0.2));
-        label1.setFont(new Font("微软雅黑", Font.BOLD, (int) ((height * 0.05) / 96 * 72 * 0.5)));
-        label1.setForeground(new Color(73, 162, 255, 255));
+        label1.setFont(font);
+        label1.setForeground(fontColor);
         label1.setBackground(null);
         label1.setOpaque(true);
 
 
         label2.setSize(searchBarWidth, (int) (searchBarHeight * 0.2));
         label2.setLocation(0, (int) (searchBarHeight * 0.4));
-        label2.setFont(new Font("微软雅黑", Font.BOLD, (int) ((height * 0.05) / 96 * 72 * 0.5)));
-        label2.setForeground(new Color(73, 162, 255, 255));
+        label2.setFont(font);
+        label2.setForeground(fontColor);
         label2.setBackground(null);
         label2.setOpaque(true);
 
 
         label3.setSize(searchBarWidth, (int) (searchBarHeight * 0.2));
         label3.setLocation(0, (int) (searchBarHeight * 0.6));
-        label3.setFont(new Font("微软雅黑", Font.BOLD, (int) ((height * 0.05) / 96 * 72 * 0.5)));
-        label3.setForeground(new Color(73, 162, 255, 255));
+        label3.setFont(font);
+        label3.setForeground(fontColor);
         label3.setBackground(null);
         label3.setOpaque(true);
 
 
         label4.setSize(searchBarWidth, (int) (searchBarHeight * 0.2));
         label4.setLocation(0, (int) (searchBarHeight * 0.8));
-        label4.setFont(new Font("微软雅黑", Font.BOLD, (int) ((height * 0.05) / 96 * 72 * 0.5)));
-        label4.setForeground(new Color(73, 162, 255, 255));
+        label4.setFont(font);
+        label4.setForeground(fontColor);
         label4.setBackground(null);
         label4.setOpaque(true);
 
 
         //panel
         panel.setLayout(null);
-        panel.setBackground(null);
+        panel.setBackground(new Color(0,0,0,0));
         panel.add(textField);
         panel.add(label1);
         panel.add(label2);
@@ -1010,14 +1340,12 @@ public class SearchBar {
 
     private void showResult() {
         try {
-            String path = listResult.get(0);
+            path = listResult.get(0);
             String name = getFileName(listResult.get(0));
-            if (name.indexOf(':') != -1) {
-                name = name.substring(name.indexOf(':') + 2);
-            }
+            File file = new File(path);
             ImageIcon icon;
-            if (new File(path).isDirectory() || new File(path).isFile()) {
-                icon = (ImageIcon) getSmallIcon(new File(path));
+            if (file.isDirectory() || file.isFile()) {
+                icon = (ImageIcon) getSmallIcon(file);
                 icon = changeIcon(icon, label1.getHeight() - 60, label1.getHeight() - 60);
                 label1.setIcon(icon);
                 label1.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
@@ -1027,11 +1355,10 @@ public class SearchBar {
             }
             path = listResult.get(1);
             name = getFileName(listResult.get(1));
-            if (name.indexOf(':') != -1) {
-                name = name.substring(name.indexOf(':') + 2);
-            }
-            if (new File(path).isDirectory() || new File(path).isFile()) {
-                icon = (ImageIcon) getSmallIcon(new File(path));
+            file = new File(path);
+
+            if (file.isDirectory() || file.isFile()) {
+                icon = (ImageIcon) getSmallIcon(file);
                 icon = changeIcon(icon, label1.getHeight() - 60, label1.getHeight() - 60);
                 label2.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
                 label2.setIcon(icon);
@@ -1041,11 +1368,10 @@ public class SearchBar {
             }
             path = listResult.get(2);
             name = getFileName(listResult.get(2));
-            if (name.indexOf(':') != -1) {
-                name = name.substring(name.indexOf(':') + 2);
-            }
-            if (new File(path).isDirectory() || new File(path).isFile()) {
-                icon = (ImageIcon) getSmallIcon(new File(path));
+            file = new File(path);
+
+            if (file.isDirectory() || file.isFile()) {
+                icon = (ImageIcon) getSmallIcon(file);
                 icon = changeIcon(icon, label1.getHeight() - 60, label1.getHeight() - 60);
                 label3.setIcon(icon);
                 label3.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
@@ -1055,11 +1381,10 @@ public class SearchBar {
             }
             path = listResult.get(3);
             name = getFileName(listResult.get(3));
-            if (name.indexOf(':') != -1) {
-                name = name.substring(name.indexOf(':') + 2);
-            }
-            if (new File(path).isDirectory() || new File(path).isFile()) {
-                icon = (ImageIcon) getSmallIcon(new File(path));
+            file = new File(path);
+
+            if (file.isDirectory() || file.isFile()) {
+                icon = (ImageIcon) getSmallIcon(file);
                 icon = changeIcon(icon, label1.getHeight() - 60, label1.getHeight() - 60);
                 label4.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
                 label4.setIcon(icon);
@@ -1067,8 +1392,8 @@ public class SearchBar {
                 label4.setIcon(null);
                 label4.setText("无效文件");
             }
-        } catch (java.lang.IndexOutOfBoundsException e) {
-            //e.printStackTrace();
+        } catch (java.lang.IndexOutOfBoundsException ignored) {
+
         }
     }
 
@@ -1092,12 +1417,15 @@ public class SearchBar {
         File name = new File(path);
         if (name.exists()) {
             try {
-                Desktop desktop = null;
-                if (Desktop.isDesktopSupported()) {
-                    desktop = Desktop.getDesktop();
+                try{
+                    Runtime.getRuntime().exec(name.getAbsolutePath(), null, new File(name.getParent()));
+                } catch (IOException e){
+                    Desktop desktop;
+                    if (Desktop.isDesktopSupported()) {
+                        desktop = Desktop.getDesktop();
+                        desktop.open(name);
+                    }
                 }
-                assert desktop != null;
-                desktop.open(name);
             } catch (IOException e) {
                 //打开上级文件夹
                 try {
@@ -1111,23 +1439,21 @@ public class SearchBar {
 
     private String getFileName(String path) {
         String placeHolder = "";
-        String[] name;
+        String[] names;
+        String name;
         try {
-            name = path.split("\\\\");
-            return name[name.length - 1];
+            names = path.split("\\\\");
+            name = names[names.length - 1];
+            if (name.contains(":")){
+                name = name.substring(name.indexOf(':') + 2);
+            }
+            return name;
         } catch (Exception e) {
-            System.err.println(path);
             return placeHolder;
         }
     }
 
 
-    /**
-     * 获取程序小图标
-     *
-     * @param f 文件路径
-     * @return icon
-     */
     private static Icon getSmallIcon(File f) {
         if (f != null && f.exists()) {
             FileSystemView fsv = FileSystemView.getFileSystemView();
@@ -1146,6 +1472,17 @@ public class SearchBar {
         }
     }
 
+    public void delRepeated(LinkedList<String> list) {
+        LinkedHashSet<String> set = new LinkedHashSet<>();
+        try {
+            set.addAll(list);
+        }catch (Exception ignored){
+
+        }
+        list.clear();
+        list.addAll(set);
+    }
+
     private void saveCache(String content) {
         int cacheNum = 0;
         File cache = new File("cache.dat");
@@ -1158,8 +1495,8 @@ public class SearchBar {
                     oldCaches.append(eachLine);
                     cacheNum++;
                 }
-            } catch (IOException e) {
-                //e.printStackTrace();
+            } catch (IOException ignored) {
+
             }
         }
         if (cacheNum < SettingsFrame.cacheNumLimit) {
@@ -1167,23 +1504,11 @@ public class SearchBar {
             if (!isRepeated) {
                 try(BufferedWriter out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(new File("cache.dat"), true)))) {
                     out.write(content + "\r\n");
-                } catch (Exception e) {
-                    e.printStackTrace();
+                } catch (Exception ignored) {
+
                 }
             }
         }
-    }
-
-
-    public static void delRepeated(LinkedList<String> list) {
-        LinkedHashSet<String> set = new LinkedHashSet<>();
-        try {
-            set.addAll(list);
-        }catch (Exception ignored){
-
-        }
-        list.clear();
-        list.addAll(set);
     }
 
 
@@ -1243,10 +1568,7 @@ public class SearchBar {
 
     private boolean match(String srcText, String txt) {
         if (srcText.length() >= txt.length()) {
-            if (srcText.length() == txt.length()) {
-                return srcText.toUpperCase().equals(txt.toUpperCase());
-            }
-            while (srcText.length() > txt.length()) {
+            while (srcText.length() >= txt.length()) {
                 String each = srcText.substring(0, txt.length());
                 if (each.toUpperCase().equals(txt.toUpperCase())) {
                     return true;
@@ -1257,6 +1579,7 @@ public class SearchBar {
         }
         return false;
     }
+    
 
     private void searchFilesFolder(String text) {
         File path = new File("Files");
@@ -1299,6 +1622,5 @@ public class SearchBar {
         SwingUtilities.invokeLater(clear);
     }
 }
-	
 
 

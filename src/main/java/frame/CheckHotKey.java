@@ -1,9 +1,11 @@
 package frame;
 import javax.swing.JFrame;
 import com.melloware.jintellitype.JIntellitype;
+import search.Search;
 
 public class CheckHotKey extends JFrame{
-    public static boolean isShowSearachBar = false;
+
+    private Search search = new Search();
 
     /**
      * 利用JIntellitype实现全局热键设置
@@ -30,6 +32,6 @@ public class CheckHotKey extends JFrame{
             });
         }
         private void changeShowSearchBarStatus(){
-            isShowSearachBar = true;
+            search.setFocusLostStatus(false);
         }
 }

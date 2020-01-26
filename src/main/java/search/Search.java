@@ -10,41 +10,43 @@ import javax.swing.filechooser.FileSystemView;
 
 
 public class Search {
-	static LinkedList<String> listRemain = new LinkedList<>();
-	public static ArrayList<String> listA = new ArrayList<>();
-	public static ArrayList<String> listB = new ArrayList<>();
-	public static ArrayList<String> listC = new ArrayList<>();
-	public static ArrayList<String> listD = new ArrayList<>();
-	public static ArrayList<String> listE = new ArrayList<>();
-	public static ArrayList<String> listF = new ArrayList<>();
-	public static ArrayList<String> listG = new ArrayList<>();
-	public static ArrayList<String> listH = new ArrayList<>();
-	public static ArrayList<String> listI = new ArrayList<>();
-	public static ArrayList<String> listJ = new ArrayList<>();
-	public static ArrayList<String> listK = new ArrayList<>();
-	public static ArrayList<String> listL = new ArrayList<>();
-	public static ArrayList<String> listM = new ArrayList<>();
-	public static ArrayList<String> listN = new ArrayList<>();
-	public static ArrayList<String> listO = new ArrayList<>();
-	public static ArrayList<String> listP = new ArrayList<>();
-	public static ArrayList<String> listQ = new ArrayList<>();
-	public static ArrayList<String> listR = new ArrayList<>();
-	public static ArrayList<String> listS = new ArrayList<>();
-	public static ArrayList<String> listT = new ArrayList<>();
-	public static ArrayList<String> listU = new ArrayList<>();
-	public static ArrayList<String> listV = new ArrayList<>();
-	public static ArrayList<String> listW = new ArrayList<>();
-	public static ArrayList<String> listX = new ArrayList<>();
-	public static ArrayList<String> listY = new ArrayList<>();
-	public static ArrayList<String> listZ = new ArrayList<>();
-	public static ArrayList<String> listNum = new ArrayList<>();
-	public static ArrayList<String> listPercentSign = new ArrayList<>();
-	public static ArrayList<String> listUnique = new ArrayList<>();
-	public static ArrayList<String> listUnderline = new ArrayList<>();
-	public static String startMenu = getStartMenu();
-	public static String desktop = FileSystemView.getFileSystemView().getHomeDirectory().getAbsolutePath();
+	LinkedList<String> listRemain = new LinkedList<>();
+	private static LinkedList<String> listA = new LinkedList<>();
+	private static LinkedList<String> listB = new LinkedList<>();
+	private static LinkedList<String> listC = new LinkedList<>();
+	private static LinkedList<String> listD = new LinkedList<>();
+	private static LinkedList<String> listE = new LinkedList<>();
+	private static LinkedList<String> listF = new LinkedList<>();
+	private static LinkedList<String> listG = new LinkedList<>();
+	private static LinkedList<String> listH = new LinkedList<>();
+	private static LinkedList<String> listI = new LinkedList<>();
+	private static LinkedList<String> listJ = new LinkedList<>();
+	private static LinkedList<String> listK = new LinkedList<>();
+	private static LinkedList<String> listL = new LinkedList<>();
+	private static LinkedList<String> listM = new LinkedList<>();
+	private static LinkedList<String> listN = new LinkedList<>();
+	private static LinkedList<String> listO = new LinkedList<>();
+	private static LinkedList<String> listP = new LinkedList<>();
+	private static LinkedList<String> listQ = new LinkedList<>();
+	private static LinkedList<String> listR = new LinkedList<>();
+	private static LinkedList<String> listS = new LinkedList<>();
+	private static LinkedList<String> listT = new LinkedList<>();
+	private static LinkedList<String> listU = new LinkedList<>();
+	private static LinkedList<String> listV = new LinkedList<>();
+	private static LinkedList<String> listW = new LinkedList<>();
+	private static LinkedList<String> listX = new LinkedList<>();
+	private static LinkedList<String> listY = new LinkedList<>();
+	private static LinkedList<String> listZ = new LinkedList<>();
+	private static LinkedList<String> listNum = new LinkedList<>();
+	private static LinkedList<String> listPercentSign = new LinkedList<>();
+	private static LinkedList<String> listUnique = new LinkedList<>();
+	private static LinkedList<String> listUnderline = new LinkedList<>();
+	private final String desktop = FileSystemView.getFileSystemView().getHomeDirectory().getAbsolutePath();
+	private String startMenu = getStartMenu();
 	private static boolean isSearch = false;
-	private static boolean isFirstRun = true;
+	private boolean isFirstRun = true;
+	private static boolean isFocusLost = true;
+
 
 
 	public boolean isSearch(){
@@ -53,8 +55,14 @@ public class Search {
 	public void setSearch(boolean b){
 		isSearch = b;
 	}
+	public boolean isIsFocusLost(){
+		return isFocusLost;
+	}
+	public void setFocusLostStatus(boolean b){
+		isFocusLost = b;
+	}
 
-	public static void searchFile(String ignorePath, int searchDepth) {
+	public void searchFile(String ignorePath, int searchDepth) {
 		File[] roots = File.listRoots();
 		for (File root: roots) {
 			listRemain.add(root.getAbsolutePath());
@@ -70,7 +78,7 @@ public class Search {
 	}
 
 
-	private static void __searchFile(String ignorePath, File path, int searchDepth) {
+	private void __searchFile(String ignorePath, File path, int searchDepth) {
 		ignorePath = ignorePath.toUpperCase();
 		boolean exist = path.exists();
 		if ( exist && !isIgnore(path.getAbsolutePath().toUpperCase(), ignorePath)) {
@@ -282,7 +290,7 @@ public class Search {
 
 	}
 
-	private static String getStartMenu() {
+	private String getStartMenu() {
 		String startMenu;
 		BufferedReader bufrIn;
 		try {
@@ -306,7 +314,7 @@ public class Search {
 	 * @param findText 需要计数的字符串
 	 * @return count
 	 */
-	public static int count(String srcText, String findText){
+	public int count(String srcText, String findText){
 		int count = 0;
 		int start = 0;
 		while (srcText.indexOf(findText, start) >= 0 && start < srcText.length()) {
@@ -321,7 +329,7 @@ public class Search {
 	 * txt是否属于target的子字符串
 	 * @return true false
 	 */
-	private static boolean isIgnore(String txt, String target) {
+	private boolean isIgnore(String txt, String target) {
 		String[] list = target.split(",");
 		for (String each : list) {
 			if (txt.contains(each)) {
@@ -331,8 +339,127 @@ public class Search {
 		return false;
 	}
 
+	public LinkedList<String> getListA(){
+		return listA;
+	}
 
-	public static void updateLists(String ignorePath, int searchDepth) {
+	public LinkedList<String> getListB() {
+		return listB;
+	}
+
+	public LinkedList<String> getListC() {
+		return listC;
+	}
+
+	public LinkedList<String> getListD() {
+		return listD;
+	}
+
+	public LinkedList<String> getListE() {
+		return listE;
+	}
+
+	public LinkedList<String> getListF() {
+		return listF;
+	}
+
+	public LinkedList<String> getListG() {
+		return listG;
+	}
+
+	public LinkedList<String> getListH() {
+		return listH;
+	}
+
+	public LinkedList<String> getListI() {
+		return listI;
+	}
+
+	public LinkedList<String> getListJ() {
+		return listJ;
+	}
+
+	public LinkedList<String> getListK() {
+		return listK;
+	}
+
+	public LinkedList<String> getListL() {
+		return listL;
+	}
+
+	public LinkedList<String> getListM() {
+		return listM;
+	}
+
+	public LinkedList<String> getListN() {
+		return listN;
+	}
+
+	public LinkedList<String> getListO() {
+		return listO;
+	}
+
+	public LinkedList<String> getListP() {
+		return listP;
+	}
+
+	public LinkedList<String> getListQ() {
+		return listQ;
+	}
+
+	public LinkedList<String> getListR() {
+		return listR;
+	}
+
+	public LinkedList<String> getListNum() {
+		return listNum;
+	}
+
+	public LinkedList<String> getListPercentSign() {
+		return listPercentSign;
+	}
+
+	public LinkedList<String> getListS() {
+		return listS;
+	}
+
+	public LinkedList<String> getListT() {
+		return listT;
+	}
+
+	public LinkedList<String> getListUnique() {
+		return listUnique;
+	}
+
+	public LinkedList<String> getListU() {
+		return listU;
+	}
+
+	public LinkedList<String> getListUnderline() {
+		return listUnderline;
+	}
+
+	public LinkedList<String> getListV() {
+		return listV;
+	}
+
+	public LinkedList<String> getListW() {
+		return listW;
+	}
+
+	public LinkedList<String> getListY() {
+		return listY;
+	}
+
+	public LinkedList<String> getListX() {
+		return listX;
+	}
+
+	public LinkedList<String> getListZ() {
+		return listZ;
+	}
+
+	public void updateLists(String ignorePath, int searchDepth) {
 		if (!isFirstRun) {
 			listA.clear();
 			listB.clear();
@@ -368,5 +495,38 @@ public class Search {
 			isFirstRun = false;
 		}
 		searchFile(ignorePath, searchDepth);
+	}
+
+	public void clearAll(){
+		listA = null;
+		listB = null;
+		listC = null;
+		listD = null;
+		listE = null;
+		listF = null;
+		listG = null;
+		listH = null;
+		listI = null;
+		listJ = null;
+		listK = null;
+		listL = null;
+		listM = null;
+		listN = null;
+		listO = null;
+		listP = null;
+		listQ = null;
+		listR = null;
+		listS = null;
+		listT = null;
+		listU = null;
+		listV = null;
+		listW = null;
+		listX = null;
+		listY = null;
+		listZ = null;
+		listNum = null;
+		listPercentSign = null;
+		listUnique = null;
+		listUnderline = null;
 	}
 }
