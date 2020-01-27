@@ -17,7 +17,7 @@ public class Main {
 	private static boolean mainExit = false;
 	private static String ignorePath;
 	private static int searchDepth;
-	private static SearchBar searchBar;
+	private static SearchBar searchBar = new SearchBar();
 	private static Search search = new Search();
 	
 	
@@ -68,7 +68,7 @@ public class Main {
 		} catch (IOException ignored) {
 
 		}
-		ignorePath = ignorePath + "C:\\Config.Msi,C:\\Windows";
+		ignorePath = ignorePath + "C:\\Config.Msi";
 
 		CheckHotKey HotKeyListener = new CheckHotKey();
 		SettingsFrame.initCacheLimit();
@@ -77,17 +77,16 @@ public class Main {
 
 
 
-		ExecutorService fixedThreadPool = Executors.newFixedThreadPool(4);
+		ExecutorService fixedThreadPool = Executors.newFixedThreadPool(3);
 		fixedThreadPool.execute(() -> {
-			// 时间检测线程 兼 内存释放线程
+			// 时间检测线程
 			int count = 0;
 			updateTimeLimit = updateTimeLimit * 1000;
 			while (!mainExit) {
 				count++;
 				if (count >= updateTimeLimit) {
 					count = 0;
-					System.out.println("正在发送更新请求并清理内存空间");
-					System.gc();
+					System.out.println("正在发送更新请求");
 					search.setSearch(true);
 				}
 				try {
@@ -134,38 +133,12 @@ public class Main {
 			}
 		});
 
-		fixedThreadPool.execute(()->{
-			//垃圾回收线程
-			int count = 1;
-			while (!mainExit){
-				if (search.isIsFocusLost() && count == 0){
-					count+=1;
-					System.out.println("检测到窗口失去焦点，进行垃圾回收");
-					System.gc();
-				}else if (!search.isIsFocusLost()){
-					count = 0;
-				}
-				try {
-					Thread.sleep(20);
-				} catch (InterruptedException ignored) {
-
-				}
-			}
-		});
-
 
 
 		do {
 			// 主循环开始
 			if (!search.isIsFocusLost()){
-				if (searchBar == null) {
-					searchBar = new SearchBar();
-					searchBar.showSearchbar();
-				}
-			}else{
-				if (searchBar != null) {
-					searchBar = null;
-				}
+				searchBar.showSearchbar();
 			}
 			try {
 				Thread.sleep(100);

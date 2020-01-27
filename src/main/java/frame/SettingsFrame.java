@@ -48,7 +48,6 @@ public class SettingsFrame {
     private JScrollPane scrollpane;
     private JLabel labelplaceholder2;
     private JLabel labelplacehoder3;
-    private JLabel labelTip;
     private boolean isStartup;
     public static int cacheNumLimit;
     private int updateTimeLimit;
