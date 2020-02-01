@@ -14,7 +14,7 @@ import javax.swing.*;
 
 public class Main {
 	private static int updateTimeLimit = 600;
-	private static boolean mainExit = false;
+	public static boolean mainExit = false;
 	private static String ignorePath;
 	private static int searchDepth;
 	private static SearchBar searchBar = new SearchBar();
@@ -46,7 +46,6 @@ public class Main {
 				JOptionPane.showMessageDialog(null, "创建缓存文件失败，程序正在退出");
 				mainExit = true;
 			}
-
 		}
 		if (!files.exists()){
 			files.mkdir();
@@ -68,7 +67,7 @@ public class Main {
 		} catch (IOException ignored) {
 
 		}
-		ignorePath = ignorePath + "C:\\Config.Msi";
+		ignorePath = ignorePath + "C:\\Config.Msi,C:\\Windows";
 
 		CheckHotKey HotKeyListener = new CheckHotKey();
 		SettingsFrame.initCacheLimit();
@@ -127,8 +126,8 @@ public class Main {
 				}
 				try {
 					Thread.sleep(16);
-				} catch (InterruptedException e) {
-					//e.printStackTrace();
+				} catch (InterruptedException ignored) {
+
 				}
 			}
 		});
