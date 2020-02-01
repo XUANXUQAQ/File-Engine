@@ -47,7 +47,7 @@ public class Search {
     LinkedList<String> listRemain = new LinkedList<>();
     private String startMenu = getStartMenu();
     private boolean isFirstRun = true;
-    private int num = 0;
+    private int num;
 
 
     public boolean isSearch() {
@@ -66,7 +66,8 @@ public class Search {
         isFocusLost = b;
     }
 
-    public void searchFile(String ignorePath, int searchDepth) {
+    private void searchFile(String ignorePath, int searchDepth) {
+        num = 0;
         File[] roots = File.listRoots();
         for (File root : roots) {
             listRemain.add(root.getAbsolutePath());
@@ -79,6 +80,7 @@ public class Search {
         }
         System.out.println("搜索完成，总数据数量：");
         System.out.println(num);
+        System.gc();
         isSearch = false;
     }
 
@@ -89,10 +91,9 @@ public class Search {
         if (exist && !isIgnore(path.getAbsolutePath().toUpperCase(), ignorePath)) {
             File[] files = path.listFiles();
             if (null == files || files.length == 0) {
-                //System.out.println("空白目录");
             } else if (searchDepth >= count(path.getAbsolutePath(), "\\") || (path.getAbsolutePath().equals(startMenu)) || path.getAbsolutePath().equals(desktop)) {
                 for (File file2 : files) {
-                    String fileFullName = file2.getAbsolutePath();
+                    String fileFullName = file2.getAbsolutePath().intern();
                     String[] nameList = fileFullName.split("\\\\");
                     String fileName = nameList[nameList.length - 1];
 
@@ -105,124 +106,124 @@ public class Search {
                             char headWord = Character.toUpperCase(firstWord);
                             switch (headWord) {
                                 case 'A':
-                                    listA.add(file2.getAbsolutePath());
+                                    listA.add(file2.getAbsolutePath().intern());
                                     num += 1;
                                     break;
                                 case 'B':
-                                    listB.add(file2.getAbsolutePath());
+                                    listB.add(file2.getAbsolutePath().intern());
                                     num += 1;
                                     break;
                                 case 'C':
-                                    listC.add(file2.getAbsolutePath());
+                                    listC.add(file2.getAbsolutePath().intern());
                                     num += 1;
                                     break;
                                 case 'D':
-                                    listD.add(file2.getAbsolutePath());
+                                    listD.add(file2.getAbsolutePath().intern());
                                     num += 1;
                                     break;
                                 case 'E':
-                                    listE.add(file2.getAbsolutePath());
+                                    listE.add(file2.getAbsolutePath().intern());
                                     num += 1;
                                     break;
                                 case 'F':
-                                    listF.add(file2.getAbsolutePath());
+                                    listF.add(file2.getAbsolutePath().intern());
                                     num += 1;
                                     break;
                                 case 'G':
-                                    listG.add(file2.getAbsolutePath());
+                                    listG.add(file2.getAbsolutePath().intern());
                                     num += 1;
                                     break;
                                 case 'H':
-                                    listH.add(file2.getAbsolutePath());
+                                    listH.add(file2.getAbsolutePath().intern());
                                     num += 1;
                                     break;
                                 case 'I':
-                                    listI.add(file2.getAbsolutePath());
+                                    listI.add(file2.getAbsolutePath().intern());
                                     num += 1;
                                     break;
                                 case 'J':
-                                    listJ.add(file2.getAbsolutePath());
+                                    listJ.add(file2.getAbsolutePath().intern());
                                     num += 1;
                                     break;
                                 case 'K':
-                                    listK.add(file2.getAbsolutePath());
+                                    listK.add(file2.getAbsolutePath().intern());
                                     num += 1;
                                     break;
                                 case 'L':
-                                    listL.add(file2.getAbsolutePath());
+                                    listL.add(file2.getAbsolutePath().intern());
                                     num += 1;
                                     break;
                                 case 'M':
-                                    listM.add(file2.getAbsolutePath());
+                                    listM.add(file2.getAbsolutePath().intern());
                                     num += 1;
                                     break;
                                 case 'N':
-                                    listN.add(file2.getAbsolutePath());
+                                    listN.add(file2.getAbsolutePath().intern());
                                     num += 1;
                                     break;
                                 case 'O':
-                                    listO.add(file2.getAbsolutePath());
+                                    listO.add(file2.getAbsolutePath().intern());
                                     num += 1;
                                     break;
                                 case 'P':
-                                    listP.add(file2.getAbsolutePath());
+                                    listP.add(file2.getAbsolutePath().intern());
                                     num += 1;
                                     break;
                                 case 'Q':
-                                    listQ.add(file2.getAbsolutePath());
+                                    listQ.add(file2.getAbsolutePath().intern());
                                     num += 1;
                                     break;
                                 case 'R':
-                                    listR.add(file2.getAbsolutePath());
+                                    listR.add(file2.getAbsolutePath().intern());
                                     num += 1;
                                     break;
                                 case 'S':
-                                    listS.add(file2.getAbsolutePath());
+                                    listS.add(file2.getAbsolutePath().intern());
                                     num += 1;
                                     break;
                                 case 'T':
-                                    listT.add(file2.getAbsolutePath());
+                                    listT.add(file2.getAbsolutePath().intern());
                                     num += 1;
                                     break;
                                 case 'U':
-                                    listU.add(file2.getAbsolutePath());
+                                    listU.add(file2.getAbsolutePath().intern());
                                     num += 1;
                                     break;
                                 case 'V':
-                                    listV.add(file2.getAbsolutePath());
+                                    listV.add(file2.getAbsolutePath().intern());
                                     num += 1;
                                     break;
                                 case 'W':
-                                    listW.add(file2.getAbsolutePath());
+                                    listW.add(file2.getAbsolutePath().intern());
                                     num += 1;
                                     break;
                                 case 'X':
-                                    listX.add(file2.getAbsolutePath());
+                                    listX.add(file2.getAbsolutePath().intern());
                                     num += 1;
                                     break;
                                 case 'Y':
-                                    listY.add(file2.getAbsolutePath());
+                                    listY.add(file2.getAbsolutePath().intern());
                                     num += 1;
                                     break;
                                 case 'Z':
-                                    listZ.add(file2.getAbsolutePath());
+                                    listZ.add(file2.getAbsolutePath().intern());
                                     num += 1;
                                     break;
                                 default:
                                     if (Character.isDigit(headWord)) {
-                                        listNum.add(file2.getAbsolutePath());
+                                        listNum.add(file2.getAbsolutePath().intern());
                                     } else if ('_' == headWord) {
-                                        listUnderline.add(file2.getAbsolutePath());
+                                        listUnderline.add(file2.getAbsolutePath().intern());
                                     } else if ('%' == headWord) {
-                                        listPercentSign.add(file2.getAbsolutePath());
+                                        listPercentSign.add(file2.getAbsolutePath().intern());
                                     } else {
-                                        listUnique.add(file2.getAbsolutePath());
+                                        listUnique.add(file2.getAbsolutePath().intern());
                                     }
                                     num += 1;
                                     break;
                             }
                             if (file2.isDirectory()) {
-                                listRemain.add(file2.getAbsolutePath());
+                                listRemain.add(file2.getAbsolutePath().intern());
                             }
                         }
 
@@ -232,124 +233,124 @@ public class Search {
                             char headWord = Character.toUpperCase(firstWord);
                             switch (headWord) {
                                 case 'A':
-                                    listA.add(file2.getAbsolutePath());
+                                    listA.add(file2.getAbsolutePath().intern());
                                     num += 1;
                                     break;
                                 case 'B':
-                                    listB.add(file2.getAbsolutePath());
+                                    listB.add(file2.getAbsolutePath().intern());
                                     num += 1;
                                     break;
                                 case 'C':
-                                    listC.add(file2.getAbsolutePath());
+                                    listC.add(file2.getAbsolutePath().intern());
                                     num += 1;
                                     break;
                                 case 'D':
-                                    listD.add(file2.getAbsolutePath());
+                                    listD.add(file2.getAbsolutePath().intern());
                                     num += 1;
                                     break;
                                 case 'E':
-                                    listE.add(file2.getAbsolutePath());
+                                    listE.add(file2.getAbsolutePath().intern());
                                     num += 1;
                                     break;
                                 case 'F':
-                                    listF.add(file2.getAbsolutePath());
+                                    listF.add(file2.getAbsolutePath().intern());
                                     num += 1;
                                     break;
                                 case 'G':
-                                    listG.add(file2.getAbsolutePath());
+                                    listG.add(file2.getAbsolutePath().intern());
                                     num += 1;
                                     break;
                                 case 'H':
-                                    listH.add(file2.getAbsolutePath());
+                                    listH.add(file2.getAbsolutePath().intern());
                                     num += 1;
                                     break;
                                 case 'I':
-                                    listI.add(file2.getAbsolutePath());
+                                    listI.add(file2.getAbsolutePath().intern());
                                     num += 1;
                                     break;
                                 case 'J':
-                                    listJ.add(file2.getAbsolutePath());
+                                    listJ.add(file2.getAbsolutePath().intern());
                                     num += 1;
                                     break;
                                 case 'K':
-                                    listK.add(file2.getAbsolutePath());
+                                    listK.add(file2.getAbsolutePath().intern());
                                     num += 1;
                                     break;
                                 case 'L':
-                                    listL.add(file2.getAbsolutePath());
+                                    listL.add(file2.getAbsolutePath().intern());
                                     num += 1;
                                     break;
                                 case 'M':
-                                    listM.add(file2.getAbsolutePath());
+                                    listM.add(file2.getAbsolutePath().intern());
                                     num += 1;
                                     break;
                                 case 'N':
-                                    listN.add(file2.getAbsolutePath());
+                                    listN.add(file2.getAbsolutePath().intern());
                                     num += 1;
                                     break;
                                 case 'O':
-                                    listO.add(file2.getAbsolutePath());
+                                    listO.add(file2.getAbsolutePath().intern());
                                     num += 1;
                                     break;
                                 case 'P':
-                                    listP.add(file2.getAbsolutePath());
+                                    listP.add(file2.getAbsolutePath().intern());
                                     num += 1;
                                     break;
                                 case 'Q':
-                                    listQ.add(file2.getAbsolutePath());
+                                    listQ.add(file2.getAbsolutePath().intern());
                                     num += 1;
                                     break;
                                 case 'R':
-                                    listR.add(file2.getAbsolutePath());
+                                    listR.add(file2.getAbsolutePath().intern());
                                     num += 1;
                                     break;
                                 case 'S':
-                                    listS.add(file2.getAbsolutePath());
+                                    listS.add(file2.getAbsolutePath().intern());
                                     num += 1;
                                     break;
                                 case 'T':
-                                    listT.add(file2.getAbsolutePath());
+                                    listT.add(file2.getAbsolutePath().intern());
                                     num += 1;
                                     break;
                                 case 'U':
-                                    listU.add(file2.getAbsolutePath());
+                                    listU.add(file2.getAbsolutePath().intern());
                                     num += 1;
                                     break;
                                 case 'V':
-                                    listV.add(file2.getAbsolutePath());
+                                    listV.add(file2.getAbsolutePath().intern());
                                     num += 1;
                                     break;
                                 case 'W':
-                                    listW.add(file2.getAbsolutePath());
+                                    listW.add(file2.getAbsolutePath().intern());
                                     num += 1;
                                     break;
                                 case 'X':
-                                    listX.add(file2.getAbsolutePath());
+                                    listX.add(file2.getAbsolutePath().intern());
                                     num += 1;
                                     break;
                                 case 'Y':
-                                    listY.add(file2.getAbsolutePath());
+                                    listY.add(file2.getAbsolutePath().intern());
                                     num += 1;
                                     break;
                                 case 'Z':
-                                    listZ.add(file2.getAbsolutePath());
+                                    listZ.add(file2.getAbsolutePath().intern());
                                     num += 1;
                                     break;
                                 default:
                                     if (Character.isDigit(headWord)) {
-                                        listNum.add(file2.getAbsolutePath());
+                                        listNum.add(file2.getAbsolutePath().intern());
                                     } else if ('_' == headWord) {
-                                        listUnderline.add(file2.getAbsolutePath());
+                                        listUnderline.add(file2.getAbsolutePath().intern());
                                     } else if ('%' == headWord) {
-                                        listPercentSign.add(file2.getAbsolutePath());
+                                        listPercentSign.add(file2.getAbsolutePath().intern());
                                     } else {
-                                        listUnique.add(file2.getAbsolutePath());
+                                        listUnique.add(file2.getAbsolutePath().intern());
                                     }
                                     num += 1;
                                     break;
                             }
                             if (file2.isDirectory()) {
-                                listRemain.add(file2.getAbsolutePath());
+                                listRemain.add(file2.getAbsolutePath().intern());
                             }
                         }
                     }
@@ -395,7 +396,7 @@ public class Search {
 
     /**
      * @param target txt
-     *               txt是否属于target的子字符串
+     * txt是否属于target的子字符串
      * @return true false
      */
     private boolean isIgnore(String txt, String target) {
