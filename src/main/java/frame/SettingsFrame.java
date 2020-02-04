@@ -1,11 +1,17 @@
 package frame;
 
 import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.FileSystemView;
 import java.awt.*;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.io.*;
 import java.net.URL;
 import com.alibaba.fastjson.*;
+import jdk.nashorn.internal.scripts.JO;
+import main.Main;
 import moveFiles.*;
 import search.Search;
 
@@ -23,7 +29,6 @@ public class SettingsFrame {
     JFrame frame = new JFrame("SettingsFrame");
     private Search searchObj = new Search();
 
-
     public void showWindow() {
         URL frameIcon = SettingsFrame.class.getResource("/icons/frame.png");
         frame.setIconImage(new ImageIcon(frameIcon).getImage());
@@ -34,6 +39,10 @@ public class SettingsFrame {
         int height = screenSize.height;
         frame.setLocation((int)(width*0.25), (int)(height*0.3));
         frame.setSize(800, 400);
+        frame.setBackground(Color.white);
+        panel.setBackground(Color.white);
+        panel.setOpaque(true);
+        frame.setBackground(Color.white);
         frame.setVisible(true);
     }
 
@@ -49,13 +58,16 @@ public class SettingsFrame {
     private JLabel labelplaceholder2;
     private JLabel labelplacehoder3;
     private JLabel labelTip;
+    private JTextField textField3;
     private boolean isStartup;
     public static int cacheNumLimit;
+    public static String hotkey;
     private int updateTimeLimit;
     private String ignorePath;
     private static File settings = new File("settings.json");
+    private static CheckHotKey HotKeyListener;
 
-    public static void initCacheLimit(){
+    public static void initSettings(){
         try(BufferedReader buffR = new BufferedReader(new FileReader(settings))) {
             String line;
             StringBuilder result = new StringBuilder();
@@ -64,6 +76,8 @@ public class SettingsFrame {
             }
             JSONObject settings = JSON.parseObject(result.toString());
             cacheNumLimit = settings.getInteger("cacheNumLimit");
+            hotkey = settings.getString("hotkey");
+            HotKeyListener = new CheckHotKey();
         } catch (IOException ignored) {
 
         }
@@ -74,12 +88,11 @@ public class SettingsFrame {
         String lookAndFeel = "com.sun.java.swing.plaf.windows.WindowsLookAndFeel";
         try {
             UIManager.setLookAndFeel(lookAndFeel);
-        } catch (ClassNotFoundException | UnsupportedLookAndFeelException | IllegalAccessException | InstantiationException e) {
-            //e.printStackTrace();
+        } catch (ClassNotFoundException | UnsupportedLookAndFeelException | IllegalAccessException | InstantiationException ignored) {
+
         }
         //读取所有设置并设置checkBox状态
         label1.setText("文件索引更新时间：");
-        label2.setText("快捷键：CTRL+ALT+J");
         label3.setText("设置忽略文件夹：");
         label4.setText("设置最大缓存数量：");
         label6.setText("搜索深度：");
@@ -116,6 +129,7 @@ public class SettingsFrame {
             int searchDepthInSettings = settings.getInteger("searchDepth");
             searchDepth = searchDepth + searchDepthInSettings;
             textField4.setText(searchDepth);
+            textField3.setText(hotkey);
         } catch (IOException ignored) {
 
         }
@@ -170,6 +184,23 @@ public class SettingsFrame {
                 JOptionPane.showMessageDialog(null, "搜索深度设置错误，请更改");
                 return;
             }
+
+            String _hotkey = textField3.getText();
+            if (_hotkey.length() == 1){
+                JOptionPane.showMessageDialog(null, "快捷键设置错误");
+                return;
+            }else{
+                if (!(64 < _hotkey.charAt(_hotkey.length()-1) && _hotkey.charAt(_hotkey.length()-1) < 91)){
+                    JOptionPane.showMessageDialog(null, "快捷键设置错误");
+                    return;
+                }
+            }
+            hotkey = textField3.getText();
+            HotKeyListener.registHotkey(hotkey);
+            Main.setIgnorePath(ignorePath);
+            Main.setSearchDepth(searchDepth);
+            Main.setUpdateTimeLimit(updateTimeLimit*1000); //使设置生效
+            allSettings.put("hotkey", hotkey);
             allSettings.put("isStartup", isStartup);
             allSettings.put("cacheNumLimit", cacheNumLimit);
             allSettings.put("updateTimeLimit", updateTimeLimit);
@@ -183,11 +214,12 @@ public class SettingsFrame {
         });
         checkBox1.addActionListener(e -> {
             Process p;
+            File superSearch = new File("search_x64.exe"); //TODO 更改版本号
             if (checkBox1.isSelected()){
                 try {
-                    File superSearch = new File("search_x64.exe"); //TODO 更改版本号
                     p = Runtime.getRuntime().exec("reg add \"HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run\" /v superSearch /t REG_SZ /d "+"\"" + superSearch.getAbsolutePath() +"\"" + " /f");
                     p.waitFor();
+                    Runtime.getRuntime().exec("reg add \"HKEY_CURRENT_USER\\Software\\Microsoft\\Windows NT\\CurrentVersion\\AppCompatFlags\\Layers\" /v " + "\""+superSearch.getAbsolutePath()+ "\"" + " /t REG_SZ /d RUNASADMIN /f");
                     BufferedReader outPut = new BufferedReader(new InputStreamReader(p.getErrorStream()));
                     String line;
                     StringBuilder result = new StringBuilder();
@@ -204,6 +236,7 @@ public class SettingsFrame {
             }else{
                 try {
                     p = Runtime.getRuntime().exec("reg delete \"HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run\" /v superSearch /f");
+                    Runtime.getRuntime().exec("reg delete \"HKEY_CURRENT_USER\\Software\\Microsoft\\Windows NT\\CurrentVersion\\AppCompatFlags\\Layers\" /v " + "\""+superSearch.getAbsolutePath()+ "\" /f");
                     BufferedReader outPut = new BufferedReader(new InputStreamReader(p.getErrorStream()));
                     String line;
                     StringBuilder result = new StringBuilder();
@@ -214,8 +247,8 @@ public class SettingsFrame {
                         checkBox1.setSelected(true);
                         JOptionPane.showMessageDialog(null, "删除开机启动失败，请尝试以管理员身份运行");
                     }
-                } catch (IOException ex) {
-                    //ex.printStackTrace();
+                } catch (IOException ignored) {
+
                 }
             }
             boolean isSelected = checkBox1.isSelected();
@@ -228,14 +261,14 @@ public class SettingsFrame {
                 }
                 allSettings = JSON.parseObject(result.toString());
                 allSettings.put("isStartup", isSelected);
-            } catch (IOException ex) {
-                //ex.printStackTrace();
+            } catch (IOException ignored) {
+
             }
             try(BufferedWriter buffW = new BufferedWriter(new FileWriter(settings))){
                 assert allSettings != null;
                 buffW.write(allSettings.toJSONString());
-            } catch (IOException ex) {
-                //ex.printStackTrace();
+            } catch (IOException ignored) {
+
             }
         });
         button2.addActionListener(e -> {
@@ -259,6 +292,59 @@ public class SettingsFrame {
                 textArea1.append(file.getAbsolutePath() + ",\n");
             }
         });
+        textField3.addKeyListener(new KeyListener() {
+            boolean reset = false;
+
+            @Override
+            public void keyTyped(KeyEvent e) {
+
+            }
+
+            @Override
+            public void keyPressed(KeyEvent e) {
+                int key = e.getKeyCode();
+                if (reset){
+                    textField3.setText(null);
+                    reset = false;
+                }
+                textField3.setCaretPosition(textField3.getText().length());
+                if (key == 17) {
+                    if (!textField3.getText().contains("Ctrl + ")) {
+                        textField3.setText(textField3.getText() + "Ctrl + ");
+                    }
+                } else if (key == 18) {
+                    if (!textField3.getText().contains("Alt + ")) {
+                        textField3.setText(textField3.getText() + "Alt + ");
+                    }
+                } else if (key == 524) {
+                    if (!textField3.getText().contains("Win + ")) {
+                        textField3.setText(textField3.getText() + "Win + ");
+                    }
+                } else if (key == 16) {
+                    if (!textField3.getText().contains("Shift + ")) {
+                        textField3.setText(textField3.getText() + "Shift + ");
+                    }
+                } else if (64 < key && key < 91) {
+                    String txt = textField3.getText();
+                    if (!txt.equals("")) {
+                        if (64 < txt.charAt(txt.length() - 1) && txt.charAt(txt.length() - 1) < 91) {
+                            String text = txt.substring(0, txt.length() - 1);
+                            textField3.setText(text + (char) key);
+                        } else {
+                            textField3.setText(txt + (char) key);
+                        }
+                    }
+                    if (txt.length() == 1){
+                        textField3.setText(null);
+                    }
+                }
+            }
+
+            @Override
+            public void keyReleased(KeyEvent e) {
+                reset = true;
+            }
+        });
     }
     class moveDesktopFiles implements Runnable{
 
@@ -272,7 +358,7 @@ public class SettingsFrame {
             moveFiles moveFiles = new moveFiles();
             moveFiles.moveFolder(fileDesktop.toString(), fileBackUp.getAbsolutePath());
             moveFiles.moveFolder("C:\\Users\\Public\\Desktop", fileBackUp.getAbsolutePath());
-            searchObj.setSearch(true);
+            searchObj.setUsable(false);
         }
     }
 }

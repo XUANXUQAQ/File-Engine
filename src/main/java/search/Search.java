@@ -1,12 +1,8 @@
 package search;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-
 import javax.swing.filechooser.FileSystemView;
 
 
@@ -41,8 +37,11 @@ public class Search {
     private static LinkedList<String> listPercentSign = new LinkedList<>();
     private static LinkedList<String> listUnique = new LinkedList<>();
     private static LinkedList<String> listUnderline = new LinkedList<>();
-    private static boolean isSearch = false;
+    private static LinkedList<String> listToAdd = new LinkedList<>();
+    private static boolean isUsable = false;
     private static boolean isFocusLost = true;
+    private static boolean isManualUpdate = false;
+    private static LinkedList<String> RecycleBin = new LinkedList<>();
     private final String desktop = FileSystemView.getFileSystemView().getHomeDirectory().getAbsolutePath();
     LinkedList<String> listRemain = new LinkedList<>();
     private String startMenu = getStartMenu();
@@ -50,12 +49,290 @@ public class Search {
     private int num;
 
 
-    public boolean isSearch() {
-        return isSearch;
+    public void addToRecycleBin(String path) {
+        RecycleBin.add(path);
     }
 
-    public void setSearch(boolean b) {
-        isSearch = b;
+    public void clearRecycleBin() {
+        isUsable = false;
+        for (String path : RecycleBin) {
+            deletePathInList(path);
+        }
+        isUsable = true;
+    }
+
+    public void FilesToAdd(String path){
+        listToAdd.add(path);
+    }
+
+    public void mergeListToadd(){
+        while (!listToAdd.isEmpty()){
+            String each = listToAdd.pop();
+            File add = new File(each);
+            if (add.exists()) {
+                addFileToList(each);
+            }
+        }
+    }
+
+    private void deletePathInList(String path) {
+        File file = new File(path);
+        char firstWord = file.getName().charAt(0);
+        char headWord = Character.toUpperCase(firstWord);
+        switch (headWord) {
+            case 'A':
+                try {
+                    listA.remove(path);
+                } catch (Exception ignored) {
+
+                }
+
+                break;
+            case 'B':
+                try {
+                    listB.remove(path);
+                } catch (Exception ignored) {
+
+                }
+
+                break;
+            case 'C':
+                try {
+                    listC.remove(path);
+                } catch (Exception ignored) {
+
+                }
+
+                break;
+            case 'D':
+                try {
+                    listD.remove(path);
+                } catch (Exception ignored) {
+
+                }
+
+                break;
+            case 'E':
+                try {
+                    listE.remove(path);
+                } catch (Exception ignored) {
+
+                }
+
+                break;
+            case 'F':
+                try {
+                    listF.remove(path);
+                } catch (Exception ignored) {
+
+                }
+
+                break;
+            case 'G':
+                try {
+                    listG.remove(path);
+                } catch (Exception ignored) {
+
+                }
+
+                break;
+            case 'H':
+                try {
+                    listH.remove(path);
+                } catch (Exception ignored) {
+
+                }
+
+                break;
+            case 'I':
+                try {
+                    listI.remove(path);
+                } catch (Exception ignored) {
+
+                }
+
+                break;
+            case 'J':
+                try {
+                    listJ.remove(path);
+                } catch (Exception ignored) {
+
+                }
+
+                break;
+            case 'K':
+                try {
+                    listK.remove(path);
+                } catch (Exception ignored) {
+
+                }
+
+                break;
+            case 'L':
+                try {
+                    listL.remove(path);
+                } catch (Exception ignored) {
+
+                }
+
+                break;
+            case 'M':
+                try {
+                    listM.remove(path);
+                } catch (Exception ignored) {
+
+                }
+
+                break;
+            case 'N':
+                try {
+                    listN.remove(path);
+                } catch (Exception ignored) {
+
+                }
+
+                break;
+            case 'O':
+                try {
+                    listO.remove(path);
+                } catch (Exception ignored) {
+
+                }
+
+                break;
+            case 'P':
+                try {
+                    listP.remove(path);
+                } catch (Exception ignored) {
+
+                }
+
+                break;
+            case 'Q':
+                try {
+                    listQ.remove(path);
+                } catch (Exception ignored) {
+
+                }
+
+                break;
+            case 'R':
+                try {
+                    listR.remove(path);
+                } catch (Exception ignored) {
+
+                }
+
+                break;
+            case 'S':
+                try {
+                    listS.remove(path);
+                } catch (Exception ignored) {
+
+                }
+
+                break;
+            case 'T':
+                try {
+                    listT.remove(path);
+                } catch (Exception ignored) {
+
+                }
+
+                break;
+            case 'U':
+                try {
+                    listU.remove(path);
+                } catch (Exception ignored) {
+
+                }
+
+                break;
+            case 'V':
+                try {
+                    listV.remove(path);
+                } catch (Exception ignored) {
+
+                }
+
+                break;
+            case 'W':
+                try {
+                    listW.remove(path);
+                } catch (Exception ignored) {
+
+                }
+
+                break;
+            case 'X':
+                try {
+                    listX.remove(path);
+                } catch (Exception ignored) {
+
+                }
+
+                break;
+            case 'Y':
+                try {
+                    listY.remove(path);
+                } catch (Exception ignored) {
+
+                }
+
+                break;
+            case 'Z':
+                try {
+                    listZ.remove(path);
+                } catch (Exception ignored) {
+
+                }
+
+                break;
+            default:
+                if (Character.isDigit(headWord)) {
+                    try {
+                        listNum.remove(path);
+                    } catch (Exception ignored) {
+
+                    }
+                } else if ('_' == headWord) {
+                    try {
+                        listUnderline.remove(path);
+                    } catch (Exception ignored) {
+
+                    }
+                } else if ('%' == headWord) {
+                    try {
+                        listPercentSign.remove(path);
+                    } catch (Exception ignored) {
+
+                    }
+                } else {
+                    try {
+                        listUnique.remove(path);
+                    } catch (Exception ignored) {
+
+                    }
+                }
+
+                break;
+        }
+    }
+
+    public boolean isManualUpdate() {
+        return isManualUpdate;
+    }
+
+    public void setManualUpdate(boolean b) {
+        isManualUpdate = b;
+    }
+
+    public boolean isUsable() {
+        return isUsable;
+    }
+
+    public void setUsable(boolean b) {
+        isUsable = b;
     }
 
     public boolean isIsFocusLost() {
@@ -64,6 +341,1383 @@ public class Search {
 
     public void setFocusLostStatus(boolean b) {
         isFocusLost = b;
+    }
+
+    private void addFileToList(String path) {
+        File file = new File(path);
+        char firstWord = file.getName().charAt(0);
+        if (firstWord != '$' && firstWord != '.') {
+            char headWord = Character.toUpperCase(firstWord);
+            switch (headWord) {
+                case 'A':
+                    try {
+                        listA.add(path);
+                    } catch (Exception ignored) {
+
+                    }
+
+                    break;
+                case 'B':
+                    try {
+                        listB.add(path);
+                    } catch (Exception ignored) {
+
+                    }
+
+                    break;
+                case 'C':
+                    try {
+                        listC.add(path);
+                    } catch (Exception ignored) {
+
+                    }
+
+                    break;
+                case 'D':
+                    try {
+                        listD.add(path);
+                    } catch (Exception ignored) {
+
+                    }
+
+                    break;
+                case 'E':
+                    try {
+                        listE.add(path);
+                    } catch (Exception ignored) {
+
+                    }
+
+                    break;
+                case 'F':
+                    try {
+                        listF.add(path);
+                    } catch (Exception ignored) {
+
+                    }
+
+                    break;
+                case 'G':
+                    try {
+                        listG.add(path);
+                    } catch (Exception ignored) {
+
+                    }
+
+                    break;
+                case 'H':
+                    try {
+                        listH.add(path);
+                    } catch (Exception ignored) {
+
+                    }
+
+                    break;
+                case 'I':
+                    try {
+                        listI.add(path);
+                    } catch (Exception ignored) {
+
+                    }
+
+                    break;
+                case 'J':
+                    try {
+                        listJ.add(path);
+                    } catch (Exception ignored) {
+
+                    }
+
+                    break;
+                case 'K':
+                    try {
+                        listK.add(path);
+                    } catch (Exception ignored) {
+
+                    }
+
+                    break;
+                case 'L':
+                    try {
+                        listL.add(path);
+                    } catch (Exception ignored) {
+
+                    }
+
+                    break;
+                case 'M':
+                    try {
+                        listM.add(path);
+                    } catch (Exception ignored) {
+
+                    }
+
+                    break;
+                case 'N':
+                    try {
+                        listN.add(path);
+                    } catch (Exception ignored) {
+
+                    }
+
+                    break;
+                case 'O':
+                    try {
+                        listO.add(path);
+                    } catch (Exception ignored) {
+
+                    }
+
+                    break;
+                case 'P':
+                    try {
+                        listP.add(path);
+                    } catch (Exception ignored) {
+
+                    }
+
+                    break;
+                case 'Q':
+                    try {
+                        listQ.add(path);
+                    } catch (Exception ignored) {
+
+                    }
+
+                    break;
+                case 'R':
+                    try {
+                        listR.add(path);
+                    } catch (Exception ignored) {
+
+                    }
+
+                    break;
+                case 'S':
+                    try {
+                        listS.add(path);
+                    } catch (Exception ignored) {
+
+                    }
+
+                    break;
+                case 'T':
+                    try {
+                        listT.add(path);
+                    } catch (Exception ignored) {
+
+                    }
+
+                    break;
+                case 'U':
+                    try {
+                        listU.add(path);
+                    } catch (Exception ignored) {
+
+                    }
+
+                    break;
+                case 'V':
+                    try {
+                        listV.add(path);
+                    } catch (Exception ignored) {
+
+                    }
+
+                    break;
+                case 'W':
+                    try {
+                        listW.add(path);
+                    } catch (Exception ignored) {
+
+                    }
+
+                    break;
+                case 'X':
+                    try {
+                        listX.add(path);
+                    } catch (Exception ignored) {
+
+                    }
+
+                    break;
+                case 'Y':
+                    try {
+                        listY.add(path);
+                    } catch (Exception ignored) {
+
+                    }
+
+                    break;
+                case 'Z':
+                    try {
+                        listZ.add(path);
+                    } catch (Exception ignored) {
+
+                    }
+
+                    break;
+                default:
+                    if (Character.isDigit(headWord)) {
+                        try {
+                            listNum.add(path);
+                        } catch (Exception ignored) {
+
+                        }
+                    } else if ('_' == headWord) {
+                        try {
+                            listUnderline.add(path);
+                        } catch (Exception ignored) {
+
+                        }
+                    } else if ('%' == headWord) {
+                        try {
+                            listPercentSign.add(path);
+                        } catch (Exception ignored) {
+
+                        }
+                    } else {
+                        try {
+                            listUnique.add(path);
+                        } catch (Exception ignored) {
+
+                        }
+                    }
+
+                    break;
+            }
+        }
+        isUsable = true;
+    }
+
+    public void loadAllLists() {
+        for (int i = 65; i < 91; i++) {
+            String ch = "" + (char) i;
+            readFileList(ch);
+        }
+        readFileList("PercentSign");
+        readFileList("Underline");
+        readFileList("Unique");
+        readFileList("Num");
+    }
+
+    public void saveAndReleaseLists() {
+        for (int i = 65; i < 91; i++) {
+            String ch = "" + (char) i;
+            saveAndReleaseList(ch);
+        }
+        saveAndReleaseList("PercentSign");
+        saveAndReleaseList("Underline");
+        saveAndReleaseList("Unique");
+        saveAndReleaseList("Num");
+    }
+
+    public void saveLists(){
+        for (int i = 65; i < 91; i++) {
+            String ch = "" + (char) i;
+            saveList(ch);
+        }
+        saveList("PercentSign");
+        saveList("Underline");
+        saveList("Unique");
+        saveList("Num");
+    }
+
+    private void saveList(String ch){
+        File data = new File("data");
+        String path;
+        Serialize listFile;
+        if (!data.exists()) {
+            data.mkdir();
+        }
+        switch (ch) {
+            case "A":
+                path = "data\\listA";
+                listFile = new Serialize();
+                listFile.setList(listA);
+                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                    oos.writeObject(listFile);
+
+                } catch (IOException ignored) {
+
+                }
+                break;
+            case "B":
+                path = "data\\listB";
+                listFile = new Serialize();
+                listFile.setList(listB);
+                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                    oos.writeObject(listFile);
+
+                } catch (IOException ignored) {
+
+                }
+                break;
+            case "C":
+                path = "data\\listC";
+                listFile = new Serialize();
+                listFile.setList(listC);
+                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                    oos.writeObject(listFile);
+
+                } catch (IOException ignored) {
+
+                }
+                break;
+            case "D":
+
+                path = "data\\listD";
+                listFile = new Serialize();
+                listFile.setList(listD);
+                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                    oos.writeObject(listFile);
+
+                } catch (IOException ignored) {
+
+                }
+                break;
+            case "E":
+
+                path = "data\\listE";
+                listFile = new Serialize();
+                listFile.setList(listE);
+                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                    oos.writeObject(listFile);
+
+                } catch (IOException ignored) {
+
+                }
+                break;
+            case "F":
+
+                path = "data\\listF";
+                listFile = new Serialize();
+                listFile.setList(listF);
+                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                    oos.writeObject(listFile);
+
+                } catch (IOException ignored) {
+
+                }
+                break;
+            case "G":
+
+                path = "data\\listG";
+                listFile = new Serialize();
+                listFile.setList(listG);
+                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                    oos.writeObject(listFile);
+
+                } catch (IOException ignored) {
+
+                }
+                break;
+            case "H":
+
+                path = "data\\listH";
+                listFile = new Serialize();
+                listFile.setList(listH);
+                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                    oos.writeObject(listFile);
+
+                } catch (IOException ignored) {
+
+                }
+                break;
+            case "I":
+
+                path = "data\\listI";
+                listFile = new Serialize();
+                listFile.setList(listI);
+                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                    oos.writeObject(listFile);
+
+                } catch (IOException ignored) {
+
+                }
+                break;
+            case "J":
+
+                path = "data\\listJ";
+                listFile = new Serialize();
+                listFile.setList(listJ);
+                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                    oos.writeObject(listFile);
+
+                } catch (IOException ignored) {
+
+                }
+                break;
+            case "K":
+
+                path = "data\\listK";
+                listFile = new Serialize();
+                listFile.setList(listK);
+                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                    oos.writeObject(listFile);
+
+                } catch (IOException ignored) {
+
+                }
+                break;
+            case "L":
+
+                path = "data\\listL";
+                listFile = new Serialize();
+                listFile.setList(listL);
+                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                    oos.writeObject(listFile);
+
+                } catch (IOException ignored) {
+
+                }
+                break;
+            case "M":
+
+                path = "data\\listM";
+                listFile = new Serialize();
+                listFile.setList(listM);
+                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                    oos.writeObject(listFile);
+
+                } catch (IOException ignored) {
+
+                }
+                break;
+            case "N":
+
+                path = "data\\listN";
+                listFile = new Serialize();
+                listFile.setList(listN);
+                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                    oos.writeObject(listFile);
+
+                } catch (IOException ignored) {
+
+                }
+                break;
+            case "O":
+
+                path = "data\\listO";
+                listFile = new Serialize();
+                listFile.setList(listO);
+                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                    oos.writeObject(listFile);
+
+                } catch (IOException ignored) {
+
+                }
+                break;
+            case "P":
+
+                path = "data\\listP";
+                listFile = new Serialize();
+                listFile.setList(listP);
+                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                    oos.writeObject(listFile);
+
+                } catch (IOException ignored) {
+
+                }
+                break;
+            case "Q":
+
+                path = "data\\listQ";
+                listFile = new Serialize();
+                listFile.setList(listQ);
+                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                    oos.writeObject(listFile);
+
+                } catch (IOException ignored) {
+
+                }
+                break;
+            case "R":
+
+                path = "data\\listR";
+                listFile = new Serialize();
+                listFile.setList(listR);
+                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                    oos.writeObject(listFile);
+
+                } catch (IOException ignored) {
+
+                }
+                break;
+            case "S":
+
+                path = "data\\listS";
+                listFile = new Serialize();
+                listFile.setList(listS);
+                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                    oos.writeObject(listFile);
+
+                } catch (IOException ignored) {
+
+                }
+                break;
+            case "T":
+
+                path = "data\\listT";
+                listFile = new Serialize();
+                listFile.setList(listT);
+                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                    oos.writeObject(listFile);
+
+                } catch (IOException ignored) {
+
+                }
+                break;
+            case "U":
+
+                path = "data\\listU";
+                listFile = new Serialize();
+                listFile.setList(listU);
+                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                    oos.writeObject(listFile);
+
+                } catch (IOException ignored) {
+
+                }
+                break;
+            case "V":
+
+                path = "data\\listV";
+                listFile = new Serialize();
+                listFile.setList(listV);
+                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                    oos.writeObject(listFile);
+
+                } catch (IOException ignored) {
+
+                }
+                break;
+            case "W":
+
+                path = "data\\listW";
+                listFile = new Serialize();
+                listFile.setList(listW);
+                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                    oos.writeObject(listFile);
+
+                } catch (IOException ignored) {
+
+                }
+                break;
+            case "X":
+
+                path = "data\\listX";
+                listFile = new Serialize();
+                listFile.setList(listX);
+                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                    oos.writeObject(listFile);
+
+                } catch (IOException ignored) {
+
+                }
+                break;
+            case "Y":
+
+                path = "data\\listY";
+                listFile = new Serialize();
+                listFile.setList(listY);
+                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                    oos.writeObject(listFile);
+
+                } catch (IOException ignored) {
+
+                }
+                break;
+            case "Z":
+
+                path = "data\\listZ";
+                listFile = new Serialize();
+                listFile.setList(listZ);
+                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                    oos.writeObject(listFile);
+
+                } catch (IOException ignored) {
+
+                }
+                break;
+            case "PercentSign":
+                path = "data\\listPercentSign";
+                listFile = new Serialize();
+                listFile.setList(listPercentSign);
+                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                    oos.writeObject(listFile);
+
+                } catch (IOException ignored) {
+
+                }
+                break;
+            case "Underline":
+
+                path = "data\\listUnderline";
+                listFile = new Serialize();
+                listFile.setList(listUnderline);
+                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                    oos.writeObject(listFile);
+
+                } catch (IOException ignored) {
+
+                }
+                break;
+            case "Unique":
+
+                path = "data\\listUnique";
+                listFile = new Serialize();
+                listFile.setList(listUnique);
+                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                    oos.writeObject(listFile);
+
+                } catch (IOException ignored) {
+
+                }
+                break;
+            case "Num":
+                path = "data\\listNum";
+                listFile = new Serialize();
+                listFile.setList(listNum);
+                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                    oos.writeObject(listFile);
+
+                } catch (IOException ignored) {
+
+                }
+                break;
+        }
+    }
+
+    private void saveAndReleaseList(String ch) {
+        File data = new File("data");
+        String path;
+        Serialize listFile;
+        if (!data.exists()) {
+            data.mkdir();
+        }
+        switch (ch) {
+            case "A":
+                path = "data\\listA";
+                listFile = new Serialize();
+                listFile.setList(listA);
+                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                    oos.writeObject(listFile);
+                    listA.clear();
+                } catch (IOException ignored) {
+
+                }
+                break;
+            case "B":
+                path = "data\\listB";
+                listFile = new Serialize();
+                listFile.setList(listB);
+                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                    oos.writeObject(listFile);
+                    listB.clear();
+                } catch (IOException ignored) {
+
+                }
+                break;
+            case "C":
+                path = "data\\listC";
+                listFile = new Serialize();
+                listFile.setList(listC);
+                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                    oos.writeObject(listFile);
+                    listC.clear();
+                } catch (IOException ignored) {
+
+                }
+                break;
+            case "D":
+
+                path = "data\\listD";
+                listFile = new Serialize();
+                listFile.setList(listD);
+                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                    oos.writeObject(listFile);
+                    listD.clear();
+                } catch (IOException ignored) {
+
+                }
+                break;
+            case "E":
+
+                path = "data\\listE";
+                listFile = new Serialize();
+                listFile.setList(listE);
+                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                    oos.writeObject(listFile);
+                    listE.clear();
+                } catch (IOException ignored) {
+
+                }
+                break;
+            case "F":
+
+                path = "data\\listF";
+                listFile = new Serialize();
+                listFile.setList(listF);
+                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                    oos.writeObject(listFile);
+                    listF.clear();
+                } catch (IOException ignored) {
+
+                }
+                break;
+            case "G":
+
+                path = "data\\listG";
+                listFile = new Serialize();
+                listFile.setList(listG);
+                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                    oos.writeObject(listFile);
+                    listG.clear();
+                } catch (IOException ignored) {
+
+                }
+                break;
+            case "H":
+
+                path = "data\\listH";
+                listFile = new Serialize();
+                listFile.setList(listH);
+                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                    oos.writeObject(listFile);
+                    listH.clear();
+                } catch (IOException ignored) {
+
+                }
+                break;
+            case "I":
+
+                path = "data\\listI";
+                listFile = new Serialize();
+                listFile.setList(listI);
+                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                    oos.writeObject(listFile);
+                    listI.clear();
+                } catch (IOException ignored) {
+
+                }
+                break;
+            case "J":
+
+                path = "data\\listJ";
+                listFile = new Serialize();
+                listFile.setList(listJ);
+                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                    oos.writeObject(listFile);
+                    listJ.clear();
+                } catch (IOException ignored) {
+
+                }
+                break;
+            case "K":
+
+                path = "data\\listK";
+                listFile = new Serialize();
+                listFile.setList(listK);
+                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                    oos.writeObject(listFile);
+                    listK.clear();
+                } catch (IOException ignored) {
+
+                }
+                break;
+            case "L":
+
+                path = "data\\listL";
+                listFile = new Serialize();
+                listFile.setList(listL);
+                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                    oos.writeObject(listFile);
+                    listL.clear();
+                } catch (IOException ignored) {
+
+                }
+                break;
+            case "M":
+
+                path = "data\\listM";
+                listFile = new Serialize();
+                listFile.setList(listM);
+                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                    oos.writeObject(listFile);
+                    listM.clear();
+                } catch (IOException ignored) {
+
+                }
+                break;
+            case "N":
+
+                path = "data\\listN";
+                listFile = new Serialize();
+                listFile.setList(listN);
+                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                    oos.writeObject(listFile);
+                    listN.clear();
+                } catch (IOException ignored) {
+
+                }
+                break;
+            case "O":
+
+                path = "data\\listO";
+                listFile = new Serialize();
+                listFile.setList(listO);
+                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                    oos.writeObject(listFile);
+                    listO.clear();
+                } catch (IOException ignored) {
+
+                }
+                break;
+            case "P":
+
+                path = "data\\listP";
+                listFile = new Serialize();
+                listFile.setList(listP);
+                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                    oos.writeObject(listFile);
+                    listP.clear();
+                } catch (IOException ignored) {
+
+                }
+                break;
+            case "Q":
+
+                path = "data\\listQ";
+                listFile = new Serialize();
+                listFile.setList(listQ);
+                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                    oos.writeObject(listFile);
+                    listQ.clear();
+                } catch (IOException ignored) {
+
+                }
+                break;
+            case "R":
+
+                path = "data\\listR";
+                listFile = new Serialize();
+                listFile.setList(listR);
+                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                    oos.writeObject(listFile);
+                    listR.clear();
+                } catch (IOException ignored) {
+
+                }
+                break;
+            case "S":
+
+                path = "data\\listS";
+                listFile = new Serialize();
+                listFile.setList(listS);
+                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                    oos.writeObject(listFile);
+                    listS.clear();
+                } catch (IOException ignored) {
+
+                }
+                break;
+            case "T":
+
+                path = "data\\listT";
+                listFile = new Serialize();
+                listFile.setList(listT);
+                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                    oos.writeObject(listFile);
+                    listT.clear();
+                } catch (IOException ignored) {
+
+                }
+                break;
+            case "U":
+
+                path = "data\\listU";
+                listFile = new Serialize();
+                listFile.setList(listU);
+                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                    oos.writeObject(listFile);
+                    listU.clear();
+                } catch (IOException ignored) {
+
+                }
+                break;
+            case "V":
+
+                path = "data\\listV";
+                listFile = new Serialize();
+                listFile.setList(listV);
+                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                    oos.writeObject(listFile);
+                    listV.clear();
+                } catch (IOException ignored) {
+
+                }
+                break;
+            case "W":
+
+                path = "data\\listW";
+                listFile = new Serialize();
+                listFile.setList(listW);
+                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                    oos.writeObject(listFile);
+                    listW.clear();
+                } catch (IOException ignored) {
+
+                }
+                break;
+            case "X":
+
+                path = "data\\listX";
+                listFile = new Serialize();
+                listFile.setList(listX);
+                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                    oos.writeObject(listFile);
+                    listX.clear();
+                } catch (IOException ignored) {
+
+                }
+                break;
+            case "Y":
+
+                path = "data\\listY";
+                listFile = new Serialize();
+                listFile.setList(listY);
+                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                    oos.writeObject(listFile);
+                    listY.clear();
+                } catch (IOException ignored) {
+
+                }
+                break;
+            case "Z":
+
+                path = "data\\listZ";
+                listFile = new Serialize();
+                listFile.setList(listZ);
+                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                    oos.writeObject(listFile);
+                    listZ.clear();
+                } catch (IOException ignored) {
+
+                }
+                break;
+            case "PercentSign":
+                path = "data\\listPercentSign";
+                listFile = new Serialize();
+                listFile.setList(listPercentSign);
+                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                    oos.writeObject(listFile);
+                    listPercentSign.clear();
+                } catch (IOException ignored) {
+
+                }
+                break;
+            case "Underline":
+
+                path = "data\\listUnderline";
+                listFile = new Serialize();
+                listFile.setList(listUnderline);
+                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                    oos.writeObject(listFile);
+                    listUnderline.clear();
+                } catch (IOException ignored) {
+
+                }
+                break;
+            case "Unique":
+
+                path = "data\\listUnique";
+                listFile = new Serialize();
+                listFile.setList(listUnique);
+                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                    oos.writeObject(listFile);
+                    listA.clear();
+                } catch (IOException ignored) {
+
+                }
+                break;
+            case "Num":
+                path = "data\\listNum";
+                listFile = new Serialize();
+                listFile.setList(listNum);
+                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                    oos.writeObject(listFile);
+                    listNum.clear();
+                } catch (IOException ignored) {
+
+                }
+                break;
+        }
+    }
+
+    private void readFileList(String ch) {
+        String path;
+        Serialize listFile;
+        switch (ch) {
+            case "A":
+                path = "data\\listA";
+                File file = new File(path);
+                try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
+                    listFile = (Serialize) ois.readObject();
+                    listA.addAll(listFile.list);
+                } catch (IOException | ClassNotFoundException ignored) {
+
+                }
+                break;
+            case "B":
+
+                path = "data\\listB";
+
+                file = new File(path);
+                try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
+                    listFile = (Serialize) ois.readObject();
+                    listB.addAll(listFile.list);
+                } catch (IOException | ClassNotFoundException ignored) {
+
+                }
+                break;
+            case "C":
+
+                path = "data\\listC";
+
+                file = new File(path);
+                try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
+                    listFile = (Serialize) ois.readObject();
+                    listC.addAll(listFile.list);
+                } catch (IOException | ClassNotFoundException ignored) {
+
+                }
+                break;
+            case "D":
+
+                path = "data\\listD";
+
+                file = new File(path);
+                try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
+                    listFile = (Serialize) ois.readObject();
+                    listD.addAll(listFile.list);
+                } catch (IOException | ClassNotFoundException ignored) {
+
+                }
+                break;
+            case "E":
+
+                path = "data\\listE";
+
+                file = new File(path);
+                try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
+                    listFile = (Serialize) ois.readObject();
+                    listE.addAll(listFile.list);
+                } catch (IOException | ClassNotFoundException ignored) {
+
+                }
+                break;
+            case "F":
+
+                path = "data\\listF";
+
+                file = new File(path);
+                try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
+                    listFile = (Serialize) ois.readObject();
+                    listF.addAll(listFile.list);
+                } catch (IOException | ClassNotFoundException ignored) {
+
+                }
+                break;
+            case "G":
+
+                path = "data\\listG";
+
+                file = new File(path);
+                try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
+                    listFile = (Serialize) ois.readObject();
+                    listG.addAll(listFile.list);
+                } catch (IOException | ClassNotFoundException ignored) {
+
+                }
+                break;
+            case "H":
+
+                path = "data\\listH";
+
+                file = new File(path);
+                try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
+                    listFile = (Serialize) ois.readObject();
+                    listH.addAll(listFile.list);
+                } catch (IOException | ClassNotFoundException ignored) {
+
+                }
+                break;
+            case "I":
+
+                path = "data\\listI";
+
+                file = new File(path);
+                try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
+                    listFile = (Serialize) ois.readObject();
+                    listI.addAll(listFile.list);
+                } catch (IOException | ClassNotFoundException ignored) {
+
+                }
+                break;
+            case "J":
+
+                path = "data\\listJ";
+
+                file = new File(path);
+                try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
+                    listFile = (Serialize) ois.readObject();
+                    listJ.addAll(listFile.list);
+                } catch (IOException | ClassNotFoundException ignored) {
+
+                }
+                break;
+            case "K":
+
+                path = "data\\listK";
+
+                file = new File(path);
+                try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
+                    listFile = (Serialize) ois.readObject();
+                    listK.addAll(listFile.list);
+                } catch (IOException | ClassNotFoundException ignored) {
+
+                }
+                break;
+            case "L":
+
+                path = "data\\listL";
+
+                file = new File(path);
+                try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
+                    listFile = (Serialize) ois.readObject();
+                    listL.addAll(listFile.list);
+                } catch (IOException | ClassNotFoundException ignored) {
+
+                }
+                break;
+            case "M":
+
+                path = "data\\listM";
+
+                file = new File(path);
+                try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
+                    listFile = (Serialize) ois.readObject();
+                    listM.addAll(listFile.list);
+                } catch (IOException | ClassNotFoundException ignored) {
+
+                }
+                break;
+            case "N":
+
+                path = "data\\listN";
+
+                file = new File(path);
+                try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
+                    listFile = (Serialize) ois.readObject();
+                    listN.addAll(listFile.list);
+                } catch (IOException | ClassNotFoundException ignored) {
+
+                }
+                break;
+            case "O":
+
+                path = "data\\listO";
+
+                file = new File(path);
+                try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
+                    listFile = (Serialize) ois.readObject();
+                    listO.addAll(listFile.list);
+                } catch (IOException | ClassNotFoundException ignored) {
+
+                }
+                break;
+            case "P":
+
+                path = "data\\listP";
+
+                file = new File(path);
+                try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
+                    listFile = (Serialize) ois.readObject();
+                    listP.addAll(listFile.list);
+                } catch (IOException | ClassNotFoundException ignored) {
+
+                }
+                break;
+            case "Q":
+
+                path = "data\\listQ";
+
+                file = new File(path);
+                try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
+                    listFile = (Serialize) ois.readObject();
+                    listQ.addAll(listFile.list);
+                } catch (IOException | ClassNotFoundException ignored) {
+
+                }
+                break;
+            case "R":
+
+                path = "data\\listR";
+
+                file = new File(path);
+                try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
+                    listFile = (Serialize) ois.readObject();
+                    listR.addAll(listFile.list);
+                } catch (IOException | ClassNotFoundException ignored) {
+
+                }
+                break;
+            case "S":
+
+                path = "data\\listS";
+
+                file = new File(path);
+                try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
+                    listFile = (Serialize) ois.readObject();
+                    listS.addAll(listFile.list);
+                } catch (IOException | ClassNotFoundException ignored) {
+
+                }
+                break;
+            case "T":
+
+                path = "data\\listT";
+
+                file = new File(path);
+                try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
+                    listFile = (Serialize) ois.readObject();
+                    listT.addAll(listFile.list);
+                } catch (IOException | ClassNotFoundException ignored) {
+
+                }
+                break;
+            case "U":
+
+                path = "data\\listU";
+
+                file = new File(path);
+                try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
+                    listFile = (Serialize) ois.readObject();
+                    listU.addAll(listFile.list);
+                } catch (IOException | ClassNotFoundException ignored) {
+
+                }
+                break;
+            case "V":
+
+                path = "data\\listV";
+
+                file = new File(path);
+                try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
+                    listFile = (Serialize) ois.readObject();
+                    listV.addAll(listFile.list);
+                } catch (IOException | ClassNotFoundException ignored) {
+
+                }
+                break;
+            case "W":
+
+                path = "data\\listW";
+
+                file = new File(path);
+                try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
+                    listFile = (Serialize) ois.readObject();
+                    listW.addAll(listFile.list);
+                } catch (IOException | ClassNotFoundException ignored) {
+
+                }
+                break;
+            case "X":
+
+                path = "data\\listX";
+
+                file = new File(path);
+                try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
+                    listFile = (Serialize) ois.readObject();
+                    listX.addAll(listFile.list);
+                } catch (IOException | ClassNotFoundException ignored) {
+
+                }
+                break;
+            case "Y":
+
+                path = "data\\listY";
+
+                file = new File(path);
+                try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
+                    listFile = (Serialize) ois.readObject();
+                    listY.addAll(listFile.list);
+                } catch (IOException | ClassNotFoundException ignored) {
+
+                }
+                break;
+            case "Z":
+
+                path = "data\\listZ";
+
+                file = new File(path);
+                try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
+                    listFile = (Serialize) ois.readObject();
+                    listZ.addAll(listFile.list);
+                } catch (IOException | ClassNotFoundException ignored) {
+
+                }
+                break;
+            case "PercentSign":
+
+                path = "data\\listPercentSign";
+
+                file = new File(path);
+                try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
+                    listFile = (Serialize) ois.readObject();
+                    listPercentSign.addAll(listFile.list);
+                } catch (IOException | ClassNotFoundException ignored) {
+
+                }
+                break;
+            case "UnderLine":
+
+                path = "data\\listUnderline";
+
+                file = new File(path);
+                try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
+                    listFile = (Serialize) ois.readObject();
+                    listUnderline.addAll(listFile.list);
+                } catch (IOException | ClassNotFoundException ignored) {
+
+                }
+                break;
+            case "Unique":
+
+                path = "data\\listUnique";
+
+                file = new File(path);
+                try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
+                    listFile = (Serialize) ois.readObject();
+                    listUnique.addAll(listFile.list);
+                } catch (IOException | ClassNotFoundException ignored) {
+
+                }
+                break;
+            case "Num":
+
+                path = "data\\listNum";
+
+                file = new File(path);
+                try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
+                    listFile = (Serialize) ois.readObject();
+                    listNum.addAll(listFile.list);
+                } catch (IOException | ClassNotFoundException ignored) {
+
+                }
+                break;
+        }
     }
 
     private void searchFile(String ignorePath, int searchDepth) {
@@ -80,8 +1734,8 @@ public class Search {
         }
         System.out.println("搜索完成，总数据数量：");
         System.out.println(num);
-        System.gc();
-        isSearch = false;
+        isUsable = true;
+        isManualUpdate = false;
     }
 
 
@@ -93,7 +1747,7 @@ public class Search {
             if (null == files || files.length == 0) {
             } else if (searchDepth >= count(path.getAbsolutePath(), "\\") || (path.getAbsolutePath().equals(startMenu)) || path.getAbsolutePath().equals(desktop)) {
                 for (File file2 : files) {
-                    String fileFullName = file2.getAbsolutePath().intern();
+                    String fileFullName = file2.getAbsolutePath();
                     String[] nameList = fileFullName.split("\\\\");
                     String fileName = nameList[nameList.length - 1];
 
@@ -106,124 +1760,244 @@ public class Search {
                             char headWord = Character.toUpperCase(firstWord);
                             switch (headWord) {
                                 case 'A':
-                                    listA.add(file2.getAbsolutePath().intern());
+                                    try {
+                                        listA.add(file2.getAbsolutePath());
+                                    } catch (Exception ignored) {
+
+                                    }
                                     num += 1;
                                     break;
                                 case 'B':
-                                    listB.add(file2.getAbsolutePath().intern());
+                                    try {
+                                        listB.add(file2.getAbsolutePath());
+                                    } catch (Exception ignored) {
+
+                                    }
                                     num += 1;
                                     break;
                                 case 'C':
-                                    listC.add(file2.getAbsolutePath().intern());
+                                    try {
+                                        listC.add(file2.getAbsolutePath());
+                                    } catch (Exception ignored) {
+
+                                    }
                                     num += 1;
                                     break;
                                 case 'D':
-                                    listD.add(file2.getAbsolutePath().intern());
+                                    try {
+                                        listD.add(file2.getAbsolutePath());
+                                    } catch (Exception ignored) {
+
+                                    }
                                     num += 1;
                                     break;
                                 case 'E':
-                                    listE.add(file2.getAbsolutePath().intern());
+                                    try {
+                                        listE.add(file2.getAbsolutePath());
+                                    } catch (Exception ignored) {
+
+                                    }
                                     num += 1;
                                     break;
                                 case 'F':
-                                    listF.add(file2.getAbsolutePath().intern());
+                                    try {
+                                        listF.add(file2.getAbsolutePath());
+                                    } catch (Exception ignored) {
+
+                                    }
                                     num += 1;
                                     break;
                                 case 'G':
-                                    listG.add(file2.getAbsolutePath().intern());
+                                    try {
+                                        listG.add(file2.getAbsolutePath());
+                                    } catch (Exception ignored) {
+
+                                    }
                                     num += 1;
                                     break;
                                 case 'H':
-                                    listH.add(file2.getAbsolutePath().intern());
+                                    try {
+                                        listH.add(file2.getAbsolutePath());
+                                    } catch (Exception ignored) {
+
+                                    }
                                     num += 1;
                                     break;
                                 case 'I':
-                                    listI.add(file2.getAbsolutePath().intern());
+                                    try {
+                                        listI.add(file2.getAbsolutePath());
+                                    } catch (Exception ignored) {
+
+                                    }
                                     num += 1;
                                     break;
                                 case 'J':
-                                    listJ.add(file2.getAbsolutePath().intern());
+                                    try {
+                                        listJ.add(file2.getAbsolutePath());
+                                    } catch (Exception ignored) {
+
+                                    }
                                     num += 1;
                                     break;
                                 case 'K':
-                                    listK.add(file2.getAbsolutePath().intern());
+                                    try {
+                                        listK.add(file2.getAbsolutePath());
+                                    } catch (Exception ignored) {
+
+                                    }
                                     num += 1;
                                     break;
                                 case 'L':
-                                    listL.add(file2.getAbsolutePath().intern());
+                                    try {
+                                        listL.add(file2.getAbsolutePath());
+                                    } catch (Exception ignored) {
+
+                                    }
                                     num += 1;
                                     break;
                                 case 'M':
-                                    listM.add(file2.getAbsolutePath().intern());
+                                    try {
+                                        listM.add(file2.getAbsolutePath());
+                                    } catch (Exception ignored) {
+
+                                    }
                                     num += 1;
                                     break;
                                 case 'N':
-                                    listN.add(file2.getAbsolutePath().intern());
+                                    try {
+                                        listN.add(file2.getAbsolutePath());
+                                    } catch (Exception ignored) {
+
+                                    }
                                     num += 1;
                                     break;
                                 case 'O':
-                                    listO.add(file2.getAbsolutePath().intern());
+                                    try {
+                                        listO.add(file2.getAbsolutePath());
+                                    } catch (Exception ignored) {
+
+                                    }
                                     num += 1;
                                     break;
                                 case 'P':
-                                    listP.add(file2.getAbsolutePath().intern());
+                                    try {
+                                        listP.add(file2.getAbsolutePath());
+                                    } catch (Exception ignored) {
+
+                                    }
                                     num += 1;
                                     break;
                                 case 'Q':
-                                    listQ.add(file2.getAbsolutePath().intern());
+                                    try {
+                                        listQ.add(file2.getAbsolutePath());
+                                    } catch (Exception ignored) {
+
+                                    }
                                     num += 1;
                                     break;
                                 case 'R':
-                                    listR.add(file2.getAbsolutePath().intern());
+                                    try {
+                                        listR.add(file2.getAbsolutePath());
+                                    } catch (Exception ignored) {
+
+                                    }
                                     num += 1;
                                     break;
                                 case 'S':
-                                    listS.add(file2.getAbsolutePath().intern());
+                                    try {
+                                        listS.add(file2.getAbsolutePath());
+                                    } catch (Exception ignored) {
+
+                                    }
                                     num += 1;
                                     break;
                                 case 'T':
-                                    listT.add(file2.getAbsolutePath().intern());
+                                    try {
+                                        listT.add(file2.getAbsolutePath());
+                                    } catch (Exception ignored) {
+
+                                    }
                                     num += 1;
                                     break;
                                 case 'U':
-                                    listU.add(file2.getAbsolutePath().intern());
+                                    try {
+                                        listU.add(file2.getAbsolutePath());
+                                    } catch (Exception ignored) {
+
+                                    }
                                     num += 1;
                                     break;
                                 case 'V':
-                                    listV.add(file2.getAbsolutePath().intern());
+                                    try {
+                                        listV.add(file2.getAbsolutePath());
+                                    } catch (Exception ignored) {
+
+                                    }
                                     num += 1;
                                     break;
                                 case 'W':
-                                    listW.add(file2.getAbsolutePath().intern());
+                                    try {
+                                        listW.add(file2.getAbsolutePath());
+                                    } catch (Exception ignored) {
+
+                                    }
                                     num += 1;
                                     break;
                                 case 'X':
-                                    listX.add(file2.getAbsolutePath().intern());
+                                    try {
+                                        listX.add(file2.getAbsolutePath());
+                                    } catch (Exception ignored) {
+
+                                    }
                                     num += 1;
                                     break;
                                 case 'Y':
-                                    listY.add(file2.getAbsolutePath().intern());
+                                    try {
+                                        listY.add(file2.getAbsolutePath());
+                                    } catch (Exception ignored) {
+
+                                    }
                                     num += 1;
                                     break;
                                 case 'Z':
-                                    listZ.add(file2.getAbsolutePath().intern());
+                                    try {
+                                        listZ.add(file2.getAbsolutePath());
+                                    } catch (Exception ignored) {
+
+                                    }
                                     num += 1;
                                     break;
                                 default:
                                     if (Character.isDigit(headWord)) {
-                                        listNum.add(file2.getAbsolutePath().intern());
+                                        try {
+                                            listNum.add(file2.getAbsolutePath());
+                                        } catch (Exception ignored) {
+
+                                        }
                                     } else if ('_' == headWord) {
-                                        listUnderline.add(file2.getAbsolutePath().intern());
+                                        try {
+                                            listUnderline.add(file2.getAbsolutePath());
+                                        } catch (Exception ignored) {
+
+                                        }
                                     } else if ('%' == headWord) {
-                                        listPercentSign.add(file2.getAbsolutePath().intern());
+                                        try {
+                                            listPercentSign.add(file2.getAbsolutePath());
+                                        } catch (Exception ignored) {
+
+                                        }
                                     } else {
-                                        listUnique.add(file2.getAbsolutePath().intern());
+                                        try {
+                                            listUnique.add(file2.getAbsolutePath());
+                                        } catch (Exception ignored) {
+
+                                        }
                                     }
                                     num += 1;
                                     break;
                             }
                             if (file2.isDirectory()) {
-                                listRemain.add(file2.getAbsolutePath().intern());
+                                listRemain.add(file2.getAbsolutePath());
                             }
                         }
 
@@ -233,124 +2007,248 @@ public class Search {
                             char headWord = Character.toUpperCase(firstWord);
                             switch (headWord) {
                                 case 'A':
-                                    listA.add(file2.getAbsolutePath().intern());
+                                    try {
+                                        listA.add(file2.getAbsolutePath());
+                                    } catch (Exception ignored) {
+
+                                    }
                                     num += 1;
                                     break;
                                 case 'B':
-                                    listB.add(file2.getAbsolutePath().intern());
+                                    try {
+                                        listB.add(file2.getAbsolutePath());
+                                    } catch (Exception ignored) {
+
+                                    }
                                     num += 1;
                                     break;
                                 case 'C':
-                                    listC.add(file2.getAbsolutePath().intern());
+                                    try {
+                                        listC.add(file2.getAbsolutePath());
+                                    } catch (Exception ignored) {
+
+                                    }
                                     num += 1;
                                     break;
                                 case 'D':
-                                    listD.add(file2.getAbsolutePath().intern());
+                                    try {
+                                        listD.add(file2.getAbsolutePath());
+                                    } catch (Exception ignored) {
+
+                                    }
                                     num += 1;
                                     break;
                                 case 'E':
-                                    listE.add(file2.getAbsolutePath().intern());
+                                    try {
+                                        listE.add(file2.getAbsolutePath());
+                                    } catch (Exception ignored) {
+
+                                    }
                                     num += 1;
                                     break;
                                 case 'F':
-                                    listF.add(file2.getAbsolutePath().intern());
+                                    try {
+                                        listF.add(file2.getAbsolutePath());
+                                    } catch (Exception ignored) {
+
+                                    }
                                     num += 1;
                                     break;
                                 case 'G':
-                                    listG.add(file2.getAbsolutePath().intern());
+                                    try {
+                                        listG.add(file2.getAbsolutePath());
+                                    } catch (Exception ignored) {
+
+                                    }
                                     num += 1;
                                     break;
                                 case 'H':
-                                    listH.add(file2.getAbsolutePath().intern());
+                                    try {
+                                        listH.add(file2.getAbsolutePath());
+                                    } catch (Exception ignored) {
+
+                                    }
                                     num += 1;
                                     break;
                                 case 'I':
-                                    listI.add(file2.getAbsolutePath().intern());
+                                    try {
+                                        listI.add(file2.getAbsolutePath());
+                                    } catch (Exception ignored) {
+
+                                    }
                                     num += 1;
                                     break;
                                 case 'J':
-                                    listJ.add(file2.getAbsolutePath().intern());
+                                    try {
+                                        listJ.add(file2.getAbsolutePath());
+                                    } catch (Exception ignored) {
+
+                                    }
                                     num += 1;
                                     break;
                                 case 'K':
-                                    listK.add(file2.getAbsolutePath().intern());
+                                    try {
+                                        listK.add(file2.getAbsolutePath());
+                                    } catch (Exception ignored) {
+
+                                    }
                                     num += 1;
                                     break;
                                 case 'L':
-                                    listL.add(file2.getAbsolutePath().intern());
+                                    try {
+                                        listL.add(file2.getAbsolutePath());
+                                    } catch (Exception ignored) {
+
+                                    }
                                     num += 1;
                                     break;
                                 case 'M':
-                                    listM.add(file2.getAbsolutePath().intern());
+                                    try {
+                                        listM.add(file2.getAbsolutePath());
+                                    } catch (Exception ignored) {
+
+                                    }
                                     num += 1;
                                     break;
                                 case 'N':
-                                    listN.add(file2.getAbsolutePath().intern());
+                                    try {
+                                        listN.add(file2.getAbsolutePath());
+                                    } catch (Exception ignored) {
+
+                                    }
                                     num += 1;
                                     break;
                                 case 'O':
-                                    listO.add(file2.getAbsolutePath().intern());
+                                    try {
+                                        listO.add(file2.getAbsolutePath());
+                                    } catch (Exception ignored) {
+
+                                    }
                                     num += 1;
                                     break;
                                 case 'P':
-                                    listP.add(file2.getAbsolutePath().intern());
+                                    try {
+                                        listP.add(file2.getAbsolutePath());
+                                    } catch (Exception ignored) {
+
+                                    }
                                     num += 1;
                                     break;
                                 case 'Q':
-                                    listQ.add(file2.getAbsolutePath().intern());
+                                    try {
+                                        listQ.add(file2.getAbsolutePath());
+                                    } catch (Exception ignored) {
+
+                                    }
                                     num += 1;
                                     break;
                                 case 'R':
-                                    listR.add(file2.getAbsolutePath().intern());
+                                    try {
+                                        listR.add(file2.getAbsolutePath());
+                                    } catch (Exception ignored) {
+
+                                    }
                                     num += 1;
                                     break;
                                 case 'S':
-                                    listS.add(file2.getAbsolutePath().intern());
+                                    try {
+                                        listS.add(file2.getAbsolutePath());
+                                    } catch (Exception ignored) {
+
+                                    }
                                     num += 1;
                                     break;
                                 case 'T':
-                                    listT.add(file2.getAbsolutePath().intern());
+                                    try {
+                                        listT.add(file2.getAbsolutePath());
+                                    } catch (Exception ignored) {
+
+                                    }
                                     num += 1;
                                     break;
                                 case 'U':
-                                    listU.add(file2.getAbsolutePath().intern());
+                                    try {
+                                        listU.add(file2.getAbsolutePath());
+                                    } catch (Exception ignored) {
+
+                                    }
                                     num += 1;
                                     break;
                                 case 'V':
-                                    listV.add(file2.getAbsolutePath().intern());
+                                    try {
+                                        listV.add(file2.getAbsolutePath());
+                                    } catch (Exception ignored) {
+
+                                    }
                                     num += 1;
                                     break;
                                 case 'W':
-                                    listW.add(file2.getAbsolutePath().intern());
+                                    try {
+                                        listW.add(file2.getAbsolutePath());
+                                    } catch (Exception ignored) {
+
+                                    }
                                     num += 1;
                                     break;
                                 case 'X':
-                                    listX.add(file2.getAbsolutePath().intern());
+                                    try {
+                                        listX.add(file2.getAbsolutePath());
+                                    } catch (Exception ignored) {
+
+                                    }
                                     num += 1;
                                     break;
                                 case 'Y':
-                                    listY.add(file2.getAbsolutePath().intern());
+                                    try {
+                                        listY.add(file2.getAbsolutePath());
+                                    } catch (Exception ignored) {
+
+                                    }
                                     num += 1;
                                     break;
                                 case 'Z':
-                                    listZ.add(file2.getAbsolutePath().intern());
+                                    try {
+                                        listZ.add(file2.getAbsolutePath());
+                                    } catch (Exception ignored) {
+
+                                    }
                                     num += 1;
                                     break;
                                 default:
                                     if (Character.isDigit(headWord)) {
-                                        listNum.add(file2.getAbsolutePath().intern());
+                                        try {
+                                            listNum.add(file2.getAbsolutePath());
+                                        } catch (Exception ignored) {
+
+                                        }
                                     } else if ('_' == headWord) {
-                                        listUnderline.add(file2.getAbsolutePath().intern());
+                                        try {
+                                            listUnderline.add(file2.getAbsolutePath());
+                                        } catch (Exception ignored) {
+
+                                        }
                                     } else if ('%' == headWord) {
-                                        listPercentSign.add(file2.getAbsolutePath().intern());
+                                        try {
+                                            listPercentSign.add(file2.getAbsolutePath());
+                                        } catch (Exception ignored) {
+
+                                        }
                                     } else {
-                                        listUnique.add(file2.getAbsolutePath().intern());
+                                        try {
+                                            listUnique.add(file2.getAbsolutePath());
+                                        } catch (Exception ignored) {
+
+                                        }
                                     }
                                     num += 1;
                                     break;
                             }
                             if (file2.isDirectory()) {
-                                listRemain.add(file2.getAbsolutePath().intern());
+                                try {
+                                    listRemain.add(file2.getAbsolutePath());
+                                } catch (Exception ignored) {
+
+                                }
                             }
                         }
                     }
@@ -396,7 +2294,7 @@ public class Search {
 
     /**
      * @param target txt
-     * txt是否属于target的子字符串
+     *               txt是否属于target的子字符串
      * @return true false
      */
     private boolean isIgnore(String txt, String target) {
@@ -410,123 +2308,204 @@ public class Search {
     }
 
     public LinkedList<String> getListA() {
+
         return listA;
     }
 
     public LinkedList<String> getListB() {
+
         return listB;
     }
 
     public LinkedList<String> getListC() {
+
         return listC;
+
     }
 
     public LinkedList<String> getListD() {
+
+
         return listD;
+
     }
 
     public LinkedList<String> getListE() {
+
+
         return listE;
+
     }
 
     public LinkedList<String> getListF() {
+
+
         return listF;
+
     }
 
     public LinkedList<String> getListG() {
+
+
         return listG;
+
     }
 
     public LinkedList<String> getListH() {
+
+
         return listH;
+
     }
 
     public LinkedList<String> getListI() {
+
+
         return listI;
+
     }
 
     public LinkedList<String> getListJ() {
+
+
         return listJ;
+
     }
 
     public LinkedList<String> getListK() {
+
+
         return listK;
+
     }
 
     public LinkedList<String> getListL() {
+
+
         return listL;
+
     }
 
     public LinkedList<String> getListM() {
+
+
         return listM;
+
     }
 
     public LinkedList<String> getListN() {
+
+
         return listN;
+
     }
 
     public LinkedList<String> getListO() {
+
         return listO;
+
     }
 
     public LinkedList<String> getListP() {
+
+
         return listP;
+
     }
 
     public LinkedList<String> getListQ() {
+
+
         return listQ;
+
     }
 
     public LinkedList<String> getListR() {
+
+
         return listR;
+
     }
 
     public LinkedList<String> getListNum() {
+
+
         return listNum;
+
     }
 
     public LinkedList<String> getListPercentSign() {
+
+
         return listPercentSign;
+
     }
 
     public LinkedList<String> getListS() {
+
+
         return listS;
+
     }
 
     public LinkedList<String> getListT() {
+
+
         return listT;
+
     }
 
     public LinkedList<String> getListUnique() {
+
         return listUnique;
     }
 
     public LinkedList<String> getListU() {
+
+
         return listU;
+
     }
 
     public LinkedList<String> getListUnderline() {
+
         return listUnderline;
+
     }
 
     public LinkedList<String> getListV() {
+
+
         return listV;
+
     }
 
     public LinkedList<String> getListW() {
+
+
         return listW;
+
     }
 
     public LinkedList<String> getListY() {
+
+
         return listY;
+
     }
 
     public LinkedList<String> getListX() {
+
+
         return listX;
+
     }
 
     public LinkedList<String> getListZ() {
+
+
         return listZ;
+
     }
 
     public void updateLists(String ignorePath, int searchDepth) {
@@ -598,5 +2577,17 @@ public class Search {
         listPercentSign = null;
         listUnique = null;
         listUnderline = null;
+    }
+
+    static class Serialize implements Serializable {
+        /**
+         *
+         */
+        private static final long serialVersionUID = 1L;
+        private LinkedList<String> list;
+
+        public void setList(LinkedList<String> listOut) {
+            this.list = listOut;
+        }
     }
 }

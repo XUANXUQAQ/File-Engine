@@ -1,4 +1,6 @@
 package frame;
+import main.Main;
+
 import java.awt.*;
 import java.net.URL;
 import javax.swing.*;
@@ -27,7 +29,9 @@ public class TaskBar {
                 settingsFrame.showWindow();
             });
             MenuItem close = new MenuItem("退出");
-            close.addActionListener(e -> System.exit(0));
+            close.addActionListener(e->{
+                Main.setMainExit(true);
+            });
             popupMenu.add(settings);
             popupMenu.add(close);
 
@@ -40,9 +44,9 @@ public class TaskBar {
                 // 为系统托盘加托盘图标
                 systemTray.add(trayIcon);
             }
-            catch (Exception e)
+            catch (Exception ignored)
             {
-                //e.printStackTrace();
+
             }
         }
         else

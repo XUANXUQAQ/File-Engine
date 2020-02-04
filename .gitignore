@@ -8,3 +8,4 @@ target/
 *.json
 Files/
 cache.dat
+data/

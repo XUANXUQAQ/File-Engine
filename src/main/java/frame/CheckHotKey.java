@@ -3,6 +3,8 @@ import javax.swing.JFrame;
 import com.melloware.jintellitype.JIntellitype;
 import search.Search;
 
+import java.util.HashMap;
+
 public class CheckHotKey extends JFrame{
 
     private Search search = new Search();
@@ -12,19 +14,56 @@ public class CheckHotKey extends JFrame{
      *
      */
         private static final long serialVersionUID = 1L;
+        private static HashMap<String, Integer> map = new HashMap<>();
 
         //定义热键标识，用于在设置多个热键时，在事件处理中区分用户按下的热键
         public static final int FUNC_KEY_MARK = 1;
+
+        public void registHotkey(String hotkey){
+            //解析字符串
+            String[] hotkeys = hotkey.split(" \\+ ");
+            int sum = 0;
+            String main = null;
+            for (String each:hotkeys){
+                if (each.length() != 1){
+                    sum += map.get(each);
+                }else{
+                    main = each;
+                }
+            }
+
+            //注册热键
+            assert main != null;
+            JIntellitype.getInstance().unregisterHotKey(FUNC_KEY_MARK);
+            JIntellitype.getInstance().registerHotKey(FUNC_KEY_MARK, sum, main.charAt(0));
+        }
 
         public CheckHotKey() {
             this.setBounds(100, 100, 600, 400);
             this.setLayout(null);
             this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            map.put("Ctrl", JIntellitype.MOD_CONTROL);
+            map.put("Alt", JIntellitype.MOD_ALT);
+            map.put("Shift", JIntellitype.MOD_ALT);
+            map.put("Win", JIntellitype.MOD_WIN);
 
-            //第一步：注册热键，第一个参数表示该热键的标识，第二个参数表示组合键，如果没有则为0，第三个参数为定义的主要热键
-            JIntellitype.getInstance().registerHotKey(FUNC_KEY_MARK, JIntellitype.MOD_CONTROL + JIntellitype.MOD_ALT, 'J');
+            //解析字符串
+            String[] hotkeys = SettingsFrame.hotkey.split(" \\+ ");
+            int sum = 0;
+            String main = null;
+            for (String each:hotkeys){
+                if (each.length() != 1){
+                    sum += map.get(each);
+                }else{
+                    main = each;
+                }
+            }
 
-            //第二步：添加热键监听器
+            //注册热键
+            assert main != null;
+            JIntellitype.getInstance().registerHotKey(FUNC_KEY_MARK, sum, main.charAt(0));
+
+            //添加热键监听器
             JIntellitype.getInstance().addHotKeyListener(markCode -> {
                 if (markCode == FUNC_KEY_MARK) {
                     CheckHotKey.this.changeShowSearchBarStatus();
