@@ -34,8 +34,8 @@ public class SettingsFrame {
         Dimension screenSize =Toolkit.getDefaultToolkit().getScreenSize(); // 获取当前分辨率
         int width = screenSize.width;
         int height = screenSize.height;
-        frame.setLocation((int)(width*0.25), (int)(height*0.3));
-        frame.setSize(800, 400);
+        frame.setLocation((int)(width*0.15), (int)(height*0.12));
+        frame.setSize(1024, 768);
         frame.setBackground(Color.white);
         panel.setBackground(Color.white);
         panel.setOpaque(true);
@@ -89,12 +89,6 @@ public class SettingsFrame {
 
         }
         //读取所有设置并设置checkBox状态
-        label1.setText("文件索引更新时间：");
-        label3.setText("设置忽略文件夹：");
-        label4.setText("设置最大缓存数量：");
-        label6.setText("搜索深度：");
-        button1.setText("保存");
-        button2.setText("备份并移除所有桌面文件");
         textArea1.setLineWrap(true);
         textArea1.setWrapStyleWord(true);
 
@@ -293,7 +287,7 @@ public class SettingsFrame {
             }
         });
         textField3.addKeyListener(new KeyListener() {
-            boolean reset = false;
+            boolean reset = true;
 
             @Override
             public void keyTyped(KeyEvent e) {
