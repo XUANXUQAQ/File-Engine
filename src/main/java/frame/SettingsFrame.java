@@ -1,8 +1,6 @@
 package frame;
 
 import javax.swing.*;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.FileSystemView;
 import java.awt.*;
 import java.awt.event.KeyEvent;
@@ -10,7 +8,6 @@ import java.awt.event.KeyListener;
 import java.io.*;
 import java.net.URL;
 import com.alibaba.fastjson.*;
-import jdk.nashorn.internal.scripts.JO;
 import main.Main;
 import moveFiles.*;
 import search.Search;
@@ -214,12 +211,11 @@ public class SettingsFrame {
         });
         checkBox1.addActionListener(e -> {
             Process p;
-            File superSearch = new File("search_x64.exe"); //TODO 更改版本号
+            File superSearch = new File("search_x64.exe"); //TODO 修改版本
             if (checkBox1.isSelected()){
                 try {
                     p = Runtime.getRuntime().exec("reg add \"HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run\" /v superSearch /t REG_SZ /d "+"\"" + superSearch.getAbsolutePath() +"\"" + " /f");
                     p.waitFor();
-                    Runtime.getRuntime().exec("reg add \"HKEY_CURRENT_USER\\Software\\Microsoft\\Windows NT\\CurrentVersion\\AppCompatFlags\\Layers\" /v " + "\""+superSearch.getAbsolutePath()+ "\"" + " /t REG_SZ /d RUNASADMIN /f");
                     BufferedReader outPut = new BufferedReader(new InputStreamReader(p.getErrorStream()));
                     String line;
                     StringBuilder result = new StringBuilder();
@@ -229,6 +225,8 @@ public class SettingsFrame {
                     if (!result.toString().equals("")){
                         checkBox1.setSelected(false);
                         JOptionPane.showMessageDialog(null, "添加到开机启动失败，请尝试以管理员身份运行");
+                    }else{
+                        Runtime.getRuntime().exec("reg add \"HKEY_CURRENT_USER\\Software\\Microsoft\\Windows NT\\CurrentVersion\\AppCompatFlags\\Layers\" /v " + "\""+superSearch.getAbsolutePath()+ "\"" + " /t REG_SZ /d RUNASADMIN /f");
                     }
                 } catch (IOException | InterruptedException ignored) {
 
@@ -236,7 +234,7 @@ public class SettingsFrame {
             }else{
                 try {
                     p = Runtime.getRuntime().exec("reg delete \"HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run\" /v superSearch /f");
-                    Runtime.getRuntime().exec("reg delete \"HKEY_CURRENT_USER\\Software\\Microsoft\\Windows NT\\CurrentVersion\\AppCompatFlags\\Layers\" /v " + "\""+superSearch.getAbsolutePath()+ "\" /f");
+                    p.waitFor();
                     BufferedReader outPut = new BufferedReader(new InputStreamReader(p.getErrorStream()));
                     String line;
                     StringBuilder result = new StringBuilder();
@@ -246,8 +244,10 @@ public class SettingsFrame {
                     if (!result.toString().equals("")){
                         checkBox1.setSelected(true);
                         JOptionPane.showMessageDialog(null, "删除开机启动失败，请尝试以管理员身份运行");
+                    }else{
+                        Runtime.getRuntime().exec("reg delete \"HKEY_CURRENT_USER\\Software\\Microsoft\\Windows NT\\CurrentVersion\\AppCompatFlags\\Layers\" /v " + "\""+superSearch.getAbsolutePath()+ "\" /f");
                     }
-                } catch (IOException ignored) {
+                } catch (IOException | InterruptedException ignored) {
 
                 }
             }
