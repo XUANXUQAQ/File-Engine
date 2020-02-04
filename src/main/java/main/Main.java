@@ -3,6 +3,8 @@ import search.*;
 
 import java.awt.*;
 import java.io.*;
+import java.nio.channels.FileChannel;
+import java.util.InputMismatchException;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -34,6 +36,36 @@ public class Main {
 		updateTimeLimit = updateTimeLimit1;
 	}
 
+	private static void copyFile(InputStream source, File dest) {
+		OutputStream os = null;
+		BufferedInputStream bis;
+		BufferedOutputStream bos;
+		try {
+			os = new FileOutputStream(dest);
+			// 创建缓冲流
+			bis = new BufferedInputStream(source);
+			bos = new BufferedOutputStream(os);
+			byte[]buffer = new byte[8192];
+			int count = bis.read(buffer);
+			while(count != -1){
+				//使用缓冲流写数据
+				bos.write(buffer,0,count);
+				//刷新
+				bos.flush();
+				count = bis.read(buffer);
+			}
+		} catch (IOException ignored) {
+
+		} finally {
+			try {
+				assert os != null;
+				os.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+
+	}
 
 	public static void main(String[] args) {
 		File settings = new File("settings.json");
@@ -54,6 +86,13 @@ public class Main {
 			} catch (IOException ignored) {
 
 			}
+		}
+		File target;
+		InputStream fileMonitorDll = Main.class.getResourceAsStream("/fileMonitor.dll");
+
+		target = new File("fileMonitor.dll");
+		if (!target.exists()) {
+			copyFile(fileMonitorDll, target);
 		}
 		if (!caches.exists()){
 			try {
@@ -238,9 +277,11 @@ public class Main {
 
 			}
 			if (mainExit){
-				System.out.println("即将退出，保存最新文件列表到data");
-				search.mergeListToadd();
-				search.saveLists();
+				if (search.isUsable()) {
+					System.out.println("即将退出，保存最新文件列表到data");
+					search.mergeListToadd();
+					search.saveLists();
+				}
 				File close = new File(tmp.getAbsolutePath() + "\\" + "CLOSE");
 				try {
 					close.createNewFile();

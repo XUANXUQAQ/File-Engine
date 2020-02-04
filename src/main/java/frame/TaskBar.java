@@ -16,6 +16,7 @@ public class TaskBar {
             URL icon;
             icon = getClass().getResource("/icons/taskbar.png");
             image = new ImageIcon(icon).getImage();
+            SystemTray systemTray = SystemTray.getSystemTray();
             // 创建托盘图标
             TrayIcon trayIcon = new TrayIcon(image);
             // 添加工具提示文本
@@ -31,6 +32,7 @@ public class TaskBar {
             MenuItem close = new MenuItem("退出");
             close.addActionListener(e->{
                 Main.setMainExit(true);
+                systemTray.remove(trayIcon);
             });
             popupMenu.add(settings);
             popupMenu.add(close);
@@ -38,7 +40,6 @@ public class TaskBar {
             // 为托盘图标加弹出菜弹
             trayIcon.setPopupMenu(popupMenu);
             // 获得系统托盘对象
-            SystemTray systemTray = SystemTray.getSystemTray();
             try
             {
                 // 为系统托盘加托盘图标
