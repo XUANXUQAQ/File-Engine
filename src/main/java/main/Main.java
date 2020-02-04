@@ -3,12 +3,12 @@ import search.*;
 
 import java.awt.*;
 import java.io.*;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
+import fileMonitor.FileMonitor;
 import frame.*;
 import com.alibaba.fastjson.*;
-
 import javax.swing.*;
 
 
@@ -19,15 +19,31 @@ public class Main {
 	private static int searchDepth;
 	private static SearchBar searchBar = new SearchBar();
 	private static Search search = new Search();
-	
-	
+	private static File fileWatcherTXT = new File("tmp\\fileMonitor.txt");
+
+	public static void setMainExit(boolean b){
+		mainExit = b;
+	}
+	public static void setIgnorePath(String paths){
+		ignorePath = paths + "C:\\Config.Msi,C:\\Windows";
+	}
+	public static void setSearchDepth(int searchDepth1){
+		searchDepth = searchDepth1;
+	}
+	public static void setUpdateTimeLimit(int updateTimeLimit1){
+		updateTimeLimit = updateTimeLimit1;
+	}
+
+
 	public static void main(String[] args) {
 		File settings = new File("settings.json");
 		File caches = new File("cache.dat");
 		File files = new File("Files");
+		File tmp = new File("tmp");
 		if (!settings.exists()){
 			String ignorePath = "";
 			JSONObject json = new JSONObject();
+			json.put("hotkey", "Ctrl + Alt + J");
 			json.put("ignorePath", ignorePath);
 			json.put("isStartup", false);
 			json.put("updateTimeLimit", 300);
@@ -35,8 +51,8 @@ public class Main {
 			json.put("searchDepth", 6);
 			try(BufferedWriter buffW = new BufferedWriter(new FileWriter(settings))) {
 				buffW.write(json.toJSONString());
-			} catch (IOException e) {
-				//e.printStackTrace();
+			} catch (IOException ignored) {
+
 			}
 		}
 		if (!caches.exists()){
@@ -49,6 +65,9 @@ public class Main {
 		}
 		if (!files.exists()){
 			files.mkdir();
+		}
+		if (!tmp.exists()){
+			tmp.mkdir();
 		}
 		TaskBar taskBar = new TaskBar();
 		taskBar.showTaskBar();
@@ -68,25 +87,64 @@ public class Main {
 
 		}
 		ignorePath = ignorePath + "C:\\Config.Msi,C:\\Windows";
+		SettingsFrame.initSettings();
 
-		CheckHotKey HotKeyListener = new CheckHotKey();
-		SettingsFrame.initCacheLimit();
+		File data = new File("data");
+		if (data.isDirectory() && data.exists()){
+			if (Objects.requireNonNull(data.list()).length == 30){
+				System.out.println("检测到data文件，正在读取");
+				search.setUsable(false);
+				search.loadAllLists();
+				search.setUsable(true);
+				System.out.println("读取完成");
+			}else{
+				System.out.println("检测到data文件损坏，开始搜索并创建data文件");
+				search.setManualUpdate(true);
+			}
+		}else{
+			System.out.println("未检测到data文件，开始搜索并创建data文件");
+			search.setManualUpdate(true);
+		}
 
-		search.setSearch(true);
+		File[] roots = File.listRoots();
+		ExecutorService fixedThreadPool = Executors.newFixedThreadPool(roots.length+4);
 
+		for(File root:roots) {
+			fixedThreadPool.execute(() -> FileMonitor.INSTANCE.fileWatcher(root.getAbsolutePath(), tmp.getAbsolutePath() + "\\" + "fileMonitor.txt", tmp.getAbsolutePath() + "\\"+"CLOSE"));
+		}
 
-
-		ExecutorService fixedThreadPool = Executors.newFixedThreadPool(3);
 		fixedThreadPool.execute(() -> {
 			// 时间检测线程
-			int count = 0;
+			long count = 0;
+			long usingCount = 0;
 			updateTimeLimit = updateTimeLimit * 1000;
 			while (!mainExit) {
+				boolean isUsing = searchBar.getUsing();
+				boolean isSleep = searchBar.getSleep();
 				count++;
-				if (count >= updateTimeLimit) {
+				if (count >= updateTimeLimit && !isUsing && !isSleep && !search.isManualUpdate()) {
 					count = 0;
-					System.out.println("正在发送更新请求");
-					search.setSearch(true);
+					System.out.println("正在更新本地索引data文件");
+					search.saveLists();
+				}
+
+				if (!isUsing){
+					usingCount++;
+					if (usingCount > 900000 && search.isUsable()) {
+						System.out.println("检测到长时间未使用，自动释放内存空间，程序休眠");
+						searchBar.setSleep(true);
+						search.setUsable(false);
+						search.saveAndReleaseLists();
+					}
+				}else{
+					usingCount = 0;
+					if (!search.isUsable() && !search.isManualUpdate()) {
+						System.out.println("检测到开始使用，加载列表");
+						search.setUsable(false);
+						searchBar.setSleep(false);
+						search.loadAllLists();
+						search.setUsable(true);
+					}
 				}
 				try {
 					Thread.sleep(1);
@@ -120,13 +178,48 @@ public class Main {
 		//搜索线程
 		fixedThreadPool.execute(() ->{
 			while (!mainExit){
-				if (search.isSearch()){
+				if (search.isManualUpdate()){
+					search.setUsable(false);
 					System.out.println("已收到更新请求");
 					search.updateLists(ignorePath, searchDepth);
 				}
 				try {
 					Thread.sleep(16);
 				} catch (InterruptedException ignored) {
+
+				}
+			}
+		});
+
+		//检测文件改动线程
+		fixedThreadPool.execute(() -> {
+			long count = 0;
+			while (!mainExit) {
+				try (BufferedReader bw = new BufferedReader(new FileReader(fileWatcherTXT))) {
+					long loop = 0;
+					String line;
+					while ((line = bw.readLine()) != null) {
+						loop += 1;
+						if (loop > count) {
+							String[] strings = line.split(" : ");
+							switch (strings[0]) {
+								case "file add":
+									search.FilesToAdd(strings[1]);
+									break;
+								case "file renamed":
+									String[] add = strings[1].split("->");
+									search.addToRecycleBin(add[0]);
+									search.FilesToAdd(add[1]);
+									break;
+								case "file removed":
+									search.addToRecycleBin(strings[1]);
+									break;
+							}
+							count += 1;
+						}
+					}
+					Thread.sleep(50);
+				} catch (IOException | InterruptedException ignored) {
 
 				}
 			}
@@ -141,13 +234,26 @@ public class Main {
 			}
 			try {
 				Thread.sleep(100);
-			} catch (InterruptedException e) {
-				//e.printStackTrace();
+			} catch (InterruptedException ignored) {
+
 			}
 			if (mainExit){
+				System.out.println("即将退出，保存最新文件列表到data");
+				search.mergeListToadd();
+				search.saveLists();
+				File close = new File(tmp.getAbsolutePath() + "\\" + "CLOSE");
+				try {
+					close.createNewFile();
+					Thread.sleep(100);
+					fileWatcherTXT.delete();
+					close.delete();
+				} catch (IOException | InterruptedException ignored) {
+
+				}
 				fixedThreadPool.shutdownNow();
 				search.clearAll();
+				System.exit(0);
 			}
-		}while(!mainExit);
+		}while(true);
 	}
 }

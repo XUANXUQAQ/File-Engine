@@ -15,7 +15,7 @@
           </grid>
         </constraints>
         <properties>
-          <text value="文件索引更新时间："/>
+          <text value="本地文件索引更新时间："/>
         </properties>
       </component>
       <component id="7d342" class="javax.swing.JTextField" binding="textField1" default-binding="true">
@@ -119,14 +119,6 @@
           <text value="保存"/>
         </properties>
       </component>
-      <component id="1cde1" class="javax.swing.JLabel" binding="label2">
-        <constraints>
-          <grid row="1" column="1" row-span="2" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
-        </constraints>
-        <properties>
-          <text value="快捷键：CTRL+ALT+J"/>
-        </properties>
-      </component>
       <component id="f56d" class="javax.swing.JLabel" binding="label4">
         <constraints>
           <grid row="3" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
@@ -165,6 +157,22 @@
         </constraints>
         <properties>
           <text value="默认忽略C:\Windows"/>
+        </properties>
+      </component>
+      <component id="44c74" class="javax.swing.JTextField" binding="textField3" default-binding="true">
+        <constraints>
+          <grid row="2" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
+            <preferred-size width="150" height="-1"/>
+          </grid>
+        </constraints>
+        <properties/>
+      </component>
+      <component id="f9ebf" class="javax.swing.JLabel" binding="label2">
+        <constraints>
+          <grid row="2" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <text value="快捷键："/>
         </properties>
       </component>
     </children>

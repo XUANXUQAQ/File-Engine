@@ -39,7 +39,20 @@ public class SearchBar {
     private boolean isFirstRun = true;
     private long startTime = 0;
     private boolean timer = false;
+    private Thread searchWaiter = null;
+    private boolean isUsing = false;
+    private boolean isSleep = false;
 
+    public boolean getSleep(){
+        return isSleep;
+    }
+    public void setSleep(boolean b){
+        isSleep = b;
+    }
+
+    public boolean getUsing(){
+        return this.isUsing;
+    }
 
     public SearchBar() {
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize(); // 获取屏幕大小
@@ -60,6 +73,7 @@ public class SearchBar {
         panel = searchBar.getContentPane();
 
 
+
         //TextField
         textField = new JTextField(300);
         textField.setSize(searchBarWidth, (int) (searchBarHeight * 0.2));
@@ -71,22 +85,23 @@ public class SearchBar {
         textField.setBackground(new Color(75, 75, 75, 255));
         textField.setLocation(0, 0);
         textField.addFocusListener(new FocusListener() {
-
             @Override
-            public void focusGained(FocusEvent arg0) {
+            public void focusGained(FocusEvent e) {
                 textField.setCaretPosition(textField.getText().length());
+                //添加更新文件
+                System.out.println("正在添加更新文件");
+                search.setUsable(false);
+                search.mergeListToadd();
+                search.setUsable(true);
+                isUsing = true;
             }
 
             @Override
-            public void focusLost(FocusEvent arg0) {
-                searchBar.setVisible(false);
-                clearLabel();
-                labelCount = 0;
-                listResult.clear();
-                textField.setText(null);
-                search.setFocusLostStatus(true);
+            public void focusLost(FocusEvent e) {
+                focusLostTodo();
             }
         });
+
 
         ExecutorService fixedThreadPool = Executors.newFixedThreadPool(1);
         fixedThreadPool.execute(() -> {
@@ -101,7 +116,8 @@ public class SearchBar {
                     if (!text.equals("")) {
                         if (text.equals("#*update*#")) {
                             clearTextFieldText();
-                            search.setSearch(true);
+                            search.setManualUpdate(true);
+                            timer = false;
                             continue;
                         }
                         searchFilesFolder(text);
@@ -276,7 +292,6 @@ public class SearchBar {
                         clearLabel();
                     }
                     timer = false;
-                    showResult();
                 }
                 try {
                     Thread.sleep(20);
@@ -360,6 +375,7 @@ public class SearchBar {
                             } else {
                                 label1.setIcon(null);
                                 label1.setText("无效文件");
+                                search.addToRecycleBin(path);
                             }
                             path = listResult.get(labelCount - 2);
                             name = getFileName(listResult.get(labelCount - 2));
@@ -372,6 +388,7 @@ public class SearchBar {
                             } else {
                                 label2.setIcon(null);
                                 label2.setText("无效文件");
+                                search.addToRecycleBin(path);
                             }
                             path = listResult.get(labelCount - 1);
                             name = getFileName(listResult.get(labelCount - 1));
@@ -385,6 +402,7 @@ public class SearchBar {
                             } else {
                                 label3.setIcon(null);
                                 label3.setText("无效文件");
+                                search.addToRecycleBin(path);
                             }
                             path = listResult.get(labelCount);
                             name = getFileName(listResult.get(labelCount));
@@ -398,6 +416,7 @@ public class SearchBar {
                             } else {
                                 label4.setIcon(null);
                                 label4.setText("无效文件");
+                                search.addToRecycleBin(path);
                             }
                         }
                     } else if (40 == key) {
@@ -448,6 +467,7 @@ public class SearchBar {
                                 label1.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
                             } else {
                                 label1.setText("无效文件");
+                                search.addToRecycleBin(path);
                             }
                             path = listResult.get(labelCount - 2);
                             name = getFileName(listResult.get(labelCount - 2));
@@ -460,6 +480,7 @@ public class SearchBar {
                                 label2.setIcon(icon);
                             } else {
                                 label2.setText("无效文件");
+                                search.addToRecycleBin(path);
                             }
                             path = listResult.get(labelCount - 1);
                             name = getFileName(listResult.get(labelCount - 1));
@@ -472,6 +493,7 @@ public class SearchBar {
                                 label3.setIcon(icon);
                             } else {
                                 label3.setText("无效文件");
+                                search.addToRecycleBin(path);
                             }
                             path = listResult.get(labelCount);
                             name = getFileName(listResult.get(labelCount));
@@ -484,6 +506,7 @@ public class SearchBar {
                                 label4.setIcon(icon);
                             } else {
                                 label4.setText("无效文件");
+                                search.addToRecycleBin(path);
                             }
                         }
                     } else if (10 == key) {
@@ -588,7 +611,7 @@ public class SearchBar {
         String[] strings = text.split(";");
         String searchText = strings[0];
         int length = strings.length;
-        if (!search.isSearch()) {
+        if (search.isUsable()) {
             for (String fileInList : list) {
                 if (length != 2 && match(getFileName(fileInList), searchText)) {
                     listResult.add(fileInList);
@@ -615,10 +638,27 @@ public class SearchBar {
                     }
                 }
             }
+        }else{
+            if (searchWaiter ==null || !searchWaiter.isAlive()) {
+                searchWaiter = new Thread(() -> {
+                    while (!mainExit) {
+                        if (search.isUsable()) {
+                            startTime = System.currentTimeMillis() - 500;
+                            timer = true;
+                            break;
+                        }
+                        try {
+                            Thread.sleep(20);
+                        } catch (InterruptedException ignored) {
+
+                        }
+                    }
+                });
+                searchWaiter.start();
+            }
         }
         delRepeated(listResult);
         showResult();
-
     }
 
     public void showSearchbar() {
@@ -639,6 +679,7 @@ public class SearchBar {
             } else {
                 label1.setIcon(null);
                 label1.setText("无效文件");
+                search.addToRecycleBin(path);
             }
             path = listResult.get(1);
             name = getFileName(listResult.get(1));
@@ -652,6 +693,7 @@ public class SearchBar {
             } else {
                 label2.setIcon(null);
                 label2.setText("无效文件");
+                search.addToRecycleBin(path);
             }
             path = listResult.get(2);
             name = getFileName(listResult.get(2));
@@ -665,6 +707,7 @@ public class SearchBar {
             } else {
                 label3.setIcon(null);
                 label3.setText("无效文件");
+                search.addToRecycleBin(path);
             }
             path = listResult.get(3);
             name = getFileName(listResult.get(3));
@@ -678,6 +721,7 @@ public class SearchBar {
             } else {
                 label4.setIcon(null);
                 label4.setText("无效文件");
+                search.addToRecycleBin(path);
             }
         } catch (java.lang.IndexOutOfBoundsException ignored) {
 
@@ -829,8 +873,8 @@ public class SearchBar {
     }
 
     private boolean match(String srcText, String txt) {
-        srcText = srcText.toUpperCase();
-        txt = txt.toUpperCase();
+        srcText = srcText.toLowerCase();
+        txt = txt.toLowerCase();
         if (srcText.length() >= txt.length()) {
             return srcText.contains(txt);
         }
@@ -878,6 +922,22 @@ public class SearchBar {
         SwingUtilities.invokeLater(clear);
     }
 
+    private void focusLostTodo(){
+        Runnable todo = () -> {
+            searchBar.setVisible(false);
+            clearLabel();
+            isUsing = false;
+            labelCount = 0;
+            listResult.clear();
+            textField.setText(null);
+            search.setFocusLostStatus(true);
+            //删除无效文件
+            System.out.println("正在删除无效文件");
+            search.clearRecycleBin();
+        };
+        SwingUtilities.invokeLater(todo);
+    }
+
     private boolean isFile(String text) {
         File file = new File(text);
         return file.isFile();
@@ -898,14 +958,18 @@ public class SearchBar {
         AddAllResult(String txt) {
             this.text = txt.substring(1);
             strings = this.text.split(";");
-            searchText = strings[0];
+            try {
+                searchText = strings[0];
+            }catch (ArrayIndexOutOfBoundsException e){
+                searchText = "";
+            }
             length = strings.length;
             listAll = new LinkedList<>();
         }
 
         @Override
         public void run() {
-            if (!search.isSearch()) {
+            if (search.isUsable()) {
                 if (!this.text.equals("")) {
                     listAll.addAll(search.getListA());
                     listAll.addAll(search.getListB());
@@ -963,6 +1027,24 @@ public class SearchBar {
                             return;
                         }
                     }
+                }
+            }else{
+                if (searchWaiter ==null || !searchWaiter.isAlive()) {
+                    searchWaiter = new Thread(() -> {
+                        while (!mainExit) {
+                            if (search.isUsable()) {
+                                startTime = System.currentTimeMillis() - 500;
+                                timer = true;
+                                break;
+                            }
+                            try {
+                                Thread.sleep(20);
+                            } catch (InterruptedException ignored) {
+
+                            }
+                        }
+                    });
+                    searchWaiter.start();
                 }
             }
             if (!Thread.currentThread().isInterrupted()) {
