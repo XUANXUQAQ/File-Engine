@@ -35,7 +35,7 @@ public class SettingsFrame {
         int width = screenSize.width;
         int height = screenSize.height;
         frame.setLocation((int)(width*0.15), (int)(height*0.12));
-        frame.setSize(1024, 768);
+        frame.setSize(width/2, height/2);
         frame.setBackground(Color.white);
         panel.setBackground(Color.white);
         panel.setOpaque(true);
