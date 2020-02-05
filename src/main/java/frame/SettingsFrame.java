@@ -77,6 +77,7 @@ public class SettingsFrame {
     public static String dataPath;
     public static String priorityFolder;
     public static int searchDepth;
+    public static File tmp = new File(System.getenv("Appdata") + "/tmp");
 
 
     private static File settings = new File(System.getenv("Appdata") + "/settings.json");
@@ -379,14 +380,13 @@ public class SettingsFrame {
             if (MainClass.isAdmin()) {
                 JOptionPane.showMessageDialog(null, "请将弹出窗口的最后一栏改为当前文件夹，\n修改成功后请重新设置开机启动，\n下次启动时请使用带(elevated)的快捷方式。");
                 InputStream UAC = getClass().getResourceAsStream("/UACTrustShortCut.zip");
-                File target = new File("./tmp/UACTrustShortCut.zip");
+                File target = new File(tmp.getAbsolutePath() + "/UACTrustShortCut.zip");
                 if (!target.exists()) {
                     copyFile(UAC, target);
                 }
-                File mainUAC = new File("./tmp/UACTrustShortCut/ElevatedShortcut.exe");
+                File mainUAC = new File(tmp.getAbsolutePath() + "/UACTrustShortCut/ElevatedShortcut.exe");
                 if (!mainUAC.exists()) {
-                    String currentPath = System.getProperty("user.dir");
-                    Unzip.unZipFiles(target, currentPath + "\\tmp");
+                    Unzip.unZipFiles(target, tmp.getAbsolutePath());
                 }
                 File searchexe = new File(MainClass.name);
                 try {
@@ -402,14 +402,13 @@ public class SettingsFrame {
             if (MainClass.isAdmin()) {
                 JOptionPane.showMessageDialog(null, "点击最后一个Remove shortcut即可选择删除快捷方式，\n修改成功后请重新设置开机启动。");
                 InputStream UAC = getClass().getResourceAsStream("/UACTrustShortCut.zip");
-                File target = new File("./tmp/UACTrustShortCut.zip");
+                File target = new File(tmp.getAbsolutePath()+"/UACTrustShortCut.zip");
                 if (!target.exists()) {
                     copyFile(UAC, target);
                 }
-                File mainUAC = new File("./tmp/UACTrustShortCut/ElevatedShortcut.exe");
+                File mainUAC = new File(tmp.getAbsolutePath()+"/UACTrustShortCut/ElevatedShortcut.exe");
                 if (!mainUAC.exists()) {
-                    String currentPath = System.getProperty("user.dir");
-                    Unzip.unZipFiles(target, currentPath +"\\tmp");
+                    Unzip.unZipFiles(target, tmp.getAbsolutePath());
                 }
                 try {
                     Runtime.getRuntime().exec("\"" + mainUAC.getAbsolutePath() + "\"");
