@@ -1,5 +1,8 @@
 package frame;
 
+import main.MainClass;
+import search.Search;
+
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
@@ -16,9 +19,7 @@ import java.util.LinkedList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import search.*;
-
-import static main.Main.mainExit;
+import static main.MainClass.mainExit;
 
 
 public class SearchBar {
@@ -58,10 +59,10 @@ public class SearchBar {
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize(); // 获取屏幕大小
         int width = screenSize.width;
         int height = screenSize.height;
-        int positionX = (int) (width * 0.15);
-        int positionY = (int) (height * 0.2);
-        int searchBarWidth = (int) (width * 0.7);
+        int searchBarWidth = (int) (width * 0.5);
         int searchBarHeight = (int) (height * 0.5);
+        int positionX = width/2 - searchBarWidth/2;
+        int positionY = height/2 - searchBarHeight/2;
 
 
         //frame
@@ -91,7 +92,7 @@ public class SearchBar {
                 //添加更新文件
                 System.out.println("正在添加更新文件");
                 search.setUsable(false);
-                search.mergeListToadd();
+                search.mergeFileToList();
                 search.setUsable(true);
                 isUsing = true;
             }
@@ -115,12 +116,13 @@ public class SearchBar {
                     String text = textField.getText();
                     if (!text.equals("")) {
                         if (text.equals("#*update*#")) {
+                            MainClass.showMessage("提示", "正在更新文件索引");
                             clearTextFieldText();
                             search.setManualUpdate(true);
                             timer = false;
                             continue;
                         }
-                        searchFilesFolder(text);
+                        searchPriorityFolder(text);
                         searchCache(text);
                         char firstWord = text.charAt(0);
                         if ('?' == firstWord) {
@@ -333,7 +335,7 @@ public class SearchBar {
                             labelCount = 0;
                         }
 
-                        System.out.println(labelCount);
+                        //System.out.println(labelCount);
                         if (labelCount >= listResult.size()) {
                             labelCount = listResult.size() - 1;
                         }
@@ -426,7 +428,7 @@ public class SearchBar {
                             labelCount = 0;
                         }
 
-                        System.out.println(labelCount);
+                        //System.out.println(labelCount);
                         if (labelCount >= listResult.size()) {
                             labelCount = listResult.size() - 1;
                         }
@@ -543,6 +545,7 @@ public class SearchBar {
 
             @Override
             public void keyTyped(KeyEvent arg0) {
+
             }
         });
 
@@ -749,7 +752,7 @@ public class SearchBar {
         if (name.exists()) {
             try {
                 try {
-                    Runtime.getRuntime().exec(name.getName(), null, new File(name.getParent()));
+                    Runtime.getRuntime().exec(name.getName(), null, name.getParentFile());
                 } catch (IOException e) {
                     Desktop desktop;
                     if (Desktop.isDesktopSupported()) {
@@ -881,8 +884,8 @@ public class SearchBar {
         return false;
     }
 
-    private void searchFilesFolder(String text) {
-        File path = new File("Files");
+    private void searchPriorityFolder(String text) {
+        File path = new File(SettingsFrame.priorityFolder);
         boolean exist = path.exists();
         LinkedList<File> listRemain = new LinkedList<>();
         if (exist) {

@@ -1,48 +1,65 @@
 package main;
-import search.*;
 
+import com.alibaba.fastjson.JSONObject;
+import fileMonitor.FileMonitor;
+import frame.SearchBar;
+import frame.SettingsFrame;
+import frame.TaskBar;
+import search.Search;
+
+import javax.swing.*;
 import java.awt.*;
 import java.io.*;
 import java.util.Objects;
+import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import fileMonitor.FileMonitor;
-import frame.*;
-import com.alibaba.fastjson.*;
-import javax.swing.*;
 
 
-public class Main {
-	private static int updateTimeLimit = 600;
+
+public class MainClass {
 	public static boolean mainExit = false;
-	private static String ignorePath;
-	private static int searchDepth;
 	private static SearchBar searchBar = new SearchBar();
 	private static Search search = new Search();
 	private static File fileWatcherTXT = new File("tmp\\fileMonitor.txt");
+	public static String name = "search_x64.exe";		//TODO 修改版本
 
 	public static void setMainExit(boolean b){
 		mainExit = b;
 	}
-	public static void setIgnorePath(String paths){
-		ignorePath = paths + "C:\\Config.Msi,C:\\Windows";
+	private static TaskBar taskBar = null;
+	public static void showMessage(String caption, String message){
+		if (taskBar != null){
+			taskBar.showMessage(caption, message);
+		}
 	}
-	public static void setSearchDepth(int searchDepth1){
-		searchDepth = searchDepth1;
-	}
-	public static void setUpdateTimeLimit(int updateTimeLimit1){
-		updateTimeLimit = updateTimeLimit1;
+	public static boolean isAdmin() {
+		try {
+			ProcessBuilder processBuilder = new ProcessBuilder("cmd.exe");
+			Process process = processBuilder.start();
+			PrintStream printStream = new PrintStream(process.getOutputStream(), true);
+			Scanner scanner = new Scanner(process.getInputStream());
+			printStream.println("@echo off");
+			printStream.println(">nul 2>&1 \"%SYSTEMROOT%\\system32\\cacls.exe\" \"%SYSTEMROOT%\\system32\\config\\system\"");
+			printStream.println("echo %errorlevel%");
+
+			boolean printedErrorlevel = false;
+			while (true) {
+				String nextLine = scanner.nextLine();
+				if (printedErrorlevel) {
+					int errorlevel = Integer.parseInt(nextLine);
+					return errorlevel == 0;
+				} else if (nextLine.equals("echo %errorlevel%")) {
+					printedErrorlevel = true;
+				}
+			}
+		} catch (IOException e) {
+			return false;
+		}
 	}
 
 	private static void copyFile(InputStream source, File dest) {
-		OutputStream os = null;
-		BufferedInputStream bis;
-		BufferedOutputStream bos;
-		try {
-			os = new FileOutputStream(dest);
-			// 创建缓冲流
-			bis = new BufferedInputStream(source);
-			bos = new BufferedOutputStream(os);
+		try(OutputStream os = new FileOutputStream(dest);BufferedInputStream bis = new BufferedInputStream(source);BufferedOutputStream bos = new BufferedOutputStream(os)) {
 			byte[]buffer = new byte[8192];
 			int count = bis.read(buffer);
 			while(count != -1){
@@ -54,22 +71,38 @@ public class Main {
 			}
 		} catch (IOException ignored) {
 
-		} finally {
-			try {
-				assert os != null;
-				os.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+		}
+	}
+
+	public static void deleteDir(String path){
+		File file = new File(path);
+		if(!file.exists()){//判断是否待删除目录是否存在
+			return;
 		}
 
+		String[] content = file.list();//取得当前目录下所有文件和文件夹
+		if (content != null) {
+			for (String name : content) {
+				File temp = new File(path, name);
+				if (temp.isDirectory()) {//判断是否是目录
+					deleteDir(temp.getAbsolutePath());//递归调用，删除目录里的内容
+					temp.delete();//删除空目录
+				} else {
+					if (!temp.delete()) {//直接删除文件
+						System.err.println("Failed to delete " + name);
+					}
+				}
+			}
+		}
 	}
 
 	public static void main(String[] args) {
-		File settings = new File("settings.json");
+		File settings = new File(System.getenv("Appdata") + "/settings.json");
 		File caches = new File("cache.dat");
-		File files = new File("Files");
 		File tmp = new File("tmp");
+		File data = new File("data");
+		//清空tmp
+		deleteDir(tmp.getAbsolutePath());
 		if (!settings.exists()){
 			String ignorePath = "";
 			JSONObject json = new JSONObject();
@@ -79,6 +112,8 @@ public class Main {
 			json.put("updateTimeLimit", 300);
 			json.put("cacheNumLimit", 1000);
 			json.put("searchDepth", 6);
+			json.put("priorityFolder", "");
+			json.put("dataPath", data.getAbsolutePath());
 			try(BufferedWriter buffW = new BufferedWriter(new FileWriter(settings))) {
 				buffW.write(json.toJSONString());
 			} catch (IOException ignored) {
@@ -86,11 +121,22 @@ public class Main {
 			}
 		}
 		File target;
-		InputStream fileMonitorDll = Main.class.getResourceAsStream("/fileMonitor.dll");
+		InputStream fileMonitorDll64 = MainClass.class.getResourceAsStream("/fileMonitor64.dll");
+		InputStream fileMonitorDll32 = MainClass.class.getResourceAsStream("/fileMonitor32.dll");
 
 		target = new File("fileMonitor.dll");
 		if (!target.exists()) {
-			copyFile(fileMonitorDll, target);
+			File dll;
+			if (name.contains("x64")) {
+				copyFile(fileMonitorDll64, target);
+				System.out.println("已加载64位dll");
+				dll = new File("fileMonitor64.dll");
+			}else{
+				copyFile(fileMonitorDll32, target);
+				System.out.println("已加载32位dll");
+				dll = new File("fileMonitor32.dll");
+			}
+			dll.renameTo(new File("fileMonitor.dll"));
 		}
 		if (!caches.exists()){
 			try {
@@ -100,40 +146,26 @@ public class Main {
 				mainExit = true;
 			}
 		}
-		if (!files.exists()){
-			files.mkdir();
-		}
 		if (!tmp.exists()){
 			tmp.mkdir();
 		}
-		TaskBar taskBar = new TaskBar();
+		taskBar = new TaskBar();
 		taskBar.showTaskBar();
-		ignorePath = "";
-		searchDepth = 0;
-		try(BufferedReader settingReader = new BufferedReader(new FileReader(settings))) {
-			String line;
-			StringBuilder result = new StringBuilder();
-			while ((line = settingReader.readLine()) != null){
-				result.append(line);
-			}
-			JSONObject allSettings = JSON.parseObject(result.toString());
-			searchDepth = allSettings.getInteger("searchDepth");
-			ignorePath = allSettings.getString("ignorePath");
-			updateTimeLimit = allSettings.getInteger("updateTimeLimit");
-		} catch (IOException ignored) {
 
-		}
-		ignorePath = ignorePath + "C:\\Config.Msi,C:\\Windows";
+
 		SettingsFrame.initSettings();
 
-		File data = new File("data");
+		data = new File(SettingsFrame.dataPath);
 		if (data.isDirectory() && data.exists()){
 			if (Objects.requireNonNull(data.list()).length == 30){
 				System.out.println("检测到data文件，正在读取");
 				search.setUsable(false);
-				search.loadAllLists();
-				search.setUsable(true);
-				System.out.println("读取完成");
+				Thread loader = new Thread(()->{
+					search.loadAllLists();
+					search.setUsable(true);
+					System.out.println("读取完成");
+				});
+				loader.start();
 			}else{
 				System.out.println("检测到data文件损坏，开始搜索并创建data文件");
 				search.setManualUpdate(true);
@@ -145,21 +177,27 @@ public class Main {
 
 		File[] roots = File.listRoots();
 		ExecutorService fixedThreadPool = Executors.newFixedThreadPool(roots.length+4);
+		String currentPath = System.getProperty("user.dir");
+		for(File root:roots){
+			fixedThreadPool.execute(()-> {
+				FileMonitor.INSTANCE.fileWatcher(root.getAbsolutePath(), currentPath + "\\tmp\\fileMonitor.txt", currentPath + "\\tmp\\CLOSE");
+			});
+		}
 
-		for(File root:roots) {
-			fixedThreadPool.execute(() -> FileMonitor.INSTANCE.fileWatcher(root.getAbsolutePath(), tmp.getAbsolutePath() + "\\" + "fileMonitor.txt", tmp.getAbsolutePath() + "\\"+"CLOSE"));
+		if (!isAdmin()){
+			System.out.println("无管理员权限，文件监控功能受限");
+			taskBar.showMessage("警告","未获取管理员权限，文件监控功能受限");
 		}
 
 		fixedThreadPool.execute(() -> {
 			// 时间检测线程
 			long count = 0;
 			long usingCount = 0;
-			updateTimeLimit = updateTimeLimit * 1000;
 			while (!mainExit) {
 				boolean isUsing = searchBar.getUsing();
 				boolean isSleep = searchBar.getSleep();
 				count++;
-				if (count >= updateTimeLimit && !isUsing && !isSleep && !search.isManualUpdate()) {
+				if (count >= SettingsFrame.updateTimeLimit << 10 && !isUsing && !isSleep && !search.isManualUpdate()) {
 					count = 0;
 					System.out.println("正在更新本地索引data文件");
 					search.saveLists();
@@ -179,8 +217,11 @@ public class Main {
 						System.out.println("检测到开始使用，加载列表");
 						search.setUsable(false);
 						searchBar.setSleep(false);
-						search.loadAllLists();
-						search.setUsable(true);
+						Thread loader = new Thread(()->{
+							search.loadAllLists();
+							search.setUsable(true);
+						});
+						loader.start();
 					}
 				}
 				try {
@@ -218,7 +259,7 @@ public class Main {
 				if (search.isManualUpdate()){
 					search.setUsable(false);
 					System.out.println("已收到更新请求");
-					search.updateLists(ignorePath, searchDepth);
+					search.updateLists(SettingsFrame.ignorePath, SettingsFrame.searchDepth);
 				}
 				try {
 					Thread.sleep(16);
@@ -275,22 +316,18 @@ public class Main {
 
 			}
 			if (mainExit){
-				if (search.isUsable()) {
-					System.out.println("即将退出，保存最新文件列表到data");
-					search.mergeListToadd();
-					search.saveLists();
-				}
 				File close = new File(tmp.getAbsolutePath() + "\\" + "CLOSE");
 				try {
 					close.createNewFile();
-					Thread.sleep(100);
-					fileWatcherTXT.delete();
-					close.delete();
-				} catch (IOException | InterruptedException ignored) {
+					if (search.isUsable()) {
+						System.out.println("即将退出，保存最新文件列表到data");
+						search.mergeFileToList();
+						search.saveLists();
+					}
+				} catch (IOException ignored) {
 
 				}
-				fixedThreadPool.shutdownNow();
-				search.clearAll();
+				fixedThreadPool.shutdown();
 				System.exit(0);
 			}
 		}while(true);

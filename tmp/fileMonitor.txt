@@ -1,0 +1,3 @@
+Start Monitor...
+file add : D:\Code\Super-search\.idea\workspace.xml
+file add : D:\Code\Super-search\tmp\CLOSE

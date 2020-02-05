@@ -1,9 +1,12 @@
 package search;
 
+import frame.SettingsFrame;
+import main.MainClass;
+
+import javax.swing.filechooser.FileSystemView;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
-import javax.swing.filechooser.FileSystemView;
+import java.util.LinkedList;
 
 
 public class Search {
@@ -65,7 +68,7 @@ public class Search {
         listToAdd.add(path);
     }
 
-    public void mergeListToadd(){
+    public void mergeFileToList(){
         while (!listToAdd.isEmpty()){
             String each = listToAdd.pop();
             File add = new File(each);
@@ -624,7 +627,7 @@ public class Search {
     }
 
     private void saveList(String ch){
-        File data = new File("data");
+        File data = new File(SettingsFrame.dataPath);
         String path;
         Serialize listFile;
         if (!data.exists()) {
@@ -632,7 +635,7 @@ public class Search {
         }
         switch (ch) {
             case "A":
-                path = "data\\listA";
+                path = SettingsFrame.dataPath + "\\listA";
                 listFile = new Serialize();
                 listFile.setList(listA);
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
@@ -643,7 +646,7 @@ public class Search {
                 }
                 break;
             case "B":
-                path = "data\\listB";
+                path = SettingsFrame.dataPath + "\\listB";
                 listFile = new Serialize();
                 listFile.setList(listB);
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
@@ -654,7 +657,7 @@ public class Search {
                 }
                 break;
             case "C":
-                path = "data\\listC";
+                path = SettingsFrame.dataPath + "\\listC";
                 listFile = new Serialize();
                 listFile.setList(listC);
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
@@ -666,7 +669,7 @@ public class Search {
                 break;
             case "D":
 
-                path = "data\\listD";
+                path = SettingsFrame.dataPath + "\\listD";
                 listFile = new Serialize();
                 listFile.setList(listD);
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
@@ -678,7 +681,7 @@ public class Search {
                 break;
             case "E":
 
-                path = "data\\listE";
+                path = SettingsFrame.dataPath + "\\listE";
                 listFile = new Serialize();
                 listFile.setList(listE);
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
@@ -690,7 +693,7 @@ public class Search {
                 break;
             case "F":
 
-                path = "data\\listF";
+                path = SettingsFrame.dataPath + "\\listF";
                 listFile = new Serialize();
                 listFile.setList(listF);
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
@@ -702,7 +705,7 @@ public class Search {
                 break;
             case "G":
 
-                path = "data\\listG";
+                path = SettingsFrame.dataPath + "\\listG";
                 listFile = new Serialize();
                 listFile.setList(listG);
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
@@ -714,7 +717,7 @@ public class Search {
                 break;
             case "H":
 
-                path = "data\\listH";
+                path = SettingsFrame.dataPath + "\\listH";
                 listFile = new Serialize();
                 listFile.setList(listH);
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
@@ -726,7 +729,7 @@ public class Search {
                 break;
             case "I":
 
-                path = "data\\listI";
+                path = SettingsFrame.dataPath + "\\listI";
                 listFile = new Serialize();
                 listFile.setList(listI);
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
@@ -738,7 +741,7 @@ public class Search {
                 break;
             case "J":
 
-                path = "data\\listJ";
+                path = SettingsFrame.dataPath + "\\listJ";
                 listFile = new Serialize();
                 listFile.setList(listJ);
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
@@ -750,7 +753,7 @@ public class Search {
                 break;
             case "K":
 
-                path = "data\\listK";
+                path = SettingsFrame.dataPath + "\\listK";
                 listFile = new Serialize();
                 listFile.setList(listK);
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
@@ -762,7 +765,7 @@ public class Search {
                 break;
             case "L":
 
-                path = "data\\listL";
+                path = SettingsFrame.dataPath + "\\listL";
                 listFile = new Serialize();
                 listFile.setList(listL);
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
@@ -774,7 +777,7 @@ public class Search {
                 break;
             case "M":
 
-                path = "data\\listM";
+                path = SettingsFrame.dataPath + "\\listM";
                 listFile = new Serialize();
                 listFile.setList(listM);
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
@@ -786,7 +789,7 @@ public class Search {
                 break;
             case "N":
 
-                path = "data\\listN";
+                path = SettingsFrame.dataPath + "\\listN";
                 listFile = new Serialize();
                 listFile.setList(listN);
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
@@ -798,7 +801,7 @@ public class Search {
                 break;
             case "O":
 
-                path = "data\\listO";
+                path = SettingsFrame.dataPath + "\\listO";
                 listFile = new Serialize();
                 listFile.setList(listO);
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
@@ -810,7 +813,7 @@ public class Search {
                 break;
             case "P":
 
-                path = "data\\listP";
+                path = SettingsFrame.dataPath + "\\listP";
                 listFile = new Serialize();
                 listFile.setList(listP);
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
@@ -822,7 +825,7 @@ public class Search {
                 break;
             case "Q":
 
-                path = "data\\listQ";
+                path = SettingsFrame.dataPath + "\\listQ";
                 listFile = new Serialize();
                 listFile.setList(listQ);
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
@@ -834,7 +837,7 @@ public class Search {
                 break;
             case "R":
 
-                path = "data\\listR";
+                path = SettingsFrame.dataPath + "\\listR";
                 listFile = new Serialize();
                 listFile.setList(listR);
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
@@ -846,7 +849,7 @@ public class Search {
                 break;
             case "S":
 
-                path = "data\\listS";
+                path = SettingsFrame.dataPath + "\\listS";
                 listFile = new Serialize();
                 listFile.setList(listS);
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
@@ -858,7 +861,7 @@ public class Search {
                 break;
             case "T":
 
-                path = "data\\listT";
+                path = SettingsFrame.dataPath + "\\listT";
                 listFile = new Serialize();
                 listFile.setList(listT);
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
@@ -870,7 +873,7 @@ public class Search {
                 break;
             case "U":
 
-                path = "data\\listU";
+                path = SettingsFrame.dataPath + "\\listU";
                 listFile = new Serialize();
                 listFile.setList(listU);
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
@@ -882,7 +885,7 @@ public class Search {
                 break;
             case "V":
 
-                path = "data\\listV";
+                path = SettingsFrame.dataPath + "\\listV";
                 listFile = new Serialize();
                 listFile.setList(listV);
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
@@ -894,7 +897,7 @@ public class Search {
                 break;
             case "W":
 
-                path = "data\\listW";
+                path = SettingsFrame.dataPath + "\\listW";
                 listFile = new Serialize();
                 listFile.setList(listW);
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
@@ -906,7 +909,7 @@ public class Search {
                 break;
             case "X":
 
-                path = "data\\listX";
+                path = SettingsFrame.dataPath + "\\listX";
                 listFile = new Serialize();
                 listFile.setList(listX);
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
@@ -918,7 +921,7 @@ public class Search {
                 break;
             case "Y":
 
-                path = "data\\listY";
+                path = SettingsFrame.dataPath + "\\listY";
                 listFile = new Serialize();
                 listFile.setList(listY);
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
@@ -930,7 +933,7 @@ public class Search {
                 break;
             case "Z":
 
-                path = "data\\listZ";
+                path = SettingsFrame.dataPath + "\\listZ";
                 listFile = new Serialize();
                 listFile.setList(listZ);
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
@@ -941,7 +944,7 @@ public class Search {
                 }
                 break;
             case "PercentSign":
-                path = "data\\listPercentSign";
+                path = SettingsFrame.dataPath + "\\listPercentSign";
                 listFile = new Serialize();
                 listFile.setList(listPercentSign);
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
@@ -953,7 +956,7 @@ public class Search {
                 break;
             case "Underline":
 
-                path = "data\\listUnderline";
+                path = SettingsFrame.dataPath + "\\listUnderline";
                 listFile = new Serialize();
                 listFile.setList(listUnderline);
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
@@ -965,7 +968,7 @@ public class Search {
                 break;
             case "Unique":
 
-                path = "data\\listUnique";
+                path = SettingsFrame.dataPath + "\\listUnique";
                 listFile = new Serialize();
                 listFile.setList(listUnique);
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
@@ -976,7 +979,7 @@ public class Search {
                 }
                 break;
             case "Num":
-                path = "data\\listNum";
+                path = SettingsFrame.dataPath + "\\listNum";
                 listFile = new Serialize();
                 listFile.setList(listNum);
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
@@ -990,7 +993,7 @@ public class Search {
     }
 
     private void saveAndReleaseList(String ch) {
-        File data = new File("data");
+        File data = new File(SettingsFrame.dataPath);
         String path;
         Serialize listFile;
         if (!data.exists()) {
@@ -998,7 +1001,7 @@ public class Search {
         }
         switch (ch) {
             case "A":
-                path = "data\\listA";
+                path = SettingsFrame.dataPath + "\\listA";
                 listFile = new Serialize();
                 listFile.setList(listA);
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
@@ -1009,7 +1012,7 @@ public class Search {
                 }
                 break;
             case "B":
-                path = "data\\listB";
+                path = SettingsFrame.dataPath + "\\listB";
                 listFile = new Serialize();
                 listFile.setList(listB);
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
@@ -1020,7 +1023,7 @@ public class Search {
                 }
                 break;
             case "C":
-                path = "data\\listC";
+                path = SettingsFrame.dataPath + "\\listC";
                 listFile = new Serialize();
                 listFile.setList(listC);
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
@@ -1032,7 +1035,7 @@ public class Search {
                 break;
             case "D":
 
-                path = "data\\listD";
+                path = SettingsFrame.dataPath + "\\listD";
                 listFile = new Serialize();
                 listFile.setList(listD);
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
@@ -1044,7 +1047,7 @@ public class Search {
                 break;
             case "E":
 
-                path = "data\\listE";
+                path = SettingsFrame.dataPath + "\\listE";
                 listFile = new Serialize();
                 listFile.setList(listE);
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
@@ -1056,7 +1059,7 @@ public class Search {
                 break;
             case "F":
 
-                path = "data\\listF";
+                path = SettingsFrame.dataPath + "\\listF";
                 listFile = new Serialize();
                 listFile.setList(listF);
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
@@ -1068,7 +1071,7 @@ public class Search {
                 break;
             case "G":
 
-                path = "data\\listG";
+                path = SettingsFrame.dataPath + "\\listG";
                 listFile = new Serialize();
                 listFile.setList(listG);
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
@@ -1080,7 +1083,7 @@ public class Search {
                 break;
             case "H":
 
-                path = "data\\listH";
+                path = SettingsFrame.dataPath + "\\listH";
                 listFile = new Serialize();
                 listFile.setList(listH);
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
@@ -1092,7 +1095,7 @@ public class Search {
                 break;
             case "I":
 
-                path = "data\\listI";
+                path = SettingsFrame.dataPath + "\\listI";
                 listFile = new Serialize();
                 listFile.setList(listI);
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
@@ -1104,7 +1107,7 @@ public class Search {
                 break;
             case "J":
 
-                path = "data\\listJ";
+                path = SettingsFrame.dataPath + "\\listJ";
                 listFile = new Serialize();
                 listFile.setList(listJ);
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
@@ -1116,7 +1119,7 @@ public class Search {
                 break;
             case "K":
 
-                path = "data\\listK";
+                path = SettingsFrame.dataPath + "\\listK";
                 listFile = new Serialize();
                 listFile.setList(listK);
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
@@ -1128,7 +1131,7 @@ public class Search {
                 break;
             case "L":
 
-                path = "data\\listL";
+                path = SettingsFrame.dataPath + "\\listL";
                 listFile = new Serialize();
                 listFile.setList(listL);
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
@@ -1140,7 +1143,7 @@ public class Search {
                 break;
             case "M":
 
-                path = "data\\listM";
+                path = SettingsFrame.dataPath + "\\listM";
                 listFile = new Serialize();
                 listFile.setList(listM);
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
@@ -1152,7 +1155,7 @@ public class Search {
                 break;
             case "N":
 
-                path = "data\\listN";
+                path = SettingsFrame.dataPath + "\\listN";
                 listFile = new Serialize();
                 listFile.setList(listN);
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
@@ -1164,7 +1167,7 @@ public class Search {
                 break;
             case "O":
 
-                path = "data\\listO";
+                path = SettingsFrame.dataPath + "\\listO";
                 listFile = new Serialize();
                 listFile.setList(listO);
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
@@ -1176,7 +1179,7 @@ public class Search {
                 break;
             case "P":
 
-                path = "data\\listP";
+                path = SettingsFrame.dataPath + "\\listP";
                 listFile = new Serialize();
                 listFile.setList(listP);
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
@@ -1188,7 +1191,7 @@ public class Search {
                 break;
             case "Q":
 
-                path = "data\\listQ";
+                path = SettingsFrame.dataPath + "\\listQ";
                 listFile = new Serialize();
                 listFile.setList(listQ);
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
@@ -1200,7 +1203,7 @@ public class Search {
                 break;
             case "R":
 
-                path = "data\\listR";
+                path = SettingsFrame.dataPath + "\\listR";
                 listFile = new Serialize();
                 listFile.setList(listR);
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
@@ -1212,7 +1215,7 @@ public class Search {
                 break;
             case "S":
 
-                path = "data\\listS";
+                path = SettingsFrame.dataPath + "\\listS";
                 listFile = new Serialize();
                 listFile.setList(listS);
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
@@ -1224,7 +1227,7 @@ public class Search {
                 break;
             case "T":
 
-                path = "data\\listT";
+                path = SettingsFrame.dataPath + "\\listT";
                 listFile = new Serialize();
                 listFile.setList(listT);
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
@@ -1236,7 +1239,7 @@ public class Search {
                 break;
             case "U":
 
-                path = "data\\listU";
+                path = SettingsFrame.dataPath + "\\listU";
                 listFile = new Serialize();
                 listFile.setList(listU);
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
@@ -1248,7 +1251,7 @@ public class Search {
                 break;
             case "V":
 
-                path = "data\\listV";
+                path = SettingsFrame.dataPath + "\\listV";
                 listFile = new Serialize();
                 listFile.setList(listV);
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
@@ -1260,7 +1263,7 @@ public class Search {
                 break;
             case "W":
 
-                path = "data\\listW";
+                path = SettingsFrame.dataPath + "\\listW";
                 listFile = new Serialize();
                 listFile.setList(listW);
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
@@ -1272,7 +1275,7 @@ public class Search {
                 break;
             case "X":
 
-                path = "data\\listX";
+                path = SettingsFrame.dataPath + "\\listX";
                 listFile = new Serialize();
                 listFile.setList(listX);
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
@@ -1284,7 +1287,7 @@ public class Search {
                 break;
             case "Y":
 
-                path = "data\\listY";
+                path = SettingsFrame.dataPath + "\\listY";
                 listFile = new Serialize();
                 listFile.setList(listY);
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
@@ -1296,7 +1299,7 @@ public class Search {
                 break;
             case "Z":
 
-                path = "data\\listZ";
+                path = SettingsFrame.dataPath + "\\listZ";
                 listFile = new Serialize();
                 listFile.setList(listZ);
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
@@ -1307,7 +1310,7 @@ public class Search {
                 }
                 break;
             case "PercentSign":
-                path = "data\\listPercentSign";
+                path = SettingsFrame.dataPath + "\\listPercentSign";
                 listFile = new Serialize();
                 listFile.setList(listPercentSign);
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
@@ -1319,7 +1322,7 @@ public class Search {
                 break;
             case "Underline":
 
-                path = "data\\listUnderline";
+                path = SettingsFrame.dataPath + "\\listUnderline";
                 listFile = new Serialize();
                 listFile.setList(listUnderline);
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
@@ -1331,7 +1334,7 @@ public class Search {
                 break;
             case "Unique":
 
-                path = "data\\listUnique";
+                path = SettingsFrame.dataPath + "\\listUnique";
                 listFile = new Serialize();
                 listFile.setList(listUnique);
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
@@ -1342,7 +1345,7 @@ public class Search {
                 }
                 break;
             case "Num":
-                path = "data\\listNum";
+                path = SettingsFrame.dataPath + "\\listNum";
                 listFile = new Serialize();
                 listFile.setList(listNum);
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
@@ -1360,7 +1363,7 @@ public class Search {
         Serialize listFile;
         switch (ch) {
             case "A":
-                path = "data\\listA";
+                path = SettingsFrame.dataPath + "\\listA";
                 File file = new File(path);
                 try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
                     listFile = (Serialize) ois.readObject();
@@ -1371,7 +1374,7 @@ public class Search {
                 break;
             case "B":
 
-                path = "data\\listB";
+                path = SettingsFrame.dataPath + "\\listB";
 
                 file = new File(path);
                 try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
@@ -1383,7 +1386,7 @@ public class Search {
                 break;
             case "C":
 
-                path = "data\\listC";
+                path = SettingsFrame.dataPath + "\\listC";
 
                 file = new File(path);
                 try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
@@ -1395,7 +1398,7 @@ public class Search {
                 break;
             case "D":
 
-                path = "data\\listD";
+                path = SettingsFrame.dataPath + "\\listD";
 
                 file = new File(path);
                 try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
@@ -1407,7 +1410,7 @@ public class Search {
                 break;
             case "E":
 
-                path = "data\\listE";
+                path = SettingsFrame.dataPath + "\\listE";
 
                 file = new File(path);
                 try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
@@ -1419,7 +1422,7 @@ public class Search {
                 break;
             case "F":
 
-                path = "data\\listF";
+                path = SettingsFrame.dataPath + "\\listF";
 
                 file = new File(path);
                 try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
@@ -1431,7 +1434,7 @@ public class Search {
                 break;
             case "G":
 
-                path = "data\\listG";
+                path = SettingsFrame.dataPath + "\\listG";
 
                 file = new File(path);
                 try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
@@ -1443,7 +1446,7 @@ public class Search {
                 break;
             case "H":
 
-                path = "data\\listH";
+                path = SettingsFrame.dataPath + "\\listH";
 
                 file = new File(path);
                 try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
@@ -1455,7 +1458,7 @@ public class Search {
                 break;
             case "I":
 
-                path = "data\\listI";
+                path = SettingsFrame.dataPath + "\\listI";
 
                 file = new File(path);
                 try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
@@ -1467,7 +1470,7 @@ public class Search {
                 break;
             case "J":
 
-                path = "data\\listJ";
+                path = SettingsFrame.dataPath + "\\listJ";
 
                 file = new File(path);
                 try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
@@ -1479,7 +1482,7 @@ public class Search {
                 break;
             case "K":
 
-                path = "data\\listK";
+                path = SettingsFrame.dataPath + "\\listK";
 
                 file = new File(path);
                 try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
@@ -1491,7 +1494,7 @@ public class Search {
                 break;
             case "L":
 
-                path = "data\\listL";
+                path = SettingsFrame.dataPath + "\\listL";
 
                 file = new File(path);
                 try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
@@ -1503,7 +1506,7 @@ public class Search {
                 break;
             case "M":
 
-                path = "data\\listM";
+                path = SettingsFrame.dataPath + "\\listM";
 
                 file = new File(path);
                 try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
@@ -1515,7 +1518,7 @@ public class Search {
                 break;
             case "N":
 
-                path = "data\\listN";
+                path = SettingsFrame.dataPath + "\\listN";
 
                 file = new File(path);
                 try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
@@ -1527,7 +1530,7 @@ public class Search {
                 break;
             case "O":
 
-                path = "data\\listO";
+                path = SettingsFrame.dataPath + "\\listO";
 
                 file = new File(path);
                 try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
@@ -1539,7 +1542,7 @@ public class Search {
                 break;
             case "P":
 
-                path = "data\\listP";
+                path = SettingsFrame.dataPath + "\\listP";
 
                 file = new File(path);
                 try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
@@ -1551,7 +1554,7 @@ public class Search {
                 break;
             case "Q":
 
-                path = "data\\listQ";
+                path = SettingsFrame.dataPath + "\\listQ";
 
                 file = new File(path);
                 try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
@@ -1563,7 +1566,7 @@ public class Search {
                 break;
             case "R":
 
-                path = "data\\listR";
+                path = SettingsFrame.dataPath + "\\listR";
 
                 file = new File(path);
                 try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
@@ -1575,7 +1578,7 @@ public class Search {
                 break;
             case "S":
 
-                path = "data\\listS";
+                path = SettingsFrame.dataPath + "\\listS";
 
                 file = new File(path);
                 try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
@@ -1587,7 +1590,7 @@ public class Search {
                 break;
             case "T":
 
-                path = "data\\listT";
+                path = SettingsFrame.dataPath + "\\listT";
 
                 file = new File(path);
                 try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
@@ -1599,7 +1602,7 @@ public class Search {
                 break;
             case "U":
 
-                path = "data\\listU";
+                path = SettingsFrame.dataPath + "\\listU";
 
                 file = new File(path);
                 try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
@@ -1611,7 +1614,7 @@ public class Search {
                 break;
             case "V":
 
-                path = "data\\listV";
+                path = SettingsFrame.dataPath + "\\listV";
 
                 file = new File(path);
                 try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
@@ -1623,7 +1626,7 @@ public class Search {
                 break;
             case "W":
 
-                path = "data\\listW";
+                path = SettingsFrame.dataPath + "\\listW";
 
                 file = new File(path);
                 try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
@@ -1635,7 +1638,7 @@ public class Search {
                 break;
             case "X":
 
-                path = "data\\listX";
+                path = SettingsFrame.dataPath + "\\listX";
 
                 file = new File(path);
                 try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
@@ -1647,7 +1650,7 @@ public class Search {
                 break;
             case "Y":
 
-                path = "data\\listY";
+                path = SettingsFrame.dataPath + "\\listY";
 
                 file = new File(path);
                 try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
@@ -1659,7 +1662,7 @@ public class Search {
                 break;
             case "Z":
 
-                path = "data\\listZ";
+                path = SettingsFrame.dataPath + "\\listZ";
 
                 file = new File(path);
                 try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
@@ -1671,7 +1674,7 @@ public class Search {
                 break;
             case "PercentSign":
 
-                path = "data\\listPercentSign";
+                path = SettingsFrame.dataPath + "\\listPercentSign";
 
                 file = new File(path);
                 try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
@@ -1683,7 +1686,7 @@ public class Search {
                 break;
             case "UnderLine":
 
-                path = "data\\listUnderline";
+                path = SettingsFrame.dataPath + "\\listUnderline";
 
                 file = new File(path);
                 try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
@@ -1695,7 +1698,7 @@ public class Search {
                 break;
             case "Unique":
 
-                path = "data\\listUnique";
+                path = SettingsFrame.dataPath + "\\listUnique";
 
                 file = new File(path);
                 try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
@@ -1707,7 +1710,7 @@ public class Search {
                 break;
             case "Num":
 
-                path = "data\\listNum";
+                path = SettingsFrame.dataPath + "\\listNum";
 
                 file = new File(path);
                 try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
@@ -1734,6 +1737,7 @@ public class Search {
         }
         System.out.println("搜索完成，总数据数量：");
         System.out.println(num);
+        MainClass.showMessage("提示","索引已经更新");
         isUsable = true;
         isManualUpdate = false;
     }
@@ -2546,43 +2550,7 @@ public class Search {
         searchFile(ignorePath, searchDepth);
     }
 
-    public void clearAll() {
-        listA = null;
-        listB = null;
-        listC = null;
-        listD = null;
-        listE = null;
-        listF = null;
-        listG = null;
-        listH = null;
-        listI = null;
-        listJ = null;
-        listK = null;
-        listL = null;
-        listM = null;
-        listN = null;
-        listO = null;
-        listP = null;
-        listQ = null;
-        listR = null;
-        listS = null;
-        listT = null;
-        listU = null;
-        listV = null;
-        listW = null;
-        listX = null;
-        listY = null;
-        listZ = null;
-        listNum = null;
-        listPercentSign = null;
-        listUnique = null;
-        listUnderline = null;
-    }
-
     static class Serialize implements Serializable {
-        /**
-         *
-         */
         private static final long serialVersionUID = 1L;
         private LinkedList<String> list;
 
