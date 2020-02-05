@@ -9,4 +9,5 @@ target/
 Files/
 cache.dat
 data/
+fileMonitor.dll
 tmp/
