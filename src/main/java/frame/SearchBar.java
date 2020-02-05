@@ -752,7 +752,7 @@ public class SearchBar {
         if (name.exists()) {
             try {
                 try {
-                    Runtime.getRuntime().exec(name.getName(), null, name.getParentFile());
+                    Runtime.getRuntime().exec("\"" + name.getAbsolutePath() + "\"", null, name.getParentFile());
                 } catch (IOException e) {
                     Desktop desktop;
                     if (Desktop.isDesktopSupported()) {
@@ -927,7 +927,9 @@ public class SearchBar {
 
     private void focusLostTodo(){
         Runnable todo = () -> {
-            searchBar.setVisible(false);
+            if (searchBar.isVisible()) {
+                searchBar.setVisible(false);
+            }
             clearLabel();
             isUsing = false;
             labelCount = 0;

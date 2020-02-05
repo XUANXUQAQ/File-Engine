@@ -21,7 +21,7 @@ public class MainClass {
 	public static boolean mainExit = false;
 	private static SearchBar searchBar = new SearchBar();
 	private static Search search = new Search();
-	private static File fileWatcherTXT = new File("tmp\\fileMonitor.txt");
+	private static File fileWatcherTXT = new File(SettingsFrame.tmp.getAbsolutePath()+ "\\fileMonitor.txt");
 	public static String name = "search_x64.exe";		//TODO ÐÞ¸Ä°æ±¾
 
 	public static void setMainExit(boolean b){
@@ -99,10 +99,9 @@ public class MainClass {
 	public static void main(String[] args) {
 		File settings = new File(System.getenv("Appdata") + "/settings.json");
 		File caches = new File("cache.dat");
-		File tmp = new File("tmp");
 		File data = new File("data");
 		//Çå¿Õtmp
-		deleteDir(tmp.getAbsolutePath());
+		deleteDir(SettingsFrame.tmp.getAbsolutePath());
 		if (!settings.exists()){
 			String ignorePath = "";
 			JSONObject json = new JSONObject();
@@ -146,8 +145,8 @@ public class MainClass {
 				mainExit = true;
 			}
 		}
-		if (!tmp.exists()){
-			tmp.mkdir();
+		if (!SettingsFrame.tmp.exists()){
+			SettingsFrame.tmp.mkdir();
 		}
 		taskBar = new TaskBar();
 		taskBar.showTaskBar();
@@ -177,10 +176,9 @@ public class MainClass {
 
 		File[] roots = File.listRoots();
 		ExecutorService fixedThreadPool = Executors.newFixedThreadPool(roots.length+4);
-		String currentPath = System.getProperty("user.dir");
 		for(File root:roots){
 			fixedThreadPool.execute(()-> {
-				FileMonitor.INSTANCE.fileWatcher(root.getAbsolutePath(), currentPath + "\\tmp\\fileMonitor.txt", currentPath + "\\tmp\\CLOSE");
+				FileMonitor.INSTANCE.fileWatcher(root.getAbsolutePath(), SettingsFrame.tmp.getAbsolutePath() + "\\fileMonitor.txt", SettingsFrame.tmp.getAbsolutePath() + "\\CLOSE");
 			});
 		}
 
@@ -316,7 +314,7 @@ public class MainClass {
 
 			}
 			if (mainExit){
-				File close = new File(tmp.getAbsolutePath() + "\\" + "CLOSE");
+				File close = new File(SettingsFrame.tmp.getAbsolutePath() + "\\" + "CLOSE");
 				try {
 					close.createNewFile();
 					if (search.isUsable()) {
