@@ -100,6 +100,7 @@ public class SearchBar {
             @Override
             public void focusLost(FocusEvent e) {
                 focusLostTodo();
+                thread.interrupt();
             }
         });
 
@@ -513,7 +514,7 @@ public class SearchBar {
                         }
                     } else if (10 == key) {
                         //enter被点击
-                        searchBar.setVisible(false);
+                        focusLostTodo();
                         if (isCtrlPressed) {
                             //打开上级文件夹
                             File open = new File(listResult.get(labelCount));
@@ -958,54 +959,23 @@ public class SearchBar {
         private String searchText;
         private int length;
         private String[] strings;
-        private LinkedList<String> listAll;
 
         AddAllResult(String txt) {
             this.text = txt.substring(1);
             strings = this.text.split(";");
             try {
                 searchText = strings[0];
-            }catch (ArrayIndexOutOfBoundsException e){
+            } catch (ArrayIndexOutOfBoundsException e) {
                 searchText = "";
             }
             length = strings.length;
-            listAll = new LinkedList<>();
         }
 
         @Override
         public void run() {
             if (search.isUsable()) {
                 if (!this.text.equals("")) {
-                    listAll.addAll(search.getListA());
-                    listAll.addAll(search.getListB());
-                    listAll.addAll(search.getListC());
-                    listAll.addAll(search.getListD());
-                    listAll.addAll(search.getListE());
-                    listAll.addAll(search.getListF());
-                    listAll.addAll(search.getListG());
-                    listAll.addAll(search.getListH());
-                    listAll.addAll(search.getListI());
-                    listAll.addAll(search.getListJ());
-                    listAll.addAll(search.getListK());
-                    listAll.addAll(search.getListL());
-                    listAll.addAll(search.getListM());
-                    listAll.addAll(search.getListN());
-                    listAll.addAll(search.getListO());
-                    listAll.addAll(search.getListP());
-                    listAll.addAll(search.getListQ());
-                    listAll.addAll(search.getListR());
-                    listAll.addAll(search.getListS());
-                    listAll.addAll(search.getListT());
-                    listAll.addAll(search.getListU());
-                    listAll.addAll(search.getListV());
-                    listAll.addAll(search.getListW());
-                    listAll.addAll(search.getListX());
-                    listAll.addAll(search.getListY());
-                    listAll.addAll(search.getListZ());
-                    listAll.addAll(search.getListUnderline());
-                    listAll.addAll(search.getListUnique());
-                    listAll.addAll(search.getListPercentSign());
-                    for (String fileInList : listAll) {
+                    for (String fileInList : search.getListA()) {
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             listResult.add(fileInList);
                             if (listResult.size() > 100) {
@@ -1032,29 +1002,864 @@ public class SearchBar {
                             return;
                         }
                     }
-                }
-            }else{
-                if (searchWaiter ==null || !searchWaiter.isAlive()) {
-                    searchWaiter = new Thread(() -> {
-                        while (!mainExit) {
-                            if (search.isUsable()) {
-                                startTime = System.currentTimeMillis() - 500;
-                                timer = true;
+                    for (String fileInList : search.getListB()) {
+                        if (length != 2 && match(getFileName(fileInList), searchText)) {
+                            listResult.add(fileInList);
+                            if (listResult.size() > 100) {
                                 break;
                             }
-                            try {
-                                Thread.sleep(20);
-                            } catch (InterruptedException ignored) {
-
+                        } else if (match(getFileName(fileInList), searchText) && length == 2) {
+                            if (strings[1].toUpperCase().equals("FILE")) {
+                                if (isFile(fileInList)) {
+                                    listResult.add(fileInList);
+                                    if (listResult.size() > 100) {
+                                        break;
+                                    }
+                                }
+                            } else if (strings[1].toUpperCase().equals("FOLDER")) {
+                                if (isDirectory(fileInList)) {
+                                    listResult.add(fileInList);
+                                    if (listResult.size() > 100) {
+                                        break;
+                                    }
+                                }
                             }
                         }
-                    });
-                    searchWaiter.start();
+                        if (Thread.currentThread().isInterrupted()) {
+                            return;
+                        }
+                    }
+                    for (String fileInList : search.getListC()) {
+                        if (length != 2 && match(getFileName(fileInList), searchText)) {
+                            listResult.add(fileInList);
+                            if (listResult.size() > 100) {
+                                break;
+                            }
+                        } else if (match(getFileName(fileInList), searchText) && length == 2) {
+                            if (strings[1].toUpperCase().equals("FILE")) {
+                                if (isFile(fileInList)) {
+                                    listResult.add(fileInList);
+                                    if (listResult.size() > 100) {
+                                        break;
+                                    }
+                                }
+                            } else if (strings[1].toUpperCase().equals("FOLDER")) {
+                                if (isDirectory(fileInList)) {
+                                    listResult.add(fileInList);
+                                    if (listResult.size() > 100) {
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        if (Thread.currentThread().isInterrupted()) {
+                            return;
+                        }
+                    }
+                    for (String fileInList : search.getListD()) {
+                        if (length != 2 && match(getFileName(fileInList), searchText)) {
+                            listResult.add(fileInList);
+                            if (listResult.size() > 100) {
+                                break;
+                            }
+                        } else if (match(getFileName(fileInList), searchText) && length == 2) {
+                            if (strings[1].toUpperCase().equals("FILE")) {
+                                if (isFile(fileInList)) {
+                                    listResult.add(fileInList);
+                                    if (listResult.size() > 100) {
+                                        break;
+                                    }
+                                }
+                            } else if (strings[1].toUpperCase().equals("FOLDER")) {
+                                if (isDirectory(fileInList)) {
+                                    listResult.add(fileInList);
+                                    if (listResult.size() > 100) {
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        if (Thread.currentThread().isInterrupted()) {
+                            return;
+                        }
+                    }
+                    for (String fileInList : search.getListA()) {
+                        if (length != 2 && match(getFileName(fileInList), searchText)) {
+                            listResult.add(fileInList);
+                            if (listResult.size() > 100) {
+                                break;
+                            }
+                        } else if (match(getFileName(fileInList), searchText) && length == 2) {
+                            if (strings[1].toUpperCase().equals("FILE")) {
+                                if (isFile(fileInList)) {
+                                    listResult.add(fileInList);
+                                    if (listResult.size() > 100) {
+                                        break;
+                                    }
+                                }
+                            } else if (strings[1].toUpperCase().equals("FOLDER")) {
+                                if (isDirectory(fileInList)) {
+                                    listResult.add(fileInList);
+                                    if (listResult.size() > 100) {
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        if (Thread.currentThread().isInterrupted()) {
+                            return;
+                        }
+                    }for (String fileInList : search.getListE()) {
+                        if (length != 2 && match(getFileName(fileInList), searchText)) {
+                            listResult.add(fileInList);
+                            if (listResult.size() > 100) {
+                                break;
+                            }
+                        } else if (match(getFileName(fileInList), searchText) && length == 2) {
+                            if (strings[1].toUpperCase().equals("FILE")) {
+                                if (isFile(fileInList)) {
+                                    listResult.add(fileInList);
+                                    if (listResult.size() > 100) {
+                                        break;
+                                    }
+                                }
+                            } else if (strings[1].toUpperCase().equals("FOLDER")) {
+                                if (isDirectory(fileInList)) {
+                                    listResult.add(fileInList);
+                                    if (listResult.size() > 100) {
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        if (Thread.currentThread().isInterrupted()) {
+                            return;
+                        }
+                    }
+                    for (String fileInList : search.getListA()) {
+                        if (length != 2 && match(getFileName(fileInList), searchText)) {
+                            listResult.add(fileInList);
+                            if (listResult.size() > 100) {
+                                break;
+                            }
+                        } else if (match(getFileName(fileInList), searchText) && length == 2) {
+                            if (strings[1].toUpperCase().equals("FILE")) {
+                                if (isFile(fileInList)) {
+                                    listResult.add(fileInList);
+                                    if (listResult.size() > 100) {
+                                        break;
+                                    }
+                                }
+                            } else if (strings[1].toUpperCase().equals("FOLDER")) {
+                                if (isDirectory(fileInList)) {
+                                    listResult.add(fileInList);
+                                    if (listResult.size() > 100) {
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        if (Thread.currentThread().isInterrupted()) {
+                            return;
+                        }
+                    }for (String fileInList : search.getListF()) {
+                        if (length != 2 && match(getFileName(fileInList), searchText)) {
+                            listResult.add(fileInList);
+                            if (listResult.size() > 100) {
+                                break;
+                            }
+                        } else if (match(getFileName(fileInList), searchText) && length == 2) {
+                            if (strings[1].toUpperCase().equals("FILE")) {
+                                if (isFile(fileInList)) {
+                                    listResult.add(fileInList);
+                                    if (listResult.size() > 100) {
+                                        break;
+                                    }
+                                }
+                            } else if (strings[1].toUpperCase().equals("FOLDER")) {
+                                if (isDirectory(fileInList)) {
+                                    listResult.add(fileInList);
+                                    if (listResult.size() > 100) {
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        if (Thread.currentThread().isInterrupted()) {
+                            return;
+                        }
+                    }
+                    for (String fileInList : search.getListG()) {
+                        if (length != 2 && match(getFileName(fileInList), searchText)) {
+                            listResult.add(fileInList);
+                            if (listResult.size() > 100) {
+                                break;
+                            }
+                        } else if (match(getFileName(fileInList), searchText) && length == 2) {
+                            if (strings[1].toUpperCase().equals("FILE")) {
+                                if (isFile(fileInList)) {
+                                    listResult.add(fileInList);
+                                    if (listResult.size() > 100) {
+                                        break;
+                                    }
+                                }
+                            } else if (strings[1].toUpperCase().equals("FOLDER")) {
+                                if (isDirectory(fileInList)) {
+                                    listResult.add(fileInList);
+                                    if (listResult.size() > 100) {
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        if (Thread.currentThread().isInterrupted()) {
+                            return;
+                        }
+                    }
+                    for (String fileInList : search.getListH()) {
+                        if (length != 2 && match(getFileName(fileInList), searchText)) {
+                            listResult.add(fileInList);
+                            if (listResult.size() > 100) {
+                                break;
+                            }
+                        } else if (match(getFileName(fileInList), searchText) && length == 2) {
+                            if (strings[1].toUpperCase().equals("FILE")) {
+                                if (isFile(fileInList)) {
+                                    listResult.add(fileInList);
+                                    if (listResult.size() > 100) {
+                                        break;
+                                    }
+                                }
+                            } else if (strings[1].toUpperCase().equals("FOLDER")) {
+                                if (isDirectory(fileInList)) {
+                                    listResult.add(fileInList);
+                                    if (listResult.size() > 100) {
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        if (Thread.currentThread().isInterrupted()) {
+                            return;
+                        }
+                    }
+                    for (String fileInList : search.getListI()) {
+                        if (length != 2 && match(getFileName(fileInList), searchText)) {
+                            listResult.add(fileInList);
+                            if (listResult.size() > 100) {
+                                break;
+                            }
+                        } else if (match(getFileName(fileInList), searchText) && length == 2) {
+                            if (strings[1].toUpperCase().equals("FILE")) {
+                                if (isFile(fileInList)) {
+                                    listResult.add(fileInList);
+                                    if (listResult.size() > 100) {
+                                        break;
+                                    }
+                                }
+                            } else if (strings[1].toUpperCase().equals("FOLDER")) {
+                                if (isDirectory(fileInList)) {
+                                    listResult.add(fileInList);
+                                    if (listResult.size() > 100) {
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        if (Thread.currentThread().isInterrupted()) {
+                            return;
+                        }
+                    }
+                    for (String fileInList : search.getListJ()) {
+                        if (length != 2 && match(getFileName(fileInList), searchText)) {
+                            listResult.add(fileInList);
+                            if (listResult.size() > 100) {
+                                break;
+                            }
+                        } else if (match(getFileName(fileInList), searchText) && length == 2) {
+                            if (strings[1].toUpperCase().equals("FILE")) {
+                                if (isFile(fileInList)) {
+                                    listResult.add(fileInList);
+                                    if (listResult.size() > 100) {
+                                        break;
+                                    }
+                                }
+                            } else if (strings[1].toUpperCase().equals("FOLDER")) {
+                                if (isDirectory(fileInList)) {
+                                    listResult.add(fileInList);
+                                    if (listResult.size() > 100) {
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        if (Thread.currentThread().isInterrupted()) {
+                            return;
+                        }
+                    }
+                    for (String fileInList : search.getListK()) {
+                        if (length != 2 && match(getFileName(fileInList), searchText)) {
+                            listResult.add(fileInList);
+                            if (listResult.size() > 100) {
+                                break;
+                            }
+                        } else if (match(getFileName(fileInList), searchText) && length == 2) {
+                            if (strings[1].toUpperCase().equals("FILE")) {
+                                if (isFile(fileInList)) {
+                                    listResult.add(fileInList);
+                                    if (listResult.size() > 100) {
+                                        break;
+                                    }
+                                }
+                            } else if (strings[1].toUpperCase().equals("FOLDER")) {
+                                if (isDirectory(fileInList)) {
+                                    listResult.add(fileInList);
+                                    if (listResult.size() > 100) {
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        if (Thread.currentThread().isInterrupted()) {
+                            return;
+                        }
+                    }
+                    for (String fileInList : search.getListL()) {
+                        if (length != 2 && match(getFileName(fileInList), searchText)) {
+                            listResult.add(fileInList);
+                            if (listResult.size() > 100) {
+                                break;
+                            }
+                        } else if (match(getFileName(fileInList), searchText) && length == 2) {
+                            if (strings[1].toUpperCase().equals("FILE")) {
+                                if (isFile(fileInList)) {
+                                    listResult.add(fileInList);
+                                    if (listResult.size() > 100) {
+                                        break;
+                                    }
+                                }
+                            } else if (strings[1].toUpperCase().equals("FOLDER")) {
+                                if (isDirectory(fileInList)) {
+                                    listResult.add(fileInList);
+                                    if (listResult.size() > 100) {
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        if (Thread.currentThread().isInterrupted()) {
+                            return;
+                        }
+                    }
+                    for (String fileInList : search.getListM()) {
+                        if (length != 2 && match(getFileName(fileInList), searchText)) {
+                            listResult.add(fileInList);
+                            if (listResult.size() > 100) {
+                                break;
+                            }
+                        } else if (match(getFileName(fileInList), searchText) && length == 2) {
+                            if (strings[1].toUpperCase().equals("FILE")) {
+                                if (isFile(fileInList)) {
+                                    listResult.add(fileInList);
+                                    if (listResult.size() > 100) {
+                                        break;
+                                    }
+                                }
+                            } else if (strings[1].toUpperCase().equals("FOLDER")) {
+                                if (isDirectory(fileInList)) {
+                                    listResult.add(fileInList);
+                                    if (listResult.size() > 100) {
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        if (Thread.currentThread().isInterrupted()) {
+                            return;
+                        }
+                    }
+                    for (String fileInList : search.getListN()) {
+                        if (length != 2 && match(getFileName(fileInList), searchText)) {
+                            listResult.add(fileInList);
+                            if (listResult.size() > 100) {
+                                break;
+                            }
+                        } else if (match(getFileName(fileInList), searchText) && length == 2) {
+                            if (strings[1].toUpperCase().equals("FILE")) {
+                                if (isFile(fileInList)) {
+                                    listResult.add(fileInList);
+                                    if (listResult.size() > 100) {
+                                        break;
+                                    }
+                                }
+                            } else if (strings[1].toUpperCase().equals("FOLDER")) {
+                                if (isDirectory(fileInList)) {
+                                    listResult.add(fileInList);
+                                    if (listResult.size() > 100) {
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        if (Thread.currentThread().isInterrupted()) {
+                            return;
+                        }
+                    }
+                    for (String fileInList : search.getListO()) {
+                        if (length != 2 && match(getFileName(fileInList), searchText)) {
+                            listResult.add(fileInList);
+                            if (listResult.size() > 100) {
+                                break;
+                            }
+                        } else if (match(getFileName(fileInList), searchText) && length == 2) {
+                            if (strings[1].toUpperCase().equals("FILE")) {
+                                if (isFile(fileInList)) {
+                                    listResult.add(fileInList);
+                                    if (listResult.size() > 100) {
+                                        break;
+                                    }
+                                }
+                            } else if (strings[1].toUpperCase().equals("FOLDER")) {
+                                if (isDirectory(fileInList)) {
+                                    listResult.add(fileInList);
+                                    if (listResult.size() > 100) {
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        if (Thread.currentThread().isInterrupted()) {
+                            return;
+                        }
+                    }
+                    for (String fileInList : search.getListP()) {
+                        if (length != 2 && match(getFileName(fileInList), searchText)) {
+                            listResult.add(fileInList);
+                            if (listResult.size() > 100) {
+                                break;
+                            }
+                        } else if (match(getFileName(fileInList), searchText) && length == 2) {
+                            if (strings[1].toUpperCase().equals("FILE")) {
+                                if (isFile(fileInList)) {
+                                    listResult.add(fileInList);
+                                    if (listResult.size() > 100) {
+                                        break;
+                                    }
+                                }
+                            } else if (strings[1].toUpperCase().equals("FOLDER")) {
+                                if (isDirectory(fileInList)) {
+                                    listResult.add(fileInList);
+                                    if (listResult.size() > 100) {
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        if (Thread.currentThread().isInterrupted()) {
+                            return;
+                        }
+                    }
+                    for (String fileInList : search.getListQ()) {
+                        if (length != 2 && match(getFileName(fileInList), searchText)) {
+                            listResult.add(fileInList);
+                            if (listResult.size() > 100) {
+                                break;
+                            }
+                        } else if (match(getFileName(fileInList), searchText) && length == 2) {
+                            if (strings[1].toUpperCase().equals("FILE")) {
+                                if (isFile(fileInList)) {
+                                    listResult.add(fileInList);
+                                    if (listResult.size() > 100) {
+                                        break;
+                                    }
+                                }
+                            } else if (strings[1].toUpperCase().equals("FOLDER")) {
+                                if (isDirectory(fileInList)) {
+                                    listResult.add(fileInList);
+                                    if (listResult.size() > 100) {
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        if (Thread.currentThread().isInterrupted()) {
+                            return;
+                        }
+                    }
+                    for (String fileInList : search.getListR()) {
+                        if (length != 2 && match(getFileName(fileInList), searchText)) {
+                            listResult.add(fileInList);
+                            if (listResult.size() > 100) {
+                                break;
+                            }
+                        } else if (match(getFileName(fileInList), searchText) && length == 2) {
+                            if (strings[1].toUpperCase().equals("FILE")) {
+                                if (isFile(fileInList)) {
+                                    listResult.add(fileInList);
+                                    if (listResult.size() > 100) {
+                                        break;
+                                    }
+                                }
+                            } else if (strings[1].toUpperCase().equals("FOLDER")) {
+                                if (isDirectory(fileInList)) {
+                                    listResult.add(fileInList);
+                                    if (listResult.size() > 100) {
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        if (Thread.currentThread().isInterrupted()) {
+                            return;
+                        }
+                    }
+                    for (String fileInList : search.getListS()) {
+                        if (length != 2 && match(getFileName(fileInList), searchText)) {
+                            listResult.add(fileInList);
+                            if (listResult.size() > 100) {
+                                break;
+                            }
+                        } else if (match(getFileName(fileInList), searchText) && length == 2) {
+                            if (strings[1].toUpperCase().equals("FILE")) {
+                                if (isFile(fileInList)) {
+                                    listResult.add(fileInList);
+                                    if (listResult.size() > 100) {
+                                        break;
+                                    }
+                                }
+                            } else if (strings[1].toUpperCase().equals("FOLDER")) {
+                                if (isDirectory(fileInList)) {
+                                    listResult.add(fileInList);
+                                    if (listResult.size() > 100) {
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        if (Thread.currentThread().isInterrupted()) {
+                            return;
+                        }
+                    }
+                    for (String fileInList : search.getListT()) {
+                        if (length != 2 && match(getFileName(fileInList), searchText)) {
+                            listResult.add(fileInList);
+                            if (listResult.size() > 100) {
+                                break;
+                            }
+                        } else if (match(getFileName(fileInList), searchText) && length == 2) {
+                            if (strings[1].toUpperCase().equals("FILE")) {
+                                if (isFile(fileInList)) {
+                                    listResult.add(fileInList);
+                                    if (listResult.size() > 100) {
+                                        break;
+                                    }
+                                }
+                            } else if (strings[1].toUpperCase().equals("FOLDER")) {
+                                if (isDirectory(fileInList)) {
+                                    listResult.add(fileInList);
+                                    if (listResult.size() > 100) {
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        if (Thread.currentThread().isInterrupted()) {
+                            return;
+                        }
+                    }
+                    for (String fileInList : search.getListU()) {
+                        if (length != 2 && match(getFileName(fileInList), searchText)) {
+                            listResult.add(fileInList);
+                            if (listResult.size() > 100) {
+                                break;
+                            }
+                        } else if (match(getFileName(fileInList), searchText) && length == 2) {
+                            if (strings[1].toUpperCase().equals("FILE")) {
+                                if (isFile(fileInList)) {
+                                    listResult.add(fileInList);
+                                    if (listResult.size() > 100) {
+                                        break;
+                                    }
+                                }
+                            } else if (strings[1].toUpperCase().equals("FOLDER")) {
+                                if (isDirectory(fileInList)) {
+                                    listResult.add(fileInList);
+                                    if (listResult.size() > 100) {
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        if (Thread.currentThread().isInterrupted()) {
+                            return;
+                        }
+                    }
+                    for (String fileInList : search.getListV()) {
+                        if (length != 2 && match(getFileName(fileInList), searchText)) {
+                            listResult.add(fileInList);
+                            if (listResult.size() > 100) {
+                                break;
+                            }
+                        } else if (match(getFileName(fileInList), searchText) && length == 2) {
+                            if (strings[1].toUpperCase().equals("FILE")) {
+                                if (isFile(fileInList)) {
+                                    listResult.add(fileInList);
+                                    if (listResult.size() > 100) {
+                                        break;
+                                    }
+                                }
+                            } else if (strings[1].toUpperCase().equals("FOLDER")) {
+                                if (isDirectory(fileInList)) {
+                                    listResult.add(fileInList);
+                                    if (listResult.size() > 100) {
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        if (Thread.currentThread().isInterrupted()) {
+                            return;
+                        }
+                    }
+                    for (String fileInList : search.getListW()) {
+                        if (length != 2 && match(getFileName(fileInList), searchText)) {
+                            listResult.add(fileInList);
+                            if (listResult.size() > 100) {
+                                break;
+                            }
+                        } else if (match(getFileName(fileInList), searchText) && length == 2) {
+                            if (strings[1].toUpperCase().equals("FILE")) {
+                                if (isFile(fileInList)) {
+                                    listResult.add(fileInList);
+                                    if (listResult.size() > 100) {
+                                        break;
+                                    }
+                                }
+                            } else if (strings[1].toUpperCase().equals("FOLDER")) {
+                                if (isDirectory(fileInList)) {
+                                    listResult.add(fileInList);
+                                    if (listResult.size() > 100) {
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        if (Thread.currentThread().isInterrupted()) {
+                            return;
+                        }
+                    }
+                    for (String fileInList : search.getListX()) {
+                        if (length != 2 && match(getFileName(fileInList), searchText)) {
+                            listResult.add(fileInList);
+                            if (listResult.size() > 100) {
+                                break;
+                            }
+                        } else if (match(getFileName(fileInList), searchText) && length == 2) {
+                            if (strings[1].toUpperCase().equals("FILE")) {
+                                if (isFile(fileInList)) {
+                                    listResult.add(fileInList);
+                                    if (listResult.size() > 100) {
+                                        break;
+                                    }
+                                }
+                            } else if (strings[1].toUpperCase().equals("FOLDER")) {
+                                if (isDirectory(fileInList)) {
+                                    listResult.add(fileInList);
+                                    if (listResult.size() > 100) {
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        if (Thread.currentThread().isInterrupted()) {
+                            return;
+                        }
+                    }
+                    for (String fileInList : search.getListY()) {
+                        if (length != 2 && match(getFileName(fileInList), searchText)) {
+                            listResult.add(fileInList);
+                            if (listResult.size() > 100) {
+                                break;
+                            }
+                        } else if (match(getFileName(fileInList), searchText) && length == 2) {
+                            if (strings[1].toUpperCase().equals("FILE")) {
+                                if (isFile(fileInList)) {
+                                    listResult.add(fileInList);
+                                    if (listResult.size() > 100) {
+                                        break;
+                                    }
+                                }
+                            } else if (strings[1].toUpperCase().equals("FOLDER")) {
+                                if (isDirectory(fileInList)) {
+                                    listResult.add(fileInList);
+                                    if (listResult.size() > 100) {
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        if (Thread.currentThread().isInterrupted()) {
+                            return;
+                        }
+                    }
+                    for (String fileInList : search.getListZ()) {
+                        if (length != 2 && match(getFileName(fileInList), searchText)) {
+                            listResult.add(fileInList);
+                            if (listResult.size() > 100) {
+                                break;
+                            }
+                        } else if (match(getFileName(fileInList), searchText) && length == 2) {
+                            if (strings[1].toUpperCase().equals("FILE")) {
+                                if (isFile(fileInList)) {
+                                    listResult.add(fileInList);
+                                    if (listResult.size() > 100) {
+                                        break;
+                                    }
+                                }
+                            } else if (strings[1].toUpperCase().equals("FOLDER")) {
+                                if (isDirectory(fileInList)) {
+                                    listResult.add(fileInList);
+                                    if (listResult.size() > 100) {
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        if (Thread.currentThread().isInterrupted()) {
+                            return;
+                        }
+                    }
+                    for (String fileInList : search.getListUnderline()) {
+                        if (length != 2 && match(getFileName(fileInList), searchText)) {
+                            listResult.add(fileInList);
+                            if (listResult.size() > 100) {
+                                break;
+                            }
+                        } else if (match(getFileName(fileInList), searchText) && length == 2) {
+                            if (strings[1].toUpperCase().equals("FILE")) {
+                                if (isFile(fileInList)) {
+                                    listResult.add(fileInList);
+                                    if (listResult.size() > 100) {
+                                        break;
+                                    }
+                                }
+                            } else if (strings[1].toUpperCase().equals("FOLDER")) {
+                                if (isDirectory(fileInList)) {
+                                    listResult.add(fileInList);
+                                    if (listResult.size() > 100) {
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        if (Thread.currentThread().isInterrupted()) {
+                            return;
+                        }
+                    }
+                    for (String fileInList : search.getListNum()) {
+                        if (length != 2 && match(getFileName(fileInList), searchText)) {
+                            listResult.add(fileInList);
+                            if (listResult.size() > 100) {
+                                break;
+                            }
+                        } else if (match(getFileName(fileInList), searchText) && length == 2) {
+                            if (strings[1].toUpperCase().equals("FILE")) {
+                                if (isFile(fileInList)) {
+                                    listResult.add(fileInList);
+                                    if (listResult.size() > 100) {
+                                        break;
+                                    }
+                                }
+                            } else if (strings[1].toUpperCase().equals("FOLDER")) {
+                                if (isDirectory(fileInList)) {
+                                    listResult.add(fileInList);
+                                    if (listResult.size() > 100) {
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        if (Thread.currentThread().isInterrupted()) {
+                            return;
+                        }
+                    }
+                    for (String fileInList : search.getListUnique()) {
+                        if (length != 2 && match(getFileName(fileInList), searchText)) {
+                            listResult.add(fileInList);
+                            if (listResult.size() > 100) {
+                                break;
+                            }
+                        } else if (match(getFileName(fileInList), searchText) && length == 2) {
+                            if (strings[1].toUpperCase().equals("FILE")) {
+                                if (isFile(fileInList)) {
+                                    listResult.add(fileInList);
+                                    if (listResult.size() > 100) {
+                                        break;
+                                    }
+                                }
+                            } else if (strings[1].toUpperCase().equals("FOLDER")) {
+                                if (isDirectory(fileInList)) {
+                                    listResult.add(fileInList);
+                                    if (listResult.size() > 100) {
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        if (Thread.currentThread().isInterrupted()) {
+                            return;
+                        }
+                    }
+                    for (String fileInList : search.getListPercentSign()) {
+                        if (length != 2 && match(getFileName(fileInList), searchText)) {
+                            listResult.add(fileInList);
+                            if (listResult.size() > 100) {
+                                break;
+                            }
+                        } else if (match(getFileName(fileInList), searchText) && length == 2) {
+                            if (strings[1].toUpperCase().equals("FILE")) {
+                                if (isFile(fileInList)) {
+                                    listResult.add(fileInList);
+                                    if (listResult.size() > 100) {
+                                        break;
+                                    }
+                                }
+                            } else if (strings[1].toUpperCase().equals("FOLDER")) {
+                                if (isDirectory(fileInList)) {
+                                    listResult.add(fileInList);
+                                    if (listResult.size() > 100) {
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        if (Thread.currentThread().isInterrupted()) {
+                            return;
+                        }
+                    }
+                } else {
+                    if (searchWaiter == null || !searchWaiter.isAlive()) {
+                        searchWaiter = new Thread(() -> {
+                            while (!mainExit) {
+                                if (search.isUsable()) {
+                                    startTime = System.currentTimeMillis() - 500;
+                                    timer = true;
+                                    break;
+                                }
+                                try {
+                                    Thread.sleep(20);
+                                } catch (InterruptedException ignored) {
+
+                                }
+                            }
+                        });
+                        searchWaiter.start();
+                    }
                 }
-            }
-            if (!Thread.currentThread().isInterrupted()) {
-                delRepeated(listResult);
-                showResult();
+                if (!Thread.currentThread().isInterrupted()) {
+                    delRepeated(listResult);
+                    showResult();
+                }
             }
         }
     }

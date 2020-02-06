@@ -63,7 +63,6 @@ __declspec(dllexport) void* fileWatcher(char path[300], char output[300], char c
 
     while (!isMainExit(closeSignalPosition))
     {
-        Sleep(1);
         if (ReadDirectoryChangesW(dirHandle, &notify, 1024, true,
             FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_DIR_NAME | FILE_NOTIFY_CHANGE_SIZE,
             &cbBytes, NULL, NULL))
@@ -83,23 +82,16 @@ __declspec(dllexport) void* fileWatcher(char path[300], char output[300], char c
                 WideCharToMultiByte(CP_ACP, 0, p->FileName, p->FileNameLength / 2, file_rename, 99, NULL, NULL);
             }
             
-            char _file_name[300];
-            memset(_file_name, 0, strlen(_file_name));
-            if (!isalpha(file_name[strlen(file_name)-1])){
-                strncpy(_file_name, file_name, strlen(file_name)-1);
-            }else{
-                strcpy(_file_name, file_name);
-            }
 
             //设置类型过滤器,监听文件创建、更改、删除、重命名等;
             switch (pnotify->Action)
             {
                 case FILE_ACTION_ADDED:
                     if (strstr(file_name, "$RECYCLE.BIN")==NULL){
-                        cout << setw(5) << "file add : " << setw(5) << _file_name << endl;
+                        cout << setw(5) << "file add : " << setw(5) << file_name << endl;
                         string data = "file add : ";
                         data.append(path);
-                        data.append(_file_name);
+                        data.append(file_name);
                         data.append("\n");                     
                         // 以追加模式打开文件
                         count++;
@@ -109,6 +101,7 @@ __declspec(dllexport) void* fileWatcher(char path[300], char output[300], char c
                             outfile << data;                    
                             outfile.close();
                         }else{
+                            count = 0;
                             ofstream outfile;
                             outfile.open(output);
                             outfile << data;                    
@@ -119,16 +112,16 @@ __declspec(dllexport) void* fileWatcher(char path[300], char output[300], char c
 
                 
                 case FILE_ACTION_MODIFIED:
-                    cout << "file modified : " << setw(5) << _file_name << endl;
+                    cout << "file modified : " << setw(5) << file_name << endl;
                     break;
                 
 
                 case FILE_ACTION_REMOVED:
                     if (strstr(file_name, "$RECYCLE.BIN")==NULL){
-                        cout << setw(5) << "file removed : " << setw(5) << _file_name << endl;
+                        cout << setw(5) << "file removed : " << setw(5) << file_name << endl;
                         string data = "file removed : ";
                         data.append(path);
-                        data.append(_file_name);
+                        data.append(file_name);
                         data.append("\n");  data.append("\n");  
                         // 以追加模式打开文件
                         count++;
@@ -138,6 +131,7 @@ __declspec(dllexport) void* fileWatcher(char path[300], char output[300], char c
                             outfile << data;                    
                             outfile.close();
                         }else{
+                            count = 0;
                             ofstream outfile;
                             outfile.open(output);
                             outfile << data;                    
@@ -148,10 +142,10 @@ __declspec(dllexport) void* fileWatcher(char path[300], char output[300], char c
 
                 case FILE_ACTION_RENAMED_OLD_NAME:
                     if (strstr(file_name, "$RECYCLE.BIN")==NULL){
-                        cout << "file renamed : " << setw(5) << _file_name << "->" << file_rename << endl;
+                        cout << "file renamed : " << setw(5) << file_name << "->" << file_rename << endl;
                         string data = "file renamed : ";
                         data.append(path);                    
-                        data.append(_file_name);
+                        data.append(file_name);
                         data.append("->");
                         data.append(path);
                         data.append(file_rename);
@@ -164,6 +158,7 @@ __declspec(dllexport) void* fileWatcher(char path[300], char output[300], char c
                             outfile << data;                    
                             outfile.close();
                         }else{
+                            count = 0;
                             ofstream outfile;
                             outfile.open(output);
                             outfile << data;                    
@@ -178,13 +173,17 @@ __declspec(dllexport) void* fileWatcher(char path[300], char output[300], char c
         }
     }
     CloseHandle(dirHandle);
-    cout << "dll已退出" << endl;
+    char exit[] = "dll exit";
+    cout << exit << endl;
     return 0;
 }
 
 #ifdef TEST
 int main(int argc, char *argv[]){    
-    fileWatcher(arg1, arg2, arg3);
+    char monitorPath[]= "D:\\";
+    char outPut[] = "D:\\Code\\C++\\out.txt";
+    char CLOSE[] = "D:\\Code\\C++\\CLOSE";
+    fileWatcher(monitorPath, outPut, CLOSE);
     return 0;
 }
 #endif

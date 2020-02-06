@@ -11,3 +11,4 @@ cache.dat
 data/
 fileMonitor.dll
 tmp/
+.settings/
