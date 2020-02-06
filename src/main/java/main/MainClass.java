@@ -22,7 +22,7 @@ public class MainClass {
 	private static SearchBar searchBar = new SearchBar();
 	private static Search search = new Search();
 	private static File fileWatcherTXT = new File(SettingsFrame.tmp.getAbsolutePath()+ "\\fileMonitor.txt");
-	public static String name = "search_x64.exe";		//TODO �޸İ汾
+	public static String name;
 
 	public static void setMainExit(boolean b){
 		mainExit = b;
@@ -97,6 +97,12 @@ public class MainClass {
 	}
 
 	public static void main(String[] args) {
+		String osArch =System.getProperty("os.arch");
+		if (osArch.contains("64")){
+			name = "search_x64.exe";
+		}else{
+			name = "search_x86.exe";
+		}
 		File settings = new File(System.getenv("Appdata") + "/settings.json");
 		File caches = new File("cache.dat");
 		File data = new File("data");

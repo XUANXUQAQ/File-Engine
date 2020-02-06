@@ -259,8 +259,6 @@ public class SettingsFrame {
         } catch (ClassNotFoundException | UnsupportedLookAndFeelException | IllegalAccessException | InstantiationException ignored) {
 
         }
-        textFieldDataPath.setEditable(false);
-        textFieldPriorityFolder.setEditable(false);
         textAreaIgnorePath.setLineWrap(true);
         textAreaIgnorePath.setWrapStyleWord(true);
 
