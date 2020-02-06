@@ -131,19 +131,7 @@ public class SettingsFrame {
             }
             ignorePath = textAreaIgnorePath.getText();
             ignorePath = ignorePath.replaceAll("\n", "");
-            String[] paths = ignorePath.split(",");
-            if (!ignorePath.equals("")) {
-                if (ignorePath.contains("\\")){
-                    JOptionPane.showMessageDialog(null, "忽略文件夹格式错误，格式为   \nC:\\Windows,\nD\\Test,");
-                    return;
-                }
-                for (String each : paths) {
-                    if (each.charAt(0) == ' ' || each.charAt(each.length() - 1) == ' ') {
-                        JOptionPane.showMessageDialog(null, "忽略文件夹格式错误，格式为   \nC:\\Windows,\nD\\Test,");
-                        return;
-                    }
-                }
-            }
+
             try {
                 searchDepth = Integer.parseInt(textFieldSearchDepth.getText());
             }catch (Exception e1){
@@ -259,8 +247,6 @@ public class SettingsFrame {
         } catch (ClassNotFoundException | UnsupportedLookAndFeelException | IllegalAccessException | InstantiationException ignored) {
 
         }
-        textAreaIgnorePath.setLineWrap(true);
-        textAreaIgnorePath.setWrapStyleWord(true);
 
         try(BufferedReader buffR = new BufferedReader(new FileReader(settings))) {
             String line;

@@ -100,7 +100,11 @@ public class SearchBar {
             @Override
             public void focusLost(FocusEvent e) {
                 focusLostTodo();
-                thread.interrupt();
+                try{
+                    thread.interrupt();
+                }catch (NullPointerException ignored){
+
+                }
             }
         });
 
@@ -1083,60 +1087,7 @@ public class SearchBar {
                             return;
                         }
                     }
-                    for (String fileInList : search.getListA()) {
-                        if (length != 2 && match(getFileName(fileInList), searchText)) {
-                            listResult.add(fileInList);
-                            if (listResult.size() > 100) {
-                                break;
-                            }
-                        } else if (match(getFileName(fileInList), searchText) && length == 2) {
-                            if (strings[1].toUpperCase().equals("FILE")) {
-                                if (isFile(fileInList)) {
-                                    listResult.add(fileInList);
-                                    if (listResult.size() > 100) {
-                                        break;
-                                    }
-                                }
-                            } else if (strings[1].toUpperCase().equals("FOLDER")) {
-                                if (isDirectory(fileInList)) {
-                                    listResult.add(fileInList);
-                                    if (listResult.size() > 100) {
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                        if (Thread.currentThread().isInterrupted()) {
-                            return;
-                        }
-                    }for (String fileInList : search.getListE()) {
-                        if (length != 2 && match(getFileName(fileInList), searchText)) {
-                            listResult.add(fileInList);
-                            if (listResult.size() > 100) {
-                                break;
-                            }
-                        } else if (match(getFileName(fileInList), searchText) && length == 2) {
-                            if (strings[1].toUpperCase().equals("FILE")) {
-                                if (isFile(fileInList)) {
-                                    listResult.add(fileInList);
-                                    if (listResult.size() > 100) {
-                                        break;
-                                    }
-                                }
-                            } else if (strings[1].toUpperCase().equals("FOLDER")) {
-                                if (isDirectory(fileInList)) {
-                                    listResult.add(fileInList);
-                                    if (listResult.size() > 100) {
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                        if (Thread.currentThread().isInterrupted()) {
-                            return;
-                        }
-                    }
-                    for (String fileInList : search.getListA()) {
+                    for (String fileInList : search.getListE()) {
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             listResult.add(fileInList);
                             if (listResult.size() > 100) {
@@ -1215,8 +1166,7 @@ public class SearchBar {
                         if (Thread.currentThread().isInterrupted()) {
                             return;
                         }
-                    }
-                    for (String fileInList : search.getListH()) {
+                    }for (String fileInList : search.getListH()) {
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             listResult.add(fileInList);
                             if (listResult.size() > 100) {
@@ -1729,7 +1679,7 @@ public class SearchBar {
                             return;
                         }
                     }
-                    for (String fileInList : search.getListUnderline()) {
+                    for (String fileInList : search.getListNum()) {
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             listResult.add(fileInList);
                             if (listResult.size() > 100) {
@@ -1756,7 +1706,7 @@ public class SearchBar {
                             return;
                         }
                     }
-                    for (String fileInList : search.getListNum()) {
+                    for (String fileInList : search.getListUnderline()) {
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             listResult.add(fileInList);
                             if (listResult.size() > 100) {

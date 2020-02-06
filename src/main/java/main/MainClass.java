@@ -157,6 +157,8 @@ public class MainClass {
 		taskBar = new TaskBar();
 		taskBar.showTaskBar();
 
+		File[] roots = File.listRoots();
+		ExecutorService fixedThreadPool = Executors.newFixedThreadPool(roots.length+4);
 
 		SettingsFrame.initSettings();
 
@@ -164,15 +166,15 @@ public class MainClass {
 		if (data.isDirectory() && data.exists()){
 			if (Objects.requireNonNull(data.list()).length == 30){
 				System.out.println("检测到data文件，正在读取");
+				showMessage("提示", "检测到data文件，正在读取");
 				search.setUsable(false);
-				Thread loader = new Thread(()->{
-					search.loadAllLists();
-					search.setUsable(true);
-					System.out.println("读取完成");
-				});
-				loader.start();
+				search.loadAllLists();
+				search.setUsable(true);
+				System.out.println("读取完成");
+				showMessage("提示", "读取完成");
 			}else{
 				System.out.println("检测到data文件损坏，开始搜索并创建data文件");
+				showMessage("提示", "检检测到data文件损坏，开始搜索并创建data文件");
 				search.setManualUpdate(true);
 			}
 		}else{
@@ -180,8 +182,7 @@ public class MainClass {
 			search.setManualUpdate(true);
 		}
 
-		File[] roots = File.listRoots();
-		ExecutorService fixedThreadPool = Executors.newFixedThreadPool(roots.length+4);
+
 		for(File root:roots){
 			fixedThreadPool.execute(()-> {
 				FileMonitor.INSTANCE.fileWatcher(root.getAbsolutePath(), SettingsFrame.tmp.getAbsolutePath() + "\\fileMonitor.txt", SettingsFrame.tmp.getAbsolutePath() + "\\CLOSE");
@@ -196,7 +197,6 @@ public class MainClass {
 		fixedThreadPool.execute(() -> {
 			// 时间检测线程
 			long count = 0;
-			long usingCount = 0;
 			while (!mainExit) {
 				boolean isUsing = searchBar.getUsing();
 				boolean isSleep = searchBar.getSleep();
@@ -207,27 +207,6 @@ public class MainClass {
 					search.saveLists();
 				}
 
-				if (!isUsing){
-					usingCount++;
-					if (usingCount > 900000 && search.isUsable()) {
-						System.out.println("检测到长时间未使用，自动释放内存空间，程序休眠");
-						searchBar.setSleep(true);
-						search.setUsable(false);
-						search.saveAndReleaseLists();
-					}
-				}else{
-					usingCount = 0;
-					if (!search.isUsable() && !search.isManualUpdate()) {
-						System.out.println("检测到开始使用，加载列表");
-						search.setUsable(false);
-						searchBar.setSleep(false);
-						Thread loader = new Thread(()->{
-							search.loadAllLists();
-							search.setUsable(true);
-						});
-						loader.start();
-					}
-				}
 				try {
 					Thread.sleep(1);
 				} catch (InterruptedException ignore) {

@@ -1751,10 +1751,7 @@ public class Search {
             if (null == files || files.length == 0) {
             } else if (searchDepth >= count(path.getAbsolutePath(), "\\") || (path.getAbsolutePath().equals(startMenu)) || path.getAbsolutePath().equals(desktop)) {
                 for (File file2 : files) {
-                    String fileFullName = file2.getAbsolutePath();
-                    String[] nameList = fileFullName.split("\\\\");
-                    String fileName = nameList[nameList.length - 1];
-
+                    String fileName = file2.getName();
 
                     char firstWord = fileName.charAt(0);
                     if (fileName.length() >= 2) {
