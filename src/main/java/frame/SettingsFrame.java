@@ -41,10 +41,7 @@ public class SettingsFrame {
         int height = screenSize.height;
         frame.setLocation((int)(width*0.15), (int)(height*0.12));
         frame.setSize(width/2, height/2);
-        frame.setBackground(Color.white);
-        panel.setBackground(Color.white);
         panel.setOpaque(true);
-        frame.setBackground(Color.white);
         frame.setVisible(true);
     }
 
@@ -78,8 +75,6 @@ public class SettingsFrame {
     public static String priorityFolder;
     public static int searchDepth;
     public static File tmp = new File(System.getenv("Appdata") + "/tmp");
-
-
     private static File settings = new File(System.getenv("Appdata") + "/settings.json");
     private static CheckHotKey HotKeyListener;
 
@@ -248,42 +243,6 @@ public class SettingsFrame {
 
         }
 
-        try(BufferedReader buffR = new BufferedReader(new FileReader(settings))) {
-            String line;
-            StringBuilder result = new StringBuilder();
-            while (null != (line = buffR.readLine())){
-                result.append(line);
-            }
-            JSONObject settings = JSON.parseObject(result.toString());
-            isStartup = settings.getBoolean("isStartup");
-            if (isStartup){
-                checkBox1.setSelected(true);
-            }else{
-                checkBox1.setSelected(false);
-            }
-            updateTimeLimit = settings.getInteger("updateTimeLimit");
-            String MaxUpdateTime = "";
-            MaxUpdateTime = MaxUpdateTime + updateTimeLimit;
-            textFieldUpdateTime.setText(MaxUpdateTime);
-            ignorePath = settings.getString("ignorePath");
-            ignorePath = ignorePath.replaceAll(",", ",\n");
-            textAreaIgnorePath.setText(ignorePath);
-            cacheNumLimit = settings.getInteger("cacheNumLimit");
-            String MaxCacheNum = "";
-            MaxCacheNum = MaxCacheNum + cacheNumLimit;
-            textFieldCacheNum.setText(MaxCacheNum);
-            String searchDepth = "";
-            int searchDepthInSettings = settings.getInteger("searchDepth");
-            searchDepth = searchDepth + searchDepthInSettings;
-            textFieldSearchDepth.setText(searchDepth);
-            textFieldHotkey.setText(hotkey);
-            textFieldDataPath.setText(dataPath);
-            textFieldPriorityFolder.setText(priorityFolder);
-        } catch (IOException ignored) {
-
-        }
-
-
         button1.addActionListener(e -> saveChanges());
         checkBox1.addActionListener(e -> setStartup(checkBox1.isSelected()));
         buttonSaveAndRemoveDesktop.addActionListener(e -> {
@@ -431,6 +390,40 @@ public class SettingsFrame {
                 }
             }
         });
+        try(BufferedReader buffR = new BufferedReader(new FileReader(settings))) {
+            String line;
+            StringBuilder result = new StringBuilder();
+            while (null != (line = buffR.readLine())){
+                result.append(line);
+            }
+            JSONObject settings = JSON.parseObject(result.toString());
+            isStartup = settings.getBoolean("isStartup");
+            if (isStartup){
+                checkBox1.setSelected(true);
+            }else{
+                checkBox1.setSelected(false);
+            }
+            updateTimeLimit = settings.getInteger("updateTimeLimit");
+            String MaxUpdateTime = "";
+            MaxUpdateTime = MaxUpdateTime + updateTimeLimit;
+            textFieldUpdateTime.setText(MaxUpdateTime);
+            ignorePath = settings.getString("ignorePath");
+            ignorePath = ignorePath.replaceAll(",", ",\n");
+            textAreaIgnorePath.setText(ignorePath);
+            cacheNumLimit = settings.getInteger("cacheNumLimit");
+            String MaxCacheNum = "";
+            MaxCacheNum = MaxCacheNum + cacheNumLimit;
+            textFieldCacheNum.setText(MaxCacheNum);
+            String searchDepth = "";
+            int searchDepthInSettings = settings.getInteger("searchDepth");
+            searchDepth = searchDepth + searchDepthInSettings;
+            textFieldSearchDepth.setText(searchDepth);
+            textFieldHotkey.setText(hotkey);
+            textFieldDataPath.setText(dataPath);
+            textFieldPriorityFolder.setText(priorityFolder);
+        } catch (IOException ignored) {
+
+        }
     }
 
     private  void copyFile(InputStream source, File dest) {

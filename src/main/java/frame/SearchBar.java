@@ -42,14 +42,6 @@ public class SearchBar {
     private boolean timer = false;
     private Thread searchWaiter = null;
     private boolean isUsing = false;
-    private boolean isSleep = false;
-
-    public boolean getSleep(){
-        return isSleep;
-    }
-    public void setSleep(boolean b){
-        isSleep = b;
-    }
 
     public boolean getUsing(){
         return this.isUsing;
@@ -91,20 +83,17 @@ public class SearchBar {
                 textField.setCaretPosition(textField.getText().length());
                 //添加更新文件
                 System.out.println("正在添加更新文件");
-                search.setUsable(false);
-                search.mergeFileToList();
-                search.setUsable(true);
+                if (!search.isManualUpdate()) {
+                    search.setUsable(false);
+                    search.mergeFileToList();
+                    search.setUsable(true);
+                }
                 isUsing = true;
             }
 
             @Override
             public void focusLost(FocusEvent e) {
                 focusLostTodo();
-                try{
-                    thread.interrupt();
-                }catch (NullPointerException ignored){
-
-                }
             }
         });
 
@@ -119,7 +108,7 @@ public class SearchBar {
                     label1.setBackground(labelColor);
                     listResult.clear();
                     String text = textField.getText();
-                    if (!text.equals("")) {
+                    if (!text.equals("") && search.isUsable()) {
                         if (text.equals("#*update*#")) {
                             MainClass.showMessage("提示", "正在更新文件索引");
                             clearTextFieldText();
@@ -130,6 +119,7 @@ public class SearchBar {
                         searchPriorityFolder(text);
                         searchCache(text);
                         char firstWord = text.charAt(0);
+
                         if ('?' == firstWord) {
                             if (isFirstRun || !thread.isAlive()) {
                                 isFirstRun = false;
@@ -296,7 +286,32 @@ public class SearchBar {
                             }
                         }
                     }else{
+                        if (search.isManualUpdate()){
+                            if (searchWaiter ==null || !searchWaiter.isAlive()) {
+                                searchWaiter = new Thread(() -> {
+                                    while (!mainExit) {
+                                        if (Thread.currentThread().isInterrupted()){
+                                            break;
+                                        }
+                                        if (search.isUsable()) {
+                                            startTime = System.currentTimeMillis() - 500;
+                                            timer = true;
+                                            break;
+                                        }
+                                        try {
+                                            Thread.sleep(20);
+                                        } catch (InterruptedException ignored) {
+
+                                        }
+                                    }
+                                });
+                                searchWaiter.start();
+                            }
+                        }
                         clearLabel();
+                        if (!search.isUsable()) {
+                            label1.setText("搜索中...");
+                        }
                     }
                     timer = false;
                 }
@@ -646,24 +661,6 @@ public class SearchBar {
                     }
                 }
             }
-        }else{
-            if (searchWaiter ==null || !searchWaiter.isAlive()) {
-                searchWaiter = new Thread(() -> {
-                    while (!mainExit) {
-                        if (search.isUsable()) {
-                            startTime = System.currentTimeMillis() - 500;
-                            timer = true;
-                            break;
-                        }
-                        try {
-                            Thread.sleep(20);
-                        } catch (InterruptedException ignored) {
-
-                        }
-                    }
-                });
-                searchWaiter.start();
-            }
         }
         delRepeated(listResult);
         showResult();
@@ -944,6 +941,12 @@ public class SearchBar {
             //删除无效文件
             System.out.println("正在删除无效文件");
             search.clearRecycleBin();
+            try{
+                thread.interrupt();
+                searchWaiter.interrupt();
+            }catch (NullPointerException ignored){
+
+            }
         };
         SwingUtilities.invokeLater(todo);
     }
@@ -1786,24 +1789,6 @@ public class SearchBar {
                         if (Thread.currentThread().isInterrupted()) {
                             return;
                         }
-                    }
-                } else {
-                    if (searchWaiter == null || !searchWaiter.isAlive()) {
-                        searchWaiter = new Thread(() -> {
-                            while (!mainExit) {
-                                if (search.isUsable()) {
-                                    startTime = System.currentTimeMillis() - 500;
-                                    timer = true;
-                                    break;
-                                }
-                                try {
-                                    Thread.sleep(20);
-                                } catch (InterruptedException ignored) {
-
-                                }
-                            }
-                        });
-                        searchWaiter.start();
                     }
                 }
                 if (!Thread.currentThread().isInterrupted()) {
