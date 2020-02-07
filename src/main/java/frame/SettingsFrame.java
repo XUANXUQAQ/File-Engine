@@ -95,7 +95,7 @@ public class SettingsFrame {
             searchDepth = settings.getInteger("searchDepth");
             ignorePath = settings.getString("ignorePath");
             updateTimeLimit = settings.getInteger("updateTimeLimit");
-            ignorePath = ignorePath + "C:\\Config.Msi,C:\\Windows";
+            ignorePath = ignorePath + "C:\\Config.Msi,C:\\Windows,";
         } catch (IOException ignored) {
 
         }

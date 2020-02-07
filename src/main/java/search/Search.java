@@ -6,6 +6,7 @@ import main.MainClass;
 import javax.swing.filechooser.FileSystemView;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 
@@ -42,14 +43,15 @@ public class Search {
     private static LinkedHashSet<String> listUnique = new LinkedHashSet<>();
     private static LinkedHashSet<String> listUnderline = new LinkedHashSet<>();
     private static LinkedList<String> listToAdd = new LinkedList<>();
+    private static LinkedList<String> listRemain = new LinkedList<>();
     private static boolean isUsable = false;
     private static boolean isFocusLost = true;
     private static boolean isManualUpdate = false;
     private static LinkedList<String> RecycleBin = new LinkedList<>();
-    private final String desktop = FileSystemView.getFileSystemView().getHomeDirectory().getAbsolutePath();
-    LinkedList<String> listRemain = new LinkedList<>();
     private String startMenu = getStartMenu();
+    private final String desktop = FileSystemView.getFileSystemView().getHomeDirectory().getAbsolutePath();
     private int num;
+
 
 
     public void addToRecycleBin(String path) {
@@ -607,16 +609,6 @@ public class Search {
         readFileList("Num");
     }
 
-    public void saveAndReleaseLists() {
-        for (int i = 65; i < 91; i++) {
-            String ch = "" + (char) i;
-            saveAndReleaseList(ch);
-        }
-        saveAndReleaseList("PercentSign");
-        saveAndReleaseList("Underline");
-        saveAndReleaseList("Unique");
-        saveAndReleaseList("Num");
-    }
 
     public void saveLists(){
         for (int i = 65; i < 91; i++) {
@@ -995,372 +987,6 @@ public class Search {
         }
     }
 
-    private void saveAndReleaseList(String ch) {
-        File data = new File(SettingsFrame.dataPath);
-        String path;
-        Serialize listFile;
-        if (!data.exists()) {
-            data.mkdir();
-        }
-        switch (ch) {
-            case "A":
-                path = SettingsFrame.dataPath + "\\listA";
-                listFile = new Serialize();
-                listFile.setList(listA);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-                    listA.clear();
-                } catch (IOException ignored) {
-
-                }
-                break;
-            case "B":
-                path = SettingsFrame.dataPath + "\\listB";
-                listFile = new Serialize();
-                listFile.setList(listB);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-                    listB.clear();
-                } catch (IOException ignored) {
-
-                }
-                break;
-            case "C":
-                path = SettingsFrame.dataPath + "\\listC";
-                listFile = new Serialize();
-                listFile.setList(listC);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-                    listC.clear();
-                } catch (IOException ignored) {
-
-                }
-                break;
-            case "D":
-
-                path = SettingsFrame.dataPath + "\\listD";
-                listFile = new Serialize();
-                listFile.setList(listD);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-                    listD.clear();
-                } catch (IOException ignored) {
-
-                }
-                break;
-            case "E":
-
-                path = SettingsFrame.dataPath + "\\listE";
-                listFile = new Serialize();
-                listFile.setList(listE);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-                    listE.clear();
-                } catch (IOException ignored) {
-
-                }
-                break;
-            case "F":
-
-                path = SettingsFrame.dataPath + "\\listF";
-                listFile = new Serialize();
-                listFile.setList(listF);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-                    listF.clear();
-                } catch (IOException ignored) {
-
-                }
-                break;
-            case "G":
-
-                path = SettingsFrame.dataPath + "\\listG";
-                listFile = new Serialize();
-                listFile.setList(listG);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-                    listG.clear();
-                } catch (IOException ignored) {
-
-                }
-                break;
-            case "H":
-
-                path = SettingsFrame.dataPath + "\\listH";
-                listFile = new Serialize();
-                listFile.setList(listH);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-                    listH.clear();
-                } catch (IOException ignored) {
-
-                }
-                break;
-            case "I":
-
-                path = SettingsFrame.dataPath + "\\listI";
-                listFile = new Serialize();
-                listFile.setList(listI);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-                    listI.clear();
-                } catch (IOException ignored) {
-
-                }
-                break;
-            case "J":
-
-                path = SettingsFrame.dataPath + "\\listJ";
-                listFile = new Serialize();
-                listFile.setList(listJ);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-                    listJ.clear();
-                } catch (IOException ignored) {
-
-                }
-                break;
-            case "K":
-
-                path = SettingsFrame.dataPath + "\\listK";
-                listFile = new Serialize();
-                listFile.setList(listK);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-                    listK.clear();
-                } catch (IOException ignored) {
-
-                }
-                break;
-            case "L":
-
-                path = SettingsFrame.dataPath + "\\listL";
-                listFile = new Serialize();
-                listFile.setList(listL);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-                    listL.clear();
-                } catch (IOException ignored) {
-
-                }
-                break;
-            case "M":
-
-                path = SettingsFrame.dataPath + "\\listM";
-                listFile = new Serialize();
-                listFile.setList(listM);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-                    listM.clear();
-                } catch (IOException ignored) {
-
-                }
-                break;
-            case "N":
-
-                path = SettingsFrame.dataPath + "\\listN";
-                listFile = new Serialize();
-                listFile.setList(listN);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-                    listN.clear();
-                } catch (IOException ignored) {
-
-                }
-                break;
-            case "O":
-
-                path = SettingsFrame.dataPath + "\\listO";
-                listFile = new Serialize();
-                listFile.setList(listO);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-                    listO.clear();
-                } catch (IOException ignored) {
-
-                }
-                break;
-            case "P":
-
-                path = SettingsFrame.dataPath + "\\listP";
-                listFile = new Serialize();
-                listFile.setList(listP);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-                    listP.clear();
-                } catch (IOException ignored) {
-
-                }
-                break;
-            case "Q":
-
-                path = SettingsFrame.dataPath + "\\listQ";
-                listFile = new Serialize();
-                listFile.setList(listQ);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-                    listQ.clear();
-                } catch (IOException ignored) {
-
-                }
-                break;
-            case "R":
-
-                path = SettingsFrame.dataPath + "\\listR";
-                listFile = new Serialize();
-                listFile.setList(listR);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-                    listR.clear();
-                } catch (IOException ignored) {
-
-                }
-                break;
-            case "S":
-
-                path = SettingsFrame.dataPath + "\\listS";
-                listFile = new Serialize();
-                listFile.setList(listS);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-                    listS.clear();
-                } catch (IOException ignored) {
-
-                }
-                break;
-            case "T":
-
-                path = SettingsFrame.dataPath + "\\listT";
-                listFile = new Serialize();
-                listFile.setList(listT);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-                    listT.clear();
-                } catch (IOException ignored) {
-
-                }
-                break;
-            case "U":
-
-                path = SettingsFrame.dataPath + "\\listU";
-                listFile = new Serialize();
-                listFile.setList(listU);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-                    listU.clear();
-                } catch (IOException ignored) {
-
-                }
-                break;
-            case "V":
-
-                path = SettingsFrame.dataPath + "\\listV";
-                listFile = new Serialize();
-                listFile.setList(listV);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-                    listV.clear();
-                } catch (IOException ignored) {
-
-                }
-                break;
-            case "W":
-
-                path = SettingsFrame.dataPath + "\\listW";
-                listFile = new Serialize();
-                listFile.setList(listW);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-                    listW.clear();
-                } catch (IOException ignored) {
-
-                }
-                break;
-            case "X":
-
-                path = SettingsFrame.dataPath + "\\listX";
-                listFile = new Serialize();
-                listFile.setList(listX);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-                    listX.clear();
-                } catch (IOException ignored) {
-
-                }
-                break;
-            case "Y":
-
-                path = SettingsFrame.dataPath + "\\listY";
-                listFile = new Serialize();
-                listFile.setList(listY);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-                    listY.clear();
-                } catch (IOException ignored) {
-
-                }
-                break;
-            case "Z":
-
-                path = SettingsFrame.dataPath + "\\listZ";
-                listFile = new Serialize();
-                listFile.setList(listZ);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-                    listZ.clear();
-                } catch (IOException ignored) {
-
-                }
-                break;
-            case "PercentSign":
-                path = SettingsFrame.dataPath + "\\listPercentSign";
-                listFile = new Serialize();
-                listFile.setList(listPercentSign);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-                    listPercentSign.clear();
-                } catch (IOException ignored) {
-
-                }
-                break;
-            case "Underline":
-
-                path = SettingsFrame.dataPath + "\\listUnderline";
-                listFile = new Serialize();
-                listFile.setList(listUnderline);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-                    listUnderline.clear();
-                } catch (IOException ignored) {
-
-                }
-                break;
-            case "Unique":
-
-                path = SettingsFrame.dataPath + "\\listUnique";
-                listFile = new Serialize();
-                listFile.setList(listUnique);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-                    listA.clear();
-                } catch (IOException ignored) {
-
-                }
-                break;
-            case "Num":
-                path = SettingsFrame.dataPath + "\\listNum";
-                listFile = new Serialize();
-                listFile.setList(listNum);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-                    listNum.clear();
-                } catch (IOException ignored) {
-
-                }
-                break;
-        }
-    }
-
     private void readFileList(String ch) {
         String path;
         Serialize listFile;
@@ -1726,7 +1352,8 @@ public class Search {
         }
     }
 
-    private void searchFile(String ignorePath, int searchDepth) {
+
+    public void searchFile(String ignorePath, int searchDepth) {
         num = 0;
         File[] roots = File.listRoots();
         for (File root : roots) {
@@ -2262,6 +1889,8 @@ public class Search {
 
     }
 
+
+
     private String getStartMenu() {
         String startMenu;
         BufferedReader bufrIn;
@@ -2298,13 +1927,20 @@ public class Search {
 
     /**
      * @param target txt
-     *               txt是否属于target的子字符串
+     * txt是否属于target的子字符串
      * @return true false
      */
     private boolean isIgnore(String txt, String target) {
-        String[] list = target.split(",");
-        for (String each : list) {
-            if (txt.contains(each)) {
+        int each;
+        txt = txt.toLowerCase();
+        target = target.toLowerCase();
+        ArrayList<String> list = new ArrayList<>();
+        while ((each = target.indexOf(",")) != -1){
+            list.add(target.substring(0, each));
+            target = target.substring(each + 1);
+        }
+        for (String i : list) {
+            if (txt.contains(i)) {
                 return true;
             }
         }

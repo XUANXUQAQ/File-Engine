@@ -57,9 +57,6 @@ public class MainClass {
 		}
 	}
 
-	private static void readMonitorFile(){
-
-	}
 	private static void copyFile(InputStream source, File dest) {
 		try(OutputStream os = new FileOutputStream(dest);BufferedInputStream bis = new BufferedInputStream(source);BufferedOutputStream bos = new BufferedOutputStream(os)) {
 			byte[]buffer = new byte[8192];
@@ -177,11 +174,11 @@ public class MainClass {
 			}else{
 				System.out.println("检测到data文件损坏，开始搜索并创建data文件");
 				showMessage("提示", "检检测到data文件损坏，开始搜索并创建data文件");
-				search.setManualUpdate(true);
+				search.searchFile(SettingsFrame.ignorePath, SettingsFrame.searchDepth);
 			}
 		}else{
 			System.out.println("未检测到data文件，开始搜索并创建data文件");
-			search.setManualUpdate(true);
+			search.searchFile(SettingsFrame.ignorePath, SettingsFrame.searchDepth);
 		}
 
 
@@ -229,7 +226,7 @@ public class MainClass {
 			while (!mainExit) {
 				boolean isUsing = searchBar.isUsing();
 				count++;
-				if (count >= SettingsFrame.updateTimeLimit << 10 && !isUsing && !search.isManualUpdate()) {
+				if (count >= (SettingsFrame.updateTimeLimit << 10) && !isUsing && !search.isManualUpdate()) {
 					count = 0;
 					System.out.println("正在更新本地索引data文件");
 					deleteDir(SettingsFrame.dataPath);
@@ -274,7 +271,7 @@ public class MainClass {
 					search.updateLists(SettingsFrame.ignorePath, SettingsFrame.searchDepth);
 				}
 				try {
-					Thread.sleep(16);
+					Thread.sleep(1);
 				} catch (InterruptedException ignored) {
 
 				}
@@ -293,6 +290,7 @@ public class MainClass {
 
 			}
 			if (mainExit){
+				fixedThreadPool.shutdown();
 				if (search.isUsable()) {
 					File CLOSEDLL = new File(SettingsFrame.tmp.getAbsolutePath() + "\\CLOSE");
 					try {
@@ -305,7 +303,6 @@ public class MainClass {
 					deleteDir(SettingsFrame.dataPath);
 					search.saveLists();
 				}
-				fixedThreadPool.shutdown();
 				System.exit(0);
 			}
 		}
