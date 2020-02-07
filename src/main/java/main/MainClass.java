@@ -213,11 +213,6 @@ public class MainClass {
 							if (loopAdd > countAdd) {
 								countAdd++;
 								search.addFileToLoadBin(filesToAdd);
-								try {
-									Thread.sleep(100);
-								} catch (InterruptedException ignored) {
-
-								}
 								break;
 							}
 						}
@@ -226,11 +221,6 @@ public class MainClass {
 							if (loopRemove > countRemove) {
 								countRemove++;
 								search.addToRecycleBin(filesToRemove);
-								try {
-									Thread.sleep(100);
-								} catch (InterruptedException ignored) {
-
-								}
 								break;
 							}
 						}
@@ -238,7 +228,7 @@ public class MainClass {
 
 					} finally {
 						try {
-							Thread.sleep(100);
+							Thread.sleep(50);
 						} catch (InterruptedException ignored) {
 
 						}

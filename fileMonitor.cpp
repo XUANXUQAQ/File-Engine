@@ -6,7 +6,7 @@
 #include <fstream>
 #include <ctype.h>
 //#define TEST
-
+#define MAX_LENGTH 500
 
 extern "C" __declspec(dllexport) __declspec(dllexport) void monitor(char* path, char* output, char* closePosition);
 
@@ -14,10 +14,29 @@ using namespace std;
 
 wchar_t fileName[300];
 wchar_t fileRename[300];
-int count = 0;
-char filesToAdd[100000];
-char filesToRemove[100000];
 
+
+
+int CountLines(char *filename)
+{
+    ifstream ReadFile;
+    int n=0;
+    string tmp;
+    ReadFile.open(filename,ios::in);//ios::in 表示以只读的方式读取文件
+    if(ReadFile.fail())//文件打开失败:返回0
+    {
+        return 0;
+    }
+    else//文件存在
+    {
+        while(getline(ReadFile,tmp,'\n'))
+        {
+            n++;
+        }
+        ReadFile.close();
+        return n;
+    }
+}
 
 bool isExist(const char* FileName)
 {
@@ -103,15 +122,13 @@ __declspec(dllexport) void monitor(char* path, char* output, char* closePosition
                     case FILE_ACTION_ADDED:
                         if (strstr(file_name, "$RECYCLE.BIN")==NULL){                            
                             //cout << "file add : " << file_name << endl; 
-                            count++;    
                             cout << "file add : ";       
                             string data;
                             data.append(path);
                             data.append(file_name);                     
                             cout << data << endl;
 							ofstream outfile;
-                            if (count > 500){
-                                count = 0;
+                            if (CountLines(fileAdded) >= MAX_LENGTH){
                                 outfile.open(fileAdded);
                                 outfile << data << endl;
                                 outfile.close();
@@ -131,7 +148,6 @@ __declspec(dllexport) void monitor(char* path, char* output, char* closePosition
 
                     case FILE_ACTION_REMOVED:
                         if (strstr(file_name, "$RECYCLE.BIN")==NULL){
-                            count++;
                             //cout << setw(5) << "file removed : " << path << setw(5) << file_name << endl;
                             cout << "file removed : ";                      
                             string data;
@@ -139,8 +155,7 @@ __declspec(dllexport) void monitor(char* path, char* output, char* closePosition
                             data.append(file_name);
                             cout << data << endl;   
 							ofstream outfile;  
-                            if (count > 500){
-                                count = 0;
+                            if (CountLines(fileRemoved) >= MAX_LENGTH){
                                 outfile.open(fileRemoved);
                                 outfile << data <<endl;
                                 outfile.close();
@@ -155,15 +170,14 @@ __declspec(dllexport) void monitor(char* path, char* output, char* closePosition
                     case FILE_ACTION_RENAMED_OLD_NAME:
                         if (strstr(file_name, "$RECYCLE.BIN")==NULL){
                             //cout << "file renamed : " << setw(5) << path << file_name << "->" << path << file_rename << endl;  
-                            count++;     
+
                             cout << "file renamed : ";        
                             string data;
                             data.append(path);                    
                             data.append(file_name);
                             cout << data << "->";
                             ofstream outfile;  
-                            if (count > 500){
-                                count = 0;
+                            if (CountLines(fileRemoved) >= MAX_LENGTH){            
                                 outfile.open(fileRemoved);
                                 outfile << data <<endl;
                                 outfile.close();
@@ -176,8 +190,7 @@ __declspec(dllexport) void monitor(char* path, char* output, char* closePosition
                             data.append(path);
                             data.append(file_rename);   
                             cout << data << endl;     
-                            if (count > 500){
-                                count = 0;
+                            if (CountLines(fileAdded) >= MAX_LENGTH){
                                 outfile.open(fileAdded);
                                 outfile << data << endl;
                                 outfile.close();
@@ -201,7 +214,7 @@ __declspec(dllexport) void monitor(char* path, char* output, char* closePosition
 
 #ifdef TEST
 int main(){    
-    char monitorPath[]= "C:\\";
+    char monitorPath[]= "D:\\";
     monitor(monitorPath, "D:\\Code\\C++", "D:\\Code\\C++\\CLOSE");
     return 0;
 }
