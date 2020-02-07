@@ -197,42 +197,27 @@ public class MainClass {
 
 		fixedThreadPool.execute(()->{
 			//检测文件改动线程
-			int countAdd = 0;
-			int countRemove = 0;
 			String filesToAdd;
 			String filesToRemove;
 			//分割字符串
 			while (!mainExit) {
 				if (!search.isManualUpdate()) {
-					int loopAdd = 0;
-					int loopRemove = 0;
 					try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(new File(SettingsFrame.tmp.getAbsolutePath() + "\\fileAdded.txt"))));
 						 BufferedReader br2 = new BufferedReader(new InputStreamReader(new FileInputStream(new File(SettingsFrame.tmp.getAbsolutePath() + "\\fileRemoved.txt"))))) {
 						while ((filesToAdd = br.readLine()) != null) {
-							loopAdd++;
-							if (loopAdd > countAdd) {
-								countAdd++;
-								search.addFileToLoadBin(filesToAdd);
-								break;
-							}
+							search.addFileToLoadBin(filesToAdd);
 						}
 						while ((filesToRemove = br2.readLine()) != null) {
-							loopRemove++;
-							if (loopRemove > countRemove) {
-								countRemove++;
-								search.addToRecycleBin(filesToRemove);
-								break;
-							}
+							search.addToRecycleBin(filesToRemove);
 						}
 					} catch (IOException ignored) {
 
-					} finally {
-						try {
-							Thread.sleep(50);
-						} catch (InterruptedException ignored) {
-
-						}
 					}
+				}
+				try {
+					Thread.sleep(5000);
+				} catch (InterruptedException ignored) {
+
 				}
 			}
 		});
@@ -247,6 +232,7 @@ public class MainClass {
 				if (count >= SettingsFrame.updateTimeLimit << 10 && !isUsing && !search.isManualUpdate()) {
 					count = 0;
 					System.out.println("正在更新本地索引data文件");
+					deleteDir(SettingsFrame.dataPath);
 					search.saveLists();
 				}
 
@@ -316,6 +302,7 @@ public class MainClass {
 					}
 					System.out.println("即将退出，保存最新文件列表到data");
 					search.mergeFileToList();
+					deleteDir(SettingsFrame.dataPath);
 					search.saveLists();
 				}
 				fixedThreadPool.shutdown();

@@ -35,7 +35,7 @@ public class SearchBar {
     private JTextField textField;
     private Search search = new Search();
     private Color labelColor = new Color(255, 125, 29, 255);
-    private LinkedList<String> list = new LinkedList<>();
+    private LinkedHashSet<String> list = new LinkedHashSet<>();
     private Thread thread;
     private boolean isFirstRun = true;
     private long startTime = 0;
@@ -630,7 +630,7 @@ public class SearchBar {
         return (null);
     }
 
-    private void addResult(LinkedList<String> list, String text) {
+    private void addResult(LinkedHashSet<String> list, String text) {
         String[] strings = text.split(";");
         String searchText = strings[0];
         int length = strings.length;
