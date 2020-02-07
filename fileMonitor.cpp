@@ -114,9 +114,11 @@ __declspec(dllexport) void monitor(char* path, char* output, char* closePosition
                                 count = 0;
                                 outfile.open(fileAdded);
                                 outfile << data << endl;
+                                outfile.close();
                             }else{
                                 outfile.open(fileAdded, ios::app);
                                 outfile << data << endl;
+                                outfile.close();
                             }
                         }
                         break;
@@ -141,10 +143,11 @@ __declspec(dllexport) void monitor(char* path, char* output, char* closePosition
                                 count = 0;
                                 outfile.open(fileRemoved);
                                 outfile << data <<endl;
+                                outfile.close();
                             }else{
                                 outfile.open(fileRemoved, ios::app);
                                 outfile << data <<endl;
-                                
+                                outfile.close();
                             }
                         }
                         break;
@@ -163,10 +166,11 @@ __declspec(dllexport) void monitor(char* path, char* output, char* closePosition
                                 count = 0;
                                 outfile.open(fileRemoved);
                                 outfile << data <<endl;
+                                outfile.close();
                             }else{
                                 outfile.open(fileRemoved, ios::app);
                                 outfile << data <<endl;
-                                
+                                outfile.close();
                             }
                             data.clear();
                             data.append(path);
@@ -176,9 +180,11 @@ __declspec(dllexport) void monitor(char* path, char* output, char* closePosition
                                 count = 0;
                                 outfile.open(fileAdded);
                                 outfile << data << endl;
+                                outfile.close();
                             }else{
                                 outfile.open(fileAdded, ios::app);
                                 outfile << data << endl;
+                                outfile.close();
                             }                                               
                         }
                         break;
@@ -195,7 +201,7 @@ __declspec(dllexport) void monitor(char* path, char* output, char* closePosition
 
 #ifdef TEST
 int main(){    
-    char monitorPath[]= "D:\\";
+    char monitorPath[]= "C:\\";
     monitor(monitorPath, "D:\\Code\\C++", "D:\\Code\\C++\\CLOSE");
     return 0;
 }

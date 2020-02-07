@@ -206,13 +206,19 @@ public class MainClass {
 				if (!search.isManualUpdate()) {
 					int loopAdd = 0;
 					int loopRemove = 0;
-					try (BufferedReader br = new BufferedReader(new FileReader(new File(SettingsFrame.tmp.getAbsolutePath() + "\\fileAdded.txt")));
-						 BufferedReader br2 = new BufferedReader(new FileReader(new File(SettingsFrame.tmp.getAbsolutePath() + "\\fileRemoved.txt")))) {
+					try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(new File(SettingsFrame.tmp.getAbsolutePath() + "\\fileAdded.txt"))));
+						 BufferedReader br2 = new BufferedReader(new InputStreamReader(new FileInputStream(new File(SettingsFrame.tmp.getAbsolutePath() + "\\fileRemoved.txt"))))) {
 						while ((filesToAdd = br.readLine()) != null) {
 							loopAdd++;
 							if (loopAdd > countAdd) {
 								countAdd++;
 								search.addFileToLoadBin(filesToAdd);
+								try {
+									Thread.sleep(100);
+								} catch (InterruptedException ignored) {
+
+								}
+								break;
 							}
 						}
 						while ((filesToRemove = br2.readLine()) != null) {
@@ -220,13 +226,19 @@ public class MainClass {
 							if (loopRemove > countRemove) {
 								countRemove++;
 								search.addToRecycleBin(filesToRemove);
+								try {
+									Thread.sleep(100);
+								} catch (InterruptedException ignored) {
+
+								}
+								break;
 							}
 						}
 					} catch (IOException ignored) {
 
 					} finally {
 						try {
-							Thread.sleep(2000);
+							Thread.sleep(100);
 						} catch (InterruptedException ignored) {
 
 						}
