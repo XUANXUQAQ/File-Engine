@@ -57,14 +57,16 @@ public class Search {
     }
 
     public void clearRecycleBin() {
-        isUsable = false;
-        for (String path : RecycleBin) {
-            deletePathInList(path);
+        if (!isManualUpdate) {
+            isUsable = false;
+            for (String path : RecycleBin) {
+                deletePathInList(path);
+            }
+            isUsable = true;
         }
-        isUsable = true;
     }
 
-    public void FilesToAdd(String path){
+    public void addFileToLoadBin(String path){
         listToAdd.add(path);
     }
 
@@ -335,7 +337,11 @@ public class Search {
     }
 
     public void setUsable(boolean b) {
-        isUsable = b;
+        if (!isManualUpdate) {
+            isUsable = b;
+        }else{
+            isUsable = false;
+        }
     }
 
     public boolean isIsFocusLost() {
@@ -590,7 +596,9 @@ public class Search {
                     break;
             }
         }
-        isUsable = true;
+        if (!isManualUpdate) {
+            isUsable = true;
+        }
     }
 
     public void loadAllLists() {

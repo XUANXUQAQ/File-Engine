@@ -21,7 +21,6 @@ public class MainClass {
 	public static boolean mainExit = false;
 	private static SearchBar searchBar = new SearchBar();
 	private static Search search = new Search();
-	private static File fileWatcherTXT = new File(SettingsFrame.tmp.getAbsolutePath()+ "\\fileMonitor.txt");
 	public static String name;
 
 	public static void setMainExit(boolean b){
@@ -58,6 +57,9 @@ public class MainClass {
 		}
 	}
 
+	private static void readMonitorFile(){
+
+	}
 	private static void copyFile(InputStream source, File dest) {
 		try(OutputStream os = new FileOutputStream(dest);BufferedInputStream bis = new BufferedInputStream(source);BufferedOutputStream bos = new BufferedOutputStream(os)) {
 			byte[]buffer = new byte[8192];
@@ -184,24 +186,63 @@ public class MainClass {
 
 
 		for(File root:roots){
-			fixedThreadPool.execute(()-> {
-				FileMonitor.INSTANCE.fileWatcher(root.getAbsolutePath(), SettingsFrame.tmp.getAbsolutePath() + "\\fileMonitor.txt", SettingsFrame.tmp.getAbsolutePath() + "\\CLOSE");
-			});
+			if (!isAdmin()){
+				System.out.println("无管理员权限，文件监控功能已关闭");
+				taskBar.showMessage("警告","无管理员权限，文件监控功能已关闭");
+			}else {
+				fixedThreadPool.execute(() -> FileMonitor.INSTANCE.monitor(root.getAbsolutePath(), SettingsFrame.tmp.getAbsolutePath(), SettingsFrame.tmp.getAbsolutePath() + "\\CLOSE"));
+			}
 		}
 
-		if (!isAdmin()){
-			System.out.println("无管理员权限，文件监控功能受限");
-			taskBar.showMessage("警告","未获取管理员权限，文件监控功能受限");
-		}
+
+		fixedThreadPool.execute(()->{
+			//检测文件改动线程
+			int countAdd = 0;
+			int countRemove = 0;
+			String filesToAdd;
+			String filesToRemove;
+			//分割字符串
+			while (!mainExit) {
+				if (!search.isManualUpdate()) {
+					int loopAdd = 0;
+					int loopRemove = 0;
+					try (BufferedReader br = new BufferedReader(new FileReader(new File(SettingsFrame.tmp.getAbsolutePath() + "\\fileAdded.txt")));
+						 BufferedReader br2 = new BufferedReader(new FileReader(new File(SettingsFrame.tmp.getAbsolutePath() + "\\fileRemoved.txt")))) {
+						while ((filesToAdd = br.readLine()) != null) {
+							loopAdd++;
+							if (loopAdd > countAdd) {
+								countAdd++;
+								search.addFileToLoadBin(filesToAdd);
+							}
+						}
+						while ((filesToRemove = br2.readLine()) != null) {
+							loopRemove++;
+							if (loopRemove > countRemove) {
+								countRemove++;
+								search.addToRecycleBin(filesToRemove);
+							}
+						}
+					} catch (IOException ignored) {
+
+					} finally {
+						try {
+							Thread.sleep(2000);
+						} catch (InterruptedException ignored) {
+
+						}
+					}
+				}
+			}
+		});
+
 
 		fixedThreadPool.execute(() -> {
 			// 时间检测线程
 			long count = 0;
 			while (!mainExit) {
 				boolean isUsing = searchBar.getUsing();
-				boolean isSleep = searchBar.getSleep();
 				count++;
-				if (count >= SettingsFrame.updateTimeLimit << 10 && !isUsing && !isSleep && !search.isManualUpdate()) {
+				if (count >= SettingsFrame.updateTimeLimit << 10 && !isUsing && !search.isManualUpdate()) {
 					count = 0;
 					System.out.println("正在更新本地索引data文件");
 					search.saveLists();
@@ -252,43 +293,8 @@ public class MainClass {
 			}
 		});
 
-		//检测文件改动线程
-		fixedThreadPool.execute(() -> {
-			long count = 0;
-			while (!mainExit) {
-				try (BufferedReader bw = new BufferedReader(new FileReader(fileWatcherTXT))) {
-					long loop = 0;
-					String line;
-					while ((line = bw.readLine()) != null) {
-						loop += 1;
-						if (loop > count) {
-							String[] strings = line.split(" : ");
-							switch (strings[0]) {
-								case "file add":
-									search.FilesToAdd(strings[1]);
-									break;
-								case "file renamed":
-									String[] add = strings[1].split("->");
-									search.addToRecycleBin(add[0]);
-									search.FilesToAdd(add[1]);
-									break;
-								case "file removed":
-									search.addToRecycleBin(strings[1]);
-									break;
-							}
-							count += 1;
-						}
-					}
-					Thread.sleep(50);
-				} catch (IOException | InterruptedException ignored) {
 
-				}
-			}
-		});
-
-
-
-		do {
+		while(true) {
 			// 主循环开始
 			if (!search.isIsFocusLost()){
 				searchBar.showSearchbar();
@@ -299,20 +305,20 @@ public class MainClass {
 
 			}
 			if (mainExit){
-				File close = new File(SettingsFrame.tmp.getAbsolutePath() + "\\" + "CLOSE");
-				try {
-					close.createNewFile();
-					if (search.isUsable()) {
-						System.out.println("即将退出，保存最新文件列表到data");
-						search.mergeFileToList();
-						search.saveLists();
-					}
-				} catch (IOException ignored) {
+				if (search.isUsable()) {
+					File CLOSEDLL = new File(SettingsFrame.tmp.getAbsolutePath() + "\\CLOSE");
+					try {
+						CLOSEDLL.createNewFile();
+					} catch (IOException ignored) {
 
+					}
+					System.out.println("即将退出，保存最新文件列表到data");
+					search.mergeFileToList();
+					search.saveLists();
 				}
 				fixedThreadPool.shutdown();
 				System.exit(0);
 			}
-		}while(true);
+		}
 	}
 }
