@@ -227,7 +227,7 @@ public class MainClass {
 			// 时间检测线程
 			long count = 0;
 			while (!mainExit) {
-				boolean isUsing = searchBar.getUsing();
+				boolean isUsing = searchBar.isUsing();
 				count++;
 				if (count >= SettingsFrame.updateTimeLimit << 10 && !isUsing && !search.isManualUpdate()) {
 					count = 0;

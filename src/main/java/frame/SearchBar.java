@@ -43,7 +43,7 @@ public class SearchBar {
     private Thread searchWaiter = null;
     private boolean isUsing = false;
 
-    public boolean getUsing(){
+    public boolean isUsing(){
         return this.isUsing;
     }
 
@@ -635,6 +635,7 @@ public class SearchBar {
         String searchText = strings[0];
         int length = strings.length;
         if (search.isUsable()) {
+            label:
             for (String fileInList : list) {
                 if (length != 2 && match(getFileName(fileInList), searchText)) {
                     listResult.add(fileInList);
@@ -642,22 +643,33 @@ public class SearchBar {
                         break;
                     }
                 } else if (match(getFileName(fileInList), searchText) && length == 2) {
-                    if (strings[1].toUpperCase().equals("FILE")) {
-                        if (isFile(fileInList)) {
+                    switch (strings[1].toUpperCase()) {
+                        case "FILE":
+                            if (isFile(fileInList)) {
 
-                            listResult.add(fileInList);
-                            if (listResult.size() > 100) {
-                                break;
+                                listResult.add(fileInList);
+                                if (listResult.size() > 100) {
+                                    break label;
+                                }
                             }
-                        }
-                    } else if (strings[1].toUpperCase().equals("FOLDER")) {
-                        if (isDirectory(fileInList)) {
+                            break;
+                        case "FOLDER":
+                            if (isDirectory(fileInList)) {
 
-                            listResult.add(fileInList);
-                            if (listResult.size() > 100) {
-                                break;
+                                listResult.add(fileInList);
+                                if (listResult.size() > 100) {
+                                    break label;
+                                }
                             }
-                        }
+                            break;
+                        case "FULL":
+                            if (getFileName(fileInList).equals(searchText)) {
+                                listResult.add(fileInList);
+                                if (listResult.size() > 100) {
+                                    break label;
+                                }
+                            }
+                            break;
                     }
                 }
             }
@@ -982,6 +994,7 @@ public class SearchBar {
         public void run() {
             if (search.isUsable()) {
                 if (!this.text.equals("")) {
+                    label:
                     for (String fileInList : search.getListA()) {
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             listResult.add(fileInList);
@@ -989,26 +1002,38 @@ public class SearchBar {
                                 break;
                             }
                         } else if (match(getFileName(fileInList), searchText) && length == 2) {
-                            if (strings[1].toUpperCase().equals("FILE")) {
-                                if (isFile(fileInList)) {
-                                    listResult.add(fileInList);
-                                    if (listResult.size() > 100) {
-                                        break;
+                            switch (strings[1].toUpperCase()) {
+                                case "FILE":
+                                    if (isFile(fileInList)) {
+                                        listResult.add(fileInList);
+                                        if (listResult.size() > 100) {
+                                            break label;
+                                        }
                                     }
-                                }
-                            } else if (strings[1].toUpperCase().equals("FOLDER")) {
-                                if (isDirectory(fileInList)) {
-                                    listResult.add(fileInList);
-                                    if (listResult.size() > 100) {
-                                        break;
+                                    break;
+                                case "FOLDER":
+                                    if (isDirectory(fileInList)) {
+                                        listResult.add(fileInList);
+                                        if (listResult.size() > 100) {
+                                            break label;
+                                        }
                                     }
-                                }
+                                    break;
+                                case "FULL":
+                                    if (getFileName(fileInList).equals(searchText)) {
+                                        listResult.add(searchText);
+                                        if (listResult.size() > 100) {
+                                            break label;
+                                        }
+                                    }
+                                    break;
                             }
                         }
                         if (Thread.currentThread().isInterrupted()) {
                             return;
                         }
                     }
+                    label1:
                     for (String fileInList : search.getListB()) {
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             listResult.add(fileInList);
@@ -1016,26 +1041,38 @@ public class SearchBar {
                                 break;
                             }
                         } else if (match(getFileName(fileInList), searchText) && length == 2) {
-                            if (strings[1].toUpperCase().equals("FILE")) {
-                                if (isFile(fileInList)) {
-                                    listResult.add(fileInList);
-                                    if (listResult.size() > 100) {
-                                        break;
+                            switch (strings[1].toUpperCase()) {
+                                case "FILE":
+                                    if (isFile(fileInList)) {
+                                        listResult.add(fileInList);
+                                        if (listResult.size() > 100) {
+                                            break label1;
+                                        }
                                     }
-                                }
-                            } else if (strings[1].toUpperCase().equals("FOLDER")) {
-                                if (isDirectory(fileInList)) {
-                                    listResult.add(fileInList);
-                                    if (listResult.size() > 100) {
-                                        break;
+                                    break;
+                                case "FOLDER":
+                                    if (isDirectory(fileInList)) {
+                                        listResult.add(fileInList);
+                                        if (listResult.size() > 100) {
+                                            break label1;
+                                        }
                                     }
-                                }
+                                    break;
+                                case "FULL":
+                                    if (getFileName(fileInList).equals(searchText)) {
+                                        listResult.add(searchText);
+                                        if (listResult.size() > 100) {
+                                            break label1;
+                                        }
+                                    }
+                                    break;
                             }
                         }
                         if (Thread.currentThread().isInterrupted()) {
                             return;
                         }
                     }
+                    label2:
                     for (String fileInList : search.getListC()) {
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             listResult.add(fileInList);
@@ -1043,26 +1080,38 @@ public class SearchBar {
                                 break;
                             }
                         } else if (match(getFileName(fileInList), searchText) && length == 2) {
-                            if (strings[1].toUpperCase().equals("FILE")) {
-                                if (isFile(fileInList)) {
-                                    listResult.add(fileInList);
-                                    if (listResult.size() > 100) {
-                                        break;
+                            switch (strings[1].toUpperCase()) {
+                                case "FILE":
+                                    if (isFile(fileInList)) {
+                                        listResult.add(fileInList);
+                                        if (listResult.size() > 100) {
+                                            break label2;
+                                        }
                                     }
-                                }
-                            } else if (strings[1].toUpperCase().equals("FOLDER")) {
-                                if (isDirectory(fileInList)) {
-                                    listResult.add(fileInList);
-                                    if (listResult.size() > 100) {
-                                        break;
+                                    break;
+                                case "FOLDER":
+                                    if (isDirectory(fileInList)) {
+                                        listResult.add(fileInList);
+                                        if (listResult.size() > 100) {
+                                            break label2;
+                                        }
                                     }
-                                }
+                                    break;
+                                case "FULL":
+                                    if (getFileName(fileInList).equals(searchText)) {
+                                        listResult.add(searchText);
+                                        if (listResult.size() > 100) {
+                                            break label2;
+                                        }
+                                    }
+                                    break;
                             }
                         }
                         if (Thread.currentThread().isInterrupted()) {
                             return;
                         }
                     }
+                    label3:
                     for (String fileInList : search.getListD()) {
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             listResult.add(fileInList);
@@ -1070,26 +1119,38 @@ public class SearchBar {
                                 break;
                             }
                         } else if (match(getFileName(fileInList), searchText) && length == 2) {
-                            if (strings[1].toUpperCase().equals("FILE")) {
-                                if (isFile(fileInList)) {
-                                    listResult.add(fileInList);
-                                    if (listResult.size() > 100) {
-                                        break;
+                            switch (strings[1].toUpperCase()) {
+                                case "FILE":
+                                    if (isFile(fileInList)) {
+                                        listResult.add(fileInList);
+                                        if (listResult.size() > 100) {
+                                            break label3;
+                                        }
                                     }
-                                }
-                            } else if (strings[1].toUpperCase().equals("FOLDER")) {
-                                if (isDirectory(fileInList)) {
-                                    listResult.add(fileInList);
-                                    if (listResult.size() > 100) {
-                                        break;
+                                    break;
+                                case "FOLDER":
+                                    if (isDirectory(fileInList)) {
+                                        listResult.add(fileInList);
+                                        if (listResult.size() > 100) {
+                                            break label3;
+                                        }
                                     }
-                                }
+                                    break;
+                                case "FULL":
+                                    if (getFileName(fileInList).equals(searchText)) {
+                                        listResult.add(searchText);
+                                        if (listResult.size() > 100) {
+                                            break label3;
+                                        }
+                                    }
+                                    break;
                             }
                         }
                         if (Thread.currentThread().isInterrupted()) {
                             return;
                         }
                     }
+                    label4:
                     for (String fileInList : search.getListE()) {
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             listResult.add(fileInList);
@@ -1097,52 +1158,77 @@ public class SearchBar {
                                 break;
                             }
                         } else if (match(getFileName(fileInList), searchText) && length == 2) {
-                            if (strings[1].toUpperCase().equals("FILE")) {
-                                if (isFile(fileInList)) {
-                                    listResult.add(fileInList);
-                                    if (listResult.size() > 100) {
-                                        break;
+                            switch (strings[1].toUpperCase()) {
+                                case "FILE":
+                                    if (isFile(fileInList)) {
+                                        listResult.add(fileInList);
+                                        if (listResult.size() > 100) {
+                                            break label4;
+                                        }
                                     }
-                                }
-                            } else if (strings[1].toUpperCase().equals("FOLDER")) {
-                                if (isDirectory(fileInList)) {
-                                    listResult.add(fileInList);
-                                    if (listResult.size() > 100) {
-                                        break;
+                                    break;
+                                case "FOLDER":
+                                    if (isDirectory(fileInList)) {
+                                        listResult.add(fileInList);
+                                        if (listResult.size() > 100) {
+                                            break label4;
+                                        }
                                     }
-                                }
-                            }
-                        }
-                        if (Thread.currentThread().isInterrupted()) {
-                            return;
-                        }
-                    }for (String fileInList : search.getListF()) {
-                        if (length != 2 && match(getFileName(fileInList), searchText)) {
-                            listResult.add(fileInList);
-                            if (listResult.size() > 100) {
-                                break;
-                            }
-                        } else if (match(getFileName(fileInList), searchText) && length == 2) {
-                            if (strings[1].toUpperCase().equals("FILE")) {
-                                if (isFile(fileInList)) {
-                                    listResult.add(fileInList);
-                                    if (listResult.size() > 100) {
-                                        break;
+                                    break;
+                                case "FULL":
+                                    if (getFileName(fileInList).equals(searchText)) {
+                                        listResult.add(searchText);
+                                        if (listResult.size() > 100) {
+                                            break label4;
+                                        }
                                     }
-                                }
-                            } else if (strings[1].toUpperCase().equals("FOLDER")) {
-                                if (isDirectory(fileInList)) {
-                                    listResult.add(fileInList);
-                                    if (listResult.size() > 100) {
-                                        break;
-                                    }
-                                }
+                                    break;
                             }
                         }
                         if (Thread.currentThread().isInterrupted()) {
                             return;
                         }
                     }
+                    label5:
+                    for (String fileInList : search.getListF()) {
+                        if (length != 2 && match(getFileName(fileInList), searchText)) {
+                            listResult.add(fileInList);
+                            if (listResult.size() > 100) {
+                                break;
+                            }
+                        } else if (match(getFileName(fileInList), searchText) && length == 2) {
+                            switch (strings[1].toUpperCase()) {
+                                case "FILE":
+                                    if (isFile(fileInList)) {
+                                        listResult.add(fileInList);
+                                        if (listResult.size() > 100) {
+                                            break label5;
+                                        }
+                                    }
+                                    break;
+                                case "FOLDER":
+                                    if (isDirectory(fileInList)) {
+                                        listResult.add(fileInList);
+                                        if (listResult.size() > 100) {
+                                            break label5;
+                                        }
+                                    }
+                                    break;
+                                case "FULL":
+                                    if (getFileName(fileInList).equals(searchText)) {
+                                        listResult.add(searchText);
+                                        if (listResult.size() > 100) {
+                                            break label5;
+                                        }
+                                    }
+                                    break;
+                            }
+                        }
+                        if (Thread.currentThread().isInterrupted()) {
+                            return;
+                        }
+                    }
+                    label6:
                     for (String fileInList : search.getListG()) {
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             listResult.add(fileInList);
@@ -1150,52 +1236,77 @@ public class SearchBar {
                                 break;
                             }
                         } else if (match(getFileName(fileInList), searchText) && length == 2) {
-                            if (strings[1].toUpperCase().equals("FILE")) {
-                                if (isFile(fileInList)) {
-                                    listResult.add(fileInList);
-                                    if (listResult.size() > 100) {
-                                        break;
+                            switch (strings[1].toUpperCase()) {
+                                case "FILE":
+                                    if (isFile(fileInList)) {
+                                        listResult.add(fileInList);
+                                        if (listResult.size() > 100) {
+                                            break label6;
+                                        }
                                     }
-                                }
-                            } else if (strings[1].toUpperCase().equals("FOLDER")) {
-                                if (isDirectory(fileInList)) {
-                                    listResult.add(fileInList);
-                                    if (listResult.size() > 100) {
-                                        break;
+                                    break;
+                                case "FOLDER":
+                                    if (isDirectory(fileInList)) {
+                                        listResult.add(fileInList);
+                                        if (listResult.size() > 100) {
+                                            break label6;
+                                        }
                                     }
-                                }
-                            }
-                        }
-                        if (Thread.currentThread().isInterrupted()) {
-                            return;
-                        }
-                    }for (String fileInList : search.getListH()) {
-                        if (length != 2 && match(getFileName(fileInList), searchText)) {
-                            listResult.add(fileInList);
-                            if (listResult.size() > 100) {
-                                break;
-                            }
-                        } else if (match(getFileName(fileInList), searchText) && length == 2) {
-                            if (strings[1].toUpperCase().equals("FILE")) {
-                                if (isFile(fileInList)) {
-                                    listResult.add(fileInList);
-                                    if (listResult.size() > 100) {
-                                        break;
+                                    break;
+                                case "FULL":
+                                    if (getFileName(fileInList).equals(searchText)) {
+                                        listResult.add(searchText);
+                                        if (listResult.size() > 100) {
+                                            break label6;
+                                        }
                                     }
-                                }
-                            } else if (strings[1].toUpperCase().equals("FOLDER")) {
-                                if (isDirectory(fileInList)) {
-                                    listResult.add(fileInList);
-                                    if (listResult.size() > 100) {
-                                        break;
-                                    }
-                                }
+                                    break;
                             }
                         }
                         if (Thread.currentThread().isInterrupted()) {
                             return;
                         }
                     }
+                    label7:
+                    for (String fileInList : search.getListH()) {
+                        if (length != 2 && match(getFileName(fileInList), searchText)) {
+                            listResult.add(fileInList);
+                            if (listResult.size() > 100) {
+                                break;
+                            }
+                        } else if (match(getFileName(fileInList), searchText) && length == 2) {
+                            switch (strings[1].toUpperCase()) {
+                                case "FILE":
+                                    if (isFile(fileInList)) {
+                                        listResult.add(fileInList);
+                                        if (listResult.size() > 100) {
+                                            break label7;
+                                        }
+                                    }
+                                    break;
+                                case "FOLDER":
+                                    if (isDirectory(fileInList)) {
+                                        listResult.add(fileInList);
+                                        if (listResult.size() > 100) {
+                                            break label7;
+                                        }
+                                    }
+                                    break;
+                                case "FULL":
+                                    if (getFileName(fileInList).equals(searchText)) {
+                                        listResult.add(searchText);
+                                        if (listResult.size() > 100) {
+                                            break label7;
+                                        }
+                                    }
+                                    break;
+                            }
+                        }
+                        if (Thread.currentThread().isInterrupted()) {
+                            return;
+                        }
+                    }
+                    label8:
                     for (String fileInList : search.getListI()) {
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             listResult.add(fileInList);
@@ -1203,26 +1314,38 @@ public class SearchBar {
                                 break;
                             }
                         } else if (match(getFileName(fileInList), searchText) && length == 2) {
-                            if (strings[1].toUpperCase().equals("FILE")) {
-                                if (isFile(fileInList)) {
-                                    listResult.add(fileInList);
-                                    if (listResult.size() > 100) {
-                                        break;
+                            switch (strings[1].toUpperCase()) {
+                                case "FILE":
+                                    if (isFile(fileInList)) {
+                                        listResult.add(fileInList);
+                                        if (listResult.size() > 100) {
+                                            break label8;
+                                        }
                                     }
-                                }
-                            } else if (strings[1].toUpperCase().equals("FOLDER")) {
-                                if (isDirectory(fileInList)) {
-                                    listResult.add(fileInList);
-                                    if (listResult.size() > 100) {
-                                        break;
+                                    break;
+                                case "FOLDER":
+                                    if (isDirectory(fileInList)) {
+                                        listResult.add(fileInList);
+                                        if (listResult.size() > 100) {
+                                            break label8;
+                                        }
                                     }
-                                }
+                                    break;
+                                case "FULL":
+                                    if (getFileName(fileInList).equals(searchText)) {
+                                        listResult.add(searchText);
+                                        if (listResult.size() > 100) {
+                                            break label8;
+                                        }
+                                    }
+                                    break;
                             }
                         }
                         if (Thread.currentThread().isInterrupted()) {
                             return;
                         }
                     }
+                    label9:
                     for (String fileInList : search.getListJ()) {
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             listResult.add(fileInList);
@@ -1230,26 +1353,38 @@ public class SearchBar {
                                 break;
                             }
                         } else if (match(getFileName(fileInList), searchText) && length == 2) {
-                            if (strings[1].toUpperCase().equals("FILE")) {
-                                if (isFile(fileInList)) {
-                                    listResult.add(fileInList);
-                                    if (listResult.size() > 100) {
-                                        break;
+                            switch (strings[1].toUpperCase()) {
+                                case "FILE":
+                                    if (isFile(fileInList)) {
+                                        listResult.add(fileInList);
+                                        if (listResult.size() > 100) {
+                                            break label9;
+                                        }
                                     }
-                                }
-                            } else if (strings[1].toUpperCase().equals("FOLDER")) {
-                                if (isDirectory(fileInList)) {
-                                    listResult.add(fileInList);
-                                    if (listResult.size() > 100) {
-                                        break;
+                                    break;
+                                case "FOLDER":
+                                    if (isDirectory(fileInList)) {
+                                        listResult.add(fileInList);
+                                        if (listResult.size() > 100) {
+                                            break label9;
+                                        }
                                     }
-                                }
+                                    break;
+                                case "FULL":
+                                    if (getFileName(fileInList).equals(searchText)) {
+                                        listResult.add(searchText);
+                                        if (listResult.size() > 100) {
+                                            break label9;
+                                        }
+                                    }
+                                    break;
                             }
                         }
                         if (Thread.currentThread().isInterrupted()) {
                             return;
                         }
                     }
+                    label10:
                     for (String fileInList : search.getListK()) {
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             listResult.add(fileInList);
@@ -1257,26 +1392,38 @@ public class SearchBar {
                                 break;
                             }
                         } else if (match(getFileName(fileInList), searchText) && length == 2) {
-                            if (strings[1].toUpperCase().equals("FILE")) {
-                                if (isFile(fileInList)) {
-                                    listResult.add(fileInList);
-                                    if (listResult.size() > 100) {
-                                        break;
+                            switch (strings[1].toUpperCase()) {
+                                case "FILE":
+                                    if (isFile(fileInList)) {
+                                        listResult.add(fileInList);
+                                        if (listResult.size() > 100) {
+                                            break label10;
+                                        }
                                     }
-                                }
-                            } else if (strings[1].toUpperCase().equals("FOLDER")) {
-                                if (isDirectory(fileInList)) {
-                                    listResult.add(fileInList);
-                                    if (listResult.size() > 100) {
-                                        break;
+                                    break;
+                                case "FOLDER":
+                                    if (isDirectory(fileInList)) {
+                                        listResult.add(fileInList);
+                                        if (listResult.size() > 100) {
+                                            break label10;
+                                        }
                                     }
-                                }
+                                    break;
+                                case "FULL":
+                                    if (getFileName(fileInList).equals(searchText)) {
+                                        listResult.add(searchText);
+                                        if (listResult.size() > 100) {
+                                            break label10;
+                                        }
+                                    }
+                                    break;
                             }
                         }
                         if (Thread.currentThread().isInterrupted()) {
                             return;
                         }
                     }
+                    label11:
                     for (String fileInList : search.getListL()) {
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             listResult.add(fileInList);
@@ -1284,26 +1431,38 @@ public class SearchBar {
                                 break;
                             }
                         } else if (match(getFileName(fileInList), searchText) && length == 2) {
-                            if (strings[1].toUpperCase().equals("FILE")) {
-                                if (isFile(fileInList)) {
-                                    listResult.add(fileInList);
-                                    if (listResult.size() > 100) {
-                                        break;
+                            switch (strings[1].toUpperCase()) {
+                                case "FILE":
+                                    if (isFile(fileInList)) {
+                                        listResult.add(fileInList);
+                                        if (listResult.size() > 100) {
+                                            break label11;
+                                        }
                                     }
-                                }
-                            } else if (strings[1].toUpperCase().equals("FOLDER")) {
-                                if (isDirectory(fileInList)) {
-                                    listResult.add(fileInList);
-                                    if (listResult.size() > 100) {
-                                        break;
+                                    break;
+                                case "FOLDER":
+                                    if (isDirectory(fileInList)) {
+                                        listResult.add(fileInList);
+                                        if (listResult.size() > 100) {
+                                            break label11;
+                                        }
                                     }
-                                }
+                                    break;
+                                case "FULL":
+                                    if (getFileName(fileInList).equals(searchText)) {
+                                        listResult.add(searchText);
+                                        if (listResult.size() > 100) {
+                                            break label11;
+                                        }
+                                    }
+                                    break;
                             }
                         }
                         if (Thread.currentThread().isInterrupted()) {
                             return;
                         }
                     }
+                    label12:
                     for (String fileInList : search.getListM()) {
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             listResult.add(fileInList);
@@ -1311,26 +1470,38 @@ public class SearchBar {
                                 break;
                             }
                         } else if (match(getFileName(fileInList), searchText) && length == 2) {
-                            if (strings[1].toUpperCase().equals("FILE")) {
-                                if (isFile(fileInList)) {
-                                    listResult.add(fileInList);
-                                    if (listResult.size() > 100) {
-                                        break;
+                            switch (strings[1].toUpperCase()) {
+                                case "FILE":
+                                    if (isFile(fileInList)) {
+                                        listResult.add(fileInList);
+                                        if (listResult.size() > 100) {
+                                            break label12;
+                                        }
                                     }
-                                }
-                            } else if (strings[1].toUpperCase().equals("FOLDER")) {
-                                if (isDirectory(fileInList)) {
-                                    listResult.add(fileInList);
-                                    if (listResult.size() > 100) {
-                                        break;
+                                    break;
+                                case "FOLDER":
+                                    if (isDirectory(fileInList)) {
+                                        listResult.add(fileInList);
+                                        if (listResult.size() > 100) {
+                                            break label12;
+                                        }
                                     }
-                                }
+                                    break;
+                                case "FULL":
+                                    if (getFileName(fileInList).equals(searchText)) {
+                                        listResult.add(searchText);
+                                        if (listResult.size() > 100) {
+                                            break label12;
+                                        }
+                                    }
+                                    break;
                             }
                         }
                         if (Thread.currentThread().isInterrupted()) {
                             return;
                         }
                     }
+                    label13:
                     for (String fileInList : search.getListN()) {
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             listResult.add(fileInList);
@@ -1338,26 +1509,38 @@ public class SearchBar {
                                 break;
                             }
                         } else if (match(getFileName(fileInList), searchText) && length == 2) {
-                            if (strings[1].toUpperCase().equals("FILE")) {
-                                if (isFile(fileInList)) {
-                                    listResult.add(fileInList);
-                                    if (listResult.size() > 100) {
-                                        break;
+                            switch (strings[1].toUpperCase()) {
+                                case "FILE":
+                                    if (isFile(fileInList)) {
+                                        listResult.add(fileInList);
+                                        if (listResult.size() > 100) {
+                                            break label13;
+                                        }
                                     }
-                                }
-                            } else if (strings[1].toUpperCase().equals("FOLDER")) {
-                                if (isDirectory(fileInList)) {
-                                    listResult.add(fileInList);
-                                    if (listResult.size() > 100) {
-                                        break;
+                                    break;
+                                case "FOLDER":
+                                    if (isDirectory(fileInList)) {
+                                        listResult.add(fileInList);
+                                        if (listResult.size() > 100) {
+                                            break label13;
+                                        }
                                     }
-                                }
+                                    break;
+                                case "FULL":
+                                    if (getFileName(fileInList).equals(searchText)) {
+                                        listResult.add(searchText);
+                                        if (listResult.size() > 100) {
+                                            break label13;
+                                        }
+                                    }
+                                    break;
                             }
                         }
                         if (Thread.currentThread().isInterrupted()) {
                             return;
                         }
                     }
+                    label14:
                     for (String fileInList : search.getListO()) {
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             listResult.add(fileInList);
@@ -1365,26 +1548,38 @@ public class SearchBar {
                                 break;
                             }
                         } else if (match(getFileName(fileInList), searchText) && length == 2) {
-                            if (strings[1].toUpperCase().equals("FILE")) {
-                                if (isFile(fileInList)) {
-                                    listResult.add(fileInList);
-                                    if (listResult.size() > 100) {
-                                        break;
+                            switch (strings[1].toUpperCase()) {
+                                case "FILE":
+                                    if (isFile(fileInList)) {
+                                        listResult.add(fileInList);
+                                        if (listResult.size() > 100) {
+                                            break label14;
+                                        }
                                     }
-                                }
-                            } else if (strings[1].toUpperCase().equals("FOLDER")) {
-                                if (isDirectory(fileInList)) {
-                                    listResult.add(fileInList);
-                                    if (listResult.size() > 100) {
-                                        break;
+                                    break;
+                                case "FOLDER":
+                                    if (isDirectory(fileInList)) {
+                                        listResult.add(fileInList);
+                                        if (listResult.size() > 100) {
+                                            break label14;
+                                        }
                                     }
-                                }
+                                    break;
+                                case "FULL":
+                                    if (getFileName(fileInList).equals(searchText)) {
+                                        listResult.add(searchText);
+                                        if (listResult.size() > 100) {
+                                            break label14;
+                                        }
+                                    }
+                                    break;
                             }
                         }
                         if (Thread.currentThread().isInterrupted()) {
                             return;
                         }
                     }
+                    label15:
                     for (String fileInList : search.getListP()) {
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             listResult.add(fileInList);
@@ -1392,26 +1587,38 @@ public class SearchBar {
                                 break;
                             }
                         } else if (match(getFileName(fileInList), searchText) && length == 2) {
-                            if (strings[1].toUpperCase().equals("FILE")) {
-                                if (isFile(fileInList)) {
-                                    listResult.add(fileInList);
-                                    if (listResult.size() > 100) {
-                                        break;
+                            switch (strings[1].toUpperCase()) {
+                                case "FILE":
+                                    if (isFile(fileInList)) {
+                                        listResult.add(fileInList);
+                                        if (listResult.size() > 100) {
+                                            break label15;
+                                        }
                                     }
-                                }
-                            } else if (strings[1].toUpperCase().equals("FOLDER")) {
-                                if (isDirectory(fileInList)) {
-                                    listResult.add(fileInList);
-                                    if (listResult.size() > 100) {
-                                        break;
+                                    break;
+                                case "FOLDER":
+                                    if (isDirectory(fileInList)) {
+                                        listResult.add(fileInList);
+                                        if (listResult.size() > 100) {
+                                            break label15;
+                                        }
                                     }
-                                }
+                                    break;
+                                case "FULL":
+                                    if (getFileName(fileInList).equals(searchText)) {
+                                        listResult.add(searchText);
+                                        if (listResult.size() > 100) {
+                                            break label15;
+                                        }
+                                    }
+                                    break;
                             }
                         }
                         if (Thread.currentThread().isInterrupted()) {
                             return;
                         }
                     }
+                    label16:
                     for (String fileInList : search.getListQ()) {
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             listResult.add(fileInList);
@@ -1419,26 +1626,38 @@ public class SearchBar {
                                 break;
                             }
                         } else if (match(getFileName(fileInList), searchText) && length == 2) {
-                            if (strings[1].toUpperCase().equals("FILE")) {
-                                if (isFile(fileInList)) {
-                                    listResult.add(fileInList);
-                                    if (listResult.size() > 100) {
-                                        break;
+                            switch (strings[1].toUpperCase()) {
+                                case "FILE":
+                                    if (isFile(fileInList)) {
+                                        listResult.add(fileInList);
+                                        if (listResult.size() > 100) {
+                                            break label16;
+                                        }
                                     }
-                                }
-                            } else if (strings[1].toUpperCase().equals("FOLDER")) {
-                                if (isDirectory(fileInList)) {
-                                    listResult.add(fileInList);
-                                    if (listResult.size() > 100) {
-                                        break;
+                                    break;
+                                case "FOLDER":
+                                    if (isDirectory(fileInList)) {
+                                        listResult.add(fileInList);
+                                        if (listResult.size() > 100) {
+                                            break label16;
+                                        }
                                     }
-                                }
+                                    break;
+                                case "FULL":
+                                    if (getFileName(fileInList).equals(searchText)) {
+                                        listResult.add(searchText);
+                                        if (listResult.size() > 100) {
+                                            break label16;
+                                        }
+                                    }
+                                    break;
                             }
                         }
                         if (Thread.currentThread().isInterrupted()) {
                             return;
                         }
                     }
+                    label17:
                     for (String fileInList : search.getListR()) {
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             listResult.add(fileInList);
@@ -1446,26 +1665,38 @@ public class SearchBar {
                                 break;
                             }
                         } else if (match(getFileName(fileInList), searchText) && length == 2) {
-                            if (strings[1].toUpperCase().equals("FILE")) {
-                                if (isFile(fileInList)) {
-                                    listResult.add(fileInList);
-                                    if (listResult.size() > 100) {
-                                        break;
+                            switch (strings[1].toUpperCase()) {
+                                case "FILE":
+                                    if (isFile(fileInList)) {
+                                        listResult.add(fileInList);
+                                        if (listResult.size() > 100) {
+                                            break label17;
+                                        }
                                     }
-                                }
-                            } else if (strings[1].toUpperCase().equals("FOLDER")) {
-                                if (isDirectory(fileInList)) {
-                                    listResult.add(fileInList);
-                                    if (listResult.size() > 100) {
-                                        break;
+                                    break;
+                                case "FOLDER":
+                                    if (isDirectory(fileInList)) {
+                                        listResult.add(fileInList);
+                                        if (listResult.size() > 100) {
+                                            break label17;
+                                        }
                                     }
-                                }
+                                    break;
+                                case "FULL":
+                                    if (getFileName(fileInList).equals(searchText)) {
+                                        listResult.add(searchText);
+                                        if (listResult.size() > 100) {
+                                            break label17;
+                                        }
+                                    }
+                                    break;
                             }
                         }
                         if (Thread.currentThread().isInterrupted()) {
                             return;
                         }
                     }
+                    label18:
                     for (String fileInList : search.getListS()) {
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             listResult.add(fileInList);
@@ -1473,26 +1704,38 @@ public class SearchBar {
                                 break;
                             }
                         } else if (match(getFileName(fileInList), searchText) && length == 2) {
-                            if (strings[1].toUpperCase().equals("FILE")) {
-                                if (isFile(fileInList)) {
-                                    listResult.add(fileInList);
-                                    if (listResult.size() > 100) {
-                                        break;
+                            switch (strings[1].toUpperCase()) {
+                                case "FILE":
+                                    if (isFile(fileInList)) {
+                                        listResult.add(fileInList);
+                                        if (listResult.size() > 100) {
+                                            break label18;
+                                        }
                                     }
-                                }
-                            } else if (strings[1].toUpperCase().equals("FOLDER")) {
-                                if (isDirectory(fileInList)) {
-                                    listResult.add(fileInList);
-                                    if (listResult.size() > 100) {
-                                        break;
+                                    break;
+                                case "FOLDER":
+                                    if (isDirectory(fileInList)) {
+                                        listResult.add(fileInList);
+                                        if (listResult.size() > 100) {
+                                            break label18;
+                                        }
                                     }
-                                }
+                                    break;
+                                case "FULL":
+                                    if (getFileName(fileInList).equals(searchText)) {
+                                        listResult.add(searchText);
+                                        if (listResult.size() > 100) {
+                                            break label18;
+                                        }
+                                    }
+                                    break;
                             }
                         }
                         if (Thread.currentThread().isInterrupted()) {
                             return;
                         }
                     }
+                    label19:
                     for (String fileInList : search.getListT()) {
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             listResult.add(fileInList);
@@ -1500,26 +1743,38 @@ public class SearchBar {
                                 break;
                             }
                         } else if (match(getFileName(fileInList), searchText) && length == 2) {
-                            if (strings[1].toUpperCase().equals("FILE")) {
-                                if (isFile(fileInList)) {
-                                    listResult.add(fileInList);
-                                    if (listResult.size() > 100) {
-                                        break;
+                            switch (strings[1].toUpperCase()) {
+                                case "FILE":
+                                    if (isFile(fileInList)) {
+                                        listResult.add(fileInList);
+                                        if (listResult.size() > 100) {
+                                            break label19;
+                                        }
                                     }
-                                }
-                            } else if (strings[1].toUpperCase().equals("FOLDER")) {
-                                if (isDirectory(fileInList)) {
-                                    listResult.add(fileInList);
-                                    if (listResult.size() > 100) {
-                                        break;
+                                    break;
+                                case "FOLDER":
+                                    if (isDirectory(fileInList)) {
+                                        listResult.add(fileInList);
+                                        if (listResult.size() > 100) {
+                                            break label19;
+                                        }
                                     }
-                                }
+                                    break;
+                                case "FULL":
+                                    if (getFileName(fileInList).equals(searchText)) {
+                                        listResult.add(searchText);
+                                        if (listResult.size() > 100) {
+                                            break label19;
+                                        }
+                                    }
+                                    break;
                             }
                         }
                         if (Thread.currentThread().isInterrupted()) {
                             return;
                         }
                     }
+                    label20:
                     for (String fileInList : search.getListU()) {
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             listResult.add(fileInList);
@@ -1527,26 +1782,38 @@ public class SearchBar {
                                 break;
                             }
                         } else if (match(getFileName(fileInList), searchText) && length == 2) {
-                            if (strings[1].toUpperCase().equals("FILE")) {
-                                if (isFile(fileInList)) {
-                                    listResult.add(fileInList);
-                                    if (listResult.size() > 100) {
-                                        break;
+                            switch (strings[1].toUpperCase()) {
+                                case "FILE":
+                                    if (isFile(fileInList)) {
+                                        listResult.add(fileInList);
+                                        if (listResult.size() > 100) {
+                                            break label20;
+                                        }
                                     }
-                                }
-                            } else if (strings[1].toUpperCase().equals("FOLDER")) {
-                                if (isDirectory(fileInList)) {
-                                    listResult.add(fileInList);
-                                    if (listResult.size() > 100) {
-                                        break;
+                                    break;
+                                case "FOLDER":
+                                    if (isDirectory(fileInList)) {
+                                        listResult.add(fileInList);
+                                        if (listResult.size() > 100) {
+                                            break label20;
+                                        }
                                     }
-                                }
+                                    break;
+                                case "FULL":
+                                    if (getFileName(fileInList).equals(searchText)) {
+                                        listResult.add(searchText);
+                                        if (listResult.size() > 100) {
+                                            break label20;
+                                        }
+                                    }
+                                    break;
                             }
                         }
                         if (Thread.currentThread().isInterrupted()) {
                             return;
                         }
                     }
+                    label21:
                     for (String fileInList : search.getListV()) {
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             listResult.add(fileInList);
@@ -1554,26 +1821,38 @@ public class SearchBar {
                                 break;
                             }
                         } else if (match(getFileName(fileInList), searchText) && length == 2) {
-                            if (strings[1].toUpperCase().equals("FILE")) {
-                                if (isFile(fileInList)) {
-                                    listResult.add(fileInList);
-                                    if (listResult.size() > 100) {
-                                        break;
+                            switch (strings[1].toUpperCase()) {
+                                case "FILE":
+                                    if (isFile(fileInList)) {
+                                        listResult.add(fileInList);
+                                        if (listResult.size() > 100) {
+                                            break label21;
+                                        }
                                     }
-                                }
-                            } else if (strings[1].toUpperCase().equals("FOLDER")) {
-                                if (isDirectory(fileInList)) {
-                                    listResult.add(fileInList);
-                                    if (listResult.size() > 100) {
-                                        break;
+                                    break;
+                                case "FOLDER":
+                                    if (isDirectory(fileInList)) {
+                                        listResult.add(fileInList);
+                                        if (listResult.size() > 100) {
+                                            break label21;
+                                        }
                                     }
-                                }
+                                    break;
+                                case "FULL":
+                                    if (getFileName(fileInList).equals(searchText)) {
+                                        listResult.add(searchText);
+                                        if (listResult.size() > 100) {
+                                            break label21;
+                                        }
+                                    }
+                                    break;
                             }
                         }
                         if (Thread.currentThread().isInterrupted()) {
                             return;
                         }
                     }
+                    label22:
                     for (String fileInList : search.getListW()) {
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             listResult.add(fileInList);
@@ -1581,26 +1860,38 @@ public class SearchBar {
                                 break;
                             }
                         } else if (match(getFileName(fileInList), searchText) && length == 2) {
-                            if (strings[1].toUpperCase().equals("FILE")) {
-                                if (isFile(fileInList)) {
-                                    listResult.add(fileInList);
-                                    if (listResult.size() > 100) {
-                                        break;
+                            switch (strings[1].toUpperCase()) {
+                                case "FILE":
+                                    if (isFile(fileInList)) {
+                                        listResult.add(fileInList);
+                                        if (listResult.size() > 100) {
+                                            break label22;
+                                        }
                                     }
-                                }
-                            } else if (strings[1].toUpperCase().equals("FOLDER")) {
-                                if (isDirectory(fileInList)) {
-                                    listResult.add(fileInList);
-                                    if (listResult.size() > 100) {
-                                        break;
+                                    break;
+                                case "FOLDER":
+                                    if (isDirectory(fileInList)) {
+                                        listResult.add(fileInList);
+                                        if (listResult.size() > 100) {
+                                            break label22;
+                                        }
                                     }
-                                }
+                                    break;
+                                case "FULL":
+                                    if (getFileName(fileInList).equals(searchText)) {
+                                        listResult.add(searchText);
+                                        if (listResult.size() > 100) {
+                                            break label22;
+                                        }
+                                    }
+                                    break;
                             }
                         }
                         if (Thread.currentThread().isInterrupted()) {
                             return;
                         }
                     }
+                    label23:
                     for (String fileInList : search.getListX()) {
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             listResult.add(fileInList);
@@ -1608,26 +1899,38 @@ public class SearchBar {
                                 break;
                             }
                         } else if (match(getFileName(fileInList), searchText) && length == 2) {
-                            if (strings[1].toUpperCase().equals("FILE")) {
-                                if (isFile(fileInList)) {
-                                    listResult.add(fileInList);
-                                    if (listResult.size() > 100) {
-                                        break;
+                            switch (strings[1].toUpperCase()) {
+                                case "FILE":
+                                    if (isFile(fileInList)) {
+                                        listResult.add(fileInList);
+                                        if (listResult.size() > 100) {
+                                            break label23;
+                                        }
                                     }
-                                }
-                            } else if (strings[1].toUpperCase().equals("FOLDER")) {
-                                if (isDirectory(fileInList)) {
-                                    listResult.add(fileInList);
-                                    if (listResult.size() > 100) {
-                                        break;
+                                    break;
+                                case "FOLDER":
+                                    if (isDirectory(fileInList)) {
+                                        listResult.add(fileInList);
+                                        if (listResult.size() > 100) {
+                                            break label23;
+                                        }
                                     }
-                                }
+                                    break;
+                                case "FULL":
+                                    if (getFileName(fileInList).equals(searchText)) {
+                                        listResult.add(searchText);
+                                        if (listResult.size() > 100) {
+                                            break label23;
+                                        }
+                                    }
+                                    break;
                             }
                         }
                         if (Thread.currentThread().isInterrupted()) {
                             return;
                         }
                     }
+                    label24:
                     for (String fileInList : search.getListY()) {
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             listResult.add(fileInList);
@@ -1635,26 +1938,38 @@ public class SearchBar {
                                 break;
                             }
                         } else if (match(getFileName(fileInList), searchText) && length == 2) {
-                            if (strings[1].toUpperCase().equals("FILE")) {
-                                if (isFile(fileInList)) {
-                                    listResult.add(fileInList);
-                                    if (listResult.size() > 100) {
-                                        break;
+                            switch (strings[1].toUpperCase()) {
+                                case "FILE":
+                                    if (isFile(fileInList)) {
+                                        listResult.add(fileInList);
+                                        if (listResult.size() > 100) {
+                                            break label24;
+                                        }
                                     }
-                                }
-                            } else if (strings[1].toUpperCase().equals("FOLDER")) {
-                                if (isDirectory(fileInList)) {
-                                    listResult.add(fileInList);
-                                    if (listResult.size() > 100) {
-                                        break;
+                                    break;
+                                case "FOLDER":
+                                    if (isDirectory(fileInList)) {
+                                        listResult.add(fileInList);
+                                        if (listResult.size() > 100) {
+                                            break label24;
+                                        }
                                     }
-                                }
+                                    break;
+                                case "FULL":
+                                    if (getFileName(fileInList).equals(searchText)) {
+                                        listResult.add(searchText);
+                                        if (listResult.size() > 100) {
+                                            break label24;
+                                        }
+                                    }
+                                    break;
                             }
                         }
                         if (Thread.currentThread().isInterrupted()) {
                             return;
                         }
                     }
+                    label25:
                     for (String fileInList : search.getListZ()) {
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             listResult.add(fileInList);
@@ -1662,26 +1977,38 @@ public class SearchBar {
                                 break;
                             }
                         } else if (match(getFileName(fileInList), searchText) && length == 2) {
-                            if (strings[1].toUpperCase().equals("FILE")) {
-                                if (isFile(fileInList)) {
-                                    listResult.add(fileInList);
-                                    if (listResult.size() > 100) {
-                                        break;
+                            switch (strings[1].toUpperCase()) {
+                                case "FILE":
+                                    if (isFile(fileInList)) {
+                                        listResult.add(fileInList);
+                                        if (listResult.size() > 100) {
+                                            break label25;
+                                        }
                                     }
-                                }
-                            } else if (strings[1].toUpperCase().equals("FOLDER")) {
-                                if (isDirectory(fileInList)) {
-                                    listResult.add(fileInList);
-                                    if (listResult.size() > 100) {
-                                        break;
+                                    break;
+                                case "FOLDER":
+                                    if (isDirectory(fileInList)) {
+                                        listResult.add(fileInList);
+                                        if (listResult.size() > 100) {
+                                            break label25;
+                                        }
                                     }
-                                }
+                                    break;
+                                case "FULL":
+                                    if (getFileName(fileInList).equals(searchText)) {
+                                        listResult.add(searchText);
+                                        if (listResult.size() > 100) {
+                                            break label25;
+                                        }
+                                    }
+                                    break;
                             }
                         }
                         if (Thread.currentThread().isInterrupted()) {
                             return;
                         }
                     }
+                    label26:
                     for (String fileInList : search.getListNum()) {
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             listResult.add(fileInList);
@@ -1689,26 +2016,38 @@ public class SearchBar {
                                 break;
                             }
                         } else if (match(getFileName(fileInList), searchText) && length == 2) {
-                            if (strings[1].toUpperCase().equals("FILE")) {
-                                if (isFile(fileInList)) {
-                                    listResult.add(fileInList);
-                                    if (listResult.size() > 100) {
-                                        break;
+                            switch (strings[1].toUpperCase()) {
+                                case "FILE":
+                                    if (isFile(fileInList)) {
+                                        listResult.add(fileInList);
+                                        if (listResult.size() > 100) {
+                                            break label26;
+                                        }
                                     }
-                                }
-                            } else if (strings[1].toUpperCase().equals("FOLDER")) {
-                                if (isDirectory(fileInList)) {
-                                    listResult.add(fileInList);
-                                    if (listResult.size() > 100) {
-                                        break;
+                                    break;
+                                case "FOLDER":
+                                    if (isDirectory(fileInList)) {
+                                        listResult.add(fileInList);
+                                        if (listResult.size() > 100) {
+                                            break label26;
+                                        }
                                     }
-                                }
+                                    break;
+                                case "FULL":
+                                    if (getFileName(fileInList).equals(searchText)) {
+                                        listResult.add(searchText);
+                                        if (listResult.size() > 100) {
+                                            break label26;
+                                        }
+                                    }
+                                    break;
                             }
                         }
                         if (Thread.currentThread().isInterrupted()) {
                             return;
                         }
                     }
+                    label27:
                     for (String fileInList : search.getListUnderline()) {
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             listResult.add(fileInList);
@@ -1716,26 +2055,38 @@ public class SearchBar {
                                 break;
                             }
                         } else if (match(getFileName(fileInList), searchText) && length == 2) {
-                            if (strings[1].toUpperCase().equals("FILE")) {
-                                if (isFile(fileInList)) {
-                                    listResult.add(fileInList);
-                                    if (listResult.size() > 100) {
-                                        break;
+                            switch (strings[1].toUpperCase()) {
+                                case "FILE":
+                                    if (isFile(fileInList)) {
+                                        listResult.add(fileInList);
+                                        if (listResult.size() > 100) {
+                                            break label27;
+                                        }
                                     }
-                                }
-                            } else if (strings[1].toUpperCase().equals("FOLDER")) {
-                                if (isDirectory(fileInList)) {
-                                    listResult.add(fileInList);
-                                    if (listResult.size() > 100) {
-                                        break;
+                                    break;
+                                case "FOLDER":
+                                    if (isDirectory(fileInList)) {
+                                        listResult.add(fileInList);
+                                        if (listResult.size() > 100) {
+                                            break label27;
+                                        }
                                     }
-                                }
+                                    break;
+                                case "FULL":
+                                    if (getFileName(fileInList).equals(searchText)) {
+                                        listResult.add(searchText);
+                                        if (listResult.size() > 100) {
+                                            break label27;
+                                        }
+                                    }
+                                    break;
                             }
                         }
                         if (Thread.currentThread().isInterrupted()) {
                             return;
                         }
                     }
+                    label28:
                     for (String fileInList : search.getListUnique()) {
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             listResult.add(fileInList);
@@ -1743,26 +2094,38 @@ public class SearchBar {
                                 break;
                             }
                         } else if (match(getFileName(fileInList), searchText) && length == 2) {
-                            if (strings[1].toUpperCase().equals("FILE")) {
-                                if (isFile(fileInList)) {
-                                    listResult.add(fileInList);
-                                    if (listResult.size() > 100) {
-                                        break;
+                            switch (strings[1].toUpperCase()) {
+                                case "FILE":
+                                    if (isFile(fileInList)) {
+                                        listResult.add(fileInList);
+                                        if (listResult.size() > 100) {
+                                            break label28;
+                                        }
                                     }
-                                }
-                            } else if (strings[1].toUpperCase().equals("FOLDER")) {
-                                if (isDirectory(fileInList)) {
-                                    listResult.add(fileInList);
-                                    if (listResult.size() > 100) {
-                                        break;
+                                    break;
+                                case "FOLDER":
+                                    if (isDirectory(fileInList)) {
+                                        listResult.add(fileInList);
+                                        if (listResult.size() > 100) {
+                                            break label28;
+                                        }
                                     }
-                                }
+                                    break;
+                                case "FULL":
+                                    if (getFileName(fileInList).equals(searchText)) {
+                                        listResult.add(searchText);
+                                        if (listResult.size() > 100) {
+                                            break label28;
+                                        }
+                                    }
+                                    break;
                             }
                         }
                         if (Thread.currentThread().isInterrupted()) {
                             return;
                         }
                     }
+                    label29:
                     for (String fileInList : search.getListPercentSign()) {
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             listResult.add(fileInList);
@@ -1770,20 +2133,31 @@ public class SearchBar {
                                 break;
                             }
                         } else if (match(getFileName(fileInList), searchText) && length == 2) {
-                            if (strings[1].toUpperCase().equals("FILE")) {
-                                if (isFile(fileInList)) {
-                                    listResult.add(fileInList);
-                                    if (listResult.size() > 100) {
-                                        break;
+                            switch (strings[1].toUpperCase()) {
+                                case "FILE":
+                                    if (isFile(fileInList)) {
+                                        listResult.add(fileInList);
+                                        if (listResult.size() > 100) {
+                                            break label29;
+                                        }
                                     }
-                                }
-                            } else if (strings[1].toUpperCase().equals("FOLDER")) {
-                                if (isDirectory(fileInList)) {
-                                    listResult.add(fileInList);
-                                    if (listResult.size() > 100) {
-                                        break;
+                                    break;
+                                case "FOLDER":
+                                    if (isDirectory(fileInList)) {
+                                        listResult.add(fileInList);
+                                        if (listResult.size() > 100) {
+                                            break label29;
+                                        }
                                     }
-                                }
+                                    break;
+                                case "FULL":
+                                    if (getFileName(fileInList).equals(searchText)) {
+                                        listResult.add(searchText);
+                                        if (listResult.size() > 100) {
+                                            break label29;
+                                        }
+                                    }
+                                    break;
                             }
                         }
                         if (Thread.currentThread().isInterrupted()) {
