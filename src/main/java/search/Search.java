@@ -6,40 +6,41 @@ import main.MainClass;
 import javax.swing.filechooser.FileSystemView;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 
 
 public class Search {
-    private static LinkedList<String> listA = new LinkedList<>();
-    private static LinkedList<String> listB = new LinkedList<>();
-    private static LinkedList<String> listC = new LinkedList<>();
-    private static LinkedList<String> listD = new LinkedList<>();
-    private static LinkedList<String> listE = new LinkedList<>();
-    private static LinkedList<String> listF = new LinkedList<>();
-    private static LinkedList<String> listG = new LinkedList<>();
-    private static LinkedList<String> listH = new LinkedList<>();
-    private static LinkedList<String> listI = new LinkedList<>();
-    private static LinkedList<String> listJ = new LinkedList<>();
-    private static LinkedList<String> listK = new LinkedList<>();
-    private static LinkedList<String> listL = new LinkedList<>();
-    private static LinkedList<String> listM = new LinkedList<>();
-    private static LinkedList<String> listN = new LinkedList<>();
-    private static LinkedList<String> listO = new LinkedList<>();
-    private static LinkedList<String> listP = new LinkedList<>();
-    private static LinkedList<String> listQ = new LinkedList<>();
-    private static LinkedList<String> listR = new LinkedList<>();
-    private static LinkedList<String> listS = new LinkedList<>();
-    private static LinkedList<String> listT = new LinkedList<>();
-    private static LinkedList<String> listU = new LinkedList<>();
-    private static LinkedList<String> listV = new LinkedList<>();
-    private static LinkedList<String> listW = new LinkedList<>();
-    private static LinkedList<String> listX = new LinkedList<>();
-    private static LinkedList<String> listY = new LinkedList<>();
-    private static LinkedList<String> listZ = new LinkedList<>();
-    private static LinkedList<String> listNum = new LinkedList<>();
-    private static LinkedList<String> listPercentSign = new LinkedList<>();
-    private static LinkedList<String> listUnique = new LinkedList<>();
-    private static LinkedList<String> listUnderline = new LinkedList<>();
+    private static LinkedHashSet<String> listA = new LinkedHashSet<>();
+    private static LinkedHashSet<String> listB = new LinkedHashSet<>();
+    private static LinkedHashSet<String> listC = new LinkedHashSet<>();
+    private static LinkedHashSet<String> listD = new LinkedHashSet<>();
+    private static LinkedHashSet<String> listE = new LinkedHashSet<>();
+    private static LinkedHashSet<String> listF = new LinkedHashSet<>();
+    private static LinkedHashSet<String> listG = new LinkedHashSet<>();
+    private static LinkedHashSet<String> listH = new LinkedHashSet<>();
+    private static LinkedHashSet<String> listI = new LinkedHashSet<>();
+    private static LinkedHashSet<String> listJ = new LinkedHashSet<>();
+    private static LinkedHashSet<String> listK = new LinkedHashSet<>();
+    private static LinkedHashSet<String> listL = new LinkedHashSet<>();
+    private static LinkedHashSet<String> listM = new LinkedHashSet<>();
+    private static LinkedHashSet<String> listN = new LinkedHashSet<>();
+    private static LinkedHashSet<String> listO = new LinkedHashSet<>();
+    private static LinkedHashSet<String> listP = new LinkedHashSet<>();
+    private static LinkedHashSet<String> listQ = new LinkedHashSet<>();
+    private static LinkedHashSet<String> listR = new LinkedHashSet<>();
+    private static LinkedHashSet<String> listS = new LinkedHashSet<>();
+    private static LinkedHashSet<String> listT = new LinkedHashSet<>();
+    private static LinkedHashSet<String> listU = new LinkedHashSet<>();
+    private static LinkedHashSet<String> listV = new LinkedHashSet<>();
+    private static LinkedHashSet<String> listW = new LinkedHashSet<>();
+    private static LinkedHashSet<String> listX = new LinkedHashSet<>();
+    private static LinkedHashSet<String> listY = new LinkedHashSet<>();
+    private static LinkedHashSet<String> listZ = new LinkedHashSet<>();
+    private static LinkedHashSet<String> listNum = new LinkedHashSet<>();
+    private static LinkedHashSet<String> listPercentSign = new LinkedHashSet<>();
+    private static LinkedHashSet<String> listUnique = new LinkedHashSet<>();
+    private static LinkedHashSet<String> listUnderline = new LinkedHashSet<>();
     private static LinkedList<String> listToAdd = new LinkedList<>();
     private static boolean isUsable = false;
     private static boolean isFocusLost = true;
@@ -48,7 +49,6 @@ public class Search {
     private final String desktop = FileSystemView.getFileSystemView().getHomeDirectory().getAbsolutePath();
     LinkedList<String> listRemain = new LinkedList<>();
     private String startMenu = getStartMenu();
-    private boolean isFirstRun = true;
     private int num;
 
 
@@ -359,12 +359,7 @@ public class Search {
             char headWord = Character.toUpperCase(firstWord);
             switch (headWord) {
                 case 'A':
-                    try {
-                        listA.add(path);
-                    } catch (Exception ignored) {
-
-                    }
-
+                    listA.add(path);
                     break;
                 case 'B':
                     try {
@@ -2316,201 +2311,201 @@ public class Search {
         return false;
     }
 
-    public LinkedList<String> getListA() {
+    public LinkedHashSet<String> getListA() {
 
         return listA;
     }
 
-    public LinkedList<String> getListB() {
+    public LinkedHashSet<String> getListB() {
 
         return listB;
     }
 
-    public LinkedList<String> getListC() {
+    public LinkedHashSet<String> getListC() {
 
         return listC;
 
     }
 
-    public LinkedList<String> getListD() {
+    public LinkedHashSet<String> getListD() {
 
 
         return listD;
 
     }
 
-    public LinkedList<String> getListE() {
+    public LinkedHashSet<String> getListE() {
 
 
         return listE;
 
     }
 
-    public LinkedList<String> getListF() {
+    public LinkedHashSet<String> getListF() {
 
 
         return listF;
 
     }
 
-    public LinkedList<String> getListG() {
+    public LinkedHashSet<String> getListG() {
 
 
         return listG;
 
     }
 
-    public LinkedList<String> getListH() {
+    public LinkedHashSet<String> getListH() {
 
 
         return listH;
 
     }
 
-    public LinkedList<String> getListI() {
+    public LinkedHashSet<String> getListI() {
 
 
         return listI;
 
     }
 
-    public LinkedList<String> getListJ() {
+    public LinkedHashSet<String> getListJ() {
 
 
         return listJ;
 
     }
 
-    public LinkedList<String> getListK() {
+    public LinkedHashSet<String> getListK() {
 
 
         return listK;
 
     }
 
-    public LinkedList<String> getListL() {
+    public LinkedHashSet<String> getListL() {
 
 
         return listL;
 
     }
 
-    public LinkedList<String> getListM() {
+    public LinkedHashSet<String> getListM() {
 
 
         return listM;
 
     }
 
-    public LinkedList<String> getListN() {
+    public LinkedHashSet<String> getListN() {
 
 
         return listN;
 
     }
 
-    public LinkedList<String> getListO() {
+    public LinkedHashSet<String> getListO() {
 
         return listO;
 
     }
 
-    public LinkedList<String> getListP() {
+    public LinkedHashSet<String> getListP() {
 
 
         return listP;
 
     }
 
-    public LinkedList<String> getListQ() {
+    public LinkedHashSet<String> getListQ() {
 
 
         return listQ;
 
     }
 
-    public LinkedList<String> getListR() {
+    public LinkedHashSet<String> getListR() {
 
 
         return listR;
 
     }
 
-    public LinkedList<String> getListNum() {
+    public LinkedHashSet<String> getListNum() {
 
 
         return listNum;
 
     }
 
-    public LinkedList<String> getListPercentSign() {
+    public LinkedHashSet<String> getListPercentSign() {
 
 
         return listPercentSign;
 
     }
 
-    public LinkedList<String> getListS() {
+    public LinkedHashSet<String> getListS() {
 
 
         return listS;
 
     }
 
-    public LinkedList<String> getListT() {
+    public LinkedHashSet<String> getListT() {
 
 
         return listT;
 
     }
 
-    public LinkedList<String> getListUnique() {
+    public LinkedHashSet<String> getListUnique() {
 
         return listUnique;
     }
 
-    public LinkedList<String> getListU() {
+    public LinkedHashSet<String> getListU() {
 
 
         return listU;
 
     }
 
-    public LinkedList<String> getListUnderline() {
+    public LinkedHashSet<String> getListUnderline() {
 
         return listUnderline;
 
     }
 
-    public LinkedList<String> getListV() {
+    public LinkedHashSet<String> getListV() {
 
 
         return listV;
 
     }
 
-    public LinkedList<String> getListW() {
+    public LinkedHashSet<String> getListW() {
 
 
         return listW;
 
     }
 
-    public LinkedList<String> getListY() {
+    public LinkedHashSet<String> getListY() {
 
 
         return listY;
 
     }
 
-    public LinkedList<String> getListX() {
+    public LinkedHashSet<String> getListX() {
 
 
         return listX;
 
     }
 
-    public LinkedList<String> getListZ() {
+    public LinkedHashSet<String> getListZ() {
 
 
         return listZ;
@@ -2518,48 +2513,44 @@ public class Search {
     }
 
     public void updateLists(String ignorePath, int searchDepth) {
-        if (!isFirstRun) {
-            listA.clear();
-            listB.clear();
-            listC.clear();
-            listD.clear();
-            listE.clear();
-            listF.clear();
-            listG.clear();
-            listH.clear();
-            listI.clear();
-            listJ.clear();
-            listK.clear();
-            listL.clear();
-            listM.clear();
-            listN.clear();
-            listO.clear();
-            listP.clear();
-            listQ.clear();
-            listR.clear();
-            listS.clear();
-            listT.clear();
-            listU.clear();
-            listV.clear();
-            listW.clear();
-            listX.clear();
-            listY.clear();
-            listZ.clear();
-            listNum.clear();
-            listPercentSign.clear();
-            listUnique.clear();
-            listUnderline.clear();
-        } else {
-            isFirstRun = false;
-        }
+        listA.clear();
+        listB.clear();
+        listC.clear();
+        listD.clear();
+        listE.clear();
+        listF.clear();
+        listG.clear();
+        listH.clear();
+        listI.clear();
+        listJ.clear();
+        listK.clear();
+        listL.clear();
+        listM.clear();
+        listN.clear();
+        listO.clear();
+        listP.clear();
+        listQ.clear();
+        listR.clear();
+        listS.clear();
+        listT.clear();
+        listU.clear();
+        listV.clear();
+        listW.clear();
+        listX.clear();
+        listY.clear();
+        listZ.clear();
+        listNum.clear();
+        listPercentSign.clear();
+        listUnique.clear();
+        listUnderline.clear();
         searchFile(ignorePath, searchDepth);
     }
 
     static class Serialize implements Serializable {
         private static final long serialVersionUID = 1L;
-        private LinkedList<String> list;
+        private LinkedHashSet<String> list;
 
-        public void setList(LinkedList<String> listOut) {
+        public void setList(LinkedHashSet<String> listOut) {
             this.list = listOut;
         }
     }
