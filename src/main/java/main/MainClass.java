@@ -18,10 +18,11 @@ import java.util.concurrent.Executors;
 
 
 public class MainClass {
+	public static String version = "2.4"; //TODO 更改版本号
 	public static boolean mainExit = false;
-	private static SearchBar searchBar = new SearchBar();
 	private static Search search = new Search();
 	public static String name;
+	private static SearchBar searchBar = SearchBar.getInstance();
 
 	public static void setMainExit(boolean b){
 		mainExit = b;
@@ -197,7 +198,7 @@ public class MainClass {
 		if (data.isDirectory() && data.exists()){
 			if (Objects.requireNonNull(data.list()).length == 30){
 				System.out.println("检测到data文件，正在读取");
-				showMessage("提示", "检测到data文件，正在读取");
+				//showMessage("提示", "检测到data文件，正在读取");
 				search.setUsable(false);
 				search.loadAllLists();
 				search.setUsable(true);
@@ -241,12 +242,12 @@ public class MainClass {
 				if (!search.isManualUpdate()) {
 					try {
 						if (readerAdd != null) {
-							while ((filesToAdd = readerAdd.readLine()) != null) {
+							if ((filesToAdd = readerAdd.readLine()) != null) {
 								search.addFileToLoadBin(filesToAdd);
 							}
 						}
 						if (readerRemove != null) {
-							while ((filesToRemove = readerRemove.readLine()) != null) {
+							if ((filesToRemove = readerRemove.readLine()) != null) {
 								search.addToRecycleBin(filesToRemove);
 							}
 						}
@@ -255,7 +256,7 @@ public class MainClass {
 					}
 				}
 				try {
-					Thread.sleep(5000);
+					Thread.sleep(50);
 				} catch (InterruptedException ignored) {
 
 				}
@@ -336,14 +337,10 @@ public class MainClass {
 			}
 		});
 
-
 		while(true) {
 			// 主循环开始
-			if (!search.isIsFocusLost()){
-				searchBar.showSearchbar();
-			}
 			try {
-				Thread.sleep(100);
+				Thread.sleep(1);
 			} catch (InterruptedException ignored) {
 
 			}

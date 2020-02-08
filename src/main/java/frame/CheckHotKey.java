@@ -1,13 +1,10 @@
 package frame;
-import javax.swing.JFrame;
 import com.melloware.jintellitype.JIntellitype;
-import search.Search;
 
+import javax.swing.*;
 import java.util.HashMap;
 
 public class CheckHotKey extends JFrame{
-
-    private Search search = new Search();
 
     /**
      * 利用JIntellitype实现全局热键设置
@@ -15,9 +12,15 @@ public class CheckHotKey extends JFrame{
      */
         private static final long serialVersionUID = 1L;
         private static HashMap<String, Integer> map = new HashMap<>();
+        public static boolean isShowSearchBar = false;
+        private static SearchBar searchBar = SearchBar.getInstance();
 
         //定义热键标识，用于在设置多个热键时，在事件处理中区分用户按下的热键
         public static final int FUNC_KEY_MARK = 1;
+
+        public static void setShowSearchBar(boolean b){
+            isShowSearchBar = b;
+        }
 
         public void registHotkey(String hotkey){
             //解析字符串
@@ -66,11 +69,13 @@ public class CheckHotKey extends JFrame{
             //添加热键监听器
             JIntellitype.getInstance().addHotKeyListener(markCode -> {
                 if (markCode == FUNC_KEY_MARK) {
-                    CheckHotKey.this.changeShowSearchBarStatus();
+                    isShowSearchBar = !isShowSearchBar;
+                    if (isShowSearchBar){
+                        searchBar.showSearchbar();
+                    }else{
+                        searchBar.closedTodo();
+                    }
                 }
             });
-        }
-        private void changeShowSearchBarStatus(){
-            search.setFocusLostStatus(false);
         }
 }

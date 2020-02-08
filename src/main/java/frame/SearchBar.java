@@ -8,8 +8,6 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.filechooser.FileSystemView;
 import java.awt.*;
-import java.awt.event.FocusEvent;
-import java.awt.event.FocusListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.io.*;
@@ -42,12 +40,17 @@ public class SearchBar {
     private boolean timer = false;
     private Thread searchWaiter = null;
     private boolean isUsing = false;
+    private static SearchBar searchBarInstance = new SearchBar();
+
+    public static SearchBar getInstance(){
+        return searchBarInstance;
+    }
 
     public boolean isUsing(){
         return this.isUsing;
     }
 
-    public SearchBar() {
+    private SearchBar() {
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize(); // 获取屏幕大小
         int width = screenSize.width;
         int height = screenSize.height;
@@ -77,25 +80,6 @@ public class SearchBar {
         textField.setBorder(null);
         textField.setBackground(new Color(75, 75, 75, 255));
         textField.setLocation(0, 0);
-        textField.addFocusListener(new FocusListener() {
-            @Override
-            public void focusGained(FocusEvent e) {
-                textField.setCaretPosition(textField.getText().length());
-                //添加更新文件
-                System.out.println("正在添加更新文件");
-                if (!search.isManualUpdate()) {
-                    search.setUsable(false);
-                    search.mergeFileToList();
-                    search.setUsable(true);
-                }
-                isUsing = true;
-            }
-
-            @Override
-            public void focusLost(FocusEvent e) {
-                focusLostTodo();
-            }
-        });
         textField.getDocument().addDocumentListener(new DocumentListener() {
             @Override
             public void insertUpdate(DocumentEvent e) {
@@ -135,6 +119,10 @@ public class SearchBar {
                             search.setManualUpdate(true);
                             timer = false;
                             continue;
+                        }
+                        if (text.equals("#*version*#")){
+                            closedTodo();
+                            JOptionPane.showMessageDialog(null, "当前版本：" + MainClass.version);
                         }
                         searchPriorityFolder(text);
                         searchCache(text);
@@ -334,6 +322,7 @@ public class SearchBar {
                         }
                         clearLabel();
                         if (!search.isUsable()) {
+                            label1.setBackground(labelColor);
                             label1.setText("搜索中...");
                         }
                     }
@@ -557,7 +546,7 @@ public class SearchBar {
                         }
                     } else if (10 == key) {
                         //enter被点击
-                        focusLostTodo();
+                        closedTodo();
                         if (isCtrlPressed) {
                             //打开上级文件夹
                             File open = new File(listResult.get(labelCount));
@@ -704,6 +693,15 @@ public class SearchBar {
 
     public void showSearchbar() {
         textField.grabFocus();
+        textField.setCaretPosition(textField.getText().length());
+        //添加更新文件
+        System.out.println("正在添加更新文件");
+        if (!search.isManualUpdate()) {
+            search.setUsable(false);
+            search.mergeFileToList();
+            search.setUsable(true);
+        }
+        isUsing = true;
         searchBar.setVisible(true);
     }
 
@@ -963,11 +961,12 @@ public class SearchBar {
         SwingUtilities.invokeLater(clear);
     }
 
-    private void focusLostTodo(){
+    public void closedTodo(){
         Runnable todo = () -> {
             if (searchBar.isVisible()) {
                 searchBar.setVisible(false);
             }
+            CheckHotKey.setShowSearchBar(false);
             clearLabel();
             isUsing = false;
             labelCount = 0;

@@ -343,10 +343,6 @@ public class Search {
         }
     }
 
-    public boolean isIsFocusLost() {
-        return isFocusLost;
-    }
-
     public void setFocusLostStatus(boolean b) {
         isFocusLost = b;
     }
