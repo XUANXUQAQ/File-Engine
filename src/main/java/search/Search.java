@@ -81,7 +81,12 @@ public class Search {
 
     private void deletePathInList(String path) {
         File file = new File(path);
-        char firstWord = file.getName().charAt(0);
+        char firstWord = '\0';
+        try{
+            firstWord = file.getName().charAt(0);
+        }catch(Exception ignored){
+
+        }
         char headWord = Character.toUpperCase(firstWord);
         switch (headWord) {
             case 'A':
