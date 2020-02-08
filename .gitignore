@@ -12,3 +12,4 @@ data/
 fileMonitor.dll
 tmp/
 .settings/
+fileSearcher.dll

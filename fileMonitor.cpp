@@ -8,7 +8,7 @@
 //#define TEST
 #define MAX_LENGTH 500
 
-extern "C" __declspec(dllexport) __declspec(dllexport) void monitor(char* path, char* output, char* closePosition);
+extern "C" __declspec(dllexport) void monitor(char* path, char* output, char* closePosition);
 
 using namespace std;
 
@@ -113,6 +113,10 @@ __declspec(dllexport) void monitor(char* path, char* output, char* closePosition
                     memset(fileRename, 0, sizeof(fileRename));
                     wcscpy(fileRename, pnotify->FileName);
                     WideCharToMultiByte(CP_ACP, 0, p->FileName, p->FileNameLength / 2, file_rename, 250, NULL, NULL);
+                }
+
+                if (file_name[strlen(file_name)-1] == '~'){
+                    file_name[strlen(file_name)-1] = '\0';
                 }
                 
 

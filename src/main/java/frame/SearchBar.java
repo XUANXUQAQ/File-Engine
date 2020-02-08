@@ -96,6 +96,24 @@ public class SearchBar {
                 focusLostTodo();
             }
         });
+        textField.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                if (textField.getText().equals("")){
+                    clearLabel();
+                }
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+
+            }
+        });
 
 
         ExecutorService fixedThreadPool = Executors.newFixedThreadPool(1);
@@ -105,10 +123,12 @@ public class SearchBar {
                 if ((endTime - startTime > 500) && (timer)) {
                     labelCount = 0;
                     clearLabel();
-                    label1.setBackground(labelColor);
+                    if (!textField.getText().equals("")) {
+                        label1.setBackground(labelColor);
+                    }
                     listResult.clear();
                     String text = textField.getText();
-                    if (!text.equals("") && search.isUsable()) {
+                    if (search.isUsable()) {
                         if (text.equals("#*update*#")) {
                             MainClass.showMessage("提示", "正在更新文件索引");
                             clearTextFieldText();
@@ -118,7 +138,12 @@ public class SearchBar {
                         }
                         searchPriorityFolder(text);
                         searchCache(text);
-                        char firstWord = text.charAt(0);
+                        char firstWord = '\0';
+                        try{
+                            firstWord = text.charAt(0);
+                        }catch(Exception ignored){
+
+                        }
 
                         if ('?' == firstWord) {
                             if (isFirstRun || !thread.isAlive()) {
@@ -131,7 +156,6 @@ public class SearchBar {
                         } else if (19968 <= (int) firstWord && (int) firstWord < 40869) {
                             list = (search.getListUnique());
                             addResult(list, text);
-
                         } else if ('%' == firstWord) {
                             list = (search.getListPercentSign());
                             addResult(list, text);
@@ -637,7 +661,6 @@ public class SearchBar {
         if (search.isUsable()) {
             label:
             for (String fileInList : list) {
-                
                 if (length != 2 && match(getFileName(fileInList), searchText)) {
                     listResult.add(fileInList);
                     if (listResult.size() > 100) {
@@ -664,7 +687,7 @@ public class SearchBar {
                             }
                             break;
                         case "FULL":
-                            if (getFileName(fileInList).equals(searchText)) {
+                            if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
                                 listResult.add(fileInList);
                                 if (listResult.size() > 100) {
                                     break label;
@@ -877,7 +900,7 @@ public class SearchBar {
                             cachesToDel.add(cach);
                         } else {
                             String eachCacheName = getFileName(cach);
-                            if (eachCacheName.contains(searchFile)) {
+                            if (eachCacheName.toLowerCase().contains(searchFile.toLowerCase())) {
                                 listResult.addFirst(cach);
                             }
                         }
@@ -1022,7 +1045,7 @@ public class SearchBar {
                                     }
                                     break;
                                 case "FULL":
-                                    if (getFileName(fileInList).equals(searchText)) {
+                                    if (getFileName(fileInList).toLowerCase().equals(searchText.toLowerCase())) {
                                         listResult.add(searchText);
                                         if (listResult.size() > 100) {
                                             break label;
@@ -1062,7 +1085,7 @@ public class SearchBar {
                                     }
                                     break;
                                 case "FULL":
-                                    if (getFileName(fileInList).equals(searchText)) {
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
                                         listResult.add(searchText);
                                         if (listResult.size() > 100) {
                                             break label1;
@@ -1102,7 +1125,7 @@ public class SearchBar {
                                     }
                                     break;
                                 case "FULL":
-                                    if (getFileName(fileInList).equals(searchText)) {
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
                                         listResult.add(searchText);
                                         if (listResult.size() > 100) {
                                             break label2;
@@ -1142,7 +1165,7 @@ public class SearchBar {
                                     }
                                     break;
                                 case "FULL":
-                                    if (getFileName(fileInList).equals(searchText)) {
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
                                         listResult.add(searchText);
                                         if (listResult.size() > 100) {
                                             break label3;
@@ -1182,7 +1205,7 @@ public class SearchBar {
                                     }
                                     break;
                                 case "FULL":
-                                    if (getFileName(fileInList).equals(searchText)) {
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
                                         listResult.add(searchText);
                                         if (listResult.size() > 100) {
                                             break label4;
@@ -1222,7 +1245,7 @@ public class SearchBar {
                                     }
                                     break;
                                 case "FULL":
-                                    if (getFileName(fileInList).equals(searchText)) {
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
                                         listResult.add(searchText);
                                         if (listResult.size() > 100) {
                                             break label5;
@@ -1262,7 +1285,7 @@ public class SearchBar {
                                     }
                                     break;
                                 case "FULL":
-                                    if (getFileName(fileInList).equals(searchText)) {
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
                                         listResult.add(searchText);
                                         if (listResult.size() > 100) {
                                             break label6;
@@ -1302,7 +1325,7 @@ public class SearchBar {
                                     }
                                     break;
                                 case "FULL":
-                                    if (getFileName(fileInList).equals(searchText)) {
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
                                         listResult.add(searchText);
                                         if (listResult.size() > 100) {
                                             break label7;
@@ -1342,7 +1365,7 @@ public class SearchBar {
                                     }
                                     break;
                                 case "FULL":
-                                    if (getFileName(fileInList).equals(searchText)) {
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
                                         listResult.add(searchText);
                                         if (listResult.size() > 100) {
                                             break label8;
@@ -1382,7 +1405,7 @@ public class SearchBar {
                                     }
                                     break;
                                 case "FULL":
-                                    if (getFileName(fileInList).equals(searchText)) {
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
                                         listResult.add(searchText);
                                         if (listResult.size() > 100) {
                                             break label9;
@@ -1422,7 +1445,7 @@ public class SearchBar {
                                     }
                                     break;
                                 case "FULL":
-                                    if (getFileName(fileInList).equals(searchText)) {
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
                                         listResult.add(searchText);
                                         if (listResult.size() > 100) {
                                             break label10;
@@ -1462,7 +1485,7 @@ public class SearchBar {
                                     }
                                     break;
                                 case "FULL":
-                                    if (getFileName(fileInList).equals(searchText)) {
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
                                         listResult.add(searchText);
                                         if (listResult.size() > 100) {
                                             break label11;
@@ -1502,7 +1525,7 @@ public class SearchBar {
                                     }
                                     break;
                                 case "FULL":
-                                    if (getFileName(fileInList).equals(searchText)) {
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
                                         listResult.add(searchText);
                                         if (listResult.size() > 100) {
                                             break label12;
@@ -1542,7 +1565,7 @@ public class SearchBar {
                                     }
                                     break;
                                 case "FULL":
-                                    if (getFileName(fileInList).equals(searchText)) {
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
                                         listResult.add(searchText);
                                         if (listResult.size() > 100) {
                                             break label13;
@@ -1582,7 +1605,7 @@ public class SearchBar {
                                     }
                                     break;
                                 case "FULL":
-                                    if (getFileName(fileInList).equals(searchText)) {
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
                                         listResult.add(searchText);
                                         if (listResult.size() > 100) {
                                             break label14;
@@ -1622,7 +1645,7 @@ public class SearchBar {
                                     }
                                     break;
                                 case "FULL":
-                                    if (getFileName(fileInList).equals(searchText)) {
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
                                         listResult.add(searchText);
                                         if (listResult.size() > 100) {
                                             break label15;
@@ -1662,7 +1685,7 @@ public class SearchBar {
                                     }
                                     break;
                                 case "FULL":
-                                    if (getFileName(fileInList).equals(searchText)) {
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
                                         listResult.add(searchText);
                                         if (listResult.size() > 100) {
                                             break label16;
@@ -1702,7 +1725,7 @@ public class SearchBar {
                                     }
                                     break;
                                 case "FULL":
-                                    if (getFileName(fileInList).equals(searchText)) {
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
                                         listResult.add(searchText);
                                         if (listResult.size() > 100) {
                                             break label17;
@@ -1742,7 +1765,7 @@ public class SearchBar {
                                     }
                                     break;
                                 case "FULL":
-                                    if (getFileName(fileInList).equals(searchText)) {
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
                                         listResult.add(searchText);
                                         if (listResult.size() > 100) {
                                             break label18;
@@ -1782,7 +1805,7 @@ public class SearchBar {
                                     }
                                     break;
                                 case "FULL":
-                                    if (getFileName(fileInList).equals(searchText)) {
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
                                         listResult.add(searchText);
                                         if (listResult.size() > 100) {
                                             break label19;
@@ -1822,7 +1845,7 @@ public class SearchBar {
                                     }
                                     break;
                                 case "FULL":
-                                    if (getFileName(fileInList).equals(searchText)) {
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
                                         listResult.add(searchText);
                                         if (listResult.size() > 100) {
                                             break label20;
@@ -1862,7 +1885,7 @@ public class SearchBar {
                                     }
                                     break;
                                 case "FULL":
-                                    if (getFileName(fileInList).equals(searchText)) {
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
                                         listResult.add(searchText);
                                         if (listResult.size() > 100) {
                                             break label21;
@@ -1902,7 +1925,7 @@ public class SearchBar {
                                     }
                                     break;
                                 case "FULL":
-                                    if (getFileName(fileInList).equals(searchText)) {
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
                                         listResult.add(searchText);
                                         if (listResult.size() > 100) {
                                             break label22;
@@ -1942,7 +1965,7 @@ public class SearchBar {
                                     }
                                     break;
                                 case "FULL":
-                                    if (getFileName(fileInList).equals(searchText)) {
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
                                         listResult.add(searchText);
                                         if (listResult.size() > 100) {
                                             break label23;
@@ -1982,7 +2005,7 @@ public class SearchBar {
                                     }
                                     break;
                                 case "FULL":
-                                    if (getFileName(fileInList).equals(searchText)) {
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
                                         listResult.add(searchText);
                                         if (listResult.size() > 100) {
                                             break label24;
@@ -2022,7 +2045,7 @@ public class SearchBar {
                                     }
                                     break;
                                 case "FULL":
-                                    if (getFileName(fileInList).equals(searchText)) {
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
                                         listResult.add(searchText);
                                         if (listResult.size() > 100) {
                                             break label25;
@@ -2062,7 +2085,7 @@ public class SearchBar {
                                     }
                                     break;
                                 case "FULL":
-                                    if (getFileName(fileInList).equals(searchText)) {
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
                                         listResult.add(searchText);
                                         if (listResult.size() > 100) {
                                             break label26;
@@ -2102,7 +2125,7 @@ public class SearchBar {
                                     }
                                     break;
                                 case "FULL":
-                                    if (getFileName(fileInList).equals(searchText)) {
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
                                         listResult.add(searchText);
                                         if (listResult.size() > 100) {
                                             break label27;
@@ -2142,7 +2165,7 @@ public class SearchBar {
                                     }
                                     break;
                                 case "FULL":
-                                    if (getFileName(fileInList).equals(searchText)) {
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
                                         listResult.add(searchText);
                                         if (listResult.size() > 100) {
                                             break label28;
@@ -2182,7 +2205,7 @@ public class SearchBar {
                                     }
                                     break;
                                 case "FULL":
-                                    if (getFileName(fileInList).equals(searchText)) {
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
                                         listResult.add(searchText);
                                         if (listResult.size() > 100) {
                                             break label29;
