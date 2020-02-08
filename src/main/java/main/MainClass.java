@@ -127,20 +127,36 @@ public class MainClass {
 		File target;
 		InputStream fileMonitorDll64 = MainClass.class.getResourceAsStream("/fileMonitor64.dll");
 		InputStream fileMonitorDll32 = MainClass.class.getResourceAsStream("/fileMonitor32.dll");
+		InputStream fileSearcherDll64 = MainClass.class.getResourceAsStream("/fileSearcher64.dll");
+		InputStream fileSearcherDll32 = MainClass.class.getResourceAsStream("/fileSearcher32.dll");
 
 		target = new File("fileMonitor.dll");
 		if (!target.exists()) {
-			File dll;
+			File dllMonitor;
 			if (name.contains("x64")) {
 				copyFile(fileMonitorDll64, target);
-				System.out.println("已加载64位dll");
-				dll = new File("fileMonitor64.dll");
+				System.out.println("已加载64位fileMonitor");
+				dllMonitor = new File("fileMonitor64.dll");
 			}else{
 				copyFile(fileMonitorDll32, target);
-				System.out.println("已加载32位dll");
-				dll = new File("fileMonitor32.dll");
+				System.out.println("已加载32位fileMonitor");
+				dllMonitor = new File("fileMonitor32.dll");
 			}
-			dll.renameTo(new File("fileMonitor.dll"));
+			dllMonitor.renameTo(target);
+		}
+		target = new File("fileSearcher.dll");
+		if (!target.exists()){
+			File dllSearcher;
+			if (name.contains("x64")){
+				copyFile(fileSearcherDll64, target);
+				System.out.println("已加载64为fileSearcher");
+				dllSearcher = new File("fileSearcher64.dll");
+			}else{
+				copyFile(fileSearcherDll32, target);
+				System.out.println("已加载32位fileSearcher");
+				dllSearcher = new File("fileSearcher32.dll");
+			}
+			dllSearcher.renameTo(target);
 		}
 		if (!caches.exists()){
 			try {
@@ -152,6 +168,22 @@ public class MainClass {
 		}
 		if (!SettingsFrame.tmp.exists()){
 			SettingsFrame.tmp.mkdir();
+		}
+		File fileAdded = new File(SettingsFrame.tmp.getAbsolutePath() + "\\fileAdded.txt");
+		File fileRemoved = new File(SettingsFrame.tmp.getAbsolutePath() + "\\fileRemoved.txt");
+		if (!fileAdded.exists()){
+			try {
+				fileAdded.createNewFile();
+			} catch (IOException ignored) {
+
+			}
+		}
+		if (!fileRemoved.exists()){
+			try {
+				fileRemoved.createNewFile();
+			}catch (IOException ignored){
+
+			}
 		}
 		taskBar = new TaskBar();
 		taskBar.showTaskBar();
@@ -174,11 +206,11 @@ public class MainClass {
 			}else{
 				System.out.println("检测到data文件损坏，开始搜索并创建data文件");
 				showMessage("提示", "检检测到data文件损坏，开始搜索并创建data文件");
-				search.searchFile(SettingsFrame.ignorePath, SettingsFrame.searchDepth);
+				search.setManualUpdate(true);
 			}
 		}else{
 			System.out.println("未检测到data文件，开始搜索并创建data文件");
-			search.searchFile(SettingsFrame.ignorePath, SettingsFrame.searchDepth);
+			search.setManualUpdate(true);
 		}
 
 
@@ -196,16 +228,27 @@ public class MainClass {
 			//检测文件改动线程
 			String filesToAdd;
 			String filesToRemove;
+			BufferedReader readerAdd = null;
+			BufferedReader readerRemove = null;
+			try {
+				readerAdd = new BufferedReader(new InputStreamReader(new FileInputStream(new File(SettingsFrame.tmp.getAbsolutePath() + "\\fileAdded.txt"))));
+				readerRemove = new BufferedReader(new InputStreamReader(new FileInputStream(new File(SettingsFrame.tmp.getAbsolutePath() + "\\fileRemoved.txt"))));
+			}catch (FileNotFoundException e) {
+				e.printStackTrace();
+			}
 			//分割字符串
 			while (!mainExit) {
 				if (!search.isManualUpdate()) {
-					try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(new File(SettingsFrame.tmp.getAbsolutePath() + "\\fileAdded.txt"))));
-						 BufferedReader br2 = new BufferedReader(new InputStreamReader(new FileInputStream(new File(SettingsFrame.tmp.getAbsolutePath() + "\\fileRemoved.txt"))))) {
-						while ((filesToAdd = br.readLine()) != null) {
-							search.addFileToLoadBin(filesToAdd);
+					try {
+						if (readerAdd != null) {
+							while ((filesToAdd = readerAdd.readLine()) != null) {
+								search.addFileToLoadBin(filesToAdd);
+							}
 						}
-						while ((filesToRemove = br2.readLine()) != null) {
-							search.addToRecycleBin(filesToRemove);
+						if (readerRemove != null) {
+							while ((filesToRemove = readerRemove.readLine()) != null) {
+								search.addToRecycleBin(filesToRemove);
+							}
 						}
 					} catch (IOException ignored) {
 
@@ -214,6 +257,20 @@ public class MainClass {
 				try {
 					Thread.sleep(5000);
 				} catch (InterruptedException ignored) {
+
+				}
+			}
+			if (readerAdd != null){
+				try {
+					readerAdd.close();
+				} catch (IOException ignored) {
+
+				}
+			}
+			if (readerRemove != null){
+				try {
+					readerRemove.close();
+				} catch (IOException ignored) {
 
 				}
 			}
@@ -229,8 +286,10 @@ public class MainClass {
 				if (count >= (SettingsFrame.updateTimeLimit << 10) && !isUsing && !search.isManualUpdate()) {
 					count = 0;
 					System.out.println("正在更新本地索引data文件");
-					deleteDir(SettingsFrame.dataPath);
-					search.saveLists();
+					if (search.isUsable()&&(!searchBar.isUsing())) {
+						deleteDir(SettingsFrame.dataPath);
+						search.saveLists();
+					}
 				}
 
 				try {
@@ -267,7 +326,6 @@ public class MainClass {
 			while (!mainExit){
 				if (search.isManualUpdate()){
 					search.setUsable(false);
-					System.out.println("已收到更新请求");
 					search.updateLists(SettingsFrame.ignorePath, SettingsFrame.searchDepth);
 				}
 				try {

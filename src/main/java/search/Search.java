@@ -1,11 +1,10 @@
 package search;
 
+import fileSearcher.FileSearcher;
 import frame.SettingsFrame;
 import main.MainClass;
 
-import javax.swing.filechooser.FileSystemView;
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
@@ -43,14 +42,12 @@ public class Search {
     private static LinkedHashSet<String> listUnique = new LinkedHashSet<>();
     private static LinkedHashSet<String> listUnderline = new LinkedHashSet<>();
     private static LinkedList<String> listToAdd = new LinkedList<>();
-    private static LinkedList<String> listRemain = new LinkedList<>();
     private static boolean isUsable = false;
     private static boolean isFocusLost = true;
     private static boolean isManualUpdate = false;
+    private static boolean isFileSearcherDefined = false;
     private static LinkedList<String> RecycleBin = new LinkedList<>();
-    private String startMenu = getStartMenu();
-    private final String desktop = FileSystemView.getFileSystemView().getHomeDirectory().getAbsolutePath();
-    private int num;
+    private static int num;
 
 
 
@@ -1353,598 +1350,277 @@ public class Search {
     }
 
 
-    public void searchFile(String ignorePath, int searchDepth) {
-        num = 0;
+    private void searchFile(String ignorePath, int searchDepth) {
+        if (!isFileSearcherDefined) {
+            isFileSearcherDefined = true;
+            String[] ignorePaths = getIgnorePaths(ignorePath);
+            for (String each : ignorePaths) {
+                FileSearcher.INSTANCE.addIgnorePath(each);
+            }
+            FileSearcher.INSTANCE.setSearchDepth(searchDepth);
+        }
         File[] roots = File.listRoots();
         for (File root : roots) {
-            listRemain.add(root.getAbsolutePath());
+            String path = root.getAbsolutePath();
+            path = path.substring(0, 2);
+            __searchFile(path);
         }
-
-
-        while (!listRemain.isEmpty()) {
-            String tmp = listRemain.pop();
-            __searchFile(ignorePath, new File(tmp), searchDepth);
-        }
-        System.out.println("搜索完成，总数据数量：");
-        System.out.println(num);
-        MainClass.showMessage("提示","索引已经更新");
+        MainClass.showMessage("提示","索引已经更新，数据量：" + num);
         isUsable = true;
         isManualUpdate = false;
     }
 
 
-    private void __searchFile(String ignorePath, File path, int searchDepth) {
-        ignorePath = ignorePath.toUpperCase();
-        boolean exist = path.exists();
-        if (exist && !isIgnore(path.getAbsolutePath().toUpperCase(), ignorePath)) {
-            File[] files = path.listFiles();
-            if (null == files || files.length == 0) {
-            } else if (searchDepth >= count(path.getAbsolutePath(), "\\") || (path.getAbsolutePath().equals(startMenu)) || path.getAbsolutePath().equals(desktop)) {
-                for (File file2 : files) {
-                    String fileName = file2.getName();
+    private void __searchFile(String path) {
+        num = 0;
+        FileSearcher.INSTANCE.searchFiles(path, "*");
+        while (!FileSearcher.INSTANCE.ResultReady()) {
+            try {
+                Thread.sleep(1);
+            } catch (InterruptedException ignored) {
 
-                    char firstWord = fileName.charAt(0);
-                    if (fileName.length() >= 2) {
-                        char secondWord = fileName.charAt(1);
+            }
+        }
+        String results = FileSearcher.INSTANCE.getResult();
+        FileSearcher.INSTANCE.deleteResult();
+        String[] resultList = results.split("\n");
+        num+=resultList.length;
+        for (String each:resultList){
+            File tmp = new File(each);
+            String name = tmp.getName();
+            char headWord = '\0';
+            try{
+                headWord = name.charAt(0);
+                headWord = Character.toUpperCase(headWord);
+            }catch(Exception ignored){
 
-                        if (firstWord != '$' && (firstWord != '.' && secondWord != '.')) {
-                            char headWord = Character.toUpperCase(firstWord);
-                            switch (headWord) {
-                                case 'A':
-                                    try {
-                                        listA.add(file2.getAbsolutePath());
-                                    } catch (Exception ignored) {
+            }
+            switch (headWord) {
+                case 'A':
+                    try {
+                        listA.add(each);
+                    } catch (Exception ignored) {
 
-                                    }
-                                    num += 1;
-                                    break;
-                                case 'B':
-                                    try {
-                                        listB.add(file2.getAbsolutePath());
-                                    } catch (Exception ignored) {
+                    }
+                    break;
+                case 'B':
+                    try {
+                        listB.add(each);
+                    } catch (Exception ignored) {
 
-                                    }
-                                    num += 1;
-                                    break;
-                                case 'C':
-                                    try {
-                                        listC.add(file2.getAbsolutePath());
-                                    } catch (Exception ignored) {
+                    }
+                    break;
+                case 'C':
+                    try {
+                        listC.add(each);
+                    } catch (Exception ignored) {
 
-                                    }
-                                    num += 1;
-                                    break;
-                                case 'D':
-                                    try {
-                                        listD.add(file2.getAbsolutePath());
-                                    } catch (Exception ignored) {
+                    }
+                    break;
+                case 'D':
+                    try {
+                        listD.add(each);
+                    } catch (Exception ignored) {
 
-                                    }
-                                    num += 1;
-                                    break;
-                                case 'E':
-                                    try {
-                                        listE.add(file2.getAbsolutePath());
-                                    } catch (Exception ignored) {
+                    }
+                    break;
+                case 'E':
+                    try {
+                        listE.add(each);
+                    } catch (Exception ignored) {
 
-                                    }
-                                    num += 1;
-                                    break;
-                                case 'F':
-                                    try {
-                                        listF.add(file2.getAbsolutePath());
-                                    } catch (Exception ignored) {
+                    }
+                    break;
+                case 'F':
+                    try {
+                        listF.add(each);
+                    } catch (Exception ignored) {
 
-                                    }
-                                    num += 1;
-                                    break;
-                                case 'G':
-                                    try {
-                                        listG.add(file2.getAbsolutePath());
-                                    } catch (Exception ignored) {
+                    }
+                    break;
+                case 'G':
+                    try {
+                        listG.add(each);
+                    } catch (Exception ignored) {
 
-                                    }
-                                    num += 1;
-                                    break;
-                                case 'H':
-                                    try {
-                                        listH.add(file2.getAbsolutePath());
-                                    } catch (Exception ignored) {
+                    }
+                    break;
+                case 'H':
+                    try {
+                        listH.add(each);
+                    } catch (Exception ignored) {
 
-                                    }
-                                    num += 1;
-                                    break;
-                                case 'I':
-                                    try {
-                                        listI.add(file2.getAbsolutePath());
-                                    } catch (Exception ignored) {
+                    }
+                    break;
+                case 'I':
+                    try {
+                        listI.add(each);
+                    } catch (Exception ignored) {
 
-                                    }
-                                    num += 1;
-                                    break;
-                                case 'J':
-                                    try {
-                                        listJ.add(file2.getAbsolutePath());
-                                    } catch (Exception ignored) {
+                    }
+                    break;
+                case 'J':
+                    try {
+                        listJ.add(each);
+                    } catch (Exception ignored) {
 
-                                    }
-                                    num += 1;
-                                    break;
-                                case 'K':
-                                    try {
-                                        listK.add(file2.getAbsolutePath());
-                                    } catch (Exception ignored) {
+                    }
+                    break;
+                case 'K':
+                    try {
+                        listK.add(each);
+                    } catch (Exception ignored) {
 
-                                    }
-                                    num += 1;
-                                    break;
-                                case 'L':
-                                    try {
-                                        listL.add(file2.getAbsolutePath());
-                                    } catch (Exception ignored) {
+                    }
+                    break;
+                case 'L':
+                    try {
+                        listL.add(each);
+                    } catch (Exception ignored) {
 
-                                    }
-                                    num += 1;
-                                    break;
-                                case 'M':
-                                    try {
-                                        listM.add(file2.getAbsolutePath());
-                                    } catch (Exception ignored) {
+                    }
+                    break;
+                case 'M':
+                    try {
+                        listM.add(each);
+                    } catch (Exception ignored) {
 
-                                    }
-                                    num += 1;
-                                    break;
-                                case 'N':
-                                    try {
-                                        listN.add(file2.getAbsolutePath());
-                                    } catch (Exception ignored) {
+                    }
+                    break;
+                case 'N':
+                    try {
+                        listN.add(each);
+                    } catch (Exception ignored) {
 
-                                    }
-                                    num += 1;
-                                    break;
-                                case 'O':
-                                    try {
-                                        listO.add(file2.getAbsolutePath());
-                                    } catch (Exception ignored) {
+                    }
+                    break;
+                case 'O':
+                    try {
+                        listO.add(each);
+                    } catch (Exception ignored) {
 
-                                    }
-                                    num += 1;
-                                    break;
-                                case 'P':
-                                    try {
-                                        listP.add(file2.getAbsolutePath());
-                                    } catch (Exception ignored) {
+                    }
+                    break;
+                case 'P':
+                    try {
+                        listP.add(each);
+                    } catch (Exception ignored) {
 
-                                    }
-                                    num += 1;
-                                    break;
-                                case 'Q':
-                                    try {
-                                        listQ.add(file2.getAbsolutePath());
-                                    } catch (Exception ignored) {
+                    }
+                    break;
+                case 'Q':
+                    try {
+                        listQ.add(each);
+                    } catch (Exception ignored) {
 
-                                    }
-                                    num += 1;
-                                    break;
-                                case 'R':
-                                    try {
-                                        listR.add(file2.getAbsolutePath());
-                                    } catch (Exception ignored) {
+                    }
+                    break;
+                case 'R':
+                    try {
+                        listR.add(each);
+                    } catch (Exception ignored) {
 
-                                    }
-                                    num += 1;
-                                    break;
-                                case 'S':
-                                    try {
-                                        listS.add(file2.getAbsolutePath());
-                                    } catch (Exception ignored) {
+                    }
+                    break;
+                case 'S':
+                    try {
+                        listS.add(each);
+                    } catch (Exception ignored) {
 
-                                    }
-                                    num += 1;
-                                    break;
-                                case 'T':
-                                    try {
-                                        listT.add(file2.getAbsolutePath());
-                                    } catch (Exception ignored) {
+                    }
+                    break;
+                case 'T':
+                    try {
+                        listT.add(each);
+                    } catch (Exception ignored) {
 
-                                    }
-                                    num += 1;
-                                    break;
-                                case 'U':
-                                    try {
-                                        listU.add(file2.getAbsolutePath());
-                                    } catch (Exception ignored) {
+                    }
+                    break;
+                case 'U':
+                    try {
+                        listU.add(each);
+                    } catch (Exception ignored) {
 
-                                    }
-                                    num += 1;
-                                    break;
-                                case 'V':
-                                    try {
-                                        listV.add(file2.getAbsolutePath());
-                                    } catch (Exception ignored) {
+                    }
+                    break;
+                case 'V':
+                    try {
+                        listV.add(each);
+                    } catch (Exception ignored) {
 
-                                    }
-                                    num += 1;
-                                    break;
-                                case 'W':
-                                    try {
-                                        listW.add(file2.getAbsolutePath());
-                                    } catch (Exception ignored) {
+                    }
+                    break;
+                case 'W':
+                    try {
+                        listW.add(each);
+                    } catch (Exception ignored) {
 
-                                    }
-                                    num += 1;
-                                    break;
-                                case 'X':
-                                    try {
-                                        listX.add(file2.getAbsolutePath());
-                                    } catch (Exception ignored) {
+                    }
+                    break;
+                case 'X':
+                    try {
+                        listX.add(each);
+                    } catch (Exception ignored) {
 
-                                    }
-                                    num += 1;
-                                    break;
-                                case 'Y':
-                                    try {
-                                        listY.add(file2.getAbsolutePath());
-                                    } catch (Exception ignored) {
+                    }
+                    break;
+                case 'Y':
+                    try {
+                        listY.add(each);
+                    } catch (Exception ignored) {
 
-                                    }
-                                    num += 1;
-                                    break;
-                                case 'Z':
-                                    try {
-                                        listZ.add(file2.getAbsolutePath());
-                                    } catch (Exception ignored) {
+                    }
+                    break;
+                case 'Z':
+                    try {
+                        listZ.add(each);
+                    } catch (Exception ignored) {
 
-                                    }
-                                    num += 1;
-                                    break;
-                                default:
-                                    if (Character.isDigit(headWord)) {
-                                        try {
-                                            listNum.add(file2.getAbsolutePath());
-                                        } catch (Exception ignored) {
+                    }
+                    break;
+                default:
+                    if (Character.isDigit(headWord)) {
+                        try {
+                            listNum.add(each);
+                        } catch (Exception ignored) {
 
-                                        }
-                                    } else if ('_' == headWord) {
-                                        try {
-                                            listUnderline.add(file2.getAbsolutePath());
-                                        } catch (Exception ignored) {
-
-                                        }
-                                    } else if ('%' == headWord) {
-                                        try {
-                                            listPercentSign.add(file2.getAbsolutePath());
-                                        } catch (Exception ignored) {
-
-                                        }
-                                    } else {
-                                        try {
-                                            listUnique.add(file2.getAbsolutePath());
-                                        } catch (Exception ignored) {
-
-                                        }
-                                    }
-                                    num += 1;
-                                    break;
-                            }
-                            if (file2.isDirectory()) {
-                                listRemain.add(file2.getAbsolutePath());
-                            }
                         }
+                    } else if ('_' == headWord) {
+                        try {
+                            listUnderline.add(each);
+                        } catch (Exception ignored) {
 
+                        }
+                    } else if ('%' == headWord) {
+                        try {
+                            listPercentSign.add(each);
+                        } catch (Exception ignored) {
 
+                        }
                     } else {
-                        if (firstWord != '$') {
-                            char headWord = Character.toUpperCase(firstWord);
-                            switch (headWord) {
-                                case 'A':
-                                    try {
-                                        listA.add(file2.getAbsolutePath());
-                                    } catch (Exception ignored) {
+                        try {
+                            listUnique.add(each);
+                        } catch (Exception ignored) {
 
-                                    }
-                                    num += 1;
-                                    break;
-                                case 'B':
-                                    try {
-                                        listB.add(file2.getAbsolutePath());
-                                    } catch (Exception ignored) {
-
-                                    }
-                                    num += 1;
-                                    break;
-                                case 'C':
-                                    try {
-                                        listC.add(file2.getAbsolutePath());
-                                    } catch (Exception ignored) {
-
-                                    }
-                                    num += 1;
-                                    break;
-                                case 'D':
-                                    try {
-                                        listD.add(file2.getAbsolutePath());
-                                    } catch (Exception ignored) {
-
-                                    }
-                                    num += 1;
-                                    break;
-                                case 'E':
-                                    try {
-                                        listE.add(file2.getAbsolutePath());
-                                    } catch (Exception ignored) {
-
-                                    }
-                                    num += 1;
-                                    break;
-                                case 'F':
-                                    try {
-                                        listF.add(file2.getAbsolutePath());
-                                    } catch (Exception ignored) {
-
-                                    }
-                                    num += 1;
-                                    break;
-                                case 'G':
-                                    try {
-                                        listG.add(file2.getAbsolutePath());
-                                    } catch (Exception ignored) {
-
-                                    }
-                                    num += 1;
-                                    break;
-                                case 'H':
-                                    try {
-                                        listH.add(file2.getAbsolutePath());
-                                    } catch (Exception ignored) {
-
-                                    }
-                                    num += 1;
-                                    break;
-                                case 'I':
-                                    try {
-                                        listI.add(file2.getAbsolutePath());
-                                    } catch (Exception ignored) {
-
-                                    }
-                                    num += 1;
-                                    break;
-                                case 'J':
-                                    try {
-                                        listJ.add(file2.getAbsolutePath());
-                                    } catch (Exception ignored) {
-
-                                    }
-                                    num += 1;
-                                    break;
-                                case 'K':
-                                    try {
-                                        listK.add(file2.getAbsolutePath());
-                                    } catch (Exception ignored) {
-
-                                    }
-                                    num += 1;
-                                    break;
-                                case 'L':
-                                    try {
-                                        listL.add(file2.getAbsolutePath());
-                                    } catch (Exception ignored) {
-
-                                    }
-                                    num += 1;
-                                    break;
-                                case 'M':
-                                    try {
-                                        listM.add(file2.getAbsolutePath());
-                                    } catch (Exception ignored) {
-
-                                    }
-                                    num += 1;
-                                    break;
-                                case 'N':
-                                    try {
-                                        listN.add(file2.getAbsolutePath());
-                                    } catch (Exception ignored) {
-
-                                    }
-                                    num += 1;
-                                    break;
-                                case 'O':
-                                    try {
-                                        listO.add(file2.getAbsolutePath());
-                                    } catch (Exception ignored) {
-
-                                    }
-                                    num += 1;
-                                    break;
-                                case 'P':
-                                    try {
-                                        listP.add(file2.getAbsolutePath());
-                                    } catch (Exception ignored) {
-
-                                    }
-                                    num += 1;
-                                    break;
-                                case 'Q':
-                                    try {
-                                        listQ.add(file2.getAbsolutePath());
-                                    } catch (Exception ignored) {
-
-                                    }
-                                    num += 1;
-                                    break;
-                                case 'R':
-                                    try {
-                                        listR.add(file2.getAbsolutePath());
-                                    } catch (Exception ignored) {
-
-                                    }
-                                    num += 1;
-                                    break;
-                                case 'S':
-                                    try {
-                                        listS.add(file2.getAbsolutePath());
-                                    } catch (Exception ignored) {
-
-                                    }
-                                    num += 1;
-                                    break;
-                                case 'T':
-                                    try {
-                                        listT.add(file2.getAbsolutePath());
-                                    } catch (Exception ignored) {
-
-                                    }
-                                    num += 1;
-                                    break;
-                                case 'U':
-                                    try {
-                                        listU.add(file2.getAbsolutePath());
-                                    } catch (Exception ignored) {
-
-                                    }
-                                    num += 1;
-                                    break;
-                                case 'V':
-                                    try {
-                                        listV.add(file2.getAbsolutePath());
-                                    } catch (Exception ignored) {
-
-                                    }
-                                    num += 1;
-                                    break;
-                                case 'W':
-                                    try {
-                                        listW.add(file2.getAbsolutePath());
-                                    } catch (Exception ignored) {
-
-                                    }
-                                    num += 1;
-                                    break;
-                                case 'X':
-                                    try {
-                                        listX.add(file2.getAbsolutePath());
-                                    } catch (Exception ignored) {
-
-                                    }
-                                    num += 1;
-                                    break;
-                                case 'Y':
-                                    try {
-                                        listY.add(file2.getAbsolutePath());
-                                    } catch (Exception ignored) {
-
-                                    }
-                                    num += 1;
-                                    break;
-                                case 'Z':
-                                    try {
-                                        listZ.add(file2.getAbsolutePath());
-                                    } catch (Exception ignored) {
-
-                                    }
-                                    num += 1;
-                                    break;
-                                default:
-                                    if (Character.isDigit(headWord)) {
-                                        try {
-                                            listNum.add(file2.getAbsolutePath());
-                                        } catch (Exception ignored) {
-
-                                        }
-                                    } else if ('_' == headWord) {
-                                        try {
-                                            listUnderline.add(file2.getAbsolutePath());
-                                        } catch (Exception ignored) {
-
-                                        }
-                                    } else if ('%' == headWord) {
-                                        try {
-                                            listPercentSign.add(file2.getAbsolutePath());
-                                        } catch (Exception ignored) {
-
-                                        }
-                                    } else {
-                                        try {
-                                            listUnique.add(file2.getAbsolutePath());
-                                        } catch (Exception ignored) {
-
-                                        }
-                                    }
-                                    num += 1;
-                                    break;
-                            }
-                            if (file2.isDirectory()) {
-                                try {
-                                    listRemain.add(file2.getAbsolutePath());
-                                } catch (Exception ignored) {
-
-                                }
-                            }
                         }
                     }
-                }
+                    break;
             }
         }
-
+        isManualUpdate = false;
+        isUsable = true;
     }
 
 
-
-    private String getStartMenu() {
-        String startMenu;
-        BufferedReader bufrIn;
-        try {
-            Process getStartMenu = Runtime.getRuntime().exec("reg query \"HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders\" " + "/v " + "\"Start Menu\"");
-            bufrIn = new BufferedReader(new InputStreamReader(getStartMenu.getInputStream(), StandardCharsets.UTF_8));
-            while ((startMenu = bufrIn.readLine()) != null) {
-                if (startMenu.contains("REG_SZ")) {
-                    startMenu = startMenu.substring(startMenu.indexOf("REG_SZ") + 10);
-                    return startMenu;
-                }
-            }
-        } catch (IOException e) {
-
-            e.printStackTrace();
-        }
-        return null;
-    }
-
-    /**
-     * @param srcText  源字符串
-     * @param findText 需要计数的字符串
-     * @return count
-     */
-    public int count(String srcText, String findText) {
-        int count = 0;
-        int start = 0;
-        while (srcText.indexOf(findText, start) >= 0 && start < srcText.length()) {
-            count++;
-            start = srcText.indexOf(findText, start) + findText.length();
-        }
-        return count;
-    }
-
-    /**
-     * @param target txt
-     * txt是否属于target的子字符串
-     * @return true false
-     */
-    private boolean isIgnore(String txt, String target) {
+    private String[] getIgnorePaths(String target) {
         int each;
-        txt = txt.toLowerCase();
         target = target.toLowerCase();
         ArrayList<String> list = new ArrayList<>();
         while ((each = target.indexOf(",")) != -1){
             list.add(target.substring(0, each));
             target = target.substring(each + 1);
         }
-        for (String i : list) {
-            if (txt.contains(i)) {
-                return true;
-            }
-        }
-        return false;
+        return list.toArray(new String[0]);
     }
 
     public LinkedHashSet<String> getListA() {
