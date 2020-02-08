@@ -313,7 +313,7 @@ public class MainClass {
 
 				}finally {
 					try {
-						Thread.sleep(50);
+						Thread.sleep(20);
 					} catch (InterruptedException ignored) {
 
 					}

@@ -32,7 +32,9 @@ public class SearchBar {
     private int labelCount = 0;
     private JTextField textField;
     private Search search = new Search();
-    private Color labelColor = new Color(255, 125, 29, 255);
+    private Color labelColor = new Color(255, 75, 12, 255);
+    private Color backgroundColor = new Color(108, 108, 108, 255);
+    private Color backgroundColorLight = new Color(75, 75, 75, 255);
     private LinkedHashSet<String> list = new LinkedHashSet<>();
     private Thread thread;
     private boolean isFirstRun = true;
@@ -75,29 +77,12 @@ public class SearchBar {
         textField.setSize(searchBarWidth, (int) (searchBarHeight * 0.2));
         Font textFieldFont = new Font("Microsoft JhengHei", Font.BOLD, (int) ((height * 0.1) / 96 * 72));
         textField.setFont(textFieldFont);
-        textField.setForeground(Color.white);
+        textField.setForeground(Color.WHITE);
         textField.setHorizontalAlignment(JTextField.LEFT);
         textField.setBorder(null);
-        textField.setBackground(new Color(75, 75, 75, 255));
+        textField.setBackground(backgroundColor);
         textField.setLocation(0, 0);
-        textField.getDocument().addDocumentListener(new DocumentListener() {
-            @Override
-            public void insertUpdate(DocumentEvent e) {
 
-            }
-
-            @Override
-            public void removeUpdate(DocumentEvent e) {
-                if (textField.getText().equals("")){
-                    clearLabel();
-                }
-            }
-
-            @Override
-            public void changedUpdate(DocumentEvent e) {
-
-            }
-        });
 
 
         ExecutorService fixedThreadPool = Executors.newFixedThreadPool(1);
@@ -132,7 +117,6 @@ public class SearchBar {
                         }catch(Exception ignored){
 
                         }
-
                         if ('?' == firstWord) {
                             if (isFirstRun || !thread.isAlive()) {
                                 isFirstRun = false;
@@ -294,7 +278,6 @@ public class SearchBar {
                             } else if ('Z' == firstWord) {
                                 list = (search.getListZ());
                                 addResult(list, text);
-
                             }
                         }
                     }else{
@@ -376,28 +359,82 @@ public class SearchBar {
                             //未到最上端
                             if (0 == labelCount) {
                                 label1.setBackground(labelColor);
-                                label2.setBackground(null);
-                                label3.setBackground(null);
-                                label4.setBackground(null);
+                                try {
+                                    String text = label2.getText();
+                                    if (text.equals("")){
+                                        label2.setBackground(null);
+                                    }else {
+                                        label2.setBackground(backgroundColor);
+                                    }
+                                }catch (NullPointerException e) {
+                                    label2.setBackground(null);
+                                }
+                                try {
+                                    String text = label3.getText();
+                                    if (text.equals("")){
+                                        label3.setBackground(null);
+                                    }else {
+                                        label3.setBackground(backgroundColorLight);
+                                    }
+                                }catch (NullPointerException e) {
+                                    label3.setBackground(null);
+                                }
+                                try{
+                                    String text = label4.getText();
+                                    if (text.equals("")){
+                                        label4.setBackground(null);
+                                    }else {
+                                        label4.setBackground(backgroundColor);
+                                    }
+                                }catch (NullPointerException e){
+                                    label4.setBackground(null);
+                                }
                                 showResult();
                             } else if (1 == labelCount) {
-                                label1.setBackground(null);
+                                label1.setBackground(backgroundColorLight);
                                 label2.setBackground(labelColor);
-                                label3.setBackground(null);
-                                label4.setBackground(null);
+                                try{
+                                    String text = label3.getText();
+                                    if (text.equals("")){
+                                        label3.setBackground(null);
+                                    }else {
+                                        label3.setBackground(backgroundColorLight);
+                                    }
+                                }catch (NullPointerException e){
+                                    label3.setBackground(null);
+                                }
+                                try{
+                                    String text = label4.getText();
+                                    if (text.equals("")) {
+                                        label4.setBackground(null);
+                                    }else{
+                                        label4.setBackground(backgroundColor);
+                                    }
+                                }catch (NullPointerException e) {
+                                    label4.setBackground(null);
+                                }
                                 showResult();
                             } else if (2 == labelCount) {
-                                label1.setBackground(null);
-                                label2.setBackground(null);
+                                label1.setBackground(backgroundColorLight);
+                                label2.setBackground(backgroundColor);
                                 label3.setBackground(labelColor);
-                                label4.setBackground(null);
+                                try {
+                                    String text = label4.getText();
+                                    if (text.equals("")){
+                                        label4.setBackground(null);
+                                    }else {
+                                        label4.setBackground(backgroundColor);
+                                    }
+                                }catch (NullPointerException e) {
+                                    label4.setBackground(null);
+                                }
                                 showResult();
                             }
                         } else {
                             //到达最下端
-                            label1.setBackground(null);
-                            label2.setBackground(null);
-                            label3.setBackground(null);
+                            label1.setBackground(backgroundColorLight);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(backgroundColorLight);
                             label4.setBackground(labelColor);
                             String path = listResult.get(labelCount - 3);
                             String name = getFileName(listResult.get(labelCount - 3));
@@ -469,28 +506,82 @@ public class SearchBar {
                             //未到最下端
                             if (0 == labelCount) {
                                 label1.setBackground(labelColor);
-                                label2.setBackground(null);
-                                label3.setBackground(null);
-                                label4.setBackground(null);
+                                try {
+                                    String text = label2.getText();
+                                    if (text.equals("")){
+                                        label2.setBackground(null);
+                                    }else {
+                                        label2.setBackground(backgroundColor);
+                                    }
+                                }catch (NullPointerException e) {
+                                    label2.setBackground(null);
+                                }
+                                try {
+                                    String text = label3.getText();
+                                    if (text.equals("")){
+                                        label3.setBackground(null);
+                                    }else {
+                                        label3.setBackground(backgroundColorLight);
+                                    }
+                                }catch (NullPointerException e) {
+                                    label3.setBackground(null);
+                                }
+                                try{
+                                    String text = label4.getText();
+                                    if (text.equals("")){
+                                        label4.setBackground(null);
+                                    }else {
+                                        label4.setBackground(backgroundColor);
+                                    }
+                                }catch (NullPointerException e){
+                                    label4.setBackground(null);
+                                }
                                 showResult();
                             } else if (1 == labelCount) {
-                                label1.setBackground(null);
+                                label1.setBackground(backgroundColorLight);
                                 label2.setBackground(labelColor);
-                                label3.setBackground(null);
-                                label4.setBackground(null);
+                                try{
+                                    String text = label3.getText();
+                                    if (text.equals("")){
+                                        label3.setBackground(null);
+                                    }else {
+                                        label3.setBackground(backgroundColorLight);
+                                    }
+                                }catch (NullPointerException e){
+                                    label3.setBackground(null);
+                                }
+                                try{
+                                    String text = label4.getText();
+                                    if (text.equals("")) {
+                                        label4.setBackground(null);
+                                    }else{
+                                        label4.setBackground(backgroundColor);
+                                    }
+                                }catch (NullPointerException e) {
+                                    label4.setBackground(null);
+                                }
                                 showResult();
                             } else if (2 == labelCount) {
-                                label1.setBackground(null);
-                                label2.setBackground(null);
+                                label1.setBackground(backgroundColorLight);
+                                label2.setBackground(backgroundColor);
                                 label3.setBackground(labelColor);
-                                label4.setBackground(null);
+                                try {
+                                    String text = label4.getText();
+                                    if (text.equals("")){
+                                        label4.setBackground(null);
+                                    }else {
+                                        label4.setBackground(backgroundColor);
+                                    }
+                                }catch (NullPointerException e) {
+                                    label4.setBackground(null);
+                                }
                                 showResult();
                             }
                         } else {
                             //到最下端
-                            label1.setBackground(null);
-                            label2.setBackground(null);
-                            label3.setBackground(null);
+                            label1.setBackground(backgroundColorLight);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(backgroundColorLight);
                             label4.setBackground(labelColor);
                             String path = listResult.get(labelCount - 3);
                             String name = getFileName(listResult.get(labelCount - 3));
@@ -688,12 +779,34 @@ public class SearchBar {
             }
         }
         delRepeated(listResult);
+        int size = listResult.size();
+        if (size == 1){
+            label1.setBackground(labelColor);
+            label2.setBackground(null);
+            label3.setBackground(null);
+            label4.setBackground(null);
+        }else if(size == 2){
+            label1.setBackground(labelColor);
+            label2.setBackground(backgroundColor);
+            label3.setBackground(null);
+            label4.setBackground(null);
+        }else if(size == 3){
+            label1.setBackground(labelColor);
+            label2.setBackground(backgroundColor);
+            label3.setBackground(backgroundColorLight);
+            label4.setBackground(null);
+        }else if(size >= 4){
+            label1.setBackground(labelColor);
+            label2.setBackground(backgroundColor);
+            label3.setBackground(backgroundColorLight);
+            label4.setBackground(backgroundColor);
+        }
         showResult();
     }
 
     public void showSearchbar() {
         textField.grabFocus();
-        textField.setCaretPosition(textField.getText().length());
+        textField.setCaretPosition(0);
         //添加更新文件
         System.out.println("正在添加更新文件");
         if (!search.isManualUpdate()) {
