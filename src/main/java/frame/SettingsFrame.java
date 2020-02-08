@@ -28,13 +28,13 @@ public class SettingsFrame {
     private JLabel label3;
     private JLabel label1;
     private JLabel label2;
-    JFrame frame = new JFrame("SettingsFrame");
     private Search searchObj = new Search();
 
     public void showWindow() {
+        JFrame frame = new JFrame("设置");
+        frame.setContentPane(new SettingsFrame().panel);
         URL frameIcon = SettingsFrame.class.getResource("/icons/frame.png");
         frame.setIconImage(new ImageIcon(frameIcon).getImage());
-        frame.setContentPane(new SettingsFrame().panel);
         frame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
         Dimension screenSize =Toolkit.getDefaultToolkit().getScreenSize(); // 获取当前分辨率
         int width = screenSize.width;
