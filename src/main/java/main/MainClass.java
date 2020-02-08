@@ -242,23 +242,24 @@ public class MainClass {
 				if (!search.isManualUpdate()) {
 					try {
 						if (readerAdd != null) {
-							if ((filesToAdd = readerAdd.readLine()) != null) {
+							while ((filesToAdd = readerAdd.readLine()) != null) {
 								search.addFileToLoadBin(filesToAdd);
+								System.out.println("Ìí¼Ó"+filesToAdd);
 							}
 						}
 						if (readerRemove != null) {
-							if ((filesToRemove = readerRemove.readLine()) != null) {
+							while ((filesToRemove = readerRemove.readLine()) != null) {
 								search.addToRecycleBin(filesToRemove);
 							}
 						}
-					} catch (IOException ignored) {
-
+					} catch (IOException e) {
+						e.printStackTrace();
 					}
 				}
 				try {
 					Thread.sleep(50);
-				} catch (InterruptedException ignored) {
-
+				} catch (InterruptedException e) {
+					e.printStackTrace();
 				}
 			}
 			if (readerAdd != null){
