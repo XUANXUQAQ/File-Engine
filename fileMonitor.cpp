@@ -6,7 +6,7 @@
 #include <fstream>
 #include <ctype.h>
 //#define TEST
-#define MAX_LENGTH 500
+
 
 extern "C" __declspec(dllexport) void monitor(char* path, char* output, char* closePosition);
 
@@ -132,15 +132,9 @@ __declspec(dllexport) void monitor(char* path, char* output, char* closePosition
                             data.append(file_name);                     
                             cout << data << endl;
 							ofstream outfile;
-                            if (CountLines(fileAdded) >= MAX_LENGTH){
-                                outfile.open(fileAdded);
-                                outfile << data << endl;
-                                outfile.close();
-                            }else{
-                                outfile.open(fileAdded, ios::app);
-                                outfile << data << endl;
-                                outfile.close();
-                            }
+                            outfile.open(fileAdded, ios::app);
+                            outfile << data << endl;
+                            outfile.close();
                         }
                         break;
 
@@ -159,15 +153,11 @@ __declspec(dllexport) void monitor(char* path, char* output, char* closePosition
                             data.append(file_name);
                             cout << data << endl;   
 							ofstream outfile;  
-                            if (CountLines(fileRemoved) >= MAX_LENGTH){
-                                outfile.open(fileRemoved);
-                                outfile << data <<endl;
-                                outfile.close();
-                            }else{
-                                outfile.open(fileRemoved, ios::app);
-                                outfile << data <<endl;
-                                outfile.close();
-                            }
+
+                            outfile.open(fileRemoved, ios::app);
+                            outfile << data <<endl;
+                            outfile.close();
+                        
                         }
                         break;
 
@@ -181,28 +171,19 @@ __declspec(dllexport) void monitor(char* path, char* output, char* closePosition
                             data.append(file_name);
                             cout << data << "->";
                             ofstream outfile;  
-                            if (CountLines(fileRemoved) >= MAX_LENGTH){            
-                                outfile.open(fileRemoved);
-                                outfile << data <<endl;
-                                outfile.close();
-                            }else{
-                                outfile.open(fileRemoved, ios::app);
-                                outfile << data <<endl;
-                                outfile.close();
-                            }
+                            outfile.open(fileRemoved, ios::app);
+                            outfile << data <<endl;
+                            outfile.close();
+                        
                             data.clear();
                             data.append(path);
                             data.append(file_rename);   
                             cout << data << endl;     
-                            if (CountLines(fileAdded) >= MAX_LENGTH){
-                                outfile.open(fileAdded);
-                                outfile << data << endl;
-                                outfile.close();
-                            }else{
-                                outfile.open(fileAdded, ios::app);
-                                outfile << data << endl;
-                                outfile.close();
-                            }                                               
+
+                            outfile.open(fileAdded, ios::app);
+                            outfile << data << endl;
+                            outfile.close();
+                                                                        
                         }
                         break;
 
