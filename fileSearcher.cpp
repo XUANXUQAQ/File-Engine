@@ -10,10 +10,12 @@ using namespace std;
 
 extern "C" __declspec(dllexport) void addIgnorePath(const char* path);
 extern "C" __declspec(dllexport) void searchFiles(const char* path, const char* exd);
+extern "C" __declspec(dllexport) void searchFilesIgnoreSearchDepth(const char* path, const char* exd);
 extern "C" __declspec(dllexport) void setSearchDepth(int i);
 extern "C" __declspec(dllexport) char* getResult();
 extern "C" __declspec(dllexport) void deleteResult();
 extern "C" __declspec(dllexport) bool ResultReady();
+extern "C" __declspec(dllexport) void clearResults();
 
 vector<string> ignorePath;
 vector<string> files;  
@@ -31,6 +33,70 @@ int count(string path, string pattern);
 bool isSearchDepthOut(string path);
 bool isIgnore(string path);
 void search(string path, string exd);
+void searchIgnoreSearchDepth(string path, string exd);
+void clearResults();
+
+__declspec(dllexport) void searchFilesIgnoreSearchDepth(const char* path, const char* exd){
+    string file(path);
+    string suffix(exd);
+    isResultReady = false;
+    cout << "start search without searchDepth" << endl;
+    searchIgnoreSearchDepth(file, suffix);
+    cout <<"end search without searchDepth" <<endl;
+    isResultReady = true;
+}
+
+__declspec(dllexport) void clearResults(){
+    results.clear();
+    files.clear();
+}
+
+
+void searchIgnoreSearchDepth(string path, string exd){
+    //cout << "getFiles()" << path<< endl;   
+    //文件句柄  
+    long   hFile = 0;  
+    //文件信息  
+    struct _finddata_t fileinfo;  
+    string pathName, exdName;  
+  
+    if (0 != strcmp(exd.c_str(), ""))  
+    {  
+        exdName = "\\*." + exd;  
+    }  
+    else  
+    {  
+        exdName = "\\*";  
+    }  
+  
+    if ((hFile = _findfirst(pathName.assign(path).append(exdName).c_str(), &fileinfo)) != -1)  
+    {  
+        do  
+        {  
+            //cout << fileinfo.name << endl;   
+  
+            //如果是文件夹中仍有文件夹,加入列表后迭代
+            //如果不是,加入列表  
+            if ((fileinfo.attrib &  _A_SUBDIR))  
+            {  
+                if (strcmp(fileinfo.name, ".") != 0 && strcmp(fileinfo.name, "..") != 0){
+                    files.push_back(pathName.assign(path).append("\\").append(fileinfo.name));  
+                    bool Ignore = isIgnore(path);
+                    if (!Ignore){
+                        searchIgnoreSearchDepth(pathName.assign(path).append("\\").append(fileinfo.name), exd); 
+                        //cout << isResultReady << endl;
+                    } 
+                }
+            }  
+            else  
+            {  
+                if (strcmp(fileinfo.name, ".") != 0 && strcmp(fileinfo.name, "..") != 0)  
+                    files.push_back(pathName.assign(path).append("\\").append(fileinfo.name));  
+            }  
+        } while (_findnext(hFile, &fileinfo) == 0);  
+        _findclose(hFile);  
+    }
+}
 
 __declspec(dllexport) bool ResultReady(){
     return isResultReady;
@@ -40,8 +106,6 @@ __declspec(dllexport) void searchFiles(const char* path, const char* exd){
     string file(path);
     string suffix(exd);
     isResultReady = false;
-    results.clear();
-    files.clear();
     cout << "start Search" << endl;
     search(file, exd);
     cout << "end Search" << endl;
@@ -163,9 +227,10 @@ int main()
 {  
     char *result;
     addIgnorePath("C:\\Windows");
-    addIgnorePath("C:\\Users");
     setSearchDepth(6);
-    searchFiles("D:", "*");  
+    clearResults();
+    //searchFiles("D:", "*");  
+    searchFilesIgnoreSearchDepth("C:\\Users\\13927\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu", "*");
     result = getResult();
     cout << result << endl;
     deleteResult();
