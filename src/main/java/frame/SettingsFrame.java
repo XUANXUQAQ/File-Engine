@@ -39,8 +39,8 @@ public class SettingsFrame {
         Dimension screenSize =Toolkit.getDefaultToolkit().getScreenSize(); // 获取当前分辨率
         int width = screenSize.width;
         int height = screenSize.height;
-        frame.setLocation((int)(width*0.15), (int)(height*0.12));
         frame.setSize(width/2, height/2);
+        frame.setLocation(width/2-width/4, height/2-height/4);
         panel.setOpaque(true);
         frame.setVisible(true);
     }

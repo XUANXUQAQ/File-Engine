@@ -43,11 +43,9 @@ public class Search {
     private static LinkedHashSet<String> listUnderline = new LinkedHashSet<>();
     private static LinkedList<String> listToAdd = new LinkedList<>();
     private static boolean isUsable = false;
-    private static boolean isFocusLost = true;
     private static boolean isManualUpdate = false;
     private static boolean isFileSearcherDefined = false;
     private static LinkedList<String> RecycleBin = new LinkedList<>();
-    private static int num;
 
 
 
@@ -348,9 +346,6 @@ public class Search {
         }
     }
 
-    public void setFocusLostStatus(boolean b) {
-        isFocusLost = b;
-    }
 
     private void addFileToList(String path) {
         File file = new File(path);
@@ -1366,14 +1361,13 @@ public class Search {
             path = path.substring(0, 2);
             __searchFile(path);
         }
-        MainClass.showMessage("提示","索引已经更新，数据量：" + num);
+        MainClass.showMessage("提示","搜索完成");
         isUsable = true;
         isManualUpdate = false;
     }
 
 
     private void __searchFile(String path) {
-        num = 0;
         FileSearcher.INSTANCE.searchFiles(path, "*");
         while (!FileSearcher.INSTANCE.ResultReady()) {
             try {
@@ -1385,7 +1379,6 @@ public class Search {
         String results = FileSearcher.INSTANCE.getResult();
         FileSearcher.INSTANCE.deleteResult();
         String[] resultList = results.split("\n");
-        num+=resultList.length;
         for (String each:resultList){
             File tmp = new File(each);
             String name = tmp.getName();
