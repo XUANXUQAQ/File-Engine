@@ -1085,7 +1085,6 @@ public class SearchBar {
             labelCount = 0;
             listResult.clear();
             textField.setText(null);
-            search.setFocusLostStatus(true);
             //删除无效文件
             System.out.println("正在删除无效文件");
             search.clearRecycleBin();
