@@ -5,6 +5,7 @@ import frame.SettingsFrame;
 import main.MainClass;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
@@ -1361,13 +1362,271 @@ public class Search {
             path = path.substring(0, 2);
             __searchFile(path);
         }
+        __searchFileIgnoreSearchDepth(getStartMenu());
+        __searchFileIgnoreSearchDepth("C:\\ProgramData\\Microsoft\\Windows\\Start Menu");
         MainClass.showMessage("提示","搜索完成");
         isUsable = true;
         isManualUpdate = false;
     }
 
+    private String getStartMenu() {
+        String startMenu;
+        BufferedReader bufrIn;
+        try {
+            Process getStartMenu = Runtime.getRuntime().exec("reg query \"HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders\" " + "/v " + "\"Start Menu\"");
+            bufrIn = new BufferedReader(new InputStreamReader(getStartMenu.getInputStream(), StandardCharsets.UTF_8));
+            while ((startMenu = bufrIn.readLine()) != null) {
+                if (startMenu.contains("REG_SZ")) {
+                    startMenu = startMenu.substring(startMenu.indexOf("REG_SZ") + 10);
+                    return startMenu;
+                }
+            }
+        } catch (IOException e) {
+
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private void __searchFileIgnoreSearchDepth(String path){
+        FileSearcher.INSTANCE.clearResults();
+        FileSearcher.INSTANCE.searchFilesIgnoreSearchDepth(path, "*");
+        while (!FileSearcher.INSTANCE.ResultReady()) {
+            try {
+                Thread.sleep(1);
+            } catch (InterruptedException ignored) {
+
+            }
+        }
+        String results = FileSearcher.INSTANCE.getResult();
+        FileSearcher.INSTANCE.deleteResult();
+        String[] resultList = results.split("\n");
+        for (String each:resultList){
+            File tmp = new File(each);
+            String name = tmp.getName();
+            char headWord = '\0';
+            try{
+                headWord = name.charAt(0);
+                headWord = Character.toUpperCase(headWord);
+            }catch(Exception ignored){
+
+            }
+            switch (headWord) {
+                case 'A':
+                    try {
+                        listA.add(each);
+                    } catch (Exception ignored) {
+
+                    }
+                    break;
+                case 'B':
+                    try {
+                        listB.add(each);
+                    } catch (Exception ignored) {
+
+                    }
+                    break;
+                case 'C':
+                    try {
+                        listC.add(each);
+                    } catch (Exception ignored) {
+
+                    }
+                    break;
+                case 'D':
+                    try {
+                        listD.add(each);
+                    } catch (Exception ignored) {
+
+                    }
+                    break;
+                case 'E':
+                    try {
+                        listE.add(each);
+                    } catch (Exception ignored) {
+
+                    }
+                    break;
+                case 'F':
+                    try {
+                        listF.add(each);
+                    } catch (Exception ignored) {
+
+                    }
+                    break;
+                case 'G':
+                    try {
+                        listG.add(each);
+                    } catch (Exception ignored) {
+
+                    }
+                    break;
+                case 'H':
+                    try {
+                        listH.add(each);
+                    } catch (Exception ignored) {
+
+                    }
+                    break;
+                case 'I':
+                    try {
+                        listI.add(each);
+                    } catch (Exception ignored) {
+
+                    }
+                    break;
+                case 'J':
+                    try {
+                        listJ.add(each);
+                    } catch (Exception ignored) {
+
+                    }
+                    break;
+                case 'K':
+                    try {
+                        listK.add(each);
+                    } catch (Exception ignored) {
+
+                    }
+                    break;
+                case 'L':
+                    try {
+                        listL.add(each);
+                    } catch (Exception ignored) {
+
+                    }
+                    break;
+                case 'M':
+                    try {
+                        listM.add(each);
+                    } catch (Exception ignored) {
+
+                    }
+                    break;
+                case 'N':
+                    try {
+                        listN.add(each);
+                    } catch (Exception ignored) {
+
+                    }
+                    break;
+                case 'O':
+                    try {
+                        listO.add(each);
+                    } catch (Exception ignored) {
+
+                    }
+                    break;
+                case 'P':
+                    try {
+                        listP.add(each);
+                    } catch (Exception ignored) {
+
+                    }
+                    break;
+                case 'Q':
+                    try {
+                        listQ.add(each);
+                    } catch (Exception ignored) {
+
+                    }
+                    break;
+                case 'R':
+                    try {
+                        listR.add(each);
+                    } catch (Exception ignored) {
+
+                    }
+                    break;
+                case 'S':
+                    try {
+                        listS.add(each);
+                    } catch (Exception ignored) {
+
+                    }
+                    break;
+                case 'T':
+                    try {
+                        listT.add(each);
+                    } catch (Exception ignored) {
+
+                    }
+                    break;
+                case 'U':
+                    try {
+                        listU.add(each);
+                    } catch (Exception ignored) {
+
+                    }
+                    break;
+                case 'V':
+                    try {
+                        listV.add(each);
+                    } catch (Exception ignored) {
+
+                    }
+                    break;
+                case 'W':
+                    try {
+                        listW.add(each);
+                    } catch (Exception ignored) {
+
+                    }
+                    break;
+                case 'X':
+                    try {
+                        listX.add(each);
+                    } catch (Exception ignored) {
+
+                    }
+                    break;
+                case 'Y':
+                    try {
+                        listY.add(each);
+                    } catch (Exception ignored) {
+
+                    }
+                    break;
+                case 'Z':
+                    try {
+                        listZ.add(each);
+                    } catch (Exception ignored) {
+
+                    }
+                    break;
+                default:
+                    if (Character.isDigit(headWord)) {
+                        try {
+                            listNum.add(each);
+                        } catch (Exception ignored) {
+
+                        }
+                    } else if ('_' == headWord) {
+                        try {
+                            listUnderline.add(each);
+                        } catch (Exception ignored) {
+
+                        }
+                    } else if ('%' == headWord) {
+                        try {
+                            listPercentSign.add(each);
+                        } catch (Exception ignored) {
+
+                        }
+                    } else {
+                        try {
+                            listUnique.add(each);
+                        } catch (Exception ignored) {
+
+                        }
+                    }
+                    break;
+            }
+        }
+    }
 
     private void __searchFile(String path) {
+        FileSearcher.INSTANCE.clearResults();
         FileSearcher.INSTANCE.searchFiles(path, "*");
         while (!FileSearcher.INSTANCE.ResultReady()) {
             try {

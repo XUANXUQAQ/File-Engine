@@ -15,4 +15,6 @@ public interface FileSearcher extends Library {
     String getResult();
     void deleteResult();
     boolean ResultReady();
+    void clearResults();
+    void searchFilesIgnoreSearchDepth(String path, String exd);
 }
