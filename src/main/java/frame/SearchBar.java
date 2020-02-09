@@ -805,7 +805,7 @@ public class SearchBar {
     }
 
     public void showSearchbar() {
-        textField.grabFocus();
+        textField.requestFocusInWindow();
         textField.setCaretPosition(0);
         //添加更新文件
         System.out.println("正在添加更新文件");
