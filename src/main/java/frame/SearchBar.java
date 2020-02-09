@@ -117,7 +117,7 @@ public class SearchBar {
                         }catch(Exception ignored){
 
                         }
-                        if ('?' == firstWord) {
+                        if ('>' == firstWord) {
                             if (isFirstRun || !thread.isAlive()) {
                                 isFirstRun = false;
                             } else {
