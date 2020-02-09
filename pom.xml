@@ -39,7 +39,10 @@
             <artifactId>jna</artifactId>
             <version>3.0.9</version>
         </dependency>
+        <dependency>
+            <groupId>beautyeye</groupId>
+            <artifactId>beautyeye</artifactId>
+            <version>3.7.0</version>
+        </dependency>
     </dependencies>
-
-
 </project>

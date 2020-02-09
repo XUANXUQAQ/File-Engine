@@ -100,6 +100,12 @@ public class MainClass {
 
 
     public static void main(String[] args) {
+        try {
+            org.jb2011.lnf.beautyeye.BeautyEyeLNFHelper.launchBeautyEyeLNF();
+            UIManager.put("RootPane.setupButtonVisible",false);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         String osArch = System.getProperty("os.arch");
         if (osArch.contains("64")) {
             name = "search_x64.exe";
@@ -296,7 +302,6 @@ public class MainClass {
                     count = 0;
                     System.out.println("正在更新本地索引data文件");
                     if (search.isUsable() && (!searchBar.isUsing())) {
-                        deleteDir(SettingsFrame.dataPath);
                         search.saveLists();
                     }
                 }
@@ -363,7 +368,6 @@ public class MainClass {
                     }
                     System.out.println("即将退出，保存最新文件列表到data");
                     search.mergeFileToList();
-                    deleteDir(SettingsFrame.dataPath);
                     search.saveLists();
                 }
                 System.exit(0);
