@@ -18,6 +18,7 @@ import java.net.URL;
 import java.util.Objects;
 
 
+
 public class SettingsFrame {
     private JTextField textFieldUpdateTime;
     private JTextField textFieldCacheNum;
@@ -236,13 +237,6 @@ public class SettingsFrame {
     }
 
     public SettingsFrame() {
-        String lookAndFeel = "com.sun.java.swing.plaf.windows.WindowsLookAndFeel";
-        try {
-            UIManager.setLookAndFeel(lookAndFeel);
-        } catch (ClassNotFoundException | UnsupportedLookAndFeelException | IllegalAccessException | InstantiationException ignored) {
-
-        }
-
         button1.addActionListener(e -> saveChanges());
         checkBox1.addActionListener(e -> setStartup(checkBox1.isSelected()));
         buttonSaveAndRemoveDesktop.addActionListener(e -> {
