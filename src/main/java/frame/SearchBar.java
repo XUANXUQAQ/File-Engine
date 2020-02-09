@@ -2332,6 +2332,28 @@ public class SearchBar {
                 }
                 if (!Thread.currentThread().isInterrupted()) {
                     delRepeated(listResult);
+                    int size = listResult.size();
+                    if (size == 1){
+                        label1.setBackground(labelColor);
+                        label2.setBackground(null);
+                        label3.setBackground(null);
+                        label4.setBackground(null);
+                    }else if(size == 2){
+                        label1.setBackground(labelColor);
+                        label2.setBackground(backgroundColor);
+                        label3.setBackground(null);
+                        label4.setBackground(null);
+                    }else if(size == 3){
+                        label1.setBackground(labelColor);
+                        label2.setBackground(backgroundColor);
+                        label3.setBackground(backgroundColorLight);
+                        label4.setBackground(null);
+                    }else if(size >= 4){
+                        label1.setBackground(labelColor);
+                        label2.setBackground(backgroundColor);
+                        label3.setBackground(backgroundColorLight);
+                        label4.setBackground(backgroundColor);
+                    }
                     showResult();
                 }
             }
