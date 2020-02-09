@@ -6,7 +6,7 @@
 
     <groupId>org.example</groupId>
     <artifactId>search</artifactId>
-    <version>2.3</version>
+    <version>2.4</version>
     <build>
         <plugins>
             <plugin>
