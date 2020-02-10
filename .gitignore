@@ -5,6 +5,9 @@ target/
 .idea/
 *.iml
 
+.classpath
+.project
+
 *.json
 Files/
 cache.dat
