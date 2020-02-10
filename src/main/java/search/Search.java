@@ -640,7 +640,7 @@ public class Search {
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
                     oos.writeObject(listFile);
 
-                } catch (IOException ignored) {
+                } catch (IOException | ConcurrentModificationException ignored) {
 
                 }
                 break;
@@ -651,7 +651,7 @@ public class Search {
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
                     oos.writeObject(listFile);
 
-                } catch (IOException ignored) {
+                } catch (IOException | ConcurrentModificationException ignored) {
 
                 }
                 break;
@@ -662,7 +662,7 @@ public class Search {
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
                     oos.writeObject(listFile);
 
-                } catch (IOException ignored) {
+                } catch (IOException | ConcurrentModificationException ignored) {
 
                 }
                 break;
@@ -674,7 +674,7 @@ public class Search {
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
                     oos.writeObject(listFile);
 
-                } catch (IOException ignored) {
+                } catch (IOException | ConcurrentModificationException ignored) {
 
                 }
                 break;
@@ -686,7 +686,7 @@ public class Search {
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
                     oos.writeObject(listFile);
 
-                } catch (IOException ignored) {
+                } catch (IOException | ConcurrentModificationException ignored) {
 
                 }
                 break;
@@ -698,7 +698,7 @@ public class Search {
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
                     oos.writeObject(listFile);
 
-                } catch (IOException ignored) {
+                } catch (IOException | ConcurrentModificationException ignored) {
 
                 }
                 break;
@@ -710,7 +710,7 @@ public class Search {
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
                     oos.writeObject(listFile);
 
-                } catch (IOException ignored) {
+                } catch (IOException | ConcurrentModificationException ignored) {
 
                 }
                 break;
@@ -722,7 +722,7 @@ public class Search {
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
                     oos.writeObject(listFile);
 
-                } catch (IOException ignored) {
+                } catch (IOException | ConcurrentModificationException ignored) {
 
                 }
                 break;
@@ -734,7 +734,7 @@ public class Search {
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
                     oos.writeObject(listFile);
 
-                } catch (IOException ignored) {
+                } catch (IOException | ConcurrentModificationException ignored) {
 
                 }
                 break;
@@ -746,7 +746,7 @@ public class Search {
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
                     oos.writeObject(listFile);
 
-                } catch (IOException ignored) {
+                } catch (IOException | ConcurrentModificationException ignored) {
 
                 }
                 break;
@@ -758,7 +758,7 @@ public class Search {
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
                     oos.writeObject(listFile);
 
-                } catch (IOException ignored) {
+                } catch (IOException | ConcurrentModificationException ignored) {
 
                 }
                 break;
@@ -770,7 +770,7 @@ public class Search {
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
                     oos.writeObject(listFile);
 
-                } catch (IOException ignored) {
+                } catch (IOException | ConcurrentModificationException ignored) {
 
                 }
                 break;
@@ -782,7 +782,7 @@ public class Search {
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
                     oos.writeObject(listFile);
 
-                } catch (IOException ignored) {
+                } catch (IOException | ConcurrentModificationException ignored) {
 
                 }
                 break;
@@ -794,7 +794,7 @@ public class Search {
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
                     oos.writeObject(listFile);
 
-                } catch (IOException ignored) {
+                } catch (IOException | ConcurrentModificationException ignored) {
 
                 }
                 break;
@@ -806,7 +806,7 @@ public class Search {
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
                     oos.writeObject(listFile);
 
-                } catch (IOException ignored) {
+                } catch (IOException | ConcurrentModificationException ignored) {
 
                 }
                 break;
@@ -818,7 +818,7 @@ public class Search {
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
                     oos.writeObject(listFile);
 
-                } catch (IOException ignored) {
+                } catch (IOException | ConcurrentModificationException ignored) {
 
                 }
                 break;
@@ -830,7 +830,7 @@ public class Search {
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
                     oos.writeObject(listFile);
 
-                } catch (IOException ignored) {
+                } catch (IOException | ConcurrentModificationException ignored) {
 
                 }
                 break;
@@ -842,7 +842,7 @@ public class Search {
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
                     oos.writeObject(listFile);
 
-                } catch (IOException ignored) {
+                } catch (IOException | ConcurrentModificationException ignored) {
 
                 }
                 break;
@@ -854,7 +854,7 @@ public class Search {
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
                     oos.writeObject(listFile);
 
-                } catch (IOException ignored) {
+                } catch (IOException | ConcurrentModificationException ignored) {
 
                 }
                 break;
@@ -866,7 +866,7 @@ public class Search {
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
                     oos.writeObject(listFile);
 
-                } catch (IOException ignored) {
+                } catch (IOException | ConcurrentModificationException ignored) {
 
                 }
                 break;
@@ -878,7 +878,7 @@ public class Search {
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
                     oos.writeObject(listFile);
 
-                } catch (IOException ignored) {
+                } catch (IOException | ConcurrentModificationException ignored) {
 
                 }
                 break;
@@ -890,7 +890,7 @@ public class Search {
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
                     oos.writeObject(listFile);
 
-                } catch (IOException ignored) {
+                } catch (IOException | ConcurrentModificationException ignored) {
 
                 }
                 break;
@@ -902,7 +902,7 @@ public class Search {
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
                     oos.writeObject(listFile);
 
-                } catch (IOException ignored) {
+                } catch (IOException | ConcurrentModificationException ignored) {
 
                 }
                 break;
@@ -914,7 +914,7 @@ public class Search {
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
                     oos.writeObject(listFile);
 
-                } catch (IOException ignored) {
+                } catch (IOException | ConcurrentModificationException ignored) {
 
                 }
                 break;
@@ -926,7 +926,7 @@ public class Search {
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
                     oos.writeObject(listFile);
 
-                } catch (IOException ignored) {
+                } catch (IOException | ConcurrentModificationException ignored) {
 
                 }
                 break;
@@ -938,7 +938,7 @@ public class Search {
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
                     oos.writeObject(listFile);
 
-                } catch (IOException ignored) {
+                } catch (IOException | ConcurrentModificationException ignored) {
 
                 }
                 break;
@@ -949,7 +949,7 @@ public class Search {
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
                     oos.writeObject(listFile);
 
-                } catch (IOException ignored) {
+                } catch (IOException | ConcurrentModificationException ignored) {
 
                 }
                 break;
@@ -961,7 +961,7 @@ public class Search {
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
                     oos.writeObject(listFile);
 
-                } catch (IOException ignored) {
+                } catch (IOException | ConcurrentModificationException ignored) {
 
                 }
                 break;
@@ -984,7 +984,7 @@ public class Search {
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
                     oos.writeObject(listFile);
 
-                } catch (IOException ignored) {
+                } catch (IOException | ConcurrentModificationException ignored) {
 
                 }
                 break;
@@ -1001,7 +1001,7 @@ public class Search {
                 try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
                     listFile = (Serialize) ois.readObject();
                     listA.addAll(listFile.list);
-                } catch (IOException | ClassNotFoundException ignored) {
+                } catch (IOException | ConcurrentModificationException | ClassNotFoundException ignored) {
 
                 }
                 break;
@@ -1013,7 +1013,7 @@ public class Search {
                 try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
                     listFile = (Serialize) ois.readObject();
                     listB.addAll(listFile.list);
-                } catch (IOException | ClassNotFoundException ignored) {
+                } catch (IOException | ConcurrentModificationException | ClassNotFoundException ignored) {
 
                 }
                 break;
@@ -1025,7 +1025,7 @@ public class Search {
                 try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
                     listFile = (Serialize) ois.readObject();
                     listC.addAll(listFile.list);
-                } catch (IOException | ClassNotFoundException ignored) {
+                } catch (IOException | ConcurrentModificationException | ClassNotFoundException ignored) {
 
                 }
                 break;
@@ -1037,7 +1037,7 @@ public class Search {
                 try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
                     listFile = (Serialize) ois.readObject();
                     listD.addAll(listFile.list);
-                } catch (IOException | ClassNotFoundException ignored) {
+                } catch (IOException | ConcurrentModificationException | ClassNotFoundException ignored) {
 
                 }
                 break;
@@ -1049,7 +1049,7 @@ public class Search {
                 try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
                     listFile = (Serialize) ois.readObject();
                     listE.addAll(listFile.list);
-                } catch (IOException | ClassNotFoundException ignored) {
+                } catch (IOException | ConcurrentModificationException | ClassNotFoundException ignored) {
 
                 }
                 break;
@@ -1061,7 +1061,7 @@ public class Search {
                 try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
                     listFile = (Serialize) ois.readObject();
                     listF.addAll(listFile.list);
-                } catch (IOException | ClassNotFoundException ignored) {
+                } catch (IOException | ConcurrentModificationException | ClassNotFoundException ignored) {
 
                 }
                 break;
@@ -1073,7 +1073,7 @@ public class Search {
                 try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
                     listFile = (Serialize) ois.readObject();
                     listG.addAll(listFile.list);
-                } catch (IOException | ClassNotFoundException ignored) {
+                } catch (IOException | ConcurrentModificationException | ClassNotFoundException ignored) {
 
                 }
                 break;
@@ -1085,7 +1085,7 @@ public class Search {
                 try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
                     listFile = (Serialize) ois.readObject();
                     listH.addAll(listFile.list);
-                } catch (IOException | ClassNotFoundException ignored) {
+                } catch (IOException | ConcurrentModificationException | ClassNotFoundException ignored) {
 
                 }
                 break;
@@ -1097,7 +1097,7 @@ public class Search {
                 try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
                     listFile = (Serialize) ois.readObject();
                     listI.addAll(listFile.list);
-                } catch (IOException | ClassNotFoundException ignored) {
+                } catch (IOException | ConcurrentModificationException | ClassNotFoundException ignored) {
 
                 }
                 break;
@@ -1109,7 +1109,7 @@ public class Search {
                 try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
                     listFile = (Serialize) ois.readObject();
                     listJ.addAll(listFile.list);
-                } catch (IOException | ClassNotFoundException ignored) {
+                } catch (IOException | ConcurrentModificationException | ClassNotFoundException ignored) {
 
                 }
                 break;
@@ -1121,7 +1121,7 @@ public class Search {
                 try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
                     listFile = (Serialize) ois.readObject();
                     listK.addAll(listFile.list);
-                } catch (IOException | ClassNotFoundException ignored) {
+                } catch (IOException | ConcurrentModificationException | ClassNotFoundException ignored) {
 
                 }
                 break;
@@ -1133,7 +1133,7 @@ public class Search {
                 try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
                     listFile = (Serialize) ois.readObject();
                     listL.addAll(listFile.list);
-                } catch (IOException | ClassNotFoundException ignored) {
+                } catch (IOException | ConcurrentModificationException | ClassNotFoundException ignored) {
 
                 }
                 break;
@@ -1145,7 +1145,7 @@ public class Search {
                 try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
                     listFile = (Serialize) ois.readObject();
                     listM.addAll(listFile.list);
-                } catch (IOException | ClassNotFoundException ignored) {
+                } catch (IOException | ConcurrentModificationException | ClassNotFoundException ignored) {
 
                 }
                 break;
@@ -1157,7 +1157,7 @@ public class Search {
                 try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
                     listFile = (Serialize) ois.readObject();
                     listN.addAll(listFile.list);
-                } catch (IOException | ClassNotFoundException ignored) {
+                } catch (IOException | ConcurrentModificationException | ClassNotFoundException ignored) {
 
                 }
                 break;
@@ -1169,7 +1169,7 @@ public class Search {
                 try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
                     listFile = (Serialize) ois.readObject();
                     listO.addAll(listFile.list);
-                } catch (IOException | ClassNotFoundException ignored) {
+                } catch (IOException | ConcurrentModificationException | ClassNotFoundException ignored) {
 
                 }
                 break;
@@ -1181,7 +1181,7 @@ public class Search {
                 try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
                     listFile = (Serialize) ois.readObject();
                     listP.addAll(listFile.list);
-                } catch (IOException | ClassNotFoundException ignored) {
+                } catch (IOException | ConcurrentModificationException | ClassNotFoundException ignored) {
 
                 }
                 break;
@@ -1193,7 +1193,7 @@ public class Search {
                 try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
                     listFile = (Serialize) ois.readObject();
                     listQ.addAll(listFile.list);
-                } catch (IOException | ClassNotFoundException ignored) {
+                } catch (IOException | ConcurrentModificationException | ClassNotFoundException ignored) {
 
                 }
                 break;
@@ -1205,7 +1205,7 @@ public class Search {
                 try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
                     listFile = (Serialize) ois.readObject();
                     listR.addAll(listFile.list);
-                } catch (IOException | ClassNotFoundException ignored) {
+                } catch (IOException | ConcurrentModificationException | ClassNotFoundException ignored) {
 
                 }
                 break;
@@ -1217,7 +1217,7 @@ public class Search {
                 try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
                     listFile = (Serialize) ois.readObject();
                     listS.addAll(listFile.list);
-                } catch (IOException | ClassNotFoundException ignored) {
+                } catch (IOException | ConcurrentModificationException | ClassNotFoundException ignored) {
 
                 }
                 break;
@@ -1229,7 +1229,7 @@ public class Search {
                 try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
                     listFile = (Serialize) ois.readObject();
                     listT.addAll(listFile.list);
-                } catch (IOException | ClassNotFoundException ignored) {
+                } catch (IOException | ConcurrentModificationException | ClassNotFoundException ignored) {
 
                 }
                 break;
@@ -1241,7 +1241,7 @@ public class Search {
                 try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
                     listFile = (Serialize) ois.readObject();
                     listU.addAll(listFile.list);
-                } catch (IOException | ClassNotFoundException ignored) {
+                } catch (IOException | ConcurrentModificationException | ClassNotFoundException ignored) {
 
                 }
                 break;
@@ -1253,7 +1253,7 @@ public class Search {
                 try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
                     listFile = (Serialize) ois.readObject();
                     listV.addAll(listFile.list);
-                } catch (IOException | ClassNotFoundException ignored) {
+                } catch (IOException | ConcurrentModificationException | ClassNotFoundException ignored) {
 
                 }
                 break;
@@ -1265,7 +1265,7 @@ public class Search {
                 try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
                     listFile = (Serialize) ois.readObject();
                     listW.addAll(listFile.list);
-                } catch (IOException | ClassNotFoundException ignored) {
+                } catch (IOException | ConcurrentModificationException | ClassNotFoundException ignored) {
 
                 }
                 break;
@@ -1277,7 +1277,7 @@ public class Search {
                 try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
                     listFile = (Serialize) ois.readObject();
                     listX.addAll(listFile.list);
-                } catch (IOException | ClassNotFoundException ignored) {
+                } catch (IOException | ConcurrentModificationException | ClassNotFoundException ignored) {
 
                 }
                 break;
@@ -1289,7 +1289,7 @@ public class Search {
                 try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
                     listFile = (Serialize) ois.readObject();
                     listY.addAll(listFile.list);
-                } catch (IOException | ClassNotFoundException ignored) {
+                } catch (IOException | ConcurrentModificationException | ClassNotFoundException ignored) {
 
                 }
                 break;
@@ -1301,7 +1301,7 @@ public class Search {
                 try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
                     listFile = (Serialize) ois.readObject();
                     listZ.addAll(listFile.list);
-                } catch (IOException | ClassNotFoundException ignored) {
+                } catch (IOException | ConcurrentModificationException | ClassNotFoundException ignored) {
 
                 }
                 break;
@@ -1313,7 +1313,7 @@ public class Search {
                 try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
                     listFile = (Serialize) ois.readObject();
                     listPercentSign.addAll(listFile.list);
-                } catch (IOException | ClassNotFoundException ignored) {
+                } catch (IOException | ConcurrentModificationException | ClassNotFoundException ignored) {
 
                 }
                 break;
@@ -1325,7 +1325,7 @@ public class Search {
                 try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
                     listFile = (Serialize) ois.readObject();
                     listUnderline.addAll(listFile.list);
-                } catch (IOException | ClassNotFoundException ignored) {
+                } catch (IOException | ConcurrentModificationException | ClassNotFoundException ignored) {
 
                 }
                 break;
@@ -1337,7 +1337,7 @@ public class Search {
                 try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
                     listFile = (Serialize) ois.readObject();
                     listUnique.addAll(listFile.list);
-                } catch (IOException | ClassNotFoundException ignored) {
+                } catch (IOException | ConcurrentModificationException | ClassNotFoundException ignored) {
 
                 }
                 break;
@@ -1349,7 +1349,7 @@ public class Search {
                 try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
                     listFile = (Serialize) ois.readObject();
                     listNum.addAll(listFile.list);
-                } catch (IOException | ClassNotFoundException ignored) {
+                } catch (IOException | ConcurrentModificationException | ClassNotFoundException ignored) {
 
                 }
                 break;
