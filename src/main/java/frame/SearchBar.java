@@ -1,12 +1,12 @@
 package frame;
 
+import getIcon.GetIcon;
 import main.MainClass;
 import search.Search;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
-import javax.swing.filechooser.FileSystemView;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
@@ -17,7 +17,6 @@ import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
 import static main.MainClass.mainExit;
 
 
@@ -34,7 +33,7 @@ public class SearchBar extends JTextField{
     private int labelCount = 0;
     private JTextField textField;
     private Search search = new Search();
-    private Color labelColor = new Color(255, 75, 12, 255);
+    private Color labelColor = new Color(255, 152, 104, 255);
     private Color backgroundColor = new Color(108, 108, 108, 255);
     private Color backgroundColorLight = new Color(75, 75, 75, 255);
     private LinkedHashSet<String> list = new LinkedHashSet<>();
@@ -77,7 +76,6 @@ public class SearchBar extends JTextField{
 
 
     private SearchBar() {
-        System.setProperty("sun.java2d.noddraw", "true"); // 防止激活输入法时白屏
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize(); // 获取屏幕大小
         int width = screenSize.width;
         int height = screenSize.height;
@@ -108,7 +106,25 @@ public class SearchBar extends JTextField{
         textField.setLocation(0, 0);
 
 
-        ExecutorService fixedThreadPool = Executors.newFixedThreadPool(2);
+        ExecutorService fixedThreadPool = Executors.newFixedThreadPool(3);
+
+        //刷新屏幕线程
+        fixedThreadPool.execute(() -> {
+            while (!mainExit) {
+                try {
+                    panel.repaint();
+                } catch (Exception ignored) {
+
+                } finally {
+                    try {
+                        Thread.sleep(20);
+                    } catch (InterruptedException ignored) {
+
+                    }
+                }
+            }
+        });
+
         fixedThreadPool.execute(() -> {
             while (!mainExit) {
                 if (!search.isManualUpdate() && !isUsing) {
@@ -491,7 +507,7 @@ public class SearchBar extends JTextField{
                             String name = getFileName(listResult.get(labelCount - 3));
                             ImageIcon icon;
                             if (isDirectory(path) || isFile(path)) {
-                                icon = (ImageIcon) getSmallIcon(path);
+                                icon = (ImageIcon) GetIcon.getBigIcon(path);
                                 icon = changeIcon(icon, label1.getHeight() - 60, label1.getHeight() - 60);
                                 label1.setIcon(icon);
                                 label1.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
@@ -504,7 +520,7 @@ public class SearchBar extends JTextField{
                             name = getFileName(listResult.get(labelCount - 2));
 
                             if (isDirectory(path) || isFile(path)) {
-                                icon = (ImageIcon) getSmallIcon(path);
+                                icon = (ImageIcon) GetIcon.getBigIcon(path);
                                 icon = changeIcon(icon, label1.getHeight() - 60, label1.getHeight() - 60);
                                 label2.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
                                 label2.setIcon(icon);
@@ -518,7 +534,7 @@ public class SearchBar extends JTextField{
 
 
                             if (isDirectory(path) || isFile(path)) {
-                                icon = (ImageIcon) getSmallIcon(path);
+                                icon = (ImageIcon) GetIcon.getBigIcon(path);
                                 icon = changeIcon(icon, label1.getHeight() - 60, label1.getHeight() - 60);
                                 label3.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
                                 label3.setIcon(icon);
@@ -532,7 +548,7 @@ public class SearchBar extends JTextField{
 
 
                             if (isDirectory(path) || isFile(path)) {
-                                icon = (ImageIcon) getSmallIcon(path);
+                                icon = (ImageIcon) GetIcon.getBigIcon(path);
                                 icon = changeIcon(icon, label1.getHeight() - 60, label1.getHeight() - 60);
                                 label4.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
                                 label4.setIcon(icon);
@@ -640,7 +656,7 @@ public class SearchBar extends JTextField{
                                 String name = getFileName(listResult.get(labelCount - 3));
                                 ImageIcon icon;
                                 if (isDirectory(path) || isFile(path)) {
-                                    icon = (ImageIcon) getSmallIcon(path);
+                                    icon = (ImageIcon) GetIcon.getBigIcon(path);
                                     icon = changeIcon(icon, label1.getHeight() - 60, label1.getHeight() - 60);
                                     label1.setIcon(icon);
                                     label1.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
@@ -653,7 +669,7 @@ public class SearchBar extends JTextField{
 
 
                                 if (isDirectory(path) || isFile(path)) {
-                                    icon = (ImageIcon) getSmallIcon(path);
+                                    icon = (ImageIcon) GetIcon.getBigIcon(path);
                                     icon = changeIcon(icon, label1.getHeight() - 60, label1.getHeight() - 60);
                                     label2.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
                                     label2.setIcon(icon);
@@ -666,7 +682,7 @@ public class SearchBar extends JTextField{
 
 
                                 if (isDirectory(path) || isFile(path)) {
-                                    icon = (ImageIcon) getSmallIcon(path);
+                                    icon = (ImageIcon) GetIcon.getBigIcon(path);
                                     icon = changeIcon(icon, label1.getHeight() - 60, label1.getHeight() - 60);
                                     label3.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
                                     label3.setIcon(icon);
@@ -679,7 +695,7 @@ public class SearchBar extends JTextField{
 
 
                                 if (isDirectory(path) || isFile(path)) {
-                                    icon = (ImageIcon) getSmallIcon(path);
+                                    icon = (ImageIcon) GetIcon.getBigIcon(path);
                                     icon = changeIcon(icon, label1.getHeight() - 60, label1.getHeight() - 60);
                                     label4.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
                                     label4.setIcon(icon);
@@ -781,15 +797,7 @@ public class SearchBar extends JTextField{
     public static SearchBar getInstance() {
         return searchBarInstance;
     }
-
-    private static Icon getSmallIcon(String file) {
-        File f = new File(file);
-        if (f.exists()) {
-            FileSystemView fsv = FileSystemView.getFileSystemView();
-            return (fsv.getSystemIcon(f));
-        }
-        return (null);
-    }
+    
 
     public boolean isUsing() {
         return this.isUsing;
@@ -903,7 +911,7 @@ public class SearchBar extends JTextField{
             String name = getFileName(listResult.get(0));
             ImageIcon icon;
             if (isDirectory(path) || isFile(path)) {
-                icon = (ImageIcon) getSmallIcon(path);
+                icon = (ImageIcon) GetIcon.getBigIcon(path);
                 icon = changeIcon(icon, label1.getHeight() - 60, label1.getHeight() - 60);
                 label1.setIcon(icon);
                 label1.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
@@ -917,7 +925,7 @@ public class SearchBar extends JTextField{
 
 
             if (isDirectory(path) || isFile(path)) {
-                icon = (ImageIcon) getSmallIcon(path);
+                icon = (ImageIcon) GetIcon.getBigIcon(path);
                 icon = changeIcon(icon, label1.getHeight() - 60, label1.getHeight() - 60);
                 label2.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
                 label2.setIcon(icon);
@@ -931,7 +939,7 @@ public class SearchBar extends JTextField{
 
 
             if (isDirectory(path) || isFile(path)) {
-                icon = (ImageIcon) getSmallIcon(path);
+                icon = (ImageIcon) GetIcon.getBigIcon(path);
                 icon = changeIcon(icon, label1.getHeight() - 60, label1.getHeight() - 60);
                 label3.setIcon(icon);
                 label3.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
@@ -945,7 +953,7 @@ public class SearchBar extends JTextField{
 
 
             if (isDirectory(path) || isFile(path)) {
-                icon = (ImageIcon) getSmallIcon(path);
+                icon = (ImageIcon) GetIcon.getBigIcon(path);
                 icon = changeIcon(icon, label1.getHeight() - 60, label1.getHeight() - 60);
                 label4.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
                 label4.setIcon(icon);
@@ -1142,10 +1150,6 @@ public class SearchBar extends JTextField{
                 }
             }
         }
-    }
-
-    public Container getPanel() {
-        return this.panel;
     }
 
     private void clearTextFieldText() {
