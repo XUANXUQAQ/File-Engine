@@ -21,6 +21,7 @@ import static main.MainClass.mainExit;
 
 
 public class SearchBar {
+    private static SearchBar searchBarInstance = new SearchBar();
     private JFrame searchBar = new JFrame();
     private Container panel;
     private LinkedList<String> listResult = new LinkedList<>();
@@ -42,15 +43,6 @@ public class SearchBar {
     private boolean timer = false;
     private Thread searchWaiter = null;
     private boolean isUsing = false;
-    private static SearchBar searchBarInstance = new SearchBar();
-
-    public static SearchBar getInstance(){
-        return searchBarInstance;
-    }
-
-    public boolean isUsing(){
-        return this.isUsing;
-    }
 
     private SearchBar() {
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize(); // 获取屏幕大小
@@ -58,8 +50,8 @@ public class SearchBar {
         int height = screenSize.height;
         int searchBarWidth = (int) (width * 0.5);
         int searchBarHeight = (int) (height * 0.5);
-        int positionX = width/2 - searchBarWidth/2;
-        int positionY = height/2 - searchBarHeight/2;
+        int positionX = width / 2 - searchBarWidth / 2;
+        int positionY = height / 2 - searchBarHeight / 2;
 
 
         //frame
@@ -69,7 +61,6 @@ public class SearchBar {
         searchBar.setBackground(null);
         searchBar.setOpacity(0.8f);
         panel = searchBar.getContentPane();
-
 
 
         //TextField
@@ -84,9 +75,8 @@ public class SearchBar {
         textField.setLocation(0, 0);
 
 
-
         ExecutorService fixedThreadPool = Executors.newFixedThreadPool(2);
-        fixedThreadPool.execute(()->{
+        fixedThreadPool.execute(() -> {
             while (!mainExit) {
                 if (!search.isManualUpdate() && !isUsing) {
                     if (search.getRecycleBinSize() > 100) {
@@ -95,7 +85,7 @@ public class SearchBar {
                         search.mergeAndClearRecycleBin();
                         search.setUsable(true);
                     }
-                    if (search.getLoadListSize() > 100){
+                    if (search.getLoadListSize() > 100) {
                         System.out.println("加载缓存空间过大，自动清理");
                         search.setUsable(false);
                         search.mergeFileToList();
@@ -128,16 +118,16 @@ public class SearchBar {
                             timer = false;
                             continue;
                         }
-                        if (text.equals("#*version*#")){
+                        if (text.equals("#*version*#")) {
                             closedTodo();
                             JOptionPane.showMessageDialog(null, "当前版本：" + MainClass.version);
                         }
                         searchPriorityFolder(text);
                         searchCache(text);
                         char firstWord = '\0';
-                        try{
+                        try {
                             firstWord = text.charAt(0);
-                        }catch(Exception ignored){
+                        } catch (Exception ignored) {
 
                         }
                         if ('>' == firstWord) {
@@ -303,12 +293,12 @@ public class SearchBar {
                                 addResult(list, text);
                             }
                         }
-                    }else{
-                        if (search.isManualUpdate()){
-                            if (searchWaiter ==null || !searchWaiter.isAlive()) {
+                    } else {
+                        if (search.isManualUpdate()) {
+                            if (searchWaiter == null || !searchWaiter.isAlive()) {
                                 searchWaiter = new Thread(() -> {
                                     while (!mainExit) {
-                                        if (Thread.currentThread().isInterrupted()){
+                                        if (Thread.currentThread().isInterrupted()) {
                                             break;
                                         }
                                         if (search.isUsable()) {
@@ -384,56 +374,56 @@ public class SearchBar {
                                 label1.setBackground(labelColor);
                                 try {
                                     String text = label2.getText();
-                                    if (text.equals("")){
+                                    if (text.equals("")) {
                                         label2.setBackground(null);
-                                    }else {
+                                    } else {
                                         label2.setBackground(backgroundColor);
                                     }
-                                }catch (NullPointerException e) {
+                                } catch (NullPointerException e) {
                                     label2.setBackground(null);
                                 }
                                 try {
                                     String text = label3.getText();
-                                    if (text.equals("")){
+                                    if (text.equals("")) {
                                         label3.setBackground(null);
-                                    }else {
+                                    } else {
                                         label3.setBackground(backgroundColorLight);
                                     }
-                                }catch (NullPointerException e) {
+                                } catch (NullPointerException e) {
                                     label3.setBackground(null);
                                 }
-                                try{
+                                try {
                                     String text = label4.getText();
-                                    if (text.equals("")){
+                                    if (text.equals("")) {
                                         label4.setBackground(null);
-                                    }else {
+                                    } else {
                                         label4.setBackground(backgroundColor);
                                     }
-                                }catch (NullPointerException e){
+                                } catch (NullPointerException e) {
                                     label4.setBackground(null);
                                 }
                                 showResult();
                             } else if (1 == labelCount) {
                                 label1.setBackground(backgroundColorLight);
                                 label2.setBackground(labelColor);
-                                try{
+                                try {
                                     String text = label3.getText();
-                                    if (text.equals("")){
+                                    if (text.equals("")) {
                                         label3.setBackground(null);
-                                    }else {
+                                    } else {
                                         label3.setBackground(backgroundColorLight);
                                     }
-                                }catch (NullPointerException e){
+                                } catch (NullPointerException e) {
                                     label3.setBackground(null);
                                 }
-                                try{
+                                try {
                                     String text = label4.getText();
                                     if (text.equals("")) {
                                         label4.setBackground(null);
-                                    }else{
+                                    } else {
                                         label4.setBackground(backgroundColor);
                                     }
-                                }catch (NullPointerException e) {
+                                } catch (NullPointerException e) {
                                     label4.setBackground(null);
                                 }
                                 showResult();
@@ -443,12 +433,12 @@ public class SearchBar {
                                 label3.setBackground(labelColor);
                                 try {
                                     String text = label4.getText();
-                                    if (text.equals("")){
+                                    if (text.equals("")) {
                                         label4.setBackground(null);
-                                    }else {
+                                    } else {
                                         label4.setBackground(backgroundColor);
                                     }
-                                }catch (NullPointerException e) {
+                                } catch (NullPointerException e) {
                                     label4.setBackground(null);
                                 }
                                 showResult();
@@ -531,56 +521,56 @@ public class SearchBar {
                                 label1.setBackground(labelColor);
                                 try {
                                     String text = label2.getText();
-                                    if (text.equals("")){
+                                    if (text.equals("")) {
                                         label2.setBackground(null);
-                                    }else {
+                                    } else {
                                         label2.setBackground(backgroundColor);
                                     }
-                                }catch (NullPointerException e) {
+                                } catch (NullPointerException e) {
                                     label2.setBackground(null);
                                 }
                                 try {
                                     String text = label3.getText();
-                                    if (text.equals("")){
+                                    if (text.equals("")) {
                                         label3.setBackground(null);
-                                    }else {
+                                    } else {
                                         label3.setBackground(backgroundColorLight);
                                     }
-                                }catch (NullPointerException e) {
+                                } catch (NullPointerException e) {
                                     label3.setBackground(null);
                                 }
-                                try{
+                                try {
                                     String text = label4.getText();
-                                    if (text.equals("")){
+                                    if (text.equals("")) {
                                         label4.setBackground(null);
-                                    }else {
+                                    } else {
                                         label4.setBackground(backgroundColor);
                                     }
-                                }catch (NullPointerException e){
+                                } catch (NullPointerException e) {
                                     label4.setBackground(null);
                                 }
                                 showResult();
                             } else if (1 == labelCount) {
                                 label1.setBackground(backgroundColorLight);
                                 label2.setBackground(labelColor);
-                                try{
+                                try {
                                     String text = label3.getText();
-                                    if (text.equals("")){
+                                    if (text.equals("")) {
                                         label3.setBackground(null);
-                                    }else {
+                                    } else {
                                         label3.setBackground(backgroundColorLight);
                                     }
-                                }catch (NullPointerException e){
+                                } catch (NullPointerException e) {
                                     label3.setBackground(null);
                                 }
-                                try{
+                                try {
                                     String text = label4.getText();
                                     if (text.equals("")) {
                                         label4.setBackground(null);
-                                    }else{
+                                    } else {
                                         label4.setBackground(backgroundColor);
                                     }
-                                }catch (NullPointerException e) {
+                                } catch (NullPointerException e) {
                                     label4.setBackground(null);
                                 }
                                 showResult();
@@ -590,12 +580,12 @@ public class SearchBar {
                                 label3.setBackground(labelColor);
                                 try {
                                     String text = label4.getText();
-                                    if (text.equals("")){
+                                    if (text.equals("")) {
                                         label4.setBackground(null);
-                                    }else {
+                                    } else {
                                         label4.setBackground(backgroundColor);
                                     }
-                                }catch (NullPointerException e) {
+                                } catch (NullPointerException e) {
                                     label4.setBackground(null);
                                 }
                                 showResult();
@@ -748,6 +738,10 @@ public class SearchBar {
         searchBar.setBackground(new Color(0, 0, 0, 0));
     }
 
+    public static SearchBar getInstance() {
+        return searchBarInstance;
+    }
+
     private static Icon getSmallIcon(String file) {
         File f = new File(file);
         if (f.exists()) {
@@ -756,6 +750,11 @@ public class SearchBar {
         }
         return (null);
     }
+
+    public boolean isUsing() {
+        return this.isUsing;
+    }
+
 
     private void addResult(LinkedHashSet<String> list, String text) {
         String[] strings = text.split(";");
@@ -803,22 +802,22 @@ public class SearchBar {
         }
         delRepeated(listResult);
         int size = listResult.size();
-        if (size == 1){
+        if (size == 1) {
             label1.setBackground(labelColor);
             label2.setBackground(null);
             label3.setBackground(null);
             label4.setBackground(null);
-        }else if(size == 2){
+        } else if (size == 2) {
             label1.setBackground(labelColor);
             label2.setBackground(backgroundColor);
             label3.setBackground(null);
             label4.setBackground(null);
-        }else if(size == 3){
+        } else if (size == 3) {
             label1.setBackground(labelColor);
             label2.setBackground(backgroundColor);
             label3.setBackground(backgroundColorLight);
             label4.setBackground(null);
-        }else if(size >= 4){
+        } else if (size >= 4) {
             label1.setBackground(labelColor);
             label2.setBackground(backgroundColor);
             label3.setBackground(backgroundColorLight);
@@ -1094,7 +1093,7 @@ public class SearchBar {
         SwingUtilities.invokeLater(clear);
     }
 
-    public void closedTodo(){
+    public void closedTodo() {
         Runnable todo = () -> {
             if (searchBar.isVisible()) {
                 searchBar.setVisible(false);
@@ -1108,10 +1107,10 @@ public class SearchBar {
             labelCount = 0;
             listResult.clear();
             textField.setText(null);
-            try{
+            try {
                 thread.interrupt();
                 searchWaiter.interrupt();
-            }catch (NullPointerException ignored){
+            } catch (NullPointerException ignored) {
 
             }
         };
@@ -1151,7 +1150,7 @@ public class SearchBar {
                 if (!this.text.equals("")) {
                     label:
                     for (String fileInList : search.getListA()) {
-                        
+
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             listResult.add(fileInList);
                             if (listResult.size() > 100) {
@@ -1191,7 +1190,7 @@ public class SearchBar {
                     }
                     label1:
                     for (String fileInList : search.getListB()) {
-                        
+
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             listResult.add(fileInList);
                             if (listResult.size() > 100) {
@@ -1231,7 +1230,7 @@ public class SearchBar {
                     }
                     label2:
                     for (String fileInList : search.getListC()) {
-                        
+
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             listResult.add(fileInList);
                             if (listResult.size() > 100) {
@@ -1271,7 +1270,7 @@ public class SearchBar {
                     }
                     label3:
                     for (String fileInList : search.getListD()) {
-                        
+
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             listResult.add(fileInList);
                             if (listResult.size() > 100) {
@@ -1311,7 +1310,7 @@ public class SearchBar {
                     }
                     label4:
                     for (String fileInList : search.getListE()) {
-                        
+
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             listResult.add(fileInList);
                             if (listResult.size() > 100) {
@@ -1351,7 +1350,7 @@ public class SearchBar {
                     }
                     label5:
                     for (String fileInList : search.getListF()) {
-                        
+
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             listResult.add(fileInList);
                             if (listResult.size() > 100) {
@@ -1391,7 +1390,7 @@ public class SearchBar {
                     }
                     label6:
                     for (String fileInList : search.getListG()) {
-                        
+
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             listResult.add(fileInList);
                             if (listResult.size() > 100) {
@@ -1431,7 +1430,7 @@ public class SearchBar {
                     }
                     label7:
                     for (String fileInList : search.getListH()) {
-                        
+
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             listResult.add(fileInList);
                             if (listResult.size() > 100) {
@@ -1471,7 +1470,7 @@ public class SearchBar {
                     }
                     label8:
                     for (String fileInList : search.getListI()) {
-                        
+
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             listResult.add(fileInList);
                             if (listResult.size() > 100) {
@@ -1511,7 +1510,7 @@ public class SearchBar {
                     }
                     label9:
                     for (String fileInList : search.getListJ()) {
-                        
+
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             listResult.add(fileInList);
                             if (listResult.size() > 100) {
@@ -1551,7 +1550,7 @@ public class SearchBar {
                     }
                     label10:
                     for (String fileInList : search.getListK()) {
-                        
+
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             listResult.add(fileInList);
                             if (listResult.size() > 100) {
@@ -1591,7 +1590,7 @@ public class SearchBar {
                     }
                     label11:
                     for (String fileInList : search.getListL()) {
-                        
+
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             listResult.add(fileInList);
                             if (listResult.size() > 100) {
@@ -1631,7 +1630,7 @@ public class SearchBar {
                     }
                     label12:
                     for (String fileInList : search.getListM()) {
-                        
+
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             listResult.add(fileInList);
                             if (listResult.size() > 100) {
@@ -1671,7 +1670,7 @@ public class SearchBar {
                     }
                     label13:
                     for (String fileInList : search.getListN()) {
-                        
+
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             listResult.add(fileInList);
                             if (listResult.size() > 100) {
@@ -1711,7 +1710,7 @@ public class SearchBar {
                     }
                     label14:
                     for (String fileInList : search.getListO()) {
-                        
+
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             listResult.add(fileInList);
                             if (listResult.size() > 100) {
@@ -1751,7 +1750,7 @@ public class SearchBar {
                     }
                     label15:
                     for (String fileInList : search.getListP()) {
-                        
+
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             listResult.add(fileInList);
                             if (listResult.size() > 100) {
@@ -1791,7 +1790,7 @@ public class SearchBar {
                     }
                     label16:
                     for (String fileInList : search.getListQ()) {
-                        
+
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             listResult.add(fileInList);
                             if (listResult.size() > 100) {
@@ -1831,7 +1830,7 @@ public class SearchBar {
                     }
                     label17:
                     for (String fileInList : search.getListR()) {
-                        
+
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             listResult.add(fileInList);
                             if (listResult.size() > 100) {
@@ -1871,7 +1870,7 @@ public class SearchBar {
                     }
                     label18:
                     for (String fileInList : search.getListS()) {
-                        
+
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             listResult.add(fileInList);
                             if (listResult.size() > 100) {
@@ -1911,7 +1910,7 @@ public class SearchBar {
                     }
                     label19:
                     for (String fileInList : search.getListT()) {
-                        
+
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             listResult.add(fileInList);
                             if (listResult.size() > 100) {
@@ -1951,7 +1950,7 @@ public class SearchBar {
                     }
                     label20:
                     for (String fileInList : search.getListU()) {
-                        
+
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             listResult.add(fileInList);
                             if (listResult.size() > 100) {
@@ -1991,7 +1990,7 @@ public class SearchBar {
                     }
                     label21:
                     for (String fileInList : search.getListV()) {
-                        
+
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             listResult.add(fileInList);
                             if (listResult.size() > 100) {
@@ -2031,7 +2030,7 @@ public class SearchBar {
                     }
                     label22:
                     for (String fileInList : search.getListW()) {
-                        
+
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             listResult.add(fileInList);
                             if (listResult.size() > 100) {
@@ -2071,7 +2070,7 @@ public class SearchBar {
                     }
                     label23:
                     for (String fileInList : search.getListX()) {
-                        
+
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             listResult.add(fileInList);
                             if (listResult.size() > 100) {
@@ -2111,7 +2110,7 @@ public class SearchBar {
                     }
                     label24:
                     for (String fileInList : search.getListY()) {
-                        
+
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             listResult.add(fileInList);
                             if (listResult.size() > 100) {
@@ -2151,7 +2150,7 @@ public class SearchBar {
                     }
                     label25:
                     for (String fileInList : search.getListZ()) {
-                        
+
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             listResult.add(fileInList);
                             if (listResult.size() > 100) {
@@ -2191,7 +2190,7 @@ public class SearchBar {
                     }
                     label26:
                     for (String fileInList : search.getListNum()) {
-                        
+
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             listResult.add(fileInList);
                             if (listResult.size() > 100) {
@@ -2231,7 +2230,7 @@ public class SearchBar {
                     }
                     label27:
                     for (String fileInList : search.getListUnderline()) {
-                        
+
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             listResult.add(fileInList);
                             if (listResult.size() > 100) {
@@ -2271,7 +2270,7 @@ public class SearchBar {
                     }
                     label28:
                     for (String fileInList : search.getListUnique()) {
-                        
+
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             listResult.add(fileInList);
                             if (listResult.size() > 100) {
@@ -2311,7 +2310,7 @@ public class SearchBar {
                     }
                     label29:
                     for (String fileInList : search.getListPercentSign()) {
-                        
+
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             listResult.add(fileInList);
                             if (listResult.size() > 100) {
@@ -2353,22 +2352,22 @@ public class SearchBar {
                 if (!Thread.currentThread().isInterrupted()) {
                     delRepeated(listResult);
                     int size = listResult.size();
-                    if (size == 1){
+                    if (size == 1) {
                         label1.setBackground(labelColor);
                         label2.setBackground(null);
                         label3.setBackground(null);
                         label4.setBackground(null);
-                    }else if(size == 2){
+                    } else if (size == 2) {
                         label1.setBackground(labelColor);
                         label2.setBackground(backgroundColor);
                         label3.setBackground(null);
                         label4.setBackground(null);
-                    }else if(size == 3){
+                    } else if (size == 3) {
                         label1.setBackground(labelColor);
                         label2.setBackground(backgroundColor);
                         label3.setBackground(backgroundColorLight);
                         label4.setBackground(null);
-                    }else if(size >= 4){
+                    } else if (size >= 4) {
                         label1.setBackground(labelColor);
                         label2.setBackground(backgroundColor);
                         label3.setBackground(backgroundColorLight);
