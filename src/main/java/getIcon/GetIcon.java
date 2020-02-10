@@ -17,8 +17,8 @@ public class GetIcon {
             try {
                 sun.awt.shell.ShellFolder sf = sun.awt.shell.ShellFolder.getShellFolder(f);
                 return new ImageIcon(sf.getIcon(true));
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
+            } catch (FileNotFoundException | NullPointerException ignored) {
+
             }
         }
         return null;

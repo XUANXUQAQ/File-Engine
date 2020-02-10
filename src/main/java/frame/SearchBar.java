@@ -1,5 +1,6 @@
 package frame;
 
+import com.sun.awt.AWTUtilities;
 import getIcon.GetIcon;
 import main.MainClass;
 import search.Search;
@@ -10,17 +11,17 @@ import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
-import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.URL;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
 import static main.MainClass.mainExit;
 
 
-public class SearchBar extends JTextField{
+public class SearchBar extends JTextField {
     private static SearchBar searchBarInstance = new SearchBar();
     private JFrame searchBar = new JFrame();
     private Container panel;
@@ -36,74 +37,97 @@ public class SearchBar extends JTextField{
     private Color labelColor = new Color(255, 152, 104, 255);
     private Color backgroundColor = new Color(108, 108, 108, 255);
     private Color backgroundColorLight = new Color(75, 75, 75, 255);
-    private LinkedHashSet<String> list = new LinkedHashSet<>();
+    private LinkedHashSet<String> list;
     private Thread thread;
     private boolean isFirstRun = true;
     private long startTime = 0;
     private boolean timer = false;
     private Thread searchWaiter = null;
     private boolean isUsing = false;
-    private BufferedImage buffer = null;
-
-    public void paintComponent(Graphics g) {
-        Component window = this.getTopLevelAncestor();
-        if (window instanceof Window && !window.isOpaque()) {
-            // This is a translucent window, so we need to draw to a buffer
-            // first to work around a bug in the DirectDraw rendering in Swing.
-            int w = this.getWidth();
-            int h = this.getHeight();
-            if (buffer == null || buffer.getWidth() != w || buffer.getHeight() != h) {
-                // Create a new buffer based on the current size.
-                GraphicsConfiguration gc = this.getGraphicsConfiguration();
-                buffer = gc.createCompatibleImage(w, h, BufferedImage.TRANSLUCENT);
-            }
-
-            // Use the super class's paintComponent implementation to draw to
-            // the buffer, then write that buffer to the original Graphics object.
-            Graphics bufferGraphics = buffer.createGraphics();
-            try {
-                super.paintComponent(bufferGraphics);
-            } finally {
-                bufferGraphics.dispose();
-            }
-            g.drawImage(buffer, 0, 0, w, h, 0, 0, w, h, null);
-        } else {
-            // This is not a translucent window, so we can call the super class
-            // implementation directly.
-            super.paintComponent(g);
-        }
-    }
-
 
     private SearchBar() {
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize(); // 获取屏幕大小
         int width = screenSize.width;
         int height = screenSize.height;
-        int searchBarWidth = (int) (width * 0.5);
+        int searchBarWidth = (int) (width * 0.4);
         int searchBarHeight = (int) (height * 0.5);
         int positionX = width / 2 - searchBarWidth / 2;
         int positionY = height / 2 - searchBarHeight / 2;
-
 
         //frame
         searchBar.setBounds(positionX, positionY, searchBarWidth, searchBarHeight);
         searchBar.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
         searchBar.setUndecorated(true);
+        AWTUtilities.setWindowOpaque(searchBar, false);
+        searchBar.getRootPane().setWindowDecorationStyle(JRootPane.NONE);
         searchBar.setBackground(null);
-        //searchBar.setOpacity(0.8f);
+        searchBar.setOpacity(0.9f);
         panel = searchBar.getContentPane();
+
+        //labels
+        Font font = new Font("Microsoft JhengHei", Font.BOLD, (int) ((height * 0.1) / 96 * 72) / 4);
+        Color fontColor = new Color(73, 162, 255, 255);
+        label1.setSize(searchBarWidth, (int) (searchBarHeight * 0.2));
+        label1.setLocation(0, (int) (searchBarHeight * 0.2));
+        label1.setFont(font);
+        label1.setForeground(fontColor);
+        label1.setOpaque(true);
+        label1.setBackground(null);
+
+
+
+        label2.setSize(searchBarWidth, (int) (searchBarHeight * 0.2));
+        label2.setLocation(0, (int) (searchBarHeight * 0.4));
+        label2.setFont(font);
+        label2.setForeground(fontColor);
+        label2.setOpaque(true);
+        label2.setBackground(null);
+
+
+
+        label3.setSize(searchBarWidth, (int) (searchBarHeight * 0.2));
+        label3.setLocation(0, (int) (searchBarHeight * 0.6));
+        label3.setFont(font);
+        label3.setForeground(fontColor);
+        label3.setOpaque(true);
+        label3.setBackground(null);
+
+
+
+        label4.setSize(searchBarWidth, (int) (searchBarHeight * 0.2));
+        label4.setLocation(0, (int) (searchBarHeight * 0.8));
+        label4.setFont(font);
+        label4.setForeground(fontColor);
+        label4.setOpaque(true);
+        label4.setBackground(null);
+
+
+
+        URL icon = TaskBar.class.getResource("/icons/taskbar_32x32.png");
+        Image image = new ImageIcon(icon).getImage();
+        searchBar.setIconImage(image);
+        searchBar.setBackground(new Color(0, 0, 0, 0));
 
 
         //TextField
         textField = new JTextField(300);
         textField.setSize(searchBarWidth, (int) (searchBarHeight * 0.2));
-        Font textFieldFont = new Font("Microsoft JhengHei", Font.BOLD, (int) ((height * 0.1) / 96 * 72));
+        Font textFieldFont = new Font("Microsoft JhengHei", Font.BOLD, (int) ((height * 0.1) / 96 * 72 / 1.2));
         textField.setFont(textFieldFont);
         textField.setForeground(Color.WHITE);
         textField.setHorizontalAlignment(JTextField.LEFT);
         textField.setBorder(null);
         textField.setBackground(backgroundColor);
         textField.setLocation(0, 0);
+
+        //panel
+        panel.setLayout(null);
+        panel.setBackground(new Color(0, 0, 0, 0));
+        panel.add(textField);
+        panel.add(label1);
+        panel.add(label2);
+        panel.add(label3);
+        panel.add(label4);
 
 
         ExecutorService fixedThreadPool = Executors.newFixedThreadPool(3);
@@ -390,7 +414,7 @@ public class SearchBar extends JTextField{
 
             @Override
             public void removeUpdate(DocumentEvent e) {
-                if (textField.getText().equals("")){
+                if (textField.getText().equals("")) {
                     listResult.clear();
                     clearLabel();
                 }
@@ -412,153 +436,153 @@ public class SearchBar extends JTextField{
                     int key = arg0.getKeyCode();
                     if (38 == key) {
                         //上键被点击
-                        if (!textField.getText().equals("")){
-                        labelCount--;
-                        if (labelCount < 0) {
-                            labelCount = 0;
-                        }
+                        if (!textField.getText().equals("")) {
+                            labelCount--;
+                            if (labelCount < 0) {
+                                labelCount = 0;
+                            }
 
-                        //System.out.println(labelCount);
-                        if (labelCount >= listResult.size()) {
-                            labelCount = listResult.size() - 1;
-                        }
-                        if (labelCount < 3) {
-                            //未到最上端
-                            if (0 == labelCount) {
-                                label1.setBackground(labelColor);
-                                try {
-                                    String text = label2.getText();
-                                    if (text.equals("")) {
+                            //System.out.println(labelCount);
+                            if (labelCount >= listResult.size()) {
+                                labelCount = listResult.size() - 1;
+                            }
+                            if (labelCount < 3) {
+                                //未到最上端
+                                if (0 == labelCount) {
+                                    label1.setBackground(labelColor);
+                                    try {
+                                        String text = label2.getText();
+                                        if (text.equals("")) {
+                                            label2.setBackground(null);
+                                        } else {
+                                            label2.setBackground(backgroundColor);
+                                        }
+                                    } catch (NullPointerException e) {
                                         label2.setBackground(null);
-                                    } else {
-                                        label2.setBackground(backgroundColor);
                                     }
-                                } catch (NullPointerException e) {
-                                    label2.setBackground(null);
-                                }
-                                try {
-                                    String text = label3.getText();
-                                    if (text.equals("")) {
+                                    try {
+                                        String text = label3.getText();
+                                        if (text.equals("")) {
+                                            label3.setBackground(null);
+                                        } else {
+                                            label3.setBackground(backgroundColorLight);
+                                        }
+                                    } catch (NullPointerException e) {
                                         label3.setBackground(null);
-                                    } else {
-                                        label3.setBackground(backgroundColorLight);
                                     }
-                                } catch (NullPointerException e) {
-                                    label3.setBackground(null);
-                                }
-                                try {
-                                    String text = label4.getText();
-                                    if (text.equals("")) {
+                                    try {
+                                        String text = label4.getText();
+                                        if (text.equals("")) {
+                                            label4.setBackground(null);
+                                        } else {
+                                            label4.setBackground(backgroundColor);
+                                        }
+                                    } catch (NullPointerException e) {
                                         label4.setBackground(null);
-                                    } else {
-                                        label4.setBackground(backgroundColor);
                                     }
-                                } catch (NullPointerException e) {
-                                    label4.setBackground(null);
-                                }
-                                showResult();
-                            } else if (1 == labelCount) {
-                                label1.setBackground(backgroundColorLight);
-                                label2.setBackground(labelColor);
-                                try {
-                                    String text = label3.getText();
-                                    if (text.equals("")) {
+                                    showResult();
+                                } else if (1 == labelCount) {
+                                    label1.setBackground(backgroundColorLight);
+                                    label2.setBackground(labelColor);
+                                    try {
+                                        String text = label3.getText();
+                                        if (text.equals("")) {
+                                            label3.setBackground(null);
+                                        } else {
+                                            label3.setBackground(backgroundColorLight);
+                                        }
+                                    } catch (NullPointerException e) {
                                         label3.setBackground(null);
-                                    } else {
-                                        label3.setBackground(backgroundColorLight);
                                     }
-                                } catch (NullPointerException e) {
-                                    label3.setBackground(null);
-                                }
-                                try {
-                                    String text = label4.getText();
-                                    if (text.equals("")) {
+                                    try {
+                                        String text = label4.getText();
+                                        if (text.equals("")) {
+                                            label4.setBackground(null);
+                                        } else {
+                                            label4.setBackground(backgroundColor);
+                                        }
+                                    } catch (NullPointerException e) {
                                         label4.setBackground(null);
-                                    } else {
-                                        label4.setBackground(backgroundColor);
                                     }
-                                } catch (NullPointerException e) {
-                                    label4.setBackground(null);
+                                    showResult();
+                                } else if (2 == labelCount) {
+                                    label1.setBackground(backgroundColorLight);
+                                    label2.setBackground(backgroundColor);
+                                    label3.setBackground(labelColor);
+                                    try {
+                                        String text = label4.getText();
+                                        if (text.equals("")) {
+                                            label4.setBackground(null);
+                                        } else {
+                                            label4.setBackground(backgroundColor);
+                                        }
+                                    } catch (NullPointerException e) {
+                                        label4.setBackground(null);
+                                    }
+                                    showResult();
                                 }
-                                showResult();
-                            } else if (2 == labelCount) {
+                            } else {
+                                //到达最下端
                                 label1.setBackground(backgroundColorLight);
                                 label2.setBackground(backgroundColor);
-                                label3.setBackground(labelColor);
-                                try {
-                                    String text = label4.getText();
-                                    if (text.equals("")) {
-                                        label4.setBackground(null);
-                                    } else {
-                                        label4.setBackground(backgroundColor);
-                                    }
-                                } catch (NullPointerException e) {
-                                    label4.setBackground(null);
+                                label3.setBackground(backgroundColorLight);
+                                label4.setBackground(labelColor);
+                                String path = listResult.get(labelCount - 3);
+                                String name = getFileName(listResult.get(labelCount - 3));
+                                ImageIcon icon;
+                                if (isDirectory(path) || isFile(path)) {
+                                    icon = (ImageIcon) GetIcon.getBigIcon(path);
+                                    icon = changeIcon(icon, label1.getHeight() - 60, label1.getHeight() - 60);
+                                    label1.setIcon(icon);
+                                    label1.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
+                                } else {
+                                    label1.setIcon(null);
+                                    label1.setText("无效文件");
+                                    search.addToRecycleBin(path);
                                 }
-                                showResult();
-                            }
-                        } else {
-                            //到达最下端
-                            label1.setBackground(backgroundColorLight);
-                            label2.setBackground(backgroundColor);
-                            label3.setBackground(backgroundColorLight);
-                            label4.setBackground(labelColor);
-                            String path = listResult.get(labelCount - 3);
-                            String name = getFileName(listResult.get(labelCount - 3));
-                            ImageIcon icon;
-                            if (isDirectory(path) || isFile(path)) {
-                                icon = (ImageIcon) GetIcon.getBigIcon(path);
-                                icon = changeIcon(icon, label1.getHeight() - 60, label1.getHeight() - 60);
-                                label1.setIcon(icon);
-                                label1.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
-                            } else {
-                                label1.setIcon(null);
-                                label1.setText("无效文件");
-                                search.addToRecycleBin(path);
-                            }
-                            path = listResult.get(labelCount - 2);
-                            name = getFileName(listResult.get(labelCount - 2));
+                                path = listResult.get(labelCount - 2);
+                                name = getFileName(listResult.get(labelCount - 2));
 
-                            if (isDirectory(path) || isFile(path)) {
-                                icon = (ImageIcon) GetIcon.getBigIcon(path);
-                                icon = changeIcon(icon, label1.getHeight() - 60, label1.getHeight() - 60);
-                                label2.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
-                                label2.setIcon(icon);
-                            } else {
-                                label2.setIcon(null);
-                                label2.setText("无效文件");
-                                search.addToRecycleBin(path);
-                            }
-                            path = listResult.get(labelCount - 1);
-                            name = getFileName(listResult.get(labelCount - 1));
+                                if (isDirectory(path) || isFile(path)) {
+                                    icon = (ImageIcon) GetIcon.getBigIcon(path);
+                                    icon = changeIcon(icon, label1.getHeight() - 60, label1.getHeight() - 60);
+                                    label2.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
+                                    label2.setIcon(icon);
+                                } else {
+                                    label2.setIcon(null);
+                                    label2.setText("无效文件");
+                                    search.addToRecycleBin(path);
+                                }
+                                path = listResult.get(labelCount - 1);
+                                name = getFileName(listResult.get(labelCount - 1));
 
 
-                            if (isDirectory(path) || isFile(path)) {
-                                icon = (ImageIcon) GetIcon.getBigIcon(path);
-                                icon = changeIcon(icon, label1.getHeight() - 60, label1.getHeight() - 60);
-                                label3.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
-                                label3.setIcon(icon);
-                            } else {
-                                label3.setIcon(null);
-                                label3.setText("无效文件");
-                                search.addToRecycleBin(path);
-                            }
-                            path = listResult.get(labelCount);
-                            name = getFileName(listResult.get(labelCount));
+                                if (isDirectory(path) || isFile(path)) {
+                                    icon = (ImageIcon) GetIcon.getBigIcon(path);
+                                    icon = changeIcon(icon, label1.getHeight() - 60, label1.getHeight() - 60);
+                                    label3.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
+                                    label3.setIcon(icon);
+                                } else {
+                                    label3.setIcon(null);
+                                    label3.setText("无效文件");
+                                    search.addToRecycleBin(path);
+                                }
+                                path = listResult.get(labelCount);
+                                name = getFileName(listResult.get(labelCount));
 
 
-                            if (isDirectory(path) || isFile(path)) {
-                                icon = (ImageIcon) GetIcon.getBigIcon(path);
-                                icon = changeIcon(icon, label1.getHeight() - 60, label1.getHeight() - 60);
-                                label4.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
-                                label4.setIcon(icon);
-                            } else {
-                                label4.setIcon(null);
-                                label4.setText("无效文件");
-                                search.addToRecycleBin(path);
+                                if (isDirectory(path) || isFile(path)) {
+                                    icon = (ImageIcon) GetIcon.getBigIcon(path);
+                                    icon = changeIcon(icon, label1.getHeight() - 60, label1.getHeight() - 60);
+                                    label4.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
+                                    label4.setIcon(icon);
+                                } else {
+                                    label4.setIcon(null);
+                                    label4.setText("无效文件");
+                                    search.addToRecycleBin(path);
+                                }
                             }
                         }
-                    }
                     } else if (40 == key) {
                         //下键被点击
                         if (!textField.getText().equals("")) {
@@ -659,7 +683,7 @@ public class SearchBar extends JTextField{
                                     icon = (ImageIcon) GetIcon.getBigIcon(path);
                                     icon = changeIcon(icon, label1.getHeight() - 60, label1.getHeight() - 60);
                                     label1.setIcon(icon);
-                                    label1.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
+                                    label1.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
                                 } else {
                                     label1.setText("无效文件");
                                     search.addToRecycleBin(path);
@@ -671,7 +695,7 @@ public class SearchBar extends JTextField{
                                 if (isDirectory(path) || isFile(path)) {
                                     icon = (ImageIcon) GetIcon.getBigIcon(path);
                                     icon = changeIcon(icon, label1.getHeight() - 60, label1.getHeight() - 60);
-                                    label2.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
+                                    label2.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
                                     label2.setIcon(icon);
                                 } else {
                                     label2.setText("无效文件");
@@ -684,7 +708,7 @@ public class SearchBar extends JTextField{
                                 if (isDirectory(path) || isFile(path)) {
                                     icon = (ImageIcon) GetIcon.getBigIcon(path);
                                     icon = changeIcon(icon, label1.getHeight() - 60, label1.getHeight() - 60);
-                                    label3.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
+                                    label3.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
                                     label3.setIcon(icon);
                                 } else {
                                     label3.setText("无效文件");
@@ -697,7 +721,7 @@ public class SearchBar extends JTextField{
                                 if (isDirectory(path) || isFile(path)) {
                                     icon = (ImageIcon) GetIcon.getBigIcon(path);
                                     icon = changeIcon(icon, label1.getHeight() - 60, label1.getHeight() - 60);
-                                    label4.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
+                                    label4.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
                                     label4.setIcon(icon);
                                 } else {
                                     label4.setText("无效文件");
@@ -741,63 +765,12 @@ public class SearchBar extends JTextField{
 
             }
         });
-
-
-        //labels
-        Font font = new Font("Microsoft JhengHei", Font.BOLD, (int) ((height * 0.1) / 96 * 72) / 4);
-        Color fontColor = new Color(73, 162, 255, 255);
-        label1.setSize(searchBarWidth, (int) (searchBarHeight * 0.2));
-        label1.setLocation(0, (int) (searchBarHeight * 0.2));
-        label1.setFont(font);
-        label1.setForeground(fontColor);
-        label1.setBackground(null);
-        label1.setOpaque(true);
-
-
-        label2.setSize(searchBarWidth, (int) (searchBarHeight * 0.2));
-        label2.setLocation(0, (int) (searchBarHeight * 0.4));
-        label2.setFont(font);
-        label2.setForeground(fontColor);
-        label2.setBackground(null);
-        label2.setOpaque(true);
-
-
-        label3.setSize(searchBarWidth, (int) (searchBarHeight * 0.2));
-        label3.setLocation(0, (int) (searchBarHeight * 0.6));
-        label3.setFont(font);
-        label3.setForeground(fontColor);
-        label3.setBackground(null);
-        label3.setOpaque(true);
-
-
-        label4.setSize(searchBarWidth, (int) (searchBarHeight * 0.2));
-        label4.setLocation(0, (int) (searchBarHeight * 0.8));
-        label4.setFont(font);
-        label4.setForeground(fontColor);
-        label4.setBackground(null);
-        label4.setOpaque(true);
-
-
-        //panel
-        panel.setLayout(null);
-        panel.setBackground(new Color(0, 0, 0, 0));
-        panel.add(textField);
-        panel.add(label1);
-        panel.add(label2);
-        panel.add(label3);
-        panel.add(label4);
-
-
-        URL icon = TaskBar.class.getResource("/icons/taskbar_32x32.png");
-        Image image = new ImageIcon(icon).getImage();
-        searchBar.setIconImage(image);
-        searchBar.setBackground(new Color(0, 0, 0, 0));
     }
 
     public static SearchBar getInstance() {
         return searchBarInstance;
     }
-    
+
 
     public boolean isUsing() {
         return this.isUsing;
@@ -845,8 +818,8 @@ public class SearchBar extends JTextField{
                             }
                             break;
                         case "FOLDER-FULL":
-                            if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())){
-                                if (isDirectory(fileInList)){
+                            if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                if (isDirectory(fileInList)) {
                                     listResult.add(fileInList);
                                 }
                                 if (listResult.size() > 100) {
@@ -914,7 +887,7 @@ public class SearchBar extends JTextField{
                 icon = (ImageIcon) GetIcon.getBigIcon(path);
                 icon = changeIcon(icon, label1.getHeight() - 60, label1.getHeight() - 60);
                 label1.setIcon(icon);
-                label1.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
+                label1.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
             } else {
                 label1.setIcon(null);
                 label1.setText("无效文件");
@@ -927,7 +900,7 @@ public class SearchBar extends JTextField{
             if (isDirectory(path) || isFile(path)) {
                 icon = (ImageIcon) GetIcon.getBigIcon(path);
                 icon = changeIcon(icon, label1.getHeight() - 60, label1.getHeight() - 60);
-                label2.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
+                label2.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
                 label2.setIcon(icon);
             } else {
                 label2.setIcon(null);
@@ -942,7 +915,7 @@ public class SearchBar extends JTextField{
                 icon = (ImageIcon) GetIcon.getBigIcon(path);
                 icon = changeIcon(icon, label1.getHeight() - 60, label1.getHeight() - 60);
                 label3.setIcon(icon);
-                label3.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
+                label3.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
             } else {
                 label3.setIcon(null);
                 label3.setText("无效文件");
@@ -955,7 +928,7 @@ public class SearchBar extends JTextField{
             if (isDirectory(path) || isFile(path)) {
                 icon = (ImageIcon) GetIcon.getBigIcon(path);
                 icon = changeIcon(icon, label1.getHeight() - 60, label1.getHeight() - 60);
-                label4.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
+                label4.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
                 label4.setIcon(icon);
             } else {
                 label4.setIcon(null);
@@ -1181,6 +1154,11 @@ public class SearchBar extends JTextField{
         SwingUtilities.invokeLater(todo);
     }
 
+    private String getParentPath(String path) {
+        File f = new File(path);
+        return f.getParent();
+    }
+
     private boolean isFile(String text) {
         File file = new File(text);
         return file.isFile();
@@ -1247,8 +1225,8 @@ public class SearchBar extends JTextField{
                                     }
                                     break;
                                 case "FOLDER-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())){
-                                        if (isDirectory(fileInList)){
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                        if (isDirectory(fileInList)) {
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -1307,8 +1285,8 @@ public class SearchBar extends JTextField{
                                     }
                                     break;
                                 case "FOLDER-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())){
-                                        if (isDirectory(fileInList)){
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                        if (isDirectory(fileInList)) {
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -1367,8 +1345,8 @@ public class SearchBar extends JTextField{
                                     }
                                     break;
                                 case "FOLDER-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())){
-                                        if (isDirectory(fileInList)){
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                        if (isDirectory(fileInList)) {
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -1427,8 +1405,8 @@ public class SearchBar extends JTextField{
                                     }
                                     break;
                                 case "FOLDER-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())){
-                                        if (isDirectory(fileInList)){
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                        if (isDirectory(fileInList)) {
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -1487,8 +1465,8 @@ public class SearchBar extends JTextField{
                                     }
                                     break;
                                 case "FOLDER-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())){
-                                        if (isDirectory(fileInList)){
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                        if (isDirectory(fileInList)) {
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -1547,8 +1525,8 @@ public class SearchBar extends JTextField{
                                     }
                                     break;
                                 case "FOLDER-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())){
-                                        if (isDirectory(fileInList)){
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                        if (isDirectory(fileInList)) {
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -1607,8 +1585,8 @@ public class SearchBar extends JTextField{
                                     }
                                     break;
                                 case "FOLDER-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())){
-                                        if (isDirectory(fileInList)){
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                        if (isDirectory(fileInList)) {
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -1667,8 +1645,8 @@ public class SearchBar extends JTextField{
                                     }
                                     break;
                                 case "FOLDER-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())){
-                                        if (isDirectory(fileInList)){
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                        if (isDirectory(fileInList)) {
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -1727,8 +1705,8 @@ public class SearchBar extends JTextField{
                                     }
                                     break;
                                 case "FOLDER-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())){
-                                        if (isDirectory(fileInList)){
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                        if (isDirectory(fileInList)) {
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -1787,8 +1765,8 @@ public class SearchBar extends JTextField{
                                     }
                                     break;
                                 case "FOLDER-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())){
-                                        if (isDirectory(fileInList)){
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                        if (isDirectory(fileInList)) {
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -1847,8 +1825,8 @@ public class SearchBar extends JTextField{
                                     }
                                     break;
                                 case "FOLDER-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())){
-                                        if (isDirectory(fileInList)){
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                        if (isDirectory(fileInList)) {
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -1907,8 +1885,8 @@ public class SearchBar extends JTextField{
                                     }
                                     break;
                                 case "FOLDER-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())){
-                                        if (isDirectory(fileInList)){
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                        if (isDirectory(fileInList)) {
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -1967,8 +1945,8 @@ public class SearchBar extends JTextField{
                                     }
                                     break;
                                 case "FOLDER-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())){
-                                        if (isDirectory(fileInList)){
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                        if (isDirectory(fileInList)) {
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -2027,8 +2005,8 @@ public class SearchBar extends JTextField{
                                     }
                                     break;
                                 case "FOLDER-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())){
-                                        if (isDirectory(fileInList)){
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                        if (isDirectory(fileInList)) {
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -2087,8 +2065,8 @@ public class SearchBar extends JTextField{
                                     }
                                     break;
                                 case "FOLDER-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())){
-                                        if (isDirectory(fileInList)){
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                        if (isDirectory(fileInList)) {
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -2147,8 +2125,8 @@ public class SearchBar extends JTextField{
                                     }
                                     break;
                                 case "FOLDER-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())){
-                                        if (isDirectory(fileInList)){
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                        if (isDirectory(fileInList)) {
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -2207,8 +2185,8 @@ public class SearchBar extends JTextField{
                                     }
                                     break;
                                 case "FOLDER-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())){
-                                        if (isDirectory(fileInList)){
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                        if (isDirectory(fileInList)) {
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -2267,8 +2245,8 @@ public class SearchBar extends JTextField{
                                     }
                                     break;
                                 case "FOLDER-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())){
-                                        if (isDirectory(fileInList)){
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                        if (isDirectory(fileInList)) {
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -2327,8 +2305,8 @@ public class SearchBar extends JTextField{
                                     }
                                     break;
                                 case "FOLDER-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())){
-                                        if (isDirectory(fileInList)){
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                        if (isDirectory(fileInList)) {
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -2387,8 +2365,8 @@ public class SearchBar extends JTextField{
                                     }
                                     break;
                                 case "FOLDER-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())){
-                                        if (isDirectory(fileInList)){
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                        if (isDirectory(fileInList)) {
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -2447,8 +2425,8 @@ public class SearchBar extends JTextField{
                                     }
                                     break;
                                 case "FOLDER-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())){
-                                        if (isDirectory(fileInList)){
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                        if (isDirectory(fileInList)) {
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -2507,8 +2485,8 @@ public class SearchBar extends JTextField{
                                     }
                                     break;
                                 case "FOLDER-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())){
-                                        if (isDirectory(fileInList)){
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                        if (isDirectory(fileInList)) {
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -2567,8 +2545,8 @@ public class SearchBar extends JTextField{
                                     }
                                     break;
                                 case "FOLDER-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())){
-                                        if (isDirectory(fileInList)){
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                        if (isDirectory(fileInList)) {
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -2627,8 +2605,8 @@ public class SearchBar extends JTextField{
                                     }
                                     break;
                                 case "FOLDER-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())){
-                                        if (isDirectory(fileInList)){
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                        if (isDirectory(fileInList)) {
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -2687,8 +2665,8 @@ public class SearchBar extends JTextField{
                                     }
                                     break;
                                 case "FOLDER-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())){
-                                        if (isDirectory(fileInList)){
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                        if (isDirectory(fileInList)) {
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -2747,8 +2725,8 @@ public class SearchBar extends JTextField{
                                     }
                                     break;
                                 case "FOLDER-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())){
-                                        if (isDirectory(fileInList)){
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                        if (isDirectory(fileInList)) {
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -2807,8 +2785,8 @@ public class SearchBar extends JTextField{
                                     }
                                     break;
                                 case "FOLDER-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())){
-                                        if (isDirectory(fileInList)){
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                        if (isDirectory(fileInList)) {
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -2867,8 +2845,8 @@ public class SearchBar extends JTextField{
                                     }
                                     break;
                                 case "FOLDER-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())){
-                                        if (isDirectory(fileInList)){
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                        if (isDirectory(fileInList)) {
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -2927,8 +2905,8 @@ public class SearchBar extends JTextField{
                                     }
                                     break;
                                 case "FOLDER-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())){
-                                        if (isDirectory(fileInList)){
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                        if (isDirectory(fileInList)) {
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -2987,8 +2965,8 @@ public class SearchBar extends JTextField{
                                     }
                                     break;
                                 case "FOLDER-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())){
-                                        if (isDirectory(fileInList)){
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                        if (isDirectory(fileInList)) {
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
