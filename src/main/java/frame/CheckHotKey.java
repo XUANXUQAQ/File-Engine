@@ -47,7 +47,7 @@ public class CheckHotKey extends JFrame{
             this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             map.put("Ctrl", JIntellitype.MOD_CONTROL);
             map.put("Alt", JIntellitype.MOD_ALT);
-            map.put("Shift", JIntellitype.MOD_ALT);
+            map.put("Shift", JIntellitype.MOD_SHIFT);
             map.put("Win", JIntellitype.MOD_WIN);
 
             //½âÎö×Ö·û´®
