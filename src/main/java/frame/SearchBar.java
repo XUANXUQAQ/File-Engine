@@ -150,6 +150,7 @@ public class SearchBar extends JTextField {
         });
 
         fixedThreadPool.execute(() -> {
+            //检测缓存大小 过大时进行清理
             while (!mainExit) {
                 if (!search.isManualUpdate() && !isUsing) {
                     if (search.getRecycleBinSize() > 100) {
@@ -173,6 +174,8 @@ public class SearchBar extends JTextField {
             }
         });
         fixedThreadPool.execute(() -> {
+            //接收insertUpdate的信息并进行搜索
+            //停顿时间0.5s，每一次输入会更新一次startTime，该线程记录endTime
             while (!mainExit) {
                 long endTime = System.currentTimeMillis();
                 if ((endTime - startTime > 500) && (timer)) {
@@ -773,11 +776,13 @@ public class SearchBar extends JTextField {
 
 
     public boolean isUsing() {
+        //窗口是否正在显示
         return this.isUsing;
     }
 
 
     private void addResult(LinkedHashSet<String> list, String text) {
+        //为label添加结果
         String[] strings = text.split(";");
         String searchText = strings[0];
         int length = strings.length;
