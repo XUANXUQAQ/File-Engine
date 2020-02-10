@@ -100,8 +100,8 @@ public class MainClass {
 
 
     public static void main(String[] args) {
-        System.setProperty("sun.java2d.noddraw", "false");
         try {
+            System.setProperty("sun.java2d.noddraw", "true");
             org.jb2011.lnf.beautyeye.BeautyEyeLNFHelper.launchBeautyEyeLNF();
             UIManager.put("RootPane.setupButtonVisible",false);
         } catch (Exception e) {
