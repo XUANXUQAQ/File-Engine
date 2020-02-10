@@ -44,6 +44,7 @@ public class SearchBar {
     private Thread searchWaiter = null;
     private boolean isUsing = false;
 
+
     private SearchBar() {
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize(); // 获取屏幕大小
         int width = screenSize.width;
@@ -341,6 +342,10 @@ public class SearchBar {
 
             @Override
             public void removeUpdate(DocumentEvent e) {
+                if (textField.getText().equals("")){
+                    listResult.clear();
+                    clearLabel();
+                }
                 startTime = System.currentTimeMillis();
                 timer = true;
             }
@@ -796,6 +801,26 @@ public class SearchBar {
                                 }
                             }
                             break;
+                        case "FOLDER-FULL":
+                            if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())){
+                                if (isDirectory(fileInList)){
+                                    listResult.add(fileInList);
+                                }
+                                if (listResult.size() > 100) {
+                                    break label;
+                                }
+                            }
+                            break;
+                        case "FILE-FULL":
+                            if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                if (isFile(fileInList)) {
+                                    listResult.add(fileInList);
+                                }
+                                if (listResult.size() > 100) {
+                                    break label;
+                                }
+                            }
+                            break;
                     }
                 }
             }
@@ -1182,6 +1207,26 @@ public class SearchBar {
                                         }
                                     }
                                     break;
+                                case "FOLDER-FULL":
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())){
+                                        if (isDirectory(fileInList)){
+                                            listResult.add(fileInList);
+                                        }
+                                        if (listResult.size() > 100) {
+                                            break label;
+                                        }
+                                    }
+                                    break;
+                                case "FILE-FULL":
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                        if (isFile(fileInList)) {
+                                            listResult.add(fileInList);
+                                        }
+                                        if (listResult.size() > 100) {
+                                            break label;
+                                        }
+                                    }
+                                    break;
                             }
                         }
                         if (Thread.currentThread().isInterrupted()) {
@@ -1217,6 +1262,26 @@ public class SearchBar {
                                 case "FULL":
                                     if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
                                         listResult.add(fileInList);
+                                        if (listResult.size() > 100) {
+                                            break label1;
+                                        }
+                                    }
+                                    break;
+                                case "FOLDER-FULL":
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())){
+                                        if (isDirectory(fileInList)){
+                                            listResult.add(fileInList);
+                                        }
+                                        if (listResult.size() > 100) {
+                                            break label1;
+                                        }
+                                    }
+                                    break;
+                                case "FILE-FULL":
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                        if (isFile(fileInList)) {
+                                            listResult.add(fileInList);
+                                        }
                                         if (listResult.size() > 100) {
                                             break label1;
                                         }
@@ -1262,6 +1327,26 @@ public class SearchBar {
                                         }
                                     }
                                     break;
+                                case "FOLDER-FULL":
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())){
+                                        if (isDirectory(fileInList)){
+                                            listResult.add(fileInList);
+                                        }
+                                        if (listResult.size() > 100) {
+                                            break label2;
+                                        }
+                                    }
+                                    break;
+                                case "FILE-FULL":
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                        if (isFile(fileInList)) {
+                                            listResult.add(fileInList);
+                                        }
+                                        if (listResult.size() > 100) {
+                                            break label2;
+                                        }
+                                    }
+                                    break;
                             }
                         }
                         if (Thread.currentThread().isInterrupted()) {
@@ -1297,6 +1382,26 @@ public class SearchBar {
                                 case "FULL":
                                     if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
                                         listResult.add(fileInList);
+                                        if (listResult.size() > 100) {
+                                            break label3;
+                                        }
+                                    }
+                                    break;
+                                case "FOLDER-FULL":
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())){
+                                        if (isDirectory(fileInList)){
+                                            listResult.add(fileInList);
+                                        }
+                                        if (listResult.size() > 100) {
+                                            break label3;
+                                        }
+                                    }
+                                    break;
+                                case "FILE-FULL":
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                        if (isFile(fileInList)) {
+                                            listResult.add(fileInList);
+                                        }
                                         if (listResult.size() > 100) {
                                             break label3;
                                         }
@@ -1342,6 +1447,26 @@ public class SearchBar {
                                         }
                                     }
                                     break;
+                                case "FOLDER-FULL":
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())){
+                                        if (isDirectory(fileInList)){
+                                            listResult.add(fileInList);
+                                        }
+                                        if (listResult.size() > 100) {
+                                            break label4;
+                                        }
+                                    }
+                                    break;
+                                case "FILE-FULL":
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                        if (isFile(fileInList)) {
+                                            listResult.add(fileInList);
+                                        }
+                                        if (listResult.size() > 100) {
+                                            break label4;
+                                        }
+                                    }
+                                    break;
                             }
                         }
                         if (Thread.currentThread().isInterrupted()) {
@@ -1377,6 +1502,26 @@ public class SearchBar {
                                 case "FULL":
                                     if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
                                         listResult.add(fileInList);
+                                        if (listResult.size() > 100) {
+                                            break label5;
+                                        }
+                                    }
+                                    break;
+                                case "FOLDER-FULL":
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())){
+                                        if (isDirectory(fileInList)){
+                                            listResult.add(fileInList);
+                                        }
+                                        if (listResult.size() > 100) {
+                                            break label5;
+                                        }
+                                    }
+                                    break;
+                                case "FILE-FULL":
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                        if (isFile(fileInList)) {
+                                            listResult.add(fileInList);
+                                        }
                                         if (listResult.size() > 100) {
                                             break label5;
                                         }
@@ -1422,6 +1567,26 @@ public class SearchBar {
                                         }
                                     }
                                     break;
+                                case "FOLDER-FULL":
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())){
+                                        if (isDirectory(fileInList)){
+                                            listResult.add(fileInList);
+                                        }
+                                        if (listResult.size() > 100) {
+                                            break label6;
+                                        }
+                                    }
+                                    break;
+                                case "FILE-FULL":
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                        if (isFile(fileInList)) {
+                                            listResult.add(fileInList);
+                                        }
+                                        if (listResult.size() > 100) {
+                                            break label6;
+                                        }
+                                    }
+                                    break;
                             }
                         }
                         if (Thread.currentThread().isInterrupted()) {
@@ -1457,6 +1622,26 @@ public class SearchBar {
                                 case "FULL":
                                     if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
                                         listResult.add(fileInList);
+                                        if (listResult.size() > 100) {
+                                            break label7;
+                                        }
+                                    }
+                                    break;
+                                case "FOLDER-FULL":
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())){
+                                        if (isDirectory(fileInList)){
+                                            listResult.add(fileInList);
+                                        }
+                                        if (listResult.size() > 100) {
+                                            break label7;
+                                        }
+                                    }
+                                    break;
+                                case "FILE-FULL":
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                        if (isFile(fileInList)) {
+                                            listResult.add(fileInList);
+                                        }
                                         if (listResult.size() > 100) {
                                             break label7;
                                         }
@@ -1502,6 +1687,26 @@ public class SearchBar {
                                         }
                                     }
                                     break;
+                                case "FOLDER-FULL":
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())){
+                                        if (isDirectory(fileInList)){
+                                            listResult.add(fileInList);
+                                        }
+                                        if (listResult.size() > 100) {
+                                            break label8;
+                                        }
+                                    }
+                                    break;
+                                case "FILE-FULL":
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                        if (isFile(fileInList)) {
+                                            listResult.add(fileInList);
+                                        }
+                                        if (listResult.size() > 100) {
+                                            break label8;
+                                        }
+                                    }
+                                    break;
                             }
                         }
                         if (Thread.currentThread().isInterrupted()) {
@@ -1537,6 +1742,26 @@ public class SearchBar {
                                 case "FULL":
                                     if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
                                         listResult.add(fileInList);
+                                        if (listResult.size() > 100) {
+                                            break label9;
+                                        }
+                                    }
+                                    break;
+                                case "FOLDER-FULL":
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())){
+                                        if (isDirectory(fileInList)){
+                                            listResult.add(fileInList);
+                                        }
+                                        if (listResult.size() > 100) {
+                                            break label9;
+                                        }
+                                    }
+                                    break;
+                                case "FILE-FULL":
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                        if (isFile(fileInList)) {
+                                            listResult.add(fileInList);
+                                        }
                                         if (listResult.size() > 100) {
                                             break label9;
                                         }
@@ -1582,6 +1807,26 @@ public class SearchBar {
                                         }
                                     }
                                     break;
+                                case "FOLDER-FULL":
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())){
+                                        if (isDirectory(fileInList)){
+                                            listResult.add(fileInList);
+                                        }
+                                        if (listResult.size() > 100) {
+                                            break label10;
+                                        }
+                                    }
+                                    break;
+                                case "FILE-FULL":
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                        if (isFile(fileInList)) {
+                                            listResult.add(fileInList);
+                                        }
+                                        if (listResult.size() > 100) {
+                                            break label10;
+                                        }
+                                    }
+                                    break;
                             }
                         }
                         if (Thread.currentThread().isInterrupted()) {
@@ -1617,6 +1862,26 @@ public class SearchBar {
                                 case "FULL":
                                     if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
                                         listResult.add(fileInList);
+                                        if (listResult.size() > 100) {
+                                            break label11;
+                                        }
+                                    }
+                                    break;
+                                case "FOLDER-FULL":
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())){
+                                        if (isDirectory(fileInList)){
+                                            listResult.add(fileInList);
+                                        }
+                                        if (listResult.size() > 100) {
+                                            break label11;
+                                        }
+                                    }
+                                    break;
+                                case "FILE-FULL":
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                        if (isFile(fileInList)) {
+                                            listResult.add(fileInList);
+                                        }
                                         if (listResult.size() > 100) {
                                             break label11;
                                         }
@@ -1662,6 +1927,26 @@ public class SearchBar {
                                         }
                                     }
                                     break;
+                                case "FOLDER-FULL":
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())){
+                                        if (isDirectory(fileInList)){
+                                            listResult.add(fileInList);
+                                        }
+                                        if (listResult.size() > 100) {
+                                            break label12;
+                                        }
+                                    }
+                                    break;
+                                case "FILE-FULL":
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                        if (isFile(fileInList)) {
+                                            listResult.add(fileInList);
+                                        }
+                                        if (listResult.size() > 100) {
+                                            break label12;
+                                        }
+                                    }
+                                    break;
                             }
                         }
                         if (Thread.currentThread().isInterrupted()) {
@@ -1697,6 +1982,26 @@ public class SearchBar {
                                 case "FULL":
                                     if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
                                         listResult.add(fileInList);
+                                        if (listResult.size() > 100) {
+                                            break label13;
+                                        }
+                                    }
+                                    break;
+                                case "FOLDER-FULL":
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())){
+                                        if (isDirectory(fileInList)){
+                                            listResult.add(fileInList);
+                                        }
+                                        if (listResult.size() > 100) {
+                                            break label13;
+                                        }
+                                    }
+                                    break;
+                                case "FILE-FULL":
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                        if (isFile(fileInList)) {
+                                            listResult.add(fileInList);
+                                        }
                                         if (listResult.size() > 100) {
                                             break label13;
                                         }
@@ -1742,6 +2047,26 @@ public class SearchBar {
                                         }
                                     }
                                     break;
+                                case "FOLDER-FULL":
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())){
+                                        if (isDirectory(fileInList)){
+                                            listResult.add(fileInList);
+                                        }
+                                        if (listResult.size() > 100) {
+                                            break label14;
+                                        }
+                                    }
+                                    break;
+                                case "FILE-FULL":
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                        if (isFile(fileInList)) {
+                                            listResult.add(fileInList);
+                                        }
+                                        if (listResult.size() > 100) {
+                                            break label14;
+                                        }
+                                    }
+                                    break;
                             }
                         }
                         if (Thread.currentThread().isInterrupted()) {
@@ -1777,6 +2102,26 @@ public class SearchBar {
                                 case "FULL":
                                     if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
                                         listResult.add(fileInList);
+                                        if (listResult.size() > 100) {
+                                            break label15;
+                                        }
+                                    }
+                                    break;
+                                case "FOLDER-FULL":
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())){
+                                        if (isDirectory(fileInList)){
+                                            listResult.add(fileInList);
+                                        }
+                                        if (listResult.size() > 100) {
+                                            break label15;
+                                        }
+                                    }
+                                    break;
+                                case "FILE-FULL":
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                        if (isFile(fileInList)) {
+                                            listResult.add(fileInList);
+                                        }
                                         if (listResult.size() > 100) {
                                             break label15;
                                         }
@@ -1822,6 +2167,26 @@ public class SearchBar {
                                         }
                                     }
                                     break;
+                                case "FOLDER-FULL":
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())){
+                                        if (isDirectory(fileInList)){
+                                            listResult.add(fileInList);
+                                        }
+                                        if (listResult.size() > 100) {
+                                            break label16;
+                                        }
+                                    }
+                                    break;
+                                case "FILE-FULL":
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                        if (isFile(fileInList)) {
+                                            listResult.add(fileInList);
+                                        }
+                                        if (listResult.size() > 100) {
+                                            break label16;
+                                        }
+                                    }
+                                    break;
                             }
                         }
                         if (Thread.currentThread().isInterrupted()) {
@@ -1857,6 +2222,26 @@ public class SearchBar {
                                 case "FULL":
                                     if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
                                         listResult.add(fileInList);
+                                        if (listResult.size() > 100) {
+                                            break label17;
+                                        }
+                                    }
+                                    break;
+                                case "FOLDER-FULL":
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())){
+                                        if (isDirectory(fileInList)){
+                                            listResult.add(fileInList);
+                                        }
+                                        if (listResult.size() > 100) {
+                                            break label17;
+                                        }
+                                    }
+                                    break;
+                                case "FILE-FULL":
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                        if (isFile(fileInList)) {
+                                            listResult.add(fileInList);
+                                        }
                                         if (listResult.size() > 100) {
                                             break label17;
                                         }
@@ -1902,6 +2287,26 @@ public class SearchBar {
                                         }
                                     }
                                     break;
+                                case "FOLDER-FULL":
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())){
+                                        if (isDirectory(fileInList)){
+                                            listResult.add(fileInList);
+                                        }
+                                        if (listResult.size() > 100) {
+                                            break label18;
+                                        }
+                                    }
+                                    break;
+                                case "FILE-FULL":
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                        if (isFile(fileInList)) {
+                                            listResult.add(fileInList);
+                                        }
+                                        if (listResult.size() > 100) {
+                                            break label18;
+                                        }
+                                    }
+                                    break;
                             }
                         }
                         if (Thread.currentThread().isInterrupted()) {
@@ -1937,6 +2342,26 @@ public class SearchBar {
                                 case "FULL":
                                     if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
                                         listResult.add(fileInList);
+                                        if (listResult.size() > 100) {
+                                            break label19;
+                                        }
+                                    }
+                                    break;
+                                case "FOLDER-FULL":
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())){
+                                        if (isDirectory(fileInList)){
+                                            listResult.add(fileInList);
+                                        }
+                                        if (listResult.size() > 100) {
+                                            break label19;
+                                        }
+                                    }
+                                    break;
+                                case "FILE-FULL":
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                        if (isFile(fileInList)) {
+                                            listResult.add(fileInList);
+                                        }
                                         if (listResult.size() > 100) {
                                             break label19;
                                         }
@@ -1982,6 +2407,26 @@ public class SearchBar {
                                         }
                                     }
                                     break;
+                                case "FOLDER-FULL":
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())){
+                                        if (isDirectory(fileInList)){
+                                            listResult.add(fileInList);
+                                        }
+                                        if (listResult.size() > 100) {
+                                            break label20;
+                                        }
+                                    }
+                                    break;
+                                case "FILE-FULL":
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                        if (isFile(fileInList)) {
+                                            listResult.add(fileInList);
+                                        }
+                                        if (listResult.size() > 100) {
+                                            break label20;
+                                        }
+                                    }
+                                    break;
                             }
                         }
                         if (Thread.currentThread().isInterrupted()) {
@@ -2017,6 +2462,26 @@ public class SearchBar {
                                 case "FULL":
                                     if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
                                         listResult.add(fileInList);
+                                        if (listResult.size() > 100) {
+                                            break label21;
+                                        }
+                                    }
+                                    break;
+                                case "FOLDER-FULL":
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())){
+                                        if (isDirectory(fileInList)){
+                                            listResult.add(fileInList);
+                                        }
+                                        if (listResult.size() > 100) {
+                                            break label21;
+                                        }
+                                    }
+                                    break;
+                                case "FILE-FULL":
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                        if (isFile(fileInList)) {
+                                            listResult.add(fileInList);
+                                        }
                                         if (listResult.size() > 100) {
                                             break label21;
                                         }
@@ -2062,6 +2527,26 @@ public class SearchBar {
                                         }
                                     }
                                     break;
+                                case "FOLDER-FULL":
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())){
+                                        if (isDirectory(fileInList)){
+                                            listResult.add(fileInList);
+                                        }
+                                        if (listResult.size() > 100) {
+                                            break label22;
+                                        }
+                                    }
+                                    break;
+                                case "FILE-FULL":
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                        if (isFile(fileInList)) {
+                                            listResult.add(fileInList);
+                                        }
+                                        if (listResult.size() > 100) {
+                                            break label22;
+                                        }
+                                    }
+                                    break;
                             }
                         }
                         if (Thread.currentThread().isInterrupted()) {
@@ -2097,6 +2582,26 @@ public class SearchBar {
                                 case "FULL":
                                     if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
                                         listResult.add(fileInList);
+                                        if (listResult.size() > 100) {
+                                            break label23;
+                                        }
+                                    }
+                                    break;
+                                case "FOLDER-FULL":
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())){
+                                        if (isDirectory(fileInList)){
+                                            listResult.add(fileInList);
+                                        }
+                                        if (listResult.size() > 100) {
+                                            break label23;
+                                        }
+                                    }
+                                    break;
+                                case "FILE-FULL":
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                        if (isFile(fileInList)) {
+                                            listResult.add(fileInList);
+                                        }
                                         if (listResult.size() > 100) {
                                             break label23;
                                         }
@@ -2142,6 +2647,26 @@ public class SearchBar {
                                         }
                                     }
                                     break;
+                                case "FOLDER-FULL":
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())){
+                                        if (isDirectory(fileInList)){
+                                            listResult.add(fileInList);
+                                        }
+                                        if (listResult.size() > 100) {
+                                            break label24;
+                                        }
+                                    }
+                                    break;
+                                case "FILE-FULL":
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                        if (isFile(fileInList)) {
+                                            listResult.add(fileInList);
+                                        }
+                                        if (listResult.size() > 100) {
+                                            break label24;
+                                        }
+                                    }
+                                    break;
                             }
                         }
                         if (Thread.currentThread().isInterrupted()) {
@@ -2177,6 +2702,26 @@ public class SearchBar {
                                 case "FULL":
                                     if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
                                         listResult.add(fileInList);
+                                        if (listResult.size() > 100) {
+                                            break label25;
+                                        }
+                                    }
+                                    break;
+                                case "FOLDER-FULL":
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())){
+                                        if (isDirectory(fileInList)){
+                                            listResult.add(fileInList);
+                                        }
+                                        if (listResult.size() > 100) {
+                                            break label25;
+                                        }
+                                    }
+                                    break;
+                                case "FILE-FULL":
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                        if (isFile(fileInList)) {
+                                            listResult.add(fileInList);
+                                        }
                                         if (listResult.size() > 100) {
                                             break label25;
                                         }
@@ -2222,6 +2767,26 @@ public class SearchBar {
                                         }
                                     }
                                     break;
+                                case "FOLDER-FULL":
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())){
+                                        if (isDirectory(fileInList)){
+                                            listResult.add(fileInList);
+                                        }
+                                        if (listResult.size() > 100) {
+                                            break label26;
+                                        }
+                                    }
+                                    break;
+                                case "FILE-FULL":
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                        if (isFile(fileInList)) {
+                                            listResult.add(fileInList);
+                                        }
+                                        if (listResult.size() > 100) {
+                                            break label26;
+                                        }
+                                    }
+                                    break;
                             }
                         }
                         if (Thread.currentThread().isInterrupted()) {
@@ -2257,6 +2822,26 @@ public class SearchBar {
                                 case "FULL":
                                     if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
                                         listResult.add(fileInList);
+                                        if (listResult.size() > 100) {
+                                            break label27;
+                                        }
+                                    }
+                                    break;
+                                case "FOLDER-FULL":
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())){
+                                        if (isDirectory(fileInList)){
+                                            listResult.add(fileInList);
+                                        }
+                                        if (listResult.size() > 100) {
+                                            break label27;
+                                        }
+                                    }
+                                    break;
+                                case "FILE-FULL":
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                        if (isFile(fileInList)) {
+                                            listResult.add(fileInList);
+                                        }
                                         if (listResult.size() > 100) {
                                             break label27;
                                         }
@@ -2302,6 +2887,26 @@ public class SearchBar {
                                         }
                                     }
                                     break;
+                                case "FOLDER-FULL":
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())){
+                                        if (isDirectory(fileInList)){
+                                            listResult.add(fileInList);
+                                        }
+                                        if (listResult.size() > 100) {
+                                            break label28;
+                                        }
+                                    }
+                                    break;
+                                case "FILE-FULL":
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                        if (isFile(fileInList)) {
+                                            listResult.add(fileInList);
+                                        }
+                                        if (listResult.size() > 100) {
+                                            break label28;
+                                        }
+                                    }
+                                    break;
                             }
                         }
                         if (Thread.currentThread().isInterrupted()) {
@@ -2337,6 +2942,26 @@ public class SearchBar {
                                 case "FULL":
                                     if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
                                         listResult.add(fileInList);
+                                        if (listResult.size() > 100) {
+                                            break label29;
+                                        }
+                                    }
+                                    break;
+                                case "FOLDER-FULL":
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())){
+                                        if (isDirectory(fileInList)){
+                                            listResult.add(fileInList);
+                                        }
+                                        if (listResult.size() > 100) {
+                                            break label29;
+                                        }
+                                    }
+                                    break;
+                                case "FILE-FULL":
+                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                        if (isFile(fileInList)) {
+                                            listResult.add(fileInList);
+                                        }
                                         if (listResult.size() > 100) {
                                             break label29;
                                         }
