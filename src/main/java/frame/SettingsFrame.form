@@ -160,7 +160,10 @@
             <preferred-size width="150" height="-1"/>
           </grid>
         </constraints>
-        <properties/>
+        <properties>
+          <editable value="false"/>
+          <enabled value="true"/>
+        </properties>
       </component>
       <component id="f9ebf" class="javax.swing.JLabel" binding="label2">
         <constraints>

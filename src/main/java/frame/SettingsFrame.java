@@ -295,7 +295,8 @@ public class SettingsFrame {
                 } else if (64 < key && key < 91) {
                     String txt = textFieldHotkey.getText();
                     if (!txt.equals("")) {
-                        if (64 < txt.charAt(txt.length() - 1) && txt.charAt(txt.length() - 1) < 91) {
+                        char c1 = Character.toUpperCase(txt.charAt(txt.length() - 1));
+                        if (64 < c1 && c1 < 91) {
                             String text = txt.substring(0, txt.length() - 1);
                             textFieldHotkey.setText(text + (char) key);
                         } else {
