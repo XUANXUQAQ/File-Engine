@@ -6,9 +6,8 @@ import main.MainClass;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
+import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 
 public class Search {
@@ -42,39 +41,50 @@ public class Search {
     private static LinkedHashSet<String> listPercentSign = new LinkedHashSet<>();
     private static LinkedHashSet<String> listUnique = new LinkedHashSet<>();
     private static LinkedHashSet<String> listUnderline = new LinkedHashSet<>();
-    private static LinkedList<String> listToAdd = new LinkedList<>();
+    private static CopyOnWriteArrayList<String> listToLoad = new CopyOnWriteArrayList<>();
     private static boolean isUsable = false;
     private static boolean isManualUpdate = false;
     private static boolean isFileSearcherDefined = false;
-    private static LinkedList<String> RecycleBin = new LinkedList<>();
+    private static List<String> RecycleBin = Collections.synchronizedList(new LinkedList<>());
 
+    public int getRecycleBinSize(){
+        return RecycleBin.size();
+    }
 
+    public int getLoadListSize(){
+        return listToLoad.size();
+    }
 
     public void addToRecycleBin(String path) {
         RecycleBin.add(path);
     }
 
-    public void clearRecycleBin() {
+    public void mergeAndClearRecycleBin() {
         if (!isManualUpdate) {
             isUsable = false;
             for (String path : RecycleBin) {
                 deletePathInList(path);
             }
             isUsable = true;
+            RecycleBin.clear();
         }
     }
 
     public void addFileToLoadBin(String path){
-        listToAdd.add(path);
+        listToLoad.add(path);
     }
 
     public void mergeFileToList(){
-        while (!listToAdd.isEmpty()){
-            String each = listToAdd.pop();
-            File add = new File(each);
-            if (add.exists()) {
-                addFileToList(each);
+        if (!isManualUpdate) {
+            isUsable = false;
+            for (String each : listToLoad) {
+                File add = new File(each);
+                if (add.exists()) {
+                    addFileToList(each);
+                }
             }
+            isUsable = true;
+            listToLoad.clear();
         }
     }
 
