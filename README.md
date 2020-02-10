@@ -14,6 +14,7 @@ A tool can make you work more efficiently.
 3.第一个字符输入 '>'  可以全盘搜索（可能会比较慢）。  
 
 4.在输入文件名后 输入";file"或者";folder"可以指定搜索文件或文件夹,输入;full开启全字匹配。
+  输入";file-full"全字匹配并只搜索文件,输入";folder-full"全字匹配并只搜索文件夹(不包括引号)。
 
 5.缓存保存常用文件。  
 
