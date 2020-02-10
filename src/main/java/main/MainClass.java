@@ -25,6 +25,7 @@ public class MainClass {
     private static SearchBar searchBar = SearchBar.getInstance();
     private static TaskBar taskBar = null;
 
+
     public static void setMainExit(boolean b) {
         mainExit = b;
     }
