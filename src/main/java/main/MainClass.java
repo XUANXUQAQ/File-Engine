@@ -9,7 +9,6 @@ import search.Search;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileSystemView;
-import java.awt.*;
 import java.io.*;
 import java.util.Objects;
 import java.util.Scanner;
@@ -101,6 +100,7 @@ public class MainClass {
 
 
     public static void main(String[] args) {
+        System.setProperty("sun.java2d.noddraw", "false");
         try {
             org.jb2011.lnf.beautyeye.BeautyEyeLNFHelper.launchBeautyEyeLNF();
             UIManager.put("RootPane.setupButtonVisible",false);
@@ -312,26 +312,6 @@ public class MainClass {
                     Thread.sleep(1);
                 } catch (InterruptedException ignore) {
 
-                }
-            }
-        });
-
-
-        //Ë¢ÐÂÆÁÄ»Ïß³Ì
-        fixedThreadPool.execute(() -> {
-            Container panel;
-            while (!mainExit) {
-                try {
-                    panel = searchBar.getPanel();
-                    panel.repaint();
-                } catch (Exception ignored) {
-
-                } finally {
-                    try {
-                        Thread.sleep(20);
-                    } catch (InterruptedException ignored) {
-
-                    }
                 }
             }
         });
