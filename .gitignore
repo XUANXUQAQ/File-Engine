@@ -13,3 +13,4 @@ fileMonitor.dll
 tmp/
 .settings/
 fileSearcher.dll
+out/

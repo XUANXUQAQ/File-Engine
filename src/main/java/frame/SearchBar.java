@@ -85,7 +85,30 @@ public class SearchBar {
 
 
 
-        ExecutorService fixedThreadPool = Executors.newFixedThreadPool(1);
+        ExecutorService fixedThreadPool = Executors.newFixedThreadPool(2);
+        fixedThreadPool.execute(()->{
+            while (!mainExit) {
+                if (!search.isManualUpdate() && !isUsing) {
+                    if (search.getRecycleBinSize() > 100) {
+                        System.out.println("已检测到回收站过大，自动清理");
+                        search.setUsable(false);
+                        search.mergeAndClearRecycleBin();
+                        search.setUsable(true);
+                    }
+                    if (search.getLoadListSize() > 100){
+                        System.out.println("加载缓存空间过大，自动清理");
+                        search.setUsable(false);
+                        search.mergeFileToList();
+                        search.setUsable(true);
+                    }
+                }
+                try {
+                    Thread.sleep(1);
+                } catch (InterruptedException ignored) {
+
+                }
+            }
+        });
         fixedThreadPool.execute(() -> {
             while (!mainExit) {
                 long endTime = System.currentTimeMillis();
@@ -805,15 +828,12 @@ public class SearchBar {
     }
 
     public void showSearchbar() {
-        textField.requestFocusInWindow();
         textField.setCaretPosition(0);
         //添加更新文件
         System.out.println("正在添加更新文件");
-        if (!search.isManualUpdate()) {
-            search.setUsable(false);
-            search.mergeFileToList();
-            search.setUsable(true);
-        }
+        search.setUsable(false);
+        search.mergeFileToList();
+        search.setUsable(true);
         isUsing = true;
         searchBar.setVisible(true);
     }
@@ -1080,14 +1100,14 @@ public class SearchBar {
                 searchBar.setVisible(false);
             }
             CheckHotKey.setShowSearchBar(false);
+            search.setUsable(false);
+            search.mergeAndClearRecycleBin();
+            search.setUsable(true);
             clearLabel();
             isUsing = false;
             labelCount = 0;
             listResult.clear();
             textField.setText(null);
-            //删除无效文件
-            System.out.println("正在删除无效文件");
-            search.clearRecycleBin();
             try{
                 thread.interrupt();
                 searchWaiter.interrupt();
