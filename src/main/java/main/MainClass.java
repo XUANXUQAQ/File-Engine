@@ -10,7 +10,6 @@ import search.Search;
 import javax.swing.*;
 import javax.swing.filechooser.FileSystemView;
 import java.io.*;
-import java.util.Objects;
 import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -205,22 +204,22 @@ public class MainClass {
 
         SettingsFrame.initSettings();
 
-        data = new File(SettingsFrame.dataPath);
-        if (data.isDirectory() && data.exists()) {
-            if (Objects.requireNonNull(data.list()).length == 30) {
-                System.out.println("检测到data文件，正在读取");
-                //showMessage("提示", "检测到data文件，正在读取");
-                search.setUsable(false);
+        data = new File(SettingsFrame.dataPath + "\\data.dat");
+        if (data.isFile() && data.exists()) {
+            System.out.println("检测到data文件，正在读取");
+            //showMessage("提示", "检测到data文件，正在读取");
+            search.setUsable(false);
+            try {
                 search.loadAllLists();
                 search.setUsable(true);
                 System.out.println("读取完成");
                 showMessage("提示", "读取完成");
-            } else {
+            } catch (Exception e) {
                 System.out.println("检测到data文件损坏，开始搜索并创建data文件");
                 showMessage("提示", "检检测到data文件损坏，开始搜索并创建data文件");
                 search.setManualUpdate(true);
             }
-        } else {
+        }else {
             System.out.println("未检测到data文件，开始搜索并创建data文件");
             search.setManualUpdate(true);
         }

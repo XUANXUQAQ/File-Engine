@@ -47,11 +47,11 @@ public class Search {
     private static boolean isFileSearcherDefined = false;
     private static List<String> RecycleBin = Collections.synchronizedList(new LinkedList<>());
 
-    public int getRecycleBinSize(){
+    public int getRecycleBinSize() {
         return RecycleBin.size();
     }
 
-    public int getLoadListSize(){
+    public int getLoadListSize() {
         return listToLoad.size();
     }
 
@@ -70,11 +70,11 @@ public class Search {
         }
     }
 
-    public void addFileToLoadBin(String path){
+    public void addFileToLoadBin(String path) {
         listToLoad.add(path);
     }
 
-    public void mergeFileToList(){
+    public void mergeFileToList() {
         if (!isManualUpdate) {
             isUsable = false;
             for (String each : listToLoad) {
@@ -91,9 +91,9 @@ public class Search {
     private void deletePathInList(String path) {
         File file = new File(path);
         char firstWord = '\0';
-        try{
+        try {
             firstWord = file.getName().charAt(0);
-        }catch(Exception ignored){
+        } catch (Exception ignored) {
 
         }
         char headWord = Character.toUpperCase(firstWord);
@@ -352,7 +352,7 @@ public class Search {
     public void setUsable(boolean b) {
         if (!isManualUpdate) {
             isUsable = b;
-        }else{
+        } else {
             isUsable = false;
         }
     }
@@ -602,759 +602,56 @@ public class Search {
         }
     }
 
-    public void loadAllLists() {
-        for (int i = 65; i < 91; i++) {
-            String ch = "" + (char) i;
-            readFileList(ch);
-        }
-        readFileList("PercentSign");
-        readFileList("Underline");
-        readFileList("Unique");
-        readFileList("Num");
-    }
-
-
-    public void saveLists(){
-        for (int i = 65; i < 91; i++) {
-            String ch = "" + (char) i;
-            saveList(ch);
-        }
-        saveList("PercentSign");
-        saveList("Underline");
-        saveList("Unique");
-        saveList("Num");
-    }
-
-    private void saveList(String ch){
-        File data = new File(SettingsFrame.dataPath);
-        String path;
-        Serialize listFile;
-        if (!data.exists()) {
-            data.mkdir();
-        }
-        switch (ch) {
-            case "A":
-                path = SettingsFrame.dataPath + "\\listA";
-                listFile = new Serialize();
-                listFile.setList(listA);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-
-                } catch (IOException | ConcurrentModificationException ignored) {
-
-                }
-                break;
-            case "B":
-                path = SettingsFrame.dataPath + "\\listB";
-                listFile = new Serialize();
-                listFile.setList(listB);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-
-                } catch (IOException | ConcurrentModificationException ignored) {
-
-                }
-                break;
-            case "C":
-                path = SettingsFrame.dataPath + "\\listC";
-                listFile = new Serialize();
-                listFile.setList(listC);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-
-                } catch (IOException | ConcurrentModificationException ignored) {
-
-                }
-                break;
-            case "D":
-
-                path = SettingsFrame.dataPath + "\\listD";
-                listFile = new Serialize();
-                listFile.setList(listD);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-
-                } catch (IOException | ConcurrentModificationException ignored) {
-
-                }
-                break;
-            case "E":
-
-                path = SettingsFrame.dataPath + "\\listE";
-                listFile = new Serialize();
-                listFile.setList(listE);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-
-                } catch (IOException | ConcurrentModificationException ignored) {
-
-                }
-                break;
-            case "F":
-
-                path = SettingsFrame.dataPath + "\\listF";
-                listFile = new Serialize();
-                listFile.setList(listF);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-
-                } catch (IOException | ConcurrentModificationException ignored) {
-
-                }
-                break;
-            case "G":
-
-                path = SettingsFrame.dataPath + "\\listG";
-                listFile = new Serialize();
-                listFile.setList(listG);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-
-                } catch (IOException | ConcurrentModificationException ignored) {
-
-                }
-                break;
-            case "H":
-
-                path = SettingsFrame.dataPath + "\\listH";
-                listFile = new Serialize();
-                listFile.setList(listH);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-
-                } catch (IOException | ConcurrentModificationException ignored) {
-
-                }
-                break;
-            case "I":
-
-                path = SettingsFrame.dataPath + "\\listI";
-                listFile = new Serialize();
-                listFile.setList(listI);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-
-                } catch (IOException | ConcurrentModificationException ignored) {
-
-                }
-                break;
-            case "J":
-
-                path = SettingsFrame.dataPath + "\\listJ";
-                listFile = new Serialize();
-                listFile.setList(listJ);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-
-                } catch (IOException | ConcurrentModificationException ignored) {
-
-                }
-                break;
-            case "K":
-
-                path = SettingsFrame.dataPath + "\\listK";
-                listFile = new Serialize();
-                listFile.setList(listK);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-
-                } catch (IOException | ConcurrentModificationException ignored) {
-
-                }
-                break;
-            case "L":
-
-                path = SettingsFrame.dataPath + "\\listL";
-                listFile = new Serialize();
-                listFile.setList(listL);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-
-                } catch (IOException | ConcurrentModificationException ignored) {
-
-                }
-                break;
-            case "M":
-
-                path = SettingsFrame.dataPath + "\\listM";
-                listFile = new Serialize();
-                listFile.setList(listM);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-
-                } catch (IOException | ConcurrentModificationException ignored) {
-
-                }
-                break;
-            case "N":
-
-                path = SettingsFrame.dataPath + "\\listN";
-                listFile = new Serialize();
-                listFile.setList(listN);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-
-                } catch (IOException | ConcurrentModificationException ignored) {
-
-                }
-                break;
-            case "O":
-
-                path = SettingsFrame.dataPath + "\\listO";
-                listFile = new Serialize();
-                listFile.setList(listO);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-
-                } catch (IOException | ConcurrentModificationException ignored) {
-
-                }
-                break;
-            case "P":
-
-                path = SettingsFrame.dataPath + "\\listP";
-                listFile = new Serialize();
-                listFile.setList(listP);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-
-                } catch (IOException | ConcurrentModificationException ignored) {
-
-                }
-                break;
-            case "Q":
-
-                path = SettingsFrame.dataPath + "\\listQ";
-                listFile = new Serialize();
-                listFile.setList(listQ);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-
-                } catch (IOException | ConcurrentModificationException ignored) {
-
-                }
-                break;
-            case "R":
-
-                path = SettingsFrame.dataPath + "\\listR";
-                listFile = new Serialize();
-                listFile.setList(listR);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-
-                } catch (IOException | ConcurrentModificationException ignored) {
-
-                }
-                break;
-            case "S":
-
-                path = SettingsFrame.dataPath + "\\listS";
-                listFile = new Serialize();
-                listFile.setList(listS);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-
-                } catch (IOException | ConcurrentModificationException ignored) {
-
-                }
-                break;
-            case "T":
-
-                path = SettingsFrame.dataPath + "\\listT";
-                listFile = new Serialize();
-                listFile.setList(listT);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-
-                } catch (IOException | ConcurrentModificationException ignored) {
-
-                }
-                break;
-            case "U":
-
-                path = SettingsFrame.dataPath + "\\listU";
-                listFile = new Serialize();
-                listFile.setList(listU);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-
-                } catch (IOException | ConcurrentModificationException ignored) {
-
-                }
-                break;
-            case "V":
-
-                path = SettingsFrame.dataPath + "\\listV";
-                listFile = new Serialize();
-                listFile.setList(listV);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-
-                } catch (IOException | ConcurrentModificationException ignored) {
-
-                }
-                break;
-            case "W":
-
-                path = SettingsFrame.dataPath + "\\listW";
-                listFile = new Serialize();
-                listFile.setList(listW);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-
-                } catch (IOException | ConcurrentModificationException ignored) {
-
-                }
-                break;
-            case "X":
-
-                path = SettingsFrame.dataPath + "\\listX";
-                listFile = new Serialize();
-                listFile.setList(listX);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-
-                } catch (IOException | ConcurrentModificationException ignored) {
-
-                }
-                break;
-            case "Y":
-
-                path = SettingsFrame.dataPath + "\\listY";
-                listFile = new Serialize();
-                listFile.setList(listY);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-
-                } catch (IOException | ConcurrentModificationException ignored) {
-
-                }
-                break;
-            case "Z":
-
-                path = SettingsFrame.dataPath + "\\listZ";
-                listFile = new Serialize();
-                listFile.setList(listZ);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-
-                } catch (IOException | ConcurrentModificationException ignored) {
-
-                }
-                break;
-            case "PercentSign":
-                path = SettingsFrame.dataPath + "\\listPercentSign";
-                listFile = new Serialize();
-                listFile.setList(listPercentSign);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-
-                } catch (IOException | ConcurrentModificationException ignored) {
-
-                }
-                break;
-            case "Underline":
-
-                path = SettingsFrame.dataPath + "\\listUnderline";
-                listFile = new Serialize();
-                listFile.setList(listUnderline);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-
-                } catch (IOException | ConcurrentModificationException ignored) {
-
-                }
-                break;
-            case "Unique":
-
-                path = SettingsFrame.dataPath + "\\listUnique";
-                listFile = new Serialize();
-                listFile.setList(listUnique);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-
-                } catch (IOException ignored) {
-
-                }
-                break;
-            case "Num":
-                path = SettingsFrame.dataPath + "\\listNum";
-                listFile = new Serialize();
-                listFile.setList(listNum);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-
-                } catch (IOException | ConcurrentModificationException ignored) {
-
-                }
-                break;
+    public void loadAllLists() throws Exception{
+        Serialize lists;
+        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(SettingsFrame.dataPath + "\\data.dat"))) {
+            lists = (Serialize) ois.readObject();
+            listA.addAll(lists._listA);
+            listB.addAll(lists._listB);
+            listC.addAll(lists._listC);
+            listD.addAll(lists._listD);
+            listE.addAll(lists._listE);
+            listF.addAll(lists._listF);
+            listG.addAll(lists._listG);
+            listH.addAll(lists._listH);
+            listI.addAll(lists._listI);
+            listJ.addAll(lists._listJ);
+            listK.addAll(lists._listK);
+            listL.addAll(lists._listL);
+            listM.addAll(lists._listM);
+            listN.addAll(lists._listN);
+            listO.addAll(lists._listO);
+            listP.addAll(lists._listP);
+            listQ.addAll(lists._listQ);
+            listR.addAll(lists._listR);
+            listS.addAll(lists._listS);
+            listT.addAll(lists._listT);
+            listU.addAll(lists._listU);
+            listV.addAll(lists._listV);
+            listW.addAll(lists._listW);
+            listX.addAll(lists._listX);
+            listY.addAll(lists._listY);
+            listZ.addAll(lists._listZ);
+            listNum.addAll(lists._listNum);
+            listPercentSign.addAll(lists._listPercentSign);
+            listUnderline.addAll(lists._listUnderline);
+            listUnique.addAll(lists._listUnique);
+        } catch (Exception e) {
+            throw new Exception("无法读取");
         }
     }
 
-    private void readFileList(String ch) {
-        String path;
-        Serialize listFile;
-        switch (ch) {
-            case "A":
-                path = SettingsFrame.dataPath + "\\listA";
-                File file = new File(path);
-                try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
-                    listFile = (Serialize) ois.readObject();
-                    listA.addAll(listFile.list);
-                } catch (IOException | ConcurrentModificationException | ClassNotFoundException ignored) {
 
-                }
-                break;
-            case "B":
+    public void saveLists() {
+        Serialize lists = new Serialize();
+        lists.setList();
+        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(SettingsFrame.dataPath + "\\data.dat"))) {
+            oos.writeObject(lists);
+        } catch (IOException | ConcurrentModificationException ignored) {
 
-                path = SettingsFrame.dataPath + "\\listB";
-
-                file = new File(path);
-                try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
-                    listFile = (Serialize) ois.readObject();
-                    listB.addAll(listFile.list);
-                } catch (IOException | ConcurrentModificationException | ClassNotFoundException ignored) {
-
-                }
-                break;
-            case "C":
-
-                path = SettingsFrame.dataPath + "\\listC";
-
-                file = new File(path);
-                try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
-                    listFile = (Serialize) ois.readObject();
-                    listC.addAll(listFile.list);
-                } catch (IOException | ConcurrentModificationException | ClassNotFoundException ignored) {
-
-                }
-                break;
-            case "D":
-
-                path = SettingsFrame.dataPath + "\\listD";
-
-                file = new File(path);
-                try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
-                    listFile = (Serialize) ois.readObject();
-                    listD.addAll(listFile.list);
-                } catch (IOException | ConcurrentModificationException | ClassNotFoundException ignored) {
-
-                }
-                break;
-            case "E":
-
-                path = SettingsFrame.dataPath + "\\listE";
-
-                file = new File(path);
-                try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
-                    listFile = (Serialize) ois.readObject();
-                    listE.addAll(listFile.list);
-                } catch (IOException | ConcurrentModificationException | ClassNotFoundException ignored) {
-
-                }
-                break;
-            case "F":
-
-                path = SettingsFrame.dataPath + "\\listF";
-
-                file = new File(path);
-                try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
-                    listFile = (Serialize) ois.readObject();
-                    listF.addAll(listFile.list);
-                } catch (IOException | ConcurrentModificationException | ClassNotFoundException ignored) {
-
-                }
-                break;
-            case "G":
-
-                path = SettingsFrame.dataPath + "\\listG";
-
-                file = new File(path);
-                try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
-                    listFile = (Serialize) ois.readObject();
-                    listG.addAll(listFile.list);
-                } catch (IOException | ConcurrentModificationException | ClassNotFoundException ignored) {
-
-                }
-                break;
-            case "H":
-
-                path = SettingsFrame.dataPath + "\\listH";
-
-                file = new File(path);
-                try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
-                    listFile = (Serialize) ois.readObject();
-                    listH.addAll(listFile.list);
-                } catch (IOException | ConcurrentModificationException | ClassNotFoundException ignored) {
-
-                }
-                break;
-            case "I":
-
-                path = SettingsFrame.dataPath + "\\listI";
-
-                file = new File(path);
-                try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
-                    listFile = (Serialize) ois.readObject();
-                    listI.addAll(listFile.list);
-                } catch (IOException | ConcurrentModificationException | ClassNotFoundException ignored) {
-
-                }
-                break;
-            case "J":
-
-                path = SettingsFrame.dataPath + "\\listJ";
-
-                file = new File(path);
-                try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
-                    listFile = (Serialize) ois.readObject();
-                    listJ.addAll(listFile.list);
-                } catch (IOException | ConcurrentModificationException | ClassNotFoundException ignored) {
-
-                }
-                break;
-            case "K":
-
-                path = SettingsFrame.dataPath + "\\listK";
-
-                file = new File(path);
-                try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
-                    listFile = (Serialize) ois.readObject();
-                    listK.addAll(listFile.list);
-                } catch (IOException | ConcurrentModificationException | ClassNotFoundException ignored) {
-
-                }
-                break;
-            case "L":
-
-                path = SettingsFrame.dataPath + "\\listL";
-
-                file = new File(path);
-                try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
-                    listFile = (Serialize) ois.readObject();
-                    listL.addAll(listFile.list);
-                } catch (IOException | ConcurrentModificationException | ClassNotFoundException ignored) {
-
-                }
-                break;
-            case "M":
-
-                path = SettingsFrame.dataPath + "\\listM";
-
-                file = new File(path);
-                try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
-                    listFile = (Serialize) ois.readObject();
-                    listM.addAll(listFile.list);
-                } catch (IOException | ConcurrentModificationException | ClassNotFoundException ignored) {
-
-                }
-                break;
-            case "N":
-
-                path = SettingsFrame.dataPath + "\\listN";
-
-                file = new File(path);
-                try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
-                    listFile = (Serialize) ois.readObject();
-                    listN.addAll(listFile.list);
-                } catch (IOException | ConcurrentModificationException | ClassNotFoundException ignored) {
-
-                }
-                break;
-            case "O":
-
-                path = SettingsFrame.dataPath + "\\listO";
-
-                file = new File(path);
-                try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
-                    listFile = (Serialize) ois.readObject();
-                    listO.addAll(listFile.list);
-                } catch (IOException | ConcurrentModificationException | ClassNotFoundException ignored) {
-
-                }
-                break;
-            case "P":
-
-                path = SettingsFrame.dataPath + "\\listP";
-
-                file = new File(path);
-                try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
-                    listFile = (Serialize) ois.readObject();
-                    listP.addAll(listFile.list);
-                } catch (IOException | ConcurrentModificationException | ClassNotFoundException ignored) {
-
-                }
-                break;
-            case "Q":
-
-                path = SettingsFrame.dataPath + "\\listQ";
-
-                file = new File(path);
-                try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
-                    listFile = (Serialize) ois.readObject();
-                    listQ.addAll(listFile.list);
-                } catch (IOException | ConcurrentModificationException | ClassNotFoundException ignored) {
-
-                }
-                break;
-            case "R":
-
-                path = SettingsFrame.dataPath + "\\listR";
-
-                file = new File(path);
-                try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
-                    listFile = (Serialize) ois.readObject();
-                    listR.addAll(listFile.list);
-                } catch (IOException | ConcurrentModificationException | ClassNotFoundException ignored) {
-
-                }
-                break;
-            case "S":
-
-                path = SettingsFrame.dataPath + "\\listS";
-
-                file = new File(path);
-                try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
-                    listFile = (Serialize) ois.readObject();
-                    listS.addAll(listFile.list);
-                } catch (IOException | ConcurrentModificationException | ClassNotFoundException ignored) {
-
-                }
-                break;
-            case "T":
-
-                path = SettingsFrame.dataPath + "\\listT";
-
-                file = new File(path);
-                try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
-                    listFile = (Serialize) ois.readObject();
-                    listT.addAll(listFile.list);
-                } catch (IOException | ConcurrentModificationException | ClassNotFoundException ignored) {
-
-                }
-                break;
-            case "U":
-
-                path = SettingsFrame.dataPath + "\\listU";
-
-                file = new File(path);
-                try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
-                    listFile = (Serialize) ois.readObject();
-                    listU.addAll(listFile.list);
-                } catch (IOException | ConcurrentModificationException | ClassNotFoundException ignored) {
-
-                }
-                break;
-            case "V":
-
-                path = SettingsFrame.dataPath + "\\listV";
-
-                file = new File(path);
-                try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
-                    listFile = (Serialize) ois.readObject();
-                    listV.addAll(listFile.list);
-                } catch (IOException | ConcurrentModificationException | ClassNotFoundException ignored) {
-
-                }
-                break;
-            case "W":
-
-                path = SettingsFrame.dataPath + "\\listW";
-
-                file = new File(path);
-                try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
-                    listFile = (Serialize) ois.readObject();
-                    listW.addAll(listFile.list);
-                } catch (IOException | ConcurrentModificationException | ClassNotFoundException ignored) {
-
-                }
-                break;
-            case "X":
-
-                path = SettingsFrame.dataPath + "\\listX";
-
-                file = new File(path);
-                try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
-                    listFile = (Serialize) ois.readObject();
-                    listX.addAll(listFile.list);
-                } catch (IOException | ConcurrentModificationException | ClassNotFoundException ignored) {
-
-                }
-                break;
-            case "Y":
-
-                path = SettingsFrame.dataPath + "\\listY";
-
-                file = new File(path);
-                try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
-                    listFile = (Serialize) ois.readObject();
-                    listY.addAll(listFile.list);
-                } catch (IOException | ConcurrentModificationException | ClassNotFoundException ignored) {
-
-                }
-                break;
-            case "Z":
-
-                path = SettingsFrame.dataPath + "\\listZ";
-
-                file = new File(path);
-                try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
-                    listFile = (Serialize) ois.readObject();
-                    listZ.addAll(listFile.list);
-                } catch (IOException | ConcurrentModificationException | ClassNotFoundException ignored) {
-
-                }
-                break;
-            case "PercentSign":
-
-                path = SettingsFrame.dataPath + "\\listPercentSign";
-
-                file = new File(path);
-                try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
-                    listFile = (Serialize) ois.readObject();
-                    listPercentSign.addAll(listFile.list);
-                } catch (IOException | ConcurrentModificationException | ClassNotFoundException ignored) {
-
-                }
-                break;
-            case "UnderLine":
-
-                path = SettingsFrame.dataPath + "\\listUnderline";
-
-                file = new File(path);
-                try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
-                    listFile = (Serialize) ois.readObject();
-                    listUnderline.addAll(listFile.list);
-                } catch (IOException | ConcurrentModificationException | ClassNotFoundException ignored) {
-
-                }
-                break;
-            case "Unique":
-
-                path = SettingsFrame.dataPath + "\\listUnique";
-
-                file = new File(path);
-                try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
-                    listFile = (Serialize) ois.readObject();
-                    listUnique.addAll(listFile.list);
-                } catch (IOException | ConcurrentModificationException | ClassNotFoundException ignored) {
-
-                }
-                break;
-            case "Num":
-
-                path = SettingsFrame.dataPath + "\\listNum";
-
-                file = new File(path);
-                try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
-                    listFile = (Serialize) ois.readObject();
-                    listNum.addAll(listFile.list);
-                } catch (IOException | ConcurrentModificationException | ClassNotFoundException ignored) {
-
-                }
-                break;
         }
     }
+
 
 
     private void searchFile(String ignorePath, int searchDepth) {
@@ -1374,7 +671,7 @@ public class Search {
         }
         __searchFileIgnoreSearchDepth(getStartMenu());
         __searchFileIgnoreSearchDepth("C:\\ProgramData\\Microsoft\\Windows\\Start Menu");
-        MainClass.showMessage("提示","搜索完成");
+        MainClass.showMessage("提示", "搜索完成");
         isUsable = true;
         isManualUpdate = false;
     }
@@ -1398,7 +695,7 @@ public class Search {
         return null;
     }
 
-    private void __searchFileIgnoreSearchDepth(String path){
+    private void __searchFileIgnoreSearchDepth(String path) {
         FileSearcher.INSTANCE.clearResults();
         FileSearcher.INSTANCE.searchFilesIgnoreSearchDepth(path, "*");
         while (!FileSearcher.INSTANCE.ResultReady()) {
@@ -1411,14 +708,14 @@ public class Search {
         String results = FileSearcher.INSTANCE.getResult();
         FileSearcher.INSTANCE.deleteResult();
         String[] resultList = results.split("\n");
-        for (String each:resultList){
+        for (String each : resultList) {
             File tmp = new File(each);
             String name = tmp.getName();
             char headWord = '\0';
-            try{
+            try {
                 headWord = name.charAt(0);
                 headWord = Character.toUpperCase(headWord);
-            }catch(Exception ignored){
+            } catch (Exception ignored) {
 
             }
             switch (headWord) {
@@ -1648,14 +945,14 @@ public class Search {
         String results = FileSearcher.INSTANCE.getResult();
         FileSearcher.INSTANCE.deleteResult();
         String[] resultList = results.split("\n");
-        for (String each:resultList){
+        for (String each : resultList) {
             File tmp = new File(each);
             String name = tmp.getName();
             char headWord = '\0';
-            try{
+            try {
                 headWord = name.charAt(0);
                 headWord = Character.toUpperCase(headWord);
-            }catch(Exception ignored){
+            } catch (Exception ignored) {
 
             }
             switch (headWord) {
@@ -1879,7 +1176,7 @@ public class Search {
         int each;
         target = target.toLowerCase();
         ArrayList<String> list = new ArrayList<>();
-        while ((each = target.indexOf(",")) != -1){
+        while ((each = target.indexOf(",")) != -1) {
             list.add(target.substring(0, each));
             target = target.substring(each + 1);
         }
@@ -2123,10 +1420,68 @@ public class Search {
 
     static class Serialize implements Serializable {
         private static final long serialVersionUID = 1L;
-        private LinkedHashSet<String> list;
+        public LinkedHashSet<String> _listA;
+        public LinkedHashSet<String> _listB;
+        public LinkedHashSet<String> _listC;
+        public LinkedHashSet<String> _listD;
+        public LinkedHashSet<String> _listE;
+        public LinkedHashSet<String> _listF;
+        public LinkedHashSet<String> _listG;
+        public LinkedHashSet<String> _listH;
+        public LinkedHashSet<String> _listI;
+        public LinkedHashSet<String> _listJ;
+        public LinkedHashSet<String> _listK;
+        public LinkedHashSet<String> _listL;
+        public LinkedHashSet<String> _listM;
+        public LinkedHashSet<String> _listN;
+        public LinkedHashSet<String> _listO;
+        public LinkedHashSet<String> _listP;
+        public LinkedHashSet<String> _listQ;
+        public LinkedHashSet<String> _listR;
+        public LinkedHashSet<String> _listS;
+        public LinkedHashSet<String> _listT;
+        public LinkedHashSet<String> _listU;
+        public LinkedHashSet<String> _listV;
+        public LinkedHashSet<String> _listW;
+        public LinkedHashSet<String> _listX;
+        public LinkedHashSet<String> _listY;
+        public LinkedHashSet<String> _listZ;
+        public LinkedHashSet<String> _listNum;
+        public LinkedHashSet<String> _listPercentSign;
+        public LinkedHashSet<String> _listUnderline;
+        public LinkedHashSet<String> _listUnique;
 
-        public void setList(LinkedHashSet<String> listOut) {
-            this.list = listOut;
+        public void setList() {
+            _listA = listA;
+            _listB = listB;
+            _listC = listC;
+            _listD = listD;
+            _listE = listE;
+            _listF = listF;
+            _listG = listG;
+            _listH = listH;
+            _listI = listI;
+            _listJ = listJ;
+            _listK = listK;
+            _listL = listL;
+            _listM = listM;
+            _listN = listN;
+            _listO = listO;
+            _listP = listP;
+            _listQ = listQ;
+            _listR = listR;
+            _listS = listS;
+            _listT = listT;
+            _listU = listU;
+            _listV = listV;
+            _listW = listW;
+            _listX = listX;
+            _listY = listY;
+            _listZ = listZ;
+            _listNum = listNum;
+            _listPercentSign = listPercentSign;
+            _listUnderline = listUnderline;
+            _listUnique = listUnique;
         }
     }
 }
