@@ -229,7 +229,7 @@ public class MainClass {
             for (File root : roots) {
                 String dirveType = sys.getSystemTypeDescription(root);
                 if (dirveType.equals("±¾µØ´ÅÅÌ")) {
-                    fixedThreadPool.execute(() -> FileMonitor.INSTANCE.monitor(root.toString(), SettingsFrame.tmp.getAbsolutePath(), SettingsFrame.tmp.getAbsolutePath() + "\\CLOSE"));
+                    fixedThreadPool.execute(() -> FileMonitor.INSTANCE.monitor(root.getAbsolutePath(), SettingsFrame.tmp.getAbsolutePath(), SettingsFrame.tmp.getAbsolutePath() + "\\CLOSE"));
                 }
             }
         } else {
