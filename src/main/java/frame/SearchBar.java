@@ -9,6 +9,8 @@ import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.*;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.io.*;
@@ -63,6 +65,7 @@ public class SearchBar extends JTextField {
         searchBar.setBackground(null);
         searchBar.setOpacity(0.9f);
         panel = searchBar.getContentPane();
+        searchBar.setType(JFrame.Type.UTILITY);//Òþ²ØÈÎÎñÀ¸Í¼±ê
 
         //labels
         Font font = new Font("Microsoft JhengHei", Font.BOLD, (int) ((height * 0.1) / 96 * 72) / 4);
@@ -119,6 +122,17 @@ public class SearchBar extends JTextField {
         textField.setBorder(null);
         textField.setBackground(backgroundColor);
         textField.setLocation(0, 0);
+        textField.addFocusListener(new FocusListener() {
+            @Override
+            public void focusGained(FocusEvent e) {
+
+            }
+
+            @Override
+            public void focusLost(FocusEvent e) {
+                closedTodo();
+            }
+        });
 
         //panel
         panel.setLayout(null);
