@@ -3,6 +3,7 @@ package frame;
 import com.sun.awt.AWTUtilities;
 import getIcon.GetIcon;
 import main.MainClass;
+import pinyin.PinYinConverter;
 import search.Search;
 
 import javax.swing.*;
@@ -46,6 +47,7 @@ public class SearchBar extends JTextField {
     private boolean timer = false;
     private Thread searchWaiter = null;
     private boolean isUsing = false;
+    private final boolean debug = false;
 
     private SearchBar() {
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize(); // 获取屏幕大小
@@ -130,7 +132,9 @@ public class SearchBar extends JTextField {
 
             @Override
             public void focusLost(FocusEvent e) {
-                closedTodo();
+                if (!debug) {
+                    closedTodo();
+                }
             }
         });
 
@@ -214,6 +218,7 @@ public class SearchBar extends JTextField {
                         }
                         searchPriorityFolder(text);
                         searchCache(text);
+                        text = PinYinConverter.getPinYin(text);
                         char firstWord = '\0';
                         try {
                             firstWord = text.charAt(0);
@@ -228,9 +233,6 @@ public class SearchBar extends JTextField {
                             }
                             thread = new Thread(new AddAllResults(text));
                             thread.start();
-                        } else if (19968 <= (int) firstWord && (int) firstWord < 40869) {
-                            list = (search.getListUnique());
-                            addResult(list, text);
                         } else if ('%' == firstWord) {
                             list = (search.getListPercentSign());
                             addResult(list, text);
@@ -382,6 +384,9 @@ public class SearchBar extends JTextField {
                                 list = (search.getListZ());
                                 addResult(list, text);
                             }
+                        }else{
+                            list = search.getListUnique();
+                            addResult(list, text);
                         }
                     } else {
                         if (search.isManualUpdate()) {
@@ -431,12 +436,13 @@ public class SearchBar extends JTextField {
 
             @Override
             public void removeUpdate(DocumentEvent e) {
+                clearLabel();
                 if (textField.getText().equals("")) {
                     listResult.clear();
-                    clearLabel();
+                }else {
+                    startTime = System.currentTimeMillis();
+                    timer = true;
                 }
-                startTime = System.currentTimeMillis();
-                timer = true;
             }
 
             @Override
@@ -829,7 +835,7 @@ public class SearchBar extends JTextField {
                             }
                             break;
                         case "FULL":
-                            if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                            if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                 listResult.add(fileInList);
                                 if (listResult.size() > 100) {
                                     break label;
@@ -837,7 +843,7 @@ public class SearchBar extends JTextField {
                             }
                             break;
                         case "FOLDER-FULL":
-                            if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                            if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                 if (isDirectory(fileInList)) {
                                     listResult.add(fileInList);
                                 }
@@ -847,7 +853,7 @@ public class SearchBar extends JTextField {
                             }
                             break;
                         case "FILE-FULL":
-                            if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                            if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                 if (isFile(fileInList)) {
                                     listResult.add(fileInList);
                                 }
@@ -1090,7 +1096,7 @@ public class SearchBar extends JTextField {
                             cachesToDel.add(cach);
                         } else {
                             String eachCacheName = getFileName(cach);
-                            if (eachCacheName.toLowerCase().contains(searchFile.toLowerCase())) {
+                            if (match(eachCacheName, searchFile)) {
                                 listResult.addFirst(cach);
                             }
                         }
@@ -1104,10 +1110,12 @@ public class SearchBar extends JTextField {
     }
 
     private boolean match(String srcText, String txt) {
-        srcText = srcText.toLowerCase();
-        txt = txt.toLowerCase();
-        if (srcText.length() >= txt.length()) {
-            return srcText.contains(txt);
+        if (!txt.equals("")) {
+            srcText = PinYinConverter.getPinYin(srcText).toLowerCase();
+            txt = txt.toLowerCase();
+            if (srcText.length() >= txt.length()) {
+                return srcText.contains(txt);
+            }
         }
         return false;
     }
@@ -1156,6 +1164,7 @@ public class SearchBar extends JTextField {
             }
             CheckHotKey.setShowSearchBar(false);
             search.setUsable(false);
+            System.out.println("正在删除无效文件");
             search.mergeAndClearRecycleBin();
             search.setUsable(true);
             clearLabel();
@@ -1236,7 +1245,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FULL":
-                                    if (getFileName(fileInList).toLowerCase().equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         listResult.add(fileInList);
                                         if (listResult.size() > 100) {
                                             break label;
@@ -1244,7 +1253,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FOLDER-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             listResult.add(fileInList);
                                         }
@@ -1254,7 +1263,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FILE-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             listResult.add(fileInList);
                                         }
@@ -1296,7 +1305,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         listResult.add(fileInList);
                                         if (listResult.size() > 100) {
                                             break label1;
@@ -1304,7 +1313,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FOLDER-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             listResult.add(fileInList);
                                         }
@@ -1314,7 +1323,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FILE-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             listResult.add(fileInList);
                                         }
@@ -1356,7 +1365,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         listResult.add(fileInList);
                                         if (listResult.size() > 100) {
                                             break label2;
@@ -1364,7 +1373,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FOLDER-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             listResult.add(fileInList);
                                         }
@@ -1374,7 +1383,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FILE-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             listResult.add(fileInList);
                                         }
@@ -1416,7 +1425,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         listResult.add(fileInList);
                                         if (listResult.size() > 100) {
                                             break label3;
@@ -1424,7 +1433,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FOLDER-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             listResult.add(fileInList);
                                         }
@@ -1434,7 +1443,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FILE-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             listResult.add(fileInList);
                                         }
@@ -1476,7 +1485,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         listResult.add(fileInList);
                                         if (listResult.size() > 100) {
                                             break label4;
@@ -1484,7 +1493,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FOLDER-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             listResult.add(fileInList);
                                         }
@@ -1494,7 +1503,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FILE-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             listResult.add(fileInList);
                                         }
@@ -1536,7 +1545,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         listResult.add(fileInList);
                                         if (listResult.size() > 100) {
                                             break label5;
@@ -1544,7 +1553,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FOLDER-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             listResult.add(fileInList);
                                         }
@@ -1554,7 +1563,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FILE-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             listResult.add(fileInList);
                                         }
@@ -1596,7 +1605,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         listResult.add(fileInList);
                                         if (listResult.size() > 100) {
                                             break label6;
@@ -1604,7 +1613,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FOLDER-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             listResult.add(fileInList);
                                         }
@@ -1614,7 +1623,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FILE-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             listResult.add(fileInList);
                                         }
@@ -1656,7 +1665,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         listResult.add(fileInList);
                                         if (listResult.size() > 100) {
                                             break label7;
@@ -1664,7 +1673,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FOLDER-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             listResult.add(fileInList);
                                         }
@@ -1674,7 +1683,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FILE-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             listResult.add(fileInList);
                                         }
@@ -1716,7 +1725,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         listResult.add(fileInList);
                                         if (listResult.size() > 100) {
                                             break label8;
@@ -1724,7 +1733,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FOLDER-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             listResult.add(fileInList);
                                         }
@@ -1734,7 +1743,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FILE-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             listResult.add(fileInList);
                                         }
@@ -1776,7 +1785,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         listResult.add(fileInList);
                                         if (listResult.size() > 100) {
                                             break label9;
@@ -1784,7 +1793,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FOLDER-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             listResult.add(fileInList);
                                         }
@@ -1794,7 +1803,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FILE-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             listResult.add(fileInList);
                                         }
@@ -1836,7 +1845,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         listResult.add(fileInList);
                                         if (listResult.size() > 100) {
                                             break label10;
@@ -1844,7 +1853,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FOLDER-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             listResult.add(fileInList);
                                         }
@@ -1854,7 +1863,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FILE-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             listResult.add(fileInList);
                                         }
@@ -1896,7 +1905,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         listResult.add(fileInList);
                                         if (listResult.size() > 100) {
                                             break label11;
@@ -1904,7 +1913,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FOLDER-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             listResult.add(fileInList);
                                         }
@@ -1914,7 +1923,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FILE-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             listResult.add(fileInList);
                                         }
@@ -1956,7 +1965,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         listResult.add(fileInList);
                                         if (listResult.size() > 100) {
                                             break label12;
@@ -1964,7 +1973,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FOLDER-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             listResult.add(fileInList);
                                         }
@@ -1974,7 +1983,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FILE-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             listResult.add(fileInList);
                                         }
@@ -2016,7 +2025,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         listResult.add(fileInList);
                                         if (listResult.size() > 100) {
                                             break label13;
@@ -2024,7 +2033,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FOLDER-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             listResult.add(fileInList);
                                         }
@@ -2034,7 +2043,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FILE-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             listResult.add(fileInList);
                                         }
@@ -2076,7 +2085,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         listResult.add(fileInList);
                                         if (listResult.size() > 100) {
                                             break label14;
@@ -2084,7 +2093,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FOLDER-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             listResult.add(fileInList);
                                         }
@@ -2094,7 +2103,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FILE-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             listResult.add(fileInList);
                                         }
@@ -2136,7 +2145,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         listResult.add(fileInList);
                                         if (listResult.size() > 100) {
                                             break label15;
@@ -2144,7 +2153,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FOLDER-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             listResult.add(fileInList);
                                         }
@@ -2154,7 +2163,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FILE-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             listResult.add(fileInList);
                                         }
@@ -2196,7 +2205,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         listResult.add(fileInList);
                                         if (listResult.size() > 100) {
                                             break label16;
@@ -2204,7 +2213,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FOLDER-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             listResult.add(fileInList);
                                         }
@@ -2214,7 +2223,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FILE-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             listResult.add(fileInList);
                                         }
@@ -2256,7 +2265,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         listResult.add(fileInList);
                                         if (listResult.size() > 100) {
                                             break label17;
@@ -2264,7 +2273,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FOLDER-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             listResult.add(fileInList);
                                         }
@@ -2274,7 +2283,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FILE-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             listResult.add(fileInList);
                                         }
@@ -2316,7 +2325,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         listResult.add(fileInList);
                                         if (listResult.size() > 100) {
                                             break label18;
@@ -2324,7 +2333,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FOLDER-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             listResult.add(fileInList);
                                         }
@@ -2334,7 +2343,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FILE-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             listResult.add(fileInList);
                                         }
@@ -2376,7 +2385,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         listResult.add(fileInList);
                                         if (listResult.size() > 100) {
                                             break label19;
@@ -2384,7 +2393,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FOLDER-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             listResult.add(fileInList);
                                         }
@@ -2394,7 +2403,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FILE-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             listResult.add(fileInList);
                                         }
@@ -2436,7 +2445,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         listResult.add(fileInList);
                                         if (listResult.size() > 100) {
                                             break label20;
@@ -2444,7 +2453,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FOLDER-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             listResult.add(fileInList);
                                         }
@@ -2454,7 +2463,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FILE-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             listResult.add(fileInList);
                                         }
@@ -2496,7 +2505,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         listResult.add(fileInList);
                                         if (listResult.size() > 100) {
                                             break label21;
@@ -2504,7 +2513,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FOLDER-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             listResult.add(fileInList);
                                         }
@@ -2514,7 +2523,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FILE-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             listResult.add(fileInList);
                                         }
@@ -2556,7 +2565,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         listResult.add(fileInList);
                                         if (listResult.size() > 100) {
                                             break label22;
@@ -2564,7 +2573,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FOLDER-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             listResult.add(fileInList);
                                         }
@@ -2574,7 +2583,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FILE-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             listResult.add(fileInList);
                                         }
@@ -2616,7 +2625,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         listResult.add(fileInList);
                                         if (listResult.size() > 100) {
                                             break label23;
@@ -2624,7 +2633,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FOLDER-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             listResult.add(fileInList);
                                         }
@@ -2634,7 +2643,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FILE-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             listResult.add(fileInList);
                                         }
@@ -2676,7 +2685,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         listResult.add(fileInList);
                                         if (listResult.size() > 100) {
                                             break label24;
@@ -2684,7 +2693,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FOLDER-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             listResult.add(fileInList);
                                         }
@@ -2694,7 +2703,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FILE-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             listResult.add(fileInList);
                                         }
@@ -2736,7 +2745,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         listResult.add(fileInList);
                                         if (listResult.size() > 100) {
                                             break label25;
@@ -2744,7 +2753,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FOLDER-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             listResult.add(fileInList);
                                         }
@@ -2754,7 +2763,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FILE-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             listResult.add(fileInList);
                                         }
@@ -2796,7 +2805,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         listResult.add(fileInList);
                                         if (listResult.size() > 100) {
                                             break label26;
@@ -2804,7 +2813,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FOLDER-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             listResult.add(fileInList);
                                         }
@@ -2814,7 +2823,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FILE-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             listResult.add(fileInList);
                                         }
@@ -2856,7 +2865,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         listResult.add(fileInList);
                                         if (listResult.size() > 100) {
                                             break label27;
@@ -2864,7 +2873,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FOLDER-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             listResult.add(fileInList);
                                         }
@@ -2874,7 +2883,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FILE-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             listResult.add(fileInList);
                                         }
@@ -2891,7 +2900,6 @@ public class SearchBar extends JTextField {
                     }
                     label28:
                     for (String fileInList : search.getListUnique()) {
-
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             listResult.add(fileInList);
                             if (listResult.size() > 100) {
@@ -2916,7 +2924,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         listResult.add(fileInList);
                                         if (listResult.size() > 100) {
                                             break label28;
@@ -2924,7 +2932,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FOLDER-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             listResult.add(fileInList);
                                         }
@@ -2934,7 +2942,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FILE-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             listResult.add(fileInList);
                                         }
@@ -2976,7 +2984,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         listResult.add(fileInList);
                                         if (listResult.size() > 100) {
                                             break label29;
@@ -2984,7 +2992,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FOLDER-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             listResult.add(fileInList);
                                         }
@@ -2994,7 +3002,7 @@ public class SearchBar extends JTextField {
                                     }
                                     break;
                                 case "FILE-FULL":
-                                    if (getFileName(fileInList.toLowerCase()).equals(searchText.toLowerCase())) {
+                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             listResult.add(fileInList);
                                         }

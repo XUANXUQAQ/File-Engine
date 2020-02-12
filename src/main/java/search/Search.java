@@ -3,6 +3,7 @@ package search;
 import fileSearcher.FileSearcher;
 import frame.SettingsFrame;
 import main.MainClass;
+import pinyin.PinYinConverter;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -360,7 +361,7 @@ public class Search {
 
     private void addFileToList(String path) {
         File file = new File(path);
-        char firstWord = file.getName().charAt(0);
+        char firstWord = PinYinConverter.getPinYin(file.getName()).charAt(0);
         if (firstWord != '$' && firstWord != '.') {
             char headWord = Character.toUpperCase(firstWord);
             switch (headWord) {
@@ -713,7 +714,7 @@ public class Search {
             String name = tmp.getName();
             char headWord = '\0';
             try {
-                headWord = name.charAt(0);
+                headWord = PinYinConverter.getPinYin(name).charAt(0);
                 headWord = Character.toUpperCase(headWord);
             } catch (Exception ignored) {
 
@@ -950,7 +951,7 @@ public class Search {
             String name = tmp.getName();
             char headWord = '\0';
             try {
-                headWord = name.charAt(0);
+                headWord = PinYinConverter.getPinYin(name).charAt(0);
                 headWord = Character.toUpperCase(headWord);
             } catch (Exception ignored) {
 
