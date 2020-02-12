@@ -785,6 +785,7 @@ public class SearchBar extends JTextField {
                             open(listResult.get(labelCount));
                         }
                         saveCache(listResult.get(labelCount) + ';');
+                        System.gc();
                     } else if (17 == key) {
                         //ctrl±»µã»÷
                         isCtrlPressed = true;

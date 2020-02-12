@@ -3,7 +3,6 @@ package search;
 import fileSearcher.FileSearcher;
 import frame.SettingsFrame;
 import main.MainClass;
-import org.anarres.lzo.*;
 import pinyin.PinYinConverter;
 
 import java.io.*;
@@ -64,12 +63,17 @@ public class Search {
     public void mergeAndClearRecycleBin() {
         if (!isManualUpdate) {
             isUsable = false;
-            for (byte[] i : RecycleBin) {
-                String path = byteArrayToStr(i);
-                deletePathInList(path);
+            try {
+                for (byte[] i : RecycleBin) {
+                    String path = byteArrayToStr(i);
+                    deletePathInList(path);
+                    RecycleBin.clear();
+                }
+            }catch (ConcurrentModificationException ignored){
+
+            }finally {
+                isUsable = true;
             }
-            isUsable = true;
-            RecycleBin.clear();
         }
     }
 
@@ -354,25 +358,14 @@ public class Search {
         if (byteArray == null) {
             return null;
         }
-        try {
-            byteArray = uncompress(byteArray);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return new String(byteArray);
+        return new String(byteArray).intern();
     }
 
     public static byte[] strToByteArray(String str) {
         if (str == null) {
             return null;
         }
-        byte[] bytes = str.getBytes();
-        try {
-            bytes = compress(bytes);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return bytes;
+        return str.getBytes();
     }
 
     public boolean isUsable() {
@@ -387,32 +380,6 @@ public class Search {
         }
     }
 
-    private static byte[] compress(byte[] srcBytes) throws IOException {
-        LzoCompressor compressor = LzoLibrary.getInstance().newCompressor(
-                LzoAlgorithm.LZO1X, null);
-
-        ByteArrayOutputStream os = new ByteArrayOutputStream();
-        LzoOutputStream cs = new LzoOutputStream(os, compressor);
-        cs.write(srcBytes);
-        cs.close();
-
-        return os.toByteArray();
-
-    }
-
-    private static byte[] uncompress(byte[] bytes) throws IOException {
-        LzoDecompressor decompressor = LzoLibrary.getInstance()
-                .newDecompressor(LzoAlgorithm.LZO1X, null);
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        ByteArrayInputStream is = new ByteArrayInputStream(bytes);
-        LzoInputStream us = new LzoInputStream(is, decompressor);
-        int count;
-        byte[] buffer = new byte[2048];
-        while ((count = us.read(buffer)) != -1) {
-            baos.write(buffer, 0, count);
-        }
-        return baos.toByteArray();
-    }
 
     private void addFileToList(String path) {
         File file = new File(path);
