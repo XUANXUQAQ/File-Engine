@@ -49,10 +49,5 @@
             <artifactId>pinyin4j</artifactId>
             <version>2.5.1</version>
         </dependency>
-        <dependency>
-            <groupId>org.anarres.lzo</groupId>
-            <artifactId>lzo-core</artifactId>
-            <version>1.0.5</version>
-        </dependency>
     </dependencies>
 </project>
