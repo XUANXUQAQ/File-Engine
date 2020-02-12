@@ -7,6 +7,8 @@ A tool can make you work more efficiently.
     这是一个绿色软件，不必安装，随时使用。
     
 ## 用法
+注意：该程序需要管理员权限来监控文件更改事件。在设置中可以取消UAC弹窗。
+
 1.默认ctrl + alt + j 呼出搜索菜单  
 
 2.按下ctrl + enter可以打开对应文件所在的文件夹。  
