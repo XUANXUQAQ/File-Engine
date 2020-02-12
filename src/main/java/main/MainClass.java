@@ -144,6 +144,8 @@ public class MainClass {
         InputStream fileMonitorDll32 = MainClass.class.getResourceAsStream("/fileMonitor32.dll");
         InputStream fileSearcherDll64 = MainClass.class.getResourceAsStream("/fileSearcher64.dll");
         InputStream fileSearcherDll32 = MainClass.class.getResourceAsStream("/fileSearcher32.dll");
+        InputStream fileOpener64 = MainClass.class.getResourceAsStream("/fileOpener64.exe");
+        InputStream fileOpener32 = MainClass.class.getResourceAsStream("/fileOpener32.exe");
 
         target = new File("fileMonitor.dll");
         if (!target.exists()) {
@@ -177,6 +179,21 @@ public class MainClass {
         if (!target.exists()){
             target.mkdir();
         }
+        target = new File("fileOpener.exe");
+        if (!target.exists()){
+            File fileOpener;
+            if (name.contains("x64")){
+                copyFile(fileOpener64, target);
+                System.out.println("已加载64位fileOpener");
+                fileOpener = new File("fileOpener64.exe");
+            }else{
+                copyFile(fileOpener32, target);
+                System.out.println("已加载32位fileOpener");
+                fileOpener = new File("fileOpener32.exe");
+            }
+            fileOpener.renameTo(target);
+        }
+
         if (!caches.exists()) {
             try {
                 caches.createNewFile();

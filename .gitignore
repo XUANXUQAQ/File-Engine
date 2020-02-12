@@ -17,3 +17,7 @@ tmp/
 .settings/
 fileSearcher.dll
 out/
+fileOpener32.exe
+fileOpener64.exe
+fileOpener.exe
+fileToOpen.txt
