@@ -3,6 +3,7 @@ package search;
 import fileSearcher.FileSearcher;
 import frame.SettingsFrame;
 import main.MainClass;
+import org.anarres.lzo.*;
 import pinyin.PinYinConverter;
 
 import java.io.*;
@@ -12,41 +13,41 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 
 public class Search {
-    private static LinkedHashSet<String> listA = new LinkedHashSet<>();
-    private static LinkedHashSet<String> listB = new LinkedHashSet<>();
-    private static LinkedHashSet<String> listC = new LinkedHashSet<>();
-    private static LinkedHashSet<String> listD = new LinkedHashSet<>();
-    private static LinkedHashSet<String> listE = new LinkedHashSet<>();
-    private static LinkedHashSet<String> listF = new LinkedHashSet<>();
-    private static LinkedHashSet<String> listG = new LinkedHashSet<>();
-    private static LinkedHashSet<String> listH = new LinkedHashSet<>();
-    private static LinkedHashSet<String> listI = new LinkedHashSet<>();
-    private static LinkedHashSet<String> listJ = new LinkedHashSet<>();
-    private static LinkedHashSet<String> listK = new LinkedHashSet<>();
-    private static LinkedHashSet<String> listL = new LinkedHashSet<>();
-    private static LinkedHashSet<String> listM = new LinkedHashSet<>();
-    private static LinkedHashSet<String> listN = new LinkedHashSet<>();
-    private static LinkedHashSet<String> listO = new LinkedHashSet<>();
-    private static LinkedHashSet<String> listP = new LinkedHashSet<>();
-    private static LinkedHashSet<String> listQ = new LinkedHashSet<>();
-    private static LinkedHashSet<String> listR = new LinkedHashSet<>();
-    private static LinkedHashSet<String> listS = new LinkedHashSet<>();
-    private static LinkedHashSet<String> listT = new LinkedHashSet<>();
-    private static LinkedHashSet<String> listU = new LinkedHashSet<>();
-    private static LinkedHashSet<String> listV = new LinkedHashSet<>();
-    private static LinkedHashSet<String> listW = new LinkedHashSet<>();
-    private static LinkedHashSet<String> listX = new LinkedHashSet<>();
-    private static LinkedHashSet<String> listY = new LinkedHashSet<>();
-    private static LinkedHashSet<String> listZ = new LinkedHashSet<>();
-    private static LinkedHashSet<String> listNum = new LinkedHashSet<>();
-    private static LinkedHashSet<String> listPercentSign = new LinkedHashSet<>();
-    private static LinkedHashSet<String> listUnique = new LinkedHashSet<>();
-    private static LinkedHashSet<String> listUnderline = new LinkedHashSet<>();
-    private static CopyOnWriteArrayList<String> listToLoad = new CopyOnWriteArrayList<>();
+    private static LinkedHashSet<byte[]> listA = new LinkedHashSet<>();
+    private static LinkedHashSet<byte[]> listB = new LinkedHashSet<>();
+    private static LinkedHashSet<byte[]> listC = new LinkedHashSet<>();
+    private static LinkedHashSet<byte[]> listD = new LinkedHashSet<>();
+    private static LinkedHashSet<byte[]> listE = new LinkedHashSet<>();
+    private static LinkedHashSet<byte[]> listF = new LinkedHashSet<>();
+    private static LinkedHashSet<byte[]> listG = new LinkedHashSet<>();
+    private static LinkedHashSet<byte[]> listH = new LinkedHashSet<>();
+    private static LinkedHashSet<byte[]> listI = new LinkedHashSet<>();
+    private static LinkedHashSet<byte[]> listJ = new LinkedHashSet<>();
+    private static LinkedHashSet<byte[]> listK = new LinkedHashSet<>();
+    private static LinkedHashSet<byte[]> listL = new LinkedHashSet<>();
+    private static LinkedHashSet<byte[]> listM = new LinkedHashSet<>();
+    private static LinkedHashSet<byte[]> listN = new LinkedHashSet<>();
+    private static LinkedHashSet<byte[]> listO = new LinkedHashSet<>();
+    private static LinkedHashSet<byte[]> listP = new LinkedHashSet<>();
+    private static LinkedHashSet<byte[]> listQ = new LinkedHashSet<>();
+    private static LinkedHashSet<byte[]> listR = new LinkedHashSet<>();
+    private static LinkedHashSet<byte[]> listS = new LinkedHashSet<>();
+    private static LinkedHashSet<byte[]> listT = new LinkedHashSet<>();
+    private static LinkedHashSet<byte[]> listU = new LinkedHashSet<>();
+    private static LinkedHashSet<byte[]> listV = new LinkedHashSet<>();
+    private static LinkedHashSet<byte[]> listW = new LinkedHashSet<>();
+    private static LinkedHashSet<byte[]> listX = new LinkedHashSet<>();
+    private static LinkedHashSet<byte[]> listY = new LinkedHashSet<>();
+    private static LinkedHashSet<byte[]> listZ = new LinkedHashSet<>();
+    private static LinkedHashSet<byte[]> listNum = new LinkedHashSet<>();
+    private static LinkedHashSet<byte[]> listPercentSign = new LinkedHashSet<>();
+    private static LinkedHashSet<byte[]> listUnique = new LinkedHashSet<>();
+    private static LinkedHashSet<byte[]> listUnderline = new LinkedHashSet<>();
+    private static CopyOnWriteArrayList<byte[]> listToLoad = new CopyOnWriteArrayList<>();
     private static boolean isUsable = false;
     private static boolean isManualUpdate = false;
     private static boolean isFileSearcherDefined = false;
-    private static List<String> RecycleBin = Collections.synchronizedList(new LinkedList<>());
+    private static List<byte[]> RecycleBin = Collections.synchronizedList(new LinkedList<>());
 
     public int getRecycleBinSize() {
         return RecycleBin.size();
@@ -57,13 +58,14 @@ public class Search {
     }
 
     public void addToRecycleBin(String path) {
-        RecycleBin.add(path);
+        RecycleBin.add(strToByteArray(path));
     }
 
     public void mergeAndClearRecycleBin() {
         if (!isManualUpdate) {
             isUsable = false;
-            for (String path : RecycleBin) {
+            for (byte[] i : RecycleBin) {
+                String path = byteArrayToStr(i);
                 deletePathInList(path);
             }
             isUsable = true;
@@ -72,13 +74,14 @@ public class Search {
     }
 
     public void addFileToLoadBin(String path) {
-        listToLoad.add(path);
+        listToLoad.add(strToByteArray(path));
     }
 
     public void mergeFileToList() {
         if (!isManualUpdate) {
             isUsable = false;
-            for (String each : listToLoad) {
+            for (byte[] i : listToLoad) {
+                String each = byteArrayToStr(i);
                 File add = new File(each);
                 if (add.exists()) {
                     addFileToList(each);
@@ -101,7 +104,7 @@ public class Search {
         switch (headWord) {
             case 'A':
                 try {
-                    listA.remove(path);
+                    listA.remove(strToByteArray(path));
                 } catch (Exception ignored) {
 
                 }
@@ -109,7 +112,7 @@ public class Search {
                 break;
             case 'B':
                 try {
-                    listB.remove(path);
+                    listB.remove(strToByteArray(path));
                 } catch (Exception ignored) {
 
                 }
@@ -117,7 +120,7 @@ public class Search {
                 break;
             case 'C':
                 try {
-                    listC.remove(path);
+                    listC.remove(strToByteArray(path));
                 } catch (Exception ignored) {
 
                 }
@@ -125,7 +128,7 @@ public class Search {
                 break;
             case 'D':
                 try {
-                    listD.remove(path);
+                    listD.remove(strToByteArray(path));
                 } catch (Exception ignored) {
 
                 }
@@ -133,7 +136,7 @@ public class Search {
                 break;
             case 'E':
                 try {
-                    listE.remove(path);
+                    listE.remove(strToByteArray(path));
                 } catch (Exception ignored) {
 
                 }
@@ -141,7 +144,7 @@ public class Search {
                 break;
             case 'F':
                 try {
-                    listF.remove(path);
+                    listF.remove(strToByteArray(path));
                 } catch (Exception ignored) {
 
                 }
@@ -149,7 +152,7 @@ public class Search {
                 break;
             case 'G':
                 try {
-                    listG.remove(path);
+                    listG.remove(strToByteArray(path));
                 } catch (Exception ignored) {
 
                 }
@@ -157,7 +160,7 @@ public class Search {
                 break;
             case 'H':
                 try {
-                    listH.remove(path);
+                    listH.remove(strToByteArray(path));
                 } catch (Exception ignored) {
 
                 }
@@ -165,7 +168,7 @@ public class Search {
                 break;
             case 'I':
                 try {
-                    listI.remove(path);
+                    listI.remove(strToByteArray(path));
                 } catch (Exception ignored) {
 
                 }
@@ -173,7 +176,7 @@ public class Search {
                 break;
             case 'J':
                 try {
-                    listJ.remove(path);
+                    listJ.remove(strToByteArray(path));
                 } catch (Exception ignored) {
 
                 }
@@ -181,7 +184,7 @@ public class Search {
                 break;
             case 'K':
                 try {
-                    listK.remove(path);
+                    listK.remove(strToByteArray(path));
                 } catch (Exception ignored) {
 
                 }
@@ -189,7 +192,7 @@ public class Search {
                 break;
             case 'L':
                 try {
-                    listL.remove(path);
+                    listL.remove(strToByteArray(path));
                 } catch (Exception ignored) {
 
                 }
@@ -197,7 +200,7 @@ public class Search {
                 break;
             case 'M':
                 try {
-                    listM.remove(path);
+                    listM.remove(strToByteArray(path));
                 } catch (Exception ignored) {
 
                 }
@@ -205,7 +208,7 @@ public class Search {
                 break;
             case 'N':
                 try {
-                    listN.remove(path);
+                    listN.remove(strToByteArray(path));
                 } catch (Exception ignored) {
 
                 }
@@ -213,7 +216,7 @@ public class Search {
                 break;
             case 'O':
                 try {
-                    listO.remove(path);
+                    listO.remove(strToByteArray(path));
                 } catch (Exception ignored) {
 
                 }
@@ -221,7 +224,7 @@ public class Search {
                 break;
             case 'P':
                 try {
-                    listP.remove(path);
+                    listP.remove(strToByteArray(path));
                 } catch (Exception ignored) {
 
                 }
@@ -229,7 +232,7 @@ public class Search {
                 break;
             case 'Q':
                 try {
-                    listQ.remove(path);
+                    listQ.remove(strToByteArray(path));
                 } catch (Exception ignored) {
 
                 }
@@ -237,7 +240,7 @@ public class Search {
                 break;
             case 'R':
                 try {
-                    listR.remove(path);
+                    listR.remove(strToByteArray(path));
                 } catch (Exception ignored) {
 
                 }
@@ -245,7 +248,7 @@ public class Search {
                 break;
             case 'S':
                 try {
-                    listS.remove(path);
+                    listS.remove(strToByteArray(path));
                 } catch (Exception ignored) {
 
                 }
@@ -253,7 +256,7 @@ public class Search {
                 break;
             case 'T':
                 try {
-                    listT.remove(path);
+                    listT.remove(strToByteArray(path));
                 } catch (Exception ignored) {
 
                 }
@@ -261,7 +264,7 @@ public class Search {
                 break;
             case 'U':
                 try {
-                    listU.remove(path);
+                    listU.remove(strToByteArray(path));
                 } catch (Exception ignored) {
 
                 }
@@ -269,7 +272,7 @@ public class Search {
                 break;
             case 'V':
                 try {
-                    listV.remove(path);
+                    listV.remove(strToByteArray(path));
                 } catch (Exception ignored) {
 
                 }
@@ -277,7 +280,7 @@ public class Search {
                 break;
             case 'W':
                 try {
-                    listW.remove(path);
+                    listW.remove(strToByteArray(path));
                 } catch (Exception ignored) {
 
                 }
@@ -285,7 +288,7 @@ public class Search {
                 break;
             case 'X':
                 try {
-                    listX.remove(path);
+                    listX.remove(strToByteArray(path));
                 } catch (Exception ignored) {
 
                 }
@@ -293,7 +296,7 @@ public class Search {
                 break;
             case 'Y':
                 try {
-                    listY.remove(path);
+                    listY.remove(strToByteArray(path));
                 } catch (Exception ignored) {
 
                 }
@@ -301,7 +304,7 @@ public class Search {
                 break;
             case 'Z':
                 try {
-                    listZ.remove(path);
+                    listZ.remove(strToByteArray(path));
                 } catch (Exception ignored) {
 
                 }
@@ -310,25 +313,25 @@ public class Search {
             default:
                 if (Character.isDigit(headWord)) {
                     try {
-                        listNum.remove(path);
+                        listNum.remove(strToByteArray(path));
                     } catch (Exception ignored) {
 
                     }
                 } else if ('_' == headWord) {
                     try {
-                        listUnderline.remove(path);
+                        listUnderline.remove(strToByteArray(path));
                     } catch (Exception ignored) {
 
                     }
                 } else if ('%' == headWord) {
                     try {
-                        listPercentSign.remove(path);
+                        listPercentSign.remove(strToByteArray(path));
                     } catch (Exception ignored) {
 
                     }
                 } else {
                     try {
-                        listUnique.remove(path);
+                        listUnique.remove(strToByteArray(path));
                     } catch (Exception ignored) {
 
                     }
@@ -346,6 +349,32 @@ public class Search {
         isManualUpdate = b;
     }
 
+
+    public static String byteArrayToStr(byte[] byteArray) {
+        if (byteArray == null) {
+            return null;
+        }
+        try {
+            byteArray = uncompress(byteArray);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return new String(byteArray);
+    }
+
+    public static byte[] strToByteArray(String str) {
+        if (str == null) {
+            return null;
+        }
+        byte[] bytes = str.getBytes();
+        try {
+            bytes = compress(bytes);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return bytes;
+    }
+
     public boolean isUsable() {
         return isUsable;
     }
@@ -358,6 +387,32 @@ public class Search {
         }
     }
 
+    private static byte[] compress(byte[] srcBytes) throws IOException {
+        LzoCompressor compressor = LzoLibrary.getInstance().newCompressor(
+                LzoAlgorithm.LZO1X, null);
+
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        LzoOutputStream cs = new LzoOutputStream(os, compressor);
+        cs.write(srcBytes);
+        cs.close();
+
+        return os.toByteArray();
+
+    }
+
+    private static byte[] uncompress(byte[] bytes) throws IOException {
+        LzoDecompressor decompressor = LzoLibrary.getInstance()
+                .newDecompressor(LzoAlgorithm.LZO1X, null);
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ByteArrayInputStream is = new ByteArrayInputStream(bytes);
+        LzoInputStream us = new LzoInputStream(is, decompressor);
+        int count;
+        byte[] buffer = new byte[2048];
+        while ((count = us.read(buffer)) != -1) {
+            baos.write(buffer, 0, count);
+        }
+        return baos.toByteArray();
+    }
 
     private void addFileToList(String path) {
         File file = new File(path);
@@ -366,11 +421,15 @@ public class Search {
             char headWord = Character.toUpperCase(firstWord);
             switch (headWord) {
                 case 'A':
-                    listA.add(path);
+                    try {
+                        listA.add(strToByteArray(path));
+                    }catch (Exception ignored){
+
+                    }
                     break;
                 case 'B':
                     try {
-                        listB.add(path);
+                        listB.add(strToByteArray(path));
                     } catch (Exception ignored) {
 
                     }
@@ -378,7 +437,7 @@ public class Search {
                     break;
                 case 'C':
                     try {
-                        listC.add(path);
+                        listC.add(strToByteArray(path));
                     } catch (Exception ignored) {
 
                     }
@@ -386,7 +445,7 @@ public class Search {
                     break;
                 case 'D':
                     try {
-                        listD.add(path);
+                        listD.add(strToByteArray(path));
                     } catch (Exception ignored) {
 
                     }
@@ -394,7 +453,7 @@ public class Search {
                     break;
                 case 'E':
                     try {
-                        listE.add(path);
+                        listE.add(strToByteArray(path));
                     } catch (Exception ignored) {
 
                     }
@@ -402,7 +461,7 @@ public class Search {
                     break;
                 case 'F':
                     try {
-                        listF.add(path);
+                        listF.add(strToByteArray(path));
                     } catch (Exception ignored) {
 
                     }
@@ -410,7 +469,7 @@ public class Search {
                     break;
                 case 'G':
                     try {
-                        listG.add(path);
+                        listG.add(strToByteArray(path));
                     } catch (Exception ignored) {
 
                     }
@@ -418,7 +477,7 @@ public class Search {
                     break;
                 case 'H':
                     try {
-                        listH.add(path);
+                        listH.add(strToByteArray(path));
                     } catch (Exception ignored) {
 
                     }
@@ -426,7 +485,7 @@ public class Search {
                     break;
                 case 'I':
                     try {
-                        listI.add(path);
+                        listI.add(strToByteArray(path));
                     } catch (Exception ignored) {
 
                     }
@@ -434,7 +493,7 @@ public class Search {
                     break;
                 case 'J':
                     try {
-                        listJ.add(path);
+                        listJ.add(strToByteArray(path));
                     } catch (Exception ignored) {
 
                     }
@@ -442,7 +501,7 @@ public class Search {
                     break;
                 case 'K':
                     try {
-                        listK.add(path);
+                        listK.add(strToByteArray(path));
                     } catch (Exception ignored) {
 
                     }
@@ -450,7 +509,7 @@ public class Search {
                     break;
                 case 'L':
                     try {
-                        listL.add(path);
+                        listL.add(strToByteArray(path));
                     } catch (Exception ignored) {
 
                     }
@@ -458,7 +517,7 @@ public class Search {
                     break;
                 case 'M':
                     try {
-                        listM.add(path);
+                        listM.add(strToByteArray(path));
                     } catch (Exception ignored) {
 
                     }
@@ -466,7 +525,7 @@ public class Search {
                     break;
                 case 'N':
                     try {
-                        listN.add(path);
+                        listN.add(strToByteArray(path));
                     } catch (Exception ignored) {
 
                     }
@@ -474,7 +533,7 @@ public class Search {
                     break;
                 case 'O':
                     try {
-                        listO.add(path);
+                        listO.add(strToByteArray(path));
                     } catch (Exception ignored) {
 
                     }
@@ -482,7 +541,7 @@ public class Search {
                     break;
                 case 'P':
                     try {
-                        listP.add(path);
+                        listP.add(strToByteArray(path));
                     } catch (Exception ignored) {
 
                     }
@@ -490,7 +549,7 @@ public class Search {
                     break;
                 case 'Q':
                     try {
-                        listQ.add(path);
+                        listQ.add(strToByteArray(path));
                     } catch (Exception ignored) {
 
                     }
@@ -498,7 +557,7 @@ public class Search {
                     break;
                 case 'R':
                     try {
-                        listR.add(path);
+                        listR.add(strToByteArray(path));
                     } catch (Exception ignored) {
 
                     }
@@ -506,7 +565,7 @@ public class Search {
                     break;
                 case 'S':
                     try {
-                        listS.add(path);
+                        listS.add(strToByteArray(path));
                     } catch (Exception ignored) {
 
                     }
@@ -514,7 +573,7 @@ public class Search {
                     break;
                 case 'T':
                     try {
-                        listT.add(path);
+                        listT.add(strToByteArray(path));
                     } catch (Exception ignored) {
 
                     }
@@ -522,7 +581,7 @@ public class Search {
                     break;
                 case 'U':
                     try {
-                        listU.add(path);
+                        listU.add(strToByteArray(path));
                     } catch (Exception ignored) {
 
                     }
@@ -530,7 +589,7 @@ public class Search {
                     break;
                 case 'V':
                     try {
-                        listV.add(path);
+                        listV.add(strToByteArray(path));
                     } catch (Exception ignored) {
 
                     }
@@ -538,7 +597,7 @@ public class Search {
                     break;
                 case 'W':
                     try {
-                        listW.add(path);
+                        listW.add(strToByteArray(path));
                     } catch (Exception ignored) {
 
                     }
@@ -546,7 +605,7 @@ public class Search {
                     break;
                 case 'X':
                     try {
-                        listX.add(path);
+                        listX.add(strToByteArray(path));
                     } catch (Exception ignored) {
 
                     }
@@ -554,7 +613,7 @@ public class Search {
                     break;
                 case 'Y':
                     try {
-                        listY.add(path);
+                        listY.add(strToByteArray(path));
                     } catch (Exception ignored) {
 
                     }
@@ -562,7 +621,7 @@ public class Search {
                     break;
                 case 'Z':
                     try {
-                        listZ.add(path);
+                        listZ.add(strToByteArray(path));
                     } catch (Exception ignored) {
 
                     }
@@ -571,25 +630,25 @@ public class Search {
                 default:
                     if (Character.isDigit(headWord)) {
                         try {
-                            listNum.add(path);
+                            listNum.add(strToByteArray(path));
                         } catch (Exception ignored) {
 
                         }
                     } else if ('_' == headWord) {
                         try {
-                            listUnderline.add(path);
+                            listUnderline.add(strToByteArray(path));
                         } catch (Exception ignored) {
 
                         }
                     } else if ('%' == headWord) {
                         try {
-                            listPercentSign.add(path);
+                            listPercentSign.add(strToByteArray(path));
                         } catch (Exception ignored) {
 
                         }
                     } else {
                         try {
-                            listUnique.add(path);
+                            listUnique.add(strToByteArray(path));
                         } catch (Exception ignored) {
 
                         }
@@ -603,7 +662,7 @@ public class Search {
         }
     }
 
-    public void loadAllLists() throws Exception{
+    public void loadAllLists() throws Exception {
         Serialize lists;
         try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(SettingsFrame.dataPath + "\\data.dat"))) {
             lists = (Serialize) ois.readObject();
@@ -652,7 +711,6 @@ public class Search {
 
         }
     }
-
 
 
     private void searchFile(String ignorePath, int searchDepth) {
@@ -722,182 +780,182 @@ public class Search {
             switch (headWord) {
                 case 'A':
                     try {
-                        listA.add(each);
+                        listA.add(strToByteArray(each));
                     } catch (Exception ignored) {
 
                     }
                     break;
                 case 'B':
                     try {
-                        listB.add(each);
+                        listB.add(strToByteArray(each));
                     } catch (Exception ignored) {
 
                     }
                     break;
                 case 'C':
                     try {
-                        listC.add(each);
+                        listC.add(strToByteArray(each));
                     } catch (Exception ignored) {
 
                     }
                     break;
                 case 'D':
                     try {
-                        listD.add(each);
+                        listD.add(strToByteArray(each));
                     } catch (Exception ignored) {
 
                     }
                     break;
                 case 'E':
                     try {
-                        listE.add(each);
+                        listE.add(strToByteArray(each));
                     } catch (Exception ignored) {
 
                     }
                     break;
                 case 'F':
                     try {
-                        listF.add(each);
+                        listF.add(strToByteArray(each));
                     } catch (Exception ignored) {
 
                     }
                     break;
                 case 'G':
                     try {
-                        listG.add(each);
+                        listG.add(strToByteArray(each));
                     } catch (Exception ignored) {
 
                     }
                     break;
                 case 'H':
                     try {
-                        listH.add(each);
+                        listH.add(strToByteArray(each));
                     } catch (Exception ignored) {
 
                     }
                     break;
                 case 'I':
                     try {
-                        listI.add(each);
+                        listI.add(strToByteArray(each));
                     } catch (Exception ignored) {
 
                     }
                     break;
                 case 'J':
                     try {
-                        listJ.add(each);
+                        listJ.add(strToByteArray(each));
                     } catch (Exception ignored) {
 
                     }
                     break;
                 case 'K':
                     try {
-                        listK.add(each);
+                        listK.add(strToByteArray(each));
                     } catch (Exception ignored) {
 
                     }
                     break;
                 case 'L':
                     try {
-                        listL.add(each);
+                        listL.add(strToByteArray(each));
                     } catch (Exception ignored) {
 
                     }
                     break;
                 case 'M':
                     try {
-                        listM.add(each);
+                        listM.add(strToByteArray(each));
                     } catch (Exception ignored) {
 
                     }
                     break;
                 case 'N':
                     try {
-                        listN.add(each);
+                        listN.add(strToByteArray(each));
                     } catch (Exception ignored) {
 
                     }
                     break;
                 case 'O':
                     try {
-                        listO.add(each);
+                        listO.add(strToByteArray(each));
                     } catch (Exception ignored) {
 
                     }
                     break;
                 case 'P':
                     try {
-                        listP.add(each);
+                        listP.add(strToByteArray(each));
                     } catch (Exception ignored) {
 
                     }
                     break;
                 case 'Q':
                     try {
-                        listQ.add(each);
+                        listQ.add(strToByteArray(each));
                     } catch (Exception ignored) {
 
                     }
                     break;
                 case 'R':
                     try {
-                        listR.add(each);
+                        listR.add(strToByteArray(each));
                     } catch (Exception ignored) {
 
                     }
                     break;
                 case 'S':
                     try {
-                        listS.add(each);
+                        listS.add(strToByteArray(each));
                     } catch (Exception ignored) {
 
                     }
                     break;
                 case 'T':
                     try {
-                        listT.add(each);
+                        listT.add(strToByteArray(each));
                     } catch (Exception ignored) {
 
                     }
                     break;
                 case 'U':
                     try {
-                        listU.add(each);
+                        listU.add(strToByteArray(each));
                     } catch (Exception ignored) {
 
                     }
                     break;
                 case 'V':
                     try {
-                        listV.add(each);
+                        listV.add(strToByteArray(each));
                     } catch (Exception ignored) {
 
                     }
                     break;
                 case 'W':
                     try {
-                        listW.add(each);
+                        listW.add(strToByteArray(each));
                     } catch (Exception ignored) {
 
                     }
                     break;
                 case 'X':
                     try {
-                        listX.add(each);
+                        listX.add(strToByteArray(each));
                     } catch (Exception ignored) {
 
                     }
                     break;
                 case 'Y':
                     try {
-                        listY.add(each);
+                        listY.add(strToByteArray(each));
                     } catch (Exception ignored) {
 
                     }
                     break;
                 case 'Z':
                     try {
-                        listZ.add(each);
+                        listZ.add(strToByteArray(each));
                     } catch (Exception ignored) {
 
                     }
@@ -905,25 +963,25 @@ public class Search {
                 default:
                     if (Character.isDigit(headWord)) {
                         try {
-                            listNum.add(each);
+                            listNum.add(strToByteArray(each));
                         } catch (Exception ignored) {
 
                         }
                     } else if ('_' == headWord) {
                         try {
-                            listUnderline.add(each);
+                            listUnderline.add(strToByteArray(each));
                         } catch (Exception ignored) {
 
                         }
                     } else if ('%' == headWord) {
                         try {
-                            listPercentSign.add(each);
+                            listPercentSign.add(strToByteArray(each));
                         } catch (Exception ignored) {
 
                         }
                     } else {
                         try {
-                            listUnique.add(each);
+                            listUnique.add(strToByteArray(each));
                         } catch (Exception ignored) {
 
                         }
@@ -959,182 +1017,182 @@ public class Search {
             switch (headWord) {
                 case 'A':
                     try {
-                        listA.add(each);
+                        listA.add(strToByteArray(each));
                     } catch (Exception ignored) {
 
                     }
                     break;
                 case 'B':
                     try {
-                        listB.add(each);
+                        listB.add(strToByteArray(each));
                     } catch (Exception ignored) {
 
                     }
                     break;
                 case 'C':
                     try {
-                        listC.add(each);
+                        listC.add(strToByteArray(each));
                     } catch (Exception ignored) {
 
                     }
                     break;
                 case 'D':
                     try {
-                        listD.add(each);
+                        listD.add(strToByteArray(each));
                     } catch (Exception ignored) {
 
                     }
                     break;
                 case 'E':
                     try {
-                        listE.add(each);
+                        listE.add(strToByteArray(each));
                     } catch (Exception ignored) {
 
                     }
                     break;
                 case 'F':
                     try {
-                        listF.add(each);
+                        listF.add(strToByteArray(each));
                     } catch (Exception ignored) {
 
                     }
                     break;
                 case 'G':
                     try {
-                        listG.add(each);
+                        listG.add(strToByteArray(each));
                     } catch (Exception ignored) {
 
                     }
                     break;
                 case 'H':
                     try {
-                        listH.add(each);
+                        listH.add(strToByteArray(each));
                     } catch (Exception ignored) {
 
                     }
                     break;
                 case 'I':
                     try {
-                        listI.add(each);
+                        listI.add(strToByteArray(each));
                     } catch (Exception ignored) {
 
                     }
                     break;
                 case 'J':
                     try {
-                        listJ.add(each);
+                        listJ.add(strToByteArray(each));
                     } catch (Exception ignored) {
 
                     }
                     break;
                 case 'K':
                     try {
-                        listK.add(each);
+                        listK.add(strToByteArray(each));
                     } catch (Exception ignored) {
 
                     }
                     break;
                 case 'L':
                     try {
-                        listL.add(each);
+                        listL.add(strToByteArray(each));
                     } catch (Exception ignored) {
 
                     }
                     break;
                 case 'M':
                     try {
-                        listM.add(each);
+                        listM.add(strToByteArray(each));
                     } catch (Exception ignored) {
 
                     }
                     break;
                 case 'N':
                     try {
-                        listN.add(each);
+                        listN.add(strToByteArray(each));
                     } catch (Exception ignored) {
 
                     }
                     break;
                 case 'O':
                     try {
-                        listO.add(each);
+                        listO.add(strToByteArray(each));
                     } catch (Exception ignored) {
 
                     }
                     break;
                 case 'P':
                     try {
-                        listP.add(each);
+                        listP.add(strToByteArray(each));
                     } catch (Exception ignored) {
 
                     }
                     break;
                 case 'Q':
                     try {
-                        listQ.add(each);
+                        listQ.add(strToByteArray(each));
                     } catch (Exception ignored) {
 
                     }
                     break;
                 case 'R':
                     try {
-                        listR.add(each);
+                        listR.add(strToByteArray(each));
                     } catch (Exception ignored) {
 
                     }
                     break;
                 case 'S':
                     try {
-                        listS.add(each);
+                        listS.add(strToByteArray(each));
                     } catch (Exception ignored) {
 
                     }
                     break;
                 case 'T':
                     try {
-                        listT.add(each);
+                        listT.add(strToByteArray(each));
                     } catch (Exception ignored) {
 
                     }
                     break;
                 case 'U':
                     try {
-                        listU.add(each);
+                        listU.add(strToByteArray(each));
                     } catch (Exception ignored) {
 
                     }
                     break;
                 case 'V':
                     try {
-                        listV.add(each);
+                        listV.add(strToByteArray(each));
                     } catch (Exception ignored) {
 
                     }
                     break;
                 case 'W':
                     try {
-                        listW.add(each);
+                        listW.add(strToByteArray(each));
                     } catch (Exception ignored) {
 
                     }
                     break;
                 case 'X':
                     try {
-                        listX.add(each);
+                        listX.add(strToByteArray(each));
                     } catch (Exception ignored) {
 
                     }
                     break;
                 case 'Y':
                     try {
-                        listY.add(each);
+                        listY.add(strToByteArray(each));
                     } catch (Exception ignored) {
 
                     }
                     break;
                 case 'Z':
                     try {
-                        listZ.add(each);
+                        listZ.add(strToByteArray(each));
                     } catch (Exception ignored) {
 
                     }
@@ -1142,25 +1200,25 @@ public class Search {
                 default:
                     if (Character.isDigit(headWord)) {
                         try {
-                            listNum.add(each);
+                            listNum.add(strToByteArray(each));
                         } catch (Exception ignored) {
 
                         }
                     } else if ('_' == headWord) {
                         try {
-                            listUnderline.add(each);
+                            listUnderline.add(strToByteArray(each));
                         } catch (Exception ignored) {
 
                         }
                     } else if ('%' == headWord) {
                         try {
-                            listPercentSign.add(each);
+                            listPercentSign.add(strToByteArray(each));
                         } catch (Exception ignored) {
 
                         }
                     } else {
                         try {
-                            listUnique.add(each);
+                            listUnique.add(strToByteArray(each));
                         } catch (Exception ignored) {
 
                         }
@@ -1184,201 +1242,201 @@ public class Search {
         return list.toArray(new String[0]);
     }
 
-    public LinkedHashSet<String> getListA() {
+    public LinkedHashSet<byte[]> getListA() {
 
         return listA;
     }
 
-    public LinkedHashSet<String> getListB() {
+    public LinkedHashSet<byte[]> getListB() {
 
         return listB;
     }
 
-    public LinkedHashSet<String> getListC() {
+    public LinkedHashSet<byte[]> getListC() {
 
         return listC;
 
     }
 
-    public LinkedHashSet<String> getListD() {
+    public LinkedHashSet<byte[]> getListD() {
 
 
         return listD;
 
     }
 
-    public LinkedHashSet<String> getListE() {
+    public LinkedHashSet<byte[]> getListE() {
 
 
         return listE;
 
     }
 
-    public LinkedHashSet<String> getListF() {
+    public LinkedHashSet<byte[]> getListF() {
 
 
         return listF;
 
     }
 
-    public LinkedHashSet<String> getListG() {
+    public LinkedHashSet<byte[]> getListG() {
 
 
         return listG;
 
     }
 
-    public LinkedHashSet<String> getListH() {
+    public LinkedHashSet<byte[]> getListH() {
 
 
         return listH;
 
     }
 
-    public LinkedHashSet<String> getListI() {
+    public LinkedHashSet<byte[]> getListI() {
 
 
         return listI;
 
     }
 
-    public LinkedHashSet<String> getListJ() {
+    public LinkedHashSet<byte[]> getListJ() {
 
 
         return listJ;
 
     }
 
-    public LinkedHashSet<String> getListK() {
+    public LinkedHashSet<byte[]> getListK() {
 
 
         return listK;
 
     }
 
-    public LinkedHashSet<String> getListL() {
+    public LinkedHashSet<byte[]> getListL() {
 
 
         return listL;
 
     }
 
-    public LinkedHashSet<String> getListM() {
+    public LinkedHashSet<byte[]> getListM() {
 
 
         return listM;
 
     }
 
-    public LinkedHashSet<String> getListN() {
+    public LinkedHashSet<byte[]> getListN() {
 
 
         return listN;
 
     }
 
-    public LinkedHashSet<String> getListO() {
+    public LinkedHashSet<byte[]> getListO() {
 
         return listO;
 
     }
 
-    public LinkedHashSet<String> getListP() {
+    public LinkedHashSet<byte[]> getListP() {
 
 
         return listP;
 
     }
 
-    public LinkedHashSet<String> getListQ() {
+    public LinkedHashSet<byte[]> getListQ() {
 
 
         return listQ;
 
     }
 
-    public LinkedHashSet<String> getListR() {
+    public LinkedHashSet<byte[]> getListR() {
 
 
         return listR;
 
     }
 
-    public LinkedHashSet<String> getListNum() {
+    public LinkedHashSet<byte[]> getListNum() {
 
 
         return listNum;
 
     }
 
-    public LinkedHashSet<String> getListPercentSign() {
+    public LinkedHashSet<byte[]> getListPercentSign() {
 
 
         return listPercentSign;
 
     }
 
-    public LinkedHashSet<String> getListS() {
+    public LinkedHashSet<byte[]> getListS() {
 
 
         return listS;
 
     }
 
-    public LinkedHashSet<String> getListT() {
+    public LinkedHashSet<byte[]> getListT() {
 
 
         return listT;
 
     }
 
-    public LinkedHashSet<String> getListUnique() {
+    public LinkedHashSet<byte[]> getListUnique() {
 
         return listUnique;
     }
 
-    public LinkedHashSet<String> getListU() {
+    public LinkedHashSet<byte[]> getListU() {
 
 
         return listU;
 
     }
 
-    public LinkedHashSet<String> getListUnderline() {
+    public LinkedHashSet<byte[]> getListUnderline() {
 
         return listUnderline;
 
     }
 
-    public LinkedHashSet<String> getListV() {
+    public LinkedHashSet<byte[]> getListV() {
 
 
         return listV;
 
     }
 
-    public LinkedHashSet<String> getListW() {
+    public LinkedHashSet<byte[]> getListW() {
 
 
         return listW;
 
     }
 
-    public LinkedHashSet<String> getListY() {
+    public LinkedHashSet<byte[]> getListY() {
 
 
         return listY;
 
     }
 
-    public LinkedHashSet<String> getListX() {
+    public LinkedHashSet<byte[]> getListX() {
 
 
         return listX;
 
     }
 
-    public LinkedHashSet<String> getListZ() {
+    public LinkedHashSet<byte[]> getListZ() {
 
 
         return listZ;
@@ -1421,36 +1479,36 @@ public class Search {
 
     static class Serialize implements Serializable {
         private static final long serialVersionUID = 1L;
-        public LinkedHashSet<String> _listA;
-        public LinkedHashSet<String> _listB;
-        public LinkedHashSet<String> _listC;
-        public LinkedHashSet<String> _listD;
-        public LinkedHashSet<String> _listE;
-        public LinkedHashSet<String> _listF;
-        public LinkedHashSet<String> _listG;
-        public LinkedHashSet<String> _listH;
-        public LinkedHashSet<String> _listI;
-        public LinkedHashSet<String> _listJ;
-        public LinkedHashSet<String> _listK;
-        public LinkedHashSet<String> _listL;
-        public LinkedHashSet<String> _listM;
-        public LinkedHashSet<String> _listN;
-        public LinkedHashSet<String> _listO;
-        public LinkedHashSet<String> _listP;
-        public LinkedHashSet<String> _listQ;
-        public LinkedHashSet<String> _listR;
-        public LinkedHashSet<String> _listS;
-        public LinkedHashSet<String> _listT;
-        public LinkedHashSet<String> _listU;
-        public LinkedHashSet<String> _listV;
-        public LinkedHashSet<String> _listW;
-        public LinkedHashSet<String> _listX;
-        public LinkedHashSet<String> _listY;
-        public LinkedHashSet<String> _listZ;
-        public LinkedHashSet<String> _listNum;
-        public LinkedHashSet<String> _listPercentSign;
-        public LinkedHashSet<String> _listUnderline;
-        public LinkedHashSet<String> _listUnique;
+        public LinkedHashSet<byte[]> _listA;
+        public LinkedHashSet<byte[]> _listB;
+        public LinkedHashSet<byte[]> _listC;
+        public LinkedHashSet<byte[]> _listD;
+        public LinkedHashSet<byte[]> _listE;
+        public LinkedHashSet<byte[]> _listF;
+        public LinkedHashSet<byte[]> _listG;
+        public LinkedHashSet<byte[]> _listH;
+        public LinkedHashSet<byte[]> _listI;
+        public LinkedHashSet<byte[]> _listJ;
+        public LinkedHashSet<byte[]> _listK;
+        public LinkedHashSet<byte[]> _listL;
+        public LinkedHashSet<byte[]> _listM;
+        public LinkedHashSet<byte[]> _listN;
+        public LinkedHashSet<byte[]> _listO;
+        public LinkedHashSet<byte[]> _listP;
+        public LinkedHashSet<byte[]> _listQ;
+        public LinkedHashSet<byte[]> _listR;
+        public LinkedHashSet<byte[]> _listS;
+        public LinkedHashSet<byte[]> _listT;
+        public LinkedHashSet<byte[]> _listU;
+        public LinkedHashSet<byte[]> _listV;
+        public LinkedHashSet<byte[]> _listW;
+        public LinkedHashSet<byte[]> _listX;
+        public LinkedHashSet<byte[]> _listY;
+        public LinkedHashSet<byte[]> _listZ;
+        public LinkedHashSet<byte[]> _listNum;
+        public LinkedHashSet<byte[]> _listPercentSign;
+        public LinkedHashSet<byte[]> _listUnderline;
+        public LinkedHashSet<byte[]> _listUnique;
 
         public void setList() {
             _listA = listA;

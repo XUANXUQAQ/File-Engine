@@ -18,11 +18,13 @@ A tool can make you work more efficiently.
 4.在输入文件名后 输入";file"或者";folder"可以指定搜索文件或文件夹,输入;full开启全字匹配。
   输入";file-full"全字匹配并只搜索文件,输入";folder-full"全字匹配并只搜索文件夹(不包括引号)。
 
-5.缓存保存常用文件。  
+5.输入:update强制重新创建索引，输入:version查看版本，输入:clearbin清空回收站。
 
-6.忽略文件夹功能(搜索效率过低可适当添加)。  
+6.缓存保存常用文件。  
 
-7.设置优先搜索文件夹，常用的文件可以放入其中。  
+7.忽略文件夹功能(搜索效率过低可适当添加)。  
+
+8.设置优先搜索文件夹，常用的文件可以放入其中。  
 
     
 ![演示](https://github.com/XUANXUQAQ/super-search/raw/master/%E6%BC%94%E7%A4%BA.gif)

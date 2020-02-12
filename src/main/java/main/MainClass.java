@@ -100,7 +100,7 @@ public class MainClass {
 
     public static void main(String[] args) {
         try {
-            System.setProperty("sun.java2d.noddraw", "true");
+            //System.setProperty("sun.java2d.noddraw", "true");
             org.jb2011.lnf.beautyeye.BeautyEyeLNFHelper.launchBeautyEyeLNF();
             UIManager.put("RootPane.setupButtonVisible",false);
         } catch (Exception e) {
@@ -115,8 +115,7 @@ public class MainClass {
         File settings = new File(System.getenv("Appdata") + "/settings.json");
         File caches = new File("cache.dat");
         File data = new File("data");
-        //Çå¿Õtmp
-        deleteDir(SettingsFrame.tmp.getAbsolutePath());
+
         if (!settings.exists()) {
             String ignorePath = "";
             JSONObject json = new JSONObject();
@@ -134,6 +133,12 @@ public class MainClass {
 
             }
         }
+
+        SettingsFrame.initSettings();
+
+        //Çå¿Õtmp
+        deleteDir(SettingsFrame.tmp.getAbsolutePath());
+
         File target;
         InputStream fileMonitorDll64 = MainClass.class.getResourceAsStream("/fileMonitor64.dll");
         InputStream fileMonitorDll32 = MainClass.class.getResourceAsStream("/fileMonitor32.dll");
@@ -167,6 +172,10 @@ public class MainClass {
                 dllSearcher = new File("fileSearcher32.dll");
             }
             dllSearcher.renameTo(target);
+        }
+        target = new File(SettingsFrame.dataPath);
+        if (!target.exists()){
+            target.mkdir();
         }
         if (!caches.exists()) {
             try {
@@ -202,7 +211,6 @@ public class MainClass {
         File[] roots = File.listRoots();
         ExecutorService fixedThreadPool = Executors.newFixedThreadPool(roots.length + 4);
 
-        SettingsFrame.initSettings();
 
         data = new File(SettingsFrame.dataPath + "\\data.dat");
         if (data.isFile() && data.exists()) {
