@@ -1036,7 +1036,17 @@ public class SearchBar extends JTextField {
         if (name.exists()) {
             try {
                 try {
-                    Runtime.getRuntime().exec("\"" + name.getAbsolutePath() + "\"", null, name.getParentFile());
+                    if (path.endsWith("exe")){
+                        Runtime.getRuntime().exec("cmd /c runas /trustlevel:0x20000 \"" + name.getAbsolutePath() + "\"", null, name.getParentFile());
+                    }else {
+                        File fileToOpen = new File("fileToOpen.txt");
+                        File fileOpener = new File("fileOpener.exe");
+                        try (BufferedWriter buffw = new BufferedWriter(new FileWriter(fileToOpen))) {
+                            buffw.write(name.getAbsolutePath() + "\n");
+                            buffw.write(name.getParent());
+                        }
+                        Runtime.getRuntime().exec("cmd /c runas /trustlevel:0x20000 \""+ fileOpener.getAbsolutePath() +"\"");
+                    }
                 } catch (IOException e) {
                     Desktop desktop;
                     if (Desktop.isDesktopSupported()) {
