@@ -16,6 +16,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.io.*;
 import java.net.URL;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.concurrent.ExecutorService;
@@ -41,7 +42,7 @@ public class SearchBar {
     private Color labelColor = new Color(255, 152, 104, 255);
     private Color backgroundColor = new Color(108, 108, 108, 255);
     private Color backgroundColorLight = new Color(75, 75, 75, 255);
-    private LinkedHashSet<byte[]> list;
+    private HashSet<byte[]> list;
     private Thread thread;
     private boolean isFirstRun = true;
     private long startTime = 0;
@@ -821,7 +822,7 @@ public class SearchBar {
     }
 
 
-    private void addResult(LinkedHashSet<byte[]> list, String text) {
+    private void addResult(HashSet<byte[]> list, String text) {
         //为label添加结果
         String[] strings = new String[0];
         String searchText;
