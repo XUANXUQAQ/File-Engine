@@ -68,8 +68,9 @@ public class SearchBar {
         searchBar.setBackground(null);
         searchBar.setOpacity(0.9f);
         panel = searchBar.getContentPane();
-        searchBar.setType(JFrame.Type.UTILITY);//隐藏任务栏图标
-
+        if (!debug) {
+            searchBar.setType(JFrame.Type.UTILITY);//隐藏任务栏图标
+        }
         //labels
         Font font = new Font("Microsoft JhengHei", Font.BOLD, (int) ((height * 0.1) / 96 * 72) / 4);
         Color fontColor = new Color(73, 162, 255, 255);
