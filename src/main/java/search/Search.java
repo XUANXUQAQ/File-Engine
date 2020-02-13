@@ -9,44 +9,59 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.regex.Pattern;
 
 
 public class Search {
-    private static LinkedHashSet<byte[]> listA = new LinkedHashSet<>();
-    private static LinkedHashSet<byte[]> listB = new LinkedHashSet<>();
-    private static LinkedHashSet<byte[]> listC = new LinkedHashSet<>();
-    private static LinkedHashSet<byte[]> listD = new LinkedHashSet<>();
-    private static LinkedHashSet<byte[]> listE = new LinkedHashSet<>();
-    private static LinkedHashSet<byte[]> listF = new LinkedHashSet<>();
-    private static LinkedHashSet<byte[]> listG = new LinkedHashSet<>();
-    private static LinkedHashSet<byte[]> listH = new LinkedHashSet<>();
-    private static LinkedHashSet<byte[]> listI = new LinkedHashSet<>();
-    private static LinkedHashSet<byte[]> listJ = new LinkedHashSet<>();
-    private static LinkedHashSet<byte[]> listK = new LinkedHashSet<>();
-    private static LinkedHashSet<byte[]> listL = new LinkedHashSet<>();
-    private static LinkedHashSet<byte[]> listM = new LinkedHashSet<>();
-    private static LinkedHashSet<byte[]> listN = new LinkedHashSet<>();
-    private static LinkedHashSet<byte[]> listO = new LinkedHashSet<>();
-    private static LinkedHashSet<byte[]> listP = new LinkedHashSet<>();
-    private static LinkedHashSet<byte[]> listQ = new LinkedHashSet<>();
-    private static LinkedHashSet<byte[]> listR = new LinkedHashSet<>();
-    private static LinkedHashSet<byte[]> listS = new LinkedHashSet<>();
-    private static LinkedHashSet<byte[]> listT = new LinkedHashSet<>();
-    private static LinkedHashSet<byte[]> listU = new LinkedHashSet<>();
-    private static LinkedHashSet<byte[]> listV = new LinkedHashSet<>();
-    private static LinkedHashSet<byte[]> listW = new LinkedHashSet<>();
-    private static LinkedHashSet<byte[]> listX = new LinkedHashSet<>();
-    private static LinkedHashSet<byte[]> listY = new LinkedHashSet<>();
-    private static LinkedHashSet<byte[]> listZ = new LinkedHashSet<>();
-    private static LinkedHashSet<byte[]> listNum = new LinkedHashSet<>();
-    private static LinkedHashSet<byte[]> listPercentSign = new LinkedHashSet<>();
-    private static LinkedHashSet<byte[]> listUnique = new LinkedHashSet<>();
-    private static LinkedHashSet<byte[]> listUnderline = new LinkedHashSet<>();
+    private static HashSet<byte[]> listA = new HashSet<>();
+    private static HashSet<byte[]> listB = new HashSet<>();
+    private static HashSet<byte[]> listC = new HashSet<>();
+    private static HashSet<byte[]> listD = new HashSet<>();
+    private static HashSet<byte[]> listE = new HashSet<>();
+    private static HashSet<byte[]> listF = new HashSet<>();
+    private static HashSet<byte[]> listG = new HashSet<>();
+    private static HashSet<byte[]> listH = new HashSet<>();
+    private static HashSet<byte[]> listI = new HashSet<>();
+    private static HashSet<byte[]> listJ = new HashSet<>();
+    private static HashSet<byte[]> listK = new HashSet<>();
+    private static HashSet<byte[]> listL = new HashSet<>();
+    private static HashSet<byte[]> listM = new HashSet<>();
+    private static HashSet<byte[]> listN = new HashSet<>();
+    private static HashSet<byte[]> listO = new HashSet<>();
+    private static HashSet<byte[]> listP = new HashSet<>();
+    private static HashSet<byte[]> listQ = new HashSet<>();
+    private static HashSet<byte[]> listR = new HashSet<>();
+    private static HashSet<byte[]> listS = new HashSet<>();
+    private static HashSet<byte[]> listT = new HashSet<>();
+    private static HashSet<byte[]> listU = new HashSet<>();
+    private static HashSet<byte[]> listV = new HashSet<>();
+    private static HashSet<byte[]> listW = new HashSet<>();
+    private static HashSet<byte[]> listX = new HashSet<>();
+    private static HashSet<byte[]> listY = new HashSet<>();
+    private static HashSet<byte[]> listZ = new HashSet<>();
+    private static HashSet<byte[]> listNum = new HashSet<>();
+    private static HashSet<byte[]> listPercentSign = new HashSet<>();
+    private static HashSet<byte[]> listUnique = new HashSet<>();
+    private static HashSet<byte[]> listUnderline = new HashSet<>();
     private static CopyOnWriteArrayList<byte[]> listToLoad = new CopyOnWriteArrayList<>();
     private static boolean isUsable = false;
     private static boolean isManualUpdate = false;
     private static boolean isFileSearcherDefined = false;
     private static List<byte[]> RecycleBin = Collections.synchronizedList(new LinkedList<>());
+
+    public static String byteArrayToStr(byte[] byteArray) {
+        if (byteArray == null) {
+            return null;
+        }
+        return new String(byteArray).intern();
+    }
+
+    public static byte[] strToByteArray(String str) {
+        if (str == null) {
+            return null;
+        }
+        return str.getBytes();
+    }
 
     public int getRecycleBinSize() {
         return RecycleBin.size();
@@ -69,9 +84,9 @@ public class Search {
                     deletePathInList(path);
                     RecycleBin.clear();
                 }
-            }catch (ConcurrentModificationException ignored){
+            } catch (ConcurrentModificationException ignored) {
 
-            }finally {
+            } finally {
                 isUsable = true;
             }
         }
@@ -353,21 +368,6 @@ public class Search {
         isManualUpdate = b;
     }
 
-
-    public static String byteArrayToStr(byte[] byteArray) {
-        if (byteArray == null) {
-            return null;
-        }
-        return new String(byteArray).intern();
-    }
-
-    public static byte[] strToByteArray(String str) {
-        if (str == null) {
-            return null;
-        }
-        return str.getBytes();
-    }
-
     public boolean isUsable() {
         return isUsable;
     }
@@ -390,7 +390,7 @@ public class Search {
                 case 'A':
                     try {
                         listA.add(strToByteArray(path));
-                    }catch (Exception ignored){
+                    } catch (Exception ignored) {
 
                     }
                     break;
@@ -733,7 +733,8 @@ public class Search {
         }
         String results = FileSearcher.INSTANCE.getResult();
         FileSearcher.INSTANCE.deleteResult();
-        String[] resultList = results.split("\n");
+        Pattern pattern = Pattern.compile("\n");
+        String[] resultList = pattern.split(results);
         for (String each : resultList) {
             File tmp = new File(each);
             String name = tmp.getName();
@@ -970,7 +971,8 @@ public class Search {
         }
         String results = FileSearcher.INSTANCE.getResult();
         FileSearcher.INSTANCE.deleteResult();
-        String[] resultList = results.split("\n");
+        Pattern pattern = Pattern.compile("\n");
+        String[] resultList = pattern.split(results);
         for (String each : resultList) {
             File tmp = new File(each);
             String name = tmp.getName();
@@ -1209,201 +1211,201 @@ public class Search {
         return list.toArray(new String[0]);
     }
 
-    public LinkedHashSet<byte[]> getListA() {
+    public HashSet<byte[]> getListA() {
 
         return listA;
     }
 
-    public LinkedHashSet<byte[]> getListB() {
+    public HashSet<byte[]> getListB() {
 
         return listB;
     }
 
-    public LinkedHashSet<byte[]> getListC() {
+    public HashSet<byte[]> getListC() {
 
         return listC;
 
     }
 
-    public LinkedHashSet<byte[]> getListD() {
+    public HashSet<byte[]> getListD() {
 
 
         return listD;
 
     }
 
-    public LinkedHashSet<byte[]> getListE() {
+    public HashSet<byte[]> getListE() {
 
 
         return listE;
 
     }
 
-    public LinkedHashSet<byte[]> getListF() {
+    public HashSet<byte[]> getListF() {
 
 
         return listF;
 
     }
 
-    public LinkedHashSet<byte[]> getListG() {
+    public HashSet<byte[]> getListG() {
 
 
         return listG;
 
     }
 
-    public LinkedHashSet<byte[]> getListH() {
+    public HashSet<byte[]> getListH() {
 
 
         return listH;
 
     }
 
-    public LinkedHashSet<byte[]> getListI() {
+    public HashSet<byte[]> getListI() {
 
 
         return listI;
 
     }
 
-    public LinkedHashSet<byte[]> getListJ() {
+    public HashSet<byte[]> getListJ() {
 
 
         return listJ;
 
     }
 
-    public LinkedHashSet<byte[]> getListK() {
+    public HashSet<byte[]> getListK() {
 
 
         return listK;
 
     }
 
-    public LinkedHashSet<byte[]> getListL() {
+    public HashSet<byte[]> getListL() {
 
 
         return listL;
 
     }
 
-    public LinkedHashSet<byte[]> getListM() {
+    public HashSet<byte[]> getListM() {
 
 
         return listM;
 
     }
 
-    public LinkedHashSet<byte[]> getListN() {
+    public HashSet<byte[]> getListN() {
 
 
         return listN;
 
     }
 
-    public LinkedHashSet<byte[]> getListO() {
+    public HashSet<byte[]> getListO() {
 
         return listO;
 
     }
 
-    public LinkedHashSet<byte[]> getListP() {
+    public HashSet<byte[]> getListP() {
 
 
         return listP;
 
     }
 
-    public LinkedHashSet<byte[]> getListQ() {
+    public HashSet<byte[]> getListQ() {
 
 
         return listQ;
 
     }
 
-    public LinkedHashSet<byte[]> getListR() {
+    public HashSet<byte[]> getListR() {
 
 
         return listR;
 
     }
 
-    public LinkedHashSet<byte[]> getListNum() {
+    public HashSet<byte[]> getListNum() {
 
 
         return listNum;
 
     }
 
-    public LinkedHashSet<byte[]> getListPercentSign() {
+    public HashSet<byte[]> getListPercentSign() {
 
 
         return listPercentSign;
 
     }
 
-    public LinkedHashSet<byte[]> getListS() {
+    public HashSet<byte[]> getListS() {
 
 
         return listS;
 
     }
 
-    public LinkedHashSet<byte[]> getListT() {
+    public HashSet<byte[]> getListT() {
 
 
         return listT;
 
     }
 
-    public LinkedHashSet<byte[]> getListUnique() {
+    public HashSet<byte[]> getListUnique() {
 
         return listUnique;
     }
 
-    public LinkedHashSet<byte[]> getListU() {
+    public HashSet<byte[]> getListU() {
 
 
         return listU;
 
     }
 
-    public LinkedHashSet<byte[]> getListUnderline() {
+    public HashSet<byte[]> getListUnderline() {
 
         return listUnderline;
 
     }
 
-    public LinkedHashSet<byte[]> getListV() {
+    public HashSet<byte[]> getListV() {
 
 
         return listV;
 
     }
 
-    public LinkedHashSet<byte[]> getListW() {
+    public HashSet<byte[]> getListW() {
 
 
         return listW;
 
     }
 
-    public LinkedHashSet<byte[]> getListY() {
+    public HashSet<byte[]> getListY() {
 
 
         return listY;
 
     }
 
-    public LinkedHashSet<byte[]> getListX() {
+    public HashSet<byte[]> getListX() {
 
 
         return listX;
 
     }
 
-    public LinkedHashSet<byte[]> getListZ() {
+    public HashSet<byte[]> getListZ() {
 
 
         return listZ;
@@ -1446,36 +1448,36 @@ public class Search {
 
     static class Serialize implements Serializable {
         private static final long serialVersionUID = 1L;
-        public LinkedHashSet<byte[]> _listA;
-        public LinkedHashSet<byte[]> _listB;
-        public LinkedHashSet<byte[]> _listC;
-        public LinkedHashSet<byte[]> _listD;
-        public LinkedHashSet<byte[]> _listE;
-        public LinkedHashSet<byte[]> _listF;
-        public LinkedHashSet<byte[]> _listG;
-        public LinkedHashSet<byte[]> _listH;
-        public LinkedHashSet<byte[]> _listI;
-        public LinkedHashSet<byte[]> _listJ;
-        public LinkedHashSet<byte[]> _listK;
-        public LinkedHashSet<byte[]> _listL;
-        public LinkedHashSet<byte[]> _listM;
-        public LinkedHashSet<byte[]> _listN;
-        public LinkedHashSet<byte[]> _listO;
-        public LinkedHashSet<byte[]> _listP;
-        public LinkedHashSet<byte[]> _listQ;
-        public LinkedHashSet<byte[]> _listR;
-        public LinkedHashSet<byte[]> _listS;
-        public LinkedHashSet<byte[]> _listT;
-        public LinkedHashSet<byte[]> _listU;
-        public LinkedHashSet<byte[]> _listV;
-        public LinkedHashSet<byte[]> _listW;
-        public LinkedHashSet<byte[]> _listX;
-        public LinkedHashSet<byte[]> _listY;
-        public LinkedHashSet<byte[]> _listZ;
-        public LinkedHashSet<byte[]> _listNum;
-        public LinkedHashSet<byte[]> _listPercentSign;
-        public LinkedHashSet<byte[]> _listUnderline;
-        public LinkedHashSet<byte[]> _listUnique;
+        public HashSet<byte[]> _listA;
+        public HashSet<byte[]> _listB;
+        public HashSet<byte[]> _listC;
+        public HashSet<byte[]> _listD;
+        public HashSet<byte[]> _listE;
+        public HashSet<byte[]> _listF;
+        public HashSet<byte[]> _listG;
+        public HashSet<byte[]> _listH;
+        public HashSet<byte[]> _listI;
+        public HashSet<byte[]> _listJ;
+        public HashSet<byte[]> _listK;
+        public HashSet<byte[]> _listL;
+        public HashSet<byte[]> _listM;
+        public HashSet<byte[]> _listN;
+        public HashSet<byte[]> _listO;
+        public HashSet<byte[]> _listP;
+        public HashSet<byte[]> _listQ;
+        public HashSet<byte[]> _listR;
+        public HashSet<byte[]> _listS;
+        public HashSet<byte[]> _listT;
+        public HashSet<byte[]> _listU;
+        public HashSet<byte[]> _listV;
+        public HashSet<byte[]> _listW;
+        public HashSet<byte[]> _listX;
+        public HashSet<byte[]> _listY;
+        public HashSet<byte[]> _listZ;
+        public HashSet<byte[]> _listNum;
+        public HashSet<byte[]> _listPercentSign;
+        public HashSet<byte[]> _listUnderline;
+        public HashSet<byte[]> _listUnique;
 
         public void setList() {
             _listA = listA;
