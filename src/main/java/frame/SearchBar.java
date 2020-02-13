@@ -24,7 +24,7 @@ import java.util.concurrent.Executors;
 import static main.MainClass.mainExit;
 
 
-public class SearchBar extends JTextField {
+public class SearchBar {
     private static SearchBar searchBarInstance = new SearchBar();
     private final boolean debug = false; //TODO 构建时修改
     private JFrame searchBar = new JFrame();
