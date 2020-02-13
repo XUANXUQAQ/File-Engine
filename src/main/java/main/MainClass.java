@@ -10,6 +10,7 @@ import search.Search;
 import javax.swing.*;
 import javax.swing.filechooser.FileSystemView;
 import java.io.*;
+import java.util.Objects;
 import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -142,8 +143,8 @@ public class MainClass {
         File target;
         InputStream fileMonitorDll64 = MainClass.class.getResourceAsStream("/fileMonitor64.dll");
         InputStream fileMonitorDll32 = MainClass.class.getResourceAsStream("/fileMonitor32.dll");
-        InputStream fileSearcherDll64 = MainClass.class.getResourceAsStream("/fileSearcher64.dll");
-        InputStream fileSearcherDll32 = MainClass.class.getResourceAsStream("/fileSearcher32.dll");
+        InputStream fileSearcherDll64 = MainClass.class.getResourceAsStream("/fileSearcher64.exe");
+        InputStream fileSearcherDll32 = MainClass.class.getResourceAsStream("/fileSearcher32.exe");
         InputStream fileOpener64 = MainClass.class.getResourceAsStream("/fileOpener64.exe");
         InputStream fileOpener32 = MainClass.class.getResourceAsStream("/fileOpener32.exe");
 
@@ -161,17 +162,17 @@ public class MainClass {
             }
             dllMonitor.renameTo(target);
         }
-        target = new File("fileSearcher.dll");
+        target = new File("fileSearcher.exe");
         if (!target.exists()) {
             File dllSearcher;
             if (name.contains("x64")) {
                 copyFile(fileSearcherDll64, target);
                 System.out.println("已加载64为fileSearcher");
-                dllSearcher = new File("fileSearcher64.dll");
+                dllSearcher = new File("fileSearcher64.exe");
             } else {
                 copyFile(fileSearcherDll32, target);
                 System.out.println("已加载32位fileSearcher");
-                dllSearcher = new File("fileSearcher32.dll");
+                dllSearcher = new File("fileSearcher32.exe");
             }
             dllSearcher.renameTo(target);
         }
@@ -229,23 +230,14 @@ public class MainClass {
         ExecutorService fixedThreadPool = Executors.newFixedThreadPool(roots.length + 4);
 
 
-        data = new File(SettingsFrame.dataPath + "\\data.dat");
-        if (data.isFile() && data.exists()) {
-            System.out.println("检测到data文件，正在读取");
-            //showMessage("提示", "检测到data文件，正在读取");
-            search.setUsable(false);
-            try {
-                search.loadAllLists();
-                search.setUsable(true);
-                System.out.println("读取完成");
-                showMessage("提示", "读取完成");
-            } catch (Exception e) {
-                System.out.println("检测到data文件损坏，开始搜索并创建data文件");
-                showMessage("提示", "检检测到data文件损坏，开始搜索并创建data文件");
+        data = new File(SettingsFrame.dataPath);
+        if (data.isDirectory() && data.exists()) {
+            if (Objects.requireNonNull(data.listFiles()).length != 30){
+                System.out.println("检测到data文件损坏，正在搜索并重建");
                 search.setManualUpdate(true);
             }
-        }else {
-            System.out.println("未检测到data文件，开始搜索并创建data文件");
+        }else{
+            System.out.println("无data文件，正在搜索并重建");
             search.setManualUpdate(true);
         }
 
@@ -327,8 +319,7 @@ public class MainClass {
                     count = 0;
                     System.out.println("正在更新本地索引data文件");
                     if (search.isUsable() && (!searchBar.isUsing())) {
-                        deleteDir(SettingsFrame.dataPath);
-                        search.saveLists();
+                        search.saveAndReleaseLists();
                     }
                 }
 
@@ -374,8 +365,7 @@ public class MainClass {
                     }
                     System.out.println("即将退出，保存最新文件列表到data");
                     search.mergeFileToList();
-                    deleteDir(SettingsFrame.dataPath);
-                    search.saveLists();
+                    search.saveAndReleaseLists();
                 }
                 System.exit(0);
             }

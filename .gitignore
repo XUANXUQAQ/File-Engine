@@ -15,7 +15,8 @@ data/
 fileMonitor.dll
 tmp/
 .settings/
-fileSearcher.dll
+fileSearcher.exe
 out/
 fileOpener.exe
 fileToOpen.txt
+/fileSearcher.exe
