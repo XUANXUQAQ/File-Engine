@@ -61,21 +61,6 @@ public class Search {
         return str.getBytes();
     }
 
-    private static void clearInfoForFile(String fileName) {
-        File file = new File(fileName);
-        try {
-            if (!file.exists()) {
-                file.createNewFile();
-            }
-            FileWriter fileWriter = new FileWriter(file);
-            fileWriter.write("");
-            fileWriter.flush();
-            fileWriter.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
     public int getRecycleBinSize() {
         return RecycleBin.size();
     }
@@ -1659,487 +1644,483 @@ public class Search {
 
     private void __searchFileIgnoreSearchDepth(String path, String ignorePath) {
         File searchResults = new File(SettingsFrame.tmp + "\\searchResults.txt");
-        clearInfoForFile(SettingsFrame.tmp + "\\searchResults.txt");
         String command = "cmd /c fileSearcher.exe \"" + path + "\"" + " \"6\" " + "\"" + ignorePath + "\" " + "\"" + searchResults.getAbsolutePath() + "\" " + "\"" + "1" + "\"";
         String each;
-        BufferedReader buffr;
         Process p;
         try {
             p = Runtime.getRuntime().exec(command);
-            buffr = new BufferedReader(new InputStreamReader(new FileInputStream(searchResults)));
             while (p.isAlive()) {
+                Thread.sleep(1);
+            }
+        } catch (IOException | InterruptedException ignored) {
+
+        }
+        try(BufferedReader buffr = new BufferedReader(new InputStreamReader(new FileInputStream(searchResults)))) {
+            while ((each = buffr.readLine()) != null) {
+                File tmp = new File(each);
+                String name = tmp.getName();
+                char headWord = '\0';
                 try {
-                    while ((each = buffr.readLine()) != null) {
-                        File tmp = new File(each);
-                        String name = tmp.getName();
-                        char headWord = '\0';
+                    headWord = PinYinConverter.getPinYin(name).charAt(0);
+                    headWord = Character.toUpperCase(headWord);
+                } catch (Exception ignored) {
+
+                }
+                switch (headWord) {
+                    case 'A':
                         try {
-                            headWord = PinYinConverter.getPinYin(name).charAt(0);
-                            headWord = Character.toUpperCase(headWord);
+                            listA.add(strToByteArray(each));
                         } catch (Exception ignored) {
 
                         }
-                        switch (headWord) {
-                            case 'A':
-                                try {
-                                    listA.add(strToByteArray(each));
-                                } catch (Exception ignored) {
+                        break;
+                    case 'B':
+                        try {
+                            listB.add(strToByteArray(each));
+                        } catch (Exception ignored) {
 
-                                }
-                                break;
-                            case 'B':
-                                try {
-                                    listB.add(strToByteArray(each));
-                                } catch (Exception ignored) {
-
-                                }
-                                break;
-                            case 'C':
-                                try {
-                                    listC.add(strToByteArray(each));
-                                } catch (Exception ignored) {
-
-                                }
-                                break;
-                            case 'D':
-                                try {
-                                    listD.add(strToByteArray(each));
-                                } catch (Exception ignored) {
-
-                                }
-                                break;
-                            case 'E':
-                                try {
-                                    listE.add(strToByteArray(each));
-                                } catch (Exception ignored) {
-
-                                }
-                                break;
-                            case 'F':
-                                try {
-                                    listF.add(strToByteArray(each));
-                                } catch (Exception ignored) {
-
-                                }
-                                break;
-                            case 'G':
-                                try {
-                                    listG.add(strToByteArray(each));
-                                } catch (Exception ignored) {
-
-                                }
-                                break;
-                            case 'H':
-                                try {
-                                    listH.add(strToByteArray(each));
-                                } catch (Exception ignored) {
-
-                                }
-                                break;
-                            case 'I':
-                                try {
-                                    listI.add(strToByteArray(each));
-                                } catch (Exception ignored) {
-
-                                }
-                                break;
-                            case 'J':
-                                try {
-                                    listJ.add(strToByteArray(each));
-                                } catch (Exception ignored) {
-
-                                }
-                                break;
-                            case 'K':
-                                try {
-                                    listK.add(strToByteArray(each));
-                                } catch (Exception ignored) {
-
-                                }
-                                break;
-                            case 'L':
-                                try {
-                                    listL.add(strToByteArray(each));
-                                } catch (Exception ignored) {
-
-                                }
-                                break;
-                            case 'M':
-                                try {
-                                    listM.add(strToByteArray(each));
-                                } catch (Exception ignored) {
-
-                                }
-                                break;
-                            case 'N':
-                                try {
-                                    listN.add(strToByteArray(each));
-                                } catch (Exception ignored) {
-
-                                }
-                                break;
-                            case 'O':
-                                try {
-                                    listO.add(strToByteArray(each));
-                                } catch (Exception ignored) {
-
-                                }
-                                break;
-                            case 'P':
-                                try {
-                                    listP.add(strToByteArray(each));
-                                } catch (Exception ignored) {
-
-                                }
-                                break;
-                            case 'Q':
-                                try {
-                                    listQ.add(strToByteArray(each));
-                                } catch (Exception ignored) {
-
-                                }
-                                break;
-                            case 'R':
-                                try {
-                                    listR.add(strToByteArray(each));
-                                } catch (Exception ignored) {
-
-                                }
-                                break;
-                            case 'S':
-                                try {
-                                    listS.add(strToByteArray(each));
-                                } catch (Exception ignored) {
-
-                                }
-                                break;
-                            case 'T':
-                                try {
-                                    listT.add(strToByteArray(each));
-                                } catch (Exception ignored) {
-
-                                }
-                                break;
-                            case 'U':
-                                try {
-                                    listU.add(strToByteArray(each));
-                                } catch (Exception ignored) {
-
-                                }
-                                break;
-                            case 'V':
-                                try {
-                                    listV.add(strToByteArray(each));
-                                } catch (Exception ignored) {
-
-                                }
-                                break;
-                            case 'W':
-                                try {
-                                    listW.add(strToByteArray(each));
-                                } catch (Exception ignored) {
-
-                                }
-                                break;
-                            case 'X':
-                                try {
-                                    listX.add(strToByteArray(each));
-                                } catch (Exception ignored) {
-
-                                }
-                                break;
-                            case 'Y':
-                                try {
-                                    listY.add(strToByteArray(each));
-                                } catch (Exception ignored) {
-
-                                }
-                                break;
-                            case 'Z':
-                                try {
-                                    listZ.add(strToByteArray(each));
-                                } catch (Exception ignored) {
-
-                                }
-                                break;
-                            default:
-                                if (Character.isDigit(headWord)) {
-                                    try {
-                                        listNum.add(strToByteArray(each));
-                                    } catch (Exception ignored) {
-
-                                    }
-                                } else if ('_' == headWord) {
-                                    try {
-                                        listUnderline.add(strToByteArray(each));
-                                    } catch (Exception ignored) {
-
-                                    }
-                                } else if ('%' == headWord) {
-                                    try {
-                                        listPercentSign.add(strToByteArray(each));
-                                    } catch (Exception ignored) {
-
-                                    }
-                                } else {
-                                    try {
-                                        listUnique.add(strToByteArray(each));
-                                    } catch (Exception ignored) {
-
-                                    }
-                                }
-                                break;
                         }
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
+                        break;
+                    case 'C':
+                        try {
+                            listC.add(strToByteArray(each));
+                        } catch (Exception ignored) {
+
+                        }
+                        break;
+                    case 'D':
+                        try {
+                            listD.add(strToByteArray(each));
+                        } catch (Exception ignored) {
+
+                        }
+                        break;
+                    case 'E':
+                        try {
+                            listE.add(strToByteArray(each));
+                        } catch (Exception ignored) {
+
+                        }
+                        break;
+                    case 'F':
+                        try {
+                            listF.add(strToByteArray(each));
+                        } catch (Exception ignored) {
+
+                        }
+                        break;
+                    case 'G':
+                        try {
+                            listG.add(strToByteArray(each));
+                        } catch (Exception ignored) {
+
+                        }
+                        break;
+                    case 'H':
+                        try {
+                            listH.add(strToByteArray(each));
+                        } catch (Exception ignored) {
+
+                        }
+                        break;
+                    case 'I':
+                        try {
+                            listI.add(strToByteArray(each));
+                        } catch (Exception ignored) {
+
+                        }
+                        break;
+                    case 'J':
+                        try {
+                            listJ.add(strToByteArray(each));
+                        } catch (Exception ignored) {
+
+                        }
+                        break;
+                    case 'K':
+                        try {
+                            listK.add(strToByteArray(each));
+                        } catch (Exception ignored) {
+
+                        }
+                        break;
+                    case 'L':
+                        try {
+                            listL.add(strToByteArray(each));
+                        } catch (Exception ignored) {
+
+                        }
+                        break;
+                    case 'M':
+                        try {
+                            listM.add(strToByteArray(each));
+                        } catch (Exception ignored) {
+
+                        }
+                        break;
+                    case 'N':
+                        try {
+                            listN.add(strToByteArray(each));
+                        } catch (Exception ignored) {
+
+                        }
+                        break;
+                    case 'O':
+                        try {
+                            listO.add(strToByteArray(each));
+                        } catch (Exception ignored) {
+
+                        }
+                        break;
+                    case 'P':
+                        try {
+                            listP.add(strToByteArray(each));
+                        } catch (Exception ignored) {
+
+                        }
+                        break;
+                    case 'Q':
+                        try {
+                            listQ.add(strToByteArray(each));
+                        } catch (Exception ignored) {
+
+                        }
+                        break;
+                    case 'R':
+                        try {
+                            listR.add(strToByteArray(each));
+                        } catch (Exception ignored) {
+
+                        }
+                        break;
+                    case 'S':
+                        try {
+                            listS.add(strToByteArray(each));
+                        } catch (Exception ignored) {
+
+                        }
+                        break;
+                    case 'T':
+                        try {
+                            listT.add(strToByteArray(each));
+                        } catch (Exception ignored) {
+
+                        }
+                        break;
+                    case 'U':
+                        try {
+                            listU.add(strToByteArray(each));
+                        } catch (Exception ignored) {
+
+                        }
+                        break;
+                    case 'V':
+                        try {
+                            listV.add(strToByteArray(each));
+                        } catch (Exception ignored) {
+
+                        }
+                        break;
+                    case 'W':
+                        try {
+                            listW.add(strToByteArray(each));
+                        } catch (Exception ignored) {
+
+                        }
+                        break;
+                    case 'X':
+                        try {
+                            listX.add(strToByteArray(each));
+                        } catch (Exception ignored) {
+
+                        }
+                        break;
+                    case 'Y':
+                        try {
+                            listY.add(strToByteArray(each));
+                        } catch (Exception ignored) {
+
+                        }
+                        break;
+                    case 'Z':
+                        try {
+                            listZ.add(strToByteArray(each));
+                        } catch (Exception ignored) {
+
+                        }
+                        break;
+                    default:
+                        if (Character.isDigit(headWord)) {
+                            try {
+                                listNum.add(strToByteArray(each));
+                            } catch (Exception ignored) {
+
+                            }
+                        } else if ('_' == headWord) {
+                            try {
+                                listUnderline.add(strToByteArray(each));
+                            } catch (Exception ignored) {
+
+                            }
+                        } else if ('%' == headWord) {
+                            try {
+                                listPercentSign.add(strToByteArray(each));
+                            } catch (Exception ignored) {
+
+                            }
+                        } else {
+                            try {
+                                listUnique.add(strToByteArray(each));
+                            } catch (Exception ignored) {
+
+                            }
+                        }
+                        break;
                 }
             }
-        } catch (IOException e) {
-            e.printStackTrace();
+        }catch (Exception ignored){
+
         }
     }
 
     private void __searchFile(String path, int searchDepth, String ignorePath) {
         File searchResults = new File(SettingsFrame.tmp + "\\searchResults.txt");
-        clearInfoForFile(SettingsFrame.tmp + "\\searchResults.txt");
         String command = "cmd /c fileSearcher.exe \"" + path + "\"" + " \"" + searchDepth + "\" " + "\"" + ignorePath + "\" " + "\"" + searchResults.getAbsolutePath() + "\" " + "\"" + "0" + "\"";
         String each;
-        BufferedReader buffr;
         Process p;
         try {
             p = Runtime.getRuntime().exec(command);
-            buffr = new BufferedReader(new InputStreamReader(new FileInputStream(searchResults)));
-            try {
-                while (p.isAlive()) {
-                    while ((each = buffr.readLine()) != null) {
-                        File tmp = new File(each);
-                        String name = tmp.getName();
-                        char headWord = '\0';
+            while (p.isAlive()) {
+                Thread.sleep(1);
+            }
+        } catch (IOException | InterruptedException ignored) {
+
+        }
+        try (BufferedReader buffr = new BufferedReader(new InputStreamReader(new FileInputStream(searchResults)))) {
+            while ((each = buffr.readLine()) != null) {
+                File tmp = new File(each);
+                String name = tmp.getName();
+                char headWord = '\0';
+                try {
+                    headWord = PinYinConverter.getPinYin(name).charAt(0);
+                    headWord = Character.toUpperCase(headWord);
+                } catch (Exception ignored) {
+
+                }
+                switch (headWord) {
+                    case 'A':
                         try {
-                            headWord = PinYinConverter.getPinYin(name).charAt(0);
-                            headWord = Character.toUpperCase(headWord);
+                            listA.add(strToByteArray(each));
                         } catch (Exception ignored) {
 
                         }
-                        switch (headWord) {
-                            case 'A':
-                                try {
-                                    listA.add(strToByteArray(each));
-                                } catch (Exception ignored) {
+                        break;
+                    case 'B':
+                        try {
+                            listB.add(strToByteArray(each));
+                        } catch (Exception ignored) {
 
-                                }
-                                break;
-                            case 'B':
-                                try {
-                                    listB.add(strToByteArray(each));
-                                } catch (Exception ignored) {
-
-                                }
-                                break;
-                            case 'C':
-                                try {
-                                    listC.add(strToByteArray(each));
-                                } catch (Exception ignored) {
-
-                                }
-                                break;
-                            case 'D':
-                                try {
-                                    listD.add(strToByteArray(each));
-                                } catch (Exception ignored) {
-
-                                }
-                                break;
-                            case 'E':
-                                try {
-                                    listE.add(strToByteArray(each));
-                                } catch (Exception ignored) {
-
-                                }
-                                break;
-                            case 'F':
-                                try {
-                                    listF.add(strToByteArray(each));
-                                } catch (Exception ignored) {
-
-                                }
-                                break;
-                            case 'G':
-                                try {
-                                    listG.add(strToByteArray(each));
-                                } catch (Exception ignored) {
-
-                                }
-                                break;
-                            case 'H':
-                                try {
-                                    listH.add(strToByteArray(each));
-                                } catch (Exception ignored) {
-
-                                }
-                                break;
-                            case 'I':
-                                try {
-                                    listI.add(strToByteArray(each));
-                                } catch (Exception ignored) {
-
-                                }
-                                break;
-                            case 'J':
-                                try {
-                                    listJ.add(strToByteArray(each));
-                                } catch (Exception ignored) {
-
-                                }
-                                break;
-                            case 'K':
-                                try {
-                                    listK.add(strToByteArray(each));
-                                } catch (Exception ignored) {
-
-                                }
-                                break;
-                            case 'L':
-                                try {
-                                    listL.add(strToByteArray(each));
-                                } catch (Exception ignored) {
-
-                                }
-                                break;
-                            case 'M':
-                                try {
-                                    listM.add(strToByteArray(each));
-                                } catch (Exception ignored) {
-
-                                }
-                                break;
-                            case 'N':
-                                try {
-                                    listN.add(strToByteArray(each));
-                                } catch (Exception ignored) {
-
-                                }
-                                break;
-                            case 'O':
-                                try {
-                                    listO.add(strToByteArray(each));
-                                } catch (Exception ignored) {
-
-                                }
-                                break;
-                            case 'P':
-                                try {
-                                    listP.add(strToByteArray(each));
-                                } catch (Exception ignored) {
-
-                                }
-                                break;
-                            case 'Q':
-                                try {
-                                    listQ.add(strToByteArray(each));
-                                } catch (Exception ignored) {
-
-                                }
-                                break;
-                            case 'R':
-                                try {
-                                    listR.add(strToByteArray(each));
-                                } catch (Exception ignored) {
-
-                                }
-                                break;
-                            case 'S':
-                                try {
-                                    listS.add(strToByteArray(each));
-                                } catch (Exception ignored) {
-
-                                }
-                                break;
-                            case 'T':
-                                try {
-                                    listT.add(strToByteArray(each));
-                                } catch (Exception ignored) {
-
-                                }
-                                break;
-                            case 'U':
-                                try {
-                                    listU.add(strToByteArray(each));
-                                } catch (Exception ignored) {
-
-                                }
-                                break;
-                            case 'V':
-                                try {
-                                    listV.add(strToByteArray(each));
-                                } catch (Exception ignored) {
-
-                                }
-                                break;
-                            case 'W':
-                                try {
-                                    listW.add(strToByteArray(each));
-                                } catch (Exception ignored) {
-
-                                }
-                                break;
-                            case 'X':
-                                try {
-                                    listX.add(strToByteArray(each));
-                                } catch (Exception ignored) {
-
-                                }
-                                break;
-                            case 'Y':
-                                try {
-                                    listY.add(strToByteArray(each));
-                                } catch (Exception ignored) {
-
-                                }
-                                break;
-                            case 'Z':
-                                try {
-                                    listZ.add(strToByteArray(each));
-                                } catch (Exception ignored) {
-
-                                }
-                                break;
-                            default:
-                                if (Character.isDigit(headWord)) {
-                                    try {
-                                        listNum.add(strToByteArray(each));
-                                    } catch (Exception ignored) {
-
-                                    }
-                                } else if ('_' == headWord) {
-                                    try {
-                                        listUnderline.add(strToByteArray(each));
-                                    } catch (Exception ignored) {
-
-                                    }
-                                } else if ('%' == headWord) {
-                                    try {
-                                        listPercentSign.add(strToByteArray(each));
-                                    } catch (Exception ignored) {
-
-                                    }
-                                } else {
-                                    try {
-                                        listUnique.add(strToByteArray(each));
-                                    } catch (Exception ignored) {
-
-                                    }
-                                }
-                                break;
                         }
-                    }
+                        break;
+                    case 'C':
+                        try {
+                            listC.add(strToByteArray(each));
+                        } catch (Exception ignored) {
+
+                        }
+                        break;
+                    case 'D':
+                        try {
+                            listD.add(strToByteArray(each));
+                        } catch (Exception ignored) {
+
+                        }
+                        break;
+                    case 'E':
+                        try {
+                            listE.add(strToByteArray(each));
+                        } catch (Exception ignored) {
+
+                        }
+                        break;
+                    case 'F':
+                        try {
+                            listF.add(strToByteArray(each));
+                        } catch (Exception ignored) {
+
+                        }
+                        break;
+                    case 'G':
+                        try {
+                            listG.add(strToByteArray(each));
+                        } catch (Exception ignored) {
+
+                        }
+                        break;
+                    case 'H':
+                        try {
+                            listH.add(strToByteArray(each));
+                        } catch (Exception ignored) {
+
+                        }
+                        break;
+                    case 'I':
+                        try {
+                            listI.add(strToByteArray(each));
+                        } catch (Exception ignored) {
+
+                        }
+                        break;
+                    case 'J':
+                        try {
+                            listJ.add(strToByteArray(each));
+                        } catch (Exception ignored) {
+
+                        }
+                        break;
+                    case 'K':
+                        try {
+                            listK.add(strToByteArray(each));
+                        } catch (Exception ignored) {
+
+                        }
+                        break;
+                    case 'L':
+                        try {
+                            listL.add(strToByteArray(each));
+                        } catch (Exception ignored) {
+
+                        }
+                        break;
+                    case 'M':
+                        try {
+                            listM.add(strToByteArray(each));
+                        } catch (Exception ignored) {
+
+                        }
+                        break;
+                    case 'N':
+                        try {
+                            listN.add(strToByteArray(each));
+                        } catch (Exception ignored) {
+
+                        }
+                        break;
+                    case 'O':
+                        try {
+                            listO.add(strToByteArray(each));
+                        } catch (Exception ignored) {
+
+                        }
+                        break;
+                    case 'P':
+                        try {
+                            listP.add(strToByteArray(each));
+                        } catch (Exception ignored) {
+
+                        }
+                        break;
+                    case 'Q':
+                        try {
+                            listQ.add(strToByteArray(each));
+                        } catch (Exception ignored) {
+
+                        }
+                        break;
+                    case 'R':
+                        try {
+                            listR.add(strToByteArray(each));
+                        } catch (Exception ignored) {
+
+                        }
+                        break;
+                    case 'S':
+                        try {
+                            listS.add(strToByteArray(each));
+                        } catch (Exception ignored) {
+
+                        }
+                        break;
+                    case 'T':
+                        try {
+                            listT.add(strToByteArray(each));
+                        } catch (Exception ignored) {
+
+                        }
+                        break;
+                    case 'U':
+                        try {
+                            listU.add(strToByteArray(each));
+                        } catch (Exception ignored) {
+
+                        }
+                        break;
+                    case 'V':
+                        try {
+                            listV.add(strToByteArray(each));
+                        } catch (Exception ignored) {
+
+                        }
+                        break;
+                    case 'W':
+                        try {
+                            listW.add(strToByteArray(each));
+                        } catch (Exception ignored) {
+
+                        }
+                        break;
+                    case 'X':
+                        try {
+                            listX.add(strToByteArray(each));
+                        } catch (Exception ignored) {
+
+                        }
+                        break;
+                    case 'Y':
+                        try {
+                            listY.add(strToByteArray(each));
+                        } catch (Exception ignored) {
+
+                        }
+                        break;
+                    case 'Z':
+                        try {
+                            listZ.add(strToByteArray(each));
+                        } catch (Exception ignored) {
+
+                        }
+                        break;
+                    default:
+                        if (Character.isDigit(headWord)) {
+                            try {
+                                listNum.add(strToByteArray(each));
+                            } catch (Exception ignored) {
+
+                            }
+                        } else if ('_' == headWord) {
+                            try {
+                                listUnderline.add(strToByteArray(each));
+                            } catch (Exception ignored) {
+
+                            }
+                        } else if ('%' == headWord) {
+                            try {
+                                listPercentSign.add(strToByteArray(each));
+                            } catch (Exception ignored) {
+
+                            }
+                        } else {
+                            try {
+                                listUnique.add(strToByteArray(each));
+                            } catch (Exception ignored) {
+
+                            }
+                        }
+                        break;
                 }
-            } catch (IOException e) {
-                e.printStackTrace();
             }
-        } catch (IOException e) {
-            e.printStackTrace();
+        }catch (Exception ignored){
+
         }
     }
 
