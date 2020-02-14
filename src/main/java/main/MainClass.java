@@ -101,7 +101,7 @@ public class MainClass {
 
     public static void main(String[] args) {
         try {
-            //System.setProperty("sun.java2d.noddraw", "true");
+            System.setProperty("sun.java2d.noddraw", "true");
             org.jb2011.lnf.beautyeye.BeautyEyeLNFHelper.launchBeautyEyeLNF();
             UIManager.put("RootPane.setupButtonVisible",false);
         } catch (Exception e) {
@@ -118,12 +118,12 @@ public class MainClass {
         File data = new File("data");
 
         if (!settings.exists()) {
-            String ignorePath = "";
+            String ignorePath = "C:\\Windows";
             JSONObject json = new JSONObject();
             json.put("hotkey", "Ctrl + Alt + J");
             json.put("ignorePath", ignorePath);
             json.put("isStartup", false);
-            json.put("updateTimeLimit", 300);
+            json.put("updateTimeLimit", 600);
             json.put("cacheNumLimit", 1000);
             json.put("searchDepth", 6);
             json.put("priorityFolder", "");

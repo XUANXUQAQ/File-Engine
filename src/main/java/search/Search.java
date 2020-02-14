@@ -2375,8 +2375,6 @@ public class Search {
     }
 
     public CopyOnWriteArraySet<byte[]> getListZ() {
-
-
         CopyOnWriteArraySet<byte[]> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("Z")));
         list.addAll(listZ);
         return list;
@@ -2414,6 +2412,7 @@ public class Search {
         listPercentSign.clear();
         listUnique.clear();
         listUnderline.clear();
+        MainClass.deleteDir(SettingsFrame.dataPath);
         searchFile(ignorePath, searchDepth);
     }
 
