@@ -9,10 +9,7 @@ import unzipFile.Unzip;
 import javax.swing.*;
 import javax.swing.filechooser.FileSystemView;
 import java.awt.*;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
 import java.io.*;
 import java.net.URL;
 import java.util.Objects;
@@ -67,6 +64,7 @@ public class SettingsFrame {
     private JTextField textFieldPriorityFolder;
     private JButton ButtonDataPath;
     private JButton ButtonPriorityFolder;
+    private JButton buttonHelp;
     private boolean isStartup;
     public static int cacheNumLimit;
     public static String hotkey;
@@ -422,6 +420,17 @@ public class SettingsFrame {
         } catch (IOException ignored) {
 
         }
+        buttonHelp.addActionListener(e -> {
+            JOptionPane.showMessageDialog(null, "帮助：\n" +
+                    "1.Enter键运行程序\n" +
+                    "2.Shift + Enter键以管理员权限运行程序（前提是该程序拥有管理员权限）\n" +
+                    "3.Ctrl + Enter键打开并选中文件所在文件夹\n" +
+                    "4.默认Ctrl + Alt + J打开搜索框\n" +
+                    "5.在搜索框中输入  :update  强制重建本地索引\n" +
+                    "6.在搜索框中输入  :version  查看当前版本\n" +
+                    "7.在搜索框中输入  :clearbin  清空回收站\n" +
+                    "8.在搜索框中输入  :help  查看帮助");
+        });
     }
 
     private  void copyFile(InputStream source, File dest) {
