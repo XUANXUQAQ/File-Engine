@@ -25,7 +25,7 @@ public class SettingsFrame {
     private JTextArea textAreaIgnorePath;
     private JTextField textFieldSearchDepth;
     private JCheckBox checkBox1;
-    private JButton button1;
+    private JButton buttonSave;
     private JLabel label3;
     private JLabel label1;
     private JLabel label2;
@@ -96,7 +96,6 @@ public class SettingsFrame {
             searchDepth = settings.getInteger("searchDepth");
             ignorePath = settings.getString("ignorePath");
             updateTimeLimit = settings.getInteger("updateTimeLimit");
-            ignorePath = ignorePath + "C:\\Config.Msi,C:\\Windows,";
         } catch (IOException ignored) {
 
         }
@@ -118,23 +117,25 @@ public class SettingsFrame {
             String MaxCacheNum = textFieldCacheNum.getText();
             try {
                 cacheNumLimit = Integer.parseInt(MaxCacheNum);
-            }catch (Exception e1){
+            } catch (Exception e1) {
                 cacheNumLimit = -1;
             }
-            if (cacheNumLimit > 10000 || cacheNumLimit <= 0){
+            if (cacheNumLimit > 10000 || cacheNumLimit <= 0) {
                 JOptionPane.showMessageDialog(null, "缓存容量设置错误，请更改");
                 return;
             }
             ignorePath = textAreaIgnorePath.getText();
             ignorePath = ignorePath.replaceAll("\n", "");
-
+            if (!ignorePath.toLowerCase().contains("c:\\windows")) {
+                ignorePath = ignorePath + "C:\\Windows,";
+            }
             try {
                 searchDepth = Integer.parseInt(textFieldSearchDepth.getText());
-            }catch (Exception e1){
+            } catch (Exception e1) {
                 searchDepth = -1;
             }
 
-            if (searchDepth > 10 || searchDepth <= 0){
+            if (searchDepth > 10 || searchDepth <= 0) {
                 JOptionPane.showMessageDialog(null, "搜索深度设置错误，请更改");
                 return;
             }
@@ -163,6 +164,7 @@ public class SettingsFrame {
             allSettings.put("dataPath", dataPath);
             try(BufferedWriter buffW = new BufferedWriter(new FileWriter(settings))) {
                 buffW.write(allSettings.toJSONString());
+                JOptionPane.showMessageDialog(null, "保存成功");
             } catch (IOException ignored) {
 
             }
@@ -237,11 +239,13 @@ public class SettingsFrame {
     }
 
     public SettingsFrame() {
-        button1.addActionListener(e -> saveChanges());
+        buttonSave.addActionListener(e -> {
+            saveChanges();
+        });
         checkBox1.addActionListener(e -> setStartup(checkBox1.isSelected()));
         buttonSaveAndRemoveDesktop.addActionListener(e -> {
             String currentFolder = new File("").getAbsolutePath();
-            if (currentFolder.equals(FileSystemView.getFileSystemView().getHomeDirectory().getAbsolutePath()) || currentFolder.equals("C:\\Users\\Public\\Desktop")){
+            if (currentFolder.equals(FileSystemView.getFileSystemView().getHomeDirectory().getAbsolutePath()) || currentFolder.equals("C:\\Users\\Public\\Desktop")) {
                 JOptionPane.showMessageDialog(null, "检测到该程序在桌面，无法移动");
                 return;
             }
@@ -403,8 +407,7 @@ public class SettingsFrame {
             MaxUpdateTime = MaxUpdateTime + updateTimeLimit;
             textFieldUpdateTime.setText(MaxUpdateTime);
             ignorePath = settings.getString("ignorePath");
-            ignorePath = ignorePath.replaceAll(",", ",\n");
-            textAreaIgnorePath.setText(ignorePath);
+            textAreaIgnorePath.setText(ignorePath.replaceAll(",", ",\n"));
             cacheNumLimit = settings.getInteger("cacheNumLimit");
             String MaxCacheNum = "";
             MaxCacheNum = MaxCacheNum + cacheNumLimit;
