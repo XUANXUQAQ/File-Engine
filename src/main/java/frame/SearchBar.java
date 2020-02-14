@@ -45,7 +45,7 @@ public class SearchBar {
     private Color labelColor = new Color(255, 152, 104, 255);
     private Color backgroundColor = new Color(108, 108, 108, 255);
     private Color backgroundColorLight = new Color(75, 75, 75, 255);
-    private CopyOnWriteArraySet<byte[]> list;
+    private CopyOnWriteArraySet<String> list;
     private Thread thread;
     private boolean isFirstRun = true;
     private long startTime = 0;
@@ -213,7 +213,8 @@ public class SearchBar {
                         showResult();
                     }
                 }
-                if (textField.getText().equals("")) {
+                String text = textField.getText();
+                if (text.equals("") || text.equals(">")) {
                     clearLabel();
                     listResult.clear();
                 }
@@ -935,7 +936,6 @@ public class SearchBar {
                             openWithoutAdmin(listResult.get(labelCount));
                         }
                         saveCache(listResult.get(labelCount) + ';');
-                        System.gc();
                     } else if (17 == key) {
                         //ctrl被点击
                         isCtrlPressed = true;
@@ -952,7 +952,7 @@ public class SearchBar {
                     //复位CTRL状态
                     isCtrlPressed = false;
                 } else if (16 == key) {
-                    isShiftPressed = true;
+                    isShiftPressed = false;
                 }
             }
 
@@ -998,7 +998,7 @@ public class SearchBar {
     }
 
 
-    private void addResult(CopyOnWriteArraySet<byte[]> list, String text) {
+    private void addResult(CopyOnWriteArraySet<String> list, String text) {
         //为label添加结果
         String[] strings = new String[0];
         String searchText;
@@ -1013,21 +1013,20 @@ public class SearchBar {
         }
         if (search.isUsable()) {
             label:
-            for (byte[] each : list) {
-                String fileInList = Search.byteArrayToStr(each);
-                if (length != 2 && match(getFileName(fileInList), searchText)) {
-                    if (!listResult.contains(fileInList)) {
-                        listResult.add(fileInList);
+            for (String each : list) {
+                if (length != 2 && match(getFileName(each), searchText)) {
+                    if (!listResult.contains(each)) {
+                        listResult.add(each);
                     }
                     if (listResult.size() > 100) {
                         break;
                     }
-                } else if (match(getFileName(fileInList), searchText) && length == 2) {
+                } else if (match(getFileName(each), searchText) && length == 2) {
                     switch (strings[1].toUpperCase()) {
                         case "FILE":
-                            if (isFile(fileInList)) {
-                                if (!listResult.contains(fileInList)) {
-                                    listResult.add(fileInList);
+                            if (isFile(each)) {
+                                if (!listResult.contains(each)) {
+                                    listResult.add(each);
                                 }
                                 if (listResult.size() > 100) {
                                     break label;
@@ -1035,9 +1034,9 @@ public class SearchBar {
                             }
                             break;
                         case "FOLDER":
-                            if (isDirectory(fileInList)) {
-                                if (!listResult.contains(fileInList)) {
-                                    listResult.add(fileInList);
+                            if (isDirectory(each)) {
+                                if (!listResult.contains(each)) {
+                                    listResult.add(each);
                                 }
                                 if (listResult.size() > 100) {
                                     break label;
@@ -1045,9 +1044,9 @@ public class SearchBar {
                             }
                             break;
                         case "FULL":
-                            if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                if (!listResult.contains(fileInList)) {
-                                    listResult.add(fileInList);
+                            if (PinYinConverter.getPinYin(getFileName(each.toLowerCase())).equals(searchText.toLowerCase())) {
+                                if (!listResult.contains(each)) {
+                                    listResult.add(each);
                                 }
                                 if (listResult.size() > 100) {
                                     break label;
@@ -1055,10 +1054,10 @@ public class SearchBar {
                             }
                             break;
                         case "FOLDERFULL":
-                            if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                if (isDirectory(fileInList)) {
-                                    if (!listResult.contains(fileInList)) {
-                                        listResult.add(fileInList);
+                            if (PinYinConverter.getPinYin(getFileName(each.toLowerCase())).equals(searchText.toLowerCase())) {
+                                if (isDirectory(each)) {
+                                    if (!listResult.contains(each)) {
+                                        listResult.add(each);
                                     }
                                 }
                                 if (listResult.size() > 100) {
@@ -1067,10 +1066,10 @@ public class SearchBar {
                             }
                             break;
                         case "FILEFULL":
-                            if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                if (isFile(fileInList)) {
-                                    if (!listResult.contains(fileInList)) {
-                                        listResult.add(fileInList);
+                            if (PinYinConverter.getPinYin(getFileName(each.toLowerCase())).equals(searchText.toLowerCase())) {
+                                if (isFile(each)) {
+                                    if (!listResult.contains(each)) {
+                                        listResult.add(each);
                                     }
                                 }
                                 if (listResult.size() > 100) {
@@ -1475,8 +1474,8 @@ public class SearchBar {
             if (search.isUsable()) {
                 if (!this.text.equals("")) {
                     label:
-                    for (byte[] each : search.getListA()) {
-                        String fileInList = Search.byteArrayToStr(each);
+                    for (String fileInList : search.getListA()) {
+                        
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
                                 listResult.add(fileInList);
@@ -1547,8 +1546,8 @@ public class SearchBar {
                         }
                     }
                     label1:
-                    for (byte[] each : search.getListB()) {
-                        String fileInList = Search.byteArrayToStr(each);
+                    for (String fileInList : search.getListB()) {
+                        
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
                                 listResult.add(fileInList);
@@ -1619,8 +1618,8 @@ public class SearchBar {
                         }
                     }
                     label2:
-                    for (byte[] each : search.getListC()) {
-                        String fileInList = Search.byteArrayToStr(each);
+                    for (String fileInList : search.getListC()) {
+                        
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
                                 listResult.add(fileInList);
@@ -1691,8 +1690,8 @@ public class SearchBar {
                         }
                     }
                     label3:
-                    for (byte[] each : search.getListD()) {
-                        String fileInList = Search.byteArrayToStr(each);
+                    for (String fileInList : search.getListD()) {
+                        
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
                                 listResult.add(fileInList);
@@ -1763,8 +1762,8 @@ public class SearchBar {
                         }
                     }
                     label4:
-                    for (byte[] each : search.getListE()) {
-                        String fileInList = Search.byteArrayToStr(each);
+                    for (String fileInList : search.getListE()) {
+                        
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
                                 listResult.add(fileInList);
@@ -1835,8 +1834,8 @@ public class SearchBar {
                         }
                     }
                     label5:
-                    for (byte[] each : search.getListF()) {
-                        String fileInList = Search.byteArrayToStr(each);
+                    for (String fileInList : search.getListF()) {
+                        
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
                                 listResult.add(fileInList);
@@ -1907,8 +1906,8 @@ public class SearchBar {
                         }
                     }
                     label6:
-                    for (byte[] each : search.getListG()) {
-                        String fileInList = Search.byteArrayToStr(each);
+                    for (String fileInList : search.getListG()) {
+                        
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
                                 listResult.add(fileInList);
@@ -1979,8 +1978,8 @@ public class SearchBar {
                         }
                     }
                     label7:
-                    for (byte[] each : search.getListH()) {
-                        String fileInList = Search.byteArrayToStr(each);
+                    for (String fileInList : search.getListH()) {
+                        
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
                                 listResult.add(fileInList);
@@ -2051,8 +2050,8 @@ public class SearchBar {
                         }
                     }
                     label8:
-                    for (byte[] each : search.getListI()) {
-                        String fileInList = Search.byteArrayToStr(each);
+                    for (String fileInList : search.getListI()) {
+                        
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
                                 listResult.add(fileInList);
@@ -2123,8 +2122,8 @@ public class SearchBar {
                         }
                     }
                     label9:
-                    for (byte[] each : search.getListJ()) {
-                        String fileInList = Search.byteArrayToStr(each);
+                    for (String fileInList : search.getListJ()) {
+                        
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
                                 listResult.add(fileInList);
@@ -2195,8 +2194,8 @@ public class SearchBar {
                         }
                     }
                     label10:
-                    for (byte[] each : search.getListK()) {
-                        String fileInList = Search.byteArrayToStr(each);
+                    for (String fileInList : search.getListK()) {
+                        
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
                                 listResult.add(fileInList);
@@ -2267,8 +2266,8 @@ public class SearchBar {
                         }
                     }
                     label11:
-                    for (byte[] each : search.getListL()) {
-                        String fileInList = Search.byteArrayToStr(each);
+                    for (String fileInList : search.getListL()) {
+                        
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
                                 listResult.add(fileInList);
@@ -2339,8 +2338,8 @@ public class SearchBar {
                         }
                     }
                     label12:
-                    for (byte[] each : search.getListM()) {
-                        String fileInList = Search.byteArrayToStr(each);
+                    for (String fileInList : search.getListM()) {
+                        
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
                                 listResult.add(fileInList);
@@ -2411,8 +2410,8 @@ public class SearchBar {
                         }
                     }
                     label13:
-                    for (byte[] each : search.getListN()) {
-                        String fileInList = Search.byteArrayToStr(each);
+                    for (String fileInList : search.getListN()) {
+                        
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
                                 listResult.add(fileInList);
@@ -2483,8 +2482,8 @@ public class SearchBar {
                         }
                     }
                     label14:
-                    for (byte[] each : search.getListO()) {
-                        String fileInList = Search.byteArrayToStr(each);
+                    for (String fileInList : search.getListO()) {
+                        
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
                                 listResult.add(fileInList);
@@ -2555,8 +2554,8 @@ public class SearchBar {
                         }
                     }
                     label15:
-                    for (byte[] each : search.getListP()) {
-                        String fileInList = Search.byteArrayToStr(each);
+                    for (String fileInList : search.getListP()) {
+                        
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
                                 listResult.add(fileInList);
@@ -2627,8 +2626,8 @@ public class SearchBar {
                         }
                     }
                     label16:
-                    for (byte[] each : search.getListQ()) {
-                        String fileInList = Search.byteArrayToStr(each);
+                    for (String fileInList : search.getListQ()) {
+                        
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
                                 listResult.add(fileInList);
@@ -2699,8 +2698,8 @@ public class SearchBar {
                         }
                     }
                     label17:
-                    for (byte[] each : search.getListR()) {
-                        String fileInList = Search.byteArrayToStr(each);
+                    for (String fileInList : search.getListR()) {
+                        
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
                                 listResult.add(fileInList);
@@ -2771,8 +2770,8 @@ public class SearchBar {
                         }
                     }
                     label18:
-                    for (byte[] each : search.getListS()) {
-                        String fileInList = Search.byteArrayToStr(each);
+                    for (String fileInList : search.getListS()) {
+                        
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
                                 listResult.add(fileInList);
@@ -2843,8 +2842,8 @@ public class SearchBar {
                         }
                     }
                     label19:
-                    for (byte[] each : search.getListT()) {
-                        String fileInList = Search.byteArrayToStr(each);
+                    for (String fileInList : search.getListT()) {
+                        
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
                                 listResult.add(fileInList);
@@ -2915,8 +2914,8 @@ public class SearchBar {
                         }
                     }
                     label20:
-                    for (byte[] each : search.getListU()) {
-                        String fileInList = Search.byteArrayToStr(each);
+                    for (String fileInList : search.getListU()) {
+                        
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
                                 listResult.add(fileInList);
@@ -2987,8 +2986,8 @@ public class SearchBar {
                         }
                     }
                     label21:
-                    for (byte[] each : search.getListV()) {
-                        String fileInList = Search.byteArrayToStr(each);
+                    for (String fileInList : search.getListV()) {
+                        
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
                                 listResult.add(fileInList);
@@ -3059,8 +3058,8 @@ public class SearchBar {
                         }
                     }
                     label22:
-                    for (byte[] each : search.getListW()) {
-                        String fileInList = Search.byteArrayToStr(each);
+                    for (String fileInList : search.getListW()) {
+                        
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
                                 listResult.add(fileInList);
@@ -3131,8 +3130,8 @@ public class SearchBar {
                         }
                     }
                     label23:
-                    for (byte[] each : search.getListX()) {
-                        String fileInList = Search.byteArrayToStr(each);
+                    for (String fileInList : search.getListX()) {
+                        
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
                                 listResult.add(fileInList);
@@ -3203,8 +3202,8 @@ public class SearchBar {
                         }
                     }
                     label24:
-                    for (byte[] each : search.getListY()) {
-                        String fileInList = Search.byteArrayToStr(each);
+                    for (String fileInList : search.getListY()) {
+                        
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
                                 listResult.add(fileInList);
@@ -3275,8 +3274,8 @@ public class SearchBar {
                         }
                     }
                     label25:
-                    for (byte[] each : search.getListZ()) {
-                        String fileInList = Search.byteArrayToStr(each);
+                    for (String fileInList : search.getListZ()) {
+                        
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
                                 listResult.add(fileInList);
@@ -3347,8 +3346,8 @@ public class SearchBar {
                         }
                     }
                     label26:
-                    for (byte[] each : search.getListNum()) {
-                        String fileInList = Search.byteArrayToStr(each);
+                    for (String fileInList : search.getListNum()) {
+                        
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
                                 listResult.add(fileInList);
@@ -3419,8 +3418,8 @@ public class SearchBar {
                         }
                     }
                     label27:
-                    for (byte[] each : search.getListUnderline()) {
-                        String fileInList = Search.byteArrayToStr(each);
+                    for (String fileInList : search.getListUnderline()) {
+                        
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
                                 listResult.add(fileInList);
@@ -3491,8 +3490,8 @@ public class SearchBar {
                         }
                     }
                     label28:
-                    for (byte[] each : search.getListUnique()) {
-                        String fileInList = Search.byteArrayToStr(each);
+                    for (String fileInList : search.getListUnique()) {
+                        
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
                                 listResult.add(fileInList);
@@ -3563,8 +3562,8 @@ public class SearchBar {
                         }
                     }
                     label29:
-                    for (byte[] each : search.getListPercentSign()) {
-                        String fileInList = Search.byteArrayToStr(each);
+                    for (String fileInList : search.getListPercentSign()) {
+                        
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
                                 listResult.add(fileInList);

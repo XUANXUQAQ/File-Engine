@@ -237,7 +237,7 @@ public class SettingsFrame {
         }
     }
 
-    public SettingsFrame() {
+    public  SettingsFrame() {
         buttonSave.addActionListener(e -> {
             saveChanges();
         });
