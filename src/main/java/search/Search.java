@@ -1245,11 +1245,11 @@ public class Search {
                 break;
             case 'J':
                 try {
-                   CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("J")));
-                   list.remove(path);
+                    CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("J")));
+                    list.remove(path);
                     listJ.remove(path);
-                   list.addAll(listJ);
-                   updateLocalList(list, "J");
+                    list.addAll(listJ);
+                    updateLocalList(list, "J");
                 } catch (Exception ignored) {
 
                 }
@@ -1353,11 +1353,11 @@ public class Search {
                 break;
             case 'S':
                 try {
-                   CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("S")));
-                   list.remove(path);
+                    CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("S")));
+                    list.remove(path);
                     listS.remove(path);
-                   list.addAll(listS);
-                   updateLocalList(list, "S");
+                    list.addAll(listS);
+                    updateLocalList(list, "S");
                 } catch (Exception ignored) {
 
                 }
@@ -2725,258 +2725,378 @@ public class Search {
 
 
     public CopyOnWriteArraySet<String> getListA() {
-        CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("A")));
-        list.addAll(listA);
-        return list;
+        try {
+            CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("A")));
+            list.addAll(listA);
+            return list;
+        } catch (NullPointerException e) {
+            return listA;
+        }
     }
 
     public CopyOnWriteArraySet<String> getListB() {
 
-        CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("B")));
-        list.addAll(listB);
-        return list;
+        try {
+            CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("B")));
+            list.addAll(listB);
+            return list;
+        } catch (NullPointerException e) {
+            return listB;
+        }
     }
 
     public CopyOnWriteArraySet<String> getListC() {
 
-        CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("C")));
-        list.addAll(listC);
-        return list;
+        try {
+            CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("C")));
+            list.addAll(listC);
+            return list;
+        } catch (NullPointerException e) {
+            return listC;
+        }
 
     }
 
     public CopyOnWriteArraySet<String> getListD() {
 
 
-        CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("D")));
-        list.addAll(listD);
-        return list;
+        try {
+            CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("D")));
+            list.addAll(listD);
+            return list;
+        } catch (NullPointerException e) {
+            return listD;
+        }
 
     }
 
     public CopyOnWriteArraySet<String> getListE() {
 
 
-        CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("E")));
-        list.addAll(listE);
-        return list;
+        try {
+            CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("E")));
+            list.addAll(listE);
+            return list;
+        } catch (NullPointerException e) {
+            return listE;
+        }
 
     }
 
     public CopyOnWriteArraySet<String> getListF() {
 
 
-        CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("F")));
-        list.addAll(listF);
-        return list;
+        try {
+            CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("F")));
+            list.addAll(listF);
+            return list;
+        } catch (NullPointerException e) {
+            return listF;
+        }
 
     }
 
     public CopyOnWriteArraySet<String> getListG() {
 
 
-        CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("G")));
-        list.addAll(listG);
-        return list;
+        try {
+            CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("G")));
+            list.addAll(listG);
+            return list;
+        } catch (NullPointerException e) {
+            return listG;
+        }
 
     }
 
     public CopyOnWriteArraySet<String> getListH() {
 
 
-        CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("H")));
-        list.addAll(listH);
-        return list;
+        try {
+            CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("H")));
+            list.addAll(listH);
+            return list;
+        } catch (NullPointerException e) {
+            return listH;
+        }
 
     }
 
     public CopyOnWriteArraySet<String> getListI() {
 
 
-        CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("I")));
-        list.addAll(listI);
-        return list;
+        try {
+            CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("I")));
+            list.addAll(listI);
+            return list;
+        } catch (NullPointerException e) {
+            return listI;
+        }
 
     }
 
     public CopyOnWriteArraySet<String> getListJ() {
 
 
-        CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("J")));
-        list.addAll(listJ);
-        return list;
+        try {
+            CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("J")));
+            list.addAll(listJ);
+            return list;
+        } catch (NullPointerException e) {
+            return listJ;
+        }
 
     }
 
     public CopyOnWriteArraySet<String> getListK() {
 
 
-        CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("K")));
-        list.addAll(listK);
-        return list;
+        try {
+            CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("K")));
+            list.addAll(listK);
+            return list;
+        } catch (NullPointerException e) {
+            return listK;
+        }
 
     }
 
     public CopyOnWriteArraySet<String> getListL() {
 
 
-        CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("L")));
-        list.addAll(listL);
-        return list;
+        try {
+            CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("L")));
+            list.addAll(listL);
+            return list;
+        } catch (NullPointerException e) {
+            return listL;
+        }
 
     }
 
     public CopyOnWriteArraySet<String> getListM() {
 
 
-        CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("M")));
-        list.addAll(listM);
-        return list;
+        try {
+            CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("M")));
+            list.addAll(listM);
+            return list;
+        } catch (NullPointerException e) {
+            return listM;
+        }
 
     }
 
     public CopyOnWriteArraySet<String> getListN() {
 
 
-        CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("N")));
-        list.addAll(listN);
-        return list;
+        try {
+            CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("N")));
+            list.addAll(listN);
+            return list;
+        } catch (NullPointerException e) {
+            return listN;
+        }
 
     }
 
     public CopyOnWriteArraySet<String> getListO() {
 
-        CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("O")));
-        list.addAll(listO);
-        return list;
+        try {
+            CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("O")));
+            list.addAll(listO);
+            return list;
+        } catch (NullPointerException e) {
+            return listO;
+        }
 
     }
 
     public CopyOnWriteArraySet<String> getListP() {
 
 
-        CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("P")));
-        list.addAll(listP);
-        return list;
+        try {
+            CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("P")));
+            list.addAll(listP);
+            return list;
+        } catch (NullPointerException e) {
+            return listP;
+        }
 
     }
 
     public CopyOnWriteArraySet<String> getListQ() {
 
 
-        CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("Q")));
-        list.addAll(listQ);
-        return list;
+        try {
+            CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("Q")));
+            list.addAll(listQ);
+            return list;
+        } catch (NullPointerException e) {
+            return listQ;
+        }
 
     }
 
     public CopyOnWriteArraySet<String> getListR() {
 
 
-        CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("R")));
-        list.addAll(listR);
-        return list;
+        try {
+            CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("R")));
+            list.addAll(listR);
+            return list;
+        } catch (NullPointerException e) {
+            return listR;
+        }
 
     }
 
     public CopyOnWriteArraySet<String> getListNum() {
 
-        CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("Num")));
-        list.addAll(listT);
-        return list;
+        try {
+            CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("Num")));
+            list.addAll(listNum);
+            return list;
+        } catch (NullPointerException e) {
+            return listNum;
+        }
 
     }
 
     public CopyOnWriteArraySet<String> getListPercentSign() {
 
-        CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("PercentSign")));
-        list.addAll(listT);
-        return list;
+        try {
+            CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("PercentSign")));
+            list.addAll(listPercentSign);
+            return list;
+        } catch (NullPointerException e) {
+            return listPercentSign;
+        }
 
     }
 
     public CopyOnWriteArraySet<String> getListS() {
 
 
-        CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("S")));
-        list.addAll(listS);
-        return list;
+        try {
+            CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("S")));
+            list.addAll(listS);
+            return list;
+        } catch (NullPointerException e) {
+            return listS;
+        }
 
     }
 
     public CopyOnWriteArraySet<String> getListT() {
 
 
-        CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("T")));
-        list.addAll(listT);
-        return list;
+        try {
+            CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("T")));
+            list.addAll(listT);
+            return list;
+        } catch (NullPointerException e) {
+            return listT;
+        }
 
     }
 
     public CopyOnWriteArraySet<String> getListUnique() {
 
-        CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("Unique")));
-        list.addAll(listT);
-        return list;
+        try {
+            CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("Unique")));
+            list.addAll(listUnique);
+            return list;
+        } catch (NullPointerException e) {
+            return listUnique;
+        }
     }
 
     public CopyOnWriteArraySet<String> getListU() {
 
 
-        CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("U")));
-        list.addAll(listU);
-        return list;
+        try {
+            CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("U")));
+            list.addAll(listU);
+            return list;
+        } catch (NullPointerException e) {
+            return listU;
+        }
 
     }
 
     public CopyOnWriteArraySet<String> getListUnderline() {
 
-        CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("Underline")));
-        list.addAll(listT);
-        return list;
+        try {
+            CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("Underline")));
+            list.addAll(listUnderline);
+            return list;
+        } catch (NullPointerException e) {
+            return listUnderline;
+        }
 
     }
 
     public CopyOnWriteArraySet<String> getListV() {
 
 
-        CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("V")));
-        list.addAll(listV);
-        return list;
+        try {
+            CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("V")));
+            list.addAll(listV);
+            return list;
+        } catch (NullPointerException e) {
+            return listV;
+        }
 
     }
 
     public CopyOnWriteArraySet<String> getListW() {
 
 
-        CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("W")));
-        list.addAll(listW);
-        return list;
+        try {
+            CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("W")));
+            list.addAll(listW);
+            return list;
+        } catch (NullPointerException e) {
+            return listW;
+        }
 
     }
 
     public CopyOnWriteArraySet<String> getListY() {
 
 
-        CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("X")));
-        list.addAll(listX);
-        return list;
+        try {
+            CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("X")));
+            list.addAll(listY);
+            return list;
+        } catch (NullPointerException e) {
+            return listY;
+        }
 
     }
 
     public CopyOnWriteArraySet<String> getListX() {
 
 
-        CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("Y")));
-        list.addAll(listY);
-        return list;
+        try {
+            CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("Y")));
+            list.addAll(listX);
+            return list;
+        } catch (NullPointerException e) {
+            return listX;
+        }
 
     }
 
     public CopyOnWriteArraySet<String> getListZ() {
-        CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("Z")));
-        list.addAll(listZ);
-        return list;
+        try {
+            CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("Z")));
+            list.addAll(listZ);
+            return list;
+        } catch (NullPointerException e) {
+            return listZ;
+        }
 
     }
 
