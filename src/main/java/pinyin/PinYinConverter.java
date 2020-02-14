@@ -8,12 +8,11 @@ import net.sourceforge.pinyin4j.format.HanyuPinyinVCharType;
 import net.sourceforge.pinyin4j.format.exception.BadHanyuPinyinOutputFormatCombination;
 
 public class PinYinConverter {
-    public static String getPinYin(String src)
-    {
+    public static String getPinYin(String src) {
         char[] t1;
         t1 = src.toCharArray();
         // System.out.println(t1.length);
-        String[] t2 = new String[t1.length];
+        String[] t2;
         // System.out.println(t2.length);
         // 设置汉字拼音输出的格式
         HanyuPinyinOutputFormat t3 = new HanyuPinyinOutputFormat();
@@ -22,8 +21,7 @@ public class PinYinConverter {
         t3.setVCharType(HanyuPinyinVCharType.WITH_V);
         StringBuilder t4 = new StringBuilder();
         int t0 = t1.length;
-        try
-        {
+        try {
             for (char c : t1) {
                 // 判断能否为汉字字符
                 // System.out.println(t1[i]);
@@ -35,9 +33,7 @@ public class PinYinConverter {
                     t4.append(c);
                 }
             }
-        }
-        catch (BadHanyuPinyinOutputFormatCombination e)
-        {
+        } catch (BadHanyuPinyinOutputFormatCombination e) {
             e.printStackTrace();
         }
         return t4.toString();
@@ -49,20 +45,15 @@ public class PinYinConverter {
      * @param str
      * @return String
      */
-    public static String getPinYinHeadChar(String str)
-    {
+    public static String getPinYinHeadChar(String str) {
         StringBuilder convert = new StringBuilder();
-        for (int j = 0; j < str.length(); j++)
-        {
+        for (int j = 0; j < str.length(); j++) {
             char word = str.charAt(j);
             // 提取汉字的首字母
             String[] pinyinArray = PinyinHelper.toHanyuPinyinStringArray(word);
-            if (pinyinArray != null)
-            {
+            if (pinyinArray != null) {
                 convert.append(pinyinArray[0].charAt(0));
-            }
-            else
-            {
+            } else {
                 convert.append(word);
             }
         }
@@ -75,8 +66,7 @@ public class PinYinConverter {
      * @param cnStr
      * @return String
      */
-    public static String getCnASCII(String cnStr)
-    {
+    public static String getCnASCII(String cnStr) {
         StringBuilder strBuf = new StringBuilder();
         // 将字符串转换成字节序列
         byte[] bGBK = cnStr.getBytes();

@@ -6,6 +6,7 @@ import main.MainClass;
 import moveFiles.moveFiles;
 import search.Search;
 import unzipFile.Unzip;
+
 import javax.swing.*;
 import javax.swing.filechooser.FileSystemView;
 import java.awt.*;
@@ -13,7 +14,6 @@ import java.awt.event.*;
 import java.io.*;
 import java.net.URL;
 import java.util.Objects;
-
 
 
 public class SettingsFrame {
@@ -34,11 +34,11 @@ public class SettingsFrame {
         URL frameIcon = SettingsFrame.class.getResource("/icons/frame.png");
         frame.setIconImage(new ImageIcon(frameIcon).getImage());
         frame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
-        Dimension screenSize =Toolkit.getDefaultToolkit().getScreenSize(); // 获取当前分辨率
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize(); // 获取当前分辨率
         int width = screenSize.width;
         int height = screenSize.height;
-        frame.setSize(width/2, height/2);
-        frame.setLocation(width/2-width/4, height/2-height/4);
+        frame.setSize(width / 2, height / 2);
+        frame.setLocation(width / 2 - width / 4, height / 2 - height / 4);
         panel.setOpaque(true);
         frame.setVisible(true);
     }
@@ -78,11 +78,11 @@ public class SettingsFrame {
     private static CheckHotKey HotKeyListener;
 
 
-    public static void initSettings(){
-        try(BufferedReader buffR = new BufferedReader(new FileReader(settings))) {
+    public static void initSettings() {
+        try (BufferedReader buffR = new BufferedReader(new FileReader(settings))) {
             String line;
             StringBuilder result = new StringBuilder();
-            while (null != (line = buffR.readLine())){
+            while (null != (line = buffR.readLine())) {
                 result.append(line);
             }
             JSONObject settings = JSON.parseObject(result.toString());
@@ -98,16 +98,17 @@ public class SettingsFrame {
 
         }
     }
-    private void saveChanges(){
+
+    private void saveChanges() {
         {
             JSONObject allSettings = new JSONObject();
             String MaxUpdateTime = textFieldUpdateTime.getText();
             try {
                 updateTimeLimit = Integer.parseInt(MaxUpdateTime);
-            }catch (Exception e1){
+            } catch (Exception e1) {
                 updateTimeLimit = -1; // 输入不正确
             }
-            if (updateTimeLimit > 3600 || updateTimeLimit <= 0){
+            if (updateTimeLimit > 3600 || updateTimeLimit <= 0) {
                 JOptionPane.showMessageDialog(null, "文件索引更新设置错误，请更改");
                 return;
             }
@@ -139,11 +140,11 @@ public class SettingsFrame {
             }
 
             String _hotkey = textFieldHotkey.getText();
-            if (_hotkey.length() == 1){
+            if (_hotkey.length() == 1) {
                 JOptionPane.showMessageDialog(null, "快捷键设置错误");
                 return;
-            }else{
-                if (!(64 < _hotkey.charAt(_hotkey.length()-1) && _hotkey.charAt(_hotkey.length()-1) < 91)){
+            } else {
+                if (!(64 < _hotkey.charAt(_hotkey.length() - 1) && _hotkey.charAt(_hotkey.length() - 1) < 91)) {
                     JOptionPane.showMessageDialog(null, "快捷键设置错误");
                     return;
                 }
@@ -160,7 +161,7 @@ public class SettingsFrame {
             allSettings.put("searchDepth", searchDepth);
             allSettings.put("priorityFolder", priorityFolder);
             allSettings.put("dataPath", dataPath);
-            try(BufferedWriter buffW = new BufferedWriter(new FileWriter(settings))) {
+            try (BufferedWriter buffW = new BufferedWriter(new FileWriter(settings))) {
                 buffW.write(allSettings.toJSONString());
                 JOptionPane.showMessageDialog(null, "保存成功");
             } catch (IOException ignored) {
@@ -169,45 +170,45 @@ public class SettingsFrame {
         }
     }
 
-    private void setStartup(boolean b){
+    private void setStartup(boolean b) {
         Process p;
         File superSearch = new File(MainClass.name);
-        if (b){
+        if (b) {
             try {
                 String currentPath = System.getProperty("user.dir");
                 File file = new File(currentPath);
-                for (File each: Objects.requireNonNull(file.listFiles())){
-                    if (each.getName().contains("elevated")){
+                for (File each : Objects.requireNonNull(file.listFiles())) {
+                    if (each.getName().contains("elevated")) {
                         superSearch = each;
                         break;
                     }
                 }
-                p = Runtime.getRuntime().exec("reg add \"HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run\" /v superSearch /t REG_SZ /d "+"\"" + superSearch.getAbsolutePath() +"\"" + " /f");
+                p = Runtime.getRuntime().exec("reg add \"HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run\" /v superSearch /t REG_SZ /d " + "\"" + superSearch.getAbsolutePath() + "\"" + " /f");
                 p.waitFor();
                 BufferedReader outPut = new BufferedReader(new InputStreamReader(p.getErrorStream()));
                 String line;
                 StringBuilder result = new StringBuilder();
-                while ((line = outPut.readLine()) != null){
+                while ((line = outPut.readLine()) != null) {
                     result.append(line);
                 }
-                if (!result.toString().equals("")){
+                if (!result.toString().equals("")) {
                     checkBox1.setSelected(false);
                     JOptionPane.showMessageDialog(null, "添加到开机启动失败，请尝试以管理员身份运行");
                 }
             } catch (IOException | InterruptedException ignored) {
 
             }
-        }else{
+        } else {
             try {
                 p = Runtime.getRuntime().exec("reg delete \"HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run\" /v superSearch /f");
                 p.waitFor();
                 BufferedReader outPut = new BufferedReader(new InputStreamReader(p.getErrorStream()));
                 String line;
                 StringBuilder result = new StringBuilder();
-                while ((line = outPut.readLine()) != null){
+                while ((line = outPut.readLine()) != null) {
                     result.append(line);
                 }
-                if (!result.toString().equals("")){
+                if (!result.toString().equals("")) {
                     checkBox1.setSelected(true);
                     JOptionPane.showMessageDialog(null, "删除开机启动失败，请尝试以管理员身份运行");
                 }
@@ -217,10 +218,10 @@ public class SettingsFrame {
         }
         boolean isSelected = checkBox1.isSelected();
         JSONObject allSettings = null;
-        try(BufferedReader buffR1 = new BufferedReader(new FileReader(settings))){
+        try (BufferedReader buffR1 = new BufferedReader(new FileReader(settings))) {
             String line;
             StringBuilder result = new StringBuilder();
-            while (null != (line = buffR1.readLine())){
+            while (null != (line = buffR1.readLine())) {
                 result.append(line);
             }
             allSettings = JSON.parseObject(result.toString());
@@ -228,7 +229,7 @@ public class SettingsFrame {
         } catch (IOException ignored) {
 
         }
-        try(BufferedWriter buffW = new BufferedWriter(new FileWriter(settings))){
+        try (BufferedWriter buffW = new BufferedWriter(new FileWriter(settings))) {
             assert allSettings != null;
             buffW.write(allSettings.toJSONString());
         } catch (IOException ignored) {
@@ -273,7 +274,7 @@ public class SettingsFrame {
             @Override
             public void keyPressed(KeyEvent e) {
                 int key = e.getKeyCode();
-                if (reset){
+                if (reset) {
                     textFieldHotkey.setText(null);
                     reset = false;
                 }
@@ -305,7 +306,7 @@ public class SettingsFrame {
                             textFieldHotkey.setText(txt + (char) key);
                         }
                     }
-                    if (txt.length() == 1){
+                    if (txt.length() == 1) {
                         textFieldHotkey.setText(null);
                     }
                 }
@@ -334,7 +335,7 @@ public class SettingsFrame {
                 } catch (IOException ignored) {
 
                 }
-            }else{
+            } else {
                 JOptionPane.showMessageDialog(null, "请以管理员身份运行");
             }
         });
@@ -342,11 +343,11 @@ public class SettingsFrame {
             if (MainClass.isAdmin()) {
                 JOptionPane.showMessageDialog(null, "点击最后一个Remove shortcut即可选择删除快捷方式，\n修改成功后请重新设置开机启动。");
                 InputStream UAC = getClass().getResourceAsStream("/UACTrustShortCut.zip");
-                File target = new File(tmp.getAbsolutePath()+"/UACTrustShortCut.zip");
+                File target = new File(tmp.getAbsolutePath() + "/UACTrustShortCut.zip");
                 if (!target.exists()) {
                     copyFile(UAC, target);
                 }
-                File mainUAC = new File(tmp.getAbsolutePath()+"/UACTrustShortCut/ElevatedShortcut.exe");
+                File mainUAC = new File(tmp.getAbsolutePath() + "/UACTrustShortCut/ElevatedShortcut.exe");
                 if (!mainUAC.exists()) {
                     Unzip.unZipFiles(target, tmp.getAbsolutePath());
                 }
@@ -355,7 +356,7 @@ public class SettingsFrame {
                 } catch (IOException ignored) {
 
                 }
-            }else{
+            } else {
                 JOptionPane.showMessageDialog(null, "请以管理员身份运行");
             }
         });
@@ -382,22 +383,22 @@ public class SettingsFrame {
         textFieldPriorityFolder.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                if (e.getClickCount() == 2){
+                if (e.getClickCount() == 2) {
                     textFieldPriorityFolder.setText(null);
                 }
             }
         });
-        try(BufferedReader buffR = new BufferedReader(new FileReader(settings))) {
+        try (BufferedReader buffR = new BufferedReader(new FileReader(settings))) {
             String line;
             StringBuilder result = new StringBuilder();
-            while (null != (line = buffR.readLine())){
+            while (null != (line = buffR.readLine())) {
                 result.append(line);
             }
             JSONObject settings = JSON.parseObject(result.toString());
             isStartup = settings.getBoolean("isStartup");
-            if (isStartup){
+            if (isStartup) {
                 checkBox1.setSelected(true);
-            }else{
+            } else {
                 checkBox1.setSelected(false);
             }
             updateTimeLimit = settings.getInteger("updateTimeLimit");
@@ -422,10 +423,10 @@ public class SettingsFrame {
         }
         buttonHelp.addActionListener(e -> {
             JOptionPane.showMessageDialog(null, "帮助：\n" +
-                    "1.Enter键运行程序\n" +
-                    "2.Shift + Enter键以管理员权限运行程序（前提是该程序拥有管理员权限）\n" +
+                    "1.默认Ctrl + Alt + J打开搜索框\n" +
+                    "2.Enter键运行程序\n" +
                     "3.Ctrl + Enter键打开并选中文件所在文件夹\n" +
-                    "4.默认Ctrl + Alt + J打开搜索框\n" +
+                    "4.Shift + Enter键以管理员权限运行程序（前提是该程序拥有管理员权限）\n" +
                     "5.在搜索框中输入  : update  强制重建本地索引\n" +
                     "6.在搜索框中输入  : version  查看当前版本\n" +
                     "7.在搜索框中输入  : clearbin  清空回收站\n" +
@@ -438,14 +439,14 @@ public class SettingsFrame {
         });
     }
 
-    private  void copyFile(InputStream source, File dest) {
-        try(OutputStream os = new FileOutputStream(dest);BufferedInputStream bis = new BufferedInputStream(source);BufferedOutputStream bos = new BufferedOutputStream(os)) {
+    private void copyFile(InputStream source, File dest) {
+        try (OutputStream os = new FileOutputStream(dest); BufferedInputStream bis = new BufferedInputStream(source); BufferedOutputStream bos = new BufferedOutputStream(os)) {
             // 创建缓冲流
-            byte[]buffer = new byte[8192];
+            byte[] buffer = new byte[8192];
             int count = bis.read(buffer);
-            while(count != -1){
+            while (count != -1) {
                 //使用缓冲流写数据
-                bos.write(buffer,0,count);
+                bos.write(buffer, 0, count);
                 //刷新
                 bos.flush();
                 count = bis.read(buffer);
@@ -455,7 +456,7 @@ public class SettingsFrame {
         }
     }
 
-    class moveDesktopFiles implements Runnable{
+    class moveDesktopFiles implements Runnable {
 
         @Override
         public void run() {
