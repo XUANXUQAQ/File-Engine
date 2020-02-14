@@ -103,7 +103,7 @@ public class MainClass {
         try {
             System.setProperty("sun.java2d.noddraw", "true");
             org.jb2011.lnf.beautyeye.BeautyEyeLNFHelper.launchBeautyEyeLNF();
-            UIManager.put("RootPane.setupButtonVisible",false);
+            UIManager.put("RootPane.setupButtonVisible", false);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -177,17 +177,17 @@ public class MainClass {
             dllSearcher.renameTo(target);
         }
         target = new File(SettingsFrame.dataPath);
-        if (!target.exists()){
+        if (!target.exists()) {
             target.mkdir();
         }
         target = new File("fileOpener.exe");
-        if (!target.exists()){
+        if (!target.exists()) {
             File fileOpener;
-            if (name.contains("x64")){
+            if (name.contains("x64")) {
                 copyFile(fileOpener64, target);
                 System.out.println("已加载64位fileOpener");
                 fileOpener = new File("fileOpener64.exe");
-            }else{
+            } else {
                 copyFile(fileOpener32, target);
                 System.out.println("已加载32位fileOpener");
                 fileOpener = new File("fileOpener32.exe");
@@ -232,11 +232,11 @@ public class MainClass {
 
         data = new File(SettingsFrame.dataPath);
         if (data.isDirectory() && data.exists()) {
-            if (Objects.requireNonNull(data.listFiles()).length != 30){
+            if (Objects.requireNonNull(data.listFiles()).length != 30) {
                 System.out.println("检测到data文件损坏，正在搜索并重建");
                 search.setManualUpdate(true);
             }
-        }else{
+        } else {
             System.out.println("无data文件，正在搜索并重建");
             search.setManualUpdate(true);
         }

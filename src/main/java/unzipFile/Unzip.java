@@ -5,6 +5,7 @@ import java.nio.charset.Charset;
 import java.util.Enumeration;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+
 public class Unzip {
 
     public static void unZipFiles(File zipFile, String descDir) {
@@ -16,11 +17,12 @@ public class Unzip {
 
         }
 
-        for (Enumeration<? extends ZipEntry> entries = zip.entries(); entries.hasMoreElements();) {
+        assert zip != null;
+        for (Enumeration<? extends ZipEntry> entries = zip.entries(); entries.hasMoreElements(); ) {
             ZipEntry entry = entries.nextElement();
             String zipEntryName = entry.getName();
-            try (InputStream in = zip.getInputStream(entry)){
-                String outPath = (descDir +"/"+ zipEntryName).replaceAll("\\*", "/");
+            try (InputStream in = zip.getInputStream(entry)) {
+                String outPath = (descDir + "/" + zipEntryName).replaceAll("\\*", "/");
                 // 判断路径是否存在,不存在则创建文件路径
                 File file = new File(outPath.substring(0, outPath.lastIndexOf('/')));
                 if (!file.exists()) {
@@ -30,7 +32,7 @@ public class Unzip {
                 if (new File(outPath).isDirectory()) {
                     continue;
                 }
-                try (FileOutputStream out = new FileOutputStream(outPath)){
+                try (FileOutputStream out = new FileOutputStream(outPath)) {
                     byte[] buf1 = new byte[1024];
                     int len;
                     while ((len = in.read(buf1)) > 0) {

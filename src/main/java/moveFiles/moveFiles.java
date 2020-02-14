@@ -7,6 +7,7 @@ import java.io.FileOutputStream;
 
 public class moveFiles {
     private String origin;
+
     private boolean deleteDir(File dir) {
         // 如果是文件夹
         if (dir.isDirectory()) {
@@ -21,9 +22,9 @@ public class moveFiles {
                 }
             }
         }
-        if (dir.getAbsolutePath().equals(origin)){
+        if (dir.getAbsolutePath().equals(origin)) {
             return true;
-        }else{
+        } else {
             return dir.delete();
         }
     }

@@ -8,6 +8,7 @@ public class GetIcon {
 
     /**
      * 获取大图标
+     *
      * @param path 路径
      * @return Image or null
      */

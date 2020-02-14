@@ -213,7 +213,7 @@ public class SearchBar {
                         showResult();
                     }
                 }
-                if (textField.getText().equals("")){
+                if (textField.getText().equals("")) {
                     clearLabel();
                     listResult.clear();
                 }
@@ -274,10 +274,10 @@ public class SearchBar {
                             clearTextFieldText();
                             closedTodo();
                             JOptionPane.showMessageDialog(null, "帮助：\n" +
-                                    "1.Enter键运行程序\n" +
-                                    "2.Shift + Enter键以管理员权限运行程序（前提是该程序拥有管理员权限）\n" +
+                                    "1.默认Ctrl + Alt + J打开搜索框\n" +
+                                    "2.Enter键运行程序\n" +
                                     "3.Ctrl + Enter键打开并选中文件所在文件夹\n" +
-                                    "4.默认Ctrl + Alt + J打开搜索框\n" +
+                                    "4.Shift + Enter键以管理员权限运行程序（前提是该程序拥有管理员权限）\n" +
                                     "5.在搜索框中输入  : update  强制重建本地索引\n" +
                                     "6.在搜索框中输入  : version  查看当前版本\n" +
                                     "7.在搜索框中输入  : clearbin  清空回收站\n" +
@@ -585,7 +585,7 @@ public class SearchBar {
                             if (!label1.getText().equals("") && !label2.getText().equals("") && !label3.getText().equals("") && !label4.getText().equals("")) {
                                 isKeyPressed = true;
                             }
-                        }catch (NullPointerException ignored){
+                        } catch (NullPointerException ignored) {
 
                         }
                         if (!textField.getText().equals("")) {
@@ -741,7 +741,7 @@ public class SearchBar {
                             if (!label1.getText().equals("") && !label2.getText().equals("") && !label3.getText().equals("") && !label4.getText().equals("")) {
                                 isKeyPressed = true;
                             }
-                        }catch (NullPointerException ignored){
+                        } catch (NullPointerException ignored) {
 
                         }
                         boolean isNextExist = false;
