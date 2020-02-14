@@ -312,9 +312,11 @@ public class MainClass {
         fixedThreadPool.execute(() -> {
             // 时间检测线程
             long count = 0;
+            long gcCount = 0;
             while (!mainExit) {
                 boolean isUsing = searchBar.isUsing();
                 count++;
+                gcCount++;
                 if (count >= (SettingsFrame.updateTimeLimit << 10) && !isUsing && !search.isManualUpdate()) {
                     count = 0;
                     System.out.println("正在更新本地索引data文件");
@@ -322,7 +324,11 @@ public class MainClass {
                         search.saveAndReleaseLists();
                     }
                 }
-
+                if (gcCount > 600000){
+                    System.out.println("正在释放内存空间");
+                    System.gc();
+                    gcCount = 0;
+                }
                 try {
                     Thread.sleep(1);
                 } catch (InterruptedException ignore) {

@@ -447,7 +447,7 @@ public class Search {
                 path = SettingsFrame.dataPath + "\\listPercentSign";
 
                 listFile = new Serialize();
-                listFile.setList(listPercentSign);
+                listFile.setList(list);
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
                     oos.writeObject(listFile);
                     listPercentSign.clear();
@@ -461,7 +461,7 @@ public class Search {
                 path = SettingsFrame.dataPath + "\\listUnderline";
 
                 listFile = new Serialize();
-                listFile.setList(listUnderline);
+                listFile.setList(list);
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
                     oos.writeObject(listFile);
                     listUnderline.clear();
@@ -475,7 +475,7 @@ public class Search {
                 path = SettingsFrame.dataPath + "\\listUnique";
 
                 listFile = new Serialize();
-                listFile.setList(listUnique);
+                listFile.setList(list);
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
                     oos.writeObject(listFile);
                     listUnique.clear();
@@ -488,7 +488,7 @@ public class Search {
                 path = SettingsFrame.dataPath + "\\listNum";
 
                 listFile = new Serialize();
-                listFile.setList(listNum);
+                listFile.setList(list);
                 try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
                     oos.writeObject(listFile);
                     listNum.clear();
@@ -1237,7 +1237,7 @@ public class Search {
                     list.remove(path);
                     listI.remove(path);
                     list.addAll(listI);
-                    updateLocalList(list, "i");
+                    updateLocalList(list, "I");
                 } catch (Exception ignored) {
 
                 }
@@ -2187,7 +2187,7 @@ public class Search {
         try (BufferedReader buffr = new BufferedReader(new InputStreamReader(new FileInputStream(searchResults)))) {
             int count = 0;
             while ((each = buffr.readLine()) != null) {
-                if (count > 20000) {
+                if (count > 50000) {
                     saveAndReleaseLists();
                     count = 0;
                 }
@@ -2463,7 +2463,7 @@ public class Search {
         try (BufferedReader buffr = new BufferedReader(new InputStreamReader(new FileInputStream(searchResults)))) {
             int count = 0;
             while ((each = buffr.readLine()) != null) {
-                if (count > 20000) {
+                if (count > 50000) {
                     saveAndReleaseLists();
                     count = 0;
                 }
