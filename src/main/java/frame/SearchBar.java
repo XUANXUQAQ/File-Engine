@@ -162,7 +162,7 @@ public class SearchBar {
 
                 } finally {
                     try {
-                        Thread.sleep(50);
+                        Thread.sleep(100);
                     } catch (InterruptedException ignored) {
 
                     }
@@ -188,7 +188,7 @@ public class SearchBar {
                     }
                 }
                 try {
-                    Thread.sleep(1);
+                    Thread.sleep(50);
                 } catch (InterruptedException ignored) {
 
                 }
@@ -220,23 +220,23 @@ public class SearchBar {
                 }
                 try {
                     if (!isKeyPressed && !label2.getText().equals("")) {
-                        if (labelCount == 1){
+                        if (labelCount == 1) {
                             label2.setBackground(labelColor);
-                        }else {
+                        } else {
                             label2.setBackground(backgroundColor);
                         }
                     }
                     if (!isKeyPressed && !label3.getText().equals("")) {
-                        if (labelCount == 2){
+                        if (labelCount == 2) {
                             label2.setBackground(labelColor);
-                        }else {
+                        } else {
                             label3.setBackground(backgroundColorLight);
                         }
                     }
                     if (!isKeyPressed && !label4.getText().equals("")) {
-                        if (labelCount >= 3){
+                        if (labelCount >= 3) {
                             label4.setBackground(labelColor);
-                        }else {
+                        } else {
                             label4.setBackground(backgroundColor);
                         }
                     }
@@ -244,7 +244,7 @@ public class SearchBar {
 
                 }
                 try {
-                    Thread.sleep(10);
+                    Thread.sleep(50);
                 } catch (InterruptedException ignored) {
 
                 }
@@ -1372,7 +1372,7 @@ public class SearchBar {
     private boolean match(String srcText, String txt) {
         if (!txt.equals("")) {
             srcText = PinYinConverter.getPinYin(srcText).toLowerCase();
-            txt = txt.toLowerCase();
+            txt = PinYinConverter.getPinYin(txt).toLowerCase();
             if (srcText.length() >= txt.length()) {
                 return srcText.contains(txt);
             }
@@ -1488,8 +1488,14 @@ public class SearchBar {
                     label:
                     for (String fileInList : search.getListA()) {
                         
+                        if (Thread.currentThread().isInterrupted()){
+                            return;
+                        }
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
+                                if (Thread.currentThread().isInterrupted()) {
+                                    return;
+                                }
                                 listResult.add(fileInList);
                             }
                             if (listResult.size() > 100) {
@@ -1500,6 +1506,7 @@ public class SearchBar {
                                 case "FILE":
                                     if (isFile(fileInList)) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -1510,6 +1517,7 @@ public class SearchBar {
                                 case "FOLDER":
                                     if (isDirectory(fileInList)) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -1520,6 +1528,7 @@ public class SearchBar {
                                 case "FULL":
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -1531,6 +1540,9 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
+                                                if (Thread.currentThread().isInterrupted()) {
+                                                    return;
+                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -1543,6 +1555,9 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
+                                                if (Thread.currentThread().isInterrupted()) {
+                                                    return;
+                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -1559,9 +1574,16 @@ public class SearchBar {
                     }
                     label1:
                     for (String fileInList : search.getListB()) {
+
                         
+                        if (Thread.currentThread().isInterrupted()){
+                            return;
+                        }
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
+                                if (Thread.currentThread().isInterrupted()) {
+                                    return;
+                                }
                                 listResult.add(fileInList);
                             }
                             if (listResult.size() > 100) {
@@ -1572,6 +1594,7 @@ public class SearchBar {
                                 case "FILE":
                                     if (isFile(fileInList)) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -1582,6 +1605,7 @@ public class SearchBar {
                                 case "FOLDER":
                                     if (isDirectory(fileInList)) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -1592,6 +1616,7 @@ public class SearchBar {
                                 case "FULL":
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -1603,6 +1628,9 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
+                                                if (Thread.currentThread().isInterrupted()) {
+                                                    return;
+                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -1615,6 +1643,9 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
+                                                if (Thread.currentThread().isInterrupted()) {
+                                                    return;
+                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -1631,9 +1662,16 @@ public class SearchBar {
                     }
                     label2:
                     for (String fileInList : search.getListC()) {
+
                         
+                        if (Thread.currentThread().isInterrupted()){
+                            return;
+                        }
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
+                                if (Thread.currentThread().isInterrupted()) {
+                                    return;
+                                }
                                 listResult.add(fileInList);
                             }
                             if (listResult.size() > 100) {
@@ -1644,6 +1682,7 @@ public class SearchBar {
                                 case "FILE":
                                     if (isFile(fileInList)) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -1654,6 +1693,7 @@ public class SearchBar {
                                 case "FOLDER":
                                     if (isDirectory(fileInList)) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -1664,6 +1704,7 @@ public class SearchBar {
                                 case "FULL":
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -1675,6 +1716,9 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
+                                                if (Thread.currentThread().isInterrupted()) {
+                                                    return;
+                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -1687,6 +1731,9 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
+                                                if (Thread.currentThread().isInterrupted()) {
+                                                    return;
+                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -1703,9 +1750,16 @@ public class SearchBar {
                     }
                     label3:
                     for (String fileInList : search.getListD()) {
+
                         
+                        if (Thread.currentThread().isInterrupted()){
+                            return;
+                        }
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
+                                if (Thread.currentThread().isInterrupted()) {
+                                    return;
+                                }
                                 listResult.add(fileInList);
                             }
                             if (listResult.size() > 100) {
@@ -1716,6 +1770,7 @@ public class SearchBar {
                                 case "FILE":
                                     if (isFile(fileInList)) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -1726,6 +1781,7 @@ public class SearchBar {
                                 case "FOLDER":
                                     if (isDirectory(fileInList)) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -1736,6 +1792,7 @@ public class SearchBar {
                                 case "FULL":
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -1747,6 +1804,9 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
+                                                if (Thread.currentThread().isInterrupted()) {
+                                                    return;
+                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -1759,6 +1819,9 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
+                                                if (Thread.currentThread().isInterrupted()) {
+                                                    return;
+                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -1775,9 +1838,16 @@ public class SearchBar {
                     }
                     label4:
                     for (String fileInList : search.getListE()) {
+
                         
+                        if (Thread.currentThread().isInterrupted()){
+                            return;
+                        }
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
+                                if (Thread.currentThread().isInterrupted()) {
+                                    return;
+                                }
                                 listResult.add(fileInList);
                             }
                             if (listResult.size() > 100) {
@@ -1788,6 +1858,7 @@ public class SearchBar {
                                 case "FILE":
                                     if (isFile(fileInList)) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -1798,6 +1869,7 @@ public class SearchBar {
                                 case "FOLDER":
                                     if (isDirectory(fileInList)) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -1808,6 +1880,7 @@ public class SearchBar {
                                 case "FULL":
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -1819,6 +1892,9 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
+                                                if (Thread.currentThread().isInterrupted()) {
+                                                    return;
+                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -1831,6 +1907,9 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
+                                                if (Thread.currentThread().isInterrupted()) {
+                                                    return;
+                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -1847,9 +1926,16 @@ public class SearchBar {
                     }
                     label5:
                     for (String fileInList : search.getListF()) {
+
                         
+                        if (Thread.currentThread().isInterrupted()){
+                            return;
+                        }
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
+                                if (Thread.currentThread().isInterrupted()) {
+                                    return;
+                                }
                                 listResult.add(fileInList);
                             }
                             if (listResult.size() > 100) {
@@ -1860,6 +1946,7 @@ public class SearchBar {
                                 case "FILE":
                                     if (isFile(fileInList)) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -1870,6 +1957,7 @@ public class SearchBar {
                                 case "FOLDER":
                                     if (isDirectory(fileInList)) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -1880,6 +1968,7 @@ public class SearchBar {
                                 case "FULL":
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -1891,6 +1980,9 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
+                                                if (Thread.currentThread().isInterrupted()) {
+                                                    return;
+                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -1903,6 +1995,9 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
+                                                if (Thread.currentThread().isInterrupted()) {
+                                                    return;
+                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -1919,9 +2014,16 @@ public class SearchBar {
                     }
                     label6:
                     for (String fileInList : search.getListG()) {
+
                         
+                        if (Thread.currentThread().isInterrupted()){
+                            return;
+                        }
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
+                                if (Thread.currentThread().isInterrupted()) {
+                                    return;
+                                }
                                 listResult.add(fileInList);
                             }
                             if (listResult.size() > 100) {
@@ -1932,6 +2034,7 @@ public class SearchBar {
                                 case "FILE":
                                     if (isFile(fileInList)) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -1942,6 +2045,7 @@ public class SearchBar {
                                 case "FOLDER":
                                     if (isDirectory(fileInList)) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -1952,6 +2056,7 @@ public class SearchBar {
                                 case "FULL":
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -1963,6 +2068,9 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
+                                                if (Thread.currentThread().isInterrupted()) {
+                                                    return;
+                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -1975,6 +2083,9 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
+                                                if (Thread.currentThread().isInterrupted()) {
+                                                    return;
+                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -1991,9 +2102,16 @@ public class SearchBar {
                     }
                     label7:
                     for (String fileInList : search.getListH()) {
+
                         
+                        if (Thread.currentThread().isInterrupted()){
+                            return;
+                        }
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
+                                if (Thread.currentThread().isInterrupted()) {
+                                    return;
+                                }
                                 listResult.add(fileInList);
                             }
                             if (listResult.size() > 100) {
@@ -2004,6 +2122,7 @@ public class SearchBar {
                                 case "FILE":
                                     if (isFile(fileInList)) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -2014,6 +2133,7 @@ public class SearchBar {
                                 case "FOLDER":
                                     if (isDirectory(fileInList)) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -2024,6 +2144,7 @@ public class SearchBar {
                                 case "FULL":
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -2035,6 +2156,9 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
+                                                if (Thread.currentThread().isInterrupted()) {
+                                                    return;
+                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -2047,6 +2171,9 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
+                                                if (Thread.currentThread().isInterrupted()) {
+                                                    return;
+                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -2063,9 +2190,16 @@ public class SearchBar {
                     }
                     label8:
                     for (String fileInList : search.getListI()) {
+
                         
+                        if (Thread.currentThread().isInterrupted()){
+                            return;
+                        }
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
+                                if (Thread.currentThread().isInterrupted()) {
+                                    return;
+                                }
                                 listResult.add(fileInList);
                             }
                             if (listResult.size() > 100) {
@@ -2076,6 +2210,7 @@ public class SearchBar {
                                 case "FILE":
                                     if (isFile(fileInList)) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -2086,6 +2221,7 @@ public class SearchBar {
                                 case "FOLDER":
                                     if (isDirectory(fileInList)) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -2096,6 +2232,7 @@ public class SearchBar {
                                 case "FULL":
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -2107,6 +2244,9 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
+                                                if (Thread.currentThread().isInterrupted()) {
+                                                    return;
+                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -2119,6 +2259,9 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
+                                                if (Thread.currentThread().isInterrupted()) {
+                                                    return;
+                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -2135,9 +2278,16 @@ public class SearchBar {
                     }
                     label9:
                     for (String fileInList : search.getListJ()) {
+
                         
+                        if (Thread.currentThread().isInterrupted()){
+                            return;
+                        }
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
+                                if (Thread.currentThread().isInterrupted()) {
+                                    return;
+                                }
                                 listResult.add(fileInList);
                             }
                             if (listResult.size() > 100) {
@@ -2148,6 +2298,7 @@ public class SearchBar {
                                 case "FILE":
                                     if (isFile(fileInList)) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -2158,6 +2309,7 @@ public class SearchBar {
                                 case "FOLDER":
                                     if (isDirectory(fileInList)) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -2168,6 +2320,7 @@ public class SearchBar {
                                 case "FULL":
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -2179,6 +2332,9 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
+                                                if (Thread.currentThread().isInterrupted()) {
+                                                    return;
+                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -2191,6 +2347,9 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
+                                                if (Thread.currentThread().isInterrupted()) {
+                                                    return;
+                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -2207,9 +2366,16 @@ public class SearchBar {
                     }
                     label10:
                     for (String fileInList : search.getListK()) {
+
                         
+                        if (Thread.currentThread().isInterrupted()){
+                            return;
+                        }
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
+                                if (Thread.currentThread().isInterrupted()) {
+                                    return;
+                                }
                                 listResult.add(fileInList);
                             }
                             if (listResult.size() > 100) {
@@ -2220,6 +2386,7 @@ public class SearchBar {
                                 case "FILE":
                                     if (isFile(fileInList)) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -2230,6 +2397,7 @@ public class SearchBar {
                                 case "FOLDER":
                                     if (isDirectory(fileInList)) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -2240,6 +2408,7 @@ public class SearchBar {
                                 case "FULL":
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -2263,6 +2432,9 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
+                                                if (Thread.currentThread().isInterrupted()) {
+                                                    return;
+                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -2279,9 +2451,16 @@ public class SearchBar {
                     }
                     label11:
                     for (String fileInList : search.getListL()) {
+
                         
+                        if (Thread.currentThread().isInterrupted()){
+                            return;
+                        }
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
+                                if (Thread.currentThread().isInterrupted()) {
+                                    return;
+                                }
                                 listResult.add(fileInList);
                             }
                             if (listResult.size() > 100) {
@@ -2292,6 +2471,7 @@ public class SearchBar {
                                 case "FILE":
                                     if (isFile(fileInList)) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -2302,6 +2482,7 @@ public class SearchBar {
                                 case "FOLDER":
                                     if (isDirectory(fileInList)) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -2312,6 +2493,7 @@ public class SearchBar {
                                 case "FULL":
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -2323,6 +2505,9 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
+                                                if (Thread.currentThread().isInterrupted()) {
+                                                    return;
+                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -2335,6 +2520,9 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
+                                                if (Thread.currentThread().isInterrupted()) {
+                                                    return;
+                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -2351,9 +2539,16 @@ public class SearchBar {
                     }
                     label12:
                     for (String fileInList : search.getListM()) {
+
                         
+                        if (Thread.currentThread().isInterrupted()){
+                            return;
+                        }
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
+                                if (Thread.currentThread().isInterrupted()) {
+                                    return;
+                                }
                                 listResult.add(fileInList);
                             }
                             if (listResult.size() > 100) {
@@ -2364,6 +2559,7 @@ public class SearchBar {
                                 case "FILE":
                                     if (isFile(fileInList)) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -2374,6 +2570,7 @@ public class SearchBar {
                                 case "FOLDER":
                                     if (isDirectory(fileInList)) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -2384,6 +2581,7 @@ public class SearchBar {
                                 case "FULL":
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -2395,6 +2593,9 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
+                                                if (Thread.currentThread().isInterrupted()) {
+                                                    return;
+                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -2407,6 +2608,9 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
+                                                if (Thread.currentThread().isInterrupted()) {
+                                                    return;
+                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -2423,9 +2627,16 @@ public class SearchBar {
                     }
                     label13:
                     for (String fileInList : search.getListN()) {
+
                         
+                        if (Thread.currentThread().isInterrupted()){
+                            return;
+                        }
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
+                                if (Thread.currentThread().isInterrupted()) {
+                                    return;
+                                }
                                 listResult.add(fileInList);
                             }
                             if (listResult.size() > 100) {
@@ -2436,6 +2647,7 @@ public class SearchBar {
                                 case "FILE":
                                     if (isFile(fileInList)) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -2446,6 +2658,7 @@ public class SearchBar {
                                 case "FOLDER":
                                     if (isDirectory(fileInList)) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -2456,6 +2669,7 @@ public class SearchBar {
                                 case "FULL":
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -2467,6 +2681,9 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
+                                                if (Thread.currentThread().isInterrupted()) {
+                                                    return;
+                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -2479,6 +2696,9 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
+                                                if (Thread.currentThread().isInterrupted()) {
+                                                    return;
+                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -2495,9 +2715,16 @@ public class SearchBar {
                     }
                     label14:
                     for (String fileInList : search.getListO()) {
+
                         
+                        if (Thread.currentThread().isInterrupted()){
+                            return;
+                        }
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
+                                if (Thread.currentThread().isInterrupted()) {
+                                    return;
+                                }
                                 listResult.add(fileInList);
                             }
                             if (listResult.size() > 100) {
@@ -2508,6 +2735,7 @@ public class SearchBar {
                                 case "FILE":
                                     if (isFile(fileInList)) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -2518,6 +2746,7 @@ public class SearchBar {
                                 case "FOLDER":
                                     if (isDirectory(fileInList)) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -2528,6 +2757,7 @@ public class SearchBar {
                                 case "FULL":
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -2539,6 +2769,9 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
+                                                if (Thread.currentThread().isInterrupted()) {
+                                                    return;
+                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -2551,6 +2784,9 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
+                                                if (Thread.currentThread().isInterrupted()) {
+                                                    return;
+                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -2567,9 +2803,16 @@ public class SearchBar {
                     }
                     label15:
                     for (String fileInList : search.getListP()) {
+
                         
+                        if (Thread.currentThread().isInterrupted()){
+                            return;
+                        }
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
+                                if (Thread.currentThread().isInterrupted()) {
+                                    return;
+                                }
                                 listResult.add(fileInList);
                             }
                             if (listResult.size() > 100) {
@@ -2580,6 +2823,7 @@ public class SearchBar {
                                 case "FILE":
                                     if (isFile(fileInList)) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -2590,6 +2834,7 @@ public class SearchBar {
                                 case "FOLDER":
                                     if (isDirectory(fileInList)) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -2600,6 +2845,7 @@ public class SearchBar {
                                 case "FULL":
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -2611,6 +2857,9 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
+                                                if (Thread.currentThread().isInterrupted()) {
+                                                    return;
+                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -2623,6 +2872,9 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
+                                                if (Thread.currentThread().isInterrupted()) {
+                                                    return;
+                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -2639,9 +2891,16 @@ public class SearchBar {
                     }
                     label16:
                     for (String fileInList : search.getListQ()) {
+
                         
+                        if (Thread.currentThread().isInterrupted()){
+                            return;
+                        }
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
+                                if (Thread.currentThread().isInterrupted()) {
+                                    return;
+                                }
                                 listResult.add(fileInList);
                             }
                             if (listResult.size() > 100) {
@@ -2652,6 +2911,7 @@ public class SearchBar {
                                 case "FILE":
                                     if (isFile(fileInList)) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -2662,6 +2922,7 @@ public class SearchBar {
                                 case "FOLDER":
                                     if (isDirectory(fileInList)) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -2672,6 +2933,7 @@ public class SearchBar {
                                 case "FULL":
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -2683,6 +2945,9 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
+                                                if (Thread.currentThread().isInterrupted()) {
+                                                    return;
+                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -2695,6 +2960,9 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
+                                                if (Thread.currentThread().isInterrupted()) {
+                                                    return;
+                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -2711,9 +2979,16 @@ public class SearchBar {
                     }
                     label17:
                     for (String fileInList : search.getListR()) {
+
                         
+                        if (Thread.currentThread().isInterrupted()){
+                            return;
+                        }
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
+                                if (Thread.currentThread().isInterrupted()) {
+                                    return;
+                                }
                                 listResult.add(fileInList);
                             }
                             if (listResult.size() > 100) {
@@ -2724,6 +2999,7 @@ public class SearchBar {
                                 case "FILE":
                                     if (isFile(fileInList)) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -2734,6 +3010,7 @@ public class SearchBar {
                                 case "FOLDER":
                                     if (isDirectory(fileInList)) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -2744,6 +3021,7 @@ public class SearchBar {
                                 case "FULL":
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -2755,6 +3033,9 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
+                                                if (Thread.currentThread().isInterrupted()) {
+                                                    return;
+                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -2767,6 +3048,9 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
+                                                if (Thread.currentThread().isInterrupted()) {
+                                                    return;
+                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -2783,9 +3067,16 @@ public class SearchBar {
                     }
                     label18:
                     for (String fileInList : search.getListS()) {
+
                         
+                        if (Thread.currentThread().isInterrupted()){
+                            return;
+                        }
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
+                                if (Thread.currentThread().isInterrupted()) {
+                                    return;
+                                }
                                 listResult.add(fileInList);
                             }
                             if (listResult.size() > 100) {
@@ -2796,6 +3087,7 @@ public class SearchBar {
                                 case "FILE":
                                     if (isFile(fileInList)) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -2806,6 +3098,7 @@ public class SearchBar {
                                 case "FOLDER":
                                     if (isDirectory(fileInList)) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -2816,6 +3109,7 @@ public class SearchBar {
                                 case "FULL":
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -2827,6 +3121,9 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
+                                                if (Thread.currentThread().isInterrupted()) {
+                                                    return;
+                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -2839,6 +3136,9 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
+                                                if (Thread.currentThread().isInterrupted()) {
+                                                    return;
+                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -2855,9 +3155,16 @@ public class SearchBar {
                     }
                     label19:
                     for (String fileInList : search.getListT()) {
+
                         
+                        if (Thread.currentThread().isInterrupted()){
+                            return;
+                        }
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
+                                if (Thread.currentThread().isInterrupted()) {
+                                    return;
+                                }
                                 listResult.add(fileInList);
                             }
                             if (listResult.size() > 100) {
@@ -2868,6 +3175,7 @@ public class SearchBar {
                                 case "FILE":
                                     if (isFile(fileInList)) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -2878,6 +3186,7 @@ public class SearchBar {
                                 case "FOLDER":
                                     if (isDirectory(fileInList)) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -2888,6 +3197,7 @@ public class SearchBar {
                                 case "FULL":
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -2899,6 +3209,9 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
+                                                if (Thread.currentThread().isInterrupted()) {
+                                                    return;
+                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -2911,6 +3224,9 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
+                                                if (Thread.currentThread().isInterrupted()) {
+                                                    return;
+                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -2927,9 +3243,16 @@ public class SearchBar {
                     }
                     label20:
                     for (String fileInList : search.getListU()) {
+
                         
+                        if (Thread.currentThread().isInterrupted()){
+                            return;
+                        }
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
+                                if (Thread.currentThread().isInterrupted()) {
+                                    return;
+                                }
                                 listResult.add(fileInList);
                             }
                             if (listResult.size() > 100) {
@@ -2940,6 +3263,7 @@ public class SearchBar {
                                 case "FILE":
                                     if (isFile(fileInList)) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -2950,6 +3274,7 @@ public class SearchBar {
                                 case "FOLDER":
                                     if (isDirectory(fileInList)) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -2960,6 +3285,7 @@ public class SearchBar {
                                 case "FULL":
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -2971,6 +3297,9 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
+                                                if (Thread.currentThread().isInterrupted()) {
+                                                    return;
+                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -2983,6 +3312,9 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
+                                                if (Thread.currentThread().isInterrupted()) {
+                                                    return;
+                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -2999,9 +3331,16 @@ public class SearchBar {
                     }
                     label21:
                     for (String fileInList : search.getListV()) {
+
                         
+                        if (Thread.currentThread().isInterrupted()){
+                            return;
+                        }
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
+                                if (Thread.currentThread().isInterrupted()) {
+                                    return;
+                                }
                                 listResult.add(fileInList);
                             }
                             if (listResult.size() > 100) {
@@ -3012,6 +3351,7 @@ public class SearchBar {
                                 case "FILE":
                                     if (isFile(fileInList)) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -3022,6 +3362,7 @@ public class SearchBar {
                                 case "FOLDER":
                                     if (isDirectory(fileInList)) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -3032,6 +3373,7 @@ public class SearchBar {
                                 case "FULL":
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -3043,6 +3385,9 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
+                                                if (Thread.currentThread().isInterrupted()) {
+                                                    return;
+                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -3055,6 +3400,9 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
+                                                if (Thread.currentThread().isInterrupted()) {
+                                                    return;
+                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -3071,9 +3419,16 @@ public class SearchBar {
                     }
                     label22:
                     for (String fileInList : search.getListW()) {
+
                         
+                        if (Thread.currentThread().isInterrupted()){
+                            return;
+                        }
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
+                                if (Thread.currentThread().isInterrupted()) {
+                                    return;
+                                }
                                 listResult.add(fileInList);
                             }
                             if (listResult.size() > 100) {
@@ -3084,6 +3439,7 @@ public class SearchBar {
                                 case "FILE":
                                     if (isFile(fileInList)) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -3094,6 +3450,7 @@ public class SearchBar {
                                 case "FOLDER":
                                     if (isDirectory(fileInList)) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -3104,6 +3461,7 @@ public class SearchBar {
                                 case "FULL":
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -3115,6 +3473,9 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
+                                                if (Thread.currentThread().isInterrupted()) {
+                                                    return;
+                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -3127,6 +3488,9 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
+                                                if (Thread.currentThread().isInterrupted()) {
+                                                    return;
+                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -3143,9 +3507,16 @@ public class SearchBar {
                     }
                     label23:
                     for (String fileInList : search.getListX()) {
+
                         
+                        if (Thread.currentThread().isInterrupted()){
+                            return;
+                        }
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
+                                if (Thread.currentThread().isInterrupted()) {
+                                    return;
+                                }
                                 listResult.add(fileInList);
                             }
                             if (listResult.size() > 100) {
@@ -3156,6 +3527,7 @@ public class SearchBar {
                                 case "FILE":
                                     if (isFile(fileInList)) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -3166,6 +3538,7 @@ public class SearchBar {
                                 case "FOLDER":
                                     if (isDirectory(fileInList)) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -3176,6 +3549,7 @@ public class SearchBar {
                                 case "FULL":
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -3187,6 +3561,9 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
+                                                if (Thread.currentThread().isInterrupted()) {
+                                                    return;
+                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -3199,6 +3576,9 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
+                                                if (Thread.currentThread().isInterrupted()) {
+                                                    return;
+                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -3215,9 +3595,16 @@ public class SearchBar {
                     }
                     label24:
                     for (String fileInList : search.getListY()) {
+
                         
+                        if (Thread.currentThread().isInterrupted()){
+                            return;
+                        }
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
+                                if (Thread.currentThread().isInterrupted()) {
+                                    return;
+                                }
                                 listResult.add(fileInList);
                             }
                             if (listResult.size() > 100) {
@@ -3228,6 +3615,7 @@ public class SearchBar {
                                 case "FILE":
                                     if (isFile(fileInList)) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -3238,6 +3626,7 @@ public class SearchBar {
                                 case "FOLDER":
                                     if (isDirectory(fileInList)) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -3248,6 +3637,7 @@ public class SearchBar {
                                 case "FULL":
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -3259,6 +3649,9 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
+                                                if (Thread.currentThread().isInterrupted()) {
+                                                    return;
+                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -3271,6 +3664,9 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
+                                                if (Thread.currentThread().isInterrupted()) {
+                                                    return;
+                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -3287,9 +3683,16 @@ public class SearchBar {
                     }
                     label25:
                     for (String fileInList : search.getListZ()) {
+
                         
+                        if (Thread.currentThread().isInterrupted()){
+                            return;
+                        }
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
+                                if (Thread.currentThread().isInterrupted()) {
+                                    return;
+                                }
                                 listResult.add(fileInList);
                             }
                             if (listResult.size() > 100) {
@@ -3300,6 +3703,7 @@ public class SearchBar {
                                 case "FILE":
                                     if (isFile(fileInList)) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -3310,6 +3714,7 @@ public class SearchBar {
                                 case "FOLDER":
                                     if (isDirectory(fileInList)) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -3320,6 +3725,7 @@ public class SearchBar {
                                 case "FULL":
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -3331,6 +3737,9 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
+                                                if (Thread.currentThread().isInterrupted()) {
+                                                    return;
+                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -3343,6 +3752,9 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
+                                                if (Thread.currentThread().isInterrupted()) {
+                                                    return;
+                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -3359,9 +3771,16 @@ public class SearchBar {
                     }
                     label26:
                     for (String fileInList : search.getListNum()) {
+
                         
+                        if (Thread.currentThread().isInterrupted()){
+                            return;
+                        }
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
+                                if (Thread.currentThread().isInterrupted()) {
+                                    return;
+                                }
                                 listResult.add(fileInList);
                             }
                             if (listResult.size() > 100) {
@@ -3372,6 +3791,7 @@ public class SearchBar {
                                 case "FILE":
                                     if (isFile(fileInList)) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -3382,6 +3802,7 @@ public class SearchBar {
                                 case "FOLDER":
                                     if (isDirectory(fileInList)) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -3392,6 +3813,7 @@ public class SearchBar {
                                 case "FULL":
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -3403,6 +3825,9 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
+                                                if (Thread.currentThread().isInterrupted()) {
+                                                    return;
+                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -3415,6 +3840,9 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
+                                                if (Thread.currentThread().isInterrupted()) {
+                                                    return;
+                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -3431,9 +3859,16 @@ public class SearchBar {
                     }
                     label27:
                     for (String fileInList : search.getListUnderline()) {
+
                         
+                        if (Thread.currentThread().isInterrupted()){
+                            return;
+                        }
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
+                                if (Thread.currentThread().isInterrupted()) {
+                                    return;
+                                }
                                 listResult.add(fileInList);
                             }
                             if (listResult.size() > 100) {
@@ -3444,6 +3879,7 @@ public class SearchBar {
                                 case "FILE":
                                     if (isFile(fileInList)) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -3454,6 +3890,7 @@ public class SearchBar {
                                 case "FOLDER":
                                     if (isDirectory(fileInList)) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -3464,6 +3901,7 @@ public class SearchBar {
                                 case "FULL":
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -3475,6 +3913,9 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
+                                                if (Thread.currentThread().isInterrupted()) {
+                                                    return;
+                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -3487,6 +3928,9 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
+                                                if (Thread.currentThread().isInterrupted()) {
+                                                    return;
+                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -3503,9 +3947,16 @@ public class SearchBar {
                     }
                     label28:
                     for (String fileInList : search.getListUnique()) {
+
                         
+                        if (Thread.currentThread().isInterrupted()){
+                            return;
+                        }
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
+                                if (Thread.currentThread().isInterrupted()) {
+                                    return;
+                                }
                                 listResult.add(fileInList);
                             }
                             if (listResult.size() > 100) {
@@ -3516,6 +3967,7 @@ public class SearchBar {
                                 case "FILE":
                                     if (isFile(fileInList)) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -3526,6 +3978,7 @@ public class SearchBar {
                                 case "FOLDER":
                                     if (isDirectory(fileInList)) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -3536,6 +3989,7 @@ public class SearchBar {
                                 case "FULL":
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -3547,6 +4001,9 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
+                                                if (Thread.currentThread().isInterrupted()) {
+                                                    return;
+                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -3559,6 +4016,9 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
+                                                if (Thread.currentThread().isInterrupted()) {
+                                                    return;
+                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -3575,9 +4035,16 @@ public class SearchBar {
                     }
                     label29:
                     for (String fileInList : search.getListPercentSign()) {
+
                         
+                        if (Thread.currentThread().isInterrupted()){
+                            return;
+                        }
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
+                                if (Thread.currentThread().isInterrupted()) {
+                                    return;
+                                }
                                 listResult.add(fileInList);
                             }
                             if (listResult.size() > 100) {
@@ -3588,6 +4055,7 @@ public class SearchBar {
                                 case "FILE":
                                     if (isFile(fileInList)) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -3598,6 +4066,7 @@ public class SearchBar {
                                 case "FOLDER":
                                     if (isDirectory(fileInList)) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -3608,6 +4077,7 @@ public class SearchBar {
                                 case "FULL":
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (!listResult.contains(fileInList)) {
+                                            
                                             listResult.add(fileInList);
                                         }
                                         if (listResult.size() > 100) {
@@ -3619,6 +4089,9 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
+                                                if (Thread.currentThread().isInterrupted()) {
+                                                    return;
+                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -3631,6 +4104,9 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
+                                                if (Thread.currentThread().isInterrupted()) {
+                                                    return;
+                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
