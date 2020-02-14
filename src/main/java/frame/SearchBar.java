@@ -581,8 +581,12 @@ public class SearchBar {
                     int key = arg0.getKeyCode();
                     if (38 == key) {
                         //上键被点击
-                        if (!label1.getText().equals("") && !label2.getText().equals("") && !label3.getText().equals("") && !label4.getText().equals("")) {
-                            isKeyPressed = true;
+                        try {
+                            if (!label1.getText().equals("") && !label2.getText().equals("") && !label3.getText().equals("") && !label4.getText().equals("")) {
+                                isKeyPressed = true;
+                            }
+                        }catch (NullPointerException ignored){
+
                         }
                         if (!textField.getText().equals("")) {
                             labelCount--;
@@ -733,8 +737,12 @@ public class SearchBar {
                         }
                     } else if (40 == key) {
                         //下键被点击
-                        if (!label1.getText().equals("") && !label2.getText().equals("") && !label3.getText().equals("") && !label4.getText().equals("")) {
-                            isKeyPressed = true;
+                        try {
+                            if (!label1.getText().equals("") && !label2.getText().equals("") && !label3.getText().equals("") && !label4.getText().equals("")) {
+                                isKeyPressed = true;
+                            }
+                        }catch (NullPointerException ignored){
+
                         }
                         boolean isNextExist = false;
                         if (labelCount == 0) {
