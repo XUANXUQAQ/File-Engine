@@ -220,13 +220,25 @@ public class SearchBar {
                 }
                 try {
                     if (!isKeyPressed && !label2.getText().equals("")) {
-                        label2.setBackground(backgroundColor);
+                        if (labelCount == 1){
+                            label2.setBackground(labelColor);
+                        }else {
+                            label2.setBackground(backgroundColor);
+                        }
                     }
                     if (!isKeyPressed && !label3.getText().equals("")) {
-                        label3.setBackground(backgroundColorLight);
+                        if (labelCount == 2){
+                            label2.setBackground(labelColor);
+                        }else {
+                            label3.setBackground(backgroundColorLight);
+                        }
                     }
                     if (!isKeyPressed && !label4.getText().equals("")) {
-                        label4.setBackground(backgroundColor);
+                        if (labelCount >= 3){
+                            label4.setBackground(labelColor);
+                        }else {
+                            label4.setBackground(backgroundColor);
+                        }
                     }
                 } catch (NullPointerException ignored) {
 
