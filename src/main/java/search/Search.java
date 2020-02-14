@@ -100,599 +100,599 @@ public class Search {
         switch (ch) {
             case "A":
                 path = SettingsFrame.dataPath + "\\listA";
-                if (!isManualUpdate) {
-                    try {
-                        listA.addAll(Objects.requireNonNull(readFileList("A")));
-                    } catch (NullPointerException ignored) {
-
-                    }
-                }
-                listFile = new Serialize();
-                listFile.setList(listA);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-                    listA.clear();
-
-                } catch (IOException ignored) {
+            {
+                try {
+                    listA.addAll(Objects.requireNonNull(readFileList("A")));
+                } catch (NullPointerException ignored) {
 
                 }
-                break;
+            }
+            listFile = new Serialize();
+            listFile.setList(listA);
+            try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                oos.writeObject(listFile);
+                listA.clear();
+
+            } catch (IOException ignored) {
+
+            }
+            break;
             case "B":
                 path = SettingsFrame.dataPath + "\\listB";
-                if (!isManualUpdate) {
-                    try {
-                        listB.addAll(Objects.requireNonNull(readFileList("B")));
-                    } catch (NullPointerException ignored) {
-
-                    }
-                }
-                listFile = new Serialize();
-                listFile.setList(listB);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-                    listB.clear();
-
-                } catch (IOException ignored) {
+            {
+                try {
+                    listB.addAll(Objects.requireNonNull(readFileList("B")));
+                } catch (NullPointerException ignored) {
 
                 }
-                break;
+            }
+            listFile = new Serialize();
+            listFile.setList(listB);
+            try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                oos.writeObject(listFile);
+                listB.clear();
+
+            } catch (IOException ignored) {
+
+            }
+            break;
             case "C":
                 path = SettingsFrame.dataPath + "\\listC";
-                if (!isManualUpdate) {
-                    try {
-                        listC.addAll(Objects.requireNonNull(readFileList("C")));
-                    } catch (NullPointerException ignored) {
-
-                    }
-                }
-                listFile = new Serialize();
-                listFile.setList(listC);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-                    listC.clear();
-
-                } catch (IOException ignored) {
+            {
+                try {
+                    listC.addAll(Objects.requireNonNull(readFileList("C")));
+                } catch (NullPointerException ignored) {
 
                 }
-                break;
+            }
+            listFile = new Serialize();
+            listFile.setList(listC);
+            try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                oos.writeObject(listFile);
+                listC.clear();
+
+            } catch (IOException ignored) {
+
+            }
+            break;
             case "D":
 
                 path = SettingsFrame.dataPath + "\\listD";
-                if (!isManualUpdate) {
-                    try {
-                        listD.addAll(Objects.requireNonNull(readFileList("D")));
-                    } catch (NullPointerException ignored) {
-
-                    }
-                }
-                listFile = new Serialize();
-                listFile.setList(listD);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-                    listD.clear();
-
-                } catch (IOException ignored) {
+            {
+                try {
+                    listD.addAll(Objects.requireNonNull(readFileList("D")));
+                } catch (NullPointerException ignored) {
 
                 }
-                break;
+            }
+            listFile = new Serialize();
+            listFile.setList(listD);
+            try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                oos.writeObject(listFile);
+                listD.clear();
+
+            } catch (IOException ignored) {
+
+            }
+            break;
             case "E":
 
                 path = SettingsFrame.dataPath + "\\listE";
-                if (!isManualUpdate) {
-                    try {
-                        listE.addAll(Objects.requireNonNull(readFileList("E")));
-                    } catch (NullPointerException ignored) {
-
-                    }
-                }
-                listFile = new Serialize();
-                listFile.setList(listE);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-                    listE.clear();
-
-                } catch (IOException ignored) {
+            {
+                try {
+                    listE.addAll(Objects.requireNonNull(readFileList("E")));
+                } catch (NullPointerException ignored) {
 
                 }
-                break;
+            }
+            listFile = new Serialize();
+            listFile.setList(listE);
+            try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                oos.writeObject(listFile);
+                listE.clear();
+
+            } catch (IOException ignored) {
+
+            }
+            break;
             case "F":
 
                 path = SettingsFrame.dataPath + "\\listF";
-                if (!isManualUpdate) {
-                    try {
-                        listF.addAll(Objects.requireNonNull(readFileList("F")));
-                    } catch (NullPointerException ignored) {
-
-                    }
-                }
-                listFile = new Serialize();
-                listFile.setList(listF);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-                    listF.clear();
-
-                } catch (IOException ignored) {
+            {
+                try {
+                    listF.addAll(Objects.requireNonNull(readFileList("F")));
+                } catch (NullPointerException ignored) {
 
                 }
-                break;
+            }
+            listFile = new Serialize();
+            listFile.setList(listF);
+            try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                oos.writeObject(listFile);
+                listF.clear();
+
+            } catch (IOException ignored) {
+
+            }
+            break;
             case "G":
 
                 path = SettingsFrame.dataPath + "\\listG";
-                if (!isManualUpdate) {
-                    try {
-                        listG.addAll(Objects.requireNonNull(readFileList("G")));
-                    } catch (NullPointerException ignored) {
-
-                    }
-                }
-                listFile = new Serialize();
-                listFile.setList(listG);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-                    listG.clear();
-
-                } catch (IOException ignored) {
+            {
+                try {
+                    listG.addAll(Objects.requireNonNull(readFileList("G")));
+                } catch (NullPointerException ignored) {
 
                 }
-                break;
+            }
+            listFile = new Serialize();
+            listFile.setList(listG);
+            try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                oos.writeObject(listFile);
+                listG.clear();
+
+            } catch (IOException ignored) {
+
+            }
+            break;
             case "H":
 
                 path = SettingsFrame.dataPath + "\\listH";
-                if (!isManualUpdate) {
-                    try {
-                        listH.addAll(Objects.requireNonNull(readFileList("H")));
-                    } catch (NullPointerException ignored) {
-
-                    }
-                }
-                listFile = new Serialize();
-                listFile.setList(listH);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-                    listH.clear();
-
-                } catch (IOException ignored) {
+            {
+                try {
+                    listH.addAll(Objects.requireNonNull(readFileList("H")));
+                } catch (NullPointerException ignored) {
 
                 }
-                break;
+            }
+            listFile = new Serialize();
+            listFile.setList(listH);
+            try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                oos.writeObject(listFile);
+                listH.clear();
+
+            } catch (IOException ignored) {
+
+            }
+            break;
             case "I":
 
                 path = SettingsFrame.dataPath + "\\listI";
-                if (!isManualUpdate) {
-                    try {
-                        listI.addAll(Objects.requireNonNull(readFileList("I")));
-                    } catch (NullPointerException ignored) {
-
-                    }
-                }
-                listFile = new Serialize();
-                listFile.setList(listI);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-                    listI.clear();
-
-                } catch (IOException ignored) {
+            {
+                try {
+                    listI.addAll(Objects.requireNonNull(readFileList("I")));
+                } catch (NullPointerException ignored) {
 
                 }
-                break;
+            }
+            listFile = new Serialize();
+            listFile.setList(listI);
+            try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                oos.writeObject(listFile);
+                listI.clear();
+
+            } catch (IOException ignored) {
+
+            }
+            break;
             case "J":
 
                 path = SettingsFrame.dataPath + "\\listJ";
-                if (!isManualUpdate) {
-                    try {
-                        listJ.addAll(Objects.requireNonNull(readFileList("J")));
-                    } catch (NullPointerException ignored) {
-
-                    }
-                }
-                listFile = new Serialize();
-                listFile.setList(listJ);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-                    listJ.clear();
-
-                } catch (IOException ignored) {
+            {
+                try {
+                    listJ.addAll(Objects.requireNonNull(readFileList("J")));
+                } catch (NullPointerException ignored) {
 
                 }
-                break;
+            }
+            listFile = new Serialize();
+            listFile.setList(listJ);
+            try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                oos.writeObject(listFile);
+                listJ.clear();
+
+            } catch (IOException ignored) {
+
+            }
+            break;
             case "K":
 
                 path = SettingsFrame.dataPath + "\\listK";
-                if (!isManualUpdate) {
-                    try {
-                        listK.addAll(Objects.requireNonNull(readFileList("K")));
-                    } catch (NullPointerException ignored) {
-
-                    }
-                }
-                listFile = new Serialize();
-                listFile.setList(listK);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-                    listK.clear();
-
-                } catch (IOException ignored) {
+            {
+                try {
+                    listK.addAll(Objects.requireNonNull(readFileList("K")));
+                } catch (NullPointerException ignored) {
 
                 }
-                break;
+            }
+            listFile = new Serialize();
+            listFile.setList(listK);
+            try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                oos.writeObject(listFile);
+                listK.clear();
+
+            } catch (IOException ignored) {
+
+            }
+            break;
             case "L":
 
                 path = SettingsFrame.dataPath + "\\listL";
-                if (!isManualUpdate) {
-                    try {
-                        listL.addAll(Objects.requireNonNull(readFileList("L")));
-                    } catch (NullPointerException ignored) {
-
-                    }
-                }
-                listFile = new Serialize();
-                listFile.setList(listL);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-                    listL.clear();
-
-                } catch (IOException ignored) {
+            {
+                try {
+                    listL.addAll(Objects.requireNonNull(readFileList("L")));
+                } catch (NullPointerException ignored) {
 
                 }
-                break;
+            }
+            listFile = new Serialize();
+            listFile.setList(listL);
+            try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                oos.writeObject(listFile);
+                listL.clear();
+
+            } catch (IOException ignored) {
+
+            }
+            break;
             case "M":
 
                 path = SettingsFrame.dataPath + "\\listM";
-                if (!isManualUpdate) {
-                    try {
-                        listM.addAll(Objects.requireNonNull(readFileList("M")));
-                    } catch (NullPointerException ignored) {
-
-                    }
-                }
-                listFile = new Serialize();
-                listFile.setList(listM);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-                    listM.clear();
-
-                } catch (IOException ignored) {
+            {
+                try {
+                    listM.addAll(Objects.requireNonNull(readFileList("M")));
+                } catch (NullPointerException ignored) {
 
                 }
-                break;
+            }
+            listFile = new Serialize();
+            listFile.setList(listM);
+            try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                oos.writeObject(listFile);
+                listM.clear();
+
+            } catch (IOException ignored) {
+
+            }
+            break;
             case "N":
 
                 path = SettingsFrame.dataPath + "\\listN";
-                if (!isManualUpdate) {
-                    try {
-                        listN.addAll(Objects.requireNonNull(readFileList("N")));
-                    } catch (NullPointerException ignored) {
-
-                    }
-                }
-                listFile = new Serialize();
-                listFile.setList(listN);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-                    listN.clear();
-
-                } catch (IOException ignored) {
+            {
+                try {
+                    listN.addAll(Objects.requireNonNull(readFileList("N")));
+                } catch (NullPointerException ignored) {
 
                 }
-                break;
+            }
+            listFile = new Serialize();
+            listFile.setList(listN);
+            try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                oos.writeObject(listFile);
+                listN.clear();
+
+            } catch (IOException ignored) {
+
+            }
+            break;
             case "O":
 
                 path = SettingsFrame.dataPath + "\\listO";
-                if (!isManualUpdate) {
-                    try {
-                        listO.addAll(Objects.requireNonNull(readFileList("O")));
-                    } catch (NullPointerException ignored) {
-
-                    }
-                }
-                listFile = new Serialize();
-                listFile.setList(listO);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-                    listO.clear();
-
-                } catch (IOException ignored) {
+            {
+                try {
+                    listO.addAll(Objects.requireNonNull(readFileList("O")));
+                } catch (NullPointerException ignored) {
 
                 }
-                break;
+            }
+            listFile = new Serialize();
+            listFile.setList(listO);
+            try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                oos.writeObject(listFile);
+                listO.clear();
+
+            } catch (IOException ignored) {
+
+            }
+            break;
             case "P":
 
                 path = SettingsFrame.dataPath + "\\listP";
-                if (!isManualUpdate) {
-                    try {
-                        listP.addAll(Objects.requireNonNull(readFileList("P")));
-                    } catch (NullPointerException ignored) {
-
-                    }
-                }
-                listFile = new Serialize();
-                listFile.setList(listP);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-                    listP.clear();
-
-                } catch (IOException ignored) {
+            {
+                try {
+                    listP.addAll(Objects.requireNonNull(readFileList("P")));
+                } catch (NullPointerException ignored) {
 
                 }
-                break;
+            }
+            listFile = new Serialize();
+            listFile.setList(listP);
+            try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                oos.writeObject(listFile);
+                listP.clear();
+
+            } catch (IOException ignored) {
+
+            }
+            break;
             case "Q":
 
                 path = SettingsFrame.dataPath + "\\listQ";
-                if (!isManualUpdate) {
-                    try {
-                        listQ.addAll(Objects.requireNonNull(readFileList("Q")));
-                    } catch (NullPointerException ignored) {
-
-                    }
-                }
-                listFile = new Serialize();
-                listFile.setList(listQ);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-                    listQ.clear();
-
-                } catch (IOException ignored) {
+            {
+                try {
+                    listQ.addAll(Objects.requireNonNull(readFileList("Q")));
+                } catch (NullPointerException ignored) {
 
                 }
-                break;
+            }
+            listFile = new Serialize();
+            listFile.setList(listQ);
+            try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                oos.writeObject(listFile);
+                listQ.clear();
+
+            } catch (IOException ignored) {
+
+            }
+            break;
             case "R":
 
                 path = SettingsFrame.dataPath + "\\listR";
-                if (!isManualUpdate) {
-                    try {
-                        listR.addAll(Objects.requireNonNull(readFileList("R")));
-                    } catch (NullPointerException ignored) {
-
-                    }
-                }
-                listFile = new Serialize();
-                listFile.setList(listR);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-                    listR.clear();
-
-                } catch (IOException ignored) {
+            {
+                try {
+                    listR.addAll(Objects.requireNonNull(readFileList("R")));
+                } catch (NullPointerException ignored) {
 
                 }
-                break;
+            }
+            listFile = new Serialize();
+            listFile.setList(listR);
+            try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                oos.writeObject(listFile);
+                listR.clear();
+
+            } catch (IOException ignored) {
+
+            }
+            break;
             case "S":
 
                 path = SettingsFrame.dataPath + "\\listS";
-                if (!isManualUpdate) {
-                    try {
-                        listS.addAll(Objects.requireNonNull(readFileList("S")));
-                    } catch (NullPointerException ignored) {
-
-                    }
-                }
-                listFile = new Serialize();
-                listFile.setList(listS);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-                    listS.clear();
-
-                } catch (IOException ignored) {
+            {
+                try {
+                    listS.addAll(Objects.requireNonNull(readFileList("S")));
+                } catch (NullPointerException ignored) {
 
                 }
-                break;
+            }
+            listFile = new Serialize();
+            listFile.setList(listS);
+            try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                oos.writeObject(listFile);
+                listS.clear();
+
+            } catch (IOException ignored) {
+
+            }
+            break;
             case "T":
 
                 path = SettingsFrame.dataPath + "\\listT";
-                if (!isManualUpdate) {
-                    try {
-                        listT.addAll(Objects.requireNonNull(readFileList("T")));
-                    } catch (NullPointerException ignored) {
-
-                    }
-                }
-                listFile = new Serialize();
-                listFile.setList(listT);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-                    listT.clear();
-
-                } catch (IOException ignored) {
+            {
+                try {
+                    listT.addAll(Objects.requireNonNull(readFileList("T")));
+                } catch (NullPointerException ignored) {
 
                 }
-                break;
+            }
+            listFile = new Serialize();
+            listFile.setList(listT);
+            try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                oos.writeObject(listFile);
+                listT.clear();
+
+            } catch (IOException ignored) {
+
+            }
+            break;
             case "U":
 
                 path = SettingsFrame.dataPath + "\\listU";
-                if (!isManualUpdate) {
-                    try {
-                        listU.addAll(Objects.requireNonNull(readFileList("U")));
-                    } catch (NullPointerException ignored) {
-
-                    }
-                }
-                listFile = new Serialize();
-                listFile.setList(listU);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-                    listU.clear();
-
-                } catch (IOException ignored) {
+            {
+                try {
+                    listU.addAll(Objects.requireNonNull(readFileList("U")));
+                } catch (NullPointerException ignored) {
 
                 }
-                break;
+            }
+            listFile = new Serialize();
+            listFile.setList(listU);
+            try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                oos.writeObject(listFile);
+                listU.clear();
+
+            } catch (IOException ignored) {
+
+            }
+            break;
             case "V":
 
                 path = SettingsFrame.dataPath + "\\listV";
-                if (!isManualUpdate) {
-                    try {
-                        listV.addAll(Objects.requireNonNull(readFileList("V")));
-                    } catch (NullPointerException ignored) {
-
-                    }
-                }
-                listFile = new Serialize();
-                listFile.setList(listV);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-                    listV.clear();
-
-                } catch (IOException ignored) {
+            {
+                try {
+                    listV.addAll(Objects.requireNonNull(readFileList("V")));
+                } catch (NullPointerException ignored) {
 
                 }
-                break;
+            }
+            listFile = new Serialize();
+            listFile.setList(listV);
+            try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                oos.writeObject(listFile);
+                listV.clear();
+
+            } catch (IOException ignored) {
+
+            }
+            break;
             case "W":
 
                 path = SettingsFrame.dataPath + "\\listW";
-                if (!isManualUpdate) {
-                    try {
-                        listW.addAll(Objects.requireNonNull(readFileList("W")));
-                    } catch (NullPointerException ignored) {
-
-                    }
-                }
-                listFile = new Serialize();
-                listFile.setList(listW);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-                    listW.clear();
-
-                } catch (IOException ignored) {
+            {
+                try {
+                    listW.addAll(Objects.requireNonNull(readFileList("W")));
+                } catch (NullPointerException ignored) {
 
                 }
-                break;
+            }
+            listFile = new Serialize();
+            listFile.setList(listW);
+            try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                oos.writeObject(listFile);
+                listW.clear();
+
+            } catch (IOException ignored) {
+
+            }
+            break;
             case "X":
 
                 path = SettingsFrame.dataPath + "\\listX";
-                if (!isManualUpdate) {
-                    try {
-                        listX.addAll(Objects.requireNonNull(readFileList("X")));
-                    } catch (NullPointerException ignored) {
-
-                    }
-                }
-                listFile = new Serialize();
-                listFile.setList(listX);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-                    listX.clear();
-
-                } catch (IOException ignored) {
+            {
+                try {
+                    listX.addAll(Objects.requireNonNull(readFileList("X")));
+                } catch (NullPointerException ignored) {
 
                 }
-                break;
+            }
+            listFile = new Serialize();
+            listFile.setList(listX);
+            try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                oos.writeObject(listFile);
+                listX.clear();
+
+            } catch (IOException ignored) {
+
+            }
+            break;
             case "Y":
 
                 path = SettingsFrame.dataPath + "\\listY";
-                if (!isManualUpdate) {
-                    try {
-                        listY.addAll(Objects.requireNonNull(readFileList("Y")));
-                    } catch (NullPointerException ignored) {
-
-                    }
-                }
-                listFile = new Serialize();
-                listFile.setList(listY);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-                    listY.clear();
-
-                } catch (IOException ignored) {
+            {
+                try {
+                    listY.addAll(Objects.requireNonNull(readFileList("Y")));
+                } catch (NullPointerException ignored) {
 
                 }
-                break;
+            }
+            listFile = new Serialize();
+            listFile.setList(listY);
+            try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                oos.writeObject(listFile);
+                listY.clear();
+
+            } catch (IOException ignored) {
+
+            }
+            break;
             case "Z":
 
                 path = SettingsFrame.dataPath + "\\listZ";
-                if (!isManualUpdate) {
-                    try {
-                        listZ.addAll(Objects.requireNonNull(readFileList("Z")));
-                    } catch (NullPointerException ignored) {
-
-                    }
-                }
-                listFile = new Serialize();
-                listFile.setList(listZ);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-                    listZ.clear();
-
-                } catch (IOException ignored) {
+            {
+                try {
+                    listZ.addAll(Objects.requireNonNull(readFileList("Z")));
+                } catch (NullPointerException ignored) {
 
                 }
-                break;
+            }
+            listFile = new Serialize();
+            listFile.setList(listZ);
+            try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                oos.writeObject(listFile);
+                listZ.clear();
+
+            } catch (IOException ignored) {
+
+            }
+            break;
             case "PercentSign":
                 path = SettingsFrame.dataPath + "\\listPercentSign";
-                if (!isManualUpdate) {
-                    try {
-                        listPercentSign.addAll(Objects.requireNonNull(readFileList("PercentSign")));
-                    } catch (NullPointerException ignored) {
-
-                    }
-                }
-                listFile = new Serialize();
-                listFile.setList(listPercentSign);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-                    listPercentSign.clear();
-
-                } catch (IOException ignored) {
+            {
+                try {
+                    listPercentSign.addAll(Objects.requireNonNull(readFileList("PercentSign")));
+                } catch (NullPointerException ignored) {
 
                 }
-                break;
+            }
+            listFile = new Serialize();
+            listFile.setList(listPercentSign);
+            try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                oos.writeObject(listFile);
+                listPercentSign.clear();
+
+            } catch (IOException ignored) {
+
+            }
+            break;
             case "Underline":
 
                 path = SettingsFrame.dataPath + "\\listUnderline";
-                if (!isManualUpdate) {
-                    try {
-                        listUnderline.addAll(Objects.requireNonNull(readFileList("Underline")));
-                    } catch (NullPointerException ignored) {
-
-                    }
-                }
-                listFile = new Serialize();
-                listFile.setList(listUnderline);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-                    listUnderline.clear();
-
-                } catch (IOException ignored) {
+            {
+                try {
+                    listUnderline.addAll(Objects.requireNonNull(readFileList("Underline")));
+                } catch (NullPointerException ignored) {
 
                 }
-                break;
+            }
+            listFile = new Serialize();
+            listFile.setList(listUnderline);
+            try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                oos.writeObject(listFile);
+                listUnderline.clear();
+
+            } catch (IOException ignored) {
+
+            }
+            break;
             case "Unique":
 
                 path = SettingsFrame.dataPath + "\\listUnique";
-                if (!isManualUpdate) {
-                    try {
-                        listUnique.addAll(Objects.requireNonNull(readFileList("Unique")));
-                    } catch (NullPointerException ignored) {
-
-                    }
-                }
-                listFile = new Serialize();
-                listFile.setList(listUnique);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-                    listUnique.clear();
-
-                } catch (IOException ignored) {
+            {
+                try {
+                    listUnique.addAll(Objects.requireNonNull(readFileList("Unique")));
+                } catch (NullPointerException ignored) {
 
                 }
-                break;
+            }
+            listFile = new Serialize();
+            listFile.setList(listUnique);
+            try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                oos.writeObject(listFile);
+                listUnique.clear();
+
+            } catch (IOException ignored) {
+
+            }
+            break;
             case "Num":
                 path = SettingsFrame.dataPath + "\\listNum";
-                if (!isManualUpdate) {
-                    try {
-                        listNum.addAll(Objects.requireNonNull(readFileList("Num")));
-                    } catch (NullPointerException ignored) {
-
-                    }
-                }
-                listFile = new Serialize();
-                listFile.setList(listNum);
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
-                    oos.writeObject(listFile);
-                    listNum.clear();
-
-                } catch (IOException ignored) {
+            {
+                try {
+                    listNum.addAll(Objects.requireNonNull(readFileList("Num")));
+                } catch (NullPointerException ignored) {
 
                 }
-                break;
+            }
+            listFile = new Serialize();
+            listFile.setList(listNum);
+            try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(new File(path).getAbsolutePath()))) {
+                oos.writeObject(listFile);
+                listNum.clear();
+
+            } catch (IOException ignored) {
+
+            }
+            break;
         }
     }
 
@@ -1655,8 +1655,13 @@ public class Search {
         } catch (IOException | InterruptedException ignored) {
 
         }
-        try(BufferedReader buffr = new BufferedReader(new InputStreamReader(new FileInputStream(searchResults)))) {
+        try (BufferedReader buffr = new BufferedReader(new InputStreamReader(new FileInputStream(searchResults)))) {
+            int count = 0;
             while ((each = buffr.readLine()) != null) {
+                if (count > 20000) {
+                    saveAndReleaseLists();
+                    count = 0;
+                }
                 File tmp = new File(each);
                 String name = tmp.getName();
                 char headWord = '\0';
@@ -1670,6 +1675,7 @@ public class Search {
                     case 'A':
                         try {
                             listA.add(strToByteArray(each));
+                            count++;
                         } catch (Exception ignored) {
 
                         }
@@ -1677,6 +1683,7 @@ public class Search {
                     case 'B':
                         try {
                             listB.add(strToByteArray(each));
+                            count++;
                         } catch (Exception ignored) {
 
                         }
@@ -1684,6 +1691,7 @@ public class Search {
                     case 'C':
                         try {
                             listC.add(strToByteArray(each));
+                            count++;
                         } catch (Exception ignored) {
 
                         }
@@ -1691,6 +1699,7 @@ public class Search {
                     case 'D':
                         try {
                             listD.add(strToByteArray(each));
+                            count++;
                         } catch (Exception ignored) {
 
                         }
@@ -1698,6 +1707,7 @@ public class Search {
                     case 'E':
                         try {
                             listE.add(strToByteArray(each));
+                            count++;
                         } catch (Exception ignored) {
 
                         }
@@ -1705,6 +1715,7 @@ public class Search {
                     case 'F':
                         try {
                             listF.add(strToByteArray(each));
+                            count++;
                         } catch (Exception ignored) {
 
                         }
@@ -1712,6 +1723,7 @@ public class Search {
                     case 'G':
                         try {
                             listG.add(strToByteArray(each));
+                            count++;
                         } catch (Exception ignored) {
 
                         }
@@ -1719,6 +1731,7 @@ public class Search {
                     case 'H':
                         try {
                             listH.add(strToByteArray(each));
+                            count++;
                         } catch (Exception ignored) {
 
                         }
@@ -1726,6 +1739,7 @@ public class Search {
                     case 'I':
                         try {
                             listI.add(strToByteArray(each));
+                            count++;
                         } catch (Exception ignored) {
 
                         }
@@ -1733,6 +1747,7 @@ public class Search {
                     case 'J':
                         try {
                             listJ.add(strToByteArray(each));
+                            count++;
                         } catch (Exception ignored) {
 
                         }
@@ -1740,6 +1755,7 @@ public class Search {
                     case 'K':
                         try {
                             listK.add(strToByteArray(each));
+                            count++;
                         } catch (Exception ignored) {
 
                         }
@@ -1747,6 +1763,7 @@ public class Search {
                     case 'L':
                         try {
                             listL.add(strToByteArray(each));
+                            count++;
                         } catch (Exception ignored) {
 
                         }
@@ -1754,6 +1771,7 @@ public class Search {
                     case 'M':
                         try {
                             listM.add(strToByteArray(each));
+                            count++;
                         } catch (Exception ignored) {
 
                         }
@@ -1761,6 +1779,7 @@ public class Search {
                     case 'N':
                         try {
                             listN.add(strToByteArray(each));
+                            count++;
                         } catch (Exception ignored) {
 
                         }
@@ -1768,6 +1787,7 @@ public class Search {
                     case 'O':
                         try {
                             listO.add(strToByteArray(each));
+                            count++;
                         } catch (Exception ignored) {
 
                         }
@@ -1775,6 +1795,7 @@ public class Search {
                     case 'P':
                         try {
                             listP.add(strToByteArray(each));
+                            count++;
                         } catch (Exception ignored) {
 
                         }
@@ -1782,6 +1803,7 @@ public class Search {
                     case 'Q':
                         try {
                             listQ.add(strToByteArray(each));
+                            count++;
                         } catch (Exception ignored) {
 
                         }
@@ -1789,6 +1811,7 @@ public class Search {
                     case 'R':
                         try {
                             listR.add(strToByteArray(each));
+                            count++;
                         } catch (Exception ignored) {
 
                         }
@@ -1796,6 +1819,7 @@ public class Search {
                     case 'S':
                         try {
                             listS.add(strToByteArray(each));
+                            count++;
                         } catch (Exception ignored) {
 
                         }
@@ -1803,6 +1827,7 @@ public class Search {
                     case 'T':
                         try {
                             listT.add(strToByteArray(each));
+                            count++;
                         } catch (Exception ignored) {
 
                         }
@@ -1810,6 +1835,7 @@ public class Search {
                     case 'U':
                         try {
                             listU.add(strToByteArray(each));
+                            count++;
                         } catch (Exception ignored) {
 
                         }
@@ -1817,6 +1843,7 @@ public class Search {
                     case 'V':
                         try {
                             listV.add(strToByteArray(each));
+                            count++;
                         } catch (Exception ignored) {
 
                         }
@@ -1824,6 +1851,7 @@ public class Search {
                     case 'W':
                         try {
                             listW.add(strToByteArray(each));
+                            count++;
                         } catch (Exception ignored) {
 
                         }
@@ -1831,6 +1859,7 @@ public class Search {
                     case 'X':
                         try {
                             listX.add(strToByteArray(each));
+                            count++;
                         } catch (Exception ignored) {
 
                         }
@@ -1838,6 +1867,7 @@ public class Search {
                     case 'Y':
                         try {
                             listY.add(strToByteArray(each));
+                            count++;
                         } catch (Exception ignored) {
 
                         }
@@ -1845,6 +1875,7 @@ public class Search {
                     case 'Z':
                         try {
                             listZ.add(strToByteArray(each));
+                            count++;
                         } catch (Exception ignored) {
 
                         }
@@ -1853,24 +1884,28 @@ public class Search {
                         if (Character.isDigit(headWord)) {
                             try {
                                 listNum.add(strToByteArray(each));
+                                count++;
                             } catch (Exception ignored) {
 
                             }
                         } else if ('_' == headWord) {
                             try {
                                 listUnderline.add(strToByteArray(each));
+                                count++;
                             } catch (Exception ignored) {
 
                             }
                         } else if ('%' == headWord) {
                             try {
                                 listPercentSign.add(strToByteArray(each));
+                                count++;
                             } catch (Exception ignored) {
 
                             }
                         } else {
                             try {
                                 listUnique.add(strToByteArray(each));
+                                count++;
                             } catch (Exception ignored) {
 
                             }
@@ -1878,7 +1913,7 @@ public class Search {
                         break;
                 }
             }
-        }catch (Exception ignored){
+        } catch (Exception ignored) {
 
         }
     }
@@ -1897,7 +1932,12 @@ public class Search {
 
         }
         try (BufferedReader buffr = new BufferedReader(new InputStreamReader(new FileInputStream(searchResults)))) {
+            int count = 0;
             while ((each = buffr.readLine()) != null) {
+                if (count > 20000) {
+                    saveAndReleaseLists();
+                    count = 0;
+                }
                 File tmp = new File(each);
                 String name = tmp.getName();
                 char headWord = '\0';
@@ -1911,6 +1951,7 @@ public class Search {
                     case 'A':
                         try {
                             listA.add(strToByteArray(each));
+                            count++;
                         } catch (Exception ignored) {
 
                         }
@@ -1918,6 +1959,7 @@ public class Search {
                     case 'B':
                         try {
                             listB.add(strToByteArray(each));
+                            count++;
                         } catch (Exception ignored) {
 
                         }
@@ -1925,6 +1967,7 @@ public class Search {
                     case 'C':
                         try {
                             listC.add(strToByteArray(each));
+                            count++;
                         } catch (Exception ignored) {
 
                         }
@@ -1932,6 +1975,7 @@ public class Search {
                     case 'D':
                         try {
                             listD.add(strToByteArray(each));
+                            count++;
                         } catch (Exception ignored) {
 
                         }
@@ -1939,6 +1983,7 @@ public class Search {
                     case 'E':
                         try {
                             listE.add(strToByteArray(each));
+                            count++;
                         } catch (Exception ignored) {
 
                         }
@@ -1946,6 +1991,7 @@ public class Search {
                     case 'F':
                         try {
                             listF.add(strToByteArray(each));
+                            count++;
                         } catch (Exception ignored) {
 
                         }
@@ -1953,6 +1999,7 @@ public class Search {
                     case 'G':
                         try {
                             listG.add(strToByteArray(each));
+                            count++;
                         } catch (Exception ignored) {
 
                         }
@@ -1960,6 +2007,7 @@ public class Search {
                     case 'H':
                         try {
                             listH.add(strToByteArray(each));
+                            count++;
                         } catch (Exception ignored) {
 
                         }
@@ -1967,6 +2015,7 @@ public class Search {
                     case 'I':
                         try {
                             listI.add(strToByteArray(each));
+                            count++;
                         } catch (Exception ignored) {
 
                         }
@@ -1974,6 +2023,7 @@ public class Search {
                     case 'J':
                         try {
                             listJ.add(strToByteArray(each));
+                            count++;
                         } catch (Exception ignored) {
 
                         }
@@ -1981,6 +2031,7 @@ public class Search {
                     case 'K':
                         try {
                             listK.add(strToByteArray(each));
+                            count++;
                         } catch (Exception ignored) {
 
                         }
@@ -1988,6 +2039,7 @@ public class Search {
                     case 'L':
                         try {
                             listL.add(strToByteArray(each));
+                            count++;
                         } catch (Exception ignored) {
 
                         }
@@ -1995,6 +2047,7 @@ public class Search {
                     case 'M':
                         try {
                             listM.add(strToByteArray(each));
+                            count++;
                         } catch (Exception ignored) {
 
                         }
@@ -2002,6 +2055,7 @@ public class Search {
                     case 'N':
                         try {
                             listN.add(strToByteArray(each));
+                            count++;
                         } catch (Exception ignored) {
 
                         }
@@ -2009,6 +2063,7 @@ public class Search {
                     case 'O':
                         try {
                             listO.add(strToByteArray(each));
+                            count++;
                         } catch (Exception ignored) {
 
                         }
@@ -2016,6 +2071,7 @@ public class Search {
                     case 'P':
                         try {
                             listP.add(strToByteArray(each));
+                            count++;
                         } catch (Exception ignored) {
 
                         }
@@ -2023,6 +2079,7 @@ public class Search {
                     case 'Q':
                         try {
                             listQ.add(strToByteArray(each));
+                            count++;
                         } catch (Exception ignored) {
 
                         }
@@ -2030,6 +2087,7 @@ public class Search {
                     case 'R':
                         try {
                             listR.add(strToByteArray(each));
+                            count++;
                         } catch (Exception ignored) {
 
                         }
@@ -2037,6 +2095,7 @@ public class Search {
                     case 'S':
                         try {
                             listS.add(strToByteArray(each));
+                            count++;
                         } catch (Exception ignored) {
 
                         }
@@ -2044,6 +2103,7 @@ public class Search {
                     case 'T':
                         try {
                             listT.add(strToByteArray(each));
+                            count++;
                         } catch (Exception ignored) {
 
                         }
@@ -2051,6 +2111,7 @@ public class Search {
                     case 'U':
                         try {
                             listU.add(strToByteArray(each));
+                            count++;
                         } catch (Exception ignored) {
 
                         }
@@ -2058,6 +2119,7 @@ public class Search {
                     case 'V':
                         try {
                             listV.add(strToByteArray(each));
+                            count++;
                         } catch (Exception ignored) {
 
                         }
@@ -2065,6 +2127,7 @@ public class Search {
                     case 'W':
                         try {
                             listW.add(strToByteArray(each));
+                            count++;
                         } catch (Exception ignored) {
 
                         }
@@ -2072,6 +2135,7 @@ public class Search {
                     case 'X':
                         try {
                             listX.add(strToByteArray(each));
+                            count++;
                         } catch (Exception ignored) {
 
                         }
@@ -2079,6 +2143,7 @@ public class Search {
                     case 'Y':
                         try {
                             listY.add(strToByteArray(each));
+                            count++;
                         } catch (Exception ignored) {
 
                         }
@@ -2086,6 +2151,7 @@ public class Search {
                     case 'Z':
                         try {
                             listZ.add(strToByteArray(each));
+                            count++;
                         } catch (Exception ignored) {
 
                         }
@@ -2094,24 +2160,28 @@ public class Search {
                         if (Character.isDigit(headWord)) {
                             try {
                                 listNum.add(strToByteArray(each));
+                                count++;
                             } catch (Exception ignored) {
 
                             }
                         } else if ('_' == headWord) {
                             try {
                                 listUnderline.add(strToByteArray(each));
+                                count++;
                             } catch (Exception ignored) {
 
                             }
                         } else if ('%' == headWord) {
                             try {
                                 listPercentSign.add(strToByteArray(each));
+                                count++;
                             } catch (Exception ignored) {
 
                             }
                         } else {
                             try {
                                 listUnique.add(strToByteArray(each));
+                                count++;
                             } catch (Exception ignored) {
 
                             }
@@ -2119,7 +2189,7 @@ public class Search {
                         break;
                 }
             }
-        }catch (Exception ignored){
+        } catch (Exception ignored) {
 
         }
     }

@@ -123,7 +123,7 @@ public class MainClass {
             json.put("hotkey", "Ctrl + Alt + J");
             json.put("ignorePath", ignorePath);
             json.put("isStartup", false);
-            json.put("updateTimeLimit", 600);
+            json.put("updateTimeLimit", 1200);
             json.put("cacheNumLimit", 1000);
             json.put("searchDepth", 6);
             json.put("priorityFolder", "");
