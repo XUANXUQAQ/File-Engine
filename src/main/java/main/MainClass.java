@@ -288,8 +288,8 @@ public class MainClass {
                 }
                 try {
                     Thread.sleep(50);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+                } catch (InterruptedException ignored) {
+
                 }
             }
             if (readerAdd != null) {
@@ -361,7 +361,7 @@ public class MainClass {
 
             }
             if (mainExit) {
-                fixedThreadPool.shutdown();
+                fixedThreadPool.shutdownNow();
                 if (search.isUsable()) {
                     File CLOSEDLL = new File(SettingsFrame.tmp.getAbsolutePath() + "\\CLOSE");
                     try {
