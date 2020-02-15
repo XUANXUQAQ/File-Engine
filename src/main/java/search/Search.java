@@ -43,6 +43,36 @@ public class Search {
     private static CopyOnWriteArraySet<String> listUnique = new CopyOnWriteArraySet<>();
     private static CopyOnWriteArraySet<String> listUnderline = new CopyOnWriteArraySet<>();
     private static CopyOnWriteArrayList<String> listToLoad = new CopyOnWriteArrayList<>();
+    CopyOnWriteArraySet<String> setA = new CopyOnWriteArraySet<>();
+    CopyOnWriteArraySet<String> setB = new CopyOnWriteArraySet<>();
+    CopyOnWriteArraySet<String> setC = new CopyOnWriteArraySet<>();
+    CopyOnWriteArraySet<String> setD = new CopyOnWriteArraySet<>();
+    CopyOnWriteArraySet<String> setE = new CopyOnWriteArraySet<>();
+    CopyOnWriteArraySet<String> setF = new CopyOnWriteArraySet<>();
+    CopyOnWriteArraySet<String> setG = new CopyOnWriteArraySet<>();
+    CopyOnWriteArraySet<String> setH = new CopyOnWriteArraySet<>();
+    CopyOnWriteArraySet<String> setI = new CopyOnWriteArraySet<>();
+    CopyOnWriteArraySet<String> setJ = new CopyOnWriteArraySet<>();
+    CopyOnWriteArraySet<String> setK = new CopyOnWriteArraySet<>();
+    CopyOnWriteArraySet<String> setL = new CopyOnWriteArraySet<>();
+    CopyOnWriteArraySet<String> setM = new CopyOnWriteArraySet<>();
+    CopyOnWriteArraySet<String> setN = new CopyOnWriteArraySet<>();
+    CopyOnWriteArraySet<String> setO = new CopyOnWriteArraySet<>();
+    CopyOnWriteArraySet<String> setP = new CopyOnWriteArraySet<>();
+    CopyOnWriteArraySet<String> setQ = new CopyOnWriteArraySet<>();
+    CopyOnWriteArraySet<String> setR = new CopyOnWriteArraySet<>();
+    CopyOnWriteArraySet<String> setS = new CopyOnWriteArraySet<>();
+    CopyOnWriteArraySet<String> setT = new CopyOnWriteArraySet<>();
+    CopyOnWriteArraySet<String> setU = new CopyOnWriteArraySet<>();
+    CopyOnWriteArraySet<String> setV = new CopyOnWriteArraySet<>();
+    CopyOnWriteArraySet<String> setW = new CopyOnWriteArraySet<>();
+    CopyOnWriteArraySet<String> setX = new CopyOnWriteArraySet<>();
+    CopyOnWriteArraySet<String> setY = new CopyOnWriteArraySet<>();
+    CopyOnWriteArraySet<String> setZ = new CopyOnWriteArraySet<>();
+    CopyOnWriteArraySet<String> setPercentSign = new CopyOnWriteArraySet<>();
+    CopyOnWriteArraySet<String> setUnderline = new CopyOnWriteArraySet<>();
+    CopyOnWriteArraySet<String> setNum = new CopyOnWriteArraySet<>();
+    CopyOnWriteArraySet<String> setUnique = new CopyOnWriteArraySet<>();
     private static boolean isUsable = false;
     private static boolean isManualUpdate = false;
     private static CopyOnWriteArraySet<String> RecycleBin = new CopyOnWriteArraySet<>();
@@ -65,8 +95,38 @@ public class Search {
             try {
                 for (String i : RecycleBin) {
                     deletePathInList(i);
-                    RecycleBin.clear();
                 }
+                RecycleBin.clear();
+                deletePathInList(setA, "A");
+                deletePathInList(setB, "B");
+                deletePathInList(setC, "C");
+                deletePathInList(setD, "D");
+                deletePathInList(setE, "E");
+                deletePathInList(setF, "F");
+                deletePathInList(setG, "G");
+                deletePathInList(setH, "H");
+                deletePathInList(setI, "I");
+                deletePathInList(setJ, "J");
+                deletePathInList(setK, "K");
+                deletePathInList(setL, "L");
+                deletePathInList(setM, "M");
+                deletePathInList(setN, "N");
+                deletePathInList(setO, "O");
+                deletePathInList(setP, "P");
+                deletePathInList(setQ, "Q");
+                deletePathInList(setR, "R");
+                deletePathInList(setS, "S");
+                deletePathInList(setT, "T");
+                deletePathInList(setU, "U");
+                deletePathInList(setV, "V");
+                deletePathInList(setW, "W");
+                deletePathInList(setX, "X");
+                deletePathInList(setY, "Y");
+                deletePathInList(setZ, "Z");
+                deletePathInList(setPercentSign, "PercentSign");
+                deletePathInList(setNum, "Num");
+                deletePathInList(setUnderline, "Underline");
+                deletePathInList(setUnique, "Unique");
             } catch (ConcurrentModificationException ignored) {
 
             } finally {
@@ -1124,6 +1184,371 @@ public class Search {
         }
     }
 
+    private void deletePathInList(CopyOnWriteArraySet<String> listToDelete, String ch){
+        if (listToDelete.isEmpty()){
+            return; //无需要清理的垃圾，直接结束
+        }
+        switch (ch) {
+            case "A":
+                try {
+                    CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("A")));
+                    list.removeAll(listToDelete);
+                    listA.removeAll(listToDelete);
+                    list.addAll(listA);
+                    updateLocalList(list, "A");
+                } catch (Exception ignored) {
+
+                }
+
+                break;
+            case "B":
+                try {
+                    CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("B")));
+                    list.removeAll(listToDelete);
+                    listB.removeAll(listToDelete);
+                    list.addAll(listB);
+                    updateLocalList(list, "B");
+                } catch (Exception ignored) {
+
+                }
+
+                break;
+            case "C":
+                try {
+                    CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("C")));
+                    list.removeAll(listToDelete);
+                    listC.removeAll(listToDelete);
+                    list.addAll(listC);
+                    updateLocalList(list, "C");
+                } catch (Exception ignored) {
+
+                }
+
+                break;
+            case "D":
+                try {
+                    CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("D")));
+                    list.removeAll(listToDelete);
+                    listD.removeAll(listToDelete);
+                    list.addAll(listD);
+                    updateLocalList(list, "D");
+                } catch (Exception ignored) {
+
+                }
+
+                break;
+            case "E":
+                try {
+                    CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("E")));
+                    list.removeAll(listToDelete);
+                    listE.removeAll(listToDelete);
+                    list.addAll(listE);
+                    updateLocalList(list, "E");
+
+                } catch (Exception ignored) {
+
+                }
+
+                break;
+            case "F":
+                try {
+                    CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("F")));
+                    list.removeAll(listToDelete);
+                    listF.removeAll(listToDelete);
+                    list.addAll(listF);
+                    updateLocalList(list, "F");
+                } catch (Exception ignored) {
+
+                }
+
+                break;
+            case "G":
+                try {
+                    CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("G")));
+                    list.removeAll(listToDelete);
+                    listG.removeAll(listToDelete);
+                    list.addAll(listG);
+                    updateLocalList(list, "G");
+                } catch (Exception ignored) {
+
+                }
+
+                break;
+            case "H":
+                try {
+                    CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("H")));
+                    list.removeAll(listToDelete);
+                    listH.removeAll(listToDelete);
+                    list.addAll(listH);
+                    updateLocalList(list, "H");
+                } catch (Exception ignored) {
+
+                }
+
+                break;
+            case "I":
+                try {
+                    CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("I")));
+                    list.removeAll(listToDelete);
+                    listI.removeAll(listToDelete);
+                    list.addAll(listI);
+                    updateLocalList(list, "I");
+                } catch (Exception ignored) {
+
+                }
+
+                break;
+            case "J":
+                try {
+                    CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("J")));
+                    list.removeAll(listToDelete);
+                    listJ.removeAll(listToDelete);
+                    list.addAll(listJ);
+                    updateLocalList(list, "J");
+                } catch (Exception ignored) {
+
+                }
+
+                break;
+            case "K":
+                try {
+                    CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("K")));
+                    list.removeAll(listToDelete);
+                    listK.removeAll(listToDelete);
+                    list.addAll(listK);
+                    updateLocalList(list, "K");
+                } catch (Exception ignored) {
+
+                }
+
+                break;
+            case "L":
+                try {
+                    CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("L")));
+                    list.removeAll(listToDelete);
+                    listL.removeAll(listToDelete);
+                    list.addAll(listL);
+                    updateLocalList(list, "L");
+                } catch (Exception ignored) {
+
+                }
+
+                break;
+            case "M":
+                try {
+                    CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("M")));
+                    list.removeAll(listToDelete);
+                    listM.removeAll(listToDelete);
+                    list.addAll(listM);
+                    updateLocalList(list, "M");
+                } catch (Exception ignored) {
+
+                }
+
+                break;
+            case "N":
+                try {
+                    CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("N")));
+                    list.removeAll(listToDelete);
+                    listN.removeAll(listToDelete);
+                    list.addAll(listN);
+                    updateLocalList(list, "N");
+                } catch (Exception ignored) {
+
+                }
+
+                break;
+            case "O":
+                try {
+                    CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("O")));
+                    list.removeAll(listToDelete);
+                    listO.removeAll(listToDelete);
+                    list.addAll(listO);
+                    updateLocalList(list, "O");
+                } catch (Exception ignored) {
+
+                }
+
+                break;
+            case "P":
+                try {
+                    CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("P")));
+                    list.removeAll(listToDelete);
+                    listP.removeAll(listToDelete);
+                    list.addAll(listP);
+                    updateLocalList(list, "P");
+                } catch (Exception ignored) {
+
+                }
+
+                break;
+            case "Q":
+                try {
+                    CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("Q")));
+                    list.removeAll(listToDelete);
+                    listQ.removeAll(listToDelete);
+                    list.addAll(listQ);
+                    updateLocalList(list, "Q");
+                } catch (Exception ignored) {
+
+                }
+
+                break;
+            case "R":
+                try {
+                    CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("R")));
+                    list.removeAll(listToDelete);
+                    listR.removeAll(listToDelete);
+                    list.addAll(listR);
+                    updateLocalList(list, "R");
+                } catch (Exception ignored) {
+
+                }
+
+                break;
+            case "S":
+                try {
+                    CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("S")));
+                    list.removeAll(listToDelete);
+                    listS.removeAll(listToDelete);
+                    list.addAll(listS);
+                    updateLocalList(list, "S");
+                } catch (Exception ignored) {
+
+                }
+
+                break;
+            case "T":
+                try {
+                    CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("T")));
+                    list.removeAll(listToDelete);
+                    listT.removeAll(listToDelete);
+                    list.addAll(listT);
+                    updateLocalList(list, "T");
+                } catch (Exception ignored) {
+
+                }
+
+                break;
+            case "U":
+                try {
+                    CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("U")));
+                    list.removeAll(listToDelete);
+                    listU.removeAll(listToDelete);
+                    list.addAll(listU);
+                    updateLocalList(list, "U");
+                } catch (Exception ignored) {
+
+                }
+
+                break;
+            case "V":
+                try {
+                    CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("V")));
+                    list.removeAll(listToDelete);
+                    listV.removeAll(listToDelete);
+                    list.addAll(listV);
+                    updateLocalList(list, "V");
+                } catch (Exception ignored) {
+
+                }
+
+                break;
+            case "W":
+                try {
+                    CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("W")));
+                    list.removeAll(listToDelete);
+                    listW.removeAll(listToDelete);
+                    list.addAll(listW);
+                    updateLocalList(list, "W");
+                } catch (Exception ignored) {
+
+                }
+
+                break;
+            case "X":
+                try {
+                    CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("X")));
+                    list.removeAll(listToDelete);
+                    listX.removeAll(listToDelete);
+                    list.addAll(listX);
+                    updateLocalList(list, "X");
+                } catch (Exception ignored) {
+
+                }
+
+                break;
+            case "Y":
+                try {
+                    CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("Y")));
+                    list.removeAll(listToDelete);
+                    listY.removeAll(listToDelete);
+                    list.addAll(listY);
+                    updateLocalList(list, "Y");
+                } catch (Exception ignored) {
+
+                }
+
+                break;
+            case "Z":
+                try {
+                    CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("Z")));
+                    list.removeAll(listToDelete);
+                    listZ.removeAll(listToDelete);
+                    list.addAll(listZ);
+                    updateLocalList(list, "Z");
+                } catch (Exception ignored) {
+
+                }
+
+                break;
+            case "Num":
+                try {
+                    CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("Num")));
+                    list.removeAll(listToDelete);
+                    listNum.removeAll(listToDelete);
+                    list.addAll(listNum);
+                    updateLocalList(list, "Num");
+                } catch (Exception ignored) {
+
+                }
+                break;
+            case "Underline":
+                try {
+                    CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("Underline")));
+                    list.removeAll(listToDelete);
+                    listUnderline.removeAll(listToDelete);
+                    list.addAll(listUnderline);
+                    updateLocalList(list, "Underline");
+                } catch (Exception ignored) {
+
+                }
+                break;
+            case "PercentSign":
+                try {
+                    CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("PercentSign")));
+                    list.removeAll(listToDelete);
+                    listPercentSign.removeAll(listToDelete);
+                    list.addAll(listPercentSign);
+                    updateLocalList(list, "PercentSign");
+                } catch (Exception ignored) {
+
+                }
+                break;
+            case "Unique":
+                try {
+                    CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("Unique")));
+                    list.removeAll(listToDelete);
+                    listUnique.removeAll(listToDelete);
+                    list.addAll(listUnique);
+                    updateLocalList(list, "Unique");
+                } catch (Exception ignored) {
+
+                }
+                break;
+        }
+    }
+
     private void deletePathInList(String path) {
         File file = new File(path);
         char firstWord = '\0';
@@ -1136,11 +1561,7 @@ public class Search {
         switch (headWord) {
             case 'A':
                 try {
-                    CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("A")));
-                    list.remove(path);
-                    listA.remove(path);
-                    list.addAll(listA);
-                    updateLocalList(list, "A");
+                    setA.add(path);
                 } catch (Exception ignored) {
 
                 }
@@ -1148,11 +1569,7 @@ public class Search {
                 break;
             case 'B':
                 try {
-                    CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("B")));
-                    list.remove(path);
-                    listB.remove(path);
-                    list.addAll(listB);
-                    updateLocalList(list, "B");
+                    setB.add(path);
                 } catch (Exception ignored) {
 
                 }
@@ -1160,11 +1577,7 @@ public class Search {
                 break;
             case 'C':
                 try {
-                    CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("C")));
-                    list.remove(path);
-                    listC.remove(path);
-                    list.addAll(listC);
-                    updateLocalList(list, "C");
+                    setC.add(path);
                 } catch (Exception ignored) {
 
                 }
@@ -1172,11 +1585,7 @@ public class Search {
                 break;
             case 'D':
                 try {
-                    CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("D")));
-                    list.remove(path);
-                    listD.remove(path);
-                    list.addAll(listD);
-                    updateLocalList(list, "D");
+                    setD.add(path);
                 } catch (Exception ignored) {
 
                 }
@@ -1184,11 +1593,7 @@ public class Search {
                 break;
             case 'E':
                 try {
-                    CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("E")));
-                    list.remove(path);
-                    listE.remove(path);
-                    list.addAll(listE);
-                    updateLocalList(list, "E");
+                    setE.add(path);
 
                 } catch (Exception ignored) {
 
@@ -1197,11 +1602,7 @@ public class Search {
                 break;
             case 'F':
                 try {
-                    CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("F")));
-                    list.remove(path);
-                    listF.remove(path);
-                    list.addAll(listF);
-                    updateLocalList(list, "F");
+                    setF.add(path);
                 } catch (Exception ignored) {
 
                 }
@@ -1209,11 +1610,7 @@ public class Search {
                 break;
             case 'G':
                 try {
-                    CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("G")));
-                    list.remove(path);
-                    listG.remove(path);
-                    list.addAll(listG);
-                    updateLocalList(list, "G");
+                    setG.add(path);
                 } catch (Exception ignored) {
 
                 }
@@ -1221,11 +1618,7 @@ public class Search {
                 break;
             case 'H':
                 try {
-                    CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("H")));
-                    list.remove(path);
-                    listH.remove(path);
-                    list.addAll(listH);
-                    updateLocalList(list, "H");
+                    setH.add(path);
                 } catch (Exception ignored) {
 
                 }
@@ -1233,11 +1626,7 @@ public class Search {
                 break;
             case 'I':
                 try {
-                    CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("I")));
-                    list.remove(path);
-                    listI.remove(path);
-                    list.addAll(listI);
-                    updateLocalList(list, "I");
+                    setI.add(path);
                 } catch (Exception ignored) {
 
                 }
@@ -1245,11 +1634,7 @@ public class Search {
                 break;
             case 'J':
                 try {
-                    CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("J")));
-                    list.remove(path);
-                    listJ.remove(path);
-                    list.addAll(listJ);
-                    updateLocalList(list, "J");
+                    setJ.add(path);
                 } catch (Exception ignored) {
 
                 }
@@ -1257,11 +1642,7 @@ public class Search {
                 break;
             case 'K':
                 try {
-                    CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("K")));
-                    list.remove(path);
-                    listK.remove(path);
-                    list.addAll(listK);
-                    updateLocalList(list, "K");
+                    setK.add(path);
                 } catch (Exception ignored) {
 
                 }
@@ -1269,11 +1650,7 @@ public class Search {
                 break;
             case 'L':
                 try {
-                    CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("L")));
-                    list.remove(path);
-                    listL.remove(path);
-                    list.addAll(listL);
-                    updateLocalList(list, "L");
+                    setL.add(path);
                 } catch (Exception ignored) {
 
                 }
@@ -1281,11 +1658,7 @@ public class Search {
                 break;
             case 'M':
                 try {
-                    CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("M")));
-                    list.remove(path);
-                    listM.remove(path);
-                    list.addAll(listM);
-                    updateLocalList(list, "M");
+                    setM.add(path);
                 } catch (Exception ignored) {
 
                 }
@@ -1293,11 +1666,7 @@ public class Search {
                 break;
             case 'N':
                 try {
-                    CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("N")));
-                    list.remove(path);
-                    listN.remove(path);
-                    list.addAll(listN);
-                    updateLocalList(list, "N");
+                    setN.add(path);
                 } catch (Exception ignored) {
 
                 }
@@ -1305,11 +1674,7 @@ public class Search {
                 break;
             case 'O':
                 try {
-                    CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("O")));
-                    list.remove(path);
-                    listO.remove(path);
-                    list.addAll(listO);
-                    updateLocalList(list, "O");
+                    setO.add(path);
                 } catch (Exception ignored) {
 
                 }
@@ -1317,11 +1682,7 @@ public class Search {
                 break;
             case 'P':
                 try {
-                    CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("P")));
-                    list.remove(path);
-                    listP.remove(path);
-                    list.addAll(listP);
-                    updateLocalList(list, "P");
+                    setP.add(path);
                 } catch (Exception ignored) {
 
                 }
@@ -1329,11 +1690,7 @@ public class Search {
                 break;
             case 'Q':
                 try {
-                    CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("Q")));
-                    list.remove(path);
-                    listQ.remove(path);
-                    list.addAll(listQ);
-                    updateLocalList(list, "Q");
+                    setQ.add(path);
                 } catch (Exception ignored) {
 
                 }
@@ -1341,11 +1698,7 @@ public class Search {
                 break;
             case 'R':
                 try {
-                    CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("R")));
-                    list.remove(path);
-                    listR.remove(path);
-                    list.addAll(listR);
-                    updateLocalList(list, "R");
+                    setR.add(path);
                 } catch (Exception ignored) {
 
                 }
@@ -1353,11 +1706,7 @@ public class Search {
                 break;
             case 'S':
                 try {
-                    CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("S")));
-                    list.remove(path);
-                    listS.remove(path);
-                    list.addAll(listS);
-                    updateLocalList(list, "S");
+                    setS.add(path);
                 } catch (Exception ignored) {
 
                 }
@@ -1365,11 +1714,7 @@ public class Search {
                 break;
             case 'T':
                 try {
-                    CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("T")));
-                    list.remove(path);
-                    listT.remove(path);
-                    list.addAll(listT);
-                    updateLocalList(list, "T");
+                    setT.add(path);
                 } catch (Exception ignored) {
 
                 }
@@ -1377,11 +1722,7 @@ public class Search {
                 break;
             case 'U':
                 try {
-                    CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("U")));
-                    list.remove(path);
-                    listU.remove(path);
-                    list.addAll(listU);
-                    updateLocalList(list, "U");
+                    setU.add(path);
                 } catch (Exception ignored) {
 
                 }
@@ -1389,11 +1730,7 @@ public class Search {
                 break;
             case 'V':
                 try {
-                    CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("V")));
-                    list.remove(path);
-                    listV.remove(path);
-                    list.addAll(listV);
-                    updateLocalList(list, "V");
+                    setV.add(path);
                 } catch (Exception ignored) {
 
                 }
@@ -1401,11 +1738,7 @@ public class Search {
                 break;
             case 'W':
                 try {
-                    CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("W")));
-                    list.remove(path);
-                    listW.remove(path);
-                    list.addAll(listW);
-                    updateLocalList(list, "W");
+                    setW.add(path);
                 } catch (Exception ignored) {
 
                 }
@@ -1413,11 +1746,7 @@ public class Search {
                 break;
             case 'X':
                 try {
-                    CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("X")));
-                    list.remove(path);
-                    listX.remove(path);
-                    list.addAll(listX);
-                    updateLocalList(list, "X");
+                    setX.add(path);
                 } catch (Exception ignored) {
 
                 }
@@ -1425,11 +1754,7 @@ public class Search {
                 break;
             case 'Y':
                 try {
-                    CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("Y")));
-                    list.remove(path);
-                    listY.remove(path);
-                    list.addAll(listY);
-                    updateLocalList(list, "Y");
+                    setY.add(path);
                 } catch (Exception ignored) {
 
                 }
@@ -1437,11 +1762,7 @@ public class Search {
                 break;
             case 'Z':
                 try {
-                    CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("Z")));
-                    list.remove(path);
-                    listZ.remove(path);
-                    list.addAll(listZ);
-                    updateLocalList(list, "Z");
+                    setZ.add(path);
                 } catch (Exception ignored) {
 
                 }
@@ -1450,41 +1771,25 @@ public class Search {
             default:
                 if (Character.isDigit(headWord)) {
                     try {
-                        CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("Num")));
-                        list.remove(path);
-                        listNum.remove(path);
-                        list.addAll(listNum);
-                        updateLocalList(list, "Num");
+                        setNum.add(path);
                     } catch (Exception ignored) {
 
                     }
                 } else if ('_' == headWord) {
                     try {
-                        CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("Underline")));
-                        list.remove(path);
-                        listUnderline.remove(path);
-                        list.addAll(listUnderline);
-                        updateLocalList(list, "Underline");
+                        setUnderline.add(path);
                     } catch (Exception ignored) {
 
                     }
                 } else if ('%' == headWord) {
                     try {
-                        CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("PercentSign")));
-                        list.remove(path);
-                        listPercentSign.remove(path);
-                        list.addAll(listPercentSign);
-                        updateLocalList(list, "PercentSign");
+                        setPercentSign.add(path);
                     } catch (Exception ignored) {
 
                     }
                 } else {
                     try {
-                        CopyOnWriteArraySet<String> list = new CopyOnWriteArraySet<>(Objects.requireNonNull(readFileList("Unique")));
-                        list.remove(path);
-                        listUnique.remove(path);
-                        list.addAll(listUnique);
-                        updateLocalList(list, "Unique");
+                        setUnique.add(path);
                     } catch (Exception ignored) {
 
                     }
