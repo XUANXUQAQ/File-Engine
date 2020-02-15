@@ -30,7 +30,7 @@ import static main.MainClass.mainExit;
 
 public class SearchBar {
     private static SearchBar searchBarInstance = new SearchBar();
-    private final boolean debug = false; //TODO 构建时修改
+    private final boolean debug = true; //TODO 构建时修改
     private JFrame searchBar = new JFrame();
     private Container panel;
     private CopyOnWriteArrayList<String> listResult = new CopyOnWriteArrayList<>();
@@ -913,7 +913,6 @@ public class SearchBar {
                                     path = listResult.get(labelCount - 1);
                                     name = getFileName(listResult.get(labelCount - 1));
 
-
                                     if (isDirectory(path) || isFile(path)) {
                                         icon = (ImageIcon) GetIcon.getBigIcon(path);
                                         icon = changeIcon(icon, label1.getHeight() - 60, label1.getHeight() - 60);
@@ -933,6 +932,7 @@ public class SearchBar {
                                         label4.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
                                         label4.setIcon(icon);
                                     } else {
+                                        label4.setIcon(null);
                                         label4.setText("无效文件");
                                         search.addToRecycleBin(path);
                                     }
