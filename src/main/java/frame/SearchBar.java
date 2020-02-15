@@ -229,7 +229,7 @@ public class SearchBar {
                     }
                     if (!isKeyPressed && !label3.getText().equals("")) {
                         if (labelCount == 2) {
-                            label2.setBackground(labelColor);
+                            label3.setBackground(labelColor);
                         } else {
                             label3.setBackground(backgroundColorLight);
                         }
