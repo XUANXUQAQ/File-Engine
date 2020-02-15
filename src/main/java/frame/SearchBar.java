@@ -174,14 +174,14 @@ public class SearchBar {
             //检测缓存大小 过大时进行清理
             while (!mainExit) {
                 if (!search.isManualUpdate() && !isUsing) {
-                    if (search.getRecycleBinSize() > 20000) {
+                    if (search.getRecycleBinSize() > 30000) {
                         System.out.println("已检测到回收站过大，自动清理");
                         search.setUsable(false);
                         search.mergeAndClearRecycleBin();
                         search.setUsable(true);
                         System.gc();
                     }
-                    if (search.getLoadListSize() > 20000) {
+                    if (search.getLoadListSize() > 30000) {
                         System.out.println("加载缓存空间过大，自动清理");
                         search.setUsable(false);
                         search.mergeFileToList();
