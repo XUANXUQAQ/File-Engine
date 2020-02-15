@@ -45,7 +45,7 @@ public class TaskBar {
             trayIcon.addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseClicked(MouseEvent e) {
-                    if (MouseEvent.BUTTON1==e.getButton()) {
+                    if (MouseEvent.BUTTON1==e.getButton() && !settingsFrame.isSettingsVisible()) {
                         settingsFrame.showWindow();
                     }
                 }

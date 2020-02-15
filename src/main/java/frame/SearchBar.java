@@ -24,6 +24,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.regex.Pattern;
 
 import static main.MainClass.mainExit;
 
@@ -54,6 +55,7 @@ public class SearchBar {
     private boolean isUsing = false;
     private boolean isKeyPressed = false;
     private boolean isShiftPressed = false;
+    private Pattern semicolon = Pattern.compile(";");
 
     private SearchBar() {
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize(); // 获取屏幕大小
@@ -179,9 +181,8 @@ public class SearchBar {
                         search.setUsable(false);
                         search.mergeAndClearRecycleBin();
                         search.setUsable(true);
-                        System.gc();
                     }
-                    if (search.getLoadListSize() > 30000) {
+                    if (search.getLoadListSize() > 15000) {
                         System.out.println("加载缓存空间过大，自动清理");
                         search.setUsable(false);
                         search.mergeFileToList();
@@ -1027,7 +1028,7 @@ public class SearchBar {
         String searchText;
         int length;
         try {
-            strings = text.split(";");
+            strings = semicolon.split(text);
             searchText = strings[0];
             length = strings.length;
         } catch (ArrayIndexOutOfBoundsException e) {
@@ -1305,7 +1306,7 @@ public class SearchBar {
         if (cacheFile.exists()) {
             try (BufferedReader br = new BufferedReader(new FileReader(cacheFile))) {
                 while ((eachLine = br.readLine()) != null) {
-                    String[] each = eachLine.split(";");
+                    String[] each = semicolon.split(eachLine);
                     Collections.addAll(set, each);
                 }
             } catch (IOException ignored) {
@@ -1329,7 +1330,7 @@ public class SearchBar {
         if (cacheFile.exists()) {
             try (BufferedReader br = new BufferedReader(new FileReader(cacheFile))) {
                 while ((eachLine = br.readLine()) != null) {
-                    String[] each = eachLine.split(";");
+                    String[] each = semicolon.split(eachLine);
                     for (String eachCache : each) {
                         if (!(cache.contains(eachCache))) {
                             allCaches.append(eachCache).append(";\n");
@@ -1355,7 +1356,7 @@ public class SearchBar {
         if (cache.exists()) {
             try (BufferedReader reader = new BufferedReader(new FileReader(cache))) {
                 while ((cacheResult = reader.readLine()) != null) {
-                    String[] caches = cacheResult.split(";");
+                    String[] caches = semicolon.split(cacheResult);
                     for (String cach : caches) {
                         if (!(new File(cach).exists())) {
                             cachesToDel.add(cach);
@@ -1480,7 +1481,7 @@ public class SearchBar {
 
         AddAllResults(String txt) {
             this.text = txt.substring(1);
-            strings = this.text.split(";");
+            strings = semicolon.split(this.text);
             try {
                 searchText = strings[0];
             } catch (ArrayIndexOutOfBoundsException e) {
