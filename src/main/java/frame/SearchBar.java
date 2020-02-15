@@ -210,7 +210,7 @@ public class SearchBar {
                         if (label4.getText().equals("")) {
                             showResult();
                         }
-                    } catch (NullPointerException ignored) {
+                    } catch (NullPointerException e) {
                         showResult();
                     }
                 }
@@ -220,6 +220,13 @@ public class SearchBar {
                     listResult.clear();
                 }
                 try {
+                    if (!isKeyPressed && !label1.getText().equals("")){
+                        if (labelCount == 0){
+                            label1.setBackground(labelColor);
+                        }else{
+                            label1.setBackground(backgroundColorLight);
+                        }
+                    }
                     if (!isKeyPressed && !label2.getText().equals("")) {
                         if (labelCount == 1) {
                             label2.setBackground(labelColor);
