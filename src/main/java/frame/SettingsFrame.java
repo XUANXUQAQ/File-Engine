@@ -27,9 +27,13 @@ public class SettingsFrame {
     private JLabel label1;
     private JLabel label2;
     private Search searchObj = new Search();
+    private JFrame frame = new JFrame("…Ë÷√");
+
+    public boolean isSettingsVisible(){
+        return frame.isVisible();
+    }
 
     public void showWindow() {
-        JFrame frame = new JFrame("…Ë÷√");
         frame.setContentPane(new SettingsFrame().panel);
         URL frameIcon = SettingsFrame.class.getResource("/icons/frame.png");
         frame.setIconImage(new ImageIcon(frameIcon).getImage());
