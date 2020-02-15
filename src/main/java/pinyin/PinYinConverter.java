@@ -20,7 +20,6 @@ public class PinYinConverter {
         t3.setToneType(HanyuPinyinToneType.WITHOUT_TONE);
         t3.setVCharType(HanyuPinyinVCharType.WITH_V);
         StringBuilder t4 = new StringBuilder();
-        int t0 = t1.length;
         try {
             for (char c : t1) {
                 // ÅÐ¶ÏÄÜ·ñÎªºº×Ö×Ö·û
