@@ -54,7 +54,7 @@ public class MainClass {
                 } else if (nextLine.equals("echo %errorlevel%")) {
                     printedErrorlevel = true;
                 }
-            }
+            }       
         } catch (IOException e) {
             return false;
         }
