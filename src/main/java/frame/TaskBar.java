@@ -45,7 +45,9 @@ public class TaskBar {
             trayIcon.addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseClicked(MouseEvent e) {
-                    settingsFrame.showWindow();
+                    if (MouseEvent.BUTTON1==e.getButton()) {
+                        settingsFrame.showWindow();
+                    }
                 }
             });
             // 获得系统托盘对象
