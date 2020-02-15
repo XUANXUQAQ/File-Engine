@@ -1429,10 +1429,6 @@ public class SearchBar {
                 searchBar.setVisible(false);
             }
             CheckHotKey.setShowSearchBar(false);
-            search.setUsable(false);
-            System.out.println("正在删除无效文件");
-            search.mergeAndClearRecycleBin();
-            search.setUsable(true);
             clearLabel();
             isUsing = false;
             isKeyPressed = false;
