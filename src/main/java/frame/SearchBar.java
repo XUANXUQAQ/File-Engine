@@ -179,6 +179,7 @@ public class SearchBar {
                         search.setUsable(false);
                         search.mergeAndClearRecycleBin();
                         search.setUsable(true);
+                        System.gc();
                     }
                     if (search.getLoadListSize() > 100) {
                         System.out.println("加载缓存空间过大，自动清理");
@@ -1099,6 +1100,7 @@ public class SearchBar {
     public void showSearchbar() {
         textField.setCaretPosition(0);
         //添加更新文件
+        textField.requestFocusInWindow();
         System.out.println("正在添加更新文件");
         search.setUsable(false);
         search.mergeFileToList();
