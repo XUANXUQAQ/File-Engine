@@ -1493,9 +1493,6 @@ public class SearchBar {
                         }
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
-                                if (Thread.currentThread().isInterrupted()) {
-                                    return;
-                                }
                                 listResult.add(fileInList);
                             }
                             if (listResult.size() > 100) {
@@ -1540,9 +1537,6 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
-                                                if (Thread.currentThread().isInterrupted()) {
-                                                    return;
-                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -1555,9 +1549,6 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
-                                                if (Thread.currentThread().isInterrupted()) {
-                                                    return;
-                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -1581,9 +1572,6 @@ public class SearchBar {
                         }
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
-                                if (Thread.currentThread().isInterrupted()) {
-                                    return;
-                                }
                                 listResult.add(fileInList);
                             }
                             if (listResult.size() > 100) {
@@ -1628,9 +1616,6 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
-                                                if (Thread.currentThread().isInterrupted()) {
-                                                    return;
-                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -1643,9 +1628,6 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
-                                                if (Thread.currentThread().isInterrupted()) {
-                                                    return;
-                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -1669,9 +1651,6 @@ public class SearchBar {
                         }
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
-                                if (Thread.currentThread().isInterrupted()) {
-                                    return;
-                                }
                                 listResult.add(fileInList);
                             }
                             if (listResult.size() > 100) {
@@ -1716,9 +1695,6 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
-                                                if (Thread.currentThread().isInterrupted()) {
-                                                    return;
-                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -1731,9 +1707,6 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
-                                                if (Thread.currentThread().isInterrupted()) {
-                                                    return;
-                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -1757,9 +1730,6 @@ public class SearchBar {
                         }
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
-                                if (Thread.currentThread().isInterrupted()) {
-                                    return;
-                                }
                                 listResult.add(fileInList);
                             }
                             if (listResult.size() > 100) {
@@ -1804,9 +1774,6 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
-                                                if (Thread.currentThread().isInterrupted()) {
-                                                    return;
-                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -1819,9 +1786,6 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
-                                                if (Thread.currentThread().isInterrupted()) {
-                                                    return;
-                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -1845,9 +1809,6 @@ public class SearchBar {
                         }
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
-                                if (Thread.currentThread().isInterrupted()) {
-                                    return;
-                                }
                                 listResult.add(fileInList);
                             }
                             if (listResult.size() > 100) {
@@ -1892,9 +1853,6 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
-                                                if (Thread.currentThread().isInterrupted()) {
-                                                    return;
-                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -1907,9 +1865,6 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
-                                                if (Thread.currentThread().isInterrupted()) {
-                                                    return;
-                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -1933,9 +1888,6 @@ public class SearchBar {
                         }
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
-                                if (Thread.currentThread().isInterrupted()) {
-                                    return;
-                                }
                                 listResult.add(fileInList);
                             }
                             if (listResult.size() > 100) {
@@ -1980,9 +1932,6 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
-                                                if (Thread.currentThread().isInterrupted()) {
-                                                    return;
-                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -1995,9 +1944,6 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
-                                                if (Thread.currentThread().isInterrupted()) {
-                                                    return;
-                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -2021,9 +1967,6 @@ public class SearchBar {
                         }
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
-                                if (Thread.currentThread().isInterrupted()) {
-                                    return;
-                                }
                                 listResult.add(fileInList);
                             }
                             if (listResult.size() > 100) {
@@ -2068,9 +2011,6 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
-                                                if (Thread.currentThread().isInterrupted()) {
-                                                    return;
-                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -2083,9 +2023,6 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
-                                                if (Thread.currentThread().isInterrupted()) {
-                                                    return;
-                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -2109,9 +2046,6 @@ public class SearchBar {
                         }
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
-                                if (Thread.currentThread().isInterrupted()) {
-                                    return;
-                                }
                                 listResult.add(fileInList);
                             }
                             if (listResult.size() > 100) {
@@ -2156,9 +2090,6 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
-                                                if (Thread.currentThread().isInterrupted()) {
-                                                    return;
-                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -2171,9 +2102,6 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
-                                                if (Thread.currentThread().isInterrupted()) {
-                                                    return;
-                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -2197,9 +2125,6 @@ public class SearchBar {
                         }
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
-                                if (Thread.currentThread().isInterrupted()) {
-                                    return;
-                                }
                                 listResult.add(fileInList);
                             }
                             if (listResult.size() > 100) {
@@ -2244,9 +2169,6 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
-                                                if (Thread.currentThread().isInterrupted()) {
-                                                    return;
-                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -2259,9 +2181,6 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
-                                                if (Thread.currentThread().isInterrupted()) {
-                                                    return;
-                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -2285,9 +2204,6 @@ public class SearchBar {
                         }
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
-                                if (Thread.currentThread().isInterrupted()) {
-                                    return;
-                                }
                                 listResult.add(fileInList);
                             }
                             if (listResult.size() > 100) {
@@ -2332,9 +2248,6 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
-                                                if (Thread.currentThread().isInterrupted()) {
-                                                    return;
-                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -2347,9 +2260,6 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
-                                                if (Thread.currentThread().isInterrupted()) {
-                                                    return;
-                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -2373,9 +2283,6 @@ public class SearchBar {
                         }
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
-                                if (Thread.currentThread().isInterrupted()) {
-                                    return;
-                                }
                                 listResult.add(fileInList);
                             }
                             if (listResult.size() > 100) {
@@ -2432,9 +2339,6 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
-                                                if (Thread.currentThread().isInterrupted()) {
-                                                    return;
-                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -2458,9 +2362,6 @@ public class SearchBar {
                         }
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
-                                if (Thread.currentThread().isInterrupted()) {
-                                    return;
-                                }
                                 listResult.add(fileInList);
                             }
                             if (listResult.size() > 100) {
@@ -2505,9 +2406,6 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
-                                                if (Thread.currentThread().isInterrupted()) {
-                                                    return;
-                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -2520,9 +2418,6 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
-                                                if (Thread.currentThread().isInterrupted()) {
-                                                    return;
-                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -2546,9 +2441,6 @@ public class SearchBar {
                         }
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
-                                if (Thread.currentThread().isInterrupted()) {
-                                    return;
-                                }
                                 listResult.add(fileInList);
                             }
                             if (listResult.size() > 100) {
@@ -2593,9 +2485,6 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
-                                                if (Thread.currentThread().isInterrupted()) {
-                                                    return;
-                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -2608,9 +2497,6 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
-                                                if (Thread.currentThread().isInterrupted()) {
-                                                    return;
-                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -2634,9 +2520,6 @@ public class SearchBar {
                         }
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
-                                if (Thread.currentThread().isInterrupted()) {
-                                    return;
-                                }
                                 listResult.add(fileInList);
                             }
                             if (listResult.size() > 100) {
@@ -2681,9 +2564,6 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
-                                                if (Thread.currentThread().isInterrupted()) {
-                                                    return;
-                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -2696,9 +2576,6 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
-                                                if (Thread.currentThread().isInterrupted()) {
-                                                    return;
-                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -2722,9 +2599,6 @@ public class SearchBar {
                         }
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
-                                if (Thread.currentThread().isInterrupted()) {
-                                    return;
-                                }
                                 listResult.add(fileInList);
                             }
                             if (listResult.size() > 100) {
@@ -2769,9 +2643,6 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
-                                                if (Thread.currentThread().isInterrupted()) {
-                                                    return;
-                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -2784,9 +2655,6 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
-                                                if (Thread.currentThread().isInterrupted()) {
-                                                    return;
-                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -2810,9 +2678,6 @@ public class SearchBar {
                         }
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
-                                if (Thread.currentThread().isInterrupted()) {
-                                    return;
-                                }
                                 listResult.add(fileInList);
                             }
                             if (listResult.size() > 100) {
@@ -2857,9 +2722,6 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
-                                                if (Thread.currentThread().isInterrupted()) {
-                                                    return;
-                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -2872,9 +2734,6 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
-                                                if (Thread.currentThread().isInterrupted()) {
-                                                    return;
-                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -2898,9 +2757,6 @@ public class SearchBar {
                         }
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
-                                if (Thread.currentThread().isInterrupted()) {
-                                    return;
-                                }
                                 listResult.add(fileInList);
                             }
                             if (listResult.size() > 100) {
@@ -2945,9 +2801,6 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
-                                                if (Thread.currentThread().isInterrupted()) {
-                                                    return;
-                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -2960,9 +2813,6 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
-                                                if (Thread.currentThread().isInterrupted()) {
-                                                    return;
-                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -2986,9 +2836,6 @@ public class SearchBar {
                         }
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
-                                if (Thread.currentThread().isInterrupted()) {
-                                    return;
-                                }
                                 listResult.add(fileInList);
                             }
                             if (listResult.size() > 100) {
@@ -3033,9 +2880,6 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
-                                                if (Thread.currentThread().isInterrupted()) {
-                                                    return;
-                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -3048,9 +2892,6 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
-                                                if (Thread.currentThread().isInterrupted()) {
-                                                    return;
-                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -3074,9 +2915,6 @@ public class SearchBar {
                         }
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
-                                if (Thread.currentThread().isInterrupted()) {
-                                    return;
-                                }
                                 listResult.add(fileInList);
                             }
                             if (listResult.size() > 100) {
@@ -3121,9 +2959,6 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
-                                                if (Thread.currentThread().isInterrupted()) {
-                                                    return;
-                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -3136,9 +2971,6 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
-                                                if (Thread.currentThread().isInterrupted()) {
-                                                    return;
-                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -3162,9 +2994,6 @@ public class SearchBar {
                         }
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
-                                if (Thread.currentThread().isInterrupted()) {
-                                    return;
-                                }
                                 listResult.add(fileInList);
                             }
                             if (listResult.size() > 100) {
@@ -3209,9 +3038,6 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
-                                                if (Thread.currentThread().isInterrupted()) {
-                                                    return;
-                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -3224,9 +3050,6 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
-                                                if (Thread.currentThread().isInterrupted()) {
-                                                    return;
-                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -3250,9 +3073,6 @@ public class SearchBar {
                         }
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
-                                if (Thread.currentThread().isInterrupted()) {
-                                    return;
-                                }
                                 listResult.add(fileInList);
                             }
                             if (listResult.size() > 100) {
@@ -3297,9 +3117,6 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
-                                                if (Thread.currentThread().isInterrupted()) {
-                                                    return;
-                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -3312,9 +3129,6 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
-                                                if (Thread.currentThread().isInterrupted()) {
-                                                    return;
-                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -3338,9 +3152,6 @@ public class SearchBar {
                         }
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
-                                if (Thread.currentThread().isInterrupted()) {
-                                    return;
-                                }
                                 listResult.add(fileInList);
                             }
                             if (listResult.size() > 100) {
@@ -3385,9 +3196,6 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
-                                                if (Thread.currentThread().isInterrupted()) {
-                                                    return;
-                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -3400,9 +3208,6 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
-                                                if (Thread.currentThread().isInterrupted()) {
-                                                    return;
-                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -3426,9 +3231,6 @@ public class SearchBar {
                         }
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
-                                if (Thread.currentThread().isInterrupted()) {
-                                    return;
-                                }
                                 listResult.add(fileInList);
                             }
                             if (listResult.size() > 100) {
@@ -3473,9 +3275,6 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
-                                                if (Thread.currentThread().isInterrupted()) {
-                                                    return;
-                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -3488,9 +3287,6 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
-                                                if (Thread.currentThread().isInterrupted()) {
-                                                    return;
-                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -3514,9 +3310,6 @@ public class SearchBar {
                         }
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
-                                if (Thread.currentThread().isInterrupted()) {
-                                    return;
-                                }
                                 listResult.add(fileInList);
                             }
                             if (listResult.size() > 100) {
@@ -3561,9 +3354,6 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
-                                                if (Thread.currentThread().isInterrupted()) {
-                                                    return;
-                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -3576,9 +3366,6 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
-                                                if (Thread.currentThread().isInterrupted()) {
-                                                    return;
-                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -3602,9 +3389,6 @@ public class SearchBar {
                         }
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
-                                if (Thread.currentThread().isInterrupted()) {
-                                    return;
-                                }
                                 listResult.add(fileInList);
                             }
                             if (listResult.size() > 100) {
@@ -3649,9 +3433,6 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
-                                                if (Thread.currentThread().isInterrupted()) {
-                                                    return;
-                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -3664,9 +3445,6 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
-                                                if (Thread.currentThread().isInterrupted()) {
-                                                    return;
-                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -3690,9 +3468,6 @@ public class SearchBar {
                         }
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
-                                if (Thread.currentThread().isInterrupted()) {
-                                    return;
-                                }
                                 listResult.add(fileInList);
                             }
                             if (listResult.size() > 100) {
@@ -3737,9 +3512,6 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
-                                                if (Thread.currentThread().isInterrupted()) {
-                                                    return;
-                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -3752,9 +3524,6 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
-                                                if (Thread.currentThread().isInterrupted()) {
-                                                    return;
-                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -3778,9 +3547,6 @@ public class SearchBar {
                         }
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
-                                if (Thread.currentThread().isInterrupted()) {
-                                    return;
-                                }
                                 listResult.add(fileInList);
                             }
                             if (listResult.size() > 100) {
@@ -3825,9 +3591,6 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
-                                                if (Thread.currentThread().isInterrupted()) {
-                                                    return;
-                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -3840,9 +3603,6 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
-                                                if (Thread.currentThread().isInterrupted()) {
-                                                    return;
-                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -3866,9 +3626,6 @@ public class SearchBar {
                         }
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
-                                if (Thread.currentThread().isInterrupted()) {
-                                    return;
-                                }
                                 listResult.add(fileInList);
                             }
                             if (listResult.size() > 100) {
@@ -3913,9 +3670,6 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
-                                                if (Thread.currentThread().isInterrupted()) {
-                                                    return;
-                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -3928,9 +3682,6 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
-                                                if (Thread.currentThread().isInterrupted()) {
-                                                    return;
-                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -3947,16 +3698,11 @@ public class SearchBar {
                     }
                     label28:
                     for (String fileInList : search.getListUnique()) {
-
-
                         if (Thread.currentThread().isInterrupted()){
                             return;
                         }
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
-                                if (Thread.currentThread().isInterrupted()) {
-                                    return;
-                                }
                                 listResult.add(fileInList);
                             }
                             if (listResult.size() > 100) {
@@ -4001,9 +3747,6 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
-                                                if (Thread.currentThread().isInterrupted()) {
-                                                    return;
-                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -4016,9 +3759,6 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
-                                                if (Thread.currentThread().isInterrupted()) {
-                                                    return;
-                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -4035,16 +3775,11 @@ public class SearchBar {
                     }
                     label29:
                     for (String fileInList : search.getListPercentSign()) {
-
-
                         if (Thread.currentThread().isInterrupted()){
                             return;
                         }
                         if (length != 2 && match(getFileName(fileInList), searchText)) {
                             if (!listResult.contains(fileInList)) {
-                                if (Thread.currentThread().isInterrupted()) {
-                                    return;
-                                }
                                 listResult.add(fileInList);
                             }
                             if (listResult.size() > 100) {
@@ -4089,9 +3824,6 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isDirectory(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
-                                                if (Thread.currentThread().isInterrupted()) {
-                                                    return;
-                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
@@ -4104,9 +3836,6 @@ public class SearchBar {
                                     if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (isFile(fileInList)) {
                                             if (!listResult.contains(fileInList)) {
-                                                if (Thread.currentThread().isInterrupted()) {
-                                                    return;
-                                                }
                                                 listResult.add(fileInList);
                                             }
                                         }
