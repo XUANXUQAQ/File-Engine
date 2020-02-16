@@ -118,7 +118,7 @@ public class MainClass {
         File data = new File("data");
 
         if (!settings.exists()) {
-            String ignorePath = "C:\\Windows";
+            String ignorePath = "C:\\Windows,\n";
             JSONObject json = new JSONObject();
             json.put("hotkey", "Ctrl + Alt + J");
             json.put("ignorePath", ignorePath);
@@ -128,6 +128,10 @@ public class MainClass {
             json.put("searchDepth", 6);
             json.put("priorityFolder", "");
             json.put("dataPath", data.getAbsolutePath());
+            json.put("isDefaultAdmin", false);
+            json.put("isLoseFocusClose", true);
+            json.put("openLastFolderKeyCode", 17);
+            json.put("runAsAdminKeyCode", 16);
             try (BufferedWriter buffW = new BufferedWriter(new FileWriter(settings))) {
                 buffW.write(json.toJSONString());
             } catch (IOException ignored) {
@@ -361,7 +365,7 @@ public class MainClass {
 
             }
             if (mainExit) {
-                fixedThreadPool.shutdownNow();
+                fixedThreadPool.shutdown();
                 if (search.isUsable()) {
                     File CLOSEDLL = new File(SettingsFrame.tmp.getAbsolutePath() + "\\CLOSE");
                     try {

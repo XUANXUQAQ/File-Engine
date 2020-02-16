@@ -39,7 +39,7 @@ public class SearchBar {
     private JLabel label2 = new JLabel();
     private JLabel label3 = new JLabel();
     private JLabel label4 = new JLabel();
-    private boolean isCtrlPressed = false;
+    private boolean isOpenLastFolderPressed = false;
     private int labelCount = 0;
     private JTextField textField;
     private Search search = new Search();
@@ -54,7 +54,7 @@ public class SearchBar {
     private Thread searchWaiter = null;
     private boolean isUsing = false;
     private boolean isKeyPressed = false;
-    private boolean isShiftPressed = false;
+    private boolean isRunAsAdminPressed = false;
     private Pattern semicolon = Pattern.compile(";");
 
     private SearchBar() {
@@ -137,7 +137,7 @@ public class SearchBar {
 
             @Override
             public void focusLost(FocusEvent e) {
-                if (!debug) {
+                if (SettingsFrame.isLoseFocusClose) {
                     closedTodo();
                 }
             }
@@ -946,7 +946,7 @@ public class SearchBar {
                     } else if (10 == key) {
                         //enter被点击
                         closedTodo();
-                        if (isCtrlPressed) {
+                        if (isOpenLastFolderPressed) {
                             //打开上级文件夹
                             File open = new File(listResult.get(labelCount));
                             try {
@@ -954,17 +954,18 @@ public class SearchBar {
                             } catch (IOException e) {
                                 e.printStackTrace();
                             }
-                        } else if (isShiftPressed) {
+                        } else if (SettingsFrame.isDefaultAdmin|| isRunAsAdminPressed) {
                             openWithAdmin(listResult.get(labelCount));
                         } else {
                             openWithoutAdmin(listResult.get(labelCount));
                         }
                         saveCache(listResult.get(labelCount) + ';');
-                    } else if (17 == key) {
-                        //ctrl被点击
-                        isCtrlPressed = true;
-                    } else if (16 == key) {
-                        isShiftPressed = true;
+                    } else if (SettingsFrame.openLastFolderKeyCode == key) {
+                        //打开上级文件夹热键被点击
+                        isOpenLastFolderPressed = true;
+                    } else if (SettingsFrame.runAsAdminKeyCode == key) {
+                        //以管理员方式运行热键被点击
+                        isRunAsAdminPressed = true;
                     }
                 }
             }
@@ -972,11 +973,11 @@ public class SearchBar {
             @Override
             public void keyReleased(KeyEvent arg0) {
                 int key = arg0.getKeyCode();
-                if (17 == key) {
-                    //复位CTRL状态
-                    isCtrlPressed = false;
-                } else if (16 == key) {
-                    isShiftPressed = false;
+                if (SettingsFrame.openLastFolderKeyCode == key) {
+                    //复位按键状态
+                    isOpenLastFolderPressed = false;
+                } else if (SettingsFrame.runAsAdminKeyCode == key) {
+                    isRunAsAdminPressed = false;
                 }
             }
 
