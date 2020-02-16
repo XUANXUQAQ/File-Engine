@@ -123,7 +123,7 @@ public class MainClass {
             json.put("hotkey", "Ctrl + Alt + J");
             json.put("ignorePath", ignorePath);
             json.put("isStartup", false);
-            json.put("updateTimeLimit", 1200);
+            json.put("updateTimeLimit", 1);
             json.put("cacheNumLimit", 1000);
             json.put("searchDepth", 6);
             json.put("priorityFolder", "");
@@ -323,9 +323,8 @@ public class MainClass {
                 gcCount++;
                 if (count >= (SettingsFrame.updateTimeLimit << 10) && !isUsing && !search.isManualUpdate()) {
                     count = 0;
-                    System.out.println("正在更新本地索引data文件");
                     if (search.isUsable() && (!searchBar.isUsing())) {
-                        search.saveAndReleaseLists();
+                        search.mergeFileToList();
                     }
                 }
                 if (gcCount > 600000){
@@ -365,18 +364,18 @@ public class MainClass {
 
             }
             if (mainExit) {
-                fixedThreadPool.shutdown();
-                if (search.isUsable()) {
-                    File CLOSEDLL = new File(SettingsFrame.tmp.getAbsolutePath() + "\\CLOSE");
-                    try {
-                        CLOSEDLL.createNewFile();
-                    } catch (IOException ignored) {
+                File CLOSEDLL = new File(SettingsFrame.tmp.getAbsolutePath() + "\\CLOSE");
+                try {
+                    CLOSEDLL.createNewFile();
+                } catch (IOException ignored) {
 
-                    }
-                    System.out.println("即将退出，保存最新文件列表到data");
-                    search.mergeFileToList();
-                    search.saveAndReleaseLists();
                 }
+                try {
+                    Thread.sleep(20000);
+                } catch (InterruptedException ignored) {
+
+                }
+                fixedThreadPool.shutdown();
                 System.exit(0);
             }
         }

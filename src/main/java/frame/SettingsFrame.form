@@ -84,7 +84,7 @@
                   </grid>
                 </constraints>
                 <properties>
-                  <text value="本地文件索引更新时间："/>
+                  <text value="文件更新检测间隔时间："/>
                 </properties>
               </component>
               <component id="7d342" class="javax.swing.JTextField" binding="textFieldUpdateTime">
