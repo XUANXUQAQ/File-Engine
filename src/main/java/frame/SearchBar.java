@@ -276,63 +276,83 @@ public class SearchBar {
                     listResult.clear();
                     String text = textField.getText();
                     if (search.isUsable()) {
-                        if (text.equals(":update")) {
-                            clearLabel();
-                            MainClass.showMessage("提示", "正在更新文件索引");
-                            clearTextFieldText();
-                            closedTodo();
-                            search.setManualUpdate(true);
-                            timer = false;
-                            continue;
-                        }
-                        if (text.equals(":version")) {
-                            clearLabel();
-                            clearTextFieldText();
-                            closedTodo();
-                            JOptionPane.showMessageDialog(null, "当前版本：" + MainClass.version);
-                        }
-                        if (text.equals(":help")) {
-                            clearLabel();
-                            clearTextFieldText();
-                            closedTodo();
-                            JOptionPane.showMessageDialog(null, "帮助：\n" +
-                                    "1.默认Ctrl + Alt + J打开搜索框\n" +
-                                    "2.Enter键运行程序\n" +
-                                    "3.Ctrl + Enter键打开并选中文件所在文件夹\n" +
-                                    "4.Shift + Enter键以管理员权限运行程序（前提是该程序拥有管理员权限）\n" +
-                                    "5.在搜索框中输入  : update  强制重建本地索引\n" +
-                                    "6.在搜索框中输入  : version  查看当前版本\n" +
-                                    "7.在搜索框中输入  : clearbin  清空回收站\n" +
-                                    "8.在搜索框中输入  : help  查看帮助\"\n" +
-                                    "9.在输入的文件名后输入  ; full  可全字匹配\n" +
-                                    "9.在输入的文件名后输入  ; file  可只匹配文件\n" +
-                                    "10.在输入的文件名后输入  ; folder  可只匹配文件夹\n" +
-                                    "11.在输入的文件名后输入  ; filefull  可只匹配文件并全字匹配\n" +
-                                    "12.在输入的文件名后输入  ; folderfull  可只匹配文件夹并全字匹配");
-                        }
-                        if (text.equals(":clearbin")) {
-                            clearLabel();
-                            clearTextFieldText();
-                            closedTodo();
-                            int r = JOptionPane.showConfirmDialog(null, "你确定要清空回收站吗");
-                            if (r == 0) {
-                                try {
-                                    File[] roots = File.listRoots();
-                                    for (File root : roots) {
-                                        Runtime.getRuntime().exec("cmd /c rd /s /q " + root.getAbsolutePath() + "$Recycle.Bin");
-                                    }
-                                    JOptionPane.showMessageDialog(null, "清空回收站成功");
-                                } catch (IOException e) {
-                                    JOptionPane.showMessageDialog(null, "清空回收站失败");
-                                }
-                            }
-                        }
                         text = PinYinConverter.getPinYin(text);
                         char firstWord = '\0';
                         try {
                             firstWord = text.charAt(0);
                         } catch (Exception ignored) {
 
+                        }
+                        if (firstWord == ':') {
+                            if (text.equals(":update")) {
+                                clearLabel();
+                                MainClass.showMessage("提示", "正在更新文件索引");
+                                clearTextFieldText();
+                                closedTodo();
+                                search.setManualUpdate(true);
+                                timer = false;
+                                continue;
+                            }
+                            if (text.equals(":version")) {
+                                clearLabel();
+                                clearTextFieldText();
+                                closedTodo();
+                                JOptionPane.showMessageDialog(null, "当前版本：" + MainClass.version);
+                            }
+                            if (text.equals(":help")) {
+                                clearLabel();
+                                clearTextFieldText();
+                                closedTodo();
+                                JOptionPane.showMessageDialog(null, "帮助：\n" +
+                                        "1.默认Ctrl + Alt + J打开搜索框\n" +
+                                        "2.Enter键运行程序\n" +
+                                        "3.Ctrl + Enter键打开并选中文件所在文件夹\n" +
+                                        "4.Shift + Enter键以管理员权限运行程序（前提是该程序拥有管理员权限）\n" +
+                                        "5.在搜索框中输入  : update  强制重建本地索引\n" +
+                                        "6.在搜索框中输入  : version  查看当前版本\n" +
+                                        "7.在搜索框中输入  : clearbin  清空回收站\n" +
+                                        "8.在搜索框中输入  : help  查看帮助\"\n" +
+                                        "9.在设置中可以自定义命令，在搜索框中输入  : 自定义标识  运行自己的命令\n" +
+                                        "10.在输入的文件名后输入  ; full  可全字匹配\n" +
+                                        "11.在输入的文件名后输入  ; file  可只匹配文件\n" +
+                                        "12.在输入的文件名后输入  ; folder  可只匹配文件夹\n" +
+                                        "13.在输入的文件名后输入  ; filefull  可只匹配文件并全字匹配\n" +
+                                        "14.在输入的文件名后输入  ; folderfull  可只匹配文件夹并全字匹配");
+                            }
+                            if (text.equals(":clearbin")) {
+                                clearLabel();
+                                clearTextFieldText();
+                                closedTodo();
+                                int r = JOptionPane.showConfirmDialog(null, "你确定要清空回收站吗");
+                                if (r == 0) {
+                                    try {
+                                        File[] roots = File.listRoots();
+                                        for (File root : roots) {
+                                            Runtime.getRuntime().exec("cmd /c rd /s /q " + root.getAbsolutePath() + "$Recycle.Bin");
+                                        }
+                                        JOptionPane.showMessageDialog(null, "清空回收站成功");
+                                    } catch (IOException e) {
+                                        JOptionPane.showMessageDialog(null, "清空回收站失败");
+                                    }
+                                }
+                            }
+                            for (String i : SettingsFrame.cmdSet) {
+                                String[] cmdInfo = semicolon.split(i);
+                                if (cmdInfo[0].equals(text)) {
+                                    clearLabel();
+                                    clearTextFieldText();
+                                    closedTodo();
+                                    Desktop desktop;
+                                    if (Desktop.isDesktopSupported()) {
+                                        desktop = Desktop.getDesktop();
+                                        try {
+                                            desktop.open(new File(cmdInfo[1]));
+                                        } catch (IOException e) {
+                                            JOptionPane.showMessageDialog(null, "执行失败");
+                                        }
+                                    }
+                                }
+                            }
                         }
                         if ('>' == firstWord) {
                             String _text = text.substring(1);
