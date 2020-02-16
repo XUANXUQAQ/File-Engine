@@ -118,7 +118,7 @@ public class MainClass {
         File data = new File("data");
 
         if (!settings.exists()) {
-            String ignorePath = "C:\\Windows,\n";
+            String ignorePath = "C:\\Windows,";
             JSONObject json = new JSONObject();
             json.put("hotkey", "Ctrl + Alt + J");
             json.put("ignorePath", ignorePath);
