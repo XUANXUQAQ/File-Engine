@@ -96,8 +96,8 @@ public class SettingsFrame {
     public static int runAsAdminKeyCode;
     private static int _openLastFolderKeyCode;
     private static int _runAsAdminKeyCode;
-    public static File tmp = new File(System.getenv("Appdata") + "/tmp");
-    private static File settings = new File(System.getenv("Appdata") + "/settings.json");
+    public static File tmp = new File("tmp");
+    public static File settings = new File("settings.json");
     private static CheckHotKey HotKeyListener;
     public static HashSet<String> cmdSet = new HashSet<>();
 
