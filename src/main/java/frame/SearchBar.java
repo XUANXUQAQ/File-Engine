@@ -16,12 +16,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.io.*;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.regex.Pattern;
@@ -31,10 +26,9 @@ import static main.MainClass.mainExit;
 
 public class SearchBar {
     private static SearchBar searchBarInstance = new SearchBar();
-    private final boolean debug = false; //TODO 构建时修改
     private JFrame searchBar = new JFrame();
     private Container panel;
-    private CopyOnWriteArrayList<String> listResult = new CopyOnWriteArrayList<>();
+    private ArrayList<String> listResult = new ArrayList<>();
     private JLabel label1 = new JLabel();
     private JLabel label2 = new JLabel();
     private JLabel label3 = new JLabel();
@@ -46,9 +40,6 @@ public class SearchBar {
     private Color labelColor = new Color(255, 152, 104, 255);
     private Color backgroundColor = new Color(108, 108, 108, 255);
     private Color backgroundColorLight = new Color(75, 75, 75, 255);
-    private CopyOnWriteArraySet<String> list;
-    private Thread thread;
-    private boolean isFirstRun = true;
     private long startTime = 0;
     private boolean timer = false;
     private Thread searchWaiter = null;
@@ -57,6 +48,7 @@ public class SearchBar {
     private boolean isRunAsAdminPressed = false;
     private Pattern semicolon = Pattern.compile(";");
     private Pattern resultSplit = Pattern.compile(":");
+    private boolean isWaitForNextRount = false;
 
     private SearchBar() {
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize(); // 获取屏幕大小
@@ -76,6 +68,8 @@ public class SearchBar {
         searchBar.setBackground(null);
         searchBar.setOpacity(0.9f);
         panel = searchBar.getContentPane();
+        //TODO 构建时修改
+        final boolean debug = false;
         if (!debug) {
             searchBar.setType(JFrame.Type.UTILITY);//隐藏任务栏图标
         }
@@ -177,7 +171,7 @@ public class SearchBar {
             //检测缓存大小 过大时进行清理
             while (!mainExit) {
                 if (!search.isManualUpdate() && !isUsing) {
-                    if (search.getRecycleBinSize() > 30000) {
+                    if (search.getRecycleBinSize() > 3000) {
                         System.out.println("已检测到回收站过大，自动清理");
                         search.setUsable(false);
                         search.mergeAndClearRecycleBin();
@@ -217,15 +211,15 @@ public class SearchBar {
                     }
                 }
                 String text = textField.getText();
-                if (text.equals("") || text.equals(">")) {
+                if (text.equals("")) {
                     clearLabel();
                     listResult.clear();
                 }
                 try {
-                    if (!isKeyPressed && !label1.getText().equals("")){
-                        if (labelCount == 0){
+                    if (!isKeyPressed && !label1.getText().equals("")) {
+                        if (labelCount == 0) {
                             label1.setBackground(labelColor);
-                        }else{
+                        } else {
                             label1.setBackground(backgroundColorLight);
                         }
                     }
@@ -267,6 +261,8 @@ public class SearchBar {
             while (!mainExit) {
                 long endTime = System.currentTimeMillis();
                 if ((endTime - startTime > 500) && (timer)) {
+                    timer = false; //开始搜索 计时停止
+                    isWaitForNextRount = false;
                     labelCount = 0;
                     clearLabel();
                     if (!textField.getText().equals("")) {
@@ -278,6 +274,17 @@ public class SearchBar {
                     String text = textField.getText();
                     if (search.isUsable()) {
                         text = PinYinConverter.getPinYin(text);
+                        HashSet<String> listChars = new HashSet<>();
+                        boolean isNumAdded = false;
+                        for (char i : text.toCharArray()) {
+                            if (Character.isAlphabetic(i)) {
+                                listChars.add(String.valueOf(i));
+                            }
+                            if (Character.isDigit(i) && !isNumAdded) {
+                                listChars.add(String.valueOf(i));
+                                isNumAdded = true;
+                            }
+                        }
                         char firstWord = '\0';
                         try {
                             firstWord = text.charAt(0);
@@ -355,178 +362,174 @@ public class SearchBar {
                                 }
                             }
                         }
-                        if ('>' == firstWord) {
-                            String _text = text.substring(1);
-                            searchPriorityFolder(_text);
-                            searchCache(_text);
-                        } else {
-                            searchPriorityFolder(text);
-                            searchCache(text);
-                        }
+
+                        searchPriorityFolder(text);
+                        searchCache(text);
                         initLabelColor();
                         showResult();
-                        if ('>' == firstWord) {
-                            if (isFirstRun || !thread.isAlive()) {
-                                isFirstRun = false;
-                            } else {
-                                thread.interrupt();
+
+                        String listPath;
+                        for (String each : listChars) {
+                            if (isWaitForNextRount) {
+                                break; //直接取新的输入开始搜索
                             }
-                            thread = new Thread(new AddAllResults(text));
-                            thread.start();
-                        } else if ('%' == firstWord) {
-                            list = (search.getListPercentSign());
-                            addResult(list, text);
-                        } else if ('_' == firstWord) {
-                            list = (search.getListUnderline());
-                            addResult(list, text);
+                            each = each.toUpperCase();
+                            switch (each) {
+                                case "%":
+                                    listPath = SettingsFrame.dataPath + "\\listPercentSign.txt";
+                                    addResult(listPath, text, System.currentTimeMillis());
+                                    break;
+                                case "_":
+                                    listPath = SettingsFrame.dataPath + "\\listUnderline.txt";
+                                    addResult(listPath, text, System.currentTimeMillis());
+                                    break;
+                                case "A":
+                                    listPath = SettingsFrame.dataPath + "\\listA.txt";
+                                    addResult(listPath, text, System.currentTimeMillis());
+                                    break;
+                                case "B":
+                                    listPath = SettingsFrame.dataPath + "\\listB.txt";
 
-                        } else if (Character.isDigit(firstWord)) {
-                            list = (search.getListNum());
-                            addResult(list, text);
+                                    addResult(listPath, text, System.currentTimeMillis());
 
-                        } else if (Character.isAlphabetic(firstWord)) {
-                            firstWord = Character.toUpperCase(firstWord);
-                            if ('A' == firstWord) {
-                                list = (search.getListA());
-                                addResult(list, text);
+                                    break;
+                                case "C":
+                                    listPath = SettingsFrame.dataPath + "\\listC.txt";
 
+                                    addResult(listPath, text, System.currentTimeMillis());
 
-                            } else if ('B' == firstWord) {
-                                list = (search.getListB());
+                                    break;
+                                case "D":
+                                    listPath = SettingsFrame.dataPath + "\\listD.txt";
 
-                                addResult(list, text);
+                                    addResult(listPath, text, System.currentTimeMillis());
 
+                                    break;
+                                case "E":
+                                    listPath = SettingsFrame.dataPath + "\\listE.txt";
+                                    addResult(listPath, text, System.currentTimeMillis());
 
-                            } else if ('C' == firstWord) {
-                                list = (search.getListC());
+                                    break;
+                                case "F":
+                                    listPath = SettingsFrame.dataPath + "\\listF.txt";
 
-                                addResult(list, text);
+                                    addResult(listPath, text, System.currentTimeMillis());
 
+                                    break;
+                                case "G":
+                                    listPath = SettingsFrame.dataPath + "\\listG.txt";
 
-                            } else if ('D' == firstWord) {
-                                list = (search.getListD());
+                                    addResult(listPath, text, System.currentTimeMillis());
 
-                                addResult(list, text);
+                                    break;
+                                case "H":
+                                    listPath = SettingsFrame.dataPath + "\\listH.txt";
+                                    addResult(listPath, text, System.currentTimeMillis());
 
+                                    break;
+                                case "I":
+                                    listPath = SettingsFrame.dataPath + "\\listI.txt";
 
-                            } else if ('E' == firstWord) {
-                                list = (search.getListE());
-                                addResult(list, text);
+                                    addResult(listPath, text, System.currentTimeMillis());
 
+                                    break;
+                                case "J":
+                                    listPath = SettingsFrame.dataPath + "\\listJ.txt";
+                                    addResult(listPath, text, System.currentTimeMillis());
 
-                            } else if ('F' == firstWord) {
-                                list = (search.getListF());
+                                    break;
+                                case "K":
+                                    listPath = SettingsFrame.dataPath + "\\listK.txt";
+                                    addResult(listPath, text, System.currentTimeMillis());
+                                    break;
+                                case "L":
+                                    listPath = SettingsFrame.dataPath + "\\listL.txt";
 
-                                addResult(list, text);
+                                    addResult(listPath, text, System.currentTimeMillis());
 
+                                    break;
+                                case "M":
+                                    listPath = SettingsFrame.dataPath + "\\listM.txt";
 
-                            } else if ('G' == firstWord) {
-                                list = (search.getListG());
+                                    addResult(listPath, text, System.currentTimeMillis());
 
-                                addResult(list, text);
+                                    break;
+                                case "N":
+                                    listPath = SettingsFrame.dataPath + "\\listN.txt";
 
+                                    addResult(listPath, text, System.currentTimeMillis());
 
-                            } else if ('H' == firstWord) {
-                                list = (search.getListH());
-                                addResult(list, text);
+                                    break;
+                                case "O":
+                                    listPath = SettingsFrame.dataPath + "\\listO.txt";
+                                    addResult(listPath, text, System.currentTimeMillis());
 
+                                    break;
+                                case "P":
+                                    listPath = SettingsFrame.dataPath + "\\listP.txt";
 
-                            } else if ('I' == firstWord) {
-                                list = (search.getListI());
+                                    addResult(listPath, text, System.currentTimeMillis());
 
-                                addResult(list, text);
+                                    break;
+                                case "Q":
+                                    listPath = SettingsFrame.dataPath + "\\listQ.txt";
 
+                                    addResult(listPath, text, System.currentTimeMillis());
 
-                            } else if ('J' == firstWord) {
-                                list = (search.getListJ());
-                                addResult(list, text);
+                                    break;
+                                case "R":
+                                    listPath = SettingsFrame.dataPath + "\\listR.txt";
 
+                                    addResult(listPath, text, System.currentTimeMillis());
 
-                            } else if ('K' == firstWord) {
-                                list = (search.getListK());
-                                addResult(list, text);
+                                    break;
+                                case "S":
+                                    listPath = SettingsFrame.dataPath + "\\listS.txt";
 
-                            } else if ('L' == firstWord) {
-                                list = (search.getListL());
+                                    addResult(listPath, text, System.currentTimeMillis());
+                                    break;
+                                case "T":
+                                    listPath = SettingsFrame.dataPath + "\\listT.txt";
 
-                                addResult(list, text);
+                                    addResult(listPath, text, System.currentTimeMillis());
+                                    break;
+                                case "U":
+                                    listPath = SettingsFrame.dataPath + "\\listU.txt";
+                                    addResult(listPath, text, System.currentTimeMillis());
 
+                                    break;
+                                case "V":
+                                    listPath = SettingsFrame.dataPath + "\\listV.txt";
 
-                            } else if ('M' == firstWord) {
-                                list = (search.getListM());
+                                    addResult(listPath, text, System.currentTimeMillis());
+                                    break;
+                                case "W":
+                                    listPath = SettingsFrame.dataPath + "\\listW.txt";
 
-                                addResult(list, text);
+                                    addResult(listPath, text, System.currentTimeMillis());
+                                    break;
+                                case "X":
+                                    listPath = SettingsFrame.dataPath + "\\listX.txt";
 
-
-                            } else if ('N' == firstWord) {
-                                list = (search.getListN());
-
-                                addResult(list, text);
-
-
-                            } else if ('O' == firstWord) {
-                                list = (search.getListO());
-                                addResult(list, text);
-
-
-                            } else if ('P' == firstWord) {
-                                list = (search.getListP());
-
-                                addResult(list, text);
-
-
-                            } else if ('Q' == firstWord) {
-                                list = (search.getListQ());
-
-                                addResult(list, text);
-
-
-                            } else if ('R' == firstWord) {
-                                list = (search.getListR());
-
-                                addResult(list, text);
-
-
-                            } else if ('S' == firstWord) {
-                                list = (search.getListS());
-
-                                addResult(list, text);
-                            } else if ('T' == firstWord) {
-                                list = (search.getListT());
-
-                                addResult(list, text);
-
-                            } else if ('U' == firstWord) {
-                                list = (search.getListU());
-                                addResult(list, text);
-
-
-                            } else if ('V' == firstWord) {
-                                list = (search.getListV());
-
-                                addResult(list, text);
-
-                            } else if ('W' == firstWord) {
-                                list = (search.getListW());
-
-                                addResult(list, text);
-
-                            } else if ('X' == firstWord) {
-                                list = (search.getListX());
-
-                                addResult(list, text);
-
-                            } else if ('Y' == firstWord) {
-                                list = (search.getListY());
-                                addResult(list, text);
-
-                            } else if ('Z' == firstWord) {
-                                list = (search.getListZ());
-                                addResult(list, text);
+                                    addResult(listPath, text, System.currentTimeMillis());
+                                    break;
+                                case "Y":
+                                    listPath = SettingsFrame.dataPath + "\\listY.txt";
+                                    addResult(listPath, text, System.currentTimeMillis());
+                                    break;
+                                case "Z":
+                                    listPath = SettingsFrame.dataPath + "\\listZ.txt";
+                                    addResult(listPath, text, System.currentTimeMillis());
+                                    break;
+                                default:
+                                    if (Character.isDigit(firstWord)) {
+                                        listPath = SettingsFrame.dataPath + "\\listNum.txt";
+                                    } else {
+                                        listPath = SettingsFrame.dataPath + "\\listUnique.txt";
+                                    }
+                                    addResult(listPath, text, System.currentTimeMillis());
+                                    break;
                             }
-                        } else {
-                            list = search.getListUnique();
-                            addResult(list, text);
                         }
                     } else {
                         if (search.isManualUpdate()) {
@@ -557,7 +560,6 @@ public class SearchBar {
                             label1.setText("搜索中...");
                         }
                     }
-                    timer = false;
                 }
                 try {
                     Thread.sleep(20);
@@ -570,37 +572,23 @@ public class SearchBar {
         textField.getDocument().addDocumentListener(new DocumentListener() {
             @Override
             public void insertUpdate(DocumentEvent e) {
-                try {
-                    thread.interrupt();
-                } catch (NullPointerException ignored) {
-
-                }
                 clearLabel();
                 listResult.clear();
                 labelCount = 0;
-                String t = textField.getText();
                 isKeyPressed = false;
-
-                if (!t.equals(">")) {
-                    startTime = System.currentTimeMillis();
-                    timer = true;
-                }
+                startTime = System.currentTimeMillis();
+                timer = true;
             }
 
             @Override
             public void removeUpdate(DocumentEvent e) {
-                try {
-                    thread.interrupt();
-                } catch (NullPointerException ignored) {
-
-                }
                 clearLabel();
                 listResult.clear();
                 labelCount = 0;
                 isKeyPressed = false;
                 String t = textField.getText();
 
-                if (t.equals("") || t.equals(">")) {
+                if (t.equals("")) {
                     clearLabel();
                     listResult.clear();
                     labelCount = 0;
@@ -975,7 +963,7 @@ public class SearchBar {
                             } catch (IOException e) {
                                 e.printStackTrace();
                             }
-                        } else if (SettingsFrame.isDefaultAdmin|| isRunAsAdminPressed) {
+                        } else if (SettingsFrame.isDefaultAdmin || isRunAsAdminPressed) {
                             openWithAdmin(listResult.get(labelCount));
                         } else {
                             openWithoutAdmin(listResult.get(labelCount));
@@ -1044,7 +1032,7 @@ public class SearchBar {
     }
 
 
-    private void addResult(CopyOnWriteArraySet<String> list, String text) {
+    private void addResult(String path, String text, long time) {
         //为label添加结果
         String[] strings = new String[0];
         String searchText;
@@ -1057,76 +1045,84 @@ public class SearchBar {
             searchText = "";
             length = 0;
         }
-        if (search.isUsable()) {
-            label:
-            for (String each : list) {
-                if (length != 2 && match(getFileName(each), searchText)) {
-                    if (!listResult.contains(each)) {
-                        listResult.add(each);
-                    }
-                    if (listResult.size() > 100) {
-                        break;
-                    }
-                } else if (match(getFileName(each), searchText) && length == 2) {
-                    switch (strings[1].toUpperCase()) {
-                        case "FILE":
-                            if (isFile(each)) {
-                                if (!listResult.contains(each)) {
-                                    listResult.add(each);
-                                }
-                                if (listResult.size() > 100) {
-                                    break label;
-                                }
-                            }
+        String each;
+        try (BufferedReader br = new BufferedReader(new FileReader(path))) {
+            while ((each = br.readLine()) != null) {
+                if (startTime > time) { //用户重新输入了信息
+                    isWaitForNextRount = true; //上次去结果过程被结束，等待下一次
+                    return;
+                }
+                if (search.isUsable()) {
+                    if (length != 2 && match(getFileName(each), searchText)) {
+                        if (!listResult.contains(each)) {
+                            listResult.add(each);
+                        }
+                        if (listResult.size() > 100) {
                             break;
-                        case "FOLDER":
-                            if (isDirectory(each)) {
-                                if (!listResult.contains(each)) {
-                                    listResult.add(each);
-                                }
-                                if (listResult.size() > 100) {
-                                    break label;
-                                }
-                            }
-                            break;
-                        case "FULL":
-                            if (PinYinConverter.getPinYin(getFileName(each.toLowerCase())).equals(searchText.toLowerCase())) {
-                                if (!listResult.contains(each)) {
-                                    listResult.add(each);
-                                }
-                                if (listResult.size() > 100) {
-                                    break label;
-                                }
-                            }
-                            break;
-                        case "FOLDERFULL":
-                            if (PinYinConverter.getPinYin(getFileName(each.toLowerCase())).equals(searchText.toLowerCase())) {
-                                if (isDirectory(each)) {
-                                    if (!listResult.contains(each)) {
-                                        listResult.add(each);
-                                    }
-                                }
-                                if (listResult.size() > 100) {
-                                    break label;
-                                }
-                            }
-                            break;
-                        case "FILEFULL":
-                            if (PinYinConverter.getPinYin(getFileName(each.toLowerCase())).equals(searchText.toLowerCase())) {
+                        }
+                    } else if (match(getFileName(each), searchText) && length == 2) {
+                        switch (strings[1].toUpperCase()) {
+                            case "FILE":
                                 if (isFile(each)) {
                                     if (!listResult.contains(each)) {
                                         listResult.add(each);
                                     }
+                                    if (listResult.size() > 100) {
+                                        break;
+                                    }
                                 }
-                                if (listResult.size() > 100) {
-                                    break label;
+                                break;
+                            case "FOLDER":
+                                if (isDirectory(each)) {
+                                    if (!listResult.contains(each)) {
+                                        listResult.add(each);
+                                    }
+                                    if (listResult.size() > 100) {
+                                        break;
+                                    }
                                 }
-                            }
-                            break;
+                                break;
+                            case "FULL":
+                                if (PinYinConverter.getPinYin(getFileName(each.toLowerCase())).equals(searchText.toLowerCase())) {
+                                    if (!listResult.contains(each)) {
+                                        listResult.add(each);
+                                    }
+                                    if (listResult.size() > 100) {
+                                        break;
+                                    }
+                                }
+                                break;
+                            case "FOLDERFULL":
+                                if (PinYinConverter.getPinYin(getFileName(each.toLowerCase())).equals(searchText.toLowerCase())) {
+                                    if (isDirectory(each)) {
+                                        if (!listResult.contains(each)) {
+                                            listResult.add(each);
+                                        }
+                                    }
+                                    if (listResult.size() > 100) {
+                                        break;
+                                    }
+                                }
+                                break;
+                            case "FILEFULL":
+                                if (PinYinConverter.getPinYin(getFileName(each.toLowerCase())).equals(searchText.toLowerCase())) {
+                                    if (isFile(each)) {
+                                        if (!listResult.contains(each)) {
+                                            listResult.add(each);
+                                        }
+                                    }
+                                    if (listResult.size() > 100) {
+                                        break;
+                                    }
+                                }
+                                break;
+                        }
                     }
                 }
             }
             delRepeated();
+        } catch (IOException ignored) {
+
         }
     }
 
@@ -1416,7 +1412,7 @@ public class SearchBar {
     }
 
     private void delRepeated() {
-        CopyOnWriteArraySet<String> set = new CopyOnWriteArraySet<>(listResult);
+        LinkedHashSet<String> set = new LinkedHashSet<>(listResult);
         listResult.clear();
         listResult.addAll(set);
     }
@@ -1465,13 +1461,14 @@ public class SearchBar {
             }
             CheckHotKey.setShowSearchBar(false);
             clearLabel();
+            isWaitForNextRount = true;
             isUsing = false;
             isKeyPressed = false;
             labelCount = 0;
             listResult.clear();
             textField.setText(null);
             try {
-                thread.interrupt();
+                //thread.interrupt();
                 searchWaiter.interrupt();
             } catch (NullPointerException ignored) {
 
@@ -1495,2396 +1492,5 @@ public class SearchBar {
         return file.isDirectory();
     }
 
-    class AddAllResults implements Runnable {
-        private String text;
-        private String searchText;
-        private int length;
-        private String[] strings;
-
-        AddAllResults(String txt) {
-            this.text = txt.substring(1);
-            strings = resultSplit.split(this.text);
-            try {
-                searchText = strings[0];
-            } catch (ArrayIndexOutOfBoundsException e) {
-                searchText = "";
-            }
-            length = strings.length;
-        }
-
-        @Override
-        public void run() {
-            if (search.isUsable()) {
-                if (!this.text.equals("")) {
-                    label:
-                    for (String fileInList : search.getListA()) {
-
-                        if (Thread.currentThread().isInterrupted()){
-                            return;
-                        }
-                        if (length != 2 && match(getFileName(fileInList), searchText)) {
-                            if (!listResult.contains(fileInList)) {
-                                listResult.add(fileInList);
-                            }
-                            if (listResult.size() > 100) {
-                                break;
-                            }
-                        } else if (match(getFileName(fileInList), searchText) && length == 2) {
-                            switch (strings[1].toUpperCase()) {
-                                case "FILE":
-                                    if (isFile(fileInList)) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label;
-                                        }
-                                    }
-                                    break;
-                                case "FOLDER":
-                                    if (isDirectory(fileInList)) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label;
-                                        }
-                                    }
-                                    break;
-                                case "FULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label;
-                                        }
-                                    }
-                                    break;
-                                case "FOLDERFULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (isDirectory(fileInList)) {
-                                            if (!listResult.contains(fileInList)) {
-                                                listResult.add(fileInList);
-                                            }
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label;
-                                        }
-                                    }
-                                    break;
-                                case "FILEFULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (isFile(fileInList)) {
-                                            if (!listResult.contains(fileInList)) {
-                                                listResult.add(fileInList);
-                                            }
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label;
-                                        }
-                                    }
-                                    break;
-                            }
-                        }
-                        if (Thread.currentThread().isInterrupted()) {
-                            return;
-                        }
-                    }
-                    label1:
-                    for (String fileInList : search.getListB()) {
-
-
-                        if (Thread.currentThread().isInterrupted()){
-                            return;
-                        }
-                        if (length != 2 && match(getFileName(fileInList), searchText)) {
-                            if (!listResult.contains(fileInList)) {
-                                listResult.add(fileInList);
-                            }
-                            if (listResult.size() > 100) {
-                                break;
-                            }
-                        } else if (match(getFileName(fileInList), searchText) && length == 2) {
-                            switch (strings[1].toUpperCase()) {
-                                case "FILE":
-                                    if (isFile(fileInList)) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label1;
-                                        }
-                                    }
-                                    break;
-                                case "FOLDER":
-                                    if (isDirectory(fileInList)) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label1;
-                                        }
-                                    }
-                                    break;
-                                case "FULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label1;
-                                        }
-                                    }
-                                    break;
-                                case "FOLDERFULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (isDirectory(fileInList)) {
-                                            if (!listResult.contains(fileInList)) {
-                                                listResult.add(fileInList);
-                                            }
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label1;
-                                        }
-                                    }
-                                    break;
-                                case "FILEFULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (isFile(fileInList)) {
-                                            if (!listResult.contains(fileInList)) {
-                                                listResult.add(fileInList);
-                                            }
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label1;
-                                        }
-                                    }
-                                    break;
-                            }
-                        }
-                        if (Thread.currentThread().isInterrupted()) {
-                            return;
-                        }
-                    }
-                    label2:
-                    for (String fileInList : search.getListC()) {
-
-
-                        if (Thread.currentThread().isInterrupted()){
-                            return;
-                        }
-                        if (length != 2 && match(getFileName(fileInList), searchText)) {
-                            if (!listResult.contains(fileInList)) {
-                                listResult.add(fileInList);
-                            }
-                            if (listResult.size() > 100) {
-                                break;
-                            }
-                        } else if (match(getFileName(fileInList), searchText) && length == 2) {
-                            switch (strings[1].toUpperCase()) {
-                                case "FILE":
-                                    if (isFile(fileInList)) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label2;
-                                        }
-                                    }
-                                    break;
-                                case "FOLDER":
-                                    if (isDirectory(fileInList)) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label2;
-                                        }
-                                    }
-                                    break;
-                                case "FULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label2;
-                                        }
-                                    }
-                                    break;
-                                case "FOLDERFULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (isDirectory(fileInList)) {
-                                            if (!listResult.contains(fileInList)) {
-                                                listResult.add(fileInList);
-                                            }
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label2;
-                                        }
-                                    }
-                                    break;
-                                case "FILEFULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (isFile(fileInList)) {
-                                            if (!listResult.contains(fileInList)) {
-                                                listResult.add(fileInList);
-                                            }
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label2;
-                                        }
-                                    }
-                                    break;
-                            }
-                        }
-                        if (Thread.currentThread().isInterrupted()) {
-                            return;
-                        }
-                    }
-                    label3:
-                    for (String fileInList : search.getListD()) {
-
-
-                        if (Thread.currentThread().isInterrupted()){
-                            return;
-                        }
-                        if (length != 2 && match(getFileName(fileInList), searchText)) {
-                            if (!listResult.contains(fileInList)) {
-                                listResult.add(fileInList);
-                            }
-                            if (listResult.size() > 100) {
-                                break;
-                            }
-                        } else if (match(getFileName(fileInList), searchText) && length == 2) {
-                            switch (strings[1].toUpperCase()) {
-                                case "FILE":
-                                    if (isFile(fileInList)) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label3;
-                                        }
-                                    }
-                                    break;
-                                case "FOLDER":
-                                    if (isDirectory(fileInList)) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label3;
-                                        }
-                                    }
-                                    break;
-                                case "FULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label3;
-                                        }
-                                    }
-                                    break;
-                                case "FOLDERFULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (isDirectory(fileInList)) {
-                                            if (!listResult.contains(fileInList)) {
-                                                listResult.add(fileInList);
-                                            }
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label3;
-                                        }
-                                    }
-                                    break;
-                                case "FILEFULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (isFile(fileInList)) {
-                                            if (!listResult.contains(fileInList)) {
-                                                listResult.add(fileInList);
-                                            }
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label3;
-                                        }
-                                    }
-                                    break;
-                            }
-                        }
-                        if (Thread.currentThread().isInterrupted()) {
-                            return;
-                        }
-                    }
-                    label4:
-                    for (String fileInList : search.getListE()) {
-
-
-                        if (Thread.currentThread().isInterrupted()){
-                            return;
-                        }
-                        if (length != 2 && match(getFileName(fileInList), searchText)) {
-                            if (!listResult.contains(fileInList)) {
-                                listResult.add(fileInList);
-                            }
-                            if (listResult.size() > 100) {
-                                break;
-                            }
-                        } else if (match(getFileName(fileInList), searchText) && length == 2) {
-                            switch (strings[1].toUpperCase()) {
-                                case "FILE":
-                                    if (isFile(fileInList)) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label4;
-                                        }
-                                    }
-                                    break;
-                                case "FOLDER":
-                                    if (isDirectory(fileInList)) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label4;
-                                        }
-                                    }
-                                    break;
-                                case "FULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label4;
-                                        }
-                                    }
-                                    break;
-                                case "FOLDERFULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (isDirectory(fileInList)) {
-                                            if (!listResult.contains(fileInList)) {
-                                                listResult.add(fileInList);
-                                            }
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label4;
-                                        }
-                                    }
-                                    break;
-                                case "FILEFULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (isFile(fileInList)) {
-                                            if (!listResult.contains(fileInList)) {
-                                                listResult.add(fileInList);
-                                            }
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label4;
-                                        }
-                                    }
-                                    break;
-                            }
-                        }
-                        if (Thread.currentThread().isInterrupted()) {
-                            return;
-                        }
-                    }
-                    label5:
-                    for (String fileInList : search.getListF()) {
-
-
-                        if (Thread.currentThread().isInterrupted()){
-                            return;
-                        }
-                        if (length != 2 && match(getFileName(fileInList), searchText)) {
-                            if (!listResult.contains(fileInList)) {
-                                listResult.add(fileInList);
-                            }
-                            if (listResult.size() > 100) {
-                                break;
-                            }
-                        } else if (match(getFileName(fileInList), searchText) && length == 2) {
-                            switch (strings[1].toUpperCase()) {
-                                case "FILE":
-                                    if (isFile(fileInList)) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label5;
-                                        }
-                                    }
-                                    break;
-                                case "FOLDER":
-                                    if (isDirectory(fileInList)) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label5;
-                                        }
-                                    }
-                                    break;
-                                case "FULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label5;
-                                        }
-                                    }
-                                    break;
-                                case "FOLDERFULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (isDirectory(fileInList)) {
-                                            if (!listResult.contains(fileInList)) {
-                                                listResult.add(fileInList);
-                                            }
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label5;
-                                        }
-                                    }
-                                    break;
-                                case "FILEFULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (isFile(fileInList)) {
-                                            if (!listResult.contains(fileInList)) {
-                                                listResult.add(fileInList);
-                                            }
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label5;
-                                        }
-                                    }
-                                    break;
-                            }
-                        }
-                        if (Thread.currentThread().isInterrupted()) {
-                            return;
-                        }
-                    }
-                    label6:
-                    for (String fileInList : search.getListG()) {
-
-
-                        if (Thread.currentThread().isInterrupted()){
-                            return;
-                        }
-                        if (length != 2 && match(getFileName(fileInList), searchText)) {
-                            if (!listResult.contains(fileInList)) {
-                                listResult.add(fileInList);
-                            }
-                            if (listResult.size() > 100) {
-                                break;
-                            }
-                        } else if (match(getFileName(fileInList), searchText) && length == 2) {
-                            switch (strings[1].toUpperCase()) {
-                                case "FILE":
-                                    if (isFile(fileInList)) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label6;
-                                        }
-                                    }
-                                    break;
-                                case "FOLDER":
-                                    if (isDirectory(fileInList)) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label6;
-                                        }
-                                    }
-                                    break;
-                                case "FULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label6;
-                                        }
-                                    }
-                                    break;
-                                case "FOLDERFULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (isDirectory(fileInList)) {
-                                            if (!listResult.contains(fileInList)) {
-                                                listResult.add(fileInList);
-                                            }
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label6;
-                                        }
-                                    }
-                                    break;
-                                case "FILEFULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (isFile(fileInList)) {
-                                            if (!listResult.contains(fileInList)) {
-                                                listResult.add(fileInList);
-                                            }
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label6;
-                                        }
-                                    }
-                                    break;
-                            }
-                        }
-                        if (Thread.currentThread().isInterrupted()) {
-                            return;
-                        }
-                    }
-                    label7:
-                    for (String fileInList : search.getListH()) {
-
-
-                        if (Thread.currentThread().isInterrupted()){
-                            return;
-                        }
-                        if (length != 2 && match(getFileName(fileInList), searchText)) {
-                            if (!listResult.contains(fileInList)) {
-                                listResult.add(fileInList);
-                            }
-                            if (listResult.size() > 100) {
-                                break;
-                            }
-                        } else if (match(getFileName(fileInList), searchText) && length == 2) {
-                            switch (strings[1].toUpperCase()) {
-                                case "FILE":
-                                    if (isFile(fileInList)) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label7;
-                                        }
-                                    }
-                                    break;
-                                case "FOLDER":
-                                    if (isDirectory(fileInList)) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label7;
-                                        }
-                                    }
-                                    break;
-                                case "FULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label7;
-                                        }
-                                    }
-                                    break;
-                                case "FOLDERFULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (isDirectory(fileInList)) {
-                                            if (!listResult.contains(fileInList)) {
-                                                listResult.add(fileInList);
-                                            }
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label7;
-                                        }
-                                    }
-                                    break;
-                                case "FILEFULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (isFile(fileInList)) {
-                                            if (!listResult.contains(fileInList)) {
-                                                listResult.add(fileInList);
-                                            }
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label7;
-                                        }
-                                    }
-                                    break;
-                            }
-                        }
-                        if (Thread.currentThread().isInterrupted()) {
-                            return;
-                        }
-                    }
-                    label8:
-                    for (String fileInList : search.getListI()) {
-
-
-                        if (Thread.currentThread().isInterrupted()){
-                            return;
-                        }
-                        if (length != 2 && match(getFileName(fileInList), searchText)) {
-                            if (!listResult.contains(fileInList)) {
-                                listResult.add(fileInList);
-                            }
-                            if (listResult.size() > 100) {
-                                break;
-                            }
-                        } else if (match(getFileName(fileInList), searchText) && length == 2) {
-                            switch (strings[1].toUpperCase()) {
-                                case "FILE":
-                                    if (isFile(fileInList)) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label8;
-                                        }
-                                    }
-                                    break;
-                                case "FOLDER":
-                                    if (isDirectory(fileInList)) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label8;
-                                        }
-                                    }
-                                    break;
-                                case "FULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label8;
-                                        }
-                                    }
-                                    break;
-                                case "FOLDERFULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (isDirectory(fileInList)) {
-                                            if (!listResult.contains(fileInList)) {
-                                                listResult.add(fileInList);
-                                            }
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label8;
-                                        }
-                                    }
-                                    break;
-                                case "FILEFULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (isFile(fileInList)) {
-                                            if (!listResult.contains(fileInList)) {
-                                                listResult.add(fileInList);
-                                            }
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label8;
-                                        }
-                                    }
-                                    break;
-                            }
-                        }
-                        if (Thread.currentThread().isInterrupted()) {
-                            return;
-                        }
-                    }
-                    label9:
-                    for (String fileInList : search.getListJ()) {
-
-
-                        if (Thread.currentThread().isInterrupted()){
-                            return;
-                        }
-                        if (length != 2 && match(getFileName(fileInList), searchText)) {
-                            if (!listResult.contains(fileInList)) {
-                                listResult.add(fileInList);
-                            }
-                            if (listResult.size() > 100) {
-                                break;
-                            }
-                        } else if (match(getFileName(fileInList), searchText) && length == 2) {
-                            switch (strings[1].toUpperCase()) {
-                                case "FILE":
-                                    if (isFile(fileInList)) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label9;
-                                        }
-                                    }
-                                    break;
-                                case "FOLDER":
-                                    if (isDirectory(fileInList)) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label9;
-                                        }
-                                    }
-                                    break;
-                                case "FULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label9;
-                                        }
-                                    }
-                                    break;
-                                case "FOLDERFULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (isDirectory(fileInList)) {
-                                            if (!listResult.contains(fileInList)) {
-                                                listResult.add(fileInList);
-                                            }
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label9;
-                                        }
-                                    }
-                                    break;
-                                case "FILEFULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (isFile(fileInList)) {
-                                            if (!listResult.contains(fileInList)) {
-                                                listResult.add(fileInList);
-                                            }
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label9;
-                                        }
-                                    }
-                                    break;
-                            }
-                        }
-                        if (Thread.currentThread().isInterrupted()) {
-                            return;
-                        }
-                    }
-                    label10:
-                    for (String fileInList : search.getListK()) {
-
-
-                        if (Thread.currentThread().isInterrupted()){
-                            return;
-                        }
-                        if (length != 2 && match(getFileName(fileInList), searchText)) {
-                            if (!listResult.contains(fileInList)) {
-                                listResult.add(fileInList);
-                            }
-                            if (listResult.size() > 100) {
-                                break;
-                            }
-                        } else if (match(getFileName(fileInList), searchText) && length == 2) {
-                            switch (strings[1].toUpperCase()) {
-                                case "FILE":
-                                    if (isFile(fileInList)) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label10;
-                                        }
-                                    }
-                                    break;
-                                case "FOLDER":
-                                    if (isDirectory(fileInList)) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label10;
-                                        }
-                                    }
-                                    break;
-                                case "FULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label10;
-                                        }
-                                    }
-                                    break;
-                                case "FOLDERFULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (isDirectory(fileInList)) {
-                                            if (!listResult.contains(fileInList)) {
-                                                listResult.add(fileInList);
-                                            }
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label10;
-                                        }
-                                    }
-                                    break;
-                                case "FILEFULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (isFile(fileInList)) {
-                                            if (!listResult.contains(fileInList)) {
-                                                listResult.add(fileInList);
-                                            }
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label10;
-                                        }
-                                    }
-                                    break;
-                            }
-                        }
-                        if (Thread.currentThread().isInterrupted()) {
-                            return;
-                        }
-                    }
-                    label11:
-                    for (String fileInList : search.getListL()) {
-
-
-                        if (Thread.currentThread().isInterrupted()){
-                            return;
-                        }
-                        if (length != 2 && match(getFileName(fileInList), searchText)) {
-                            if (!listResult.contains(fileInList)) {
-                                listResult.add(fileInList);
-                            }
-                            if (listResult.size() > 100) {
-                                break;
-                            }
-                        } else if (match(getFileName(fileInList), searchText) && length == 2) {
-                            switch (strings[1].toUpperCase()) {
-                                case "FILE":
-                                    if (isFile(fileInList)) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label11;
-                                        }
-                                    }
-                                    break;
-                                case "FOLDER":
-                                    if (isDirectory(fileInList)) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label11;
-                                        }
-                                    }
-                                    break;
-                                case "FULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label11;
-                                        }
-                                    }
-                                    break;
-                                case "FOLDERFULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (isDirectory(fileInList)) {
-                                            if (!listResult.contains(fileInList)) {
-                                                listResult.add(fileInList);
-                                            }
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label11;
-                                        }
-                                    }
-                                    break;
-                                case "FILEFULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (isFile(fileInList)) {
-                                            if (!listResult.contains(fileInList)) {
-                                                listResult.add(fileInList);
-                                            }
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label11;
-                                        }
-                                    }
-                                    break;
-                            }
-                        }
-                        if (Thread.currentThread().isInterrupted()) {
-                            return;
-                        }
-                    }
-                    label12:
-                    for (String fileInList : search.getListM()) {
-
-
-                        if (Thread.currentThread().isInterrupted()){
-                            return;
-                        }
-                        if (length != 2 && match(getFileName(fileInList), searchText)) {
-                            if (!listResult.contains(fileInList)) {
-                                listResult.add(fileInList);
-                            }
-                            if (listResult.size() > 100) {
-                                break;
-                            }
-                        } else if (match(getFileName(fileInList), searchText) && length == 2) {
-                            switch (strings[1].toUpperCase()) {
-                                case "FILE":
-                                    if (isFile(fileInList)) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label12;
-                                        }
-                                    }
-                                    break;
-                                case "FOLDER":
-                                    if (isDirectory(fileInList)) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label12;
-                                        }
-                                    }
-                                    break;
-                                case "FULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label12;
-                                        }
-                                    }
-                                    break;
-                                case "FOLDERFULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (isDirectory(fileInList)) {
-                                            if (!listResult.contains(fileInList)) {
-                                                listResult.add(fileInList);
-                                            }
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label12;
-                                        }
-                                    }
-                                    break;
-                                case "FILEFULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (isFile(fileInList)) {
-                                            if (!listResult.contains(fileInList)) {
-                                                listResult.add(fileInList);
-                                            }
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label12;
-                                        }
-                                    }
-                                    break;
-                            }
-                        }
-                        if (Thread.currentThread().isInterrupted()) {
-                            return;
-                        }
-                    }
-                    label13:
-                    for (String fileInList : search.getListN()) {
-
-
-                        if (Thread.currentThread().isInterrupted()){
-                            return;
-                        }
-                        if (length != 2 && match(getFileName(fileInList), searchText)) {
-                            if (!listResult.contains(fileInList)) {
-                                listResult.add(fileInList);
-                            }
-                            if (listResult.size() > 100) {
-                                break;
-                            }
-                        } else if (match(getFileName(fileInList), searchText) && length == 2) {
-                            switch (strings[1].toUpperCase()) {
-                                case "FILE":
-                                    if (isFile(fileInList)) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label13;
-                                        }
-                                    }
-                                    break;
-                                case "FOLDER":
-                                    if (isDirectory(fileInList)) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label13;
-                                        }
-                                    }
-                                    break;
-                                case "FULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label13;
-                                        }
-                                    }
-                                    break;
-                                case "FOLDERFULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (isDirectory(fileInList)) {
-                                            if (!listResult.contains(fileInList)) {
-                                                listResult.add(fileInList);
-                                            }
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label13;
-                                        }
-                                    }
-                                    break;
-                                case "FILEFULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (isFile(fileInList)) {
-                                            if (!listResult.contains(fileInList)) {
-                                                listResult.add(fileInList);
-                                            }
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label13;
-                                        }
-                                    }
-                                    break;
-                            }
-                        }
-                        if (Thread.currentThread().isInterrupted()) {
-                            return;
-                        }
-                    }
-                    label14:
-                    for (String fileInList : search.getListO()) {
-
-
-                        if (Thread.currentThread().isInterrupted()){
-                            return;
-                        }
-                        if (length != 2 && match(getFileName(fileInList), searchText)) {
-                            if (!listResult.contains(fileInList)) {
-                                listResult.add(fileInList);
-                            }
-                            if (listResult.size() > 100) {
-                                break;
-                            }
-                        } else if (match(getFileName(fileInList), searchText) && length == 2) {
-                            switch (strings[1].toUpperCase()) {
-                                case "FILE":
-                                    if (isFile(fileInList)) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label14;
-                                        }
-                                    }
-                                    break;
-                                case "FOLDER":
-                                    if (isDirectory(fileInList)) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label14;
-                                        }
-                                    }
-                                    break;
-                                case "FULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label14;
-                                        }
-                                    }
-                                    break;
-                                case "FOLDERFULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (isDirectory(fileInList)) {
-                                            if (!listResult.contains(fileInList)) {
-                                                listResult.add(fileInList);
-                                            }
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label14;
-                                        }
-                                    }
-                                    break;
-                                case "FILEFULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (isFile(fileInList)) {
-                                            if (!listResult.contains(fileInList)) {
-                                                listResult.add(fileInList);
-                                            }
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label14;
-                                        }
-                                    }
-                                    break;
-                            }
-                        }
-                        if (Thread.currentThread().isInterrupted()) {
-                            return;
-                        }
-                    }
-                    label15:
-                    for (String fileInList : search.getListP()) {
-
-
-                        if (Thread.currentThread().isInterrupted()){
-                            return;
-                        }
-                        if (length != 2 && match(getFileName(fileInList), searchText)) {
-                            if (!listResult.contains(fileInList)) {
-                                listResult.add(fileInList);
-                            }
-                            if (listResult.size() > 100) {
-                                break;
-                            }
-                        } else if (match(getFileName(fileInList), searchText) && length == 2) {
-                            switch (strings[1].toUpperCase()) {
-                                case "FILE":
-                                    if (isFile(fileInList)) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label15;
-                                        }
-                                    }
-                                    break;
-                                case "FOLDER":
-                                    if (isDirectory(fileInList)) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label15;
-                                        }
-                                    }
-                                    break;
-                                case "FULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label15;
-                                        }
-                                    }
-                                    break;
-                                case "FOLDERFULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (isDirectory(fileInList)) {
-                                            if (!listResult.contains(fileInList)) {
-                                                listResult.add(fileInList);
-                                            }
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label15;
-                                        }
-                                    }
-                                    break;
-                                case "FILEFULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (isFile(fileInList)) {
-                                            if (!listResult.contains(fileInList)) {
-                                                listResult.add(fileInList);
-                                            }
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label15;
-                                        }
-                                    }
-                                    break;
-                            }
-                        }
-                        if (Thread.currentThread().isInterrupted()) {
-                            return;
-                        }
-                    }
-                    label16:
-                    for (String fileInList : search.getListQ()) {
-
-
-                        if (Thread.currentThread().isInterrupted()){
-                            return;
-                        }
-                        if (length != 2 && match(getFileName(fileInList), searchText)) {
-                            if (!listResult.contains(fileInList)) {
-                                listResult.add(fileInList);
-                            }
-                            if (listResult.size() > 100) {
-                                break;
-                            }
-                        } else if (match(getFileName(fileInList), searchText) && length == 2) {
-                            switch (strings[1].toUpperCase()) {
-                                case "FILE":
-                                    if (isFile(fileInList)) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label16;
-                                        }
-                                    }
-                                    break;
-                                case "FOLDER":
-                                    if (isDirectory(fileInList)) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label16;
-                                        }
-                                    }
-                                    break;
-                                case "FULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label16;
-                                        }
-                                    }
-                                    break;
-                                case "FOLDERFULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (isDirectory(fileInList)) {
-                                            if (!listResult.contains(fileInList)) {
-                                                listResult.add(fileInList);
-                                            }
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label16;
-                                        }
-                                    }
-                                    break;
-                                case "FILEFULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (isFile(fileInList)) {
-                                            if (!listResult.contains(fileInList)) {
-                                                listResult.add(fileInList);
-                                            }
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label16;
-                                        }
-                                    }
-                                    break;
-                            }
-                        }
-                        if (Thread.currentThread().isInterrupted()) {
-                            return;
-                        }
-                    }
-                    label17:
-                    for (String fileInList : search.getListR()) {
-
-
-                        if (Thread.currentThread().isInterrupted()){
-                            return;
-                        }
-                        if (length != 2 && match(getFileName(fileInList), searchText)) {
-                            if (!listResult.contains(fileInList)) {
-                                listResult.add(fileInList);
-                            }
-                            if (listResult.size() > 100) {
-                                break;
-                            }
-                        } else if (match(getFileName(fileInList), searchText) && length == 2) {
-                            switch (strings[1].toUpperCase()) {
-                                case "FILE":
-                                    if (isFile(fileInList)) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label17;
-                                        }
-                                    }
-                                    break;
-                                case "FOLDER":
-                                    if (isDirectory(fileInList)) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label17;
-                                        }
-                                    }
-                                    break;
-                                case "FULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label17;
-                                        }
-                                    }
-                                    break;
-                                case "FOLDERFULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (isDirectory(fileInList)) {
-                                            if (!listResult.contains(fileInList)) {
-                                                listResult.add(fileInList);
-                                            }
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label17;
-                                        }
-                                    }
-                                    break;
-                                case "FILEFULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (isFile(fileInList)) {
-                                            if (!listResult.contains(fileInList)) {
-                                                listResult.add(fileInList);
-                                            }
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label17;
-                                        }
-                                    }
-                                    break;
-                            }
-                        }
-                        if (Thread.currentThread().isInterrupted()) {
-                            return;
-                        }
-                    }
-                    label18:
-                    for (String fileInList : search.getListS()) {
-
-
-                        if (Thread.currentThread().isInterrupted()){
-                            return;
-                        }
-                        if (length != 2 && match(getFileName(fileInList), searchText)) {
-                            if (!listResult.contains(fileInList)) {
-                                listResult.add(fileInList);
-                            }
-                            if (listResult.size() > 100) {
-                                break;
-                            }
-                        } else if (match(getFileName(fileInList), searchText) && length == 2) {
-                            switch (strings[1].toUpperCase()) {
-                                case "FILE":
-                                    if (isFile(fileInList)) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label18;
-                                        }
-                                    }
-                                    break;
-                                case "FOLDER":
-                                    if (isDirectory(fileInList)) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label18;
-                                        }
-                                    }
-                                    break;
-                                case "FULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label18;
-                                        }
-                                    }
-                                    break;
-                                case "FOLDERFULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (isDirectory(fileInList)) {
-                                            if (!listResult.contains(fileInList)) {
-                                                listResult.add(fileInList);
-                                            }
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label18;
-                                        }
-                                    }
-                                    break;
-                                case "FILEFULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (isFile(fileInList)) {
-                                            if (!listResult.contains(fileInList)) {
-                                                listResult.add(fileInList);
-                                            }
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label18;
-                                        }
-                                    }
-                                    break;
-                            }
-                        }
-                        if (Thread.currentThread().isInterrupted()) {
-                            return;
-                        }
-                    }
-                    label19:
-                    for (String fileInList : search.getListT()) {
-
-
-                        if (Thread.currentThread().isInterrupted()){
-                            return;
-                        }
-                        if (length != 2 && match(getFileName(fileInList), searchText)) {
-                            if (!listResult.contains(fileInList)) {
-                                listResult.add(fileInList);
-                            }
-                            if (listResult.size() > 100) {
-                                break;
-                            }
-                        } else if (match(getFileName(fileInList), searchText) && length == 2) {
-                            switch (strings[1].toUpperCase()) {
-                                case "FILE":
-                                    if (isFile(fileInList)) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label19;
-                                        }
-                                    }
-                                    break;
-                                case "FOLDER":
-                                    if (isDirectory(fileInList)) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label19;
-                                        }
-                                    }
-                                    break;
-                                case "FULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label19;
-                                        }
-                                    }
-                                    break;
-                                case "FOLDERFULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (isDirectory(fileInList)) {
-                                            if (!listResult.contains(fileInList)) {
-                                                listResult.add(fileInList);
-                                            }
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label19;
-                                        }
-                                    }
-                                    break;
-                                case "FILEFULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (isFile(fileInList)) {
-                                            if (!listResult.contains(fileInList)) {
-                                                listResult.add(fileInList);
-                                            }
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label19;
-                                        }
-                                    }
-                                    break;
-                            }
-                        }
-                        if (Thread.currentThread().isInterrupted()) {
-                            return;
-                        }
-                    }
-                    label20:
-                    for (String fileInList : search.getListU()) {
-
-
-                        if (Thread.currentThread().isInterrupted()){
-                            return;
-                        }
-                        if (length != 2 && match(getFileName(fileInList), searchText)) {
-                            if (!listResult.contains(fileInList)) {
-                                listResult.add(fileInList);
-                            }
-                            if (listResult.size() > 100) {
-                                break;
-                            }
-                        } else if (match(getFileName(fileInList), searchText) && length == 2) {
-                            switch (strings[1].toUpperCase()) {
-                                case "FILE":
-                                    if (isFile(fileInList)) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label20;
-                                        }
-                                    }
-                                    break;
-                                case "FOLDER":
-                                    if (isDirectory(fileInList)) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label20;
-                                        }
-                                    }
-                                    break;
-                                case "FULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label20;
-                                        }
-                                    }
-                                    break;
-                                case "FOLDERFULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (isDirectory(fileInList)) {
-                                            if (!listResult.contains(fileInList)) {
-                                                listResult.add(fileInList);
-                                            }
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label20;
-                                        }
-                                    }
-                                    break;
-                                case "FILEFULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (isFile(fileInList)) {
-                                            if (!listResult.contains(fileInList)) {
-                                                listResult.add(fileInList);
-                                            }
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label20;
-                                        }
-                                    }
-                                    break;
-                            }
-                        }
-                        if (Thread.currentThread().isInterrupted()) {
-                            return;
-                        }
-                    }
-                    label21:
-                    for (String fileInList : search.getListV()) {
-
-
-                        if (Thread.currentThread().isInterrupted()){
-                            return;
-                        }
-                        if (length != 2 && match(getFileName(fileInList), searchText)) {
-                            if (!listResult.contains(fileInList)) {
-                                listResult.add(fileInList);
-                            }
-                            if (listResult.size() > 100) {
-                                break;
-                            }
-                        } else if (match(getFileName(fileInList), searchText) && length == 2) {
-                            switch (strings[1].toUpperCase()) {
-                                case "FILE":
-                                    if (isFile(fileInList)) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label21;
-                                        }
-                                    }
-                                    break;
-                                case "FOLDER":
-                                    if (isDirectory(fileInList)) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label21;
-                                        }
-                                    }
-                                    break;
-                                case "FULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label21;
-                                        }
-                                    }
-                                    break;
-                                case "FOLDERFULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (isDirectory(fileInList)) {
-                                            if (!listResult.contains(fileInList)) {
-                                                listResult.add(fileInList);
-                                            }
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label21;
-                                        }
-                                    }
-                                    break;
-                                case "FILEFULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (isFile(fileInList)) {
-                                            if (!listResult.contains(fileInList)) {
-                                                listResult.add(fileInList);
-                                            }
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label21;
-                                        }
-                                    }
-                                    break;
-                            }
-                        }
-                        if (Thread.currentThread().isInterrupted()) {
-                            return;
-                        }
-                    }
-                    label22:
-                    for (String fileInList : search.getListW()) {
-
-
-                        if (Thread.currentThread().isInterrupted()){
-                            return;
-                        }
-                        if (length != 2 && match(getFileName(fileInList), searchText)) {
-                            if (!listResult.contains(fileInList)) {
-                                listResult.add(fileInList);
-                            }
-                            if (listResult.size() > 100) {
-                                break;
-                            }
-                        } else if (match(getFileName(fileInList), searchText) && length == 2) {
-                            switch (strings[1].toUpperCase()) {
-                                case "FILE":
-                                    if (isFile(fileInList)) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label22;
-                                        }
-                                    }
-                                    break;
-                                case "FOLDER":
-                                    if (isDirectory(fileInList)) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label22;
-                                        }
-                                    }
-                                    break;
-                                case "FULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label22;
-                                        }
-                                    }
-                                    break;
-                                case "FOLDERFULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (isDirectory(fileInList)) {
-                                            if (!listResult.contains(fileInList)) {
-                                                listResult.add(fileInList);
-                                            }
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label22;
-                                        }
-                                    }
-                                    break;
-                                case "FILEFULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (isFile(fileInList)) {
-                                            if (!listResult.contains(fileInList)) {
-                                                listResult.add(fileInList);
-                                            }
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label22;
-                                        }
-                                    }
-                                    break;
-                            }
-                        }
-                        if (Thread.currentThread().isInterrupted()) {
-                            return;
-                        }
-                    }
-                    label23:
-                    for (String fileInList : search.getListX()) {
-
-
-                        if (Thread.currentThread().isInterrupted()){
-                            return;
-                        }
-                        if (length != 2 && match(getFileName(fileInList), searchText)) {
-                            if (!listResult.contains(fileInList)) {
-                                listResult.add(fileInList);
-                            }
-                            if (listResult.size() > 100) {
-                                break;
-                            }
-                        } else if (match(getFileName(fileInList), searchText) && length == 2) {
-                            switch (strings[1].toUpperCase()) {
-                                case "FILE":
-                                    if (isFile(fileInList)) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label23;
-                                        }
-                                    }
-                                    break;
-                                case "FOLDER":
-                                    if (isDirectory(fileInList)) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label23;
-                                        }
-                                    }
-                                    break;
-                                case "FULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label23;
-                                        }
-                                    }
-                                    break;
-                                case "FOLDERFULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (isDirectory(fileInList)) {
-                                            if (!listResult.contains(fileInList)) {
-                                                listResult.add(fileInList);
-                                            }
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label23;
-                                        }
-                                    }
-                                    break;
-                                case "FILEFULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (isFile(fileInList)) {
-                                            if (!listResult.contains(fileInList)) {
-                                                listResult.add(fileInList);
-                                            }
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label23;
-                                        }
-                                    }
-                                    break;
-                            }
-                        }
-                        if (Thread.currentThread().isInterrupted()) {
-                            return;
-                        }
-                    }
-                    label24:
-                    for (String fileInList : search.getListY()) {
-
-
-                        if (Thread.currentThread().isInterrupted()){
-                            return;
-                        }
-                        if (length != 2 && match(getFileName(fileInList), searchText)) {
-                            if (!listResult.contains(fileInList)) {
-                                listResult.add(fileInList);
-                            }
-                            if (listResult.size() > 100) {
-                                break;
-                            }
-                        } else if (match(getFileName(fileInList), searchText) && length == 2) {
-                            switch (strings[1].toUpperCase()) {
-                                case "FILE":
-                                    if (isFile(fileInList)) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label24;
-                                        }
-                                    }
-                                    break;
-                                case "FOLDER":
-                                    if (isDirectory(fileInList)) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label24;
-                                        }
-                                    }
-                                    break;
-                                case "FULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label24;
-                                        }
-                                    }
-                                    break;
-                                case "FOLDERFULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (isDirectory(fileInList)) {
-                                            if (!listResult.contains(fileInList)) {
-                                                listResult.add(fileInList);
-                                            }
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label24;
-                                        }
-                                    }
-                                    break;
-                                case "FILEFULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (isFile(fileInList)) {
-                                            if (!listResult.contains(fileInList)) {
-                                                listResult.add(fileInList);
-                                            }
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label24;
-                                        }
-                                    }
-                                    break;
-                            }
-                        }
-                        if (Thread.currentThread().isInterrupted()) {
-                            return;
-                        }
-                    }
-                    label25:
-                    for (String fileInList : search.getListZ()) {
-
-
-                        if (Thread.currentThread().isInterrupted()){
-                            return;
-                        }
-                        if (length != 2 && match(getFileName(fileInList), searchText)) {
-                            if (!listResult.contains(fileInList)) {
-                                listResult.add(fileInList);
-                            }
-                            if (listResult.size() > 100) {
-                                break;
-                            }
-                        } else if (match(getFileName(fileInList), searchText) && length == 2) {
-                            switch (strings[1].toUpperCase()) {
-                                case "FILE":
-                                    if (isFile(fileInList)) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label25;
-                                        }
-                                    }
-                                    break;
-                                case "FOLDER":
-                                    if (isDirectory(fileInList)) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label25;
-                                        }
-                                    }
-                                    break;
-                                case "FULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label25;
-                                        }
-                                    }
-                                    break;
-                                case "FOLDERFULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (isDirectory(fileInList)) {
-                                            if (!listResult.contains(fileInList)) {
-                                                listResult.add(fileInList);
-                                            }
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label25;
-                                        }
-                                    }
-                                    break;
-                                case "FILEFULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (isFile(fileInList)) {
-                                            if (!listResult.contains(fileInList)) {
-                                                listResult.add(fileInList);
-                                            }
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label25;
-                                        }
-                                    }
-                                    break;
-                            }
-                        }
-                        if (Thread.currentThread().isInterrupted()) {
-                            return;
-                        }
-                    }
-                    label26:
-                    for (String fileInList : search.getListNum()) {
-
-
-                        if (Thread.currentThread().isInterrupted()){
-                            return;
-                        }
-                        if (length != 2 && match(getFileName(fileInList), searchText)) {
-                            if (!listResult.contains(fileInList)) {
-                                listResult.add(fileInList);
-                            }
-                            if (listResult.size() > 100) {
-                                break;
-                            }
-                        } else if (match(getFileName(fileInList), searchText) && length == 2) {
-                            switch (strings[1].toUpperCase()) {
-                                case "FILE":
-                                    if (isFile(fileInList)) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label26;
-                                        }
-                                    }
-                                    break;
-                                case "FOLDER":
-                                    if (isDirectory(fileInList)) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label26;
-                                        }
-                                    }
-                                    break;
-                                case "FULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label26;
-                                        }
-                                    }
-                                    break;
-                                case "FOLDERFULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (isDirectory(fileInList)) {
-                                            if (!listResult.contains(fileInList)) {
-                                                listResult.add(fileInList);
-                                            }
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label26;
-                                        }
-                                    }
-                                    break;
-                                case "FILEFULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (isFile(fileInList)) {
-                                            if (!listResult.contains(fileInList)) {
-                                                listResult.add(fileInList);
-                                            }
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label26;
-                                        }
-                                    }
-                                    break;
-                            }
-                        }
-                        if (Thread.currentThread().isInterrupted()) {
-                            return;
-                        }
-                    }
-                    label27:
-                    for (String fileInList : search.getListUnderline()) {
-
-
-                        if (Thread.currentThread().isInterrupted()){
-                            return;
-                        }
-                        if (length != 2 && match(getFileName(fileInList), searchText)) {
-                            if (!listResult.contains(fileInList)) {
-                                listResult.add(fileInList);
-                            }
-                            if (listResult.size() > 100) {
-                                break;
-                            }
-                        } else if (match(getFileName(fileInList), searchText) && length == 2) {
-                            switch (strings[1].toUpperCase()) {
-                                case "FILE":
-                                    if (isFile(fileInList)) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label27;
-                                        }
-                                    }
-                                    break;
-                                case "FOLDER":
-                                    if (isDirectory(fileInList)) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label27;
-                                        }
-                                    }
-                                    break;
-                                case "FULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label27;
-                                        }
-                                    }
-                                    break;
-                                case "FOLDERFULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (isDirectory(fileInList)) {
-                                            if (!listResult.contains(fileInList)) {
-                                                listResult.add(fileInList);
-                                            }
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label27;
-                                        }
-                                    }
-                                    break;
-                                case "FILEFULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (isFile(fileInList)) {
-                                            if (!listResult.contains(fileInList)) {
-                                                listResult.add(fileInList);
-                                            }
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label27;
-                                        }
-                                    }
-                                    break;
-                            }
-                        }
-                        if (Thread.currentThread().isInterrupted()) {
-                            return;
-                        }
-                    }
-                    label28:
-                    for (String fileInList : search.getListUnique()) {
-                        if (Thread.currentThread().isInterrupted()){
-                            return;
-                        }
-                        if (length != 2 && match(getFileName(fileInList), searchText)) {
-                            if (!listResult.contains(fileInList)) {
-                                listResult.add(fileInList);
-                            }
-                            if (listResult.size() > 100) {
-                                break;
-                            }
-                        } else if (match(getFileName(fileInList), searchText) && length == 2) {
-                            switch (strings[1].toUpperCase()) {
-                                case "FILE":
-                                    if (isFile(fileInList)) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label28;
-                                        }
-                                    }
-                                    break;
-                                case "FOLDER":
-                                    if (isDirectory(fileInList)) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label28;
-                                        }
-                                    }
-                                    break;
-                                case "FULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label28;
-                                        }
-                                    }
-                                    break;
-                                case "FOLDERFULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (isDirectory(fileInList)) {
-                                            if (!listResult.contains(fileInList)) {
-                                                listResult.add(fileInList);
-                                            }
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label28;
-                                        }
-                                    }
-                                    break;
-                                case "FILEFULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (isFile(fileInList)) {
-                                            if (!listResult.contains(fileInList)) {
-                                                listResult.add(fileInList);
-                                            }
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label28;
-                                        }
-                                    }
-                                    break;
-                            }
-                        }
-                        if (Thread.currentThread().isInterrupted()) {
-                            return;
-                        }
-                    }
-                    label29:
-                    for (String fileInList : search.getListPercentSign()) {
-                        if (Thread.currentThread().isInterrupted()){
-                            return;
-                        }
-                        if (length != 2 && match(getFileName(fileInList), searchText)) {
-                            if (!listResult.contains(fileInList)) {
-                                listResult.add(fileInList);
-                            }
-                            if (listResult.size() > 100) {
-                                break;
-                            }
-                        } else if (match(getFileName(fileInList), searchText) && length == 2) {
-                            switch (strings[1].toUpperCase()) {
-                                case "FILE":
-                                    if (isFile(fileInList)) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label29;
-                                        }
-                                    }
-                                    break;
-                                case "FOLDER":
-                                    if (isDirectory(fileInList)) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label29;
-                                        }
-                                    }
-                                    break;
-                                case "FULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (!listResult.contains(fileInList)) {
-
-                                            listResult.add(fileInList);
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label29;
-                                        }
-                                    }
-                                    break;
-                                case "FOLDERFULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (isDirectory(fileInList)) {
-                                            if (!listResult.contains(fileInList)) {
-                                                listResult.add(fileInList);
-                                            }
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label29;
-                                        }
-                                    }
-                                    break;
-                                case "FILEFULL":
-                                    if (PinYinConverter.getPinYin(getFileName(fileInList.toLowerCase())).equals(searchText.toLowerCase())) {
-                                        if (isFile(fileInList)) {
-                                            if (!listResult.contains(fileInList)) {
-                                                listResult.add(fileInList);
-                                            }
-                                        }
-                                        if (listResult.size() > 100) {
-                                            break label29;
-                                        }
-                                    }
-                                    break;
-                            }
-                        }
-                        if (Thread.currentThread().isInterrupted()) {
-                            return;
-                        }
-                    }
-                    delRepeated();
-                }
-            }
-        }
-    }
 }
 
