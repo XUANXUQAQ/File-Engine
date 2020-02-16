@@ -553,6 +553,10 @@ public class SettingsFrame {
         });
         buttonAddCMD.addActionListener(e -> {
             String name = JOptionPane.showInputDialog("请输入对该命令的标识,之后你可以在搜索框中输入 \": 标识符\" 直接执行该命令");
+            if (name == null || name.equals("")) {
+                //未输入
+                return;
+            }
             if (name.equals("update") || name.equals("clearbin") || name.equals("help") || name.equals("version")) {
                 JOptionPane.showMessageDialog(null, "和已有的命令冲突");
                 return;
