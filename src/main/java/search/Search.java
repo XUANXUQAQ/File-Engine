@@ -7,7 +7,6 @@ import pinyin.PinYinConverter;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ConcurrentModificationException;
-import java.util.HashSet;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 
@@ -923,18 +922,10 @@ public class Search {
         for (File root : roots) {
             String path = root.getAbsolutePath();
             path = path.substring(0, 2);
-            try {
-                __searchFile(path, searchDepth, ignorePath);
-            } catch (IOException ignored) {
-
-            }
+            __searchFile(path, searchDepth, ignorePath);
         }
-        try {
-            __searchFileIgnoreSearchDepth(getStartMenu(), ignorePath);
-            __searchFileIgnoreSearchDepth("C:\\ProgramData\\Microsoft\\Windows\\Start Menu", ignorePath);
-        } catch (IOException ignored) {
-
-        }
+        __searchFileIgnoreSearchDepth(getStartMenu(), ignorePath);
+        __searchFileIgnoreSearchDepth("C:\\ProgramData\\Microsoft\\Windows\\Start Menu", ignorePath);
         MainClass.showMessage("提示", "搜索完成");
         isManualUpdate = false;
         isUsable = true;
@@ -959,10 +950,8 @@ public class Search {
         return null;
     }
 
-    private void __searchFileIgnoreSearchDepth(String path, String ignorePath) throws IOException {
-        File searchResults = new File(SettingsFrame.tmp + "\\searchResults.txt");
-        String command = "cmd /c fileSearcher.exe \"" + path + "\"" + " \"6\" " + "\"" + ignorePath + "\" " + "\"" + searchResults.getAbsolutePath() + "\" " + "\"" + "1" + "\"";
-        String each;
+    private void __searchFileIgnoreSearchDepth(String path, String ignorePath) {
+        String command = "cmd /c fileSearcher.exe \"" + path + "\"" + " \"6\" " + "\"" + ignorePath + "\" " + "\"" + SettingsFrame.dataPath + "\" " + "\"" + "1" + "\"";
         Process p;
         try {
             p = Runtime.getRuntime().exec(command);
@@ -971,192 +960,11 @@ public class Search {
             }
         } catch (IOException | InterruptedException ignored) {
 
-        }
-        BufferedWriter bwA = new BufferedWriter((new FileWriter(SettingsFrame.dataPath + "\\listA.txt", true)));
-        BufferedWriter bwB = new BufferedWriter((new FileWriter(SettingsFrame.dataPath + "\\listB.txt", true)));
-        BufferedWriter bwC = new BufferedWriter((new FileWriter(SettingsFrame.dataPath + "\\listC.txt", true)));
-        BufferedWriter bwD = new BufferedWriter((new FileWriter(SettingsFrame.dataPath + "\\listD.txt", true)));
-        BufferedWriter bwE = new BufferedWriter((new FileWriter(SettingsFrame.dataPath + "\\listE.txt", true)));
-        BufferedWriter bwF = new BufferedWriter((new FileWriter(SettingsFrame.dataPath + "\\listF.txt", true)));
-        BufferedWriter bwG = new BufferedWriter((new FileWriter(SettingsFrame.dataPath + "\\listG.txt", true)));
-        BufferedWriter bwH = new BufferedWriter((new FileWriter(SettingsFrame.dataPath + "\\listH.txt", true)));
-        BufferedWriter bwI = new BufferedWriter((new FileWriter(SettingsFrame.dataPath + "\\listI.txt", true)));
-        BufferedWriter bwJ = new BufferedWriter((new FileWriter(SettingsFrame.dataPath + "\\listJ.txt", true)));
-        BufferedWriter bwK = new BufferedWriter((new FileWriter(SettingsFrame.dataPath + "\\listK.txt", true)));
-        BufferedWriter bwL = new BufferedWriter((new FileWriter(SettingsFrame.dataPath + "\\listL.txt", true)));
-        BufferedWriter bwM = new BufferedWriter((new FileWriter(SettingsFrame.dataPath + "\\listM.txt", true)));
-        BufferedWriter bwN = new BufferedWriter((new FileWriter(SettingsFrame.dataPath + "\\listN.txt", true)));
-        BufferedWriter bwO = new BufferedWriter((new FileWriter(SettingsFrame.dataPath + "\\listO.txt", true)));
-        BufferedWriter bwP = new BufferedWriter((new FileWriter(SettingsFrame.dataPath + "\\listP.txt", true)));
-        BufferedWriter bwQ = new BufferedWriter((new FileWriter(SettingsFrame.dataPath + "\\listQ.txt", true)));
-        BufferedWriter bwR = new BufferedWriter((new FileWriter(SettingsFrame.dataPath + "\\listR.txt", true)));
-        BufferedWriter bwS = new BufferedWriter((new FileWriter(SettingsFrame.dataPath + "\\listS.txt", true)));
-        BufferedWriter bwT = new BufferedWriter((new FileWriter(SettingsFrame.dataPath + "\\listT.txt", true)));
-        BufferedWriter bwU = new BufferedWriter((new FileWriter(SettingsFrame.dataPath + "\\listU.txt", true)));
-        BufferedWriter bwV = new BufferedWriter((new FileWriter(SettingsFrame.dataPath + "\\listV.txt", true)));
-        BufferedWriter bwW = new BufferedWriter((new FileWriter(SettingsFrame.dataPath + "\\listW.txt", true)));
-        BufferedWriter bwX = new BufferedWriter((new FileWriter(SettingsFrame.dataPath + "\\listX.txt", true)));
-        BufferedWriter bwY = new BufferedWriter((new FileWriter(SettingsFrame.dataPath + "\\listY.txt", true)));
-        BufferedWriter bwZ = new BufferedWriter((new FileWriter(SettingsFrame.dataPath + "\\listZ.txt", true)));
-        BufferedWriter bwNum = new BufferedWriter((new FileWriter(SettingsFrame.dataPath + "\\listNum.txt", true)));
-        BufferedWriter bwUnderline = new BufferedWriter((new FileWriter(SettingsFrame.dataPath + "\\listUnderline.txt", true)));
-        BufferedWriter bwPercentSign = new BufferedWriter((new FileWriter(SettingsFrame.dataPath + "\\listPercentSign.txt", true)));
-        BufferedWriter bwUnique = new BufferedWriter((new FileWriter(SettingsFrame.dataPath + "\\listUnique.txt", true)));
-        try (BufferedReader buffr = new BufferedReader(new InputStreamReader(new FileInputStream(searchResults)))) {
-            while ((each = buffr.readLine()) != null) {
-                File tmp = new File(each);
-                String name = tmp.getName();
-                name = PinYinConverter.getPinYin(name);
-                HashSet<String> set = new HashSet<>();
-                boolean isNumAdded = false;
-                for (char i : name.toCharArray()) {
-                    if (Character.isAlphabetic(i)) {
-                        set.add(String.valueOf(i));
-                    }
-                    if (Character.isDigit(i) && !isNumAdded) {
-                        set.add(String.valueOf(i));
-                        isNumAdded = true;
-                    }
-                    if (set.size() > 7) {
-                        break;
-                    }
-                }
-                for (String headWord : set) {
-                    headWord = headWord.toUpperCase();
-                    switch (headWord) {
-                        case "A":
-                            bwA.write(each + "\n");
-                            break;
-                        case "B":
-                            bwB.write(each + "\n");
-                            break;
-                        case "C":
-                            bwC.write(each + "\n");
-                            break;
-                        case "D":
-                            bwD.write(each + "\n");
-                            break;
-                        case "E":
-                            bwE.write(each + "\n");
-                            break;
-                        case "F":
-                            bwF.write(each + "\n");
-                            break;
-                        case "G":
-                            bwG.write(each + "\n");
-                            break;
-                        case "H":
-                            bwH.write(each + "\n");
-                            break;
-                        case "I":
-                            bwI.write(each + "\n");
-                            break;
-                        case "J":
-                            bwJ.write(each + "\n");
-                            break;
-                        case "K":
-                            bwK.write(each + "\n");
-                            break;
-                        case "L":
-                            bwL.write(each + "\n");
-                            break;
-                        case "M":
-                            bwM.write(each + "\n");
-                            break;
-                        case "N":
-                            bwN.write(each + "\n");
-                            break;
-                        case "O":
-                            bwO.write(each + "\n");
-                            break;
-                        case "P":
-                            bwP.write(each + "\n");
-                            break;
-                        case "Q":
-                            bwQ.write(each + "\n");
-                            break;
-                        case "R":
-                            bwR.write(each + "\n");
-                            break;
-                        case "S":
-                            bwS.write(each + "\n");
-                            break;
-                        case "T":
-                            bwT.write(each + "\n");
-                            break;
-                        case "U":
-                            bwU.write(each + "\n");
-                            break;
-                        case "V":
-                            bwV.write(each + "\n");
-                            break;
-                        case "W":
-                            bwW.write(each + "\n");
-                            break;
-                        case "X":
-                            bwX.write(each + "\n");
-                            break;
-                        case "Y":
-                            bwY.write(each + "\n");
-                            break;
-                        case "Z":
-                            bwZ.write(each + "\n");
-                            break;
-                        case "_":
-                            bwUnderline.write(each + "\n");
-                            break;
-                        case "%":
-                            bwPercentSign.write(each + "\n");
-                            break;
-                        default:
-                            if (Character.isDigit(headWord.charAt(0))) {
-                                bwNum.write(each + "\n");
-                            } else {
-                                bwUnique.write(each + "\n");
-                            }
-                            break;
-                    }
-                }
-            }
-        } catch (Exception ignored) {
-
-        } finally {
-            bwA.close();
-            bwB.close();
-            bwC.close();
-            bwD.close();
-            bwE.close();
-            bwF.close();
-            bwG.close();
-            bwH.close();
-            bwI.close();
-            bwK.close();
-            bwL.close();
-            bwM.close();
-            bwN.close();
-            bwO.close();
-            bwP.close();
-            bwQ.close();
-            bwR.close();
-            bwS.close();
-            bwT.close();
-            bwU.close();
-            bwV.close();
-            bwW.close();
-            bwX.close();
-            bwY.close();
-            bwZ.close();
-            bwNum.close();
-            bwPercentSign.close();
-            bwUnderline.close();
-            bwUnique.close();
         }
     }
 
-    private void __searchFile(String path, int searchDepth, String ignorePath) throws IOException {
-        File searchResults = new File(SettingsFrame.tmp + "\\searchResults.txt");
-        String command = "cmd /c fileSearcher.exe \"" + path + "\"" + " \"" + searchDepth + "\" " + "\"" + ignorePath + "\" " + "\"" + searchResults.getAbsolutePath() + "\" " + "\"" + "0" + "\"";
-        String each;
+    private void __searchFile(String path, int searchDepth, String ignorePath) {
+        String command = "cmd /c fileSearcher.exe \"" + path + "\"" + " \"" + searchDepth + "\" " + "\"" + ignorePath + "\" " + "\"" + SettingsFrame.dataPath + "\" " + "\"" + "0" + "\"";
         Process p;
         try {
             p = Runtime.getRuntime().exec(command);
@@ -1165,187 +973,6 @@ public class Search {
             }
         } catch (IOException | InterruptedException ignored) {
 
-        }
-
-        BufferedWriter bwA = new BufferedWriter((new FileWriter(SettingsFrame.dataPath + "\\listA.txt", true)));
-        BufferedWriter bwB = new BufferedWriter((new FileWriter(SettingsFrame.dataPath + "\\listB.txt", true)));
-        BufferedWriter bwC = new BufferedWriter((new FileWriter(SettingsFrame.dataPath + "\\listC.txt", true)));
-        BufferedWriter bwD = new BufferedWriter((new FileWriter(SettingsFrame.dataPath + "\\listD.txt", true)));
-        BufferedWriter bwE = new BufferedWriter((new FileWriter(SettingsFrame.dataPath + "\\listE.txt", true)));
-        BufferedWriter bwF = new BufferedWriter((new FileWriter(SettingsFrame.dataPath + "\\listF.txt", true)));
-        BufferedWriter bwG = new BufferedWriter((new FileWriter(SettingsFrame.dataPath + "\\listG.txt", true)));
-        BufferedWriter bwH = new BufferedWriter((new FileWriter(SettingsFrame.dataPath + "\\listH.txt", true)));
-        BufferedWriter bwI = new BufferedWriter((new FileWriter(SettingsFrame.dataPath + "\\listI.txt", true)));
-        BufferedWriter bwJ = new BufferedWriter((new FileWriter(SettingsFrame.dataPath + "\\listJ.txt", true)));
-        BufferedWriter bwK = new BufferedWriter((new FileWriter(SettingsFrame.dataPath + "\\listK.txt", true)));
-        BufferedWriter bwL = new BufferedWriter((new FileWriter(SettingsFrame.dataPath + "\\listL.txt", true)));
-        BufferedWriter bwM = new BufferedWriter((new FileWriter(SettingsFrame.dataPath + "\\listM.txt", true)));
-        BufferedWriter bwN = new BufferedWriter((new FileWriter(SettingsFrame.dataPath + "\\listN.txt", true)));
-        BufferedWriter bwO = new BufferedWriter((new FileWriter(SettingsFrame.dataPath + "\\listO.txt", true)));
-        BufferedWriter bwP = new BufferedWriter((new FileWriter(SettingsFrame.dataPath + "\\listP.txt", true)));
-        BufferedWriter bwQ = new BufferedWriter((new FileWriter(SettingsFrame.dataPath + "\\listQ.txt", true)));
-        BufferedWriter bwR = new BufferedWriter((new FileWriter(SettingsFrame.dataPath + "\\listR.txt", true)));
-        BufferedWriter bwS = new BufferedWriter((new FileWriter(SettingsFrame.dataPath + "\\listS.txt", true)));
-        BufferedWriter bwT = new BufferedWriter((new FileWriter(SettingsFrame.dataPath + "\\listT.txt", true)));
-        BufferedWriter bwU = new BufferedWriter((new FileWriter(SettingsFrame.dataPath + "\\listU.txt", true)));
-        BufferedWriter bwV = new BufferedWriter((new FileWriter(SettingsFrame.dataPath + "\\listV.txt", true)));
-        BufferedWriter bwW = new BufferedWriter((new FileWriter(SettingsFrame.dataPath + "\\listW.txt", true)));
-        BufferedWriter bwX = new BufferedWriter((new FileWriter(SettingsFrame.dataPath + "\\listX.txt", true)));
-        BufferedWriter bwY = new BufferedWriter((new FileWriter(SettingsFrame.dataPath + "\\listY.txt", true)));
-        BufferedWriter bwZ = new BufferedWriter((new FileWriter(SettingsFrame.dataPath + "\\listZ.txt", true)));
-        BufferedWriter bwNum = new BufferedWriter((new FileWriter(SettingsFrame.dataPath + "\\listNum.txt", true)));
-        BufferedWriter bwUnderline = new BufferedWriter((new FileWriter(SettingsFrame.dataPath + "\\listUnderline.txt", true)));
-        BufferedWriter bwPercentSign = new BufferedWriter((new FileWriter(SettingsFrame.dataPath + "\\listPercentSign.txt", true)));
-        BufferedWriter bwUnique = new BufferedWriter((new FileWriter(SettingsFrame.dataPath + "\\listUnique.txt", true)));
-
-        try (BufferedReader buffr = new BufferedReader(new InputStreamReader(new FileInputStream(searchResults)))) {
-            while ((each = buffr.readLine()) != null) {
-                File tmp = new File(each);
-                String name = tmp.getName();
-                name = PinYinConverter.getPinYin(name);
-                HashSet<String> set = new HashSet<>();
-                boolean isNumAdded = false;
-                for (char i : name.toCharArray()) {
-                    if (Character.isAlphabetic(i)) {
-                        set.add(String.valueOf(i));
-                    }
-                    if (Character.isDigit(i) && !isNumAdded) {
-                        set.add(String.valueOf(i));
-                        isNumAdded = true;
-                    }
-                    if (set.size() > 7) {
-                        break;
-                    }
-                }
-                for (String headWord : set) {
-                    headWord = headWord.toUpperCase();
-                    switch (headWord) {
-                        case "A":
-                            bwA.write(each + "\n");
-                            break;
-                        case "B":
-                            bwB.write(each + "\n");
-                            break;
-                        case "C":
-                            bwC.write(each + "\n");
-                            break;
-                        case "D":
-                            bwD.write(each + "\n");
-                            break;
-                        case "E":
-                            bwE.write(each + "\n");
-                            break;
-                        case "F":
-                            bwF.write(each + "\n");
-                            break;
-                        case "G":
-                            bwG.write(each + "\n");
-                            break;
-                        case "H":
-                            bwH.write(each + "\n");
-                            break;
-                        case "I":
-                            bwI.write(each + "\n");
-                            break;
-                        case "J":
-                            bwJ.write(each + "\n");
-                            break;
-                        case "K":
-                            bwK.write(each + "\n");
-                            break;
-                        case "L":
-                            bwL.write(each + "\n");
-                            break;
-                        case "M":
-                            bwM.write(each + "\n");
-                            break;
-                        case "N":
-                            bwN.write(each + "\n");
-                            break;
-                        case "O":
-                            bwO.write(each + "\n");
-                            break;
-                        case "P":
-                            bwP.write(each + "\n");
-                            break;
-                        case "Q":
-                            bwQ.write(each + "\n");
-                            break;
-                        case "R":
-                            bwR.write(each + "\n");
-                            break;
-                        case "S":
-                            bwS.write(each + "\n");
-                            break;
-                        case "T":
-                            bwT.write(each + "\n");
-                            break;
-                        case "U":
-                            bwU.write(each + "\n");
-                            break;
-                        case "V":
-                            bwV.write(each + "\n");
-                            break;
-                        case "W":
-                            bwW.write(each + "\n");
-                            break;
-                        case "X":
-                            bwX.write(each + "\n");
-                            break;
-                        case "Y":
-                            bwY.write(each + "\n");
-                            break;
-                        case "Z":
-                            bwZ.write(each + "\n");
-                            break;
-                        case "_":
-                            bwUnderline.write(each + "\n");
-                            break;
-                        case "%":
-                            bwPercentSign.write(each + "\n");
-                            break;
-                        default:
-                            if (Character.isDigit(headWord.charAt(0))) {
-                                bwNum.write(each + "\n");
-                            } else {
-                                bwUnique.write(each + "\n");
-                            }
-                            break;
-                    }
-                }
-            }
-        } catch (Exception ignored) {
-
-        } finally {
-            bwA.close();
-            bwB.close();
-            bwC.close();
-            bwD.close();
-            bwE.close();
-            bwF.close();
-            bwG.close();
-            bwH.close();
-            bwI.close();
-            bwK.close();
-            bwL.close();
-            bwM.close();
-            bwN.close();
-            bwO.close();
-            bwP.close();
-            bwQ.close();
-            bwR.close();
-            bwS.close();
-            bwT.close();
-            bwU.close();
-            bwV.close();
-            bwW.close();
-            bwX.close();
-            bwY.close();
-            bwZ.close();
-            bwNum.close();
-            bwPercentSign.close();
-            bwUnderline.close();
-            bwUnique.close();
         }
     }
 
