@@ -113,7 +113,7 @@ public class MainClass {
         } else {
             name = "search_x86.exe";
         }
-        File settings = new File(System.getenv("Appdata") + "/settings.json");
+        File settings = SettingsFrame.settings;
         File caches = new File("cache.dat");
         File data = new File("data");
 
