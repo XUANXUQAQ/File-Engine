@@ -13,6 +13,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
 import java.net.URL;
+import java.util.HashSet;
 import java.util.Objects;
 
 
@@ -76,6 +77,11 @@ public class SettingsFrame {
     private JTextField textFieldRunAsAdmin;
     private JLabel labelOpenFolder;
     private JTextField textFieldOpenLastFolder;
+    private JLabel labelSelfDefinedTip;
+    private JButton buttonAddCMD;
+    private JButton buttonDelCmd;
+    private JScrollPane scrollPaneCmd;
+    private JList<Object> listCmds;
     private boolean isStartup;
     public static int cacheNumLimit;
     public static String hotkey;
@@ -93,9 +99,11 @@ public class SettingsFrame {
     public static File tmp = new File(System.getenv("Appdata") + "/tmp");
     private static File settings = new File(System.getenv("Appdata") + "/settings.json");
     private static CheckHotKey HotKeyListener;
+    public static HashSet<String> cmdSet = new HashSet<>();
 
 
     public static void initSettings() {
+        //获取所有设置信息
         try (BufferedReader buffR = new BufferedReader(new FileReader(settings))) {
             String line;
             StringBuilder result = new StringBuilder();
@@ -117,6 +125,15 @@ public class SettingsFrame {
             _openLastFolderKeyCode = openLastFolderKeyCode;
             runAsAdminKeyCode = settings.getInteger("runAsAdminKeyCode");
             _runAsAdminKeyCode = runAsAdminKeyCode;
+        } catch (IOException ignored) {
+
+        }
+        //获取所有自定义命令
+        try (BufferedReader br = new BufferedReader(new FileReader(new File("cmds.txt")))) {
+            String each;
+            while ((each = br.readLine()) != null) {
+                cmdSet.add(each);
+            }
         } catch (IOException ignored) {
 
         }
@@ -197,7 +214,18 @@ public class SettingsFrame {
             allSettings.put("openLastFolderKeyCode", openLastFolderKeyCode);
             try (BufferedWriter buffW = new BufferedWriter(new FileWriter(settings))) {
                 buffW.write(allSettings.toJSONString());
-                JOptionPane.showMessageDialog(null, "保存成功");
+                JOptionPane.showMessageDialog(null, "保存成功"); //将设置保存
+            } catch (IOException ignored) {
+
+            }
+            //保存自定义命令
+            StringBuilder strb = new StringBuilder();
+            for (String each : cmdSet) {
+                strb.append(each);
+                strb.append("\n");
+            }
+            try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File("cmds.txt")))) {
+                bw.write(strb.toString());
             } catch (IOException ignored) {
 
             }
@@ -470,6 +498,7 @@ public class SettingsFrame {
             }else if (openLastFolderKeyCode == 18){
                 textFieldOpenLastFolder.setText("Alt + Enter");
             }
+            listCmds.setListData(cmdSet.toArray());
         } catch (IOException ignored) {
 
         }
@@ -481,24 +510,23 @@ public class SettingsFrame {
                 "5.在搜索框中输入  : update  强制重建本地索引\n" +
                 "6.在搜索框中输入  : version  查看当前版本\n" +
                 "7.在搜索框中输入  : clearbin  清空回收站\n" +
-                "8.在搜索框中输入  : help  查看帮助\"\n" +
-                "9.在输入的文件名后输入  ; full  可全字匹配\n" +
-                "9.在输入的文件名后输入  ; file  可只匹配文件\n" +
-                "10.在输入的文件名后输入  ; folder  可只匹配文件夹\n" +
-                "11.在输入的文件名后输入  ; filefull  可只匹配文件并全字匹配\n" +
-                "12.在输入的文件名后输入  ; folderfull  可只匹配文件夹并全字匹配"));
+                "8.在搜索框中输入  : help  查看帮助\n" +
+                "9.在设置中可以自定义命令，在搜索框中输入  : 自定义标识  运行自己的命令\n" +
+                "10.在输入的文件名后输入  ; full  可全字匹配\n" +
+                "11.在输入的文件名后输入  ; file  可只匹配文件\n" +
+                "12.在输入的文件名后输入  ; folder  可只匹配文件夹\n" +
+                "13.在输入的文件名后输入  ; filefull  可只匹配文件并全字匹配\n" +
+                "14.在输入的文件名后输入  ; folderfull  可只匹配文件夹并全字匹配"));
         checkBoxAdmin.addActionListener(e -> isDefaultAdmin = checkBoxAdmin.isSelected());
-        checkBoxLoseFocus.addActionListener(e -> {
-            isLoseFocusClose = checkBoxLoseFocus.isSelected();
-        });
+        checkBoxLoseFocus.addActionListener(e -> isLoseFocusClose = checkBoxLoseFocus.isSelected());
         textFieldRunAsAdmin.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
                 int code = e.getKeyCode();
-                if (code == 17){
+                if (code == 17) {
                     textFieldRunAsAdmin.setText("Ctrl + Enter");
                     _runAsAdminKeyCode = 17;
-                }else if (code == 16){
+                } else if (code == 16) {
                     textFieldRunAsAdmin.setText("Shift + Enter");
                     _runAsAdminKeyCode = 16;
                 }else if (code == 18){
@@ -514,14 +542,36 @@ public class SettingsFrame {
                 if (code == 17){
                     textFieldOpenLastFolder.setText("Ctrl + Enter");
                     _openLastFolderKeyCode = 17;
-                }else if (code == 16){
+                } else if (code == 16) {
                     textFieldOpenLastFolder.setText("Shift + Enter");
                     _openLastFolderKeyCode = 16;
-                }else if (code == 18){
+                } else if (code == 18) {
                     textFieldOpenLastFolder.setText("Alt + Enter");
                     _openLastFolderKeyCode = 18;
                 }
             }
+        });
+        buttonAddCMD.addActionListener(e -> {
+            String name = JOptionPane.showInputDialog("请输入对该命令的标识,之后你可以在搜索框中输入 \": 标识符\" 直接执行该命令");
+            if (name.equals("update") || name.equals("clearbin") || name.equals("help") || name.equals("version")) {
+                JOptionPane.showMessageDialog(null, "和已有的命令冲突");
+                return;
+            }
+            String cmd;
+            JOptionPane.showMessageDialog(null, "请选择可执行批处理文件位置");
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+            int returnValue = fileChooser.showDialog(new Label(), "选择");
+            if (returnValue == JFileChooser.APPROVE_OPTION) {
+                cmd = fileChooser.getSelectedFile().getAbsolutePath();
+                cmdSet.add(":" + name + ";" + cmd);
+                listCmds.setListData(cmdSet.toArray());
+            }
+        });
+        buttonDelCmd.addActionListener(e -> {
+            String del = (String) listCmds.getSelectedValue();
+            cmdSet.remove(del);
+            listCmds.setListData(cmdSet.toArray());
         });
     }
 
