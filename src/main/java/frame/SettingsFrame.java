@@ -53,12 +53,9 @@ public class SettingsFrame {
     private JPanel panel;
     private JLabel label7;
     private JButton buttonSaveAndRemoveDesktop;
-    private JLabel labelPlaceHoder1;
     private JButton Button3;
     private JScrollPane scrollpane;
     private JLabel labelplaceholder2;
-    private JLabel labelplacehoder3;
-    private JLabel labelTip;
     private JTextField textFieldHotkey;
     private JButton ButtonCloseAdmin;
     private JButton ButtonRecoverAdmin;
@@ -69,6 +66,16 @@ public class SettingsFrame {
     private JButton ButtonDataPath;
     private JButton ButtonPriorityFolder;
     private JButton buttonHelp;
+    private JTabbedPane tabbedPane1;
+    private JCheckBox checkBoxAdmin;
+    private JLabel labelplaceholder1;
+    private JCheckBox checkBoxLoseFocus;
+    private JLabel labelPlaceHolder2;
+    private JLabel labelPlaceHolder3;
+    private JLabel labelRunAsAdmin;
+    private JTextField textFieldRunAsAdmin;
+    private JLabel labelOpenFolder;
+    private JTextField textFieldOpenLastFolder;
     private boolean isStartup;
     public static int cacheNumLimit;
     public static String hotkey;
@@ -77,6 +84,12 @@ public class SettingsFrame {
     public static String dataPath;
     public static String priorityFolder;
     public static int searchDepth;
+    public static boolean isDefaultAdmin;
+    public static boolean isLoseFocusClose;
+    public static int openLastFolderKeyCode;
+    public static int runAsAdminKeyCode;
+    private static int _openLastFolderKeyCode;
+    private static int _runAsAdminKeyCode;
     public static File tmp = new File(System.getenv("Appdata") + "/tmp");
     private static File settings = new File(System.getenv("Appdata") + "/settings.json");
     private static CheckHotKey HotKeyListener;
@@ -98,6 +111,12 @@ public class SettingsFrame {
             searchDepth = settings.getInteger("searchDepth");
             ignorePath = settings.getString("ignorePath");
             updateTimeLimit = settings.getInteger("updateTimeLimit");
+            isDefaultAdmin = settings.getBoolean("isDefaultAdmin");
+            isLoseFocusClose = settings.getBoolean("isLoseFocusClose");
+            openLastFolderKeyCode = settings.getInteger("openLastFolderKeyCode");
+            _openLastFolderKeyCode = openLastFolderKeyCode;
+            runAsAdminKeyCode = settings.getInteger("runAsAdminKeyCode");
+            _runAsAdminKeyCode = runAsAdminKeyCode;
         } catch (IOException ignored) {
 
         }
@@ -153,6 +172,13 @@ public class SettingsFrame {
                     return;
                 }
             }
+            if (_openLastFolderKeyCode == _runAsAdminKeyCode){
+                JOptionPane.showMessageDialog(null, "打开上级文件夹快捷键与以管理员方式运行快捷键冲突");
+                return;
+            }else{
+                openLastFolderKeyCode = _openLastFolderKeyCode;
+                runAsAdminKeyCode = _runAsAdminKeyCode;
+            }
             priorityFolder = textFieldPriorityFolder.getText();
             dataPath = textFieldDataPath.getText();
             hotkey = textFieldHotkey.getText();
@@ -165,6 +191,10 @@ public class SettingsFrame {
             allSettings.put("searchDepth", searchDepth);
             allSettings.put("priorityFolder", priorityFolder);
             allSettings.put("dataPath", dataPath);
+            allSettings.put("isDefaultAdmin", isDefaultAdmin);
+            allSettings.put("isLoseFocusClose", isLoseFocusClose);
+            allSettings.put("runAsAdminKeyCode", runAsAdminKeyCode);
+            allSettings.put("openLastFolderKeyCode", openLastFolderKeyCode);
             try (BufferedWriter buffW = new BufferedWriter(new FileWriter(settings))) {
                 buffW.write(allSettings.toJSONString());
                 JOptionPane.showMessageDialog(null, "保存成功");
@@ -242,9 +272,7 @@ public class SettingsFrame {
     }
 
     public  SettingsFrame() {
-        buttonSave.addActionListener(e -> {
-            saveChanges();
-        });
+        buttonSave.addActionListener(e -> saveChanges());
         checkBox1.addActionListener(e -> setStartup(checkBox1.isSelected()));
         buttonSaveAndRemoveDesktop.addActionListener(e -> {
             String currentFolder = new File("").getAbsolutePath();
@@ -422,24 +450,78 @@ public class SettingsFrame {
             textFieldHotkey.setText(hotkey);
             textFieldDataPath.setText(dataPath);
             textFieldPriorityFolder.setText(priorityFolder);
+            isDefaultAdmin = settings.getBoolean("isDefaultAdmin");
+            checkBoxAdmin.setSelected(isDefaultAdmin);
+            isLoseFocusClose = settings.getBoolean("isLoseFocusClose");
+            checkBoxLoseFocus.setSelected(isLoseFocusClose);
+            runAsAdminKeyCode = settings.getInteger("runAsAdminKeyCode");
+            openLastFolderKeyCode = settings.getInteger("openLastFolderKeyCode");
+            if (runAsAdminKeyCode == 17){
+                textFieldRunAsAdmin.setText("Ctrl + Enter");
+            }else if (runAsAdminKeyCode == 16){
+                textFieldRunAsAdmin.setText("Shift + Enter");
+            }else if (runAsAdminKeyCode == 18){
+                textFieldRunAsAdmin.setText("Alt + Enter");
+            }
+            if (openLastFolderKeyCode == 17){
+                textFieldOpenLastFolder.setText("Ctrl + Enter");
+            }else if (openLastFolderKeyCode == 16){
+                textFieldOpenLastFolder.setText("Shift + Enter");
+            }else if (openLastFolderKeyCode == 18){
+                textFieldOpenLastFolder.setText("Alt + Enter");
+            }
         } catch (IOException ignored) {
 
         }
-        buttonHelp.addActionListener(e -> {
-            JOptionPane.showMessageDialog(null, "帮助：\n" +
-                    "1.默认Ctrl + Alt + J打开搜索框\n" +
-                    "2.Enter键运行程序\n" +
-                    "3.Ctrl + Enter键打开并选中文件所在文件夹\n" +
-                    "4.Shift + Enter键以管理员权限运行程序（前提是该程序拥有管理员权限）\n" +
-                    "5.在搜索框中输入  : update  强制重建本地索引\n" +
-                    "6.在搜索框中输入  : version  查看当前版本\n" +
-                    "7.在搜索框中输入  : clearbin  清空回收站\n" +
-                    "8.在搜索框中输入  : help  查看帮助\"\n" +
-                    "9.在输入的文件名后输入  ; full  可全字匹配\n" +
-                    "9.在输入的文件名后输入  ; file  可只匹配文件\n" +
-                    "10.在输入的文件名后输入  ; folder  可只匹配文件夹\n" +
-                    "11.在输入的文件名后输入  ; filefull  可只匹配文件并全字匹配\n" +
-                    "12.在输入的文件名后输入  ; folderfull  可只匹配文件夹并全字匹配");
+        buttonHelp.addActionListener(e -> JOptionPane.showMessageDialog(null, "帮助：\n" +
+                "1.默认Ctrl + Alt + J打开搜索框\n" +
+                "2.Enter键运行程序\n" +
+                "3.Ctrl + Enter键打开并选中文件所在文件夹\n" +
+                "4.Shift + Enter键以管理员权限运行程序（前提是该程序拥有管理员权限）\n" +
+                "5.在搜索框中输入  : update  强制重建本地索引\n" +
+                "6.在搜索框中输入  : version  查看当前版本\n" +
+                "7.在搜索框中输入  : clearbin  清空回收站\n" +
+                "8.在搜索框中输入  : help  查看帮助\"\n" +
+                "9.在输入的文件名后输入  ; full  可全字匹配\n" +
+                "9.在输入的文件名后输入  ; file  可只匹配文件\n" +
+                "10.在输入的文件名后输入  ; folder  可只匹配文件夹\n" +
+                "11.在输入的文件名后输入  ; filefull  可只匹配文件并全字匹配\n" +
+                "12.在输入的文件名后输入  ; folderfull  可只匹配文件夹并全字匹配"));
+        checkBoxAdmin.addActionListener(e -> isDefaultAdmin = checkBoxAdmin.isSelected());
+        checkBoxLoseFocus.addActionListener(e -> {
+            isLoseFocusClose = checkBoxLoseFocus.isSelected();
+        });
+        textFieldRunAsAdmin.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                int code = e.getKeyCode();
+                if (code == 17){
+                    textFieldRunAsAdmin.setText("Ctrl + Enter");
+                    _runAsAdminKeyCode = 17;
+                }else if (code == 16){
+                    textFieldRunAsAdmin.setText("Shift + Enter");
+                    _runAsAdminKeyCode = 16;
+                }else if (code == 18){
+                    textFieldRunAsAdmin.setText("Alt + Enter");
+                    _runAsAdminKeyCode = 18;
+                }
+            }
+        });
+        textFieldOpenLastFolder.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                int code = e.getKeyCode();
+                if (code == 17){
+                    textFieldOpenLastFolder.setText("Ctrl + Enter");
+                    _openLastFolderKeyCode = 17;
+                }else if (code == 16){
+                    textFieldOpenLastFolder.setText("Shift + Enter");
+                    _openLastFolderKeyCode = 16;
+                }else if (code == 18){
+                    textFieldOpenLastFolder.setText("Alt + Enter");
+                    _openLastFolderKeyCode = 18;
+                }
+            }
         });
     }
 
