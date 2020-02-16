@@ -56,6 +56,7 @@ public class SearchBar {
     private boolean isKeyPressed = false;
     private boolean isRunAsAdminPressed = false;
     private Pattern semicolon = Pattern.compile(";");
+    private Pattern resultSplit = Pattern.compile(":");
 
     private SearchBar() {
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize(); // 获取屏幕大小
@@ -313,11 +314,11 @@ public class SearchBar {
                                         "7.在搜索框中输入  : clearbin  清空回收站\n" +
                                         "8.在搜索框中输入  : help  查看帮助\"\n" +
                                         "9.在设置中可以自定义命令，在搜索框中输入  : 自定义标识  运行自己的命令\n" +
-                                        "10.在输入的文件名后输入  ; full  可全字匹配\n" +
-                                        "11.在输入的文件名后输入  ; file  可只匹配文件\n" +
-                                        "12.在输入的文件名后输入  ; folder  可只匹配文件夹\n" +
-                                        "13.在输入的文件名后输入  ; filefull  可只匹配文件并全字匹配\n" +
-                                        "14.在输入的文件名后输入  ; folderfull  可只匹配文件夹并全字匹配");
+                                        "10.在输入的文件名后输入  : full  可全字匹配\n" +
+                                        "11.在输入的文件名后输入  : file  可只匹配文件\n" +
+                                        "12.在输入的文件名后输入  : folder  可只匹配文件夹\n" +
+                                        "13.在输入的文件名后输入  : filefull  可只匹配文件并全字匹配\n" +
+                                        "14.在输入的文件名后输入  : folderfull  可只匹配文件夹并全字匹配");
                             }
                             if (text.equals(":clearbin")) {
                                 clearLabel();
@@ -1049,7 +1050,7 @@ public class SearchBar {
         String searchText;
         int length;
         try {
-            strings = semicolon.split(text);
+            strings = resultSplit.split(text);
             searchText = strings[0];
             length = strings.length;
         } catch (ArrayIndexOutOfBoundsException e) {
@@ -1502,7 +1503,7 @@ public class SearchBar {
 
         AddAllResults(String txt) {
             this.text = txt.substring(1);
-            strings = semicolon.split(this.text);
+            strings = resultSplit.split(this.text);
             try {
                 searchText = strings[0];
             } catch (ArrayIndexOutOfBoundsException e) {
