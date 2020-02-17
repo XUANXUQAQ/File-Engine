@@ -115,7 +115,7 @@ public class SettingsFrame {
             JSONObject settings = JSON.parseObject(result.toString());
             cacheNumLimit = settings.getInteger("cacheNumLimit");
             hotkey = settings.getString("hotkey");
-            HotKeyListener = new CheckHotKey();
+            HotKeyListener = CheckHotKey.getInstance();
             dataPath = settings.getString("dataPath");
             priorityFolder = settings.getString("priorityFolder");
             searchDepth = settings.getInteger("searchDepth");
