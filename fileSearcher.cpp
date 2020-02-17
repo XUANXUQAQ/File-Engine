@@ -260,6 +260,11 @@ void searchIgnoreSearchDepth(string path, string exd)
                         resultsJ.append(_path);
                         resultsJ.append("\n");
                     }
+                    if (_name.find("K") != string::npos)
+                    {
+                        resultsK.append(_path);
+                        resultsK.append("\n");
+                    }
                     if (_name.find("L") != string::npos)
                     {
                         resultsL.append(_path);
@@ -345,7 +350,9 @@ void searchIgnoreSearchDepth(string path, string exd)
                         resultsUnderline.append(_path);
                         resultsUnderline.append("\n");
                     }
-                    if (_name.find("Num") != string::npos)
+                    if (_name.find("0") != string::npos||_name.find("1") != string::npos||_name.find("2") != string::npos||
+                    _name.find("3") != string::npos||_name.find("4") != string::npos||_name.find("5") != string::npos||
+                    _name.find("6") != string::npos||_name.find("7") != string::npos||_name.find("8") != string::npos||_name.find("9") != string::npos)
                     {
                         resultsNum.append(_path);
                         resultsNum.append("\n");
@@ -423,6 +430,10 @@ void searchIgnoreSearchDepth(string path, string exd)
                         resultsJ.append(_path);
                         resultsJ.append("\n");
                     }
+                    if (_name.find("K") != string::npos){
+                        resultsK.append(_path);
+                        resultsK.append("\n");
+                    }
                     if (_name.find("L") != string::npos)
                     {
                         resultsL.append(_path);
@@ -508,7 +519,9 @@ void searchIgnoreSearchDepth(string path, string exd)
                         resultsUnderline.append(_path);
                         resultsUnderline.append("\n");
                     }
-                    if (_name.find("Num") != string::npos)
+                    if (_name.find("0") != string::npos||_name.find("1") != string::npos||_name.find("2") != string::npos||
+                    _name.find("3") != string::npos||_name.find("4") != string::npos||_name.find("5") != string::npos||
+                    _name.find("6") != string::npos||_name.find("7") != string::npos||_name.find("8") != string::npos||_name.find("9") != string::npos)
                     {
                         resultsNum.append(_path);
                         resultsNum.append("\n");
@@ -673,6 +686,10 @@ void search(string path, string exd)
                         resultsJ.append(_path);
                         resultsJ.append("\n");
                     }
+                    if (_name.find("K") != string::npos){
+                        resultsK.append(_path);
+                        resultsK.append("\n");
+                    }
                     if (_name.find("L") != string::npos)
                     {
                         resultsL.append(_path);
@@ -758,7 +775,9 @@ void search(string path, string exd)
                         resultsUnderline.append(_path);
                         resultsUnderline.append("\n");
                     }
-                    if (_name.find("Num") != string::npos)
+                    if (_name.find("0") != string::npos||_name.find("1") != string::npos||_name.find("2") != string::npos||
+                    _name.find("3") != string::npos||_name.find("4") != string::npos||_name.find("5") != string::npos||
+                    _name.find("6") != string::npos||_name.find("7") != string::npos||_name.find("8") != string::npos||_name.find("9") != string::npos)
                     {
                         resultsNum.append(_path);
                         resultsNum.append("\n");
@@ -837,6 +856,11 @@ void search(string path, string exd)
                         resultsJ.append(_path);
                         resultsJ.append("\n");
                     }
+                    if (_name.find("K") != string::npos)
+                    {
+                        resultsK.append(_path);
+                        resultsK.append("\n");
+                    }
                     if (_name.find("L") != string::npos)
                     {
                         resultsL.append(_path);
@@ -922,7 +946,9 @@ void search(string path, string exd)
                         resultsUnderline.append(_path);
                         resultsUnderline.append("\n");
                     }
-                    if (_name.find("Num") != string::npos)
+                    if (_name.find("0") != string::npos||_name.find("1") != string::npos||_name.find("2") != string::npos||
+                    _name.find("3") != string::npos||_name.find("4") != string::npos||_name.find("5") != string::npos||
+                    _name.find("6") != string::npos||_name.find("7") != string::npos||_name.find("8") != string::npos||_name.find("9") != string::npos)
                     {
                         resultsNum.append(_path);
                         resultsNum.append("\n");
