@@ -17,25 +17,29 @@ import java.util.concurrent.Executors;
 
 
 public class MainClass {
-    public static String version = "2.7"; //TODO 更改版本号
+    public static final String version = "2.7"; //TODO 更改版本号
     public static boolean mainExit = false;
     public static String name;
-    private static Search search = new Search();
-    private static SearchBar searchBar = SearchBar.getInstance();
+    private Search search = new Search();
+    private SearchBar searchBar = SearchBar.getInstance();
     private static TaskBar taskBar = null;
+    private static MainClass mainInstance = new MainClass();
 
+    public static MainClass getInstance() {
+        return mainInstance;
+    }
 
-    public static void setMainExit(boolean b) {
+    public void setMainExit(boolean b) {
         mainExit = b;
     }
 
-    public static void showMessage(String caption, String message) {
+    public void showMessage(String caption, String message) {
         if (taskBar != null) {
             taskBar.showMessage(caption, message);
         }
     }
 
-    public static boolean isAdmin() {
+    public boolean isAdmin() {
         try {
             ProcessBuilder processBuilder = new ProcessBuilder("cmd.exe");
             Process process = processBuilder.start();
@@ -60,7 +64,7 @@ public class MainClass {
         }
     }
 
-    private static void copyFile(InputStream source, File dest) {
+    private void copyFile(InputStream source, File dest) {
         try (OutputStream os = new FileOutputStream(dest); BufferedInputStream bis = new BufferedInputStream(source); BufferedOutputStream bos = new BufferedOutputStream(os)) {
             byte[] buffer = new byte[8192];
             int count = bis.read(buffer);
@@ -76,7 +80,7 @@ public class MainClass {
         }
     }
 
-    public static void deleteDir(String path) {
+    public void deleteDir(String path) {
         File file = new File(path);
         if (!file.exists()) {//判断是否待删除目录是否存在
             return;
@@ -99,7 +103,7 @@ public class MainClass {
     }
 
 
-    public static void main(String[] args) {
+    public void entry() {
         try {
             System.setProperty("sun.java2d.noddraw", "true");
             org.jb2011.lnf.beautyeye.BeautyEyeLNFHelper.launchBeautyEyeLNF();
@@ -142,7 +146,7 @@ public class MainClass {
         SettingsFrame.initSettings();
 
         //清空tmp
-        deleteDir(SettingsFrame.tmp.getAbsolutePath());
+        mainInstance.deleteDir(SettingsFrame.tmp.getAbsolutePath());
 
         File target;
         InputStream fileMonitorDll64 = MainClass.class.getResourceAsStream("/fileMonitor64.dll");
@@ -156,11 +160,11 @@ public class MainClass {
         if (!target.exists()) {
             File dllMonitor;
             if (name.contains("x64")) {
-                copyFile(fileMonitorDll64, target);
+                mainInstance.copyFile(fileMonitorDll64, target);
                 System.out.println("已加载64位fileMonitor");
                 dllMonitor = new File("fileMonitor64.dll");
             } else {
-                copyFile(fileMonitorDll32, target);
+                mainInstance.copyFile(fileMonitorDll32, target);
                 System.out.println("已加载32位fileMonitor");
                 dllMonitor = new File("fileMonitor32.dll");
             }
@@ -170,11 +174,11 @@ public class MainClass {
         if (!target.exists()) {
             File dllSearcher;
             if (name.contains("x64")) {
-                copyFile(fileSearcherDll64, target);
+                mainInstance.copyFile(fileSearcherDll64, target);
                 System.out.println("已加载64为fileSearcher");
                 dllSearcher = new File("fileSearcher64.exe");
             } else {
-                copyFile(fileSearcherDll32, target);
+                mainInstance.copyFile(fileSearcherDll32, target);
                 System.out.println("已加载32位fileSearcher");
                 dllSearcher = new File("fileSearcher32.exe");
             }
@@ -188,11 +192,11 @@ public class MainClass {
         if (!target.exists()) {
             File fileOpener;
             if (name.contains("x64")) {
-                copyFile(fileOpener64, target);
+                mainInstance.copyFile(fileOpener64, target);
                 System.out.println("已加载64位fileOpener");
                 fileOpener = new File("fileOpener64.exe");
             } else {
-                copyFile(fileOpener32, target);
+                mainInstance.copyFile(fileOpener32, target);
                 System.out.println("已加载32位fileOpener");
                 fileOpener = new File("fileOpener32.exe");
             }
@@ -383,5 +387,9 @@ public class MainClass {
                 System.exit(0);
             }
         }
+    }
+
+    public static void main(String[] args) {
+        mainInstance.entry();
     }
 }
