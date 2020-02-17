@@ -14,8 +14,8 @@ import java.util.concurrent.CopyOnWriteArraySet;
 public class Search {
     private static boolean isUsable = true;
     private static boolean isManualUpdate = false;
-    private static CopyOnWriteArraySet<String> RecycleBin = new CopyOnWriteArraySet<>();
-    private static CopyOnWriteArraySet<String> listToLoad = new CopyOnWriteArraySet<>();
+    private CopyOnWriteArraySet<String> RecycleBin = new CopyOnWriteArraySet<>();
+    private CopyOnWriteArraySet<String> listToLoad = new CopyOnWriteArraySet<>();
     private MainClass mainInstance = MainClass.getInstance();
 
     private static void addFileToRecord(String record, String srcPath) {

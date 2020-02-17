@@ -21,7 +21,6 @@ public class MainClass {
     public static boolean mainExit = false;
     public static String name;
     private Search search = new Search();
-    private SearchBar searchBar = SearchBar.getInstance();
     private static TaskBar taskBar = null;
     private static MainClass mainInstance = new MainClass();
 
@@ -144,6 +143,7 @@ public class MainClass {
         }
 
         SettingsFrame.initSettings();
+        SearchBar searchBar = SearchBar.getInstance();
 
         //Çå¿Õtmp
         mainInstance.deleteDir(SettingsFrame.tmp.getAbsolutePath());

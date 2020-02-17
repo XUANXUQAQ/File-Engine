@@ -51,6 +51,7 @@ public class SearchBar {
     private boolean isWaitForNextRount = false;
     private MainClass mainInstance = MainClass.getInstance();
 
+
     private SearchBar() {
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize(); // 获取屏幕大小
         int width = screenSize.width;
@@ -1032,6 +1033,10 @@ public class SearchBar {
         return this.isUsing;
     }
 
+    private boolean isExist(String path) {
+        File f = new File(path);
+        return f.exists();
+    }
 
     private void addResult(String path, String text, long time) {
         //为label添加结果
@@ -1056,7 +1061,9 @@ public class SearchBar {
                 if (search.isUsable()) {
                     if (length != 2 && match(getFileName(each), searchText)) {
                         if (!listResult.contains(each)) {
-                            listResult.add(each);
+                            if (isExist(each)) {
+                                listResult.add(each);
+                            }
                         }
                         if (listResult.size() > 100) {
                             break;
@@ -1066,7 +1073,9 @@ public class SearchBar {
                             case "FILE":
                                 if (isFile(each)) {
                                     if (!listResult.contains(each)) {
-                                        listResult.add(each);
+                                        if (isExist(each)) {
+                                            listResult.add(each);
+                                        }
                                     }
                                     if (listResult.size() > 100) {
                                         break;
@@ -1076,7 +1085,9 @@ public class SearchBar {
                             case "FOLDER":
                                 if (isDirectory(each)) {
                                     if (!listResult.contains(each)) {
-                                        listResult.add(each);
+                                        if (isExist(each)) {
+                                            listResult.add(each);
+                                        }
                                     }
                                     if (listResult.size() > 100) {
                                         break;
@@ -1086,7 +1097,9 @@ public class SearchBar {
                             case "FULL":
                                 if (PinYinConverter.getPinYin(getFileName(each.toLowerCase())).equals(searchText.toLowerCase())) {
                                     if (!listResult.contains(each)) {
-                                        listResult.add(each);
+                                        if (isExist(each)) {
+                                            listResult.add(each);
+                                        }
                                     }
                                     if (listResult.size() > 100) {
                                         break;
@@ -1097,7 +1110,9 @@ public class SearchBar {
                                 if (PinYinConverter.getPinYin(getFileName(each.toLowerCase())).equals(searchText.toLowerCase())) {
                                     if (isDirectory(each)) {
                                         if (!listResult.contains(each)) {
-                                            listResult.add(each);
+                                            if (isExist(each)) {
+                                                listResult.add(each);
+                                            }
                                         }
                                     }
                                     if (listResult.size() > 100) {
@@ -1109,7 +1124,9 @@ public class SearchBar {
                                 if (PinYinConverter.getPinYin(getFileName(each.toLowerCase())).equals(searchText.toLowerCase())) {
                                     if (isFile(each)) {
                                         if (!listResult.contains(each)) {
-                                            listResult.add(each);
+                                            if (isExist(each)) {
+                                                listResult.add(each);
+                                            }
                                         }
                                     }
                                     if (listResult.size() > 100) {
@@ -1456,7 +1473,8 @@ public class SearchBar {
             if (searchBar.isVisible()) {
                 searchBar.setVisible(false);
             }
-            CheckHotKey.setShowSearchBar(false);
+            CheckHotKey hotkeyListener = CheckHotKey.getInstance();
+            hotkeyListener.setShowSearchBar(false);
             clearLabel();
             isWaitForNextRount = true;
             isUsing = false;

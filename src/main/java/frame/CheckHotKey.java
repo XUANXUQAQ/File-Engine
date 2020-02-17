@@ -11,14 +11,18 @@ public class CheckHotKey extends JFrame {
      * 利用JIntellitype实现全局热键设置
      */
     private static final long serialVersionUID = 1L;
-    private static HashMap<String, Integer> map = new HashMap<>();
     public static boolean isShowSearchBar = false;
-    private static SearchBar searchBar = SearchBar.getInstance();
+    private static CheckHotKey hotKeyListener = new CheckHotKey();
+    private HashMap<String, Integer> map = new HashMap<>();
+
+    public static CheckHotKey getInstance() {
+        return hotKeyListener;
+    }
 
     //定义热键标识，用于在设置多个热键时，在事件处理中区分用户按下的热键
     public static final int FUNC_KEY_MARK = 1;
 
-    public static void setShowSearchBar(boolean b) {
+    public void setShowSearchBar(boolean b) {
         isShowSearchBar = b;
     }
 
@@ -41,7 +45,7 @@ public class CheckHotKey extends JFrame {
         JIntellitype.getInstance().registerHotKey(FUNC_KEY_MARK, sum, main.charAt(0));
     }
 
-    public CheckHotKey() {
+    private CheckHotKey() {
         this.setBounds(100, 100, 600, 400);
         this.setLayout(null);
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -70,7 +74,9 @@ public class CheckHotKey extends JFrame {
         JIntellitype.getInstance().addHotKeyListener(markCode -> {
             if (markCode == FUNC_KEY_MARK) {
                 isShowSearchBar = !isShowSearchBar;
+                SearchBar searchBar = SearchBar.getInstance();
                 if (isShowSearchBar) {
+
                     searchBar.showSearchbar();
                 } else {
                     searchBar.closedTodo();
