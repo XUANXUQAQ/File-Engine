@@ -1049,7 +1049,7 @@ public class SearchBar {
         try (BufferedReader br = new BufferedReader(new FileReader(path))) {
             while ((each = br.readLine()) != null) {
                 if (startTime > time) { //用户重新输入了信息
-                    isWaitForNextRount = true; //上次去结果过程被结束，等待下一次
+                    isWaitForNextRount = true; //上次取结果过程被结束，等待下一次
                     return;
                 }
                 if (search.isUsable()) {
@@ -1130,10 +1130,6 @@ public class SearchBar {
         textField.setCaretPosition(0);
         //添加更新文件
         textField.requestFocusInWindow();
-        System.out.println("正在添加更新文件");
-        search.setUsable(false);
-        search.mergeFileToList();
-        search.setUsable(true);
         isUsing = true;
         searchBar.setVisible(true);
     }
@@ -1468,7 +1464,6 @@ public class SearchBar {
             listResult.clear();
             textField.setText(null);
             try {
-                //thread.interrupt();
                 searchWaiter.interrupt();
             } catch (NullPointerException ignored) {
 
