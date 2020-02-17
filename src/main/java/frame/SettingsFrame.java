@@ -100,6 +100,8 @@ public class SettingsFrame {
     public static File settings = new File("settings.json");
     private static CheckHotKey HotKeyListener;
     public static HashSet<String> cmdSet = new HashSet<>();
+    private MainClass mainInstance = MainClass.getInstance();
+    private Unzip unzipInstance = Unzip.getInstance();
 
 
     public static void initSettings() {
@@ -378,7 +380,7 @@ public class SettingsFrame {
             }
         });
         ButtonCloseAdmin.addActionListener(e -> {
-            if (MainClass.isAdmin()) {
+            if (mainInstance.isAdmin()) {
                 JOptionPane.showMessageDialog(null, "请将弹出窗口的最后一栏改为当前文件夹，\n修改成功后请重新设置开机启动，\n下次启动时请使用带(elevated)的快捷方式。");
                 InputStream UAC = getClass().getResourceAsStream("/UACTrustShortCut.zip");
                 File target = new File(tmp.getAbsolutePath() + "/UACTrustShortCut.zip");
@@ -387,7 +389,7 @@ public class SettingsFrame {
                 }
                 File mainUAC = new File(tmp.getAbsolutePath() + "/UACTrustShortCut/ElevatedShortcut.exe");
                 if (!mainUAC.exists()) {
-                    Unzip.unZipFiles(target, tmp.getAbsolutePath());
+                    unzipInstance.unZipFiles(target, tmp.getAbsolutePath());
                 }
                 File searchexe = new File(MainClass.name);
                 try {
@@ -400,7 +402,7 @@ public class SettingsFrame {
             }
         });
         ButtonRecoverAdmin.addActionListener(e -> {
-            if (MainClass.isAdmin()) {
+            if (mainInstance.isAdmin()) {
                 JOptionPane.showMessageDialog(null, "点击最后一个Remove shortcut即可选择删除快捷方式，\n修改成功后请重新设置开机启动。");
                 InputStream UAC = getClass().getResourceAsStream("/UACTrustShortCut.zip");
                 File target = new File(tmp.getAbsolutePath() + "/UACTrustShortCut.zip");
@@ -409,7 +411,7 @@ public class SettingsFrame {
                 }
                 File mainUAC = new File(tmp.getAbsolutePath() + "/UACTrustShortCut/ElevatedShortcut.exe");
                 if (!mainUAC.exists()) {
-                    Unzip.unZipFiles(target, tmp.getAbsolutePath());
+                    unzipInstance.unZipFiles(target, tmp.getAbsolutePath());
                 }
                 try {
                     Runtime.getRuntime().exec("\"" + mainUAC.getAbsolutePath() + "\"");

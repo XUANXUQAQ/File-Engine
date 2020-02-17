@@ -49,6 +49,7 @@ public class SearchBar {
     private Pattern semicolon = Pattern.compile(";");
     private Pattern resultSplit = Pattern.compile(":");
     private boolean isWaitForNextRount = false;
+    private MainClass mainInstance = MainClass.getInstance();
 
     private SearchBar() {
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize(); // 获取屏幕大小
@@ -294,7 +295,7 @@ public class SearchBar {
                         if (firstWord == ':') {
                             if (text.equals(":update")) {
                                 clearLabel();
-                                MainClass.showMessage("提示", "正在更新文件索引");
+                                mainInstance.showMessage("提示", "正在更新文件索引");
                                 clearTextFieldText();
                                 closedTodo();
                                 search.setManualUpdate(true);

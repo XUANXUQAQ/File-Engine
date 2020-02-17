@@ -7,8 +7,16 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 public class Unzip {
+    private static Unzip unzip = new Unzip();
 
-    public static void unZipFiles(File zipFile, String descDir) {
+    public static Unzip getInstance() {
+        return unzip;
+    }
+
+    private Unzip() {
+    }
+
+    public void unZipFiles(File zipFile, String descDir) {
 
         ZipFile zip = null;//解决中文文件夹乱码
         try {

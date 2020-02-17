@@ -16,6 +16,7 @@ public class Search {
     private static boolean isManualUpdate = false;
     private static CopyOnWriteArraySet<String> RecycleBin = new CopyOnWriteArraySet<>();
     private static CopyOnWriteArraySet<String> listToLoad = new CopyOnWriteArraySet<>();
+    private MainClass mainInstance = MainClass.getInstance();
 
     private static void addFileToRecord(String record, String srcPath) {
         try (BufferedWriter bw = new BufferedWriter(new FileWriter(srcPath, true))) {
@@ -786,7 +787,7 @@ public class Search {
         }
         __searchFileIgnoreSearchDepth(getStartMenu(), ignorePath);
         __searchFileIgnoreSearchDepth("C:\\ProgramData\\Microsoft\\Windows\\Start Menu", ignorePath);
-        MainClass.showMessage("提示", "搜索完成");
+        mainInstance.showMessage("提示", "搜索完成");
         isManualUpdate = false;
         isUsable = true;
     }
@@ -838,7 +839,7 @@ public class Search {
 
 
     public void updateLists(String ignorePath, int searchDepth) {
-        MainClass.deleteDir(SettingsFrame.dataPath);
+        mainInstance.deleteDir(SettingsFrame.dataPath);
         searchFile(ignorePath, searchDepth);
     }
 
