@@ -17,18 +17,9 @@ public class Search {
     private static CopyOnWriteArraySet<String> RecycleBin = new CopyOnWriteArraySet<>();
     private static CopyOnWriteArraySet<String> listToLoad = new CopyOnWriteArraySet<>();
 
-    private static void appendFileHeader(String head, String srcPath) {
-        try {
-            byte[] header = head.getBytes();
-            RandomAccessFile src = new RandomAccessFile(srcPath, "rw");
-            int srcLength = (int) src.length();
-            byte[] buff = new byte[srcLength];
-            src.read(buff, 0, srcLength);
-            src.seek(0);
-            src.write(header);
-            src.seek(header.length);
-            src.write(buff);
-            src.close();
+    private static void addFileToRecord(String record, String srcPath) {
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(srcPath, true))) {
+            bw.write(record);
         } catch (IOException ignored) {
 
         }
@@ -635,146 +626,146 @@ public class Search {
 
             switch (headWord) {
                 case "A":
-                    appendFileHeader(path + "\n", SettingsFrame.dataPath + "\\listA.txt");
+                    addFileToRecord(path + "\n", SettingsFrame.dataPath + "\\listA.txt");
                     break;
                 case "B":
-                    appendFileHeader(path + "\n", SettingsFrame.dataPath + "\\listB.txt");
+                    addFileToRecord(path + "\n", SettingsFrame.dataPath + "\\listB.txt");
 
 
                     break;
                 case "C":
-                    appendFileHeader(path + "\n", SettingsFrame.dataPath + "\\listC.txt");
+                    addFileToRecord(path + "\n", SettingsFrame.dataPath + "\\listC.txt");
 
 
                     break;
                 case "D":
-                    appendFileHeader(path + "\n", SettingsFrame.dataPath + "\\listD.txt");
+                    addFileToRecord(path + "\n", SettingsFrame.dataPath + "\\listD.txt");
 
 
                     break;
                 case "E":
-                    appendFileHeader(path + "\n", SettingsFrame.dataPath + "\\listE.txt");
+                    addFileToRecord(path + "\n", SettingsFrame.dataPath + "\\listE.txt");
 
 
                     break;
                 case "F":
-                    appendFileHeader(path + "\n", SettingsFrame.dataPath + "\\listF.txt");
+                    addFileToRecord(path + "\n", SettingsFrame.dataPath + "\\listF.txt");
 
 
                     break;
                 case "G":
-                    appendFileHeader(path + "\n", SettingsFrame.dataPath + "\\listG.txt");
+                    addFileToRecord(path + "\n", SettingsFrame.dataPath + "\\listG.txt");
 
 
                     break;
                 case "H":
-                    appendFileHeader(path + "\n", SettingsFrame.dataPath + "\\listH.txt");
+                    addFileToRecord(path + "\n", SettingsFrame.dataPath + "\\listH.txt");
 
 
                     break;
                 case "I":
-                    appendFileHeader(path + "\n", SettingsFrame.dataPath + "\\listI.txt");
+                    addFileToRecord(path + "\n", SettingsFrame.dataPath + "\\listI.txt");
 
 
                     break;
                 case "J":
-                    appendFileHeader(path + "\n", SettingsFrame.dataPath + "\\listJ.txt");
+                    addFileToRecord(path + "\n", SettingsFrame.dataPath + "\\listJ.txt");
 
 
                     break;
                 case "K":
-                    appendFileHeader(path + "\n", SettingsFrame.dataPath + "\\listK.txt");
+                    addFileToRecord(path + "\n", SettingsFrame.dataPath + "\\listK.txt");
 
 
                     break;
                 case "L":
-                    appendFileHeader(path + "\n", SettingsFrame.dataPath + "\\listL.txt");
+                    addFileToRecord(path + "\n", SettingsFrame.dataPath + "\\listL.txt");
 
 
                     break;
                 case "M":
-                    appendFileHeader(path + "\n", SettingsFrame.dataPath + "\\listM.txt");
+                    addFileToRecord(path + "\n", SettingsFrame.dataPath + "\\listM.txt");
 
 
                     break;
                 case "N":
-                    appendFileHeader(path + "\n", SettingsFrame.dataPath + "\\listN.txt");
+                    addFileToRecord(path + "\n", SettingsFrame.dataPath + "\\listN.txt");
 
 
                     break;
                 case "O":
-                    appendFileHeader(path + "\n", SettingsFrame.dataPath + "\\listO.txt");
+                    addFileToRecord(path + "\n", SettingsFrame.dataPath + "\\listO.txt");
 
 
                     break;
                 case "P":
-                    appendFileHeader(path + "\n", SettingsFrame.dataPath + "\\listP.txt");
+                    addFileToRecord(path + "\n", SettingsFrame.dataPath + "\\listP.txt");
 
 
                     break;
                 case "Q":
-                    appendFileHeader(path + "\n", SettingsFrame.dataPath + "\\listQ.txt");
+                    addFileToRecord(path + "\n", SettingsFrame.dataPath + "\\listQ.txt");
 
 
                     break;
                 case "R":
-                    appendFileHeader(path + "\n", SettingsFrame.dataPath + "\\listR.txt");
+                    addFileToRecord(path + "\n", SettingsFrame.dataPath + "\\listR.txt");
 
 
                     break;
                 case "S":
-                    appendFileHeader(path + "\n", SettingsFrame.dataPath + "\\listS.txt");
+                    addFileToRecord(path + "\n", SettingsFrame.dataPath + "\\listS.txt");
 
 
                     break;
                 case "T":
-                    appendFileHeader(path + "\n", SettingsFrame.dataPath + "\\listT.txt");
+                    addFileToRecord(path + "\n", SettingsFrame.dataPath + "\\listT.txt");
 
 
                     break;
                 case "U":
-                    appendFileHeader(path + "\n", SettingsFrame.dataPath + "\\listU.txt");
+                    addFileToRecord(path + "\n", SettingsFrame.dataPath + "\\listU.txt");
 
 
                     break;
                 case "V":
-                    appendFileHeader(path + "\n", SettingsFrame.dataPath + "\\listV.txt");
+                    addFileToRecord(path + "\n", SettingsFrame.dataPath + "\\listV.txt");
 
 
                     break;
                 case "W":
-                    appendFileHeader(path + "\n", SettingsFrame.dataPath + "\\listW.txt");
+                    addFileToRecord(path + "\n", SettingsFrame.dataPath + "\\listW.txt");
 
 
                     break;
                 case "X":
-                    appendFileHeader(path + "\n", SettingsFrame.dataPath + "\\listX.txt");
+                    addFileToRecord(path + "\n", SettingsFrame.dataPath + "\\listX.txt");
 
 
                     break;
                 case "Y":
-                    appendFileHeader(path + "\n", SettingsFrame.dataPath + "\\listY.txt");
+                    addFileToRecord(path + "\n", SettingsFrame.dataPath + "\\listY.txt");
 
 
                     break;
                 case "Z":
-                    appendFileHeader(path + "\n", SettingsFrame.dataPath + "\\listZ.txt");
+                    addFileToRecord(path + "\n", SettingsFrame.dataPath + "\\listZ.txt");
 
 
                     break;
                 case "_":
-                    appendFileHeader(path + "\n", SettingsFrame.dataPath + "\\listUnderline.txt");
+                    addFileToRecord(path + "\n", SettingsFrame.dataPath + "\\listUnderline.txt");
 
                     break;
                 case "%":
-                    appendFileHeader(path + "\n", SettingsFrame.dataPath + "\\listPercentSign.txt");
+                    addFileToRecord(path + "\n", SettingsFrame.dataPath + "\\listPercentSign.txt");
                     break;
                 default:
                     if (Character.isDigit(headWord.charAt(0))) {
-                        appendFileHeader(path + "\n", SettingsFrame.dataPath + "\\listNum.txt");
+                        addFileToRecord(path + "\n", SettingsFrame.dataPath + "\\listNum.txt");
 
                     } else {
-                        appendFileHeader(path + "\n", SettingsFrame.dataPath + "\\listUnique.txt");
+                        addFileToRecord(path + "\n", SettingsFrame.dataPath + "\\listUnique.txt");
                     }
 
                     break;
