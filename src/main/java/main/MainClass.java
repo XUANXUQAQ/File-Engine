@@ -17,7 +17,7 @@ import java.util.concurrent.Executors;
 
 
 public class MainClass {
-    public static String version = "2.6"; //TODO 更改版本号
+    public static String version = "2.7"; //TODO 更改版本号
     public static boolean mainExit = false;
     public static String name;
     private static Search search = new Search();
@@ -123,7 +123,7 @@ public class MainClass {
             json.put("hotkey", "Ctrl + Alt + J");
             json.put("ignorePath", ignorePath);
             json.put("isStartup", false);
-            json.put("updateTimeLimit", 1);
+            json.put("updateTimeLimit", 5);
             json.put("cacheNumLimit", 1000);
             json.put("searchDepth", 6);
             json.put("priorityFolder", "");
@@ -277,13 +277,17 @@ public class MainClass {
                     try {
                         if (readerAdd != null) {
                             while ((filesToAdd = readerAdd.readLine()) != null) {
-                                search.addFileToLoadBin(filesToAdd);
-                                System.out.println("添加" + filesToAdd);
+                                if (!filesToAdd.contains(SettingsFrame.dataPath)) {
+                                    search.addFileToLoadBin(filesToAdd);
+                                    System.out.println("添加" + filesToAdd);
+                                }
                             }
                         }
                         if (readerRemove != null) {
                             while ((filesToRemove = readerRemove.readLine()) != null) {
-                                search.addToRecycleBin(filesToRemove);
+                                if (!filesToRemove.contains(SettingsFrame.dataPath)) {
+                                    search.addToRecycleBin(filesToRemove);
+                                }
                             }
                         }
                     } catch (IOException e) {

@@ -7,14 +7,32 @@ import pinyin.PinYinConverter;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ConcurrentModificationException;
+import java.util.HashSet;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 
 public class Search {
-    private static boolean isUsable = false;
+    private static boolean isUsable = true;
     private static boolean isManualUpdate = false;
     private static CopyOnWriteArraySet<String> RecycleBin = new CopyOnWriteArraySet<>();
     private static CopyOnWriteArraySet<String> listToLoad = new CopyOnWriteArraySet<>();
+
+    private static void appendFileHeader(String head, String srcPath) {
+        try {
+            byte[] header = head.getBytes();
+            RandomAccessFile src = new RandomAccessFile(srcPath, "rw");
+            int srcLength = (int) src.length();
+            byte[] buff = new byte[srcLength];
+            src.read(buff, 0, srcLength);
+            src.seek(0);
+            src.write(header);
+            src.seek(header.length);
+            src.write(buff);
+            src.close();
+        } catch (IOException ignored) {
+
+        }
+    }
 
     public int getRecycleBinSize() {
         return RecycleBin.size();
@@ -32,10 +50,44 @@ public class Search {
         if (!isManualUpdate) {
             isUsable = false;
             try {
-                for (String i : RecycleBin) {
-                    deletePathInList(i);
+                HashSet<String> listChars = new HashSet<>();
+                boolean isNumAdded = false;
+                for (String each : RecycleBin) { //统计需要在哪些文件中进行修改
+                    File file = new File(each);
+                    for (char i : PinYinConverter.getPinYin(file.getName()).toCharArray()) {
+                        if (!Character.isDigit(i)) {
+                            if (Character.isAlphabetic(i)) {
+                                listChars.add(String.valueOf(i).toUpperCase());
+                            } else {
+                                listChars.add("Unique");
+                            }
+                        }
+                        if (Character.isDigit(i) && !isNumAdded) {
+                            listChars.add("Num");
+                            isNumAdded = true;
+                        }
+                    }
                 }
+                deletePathInList(RecycleBin, listChars);
                 RecycleBin.clear();
+                for (String i : listChars) {
+                    String target = SettingsFrame.dataPath + "\\list" + i + ".txt";
+                    File old = new File(target);
+                    try {
+                        old.delete();
+                    } catch (Exception ignored) {
+
+                    }
+                }
+                for (String i : listChars) {
+                    String file = SettingsFrame.dataPath + "\\_list" + i + ".txt";
+                    File newFile = new File(file);
+                    try {
+                        newFile.renameTo(new File(SettingsFrame.dataPath + "\\list" + i + ".txt"));
+                    } catch (Exception ignored) {
+
+                    }
+                }
             } catch (ConcurrentModificationException ignored) {
 
             } finally {
@@ -62,588 +114,486 @@ public class Search {
         }
     }
 
-    private void deletePathInList(String path) {
-        File file = new File(path);
-        char firstWord = '\0';
-        try {
-            firstWord = PinYinConverter.getPinYin(file.getName()).charAt(0);
-        } catch (Exception ignored) {
-
-        }
-        char headWord = Character.toUpperCase(firstWord);
-        switch (headWord) {
-            case 'A':
-                StringBuilder strb = new StringBuilder();
-                try (BufferedReader br = new BufferedReader(new FileReader(SettingsFrame.dataPath + "\\listA.txt"))) {
-                    String each;
-                    while ((each = br.readLine()) != null) {
-                        if (!each.equals(path)) {
-                            strb.append(each).append("\n");
-                        }
-                    }
-                } catch (Exception ignored) {
-
-                }
-                try (BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\listA.txt"))) {
-                    bw.write(strb.toString());
-                } catch (IOException ignored) {
-
-                }
-
-                break;
-            case 'B':
-                strb = new StringBuilder();
-                try (BufferedReader br = new BufferedReader(new FileReader(SettingsFrame.dataPath + "\\listB.txt"))) {
-                    String each;
-                    while ((each = br.readLine()) != null) {
-                        if (!each.equals(path)) {
-                            strb.append(each).append("\n");
-                        }
-                    }
-                } catch (Exception ignored) {
-
-                }
-                try (BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\listB.txt"))) {
-                    bw.write(strb.toString());
-                } catch (IOException ignored) {
-
-                }
-
-                break;
-            case 'C':
-                strb = new StringBuilder();
-                try (BufferedReader br = new BufferedReader(new FileReader(SettingsFrame.dataPath + "\\listC.txt"))) {
-                    String each;
-                    while ((each = br.readLine()) != null) {
-                        if (!each.equals(path)) {
-                            strb.append(each).append("\n");
-                        }
-                    }
-                } catch (Exception ignored) {
-
-                }
-                try (BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\listC.txt"))) {
-                    bw.write(strb.toString());
-                } catch (IOException ignored) {
-
-                }
-
-                break;
-            case 'D':
-                strb = new StringBuilder();
-                try (BufferedReader br = new BufferedReader(new FileReader(SettingsFrame.dataPath + "\\listD.txt"))) {
-                    String each;
-                    while ((each = br.readLine()) != null) {
-                        if (!each.equals(path)) {
-                            strb.append(each).append("\n");
-                        }
-                    }
-                } catch (Exception ignored) {
-
-                }
-                try (BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\listD.txt"))) {
-                    bw.write(strb.toString());
-                } catch (IOException ignored) {
-
-                }
-
-                break;
-            case 'E':
-                strb = new StringBuilder();
-                try (BufferedReader br = new BufferedReader(new FileReader(SettingsFrame.dataPath + "\\listE.txt"))) {
-                    String each;
-                    while ((each = br.readLine()) != null) {
-                        if (!each.equals(path)) {
-                            strb.append(each).append("\n");
-                        }
-                    }
-                } catch (Exception ignored) {
-
-                }
-                try (BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\listE.txt"))) {
-                    bw.write(strb.toString());
-                } catch (IOException ignored) {
-
-                }
-
-                break;
-            case 'F':
-                strb = new StringBuilder();
-                try (BufferedReader br = new BufferedReader(new FileReader(SettingsFrame.dataPath + "\\listF.txt"))) {
-                    String each;
-                    while ((each = br.readLine()) != null) {
-                        if (!each.equals(path)) {
-                            strb.append(each).append("\n");
-                        }
-                    }
-                } catch (Exception ignored) {
-
-                }
-                try (BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\listF.txt"))) {
-                    bw.write(strb.toString());
-                } catch (IOException ignored) {
-
-                }
-
-                break;
-            case 'G':
-                strb = new StringBuilder();
-                try (BufferedReader br = new BufferedReader(new FileReader(SettingsFrame.dataPath + "\\listG.txt"))) {
-                    String each;
-                    while ((each = br.readLine()) != null) {
-                        if (!each.equals(path)) {
-                            strb.append(each).append("\n");
-                        }
-                    }
-                } catch (Exception ignored) {
-
-                }
-                try (BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\listG.txt"))) {
-                    bw.write(strb.toString());
-                } catch (IOException ignored) {
-
-                }
-
-                break;
-            case 'H':
-                strb = new StringBuilder();
-                try (BufferedReader br = new BufferedReader(new FileReader(SettingsFrame.dataPath + "\\listH.txt"))) {
-                    String each;
-                    while ((each = br.readLine()) != null) {
-                        if (!each.equals(path)) {
-                            strb.append(each).append("\n");
-                        }
-                    }
-                } catch (Exception ignored) {
-
-                }
-                try (BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\listH.txt"))) {
-                    bw.write(strb.toString());
-                } catch (IOException ignored) {
-
-                }
-
-                break;
-            case 'I':
-                strb = new StringBuilder();
-                try (BufferedReader br = new BufferedReader(new FileReader(SettingsFrame.dataPath + "\\listI.txt"))) {
-                    String each;
-                    while ((each = br.readLine()) != null) {
-                        if (!each.equals(path)) {
-                            strb.append(each).append("\n");
-                        }
-                    }
-                } catch (Exception ignored) {
-
-                }
-                try (BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\listI.txt"))) {
-                    bw.write(strb.toString());
-                } catch (IOException ignored) {
-
-                }
-
-                break;
-            case 'J':
-                strb = new StringBuilder();
-                try (BufferedReader br = new BufferedReader(new FileReader(SettingsFrame.dataPath + "\\listJ.txt"))) {
-                    String each;
-                    while ((each = br.readLine()) != null) {
-                        if (!each.equals(path)) {
-                            strb.append(each).append("\n");
-                        }
-                    }
-                } catch (Exception ignored) {
-
-                }
-                try (BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\listJ.txt"))) {
-                    bw.write(strb.toString());
-                } catch (IOException ignored) {
-
-                }
-
-                break;
-            case 'K':
-                strb = new StringBuilder();
-                try (BufferedReader br = new BufferedReader(new FileReader(SettingsFrame.dataPath + "\\listK.txt"))) {
-                    String each;
-                    while ((each = br.readLine()) != null) {
-                        if (!each.equals(path)) {
-                            strb.append(each).append("\n");
-                        }
-                    }
-                } catch (Exception ignored) {
-
-                }
-                try (BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\listK.txt"))) {
-                    bw.write(strb.toString());
-                } catch (IOException ignored) {
-
-                }
-
-                break;
-            case 'L':
-                strb = new StringBuilder();
-                try (BufferedReader br = new BufferedReader(new FileReader(SettingsFrame.dataPath + "\\listL.txt"))) {
-                    String each;
-                    while ((each = br.readLine()) != null) {
-                        if (!each.equals(path)) {
-                            strb.append(each).append("\n");
-                        }
-                    }
-                } catch (Exception ignored) {
-
-                }
-                try (BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\listL.txt"))) {
-                    bw.write(strb.toString());
-                } catch (IOException ignored) {
-
-                }
-
-                break;
-            case 'M':
-                strb = new StringBuilder();
-                try (BufferedReader br = new BufferedReader(new FileReader(SettingsFrame.dataPath + "\\listM.txt"))) {
-                    String each;
-                    while ((each = br.readLine()) != null) {
-                        if (!each.equals(path)) {
-                            strb.append(each).append("\n");
-                        }
-                    }
-                } catch (Exception ignored) {
-
-                }
-                try (BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\listM.txt"))) {
-                    bw.write(strb.toString());
-                } catch (IOException ignored) {
-
-                }
-
-                break;
-            case 'N':
-                strb = new StringBuilder();
-                try (BufferedReader br = new BufferedReader(new FileReader(SettingsFrame.dataPath + "\\listN.txt"))) {
-                    String each;
-                    while ((each = br.readLine()) != null) {
-                        if (!each.equals(path)) {
-                            strb.append(each).append("\n");
-                        }
-                    }
-                } catch (Exception ignored) {
-
-                }
-                try (BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\listN.txt"))) {
-                    bw.write(strb.toString());
-                } catch (IOException ignored) {
-
-                }
-
-                break;
-            case 'O':
-                strb = new StringBuilder();
-                try (BufferedReader br = new BufferedReader(new FileReader(SettingsFrame.dataPath + "\\listO.txt"))) {
-                    String each;
-                    while ((each = br.readLine()) != null) {
-                        if (!each.equals(path)) {
-                            strb.append(each).append("\n");
-                        }
-                    }
-                } catch (Exception ignored) {
-
-                }
-                try (BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\listO.txt"))) {
-                    bw.write(strb.toString());
-                } catch (IOException ignored) {
-
-                }
-
-                break;
-            case 'P':
-                strb = new StringBuilder();
-                try (BufferedReader br = new BufferedReader(new FileReader(SettingsFrame.dataPath + "\\listP.txt"))) {
-                    String each;
-                    while ((each = br.readLine()) != null) {
-                        if (!each.equals(path)) {
-                            strb.append(each).append("\n");
-                        }
-                    }
-                } catch (Exception ignored) {
-
-                }
-                try (BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\listP.txt"))) {
-                    bw.write(strb.toString());
-                } catch (IOException ignored) {
-
-                }
-
-                break;
-            case 'Q':
-                strb = new StringBuilder();
-                try (BufferedReader br = new BufferedReader(new FileReader(SettingsFrame.dataPath + "\\listQ.txt"))) {
-                    String each;
-                    while ((each = br.readLine()) != null) {
-                        if (!each.equals(path)) {
-                            strb.append(each).append("\n");
-                        }
-                    }
-                } catch (Exception ignored) {
-
-                }
-                try (BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\listQ.txt"))) {
-                    bw.write(strb.toString());
-                } catch (IOException ignored) {
-
-                }
-
-                break;
-            case 'R':
-                strb = new StringBuilder();
-                try (BufferedReader br = new BufferedReader(new FileReader(SettingsFrame.dataPath + "\\listR.txt"))) {
-                    String each;
-                    while ((each = br.readLine()) != null) {
-                        if (!each.equals(path)) {
-                            strb.append(each).append("\n");
-                        }
-                    }
-                } catch (Exception ignored) {
-
-                }
-                try (BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\listR.txt"))) {
-                    bw.write(strb.toString());
-                } catch (IOException ignored) {
-
-                }
-
-                break;
-            case 'S':
-                strb = new StringBuilder();
-                try (BufferedReader br = new BufferedReader(new FileReader(SettingsFrame.dataPath + "\\listS.txt"))) {
-                    String each;
-                    while ((each = br.readLine()) != null) {
-                        if (!each.equals(path)) {
-                            strb.append(each).append("\n");
-                        }
-                    }
-                } catch (Exception ignored) {
-
-                }
-                try (BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\listS.txt"))) {
-                    bw.write(strb.toString());
-                } catch (IOException ignored) {
-
-                }
-
-                break;
-            case 'T':
-                strb = new StringBuilder();
-                try (BufferedReader br = new BufferedReader(new FileReader(SettingsFrame.dataPath + "\\listT.txt"))) {
-                    String each;
-                    while ((each = br.readLine()) != null) {
-                        if (!each.equals(path)) {
-                            strb.append(each).append("\n");
-                        }
-                    }
-                } catch (Exception ignored) {
-
-                }
-                try (BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\listT.txt"))) {
-                    bw.write(strb.toString());
-                } catch (IOException ignored) {
-
-                }
-
-                break;
-            case 'U':
-                strb = new StringBuilder();
-                try (BufferedReader br = new BufferedReader(new FileReader(SettingsFrame.dataPath + "\\listU.txt"))) {
-                    String each;
-                    while ((each = br.readLine()) != null) {
-                        if (!each.equals(path)) {
-                            strb.append(each).append("\n");
-                        }
-                    }
-                } catch (Exception ignored) {
-
-                }
-                try (BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\listU.txt"))) {
-                    bw.write(strb.toString());
-                } catch (IOException ignored) {
-
-                }
-
-                break;
-            case 'V':
-                strb = new StringBuilder();
-                try (BufferedReader br = new BufferedReader(new FileReader(SettingsFrame.dataPath + "\\listV.txt"))) {
-                    String each;
-                    while ((each = br.readLine()) != null) {
-                        if (!each.equals(path)) {
-                            strb.append(each).append("\n");
-                        }
-                    }
-                } catch (Exception ignored) {
-
-                }
-                try (BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\listV.txt"))) {
-                    bw.write(strb.toString());
-                } catch (IOException ignored) {
-
-                }
-
-                break;
-            case 'W':
-                strb = new StringBuilder();
-                try (BufferedReader br = new BufferedReader(new FileReader(SettingsFrame.dataPath + "\\listW.txt"))) {
-                    String each;
-                    while ((each = br.readLine()) != null) {
-                        if (!each.equals(path)) {
-                            strb.append(each).append("\n");
-                        }
-                    }
-                } catch (Exception ignored) {
-
-                }
-                try (BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\listW.txt"))) {
-                    bw.write(strb.toString());
-                } catch (IOException ignored) {
-
-                }
-
-                break;
-            case 'X':
-                strb = new StringBuilder();
-                try (BufferedReader br = new BufferedReader(new FileReader(SettingsFrame.dataPath + "\\listX.txt"))) {
-                    String each;
-                    while ((each = br.readLine()) != null) {
-                        if (!each.equals(path)) {
-                            strb.append(each).append("\n");
-                        }
-                    }
-                } catch (Exception ignored) {
-
-                }
-                try (BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\listX.txt"))) {
-                    bw.write(strb.toString());
-                } catch (IOException ignored) {
-
-                }
-
-                break;
-            case 'Y':
-                strb = new StringBuilder();
-                try (BufferedReader br = new BufferedReader(new FileReader(SettingsFrame.dataPath + "\\listY.txt"))) {
-                    String each;
-                    while ((each = br.readLine()) != null) {
-                        if (!each.equals(path)) {
-                            strb.append(each).append("\n");
-                        }
-                    }
-                } catch (Exception ignored) {
-
-                }
-                try (BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\listY.txt"))) {
-                    bw.write(strb.toString());
-                } catch (IOException ignored) {
-
-                }
-
-                break;
-            case 'Z':
-                strb = new StringBuilder();
-                try (BufferedReader br = new BufferedReader(new FileReader(SettingsFrame.dataPath + "\\listZ.txt"))) {
-                    String each;
-                    while ((each = br.readLine()) != null) {
-                        if (!each.equals(path)) {
-                            strb.append(each).append("\n");
-                        }
-                    }
-                } catch (Exception ignored) {
-
-                }
-                try (BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\listZ.txt"))) {
-                    bw.write(strb.toString());
-                } catch (IOException ignored) {
-
-                }
-
-                break;
-            case '_':
-                strb = new StringBuilder();
-                try (BufferedReader br = new BufferedReader(new FileReader(SettingsFrame.dataPath + "\\listUnderline.txt"))) {
-                    String each;
-                    while ((each = br.readLine()) != null) {
-                        if (!each.equals(path)) {
-                            strb.append(each).append("\n");
-                        }
-                    }
-                } catch (Exception ignored) {
-
-                }
-                try (BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\listUnderline.txt"))) {
-                    bw.write(strb.toString());
-                } catch (IOException ignored) {
-
-                }
-
-                break;
-            case '%':
-                strb = new StringBuilder();
-                try (BufferedReader br = new BufferedReader(new FileReader(SettingsFrame.dataPath + "\\listPercentSign.txt"))) {
-                    String each;
-                    while ((each = br.readLine()) != null) {
-                        if (!each.equals(path)) {
-                            strb.append(each).append("\n");
-                        }
-                    }
-                } catch (Exception ignored) {
-
-                }
-                try (BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\listPercentSign.txt"))) {
-                    bw.write(strb.toString());
-                } catch (IOException ignored) {
-
-                }
-
-                break;
-            default:
-                if (Character.isDigit(headWord)) {
-                    strb = new StringBuilder();
-                    try (BufferedReader br = new BufferedReader(new FileReader(SettingsFrame.dataPath + "\\listNum.txt"))) {
+    private void deletePathInList(CopyOnWriteArraySet<String> path, HashSet<String> listChars) {
+        for (String headWord : listChars) {
+            headWord = headWord.toUpperCase();
+
+            switch (headWord) {
+                case "A":
+                    try (BufferedReader br = new BufferedReader(new FileReader(SettingsFrame.dataPath + "\\listA.txt"));
+                         BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\_listA.txt", true))) {
                         String each;
                         while ((each = br.readLine()) != null) {
-                            if (!each.equals(path)) {
-                                strb.append(each).append("\n");
+                            if (!path.contains(each)) {
+                                bw.write(each + "\n");
                             }
                         }
                     } catch (Exception ignored) {
 
                     }
-                    try (BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\listNum.txt"))) {
-                        bw.write(strb.toString());
-                    } catch (IOException ignored) {
-
-                    }
 
                     break;
-                } else {
-                    strb = new StringBuilder();
-                    try (BufferedReader br = new BufferedReader(new FileReader(SettingsFrame.dataPath + "\\listUnique.txt"))) {
+                case "B":
+
+                    try (BufferedReader br = new BufferedReader(new FileReader(SettingsFrame.dataPath + "\\listB.txt"));
+                         BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\_listB.txt", true))) {
                         String each;
                         while ((each = br.readLine()) != null) {
-                            if (!each.equals(path)) {
-                                strb.append(each).append("\n");
+                            if (!path.contains(each)) {
+                                bw.write(each + "\n");
                             }
                         }
                     } catch (Exception ignored) {
 
                     }
-                    try (BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\listUnique.txt"))) {
-                        bw.write(strb.toString());
-                    } catch (IOException ignored) {
+
+                    break;
+                case "C":
+
+                    try (BufferedReader br = new BufferedReader(new FileReader(SettingsFrame.dataPath + "\\listC.txt"));
+                         BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\_listC.txt", true))) {
+                        String each;
+                        while ((each = br.readLine()) != null) {
+                            if (!path.contains(each)) {
+                                bw.write(each + "\n");
+                            }
+                        }
+                    } catch (Exception ignored) {
+
+                    }
+
+
+                    break;
+                case "D":
+
+                    try (BufferedReader br = new BufferedReader(new FileReader(SettingsFrame.dataPath + "\\listD.txt"));
+                         BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\_listD.txt", true))) {
+                        String each;
+                        while ((each = br.readLine()) != null) {
+                            if (!path.contains(each)) {
+                                bw.write(each + "\n");
+                            }
+                        }
+                    } catch (Exception ignored) {
+
+                    }
+
+
+                    break;
+                case "E":
+
+                    try (BufferedReader br = new BufferedReader(new FileReader(SettingsFrame.dataPath + "\\listE.txt"));
+                         BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\_listE.txt", true))) {
+                        String each;
+                        while ((each = br.readLine()) != null) {
+                            if (!path.contains(each)) {
+                                bw.write(each + "\n");
+                            }
+                        }
+                    } catch (Exception ignored) {
+
+                    }
+
+
+                    break;
+                case "F":
+
+                    try (BufferedReader br = new BufferedReader(new FileReader(SettingsFrame.dataPath + "\\listF.txt"));
+                         BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\_listF.txt", true))) {
+                        String each;
+                        while ((each = br.readLine()) != null) {
+                            if (!path.contains(each)) {
+                                bw.write(each + "\n");
+                            }
+                        }
+                    } catch (Exception ignored) {
+
+                    }
+
+
+                    break;
+                case "G":
+
+                    try (BufferedReader br = new BufferedReader(new FileReader(SettingsFrame.dataPath + "\\listG.txt"));
+                         BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\_listG.txt", true))) {
+                        String each;
+                        while ((each = br.readLine()) != null) {
+                            if (!path.contains(each)) {
+                                bw.write(each + "\n");
+                            }
+                        }
+                    } catch (Exception ignored) {
+
+                    }
+
+
+                    break;
+                case "H":
+
+                    try (BufferedReader br = new BufferedReader(new FileReader(SettingsFrame.dataPath + "\\listH.txt"));
+                         BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\_listH.txt", true))) {
+                        String each;
+                        while ((each = br.readLine()) != null) {
+                            if (!path.contains(each)) {
+                                bw.write(each + "\n");
+                            }
+                        }
+                    } catch (Exception ignored) {
+
+                    }
+
+
+                    break;
+                case "I":
+
+                    try (BufferedReader br = new BufferedReader(new FileReader(SettingsFrame.dataPath + "\\listI.txt"));
+                         BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\_listI.txt", true))) {
+                        String each;
+                        while ((each = br.readLine()) != null) {
+                            if (!path.contains(each)) {
+                                bw.write(each + "\n");
+                            }
+                        }
+                    } catch (Exception ignored) {
+
+                    }
+
+
+                    break;
+                case "J":
+
+                    try (BufferedReader br = new BufferedReader(new FileReader(SettingsFrame.dataPath + "\\listJ.txt"));
+                         BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\_listJ.txt", true))) {
+                        String each;
+                        while ((each = br.readLine()) != null) {
+                            if (!path.contains(each)) {
+                                bw.write(each + "\n");
+                            }
+                        }
+                    } catch (Exception ignored) {
+
+                    }
+
+
+                    break;
+                case "K":
+
+                    try (BufferedReader br = new BufferedReader(new FileReader(SettingsFrame.dataPath + "\\listK.txt"));
+                         BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\_listK.txt", true))) {
+                        String each;
+                        while ((each = br.readLine()) != null) {
+                            if (!path.contains(each)) {
+                                bw.write(each + "\n");
+                            }
+                        }
+                    } catch (Exception ignored) {
+
+                    }
+
+
+                    break;
+                case "L":
+
+                    try (BufferedReader br = new BufferedReader(new FileReader(SettingsFrame.dataPath + "\\listL.txt"));
+                         BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\_listL.txt", true))) {
+                        String each;
+                        while ((each = br.readLine()) != null) {
+                            if (!path.contains(each)) {
+                                bw.write(each + "\n");
+                            }
+                        }
+                    } catch (Exception ignored) {
+
+                    }
+
+
+                    break;
+                case "M":
+
+                    try (BufferedReader br = new BufferedReader(new FileReader(SettingsFrame.dataPath + "\\listM.txt"));
+                         BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\_listM.txt", true))) {
+                        String each;
+                        while ((each = br.readLine()) != null) {
+                            if (!path.contains(each)) {
+                                bw.write(each + "\n");
+                            }
+                        }
+                    } catch (Exception ignored) {
+
+                    }
+
+
+                    break;
+                case "N":
+
+                    try (BufferedReader br = new BufferedReader(new FileReader(SettingsFrame.dataPath + "\\listN.txt"));
+                         BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\_listN.txt", true))) {
+                        String each;
+                        while ((each = br.readLine()) != null) {
+                            if (!path.contains(each)) {
+                                bw.write(each + "\n");
+                            }
+                        }
+                    } catch (Exception ignored) {
+
+                    }
+
+
+                    break;
+                case "O":
+
+                    try (BufferedReader br = new BufferedReader(new FileReader(SettingsFrame.dataPath + "\\listO.txt"));
+                         BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\_listO.txt", true))) {
+                        String each;
+                        while ((each = br.readLine()) != null) {
+                            if (!path.contains(each)) {
+                                bw.write(each + "\n");
+                            }
+                        }
+                    } catch (Exception ignored) {
+
+                    }
+
+
+                    break;
+                case "P":
+
+                    try (BufferedReader br = new BufferedReader(new FileReader(SettingsFrame.dataPath + "\\listP.txt"));
+                         BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\_listP.txt", true))) {
+                        String each;
+                        while ((each = br.readLine()) != null) {
+                            if (!path.contains(each)) {
+                                bw.write(each + "\n");
+                            }
+                        }
+                    } catch (Exception ignored) {
+
+                    }
+
+
+                    break;
+                case "Q":
+
+                    try (BufferedReader br = new BufferedReader(new FileReader(SettingsFrame.dataPath + "\\listQ.txt"));
+                         BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\_listQ.txt", true))) {
+                        String each;
+                        while ((each = br.readLine()) != null) {
+                            if (!path.contains(each)) {
+                                bw.write(each + "\n");
+                            }
+                        }
+                    } catch (Exception ignored) {
+
+                    }
+
+
+                    break;
+                case "R":
+
+                    try (BufferedReader br = new BufferedReader(new FileReader(SettingsFrame.dataPath + "\\listR.txt"));
+                         BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\_listR.txt", true))) {
+                        String each;
+                        while ((each = br.readLine()) != null) {
+                            if (!path.contains(each)) {
+                                bw.write(each + "\n");
+                            }
+                        }
+                    } catch (Exception ignored) {
+
+                    }
+
+
+                    break;
+                case "S":
+
+                    try (BufferedReader br = new BufferedReader(new FileReader(SettingsFrame.dataPath + "\\listS.txt"));
+                         BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\_listS.txt", true))) {
+                        String each;
+                        while ((each = br.readLine()) != null) {
+                            if (!path.contains(each)) {
+                                bw.write(each + "\n");
+                            }
+                        }
+                    } catch (Exception ignored) {
+
+                    }
+
+
+                    break;
+                case "T":
+
+                    try (BufferedReader br = new BufferedReader(new FileReader(SettingsFrame.dataPath + "\\listT.txt"));
+                         BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\_listT.txt", true))) {
+                        String each;
+                        while ((each = br.readLine()) != null) {
+                            if (!path.contains(each)) {
+                                bw.write(each + "\n");
+                            }
+                        }
+                    } catch (Exception ignored) {
+
+                    }
+
+
+                    break;
+                case "U":
+
+                    try (BufferedReader br = new BufferedReader(new FileReader(SettingsFrame.dataPath + "\\listU.txt"));
+                         BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\_listU.txt", true))) {
+                        String each;
+                        while ((each = br.readLine()) != null) {
+                            if (!path.contains(each)) {
+                                bw.write(each + "\n");
+                            }
+                        }
+                    } catch (Exception ignored) {
+
+                    }
+
+
+                    break;
+                case "V":
+
+                    try (BufferedReader br = new BufferedReader(new FileReader(SettingsFrame.dataPath + "\\listV.txt"));
+                         BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\_listV.txt", true))) {
+                        String each;
+                        while ((each = br.readLine()) != null) {
+                            if (!path.contains(each)) {
+                                bw.write(each + "\n");
+                            }
+                        }
+                    } catch (Exception ignored) {
+
+                    }
+
+
+                    break;
+                case "W":
+
+                    try (BufferedReader br = new BufferedReader(new FileReader(SettingsFrame.dataPath + "\\listW.txt"));
+                         BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\_listW.txt", true))) {
+                        String each;
+                        while ((each = br.readLine()) != null) {
+                            if (!path.contains(each)) {
+                                bw.write(each + "\n");
+                            }
+                        }
+                    } catch (Exception ignored) {
+
+                    }
+
+
+                    break;
+                case "X":
+
+                    try (BufferedReader br = new BufferedReader(new FileReader(SettingsFrame.dataPath + "\\listX.txt"));
+                         BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\_listX.txt", true))) {
+                        String each;
+                        while ((each = br.readLine()) != null) {
+                            if (!path.contains(each)) {
+                                bw.write(each + "\n");
+                            }
+                        }
+                    } catch (Exception ignored) {
+
+                    }
+
+
+                    break;
+                case "Y":
+
+                    try (BufferedReader br = new BufferedReader(new FileReader(SettingsFrame.dataPath + "\\listY.txt"));
+                         BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\_listY.txt", true))) {
+                        String each;
+                        while ((each = br.readLine()) != null) {
+                            if (!path.contains(each)) {
+                                bw.write(each + "\n");
+                            }
+                        }
+                    } catch (Exception ignored) {
+
+                    }
+
+
+                    break;
+                case "Z":
+
+                    try (BufferedReader br = new BufferedReader(new FileReader(SettingsFrame.dataPath + "\\listZ.txt"));
+                         BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\_listZ.txt", true))) {
+                        String each;
+                        while ((each = br.readLine()) != null) {
+                            if (!path.contains(each)) {
+                                bw.write(each + "\n");
+                            }
+                        }
+                    } catch (Exception ignored) {
+
+                    }
+
+
+                    break;
+                case "_":
+
+                    try (BufferedReader br = new BufferedReader(new FileReader(SettingsFrame.dataPath + "\\listUnderline.txt"));
+                         BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\_listUnderline.txt", true))) {
+                        String each;
+                        while ((each = br.readLine()) != null) {
+                            if (!path.contains(each)) {
+                                bw.write(each + "\n");
+                            }
+                        }
+                    } catch (Exception ignored) {
 
                     }
 
                     break;
-                }
+                case "%":
+
+                    try (BufferedReader br = new BufferedReader(new FileReader(SettingsFrame.dataPath + "\\listPercentSign.txt"));
+                         BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\_listPercentSign.txt", true))) {
+                        String each;
+                        while ((each = br.readLine()) != null) {
+                            if (!path.contains(each)) {
+                                bw.write(each + "\n");
+                            }
+                        }
+                    } catch (Exception ignored) {
+
+                    }
+
+                    break;
+                default:
+                    if (Character.isDigit(headWord.charAt(0))) {
+
+                        try (BufferedReader br = new BufferedReader(new FileReader(SettingsFrame.dataPath + "\\listNum.txt"));
+                             BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\_listNum.txt", true))) {
+                            String each;
+                            while ((each = br.readLine()) != null) {
+                                if (!path.contains(each)) {
+                                    bw.write(each + "\n");
+                                }
+                            }
+                        } catch (Exception ignored) {
+
+                        }
+
+                    } else {
+
+                        try (BufferedReader br = new BufferedReader(new FileReader(SettingsFrame.dataPath + "\\listUnique.txt"));
+                             BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\_listUnique.txt", true))) {
+                            String each;
+                            while ((each = br.readLine()) != null) {
+                                if (!path.contains(each)) {
+                                    bw.write(each + "\n");
+                                }
+                            }
+                        } catch (Exception ignored) {
+
+                        }
+
+                    }
+                    break;
+            }
         }
     }
 
@@ -669,243 +619,162 @@ public class Search {
 
     private void addFileToList(String path) {
         File file = new File(path);
-        char firstWord = PinYinConverter.getPinYin(file.getName()).charAt(0);
-        if (firstWord != '$' && firstWord != '.') {
-            char headWord = Character.toUpperCase(firstWord);
+        HashSet<String> listChars = new HashSet<>();
+        boolean isNumAdded = false;
+        for (char i : PinYinConverter.getPinYin(file.getName()).toCharArray()) {
+            if (Character.isAlphabetic(i)) {
+                listChars.add(String.valueOf(i));
+            }
+            if (Character.isDigit(i) && !isNumAdded) {
+                listChars.add(String.valueOf(i));
+                isNumAdded = true;
+            }
+        }
+        for (String headWord : listChars) {
+            headWord = headWord.toUpperCase();
+
             switch (headWord) {
-                case 'A':
-                    try (BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\listA.txt", true))) {
-                        bw.write(path);
-                    } catch (Exception ignored) {
-
-                    }
+                case "A":
+                    appendFileHeader(path + "\n", SettingsFrame.dataPath + "\\listA.txt");
                     break;
-                case 'B':
-                    try (BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\listB.txt", true))) {
-                        bw.write(path);
-                    } catch (Exception ignored) {
+                case "B":
+                    appendFileHeader(path + "\n", SettingsFrame.dataPath + "\\listB.txt");
 
-                    }
 
                     break;
-                case 'C':
-                    try (BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\listC.txt", true))) {
-                        bw.write(path);
-                    } catch (Exception ignored) {
+                case "C":
+                    appendFileHeader(path + "\n", SettingsFrame.dataPath + "\\listC.txt");
 
-                    }
 
                     break;
-                case 'D':
-                    try (BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\listD.txt", true))) {
-                        bw.write(path);
-                    } catch (Exception ignored) {
+                case "D":
+                    appendFileHeader(path + "\n", SettingsFrame.dataPath + "\\listD.txt");
 
-                    }
 
                     break;
-                case 'E':
-                    try (BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\listE.txt", true))) {
-                        bw.write(path);
-                    } catch (Exception ignored) {
+                case "E":
+                    appendFileHeader(path + "\n", SettingsFrame.dataPath + "\\listE.txt");
 
-                    }
 
                     break;
-                case 'F':
-                    try (BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\listF.txt", true))) {
-                        bw.write(path);
-                    } catch (Exception ignored) {
+                case "F":
+                    appendFileHeader(path + "\n", SettingsFrame.dataPath + "\\listF.txt");
 
-                    }
 
                     break;
-                case 'G':
-                    try (BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\listG.txt", true))) {
-                        bw.write(path);
-                    } catch (Exception ignored) {
+                case "G":
+                    appendFileHeader(path + "\n", SettingsFrame.dataPath + "\\listG.txt");
 
-                    }
 
                     break;
-                case 'H':
-                    try (BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\listH.txt", true))) {
-                        bw.write(path);
-                    } catch (Exception ignored) {
+                case "H":
+                    appendFileHeader(path + "\n", SettingsFrame.dataPath + "\\listH.txt");
 
-                    }
 
                     break;
-                case 'I':
-                    try (BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\listI.txt", true))) {
-                        bw.write(path);
-                    } catch (Exception ignored) {
+                case "I":
+                    appendFileHeader(path + "\n", SettingsFrame.dataPath + "\\listI.txt");
 
-                    }
 
                     break;
-                case 'J':
-                    try (BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\listJ.txt", true))) {
-                        bw.write(path);
-                    } catch (Exception ignored) {
+                case "J":
+                    appendFileHeader(path + "\n", SettingsFrame.dataPath + "\\listJ.txt");
 
-                    }
 
                     break;
-                case 'K':
-                    try (BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\listK.txt", true))) {
-                        bw.write(path);
-                    } catch (Exception ignored) {
+                case "K":
+                    appendFileHeader(path + "\n", SettingsFrame.dataPath + "\\listK.txt");
 
-                    }
 
                     break;
-                case 'L':
-                    try (BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\listL.txt", true))) {
-                        bw.write(path);
-                    } catch (Exception ignored) {
+                case "L":
+                    appendFileHeader(path + "\n", SettingsFrame.dataPath + "\\listL.txt");
 
-                    }
 
                     break;
-                case 'M':
-                    try (BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\listM.txt", true))) {
-                        bw.write(path);
-                    } catch (Exception ignored) {
+                case "M":
+                    appendFileHeader(path + "\n", SettingsFrame.dataPath + "\\listM.txt");
 
-                    }
 
                     break;
-                case 'N':
-                    try (BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\listN.txt", true))) {
-                        bw.write(path);
-                    } catch (Exception ignored) {
+                case "N":
+                    appendFileHeader(path + "\n", SettingsFrame.dataPath + "\\listN.txt");
 
-                    }
 
                     break;
-                case 'O':
-                    try (BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\listO.txt", true))) {
-                        bw.write(path);
-                    } catch (Exception ignored) {
+                case "O":
+                    appendFileHeader(path + "\n", SettingsFrame.dataPath + "\\listO.txt");
 
-                    }
 
                     break;
-                case 'P':
-                    try (BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\listP.txt", true))) {
-                        bw.write(path);
-                    } catch (Exception ignored) {
+                case "P":
+                    appendFileHeader(path + "\n", SettingsFrame.dataPath + "\\listP.txt");
 
-                    }
 
                     break;
-                case 'Q':
-                    try (BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\listQ.txt", true))) {
-                        bw.write(path);
-                    } catch (Exception ignored) {
+                case "Q":
+                    appendFileHeader(path + "\n", SettingsFrame.dataPath + "\\listQ.txt");
 
-                    }
 
                     break;
-                case 'R':
-                    try (BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\listR.txt", true))) {
-                        bw.write(path);
-                    } catch (Exception ignored) {
+                case "R":
+                    appendFileHeader(path + "\n", SettingsFrame.dataPath + "\\listR.txt");
 
-                    }
 
                     break;
-                case 'S':
-                    try (BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\listS.txt", true))) {
-                        bw.write(path);
-                    } catch (Exception ignored) {
+                case "S":
+                    appendFileHeader(path + "\n", SettingsFrame.dataPath + "\\listS.txt");
 
-                    }
 
                     break;
-                case 'T':
-                    try (BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\listT.txt", true))) {
-                        bw.write(path);
-                    } catch (Exception ignored) {
+                case "T":
+                    appendFileHeader(path + "\n", SettingsFrame.dataPath + "\\listT.txt");
 
-                    }
 
                     break;
-                case 'U':
-                    try (BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\listU.txt", true))) {
-                        bw.write(path);
-                    } catch (Exception ignored) {
+                case "U":
+                    appendFileHeader(path + "\n", SettingsFrame.dataPath + "\\listU.txt");
 
-                    }
 
                     break;
-                case 'V':
-                    try (BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\listV.txt", true))) {
-                        bw.write(path);
-                    } catch (Exception ignored) {
+                case "V":
+                    appendFileHeader(path + "\n", SettingsFrame.dataPath + "\\listV.txt");
 
-                    }
 
                     break;
-                case 'W':
-                    try (BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\listW.txt", true))) {
-                        bw.write(path);
-                    } catch (Exception ignored) {
+                case "W":
+                    appendFileHeader(path + "\n", SettingsFrame.dataPath + "\\listW.txt");
 
-                    }
 
                     break;
-                case 'X':
-                    try (BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\listX.txt", true))) {
-                        bw.write(path);
-                    } catch (Exception ignored) {
+                case "X":
+                    appendFileHeader(path + "\n", SettingsFrame.dataPath + "\\listX.txt");
 
-                    }
 
                     break;
-                case 'Y':
-                    try (BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\listY.txt", true))) {
-                        bw.write(path);
-                    } catch (Exception ignored) {
+                case "Y":
+                    appendFileHeader(path + "\n", SettingsFrame.dataPath + "\\listY.txt");
 
-                    }
 
                     break;
-                case 'Z':
-                    try (BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\listZ.txt", true))) {
-                        bw.write(path);
-                    } catch (Exception ignored) {
+                case "Z":
+                    appendFileHeader(path + "\n", SettingsFrame.dataPath + "\\listZ.txt");
 
-                    }
 
                     break;
-                case '_':
-                    try (BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\listUnderline.txt", true))) {
-                        bw.write(path);
-                    } catch (Exception ignored) {
+                case "_":
+                    appendFileHeader(path + "\n", SettingsFrame.dataPath + "\\listUnderline.txt");
 
-                    }
                     break;
-                case '%':
-                    try (BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\listPercentSign.txt", true))) {
-                        bw.write(path);
-                    } catch (Exception ignored) {
-
-                    }
+                case "%":
+                    appendFileHeader(path + "\n", SettingsFrame.dataPath + "\\listPercentSign.txt");
+                    break;
                 default:
-                    if (Character.isDigit(headWord)) {
-                        try (BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\listNum.txt", true))) {
-                            bw.write(path);
-                        } catch (Exception ignored) {
+                    if (Character.isDigit(headWord.charAt(0))) {
+                        appendFileHeader(path + "\n", SettingsFrame.dataPath + "\\listNum.txt");
 
-                        }
                     } else {
-                        try (BufferedWriter bw = new BufferedWriter(new FileWriter(SettingsFrame.dataPath + "\\listUnique.txt", true))) {
-                            bw.write(path);
-                        } catch (Exception ignored) {
-
-                        }
+                        appendFileHeader(path + "\n", SettingsFrame.dataPath + "\\listUnique.txt");
                     }
 
                     break;
