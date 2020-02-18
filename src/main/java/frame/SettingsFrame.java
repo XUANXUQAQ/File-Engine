@@ -301,7 +301,7 @@ public class SettingsFrame {
         }
     }
 
-    public  SettingsFrame() {
+    public SettingsFrame() {
         buttonSave.addActionListener(e -> saveChanges());
         checkBox1.addActionListener(e -> setStartup(checkBox1.isSelected()));
         buttonSaveAndRemoveDesktop.addActionListener(e -> {
