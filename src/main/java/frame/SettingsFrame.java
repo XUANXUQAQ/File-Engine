@@ -44,7 +44,7 @@ public class SettingsFrame {
     private JLabel label3;
     private JLabel label1;
     private JLabel label2;
-    private Search searchObj = new Search();
+    private Search searchObj = Search.getInstance();
     private JFrame frame = new JFrame("…Ë÷√");
     private JLabel label4;
     private JLabel label5;

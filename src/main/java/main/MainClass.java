@@ -20,7 +20,7 @@ public class MainClass {
     public static final String version = "2.7"; //TODO 更改版本号
     public static boolean mainExit = false;
     public static String name;
-    private static Search search = new Search();
+    private static Search search = Search.getInstance();
     private static TaskBar taskBar = null;
 
     public static void setMainExit(boolean b) {
@@ -239,7 +239,7 @@ public class MainClass {
 
         data = new File(SettingsFrame.dataPath);
         if (data.isDirectory() && data.exists()) {
-            if (Objects.requireNonNull(data.listFiles()).length != 30) {
+            if (Objects.requireNonNull(data.listFiles()).length != 25) {
                 System.out.println("检测到data文件损坏，正在搜索并重建");
                 search.setManualUpdate(true);
             }
