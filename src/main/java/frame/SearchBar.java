@@ -37,7 +37,7 @@ public class SearchBar {
     private boolean isOpenLastFolderPressed = false;
     private int labelCount = 0;
     private JTextField textField;
-    private Search search = new Search();
+    private Search search = Search.getInstance();
     private Color labelColor = new Color(255, 152, 104, 255);
     private Color backgroundColor = new Color(108, 108, 108, 255);
     private Color backgroundColorLight = new Color(75, 75, 75, 255);
@@ -49,7 +49,6 @@ public class SearchBar {
     private boolean isRunAsAdminPressed = false;
     private Pattern semicolon = Pattern.compile(";");
     private Pattern resultSplit = Pattern.compile(":");
-    private boolean isWaitForNextRount = false;
     private int priorityCount = 0;
 
 
@@ -214,7 +213,7 @@ public class SearchBar {
                     }
                 }
                 try {
-                    Thread.sleep(50);
+                    Thread.sleep(10);
                 } catch (InterruptedException ignored) {
 
                 }
@@ -228,54 +227,72 @@ public class SearchBar {
                     if (labelCount < 4) {
                         showResult();
                     } else {
-                        String path = listResult.get(labelCount - 3);
-                        String name = getFileName(listResult.get(labelCount - 3));
+                        String path;
+                        String name;
                         ImageIcon iconf;
-                        if (isDirectory(path) || isFile(path)) {
-                            iconf = (ImageIcon) GetIcon.getBigIcon(path);
-                            iconf = changeIcon(iconf, label1.getHeight() - 60, label1.getHeight() - 60);
-                            label1.setIcon(iconf);
-                            label1.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
-                        } else {
-                            label1.setIcon(null);
-                            label1.setText("无效文件");
-                            search.addToRecycleBin(path);
+                        try {
+                            path = listResult.get(labelCount - 3);
+                            name = getFileName(listResult.get(labelCount - 3));
+                            if (isDirectory(path) || isFile(path)) {
+                                iconf = (ImageIcon) GetIcon.getBigIcon(path);
+                                iconf = changeIcon(iconf, label1.getHeight() - 60, label1.getHeight() - 60);
+                                label1.setIcon(iconf);
+                                label1.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
+                            } else {
+                                label1.setIcon(null);
+                                label1.setText("无效文件");
+                                search.addToRecycleBin(path);
+                            }
+                        } catch (ArrayIndexOutOfBoundsException ignored) {
+
                         }
-                        path = listResult.get(labelCount - 2);
-                        name = getFileName(listResult.get(labelCount - 2));
-                        if (isDirectory(path) || isFile(path)) {
-                            iconf = (ImageIcon) GetIcon.getBigIcon(path);
-                            iconf = changeIcon(iconf, label1.getHeight() - 60, label1.getHeight() - 60);
-                            label2.setIcon(iconf);
-                            label2.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
-                        } else {
-                            label2.setIcon(null);
-                            label2.setText("无效文件");
-                            search.addToRecycleBin(path);
+                        try {
+                            path = listResult.get(labelCount - 2);
+                            name = getFileName(listResult.get(labelCount - 2));
+                            if (isDirectory(path) || isFile(path)) {
+                                iconf = (ImageIcon) GetIcon.getBigIcon(path);
+                                iconf = changeIcon(iconf, label1.getHeight() - 60, label1.getHeight() - 60);
+                                label2.setIcon(iconf);
+                                label2.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
+                            } else {
+                                label2.setIcon(null);
+                                label2.setText("无效文件");
+                                search.addToRecycleBin(path);
+                            }
+                        } catch (ArrayIndexOutOfBoundsException ignored) {
+
                         }
-                        path = listResult.get(labelCount - 1);
-                        name = getFileName(listResult.get(labelCount - 1));
-                        if (isDirectory(path) || isFile(path)) {
-                            iconf = (ImageIcon) GetIcon.getBigIcon(path);
-                            iconf = changeIcon(iconf, label1.getHeight() - 60, label1.getHeight() - 60);
-                            label3.setIcon(iconf);
-                            label3.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
-                        } else {
-                            label3.setIcon(null);
-                            label3.setText("无效文件");
-                            search.addToRecycleBin(path);
+                        try {
+                            path = listResult.get(labelCount - 1);
+                            name = getFileName(listResult.get(labelCount - 1));
+                            if (isDirectory(path) || isFile(path)) {
+                                iconf = (ImageIcon) GetIcon.getBigIcon(path);
+                                iconf = changeIcon(iconf, label1.getHeight() - 60, label1.getHeight() - 60);
+                                label3.setIcon(iconf);
+                                label3.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
+                            } else {
+                                label3.setIcon(null);
+                                label3.setText("无效文件");
+                                search.addToRecycleBin(path);
+                            }
+                        } catch (ArrayIndexOutOfBoundsException ignored) {
+
                         }
-                        path = listResult.get(labelCount);
-                        name = getFileName(listResult.get(labelCount));
-                        if (isDirectory(path) || isFile(path)) {
-                            iconf = (ImageIcon) GetIcon.getBigIcon(path);
-                            iconf = changeIcon(iconf, label1.getHeight() - 60, label1.getHeight() - 60);
-                            label4.setIcon(iconf);
-                            label4.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
-                        } else {
-                            label4.setIcon(null);
-                            label4.setText("无效文件");
-                            search.addToRecycleBin(path);
+                        try {
+                            path = listResult.get(labelCount);
+                            name = getFileName(listResult.get(labelCount));
+                            if (isDirectory(path) || isFile(path)) {
+                                iconf = (ImageIcon) GetIcon.getBigIcon(path);
+                                iconf = changeIcon(iconf, label1.getHeight() - 60, label1.getHeight() - 60);
+                                label4.setIcon(iconf);
+                                label4.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
+                            } else {
+                                label4.setIcon(null);
+                                label4.setText("无效文件");
+                                search.addToRecycleBin(path);
+                            }
+                        } catch (ArrayIndexOutOfBoundsException ignored) {
+
                         }
                     }
                 }
@@ -331,7 +348,6 @@ public class SearchBar {
                 long endTime = System.currentTimeMillis();
                 if ((endTime - startTime > 500) && (timer)) {
                     timer = false; //开始搜索 计时停止
-                    isWaitForNextRount = false;
                     labelCount = 0;
                     clearLabel();
                     if (!textField.getText().equals("")) {
@@ -343,17 +359,6 @@ public class SearchBar {
                     String text = textField.getText();
                     if (search.isUsable()) {
                         text = PinYinConverter.getPinYin(text);
-                        HashSet<String> listChars = new HashSet<>();
-                        boolean isNumAdded = false;
-                        for (char i : text.toCharArray()) {
-                            if (Character.isAlphabetic(i)) {
-                                listChars.add(String.valueOf(i));
-                            }
-                            if (Character.isDigit(i) && !isNumAdded) {
-                                listChars.add(String.valueOf(i));
-                                isNumAdded = true;
-                            }
-                        }
                         char firstWord = '\0';
                         try {
                             firstWord = text.charAt(0);
@@ -431,174 +436,218 @@ public class SearchBar {
                                 }
                             }
                         } else {
-
                             searchPriorityFolder(text);
                             searchCache(text);
                             initLabelColor();
                             showResult();
 
+                            ArrayList<String> paths = new ArrayList<>();
                             String listPath;
-                            for (String each : listChars) {
-                                if (isWaitForNextRount) {
-                                    break; //直接取新的输入开始搜索
+                            int ascII = getAscIISum(getFileName(text));
+
+                            if (0 < ascII && ascII < 100) {
+                                for (int i = 0; i < 2500; i += 100) {
+                                    int name = i + 100;
+                                    listPath = SettingsFrame.dataPath + "\\list" + i + "-" + name + ".txt";
+                                    paths.add(listPath);
                                 }
-                                each = each.toUpperCase();
-                                switch (each) {
-                                    case "%":
-                                        listPath = SettingsFrame.dataPath + "\\listPercentSign.txt";
-                                        addResult(listPath, text, System.currentTimeMillis());
-                                        break;
-                                    case "_":
-                                        listPath = SettingsFrame.dataPath + "\\listUnderline.txt";
-                                        addResult(listPath, text, System.currentTimeMillis());
-                                        break;
-                                    case "A":
-                                        listPath = SettingsFrame.dataPath + "\\listA.txt";
-                                        addResult(listPath, text, System.currentTimeMillis());
-                                        break;
-                                    case "B":
-                                        listPath = SettingsFrame.dataPath + "\\listB.txt";
-
-                                        addResult(listPath, text, System.currentTimeMillis());
-
-                                        break;
-                                    case "C":
-                                        listPath = SettingsFrame.dataPath + "\\listC.txt";
-
-                                        addResult(listPath, text, System.currentTimeMillis());
-
-                                        break;
-                                    case "D":
-                                        listPath = SettingsFrame.dataPath + "\\listD.txt";
-
-                                        addResult(listPath, text, System.currentTimeMillis());
-
-                                        break;
-                                    case "E":
-                                        listPath = SettingsFrame.dataPath + "\\listE.txt";
-                                        addResult(listPath, text, System.currentTimeMillis());
-
-                                        break;
-                                    case "F":
-                                        listPath = SettingsFrame.dataPath + "\\listF.txt";
-
-                                        addResult(listPath, text, System.currentTimeMillis());
-
-                                        break;
-                                    case "G":
-                                        listPath = SettingsFrame.dataPath + "\\listG.txt";
-
-                                        addResult(listPath, text, System.currentTimeMillis());
-
-                                        break;
-                                    case "H":
-                                        listPath = SettingsFrame.dataPath + "\\listH.txt";
-                                        addResult(listPath, text, System.currentTimeMillis());
-
-                                        break;
-                                    case "I":
-                                        listPath = SettingsFrame.dataPath + "\\listI.txt";
-
-                                        addResult(listPath, text, System.currentTimeMillis());
-
-                                        break;
-                                    case "J":
-                                        listPath = SettingsFrame.dataPath + "\\listJ.txt";
-                                        addResult(listPath, text, System.currentTimeMillis());
-
-                                        break;
-                                    case "K":
-                                        listPath = SettingsFrame.dataPath + "\\listK.txt";
-                                        addResult(listPath, text, System.currentTimeMillis());
-                                        break;
-                                    case "L":
-                                        listPath = SettingsFrame.dataPath + "\\listL.txt";
-
-                                        addResult(listPath, text, System.currentTimeMillis());
-
-                                        break;
-                                    case "M":
-                                        listPath = SettingsFrame.dataPath + "\\listM.txt";
-
-                                        addResult(listPath, text, System.currentTimeMillis());
-
-                                        break;
-                                    case "N":
-                                        listPath = SettingsFrame.dataPath + "\\listN.txt";
-
-                                        addResult(listPath, text, System.currentTimeMillis());
-
-                                        break;
-                                    case "O":
-                                        listPath = SettingsFrame.dataPath + "\\listO.txt";
-                                        addResult(listPath, text, System.currentTimeMillis());
-
-                                        break;
-                                    case "P":
-                                        listPath = SettingsFrame.dataPath + "\\listP.txt";
-
-                                        addResult(listPath, text, System.currentTimeMillis());
-
-                                        break;
-                                    case "Q":
-                                        listPath = SettingsFrame.dataPath + "\\listQ.txt";
-
-                                        addResult(listPath, text, System.currentTimeMillis());
-
-                                        break;
-                                    case "R":
-                                        listPath = SettingsFrame.dataPath + "\\listR.txt";
-
-                                        addResult(listPath, text, System.currentTimeMillis());
-
-                                        break;
-                                    case "S":
-                                        listPath = SettingsFrame.dataPath + "\\listS.txt";
-
-                                        addResult(listPath, text, System.currentTimeMillis());
-                                        break;
-                                    case "T":
-                                        listPath = SettingsFrame.dataPath + "\\listT.txt";
-
-                                        addResult(listPath, text, System.currentTimeMillis());
-                                        break;
-                                    case "U":
-                                        listPath = SettingsFrame.dataPath + "\\listU.txt";
-                                        addResult(listPath, text, System.currentTimeMillis());
-
-                                        break;
-                                    case "V":
-                                        listPath = SettingsFrame.dataPath + "\\listV.txt";
-
-                                        addResult(listPath, text, System.currentTimeMillis());
-                                        break;
-                                    case "W":
-                                        listPath = SettingsFrame.dataPath + "\\listW.txt";
-
-                                        addResult(listPath, text, System.currentTimeMillis());
-                                        break;
-                                    case "X":
-                                        listPath = SettingsFrame.dataPath + "\\listX.txt";
-
-                                        addResult(listPath, text, System.currentTimeMillis());
-                                        break;
-                                    case "Y":
-                                        listPath = SettingsFrame.dataPath + "\\listY.txt";
-                                        addResult(listPath, text, System.currentTimeMillis());
-                                        break;
-                                    case "Z":
-                                        listPath = SettingsFrame.dataPath + "\\listZ.txt";
-                                        addResult(listPath, text, System.currentTimeMillis());
-                                        break;
-                                    default:
-                                        if (Character.isDigit(firstWord)) {
-                                            listPath = SettingsFrame.dataPath + "\\listNum.txt";
-                                        } else {
-                                            listPath = SettingsFrame.dataPath + "\\listUnique.txt";
-                                        }
-                                        addResult(listPath, text, System.currentTimeMillis());
-                                        break;
+                                paths.add(SettingsFrame.dataPath + "\\list2500-.txt");
+                                addResult(paths, text, System.currentTimeMillis());
+                            } else if (100 < ascII && ascII < 200) {
+                                for (int i = 100; i < 2500; i += 100) {
+                                    int name = i + 100;
+                                    listPath = SettingsFrame.dataPath + "\\list" + i + "-" + name + ".txt";
+                                    paths.add(listPath);
                                 }
+                                paths.add(SettingsFrame.dataPath + "\\list2500-.txt");
+                                addResult(paths, text, System.currentTimeMillis());
+                            } else if (200 < ascII && ascII < 300) {
+                                for (int i = 200; i < 2500; i += 100) {
+                                    int name = i + 100;
+                                    listPath = SettingsFrame.dataPath + "\\list" + i + "-" + name + ".txt";
+                                    paths.add(listPath);
+                                }
+                                paths.add(SettingsFrame.dataPath + "\\list2500-.txt");
+                                addResult(paths, text, System.currentTimeMillis());
+                            } else if (300 < ascII && ascII < 400) {
+                                for (int i = 300; i < 2500; i += 100) {
+                                    int name = i + 100;
+                                    listPath = SettingsFrame.dataPath + "\\list" + i + "-" + name + ".txt";
+                                    paths.add(listPath);
+                                }
+                                paths.add(SettingsFrame.dataPath + "\\list2500-.txt");
+                                addResult(paths, text, System.currentTimeMillis());
+                            } else if (400 < ascII && ascII < 500) {
+                                for (int i = 400; i < 2500; i += 100) {
+                                    int name = i + 100;
+                                    listPath = SettingsFrame.dataPath + "\\list" + i + "-" + name + ".txt";
+                                    paths.add(listPath);
+                                }
+                                paths.add(SettingsFrame.dataPath + "\\list2500-.txt");
+                                addResult(paths, text, System.currentTimeMillis());
+                            } else if (500 < ascII && ascII < 600) {
+                                for (int i = 500; i < 2500; i += 100) {
+                                    int name = i + 100;
+                                    listPath = SettingsFrame.dataPath + "\\list" + i + "-" + name + ".txt";
+                                    paths.add(listPath);
+                                }
+                                paths.add(SettingsFrame.dataPath + "\\list2500-.txt");
+                                addResult(paths, text, System.currentTimeMillis());
+                            } else if (600 < ascII && ascII < 700) {
+                                for (int i = 600; i < 2500; i += 100) {
+                                    int name = i + 100;
+                                    listPath = SettingsFrame.dataPath + "\\list" + i + "-" + name + ".txt";
+                                    paths.add(listPath);
+                                }
+                                paths.add(SettingsFrame.dataPath + "\\list2500-.txt");
+                                addResult(paths, text, System.currentTimeMillis());
+                            } else if (700 < ascII && ascII < 800) {
+                                for (int i = 700; i < 2500; i += 100) {
+                                    int name = i + 100;
+                                    listPath = SettingsFrame.dataPath + "\\list" + i + "-" + name + ".txt";
+                                    paths.add(listPath);
+                                }
+                                paths.add(SettingsFrame.dataPath + "\\list2500-.txt");
+                                addResult(paths, text, System.currentTimeMillis());
+                            } else if (800 < ascII && ascII < 900) {
+                                for (int i = 800; i < 2500; i += 100) {
+                                    int name = i + 100;
+                                    listPath = SettingsFrame.dataPath + "\\list" + i + "-" + name + ".txt";
+                                    paths.add(listPath);
+                                }
+                                paths.add(SettingsFrame.dataPath + "\\list2500-.txt");
+                                addResult(paths, text, System.currentTimeMillis());
+                            } else if (900 < ascII && ascII < 1000) {
+                                for (int i = 900; i < 2500; i += 100) {
+                                    int name = i + 100;
+                                    listPath = SettingsFrame.dataPath + "\\list" + i + "-" + name + ".txt";
+                                    paths.add(listPath);
+                                }
+                                paths.add(SettingsFrame.dataPath + "\\list2500-.txt");
+                                addResult(paths, text, System.currentTimeMillis());
+                            } else if (1000 < ascII && ascII < 1100) {
+                                for (int i = 1000; i < 2500; i += 100) {
+                                    int name = i + 100;
+                                    listPath = SettingsFrame.dataPath + "\\list" + i + "-" + name + ".txt";
+                                    paths.add(listPath);
+                                }
+                                paths.add(SettingsFrame.dataPath + "\\list2500-.txt");
+                                addResult(paths, text, System.currentTimeMillis());
+                            } else if (1100 < ascII && ascII < 1200) {
+                                for (int i = 1100; i < 2500; i += 100) {
+                                    int name = i + 100;
+                                    listPath = SettingsFrame.dataPath + "\\list" + i + "-" + name + ".txt";
+                                    paths.add(listPath);
+                                }
+                                paths.add(SettingsFrame.dataPath + "\\list2500-.txt");
+                                addResult(paths, text, System.currentTimeMillis());
+                            } else if (1200 < ascII && ascII < 1300) {
+                                for (int i = 1200; i < 2500; i += 100) {
+                                    int name = i + 100;
+                                    listPath = SettingsFrame.dataPath + "\\list" + i + "-" + name + ".txt";
+                                    paths.add(listPath);
+                                }
+                                paths.add(SettingsFrame.dataPath + "\\list2500-.txt");
+                                addResult(paths, text, System.currentTimeMillis());
+                            } else if (1300 < ascII && ascII < 1400) {
+                                for (int i = 1300; i < 2500; i += 100) {
+                                    int name = i + 100;
+                                    listPath = SettingsFrame.dataPath + "\\list" + i + "-" + name + ".txt";
+                                    paths.add(listPath);
+                                }
+                                paths.add(SettingsFrame.dataPath + "\\list2500-.txt");
+                                addResult(paths, text, System.currentTimeMillis());
+                            } else if (1400 < ascII && ascII < 1500) {
+                                for (int i = 1400; i < 2500; i += 100) {
+                                    int name = i + 100;
+                                    listPath = SettingsFrame.dataPath + "\\list" + i + "-" + name + ".txt";
+                                    paths.add(listPath);
+                                }
+                                paths.add(SettingsFrame.dataPath + "\\list2500-.txt");
+                                addResult(paths, text, System.currentTimeMillis());
+                            } else if (1500 < ascII && ascII < 1600) {
+                                for (int i = 1500; i < 2500; i += 100) {
+                                    int name = i + 100;
+                                    listPath = SettingsFrame.dataPath + "\\list" + i + "-" + name + ".txt";
+                                    paths.add(listPath);
+                                }
+                                paths.add(SettingsFrame.dataPath + "\\list2500-.txt");
+                                addResult(paths, text, System.currentTimeMillis());
+                            } else if (1600 < ascII && ascII < 1700) {
+                                for (int i = 1600; i < 2500; i += 100) {
+                                    int name = i + 100;
+                                    listPath = SettingsFrame.dataPath + "\\list" + i + "-" + name + ".txt";
+                                    paths.add(listPath);
+                                }
+                                paths.add(SettingsFrame.dataPath + "\\list2500-.txt");
+                                addResult(paths, text, System.currentTimeMillis());
+                            } else if (1700 < ascII && ascII < 1800) {
+                                for (int i = 1700; i < 2500; i += 100) {
+                                    int name = i + 100;
+                                    listPath = SettingsFrame.dataPath + "\\list" + i + "-" + name + ".txt";
+                                    paths.add(listPath);
+                                }
+                                paths.add(SettingsFrame.dataPath + "\\list2500-.txt");
+                                addResult(paths, text, System.currentTimeMillis());
+                            } else if (1800 < ascII && ascII < 1900) {
+                                for (int i = 1800; i < 2500; i += 100) {
+                                    int name = i + 100;
+                                    listPath = SettingsFrame.dataPath + "\\list" + i + "-" + name + ".txt";
+                                    paths.add(listPath);
+                                }
+                                paths.add(SettingsFrame.dataPath + "\\list2500-.txt");
+                                addResult(paths, text, System.currentTimeMillis());
+                            } else if (1900 < ascII && ascII < 2000) {
+                                for (int i = 1900; i < 2500; i += 100) {
+                                    int name = i + 100;
+                                    listPath = SettingsFrame.dataPath + "\\list" + i + "-" + name + ".txt";
+                                    paths.add(listPath);
+                                }
+                                paths.add(SettingsFrame.dataPath + "\\list2500-.txt");
+                                addResult(paths, text, System.currentTimeMillis());
+                            } else if (2000 < ascII && ascII < 2100) {
+                                for (int i = 2000; i < 2500; i += 100) {
+                                    int name = i + 100;
+                                    listPath = SettingsFrame.dataPath + "\\list" + i + "-" + name + ".txt";
+                                    paths.add(listPath);
+                                }
+                                paths.add(SettingsFrame.dataPath + "\\list2500-.txt");
+                                addResult(paths, text, System.currentTimeMillis());
+                            } else if (2100 < ascII && ascII < 2200) {
+                                for (int i = 2100; i < 2500; i += 100) {
+                                    int name = i + 100;
+                                    listPath = SettingsFrame.dataPath + "\\list" + i + "-" + name + ".txt";
+                                    paths.add(listPath);
+                                }
+                                paths.add(SettingsFrame.dataPath + "\\list2500-.txt");
+                                addResult(paths, text, System.currentTimeMillis());
+                            } else if (2200 < ascII && ascII < 2300) {
+                                for (int i = 2200; i < 2500; i += 100) {
+                                    int name = i + 100;
+                                    listPath = SettingsFrame.dataPath + "\\list" + i + "-" + name + ".txt";
+                                    paths.add(listPath);
+                                }
+                                paths.add(SettingsFrame.dataPath + "\\list2500-.txt");
+                                addResult(paths, text, System.currentTimeMillis());
+                            } else if (2300 < ascII && ascII < 2400) {
+                                for (int i = 2300; i < 2500; i += 100) {
+                                    int name = i + 100;
+                                    listPath = SettingsFrame.dataPath + "\\list" + i + "-" + name + ".txt";
+                                    paths.add(listPath);
+                                }
+                                paths.add(SettingsFrame.dataPath + "\\list2500-.txt");
+                                addResult(paths, text, System.currentTimeMillis());
+                            } else if (2400 < ascII && ascII < 2500) {
+                                for (int i = 2400; i < 2500; i += 100) {
+                                    int name = i + 100;
+                                    listPath = SettingsFrame.dataPath + "\\list" + i + "-" + name + ".txt";
+                                    paths.add(listPath);
+                                }
+                                paths.add(SettingsFrame.dataPath + "\\list2500-.txt");
+                                addResult(paths, text, System.currentTimeMillis());
+                            } else {
+                                paths.add(SettingsFrame.dataPath + "\\list2500-.txt");
+                                addResult(paths, text, System.currentTimeMillis());
                             }
                         }
                     } else {
@@ -783,7 +832,7 @@ public class SearchBar {
                                 label2.setBackground(backgroundColor);
                                 label3.setBackground(backgroundColorLight);
                                 label4.setBackground(labelColor);
-                                /*String path = listResult.get(labelCount - 3);
+                                String path = listResult.get(labelCount - 3);
                                 String name = getFileName(listResult.get(labelCount - 3));
                                 ImageIcon icon;
                                 if (isDirectory(path) || isFile(path)) {
@@ -836,7 +885,7 @@ public class SearchBar {
                                     label4.setIcon(null);
                                     label4.setText("无效文件");
                                     search.addToRecycleBin(path);
-                                }*/
+                                }
                             }
                         }
                     } else if (40 == key) {
@@ -968,7 +1017,7 @@ public class SearchBar {
                                     label2.setBackground(backgroundColor);
                                     label3.setBackground(backgroundColorLight);
                                     label4.setBackground(labelColor);
-                                    /*String path = listResult.get(labelCount - 3);
+                                    String path = listResult.get(labelCount - 3);
                                     String name = getFileName(listResult.get(labelCount - 3));
                                     ImageIcon icon;
                                     if (isDirectory(path) || isFile(path)) {
@@ -1021,7 +1070,7 @@ public class SearchBar {
                                         label4.setIcon(null);
                                         label4.setText("无效文件");
                                         search.addToRecycleBin(path);
-                                    }*/
+                                    }
                                 }
                             }
                         }
@@ -1109,7 +1158,7 @@ public class SearchBar {
         return f.exists();
     }
 
-    private void addResult(String path, String text, long time) {
+    private void addResult(ArrayList<String> paths, String text, long time) {
         //为label添加结果
         String[] strings = new String[0];
         String searchText;
@@ -1123,66 +1172,45 @@ public class SearchBar {
             length = 0;
         }
         String each;
-        try (BufferedReader br = new BufferedReader(new FileReader(path))) {
-            while ((each = br.readLine()) != null) {
-                if (startTime > time) { //用户重新输入了信息
-                    isWaitForNextRount = true; //上次取结果过程被结束，等待下一次
-                    return;
-                }
-                if (search.isUsable()) {
-                    if (length != 2 && match(getFileName(each), searchText)) {
-                        if (!listResult.contains(each)) {
-                            if (isExist(each)) {
-                                if (canExecute(each)) {
-                                    listResult.add(priorityCount, each);
-                                } else {
-                                    listResult.add(each);
+        for (String path : paths) {
+            try (BufferedReader br = new BufferedReader(new FileReader(path))) {
+                while ((each = br.readLine()) != null) {
+                    if (startTime > time) { //用户重新输入了信息
+                        return;
+                    }
+                    if (search.isUsable()) {
+                        if (length != 2 && match(getFileName(each), searchText)) {
+                            if (!listResult.contains(each)) {
+                                if (isExist(each)) {
+                                    if (canExecute(each)) {
+                                        listResult.add(priorityCount, each);
+                                    } else {
+                                        listResult.add(each);
+                                    }
+                                    if (listResult.size() > 100) {
+                                        break;
+                                    }
                                 }
                             }
-                        }
-                    } else if (match(getFileName(each), searchText) && length == 2) {
-                        switch (strings[1].toUpperCase()) {
-                            case "FILE":
-                                if (isFile(each)) {
-                                    if (!listResult.contains(each)) {
-                                        if (isExist(each)) {
-                                            if (canExecute(each)) {
-                                                listResult.add(priorityCount, each);
-                                            } else {
-                                                listResult.add(each);
+                        } else if (match(getFileName(each), searchText) && length == 2) {
+                            switch (strings[1].toUpperCase()) {
+                                case "FILE":
+                                    if (isFile(each)) {
+                                        if (!listResult.contains(each)) {
+                                            if (isExist(each)) {
+                                                if (canExecute(each)) {
+                                                    listResult.add(priorityCount, each);
+                                                } else {
+                                                    listResult.add(each);
+                                                }
+                                                if (listResult.size() > 100) {
+                                                    break;
+                                                }
                                             }
                                         }
                                     }
-                                }
-                                break;
-                            case "FOLDER":
-                                if (isDirectory(each)) {
-                                    if (!listResult.contains(each)) {
-                                        if (isExist(each)) {
-                                            if (canExecute(each)) {
-                                                listResult.add(priorityCount, each);
-                                            } else {
-                                                listResult.add(each);
-                                            }
-                                        }
-                                    }
-                                }
-                                break;
-                            case "FULL":
-                                if (PinYinConverter.getPinYin(getFileName(each.toLowerCase())).equals(searchText.toLowerCase())) {
-                                    if (!listResult.contains(each)) {
-                                        if (isExist(each)) {
-                                            if (canExecute(each)) {
-                                                listResult.add(priorityCount, each);
-                                            } else {
-                                                listResult.add(each);
-                                            }
-                                        }
-                                    }
-                                }
-                                break;
-                            case "FOLDERFULL":
-                                if (PinYinConverter.getPinYin(getFileName(each.toLowerCase())).equals(searchText.toLowerCase())) {
+                                    break;
+                                case "FOLDER":
                                     if (isDirectory(each)) {
                                         if (!listResult.contains(each)) {
                                             if (isExist(each)) {
@@ -1191,35 +1219,74 @@ public class SearchBar {
                                                 } else {
                                                     listResult.add(each);
                                                 }
+                                                if (listResult.size() > 100) {
+                                                    break;
+                                                }
                                             }
                                         }
                                     }
-                                }
-                                break;
-                            case "FILEFULL":
-                                if (PinYinConverter.getPinYin(getFileName(each.toLowerCase())).equals(searchText.toLowerCase())) {
-                                    if (isFile(each)) {
+                                    break;
+                                case "FULL":
+                                    if (PinYinConverter.getPinYin(getFileName(each.toLowerCase())).equals(searchText.toLowerCase())) {
                                         if (!listResult.contains(each)) {
                                             if (isExist(each)) {
-
                                                 if (canExecute(each)) {
                                                     listResult.add(priorityCount, each);
                                                 } else {
                                                     listResult.add(each);
                                                 }
-
+                                                if (listResult.size() > 100) {
+                                                    break;
+                                                }
                                             }
                                         }
                                     }
-                                }
-                                break;
+                                    break;
+                                case "FOLDERFULL":
+                                    if (PinYinConverter.getPinYin(getFileName(each.toLowerCase())).equals(searchText.toLowerCase())) {
+                                        if (isDirectory(each)) {
+                                            if (!listResult.contains(each)) {
+                                                if (isExist(each)) {
+                                                    if (canExecute(each)) {
+                                                        listResult.add(priorityCount, each);
+                                                    } else {
+                                                        listResult.add(each);
+                                                    }
+                                                    if (listResult.size() > 100) {
+                                                        break;
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                    break;
+                                case "FILEFULL":
+                                    if (PinYinConverter.getPinYin(getFileName(each.toLowerCase())).equals(searchText.toLowerCase())) {
+                                        if (isFile(each)) {
+                                            if (!listResult.contains(each)) {
+                                                if (isExist(each)) {
+
+                                                    if (canExecute(each)) {
+                                                        listResult.add(priorityCount, each);
+                                                    } else {
+                                                        listResult.add(each);
+                                                    }
+                                                    if (listResult.size() > 100) {
+                                                        break;
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                    break;
+                            }
                         }
                     }
                 }
-            }
-            delRepeated();
-        } catch (IOException ignored) {
+                delRepeated();
+            } catch (IOException ignored) {
 
+            }
         }
     }
 
@@ -1238,7 +1305,7 @@ public class SearchBar {
         }
         String[] eachExd = semicolon.split(SettingsFrame.exds);
         for (String each : eachExd) {
-            if (name.toLowerCase().endsWith(each.toLowerCase())) {
+            if (name.toLowerCase().endsWith("." + each.toLowerCase())) {
                 return true;
             }
         }
@@ -1395,6 +1462,15 @@ public class SearchBar {
         }
     }
 
+    public int getAscIISum(String path) {
+        path = path.toUpperCase();
+        int sum = 0;
+        for (char i : path.toCharArray()) {
+            sum += i;
+        }
+        return sum;
+    }
+
     private void saveCache(ArrayList<String> list) {
         int cacheNum = 0;
         File cache = new File("cache.dat");
@@ -1504,6 +1580,9 @@ public class SearchBar {
                                     } else {
                                         listResult.add(cach);
                                     }
+                                    if (listResult.size() > 500) {
+                                        break;
+                                    }
                                 } else {
                                     isCacheRepeated = true;
                                 }
@@ -1547,6 +1626,7 @@ public class SearchBar {
             if (!(null == files || files.length == 0)) {
                 for (File each : files) {
                     if (match(getFileName(each.getAbsolutePath()), text)) {
+                        priorityCount++;
                         listResult.add(0, each.getAbsolutePath());
                     }
                     if (each.isDirectory()) {
@@ -1584,7 +1664,7 @@ public class SearchBar {
             CheckHotKey hotkeyListener = CheckHotKey.getInstance();
             hotkeyListener.setShowSearchBar(false);
             clearLabel();
-            isWaitForNextRount = true;
+            startTime = System.currentTimeMillis();//结束搜索
             isUsing = false;
             isKeyPressed = false;
             labelCount = 0;
