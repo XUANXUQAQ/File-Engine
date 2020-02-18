@@ -970,7 +970,7 @@ public class SearchBar {
                         } else {
                             openWithoutAdmin(listResult.get(labelCount));
                         }
-                        saveCache(listResult.get(labelCount) + ';');
+                        //saveCache(listResult.get(labelCount) + ';');
                     } else if (SettingsFrame.openLastFolderKeyCode == key) {
                         //打开上级文件夹热键被点击
                         isOpenLastFolderPressed = true;
@@ -1139,6 +1139,11 @@ public class SearchBar {
                 }
             }
             delRepeated();
+            ArrayList<String> listCache = new ArrayList<>();
+            for (String result : listResult) {
+                listCache.add(result + ";");
+            }
+            saveCache(listCache);
         } catch (IOException ignored) {
 
         }
@@ -1302,11 +1307,10 @@ public class SearchBar {
         }
     }
 
-    private void saveCache(String content) {
+    private void saveCache(ArrayList<String> list) {
         int cacheNum = 0;
         File cache = new File("cache.dat");
         StringBuilder oldCaches = new StringBuilder();
-        boolean isRepeated;
         if (cache.exists()) {
             try (BufferedReader reader = new BufferedReader(new FileReader(cache))) {
                 String eachLine;
@@ -1318,14 +1322,23 @@ public class SearchBar {
 
             }
         }
+        StringBuilder strb = new StringBuilder();
+        for (String each : list) {
+            if (!oldCaches.toString().contains(each)) {
+                strb.append(each).append("\r\n");
+            }
+        }
         if (cacheNum < SettingsFrame.cacheNumLimit) {
-            isRepeated = oldCaches.toString().contains(content);
-            if (!isRepeated) {
-                try (BufferedWriter out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(new File("cache.dat"), true)))) {
-                    out.write(content + "\r\n");
-                } catch (Exception ignored) {
-
-                }
+            try (BufferedWriter bw = new BufferedWriter(new FileWriter("cache.dat", true))) {
+                bw.write(strb.toString());
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        } else {
+            try (BufferedWriter bw = new BufferedWriter(new FileWriter("cache.dat"))) {
+                bw.write(strb.toString());
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
     }
@@ -1396,7 +1409,7 @@ public class SearchBar {
                             String eachCacheName = getFileName(cach);
                             if (match(eachCacheName, searchFile)) {
                                 if (!listResult.contains(cach)) {
-                                    listResult.add(0, cach);
+                                    listResult.add(cach);
                                 } else {
                                     isCacheRepeated = true;
                                 }
