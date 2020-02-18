@@ -1335,7 +1335,8 @@ public class SearchBar {
                 e.printStackTrace();
             }
         } else {
-            try (BufferedWriter bw = new BufferedWriter(new FileWriter("cache.dat"))) {
+            //超过限制，进行覆写
+            try (BufferedWriter bw = new BufferedWriter(new FileWriter("cache.dat", false))) {
                 bw.write(strb.toString());
             } catch (IOException e) {
                 e.printStackTrace();
