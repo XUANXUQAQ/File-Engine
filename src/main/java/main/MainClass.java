@@ -20,25 +20,20 @@ public class MainClass {
     public static final String version = "2.7"; //TODO 更改版本号
     public static boolean mainExit = false;
     public static String name;
-    private Search search = new Search();
+    private static Search search = new Search();
     private static TaskBar taskBar = null;
-    private static MainClass mainInstance = new MainClass();
 
-    public static MainClass getInstance() {
-        return mainInstance;
-    }
-
-    public void setMainExit(boolean b) {
+    public static void setMainExit(boolean b) {
         mainExit = b;
     }
 
-    public void showMessage(String caption, String message) {
+    public static void showMessage(String caption, String message) {
         if (taskBar != null) {
             taskBar.showMessage(caption, message);
         }
     }
 
-    public boolean isAdmin() {
+    public static boolean isAdmin() {
         try {
             ProcessBuilder processBuilder = new ProcessBuilder("cmd.exe");
             Process process = processBuilder.start();
@@ -57,13 +52,13 @@ public class MainClass {
                 } else if (nextLine.equals("echo %errorlevel%")) {
                     printedErrorlevel = true;
                 }
-            }       
+            }
         } catch (IOException e) {
             return false;
         }
     }
 
-    private void copyFile(InputStream source, File dest) {
+    private static void copyFile(InputStream source, File dest) {
         try (OutputStream os = new FileOutputStream(dest); BufferedInputStream bis = new BufferedInputStream(source); BufferedOutputStream bos = new BufferedOutputStream(os)) {
             byte[] buffer = new byte[8192];
             int count = bis.read(buffer);
@@ -79,7 +74,7 @@ public class MainClass {
         }
     }
 
-    public void deleteDir(String path) {
+    public static void deleteDir(String path) {
         File file = new File(path);
         if (!file.exists()) {//判断是否待删除目录是否存在
             return;
@@ -102,7 +97,7 @@ public class MainClass {
     }
 
 
-    public void entry() {
+    public static void main(String[] args) {
         try {
             System.setProperty("sun.java2d.noddraw", "true");
             org.jb2011.lnf.beautyeye.BeautyEyeLNFHelper.launchBeautyEyeLNF();
@@ -135,6 +130,10 @@ public class MainClass {
             json.put("isLoseFocusClose", true);
             json.put("openLastFolderKeyCode", 17);
             json.put("runAsAdminKeyCode", 16);
+            json.put("exds", "aac;adt;aif;aifc;aiff;aspx;avi;bat;bin;bmp;dll;doc;docx;dotx;eml;eps;exe;flv;gif;ini;" +
+                    "iso;jar;jpg;jpeg;mov;mp3;mp4;mpeg;mpg;msi;mui;pdf;png;" +
+                    "pot;potm;potx;ppam;pps;ppsm;ppsx;ppt;pptm;pptx;psd;pst;pub;rar;rtf;sldm;sldx;swf;sys;tif tiff;" +
+                    "tmp;txt;vob;vsd;vsdm;vsdx;vss;vssm;vst;vstm;vstx;wav;wbk;wks;wmd;wmz wms;xlsx;xlt;xltx;xps;zip;rar;lnk");
             try (BufferedWriter buffW = new BufferedWriter(new FileWriter(settings))) {
                 buffW.write(json.toJSONString());
             } catch (IOException ignored) {
@@ -146,7 +145,7 @@ public class MainClass {
         SearchBar searchBar = SearchBar.getInstance();
 
         //清空tmp
-        mainInstance.deleteDir(SettingsFrame.tmp.getAbsolutePath());
+        MainClass.deleteDir(SettingsFrame.tmp.getAbsolutePath());
 
         File target;
         InputStream fileMonitorDll64 = MainClass.class.getResourceAsStream("/fileMonitor64.dll");
@@ -160,11 +159,11 @@ public class MainClass {
         if (!target.exists()) {
             File dllMonitor;
             if (name.contains("x64")) {
-                mainInstance.copyFile(fileMonitorDll64, target);
+                copyFile(fileMonitorDll64, target);
                 System.out.println("已加载64位fileMonitor");
                 dllMonitor = new File("fileMonitor64.dll");
             } else {
-                mainInstance.copyFile(fileMonitorDll32, target);
+                copyFile(fileMonitorDll32, target);
                 System.out.println("已加载32位fileMonitor");
                 dllMonitor = new File("fileMonitor32.dll");
             }
@@ -174,11 +173,11 @@ public class MainClass {
         if (!target.exists()) {
             File dllSearcher;
             if (name.contains("x64")) {
-                mainInstance.copyFile(fileSearcherDll64, target);
+                copyFile(fileSearcherDll64, target);
                 System.out.println("已加载64为fileSearcher");
                 dllSearcher = new File("fileSearcher64.exe");
             } else {
-                mainInstance.copyFile(fileSearcherDll32, target);
+                copyFile(fileSearcherDll32, target);
                 System.out.println("已加载32位fileSearcher");
                 dllSearcher = new File("fileSearcher32.exe");
             }
@@ -192,11 +191,11 @@ public class MainClass {
         if (!target.exists()) {
             File fileOpener;
             if (name.contains("x64")) {
-                mainInstance.copyFile(fileOpener64, target);
+                copyFile(fileOpener64, target);
                 System.out.println("已加载64位fileOpener");
                 fileOpener = new File("fileOpener64.exe");
             } else {
-                mainInstance.copyFile(fileOpener32, target);
+                copyFile(fileOpener32, target);
                 System.out.println("已加载32位fileOpener");
                 fileOpener = new File("fileOpener32.exe");
             }
@@ -335,7 +334,7 @@ public class MainClass {
                         search.mergeFileToList();
                     }
                 }
-                if (gcCount > 600000){
+                if (gcCount > 600000) {
                     System.out.println("正在释放内存空间");
                     System.gc();
                     gcCount = 0;
@@ -387,9 +386,5 @@ public class MainClass {
                 System.exit(0);
             }
         }
-    }
-
-    public static void main(String[] args) {
-        mainInstance.entry();
     }
 }
