@@ -591,7 +591,7 @@ int main(int argc, char *argv[])
         strcpy(output1800_1900, output);
         strcat(output1800_1900, "\\list1800-1900.txt");
         strcpy(output1900_2000, output);
-        strcat(output2000_2100, "\\list1900-2000.txt");
+        strcat(output1900_2000, "\\list1900-2000.txt");
         strcpy(output2000_2100, output);
         strcat(output2000_2100, "\\list2000-2100.txt");
         strcpy(output2100_2200, output);
