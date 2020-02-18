@@ -87,6 +87,10 @@ public class SettingsFrame {
     private boolean isStartup;
     private Unzip unzipInstance = Unzip.getInstance();
 
+    public void hideFrame() {
+        frame.setVisible(false);
+    }
+
     public SettingsFrame() {
         checkBox1.addActionListener(e -> {
             setStartup(checkBox1.isSelected());
