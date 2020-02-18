@@ -12,7 +12,6 @@ import java.net.URL;
 public class TaskBar {
     private TrayIcon trayIcon = null;
     private SettingsFrame settingsFrame = new SettingsFrame();
-    private MainClass mainInstance = MainClass.getInstance();
 
     public void showTaskBar() {
         // 判断是否支持系统托盘
@@ -35,7 +34,7 @@ public class TaskBar {
             });
             MenuItem close = new MenuItem("退出");
             close.addActionListener(e -> {
-                mainInstance.setMainExit(true);
+                MainClass.setMainExit(true);
                 systemTray.remove(trayIcon);
             });
             popupMenu.add(settings);
