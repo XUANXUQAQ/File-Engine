@@ -130,10 +130,10 @@ public class MainClass {
             json.put("isLoseFocusClose", true);
             json.put("openLastFolderKeyCode", 17);
             json.put("runAsAdminKeyCode", 16);
-            json.put("exds", "aac;adt;aif;aifc;aiff;aspx;avi;bat;bin;bmp;dll;doc;docx;dotx;eml;eps;exe;flv;gif;ini;" +
-                    "iso;jar;jpg;jpeg;mov;mp3;mp4;mpeg;mpg;msi;mui;pdf;png;" +
-                    "pot;potm;potx;ppam;pps;ppsm;ppsx;ppt;pptm;pptx;psd;pst;pub;rar;rtf;sldm;sldx;swf;sys;tif tiff;" +
-                    "tmp;txt;vob;vsd;vsdm;vsdx;vss;vssm;vst;vstm;vstx;wav;wbk;wks;wmd;wmz wms;xlsx;xlt;xltx;xps;zip;rar;lnk");
+            json.put("exds", "avi;bat;bmp;dll;doc;docx;dotx;exe;flv;gif;ini;" +
+                    "iso;jar;mp3;mp4;mpeg;mpg;msi;mui;pdf;" +
+                    "potx;ppsm;ppsx;ppt;pptm;pptx;rar;rtf;sldm;sldx;" +
+                    "txt;vob;vssm;vstx;wav;wbk;wks;wmd;xlsx;xltx;xps;zip;rar;7z;bz2;lz;lnk");
             try (BufferedWriter buffW = new BufferedWriter(new FileWriter(settings))) {
                 buffW.write(json.toJSONString());
             } catch (IOException ignored) {
@@ -239,7 +239,7 @@ public class MainClass {
 
         data = new File(SettingsFrame.dataPath);
         if (data.isDirectory() && data.exists()) {
-            if (Objects.requireNonNull(data.listFiles()).length != 25) {
+            if (Objects.requireNonNull(data.listFiles()).length != 26) {
                 System.out.println("检测到data文件损坏，正在搜索并重建");
                 search.setManualUpdate(true);
             }

@@ -36,6 +36,7 @@ public class TaskBar {
             close.addActionListener(e -> {
                 MainClass.setMainExit(true);
                 systemTray.remove(trayIcon);
+                settingsFrame.hideFrame();
             });
             popupMenu.add(settings);
             popupMenu.add(close);
