@@ -339,7 +339,7 @@ public class SearchBar {
                                         desktop = Desktop.getDesktop();
                                         try {
                                             desktop.open(new File(cmdInfo[1]));
-                                        } catch (IOException e) {
+                                        } catch (Exception e) {
                                             JOptionPane.showMessageDialog(null, "Ö´ÐÐÊ§°Ü");
                                         }
                                     }
