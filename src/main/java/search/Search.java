@@ -76,7 +76,8 @@ public class Search {
             CopyOnWriteArraySet<String> set2500 = new CopyOnWriteArraySet<>();
             try { //À¬»ø·ÖÀà
                 for (String i : RecycleBin) {
-                    int ascII = SearchBar.getInstance().getAscIISum(i);
+                    SearchBar instance = SearchBar.getInstance();
+                    int ascII = instance.getAscIISum(instance.getFileName(i));
                     if (0 < ascII && ascII < 100) {
                         set0.add(i);
                     } else if (100 < ascII && ascII <= 200) {

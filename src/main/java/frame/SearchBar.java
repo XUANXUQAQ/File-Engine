@@ -118,7 +118,7 @@ public class SearchBar {
         //TextField
         textField = new JTextField(300);
         textField.setSize(searchBarWidth, (int) (searchBarHeight * 0.2));
-        Font textFieldFont = new Font("Microsoft JhengHei", Font.BOLD, (int) ((height * 0.1) / 96 * 72 / 1.2));
+        Font textFieldFont = new Font("Microsoft JhengHei", Font.BOLD, (int) (((height * 0.1) / 96 * 72 / 1.2) / 1.5));
         textField.setFont(textFieldFont);
         textField.setForeground(Color.WHITE);
         textField.setHorizontalAlignment(JTextField.LEFT);
@@ -275,6 +275,7 @@ public class SearchBar {
 
                         }
                         if (firstWord == ':') {
+                            label1.setText("运行命令");
                             if (text.equals(":update")) {
                                 clearLabel();
                                 MainClass.showMessage("提示", "正在更新文件索引");
@@ -345,13 +346,26 @@ public class SearchBar {
                                 }
                             }
                         } else {
-                            searchPriorityFolder(text);
-                            searchCache(text);
+                            String[] strings;
+                            String searchText;
+                            int length;
+                            String searchCase;
+                            strings = resultSplit.split(text);
+                            length = strings.length;
+                            if (length == 2) {
+                                searchCase = strings[1].toUpperCase();
+                                searchText = strings[0];
+                            } else {
+                                searchText = strings[0];
+                                searchCase = "";
+                            }
+                            searchPriorityFolder(searchText);
+                            searchCache(searchText);
                             showResults();
 
                             HashSet<String> paths = new HashSet<>();
                             String listPath;
-                            int ascII = getAscIISum(text);
+                            int ascII = getAscIISum(searchText);
 
                             if (0 < ascII && ascII < 100) {
                                 for (int i = 0; i < 2500; i += 100) {
@@ -360,7 +374,7 @@ public class SearchBar {
                                     paths.add(listPath);
                                 }
                                 paths.add(SettingsFrame.dataPath + "\\list2500-.txt");
-                                addResult(paths, text, System.currentTimeMillis());
+                                addResult(paths, searchText, System.currentTimeMillis(), searchCase);
                             } else if (100 < ascII && ascII < 200) {
                                 paths.add(SettingsFrame.dataPath + "\\list0-100.txt");
                                 for (int i = 100; i < 2500; i += 100) {
@@ -369,7 +383,7 @@ public class SearchBar {
                                     paths.add(listPath);
                                 }
                                 paths.add(SettingsFrame.dataPath + "\\list2500-.txt");
-                                addResult(paths, text, System.currentTimeMillis());
+                                addResult(paths, searchText, System.currentTimeMillis(), searchCase);
                             } else if (200 < ascII && ascII < 300) {
                                 paths.add(SettingsFrame.dataPath + "\\list0-100.txt");
                                 for (int i = 200; i < 2500; i += 100) {
@@ -378,7 +392,7 @@ public class SearchBar {
                                     paths.add(listPath);
                                 }
                                 paths.add(SettingsFrame.dataPath + "\\list2500-.txt");
-                                addResult(paths, text, System.currentTimeMillis());
+                                addResult(paths, searchText, System.currentTimeMillis(), searchCase);
                             } else if (300 < ascII && ascII < 400) {
                                 paths.add(SettingsFrame.dataPath + "\\list0-100.txt");
                                 for (int i = 300; i < 2500; i += 100) {
@@ -387,7 +401,7 @@ public class SearchBar {
                                     paths.add(listPath);
                                 }
                                 paths.add(SettingsFrame.dataPath + "\\list2500-.txt");
-                                addResult(paths, text, System.currentTimeMillis());
+                                addResult(paths, searchText, System.currentTimeMillis(), searchCase);
                             } else if (400 < ascII && ascII < 500) {
                                 paths.add(SettingsFrame.dataPath + "\\list0-100.txt");
                                 for (int i = 400; i < 2500; i += 100) {
@@ -396,7 +410,7 @@ public class SearchBar {
                                     paths.add(listPath);
                                 }
                                 paths.add(SettingsFrame.dataPath + "\\list2500-.txt");
-                                addResult(paths, text, System.currentTimeMillis());
+                                addResult(paths, searchText, System.currentTimeMillis(), searchCase);
                             } else if (500 < ascII && ascII < 600) {
                                 paths.add(SettingsFrame.dataPath + "\\list0-100.txt");
                                 for (int i = 500; i < 2500; i += 100) {
@@ -405,7 +419,7 @@ public class SearchBar {
                                     paths.add(listPath);
                                 }
                                 paths.add(SettingsFrame.dataPath + "\\list2500-.txt");
-                                addResult(paths, text, System.currentTimeMillis());
+                                addResult(paths, searchText, System.currentTimeMillis(), searchCase);
                             } else if (600 < ascII && ascII < 700) {
                                 paths.add(SettingsFrame.dataPath + "\\list0-100.txt");
                                 for (int i = 600; i < 2500; i += 100) {
@@ -414,7 +428,7 @@ public class SearchBar {
                                     paths.add(listPath);
                                 }
                                 paths.add(SettingsFrame.dataPath + "\\list2500-.txt");
-                                addResult(paths, text, System.currentTimeMillis());
+                                addResult(paths, searchText, System.currentTimeMillis(), searchCase);
                             } else if (700 < ascII && ascII < 800) {
                                 paths.add(SettingsFrame.dataPath + "\\list0-100.txt");
                                 for (int i = 700; i < 2500; i += 100) {
@@ -423,7 +437,7 @@ public class SearchBar {
                                     paths.add(listPath);
                                 }
                                 paths.add(SettingsFrame.dataPath + "\\list2500-.txt");
-                                addResult(paths, text, System.currentTimeMillis());
+                                addResult(paths, searchText, System.currentTimeMillis(), searchCase);
                             } else if (800 < ascII && ascII < 900) {
                                 paths.add(SettingsFrame.dataPath + "\\list0-100.txt");
                                 for (int i = 800; i < 2500; i += 100) {
@@ -432,7 +446,7 @@ public class SearchBar {
                                     paths.add(listPath);
                                 }
                                 paths.add(SettingsFrame.dataPath + "\\list2500-.txt");
-                                addResult(paths, text, System.currentTimeMillis());
+                                addResult(paths, searchText, System.currentTimeMillis(), searchCase);
                             } else if (900 < ascII && ascII < 1000) {
                                 paths.add(SettingsFrame.dataPath + "\\list0-100.txt");
                                 for (int i = 900; i < 2500; i += 100) {
@@ -441,7 +455,7 @@ public class SearchBar {
                                     paths.add(listPath);
                                 }
                                 paths.add(SettingsFrame.dataPath + "\\list2500-.txt");
-                                addResult(paths, text, System.currentTimeMillis());
+                                addResult(paths, searchText, System.currentTimeMillis(), searchCase);
                             } else if (1000 < ascII && ascII < 1100) {
                                 paths.add(SettingsFrame.dataPath + "\\list0-100.txt");
                                 for (int i = 1000; i < 2500; i += 100) {
@@ -450,7 +464,7 @@ public class SearchBar {
                                     paths.add(listPath);
                                 }
                                 paths.add(SettingsFrame.dataPath + "\\list2500-.txt");
-                                addResult(paths, text, System.currentTimeMillis());
+                                addResult(paths, searchText, System.currentTimeMillis(), searchCase);
                             } else if (1100 < ascII && ascII < 1200) {
                                 paths.add(SettingsFrame.dataPath + "\\list0-100.txt");
                                 for (int i = 1100; i < 2500; i += 100) {
@@ -459,7 +473,7 @@ public class SearchBar {
                                     paths.add(listPath);
                                 }
                                 paths.add(SettingsFrame.dataPath + "\\list2500-.txt");
-                                addResult(paths, text, System.currentTimeMillis());
+                                addResult(paths, searchText, System.currentTimeMillis(), searchCase);
                             } else if (1200 < ascII && ascII < 1300) {
                                 paths.add(SettingsFrame.dataPath + "\\list0-100.txt");
                                 for (int i = 1200; i < 2500; i += 100) {
@@ -468,7 +482,7 @@ public class SearchBar {
                                     paths.add(listPath);
                                 }
                                 paths.add(SettingsFrame.dataPath + "\\list2500-.txt");
-                                addResult(paths, text, System.currentTimeMillis());
+                                addResult(paths, searchText, System.currentTimeMillis(), searchCase);
                             } else if (1300 < ascII && ascII < 1400) {
                                 paths.add(SettingsFrame.dataPath + "\\list0-100.txt");
                                 for (int i = 1300; i < 2500; i += 100) {
@@ -477,7 +491,7 @@ public class SearchBar {
                                     paths.add(listPath);
                                 }
                                 paths.add(SettingsFrame.dataPath + "\\list2500-.txt");
-                                addResult(paths, text, System.currentTimeMillis());
+                                addResult(paths, searchText, System.currentTimeMillis(), searchCase);
                             } else if (1400 < ascII && ascII < 1500) {
                                 paths.add(SettingsFrame.dataPath + "\\list0-100.txt");
                                 for (int i = 1400; i < 2500; i += 100) {
@@ -486,7 +500,7 @@ public class SearchBar {
                                     paths.add(listPath);
                                 }
                                 paths.add(SettingsFrame.dataPath + "\\list2500-.txt");
-                                addResult(paths, text, System.currentTimeMillis());
+                                addResult(paths, searchText, System.currentTimeMillis(), searchCase);
                             } else if (1500 < ascII && ascII < 1600) {
                                 paths.add(SettingsFrame.dataPath + "\\list0-100.txt");
                                 for (int i = 1500; i < 2500; i += 100) {
@@ -495,7 +509,7 @@ public class SearchBar {
                                     paths.add(listPath);
                                 }
                                 paths.add(SettingsFrame.dataPath + "\\list2500-.txt");
-                                addResult(paths, text, System.currentTimeMillis());
+                                addResult(paths, searchText, System.currentTimeMillis(), searchCase);
                             } else if (1600 < ascII && ascII < 1700) {
                                 paths.add(SettingsFrame.dataPath + "\\list0-100.txt");
                                 for (int i = 1600; i < 2500; i += 100) {
@@ -504,7 +518,7 @@ public class SearchBar {
                                     paths.add(listPath);
                                 }
                                 paths.add(SettingsFrame.dataPath + "\\list2500-.txt");
-                                addResult(paths, text, System.currentTimeMillis());
+                                addResult(paths, searchText, System.currentTimeMillis(), searchCase);
                             } else if (1700 < ascII && ascII < 1800) {
                                 paths.add(SettingsFrame.dataPath + "\\list0-100.txt");
                                 for (int i = 1700; i < 2500; i += 100) {
@@ -513,7 +527,7 @@ public class SearchBar {
                                     paths.add(listPath);
                                 }
                                 paths.add(SettingsFrame.dataPath + "\\list2500-.txt");
-                                addResult(paths, text, System.currentTimeMillis());
+                                addResult(paths, searchText, System.currentTimeMillis(), searchCase);
                             } else if (1800 < ascII && ascII < 1900) {
                                 paths.add(SettingsFrame.dataPath + "\\list0-100.txt");
                                 for (int i = 1800; i < 2500; i += 100) {
@@ -522,7 +536,7 @@ public class SearchBar {
                                     paths.add(listPath);
                                 }
                                 paths.add(SettingsFrame.dataPath + "\\list2500-.txt");
-                                addResult(paths, text, System.currentTimeMillis());
+                                addResult(paths, searchText, System.currentTimeMillis(), searchCase);
                             } else if (1900 < ascII && ascII < 2000) {
                                 paths.add(SettingsFrame.dataPath + "\\list0-100.txt");
                                 for (int i = 1900; i < 2500; i += 100) {
@@ -531,7 +545,7 @@ public class SearchBar {
                                     paths.add(listPath);
                                 }
                                 paths.add(SettingsFrame.dataPath + "\\list2500-.txt");
-                                addResult(paths, text, System.currentTimeMillis());
+                                addResult(paths, searchText, System.currentTimeMillis(), searchCase);
                             } else if (2000 < ascII && ascII < 2100) {
                                 paths.add(SettingsFrame.dataPath + "\\list0-100.txt");
                                 for (int i = 2000; i < 2500; i += 100) {
@@ -540,7 +554,7 @@ public class SearchBar {
                                     paths.add(listPath);
                                 }
                                 paths.add(SettingsFrame.dataPath + "\\list2500-.txt");
-                                addResult(paths, text, System.currentTimeMillis());
+                                addResult(paths, searchText, System.currentTimeMillis(), searchCase);
                             } else if (2100 < ascII && ascII < 2200) {
                                 paths.add(SettingsFrame.dataPath + "\\list0-100.txt");
                                 for (int i = 2100; i < 2500; i += 100) {
@@ -549,7 +563,7 @@ public class SearchBar {
                                     paths.add(listPath);
                                 }
                                 paths.add(SettingsFrame.dataPath + "\\list2500-.txt");
-                                addResult(paths, text, System.currentTimeMillis());
+                                addResult(paths, searchText, System.currentTimeMillis(), searchCase);
                             } else if (2200 < ascII && ascII < 2300) {
                                 paths.add(SettingsFrame.dataPath + "\\list0-100.txt");
                                 for (int i = 2200; i < 2500; i += 100) {
@@ -558,7 +572,7 @@ public class SearchBar {
                                     paths.add(listPath);
                                 }
                                 paths.add(SettingsFrame.dataPath + "\\list2500-.txt");
-                                addResult(paths, text, System.currentTimeMillis());
+                                addResult(paths, searchText, System.currentTimeMillis(), searchCase);
                             } else if (2300 < ascII && ascII < 2400) {
                                 paths.add(SettingsFrame.dataPath + "\\list0-100.txt");
                                 for (int i = 2300; i < 2500; i += 100) {
@@ -567,7 +581,7 @@ public class SearchBar {
                                     paths.add(listPath);
                                 }
                                 paths.add(SettingsFrame.dataPath + "\\list2500-.txt");
-                                addResult(paths, text, System.currentTimeMillis());
+                                addResult(paths, searchText, System.currentTimeMillis(), searchCase);
                             } else if (2400 < ascII && ascII < 2500) {
                                 paths.add(SettingsFrame.dataPath + "\\list0-100.txt");
                                 for (int i = 2400; i < 2500; i += 100) {
@@ -576,10 +590,10 @@ public class SearchBar {
                                     paths.add(listPath);
                                 }
                                 paths.add(SettingsFrame.dataPath + "\\list2500-.txt");
-                                addResult(paths, text, System.currentTimeMillis());
+                                addResult(paths, searchText, System.currentTimeMillis(), searchCase);
                             } else {
                                 paths.add(SettingsFrame.dataPath + "\\list2500-.txt");
-                                addResult(paths, text, System.currentTimeMillis());
+                                addResult(paths, searchText, System.currentTimeMillis(), searchCase);
                             }
                         }
                     } else {
@@ -1066,21 +1080,8 @@ public class SearchBar {
         return f.exists();
     }
 
-    private void addResult(HashSet<String> paths, String text, long time) {
+    private void addResult(HashSet<String> paths, String searchText, long time, String searchCase) {
         //为label添加结果
-        String[] strings;
-        String searchText;
-        int length;
-        String searchCase;
-        strings = resultSplit.split(text);
-        length = strings.length;
-        if (length == 2) {
-            searchCase = strings[1].toUpperCase();
-            searchText = strings[0];
-        } else {
-            searchText = strings[0];
-            searchCase = "";
-        }
         String each;
         for (String path : paths) {
             try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(path)))) {
@@ -1089,7 +1090,7 @@ public class SearchBar {
                         return;
                     }
                     if (search.isUsable()) {
-                        if (length != 2 && match(getFileName(each), searchText)) {
+                        if (searchCase.equals("") && match(getFileName(each), searchText)) {
                             if (!listResult.contains(each)) {
                                 if (isExist(each)) {
                                     listResult.add(each);
@@ -1098,7 +1099,7 @@ public class SearchBar {
                                     }
                                 }
                             }
-                        } else if (match(getFileName(each), searchText) && length == 2) {
+                        } else if (match(getFileName(each), searchText) && !searchCase.equals("")) {
                             switch (searchCase) {
                                 case "FILE":
                                     if (isFile(each)) {
@@ -1365,7 +1366,7 @@ public class SearchBar {
         }
     }
 
-    private String getFileName(String path) {
+    public String getFileName(String path) {
         File file = new File(path);
         return file.getName();
     }
