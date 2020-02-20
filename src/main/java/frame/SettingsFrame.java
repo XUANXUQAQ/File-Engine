@@ -31,7 +31,6 @@ public class SettingsFrame {
     public static int runAsAdminKeyCode;
     public static File tmp = new File("tmp");
     public static File settings = new File("settings.json");
-    public static String exds;
     public static HashSet<String> cmdSet = new HashSet<>();
     private static int _openLastFolderKeyCode;
     private static int _runAsAdminKeyCode;
@@ -80,8 +79,6 @@ public class SettingsFrame {
     private JButton buttonDelCmd;
     private JScrollPane scrollPaneCmd;
     private JList<Object> listCmds;
-    private JLabel labelExdTip;
-    private JTextArea textAreaExds;
     private JLabel labelPlaceHoder4;
     private JButton buttonSave;
     private boolean isStartup;
@@ -296,7 +293,6 @@ public class SettingsFrame {
                 textFieldOpenLastFolder.setText("Alt + Enter");
             }
             listCmds.setListData(cmdSet.toArray());
-            textAreaExds.setText(exds);
         } catch (IOException ignored) {
 
         }
@@ -377,9 +373,7 @@ public class SettingsFrame {
             listCmds.setListData(cmdSet.toArray());
 
         });
-        buttonSave.addActionListener(e -> {
-            saveChanges();
-        });
+        buttonSave.addActionListener(e -> saveChanges());
     }
 
     public static void initSettings() {
@@ -405,7 +399,6 @@ public class SettingsFrame {
             _openLastFolderKeyCode = openLastFolderKeyCode;
             runAsAdminKeyCode = settings.getInteger("runAsAdminKeyCode");
             _runAsAdminKeyCode = runAsAdminKeyCode;
-            exds = settings.getString("exds");
         } catch (IOException ignored) {
 
         }
@@ -498,8 +491,7 @@ public class SettingsFrame {
             priorityFolder = textFieldPriorityFolder.getText();
             dataPath = textFieldDataPath.getText();
             hotkey = textFieldHotkey.getText();
-            HotKeyListener.registHotkey(hotkey);
-            exds = textAreaExds.getText();
+            HotKeyListener.registerHotkey(hotkey);
             allSettings.put("hotkey", hotkey);
             allSettings.put("isStartup", isStartup);
             allSettings.put("cacheNumLimit", cacheNumLimit);
@@ -512,7 +504,6 @@ public class SettingsFrame {
             allSettings.put("isLoseFocusClose", isLoseFocusClose);
             allSettings.put("runAsAdminKeyCode", runAsAdminKeyCode);
             allSettings.put("openLastFolderKeyCode", openLastFolderKeyCode);
-            allSettings.put("exds", exds);
             try (BufferedWriter buffW = new BufferedWriter(new FileWriter(settings))) {
                 buffW.write(allSettings.toJSONString());
                 JOptionPane.showMessageDialog(null, "保存成功"); //将设置保存
