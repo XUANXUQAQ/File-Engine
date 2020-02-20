@@ -26,7 +26,7 @@ public class CheckHotKey extends JFrame {
         isShowSearchBar = b;
     }
 
-    public void registHotkey(String hotkey) {
+    public void registerHotkey(String hotkey) {
         //½âÎö×Ö·û´®
         String[] hotkeys = hotkey.split(" \\+ ");
         int sum = 0;
@@ -43,6 +43,10 @@ public class CheckHotKey extends JFrame {
         assert main != null;
         JIntellitype.getInstance().unregisterHotKey(FUNC_KEY_MARK);
         JIntellitype.getInstance().registerHotKey(FUNC_KEY_MARK, sum, main.charAt(0));
+    }
+
+    public void unregisterHotkey() {
+        JIntellitype.getInstance().unregisterHotKey(FUNC_KEY_MARK);
     }
 
     private CheckHotKey() {

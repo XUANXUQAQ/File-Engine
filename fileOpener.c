@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <windows.h>
-#pragma comment( linker, "/subsystem:\"windows\" /entry:\"mainCRTStartup\"" ) // 设置入口地址
 
 int main(){
     int hwndDOS = GetForegroundWindow();

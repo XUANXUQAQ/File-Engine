@@ -2,6 +2,7 @@ package main;
 
 import com.alibaba.fastjson.JSONObject;
 import fileMonitor.FileMonitor;
+import frame.CheckHotKey;
 import frame.SearchBar;
 import frame.SettingsFrame;
 import frame.TaskBar;
@@ -130,10 +131,6 @@ public class MainClass {
             json.put("isLoseFocusClose", true);
             json.put("openLastFolderKeyCode", 17);
             json.put("runAsAdminKeyCode", 16);
-            json.put("exds", "avi;bat;bmp;dll;doc;docx;dotx;exe;flv;gif;ini;" +
-                    "iso;jar;mp3;mp4;mpeg;mpg;msi;mui;pdf;" +
-                    "potx;ppsm;ppsx;ppt;pptm;pptx;rar;rtf;sldm;sldx;" +
-                    "txt;vob;vssm;vstx;wav;wbk;wks;wmd;xlsx;xltx;xps;zip;rar;7z;bz2;lz;lnk");
             try (BufferedWriter buffW = new BufferedWriter(new FileWriter(settings))) {
                 buffW.write(json.toJSONString());
             } catch (IOException ignored) {
@@ -154,6 +151,8 @@ public class MainClass {
         InputStream fileSearcherDll32 = MainClass.class.getResourceAsStream("/fileSearcher32.exe");
         InputStream fileOpener64 = MainClass.class.getResourceAsStream("/fileOpener64.exe");
         InputStream fileOpener32 = MainClass.class.getResourceAsStream("/fileOpener32.exe");
+        InputStream getAscIIDll64 = MainClass.class.getResourceAsStream("/getAscII64.dll");
+        InputStream getAscIIDll32 = MainClass.class.getResourceAsStream("/getAscII32.dll");
 
         target = new File("fileMonitor.dll");
         if (!target.exists()) {
@@ -174,7 +173,7 @@ public class MainClass {
             File dllSearcher;
             if (name.contains("x64")) {
                 copyFile(fileSearcherDll64, target);
-                System.out.println("已加载64为fileSearcher");
+                System.out.println("已加载64位fileSearcher");
                 dllSearcher = new File("fileSearcher64.exe");
             } else {
                 copyFile(fileSearcherDll32, target);
@@ -200,6 +199,20 @@ public class MainClass {
                 fileOpener = new File("fileOpener32.exe");
             }
             fileOpener.renameTo(target);
+        }
+        target = new File("getAscII.dll");
+        if (!target.exists()) {
+            File getAscII;
+            if (name.contains("x64")) {
+                copyFile(getAscIIDll64, target);
+                System.out.println("已加载64位getAscII");
+                getAscII = new File("getAscII64.dll");
+            } else {
+                copyFile(getAscIIDll32, target);
+                System.out.println("已加载32位getAscII");
+                getAscII = new File("getAscII32.dll");
+            }
+            getAscII.renameTo(target);
         }
 
         if (!caches.exists()) {
@@ -371,6 +384,7 @@ public class MainClass {
 
             }
             if (mainExit) {
+                CheckHotKey.getInstance().unregisterHotkey();
                 File CLOSEDLL = new File(SettingsFrame.tmp.getAbsolutePath() + "\\CLOSE");
                 try {
                     CLOSEDLL.createNewFile();
@@ -378,7 +392,7 @@ public class MainClass {
 
                 }
                 try {
-                    Thread.sleep(20000);
+                    Thread.sleep(10000);
                 } catch (InterruptedException ignored) {
 
                 }
