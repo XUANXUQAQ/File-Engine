@@ -399,7 +399,15 @@ public class SettingsFrame {
             _openLastFolderKeyCode = openLastFolderKeyCode;
             runAsAdminKeyCode = settings.getInteger("runAsAdminKeyCode");
             _runAsAdminKeyCode = runAsAdminKeyCode;
-        } catch (IOException ignored) {
+            File data = new File(dataPath);
+            if (!data.exists()) {
+                MainClass.showMessage("提示", "检测到缓存不存在，正在重新搜索");
+                data = new File("data");
+                dataPath = data.getAbsolutePath();
+                new SettingsFrame().saveChangesWithoutPrompt();
+                Search.getInstance().setManualUpdate(true);
+            }
+        } catch (Exception ignored) {
 
         }
         //获取所有自定义命令
@@ -408,6 +416,96 @@ public class SettingsFrame {
             while ((each = br.readLine()) != null) {
                 cmdSet.add(each);
             }
+        } catch (IOException ignored) {
+
+        }
+    }
+
+    private void saveChangesWithoutPrompt() {
+        JSONObject allSettings = new JSONObject();
+        String MaxUpdateTime = textFieldUpdateTime.getText();
+        try {
+            updateTimeLimit = Integer.parseInt(MaxUpdateTime);
+        } catch (Exception e1) {
+            updateTimeLimit = -1; // 输入不正确
+        }
+        if (updateTimeLimit > 3600 || updateTimeLimit <= 0) {
+            JOptionPane.showMessageDialog(null, "文件索引更新设置错误，请更改");
+            return;
+        }
+        isStartup = checkBox1.isSelected();
+        String MaxCacheNum = textFieldCacheNum.getText();
+        try {
+            cacheNumLimit = Integer.parseInt(MaxCacheNum);
+        } catch (Exception e1) {
+            cacheNumLimit = -1;
+        }
+        if (cacheNumLimit > 10000 || cacheNumLimit <= 0) {
+            JOptionPane.showMessageDialog(null, "缓存容量设置错误，请更改");
+            return;
+        }
+        ignorePath = textAreaIgnorePath.getText();
+        ignorePath = ignorePath.replaceAll("\n", "");
+        if (!ignorePath.toLowerCase().contains("c:\\windows")) {
+            ignorePath = ignorePath + "C:\\Windows,";
+        }
+        try {
+            searchDepth = Integer.parseInt(textFieldSearchDepth.getText());
+        } catch (Exception e1) {
+            searchDepth = -1;
+        }
+
+        if (searchDepth > 10 || searchDepth <= 0) {
+            JOptionPane.showMessageDialog(null, "搜索深度设置错误，请更改");
+            return;
+        }
+
+        String _hotkey = textFieldHotkey.getText();
+        if (_hotkey.length() == 1) {
+            JOptionPane.showMessageDialog(null, "快捷键设置错误");
+            return;
+        } else {
+            if (!(64 < _hotkey.charAt(_hotkey.length() - 1) && _hotkey.charAt(_hotkey.length() - 1) < 91)) {
+                JOptionPane.showMessageDialog(null, "快捷键设置错误");
+                return;
+            }
+        }
+        if (_openLastFolderKeyCode == _runAsAdminKeyCode) {
+            JOptionPane.showMessageDialog(null, "打开上级文件夹快捷键与以管理员方式运行快捷键冲突");
+            return;
+        } else {
+            openLastFolderKeyCode = _openLastFolderKeyCode;
+            runAsAdminKeyCode = _runAsAdminKeyCode;
+        }
+        priorityFolder = textFieldPriorityFolder.getText();
+        dataPath = textFieldDataPath.getText();
+        hotkey = textFieldHotkey.getText();
+        HotKeyListener.registerHotkey(hotkey);
+        allSettings.put("hotkey", hotkey);
+        allSettings.put("isStartup", isStartup);
+        allSettings.put("cacheNumLimit", cacheNumLimit);
+        allSettings.put("updateTimeLimit", updateTimeLimit);
+        allSettings.put("ignorePath", ignorePath);
+        allSettings.put("searchDepth", searchDepth);
+        allSettings.put("priorityFolder", priorityFolder);
+        allSettings.put("dataPath", dataPath);
+        allSettings.put("isDefaultAdmin", isDefaultAdmin);
+        allSettings.put("isLoseFocusClose", isLoseFocusClose);
+        allSettings.put("runAsAdminKeyCode", runAsAdminKeyCode);
+        allSettings.put("openLastFolderKeyCode", openLastFolderKeyCode);
+        try (BufferedWriter buffW = new BufferedWriter(new FileWriter(settings))) {
+            buffW.write(allSettings.toJSONString());
+        } catch (IOException ignored) {
+
+        }
+        //保存自定义命令
+        StringBuilder strb = new StringBuilder();
+        for (String each : cmdSet) {
+            strb.append(each);
+            strb.append("\n");
+        }
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File("cmds.txt")))) {
+            bw.write(strb.toString());
         } catch (IOException ignored) {
 
         }
