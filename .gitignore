@@ -17,6 +17,7 @@ tmp/
 .settings/
 fileSearcher.exe
 out/
+user/
 fileOpener.exe
 fileToOpen.txt
 /fileSearcher.exe

@@ -30,7 +30,7 @@ public class SettingsFrame {
     public static int openLastFolderKeyCode;
     public static int runAsAdminKeyCode;
     public static File tmp = new File("tmp");
-    public static File settings = new File("settings.json");
+    public static File settings = new File("./user/settings.json");
     public static HashSet<String> cmdSet = new HashSet<>();
     private static int _openLastFolderKeyCode;
     private static int _runAsAdminKeyCode;
@@ -411,7 +411,7 @@ public class SettingsFrame {
 
         }
         //获取所有自定义命令
-        try (BufferedReader br = new BufferedReader(new FileReader(new File("cmds.txt")))) {
+        try (BufferedReader br = new BufferedReader(new FileReader(new File("./user/cmds.txt")))) {
             String each;
             while ((each = br.readLine()) != null) {
                 cmdSet.add(each);
@@ -504,7 +504,7 @@ public class SettingsFrame {
             strb.append(each);
             strb.append("\n");
         }
-        try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File("cmds.txt")))) {
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File("./user/cmds.txt")))) {
             bw.write(strb.toString());
         } catch (IOException ignored) {
 
@@ -614,7 +614,7 @@ public class SettingsFrame {
                 strb.append(each);
                 strb.append("\n");
             }
-            try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File("cmds.txt")))) {
+            try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File("./user/cmds.txt")))) {
                 bw.write(strb.toString());
             } catch (IOException ignored) {
 
