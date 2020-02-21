@@ -68,7 +68,7 @@ public class SearchBar {
         AWTUtilities.setWindowOpaque(searchBar, false);
         searchBar.getRootPane().setWindowDecorationStyle(JRootPane.NONE);
         searchBar.setBackground(null);
-        searchBar.setOpacity(0.9f);
+        searchBar.setOpacity(0.8f);
         panel = searchBar.getContentPane();
         searchBar.setType(JFrame.Type.UTILITY);//Òþ²ØÈÎÎñÀ¸Í¼±ê
         //labels
