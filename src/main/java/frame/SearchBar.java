@@ -327,15 +327,7 @@ public class SearchBar {
                                     clearLabel();
                                     clearTextFieldText();
                                     closedTodo();
-                                    Desktop desktop;
-                                    if (Desktop.isDesktopSupported()) {
-                                        desktop = Desktop.getDesktop();
-                                        try {
-                                            desktop.open(new File(cmdInfo[1]));
-                                        } catch (Exception e) {
-                                            JOptionPane.showMessageDialog(null, "Ö´ÐÐÊ§°Ü");
-                                        }
-                                    }
+                                    openWithAdmin(cmdInfo[1]);
                                 }
                             }
                             showResults();
