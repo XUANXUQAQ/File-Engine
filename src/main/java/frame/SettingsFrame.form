@@ -380,12 +380,12 @@
                   <text value="删除"/>
                 </properties>
               </component>
-              <component id="8d2c6" class="javax.swing.JLabel" binding="labelSelfDefinedTip">
+              <component id="a8dd1" class="javax.swing.JLabel" binding="labelCmdTip">
                 <constraints>
                   <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
-                  <text value="命令只能为Windows CMD命令"/>
+                  <text value="自定义命令，设置后在搜索框中输入&quot;: + 你的标识符&quot;即可快捷打开"/>
                 </properties>
               </component>
             </children>

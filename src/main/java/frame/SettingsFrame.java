@@ -74,19 +74,15 @@ public class SettingsFrame {
     private JTextField textFieldRunAsAdmin;
     private JLabel labelOpenFolder;
     private JTextField textFieldOpenLastFolder;
-    private JLabel labelSelfDefinedTip;
     private JButton buttonAddCMD;
     private JButton buttonDelCmd;
     private JScrollPane scrollPaneCmd;
     private JList<Object> listCmds;
     private JLabel labelPlaceHoder4;
     private JButton buttonSave;
+    private JLabel labelCmdTip;
     private boolean isStartup;
     private Unzip unzipInstance = Unzip.getInstance();
-
-    public void hideFrame() {
-        frame.setVisible(false);
-    }
 
     public SettingsFrame() {
         checkBox1.addActionListener(e -> {
@@ -356,9 +352,9 @@ public class SettingsFrame {
                 return;
             }
             String cmd;
-            JOptionPane.showMessageDialog(null, "请选择可执行批处理文件位置");
+            JOptionPane.showMessageDialog(null, "请选择可执行文件位置(文件夹也可以)");
             JFileChooser fileChooser = new JFileChooser();
-            fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+            fileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
             int returnValue = fileChooser.showDialog(new Label(), "选择");
             if (returnValue == JFileChooser.APPROVE_OPTION) {
                 cmd = fileChooser.getSelectedFile().getAbsolutePath();
@@ -419,6 +415,10 @@ public class SettingsFrame {
         } catch (IOException ignored) {
 
         }
+    }
+
+    public void hideFrame() {
+        frame.setVisible(false);
     }
 
     private void saveChangesWithoutPrompt() {
