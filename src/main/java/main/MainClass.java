@@ -106,6 +106,10 @@ public class MainClass {
         } catch (Exception e) {
             e.printStackTrace();
         }
+        File user = new File("user");
+        if (!user.exists()) {
+            user.mkdir();
+        }
         String osArch = System.getProperty("os.arch");
         if (osArch.contains("64")) {
             name = "search_x64.exe";
@@ -113,7 +117,7 @@ public class MainClass {
             name = "search_x86.exe";
         }
         File settings = SettingsFrame.settings;
-        File caches = new File("cache.dat");
+        File caches = new File("./user/cache.dat");
         File data = new File("data");
 
         if (!settings.exists()) {
@@ -154,31 +158,31 @@ public class MainClass {
         InputStream getAscIIDll64 = MainClass.class.getResourceAsStream("/getAscII64.dll");
         InputStream getAscIIDll32 = MainClass.class.getResourceAsStream("/getAscII32.dll");
 
-        target = new File("fileMonitor.dll");
+        target = new File("./user/fileMonitor.dll");
         if (!target.exists()) {
             File dllMonitor;
             if (name.contains("x64")) {
                 copyFile(fileMonitorDll64, target);
                 System.out.println("已加载64位fileMonitor");
-                dllMonitor = new File("fileMonitor64.dll");
+                dllMonitor = new File("./user/fileMonitor64.dll");
             } else {
                 copyFile(fileMonitorDll32, target);
                 System.out.println("已加载32位fileMonitor");
-                dllMonitor = new File("fileMonitor32.dll");
+                dllMonitor = new File("./user/fileMonitor32.dll");
             }
             dllMonitor.renameTo(target);
         }
-        target = new File("fileSearcher.exe");
+        target = new File("./user/fileSearcher.exe");
         if (!target.exists()) {
             File dllSearcher;
             if (name.contains("x64")) {
                 copyFile(fileSearcherDll64, target);
                 System.out.println("已加载64位fileSearcher");
-                dllSearcher = new File("fileSearcher64.exe");
+                dllSearcher = new File("./user/fileSearcher64.exe");
             } else {
                 copyFile(fileSearcherDll32, target);
                 System.out.println("已加载32位fileSearcher");
-                dllSearcher = new File("fileSearcher32.exe");
+                dllSearcher = new File("./user/fileSearcher32.exe");
             }
             dllSearcher.renameTo(target);
         }
@@ -186,31 +190,31 @@ public class MainClass {
         if (!target.exists()) {
             target.mkdir();
         }
-        target = new File("fileOpener.exe");
+        target = new File("./user/fileOpener.exe");
         if (!target.exists()) {
             File fileOpener;
             if (name.contains("x64")) {
                 copyFile(fileOpener64, target);
                 System.out.println("已加载64位fileOpener");
-                fileOpener = new File("fileOpener64.exe");
+                fileOpener = new File("./user/fileOpener64.exe");
             } else {
                 copyFile(fileOpener32, target);
                 System.out.println("已加载32位fileOpener");
-                fileOpener = new File("fileOpener32.exe");
+                fileOpener = new File("./user/fileOpener32.exe");
             }
             fileOpener.renameTo(target);
         }
-        target = new File("getAscII.dll");
+        target = new File("./user/getAscII.dll");
         if (!target.exists()) {
             File getAscII;
             if (name.contains("x64")) {
                 copyFile(getAscIIDll64, target);
                 System.out.println("已加载64位getAscII");
-                getAscII = new File("getAscII64.dll");
+                getAscII = new File("./user/getAscII64.dll");
             } else {
                 copyFile(getAscIIDll32, target);
                 System.out.println("已加载32位getAscII");
-                getAscII = new File("getAscII32.dll");
+                getAscII = new File("./user/getAscII32.dll");
             }
             getAscII.renameTo(target);
         }
