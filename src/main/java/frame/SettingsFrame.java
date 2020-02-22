@@ -178,9 +178,9 @@ public class SettingsFrame {
                 if (!mainUAC.exists()) {
                     unzipInstance.unZipFiles(target, tmp.getAbsolutePath());
                 }
-                File searchexe = new File(MainClass.name);
+                File mainFile = new File(MainClass.name);
                 try {
-                    Runtime.getRuntime().exec("\"" + mainUAC.getAbsolutePath() + "\"" + " \"" + searchexe.getAbsolutePath() + "\"");
+                    Runtime.getRuntime().exec("\"" + mainUAC.getAbsolutePath() + "\"" + " \"" + mainFile.getAbsolutePath() + "\"");
                 } catch (IOException ignored) {
 
                 }
@@ -624,18 +624,18 @@ public class SettingsFrame {
 
     private void setStartup(boolean b) {
         Process p;
-        File superSearch = new File(MainClass.name);
+        File FileEngine = new File(MainClass.name);
         if (b) {
             try {
                 String currentPath = System.getProperty("user.dir");
                 File file = new File(currentPath);
                 for (File each : Objects.requireNonNull(file.listFiles())) {
                     if (each.getName().contains("elevated")) {
-                        superSearch = each;
+                        FileEngine = each;
                         break;
                     }
                 }
-                p = Runtime.getRuntime().exec("reg add \"HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run\" /v superSearch /t REG_SZ /d " + "\"" + superSearch.getAbsolutePath() + "\"" + " /f");
+                p = Runtime.getRuntime().exec("reg add \"HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run\" /v FileEngine /t REG_SZ /d " + "\"" + FileEngine.getAbsolutePath() + "\"" + " /f");
                 p.waitFor();
                 BufferedReader outPut = new BufferedReader(new InputStreamReader(p.getErrorStream()));
                 String line;
@@ -652,7 +652,7 @@ public class SettingsFrame {
             }
         } else {
             try {
-                p = Runtime.getRuntime().exec("reg delete \"HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run\" /v superSearch /f");
+                p = Runtime.getRuntime().exec("reg delete \"HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run\" /v FileEngine /f");
                 p.waitFor();
                 BufferedReader outPut = new BufferedReader(new InputStreamReader(p.getErrorStream()));
                 String line;

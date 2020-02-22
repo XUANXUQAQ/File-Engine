@@ -112,9 +112,9 @@ public class MainClass {
         }
         String osArch = System.getProperty("os.arch");
         if (osArch.contains("64")) {
-            name = "search_x64.exe";
+            name = "File-Engine-x64.exe";
         } else {
-            name = "search_x86.exe";
+            name = "File-Engine-x86.exe";
         }
         File settings = SettingsFrame.settings;
         File caches = new File("./user/cache.dat");
