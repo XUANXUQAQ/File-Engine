@@ -1661,7 +1661,7 @@ public class SearchBar {
         File name = new File(path);
         if (name.exists()) {
             try {
-                if (path.endsWith("exe")) {
+                if (path.endsWith(".exe")) {
                     Runtime.getRuntime().exec("cmd /c runas /trustlevel:0x20000 \"" + name.getAbsolutePath() + "\"", null, name.getParentFile());
                 } else {
                     File fileToOpen = new File("./user/fileToOpen.txt");
