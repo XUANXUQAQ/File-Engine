@@ -28,7 +28,6 @@ import static main.MainClass.mainExit;
 public class SearchBar {
     private static SearchBar searchBarInstance = new SearchBar();
     private JFrame searchBar = new JFrame();
-    private Container panel;
     private CopyOnWriteArrayList<String> listResult = new CopyOnWriteArrayList<>();
     private JLabel label1 = new JLabel();
     private JLabel label2 = new JLabel();
@@ -41,6 +40,7 @@ public class SearchBar {
     private Color labelColor = new Color(255, 152, 104, 255);
     private Color backgroundColor = new Color(108, 108, 108, 255);
     private Color backgroundColorLight = new Color(75, 75, 75, 255);
+    private Color fontColorWithCoverage = new Color(0x1C0EFF);
     private long startTime = 0;
     private boolean timer = false;
     private Thread searchWaiter = null;
@@ -50,6 +50,7 @@ public class SearchBar {
     private Pattern resultSplit = Pattern.compile(":");
     private boolean isKeyPressed = false;
     private boolean isCommandMode = false;
+    private JPanel panel = new JPanel();
 
 
     private SearchBar() {
@@ -69,11 +70,13 @@ public class SearchBar {
         searchBar.getRootPane().setWindowDecorationStyle(JRootPane.NONE);
         searchBar.setBackground(null);
         searchBar.setOpacity(0.8f);
-        panel = searchBar.getContentPane();
+        searchBar.add(panel);
         searchBar.setType(JFrame.Type.UTILITY);//隐藏任务栏图标
+
+
         //labels
         Font font = new Font("Microsoft JhengHei", Font.BOLD, (int) ((height * 0.1) / 96 * 72) / 4);
-        Color fontColor = new Color(73, 162, 255, 255);
+        Color fontColor = new Color(197, 197, 197, 255);
         label1.setSize(searchBarWidth, (int) (searchBarHeight * 0.2));
         label1.setLocation(0, (int) (searchBarHeight * 0.2));
         label1.setFont(font);
@@ -146,22 +149,55 @@ public class SearchBar {
         panel.add(label4);
 
 
-        ExecutorService fixedThreadPool = Executors.newFixedThreadPool(4);
+        ExecutorService fixedThreadPool = Executors.newFixedThreadPool(5);
 
         //刷新屏幕线程
         fixedThreadPool.execute(() -> {
+            Container contentPanel = searchBar.getContentPane();
             while (!mainExit) {
                 try {
+                    contentPanel.repaint();
                     panel.repaint();
                 } catch (Exception ignored) {
 
                 } finally {
                     try {
-                        Thread.sleep(500);
+                        Thread.sleep(100);
                     } catch (InterruptedException ignored) {
 
                     }
                 }
+            }
+        });
+
+        fixedThreadPool.execute(() -> {
+            try {
+                while (!mainExit) {
+                    if (labelCount == 0) {
+                        label1.setForeground(fontColorWithCoverage);
+                        label2.setForeground(fontColor);
+                        label3.setForeground(fontColor);
+                        label4.setForeground(fontColor);
+                    } else if (labelCount == 1) {
+                        label1.setForeground(fontColor);
+                        label2.setForeground(fontColorWithCoverage);
+                        label3.setForeground(fontColor);
+                        label4.setForeground(fontColor);
+                    } else if (labelCount == 2) {
+                        label1.setForeground(fontColor);
+                        label2.setForeground(fontColor);
+                        label3.setForeground(fontColorWithCoverage);
+                        label4.setForeground(fontColor);
+                    } else {
+                        label1.setForeground(fontColor);
+                        label2.setForeground(fontColor);
+                        label3.setForeground(fontColor);
+                        label4.setForeground(fontColorWithCoverage);
+                    }
+                    Thread.sleep(100);
+                }
+            } catch (Exception ignored) {
+
             }
         });
 
@@ -225,26 +261,26 @@ public class SearchBar {
 
         fixedThreadPool.execute(() -> {
             //检测缓存大小 过大时进行清理
-            while (!mainExit) {
-                if (!search.isManualUpdate() && !isUsing) {
-                    if (search.getRecycleBinSize() > 3000) {
-                        System.out.println("已检测到回收站过大，自动清理");
-                        search.setUsable(false);
-                        search.mergeAndClearRecycleBin();
-                        search.setUsable(true);
+            try {
+                while (!mainExit) {
+                    if (!search.isManualUpdate() && !isUsing) {
+                        if (search.getRecycleBinSize() > 3000) {
+                            System.out.println("已检测到回收站过大，自动清理");
+                            search.setUsable(false);
+                            search.mergeAndClearRecycleBin();
+                            search.setUsable(true);
+                        }
+                        if (search.getLoadListSize() > 15000) {
+                            System.out.println("加载缓存空间过大，自动清理");
+                            search.setUsable(false);
+                            search.mergeFileToList();
+                            search.setUsable(true);
+                        }
                     }
-                    if (search.getLoadListSize() > 15000) {
-                        System.out.println("加载缓存空间过大，自动清理");
-                        search.setUsable(false);
-                        search.mergeFileToList();
-                        search.setUsable(true);
-                    }
-                }
-                try {
                     Thread.sleep(50);
-                } catch (InterruptedException ignored) {
-
                 }
+            } catch (InterruptedException ignored) {
+
             }
         });
 
@@ -775,7 +811,7 @@ public class SearchBar {
                                         ImageIcon icon;
                                         if (isDirectory(path) || isFile(path)) {
                                             icon = (ImageIcon) GetIcon.getBigIcon(path);
-                                            icon = changeIcon(icon, label1.getHeight() - 60, label1.getHeight() - 60);
+                                            icon = changeIcon(icon, label1.getHeight() - 70, label1.getHeight() - 70);
                                             label1.setIcon(icon);
                                             label1.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
                                         } else {
@@ -788,7 +824,7 @@ public class SearchBar {
 
                                         if (isDirectory(path) || isFile(path)) {
                                             icon = (ImageIcon) GetIcon.getBigIcon(path);
-                                            icon = changeIcon(icon, label1.getHeight() - 60, label1.getHeight() - 60);
+                                            icon = changeIcon(icon, label1.getHeight() - 70, label1.getHeight() - 70);
                                             label2.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
                                             label2.setIcon(icon);
                                         } else {
@@ -802,7 +838,7 @@ public class SearchBar {
 
                                         if (isDirectory(path) || isFile(path)) {
                                             icon = (ImageIcon) GetIcon.getBigIcon(path);
-                                            icon = changeIcon(icon, label1.getHeight() - 60, label1.getHeight() - 60);
+                                            icon = changeIcon(icon, label1.getHeight() - 70, label1.getHeight() - 70);
                                             label3.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
                                             label3.setIcon(icon);
                                         } else {
@@ -816,7 +852,7 @@ public class SearchBar {
 
                                         if (isDirectory(path) || isFile(path)) {
                                             icon = (ImageIcon) GetIcon.getBigIcon(path);
-                                            icon = changeIcon(icon, label1.getHeight() - 60, label1.getHeight() - 60);
+                                            icon = changeIcon(icon, label1.getHeight() - 70, label1.getHeight() - 70);
                                             label4.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
                                             label4.setIcon(icon);
                                         } else {
@@ -1075,7 +1111,7 @@ public class SearchBar {
                                             ImageIcon icon;
                                             if (isDirectory(path) || isFile(path)) {
                                                 icon = (ImageIcon) GetIcon.getBigIcon(path);
-                                                icon = changeIcon(icon, label1.getHeight() - 60, label1.getHeight() - 60);
+                                                icon = changeIcon(icon, label1.getHeight() - 70, label1.getHeight() - 70);
                                                 label1.setIcon(icon);
                                                 label1.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
                                             } else {
@@ -1089,7 +1125,7 @@ public class SearchBar {
 
                                             if (isDirectory(path) || isFile(path)) {
                                                 icon = (ImageIcon) GetIcon.getBigIcon(path);
-                                                icon = changeIcon(icon, label1.getHeight() - 60, label1.getHeight() - 60);
+                                                icon = changeIcon(icon, label1.getHeight() - 70, label1.getHeight() - 70);
                                                 label2.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
                                                 label2.setIcon(icon);
                                             } else {
@@ -1102,7 +1138,7 @@ public class SearchBar {
 
                                             if (isDirectory(path) || isFile(path)) {
                                                 icon = (ImageIcon) GetIcon.getBigIcon(path);
-                                                icon = changeIcon(icon, label1.getHeight() - 60, label1.getHeight() - 60);
+                                                icon = changeIcon(icon, label1.getHeight() - 70, label1.getHeight() - 70);
                                                 label3.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
                                                 label3.setIcon(icon);
                                             } else {
@@ -1116,7 +1152,7 @@ public class SearchBar {
 
                                             if (isDirectory(path) || isFile(path)) {
                                                 icon = (ImageIcon) GetIcon.getBigIcon(path);
-                                                icon = changeIcon(icon, label1.getHeight() - 60, label1.getHeight() - 60);
+                                                icon = changeIcon(icon, label1.getHeight() - 70, label1.getHeight() - 70);
                                                 label4.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
                                                 label4.setIcon(icon);
                                             } else {
@@ -1434,7 +1470,7 @@ public class SearchBar {
                 ImageIcon icon;
                 if (isDirectory(path) || isFile(path)) {
                     icon = (ImageIcon) GetIcon.getBigIcon(path);
-                    icon = changeIcon(icon, label1.getHeight() - 60, label1.getHeight() - 60);
+                    icon = changeIcon(icon, label1.getHeight() - 70, label1.getHeight() - 70);
                     label1.setIcon(icon);
                     label1.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
                     if (labelCount == 0) {
@@ -1458,7 +1494,7 @@ public class SearchBar {
 
                 if (isDirectory(path) || isFile(path)) {
                     icon = (ImageIcon) GetIcon.getBigIcon(path);
-                    icon = changeIcon(icon, label1.getHeight() - 60, label1.getHeight() - 60);
+                    icon = changeIcon(icon, label1.getHeight() - 70, label1.getHeight() - 70);
                     label2.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
                     label2.setIcon(icon);
                     if (labelCount == 1) {
@@ -1482,7 +1518,7 @@ public class SearchBar {
 
                 if (isDirectory(path) || isFile(path)) {
                     icon = (ImageIcon) GetIcon.getBigIcon(path);
-                    icon = changeIcon(icon, label1.getHeight() - 60, label1.getHeight() - 60);
+                    icon = changeIcon(icon, label1.getHeight() - 70, label1.getHeight() - 70);
                     label3.setIcon(icon);
                     label3.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
                     if (labelCount == 2) {
@@ -1506,7 +1542,7 @@ public class SearchBar {
 
                 if (isDirectory(path) || isFile(path)) {
                     icon = (ImageIcon) GetIcon.getBigIcon(path);
-                    icon = changeIcon(icon, label1.getHeight() - 60, label1.getHeight() - 60);
+                    icon = changeIcon(icon, label1.getHeight() - 70, label1.getHeight() - 70);
                     label4.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
                     label4.setIcon(icon);
                     if (labelCount >= 3) {
@@ -1533,7 +1569,7 @@ public class SearchBar {
                 String[] info = semicolon.split(command);
                 String path = info[1];
                 String name = info[0];
-                label1.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
+                label1.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + ">>>" + path + "</body></html>");
                 if (labelCount == 0) {
                     label1.setBackground(labelColor);
                 } else {
@@ -1544,7 +1580,7 @@ public class SearchBar {
                 info = semicolon.split(command);
                 path = info[1];
                 name = info[0];
-                label2.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
+                label2.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + ">>>" + path + "</body></html>");
                 if (labelCount == 1) {
                     label2.setBackground(labelColor);
                 } else {
@@ -1555,7 +1591,7 @@ public class SearchBar {
                 info = semicolon.split(command);
                 path = info[1];
                 name = info[0];
-                label3.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
+                label3.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + ">>>" + path + "</body></html>");
                 if (labelCount == 2) {
                     label3.setBackground(labelColor);
                 } else {
@@ -1566,7 +1602,7 @@ public class SearchBar {
                 info = semicolon.split(command);
                 path = info[1];
                 name = info[0];
-                label4.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
+                label4.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + ">>>" + path + "</body></html>");
                 if (labelCount >= 3) {
                     label4.setBackground(labelColor);
                 } else {
