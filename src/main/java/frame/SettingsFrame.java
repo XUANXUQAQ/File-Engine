@@ -12,6 +12,7 @@ import javax.swing.filechooser.FileSystemView;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
+import java.net.URI;
 import java.net.URL;
 import java.util.HashSet;
 import java.util.Objects;
@@ -81,10 +82,27 @@ public class SettingsFrame {
     private JLabel labelPlaceHoder4;
     private JButton buttonSave;
     private JLabel labelCmdTip;
+    private JLabel labelPlaceHoder6;
+    private JLabel labelPlaceHolder7;
+    private JLabel labelPlaceHolder8;
+    private JLabel labelAbout;
+    private JLabel labelAboutGithub;
+    private JLabel labelPlaceHolder12;
+    private JLabel labelPlaceHolder13;
+    private JLabel labelGitHubTip;
+    private JLabel labelIcon;
+    private JLabel labelPlaceHolder15;
+    private JLabel labelGithubIssue;
+    private JLabel labelPalceHolder5;
+    private JLabel labelPlaceHolder16;
+    private JLabel labelPlaceHolder17;
     private boolean isStartup;
     private Unzip unzipInstance = Unzip.getInstance();
 
     public SettingsFrame() {
+        labelAboutGithub.setText("<html><a href='https://github.com/XUANXUQAQ/File-Engine'>File-Engine</a></html>");
+        ImageIcon imageIcon = new ImageIcon(SettingsFrame.class.getResource("/icons/frame.png"));
+        labelIcon.setIcon(imageIcon);
         checkBox1.addActionListener(e -> {
             setStartup(checkBox1.isSelected());
 
@@ -370,6 +388,21 @@ public class SettingsFrame {
 
         });
         buttonSave.addActionListener(e -> saveChanges());
+        labelAboutGithub.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                Desktop desktop;
+                if (Desktop.isDesktopSupported()) {
+                    desktop = Desktop.getDesktop();
+                    try {
+                        URI uri = new URI("https://github.com/XUANXUQAQ/File-Engine");
+                        desktop.browse(uri);
+                    } catch (Exception ignored) {
+
+                    }
+                }
+            }
+        });
     }
 
     public static void initSettings() {

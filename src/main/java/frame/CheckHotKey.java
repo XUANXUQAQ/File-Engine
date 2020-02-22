@@ -7,10 +7,6 @@ import java.util.HashMap;
 
 public class CheckHotKey extends JFrame {
 
-    /**
-     * 利用JIntellitype实现全局热键设置
-     */
-    private static final long serialVersionUID = 1L;
     public static boolean isShowSearchBar = false;
     private static CheckHotKey hotKeyListener = new CheckHotKey();
     private HashMap<String, Integer> map = new HashMap<>();
