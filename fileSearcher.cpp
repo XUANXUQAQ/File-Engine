@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <ctime>
 #include <tchar.h>
+#include <windows.h>
 
 using namespace std;
 //#define TEST
@@ -450,6 +451,12 @@ void search(string path, string exd)
 #ifndef TEST
 int main(int argc, char *argv[])
 {
+    HWND hwnd;  
+    hwnd=FindWindow(TEXT("ConsoleWindowClass"),NULL); //处理顶级窗口的类名和窗口名称匹配指定的字符串,不搜索子窗口。  
+    if(hwnd)  
+    {  
+        ShowWindow(hwnd,SW_HIDE);               //设置指定窗口的显示状态  
+    }  
     char searchPath[260];
     char searchDepth[50];
     char ignorePath[3000];
