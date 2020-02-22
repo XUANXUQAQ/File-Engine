@@ -578,7 +578,10 @@ public class Search {
 
     private void __searchFileIgnoreSearchDepth(String path, String ignorePath) {
         File fileSearcher = new File("./user/fileSearcher.exe");
-        String command = "cmd /c " + fileSearcher.getAbsolutePath() + " \"" + path + "\"" + " \"6\" " + "\"" + ignorePath + "\" " + "\"" + SettingsFrame.dataPath + "\" " + "\"" + "1" + "\"";
+        String absPath = fileSearcher.getAbsolutePath();
+        String start = absPath.substring(0, 2);
+        String end = "\"" + absPath.substring(2) + "\"";
+        String command = "cmd /c " + start + end + " \"" + path + "\"" + " \"6\" " + "\"" + ignorePath + "\" " + "\"" + SettingsFrame.dataPath + "\" " + "\"" + "1" + "\"";
         Process p;
         try {
             p = Runtime.getRuntime().exec(command);
@@ -592,7 +595,10 @@ public class Search {
 
     private void __searchFile(String path, int searchDepth, String ignorePath) {
         File fileSearcher = new File("./user/fileSearcher.exe");
-        String command = "cmd /c " + fileSearcher.getAbsolutePath() + " \"" + path + "\"" + " \"" + searchDepth + "\" " + "\"" + ignorePath + "\" " + "\"" + SettingsFrame.dataPath + "\" " + "\"" + "0" + "\"";
+        String absPath = fileSearcher.getAbsolutePath();
+        String start = absPath.substring(0, 2);
+        String end = "\"" + absPath.substring(2) + "\"";
+        String command = "cmd /c " + start + end + " \"" + path + "\"" + " \"" + searchDepth + "\" " + "\"" + ignorePath + "\" " + "\"" + SettingsFrame.dataPath + "\" " + "\"" + "0" + "\"";
         Process p;
         try {
             p = Runtime.getRuntime().exec(command);
