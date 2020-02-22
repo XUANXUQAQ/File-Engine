@@ -32,7 +32,7 @@ A tool can make you work more efficiently.
 9.设置优先搜索文件夹，常用的文件可以放入其中。  
     
 演示：
-![Image](https://raw.githubusercontent.com/XUANXUQAQ/File-Engine/master/%E6%BC%94%E7%A4%BA.png)
+![Image](https://raw.githubusercontent.com/XUANXUQAQ/File-Engine/master/%E6%BC%94%E7%A4%BA.gif)
     
 ### 更多功能敬请期待
     还有100多天， 高考完了继续更新。。。
