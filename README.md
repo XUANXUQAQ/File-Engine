@@ -23,7 +23,7 @@ A tool can make you work more efficiently.
 
 5.输入:update强制重新创建索引，输入:version查看版本，输入:clearbin清空回收站。
 
-6.支持自定义命令，如果你比较了解Windows CMD命令，你几乎可以做任何你想做的事情。
+6.支持自定义命令，快捷打开软件，如果你比较了解Windows CMD命令，你几乎可以做任何你想做的事情。
 
 7.缓存保存常用文件。  
 
