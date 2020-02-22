@@ -1253,7 +1253,12 @@ public class SearchBar {
                             } else if (SettingsFrame.isDefaultAdmin || isRunAsAdminPressed) {
                                 openWithAdmin(listResult.get(labelCount));
                             } else {
-                                openWithoutAdmin(listResult.get(labelCount));
+                                String openFile = listResult.get(labelCount);
+                                if (openFile.endsWith(".bat") || openFile.endsWith(".cmd")) {
+                                    openWithAdmin(openFile);
+                                } else {
+                                    openWithoutAdmin(openFile);
+                                }
                             }
                             saveCache(listResult.get(labelCount) + ';');
                         } else {
@@ -1594,7 +1599,10 @@ public class SearchBar {
         if (name.exists()) {
             try {
                 try {
-                    Runtime.getRuntime().exec("\"" + name.getAbsolutePath() + "\"", null, name.getParentFile());
+                    String command = name.getAbsolutePath();
+                    String start = command.substring(0, 2);
+                    String end = "\"" + command.substring(2) + "\"";
+                    Runtime.getRuntime().exec(start + end, null, name.getParentFile());
                 } catch (IOException e) {
                     Desktop desktop;
                     if (Desktop.isDesktopSupported()) {
@@ -1617,24 +1625,16 @@ public class SearchBar {
         File name = new File(path);
         if (name.exists()) {
             try {
-                try {
-                    if (path.endsWith("exe")) {
-                        Runtime.getRuntime().exec("cmd /c runas /trustlevel:0x20000 \"" + name.getAbsolutePath() + "\"", null, name.getParentFile());
-                    } else {
-                        File fileToOpen = new File("./user/fileToOpen.txt");
-                        File fileOpener = new File("./user/fileOpener.exe");
-                        try (BufferedWriter buffw = new BufferedWriter(new FileWriter(fileToOpen))) {
-                            buffw.write(name.getAbsolutePath() + "\n");
-                            buffw.write(name.getParent());
-                        }
-                        Runtime.getRuntime().exec("cmd /c runas /trustlevel:0x20000 \"" + fileOpener.getAbsolutePath() + "\"", null, fileOpener.getParentFile());
+                if (path.endsWith("exe")) {
+                    Runtime.getRuntime().exec("cmd /c runas /trustlevel:0x20000 \"" + name.getAbsolutePath() + "\"", null, name.getParentFile());
+                } else {
+                    File fileToOpen = new File("./user/fileToOpen.txt");
+                    File fileOpener = new File("./user/fileOpener.exe");
+                    try (BufferedWriter buffw = new BufferedWriter(new FileWriter(fileToOpen))) {
+                        buffw.write(name.getAbsolutePath() + "\n");
+                        buffw.write(name.getParent());
                     }
-                } catch (IOException e) {
-                    Desktop desktop;
-                    if (Desktop.isDesktopSupported()) {
-                        desktop = Desktop.getDesktop();
-                        desktop.open(name);
-                    }
+                    Runtime.getRuntime().exec("cmd /c runas /trustlevel:0x20000 \"" + fileOpener.getAbsolutePath() + "\"", null, fileOpener.getParentFile());
                 }
             } catch (IOException e) {
                 //打开上级文件夹
@@ -1931,6 +1931,8 @@ public class SearchBar {
             labelCount = 0;
             listResult.clear();
             textField.setText(null);
+            isOpenLastFolderPressed = false;
+            isRunAsAdminPressed = false;
             try {
                 searchWaiter.interrupt();
             } catch (NullPointerException ignored) {
