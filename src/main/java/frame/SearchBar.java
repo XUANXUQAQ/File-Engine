@@ -811,7 +811,7 @@ public class SearchBar {
                                         ImageIcon icon;
                                         if (isDirectory(path) || isFile(path)) {
                                             icon = (ImageIcon) GetIcon.getBigIcon(path);
-                                            icon = changeIcon(icon, label1.getHeight() - 70, label1.getHeight() - 70);
+                                            icon = changeIcon(icon, label1.getHeight() / 3, label1.getHeight() / 3);
                                             label1.setIcon(icon);
                                             label1.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
                                         } else {
@@ -824,7 +824,7 @@ public class SearchBar {
 
                                         if (isDirectory(path) || isFile(path)) {
                                             icon = (ImageIcon) GetIcon.getBigIcon(path);
-                                            icon = changeIcon(icon, label1.getHeight() - 70, label1.getHeight() - 70);
+                                            icon = changeIcon(icon, label1.getHeight() / 3, label1.getHeight() / 3);
                                             label2.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
                                             label2.setIcon(icon);
                                         } else {
@@ -838,7 +838,7 @@ public class SearchBar {
 
                                         if (isDirectory(path) || isFile(path)) {
                                             icon = (ImageIcon) GetIcon.getBigIcon(path);
-                                            icon = changeIcon(icon, label1.getHeight() - 70, label1.getHeight() - 70);
+                                            icon = changeIcon(icon, label1.getHeight() / 3, label1.getHeight() / 3);
                                             label3.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
                                             label3.setIcon(icon);
                                         } else {
@@ -852,7 +852,7 @@ public class SearchBar {
 
                                         if (isDirectory(path) || isFile(path)) {
                                             icon = (ImageIcon) GetIcon.getBigIcon(path);
-                                            icon = changeIcon(icon, label1.getHeight() - 70, label1.getHeight() - 70);
+                                            icon = changeIcon(icon, label1.getHeight() / 3, label1.getHeight() / 3);
                                             label4.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
                                             label4.setIcon(icon);
                                         } else {
@@ -1111,7 +1111,7 @@ public class SearchBar {
                                             ImageIcon icon;
                                             if (isDirectory(path) || isFile(path)) {
                                                 icon = (ImageIcon) GetIcon.getBigIcon(path);
-                                                icon = changeIcon(icon, label1.getHeight() - 70, label1.getHeight() - 70);
+                                                icon = changeIcon(icon, label1.getHeight() / 3, label1.getHeight() / 3);
                                                 label1.setIcon(icon);
                                                 label1.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
                                             } else {
@@ -1125,7 +1125,7 @@ public class SearchBar {
 
                                             if (isDirectory(path) || isFile(path)) {
                                                 icon = (ImageIcon) GetIcon.getBigIcon(path);
-                                                icon = changeIcon(icon, label1.getHeight() - 70, label1.getHeight() - 70);
+                                                icon = changeIcon(icon, label1.getHeight() / 3, label1.getHeight() / 3);
                                                 label2.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
                                                 label2.setIcon(icon);
                                             } else {
@@ -1138,7 +1138,7 @@ public class SearchBar {
 
                                             if (isDirectory(path) || isFile(path)) {
                                                 icon = (ImageIcon) GetIcon.getBigIcon(path);
-                                                icon = changeIcon(icon, label1.getHeight() - 70, label1.getHeight() - 70);
+                                                icon = changeIcon(icon, label1.getHeight() / 3, label1.getHeight() / 3);
                                                 label3.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
                                                 label3.setIcon(icon);
                                             } else {
@@ -1152,7 +1152,7 @@ public class SearchBar {
 
                                             if (isDirectory(path) || isFile(path)) {
                                                 icon = (ImageIcon) GetIcon.getBigIcon(path);
-                                                icon = changeIcon(icon, label1.getHeight() - 70, label1.getHeight() - 70);
+                                                icon = changeIcon(icon, label1.getHeight() / 3, label1.getHeight() / 3);
                                                 label4.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
                                                 label4.setIcon(icon);
                                             } else {
@@ -1470,7 +1470,7 @@ public class SearchBar {
                 ImageIcon icon;
                 if (isDirectory(path) || isFile(path)) {
                     icon = (ImageIcon) GetIcon.getBigIcon(path);
-                    icon = changeIcon(icon, label1.getHeight() - 70, label1.getHeight() - 70);
+                    icon = changeIcon(icon, label1.getHeight() / 3, label1.getHeight() / 3);
                     label1.setIcon(icon);
                     label1.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
                     if (labelCount == 0) {
@@ -1494,7 +1494,7 @@ public class SearchBar {
 
                 if (isDirectory(path) || isFile(path)) {
                     icon = (ImageIcon) GetIcon.getBigIcon(path);
-                    icon = changeIcon(icon, label1.getHeight() - 70, label1.getHeight() - 70);
+                    icon = changeIcon(icon, label1.getHeight() / 3, label1.getHeight() / 3);
                     label2.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
                     label2.setIcon(icon);
                     if (labelCount == 1) {
@@ -1518,7 +1518,7 @@ public class SearchBar {
 
                 if (isDirectory(path) || isFile(path)) {
                     icon = (ImageIcon) GetIcon.getBigIcon(path);
-                    icon = changeIcon(icon, label1.getHeight() - 70, label1.getHeight() - 70);
+                    icon = changeIcon(icon, label1.getHeight() / 3, label1.getHeight() / 3);
                     label3.setIcon(icon);
                     label3.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
                     if (labelCount == 2) {
@@ -1542,7 +1542,7 @@ public class SearchBar {
 
                 if (isDirectory(path) || isFile(path)) {
                     icon = (ImageIcon) GetIcon.getBigIcon(path);
-                    icon = changeIcon(icon, label1.getHeight() - 70, label1.getHeight() - 70);
+                    icon = changeIcon(icon, label1.getHeight() / 3, label1.getHeight() / 3);
                     label4.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
                     label4.setIcon(icon);
                     if (labelCount >= 3) {
