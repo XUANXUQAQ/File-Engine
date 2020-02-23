@@ -12,8 +12,10 @@ import javax.swing.filechooser.FileSystemView;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
+import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
+import java.net.URLConnection;
 import java.util.HashSet;
 import java.util.Objects;
 
@@ -96,8 +98,10 @@ public class SettingsFrame {
     private JLabel labelPalceHolder5;
     private JLabel labelPlaceHolder16;
     private JLabel labelPlaceHolder17;
+    private JButton buttonCheckUpdate;
     private boolean isStartup;
     private Unzip unzipInstance = Unzip.getInstance();
+    private Thread updateThread = null;
 
     public SettingsFrame() {
         labelAboutGithub.setText("<html><a href='https://github.com/XUANXUQAQ/File-Engine'>File-Engine</a></html>");
@@ -403,6 +407,30 @@ public class SettingsFrame {
                 }
             }
         });
+        buttonCheckUpdate.addActionListener(e -> {
+            try {
+                if (!updateThread.isAlive()) {
+                    updateThread = new Thread(this::update);
+                    updateThread.start();
+                }
+            } catch (NullPointerException e1) {
+                updateThread = new Thread(this::update);
+                updateThread.start();
+            }
+        });
+    }
+
+    public static JSONObject getInfo() throws IOException {
+        StringBuilder jsonUpdate = new StringBuilder();
+        URL updateServer = new URL("https://rawcdn.githack.com/XUANXUQAQ/File-Engine/eb36e75f54d4261b59462f4f6fe24e84e0fa0271/version.json");
+        URLConnection uc = updateServer.openConnection();
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(uc.getInputStream()))) {
+            String eachLine;
+            while ((eachLine = br.readLine()) != null) {
+                jsonUpdate.append(eachLine);
+            }
+        }
+        return JSONObject.parseObject(jsonUpdate.toString());
     }
 
     public static void initSettings() {
@@ -448,6 +476,92 @@ public class SettingsFrame {
         } catch (IOException ignored) {
 
         }
+    }
+
+    private void update() {
+        JSONObject updateInfo;
+        String updateVersion;
+        try {
+            updateInfo = getInfo();
+            updateVersion = updateInfo.getString("version");
+        } catch (IOException e1) {
+            JOptionPane.showMessageDialog(null, "检查更新失败");
+            return;
+        }
+
+        if (!updateVersion.equals(MainClass.version)) {
+            int result = JOptionPane.showConfirmDialog(null, "有新版本" + updateVersion + "，是否更新");
+            if (result == 0) {
+                //开始更新,下载更新文件到tmp
+                String urlChoose;
+                String fileName;
+                if (MainClass.name.contains("x64")) {
+                    urlChoose = "url64";
+                    fileName = "File-Engine-x64.exe";
+                } else {
+                    urlChoose = "url32";
+                    fileName = "File-Engine-x32.exe";
+                }
+                try {
+                    MainClass.showMessage("提示", "已开始后台下载");
+                    downLoadFromUrl(updateInfo.getString(urlChoose), fileName, tmp.getAbsolutePath());
+                } catch (Exception e) {
+                    JOptionPane.showMessageDialog(null, "下载失败");
+                    return;
+                }
+                MainClass.showMessage("提示", "下载完成");
+                try {
+                    File updateSignal = new File("user/update");
+                    updateSignal.createNewFile();
+                } catch (Exception ignored) {
+
+                }
+            }
+        } else {
+            JOptionPane.showMessageDialog(null, "当前版本已是最新");
+        }
+    }
+
+    /**
+     * 从网络Url中下载文件
+     *
+     * @param urlStr   地址
+     * @param savePath 保存位置
+     */
+    private void downLoadFromUrl(String urlStr, String fileName, String savePath) throws IOException {
+        URL url = new URL(urlStr);
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        //设置超时间为3秒
+        conn.setConnectTimeout(3 * 1000);
+        //防止屏蔽程序抓取而返回403错误
+        conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.116 Safari/537.36 Edg/80.0.361.57");
+
+        //得到输入流
+        InputStream inputStream = conn.getInputStream();
+        //获取自己数组
+        byte[] getData = readInputStream(inputStream);
+
+        //文件保存位置
+        File saveDir = new File(savePath);
+        if (!saveDir.exists()) {
+            saveDir.mkdir();
+        }
+        File file = new File(saveDir + File.separator + fileName);
+        FileOutputStream fos = new FileOutputStream(file);
+        fos.write(getData);
+        fos.close();
+        inputStream.close();
+    }
+
+    private byte[] readInputStream(InputStream inputStream) throws IOException {
+        byte[] buffer = new byte[1024];
+        int len;
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        while ((len = inputStream.read(buffer)) != -1) {
+            bos.write(buffer, 0, len);
+        }
+        bos.close();
+        return bos.toByteArray();
     }
 
     public void hideFrame() {

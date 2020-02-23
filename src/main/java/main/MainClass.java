@@ -10,6 +10,7 @@ import search.Search;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileSystemView;
+import java.awt.*;
 import java.io.*;
 import java.util.Objects;
 import java.util.Scanner;
@@ -18,7 +19,7 @@ import java.util.concurrent.Executors;
 
 
 public class MainClass {
-    public static final String version = "1.0"; //TODO 更改版本号
+    public static final String version = "1.1"; //TODO 更改版本号
     public static boolean mainExit = false;
     public static String name;
     private static Search search = Search.getInstance();
@@ -106,16 +107,86 @@ public class MainClass {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        File user = new File("user");
-        if (!user.exists()) {
-            user.mkdir();
-        }
         String osArch = System.getProperty("os.arch");
         if (osArch.contains("64")) {
             name = "File-Engine-x64.exe";
         } else {
             name = "File-Engine-x86.exe";
         }
+        File user = new File("user");
+        if (!user.exists()) {
+            user.mkdir();
+        }
+        File[] userFiles = user.listFiles();
+        boolean isUpdate = false;
+        if (userFiles != null) {
+            for (File each : userFiles) {
+                if (each.getName().equals("update")) {
+                    isUpdate = true;
+                    break;
+                }
+            }
+        }
+        if (isUpdate) {
+            boolean isCopied = false;
+            String currentPath = System.getProperty("user.dir");
+            File[] files = new File(currentPath).listFiles();
+            assert files != null;
+            for (File i : files) {
+                if (i.getName().startsWith("_File-Engine")) {
+                    isCopied = true;
+                    new File("./user/update").delete();
+                }
+            }
+            if (!isCopied) {
+                try {
+                    new File("./user/fileMonitor.dll").delete();
+                    new File("./user/fileSearcher.exe").delete();
+                    new File("./user/getAscII.dll").delete();
+                    new File("./user/fileOpener.exe").delete();
+                    File originFile = new File(name);
+                    File updated = new File("_" + name);
+                    copyFile(new FileInputStream(originFile), updated);
+                    Desktop desktop;
+                    if (Desktop.isDesktopSupported()) {
+                        desktop = Desktop.getDesktop();
+                        //复制并重命名自己后退出，打开复制后的程序
+                        desktop.open(updated);
+                        System.exit(0);
+                    }
+                } catch (Exception ignored) {
+
+                }
+            } else {
+                try {
+                    copyFile(new FileInputStream(new File("tmp\\" + name)), new File(name));
+                    Desktop desktop;
+                    if (Desktop.isDesktopSupported()) {
+                        desktop = Desktop.getDesktop();
+                        //复制并重命名自己后退出，打开复制后的程序
+                        desktop.open(new File(name));
+                        System.exit(0);
+                    }
+                } catch (IOException ignored) {
+
+                }
+            }
+        } else {
+            File pre = new File("_" + name);
+            if (pre.exists()) {
+                int count = 0;
+                while (count < 500) {
+                    count++;
+                    try {
+                        pre.delete();
+                        Thread.sleep(10);
+                    } catch (Exception ignored) {
+
+                    }
+                }
+            }
+        }
+
         File settings = SettingsFrame.settings;
         File caches = new File("./user/cache.dat");
         File data = new File("data");
@@ -160,31 +231,23 @@ public class MainClass {
 
         target = new File("./user/fileMonitor.dll");
         if (!target.exists()) {
-            File dllMonitor;
             if (name.contains("x64")) {
                 copyFile(fileMonitorDll64, target);
                 System.out.println("已加载64位fileMonitor");
-                dllMonitor = new File("./user/fileMonitor64.dll");
             } else {
                 copyFile(fileMonitorDll32, target);
                 System.out.println("已加载32位fileMonitor");
-                dllMonitor = new File("./user/fileMonitor32.dll");
             }
-            dllMonitor.renameTo(target);
         }
         target = new File("./user/fileSearcher.exe");
         if (!target.exists()) {
-            File dllSearcher;
             if (name.contains("x64")) {
                 copyFile(fileSearcherDll64, target);
                 System.out.println("已加载64位fileSearcher");
-                dllSearcher = new File("./user/fileSearcher64.exe");
             } else {
                 copyFile(fileSearcherDll32, target);
                 System.out.println("已加载32位fileSearcher");
-                dllSearcher = new File("./user/fileSearcher32.exe");
             }
-            dllSearcher.renameTo(target);
         }
         target = new File(SettingsFrame.dataPath);
         if (!target.exists()) {
@@ -192,31 +255,23 @@ public class MainClass {
         }
         target = new File("./user/fileOpener.exe");
         if (!target.exists()) {
-            File fileOpener;
             if (name.contains("x64")) {
                 copyFile(fileOpener64, target);
                 System.out.println("已加载64位fileOpener");
-                fileOpener = new File("./user/fileOpener64.exe");
             } else {
                 copyFile(fileOpener32, target);
                 System.out.println("已加载32位fileOpener");
-                fileOpener = new File("./user/fileOpener32.exe");
             }
-            fileOpener.renameTo(target);
         }
         target = new File("./user/getAscII.dll");
         if (!target.exists()) {
-            File getAscII;
             if (name.contains("x64")) {
                 copyFile(getAscIIDll64, target);
                 System.out.println("已加载64位getAscII");
-                getAscII = new File("./user/getAscII64.dll");
             } else {
                 copyFile(getAscIIDll32, target);
                 System.out.println("已加载32位getAscII");
-                getAscII = new File("./user/getAscII32.dll");
             }
-            getAscII.renameTo(target);
         }
 
         if (!caches.exists()) {
@@ -276,6 +331,17 @@ public class MainClass {
         } else {
             System.out.println("无管理员权限，文件监控功能已关闭");
             taskBar.showMessage("警告", "无管理员权限，文件监控功能已关闭");
+        }
+
+        //检测是否为最新版本
+        try {
+            JSONObject info = SettingsFrame.getInfo();
+            String latestVersion = info.getString("version");
+            if (!latestVersion.equals(version)) {
+                showMessage("提示", "有新版本可更新");
+            }
+        } catch (IOException ignored) {
+
         }
 
 
