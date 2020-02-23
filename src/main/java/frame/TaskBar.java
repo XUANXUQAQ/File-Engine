@@ -12,6 +12,7 @@ import java.net.URL;
 public class TaskBar {
     private TrayIcon trayIcon = null;
     private SettingsFrame settingsFrame = new SettingsFrame();
+    private SystemTray systemTray;
 
     public void showTaskBar() {
         // 判断是否支持系统托盘
@@ -20,7 +21,7 @@ public class TaskBar {
             URL icon;
             icon = getClass().getResource("/icons/taskbar.png");
             image = new ImageIcon(icon).getImage();
-            SystemTray systemTray = SystemTray.getSystemTray();
+            systemTray = SystemTray.getSystemTray();
             // 创建托盘图标
             trayIcon = new TrayIcon(image);
             // 添加工具提示文本
@@ -33,11 +34,7 @@ public class TaskBar {
                 settingsFrame.showWindow();
             });
             MenuItem close = new MenuItem("退出");
-            close.addActionListener(e -> {
-                MainClass.setMainExit(true);
-                systemTray.remove(trayIcon);
-                settingsFrame.hideFrame();
-            });
+            close.addActionListener(e -> closeAndExit());
             popupMenu.add(settings);
             popupMenu.add(close);
 
@@ -61,6 +58,12 @@ public class TaskBar {
         } else {
             JOptionPane.showMessageDialog(null, "not support");
         }
+    }
+
+    public void closeAndExit() {
+        MainClass.setMainExit(true);
+        systemTray.remove(trayIcon);
+        settingsFrame.hideFrame();
     }
 
     public void showMessage(String caption, String message) {
