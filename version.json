@@ -1,5 +1,5 @@
 {
   "version": "1.1",
-  "url64": "https://raw.githack.com/XUANXUQAQ/File-Engine/master/update/File-Engine-x64.zip",
-  "url32": "https://raw.githack.com/XUANXUQAQ/File-Engine/master/update/File-Engine-x84.zip"
+  "url64": "https://cdn.jsdelivr.net/gh/XUANXUQAQ/File-Engine@master/update/File-Engine-x64.zip",
+  "url32": "https://cdn.jsdelivr.net/gh/XUANXUQAQ/File-Engine@master/update/File-Engine-x86.zip"
 }
