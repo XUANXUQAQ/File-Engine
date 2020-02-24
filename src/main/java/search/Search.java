@@ -610,9 +610,113 @@ public class Search {
         }
     }
 
+    private void initDataFiles() {
+        try {
+            File target = new File(SettingsFrame.dataPath + "\\list0-100.txt");
+            if (!target.exists()) {
+                target.createNewFile();
+            }
+            target = new File(SettingsFrame.dataPath + "\\list100-200.txt");
+            if (!target.exists()) {
+                target.createNewFile();
+            }
+            target = new File(SettingsFrame.dataPath + "\\list200-300.txt");
+            if (!target.exists()) {
+                target.createNewFile();
+            }
+            target = new File(SettingsFrame.dataPath + "\\list300-400.txt");
+            if (!target.exists()) {
+                target.createNewFile();
+            }
+            target = new File(SettingsFrame.dataPath + "\\list400-500.txt");
+            if (!target.exists()) {
+                target.createNewFile();
+            }
+            target = new File(SettingsFrame.dataPath + "\\list500-600.txt");
+            if (!target.exists()) {
+                target.createNewFile();
+            }
+            target = new File(SettingsFrame.dataPath + "\\list600-700.txt");
+            if (!target.exists()) {
+                target.createNewFile();
+            }
+            target = new File(SettingsFrame.dataPath + "\\list700-800.txt");
+            if (!target.exists()) {
+                target.createNewFile();
+            }
+            target = new File(SettingsFrame.dataPath + "\\list800-900.txt");
+            if (!target.exists()) {
+                target.createNewFile();
+            }
+            target = new File(SettingsFrame.dataPath + "\\list900-1000.txt");
+            if (!target.exists()) {
+                target.createNewFile();
+            }
+            target = new File(SettingsFrame.dataPath + "\\list1000-1100.txt");
+            if (!target.exists()) {
+                target.createNewFile();
+            }
+            target = new File(SettingsFrame.dataPath + "\\list1100-1200.txt");
+            if (!target.exists()) {
+                target.createNewFile();
+            }
+            target = new File(SettingsFrame.dataPath + "\\list1200-1300.txt");
+            if (!target.exists()) {
+                target.createNewFile();
+            }
+            target = new File(SettingsFrame.dataPath + "\\list1300-1400.txt");
+            if (!target.exists()) {
+                target.createNewFile();
+            }
+            target = new File(SettingsFrame.dataPath + "\\list1400-1500.txt");
+            if (!target.exists()) {
+                target.createNewFile();
+            }
+            target = new File(SettingsFrame.dataPath + "\\list1500-1600.txt");
+            if (!target.exists()) {
+                target.createNewFile();
+            }
+            target = new File(SettingsFrame.dataPath + "\\list1600-1700.txt");
+            if (!target.exists()) {
+                target.createNewFile();
+            }
+            target = new File(SettingsFrame.dataPath + "\\list1700-1800.txt");
+            if (!target.exists()) {
+                target.createNewFile();
+            }
+            target = new File(SettingsFrame.dataPath + "\\list1800-1900.txt");
+            if (!target.exists()) {
+                target.createNewFile();
+            }
+            target = new File(SettingsFrame.dataPath + "\\list1900-2000.txt");
+            if (!target.exists()) {
+                target.createNewFile();
+            }
+            target = new File(SettingsFrame.dataPath + "\\list2100-2200.txt");
+            if (!target.exists()) {
+                target.createNewFile();
+            }
+            target = new File(SettingsFrame.dataPath + "\\list2300-2400.txt");
+            if (!target.exists()) {
+                target.createNewFile();
+            }
+            target = new File(SettingsFrame.dataPath + "\\list2400-2500.txt");
+            if (!target.exists()) {
+                target.createNewFile();
+            }
+            target = new File(SettingsFrame.dataPath + "\\list2500-.txt");
+            if (!target.exists()) {
+                target.createNewFile();
+            }
+        } catch (Exception ignored) {
+
+        }
+    }
+
 
     public void updateLists(String ignorePath, int searchDepth) {
         MainClass.deleteDir(SettingsFrame.dataPath);
+        initDataFiles();
         searchFile(ignorePath, searchDepth);
     }
 
