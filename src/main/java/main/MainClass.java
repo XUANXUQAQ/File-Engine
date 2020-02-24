@@ -221,13 +221,13 @@ public class MainClass {
 
         File target;
         InputStream fileMonitorDll64 = MainClass.class.getResourceAsStream("/fileMonitor64.dll");
-        InputStream fileMonitorDll32 = MainClass.class.getResourceAsStream("/fileMonitor32.dll");
+        InputStream fileMonitorDll86 = MainClass.class.getResourceAsStream("/fileMonitor86.dll");
         InputStream fileSearcherDll64 = MainClass.class.getResourceAsStream("/fileSearcher64.exe");
-        InputStream fileSearcherDll32 = MainClass.class.getResourceAsStream("/fileSearcher32.exe");
+        InputStream fileSearcherDll86 = MainClass.class.getResourceAsStream("/fileSearcher86.exe");
         InputStream fileOpener64 = MainClass.class.getResourceAsStream("/fileOpener64.exe");
-        InputStream fileOpener32 = MainClass.class.getResourceAsStream("/fileOpener32.exe");
+        InputStream fileOpener86 = MainClass.class.getResourceAsStream("/fileOpener86.exe");
         InputStream getAscIIDll64 = MainClass.class.getResourceAsStream("/getAscII64.dll");
-        InputStream getAscIIDll32 = MainClass.class.getResourceAsStream("/getAscII32.dll");
+        InputStream getAscIIDll86 = MainClass.class.getResourceAsStream("/getAscII86.dll");
 
         target = new File("./user/fileMonitor.dll");
         if (!target.exists()) {
@@ -235,7 +235,7 @@ public class MainClass {
                 copyFile(fileMonitorDll64, target);
                 System.out.println("已加载64位fileMonitor");
             } else {
-                copyFile(fileMonitorDll32, target);
+                copyFile(fileMonitorDll86, target);
                 System.out.println("已加载32位fileMonitor");
             }
         }
@@ -245,7 +245,7 @@ public class MainClass {
                 copyFile(fileSearcherDll64, target);
                 System.out.println("已加载64位fileSearcher");
             } else {
-                copyFile(fileSearcherDll32, target);
+                copyFile(fileSearcherDll86, target);
                 System.out.println("已加载32位fileSearcher");
             }
         }
@@ -259,7 +259,7 @@ public class MainClass {
                 copyFile(fileOpener64, target);
                 System.out.println("已加载64位fileOpener");
             } else {
-                copyFile(fileOpener32, target);
+                copyFile(fileOpener86, target);
                 System.out.println("已加载32位fileOpener");
             }
         }
@@ -269,7 +269,7 @@ public class MainClass {
                 copyFile(getAscIIDll64, target);
                 System.out.println("已加载64位getAscII");
             } else {
-                copyFile(getAscIIDll32, target);
+                copyFile(getAscIIDll86, target);
                 System.out.println("已加载32位getAscII");
             }
         }

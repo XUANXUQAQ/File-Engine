@@ -499,8 +499,8 @@ public class SettingsFrame {
                     urlChoose = "url64";
                     fileName = "File-Engine-x64.exe";
                 } else {
-                    urlChoose = "url32";
-                    fileName = "File-Engine-x32.exe";
+                    urlChoose = "url86";
+                    fileName = "File-Engine-x86.exe";
                 }
                 try {
                     MainClass.showMessage("提示", "已开始下载");
