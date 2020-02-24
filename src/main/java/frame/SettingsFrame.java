@@ -424,6 +424,9 @@ public class SettingsFrame {
         StringBuilder jsonUpdate = new StringBuilder();
         URL updateServer = new URL("https://gitee.com/xuanxuF/File-Engine/raw/master/version.json");
         URLConnection uc = updateServer.openConnection();
+        uc.setConnectTimeout(3 * 1000);
+        //防止屏蔽程序抓取而返回403错误
+        uc.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.116 Safari/537.36 Edg/80.0.361.57");
         try (BufferedReader br = new BufferedReader(new InputStreamReader(uc.getInputStream()))) {
             String eachLine;
             while ((eachLine = br.readLine()) != null) {
