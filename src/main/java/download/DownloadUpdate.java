@@ -42,29 +42,6 @@ public class DownloadUpdate {
         frame.setLocation(width / 2 - width / 4, height / 2 - height / 4);
     }
 
-    private byte[] readInputStream(InputStream inputStream, int maxLength) throws IOException {
-        byte[] buffer = new byte[1024];
-        int progress = 0;
-        int len;
-        progressBar.setMinimum(0);
-        progressBar.setMaximum(maxLength);
-        progressBar.setValue(0);
-        progressBar.setStringPainted(true);
-        progressBar.setBackground(Color.pink);
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        while ((len = inputStream.read(buffer)) != -1) {
-            bos.write(buffer, 0, len);
-            progress += len;
-            progressBar.setValue(progress);
-            progressBar.setString("已下载：" + (int) (progressBar.getPercentComplete() * 100) + "%");
-            if (isUserInterruptDownload) {
-                bos.close();
-                return null;
-            }
-        }
-        bos.close();
-        return bos.toByteArray();
-    }
 
 
 
@@ -85,10 +62,9 @@ public class DownloadUpdate {
         //防止屏蔽程序抓取而返回403错误
         con.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.116 Safari/537.36 Edg/80.0.361.57");
         InputStream in = con.getInputStream();
-        byte[] getData = readInputStream(in, con.getContentLength());
-        if (getData == null) {
-            throw new Exception("用户中断下载");
-        }
+        byte[] buffer = new byte[1024];
+        int progress = 0;
+        int len;
         //文件保存位置
         File saveDir = new File(savePath);
         if (!saveDir.exists()) {
@@ -96,7 +72,21 @@ public class DownloadUpdate {
         }
         File file = new File(saveDir + File.separator + fileName);
         FileOutputStream fos = new FileOutputStream(file);
-        fos.write(getData);
+        progressBar.setMinimum(0);
+        progressBar.setMaximum(con.getContentLength());
+        progressBar.setValue(0);
+        progressBar.setStringPainted(true);
+        progressBar.setBackground(Color.pink);
+        while ((len = in.read(buffer)) != -1) {
+            fos.write(buffer, 0, len);
+            progress += len;
+            progressBar.setValue(progress);
+            progressBar.setString("已下载：" + (int) (progressBar.getPercentComplete() * 100) + "%");
+            if (isUserInterruptDownload) {
+                fos.close();
+                throw new Exception("用户中断下载");
+            }
+        }
         fos.close();
         frame.setVisible(false);
     }
