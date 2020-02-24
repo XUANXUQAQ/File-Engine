@@ -67,6 +67,7 @@ public class DownloadUpdate {
     }
 
 
+
     /**
      * 从网络Url中下载文件
      *
@@ -97,6 +98,10 @@ public class DownloadUpdate {
         FileOutputStream fos = new FileOutputStream(file);
         fos.write(getData);
         fos.close();
+        frame.setVisible(false);
+    }
+
+    public void hideFrame() {
         frame.setVisible(false);
     }
 }
