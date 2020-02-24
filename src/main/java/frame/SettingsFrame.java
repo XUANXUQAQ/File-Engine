@@ -504,13 +504,14 @@ public class SettingsFrame {
                     urlChoose = "url86";
                     fileName = "File-Engine-x86.exe";
                 }
+                DownloadUpdate download = DownloadUpdate.getInstance();
                 try {
-                    DownloadUpdate download = DownloadUpdate.getInstance();
                     download.downLoadFromUrl(updateInfo.getString(urlChoose), fileName, tmp.getAbsolutePath());
                 } catch (Exception e) {
                     if (!e.equals(new Exception("用户中断下载"))) {
                         JOptionPane.showMessageDialog(null, "下载失败");
                     }
+                    download.hideFrame();
                     return;
                 }
                 MainClass.showMessage("提示", "下载完成，更新将在下次启动时开始");
