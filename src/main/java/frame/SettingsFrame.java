@@ -422,7 +422,7 @@ public class SettingsFrame {
 
     public static JSONObject getInfo() throws IOException {
         StringBuilder jsonUpdate = new StringBuilder();
-        URL updateServer = new URL("https://rawcdn.githack.com/XUANXUQAQ/File-Engine/eb36e75f54d4261b59462f4f6fe24e84e0fa0271/version.json");
+        URL updateServer = new URL("https://gitee.com/xuanxuF/File-Engine/raw/master/version.json");
         URLConnection uc = updateServer.openConnection();
         try (BufferedReader br = new BufferedReader(new InputStreamReader(uc.getInputStream()))) {
             String eachLine;
@@ -488,7 +488,6 @@ public class SettingsFrame {
             JOptionPane.showMessageDialog(null, "检查更新失败");
             return;
         }
-
         if (!updateVersion.equals(MainClass.version)) {
             int result = JOptionPane.showConfirmDialog(null, "有新版本" + updateVersion + "，是否更新");
             if (result == 0) {
@@ -503,7 +502,6 @@ public class SettingsFrame {
                     fileName = "File-Engine-x86.exe";
                 }
                 try {
-                    MainClass.showMessage("提示", "已开始下载");
                     DownloadUpdate download = DownloadUpdate.getInstance();
                     download.downLoadFromUrl(updateInfo.getString(urlChoose), fileName, tmp.getAbsolutePath());
                 } catch (Exception e) {
