@@ -432,7 +432,7 @@ public class SettingsFrame {
 
     public static JSONObject getInfo() throws IOException {
         StringBuilder jsonUpdate = new StringBuilder();
-        URL updateServer = new URL("https://gitee.com/xuanxuF/File-Engine/raw/master/version.json");
+        URL updateServer = new URL("https://raw.githack.com/XUANXUQAQ/File-Engine/master/version.json");
         URLConnection uc = updateServer.openConnection();
         uc.setConnectTimeout(3 * 1000);
         //防止屏蔽程序抓取而返回403错误
@@ -501,7 +501,7 @@ public class SettingsFrame {
             JOptionPane.showMessageDialog(null, "检查更新失败");
             return;
         }
-        if (!updateVersion.equals(MainClass.version)) {
+        if (Double.parseDouble(updateVersion) > Double.parseDouble(MainClass.version)) {
             int result = JOptionPane.showConfirmDialog(null, "有新版本" + updateVersion + "，是否更新");
             if (result == 0) {
                 //开始更新,下载更新文件到tmp
