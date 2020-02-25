@@ -432,7 +432,7 @@ public class SettingsFrame {
 
     public static JSONObject getInfo() throws IOException {
         StringBuilder jsonUpdate = new StringBuilder();
-        URL updateServer = new URL("https://raw.githack.com/XUANXUQAQ/File-Engine/master/version.json");
+        URL updateServer = new URL("https://gitee.com/xuanxuF/File-Engine/raw/master/version.json");
         URLConnection uc = updateServer.openConnection();
         uc.setConnectTimeout(3 * 1000);
         //防止屏蔽程序抓取而返回403错误
