@@ -369,7 +369,7 @@ public class SettingsFrame {
                 //未输入
                 return;
             }
-            if (name.equals("update") || name.equals("clearbin") || name.equals("help") || name.equals("version")) {
+            if (name.equals("update") || name.equals("clearbin") || name.equals("help") || name.equals("version") || isRepeatCommand(name)) {
                 JOptionPane.showMessageDialog(null, "和已有的命令冲突");
                 return;
             }
@@ -418,6 +418,16 @@ public class SettingsFrame {
                 updateThread.start();
             }
         });
+    }
+
+    private boolean isRepeatCommand(String name) {
+        name = ":" + name;
+        for (String each : cmdSet) {
+            if (each.substring(0, each.indexOf(";")).equals(name)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public static JSONObject getInfo() throws IOException {
