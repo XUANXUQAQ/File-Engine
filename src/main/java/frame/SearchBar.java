@@ -10,10 +10,7 @@ import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.*;
-import java.awt.event.FocusEvent;
-import java.awt.event.FocusListener;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
+import java.awt.event.*;
 import java.io.*;
 import java.net.URL;
 import java.util.*;
@@ -48,9 +45,11 @@ public class SearchBar {
     private boolean isRunAsAdminPressed = false;
     private Pattern semicolon = Pattern.compile(";");
     private Pattern resultSplit = Pattern.compile(":");
-    private boolean isKeyPressed = false;
+    private boolean isUserPressed = false;
     private boolean isCommandMode = false;
+    private boolean isLockMouseMotion = false;
     private JPanel panel = new JPanel();
+    private long mouseWheelTime = 0;
 
 
     private SearchBar() {
@@ -71,7 +70,7 @@ public class SearchBar {
         searchBar.setBackground(null);
         searchBar.setOpacity(0.8f);
         searchBar.add(panel);
-        searchBar.setType(JFrame.Type.UTILITY);//隐藏任务栏图标
+        searchBar.setType(JFrame.Type.UTILITY);// TODO 隐藏任务栏图标
 
 
         //labels
@@ -149,7 +148,22 @@ public class SearchBar {
         panel.add(label4);
 
 
-        ExecutorService fixedThreadPool = Executors.newFixedThreadPool(5);
+        ExecutorService fixedThreadPool = Executors.newFixedThreadPool(6);
+
+        fixedThreadPool.execute(() -> {
+            //锁住MouseMotion检测，阻止同时出发两个动作
+            while (!mainExit) {
+                if (System.currentTimeMillis() - mouseWheelTime > 500) {
+                    isLockMouseMotion = false;
+                }
+
+                try {
+                    Thread.sleep(5);
+                } catch (InterruptedException ignored) {
+
+                }
+            }
+        });
 
         //刷新屏幕线程
         fixedThreadPool.execute(() -> {
@@ -173,17 +187,28 @@ public class SearchBar {
         fixedThreadPool.execute(() -> {
             try {
                 while (!mainExit) {
-                    if (labelCount == 0) {
+                    //判定当前选定位置
+                    int position;
+                    if (label1.getBackground().equals(labelColor)) {
+                        position = 0;
+                    } else if (label2.getBackground().equals(labelColor)) {
+                        position = 1;
+                    } else if (label3.getBackground().equals(labelColor)) {
+                        position = 2;
+                    } else {
+                        position = 3;
+                    }
+                    if (position == 0) {
                         label1.setForeground(fontColorWithCoverage);
                         label2.setForeground(fontColor);
                         label3.setForeground(fontColor);
                         label4.setForeground(fontColor);
-                    } else if (labelCount == 1) {
+                    } else if (position == 1) {
                         label1.setForeground(fontColor);
                         label2.setForeground(fontColorWithCoverage);
                         label3.setForeground(fontColor);
                         label4.setForeground(fontColor);
-                    } else if (labelCount == 2) {
+                    } else if (position == 2) {
                         label1.setForeground(fontColor);
                         label2.setForeground(fontColor);
                         label3.setForeground(fontColorWithCoverage);
@@ -219,29 +244,29 @@ public class SearchBar {
                     listResult.clear();
                 }
                 try {
-                    if (!isKeyPressed && !label1.getText().equals("")) {
+                    if (!isUserPressed && !label1.getText().equals("")) {
                         if (labelCount == 0) {
                             label1.setBackground(labelColor);
                         } else {
                             label1.setBackground(backgroundColorLight);
                         }
                     }
-                    if (!isKeyPressed && !label2.getText().equals("")) {
+                    if (!isUserPressed && !label2.getText().equals("")) {
                         if (labelCount == 1) {
                             label2.setBackground(labelColor);
                         } else {
                             label2.setBackground(backgroundColor);
                         }
                     }
-                    if (!isKeyPressed && !label3.getText().equals("")) {
+                    if (!isUserPressed && !label3.getText().equals("")) {
                         if (labelCount == 2) {
                             label3.setBackground(labelColor);
                         } else {
                             label3.setBackground(backgroundColorLight);
                         }
                     }
-                    if (!isKeyPressed && !label4.getText().equals("")) {
-                        if (labelCount >= 3) {
+                    if (!isUserPressed && !label4.getText().equals("")) {
+                        if (labelCount == 3) {
                             label4.setBackground(labelColor);
                         } else {
                             label4.setBackground(backgroundColor);
@@ -697,123 +722,164 @@ public class SearchBar {
             }
         });
 
-        textField.addKeyListener(new KeyListener() {
-            int timeLimit = 50;
-            long startTime;
-            boolean isFirstPress = true;
+        searchBar.addMouseListener(new MouseListener() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+
+            }
 
             @Override
-            public void keyPressed(KeyEvent arg0) {
-                if (!listResult.isEmpty()) {
-                    int key = arg0.getKeyCode();
-                    if (38 == key) {
-                        //上键被点击
-                        if (isFirstPress || System.currentTimeMillis() - startTime > timeLimit) {
-                            startTime = System.currentTimeMillis();
-                            isFirstPress = false;
+            public void mousePressed(MouseEvent e) {
+                int count = e.getClickCount();
+                if (count == 2) {
+                    closedTodo();
+                    if (!isCommandMode) {
+                        if (isOpenLastFolderPressed) {
+                            //打开上级文件夹
+                            File open = new File(listResult.get(labelCount));
                             try {
-                                if (!label1.getText().equals("") && !label2.getText().equals("") && !label3.getText().equals("") && !label4.getText().equals("")) {
-                                    isKeyPressed = true;
-                                }
-                            } catch (NullPointerException ignored) {
+                                Runtime.getRuntime().exec("explorer.exe /select, \"" + open.getAbsolutePath() + "\"");
+                            } catch (IOException e1) {
+                                e1.printStackTrace();
+                            }
+                        } else if (SettingsFrame.isDefaultAdmin || isRunAsAdminPressed) {
+                            openWithAdmin(listResult.get(labelCount));
+                        } else {
+                            String openFile = listResult.get(labelCount);
+                            if (openFile.endsWith(".bat") || openFile.endsWith(".cmd")) {
+                                openWithAdmin(openFile);
+                            } else {
+                                openWithoutAdmin(openFile);
+                            }
+                        }
+                        saveCache(listResult.get(labelCount) + ';');
+                    } else {
+                        //直接打开
+                        String command = listResult.get(labelCount);
+                        if (Desktop.isDesktopSupported()) {
+                            Desktop desktop = Desktop.getDesktop();
+                            try {
+                                desktop.open(new File(semicolon.split(command)[1]));
+                            } catch (Exception e1) {
+                                JOptionPane.showMessageDialog(null, "执行失败");
+                            }
+                        }
+                    }
+                }
+            }
 
+            @Override
+            public void mouseReleased(MouseEvent e) {
+
+            }
+
+            @Override
+            public void mouseEntered(MouseEvent e) {
+
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+
+            }
+        });
+
+        searchBar.addMouseWheelListener(e -> {
+            mouseWheelTime = System.currentTimeMillis();
+            isLockMouseMotion = true;
+            if (e.getPreciseWheelRotation() > 0) {
+                //向下滚动
+                try {
+                    if (!label1.getText().equals("") && !label2.getText().equals("") && !label3.getText().equals("") && !label4.getText().equals("")) {
+                        isUserPressed = true;
+                    }
+                } catch (NullPointerException ignored) {
+
+                }
+                boolean isNextExist = false;
+                if (labelCount == 0) {
+                    try {
+                        if (!label2.getText().equals("")) {
+                            isNextExist = true;
+                        }
+                    } catch (NullPointerException ignored) {
+
+                    }
+                } else if (labelCount == 1) {
+                    try {
+                        if (!label3.getText().equals("")) {
+                            isNextExist = true;
+                        }
+                    } catch (NullPointerException ignored) {
+
+                    }
+                } else if (labelCount == 2) {
+                    try {
+                        if (!label4.getText().equals("")) {
+                            isNextExist = true;
+                        }
+                    } catch (NullPointerException ignored) {
+
+                    }
+                } else {
+                    isNextExist = true;
+                }
+                if (isNextExist) {
+                    if (!textField.getText().equals("")) {
+                        labelCount++;
+                        if (labelCount < 0) {
+                            labelCount = 0;
+                        }
+
+                        //System.out.println(labelCount);
+                        if (labelCount >= listResult.size()) {
+                            labelCount = listResult.size() - 1;
+                        }
+                        //判定当前选定位置
+                        int position;
+                        try {
+                            if (label1.getBackground().equals(labelColor)) {
+                                position = 0;
+                            } else if (label2.getBackground().equals(labelColor)) {
+                                position = 1;
+                            } else if (label3.getBackground().equals(labelColor)) {
+                                position = 2;
+                            } else {
+                                position = 3;
                             }
                             if (!isCommandMode) {
-                                if (!textField.getText().equals("")) {
-                                    labelCount--;
-                                    if (labelCount < 0) {
-                                        labelCount = 0;
-                                    }
-
-                                    //System.out.println(labelCount);
-                                    if (labelCount >= listResult.size()) {
-                                        labelCount = listResult.size() - 1;
-                                    }
-                                    if (labelCount < 3) {
-                                        //未到最上端
-                                        if (0 == labelCount) {
-                                            label1.setBackground(labelColor);
-                                            try {
-                                                String text = label2.getText();
-                                                if (text.equals("")) {
-                                                    label2.setBackground(null);
-                                                } else {
-                                                    label2.setBackground(backgroundColor);
-                                                }
-                                            } catch (NullPointerException e) {
-                                                label2.setBackground(null);
-                                            }
-                                            try {
-                                                String text = label3.getText();
-                                                if (text.equals("")) {
-                                                    label3.setBackground(null);
-                                                } else {
-                                                    label3.setBackground(backgroundColorLight);
-                                                }
-                                            } catch (NullPointerException e) {
-                                                label3.setBackground(null);
-                                            }
-                                            try {
-                                                String text = label4.getText();
-                                                if (text.equals("")) {
-                                                    label4.setBackground(null);
-                                                } else {
-                                                    label4.setBackground(backgroundColor);
-                                                }
-                                            } catch (NullPointerException e) {
-                                                label4.setBackground(null);
-                                            }
-                                        } else if (1 == labelCount) {
-                                            label1.setBackground(backgroundColorLight);
-                                            label2.setBackground(labelColor);
-                                            try {
-                                                String text = label3.getText();
-                                                if (text.equals("")) {
-                                                    label3.setBackground(null);
-                                                } else {
-                                                    label3.setBackground(backgroundColorLight);
-                                                }
-                                            } catch (NullPointerException e) {
-                                                label3.setBackground(null);
-                                            }
-                                            try {
-                                                String text = label4.getText();
-                                                if (text.equals("")) {
-                                                    label4.setBackground(null);
-                                                } else {
-                                                    label4.setBackground(backgroundColor);
-                                                }
-                                            } catch (NullPointerException e) {
-                                                label4.setBackground(null);
-                                            }
-                                        } else if (2 == labelCount) {
-                                            label1.setBackground(backgroundColorLight);
-                                            label2.setBackground(backgroundColor);
-                                            label3.setBackground(labelColor);
-                                            try {
-                                                String text = label4.getText();
-                                                if (text.equals("")) {
-                                                    label4.setBackground(null);
-                                                } else {
-                                                    label4.setBackground(backgroundColor);
-                                                }
-                                            } catch (NullPointerException e) {
-                                                label4.setBackground(null);
-                                            }
-                                        }
-                                    } else {
-                                        //到达最下端
+                                switch (position) {
+                                    case 0:
+                                        label1.setBackground(backgroundColorLight);
+                                        label2.setBackground(labelColor);
+                                        label3.setBackground(backgroundColorLight);
+                                        label4.setBackground(backgroundColor);
+                                        break;
+                                    case 1:
+                                        label1.setBackground(backgroundColorLight);
+                                        label2.setBackground(backgroundColor);
+                                        label3.setBackground(labelColor);
+                                        label4.setBackground(backgroundColor);
+                                        break;
+                                    case 2:
+                                        label1.setBackground(backgroundColorLight);
+                                        label2.setBackground(backgroundColor);
+                                        label3.setBackground(backgroundColorLight);
+                                        label4.setBackground(labelColor);
+                                        break;
+                                    case 3:
+                                        //到达最下端，刷新显示
                                         label1.setBackground(backgroundColorLight);
                                         label2.setBackground(backgroundColor);
                                         label3.setBackground(backgroundColorLight);
                                         label4.setBackground(labelColor);
                                         String path = listResult.get(labelCount - 3);
                                         String name = getFileName(listResult.get(labelCount - 3));
-                                        ImageIcon icon;
+                                        ImageIcon icon1;
                                         if (isDirectory(path) || isFile(path)) {
-                                            icon = (ImageIcon) GetIcon.getBigIcon(path);
-                                            icon = changeIcon(icon, label1.getHeight() / 3, label1.getHeight() / 3);
-                                            label1.setIcon(icon);
+                                            icon1 = (ImageIcon) GetIcon.getBigIcon(path);
+                                            icon1 = changeIcon(icon1, label1.getHeight() / 3, label1.getHeight() / 3);
+                                            label1.setIcon(icon1);
                                             label1.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
                                         } else {
                                             label1.setIcon(null);
@@ -824,10 +890,10 @@ public class SearchBar {
                                         name = getFileName(listResult.get(labelCount - 2));
 
                                         if (isDirectory(path) || isFile(path)) {
-                                            icon = (ImageIcon) GetIcon.getBigIcon(path);
-                                            icon = changeIcon(icon, label1.getHeight() / 3, label1.getHeight() / 3);
+                                            icon1 = (ImageIcon) GetIcon.getBigIcon(path);
+                                            icon1 = changeIcon(icon1, label1.getHeight() / 3, label1.getHeight() / 3);
                                             label2.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
-                                            label2.setIcon(icon);
+                                            label2.setIcon(icon1);
                                         } else {
                                             label2.setIcon(null);
                                             label2.setText("无效文件");
@@ -838,10 +904,10 @@ public class SearchBar {
 
 
                                         if (isDirectory(path) || isFile(path)) {
-                                            icon = (ImageIcon) GetIcon.getBigIcon(path);
-                                            icon = changeIcon(icon, label1.getHeight() / 3, label1.getHeight() / 3);
+                                            icon1 = (ImageIcon) GetIcon.getBigIcon(path);
+                                            icon1 = changeIcon(icon1, label1.getHeight() / 3, label1.getHeight() / 3);
                                             label3.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
-                                            label3.setIcon(icon);
+                                            label3.setIcon(icon1);
                                         } else {
                                             label3.setIcon(null);
                                             label3.setText("无效文件");
@@ -852,18 +918,353 @@ public class SearchBar {
 
 
                                         if (isDirectory(path) || isFile(path)) {
-                                            icon = (ImageIcon) GetIcon.getBigIcon(path);
-                                            icon = changeIcon(icon, label1.getHeight() / 3, label1.getHeight() / 3);
+                                            icon1 = (ImageIcon) GetIcon.getBigIcon(path);
+                                            icon1 = changeIcon(icon1, label1.getHeight() / 3, label1.getHeight() / 3);
                                             label4.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
-                                            label4.setIcon(icon);
+                                            label4.setIcon(icon1);
                                         } else {
                                             label4.setIcon(null);
                                             label4.setText("无效文件");
                                             search.addToRecycleBin(path);
                                         }
-                                    }
+                                        break;
                                 }
                             } else {
+                                switch (position) {
+                                    case 0:
+                                        //到达了最上端，刷新显示
+                                        label1.setBackground(labelColor);
+                                        label2.setBackground(backgroundColor);
+                                        label3.setBackground(backgroundColorLight);
+                                        label4.setBackground(backgroundColor);
+                                        String command = listResult.get(labelCount);
+                                        String[] info = semicolon.split(command);
+                                        String path = info[1];
+                                        String name = info[0];
+                                        label1.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
+
+                                        command = listResult.get(labelCount + 1);
+                                        info = semicolon.split(command);
+                                        path = info[1];
+                                        name = info[0];
+                                        label2.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
+
+                                        command = listResult.get(labelCount + 2);
+                                        info = semicolon.split(command);
+                                        path = info[1];
+                                        name = info[0];
+                                        label3.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
+
+                                        command = listResult.get(labelCount + 3);
+                                        info = semicolon.split(command);
+                                        path = info[1];
+                                        name = info[0];
+                                        label4.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
+                                        break;
+                                    case 1:
+                                        label1.setBackground(labelColor);
+                                        label2.setBackground(backgroundColor);
+                                        label3.setBackground(backgroundColorLight);
+                                        label4.setBackground(backgroundColor);
+                                        break;
+                                    case 2:
+                                        label1.setBackground(backgroundColorLight);
+                                        label2.setBackground(labelColor);
+                                        label3.setBackground(backgroundColorLight);
+                                        label4.setBackground(backgroundColor);
+                                        break;
+                                    case 3:
+                                        label1.setBackground(backgroundColorLight);
+                                        label2.setBackground(backgroundColor);
+                                        label3.setBackground(labelColor);
+                                        label4.setBackground(backgroundColor);
+                                        break;
+                                    case 4:
+                                        label1.setBackground(backgroundColorLight);
+                                        label2.setBackground(backgroundColor);
+                                        label3.setBackground(backgroundColorLight);
+                                        label4.setBackground(labelColor);
+                                        break;
+                                }
+                            }
+                        } catch (NullPointerException ignored) {
+
+                        }
+                    }
+                }
+            } else if (e.getPreciseWheelRotation() < 0) {
+                //向上滚动
+                try {
+                    if (!label1.getText().equals("") && !label2.getText().equals("") && !label3.getText().equals("") && !label4.getText().equals("")) {
+                        isUserPressed = true;
+                    }
+                } catch (NullPointerException ignored) {
+
+                }
+                if (!textField.getText().equals("")) {
+                    labelCount--;
+                    if (labelCount < 0) {
+                        labelCount = 0;
+                    }
+
+                    //System.out.println(labelCount);
+                    if (labelCount >= listResult.size()) {
+                        labelCount = listResult.size() - 1;
+                    }
+
+                    //判定当前选定位置
+                    int position;
+                    try {
+                        if (label1.getBackground().equals(labelColor)) {
+                            position = 0;
+                        } else if (label2.getBackground().equals(labelColor)) {
+                            position = 1;
+                        } else if (label3.getBackground().equals(labelColor)) {
+                            position = 2;
+                        } else {
+                            position = 3;
+                        }
+                        if (!isCommandMode) {
+                            switch (position) {
+                                case 0:
+                                    //到达了最上端，刷新显示
+                                    label1.setBackground(labelColor);
+                                    label2.setBackground(backgroundColor);
+                                    label3.setBackground(backgroundColorLight);
+                                    label4.setBackground(backgroundColor);
+                                    String path = listResult.get(labelCount);
+                                    String name = getFileName(listResult.get(labelCount));
+                                    ImageIcon icon1;
+                                    if (isDirectory(path) || isFile(path)) {
+                                        icon1 = (ImageIcon) GetIcon.getBigIcon(path);
+                                        icon1 = changeIcon(icon1, label1.getHeight() / 3, label1.getHeight() / 3);
+                                        label1.setIcon(icon1);
+                                        label1.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
+                                    } else {
+                                        label1.setIcon(null);
+                                        label1.setText("无效文件");
+                                        search.addToRecycleBin(path);
+                                    }
+                                    path = listResult.get(labelCount + 1);
+                                    name = getFileName(listResult.get(labelCount + 1));
+
+                                    if (isDirectory(path) || isFile(path)) {
+                                        icon1 = (ImageIcon) GetIcon.getBigIcon(path);
+                                        icon1 = changeIcon(icon1, label1.getHeight() / 3, label1.getHeight() / 3);
+                                        label2.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
+                                        label2.setIcon(icon1);
+                                    } else {
+                                        label2.setIcon(null);
+                                        label2.setText("无效文件");
+                                        search.addToRecycleBin(path);
+                                    }
+                                    path = listResult.get(labelCount + 2);
+                                    name = getFileName(listResult.get(labelCount + 2));
+
+
+                                    if (isDirectory(path) || isFile(path)) {
+                                        icon1 = (ImageIcon) GetIcon.getBigIcon(path);
+                                        icon1 = changeIcon(icon1, label1.getHeight() / 3, label1.getHeight() / 3);
+                                        label3.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
+                                        label3.setIcon(icon1);
+                                    } else {
+                                        label3.setIcon(null);
+                                        label3.setText("无效文件");
+                                        search.addToRecycleBin(path);
+                                    }
+                                    path = listResult.get(labelCount + 3);
+                                    name = getFileName(listResult.get(labelCount + 3));
+
+
+                                    if (isDirectory(path) || isFile(path)) {
+                                        icon1 = (ImageIcon) GetIcon.getBigIcon(path);
+                                        icon1 = changeIcon(icon1, label1.getHeight() / 3, label1.getHeight() / 3);
+                                        label4.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
+                                        label4.setIcon(icon1);
+                                    } else {
+                                        label4.setIcon(null);
+                                        label4.setText("无效文件");
+                                        search.addToRecycleBin(path);
+                                    }
+                                    break;
+                                case 1:
+                                    label1.setBackground(labelColor);
+                                    label2.setBackground(backgroundColor);
+                                    label3.setBackground(backgroundColorLight);
+                                    label4.setBackground(backgroundColor);
+                                    break;
+                                case 2:
+                                    label1.setBackground(backgroundColorLight);
+                                    label2.setBackground(labelColor);
+                                    label3.setBackground(backgroundColorLight);
+                                    label4.setBackground(backgroundColor);
+                                    break;
+                                case 3:
+                                    label1.setBackground(backgroundColorLight);
+                                    label2.setBackground(backgroundColor);
+                                    label3.setBackground(labelColor);
+                                    label4.setBackground(backgroundColor);
+                                    break;
+                            }
+                        } else {
+                            switch (position) {
+                                case 0:
+                                    //到达了最上端，刷新显示
+                                    label1.setBackground(labelColor);
+                                    label2.setBackground(backgroundColor);
+                                    label3.setBackground(backgroundColorLight);
+                                    label4.setBackground(backgroundColor);
+                                    String command = listResult.get(labelCount);
+                                    String[] info = semicolon.split(command);
+                                    String path = info[1];
+                                    String name = info[0];
+                                    label1.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
+
+                                    command = listResult.get(labelCount + 1);
+                                    info = semicolon.split(command);
+                                    path = info[1];
+                                    name = info[0];
+                                    label2.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
+
+                                    command = listResult.get(labelCount + 2);
+                                    info = semicolon.split(command);
+                                    path = info[1];
+                                    name = info[0];
+                                    label3.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
+
+                                    command = listResult.get(labelCount + 3);
+                                    info = semicolon.split(command);
+                                    path = info[1];
+                                    name = info[0];
+                                    label4.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
+                                    break;
+                                case 1:
+                                    label1.setBackground(labelColor);
+                                    label2.setBackground(backgroundColor);
+                                    label3.setBackground(backgroundColorLight);
+                                    label4.setBackground(backgroundColor);
+                                    break;
+                                case 2:
+                                    label1.setBackground(backgroundColorLight);
+                                    label2.setBackground(labelColor);
+                                    label3.setBackground(backgroundColorLight);
+                                    label4.setBackground(backgroundColor);
+                                    break;
+                                case 3:
+                                    label1.setBackground(backgroundColorLight);
+                                    label2.setBackground(backgroundColor);
+                                    label3.setBackground(labelColor);
+                                    label4.setBackground(backgroundColor);
+                                    break;
+                                case 4:
+                                    label1.setBackground(backgroundColorLight);
+                                    label2.setBackground(backgroundColor);
+                                    label3.setBackground(backgroundColorLight);
+                                    label4.setBackground(labelColor);
+                                    break;
+                            }
+                        }
+                    } catch (NullPointerException ignored) {
+
+                    }
+
+                    if (labelCount < 0) {
+                        labelCount = 0;
+                    }
+                }
+
+            }
+        });
+
+        searchBar.addMouseMotionListener(new MouseAdapter() {
+            @Override
+            public void mouseMoved(MouseEvent e) {
+                //判定当前位置
+                if (!isLockMouseMotion) {
+                    int position;
+                    if (label1.getBackground().equals(labelColor)) {
+                        position = 0;
+                    } else if (label2.getBackground().equals(labelColor)) {
+                        position = 1;
+                    } else if (label3.getBackground().equals(labelColor)) {
+                        position = 2;
+                    } else {
+                        position = 3;
+                    }
+                    //判断鼠标位置
+                    int labelPosition = label1.getY();
+                    int labelPosition2 = labelPosition * 2;
+                    int labelPosition3 = labelPosition * 3;
+                    int labelPosition4 = labelPosition * 4;
+                    int mousePosition;
+                    if (labelPosition <= e.getY() && e.getY() < labelPosition2) {
+                        mousePosition = 0;
+                    } else if (labelPosition2 <= e.getY() && e.getY() < labelPosition3) {
+                        mousePosition = 1;
+                    } else if (labelPosition3 <= e.getY() && e.getY() < labelPosition4) {
+                        mousePosition = 2;
+                    } else {
+                        mousePosition = 3;
+                    }
+                    if (mousePosition < listResult.size()) {
+                        if (position < mousePosition) {
+                            labelCount = labelCount + (mousePosition - position);
+                        } else {
+                            labelCount = labelCount - (position - mousePosition);
+                        }
+                        switch (mousePosition) {
+                            case 0:
+                                label1.setBackground(labelColor);
+                                label2.setBackground(backgroundColor);
+                                label3.setBackground(backgroundColorLight);
+                                label4.setBackground(backgroundColor);
+                                break;
+                            case 1:
+                                label1.setBackground(backgroundColorLight);
+                                label2.setBackground(labelColor);
+                                label3.setBackground(backgroundColorLight);
+                                label4.setBackground(backgroundColor);
+                                break;
+                            case 2:
+                                label1.setBackground(backgroundColorLight);
+                                label2.setBackground(backgroundColor);
+                                label3.setBackground(labelColor);
+                                label4.setBackground(backgroundColor);
+                                break;
+                            case 3:
+                                label1.setBackground(backgroundColorLight);
+                                label2.setBackground(backgroundColor);
+                                label3.setBackground(backgroundColorLight);
+                                label4.setBackground(labelColor);
+                                break;
+                        }
+                    }
+                }
+            }
+        });
+
+        textField.addKeyListener(new KeyListener() {
+            int timeLimit = 50;
+            long pressTime;
+            boolean isFirstPress = true;
+
+            @Override
+            public void keyPressed(KeyEvent arg0) {
+                if (!listResult.isEmpty()) {
+                    int key = arg0.getKeyCode();
+                    if (38 == key) {
+                        //上键被点击
+                        if (isFirstPress || System.currentTimeMillis() - pressTime > timeLimit) {
+                            pressTime = System.currentTimeMillis();
+                            isFirstPress = false;
+                            try {
+                                if (!label1.getText().equals("") && !label2.getText().equals("") && !label3.getText().equals("") && !label4.getText().equals("")) {
+                                    isUserPressed = true;
+                                }
+                            } catch (NullPointerException ignored) {
+
+                            }
+                            if (!textField.getText().equals("")) {
                                 labelCount--;
                                 if (labelCount < 0) {
                                     labelCount = 0;
@@ -873,118 +1274,176 @@ public class SearchBar {
                                 if (labelCount >= listResult.size()) {
                                     labelCount = listResult.size() - 1;
                                 }
-                                if (labelCount < 3) {
-                                    //未到最上端
-                                    if (0 == labelCount) {
-                                        label1.setBackground(labelColor);
-                                        try {
-                                            String text = label2.getText();
-                                            if (text.equals("")) {
-                                                label2.setBackground(null);
-                                            } else {
+
+                                //判定当前选定位置
+                                int position;
+                                try {
+                                    if (label1.getBackground().equals(labelColor)) {
+                                        position = 0;
+                                    } else if (label2.getBackground().equals(labelColor)) {
+                                        position = 1;
+                                    } else if (label3.getBackground().equals(labelColor)) {
+                                        position = 2;
+                                    } else {
+                                        position = 3;
+                                    }
+                                    if (!isCommandMode) {
+                                        switch (position) {
+                                            case 0:
+                                                //到达了最上端，刷新显示
+                                                label1.setBackground(labelColor);
                                                 label2.setBackground(backgroundColor);
-                                            }
-                                        } catch (NullPointerException e) {
-                                            label2.setBackground(null);
-                                        }
-                                        try {
-                                            String text = label3.getText();
-                                            if (text.equals("")) {
-                                                label3.setBackground(null);
-                                            } else {
                                                 label3.setBackground(backgroundColorLight);
-                                            }
-                                        } catch (NullPointerException e) {
-                                            label3.setBackground(null);
-                                        }
-                                        try {
-                                            String text = label4.getText();
-                                            if (text.equals("")) {
-                                                label4.setBackground(null);
-                                            } else {
                                                 label4.setBackground(backgroundColor);
-                                            }
-                                        } catch (NullPointerException e) {
-                                            label4.setBackground(null);
-                                        }
-                                    } else if (1 == labelCount) {
-                                        label1.setBackground(backgroundColorLight);
-                                        label2.setBackground(labelColor);
-                                        try {
-                                            String text = label3.getText();
-                                            if (text.equals("")) {
-                                                label3.setBackground(null);
-                                            } else {
+                                                String path = listResult.get(labelCount);
+                                                String name = getFileName(listResult.get(labelCount));
+                                                ImageIcon icon;
+                                                if (isDirectory(path) || isFile(path)) {
+                                                    icon = (ImageIcon) GetIcon.getBigIcon(path);
+                                                    icon = changeIcon(icon, label1.getHeight() / 3, label1.getHeight() / 3);
+                                                    label1.setIcon(icon);
+                                                    label1.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
+                                                } else {
+                                                    label1.setIcon(null);
+                                                    label1.setText("无效文件");
+                                                    search.addToRecycleBin(path);
+                                                }
+                                                path = listResult.get(labelCount + 1);
+                                                name = getFileName(listResult.get(labelCount + 1));
+
+                                                if (isDirectory(path) || isFile(path)) {
+                                                    icon = (ImageIcon) GetIcon.getBigIcon(path);
+                                                    icon = changeIcon(icon, label1.getHeight() / 3, label1.getHeight() / 3);
+                                                    label2.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
+                                                    label2.setIcon(icon);
+                                                } else {
+                                                    label2.setIcon(null);
+                                                    label2.setText("无效文件");
+                                                    search.addToRecycleBin(path);
+                                                }
+                                                path = listResult.get(labelCount + 2);
+                                                name = getFileName(listResult.get(labelCount + 2));
+
+
+                                                if (isDirectory(path) || isFile(path)) {
+                                                    icon = (ImageIcon) GetIcon.getBigIcon(path);
+                                                    icon = changeIcon(icon, label1.getHeight() / 3, label1.getHeight() / 3);
+                                                    label3.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
+                                                    label3.setIcon(icon);
+                                                } else {
+                                                    label3.setIcon(null);
+                                                    label3.setText("无效文件");
+                                                    search.addToRecycleBin(path);
+                                                }
+                                                path = listResult.get(labelCount + 3);
+                                                name = getFileName(listResult.get(labelCount + 3));
+
+
+                                                if (isDirectory(path) || isFile(path)) {
+                                                    icon = (ImageIcon) GetIcon.getBigIcon(path);
+                                                    icon = changeIcon(icon, label1.getHeight() / 3, label1.getHeight() / 3);
+                                                    label4.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
+                                                    label4.setIcon(icon);
+                                                } else {
+                                                    label4.setIcon(null);
+                                                    label4.setText("无效文件");
+                                                    search.addToRecycleBin(path);
+                                                }
+                                                break;
+                                            case 1:
+                                                label1.setBackground(labelColor);
+                                                label2.setBackground(backgroundColor);
                                                 label3.setBackground(backgroundColorLight);
-                                            }
-                                        } catch (NullPointerException e) {
-                                            label3.setBackground(null);
-                                        }
-                                        try {
-                                            String text = label4.getText();
-                                            if (text.equals("")) {
-                                                label4.setBackground(null);
-                                            } else {
                                                 label4.setBackground(backgroundColor);
-                                            }
-                                        } catch (NullPointerException e) {
-                                            label4.setBackground(null);
-                                        }
-                                    } else if (2 == labelCount) {
-                                        label1.setBackground(backgroundColorLight);
-                                        label2.setBackground(backgroundColor);
-                                        label3.setBackground(labelColor);
-                                        try {
-                                            String text = label4.getText();
-                                            if (text.equals("")) {
-                                                label4.setBackground(null);
-                                            } else {
+                                                break;
+                                            case 2:
+                                                label1.setBackground(backgroundColorLight);
+                                                label2.setBackground(labelColor);
+                                                label3.setBackground(backgroundColorLight);
                                                 label4.setBackground(backgroundColor);
-                                            }
-                                        } catch (NullPointerException e) {
-                                            label4.setBackground(null);
+                                                break;
+                                            case 3:
+                                                label1.setBackground(backgroundColorLight);
+                                                label2.setBackground(backgroundColor);
+                                                label3.setBackground(labelColor);
+                                                label4.setBackground(backgroundColor);
+                                                break;
+                                        }
+                                    } else {
+                                        switch (position) {
+                                            case 0:
+                                                //到达了最上端，刷新显示
+                                                label1.setBackground(labelColor);
+                                                label2.setBackground(backgroundColor);
+                                                label3.setBackground(backgroundColorLight);
+                                                label4.setBackground(backgroundColor);
+                                                String command = listResult.get(labelCount);
+                                                String[] info = semicolon.split(command);
+                                                String path = info[1];
+                                                String name = info[0];
+                                                label1.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
+
+                                                command = listResult.get(labelCount + 1);
+                                                info = semicolon.split(command);
+                                                path = info[1];
+                                                name = info[0];
+                                                label2.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
+
+                                                command = listResult.get(labelCount + 2);
+                                                info = semicolon.split(command);
+                                                path = info[1];
+                                                name = info[0];
+                                                label3.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
+
+                                                command = listResult.get(labelCount + 3);
+                                                info = semicolon.split(command);
+                                                path = info[1];
+                                                name = info[0];
+                                                label4.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
+                                                break;
+                                            case 1:
+                                                label1.setBackground(labelColor);
+                                                label2.setBackground(backgroundColor);
+                                                label3.setBackground(backgroundColorLight);
+                                                label4.setBackground(backgroundColor);
+                                                break;
+                                            case 2:
+                                                label1.setBackground(backgroundColorLight);
+                                                label2.setBackground(labelColor);
+                                                label3.setBackground(backgroundColorLight);
+                                                label4.setBackground(backgroundColor);
+                                                break;
+                                            case 3:
+                                                label1.setBackground(backgroundColorLight);
+                                                label2.setBackground(backgroundColor);
+                                                label3.setBackground(labelColor);
+                                                label4.setBackground(backgroundColor);
+                                                break;
+                                            case 4:
+                                                label1.setBackground(backgroundColorLight);
+                                                label2.setBackground(backgroundColor);
+                                                label3.setBackground(backgroundColorLight);
+                                                label4.setBackground(labelColor);
+                                                break;
                                         }
                                     }
-                                } else {
-                                    //到达最下端
-                                    label1.setBackground(backgroundColorLight);
-                                    label2.setBackground(backgroundColor);
-                                    label3.setBackground(backgroundColorLight);
-                                    label4.setBackground(labelColor);
-                                    String command = listResult.get(labelCount - 3);
-                                    String[] info = semicolon.split(command);
-                                    String path = info[1];
-                                    String name = info[0];
-                                    label1.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
+                                } catch (NullPointerException ignored) {
 
-                                    command = listResult.get(labelCount - 2);
-                                    info = semicolon.split(command);
-                                    path = info[1];
-                                    name = info[0];
-                                    label2.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
-
-                                    command = listResult.get(labelCount - 1);
-                                    info = semicolon.split(command);
-                                    path = info[1];
-                                    name = info[0];
-                                    label3.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
-
-                                    command = listResult.get(labelCount);
-                                    info = semicolon.split(command);
-                                    path = info[1];
-                                    name = info[0];
-                                    label4.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
                                 }
+
+                            }
+                            if (labelCount < 0) {
+                                labelCount = 0;
                             }
                         }
                     } else if (40 == key) {
                         //下键被点击
-                        if (isFirstPress || System.currentTimeMillis() - startTime > timeLimit) {
-                            startTime = System.currentTimeMillis();
+                        if (isFirstPress || System.currentTimeMillis() - pressTime > timeLimit) {
+                            pressTime = System.currentTimeMillis();
                             isFirstPress = false;
                             try {
                                 if (!label1.getText().equals("") && !label2.getText().equals("") && !label3.getText().equals("") && !label4.getText().equals("")) {
-                                    isKeyPressed = true;
+                                    isUserPressed = true;
                                 }
                             } catch (NullPointerException ignored) {
 
@@ -1018,259 +1477,170 @@ public class SearchBar {
                                 isNextExist = true;
                             }
                             if (isNextExist) {
-                                if (!isCommandMode) {
-                                    if (!textField.getText().equals("")) {
-                                        labelCount++;
-                                        if (labelCount < 0) {
-                                            labelCount = 0;
-                                        }
-
-                                        //System.out.println(labelCount);
-                                        if (labelCount >= listResult.size()) {
-                                            labelCount = listResult.size() - 1;
-                                        }
-                                        if (labelCount < 3) {
-                                            //未到最下端
-                                            if (0 == labelCount) {
-                                                label1.setBackground(labelColor);
-                                                try {
-                                                    String text = label2.getText();
-                                                    if (text.equals("")) {
-                                                        label2.setBackground(null);
-                                                    } else {
-                                                        label2.setBackground(backgroundColor);
-                                                    }
-                                                } catch (NullPointerException e) {
-                                                    label2.setBackground(null);
-                                                }
-                                                try {
-                                                    String text = label3.getText();
-                                                    if (text.equals("")) {
-                                                        label3.setBackground(null);
-                                                    } else {
-                                                        label3.setBackground(backgroundColorLight);
-                                                    }
-                                                } catch (NullPointerException e) {
-                                                    label3.setBackground(null);
-                                                }
-                                                try {
-                                                    String text = label4.getText();
-                                                    if (text.equals("")) {
-                                                        label4.setBackground(null);
-                                                    } else {
-                                                        label4.setBackground(backgroundColor);
-                                                    }
-                                                } catch (NullPointerException e) {
-                                                    label4.setBackground(null);
-                                                }
-                                            } else if (1 == labelCount) {
-                                                label1.setBackground(backgroundColorLight);
-                                                label2.setBackground(labelColor);
-                                                try {
-                                                    String text = label3.getText();
-                                                    if (text.equals("")) {
-                                                        label3.setBackground(null);
-                                                    } else {
-                                                        label3.setBackground(backgroundColorLight);
-                                                    }
-                                                } catch (NullPointerException e) {
-                                                    label3.setBackground(null);
-                                                }
-                                                try {
-                                                    String text = label4.getText();
-                                                    if (text.equals("")) {
-                                                        label4.setBackground(null);
-                                                    } else {
-                                                        label4.setBackground(backgroundColor);
-                                                    }
-                                                } catch (NullPointerException e) {
-                                                    label4.setBackground(null);
-                                                }
-                                            } else if (2 == labelCount) {
-                                                label1.setBackground(backgroundColorLight);
-                                                label2.setBackground(backgroundColor);
-                                                label3.setBackground(labelColor);
-                                                try {
-                                                    String text = label4.getText();
-                                                    if (text.equals("")) {
-                                                        label4.setBackground(null);
-                                                    } else {
-                                                        label4.setBackground(backgroundColor);
-                                                    }
-                                                } catch (NullPointerException e) {
-                                                    label4.setBackground(null);
-                                                }
-                                            }
-                                        } else {
-                                            //到最下端
-                                            label1.setBackground(backgroundColorLight);
-                                            label2.setBackground(backgroundColor);
-                                            label3.setBackground(backgroundColorLight);
-                                            label4.setBackground(labelColor);
-                                            String path = listResult.get(labelCount - 3);
-                                            String name = getFileName(listResult.get(labelCount - 3));
-                                            ImageIcon icon;
-                                            if (isDirectory(path) || isFile(path)) {
-                                                icon = (ImageIcon) GetIcon.getBigIcon(path);
-                                                icon = changeIcon(icon, label1.getHeight() / 3, label1.getHeight() / 3);
-                                                label1.setIcon(icon);
-                                                label1.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
-                                            } else {
-                                                label1.setIcon(null);
-                                                label1.setText("无效文件");
-                                                search.addToRecycleBin(path);
-                                            }
-                                            path = listResult.get(labelCount - 2);
-                                            name = getFileName(listResult.get(labelCount - 2));
-
-
-                                            if (isDirectory(path) || isFile(path)) {
-                                                icon = (ImageIcon) GetIcon.getBigIcon(path);
-                                                icon = changeIcon(icon, label1.getHeight() / 3, label1.getHeight() / 3);
-                                                label2.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
-                                                label2.setIcon(icon);
-                                            } else {
-                                                label2.setIcon(null);
-                                                label2.setText("无效文件");
-                                                search.addToRecycleBin(path);
-                                            }
-                                            path = listResult.get(labelCount - 1);
-                                            name = getFileName(listResult.get(labelCount - 1));
-
-                                            if (isDirectory(path) || isFile(path)) {
-                                                icon = (ImageIcon) GetIcon.getBigIcon(path);
-                                                icon = changeIcon(icon, label1.getHeight() / 3, label1.getHeight() / 3);
-                                                label3.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
-                                                label3.setIcon(icon);
-                                            } else {
-                                                label3.setIcon(null);
-                                                label3.setText("无效文件");
-                                                search.addToRecycleBin(path);
-                                            }
-                                            path = listResult.get(labelCount);
-                                            name = getFileName(listResult.get(labelCount));
-
-
-                                            if (isDirectory(path) || isFile(path)) {
-                                                icon = (ImageIcon) GetIcon.getBigIcon(path);
-                                                icon = changeIcon(icon, label1.getHeight() / 3, label1.getHeight() / 3);
-                                                label4.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
-                                                label4.setIcon(icon);
-                                            } else {
-                                                label4.setIcon(null);
-                                                label4.setText("无效文件");
-                                                search.addToRecycleBin(path);
-                                            }
-                                        }
-                                    }
-                                } else {
+                                if (!textField.getText().equals("")) {
                                     labelCount++;
+                                    if (labelCount < 0) {
+                                        labelCount = 0;
+                                    }
 
                                     //System.out.println(labelCount);
                                     if (labelCount >= listResult.size()) {
                                         labelCount = listResult.size() - 1;
                                     }
-                                    if (labelCount < 3) {
-                                        //未到最上端
-                                        if (0 == labelCount) {
-                                            label1.setBackground(labelColor);
-                                            try {
-                                                String text = label2.getText();
-                                                if (text.equals("")) {
-                                                    label2.setBackground(null);
-                                                } else {
+                                    //判定当前选定位置
+                                    int position;
+                                    try {
+                                        if (label1.getBackground().equals(labelColor)) {
+                                            position = 0;
+                                        } else if (label2.getBackground().equals(labelColor)) {
+                                            position = 1;
+                                        } else if (label3.getBackground().equals(labelColor)) {
+                                            position = 2;
+                                        } else {
+                                            position = 3;
+                                        }
+                                        if (!isCommandMode) {
+                                            switch (position) {
+                                                case 0:
+                                                    label1.setBackground(backgroundColorLight);
+                                                    label2.setBackground(labelColor);
+                                                    label3.setBackground(backgroundColorLight);
+                                                    label4.setBackground(backgroundColor);
+                                                    break;
+                                                case 1:
+                                                    label1.setBackground(backgroundColorLight);
                                                     label2.setBackground(backgroundColor);
-                                                }
-                                            } catch (NullPointerException e) {
-                                                label2.setBackground(null);
-                                            }
-                                            try {
-                                                String text = label3.getText();
-                                                if (text.equals("")) {
-                                                    label3.setBackground(null);
-                                                } else {
+                                                    label3.setBackground(labelColor);
+                                                    label4.setBackground(backgroundColor);
+                                                    break;
+                                                case 2:
+                                                    label1.setBackground(backgroundColorLight);
+                                                    label2.setBackground(backgroundColor);
                                                     label3.setBackground(backgroundColorLight);
-                                                }
-                                            } catch (NullPointerException e) {
-                                                label3.setBackground(null);
-                                            }
-                                            try {
-                                                String text = label4.getText();
-                                                if (text.equals("")) {
-                                                    label4.setBackground(null);
-                                                } else {
-                                                    label4.setBackground(backgroundColor);
-                                                }
-                                            } catch (NullPointerException e) {
-                                                label4.setBackground(null);
-                                            }
-                                        } else if (1 == labelCount) {
-                                            label1.setBackground(backgroundColorLight);
-                                            label2.setBackground(labelColor);
-                                            try {
-                                                String text = label3.getText();
-                                                if (text.equals("")) {
-                                                    label3.setBackground(null);
-                                                } else {
+                                                    label4.setBackground(labelColor);
+                                                    break;
+                                                case 3:
+                                                    //到达最下端，刷新显示
+                                                    label1.setBackground(backgroundColorLight);
+                                                    label2.setBackground(backgroundColor);
                                                     label3.setBackground(backgroundColorLight);
-                                                }
-                                            } catch (NullPointerException e) {
-                                                label3.setBackground(null);
+                                                    label4.setBackground(labelColor);
+                                                    String path = listResult.get(labelCount - 3);
+                                                    String name = getFileName(listResult.get(labelCount - 3));
+                                                    ImageIcon icon;
+                                                    if (isDirectory(path) || isFile(path)) {
+                                                        icon = (ImageIcon) GetIcon.getBigIcon(path);
+                                                        icon = changeIcon(icon, label1.getHeight() / 3, label1.getHeight() / 3);
+                                                        label1.setIcon(icon);
+                                                        label1.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
+                                                    } else {
+                                                        label1.setIcon(null);
+                                                        label1.setText("无效文件");
+                                                        search.addToRecycleBin(path);
+                                                    }
+                                                    path = listResult.get(labelCount - 2);
+                                                    name = getFileName(listResult.get(labelCount - 2));
+
+                                                    if (isDirectory(path) || isFile(path)) {
+                                                        icon = (ImageIcon) GetIcon.getBigIcon(path);
+                                                        icon = changeIcon(icon, label1.getHeight() / 3, label1.getHeight() / 3);
+                                                        label2.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
+                                                        label2.setIcon(icon);
+                                                    } else {
+                                                        label2.setIcon(null);
+                                                        label2.setText("无效文件");
+                                                        search.addToRecycleBin(path);
+                                                    }
+                                                    path = listResult.get(labelCount - 1);
+                                                    name = getFileName(listResult.get(labelCount - 1));
+
+
+                                                    if (isDirectory(path) || isFile(path)) {
+                                                        icon = (ImageIcon) GetIcon.getBigIcon(path);
+                                                        icon = changeIcon(icon, label1.getHeight() / 3, label1.getHeight() / 3);
+                                                        label3.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
+                                                        label3.setIcon(icon);
+                                                    } else {
+                                                        label3.setIcon(null);
+                                                        label3.setText("无效文件");
+                                                        search.addToRecycleBin(path);
+                                                    }
+                                                    path = listResult.get(labelCount);
+                                                    name = getFileName(listResult.get(labelCount));
+
+
+                                                    if (isDirectory(path) || isFile(path)) {
+                                                        icon = (ImageIcon) GetIcon.getBigIcon(path);
+                                                        icon = changeIcon(icon, label1.getHeight() / 3, label1.getHeight() / 3);
+                                                        label4.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
+                                                        label4.setIcon(icon);
+                                                    } else {
+                                                        label4.setIcon(null);
+                                                        label4.setText("无效文件");
+                                                        search.addToRecycleBin(path);
+                                                    }
+                                                    break;
                                             }
-                                            try {
-                                                String text = label4.getText();
-                                                if (text.equals("")) {
-                                                    label4.setBackground(null);
-                                                } else {
+                                        } else {
+                                            switch (position) {
+                                                case 0:
+                                                    //到达了最上端，刷新显示
+                                                    label1.setBackground(labelColor);
+                                                    label2.setBackground(backgroundColor);
+                                                    label3.setBackground(backgroundColorLight);
                                                     label4.setBackground(backgroundColor);
-                                                }
-                                            } catch (NullPointerException e) {
-                                                label4.setBackground(null);
-                                            }
-                                        } else if (2 == labelCount) {
-                                            label1.setBackground(backgroundColorLight);
-                                            label2.setBackground(backgroundColor);
-                                            label3.setBackground(labelColor);
-                                            try {
-                                                String text = label4.getText();
-                                                if (text.equals("")) {
-                                                    label4.setBackground(null);
-                                                } else {
+                                                    String command = listResult.get(labelCount);
+                                                    String[] info = semicolon.split(command);
+                                                    String path = info[1];
+                                                    String name = info[0];
+                                                    label1.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
+
+                                                    command = listResult.get(labelCount + 1);
+                                                    info = semicolon.split(command);
+                                                    path = info[1];
+                                                    name = info[0];
+                                                    label2.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
+
+                                                    command = listResult.get(labelCount + 2);
+                                                    info = semicolon.split(command);
+                                                    path = info[1];
+                                                    name = info[0];
+                                                    label3.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
+
+                                                    command = listResult.get(labelCount + 3);
+                                                    info = semicolon.split(command);
+                                                    path = info[1];
+                                                    name = info[0];
+                                                    label4.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
+                                                    break;
+                                                case 1:
+                                                    label1.setBackground(labelColor);
+                                                    label2.setBackground(backgroundColor);
+                                                    label3.setBackground(backgroundColorLight);
                                                     label4.setBackground(backgroundColor);
-                                                }
-                                            } catch (NullPointerException e) {
-                                                label4.setBackground(null);
+                                                    break;
+                                                case 2:
+                                                    label1.setBackground(backgroundColorLight);
+                                                    label2.setBackground(labelColor);
+                                                    label3.setBackground(backgroundColorLight);
+                                                    label4.setBackground(backgroundColor);
+                                                    break;
+                                                case 3:
+                                                    label1.setBackground(backgroundColorLight);
+                                                    label2.setBackground(backgroundColor);
+                                                    label3.setBackground(labelColor);
+                                                    label4.setBackground(backgroundColor);
+                                                    break;
+                                                case 4:
+                                                    label1.setBackground(backgroundColorLight);
+                                                    label2.setBackground(backgroundColor);
+                                                    label3.setBackground(backgroundColorLight);
+                                                    label4.setBackground(labelColor);
+                                                    break;
                                             }
                                         }
-                                    } else {
-                                        //到达最下端
-                                        label1.setBackground(backgroundColorLight);
-                                        label2.setBackground(backgroundColor);
-                                        label3.setBackground(backgroundColorLight);
-                                        label4.setBackground(labelColor);
-                                        String command = listResult.get(labelCount - 3);
-                                        String[] info = semicolon.split(command);
-                                        String path = info[1];
-                                        String name = info[0];
-                                        label1.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
+                                    } catch (NullPointerException ignored) {
 
-                                        command = listResult.get(labelCount - 2);
-                                        info = semicolon.split(command);
-                                        path = info[1];
-                                        name = info[0];
-                                        label2.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
-
-                                        command = listResult.get(labelCount - 1);
-                                        info = semicolon.split(command);
-                                        path = info[1];
-                                        name = info[0];
-                                        label3.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
-
-                                        command = listResult.get(labelCount);
-                                        info = semicolon.split(command);
-                                        path = info[1];
-                                        name = info[0];
-                                        label4.setText("<html><body>" + name + "<br>" + ">>>" + path + "</body></html>");
                                     }
                                 }
                             }
@@ -1370,7 +1740,7 @@ public class SearchBar {
                                             if (isExist(each)) {
                                                 listResult.add(each);
                                                 if (listResult.size() > 100) {
-                                                    break;
+                                                    return;
                                                 }
                                             }
                                         }
@@ -1382,7 +1752,7 @@ public class SearchBar {
                                             if (isExist(each)) {
                                                 listResult.add(each);
                                                 if (listResult.size() > 100) {
-                                                    break;
+                                                    return;
                                                 }
                                             }
                                         }
@@ -1394,7 +1764,7 @@ public class SearchBar {
                                             if (isExist(each)) {
                                                 listResult.add(each);
                                                 if (listResult.size() > 100) {
-                                                    break;
+                                                    return;
                                                 }
                                             }
                                         }
@@ -1407,7 +1777,7 @@ public class SearchBar {
                                                 if (isExist(each)) {
                                                     listResult.add(each);
                                                     if (listResult.size() > 100) {
-                                                        break;
+                                                        return;
                                                     }
                                                 }
                                             }
@@ -1419,10 +1789,9 @@ public class SearchBar {
                                         if (isFile(each)) {
                                             if (!listResult.contains(each)) {
                                                 if (isExist(each)) {
-
                                                     listResult.add(each);
                                                     if (listResult.size() > 100) {
-                                                        break;
+                                                        return;
                                                     }
                                                 }
                                             }
@@ -1434,7 +1803,7 @@ public class SearchBar {
                                         if (isExist(each)) {
                                             listResult.add(each);
                                             if (listResult.size() > 100) {
-                                                break;
+                                                return;
                                             }
                                         }
                                     }
