@@ -337,7 +337,7 @@ public class MainClass {
         try {
             JSONObject info = SettingsFrame.getInfo();
             String latestVersion = info.getString("version");
-            if (!latestVersion.equals(version)) {
+            if (Double.parseDouble(latestVersion) > Double.parseDouble(version)) {
                 showMessage("提示", "有新版本可更新");
             }
         } catch (IOException ignored) {
