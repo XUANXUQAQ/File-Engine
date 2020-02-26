@@ -325,10 +325,10 @@ public class SettingsFrame {
                 "8.在搜索框中输入  : help  查看帮助\n" +
                 "9.在设置中可以自定义命令，在搜索框中输入  : 自定义标识  运行自己的命令\n" +
                 "10.在输入的文件名后输入  : full  可全字匹配\n" +
-                "11.在输入的文件名后输入  : file  可只匹配文件\n" +
-                "12.在输入的文件名后输入  : folder  可只匹配文件夹\n" +
-                "13.在输入的文件名后输入  : filefull  可只匹配文件并全字匹配\n" +
-                "14.在输入的文件名后输入  : folderfull  可只匹配文件夹并全字匹配"));
+                "11.在输入的文件名后输入  : F  可只匹配文件\n" +
+                "12.在输入的文件名后输入  : D  可只匹配文件夹\n" +
+                "13.在输入的文件名后输入  : Ffull  可只匹配文件并全字匹配\n" +
+                "14.在输入的文件名后输入  : Dfull  可只匹配文件夹并全字匹配"));
         checkBoxAdmin.addActionListener(e -> isDefaultAdmin = checkBoxAdmin.isSelected());
         checkBoxLoseFocus.addActionListener(e -> isLoseFocusClose = checkBoxLoseFocus.isSelected());
         textFieldRunAsAdmin.addKeyListener(new KeyAdapter() {

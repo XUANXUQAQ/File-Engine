@@ -219,7 +219,7 @@ public class SearchBar {
                         label3.setForeground(fontColor);
                         label4.setForeground(fontColorWithCoverage);
                     }
-                    Thread.sleep(100);
+                    Thread.sleep(5);
                 }
             } catch (Exception ignored) {
 
@@ -357,10 +357,10 @@ public class SearchBar {
                                         "8.在搜索框中输入  : help  查看帮助\"\n" +
                                         "9.在设置中可以自定义命令，在搜索框中输入  : 自定义标识  运行自己的命令\n" +
                                         "10.在输入的文件名后输入  : full  可全字匹配\n" +
-                                        "11.在输入的文件名后输入  : file  可只匹配文件\n" +
-                                        "12.在输入的文件名后输入  : folder  可只匹配文件夹\n" +
-                                        "13.在输入的文件名后输入  : filefull  可只匹配文件并全字匹配\n" +
-                                        "14.在输入的文件名后输入  : folderfull  可只匹配文件夹并全字匹配");
+                                        "11.在输入的文件名后输入  : F  可只匹配文件\n" +
+                                        "12.在输入的文件名后输入  : D  可只匹配文件夹\n" +
+                                        "13.在输入的文件名后输入  : Ffull  可只匹配文件并全字匹配\n" +
+                                        "14.在输入的文件名后输入  : Dfull  可只匹配文件夹并全字匹配");
                             }
                             if (text.equals(":clearbin")) {
                                 clearLabel();
@@ -2060,7 +2060,7 @@ public class SearchBar {
                     if (search.isUsable()) {
                         if (isSubString(getFileName(each), searchText)) {
                             switch (searchCase) {
-                                case "FILE":
+                                case "F":
                                     if (isFile(each)) {
                                         if (!listResult.contains(each)) {
                                             if (isExist(each)) {
@@ -2072,7 +2072,7 @@ public class SearchBar {
                                         }
                                     }
                                     break;
-                                case "FOLDER":
+                                case "D":
                                     if (isDirectory(each)) {
                                         if (!listResult.contains(each)) {
                                             if (isExist(each)) {
@@ -2096,7 +2096,7 @@ public class SearchBar {
                                         }
                                     }
                                     break;
-                                case "FOLDERFULL":
+                                case "DFULL":
                                     if (getFileName(each).toLowerCase().equals(searchText.toLowerCase())) {
                                         if (isDirectory(each)) {
                                             if (!listResult.contains(each)) {
@@ -2110,7 +2110,7 @@ public class SearchBar {
                                         }
                                     }
                                     break;
-                                case "FILEFULL":
+                                case "FFULL":
                                     if (getFileName(each).toLowerCase().equals(searchText.toLowerCase())) {
                                         if (isFile(each)) {
                                             if (!listResult.contains(each)) {
@@ -2494,12 +2494,12 @@ public class SearchBar {
                                 if (!listResult.contains(cach)) {
                                     boolean fullMatched = eachCacheName.toLowerCase().equals(text.toLowerCase());
                                     switch (searchCase) {
-                                        case "FILE":
+                                        case "F":
                                             if (isFile(cach)) {
                                                 listResult.add(cach);
                                             }
                                             break;
-                                        case "FOLDER":
+                                        case "D":
                                             if (isDirectory(cach)) {
                                                 listResult.add(cach);
                                             }
@@ -2509,12 +2509,12 @@ public class SearchBar {
                                                 listResult.add(cach);
                                             }
                                             break;
-                                        case "FOLDERFULL":
+                                        case "DFULL":
                                             if (fullMatched && isDirectory(cach)) {
                                                 listResult.add(cach);
                                             }
                                             break;
-                                        case "FILEFULL":
+                                        case "FFULL":
                                             if (fullMatched && isFile(cach)) {
                                                 listResult.add(cach);
                                             }
@@ -2546,7 +2546,7 @@ public class SearchBar {
         if (!txt.equals("")) {
             srcText = srcText.toLowerCase();
             txt = txt.toLowerCase();
-            String[] keyWords = txt.split("\\|");
+            String[] keyWords = txt.split(";");
             for (String each : keyWords) {
                 if (!srcText.contains(each)) {
                     return false;
@@ -2572,12 +2572,12 @@ public class SearchBar {
                 for (File each : files) {
                     if (isSubString(getFileName(each.getAbsolutePath()), text)) {
                         switch (searchCase) {
-                            case "FILE":
+                            case "F":
                                 if (each.isFile()) {
                                     listResult.add(0, each.getAbsolutePath());
                                 }
                                 break;
-                            case "FOLDER":
+                            case "D":
                                 if (each.isDirectory()) {
                                     listResult.add(0, each.getAbsolutePath());
                                 }
@@ -2587,12 +2587,12 @@ public class SearchBar {
                                     listResult.add(0, each.getAbsolutePath());
                                 }
                                 break;
-                            case "FOLDERFULL":
+                            case "DFULL":
                                 if (each.getName().equals(text) && each.isDirectory()) {
                                     listResult.add(0, each.getAbsolutePath());
                                 }
                                 break;
-                            case "FILEFULL":
+                            case "FFULL":
                                 if (each.getName().equals(text) && each.isFile()) {
                                     listResult.add(0, each.getAbsolutePath());
                                 }
@@ -2612,12 +2612,12 @@ public class SearchBar {
                     for (File each : allFiles) {
                         if (isSubString(getFileName(each.getAbsolutePath()), text)) {
                             switch (searchCase) {
-                                case "FILE":
+                                case "F":
                                     if (each.isFile()) {
                                         listResult.add(0, each.getAbsolutePath());
                                     }
                                     break;
-                                case "FOLDER":
+                                case "D":
                                     if (each.isDirectory()) {
                                         listResult.add(0, each.getAbsolutePath());
                                     }
@@ -2627,12 +2627,12 @@ public class SearchBar {
                                         listResult.add(0, each.getAbsolutePath());
                                     }
                                     break;
-                                case "FOLDERFULL":
+                                case "DFULL":
                                     if (each.getName().toLowerCase().equals(text.toLowerCase()) && each.isDirectory()) {
                                         listResult.add(0, each.getAbsolutePath());
                                     }
                                     break;
-                                case "FILEFULL":
+                                case "FFULL":
                                     if (each.getName().toLowerCase().equals(text.toLowerCase()) && each.isFile()) {
                                         listResult.add(0, each.getAbsolutePath());
                                     }
