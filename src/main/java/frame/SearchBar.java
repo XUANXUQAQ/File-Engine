@@ -2330,18 +2330,10 @@ public class SearchBar {
         File name = new File(path);
         if (name.exists()) {
             try {
-                try {
-                    String command = name.getAbsolutePath();
-                    String start = command.substring(0, 2);
-                    String end = "\"" + command.substring(2) + "\"";
-                    Runtime.getRuntime().exec(start + end, null, name.getParentFile());
-                } catch (IOException e) {
-                    Desktop desktop;
-                    if (Desktop.isDesktopSupported()) {
-                        desktop = Desktop.getDesktop();
-                        desktop.open(name);
-                    }
-                }
+                String command = name.getAbsolutePath();
+                String start = "cmd /c start " + command.substring(0, 2);
+                String end = "\"" + command.substring(2) + "\"";
+                Runtime.getRuntime().exec(start + end, null, name.getParentFile());
             } catch (IOException e) {
                 //打开上级文件夹
                 try {
