@@ -826,7 +826,7 @@ public class SettingsFrame {
         }
     }
 
-    class moveDesktopFiles implements Runnable {
+    static class moveDesktopFiles implements Runnable {
 
         @Override
         public void run() {
@@ -838,7 +838,6 @@ public class SettingsFrame {
             moveFiles moveFiles = new moveFiles();
             moveFiles.moveFolder(fileDesktop.toString(), fileBackUp.getAbsolutePath());
             moveFiles.moveFolder("C:\\Users\\Public\\Desktop", fileBackUp.getAbsolutePath());
-            searchObj.setUsable(false);
         }
     }
 }
