@@ -19,7 +19,7 @@ import java.util.concurrent.Executors;
 
 
 public class MainClass {
-    public static final String version = "1.2"; //TODO 更改版本号
+    public static final String version = "1.3"; //TODO 更改版本号
     public static boolean mainExit = false;
     public static String name;
     private static Search search = Search.getInstance();
