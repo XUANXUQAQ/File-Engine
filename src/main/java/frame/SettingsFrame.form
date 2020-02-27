@@ -287,7 +287,7 @@
               </component>
             </children>
           </grid>
-          <grid id="61eb8" layout-manager="GridLayoutManager" row-count="4" column-count="3" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+          <grid id="61eb8" layout-manager="GridLayoutManager" row-count="5" column-count="3" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
             <margin top="0" left="0" bottom="0" right="0"/>
             <constraints>
               <tabbedpane title="快捷键设置及帮助"/>
@@ -340,24 +340,6 @@
                   <editable value="false"/>
                 </properties>
               </component>
-              <component id="a65dc" class="javax.swing.JLabel" binding="labelOpenFolder">
-                <constraints>
-                  <grid row="3" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
-                </constraints>
-                <properties>
-                  <text value="打开上级文件夹："/>
-                </properties>
-              </component>
-              <component id="74e69" class="javax.swing.JTextField" binding="textFieldOpenLastFolder">
-                <constraints>
-                  <grid row="3" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
-                    <preferred-size width="150" height="-1"/>
-                  </grid>
-                </constraints>
-                <properties>
-                  <editable value="false"/>
-                </properties>
-              </component>
               <component id="29dc0" class="javax.swing.JButton" binding="buttonHelp">
                 <constraints>
                   <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
@@ -371,6 +353,42 @@
                   <grid row="1" column="2" row-span="1" col-span="1" vsize-policy="1" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
                 </constraints>
               </hspacer>
+              <component id="fba2f" class="javax.swing.JLabel" binding="labelCopyPath">
+                <constraints>
+                  <grid row="4" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                </constraints>
+                <properties>
+                  <text value="复制路径："/>
+                </properties>
+              </component>
+              <component id="74e69" class="javax.swing.JTextField" binding="textFieldOpenLastFolder">
+                <constraints>
+                  <grid row="3" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
+                    <preferred-size width="150" height="-1"/>
+                  </grid>
+                </constraints>
+                <properties>
+                  <editable value="false"/>
+                </properties>
+              </component>
+              <component id="a65dc" class="javax.swing.JLabel" binding="labelOpenFolder">
+                <constraints>
+                  <grid row="3" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                </constraints>
+                <properties>
+                  <text value="打开上级文件夹："/>
+                </properties>
+              </component>
+              <component id="a02fc" class="javax.swing.JTextField" binding="textFieldCopyPath">
+                <constraints>
+                  <grid row="4" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
+                    <preferred-size width="150" height="-1"/>
+                  </grid>
+                </constraints>
+                <properties>
+                  <editable value="false"/>
+                </properties>
+              </component>
             </children>
           </grid>
           <grid id="42c04" layout-manager="GridLayoutManager" row-count="3" column-count="2" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
@@ -420,7 +438,7 @@
               </component>
             </children>
           </grid>
-          <grid id="9b15a" layout-manager="GridLayoutManager" row-count="10" column-count="6" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+          <grid id="9b15a" layout-manager="GridLayoutManager" row-count="10" column-count="7" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
             <margin top="0" left="0" bottom="0" right="0"/>
             <constraints>
               <tabbedpane title="关于"/>
@@ -430,7 +448,7 @@
             <children>
               <component id="7a3c1" class="javax.swing.JLabel" binding="labelPlaceHolder13">
                 <constraints>
-                  <grid row="9" column="5" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                  <grid row="9" column="6" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
                   <text value=""/>
@@ -438,7 +456,7 @@
               </component>
               <component id="ed1b3" class="javax.swing.JLabel" binding="labelPlaceHolder12">
                 <constraints>
-                  <grid row="8" column="5" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                  <grid row="8" column="6" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
                   <text value=""/>
@@ -470,7 +488,7 @@
               </component>
               <component id="99d1a" class="javax.swing.JLabel" binding="labelGithubIssue">
                 <constraints>
-                  <grid row="6" column="2" row-span="1" col-span="2" vsize-policy="0" hsize-policy="0" anchor="9" fill="0" indent="0" use-parent-layout="false"/>
+                  <grid row="6" column="2" row-span="1" col-span="3" vsize-policy="0" hsize-policy="0" anchor="9" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
                   <text value="如果发现bug或想建议新功能的欢迎到GitHub反馈"/>
@@ -478,7 +496,7 @@
               </component>
               <component id="eec39" class="javax.swing.JLabel" binding="labelGitHubTip">
                 <constraints>
-                  <grid row="3" column="2" row-span="1" col-span="2" vsize-policy="0" hsize-policy="0" anchor="10" fill="0" indent="0" use-parent-layout="false"/>
+                  <grid row="3" column="2" row-span="1" col-span="3" vsize-policy="0" hsize-policy="0" anchor="10" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
                   <text value="这是一个开源软件，GitHub："/>
@@ -486,7 +504,7 @@
               </component>
               <component id="feea4" class="javax.swing.JLabel" binding="labelAboutGithub">
                 <constraints>
-                  <grid row="4" column="2" row-span="1" col-span="2" vsize-policy="0" hsize-policy="0" anchor="9" fill="0" indent="0" use-parent-layout="false"/>
+                  <grid row="4" column="2" row-span="1" col-span="3" vsize-policy="0" hsize-policy="0" anchor="9" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
                   <text value="label"/>
@@ -494,12 +512,12 @@
               </component>
               <vspacer id="6c7f0">
                 <constraints>
-                  <grid row="7" column="3" row-span="1" col-span="1" vsize-policy="6" hsize-policy="1" anchor="0" fill="2" indent="0" use-parent-layout="false"/>
+                  <grid row="7" column="3" row-span="1" col-span="2" vsize-policy="6" hsize-policy="1" anchor="0" fill="2" indent="0" use-parent-layout="false"/>
                 </constraints>
               </vspacer>
               <component id="5c642" class="javax.swing.JLabel" binding="labelPalceHolder5">
                 <constraints>
-                  <grid row="0" column="2" row-span="1" col-span="2" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                  <grid row="0" column="2" row-span="1" col-span="3" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
                   <text value=""/>
@@ -507,7 +525,7 @@
               </component>
               <component id="ebecd" class="javax.swing.JLabel" binding="labelPlaceHolder16">
                 <constraints>
-                  <grid row="2" column="2" row-span="1" col-span="2" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                  <grid row="2" column="2" row-span="1" col-span="3" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
                   <text value=""/>
@@ -515,7 +533,7 @@
               </component>
               <component id="94133" class="javax.swing.JLabel" binding="labelPlaceHolder17">
                 <constraints>
-                  <grid row="5" column="2" row-span="1" col-span="2" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                  <grid row="5" column="2" row-span="1" col-span="3" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
                   <text value=""/>
@@ -523,7 +541,7 @@
               </component>
               <hspacer id="5487b">
                 <constraints>
-                  <grid row="6" column="4" row-span="1" col-span="1" vsize-policy="1" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                  <grid row="6" column="5" row-span="1" col-span="1" vsize-policy="1" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
                 </constraints>
               </hspacer>
               <component id="730b5" class="javax.swing.JButton" binding="buttonCheckUpdate">
@@ -532,6 +550,14 @@
                 </constraints>
                 <properties>
                   <text value="检查更新"/>
+                </properties>
+              </component>
+              <component id="10a7" class="javax.swing.JLabel" binding="labelVersion">
+                <constraints>
+                  <grid row="1" column="4" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                </constraints>
+                <properties>
+                  <text value=""/>
                 </properties>
               </component>
             </children>

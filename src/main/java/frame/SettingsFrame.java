@@ -32,6 +32,8 @@ public class SettingsFrame {
     public static boolean isLoseFocusClose;
     public static int openLastFolderKeyCode;
     public static int runAsAdminKeyCode;
+    public static int copyPathKeyCode;
+    private static int _copyPathKeyCode;
     public static File tmp = new File("tmp");
     public static File settings = new File("./user/settings.json");
     public static HashSet<String> cmdSet = new HashSet<>();
@@ -99,7 +101,10 @@ public class SettingsFrame {
     private JLabel labelPlaceHolder16;
     private JLabel labelPlaceHolder17;
     private JButton buttonCheckUpdate;
-    private boolean isStartup;
+    private JLabel labelCopyPath;
+    private JTextField textFieldCopyPath;
+    private JLabel labelVersion;
+    private static boolean isStartup;
     private Unzip unzipInstance = Unzip.getInstance();
     private Thread updateThread = null;
 
@@ -109,7 +114,6 @@ public class SettingsFrame {
         labelIcon.setIcon(imageIcon);
         checkBox1.addActionListener(e -> {
             setStartup(checkBox1.isSelected());
-
         });
         buttonSaveAndRemoveDesktop.addActionListener(e -> {
             String currentFolder = new File("").getAbsolutePath();
@@ -260,6 +264,7 @@ public class SettingsFrame {
 
             }
         });
+        labelVersion.setText("当前版本：" + MainClass.version);
         try (BufferedReader buffR = new BufferedReader(new FileReader(settings))) {
             String line;
             StringBuilder result = new StringBuilder();
@@ -309,6 +314,13 @@ public class SettingsFrame {
                 textFieldOpenLastFolder.setText("Shift + Enter");
             } else if (openLastFolderKeyCode == 18) {
                 textFieldOpenLastFolder.setText("Alt + Enter");
+            }
+            if (copyPathKeyCode == 17) {
+                textFieldCopyPath.setText("Ctrl + Enter");
+            } else if (copyPathKeyCode == 16) {
+                textFieldCopyPath.setText("Shift + Enter");
+            } else if (copyPathKeyCode == 18) {
+                textFieldCopyPath.setText("Alt + Enter");
             }
             listCmds.setListData(cmdSet.toArray());
         } catch (IOException ignored) {
@@ -418,6 +430,22 @@ public class SettingsFrame {
                 updateThread.start();
             }
         });
+        textFieldCopyPath.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                int code = e.getKeyCode();
+                if (code == 17) {
+                    textFieldCopyPath.setText("Ctrl + Enter");
+                    _copyPathKeyCode = 17;
+                } else if (code == 16) {
+                    textFieldCopyPath.setText("Shift + Enter");
+                    _copyPathKeyCode = 16;
+                } else if (code == 18) {
+                    textFieldCopyPath.setText("Alt + Enter");
+                    _copyPathKeyCode = 18;
+                }
+            }
+        });
     }
 
     private boolean isRepeatCommand(String name) {
@@ -455,31 +483,107 @@ public class SettingsFrame {
                 result.append(line);
             }
             JSONObject settings = JSON.parseObject(result.toString());
-            cacheNumLimit = settings.getInteger("cacheNumLimit");
-            hotkey = settings.getString("hotkey");
-            HotKeyListener = CheckHotKey.getInstance();
-            dataPath = settings.getString("dataPath");
-            priorityFolder = settings.getString("priorityFolder");
-            searchDepth = settings.getInteger("searchDepth");
-            ignorePath = settings.getString("ignorePath");
-            updateTimeLimit = settings.getInteger("updateTimeLimit");
-            isDefaultAdmin = settings.getBoolean("isDefaultAdmin");
-            isLoseFocusClose = settings.getBoolean("isLoseFocusClose");
-            openLastFolderKeyCode = settings.getInteger("openLastFolderKeyCode");
-            _openLastFolderKeyCode = openLastFolderKeyCode;
-            runAsAdminKeyCode = settings.getInteger("runAsAdminKeyCode");
-            _runAsAdminKeyCode = runAsAdminKeyCode;
-            File data = new File(dataPath);
-            if (!data.exists()) {
-                MainClass.showMessage("提示", "检测到缓存不存在，正在重新搜索");
-                data = new File("data");
-                dataPath = data.getAbsolutePath();
-                new SettingsFrame().saveChangesWithoutPrompt();
-                Search.getInstance().setManualUpdate(true);
+            if (settings.containsKey("isStartup")) {
+                isStartup = settings.getBoolean("isStartup");
+            } else {
+                isStartup = false;
             }
-        } catch (Exception ignored) {
+            if (settings.containsKey("cacheNumLimit")) {
+                cacheNumLimit = settings.getInteger("cacheNumLimit");
+            } else {
+                cacheNumLimit = 1000;
+            }
+            if (settings.containsKey("hotkey")) {
+                hotkey = settings.getString("hotkey");
+            } else {
+                hotkey = "Ctrl + Alt + J";
+            }
+            HotKeyListener = CheckHotKey.getInstance();
+            HotKeyListener.registerHotkey(hotkey);
+            if (settings.containsKey("dataPath")) {
+                dataPath = settings.getString("dataPath");
+                File data = new File(dataPath);
+                if (!data.exists()) {
+                    MainClass.showMessage("提示", "检测到缓存不存在，正在重新搜索");
+                    data = new File("data");
+                    dataPath = data.getAbsolutePath();
+                    Search.getInstance().setManualUpdate(true);
+                }
+            } else {
+                dataPath = new File("data").getAbsolutePath();
+            }
+            if (settings.containsKey("priorityFolder")) {
+                priorityFolder = settings.getString("priorityFolder");
+            } else {
+                priorityFolder = "";
+            }
+            if (settings.containsKey("searchDepth")) {
+                searchDepth = settings.getInteger("searchDepth");
+            } else {
+                searchDepth = 6;
+            }
+            if (settings.containsKey("ignorePath")) {
+                ignorePath = settings.getString("ignorePath");
+            } else {
+                ignorePath = "C:\\Windows,";
+            }
+            if (settings.containsKey("updateTimeLimit")) {
+                updateTimeLimit = settings.getInteger("updateTimeLimit");
+            } else {
+                updateTimeLimit = 5;
+            }
+            if (settings.containsKey("isDefaultAdmin")) {
+                isDefaultAdmin = settings.getBoolean("isDefaultAdmin");
+            } else {
+                isDefaultAdmin = false;
+            }
+            if (settings.containsKey("isLoseFocusClose")) {
+                isLoseFocusClose = settings.getBoolean("isLoseFocusClose");
+            } else {
+                isLoseFocusClose = true;
+            }
+            if (settings.containsKey("openLastFolderKeyCode")) {
+                openLastFolderKeyCode = settings.getInteger("openLastFolderKeyCode");
+            } else {
+                openLastFolderKeyCode = 17;
+            }
+            _openLastFolderKeyCode = openLastFolderKeyCode;
+            if (settings.containsKey("runAsAdminKeyCode")) {
+                runAsAdminKeyCode = settings.getInteger("runAsAdminKeyCode");
+            } else {
+                runAsAdminKeyCode = 16;
+            }
+            _runAsAdminKeyCode = runAsAdminKeyCode;
+            if (settings.containsKey("copyPathKeyCode")) {
+                copyPathKeyCode = settings.getInteger("copyPathKeyCode");
+            } else {
+                copyPathKeyCode = 18;
+            }
+            _copyPathKeyCode = copyPathKeyCode;
+        } catch (NullPointerException | IOException ignored) {
 
         }
+
+        JSONObject allSettings = new JSONObject();
+        allSettings.put("hotkey", hotkey);
+        allSettings.put("isStartup", isStartup);
+        allSettings.put("cacheNumLimit", cacheNumLimit);
+        allSettings.put("updateTimeLimit", updateTimeLimit);
+        allSettings.put("ignorePath", ignorePath);
+        allSettings.put("searchDepth", searchDepth);
+        allSettings.put("priorityFolder", priorityFolder);
+        allSettings.put("dataPath", dataPath);
+        allSettings.put("isDefaultAdmin", isDefaultAdmin);
+        allSettings.put("isLoseFocusClose", isLoseFocusClose);
+        allSettings.put("runAsAdminKeyCode", runAsAdminKeyCode);
+        allSettings.put("openLastFolderKeyCode", openLastFolderKeyCode);
+        allSettings.put("copyPathKeyCode", copyPathKeyCode);
+        try (BufferedWriter buffW = new BufferedWriter(new FileWriter(settings))) {
+            buffW.write(allSettings.toJSONString());
+        } catch (IOException ignored) {
+
+        }
+
         //获取所有自定义命令
         try (BufferedReader br = new BufferedReader(new FileReader(new File("./user/cmds.txt")))) {
             String each;
@@ -493,16 +597,16 @@ public class SettingsFrame {
 
     private void update() {
         JSONObject updateInfo;
-        String updateVersion;
+        String latestVersion;
         try {
             updateInfo = getInfo();
-            updateVersion = updateInfo.getString("version");
+            latestVersion = updateInfo.getString("version");
         } catch (IOException e1) {
             JOptionPane.showMessageDialog(null, "检查更新失败");
             return;
         }
-        if (Double.parseDouble(updateVersion) > Double.parseDouble(MainClass.version)) {
-            int result = JOptionPane.showConfirmDialog(null, "有新版本" + updateVersion + "，是否更新");
+        if (Double.parseDouble(latestVersion) > Double.parseDouble(MainClass.version)) {
+            int result = JOptionPane.showConfirmDialog(null, "有新版本" + latestVersion + "，是否更新");
             if (result == 0) {
                 //开始更新,下载更新文件到tmp
                 String urlChoose;
@@ -533,7 +637,7 @@ public class SettingsFrame {
                 }
             }
         } else {
-            JOptionPane.showMessageDialog(null, "当前版本已是最新");
+            JOptionPane.showMessageDialog(null, "最新版本：" + latestVersion + "\n当前版本已是最新");
         }
     }
 
@@ -541,95 +645,6 @@ public class SettingsFrame {
         frame.setVisible(false);
     }
 
-    private void saveChangesWithoutPrompt() {
-        JSONObject allSettings = new JSONObject();
-        String MaxUpdateTime = textFieldUpdateTime.getText();
-        try {
-            updateTimeLimit = Integer.parseInt(MaxUpdateTime);
-        } catch (Exception e1) {
-            updateTimeLimit = -1; // 输入不正确
-        }
-        if (updateTimeLimit > 3600 || updateTimeLimit <= 0) {
-            JOptionPane.showMessageDialog(null, "文件索引更新设置错误，请更改");
-            return;
-        }
-        isStartup = checkBox1.isSelected();
-        String MaxCacheNum = textFieldCacheNum.getText();
-        try {
-            cacheNumLimit = Integer.parseInt(MaxCacheNum);
-        } catch (Exception e1) {
-            cacheNumLimit = -1;
-        }
-        if (cacheNumLimit > 10000 || cacheNumLimit <= 0) {
-            JOptionPane.showMessageDialog(null, "缓存容量设置错误，请更改");
-            return;
-        }
-        ignorePath = textAreaIgnorePath.getText();
-        ignorePath = ignorePath.replaceAll("\n", "");
-        if (!ignorePath.toLowerCase().contains("c:\\windows")) {
-            ignorePath = ignorePath + "C:\\Windows,";
-        }
-        try {
-            searchDepth = Integer.parseInt(textFieldSearchDepth.getText());
-        } catch (Exception e1) {
-            searchDepth = -1;
-        }
-
-        if (searchDepth > 10 || searchDepth <= 0) {
-            JOptionPane.showMessageDialog(null, "搜索深度设置错误，请更改");
-            return;
-        }
-
-        String _hotkey = textFieldHotkey.getText();
-        if (_hotkey.length() == 1) {
-            JOptionPane.showMessageDialog(null, "快捷键设置错误");
-            return;
-        } else {
-            if (!(64 < _hotkey.charAt(_hotkey.length() - 1) && _hotkey.charAt(_hotkey.length() - 1) < 91)) {
-                JOptionPane.showMessageDialog(null, "快捷键设置错误");
-                return;
-            }
-        }
-        if (_openLastFolderKeyCode == _runAsAdminKeyCode) {
-            JOptionPane.showMessageDialog(null, "打开上级文件夹快捷键与以管理员方式运行快捷键冲突");
-            return;
-        } else {
-            openLastFolderKeyCode = _openLastFolderKeyCode;
-            runAsAdminKeyCode = _runAsAdminKeyCode;
-        }
-        priorityFolder = textFieldPriorityFolder.getText();
-        dataPath = textFieldDataPath.getText();
-        hotkey = textFieldHotkey.getText();
-        HotKeyListener.registerHotkey(hotkey);
-        allSettings.put("hotkey", hotkey);
-        allSettings.put("isStartup", isStartup);
-        allSettings.put("cacheNumLimit", cacheNumLimit);
-        allSettings.put("updateTimeLimit", updateTimeLimit);
-        allSettings.put("ignorePath", ignorePath);
-        allSettings.put("searchDepth", searchDepth);
-        allSettings.put("priorityFolder", priorityFolder);
-        allSettings.put("dataPath", dataPath);
-        allSettings.put("isDefaultAdmin", isDefaultAdmin);
-        allSettings.put("isLoseFocusClose", isLoseFocusClose);
-        allSettings.put("runAsAdminKeyCode", runAsAdminKeyCode);
-        allSettings.put("openLastFolderKeyCode", openLastFolderKeyCode);
-        try (BufferedWriter buffW = new BufferedWriter(new FileWriter(settings))) {
-            buffW.write(allSettings.toJSONString());
-        } catch (IOException ignored) {
-
-        }
-        //保存自定义命令
-        StringBuilder strb = new StringBuilder();
-        for (String each : cmdSet) {
-            strb.append(each);
-            strb.append("\n");
-        }
-        try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File("./user/cmds.txt")))) {
-            bw.write(strb.toString());
-        } catch (IOException ignored) {
-
-        }
-    }
 
     public boolean isSettingsVisible() {
         return frame.isVisible();
@@ -699,12 +714,13 @@ public class SettingsFrame {
                     return;
                 }
             }
-            if (_openLastFolderKeyCode == _runAsAdminKeyCode) {
-                JOptionPane.showMessageDialog(null, "打开上级文件夹快捷键与以管理员方式运行快捷键冲突");
+            if (_openLastFolderKeyCode == _runAsAdminKeyCode || _openLastFolderKeyCode == _copyPathKeyCode || _runAsAdminKeyCode == _copyPathKeyCode) {
+                JOptionPane.showMessageDialog(null, "快捷键冲突");
                 return;
             } else {
                 openLastFolderKeyCode = _openLastFolderKeyCode;
                 runAsAdminKeyCode = _runAsAdminKeyCode;
+                copyPathKeyCode = _copyPathKeyCode;
             }
             priorityFolder = textFieldPriorityFolder.getText();
             dataPath = textFieldDataPath.getText();
@@ -722,9 +738,10 @@ public class SettingsFrame {
             allSettings.put("isLoseFocusClose", isLoseFocusClose);
             allSettings.put("runAsAdminKeyCode", runAsAdminKeyCode);
             allSettings.put("openLastFolderKeyCode", openLastFolderKeyCode);
+            allSettings.put("copyPathKeyCode", copyPathKeyCode);
             try (BufferedWriter buffW = new BufferedWriter(new FileWriter(settings))) {
                 buffW.write(allSettings.toJSONString());
-                JOptionPane.showMessageDialog(null, "保存成功"); //将设置保存
+                JOptionPane.showMessageDialog(null, "保存成功");
             } catch (IOException ignored) {
 
             }
@@ -734,7 +751,7 @@ public class SettingsFrame {
                 strb.append(each);
                 strb.append("\n");
             }
-            try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File("./user/cmds.txt")))) {
+            try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File("user/cmds.txt")))) {
                 bw.write(strb.toString());
             } catch (IOException ignored) {
 
