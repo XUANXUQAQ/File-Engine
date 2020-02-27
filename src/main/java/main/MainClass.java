@@ -19,7 +19,7 @@ import java.util.concurrent.Executors;
 
 
 public class MainClass {
-    public static final String version = "1.3"; //TODO 更改版本号
+    public static final String version = "1.4"; //TODO 更改版本号
     public static boolean mainExit = false;
     public static String name;
     private static Search search = Search.getInstance();
@@ -135,15 +135,15 @@ public class MainClass {
             for (File i : files) {
                 if (i.getName().startsWith("_File-Engine")) {
                     isCopied = true;
-                    new File("./user/update").delete();
+                    new File("user/update").delete();
                 }
             }
             if (!isCopied) {
                 try {
-                    new File("./user/fileMonitor.dll").delete();
-                    new File("./user/fileSearcher.exe").delete();
-                    new File("./user/getAscII.dll").delete();
-                    new File("./user/fileOpener.exe").delete();
+                    new File("user/fileMonitor.dll").delete();
+                    new File("user/fileSearcher.exe").delete();
+                    new File("user/getAscII.dll").delete();
+                    new File("user/fileOpener.exe").delete();
                     File originFile = new File(name);
                     File updated = new File("_" + name);
                     copyFile(new FileInputStream(originFile), updated);
@@ -206,6 +206,7 @@ public class MainClass {
             json.put("isLoseFocusClose", true);
             json.put("openLastFolderKeyCode", 17);
             json.put("runAsAdminKeyCode", 16);
+            json.put("copyPathKeyCode", 18);
             try (BufferedWriter buffW = new BufferedWriter(new FileWriter(settings))) {
                 buffW.write(json.toJSONString());
             } catch (IOException ignored) {
@@ -454,7 +455,7 @@ public class MainClass {
 
             }
             if (mainExit) {
-                CheckHotKey.getInstance().unregisterHotkey();
+                CheckHotKey.getInstance().unRegisterHotkey();
                 File CLOSEDLL = new File(SettingsFrame.tmp.getAbsolutePath() + "\\CLOSE");
                 try {
                     CLOSEDLL.createNewFile();

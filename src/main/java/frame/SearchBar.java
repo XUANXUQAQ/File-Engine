@@ -10,6 +10,9 @@ import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.*;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Transferable;
 import java.awt.event.*;
 import java.io.*;
 import java.net.URL;
@@ -50,6 +53,7 @@ public class SearchBar {
     private boolean isLockMouseMotion = false;
     private JPanel panel = new JPanel();
     private long mouseWheelTime = 0;
+    private boolean isCopyPathPressed = false;
 
 
     private SearchBar() {
@@ -152,35 +156,29 @@ public class SearchBar {
 
         fixedThreadPool.execute(() -> {
             //锁住MouseMotion检测，阻止同时出发两个动作
-            while (!mainExit) {
-                if (System.currentTimeMillis() - mouseWheelTime > 500) {
-                    isLockMouseMotion = false;
-                }
-
-                try {
+            try {
+                while (!mainExit) {
+                    if (System.currentTimeMillis() - mouseWheelTime > 500) {
+                        isLockMouseMotion = false;
+                    }
                     Thread.sleep(5);
-                } catch (InterruptedException ignored) {
-
                 }
+            } catch (Exception ignored) {
+
             }
         });
 
         //刷新屏幕线程
         fixedThreadPool.execute(() -> {
             Container contentPanel = searchBar.getContentPane();
-            while (!mainExit) {
-                try {
+            try {
+                while (!mainExit) {
                     contentPanel.repaint();
                     panel.repaint();
-                } catch (Exception ignored) {
-
-                } finally {
-                    try {
-                        Thread.sleep(100);
-                    } catch (InterruptedException ignored) {
-
-                    }
+                    Thread.sleep(100);
                 }
+            } catch (Exception ignored) {
+
             }
         });
 
@@ -1985,6 +1983,10 @@ public class SearchBar {
                                 }
                             } else if (SettingsFrame.isDefaultAdmin || isRunAsAdminPressed) {
                                 openWithAdmin(listResult.get(labelCount));
+                            } else if (isCopyPathPressed) {
+                                Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+                                Transferable trans = new StringSelection(listResult.get(labelCount));
+                                clipboard.setContents(trans, null);
                             } else {
                                 String openFile = listResult.get(labelCount);
                                 if (openFile.endsWith(".bat") || openFile.endsWith(".cmd")) {
@@ -2012,6 +2014,8 @@ public class SearchBar {
                     } else if (SettingsFrame.runAsAdminKeyCode == key) {
                         //以管理员方式运行热键被点击
                         isRunAsAdminPressed = true;
+                    } else if (SettingsFrame.copyPathKeyCode == key) {
+                        isCopyPathPressed = true;
                     }
                 }
             }
@@ -2024,6 +2028,8 @@ public class SearchBar {
                     isOpenLastFolderPressed = false;
                 } else if (SettingsFrame.runAsAdminKeyCode == key) {
                     isRunAsAdminPressed = false;
+                } else if (SettingsFrame.copyPathKeyCode == key) {
+                    isCopyPathPressed = false;
                 }
             }
 
@@ -2660,6 +2666,7 @@ public class SearchBar {
             textField.setText(null);
             isOpenLastFolderPressed = false;
             isRunAsAdminPressed = false;
+            isCopyPathPressed = false;
             try {
                 searchWaiter.interrupt();
             } catch (NullPointerException ignored) {

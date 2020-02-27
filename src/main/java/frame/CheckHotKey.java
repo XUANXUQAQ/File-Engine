@@ -41,7 +41,7 @@ public class CheckHotKey extends JFrame {
         JIntellitype.getInstance().registerHotKey(FUNC_KEY_MARK, sum, main.charAt(0));
     }
 
-    public void unregisterHotkey() {
+    public void unRegisterHotkey() {
         JIntellitype.getInstance().unregisterHotKey(FUNC_KEY_MARK);
     }
 
