@@ -30,9 +30,7 @@ public class TaskBar {
             PopupMenu popupMenu = new PopupMenu();
 
             MenuItem settings = new MenuItem("ÉèÖÃ");
-            settings.addActionListener(e -> {
-                settingsFrame.showWindow();
-            });
+            settings.addActionListener(e -> settingsFrame.showWindow());
             MenuItem close = new MenuItem("ÍË³ö");
             close.addActionListener(e -> closeAndExit());
             popupMenu.add(settings);

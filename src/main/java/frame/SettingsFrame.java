@@ -45,11 +45,10 @@ public class SettingsFrame {
     private JTextArea textAreaIgnorePath;
     private JTextField textFieldSearchDepth;
     private JCheckBox checkBox1;
+    private JFrame frame = new JFrame("…Ë÷√");
     private JLabel label3;
     private JLabel label1;
     private JLabel label2;
-    private Search searchObj = Search.getInstance();
-    private JFrame frame = new JFrame("…Ë÷√");
     private JLabel label4;
     private JLabel label5;
     private JLabel label6;
@@ -112,9 +111,7 @@ public class SettingsFrame {
         labelAboutGithub.setText("<html><a href='https://github.com/XUANXUQAQ/File-Engine'>File-Engine</a></html>");
         ImageIcon imageIcon = new ImageIcon(SettingsFrame.class.getResource("/icons/frame.png"));
         labelIcon.setIcon(imageIcon);
-        checkBox1.addActionListener(e -> {
-            setStartup(checkBox1.isSelected());
-        });
+        checkBox1.addActionListener(e -> setStartup(checkBox1.isSelected()));
         buttonSaveAndRemoveDesktop.addActionListener(e -> {
             String currentFolder = new File("").getAbsolutePath();
             if (currentFolder.equals(FileSystemView.getFileSystemView().getHomeDirectory().getAbsolutePath()) || currentFolder.equals("C:\\Users\\Public\\Desktop")) {
