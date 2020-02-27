@@ -2358,8 +2358,8 @@ public class SearchBar {
                 if (path.endsWith(".exe")) {
                     Runtime.getRuntime().exec("cmd /c runas /trustlevel:0x20000 \"" + name.getAbsolutePath() + "\"", null, name.getParentFile());
                 } else {
-                    File fileToOpen = new File("./user/fileToOpen.txt");
-                    File fileOpener = new File("./user/fileOpener.exe");
+                    File fileToOpen = new File("user/fileToOpen.txt");
+                    File fileOpener = new File("user/fileOpener.exe");
                     try (BufferedWriter buffw = new BufferedWriter(new FileWriter(fileToOpen))) {
                         buffw.write(name.getAbsolutePath() + "\n");
                         buffw.write(name.getParent());
@@ -2398,7 +2398,7 @@ public class SearchBar {
 
     private void saveCache(String content) {
         int cacheNum = 0;
-        File cache = new File("./user/cache.dat");
+        File cache = new File("user/cache.dat");
         StringBuilder oldCaches = new StringBuilder();
         boolean isRepeated;
         if (cache.exists()) {
@@ -2415,7 +2415,7 @@ public class SearchBar {
         if (cacheNum < SettingsFrame.cacheNumLimit) {
             isRepeated = isSubString(oldCaches.toString() + ";", (content));
             if (!isRepeated) {
-                try (BufferedWriter out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(new File("./user/cache.dat"), true)))) {
+                try (BufferedWriter out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(new File("user/cache.dat"), true)))) {
                     out.write(content + "\r\n");
                 } catch (Exception ignored) {
 
@@ -2425,7 +2425,7 @@ public class SearchBar {
     }
 
     private void delCacheRepeated() {
-        File cacheFile = new File("./user/cache.dat");
+        File cacheFile = new File("user/cache.dat");
         HashSet<String> set = new HashSet<>();
         StringBuilder allCaches = new StringBuilder();
         String eachLine;
@@ -2450,7 +2450,7 @@ public class SearchBar {
     }
 
     private void delCache(ArrayList<String> cache) {
-        File cacheFile = new File("./user/cache.dat");
+        File cacheFile = new File("user/cache.dat");
         StringBuilder allCaches = new StringBuilder();
         String eachLine;
         if (cacheFile.exists()) {
@@ -2478,7 +2478,7 @@ public class SearchBar {
         String cacheResult;
         boolean isCacheRepeated = false;
         ArrayList<String> cachesToDel = new ArrayList<>();
-        File cache = new File("./user/cache.dat");
+        File cache = new File("user/cache.dat");
         if (cache.exists()) {
             try (BufferedReader reader = new BufferedReader(new FileReader(cache))) {
                 while ((cacheResult = reader.readLine()) != null) {
