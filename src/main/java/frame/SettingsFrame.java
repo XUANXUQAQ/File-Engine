@@ -602,7 +602,8 @@ public class SettingsFrame {
             JOptionPane.showMessageDialog(null, "检查更新失败");
             return;
         }
-        if (Double.parseDouble(latestVersion) > Double.parseDouble(MainClass.version)) {
+        File test = new File("TEST");
+        if (Double.parseDouble(latestVersion) > Double.parseDouble(MainClass.version) || test.exists()) {
             int result = JOptionPane.showConfirmDialog(null, "有新版本" + latestVersion + "，是否更新");
             if (result == 0) {
                 //开始更新,下载更新文件到tmp
