@@ -4,12 +4,13 @@ import frame.SettingsFrame;
 
 import javax.swing.*;
 import java.awt.*;
-import java.io.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
 
 public class DownloadUpdate {
-    private boolean isUserInterruptDownload = false;
     private JFrame frame = new JFrame();
     private JProgressBar progressBar = new JProgressBar();
     private static DownloadUpdate downloadupdate = new DownloadUpdate();
@@ -22,7 +23,6 @@ public class DownloadUpdate {
         JPanel panel = new JPanel();
         JButton buttonCancel = new JButton();
         buttonCancel.addActionListener(e -> {
-            isUserInterruptDownload = true;
             frame.setVisible(false);
         });
         buttonCancel.setText("取消");
@@ -54,10 +54,9 @@ public class DownloadUpdate {
     public void downLoadFromUrl(String urlStr, String fileName, String savePath) throws Exception {
         System.setProperty("http.keepAlive", "false"); // must be set
         frame.setVisible(true);
-        isUserInterruptDownload = false;
         URL url = new URL(urlStr);
         URLConnection con = url.openConnection();
-        //设置超时间为3秒
+        //设置超时为3秒
         con.setConnectTimeout(3 * 1000);
         //防止屏蔽程序抓取而返回403错误
         con.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.116 Safari/537.36 Edg/80.0.361.57");
@@ -82,7 +81,7 @@ public class DownloadUpdate {
             progress += len;
             progressBar.setValue(progress);
             progressBar.setString("已下载：" + (int) (progressBar.getPercentComplete() * 100) + "%");
-            if (isUserInterruptDownload) {
+            if (!frame.isVisible()) {
                 fos.close();
                 throw new Exception("用户中断下载");
             }

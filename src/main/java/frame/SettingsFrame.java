@@ -620,7 +620,7 @@ public class SettingsFrame {
                 try {
                     download.downLoadFromUrl(updateInfo.getString(urlChoose), fileName, tmp.getAbsolutePath());
                 } catch (Exception e) {
-                    if (!e.equals(new Exception("用户中断下载"))) {
+                    if (!e.getMessage().equals("用户中断下载")) {
                         JOptionPane.showMessageDialog(null, "下载失败");
                     }
                     download.hideFrame();
