@@ -907,7 +907,7 @@ public class SearchBar {
                                                 icon1 = (ImageIcon) GetIcon.getBigIcon(path);
                                                 icon1 = changeIcon(icon1, label1.getHeight() / 3, label1.getHeight() / 3);
                                                 label1.setIcon(icon1);
-                                                label1.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
+                                                label1.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>>" + getParentPath(path) + "</font></body></html>");
                                             } else {
                                                 label1.setIcon(null);
                                                 label1.setText("无效文件");
@@ -919,7 +919,7 @@ public class SearchBar {
                                             if (isDirectory(path) || isFile(path)) {
                                                 icon1 = (ImageIcon) GetIcon.getBigIcon(path);
                                                 icon1 = changeIcon(icon1, label1.getHeight() / 3, label1.getHeight() / 3);
-                                                label2.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
+                                                label2.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>>" + getParentPath(path) + "</body></html>");
                                                 label2.setIcon(icon1);
                                             } else {
                                                 label2.setIcon(null);
@@ -933,7 +933,7 @@ public class SearchBar {
                                             if (isDirectory(path) || isFile(path)) {
                                                 icon1 = (ImageIcon) GetIcon.getBigIcon(path);
                                                 icon1 = changeIcon(icon1, label1.getHeight() / 3, label1.getHeight() / 3);
-                                                label3.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
+                                                label3.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>>" + getParentPath(path) + "</body></html>");
                                                 label3.setIcon(icon1);
                                             } else {
                                                 label3.setIcon(null);
@@ -947,7 +947,7 @@ public class SearchBar {
                                             if (isDirectory(path) || isFile(path)) {
                                                 icon1 = (ImageIcon) GetIcon.getBigIcon(path);
                                                 icon1 = changeIcon(icon1, label1.getHeight() / 3, label1.getHeight() / 3);
-                                                label4.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
+                                                label4.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>>" + getParentPath(path) + "</body></html>");
                                                 label4.setIcon(icon1);
                                             } else {
                                                 label4.setIcon(null);
@@ -1016,25 +1016,25 @@ public class SearchBar {
                                             String[] info = semicolon.split(command);
                                             String path = info[1];
                                             String name = info[0];
-                                            label1.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + ">>>" + path + "</body></html>");
+                                            label1.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br><font size=\"-1\">" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + ">>>" + path + "</body></html>");
 
                                             command = listResult.get(labelCount - 2);
                                             info = semicolon.split(command);
                                             path = info[1];
                                             name = info[0];
-                                            label2.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + ">>>" + path + "</body></html>");
+                                            label2.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br><font size=\"-1\">" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + ">>>" + path + "</body></html>");
 
                                             command = listResult.get(labelCount - 1);
                                             info = semicolon.split(command);
                                             path = info[1];
                                             name = info[0];
-                                            label3.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + ">>>" + path + "</body></html>");
+                                            label3.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br><font size=\"-1\">" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + ">>>" + path + "</body></html>");
 
                                             command = listResult.get(labelCount);
                                             info = semicolon.split(command);
                                             path = info[1];
                                             name = info[0];
-                                            label4.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + ">>>" + path + "</body></html>");
+                                            label4.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br><font size=\"-1\">" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + ">>>" + path + "</body></html>");
                                         } catch (ArrayIndexOutOfBoundsException ignored) {
 
                                         }
@@ -1090,7 +1090,7 @@ public class SearchBar {
                                             icon1 = (ImageIcon) GetIcon.getBigIcon(path);
                                             icon1 = changeIcon(icon1, label1.getHeight() / 3, label1.getHeight() / 3);
                                             label1.setIcon(icon1);
-                                            label1.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
+                                            label1.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>>" + getParentPath(path) + "</body></html>");
                                         } else {
                                             label1.setIcon(null);
                                             label1.setText("无效文件");
@@ -1102,7 +1102,7 @@ public class SearchBar {
                                         if (isDirectory(path) || isFile(path)) {
                                             icon1 = (ImageIcon) GetIcon.getBigIcon(path);
                                             icon1 = changeIcon(icon1, label1.getHeight() / 3, label1.getHeight() / 3);
-                                            label2.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
+                                            label2.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>>" + getParentPath(path) + "</body></html>");
                                             label2.setIcon(icon1);
                                         } else {
                                             label2.setIcon(null);
@@ -1116,7 +1116,7 @@ public class SearchBar {
                                         if (isDirectory(path) || isFile(path)) {
                                             icon1 = (ImageIcon) GetIcon.getBigIcon(path);
                                             icon1 = changeIcon(icon1, label1.getHeight() / 3, label1.getHeight() / 3);
-                                            label3.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
+                                            label3.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>>" + getParentPath(path) + "</body></html>");
                                             label3.setIcon(icon1);
                                         } else {
                                             label3.setIcon(null);
@@ -1130,7 +1130,7 @@ public class SearchBar {
                                         if (isDirectory(path) || isFile(path)) {
                                             icon1 = (ImageIcon) GetIcon.getBigIcon(path);
                                             icon1 = changeIcon(icon1, label1.getHeight() / 3, label1.getHeight() / 3);
-                                            label4.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
+                                            label4.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>>" + getParentPath(path) + "</body></html>");
                                             label4.setIcon(icon1);
                                         } else {
                                             label4.setIcon(null);
@@ -1205,25 +1205,25 @@ public class SearchBar {
                                         String[] info = semicolon.split(command);
                                         String path = info[1];
                                         String name = info[0];
-                                        label1.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + ">>>" + path + "</body></html>");
+                                        label1.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br><font size=\"-1\">" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + ">>>" + path + "</body></html>");
 
                                         command = listResult.get(labelCount + 1);
                                         info = semicolon.split(command);
                                         path = info[1];
                                         name = info[0];
-                                        label2.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + ">>>" + path + "</body></html>");
+                                        label2.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br><font size=\"-1\">" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + ">>>" + path + "</body></html>");
 
                                         command = listResult.get(labelCount + 2);
                                         info = semicolon.split(command);
                                         path = info[1];
                                         name = info[0];
-                                        label3.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + ">>>" + path + "</body></html>");
+                                        label3.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br><font size=\"-1\">" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + ">>>" + path + "</body></html>");
 
                                         command = listResult.get(labelCount + 3);
                                         info = semicolon.split(command);
                                         path = info[1];
                                         name = info[0];
-                                        label4.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + ">>>" + path + "</body></html>");
+                                        label4.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br><font size=\"-1\">" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + ">>>" + path + "</body></html>");
                                     } catch (ArrayIndexOutOfBoundsException ignored) {
 
                                     }
@@ -1485,7 +1485,7 @@ public class SearchBar {
                                                         icon = (ImageIcon) GetIcon.getBigIcon(path);
                                                         icon = changeIcon(icon, label1.getHeight() / 3, label1.getHeight() / 3);
                                                         label1.setIcon(icon);
-                                                        label1.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
+                                                        label1.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>>" + getParentPath(path) + "</body></html>");
                                                     } else {
                                                         label1.setIcon(null);
                                                         label1.setText("无效文件");
@@ -1497,7 +1497,7 @@ public class SearchBar {
                                                     if (isDirectory(path) || isFile(path)) {
                                                         icon = (ImageIcon) GetIcon.getBigIcon(path);
                                                         icon = changeIcon(icon, label1.getHeight() / 3, label1.getHeight() / 3);
-                                                        label2.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
+                                                        label2.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>>" + getParentPath(path) + "</body></html>");
                                                         label2.setIcon(icon);
                                                     } else {
                                                         label2.setIcon(null);
@@ -1511,7 +1511,7 @@ public class SearchBar {
                                                     if (isDirectory(path) || isFile(path)) {
                                                         icon = (ImageIcon) GetIcon.getBigIcon(path);
                                                         icon = changeIcon(icon, label1.getHeight() / 3, label1.getHeight() / 3);
-                                                        label3.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
+                                                        label3.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>>" + getParentPath(path) + "</body></html>");
                                                         label3.setIcon(icon);
                                                     } else {
                                                         label3.setIcon(null);
@@ -1525,7 +1525,7 @@ public class SearchBar {
                                                     if (isDirectory(path) || isFile(path)) {
                                                         icon = (ImageIcon) GetIcon.getBigIcon(path);
                                                         icon = changeIcon(icon, label1.getHeight() / 3, label1.getHeight() / 3);
-                                                        label4.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
+                                                        label4.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>>" + getParentPath(path) + "</body></html>");
                                                         label4.setIcon(icon);
                                                     } else {
                                                         label4.setIcon(null);
@@ -1600,25 +1600,25 @@ public class SearchBar {
                                                     String[] info = semicolon.split(command);
                                                     String path = info[1];
                                                     String name = info[0];
-                                                    label1.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + ">>>" + path + "</body></html>");
+                                                    label1.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br><font size=\"-1\">" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + ">>>" + path + "</body></html>");
 
                                                     command = listResult.get(labelCount + 1);
                                                     info = semicolon.split(command);
                                                     path = info[1];
                                                     name = info[0];
-                                                    label2.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + ">>>" + path + "</body></html>");
+                                                    label2.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br><font size=\"-1\">" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + ">>>" + path + "</body></html>");
 
                                                     command = listResult.get(labelCount + 2);
                                                     info = semicolon.split(command);
                                                     path = info[1];
                                                     name = info[0];
-                                                    label3.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + ">>>" + path + "</body></html>");
+                                                    label3.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br><font size=\"-1\">" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + ">>>" + path + "</body></html>");
 
                                                     command = listResult.get(labelCount + 3);
                                                     info = semicolon.split(command);
                                                     path = info[1];
                                                     name = info[0];
-                                                    label4.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + ">>>" + path + "</body></html>");
+                                                    label4.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br><font size=\"-1\">" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + ">>>" + path + "</body></html>");
                                                 } catch (ArrayIndexOutOfBoundsException ignored) {
 
                                                 }
@@ -1829,7 +1829,7 @@ public class SearchBar {
                                                             icon = (ImageIcon) GetIcon.getBigIcon(path);
                                                             icon = changeIcon(icon, label1.getHeight() / 3, label1.getHeight() / 3);
                                                             label1.setIcon(icon);
-                                                            label1.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
+                                                            label1.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>>" + getParentPath(path) + "</body></html>");
                                                         } else {
                                                             label1.setIcon(null);
                                                             label1.setText("无效文件");
@@ -1841,7 +1841,7 @@ public class SearchBar {
                                                         if (isDirectory(path) || isFile(path)) {
                                                             icon = (ImageIcon) GetIcon.getBigIcon(path);
                                                             icon = changeIcon(icon, label1.getHeight() / 3, label1.getHeight() / 3);
-                                                            label2.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
+                                                            label2.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>>" + getParentPath(path) + "</body></html>");
                                                             label2.setIcon(icon);
                                                         } else {
                                                             label2.setIcon(null);
@@ -1855,7 +1855,7 @@ public class SearchBar {
                                                         if (isDirectory(path) || isFile(path)) {
                                                             icon = (ImageIcon) GetIcon.getBigIcon(path);
                                                             icon = changeIcon(icon, label1.getHeight() / 3, label1.getHeight() / 3);
-                                                            label3.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
+                                                            label3.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>>" + getParentPath(path) + "</body></html>");
                                                             label3.setIcon(icon);
                                                         } else {
                                                             label3.setIcon(null);
@@ -1869,7 +1869,7 @@ public class SearchBar {
                                                         if (isDirectory(path) || isFile(path)) {
                                                             icon = (ImageIcon) GetIcon.getBigIcon(path);
                                                             icon = changeIcon(icon, label1.getHeight() / 3, label1.getHeight() / 3);
-                                                            label4.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
+                                                            label4.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>>" + getParentPath(path) + "</body></html>");
                                                             label4.setIcon(icon);
                                                         } else {
                                                             label4.setIcon(null);
@@ -1938,25 +1938,25 @@ public class SearchBar {
                                                         String[] info = semicolon.split(command);
                                                         String path = info[1];
                                                         String name = info[0];
-                                                        label1.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + ">>>" + path + "</body></html>");
+                                                        label1.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br><font size=\"-1\">" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + ">>>" + path + "</body></html>");
 
                                                         command = listResult.get(labelCount - 2);
                                                         info = semicolon.split(command);
                                                         path = info[1];
                                                         name = info[0];
-                                                        label2.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + ">>>" + path + "</body></html>");
+                                                        label2.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br><font size=\"-1\">" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + ">>>" + path + "</body></html>");
 
                                                         command = listResult.get(labelCount - 1);
                                                         info = semicolon.split(command);
                                                         path = info[1];
                                                         name = info[0];
-                                                        label3.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + ">>>" + path + "</body></html>");
+                                                        label3.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br><font size=\"-1\">" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + ">>>" + path + "</body></html>");
 
                                                         command = listResult.get(labelCount);
                                                         info = semicolon.split(command);
                                                         path = info[1];
                                                         name = info[0];
-                                                        label4.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + ">>>" + path + "</body></html>");
+                                                        label4.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br><font size=\"-1\">" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + ">>>" + path + "</body></html>");
                                                     } catch (ArrayIndexOutOfBoundsException ignored) {
 
                                                     }
@@ -2174,7 +2174,7 @@ public class SearchBar {
                     icon = (ImageIcon) GetIcon.getBigIcon(path);
                     icon = changeIcon(icon, label1.getHeight() / 3, label1.getHeight() / 3);
                     label1.setIcon(icon);
-                    label1.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
+                    label1.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>>" + getParentPath(path) + "</body></html>");
                     if (labelCount == 0) {
                         label1.setBackground(labelColor);
                     } else {
@@ -2197,7 +2197,7 @@ public class SearchBar {
                 if (isDirectory(path) || isFile(path)) {
                     icon = (ImageIcon) GetIcon.getBigIcon(path);
                     icon = changeIcon(icon, label1.getHeight() / 3, label1.getHeight() / 3);
-                    label2.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
+                    label2.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>>" + getParentPath(path) + "</body></html>");
                     label2.setIcon(icon);
                     if (labelCount == 1) {
                         label2.setBackground(labelColor);
@@ -2222,7 +2222,7 @@ public class SearchBar {
                     icon = (ImageIcon) GetIcon.getBigIcon(path);
                     icon = changeIcon(icon, label1.getHeight() / 3, label1.getHeight() / 3);
                     label3.setIcon(icon);
-                    label3.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
+                    label3.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>>" + getParentPath(path) + "</body></html>");
                     if (labelCount == 2) {
                         label3.setBackground(labelColor);
                     } else {
@@ -2245,7 +2245,7 @@ public class SearchBar {
                 if (isDirectory(path) || isFile(path)) {
                     icon = (ImageIcon) GetIcon.getBigIcon(path);
                     icon = changeIcon(icon, label1.getHeight() / 3, label1.getHeight() / 3);
-                    label4.setText("<html><body>" + name + "<br>" + ">>>" + getParentPath(path) + "</body></html>");
+                    label4.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>>" + getParentPath(path) + "</body></html>");
                     label4.setIcon(icon);
                     if (labelCount >= 3) {
                         label4.setBackground(labelColor);
@@ -2271,7 +2271,7 @@ public class SearchBar {
                 String[] info = semicolon.split(command);
                 String path = info[1];
                 String name = info[0];
-                label1.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + ">>>" + path + "</body></html>");
+                label1.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br><font size=\"-1\">" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + ">>>" + path + "</body></html>");
                 if (labelCount == 0) {
                     label1.setBackground(labelColor);
                 } else {
@@ -2282,7 +2282,7 @@ public class SearchBar {
                 info = semicolon.split(command);
                 path = info[1];
                 name = info[0];
-                label2.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + ">>>" + path + "</body></html>");
+                label2.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br><font size=\"-1\">" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + ">>>" + path + "</body></html>");
                 if (labelCount == 1) {
                     label2.setBackground(labelColor);
                 } else {
@@ -2293,7 +2293,7 @@ public class SearchBar {
                 info = semicolon.split(command);
                 path = info[1];
                 name = info[0];
-                label3.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + ">>>" + path + "</body></html>");
+                label3.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br><font size=\"-1\">" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + ">>>" + path + "</body></html>");
                 if (labelCount == 2) {
                     label3.setBackground(labelColor);
                 } else {
@@ -2304,7 +2304,7 @@ public class SearchBar {
                 info = semicolon.split(command);
                 path = info[1];
                 name = info[0];
-                label4.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + ">>>" + path + "</body></html>");
+                label4.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br><font size=\"-1\">" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + ">>>" + path + "</body></html>");
                 if (labelCount >= 3) {
                     label4.setBackground(labelColor);
                 } else {
