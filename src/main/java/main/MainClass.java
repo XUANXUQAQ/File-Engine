@@ -3,7 +3,7 @@ package main;
 import com.alee.laf.WebLookAndFeel;
 import com.alibaba.fastjson.JSONObject;
 import fileMonitor.FileMonitor;
-import frame.CheckHotKey;
+import hotkeyListener.CheckHotKey;
 import frame.SearchBar;
 import frame.SettingsFrame;
 import frame.TaskBar;
@@ -25,6 +25,9 @@ public class MainClass {
     public static String name;
     private static Search search = Search.getInstance();
     private static TaskBar taskBar = null;
+    public static String fileMonitorDllName;
+    public static String getAscIIDllName;
+    public static String hotkeyListenerDllName;
 
     public static void setMainExit(boolean b) {
         mainExit = b;
@@ -61,7 +64,7 @@ public class MainClass {
         }
     }
 
-    private static void copyFile(InputStream source, File dest) {
+    public static void copyFile(InputStream source, File dest) {
         try (OutputStream os = new FileOutputStream(dest); BufferedInputStream bis = new BufferedInputStream(source); BufferedOutputStream bos = new BufferedOutputStream(os)) {
             byte[] buffer = new byte[8192];
             int count = bis.read(buffer);
@@ -112,8 +115,14 @@ public class MainClass {
         String osArch = System.getProperty("os.arch");
         if (osArch.contains("64")) {
             name = "File-Engine-x64.exe";
+            fileMonitorDllName = "fileMonitor64";
+            getAscIIDllName = "getAscII64";
+            hotkeyListenerDllName = "hotkeyListener64";
         } else {
             name = "File-Engine-x86.exe";
+            fileMonitorDllName = "fileMonitor86";
+            getAscIIDllName = "getAscII86";
+            hotkeyListenerDllName = "hotkeyListener86";
         }
         File user = new File("user");
         if (!user.exists()) {
@@ -190,7 +199,7 @@ public class MainClass {
         }
 
         File settings = SettingsFrame.settings;
-        File caches = new File("./user/cache.dat");
+        File caches = new File("user/cache.dat");
         File data = new File("data");
 
         if (!settings.exists()) {
@@ -223,26 +232,12 @@ public class MainClass {
         MainClass.deleteDir(SettingsFrame.tmp.getAbsolutePath());
 
         File target;
-        InputStream fileMonitorDll64 = MainClass.class.getResourceAsStream("/fileMonitor64.dll");
-        InputStream fileMonitorDll86 = MainClass.class.getResourceAsStream("/fileMonitor86.dll");
         InputStream fileSearcherDll64 = MainClass.class.getResourceAsStream("/fileSearcher64.exe");
         InputStream fileSearcherDll86 = MainClass.class.getResourceAsStream("/fileSearcher86.exe");
         InputStream fileOpener64 = MainClass.class.getResourceAsStream("/fileOpener64.exe");
         InputStream fileOpener86 = MainClass.class.getResourceAsStream("/fileOpener86.exe");
-        InputStream getAscIIDll64 = MainClass.class.getResourceAsStream("/getAscII64.dll");
-        InputStream getAscIIDll86 = MainClass.class.getResourceAsStream("/getAscII86.dll");
 
-        target = new File("./user/fileMonitor.dll");
-        if (!target.exists()) {
-            if (name.contains("x64")) {
-                copyFile(fileMonitorDll64, target);
-                System.out.println("已加载64位fileMonitor");
-            } else {
-                copyFile(fileMonitorDll86, target);
-                System.out.println("已加载32位fileMonitor");
-            }
-        }
-        target = new File("./user/fileSearcher.exe");
+        target = new File("user/fileSearcher.exe");
         if (!target.exists()) {
             if (name.contains("x64")) {
                 copyFile(fileSearcherDll64, target);
@@ -256,7 +251,7 @@ public class MainClass {
         if (!target.exists()) {
             target.mkdir();
         }
-        target = new File("./user/fileOpener.exe");
+        target = new File("user/fileOpener.exe");
         if (!target.exists()) {
             if (name.contains("x64")) {
                 copyFile(fileOpener64, target);
@@ -264,16 +259,6 @@ public class MainClass {
             } else {
                 copyFile(fileOpener86, target);
                 System.out.println("已加载32位fileOpener");
-            }
-        }
-        target = new File("./user/getAscII.dll");
-        if (!target.exists()) {
-            if (name.contains("x64")) {
-                copyFile(getAscIIDll64, target);
-                System.out.println("已加载64位getAscII");
-            } else {
-                copyFile(getAscIIDll86, target);
-                System.out.println("已加载32位getAscII");
             }
         }
 
@@ -457,7 +442,7 @@ public class MainClass {
 
             }
             if (mainExit) {
-                CheckHotKey.getInstance().unRegisterHotkey();
+                CheckHotKey.getInstance().stopListen();
                 File CLOSEDLL = new File(SettingsFrame.tmp.getAbsolutePath() + "\\CLOSE");
                 try {
                     CLOSEDLL.createNewFile();

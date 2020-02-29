@@ -3,6 +3,7 @@ package frame;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import download.DownloadUpdate;
+import hotkeyListener.CheckHotKey;
 import main.MainClass;
 import moveFiles.moveFiles;
 import search.Search;
@@ -45,7 +46,7 @@ public class SettingsFrame {
     private JTextArea textAreaIgnorePath;
     private JTextField textFieldSearchDepth;
     private JCheckBox checkBox1;
-    private JFrame frame = new JFrame("设置");
+    private JFrame frame = new JFrame("设置-吾爱破解论坛");
     private JLabel label3;
     private JLabel label1;
     private JLabel label2;
@@ -107,6 +108,7 @@ public class SettingsFrame {
     private Unzip unzipInstance = Unzip.getInstance();
     private Thread updateThread = null;
 
+
     public SettingsFrame() {
         labelAboutGithub.setText("<html><a href='https://github.com/XUANXUQAQ/File-Engine'>File-Engine</a></html>");
         ImageIcon imageIcon = new ImageIcon(SettingsFrame.class.getResource("/icons/frame.png"));
@@ -132,7 +134,6 @@ public class SettingsFrame {
             if (file != null && returnValue == JFileChooser.APPROVE_OPTION) {
                 textAreaIgnorePath.append(file.getAbsolutePath() + ",\n");
             }
-
         });
         textFieldHotkey.addKeyListener(new KeyListener() {
             boolean reset = true;

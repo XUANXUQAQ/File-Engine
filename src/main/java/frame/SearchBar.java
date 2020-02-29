@@ -3,6 +3,7 @@ package frame;
 
 import getAscII.GetAscII;
 import getIcon.GetIcon;
+import hotkeyListener.CheckHotKey;
 import main.MainClass;
 import search.Search;
 
@@ -1313,6 +1314,12 @@ public class SearchBar {
             }
         });
 
+        //≈–∂œ Û±ÍŒª÷√
+        int labelPosition = label1.getY();
+        int labelPosition2 = labelPosition * 2;
+        int labelPosition3 = labelPosition * 3;
+        int labelPosition4 = labelPosition * 4;
+        int end = labelPosition * 5;
         searchBar.addMouseMotionListener(new MouseAdapter() {
             @Override
             public void mouseMoved(MouseEvent e) {
@@ -1328,19 +1335,13 @@ public class SearchBar {
                     } else {
                         position = 3;
                     }
-                    //≈–∂œ Û±ÍŒª÷√
-                    int labelPosition = label1.getY();
-                    int labelPosition2 = labelPosition * 2;
-                    int labelPosition3 = labelPosition * 3;
-                    int labelPosition4 = labelPosition * 4;
-                    int mousePosition;
+                    int mousePosition = 0;
                     if (labelPosition <= e.getY() && e.getY() < labelPosition2) {
-                        mousePosition = 0;
                     } else if (labelPosition2 <= e.getY() && e.getY() < labelPosition3) {
                         mousePosition = 1;
                     } else if (labelPosition3 <= e.getY() && e.getY() < labelPosition4) {
                         mousePosition = 2;
-                    } else {
+                    } else if (labelPosition4 <= e.getY() && e.getY() < end) {
                         mousePosition = 3;
                     }
                     if (mousePosition < listResult.size()) {
