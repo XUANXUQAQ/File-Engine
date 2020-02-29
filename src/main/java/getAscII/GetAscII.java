@@ -7,7 +7,7 @@ import java.io.File;
 
 public interface GetAscII extends Library {
     File dll = new File("user/getAscII.dll");
-    GetAscII INSTANCE = (GetAscII) Native.loadLibrary(dll.getAbsolutePath(), GetAscII.class);
+    GetAscII INSTANCE = Native.load(dll.getAbsolutePath(), GetAscII.class);
 
     int getAscII(String str);
 }

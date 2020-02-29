@@ -1,5 +1,6 @@
 package main;
 
+import com.alee.laf.WebLookAndFeel;
 import com.alibaba.fastjson.JSONObject;
 import fileMonitor.FileMonitor;
 import frame.CheckHotKey;
@@ -19,7 +20,7 @@ import java.util.concurrent.Executors;
 
 
 public class MainClass {
-    public static final String version = "1.4"; //TODO 更改版本号
+    public static final String version = "1.5"; //TODO 更改版本号
     public static boolean mainExit = false;
     public static String name;
     private static Search search = Search.getInstance();
@@ -102,8 +103,9 @@ public class MainClass {
     public static void main(String[] args) {
         try {
             System.setProperty("sun.java2d.noddraw", "true");
-            org.jb2011.lnf.beautyeye.BeautyEyeLNFHelper.launchBeautyEyeLNF();
-            UIManager.put("RootPane.setupButtonVisible", false);
+            /*org.jb2011.lnf.beautyeye.BeautyEyeLNFHelper.launchBeautyEyeLNF();
+            UIManager.put("RootPane.setupButtonVisible", false);*/
+            WebLookAndFeel.install();
         } catch (Exception e) {
             e.printStackTrace();
         }

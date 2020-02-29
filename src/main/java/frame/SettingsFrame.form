@@ -3,9 +3,11 @@
   <grid id="27dc6" binding="panel" layout-manager="GridLayoutManager" row-count="4" column-count="5" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
     <margin top="0" left="0" bottom="0" right="0"/>
     <constraints>
-      <xy x="20" y="20" width="1252" height="592"/>
+      <xy x="20" y="20" width="1051" height="825"/>
     </constraints>
-    <properties/>
+    <properties>
+      <opaque value="false"/>
+    </properties>
     <border type="none"/>
     <children>
       <component id="6351c" class="javax.swing.JLabel" binding="labelplaceholder2">
@@ -33,7 +35,9 @@
             <constraints>
               <tabbedpane title="常规"/>
             </constraints>
-            <properties/>
+            <properties>
+              <opaque value="false"/>
+            </properties>
             <border type="none"/>
             <children>
               <component id="f56d" class="javax.swing.JLabel" binding="label4">
@@ -50,7 +54,9 @@
                     <preferred-size width="150" height="-1"/>
                   </grid>
                 </constraints>
-                <properties/>
+                <properties>
+                  <opaque value="false"/>
+                </properties>
               </component>
               <component id="a0920" class="javax.swing.JLabel" binding="labeltip2">
                 <constraints>
@@ -68,6 +74,7 @@
                 </constraints>
                 <properties>
                   <editable value="false"/>
+                  <opaque value="false"/>
                 </properties>
               </component>
               <component id="7f288" class="javax.swing.JButton" binding="ButtonDataPath">
@@ -94,7 +101,9 @@
                     <preferred-size width="150" height="-1"/>
                   </grid>
                 </constraints>
-                <properties/>
+                <properties>
+                  <opaque value="false"/>
+                </properties>
               </component>
               <component id="5bad1" class="javax.swing.JLabel" binding="label5">
                 <constraints>
@@ -132,7 +141,9 @@
             <constraints>
               <tabbedpane title="搜索设置"/>
             </constraints>
-            <properties/>
+            <properties>
+              <opaque value="false"/>
+            </properties>
             <border type="none"/>
             <children>
               <scrollpane id="f84cd" binding="scrollpane">
@@ -146,6 +157,7 @@
                     <constraints/>
                     <properties>
                       <lineWrap value="true"/>
+                      <opaque value="false"/>
                       <wrapStyleWord value="true"/>
                     </properties>
                   </component>
@@ -189,7 +201,9 @@
                     <preferred-size width="150" height="-1"/>
                   </grid>
                 </constraints>
-                <properties/>
+                <properties>
+                  <opaque value="false"/>
+                </properties>
               </component>
               <component id="6522f" class="javax.swing.JLabel" binding="labeltip3">
                 <constraints>
@@ -207,6 +221,7 @@
                 </constraints>
                 <properties>
                   <editable value="false"/>
+                  <opaque value="false"/>
                 </properties>
               </component>
               <component id="38bd5" class="javax.swing.JButton" binding="ButtonPriorityFolder">
@@ -224,7 +239,9 @@
             <constraints>
               <tabbedpane title="搜索窗口与权限设置"/>
             </constraints>
-            <properties/>
+            <properties>
+              <opaque value="false"/>
+            </properties>
             <border type="none"/>
             <children>
               <hspacer id="ccbbe">
@@ -292,7 +309,9 @@
             <constraints>
               <tabbedpane title="快捷键设置及帮助"/>
             </constraints>
-            <properties/>
+            <properties>
+              <opaque value="false"/>
+            </properties>
             <border type="none"/>
             <children>
               <component id="60455" class="javax.swing.JCheckBox" binding="checkBoxLoseFocus">
@@ -312,6 +331,7 @@
                 <properties>
                   <editable value="false"/>
                   <enabled value="true"/>
+                  <opaque value="false"/>
                 </properties>
               </component>
               <component id="f9ebf" class="javax.swing.JLabel" binding="label2">
@@ -338,6 +358,7 @@
                 </constraints>
                 <properties>
                   <editable value="false"/>
+                  <opaque value="false"/>
                 </properties>
               </component>
               <component id="29dc0" class="javax.swing.JButton" binding="buttonHelp">
@@ -369,6 +390,7 @@
                 </constraints>
                 <properties>
                   <editable value="false"/>
+                  <opaque value="false"/>
                 </properties>
               </component>
               <component id="a65dc" class="javax.swing.JLabel" binding="labelOpenFolder">
@@ -396,7 +418,9 @@
             <constraints>
               <tabbedpane title="自定义命令"/>
             </constraints>
-            <properties/>
+            <properties>
+              <opaque value="false"/>
+            </properties>
             <border type="none"/>
             <children>
               <scrollpane id="2db" binding="scrollPaneCmd">
@@ -408,7 +432,9 @@
                 <children>
                   <component id="7be97" class="javax.swing.JList" binding="listCmds">
                     <constraints/>
-                    <properties/>
+                    <properties>
+                      <opaque value="false"/>
+                    </properties>
                   </component>
                 </children>
               </scrollpane>
@@ -438,17 +464,19 @@
               </component>
             </children>
           </grid>
-          <grid id="9b15a" layout-manager="GridLayoutManager" row-count="10" column-count="7" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+          <grid id="9b15a" layout-manager="GridLayoutManager" row-count="11" column-count="7" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
             <margin top="0" left="0" bottom="0" right="0"/>
             <constraints>
               <tabbedpane title="关于"/>
             </constraints>
-            <properties/>
+            <properties>
+              <opaque value="false"/>
+            </properties>
             <border type="none"/>
             <children>
               <component id="7a3c1" class="javax.swing.JLabel" binding="labelPlaceHolder13">
                 <constraints>
-                  <grid row="9" column="6" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                  <grid row="10" column="6" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
                   <text value=""/>
@@ -456,7 +484,7 @@
               </component>
               <component id="ed1b3" class="javax.swing.JLabel" binding="labelPlaceHolder12">
                 <constraints>
-                  <grid row="8" column="6" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                  <grid row="9" column="6" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
                   <text value=""/>
@@ -464,7 +492,7 @@
               </component>
               <component id="887e2" class="javax.swing.JLabel" binding="labelPlaceHolder15">
                 <constraints>
-                  <grid row="3" column="0" row-span="5" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                  <grid row="3" column="0" row-span="6" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
                   <text value=""/>
@@ -512,7 +540,7 @@
               </component>
               <vspacer id="6c7f0">
                 <constraints>
-                  <grid row="7" column="3" row-span="1" col-span="2" vsize-policy="6" hsize-policy="1" anchor="0" fill="2" indent="0" use-parent-layout="false"/>
+                  <grid row="7" column="3" row-span="2" col-span="2" vsize-policy="6" hsize-policy="1" anchor="0" fill="2" indent="0" use-parent-layout="false"/>
                 </constraints>
               </vspacer>
               <component id="5c642" class="javax.swing.JLabel" binding="labelPalceHolder5">
@@ -560,6 +588,11 @@
                   <text value=""/>
                 </properties>
               </component>
+              <vspacer id="11971">
+                <constraints>
+                  <grid row="8" column="2" row-span="1" col-span="1" vsize-policy="6" hsize-policy="1" anchor="0" fill="2" indent="0" use-parent-layout="false"/>
+                </constraints>
+              </vspacer>
             </children>
           </grid>
         </children>

@@ -16,7 +16,7 @@ public class CheckHotKey extends JFrame {
     }
 
     //定义热键标识，用于在设置多个热键时，在事件处理中区分用户按下的热键
-    public static final int FUNC_KEY_MARK = 1;
+    private static final int FUNC_KEY_MARK = 1;
 
     public void setShowSearchBar(boolean b) {
         isShowSearchBar = b;
