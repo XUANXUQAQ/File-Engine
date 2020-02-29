@@ -1,13 +1,12 @@
 package fileMonitor;
 
-import com.sun.jna.*;
-
-import java.io.File;
+import com.sun.jna.Library;
+import com.sun.jna.Native;
+import main.MainClass;
 
 
 public interface FileMonitor extends Library {
-    File dll = new File("user/fileMonitor.dll");
-    FileMonitor INSTANCE = Native.load(dll.getAbsolutePath(), FileMonitor.class);
+    FileMonitor INSTANCE = Native.load(MainClass.fileMonitorDllName, FileMonitor.class);
 
     void monitor(String path, String output, String closePosition);
 }
