@@ -1,6 +1,6 @@
 package hotkeyListener;
 
-import frame.SearchBar;
+import frames.SearchBar;
 import main.MainClass;
 
 import java.awt.event.KeyEvent;
