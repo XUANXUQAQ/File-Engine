@@ -3,10 +3,10 @@ package main;
 import com.alee.laf.WebLookAndFeel;
 import com.alibaba.fastjson.JSONObject;
 import fileMonitor.FileMonitor;
-import hotkeyListener.CheckHotKey;
 import frame.SearchBar;
 import frame.SettingsFrame;
 import frame.TaskBar;
+import hotkeyListener.CheckHotKey;
 import search.Search;
 
 import javax.swing.*;
@@ -124,6 +124,7 @@ public class MainClass {
             getAscIIDllName = "getAscII86";
             hotkeyListenerDllName = "hotkeyListener86";
         }
+
         File user = new File("user");
         if (!user.exists()) {
             user.mkdir();
@@ -225,25 +226,34 @@ public class MainClass {
             }
         }
 
-        SettingsFrame.initSettings();
-        SearchBar searchBar = SearchBar.getInstance();
 
         //清空tmp
         MainClass.deleteDir(SettingsFrame.tmp.getAbsolutePath());
 
         File target;
-        InputStream fileSearcherDll64 = MainClass.class.getResourceAsStream("/fileSearcher64.exe");
-        InputStream fileSearcherDll86 = MainClass.class.getResourceAsStream("/fileSearcher86.exe");
+        InputStream fileSearcher64 = MainClass.class.getResourceAsStream("/fileSearcher64.exe");
+        InputStream fileSearcher86 = MainClass.class.getResourceAsStream("/fileSearcher86.exe");
         InputStream fileOpener64 = MainClass.class.getResourceAsStream("/fileOpener64.exe");
         InputStream fileOpener86 = MainClass.class.getResourceAsStream("/fileOpener86.exe");
+        /*InputStream fileMonitorDll64 = MainClass.class.getResourceAsStream("/fileMonitor64.dll");
+        InputStream fileMonitorDll86 = MainClass.class.getResourceAsStream("fileMonitor86.dll");
+        InputStream getAscIIDll64 = MainClass.class.getResourceAsStream("/getAscII64.dll");
+        InputStream getAscIIDll86 = MainClass.class.getResourceAsStream("/getAscII86.dll");
+        InputStream hotkeyListenerDll64 = MainClass.class.getResourceAsStream("/hotkeyListener64.dll");
+        InputStream hotkeyListenerDll86 = MainClass.class.getResourceAsStream("/hotkeyListener86.dll");*/
+
+        boolean is64Bit = name.contains("x64");
+
+        SettingsFrame.initSettings();
+        SearchBar searchBar = SearchBar.getInstance();
 
         target = new File("user/fileSearcher.exe");
         if (!target.exists()) {
-            if (name.contains("x64")) {
-                copyFile(fileSearcherDll64, target);
+            if (is64Bit) {
+                copyFile(fileSearcher64, target);
                 System.out.println("已加载64位fileSearcher");
             } else {
-                copyFile(fileSearcherDll86, target);
+                copyFile(fileSearcher86, target);
                 System.out.println("已加载32位fileSearcher");
             }
         }
@@ -253,7 +263,7 @@ public class MainClass {
         }
         target = new File("user/fileOpener.exe");
         if (!target.exists()) {
-            if (name.contains("x64")) {
+            if (is64Bit) {
                 copyFile(fileOpener64, target);
                 System.out.println("已加载64位fileOpener");
             } else {
