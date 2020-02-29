@@ -653,14 +653,11 @@ public class SettingsFrame {
         URL frameIcon = SettingsFrame.class.getResource("/icons/frame.png");
         frame.setIconImage(new ImageIcon(frameIcon).getImage());
         frame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
-        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize(); // 获取当前分辨率
-        int width = screenSize.width;
-        int height = screenSize.height;
-        frame.setSize(width / 2, height / 2);
-        frame.setLocation(width / 2 - width / 4, height / 2 - height / 4);
-        panel.setOpaque(true);
+        frame.setSize(800, 600);
+        frame.setLocationRelativeTo(null);
         frame.setVisible(true);
     }
+
 
     private void saveChanges() {
         {

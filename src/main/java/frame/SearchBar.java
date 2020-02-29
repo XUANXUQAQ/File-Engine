@@ -1,6 +1,6 @@
 package frame;
 
-import com.sun.awt.AWTUtilities;
+
 import getAscII.GetAscII;
 import getIcon.GetIcon;
 import main.MainClass;
@@ -69,7 +69,6 @@ public class SearchBar {
         searchBar.setBounds(positionX, positionY, searchBarWidth, searchBarHeight);
         searchBar.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
         searchBar.setUndecorated(true);
-        AWTUtilities.setWindowOpaque(searchBar, false);
         searchBar.getRootPane().setWindowDecorationStyle(JRootPane.NONE);
         searchBar.setBackground(null);
         searchBar.setOpacity(0.8f);
@@ -123,7 +122,7 @@ public class SearchBar {
         textField.setSize(searchBarWidth, (int) (searchBarHeight * 0.2));
         Font textFieldFont = new Font("Microsoft JhengHei", Font.BOLD, (int) (((height * 0.1) / 96 * 72 / 1.2) / 1.5));
         textField.setFont(textFieldFont);
-        textField.setForeground(Color.WHITE);
+        textField.setForeground(Color.BLACK);
         textField.setHorizontalAlignment(JTextField.LEFT);
         textField.setBorder(null);
         textField.setBackground(backgroundColor);
@@ -1016,25 +1015,25 @@ public class SearchBar {
                                             String[] info = semicolon.split(command);
                                             String path = info[1];
                                             String name = info[0];
-                                            label1.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br><font size=\"-1\">" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + ">>>" + path + "</body></html>");
+                                            label1.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br>&nbsp;&nbsp;" + "<font size=\"-1\">" + "&nbsp;&nbsp;" + ">>>" + path + "</font></body></html>");
 
                                             command = listResult.get(labelCount - 2);
                                             info = semicolon.split(command);
                                             path = info[1];
                                             name = info[0];
-                                            label2.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br><font size=\"-1\">" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + ">>>" + path + "</body></html>");
+                                            label2.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br>&nbsp;&nbsp;" + "<font size=\"-1\">" + "&nbsp;&nbsp;" + ">>>" + path + "</font></body></html>");
 
                                             command = listResult.get(labelCount - 1);
                                             info = semicolon.split(command);
                                             path = info[1];
                                             name = info[0];
-                                            label3.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br><font size=\"-1\">" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + ">>>" + path + "</body></html>");
+                                            label3.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br>&nbsp;&nbsp;" + "<font size=\"-1\">" + "&nbsp;&nbsp;" + ">>>" + path + "</font></body></html>");
 
                                             command = listResult.get(labelCount);
                                             info = semicolon.split(command);
                                             path = info[1];
                                             name = info[0];
-                                            label4.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br><font size=\"-1\">" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + ">>>" + path + "</body></html>");
+                                            label4.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br>&nbsp;&nbsp;" + "<font size=\"-1\">" + "&nbsp;&nbsp;" + ">>>" + path + "</font></body></html>");
                                         } catch (ArrayIndexOutOfBoundsException ignored) {
 
                                         }
@@ -1205,25 +1204,25 @@ public class SearchBar {
                                         String[] info = semicolon.split(command);
                                         String path = info[1];
                                         String name = info[0];
-                                        label1.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br><font size=\"-1\">" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + ">>>" + path + "</body></html>");
+                                        label1.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br>&nbsp;&nbsp;" + "<font size=\"-1\">" + "&nbsp;&nbsp;" + ">>>" + path + "</font></body></html>");
 
                                         command = listResult.get(labelCount + 1);
                                         info = semicolon.split(command);
                                         path = info[1];
                                         name = info[0];
-                                        label2.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br><font size=\"-1\">" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + ">>>" + path + "</body></html>");
+                                        label2.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br>&nbsp;&nbsp;" + "<font size=\"-1\">" + "&nbsp;&nbsp;" + ">>>" + path + "</font></body></html>");
 
                                         command = listResult.get(labelCount + 2);
                                         info = semicolon.split(command);
                                         path = info[1];
                                         name = info[0];
-                                        label3.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br><font size=\"-1\">" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + ">>>" + path + "</body></html>");
+                                        label3.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br>&nbsp;&nbsp;" + "<font size=\"-1\">" + "&nbsp;&nbsp;" + ">>>" + path + "</font></body></html>");
 
                                         command = listResult.get(labelCount + 3);
                                         info = semicolon.split(command);
                                         path = info[1];
                                         name = info[0];
-                                        label4.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br><font size=\"-1\">" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + ">>>" + path + "</body></html>");
+                                        label4.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br>&nbsp;&nbsp;" + "<font size=\"-1\">" + "&nbsp;&nbsp;" + ">>>" + path + "</font></body></html>");
                                     } catch (ArrayIndexOutOfBoundsException ignored) {
 
                                     }
@@ -1600,25 +1599,25 @@ public class SearchBar {
                                                     String[] info = semicolon.split(command);
                                                     String path = info[1];
                                                     String name = info[0];
-                                                    label1.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br><font size=\"-1\">" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + ">>>" + path + "</body></html>");
+                                                    label1.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br>&nbsp;&nbsp;" + "<font size=\"-1\">" + "&nbsp;&nbsp;" + ">>>" + path + "</font></body></html>");
 
                                                     command = listResult.get(labelCount + 1);
                                                     info = semicolon.split(command);
                                                     path = info[1];
                                                     name = info[0];
-                                                    label2.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br><font size=\"-1\">" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + ">>>" + path + "</body></html>");
+                                                    label2.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br>&nbsp;&nbsp;" + "<font size=\"-1\">" + "&nbsp;&nbsp;" + ">>>" + path + "</font></body></html>");
 
                                                     command = listResult.get(labelCount + 2);
                                                     info = semicolon.split(command);
                                                     path = info[1];
                                                     name = info[0];
-                                                    label3.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br><font size=\"-1\">" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + ">>>" + path + "</body></html>");
+                                                    label3.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br>&nbsp;&nbsp;" + "<font size=\"-1\">" + "&nbsp;&nbsp;" + ">>>" + path + "</font></body></html>");
 
                                                     command = listResult.get(labelCount + 3);
                                                     info = semicolon.split(command);
                                                     path = info[1];
                                                     name = info[0];
-                                                    label4.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br><font size=\"-1\">" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + ">>>" + path + "</body></html>");
+                                                    label4.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br>&nbsp;&nbsp;" + "<font size=\"-1\">" + "&nbsp;&nbsp;" + ">>>" + path + "</font></body></html>");
                                                 } catch (ArrayIndexOutOfBoundsException ignored) {
 
                                                 }
@@ -1938,25 +1937,25 @@ public class SearchBar {
                                                         String[] info = semicolon.split(command);
                                                         String path = info[1];
                                                         String name = info[0];
-                                                        label1.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br><font size=\"-1\">" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + ">>>" + path + "</body></html>");
+                                                        label1.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br>&nbsp;&nbsp;" + "<font size=\"-1\">" + "&nbsp;&nbsp;" + ">>>" + path + "</font></body></html>");
 
                                                         command = listResult.get(labelCount - 2);
                                                         info = semicolon.split(command);
                                                         path = info[1];
                                                         name = info[0];
-                                                        label2.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br><font size=\"-1\">" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + ">>>" + path + "</body></html>");
+                                                        label2.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br>&nbsp;&nbsp;" + "<font size=\"-1\">" + "&nbsp;&nbsp;" + ">>>" + path + "</font></body></html>");
 
                                                         command = listResult.get(labelCount - 1);
                                                         info = semicolon.split(command);
                                                         path = info[1];
                                                         name = info[0];
-                                                        label3.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br><font size=\"-1\">" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + ">>>" + path + "</body></html>");
+                                                        label3.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br>&nbsp;&nbsp;" + "<font size=\"-1\">" + "&nbsp;&nbsp;" + ">>>" + path + "</font></body></html>");
 
                                                         command = listResult.get(labelCount);
                                                         info = semicolon.split(command);
                                                         path = info[1];
                                                         name = info[0];
-                                                        label4.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br><font size=\"-1\">" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + ">>>" + path + "</body></html>");
+                                                        label4.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br>&nbsp;&nbsp;" + "<font size=\"-1\">" + "&nbsp;&nbsp;" + ">>>" + path + "</font></body></html>");
                                                     } catch (ArrayIndexOutOfBoundsException ignored) {
 
                                                     }
@@ -2271,7 +2270,7 @@ public class SearchBar {
                 String[] info = semicolon.split(command);
                 String path = info[1];
                 String name = info[0];
-                label1.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br><font size=\"-1\">" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + ">>>" + path + "</body></html>");
+                label1.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br>&nbsp;&nbsp;" + "<font size=\"-1\">" + "&nbsp;&nbsp;" + ">>>" + path + "</font></body></html>");
                 if (labelCount == 0) {
                     label1.setBackground(labelColor);
                 } else {
@@ -2282,7 +2281,7 @@ public class SearchBar {
                 info = semicolon.split(command);
                 path = info[1];
                 name = info[0];
-                label2.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br><font size=\"-1\">" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + ">>>" + path + "</body></html>");
+                label2.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br>&nbsp;&nbsp;" + "<font size=\"-1\">" + "&nbsp;&nbsp;" + ">>>" + path + "</font></body></html>");
                 if (labelCount == 1) {
                     label2.setBackground(labelColor);
                 } else {
@@ -2293,7 +2292,7 @@ public class SearchBar {
                 info = semicolon.split(command);
                 path = info[1];
                 name = info[0];
-                label3.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br><font size=\"-1\">" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + ">>>" + path + "</body></html>");
+                label3.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br>&nbsp;&nbsp;" + "<font size=\"-1\">" + "&nbsp;&nbsp;" + ">>>" + path + "</font></body></html>");
                 if (labelCount == 2) {
                     label3.setBackground(labelColor);
                 } else {
@@ -2304,7 +2303,7 @@ public class SearchBar {
                 info = semicolon.split(command);
                 path = info[1];
                 name = info[0];
-                label4.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br><font size=\"-1\">" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + ">>>" + path + "</body></html>");
+                label4.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br>&nbsp;&nbsp;" + "<font size=\"-1\">" + "&nbsp;&nbsp;" + ">>>" + path + "</font></body></html>");
                 if (labelCount >= 3) {
                     label4.setBackground(labelColor);
                 } else {
