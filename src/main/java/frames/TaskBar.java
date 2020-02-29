@@ -1,4 +1,4 @@
-package frame;
+package frames;
 
 import main.MainClass;
 
@@ -41,7 +41,7 @@ public class TaskBar {
             trayIcon.addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseClicked(MouseEvent e) {
-                    if (MouseEvent.BUTTON1==e.getButton() && !settingsFrame.isSettingsVisible()) {
+                    if (MouseEvent.BUTTON1 == e.getButton() && !settingsFrame.isSettingsVisible()) {
                         settingsFrame.showWindow();
                     }
                 }

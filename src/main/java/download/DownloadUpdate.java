@@ -1,6 +1,6 @@
 package download;
 
-import frame.SettingsFrame;
+import frames.SettingsFrame;
 
 import javax.swing.*;
 import java.awt.*;

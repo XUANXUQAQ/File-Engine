@@ -1,7 +1,7 @@
 package search;
 
-import frame.SearchBar;
-import frame.SettingsFrame;
+import frames.SearchBar;
+import frames.SettingsFrame;
 import main.MainClass;
 
 import java.io.*;
