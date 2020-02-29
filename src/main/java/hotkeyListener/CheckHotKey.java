@@ -54,6 +54,28 @@ public class CheckHotKey {
         });
     }
 
+    public void changeHotKey(String hotkey) {
+        //½âÎö×Ö·û´®
+        int hotkey1 = -1, hotkey2 = -1, hotkey3 = -1;
+        int count = 0;
+        String[] hotkeys = hotkey.split(" \\+ ");
+        for (String each : hotkeys) {
+            if (each.length() != 1) {
+                if (count == 0) {
+                    hotkey1 = map.get(each);
+                } else if (count == 1) {
+                    hotkey2 = map.get(each);
+                }
+                count++;
+            } else {
+                hotkey3 = each.charAt(0);
+            }
+        }
+        //×¢²á¿ì½Ý¼ü
+        HotkeyListener.INSTANCE.registerHotKey(hotkey1, hotkey2, hotkey3);
+
+    }
+
     private CheckHotKey() {
         map.put("Ctrl", KeyEvent.VK_CONTROL);
         map.put("Alt", KeyEvent.VK_ALT);
