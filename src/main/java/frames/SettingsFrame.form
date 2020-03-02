@@ -6,7 +6,7 @@
       <xy x="20" y="20" width="1051" height="825"/>
     </constraints>
     <properties>
-      <opaque value="false"/>
+      <opaque value="true"/>
     </properties>
     <border type="none"/>
     <children>
@@ -55,7 +55,7 @@
                   </grid>
                 </constraints>
                 <properties>
-                  <opaque value="false"/>
+                  <opaque value="true"/>
                 </properties>
               </component>
               <component id="a0920" class="javax.swing.JLabel" binding="labeltip2">
@@ -74,7 +74,7 @@
                 </constraints>
                 <properties>
                   <editable value="false"/>
-                  <opaque value="false"/>
+                  <opaque value="true"/>
                 </properties>
               </component>
               <component id="7f288" class="javax.swing.JButton" binding="ButtonDataPath">
@@ -102,7 +102,7 @@
                   </grid>
                 </constraints>
                 <properties>
-                  <opaque value="false"/>
+                  <opaque value="true"/>
                 </properties>
               </component>
               <component id="5bad1" class="javax.swing.JLabel" binding="label5">
@@ -202,7 +202,7 @@
                   </grid>
                 </constraints>
                 <properties>
-                  <opaque value="false"/>
+                  <opaque value="true"/>
                 </properties>
               </component>
               <component id="6522f" class="javax.swing.JLabel" binding="labeltip3">
@@ -221,7 +221,7 @@
                 </constraints>
                 <properties>
                   <editable value="false"/>
-                  <opaque value="false"/>
+                  <opaque value="true"/>
                 </properties>
               </component>
               <component id="38bd5" class="javax.swing.JButton" binding="ButtonPriorityFolder">
@@ -331,7 +331,7 @@
                 <properties>
                   <editable value="false"/>
                   <enabled value="true"/>
-                  <opaque value="false"/>
+                  <opaque value="true"/>
                 </properties>
               </component>
               <component id="f9ebf" class="javax.swing.JLabel" binding="label2">
@@ -358,7 +358,7 @@
                 </constraints>
                 <properties>
                   <editable value="false"/>
-                  <opaque value="false"/>
+                  <opaque value="true"/>
                 </properties>
               </component>
               <component id="29dc0" class="javax.swing.JButton" binding="buttonHelp">
@@ -390,7 +390,7 @@
                 </constraints>
                 <properties>
                   <editable value="false"/>
-                  <opaque value="false"/>
+                  <opaque value="true"/>
                 </properties>
               </component>
               <component id="a65dc" class="javax.swing.JLabel" binding="labelOpenFolder">
@@ -433,7 +433,7 @@
                   <component id="7be97" class="javax.swing.JList" binding="listCmds">
                     <constraints/>
                     <properties>
-                      <opaque value="false"/>
+                      <opaque value="true"/>
                     </properties>
                   </component>
                 </children>
