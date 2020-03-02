@@ -1,6 +1,7 @@
+//#define TEST
 #include <iostream>
 #include <cstring>
-#define TEST
+
 
 using namespace std;
 extern "C" __declspec(dllexport) int getAscII(const char *str);
