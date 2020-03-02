@@ -25,9 +25,6 @@ public class MainClass {
     public static String name;
     private static Search search = Search.getInstance();
     private static TaskBar taskBar = null;
-    public static String fileMonitorDllName;
-    public static String getAscIIDllName;
-    public static String hotkeyListenerDllName;
 
     public static void setMainExit(boolean b) {
         mainExit = b;
@@ -106,6 +103,7 @@ public class MainClass {
     public static void main(String[] args) {
         try {
             System.setProperty("sun.java2d.noddraw", "true");
+            System.setProperty("jna.library.path", new File("user").getAbsolutePath() + "\\");
             /*org.jb2011.lnf.beautyeye.BeautyEyeLNFHelper.launchBeautyEyeLNF();
             UIManager.put("RootPane.setupButtonVisible", false);*/
             WebLookAndFeel.install();
@@ -115,14 +113,8 @@ public class MainClass {
         String osArch = System.getProperty("os.arch");
         if (osArch.contains("64")) {
             name = "File-Engine-x64.exe";
-            fileMonitorDllName = "fileMonitor64";
-            getAscIIDllName = "getAscII64";
-            hotkeyListenerDllName = "hotkeyListener64";
         } else {
             name = "File-Engine-x86.exe";
-            fileMonitorDllName = "fileMonitor86";
-            getAscIIDllName = "getAscII86";
-            hotkeyListenerDllName = "hotkeyListener86";
         }
 
         File user = new File("user");
@@ -235,11 +227,45 @@ public class MainClass {
         InputStream fileSearcher86 = MainClass.class.getResourceAsStream("/fileSearcher86.exe");
         InputStream fileOpener64 = MainClass.class.getResourceAsStream("/fileOpener64.exe");
         InputStream fileOpener86 = MainClass.class.getResourceAsStream("/fileOpener86.exe");
+        InputStream fileMonitor64Dll = MainClass.class.getResourceAsStream("/win32-x86-64/fileMonitor64.dll");
+        InputStream fileMonitor86Dll = MainClass.class.getResourceAsStream("/win32-x86/fileMonitor86.dll");
+        InputStream getAscII64Dll = MainClass.class.getResourceAsStream("/win32-x86-64/getAscII64.dll");
+        InputStream getAscII86Dll = MainClass.class.getResourceAsStream("/win32-x86/getAscII86.dll");
+        InputStream hotkeyListener64Dll = MainClass.class.getResourceAsStream("/win32-x86-64/hotkeyListener64.dll");
+        InputStream hotkeyListener86Dll = MainClass.class.getResourceAsStream("/win32-x86/hotkeyListener86.dll");
 
         boolean is64Bit = name.contains("x64");
 
         SettingsFrame.initSettings();
         SearchBar searchBar = SearchBar.getInstance();
+
+        if (is64Bit) {
+            target = new File("user/fileMonitor.dll");
+            if (!target.exists()) {
+                copyFile(fileMonitor64Dll, target);
+            }
+            target = new File("user/getAscII.dll");
+            if (!target.exists()) {
+                copyFile(getAscII64Dll, target);
+            }
+            target = new File("user/hotkeyListener.dll");
+            if (!target.exists()) {
+                copyFile(hotkeyListener64Dll, target);
+            }
+        } else {
+            target = new File("user/fileMonitor.dll");
+            if (!target.exists()) {
+                copyFile(fileMonitor86Dll, target);
+            }
+            target = new File("user/getAscII.dll");
+            if (!target.exists()) {
+                copyFile(getAscII86Dll, target);
+            }
+            target = new File("user/hotkeyListener.dll");
+            if (!target.exists()) {
+                copyFile(hotkeyListener86Dll, target);
+            }
+        }
 
         target = new File("user/fileSearcher.exe");
         if (!target.exists()) {
