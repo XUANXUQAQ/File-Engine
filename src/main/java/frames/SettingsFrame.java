@@ -721,7 +721,7 @@ public class SettingsFrame {
             priorityFolder = textFieldPriorityFolder.getText();
             dataPath = textFieldDataPath.getText();
             hotkey = textFieldHotkey.getText();
-            HotKeyListener.registerHotkey(hotkey);
+            HotKeyListener.changeHotKey(hotkey);
             allSettings.put("hotkey", hotkey);
             allSettings.put("isStartup", isStartup);
             allSettings.put("cacheNumLimit", cacheNumLimit);

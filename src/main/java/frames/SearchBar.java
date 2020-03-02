@@ -1,6 +1,7 @@
 package frames;
 
 
+import com.alee.laf.text.WebTextField;
 import getAscII.GetAscII;
 import getIcon.GetIcon;
 import hotkeyListener.CheckHotKey;
@@ -36,7 +37,7 @@ public class SearchBar {
     private JLabel label4 = new JLabel();
     private boolean isOpenLastFolderPressed = false;
     private int labelCount = 0;
-    private JTextField textField;
+    private WebTextField textField;
     private Search search = Search.getInstance();
     private Color labelColor = new Color(255, 152, 104, 255);
     private Color backgroundColor = new Color(108, 108, 108, 255);
@@ -119,14 +120,14 @@ public class SearchBar {
 
 
         //TextField
-        textField = new JTextField(300);
+        textField = new WebTextField(300);
         textField.setSize(searchBarWidth, (int) (searchBarHeight * 0.2));
         Font textFieldFont = new Font("Microsoft JhengHei", Font.BOLD, (int) (((height * 0.1) / 96 * 72 / 1.2) / 1.5));
         textField.setFont(textFieldFont);
         textField.setForeground(Color.BLACK);
         textField.setHorizontalAlignment(JTextField.LEFT);
         textField.setBorder(null);
-        textField.setBackground(backgroundColor);
+        textField.setBackground(Color.WHITE);
         textField.setLocation(0, 0);
         textField.addFocusListener(new FocusListener() {
             @Override
