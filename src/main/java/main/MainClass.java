@@ -148,6 +148,7 @@ public class MainClass {
                     new File("user/fileSearcher.exe").delete();
                     new File("user/getAscII.dll").delete();
                     new File("user/fileOpener.exe").delete();
+                    new File("user/hotkeyListener.dll").delete();
                     File originFile = new File(name);
                     File updated = new File("_" + name);
                     copyFile(new FileInputStream(originFile), updated);
@@ -236,9 +237,6 @@ public class MainClass {
 
         boolean is64Bit = name.contains("x64");
 
-        SettingsFrame.initSettings();
-        SearchBar searchBar = SearchBar.getInstance();
-
         if (is64Bit) {
             target = new File("user/fileMonitor.dll");
             if (!target.exists()) {
@@ -266,6 +264,8 @@ public class MainClass {
                 copyFile(hotkeyListener86Dll, target);
             }
         }
+        SettingsFrame.initSettings();
+        SearchBar searchBar = SearchBar.getInstance();
 
         target = new File("user/fileSearcher.exe");
         if (!target.exists()) {
