@@ -1,107 +1,87 @@
 package hotkeyListener;
 
+import com.melloware.jintellitype.JIntellitype;
 import frames.SearchBar;
-import main.MainClass;
+import frames.SettingsFrame;
 
-import java.awt.event.KeyEvent;
+import javax.swing.*;
 import java.util.HashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
-public class CheckHotKey {
+public class CheckHotKey extends JFrame {
 
     public static boolean isShowSearchBar = false;
     private static CheckHotKey hotKeyListener = new CheckHotKey();
     private HashMap<String, Integer> map = new HashMap<>();
-    private ExecutorService threadPool = Executors.newFixedThreadPool(2);
 
     public static CheckHotKey getInstance() {
         return hotKeyListener;
     }
+
+    //定义热键标识，用于在设置多个热键时，在事件处理中区分用户按下的热键
+    public static final int FUNC_KEY_MARK = 1;
 
     public void setShowSearchBar(boolean b) {
         isShowSearchBar = b;
     }
 
     public void stopListen() {
-        HotkeyListener.INSTANCE.stopListen();
+        JIntellitype.getInstance().unregisterHotKey(FUNC_KEY_MARK);
     }
 
     public void registerHotkey(String hotkey) {
         //解析字符串
-        int hotkey1 = -1, hotkey2 = -1, hotkey3 = -1;
-        int count = 0;
         String[] hotkeys = hotkey.split(" \\+ ");
+        int sum = 0;
+        String main = null;
         for (String each : hotkeys) {
             if (each.length() != 1) {
-                if (count == 0) {
-                    hotkey1 = map.get(each);
-                } else if (count == 1) {
-                    hotkey2 = map.get(each);
-                }
-                count++;
+                sum += map.get(each);
             } else {
-                hotkey3 = each.charAt(0);
+                main = each;
             }
         }
-        //注册快捷键
-        int finalHotkey = hotkey1;
-        int finalHotkey1 = hotkey2;
-        int finalHotkey2 = hotkey3;
-        threadPool.execute(() -> {
-            HotkeyListener.INSTANCE.registerHotKey(finalHotkey, finalHotkey1, finalHotkey2);
-            HotkeyListener.INSTANCE.startListen();
-        });
-    }
 
-    public void changeHotKey(String hotkey) {
-        //解析字符串
-        int hotkey1 = -1, hotkey2 = -1, hotkey3 = -1;
-        int count = 0;
-        String[] hotkeys = hotkey.split(" \\+ ");
-        for (String each : hotkeys) {
-            if (each.length() != 1) {
-                if (count == 0) {
-                    hotkey1 = map.get(each);
-                } else if (count == 1) {
-                    hotkey2 = map.get(each);
-                }
-                count++;
-            } else {
-                hotkey3 = each.charAt(0);
-            }
-        }
-        //注册快捷键
-        HotkeyListener.INSTANCE.registerHotKey(hotkey1, hotkey2, hotkey3);
-
+        //注册热键
+        assert main != null;
+        JIntellitype.getInstance().unregisterHotKey(FUNC_KEY_MARK);
+        JIntellitype.getInstance().registerHotKey(FUNC_KEY_MARK, sum, main.charAt(0));
     }
 
     private CheckHotKey() {
-        map.put("Ctrl", KeyEvent.VK_CONTROL);
-        map.put("Alt", KeyEvent.VK_ALT);
-        map.put("Shift", KeyEvent.VK_SHIFT);
-        map.put("Win", 0x5B);
+        this.setBounds(100, 100, 600, 400);
+        this.setLayout(null);
+        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        map.put("Ctrl", JIntellitype.MOD_CONTROL);
+        map.put("Alt", JIntellitype.MOD_ALT);
+        map.put("Shift", JIntellitype.MOD_SHIFT);
+        map.put("Win", JIntellitype.MOD_WIN);
 
-        threadPool.execute(() -> {
-            boolean isExecuted = false;
-            while (!MainClass.mainExit) {
-                if (!isExecuted && HotkeyListener.INSTANCE.getKeyStatus()) {
-                    isExecuted = true;
-                    isShowSearchBar = !isShowSearchBar;
-                    SearchBar searchBar = SearchBar.getInstance();
-                    if (isShowSearchBar) {
-                        searchBar.showSearchbar();
-                    } else {
-                        searchBar.closedTodo();
-                    }
-                }
-                if (!HotkeyListener.INSTANCE.getKeyStatus()) {
-                    isExecuted = false;
-                }
-                try {
-                    Thread.sleep(10);
-                } catch (InterruptedException ignored) {
+        //解析字符串
+        String[] hotkeys = SettingsFrame.hotkey.split(" \\+ ");
+        int sum = 0;
+        String main = null;
+        for (String each : hotkeys) {
+            if (each.length() != 1) {
+                sum += map.get(each);
+            } else {
+                main = each;
+            }
+        }
 
+        //注册热键
+        assert main != null;
+        JIntellitype.getInstance().registerHotKey(FUNC_KEY_MARK, sum, main.charAt(0));
+
+        //添加热键监听器
+        JIntellitype.getInstance().addHotKeyListener(markCode -> {
+            if (markCode == FUNC_KEY_MARK) {
+                isShowSearchBar = !isShowSearchBar;
+                SearchBar searchBar = SearchBar.getInstance();
+                if (isShowSearchBar) {
+
+                    searchBar.showSearchbar();
+                } else {
+                    searchBar.closedTodo();
                 }
             }
         });
