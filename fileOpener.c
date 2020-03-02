@@ -1,9 +1,14 @@
 #include <stdio.h>
 #include <windows.h>
 
+
 int main(){
-    int hwndDOS = GetForegroundWindow();
-    ShowWindow(hwndDOS, SW_HIDE);
+    HWND hwnd;  
+    hwnd=FindWindow("ConsoleWindowClass",NULL); //处理顶级窗口的类名和窗口名称匹配指定的字符串,不搜索子窗口。  
+    if(hwnd)  
+    {  
+        ShowWindow(hwnd,SW_HIDE);               //设置指定窗口的显示状态  
+    }  
     char *path = "fileToOpen.txt";
     char command[260];
     char workingdir[260];
