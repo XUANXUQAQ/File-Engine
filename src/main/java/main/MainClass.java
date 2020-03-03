@@ -234,8 +234,6 @@ public class MainClass {
         InputStream getAscII86Dll = MainClass.class.getResourceAsStream("/win32-x86/getAscII86.dll");
         InputStream hotkeyListener64Dll = MainClass.class.getResourceAsStream("/win32-x86-64/hotkeyListener64.dll");
         InputStream hotkeyListener86Dll = MainClass.class.getResourceAsStream("/win32-x86/hotkeyListener86.dll");
-        InputStream everything64Dll = MainClass.class.getResourceAsStream("/win32-x86-64/Everything64.dll");
-        InputStream everything86Dll = MainClass.class.getResourceAsStream("/win32-x86/Everything32.dll");
 
         boolean is64Bit = name.contains("x64");
 
@@ -252,10 +250,6 @@ public class MainClass {
             if (!target.exists()) {
                 copyFile(hotkeyListener64Dll, target);
             }
-            target = new File("user/Everything.dll");
-            if (!target.exists()) {
-                copyFile(everything64Dll, target);
-            }
         } else {
             target = new File("user/fileMonitor.dll");
             if (!target.exists()) {
@@ -268,10 +262,6 @@ public class MainClass {
             target = new File("user/hotkeyListener.dll");
             if (!target.exists()) {
                 copyFile(hotkeyListener86Dll, target);
-            }
-            target = new File("user/Everything.dll");
-            if (!target.exists()) {
-                copyFile(everything86Dll, target);
             }
         }
         SettingsFrame.initSettings();
