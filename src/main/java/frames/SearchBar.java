@@ -1,7 +1,6 @@
 package frames;
 
 
-import com.alee.laf.text.WebTextField;
 import getAscII.GetAscII;
 import getIcon.GetIcon;
 import hotkeyListener.CheckHotKey;
@@ -37,7 +36,7 @@ public class SearchBar {
     private JLabel label4 = new JLabel();
     private boolean isOpenLastFolderPressed = false;
     private int labelCount = 0;
-    private WebTextField textField;
+    private JTextField textField;
     private Search search = Search.getInstance();
     private Color labelColor = new Color(255, 152, 104, 255);
     private Color backgroundColor = new Color(108, 108, 108, 255);
@@ -74,7 +73,7 @@ public class SearchBar {
         searchBar.getRootPane().setWindowDecorationStyle(JRootPane.NONE);
         searchBar.setBackground(null);
         searchBar.setOpacity(0.8f);
-        searchBar.add(panel);
+        searchBar.setContentPane(panel);
         searchBar.setType(JFrame.Type.UTILITY);// TODO 隐藏任务栏图标
 
 
@@ -120,15 +119,15 @@ public class SearchBar {
 
 
         //TextField
-        textField = new WebTextField(300);
-        textField.setSize(searchBarWidth, (int) (searchBarHeight * 0.2));
+        textField = new JTextField(300);
+        textField.setSize(searchBarWidth - 6, (int) (searchBarHeight * 0.2) - 5);
         Font textFieldFont = new Font("Microsoft JhengHei", Font.BOLD, (int) (((height * 0.1) / 96 * 72 / 1.2) / 1.5));
         textField.setFont(textFieldFont);
         textField.setForeground(Color.BLACK);
         textField.setHorizontalAlignment(JTextField.LEFT);
         textField.setBorder(null);
         textField.setBackground(Color.WHITE);
-        textField.setLocation(0, 0);
+        textField.setLocation(3, 0);
         textField.addFocusListener(new FocusListener() {
             @Override
             public void focusGained(FocusEvent e) {
@@ -156,7 +155,7 @@ public class SearchBar {
         ExecutorService fixedThreadPool = Executors.newFixedThreadPool(6);
 
         fixedThreadPool.execute(() -> {
-            //锁住MouseMotion检测，阻止同时出发两个动作
+            //锁住MouseMotion检测，阻止同时发出两个动作
             try {
                 while (!mainExit) {
                     if (System.currentTimeMillis() - mouseWheelTime > 500) {
@@ -171,10 +170,8 @@ public class SearchBar {
 
         //刷新屏幕线程
         fixedThreadPool.execute(() -> {
-            Container contentPanel = searchBar.getContentPane();
             try {
                 while (!mainExit) {
-                    contentPanel.repaint();
                     panel.repaint();
                     Thread.sleep(100);
                 }
