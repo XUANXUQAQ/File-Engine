@@ -1,10 +1,15 @@
 package search;
 
+import com.sun.jna.WString;
+import everythingSDK.Everything;
 import frames.SearchBar;
 import frames.SettingsFrame;
 import main.MainClass;
 
+import javax.swing.filechooser.FileSystemView;
 import java.io.*;
+import java.nio.Buffer;
+import java.nio.CharBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.ConcurrentModificationException;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -544,14 +549,138 @@ public class Search {
 
 
     private void searchFile(String ignorePath, int searchDepth) {
-        File[] roots = File.listRoots();
-        for (File root : roots) {
-            String path = root.getAbsolutePath();
-            path = path.substring(0, 2);
-            __searchFile(path, searchDepth, ignorePath);
+        //TODO 检测Everything
+        if (isEverythingRunning()) {
+            Everything.INSTANCE.Everything_SetSearchW(new WString(""));
+            Everything.INSTANCE.Everything_QueryW(true);
+            int all = Everything.INSTANCE.Everything_GetTotResults();
+            Buffer result = CharBuffer.allocate(1000);
+            try (BufferedWriter bw0 = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(SettingsFrame.dataPath + "\\list0-100.txt", true)));
+                 BufferedWriter bw1 = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(SettingsFrame.dataPath + "\\list100-200.txt", true)));
+                 BufferedWriter bw2 = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(SettingsFrame.dataPath + "\\list200-300.txt", true)));
+                 BufferedWriter bw3 = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(SettingsFrame.dataPath + "\\list300-400.txt", true)));
+                 BufferedWriter bw4 = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(SettingsFrame.dataPath + "\\list400-500.txt", true)));
+                 BufferedWriter bw5 = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(SettingsFrame.dataPath + "\\list500-600.txt", true)));
+                 BufferedWriter bw6 = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(SettingsFrame.dataPath + "\\list600-700.txt", true)));
+                 BufferedWriter bw7 = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(SettingsFrame.dataPath + "\\list700-800.txt", true)));
+                 BufferedWriter bw8 = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(SettingsFrame.dataPath + "\\list800-900.txt", true)));
+                 BufferedWriter bw9 = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(SettingsFrame.dataPath + "\\list900-1000.txt", true)));
+                 BufferedWriter bw10 = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(SettingsFrame.dataPath + "\\list1000-1100.txt", true)));
+                 BufferedWriter bw11 = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(SettingsFrame.dataPath + "\\list1100-1200.txt", true)));
+                 BufferedWriter bw12 = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(SettingsFrame.dataPath + "\\list1200-1300.txt", true)));
+                 BufferedWriter bw13 = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(SettingsFrame.dataPath + "\\list1300-1400.txt", true)));
+                 BufferedWriter bw14 = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(SettingsFrame.dataPath + "\\list1400-1500.txt", true)));
+                 BufferedWriter bw15 = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(SettingsFrame.dataPath + "\\list1500-1600.txt", true)));
+                 BufferedWriter bw16 = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(SettingsFrame.dataPath + "\\list1600-1700.txt", true)));
+                 BufferedWriter bw17 = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(SettingsFrame.dataPath + "\\list1700-1800.txt", true)));
+                 BufferedWriter bw18 = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(SettingsFrame.dataPath + "\\list1800-1900.txt", true)));
+                 BufferedWriter bw19 = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(SettingsFrame.dataPath + "\\list1900-2000.txt", true)));
+                 BufferedWriter bw20 = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(SettingsFrame.dataPath + "\\list2000-2100.txt", true)));
+                 BufferedWriter bw21 = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(SettingsFrame.dataPath + "\\list2100-2200.txt", true)));
+                 BufferedWriter bw22 = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(SettingsFrame.dataPath + "\\list2200-2300.txt", true)));
+                 BufferedWriter bw23 = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(SettingsFrame.dataPath + "\\list2300-2400.txt", true)));
+                 BufferedWriter bw24 = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(SettingsFrame.dataPath + "\\list2400-2500.txt", true)));
+                 BufferedWriter bw25 = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(SettingsFrame.dataPath + "\\list2500-.txt", true)))) {
+                char[] buf;
+                String each;
+                int ascII;
+                for (int j = 0; j < all; j++) {
+                    Everything.INSTANCE.Everything_GetResultFullPathNameW(j, result, all);
+                    buf = (char[]) result.array();
+                    each = new String(buf).trim();
+                    int index = each.indexOf('\u0000');
+                    if (index != -1) {
+                        each = each.substring(0, index);
+                    }
+                    ascII = SearchBar.getInstance().getAscIISum(new File(each).getName());
+                    if (0 < ascII && ascII <= 100) {
+                        bw0.write(each + "\n");
+                    } else if (100 < ascII && ascII <= 200) {
+                        bw1.write(each + "\n");
+                    } else if (200 < ascII && ascII <= 300) {
+                        bw2.write(each + "\n");
+                    } else if (300 < ascII && ascII <= 400) {
+                        bw3.write(each + "\n");
+                    } else if (400 < ascII && ascII <= 500) {
+                        bw4.write(each + "\n");
+                    } else if (500 < ascII && ascII <= 600) {
+                        bw5.write(each + "\n");
+                    } else if (600 < ascII && ascII <= 700) {
+                        bw6.write(each + "\n");
+                    } else if (700 < ascII && ascII <= 800) {
+                        bw7.write(each + "\n");
+                    } else if (800 < ascII && ascII <= 900) {
+
+                        bw8.write(each + "\n");
+                    } else if (900 < ascII && ascII <= 1000) {
+
+                        bw9.write(each + "\n");
+                    } else if (1000 < ascII && ascII <= 1100) {
+
+                        bw10.write(each + "\n");
+                    } else if (1100 < ascII && ascII <= 1200) {
+
+                        bw11.write(each + "\n");
+                    } else if (1200 < ascII && ascII <= 1300) {
+
+                        bw12.write(each + "\n");
+                    } else if (1300 < ascII && ascII <= 1400) {
+
+                        bw13.write(each + "\n");
+                    } else if (1400 < ascII && ascII <= 1500) {
+
+                        bw14.write(each + "\n");
+                    } else if (1500 < ascII && ascII <= 1600) {
+
+                        bw15.write(each + "\n");
+                    } else if (1600 < ascII && ascII <= 1700) {
+
+                        bw16.write(each + "\n");
+                    } else if (1700 < ascII && ascII <= 1800) {
+
+                        bw17.write(each + "\n");
+                    } else if (1800 < ascII && ascII <= 1900) {
+
+                        bw18.write(each + "\n");
+                    } else if (1900 < ascII && ascII <= 2000) {
+
+                        bw19.write(each + "\n");
+                    } else if (2000 < ascII && ascII <= 2100) {
+
+                        bw20.write(each + "\n");
+                    } else if (2100 < ascII && ascII <= 2200) {
+
+                        bw21.write(each + "\n");
+                    } else if (2200 < ascII && ascII <= 2300) {
+
+                        bw22.write(each + "\n");
+                    } else if (2300 < ascII && ascII <= 2400) {
+                        bw23.write(each + "\n");
+                    } else {
+                        if (2400 < ascII && ascII <= 2500) {
+                            bw24.write(each + "\n");
+                        } else {
+                            bw25.write(each + "\n");
+                        }
+                    }
+                }
+            } catch (IOException ignored) {
+
+            }
+        } else {
+            File[] roots = File.listRoots();
+            FileSystemView sys = FileSystemView.getFileSystemView();
+            for (File root : roots) {
+                String dirveType = sys.getSystemTypeDescription(root);
+                if (dirveType.equals("本地磁盘")) {
+                    String path = root.getAbsolutePath();
+                    path = path.substring(0, 2);
+                    __searchFile(path, searchDepth, ignorePath);
+                }
+            }
+            __searchFileIgnoreSearchDepth(getStartMenu(), ignorePath);
+            __searchFileIgnoreSearchDepth("C:\\ProgramData\\Microsoft\\Windows\\Start Menu", ignorePath);
         }
-        __searchFileIgnoreSearchDepth(getStartMenu(), ignorePath);
-        __searchFileIgnoreSearchDepth("C:\\ProgramData\\Microsoft\\Windows\\Start Menu", ignorePath);
         MainClass.showMessage("提示", "搜索完成");
         isManualUpdate = false;
         isUsable = true;
@@ -720,4 +849,32 @@ public class Search {
         searchFile(ignorePath, searchDepth);
     }
 
+    private boolean isEverythingRunning() {
+        String cmd = "tasklist /fi \"" + "imagename eq " + "Everything.exe" + "\"";
+        Runtime r = Runtime.getRuntime();
+        Process p;
+        BufferedReader br = null;
+        try {
+            p = r.exec(cmd);
+            br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+            String line;
+            while ((line = br.readLine()) != null) {
+                if (line.contains("Everything.exe")) {
+                    return true;
+                }
+            }
+            return false;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        } finally {
+            if (br != null) {
+                try {
+                    br.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
 }

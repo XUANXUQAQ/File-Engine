@@ -2065,7 +2065,7 @@ public class SearchBar {
                         return;
                     }
                     if (search.isUsable()) {
-                        if (isSubString(getFileName(each), searchText)) {
+                        if (isMatched(getFileName(each), searchText)) {
                             switch (searchCase) {
                                 case "F":
                                     if (isFile(each)) {
@@ -2394,6 +2394,9 @@ public class SearchBar {
 
     public int getAscIISum(String path) {
         path = path.toUpperCase();
+        if (path.contains(";")) {
+            path = path.replace(";", "");
+        }
         return GetAscII.INSTANCE.getAscII(path);
     }
 
@@ -2414,7 +2417,7 @@ public class SearchBar {
             }
         }
         if (cacheNum < SettingsFrame.cacheNumLimit) {
-            isRepeated = isSubString(oldCaches.toString() + ";", (content));
+            isRepeated = isMatched(oldCaches.toString() + ";", (content));
             if (!isRepeated) {
                 try (BufferedWriter out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(new File("user/cache.dat"), true)))) {
                     out.write(content + "\r\n");
@@ -2489,7 +2492,7 @@ public class SearchBar {
                             cachesToDel.add(cach);
                         } else {
                             String eachCacheName = getFileName(cach);
-                            if (isSubString(eachCacheName, text)) {
+                            if (isMatched(eachCacheName, text)) {
                                 if (!listResult.contains(cach)) {
                                     boolean fullMatched = eachCacheName.toLowerCase().equals(text.toLowerCase());
                                     switch (searchCase) {
@@ -2541,11 +2544,11 @@ public class SearchBar {
         }
     }
 
-    private boolean isSubString(String srcText, String txt) {
+    private boolean isMatched(String srcText, String txt) {
         if (!txt.equals("")) {
             srcText = srcText.toLowerCase();
             txt = txt.toLowerCase();
-            String[] keyWords = txt.split(";");
+            String[] keyWords = semicolon.split(txt);
             for (String each : keyWords) {
                 if (!srcText.contains(each)) {
                     return false;
@@ -2569,7 +2572,7 @@ public class SearchBar {
             File[] files = path.listFiles();
             if (!(null == files || files.length == 0)) {
                 for (File each : files) {
-                    if (isSubString(getFileName(each.getAbsolutePath()), text)) {
+                    if (isMatched(getFileName(each.getAbsolutePath()), text)) {
                         switch (searchCase) {
                             case "F":
                                 if (each.isFile()) {
@@ -2609,7 +2612,7 @@ public class SearchBar {
                     File[] allFiles = remain.listFiles();
                     assert allFiles != null;
                     for (File each : allFiles) {
-                        if (isSubString(getFileName(each.getAbsolutePath()), text)) {
+                        if (isMatched(getFileName(each.getAbsolutePath()), text)) {
                             switch (searchCase) {
                                 case "F":
                                     if (each.isFile()) {
