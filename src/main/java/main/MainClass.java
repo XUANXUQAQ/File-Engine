@@ -1,6 +1,5 @@
 package main;
 
-import com.alee.laf.WebLookAndFeel;
 import com.alibaba.fastjson.JSONObject;
 import fileMonitor.FileMonitor;
 import frames.SearchBar;
@@ -106,7 +105,7 @@ public class MainClass {
             System.setProperty("jna.library.path", new File("user").getAbsolutePath() + "\\");
             org.jb2011.lnf.beautyeye.BeautyEyeLNFHelper.launchBeautyEyeLNF();
             UIManager.put("RootPane.setupButtonVisible", false);
-            WebLookAndFeel.initializeManagers();
+            //WebLookAndFeel.initializeManagers();
         } catch (Exception e) {
             e.printStackTrace();
         }
