@@ -124,7 +124,7 @@ public class SearchBar {
         TextBorderUtlis border = new TextBorderUtlis(new Color(73, 162, 255, 255), 1, true);
         textField.setBorder(border);
         textField.setSize(searchBarWidth - 6, (int) (searchBarHeight * 0.2) - 5);
-        Font textFieldFont = new Font("Microsoft JhengHei", Font.BOLD, (int) (((height * 0.1) / 96 * 72 / 1.2)));
+        Font textFieldFont = new Font("Microsoft JhengHei", Font.PLAIN, (int) (((height * 0.1) / 96 * 72 / 1.2)));
         textField.setFont(textFieldFont);
         textField.setForeground(Color.BLACK);
         textField.setHorizontalAlignment(JTextField.LEFT);
