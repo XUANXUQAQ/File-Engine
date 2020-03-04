@@ -8,6 +8,7 @@ import main.MainClass;
 import search.Search;
 
 import javax.swing.*;
+import javax.swing.border.LineBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.*;
@@ -74,7 +75,7 @@ public class SearchBar {
         searchBar.setBackground(null);
         searchBar.setOpacity(0.8f);
         searchBar.setContentPane(panel);
-        searchBar.setType(JFrame.Type.UTILITY);// TODO Òþ²ØÈÎÎñÀ¸Í¼±ê
+        searchBar.setType(JFrame.Type.UTILITY);
 
 
         //labels
@@ -120,12 +121,13 @@ public class SearchBar {
 
         //TextField
         textField = new JTextField(300);
+        TextBorderUtlis border = new TextBorderUtlis(new Color(73, 162, 255, 255), 1, true);
+        textField.setBorder(border);
         textField.setSize(searchBarWidth - 6, (int) (searchBarHeight * 0.2) - 5);
-        Font textFieldFont = new Font("Microsoft JhengHei", Font.BOLD, (int) (((height * 0.1) / 96 * 72 / 1.2) / 1.5));
+        Font textFieldFont = new Font("Microsoft JhengHei", Font.BOLD, (int) (((height * 0.1) / 96 * 72 / 1.2)));
         textField.setFont(textFieldFont);
         textField.setForeground(Color.BLACK);
         textField.setHorizontalAlignment(JTextField.LEFT);
-        textField.setBorder(null);
         textField.setBackground(Color.WHITE);
         textField.setLocation(3, 0);
         textField.addFocusListener(new FocusListener() {
@@ -272,7 +274,7 @@ public class SearchBar {
 
                 } finally {
                     try {
-                        Thread.sleep(1);
+                        Thread.sleep(5);
                     } catch (InterruptedException ignored) {
 
                     }
@@ -2691,5 +2693,33 @@ public class SearchBar {
         File file = new File(text);
         return file.isDirectory();
     }
+}
+
+class TextBorderUtlis extends LineBorder {
+
+    private static final long serialVersionUID = 1L;
+
+    public TextBorderUtlis(Color color, int thickness, boolean roundedCorners) {
+        super(color, thickness, roundedCorners);
+    }
+
+    public void paintBorder(Component c, Graphics g, int x, int y, int width, int height) {
+
+        RenderingHints rh = new RenderingHints(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        Color oldColor = g.getColor();
+        Graphics2D g2 = (Graphics2D) g;
+        int i;
+        g2.setRenderingHints(rh);
+        g2.setColor(lineColor);
+        for (i = 0; i < thickness; i++) {
+            if (!roundedCorners) {
+                g2.drawRect(x + i, y + i, width - i - i - 1, height - i - i - 1);
+            } else {
+                g2.drawRoundRect(x + i, y + i, width - i - i - 1, height - i - i - 1, 5, 5);
+            }
+        }
+        g2.setColor(oldColor);
+    }
+
 }
 
