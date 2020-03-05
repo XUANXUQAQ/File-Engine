@@ -366,56 +366,27 @@ public class MainClass {
             //检测文件改动线程
             String filesToAdd;
             String filesToRemove;
-            BufferedReader readerAdd = null;
-            BufferedReader readerRemove = null;
-            try {
-                readerAdd = new BufferedReader(new InputStreamReader(new FileInputStream(new File(SettingsFrame.tmp.getAbsolutePath() + "\\fileAdded.txt"))));
-                readerRemove = new BufferedReader(new InputStreamReader(new FileInputStream(new File(SettingsFrame.tmp.getAbsolutePath() + "\\fileRemoved.txt"))));
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            }
-            //分割字符串
-            while (!mainExit) {
-                if (!search.isManualUpdate()) {
-                    try {
-                        if (readerAdd != null) {
-                            while ((filesToAdd = readerAdd.readLine()) != null) {
-                                if (!filesToAdd.contains(SettingsFrame.dataPath)) {
-                                    search.addFileToLoadBin(filesToAdd);
-                                    System.out.println("添加" + filesToAdd);
-                                }
+            try (BufferedReader readerAdd = new BufferedReader(new InputStreamReader(new FileInputStream(new File(SettingsFrame.tmp.getAbsolutePath() + "\\fileAdded.txt")))); BufferedReader readerRemove = new BufferedReader(new InputStreamReader(new FileInputStream(new File(SettingsFrame.tmp.getAbsolutePath() + "\\fileRemoved.txt"))))) {
+                //分割字符串
+                while (!mainExit) {
+                    if (!search.isManualUpdate()) {
+                        if ((filesToAdd = readerAdd.readLine()) != null) {
+                            if (!filesToAdd.contains(SettingsFrame.dataPath)) {
+                                search.addFileToLoadBin(filesToAdd);
+                                System.out.println("添加" + filesToAdd);
                             }
                         }
-                        if (readerRemove != null) {
-                            while ((filesToRemove = readerRemove.readLine()) != null) {
-                                if (!filesToRemove.contains(SettingsFrame.dataPath)) {
-                                    search.addToRecycleBin(filesToRemove);
-                                }
+                        if ((filesToRemove = readerRemove.readLine()) != null) {
+                            if (!filesToRemove.contains(SettingsFrame.dataPath)) {
+                                search.addToRecycleBin(filesToRemove);
+                                System.out.println("删除" + filesToRemove);
                             }
                         }
-                    } catch (IOException e) {
-                        e.printStackTrace();
                     }
+                    Thread.sleep(1);
                 }
-                try {
-                    Thread.sleep(50);
-                } catch (InterruptedException ignored) {
-
-                }
-            }
-            if (readerAdd != null) {
-                try {
-                    readerAdd.close();
-                } catch (IOException ignored) {
-
-                }
-            }
-            if (readerRemove != null) {
-                try {
-                    readerRemove.close();
-                } catch (IOException ignored) {
-
-                }
+            } catch (IOException | InterruptedException e) {
+                e.printStackTrace();
             }
         });
 
@@ -424,68 +395,61 @@ public class MainClass {
             // 时间检测线程
             long count = 0;
             long gcCount = 0;
-            while (!mainExit) {
-                boolean isUsing = searchBar.isUsing();
-                count++;
-                gcCount++;
-                if (count >= (SettingsFrame.updateTimeLimit << 10) && !isUsing && !search.isManualUpdate()) {
-                    count = 0;
-                    if (search.isUsable() && (!searchBar.isUsing())) {
-                        search.mergeFileToList();
+            try {
+                while (!mainExit) {
+                    boolean isUsing = searchBar.isUsing();
+                    count++;
+                    gcCount++;
+                    if (count >= (SettingsFrame.updateTimeLimit << 10) && !isUsing && !search.isManualUpdate()) {
+                        count = 0;
+                        if (search.isUsable() && (!searchBar.isUsing())) {
+                            search.mergeFileToList();
+                        }
                     }
-                }
-                if (gcCount > 600000) {
-                    System.out.println("正在释放内存空间");
-                    System.gc();
-                    gcCount = 0;
-                }
-                try {
+                    if (gcCount > 600000) {
+                        System.out.println("正在释放内存空间");
+                        System.gc();
+                        gcCount = 0;
+                    }
                     Thread.sleep(1);
-                } catch (InterruptedException ignore) {
-
                 }
+            } catch (InterruptedException ignore) {
+
             }
         });
 
 
         //搜索线程
         fixedThreadPool.execute(() -> {
-            while (!mainExit) {
-                if (search.isManualUpdate()) {
-                    search.setUsable(false);
-                    search.updateLists(SettingsFrame.ignorePath, SettingsFrame.searchDepth);
-                }
-                try {
+            try {
+                while (!mainExit) {
+                    if (search.isManualUpdate()) {
+                        search.setUsable(false);
+                        search.updateLists(SettingsFrame.ignorePath, SettingsFrame.searchDepth);
+                    }
                     Thread.sleep(1);
-                } catch (InterruptedException ignored) {
-
                 }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
         });
 
-        while (true) {
-            // 主循环开始
-            try {
+        try {
+            while (true) {
+                // 主循环开始
                 Thread.sleep(1);
-            } catch (InterruptedException ignored) {
-
-            }
-            if (mainExit) {
-                CheckHotKey.getInstance().stopListen();
-                File CLOSEDLL = new File(SettingsFrame.tmp.getAbsolutePath() + "\\CLOSE");
-                try {
+                if (mainExit) {
+                    CheckHotKey.getInstance().stopListen();
+                    File CLOSEDLL = new File(SettingsFrame.tmp.getAbsolutePath() + "\\CLOSE");
                     CLOSEDLL.createNewFile();
-                } catch (IOException ignored) {
-
-                }
-                try {
                     Thread.sleep(10000);
-                } catch (InterruptedException ignored) {
-
+                    fixedThreadPool.shutdown();
+                    System.exit(0);
                 }
-                fixedThreadPool.shutdown();
-                System.exit(0);
             }
+
+        } catch (InterruptedException | IOException ignored) {
+
         }
     }
 }
