@@ -293,7 +293,7 @@ public class SearchBar {
                             search.mergeAndClearRecycleBin();
                             search.setUsable(true);
                         }
-                        if (search.getLoadListSize() > 15000) {
+                        if (search.getLoadListSize() > 3000) {
                             System.out.println("加载缓存空间过大，自动清理");
                             search.setUsable(false);
                             search.mergeFileToList();
