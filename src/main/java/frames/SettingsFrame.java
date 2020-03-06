@@ -104,13 +104,21 @@ public class SettingsFrame {
     private JLabel labelCopyPath;
     private JTextField textFieldCopyPath;
     private JLabel labelVersion;
+    private JPanel tab1;
+    private JPanel tab2;
+    private JPanel tab3;
+    private JPanel tab4;
+    private JPanel tab5;
+    private JPanel tab6;
     private static boolean isStartup;
     private Unzip unzipInstance = Unzip.getInstance();
     private Thread updateThread = null;
 
 
     public SettingsFrame() {
-        labelAboutGithub.setText("<html><a href='https://github.com/XUANXUQAQ/File-Engine'>File-Engine</a></html>");
+        Color trans = new Color(0, 0, 0, 0);
+        UIManager.put("TabbedPane.focus", trans);
+        labelAboutGithub.setText("<html><a href='https://github.com/XUANXUQAQ/File-Engine'><font size=\"4\">File-Engine</font></a></html>");
         ImageIcon imageIcon = new ImageIcon(SettingsFrame.class.getResource("/icons/frame.png"));
         labelIcon.setIcon(imageIcon);
         checkBox1.addActionListener(e -> setStartup(checkBox1.isSelected()));
