@@ -105,7 +105,6 @@ public class MainClass {
             System.setProperty("jna.library.path", new File("user").getAbsolutePath() + "\\");
             org.jb2011.lnf.beautyeye.BeautyEyeLNFHelper.launchBeautyEyeLNF();
             UIManager.put("RootPane.setupButtonVisible", false);
-            //WebLookAndFeel.initializeManagers();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -327,14 +326,17 @@ public class MainClass {
 
 
         data = new File(SettingsFrame.dataPath);
-        if (data.isDirectory() && data.exists()) {
-            if (Objects.requireNonNull(data.listFiles()).length != 26) {
-                System.out.println("检测到data文件损坏，正在搜索并重建");
-                search.setManualUpdate(true);
-            }
-        } else {
+        if (!data.exists()) {
             System.out.println("无data文件，正在搜索并重建");
             search.setManualUpdate(true);
+        } else if (!data.isDirectory()) {
+            System.out.println("无data文件，正在搜索并重建");
+            search.setManualUpdate(true);
+        } else if (data.isDirectory() && Objects.requireNonNull(data.listFiles()).length == 0) {
+            System.out.println("无data文件，正在搜索并重建");
+            search.setManualUpdate(true);
+        } else {
+            Search.diskCount = Objects.requireNonNull(data.listFiles()).length;
         }
 
         FileSystemView sys = FileSystemView.getFileSystemView();
@@ -370,13 +372,13 @@ public class MainClass {
                 //分割字符串
                 while (!mainExit) {
                     if (!search.isManualUpdate()) {
-                        if ((filesToAdd = readerAdd.readLine()) != null) {
+                        while ((filesToAdd = readerAdd.readLine()) != null) {
                             if (!filesToAdd.contains(SettingsFrame.dataPath)) {
                                 search.addFileToLoadBin(filesToAdd);
                                 System.out.println("添加" + filesToAdd);
                             }
                         }
-                        if ((filesToRemove = readerRemove.readLine()) != null) {
+                        while ((filesToRemove = readerRemove.readLine()) != null) {
                             if (!filesToRemove.contains(SettingsFrame.dataPath)) {
                                 search.addToRecycleBin(filesToRemove);
                                 System.out.println("删除" + filesToRemove);
