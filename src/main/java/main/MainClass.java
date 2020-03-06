@@ -335,6 +335,9 @@ public class MainClass {
         } else if (data.isDirectory() && Objects.requireNonNull(data.listFiles()).length == 0) {
             System.out.println("无data文件，正在搜索并重建");
             search.setManualUpdate(true);
+        } else if (data.isDirectory() && Objects.requireNonNull(data.listFiles()).length == 26) {
+            System.out.println("无data文件，正在搜索并重建");
+            search.setManualUpdate(true);
         } else {
             Search.diskCount = Objects.requireNonNull(data.listFiles()).length;
         }
