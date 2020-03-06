@@ -9,6 +9,9 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ConcurrentModificationException;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 
 public class Search {
@@ -17,6 +20,7 @@ public class Search {
     private static Search searchInstance = new Search();
     private CopyOnWriteArraySet<String> RecycleBin = new CopyOnWriteArraySet<>();
     private CopyOnWriteArraySet<String> listToLoad = new CopyOnWriteArraySet<>();
+    public static int diskCount = 0;
 
     private Search() {
     }
@@ -140,8 +144,8 @@ public class Search {
                 File target;
 
                 if (!set0.isEmpty()) {
-                    srcPath = SettingsFrame.dataPath + "\\list0-100.txt";
-                    destPath = SettingsFrame.dataPath + "\\_list0-100.txt";
+                    srcPath = SettingsFrame.dataPath + "\\0" + "\\list0-100.txt";
+                    destPath = SettingsFrame.dataPath + "\\0" + "\\_list0-100.txt";
                     deleteRecordInFile(set0, srcPath, destPath);
                     src = new File(srcPath);
                     src.delete();
@@ -149,8 +153,8 @@ public class Search {
                     target.renameTo(src);
                 }
                 if (!set100.isEmpty()) {
-                    srcPath = SettingsFrame.dataPath + "\\list100-200.txt";
-                    destPath = SettingsFrame.dataPath + "\\_list100-200.txt";
+                    srcPath = SettingsFrame.dataPath + "\\0" + "\\list100-200.txt";
+                    destPath = SettingsFrame.dataPath + "\\0" + "\\_list100-200.txt";
                     deleteRecordInFile(set100, srcPath, destPath);
                     src = new File(srcPath);
                     src.delete();
@@ -158,8 +162,8 @@ public class Search {
                     target.renameTo(src);
                 }
                 if (!set200.isEmpty()) {
-                    srcPath = SettingsFrame.dataPath + "\\list200-300.txt";
-                    destPath = SettingsFrame.dataPath + "\\_list200-300.txt";
+                    srcPath = SettingsFrame.dataPath + "\\0" + "\\list200-300.txt";
+                    destPath = SettingsFrame.dataPath + "\\0" + "\\_list200-300.txt";
                     deleteRecordInFile(set200, srcPath, destPath);
                     src = new File(srcPath);
                     src.delete();
@@ -167,8 +171,8 @@ public class Search {
                     target.renameTo(src);
                 }
                 if (!set300.isEmpty()) {
-                    srcPath = SettingsFrame.dataPath + "\\list300-400.txt";
-                    destPath = SettingsFrame.dataPath + "\\_list300-400.txt";
+                    srcPath = SettingsFrame.dataPath + "\\0" + "\\list300-400.txt";
+                    destPath = SettingsFrame.dataPath + "\\0" + "\\_list300-400.txt";
                     deleteRecordInFile(set300, srcPath, destPath);
                     src = new File(srcPath);
                     src.delete();
@@ -176,8 +180,8 @@ public class Search {
                     target.renameTo(src);
                 }
                 if (!set400.isEmpty()) {
-                    srcPath = SettingsFrame.dataPath + "\\list400-500.txt";
-                    destPath = SettingsFrame.dataPath + "\\_list400-500.txt";
+                    srcPath = SettingsFrame.dataPath + "\\0" + "\\list400-500.txt";
+                    destPath = SettingsFrame.dataPath + "\\0" + "\\_list400-500.txt";
                     deleteRecordInFile(set400, srcPath, destPath);
                     src = new File(srcPath);
                     src.delete();
@@ -185,8 +189,8 @@ public class Search {
                     target.renameTo(src);
                 }
                 if (!set500.isEmpty()) {
-                    srcPath = SettingsFrame.dataPath + "\\list500-600.txt";
-                    destPath = SettingsFrame.dataPath + "\\_list500-600.txt";
+                    srcPath = SettingsFrame.dataPath + "\\0" + "\\list500-600.txt";
+                    destPath = SettingsFrame.dataPath + "\\0" + "\\_list500-600.txt";
                     deleteRecordInFile(set500, srcPath, destPath);
                     src = new File(srcPath);
                     src.delete();
@@ -194,8 +198,8 @@ public class Search {
                     target.renameTo(src);
                 }
                 if (!set600.isEmpty()) {
-                    srcPath = SettingsFrame.dataPath + "\\list600-700.txt";
-                    destPath = SettingsFrame.dataPath + "\\_list600-700.txt";
+                    srcPath = SettingsFrame.dataPath + "\\0" + "\\list600-700.txt";
+                    destPath = SettingsFrame.dataPath + "\\0" + "\\_list600-700.txt";
                     deleteRecordInFile(set600, srcPath, destPath);
                     src = new File(srcPath);
                     src.delete();
@@ -203,8 +207,8 @@ public class Search {
                     target.renameTo(src);
                 }
                 if (!set700.isEmpty()) {
-                    srcPath = SettingsFrame.dataPath + "\\list700-800.txt";
-                    destPath = SettingsFrame.dataPath + "\\_list700-800.txt";
+                    srcPath = SettingsFrame.dataPath + "\\0" + "\\list700-800.txt";
+                    destPath = SettingsFrame.dataPath + "\\0" + "\\_list700-800.txt";
                     deleteRecordInFile(set700, srcPath, destPath);
                     src = new File(srcPath);
                     src.delete();
@@ -212,8 +216,8 @@ public class Search {
                     target.renameTo(src);
                 }
                 if (!set800.isEmpty()) {
-                    srcPath = SettingsFrame.dataPath + "\\list800-900.txt";
-                    destPath = SettingsFrame.dataPath + "\\_list800-900.txt";
+                    srcPath = SettingsFrame.dataPath + "\\0" + "\\list800-900.txt";
+                    destPath = SettingsFrame.dataPath + "\\0" + "\\_list800-900.txt";
                     deleteRecordInFile(set800, srcPath, destPath);
                     src = new File(srcPath);
                     src.delete();
@@ -221,8 +225,8 @@ public class Search {
                     target.renameTo(src);
                 }
                 if (!set900.isEmpty()) {
-                    srcPath = SettingsFrame.dataPath + "\\list900-1000.txt";
-                    destPath = SettingsFrame.dataPath + "\\_list900-1000.txt";
+                    srcPath = SettingsFrame.dataPath + "\\0" + "\\list900-1000.txt";
+                    destPath = SettingsFrame.dataPath + "\\0" + "\\_list900-1000.txt";
                     deleteRecordInFile(set900, srcPath, destPath);
                     src = new File(srcPath);
                     src.delete();
@@ -230,8 +234,8 @@ public class Search {
                     target.renameTo(src);
                 }
                 if (!set1000.isEmpty()) {
-                    srcPath = SettingsFrame.dataPath + "\\list1000-1100.txt";
-                    destPath = SettingsFrame.dataPath + "\\_list1000-1100.txt";
+                    srcPath = SettingsFrame.dataPath + "\\0" + "\\list1000-1100.txt";
+                    destPath = SettingsFrame.dataPath + "\\0" + "\\_list1000-1100.txt";
                     deleteRecordInFile(set1000, srcPath, destPath);
                     src = new File(srcPath);
                     src.delete();
@@ -239,8 +243,8 @@ public class Search {
                     target.renameTo(src);
                 }
                 if (!set1100.isEmpty()) {
-                    srcPath = SettingsFrame.dataPath + "\\list1100-1200.txt";
-                    destPath = SettingsFrame.dataPath + "\\_list1100-1200.txt";
+                    srcPath = SettingsFrame.dataPath + "\\0" + "\\list1100-1200.txt";
+                    destPath = SettingsFrame.dataPath + "\\0" + "\\_list1100-1200.txt";
                     deleteRecordInFile(set1100, srcPath, destPath);
                     src = new File(srcPath);
                     src.delete();
@@ -248,8 +252,8 @@ public class Search {
                     target.renameTo(src);
                 }
                 if (!set1200.isEmpty()) {
-                    srcPath = SettingsFrame.dataPath + "\\list1200-1300.txt";
-                    destPath = SettingsFrame.dataPath + "\\_list1200-1300.txt";
+                    srcPath = SettingsFrame.dataPath + "\\0" + "\\list1200-1300.txt";
+                    destPath = SettingsFrame.dataPath + "\\0" + "\\_list1200-1300.txt";
                     deleteRecordInFile(set1200, srcPath, destPath);
                     src = new File(srcPath);
                     src.delete();
@@ -257,8 +261,8 @@ public class Search {
                     target.renameTo(src);
                 }
                 if (!set1300.isEmpty()) {
-                    srcPath = SettingsFrame.dataPath + "\\list1300-1400.txt";
-                    destPath = SettingsFrame.dataPath + "\\_list1300-1400.txt";
+                    srcPath = SettingsFrame.dataPath + "\\0" + "\\list1300-1400.txt";
+                    destPath = SettingsFrame.dataPath + "\\0" + "\\_list1300-1400.txt";
                     deleteRecordInFile(set1300, srcPath, destPath);
                     src = new File(srcPath);
                     src.delete();
@@ -266,8 +270,8 @@ public class Search {
                     target.renameTo(src);
                 }
                 if (!set1400.isEmpty()) {
-                    srcPath = SettingsFrame.dataPath + "\\list1400-1500.txt";
-                    destPath = SettingsFrame.dataPath + "\\_list1400-1500.txt";
+                    srcPath = SettingsFrame.dataPath + "\\0" + "\\list1400-1500.txt";
+                    destPath = SettingsFrame.dataPath + "\\0" + "\\_list1400-1500.txt";
                     deleteRecordInFile(set1400, srcPath, destPath);
                     src = new File(srcPath);
                     src.delete();
@@ -275,8 +279,8 @@ public class Search {
                     target.renameTo(src);
                 }
                 if (!set1500.isEmpty()) {
-                    srcPath = SettingsFrame.dataPath + "\\list1500-1600.txt";
-                    destPath = SettingsFrame.dataPath + "\\_list1500-1600.txt";
+                    srcPath = SettingsFrame.dataPath + "\\0" + "\\list1500-1600.txt";
+                    destPath = SettingsFrame.dataPath + "\\0" + "\\_list1500-1600.txt";
                     deleteRecordInFile(set1500, srcPath, destPath);
                     src = new File(srcPath);
                     src.delete();
@@ -284,8 +288,8 @@ public class Search {
                     target.renameTo(src);
                 }
                 if (!set1600.isEmpty()) {
-                    srcPath = SettingsFrame.dataPath + "\\list1600-1700.txt";
-                    destPath = SettingsFrame.dataPath + "\\_list1600-1700.txt";
+                    srcPath = SettingsFrame.dataPath + "\\0" + "\\list1600-1700.txt";
+                    destPath = SettingsFrame.dataPath + "\\0" + "\\_list1600-1700.txt";
                     deleteRecordInFile(set1500, srcPath, destPath);
                     src = new File(srcPath);
                     src.delete();
@@ -293,8 +297,8 @@ public class Search {
                     target.renameTo(src);
                 }
                 if (!set1700.isEmpty()) {
-                    srcPath = SettingsFrame.dataPath + "\\list1700-1800.txt";
-                    destPath = SettingsFrame.dataPath + "\\_list1700-1800.txt";
+                    srcPath = SettingsFrame.dataPath + "\\0" + "\\list1700-1800.txt";
+                    destPath = SettingsFrame.dataPath + "\\0" + "\\_list1700-1800.txt";
                     deleteRecordInFile(set1500, srcPath, destPath);
                     src = new File(srcPath);
                     src.delete();
@@ -302,8 +306,8 @@ public class Search {
                     target.renameTo(src);
                 }
                 if (!set1800.isEmpty()) {
-                    srcPath = SettingsFrame.dataPath + "\\list1800-1900.txt";
-                    destPath = SettingsFrame.dataPath + "\\_list1800-1900.txt";
+                    srcPath = SettingsFrame.dataPath + "\\0" + "\\list1800-1900.txt";
+                    destPath = SettingsFrame.dataPath + "\\0" + "\\_list1800-1900.txt";
                     deleteRecordInFile(set1500, srcPath, destPath);
                     src = new File(srcPath);
                     src.delete();
@@ -311,8 +315,8 @@ public class Search {
                     target.renameTo(src);
                 }
                 if (!set1900.isEmpty()) {
-                    srcPath = SettingsFrame.dataPath + "\\list1900-2000.txt";
-                    destPath = SettingsFrame.dataPath + "\\_list1900-2000.txt";
+                    srcPath = SettingsFrame.dataPath + "\\0" + "\\list1900-2000.txt";
+                    destPath = SettingsFrame.dataPath + "\\0" + "\\_list1900-2000.txt";
                     deleteRecordInFile(set1500, srcPath, destPath);
                     src = new File(srcPath);
                     src.delete();
@@ -320,8 +324,8 @@ public class Search {
                     target.renameTo(src);
                 }
                 if (!set2000.isEmpty()) {
-                    srcPath = SettingsFrame.dataPath + "\\list2000-2100.txt";
-                    destPath = SettingsFrame.dataPath + "\\_list2000-2100.txt";
+                    srcPath = SettingsFrame.dataPath + "\\0" + "\\list2000-2100.txt";
+                    destPath = SettingsFrame.dataPath + "\\0" + "\\_list2000-2100.txt";
                     deleteRecordInFile(set1500, srcPath, destPath);
                     src = new File(srcPath);
                     src.delete();
@@ -329,8 +333,8 @@ public class Search {
                     target.renameTo(src);
                 }
                 if (!set2100.isEmpty()) {
-                    srcPath = SettingsFrame.dataPath + "\\list2100-2200.txt";
-                    destPath = SettingsFrame.dataPath + "\\_list2100-2200.txt";
+                    srcPath = SettingsFrame.dataPath + "\\0" + "\\list2100-2200.txt";
+                    destPath = SettingsFrame.dataPath + "\\0" + "\\_list2100-2200.txt";
                     deleteRecordInFile(set1500, srcPath, destPath);
                     src = new File(srcPath);
                     src.delete();
@@ -338,8 +342,8 @@ public class Search {
                     target.renameTo(src);
                 }
                 if (!set2200.isEmpty()) {
-                    srcPath = SettingsFrame.dataPath + "\\list2200-2300.txt";
-                    destPath = SettingsFrame.dataPath + "\\_list2200-2300.txt";
+                    srcPath = SettingsFrame.dataPath + "\\0" + "\\list2200-2300.txt";
+                    destPath = SettingsFrame.dataPath + "\\0" + "\\_list2200-2300.txt";
                     deleteRecordInFile(set1500, srcPath, destPath);
                     src = new File(srcPath);
                     src.delete();
@@ -347,8 +351,8 @@ public class Search {
                     target.renameTo(src);
                 }
                 if (!set2300.isEmpty()) {
-                    srcPath = SettingsFrame.dataPath + "\\list2300-2400.txt";
-                    destPath = SettingsFrame.dataPath + "\\_list2300-2400.txt";
+                    srcPath = SettingsFrame.dataPath + "\\0" + "\\list2300-2400.txt";
+                    destPath = SettingsFrame.dataPath + "\\0" + "\\_list2300-2400.txt";
                     deleteRecordInFile(set1500, srcPath, destPath);
                     src = new File(srcPath);
                     src.delete();
@@ -356,8 +360,8 @@ public class Search {
                     target.renameTo(src);
                 }
                 if (!set2400.isEmpty()) {
-                    srcPath = SettingsFrame.dataPath + "\\list2400-2500.txt";
-                    destPath = SettingsFrame.dataPath + "\\_list2400-2500.txt";
+                    srcPath = SettingsFrame.dataPath + "\\0" + "\\list2400-2500.txt";
+                    destPath = SettingsFrame.dataPath + "\\0" + "\\_list2400-2500.txt";
                     deleteRecordInFile(set1500, srcPath, destPath);
                     src = new File(srcPath);
                     src.delete();
@@ -365,8 +369,8 @@ public class Search {
                     target.renameTo(src);
                 }
                 if (!set2500.isEmpty()) {
-                    srcPath = SettingsFrame.dataPath + "\\list2500-.txt";
-                    destPath = SettingsFrame.dataPath + "\\_list2500-.txt";
+                    srcPath = SettingsFrame.dataPath + "\\0" + "\\list2500-.txt";
+                    destPath = SettingsFrame.dataPath + "\\0" + "\\_list2500-.txt";
                     deleteRecordInFile(set1500, srcPath, destPath);
                     src = new File(srcPath);
                     src.delete();
@@ -441,100 +445,99 @@ public class Search {
         int ascII = SearchBar.getInstance().getAscIISum(file.getName());
         String listPath;
         if (0 < ascII && ascII <= 100) {
-            listPath = SettingsFrame.dataPath + "\\list0-100.txt";
+            listPath = SettingsFrame.dataPath + "\\0" + "\\list0-100.txt";
             writeRecordToFile(path, listPath);
         } else if (100 < ascII && ascII <= 200) {
-            listPath = SettingsFrame.dataPath + "\\list100-200.txt";
+            listPath = SettingsFrame.dataPath + "\\0" + "\\list100-200.txt";
             writeRecordToFile(path, listPath);
         } else if (200 < ascII && ascII <= 300) {
-            listPath = SettingsFrame.dataPath + "\\list200-300.txt";
+            listPath = SettingsFrame.dataPath + "\\0" + "\\list200-300.txt";
             writeRecordToFile(path, listPath);
         } else if (300 < ascII && ascII <= 400) {
-            listPath = SettingsFrame.dataPath + "\\list300-400.txt";
-
+            listPath = SettingsFrame.dataPath + "\\0" + "\\list300-400.txt";
             writeRecordToFile(path, listPath);
         } else if (400 < ascII && ascII <= 500) {
-            listPath = SettingsFrame.dataPath + "\\list400-500.txt";
+            listPath = SettingsFrame.dataPath + "\\0" + "\\list400-500.txt";
 
             writeRecordToFile(path, listPath);
         } else if (500 < ascII && ascII <= 600) {
-            listPath = SettingsFrame.dataPath + "\\list500-600.txt";
+            listPath = SettingsFrame.dataPath + "\\0" + "\\list500-600.txt";
 
             writeRecordToFile(path, listPath);
         } else if (600 < ascII && ascII <= 700) {
-            listPath = SettingsFrame.dataPath + "\\list600-700.txt";
+            listPath = SettingsFrame.dataPath + "\\0" + "\\list600-700.txt";
             writeRecordToFile(path, listPath);
         } else if (700 < ascII && ascII <= 800) {
-            listPath = SettingsFrame.dataPath + "\\list700-800.txt";
+            listPath = SettingsFrame.dataPath + "\\0" + "\\list700-800.txt";
 
             writeRecordToFile(path, listPath);
         } else if (800 < ascII && ascII <= 900) {
-            listPath = SettingsFrame.dataPath + "\\list800-900.txt";
+            listPath = SettingsFrame.dataPath + "\\0" + "\\list800-900.txt";
 
             writeRecordToFile(path, listPath);
         } else if (900 < ascII && ascII <= 1000) {
-            listPath = SettingsFrame.dataPath + "\\list900-1000.txt";
+            listPath = SettingsFrame.dataPath + "\\0" + "\\list900-1000.txt";
             writeRecordToFile(path, listPath);
         } else if (1000 < ascII && ascII <= 1100) {
-            listPath = SettingsFrame.dataPath + "\\list1000-1100.txt";
+            listPath = SettingsFrame.dataPath + "\\0" + "\\list1000-1100.txt";
 
             writeRecordToFile(path, listPath);
         } else if (1100 < ascII && ascII <= 1200) {
-            listPath = SettingsFrame.dataPath + "\\list1100-1200.txt";
+            listPath = SettingsFrame.dataPath + "\\0" + "\\list1100-1200.txt";
             writeRecordToFile(path, listPath);
         } else if (1200 < ascII && ascII <= 1300) {
-            listPath = SettingsFrame.dataPath + "\\list1200-1300.txt";
+            listPath = SettingsFrame.dataPath + "\\0" + "\\list1200-1300.txt";
             writeRecordToFile(path, listPath);
         } else if (1300 < ascII && ascII <= 1400) {
-            listPath = SettingsFrame.dataPath + "\\list1300-1400.txt";
+            listPath = SettingsFrame.dataPath + "\\0" + "\\list1300-1400.txt";
 
             writeRecordToFile(path, listPath);
         } else if (1400 < ascII && ascII <= 1500) {
-            listPath = SettingsFrame.dataPath + "\\list1400-1500.txt";
+            listPath = SettingsFrame.dataPath + "\\0" + "\\list1400-1500.txt";
 
             writeRecordToFile(path, listPath);
         } else if (1500 < ascII && ascII <= 1600) {
-            listPath = SettingsFrame.dataPath + "\\list1500-1600.txt";
+            listPath = SettingsFrame.dataPath + "\\0" + "\\list1500-1600.txt";
 
             writeRecordToFile(path, listPath);
         } else if (1600 < ascII && ascII <= 1700) {
-            listPath = SettingsFrame.dataPath + "\\list1600-1700.txt";
+            listPath = SettingsFrame.dataPath + "\\0" + "\\list1600-1700.txt";
 
             writeRecordToFile(path, listPath);
         } else if (1700 < ascII && ascII <= 1800) {
-            listPath = SettingsFrame.dataPath + "\\list1700-1800.txt";
+            listPath = SettingsFrame.dataPath + "\\0" + "\\list1700-1800.txt";
 
             writeRecordToFile(path, listPath);
         } else if (1800 < ascII && ascII <= 1900) {
-            listPath = SettingsFrame.dataPath + "\\list1800-1900.txt";
+            listPath = SettingsFrame.dataPath + "\\0" + "\\list1800-1900.txt";
 
             writeRecordToFile(path, listPath);
         } else if (1900 < ascII && ascII <= 2000) {
-            listPath = SettingsFrame.dataPath + "\\list1900-2000.txt";
+            listPath = SettingsFrame.dataPath + "\\0" + "\\list1900-2000.txt";
 
             writeRecordToFile(path, listPath);
         } else if (2000 < ascII && ascII <= 2100) {
-            listPath = SettingsFrame.dataPath + "\\list2000-2100.txt";
+            listPath = SettingsFrame.dataPath + "\\0" + "\\list2000-2100.txt";
 
             writeRecordToFile(path, listPath);
         } else if (2100 < ascII && ascII <= 2200) {
-            listPath = SettingsFrame.dataPath + "\\list2100-2200.txt";
+            listPath = SettingsFrame.dataPath + "\\0" + "\\list2100-2200.txt";
 
             writeRecordToFile(path, listPath);
         } else if (2200 < ascII && ascII <= 2300) {
-            listPath = SettingsFrame.dataPath + "\\list2200-2300.txt";
+            listPath = SettingsFrame.dataPath + "\\0" + "\\list2200-2300.txt";
 
             writeRecordToFile(path, listPath);
         } else if (2300 < ascII && ascII <= 2400) {
-            listPath = SettingsFrame.dataPath + "\\list2300-2400.txt";
+            listPath = SettingsFrame.dataPath + "\\0" + "\\list2300-2400.txt";
 
             writeRecordToFile(path, listPath);
         } else if (2400 < ascII && ascII <= 2500) {
-            listPath = SettingsFrame.dataPath + "\\list2400-2500.txt";
+            listPath = SettingsFrame.dataPath + "\\0" + "\\list2400-2500.txt";
 
             writeRecordToFile(path, listPath);
         } else {
-            listPath = SettingsFrame.dataPath + "\\list2500-.txt";
+            listPath = SettingsFrame.dataPath + "\\0" + "\\list2500-.txt";
             writeRecordToFile(path, listPath);
         }
 
@@ -547,13 +550,27 @@ public class Search {
     private void searchFile(String ignorePath, int searchDepth) {
         File[] roots = File.listRoots();
         FileSystemView sys = FileSystemView.getFileSystemView();
+        ExecutorService pool = Executors.newFixedThreadPool(roots.length);
         for (File root : roots) {
-            String dirveType = sys.getSystemTypeDescription(root);
-            if (dirveType.equals("本地磁盘")) {
+            String driveType = sys.getSystemTypeDescription(root);
+            if (driveType.equals("本地磁盘")) {
                 String path = root.getAbsolutePath();
                 path = path.substring(0, 2);
-                __searchFile(path, searchDepth, ignorePath);
+                File eachResults = new File(SettingsFrame.dataPath + "\\" + diskCount);
+                if (!eachResults.exists()) {
+                    eachResults.mkdir();
+                }
+                String finalPath = path;
+                int finalCount = diskCount;
+                pool.execute(() -> __searchFile(finalPath, searchDepth, ignorePath, finalCount));
+                diskCount++;
             }
+        }
+        pool.shutdown();
+        try {
+            pool.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
         __searchFileIgnoreSearchDepth(getStartMenu(), ignorePath);
         __searchFileIgnoreSearchDepth("C:\\ProgramData\\Microsoft\\Windows\\Start Menu", ignorePath);
@@ -580,12 +597,13 @@ public class Search {
         return null;
     }
 
+    //统一合并进0文件夹，第一个硬盘
     private void __searchFileIgnoreSearchDepth(String path, String ignorePath) {
         File fileSearcher = new File("./user/fileSearcher.exe");
         String absPath = fileSearcher.getAbsolutePath();
         String start = absPath.substring(0, 2);
         String end = "\"" + absPath.substring(2) + "\"";
-        String command = "cmd /c " + start + end + " \"" + path + "\"" + " \"6\" " + "\"" + ignorePath + "\" " + "\"" + SettingsFrame.dataPath + "\" " + "\"" + "1" + "\"";
+        String command = "cmd /c " + start + end + " \"" + path + "\"" + " \"6\" " + "\"" + ignorePath + "\" " + "\"" + SettingsFrame.dataPath + "\\0" + "\" " + "\"" + "1" + "\"";
         Process p;
         try {
             p = Runtime.getRuntime().exec(command);
@@ -597,12 +615,12 @@ public class Search {
         }
     }
 
-    private void __searchFile(String path, int searchDepth, String ignorePath) {
+    private void __searchFile(String path, int searchDepth, String ignorePath, int count) {
         File fileSearcher = new File("./user/fileSearcher.exe");
         String absPath = fileSearcher.getAbsolutePath();
         String start = absPath.substring(0, 2);
         String end = "\"" + absPath.substring(2) + "\"";
-        String command = "cmd /c " + start + end + " \"" + path + "\"" + " \"" + searchDepth + "\" " + "\"" + ignorePath + "\" " + "\"" + SettingsFrame.dataPath + "\" " + "\"" + "0" + "\"";
+        String command = "cmd /c " + start + end + " \"" + path + "\"" + " \"" + searchDepth + "\" " + "\"" + ignorePath + "\" " + "\"" + SettingsFrame.dataPath + "\\" + count + "\" " + "\"" + "0" + "\"";
         Process p;
         try {
             p = Runtime.getRuntime().exec(command);
@@ -610,146 +628,15 @@ public class Search {
                 Thread.sleep(1);
             }
         } catch (IOException | InterruptedException ignored) {
-
-        }
-    }
-
-    private void initDataFiles() {
-        try {
-            File target = new File(SettingsFrame.dataPath + "\\list0-100.txt");
-            if (!target.exists()) {
-                target.createNewFile();
-            }
-            target = new File(SettingsFrame.dataPath + "\\list100-200.txt");
-            if (!target.exists()) {
-                target.createNewFile();
-            }
-            target = new File(SettingsFrame.dataPath + "\\list200-300.txt");
-            if (!target.exists()) {
-                target.createNewFile();
-            }
-            target = new File(SettingsFrame.dataPath + "\\list300-400.txt");
-            if (!target.exists()) {
-                target.createNewFile();
-            }
-            target = new File(SettingsFrame.dataPath + "\\list400-500.txt");
-            if (!target.exists()) {
-                target.createNewFile();
-            }
-            target = new File(SettingsFrame.dataPath + "\\list500-600.txt");
-            if (!target.exists()) {
-                target.createNewFile();
-            }
-            target = new File(SettingsFrame.dataPath + "\\list600-700.txt");
-            if (!target.exists()) {
-                target.createNewFile();
-            }
-            target = new File(SettingsFrame.dataPath + "\\list700-800.txt");
-            if (!target.exists()) {
-                target.createNewFile();
-            }
-            target = new File(SettingsFrame.dataPath + "\\list800-900.txt");
-            if (!target.exists()) {
-                target.createNewFile();
-            }
-            target = new File(SettingsFrame.dataPath + "\\list900-1000.txt");
-            if (!target.exists()) {
-                target.createNewFile();
-            }
-            target = new File(SettingsFrame.dataPath + "\\list1000-1100.txt");
-            if (!target.exists()) {
-                target.createNewFile();
-            }
-            target = new File(SettingsFrame.dataPath + "\\list1100-1200.txt");
-            if (!target.exists()) {
-                target.createNewFile();
-            }
-            target = new File(SettingsFrame.dataPath + "\\list1200-1300.txt");
-            if (!target.exists()) {
-                target.createNewFile();
-            }
-            target = new File(SettingsFrame.dataPath + "\\list1300-1400.txt");
-            if (!target.exists()) {
-                target.createNewFile();
-            }
-            target = new File(SettingsFrame.dataPath + "\\list1400-1500.txt");
-            if (!target.exists()) {
-                target.createNewFile();
-            }
-            target = new File(SettingsFrame.dataPath + "\\list1500-1600.txt");
-            if (!target.exists()) {
-                target.createNewFile();
-            }
-            target = new File(SettingsFrame.dataPath + "\\list1600-1700.txt");
-            if (!target.exists()) {
-                target.createNewFile();
-            }
-            target = new File(SettingsFrame.dataPath + "\\list1700-1800.txt");
-            if (!target.exists()) {
-                target.createNewFile();
-            }
-            target = new File(SettingsFrame.dataPath + "\\list1800-1900.txt");
-            if (!target.exists()) {
-                target.createNewFile();
-            }
-            target = new File(SettingsFrame.dataPath + "\\list1900-2000.txt");
-            if (!target.exists()) {
-                target.createNewFile();
-            }
-            target = new File(SettingsFrame.dataPath + "\\list2100-2200.txt");
-            if (!target.exists()) {
-                target.createNewFile();
-            }
-            target = new File(SettingsFrame.dataPath + "\\list2300-2400.txt");
-            if (!target.exists()) {
-                target.createNewFile();
-            }
-            target = new File(SettingsFrame.dataPath + "\\list2400-2500.txt");
-            if (!target.exists()) {
-                target.createNewFile();
-            }
-            target = new File(SettingsFrame.dataPath + "\\list2500-.txt");
-            if (!target.exists()) {
-                target.createNewFile();
-            }
-        } catch (Exception ignored) {
 
         }
     }
 
 
     public void updateLists(String ignorePath, int searchDepth) {
+        diskCount = 0; //重置
         MainClass.deleteDir(SettingsFrame.dataPath);
-        initDataFiles();
         searchFile(ignorePath, searchDepth);
     }
 
-    private boolean isEverythingRunning() {
-        String cmd = "tasklist /fi \"" + "imagename eq " + "Everything.exe" + "\"";
-        Runtime r = Runtime.getRuntime();
-        Process p;
-        BufferedReader br = null;
-        try {
-            p = r.exec(cmd);
-            br = new BufferedReader(new InputStreamReader(p.getInputStream()));
-            String line;
-            while ((line = br.readLine()) != null) {
-                if (line.contains("Everything.exe")) {
-                    return true;
-                }
-            }
-            return false;
-        } catch (IOException e) {
-            e.printStackTrace();
-            return false;
-        } finally {
-            if (br != null) {
-                try {
-                    br.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-    }
 }

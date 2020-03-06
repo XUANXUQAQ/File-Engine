@@ -414,230 +414,380 @@ public class SearchBar {
 
                             if (0 < ascII && ascII <= 100) {
                                 for (int i = 0; i < 2500; i += 100) {
-                                    int name = i + 100;
-                                    listPath = SettingsFrame.dataPath + "\\list" + i + "-" + name + ".txt";
-                                    paths.add(listPath);
+                                    for (int j = 0; j < Search.diskCount; j++) {
+                                        int name = i + 100;
+                                        listPath = SettingsFrame.dataPath + "\\" + j + "\\list" + i + "-" + name + ".txt";
+                                        paths.add(listPath);
+                                    }
                                 }
-                                paths.add(SettingsFrame.dataPath + "\\list2500-.txt");
+                                for (int j = 0; j < Search.diskCount; j++) {
+                                    paths.add(SettingsFrame.dataPath + "\\" + j + "\\list2500-.txt");
+                                }
                                 addResult(paths, searchText, System.currentTimeMillis(), searchCase);
                             } else if (100 < ascII && ascII <= 200) {
-                                paths.add(SettingsFrame.dataPath + "\\list0-100.txt");
-                                for (int i = 100; i < 2500; i += 100) {
-                                    int name = i + 100;
-                                    listPath = SettingsFrame.dataPath + "\\list" + i + "-" + name + ".txt";
-                                    paths.add(listPath);
+                                for (int j = 0; j < Search.diskCount; j++) {
+                                    paths.add(SettingsFrame.dataPath + "\\" + j + "\\list0-100.txt");
                                 }
-                                paths.add(SettingsFrame.dataPath + "\\list2500-.txt");
+                                for (int i = 100; i < 2500; i += 100) {
+                                    for (int j = 0; j < Search.diskCount; j++) {
+                                        int name = i + 100;
+                                        listPath = SettingsFrame.dataPath + "\\" + j + "\\list" + i + "-" + name + ".txt";
+                                        paths.add(listPath);
+                                    }
+                                }
+                                for (int j = 0; j < Search.diskCount; j++) {
+                                    paths.add(SettingsFrame.dataPath + "\\" + j + "\\list2500-.txt");
+                                }
                                 addResult(paths, searchText, System.currentTimeMillis(), searchCase);
                             } else if (200 < ascII && ascII <= 300) {
-                                paths.add(SettingsFrame.dataPath + "\\list0-100.txt");
-                                for (int i = 200; i < 2500; i += 100) {
-                                    int name = i + 100;
-                                    listPath = SettingsFrame.dataPath + "\\list" + i + "-" + name + ".txt";
-                                    paths.add(listPath);
+                                for (int j = 0; j < Search.diskCount; j++) {
+                                    paths.add(SettingsFrame.dataPath + "\\" + j + "\\list0-100.txt");
                                 }
-                                paths.add(SettingsFrame.dataPath + "\\list2500-.txt");
+                                for (int i = 200; i < 2500; i += 100) {
+                                    for (int j = 0; j < Search.diskCount; j++) {
+                                        int name = i + 100;
+                                        listPath = SettingsFrame.dataPath + "\\" + j + "\\list" + i + "-" + name + ".txt";
+                                        paths.add(listPath);
+                                    }
+                                }
+                                for (int j = 0; j < Search.diskCount; j++) {
+                                    paths.add(SettingsFrame.dataPath + "\\" + j + "\\list2500-.txt");
+                                }
                                 addResult(paths, searchText, System.currentTimeMillis(), searchCase);
                             } else if (300 < ascII && ascII <= 400) {
-                                paths.add(SettingsFrame.dataPath + "\\list0-100.txt");
-                                for (int i = 300; i < 2500; i += 100) {
-                                    int name = i + 100;
-                                    listPath = SettingsFrame.dataPath + "\\list" + i + "-" + name + ".txt";
-                                    paths.add(listPath);
+                                for (int j = 0; j < Search.diskCount; j++) {
+                                    paths.add(SettingsFrame.dataPath + "\\" + j + "\\list0-100.txt");
                                 }
-                                paths.add(SettingsFrame.dataPath + "\\list2500-.txt");
+                                for (int i = 300; i < 2500; i += 100) {
+                                    for (int j = 0; j < Search.diskCount; j++) {
+                                        int name = i + 100;
+                                        listPath = SettingsFrame.dataPath + "\\" + j + "\\list" + i + "-" + name + ".txt";
+                                        paths.add(listPath);
+                                    }
+                                }
+                                for (int j = 0; j < Search.diskCount; j++) {
+                                    paths.add(SettingsFrame.dataPath + "\\" + j + "\\list2500-.txt");
+                                }
                                 addResult(paths, searchText, System.currentTimeMillis(), searchCase);
                             } else if (400 < ascII && ascII <= 500) {
-                                paths.add(SettingsFrame.dataPath + "\\list0-100.txt");
-                                for (int i = 400; i < 2500; i += 100) {
-                                    int name = i + 100;
-                                    listPath = SettingsFrame.dataPath + "\\list" + i + "-" + name + ".txt";
-                                    paths.add(listPath);
+                                for (int j = 0; j < Search.diskCount; j++) {
+                                    paths.add(SettingsFrame.dataPath + "\\" + j + "\\list0-100.txt");
                                 }
-                                paths.add(SettingsFrame.dataPath + "\\list2500-.txt");
+                                for (int i = 400; i < 2500; i += 100) {
+                                    for (int j = 0; j < Search.diskCount; j++) {
+                                        int name = i + 100;
+                                        listPath = SettingsFrame.dataPath + "\\" + j + "\\list" + i + "-" + name + ".txt";
+                                        paths.add(listPath);
+                                    }
+                                }
+                                for (int j = 0; j < Search.diskCount; j++) {
+                                    paths.add(SettingsFrame.dataPath + "\\" + j + "\\list2500-.txt");
+                                }
                                 addResult(paths, searchText, System.currentTimeMillis(), searchCase);
                             } else if (500 < ascII && ascII <= 600) {
-                                paths.add(SettingsFrame.dataPath + "\\list0-100.txt");
-                                for (int i = 500; i < 2500; i += 100) {
-                                    int name = i + 100;
-                                    listPath = SettingsFrame.dataPath + "\\list" + i + "-" + name + ".txt";
-                                    paths.add(listPath);
+                                for (int j = 0; j < Search.diskCount; j++) {
+                                    paths.add(SettingsFrame.dataPath + "\\" + j + "\\list0-100.txt");
                                 }
-                                paths.add(SettingsFrame.dataPath + "\\list2500-.txt");
+                                for (int i = 500; i < 2500; i += 100) {
+                                    for (int j = 0; j < Search.diskCount; j++) {
+                                        int name = i + 100;
+                                        listPath = SettingsFrame.dataPath + "\\" + j + "\\list" + i + "-" + name + ".txt";
+                                        paths.add(listPath);
+                                    }
+                                }
+                                for (int j = 0; j < Search.diskCount; j++) {
+                                    paths.add(SettingsFrame.dataPath + "\\" + j + "\\list2500-.txt");
+                                }
                                 addResult(paths, searchText, System.currentTimeMillis(), searchCase);
                             } else if (600 < ascII && ascII <= 700) {
-                                paths.add(SettingsFrame.dataPath + "\\list0-100.txt");
-                                for (int i = 600; i < 2500; i += 100) {
-                                    int name = i + 100;
-                                    listPath = SettingsFrame.dataPath + "\\list" + i + "-" + name + ".txt";
-                                    paths.add(listPath);
+                                for (int j = 0; j < Search.diskCount; j++) {
+                                    paths.add(SettingsFrame.dataPath + "\\" + j + "\\list0-100.txt");
                                 }
-                                paths.add(SettingsFrame.dataPath + "\\list2500-.txt");
+                                for (int i = 600; i < 2500; i += 100) {
+                                    for (int j = 0; j < Search.diskCount; j++) {
+                                        int name = i + 100;
+                                        listPath = SettingsFrame.dataPath + "\\" + j + "\\list" + i + "-" + name + ".txt";
+                                        paths.add(listPath);
+                                    }
+                                }
+                                for (int j = 0; j < Search.diskCount; j++) {
+                                    paths.add(SettingsFrame.dataPath + "\\" + j + "\\list2500-.txt");
+                                }
                                 addResult(paths, searchText, System.currentTimeMillis(), searchCase);
                             } else if (700 < ascII && ascII <= 800) {
-                                paths.add(SettingsFrame.dataPath + "\\list0-100.txt");
-                                for (int i = 700; i < 2500; i += 100) {
-                                    int name = i + 100;
-                                    listPath = SettingsFrame.dataPath + "\\list" + i + "-" + name + ".txt";
-                                    paths.add(listPath);
+                                for (int j = 0; j < Search.diskCount; j++) {
+                                    paths.add(SettingsFrame.dataPath + "\\" + j + "\\list0-100.txt");
                                 }
-                                paths.add(SettingsFrame.dataPath + "\\list2500-.txt");
+                                for (int i = 700; i < 2500; i += 100) {
+                                    for (int j = 0; j < Search.diskCount; j++) {
+                                        int name = i + 100;
+                                        listPath = SettingsFrame.dataPath + "\\" + j + "\\list" + i + "-" + name + ".txt";
+                                        paths.add(listPath);
+                                    }
+                                }
+                                for (int j = 0; j < Search.diskCount; j++) {
+                                    paths.add(SettingsFrame.dataPath + "\\" + j + "\\list2500-.txt");
+                                }
                                 addResult(paths, searchText, System.currentTimeMillis(), searchCase);
                             } else if (800 < ascII && ascII <= 900) {
-                                paths.add(SettingsFrame.dataPath + "\\list0-100.txt");
-                                for (int i = 800; i < 2500; i += 100) {
-                                    int name = i + 100;
-                                    listPath = SettingsFrame.dataPath + "\\list" + i + "-" + name + ".txt";
-                                    paths.add(listPath);
+                                for (int j = 0; j < Search.diskCount; j++) {
+                                    paths.add(SettingsFrame.dataPath + "\\" + j + "\\list0-100.txt");
                                 }
-                                paths.add(SettingsFrame.dataPath + "\\list2500-.txt");
+                                for (int i = 800; i < 2500; i += 100) {
+                                    for (int j = 0; j < Search.diskCount; j++) {
+                                        int name = i + 100;
+                                        listPath = SettingsFrame.dataPath + "\\" + j + "\\list" + i + "-" + name + ".txt";
+                                        paths.add(listPath);
+                                    }
+                                }
+                                for (int j = 0; j < Search.diskCount; j++) {
+                                    paths.add(SettingsFrame.dataPath + "\\" + j + "\\list2500-.txt");
+                                }
                                 addResult(paths, searchText, System.currentTimeMillis(), searchCase);
                             } else if (900 < ascII && ascII <= 1000) {
-                                paths.add(SettingsFrame.dataPath + "\\list0-100.txt");
-                                for (int i = 900; i < 2500; i += 100) {
-                                    int name = i + 100;
-                                    listPath = SettingsFrame.dataPath + "\\list" + i + "-" + name + ".txt";
-                                    paths.add(listPath);
+                                for (int j = 0; j < Search.diskCount; j++) {
+                                    paths.add(SettingsFrame.dataPath + "\\" + j + "\\list0-100.txt");
                                 }
-                                paths.add(SettingsFrame.dataPath + "\\list2500-.txt");
+                                for (int i = 900; i < 2500; i += 100) {
+                                    for (int j = 0; j < Search.diskCount; j++) {
+                                        int name = i + 100;
+                                        listPath = SettingsFrame.dataPath + "\\" + j + "\\list" + i + "-" + name + ".txt";
+                                        paths.add(listPath);
+                                    }
+                                }
+                                for (int j = 0; j < Search.diskCount; j++) {
+                                    paths.add(SettingsFrame.dataPath + "\\" + j + "\\list2500-.txt");
+                                }
                                 addResult(paths, searchText, System.currentTimeMillis(), searchCase);
                             } else if (1000 < ascII && ascII <= 1100) {
-                                paths.add(SettingsFrame.dataPath + "\\list0-100.txt");
-                                for (int i = 1000; i < 2500; i += 100) {
-                                    int name = i + 100;
-                                    listPath = SettingsFrame.dataPath + "\\list" + i + "-" + name + ".txt";
-                                    paths.add(listPath);
+                                for (int j = 0; j < Search.diskCount; j++) {
+                                    paths.add(SettingsFrame.dataPath + "\\" + j + "\\list0-100.txt");
                                 }
-                                paths.add(SettingsFrame.dataPath + "\\list2500-.txt");
+                                for (int i = 1000; i < 2500; i += 100) {
+                                    for (int j = 0; j < Search.diskCount; j++) {
+                                        int name = i + 100;
+                                        listPath = SettingsFrame.dataPath + "\\" + j + "\\list" + i + "-" + name + ".txt";
+                                        paths.add(listPath);
+                                    }
+                                }
+                                for (int j = 0; j < Search.diskCount; j++) {
+                                    paths.add(SettingsFrame.dataPath + "\\" + j + "\\list2500-.txt");
+                                }
                                 addResult(paths, searchText, System.currentTimeMillis(), searchCase);
                             } else if (1100 < ascII && ascII <= 1200) {
-                                paths.add(SettingsFrame.dataPath + "\\list0-100.txt");
-                                for (int i = 1100; i < 2500; i += 100) {
-                                    int name = i + 100;
-                                    listPath = SettingsFrame.dataPath + "\\list" + i + "-" + name + ".txt";
-                                    paths.add(listPath);
+                                for (int j = 0; j < Search.diskCount; j++) {
+                                    paths.add(SettingsFrame.dataPath + "\\" + j + "\\list0-100.txt");
                                 }
-                                paths.add(SettingsFrame.dataPath + "\\list2500-.txt");
+                                for (int i = 1100; i < 2500; i += 100) {
+                                    for (int j = 0; j < Search.diskCount; j++) {
+                                        int name = i + 100;
+                                        listPath = SettingsFrame.dataPath + "\\" + j + "\\list" + i + "-" + name + ".txt";
+                                        paths.add(listPath);
+                                    }
+                                }
+                                for (int j = 0; j < Search.diskCount; j++) {
+                                    paths.add(SettingsFrame.dataPath + "\\" + j + "\\list2500-.txt");
+                                }
                                 addResult(paths, searchText, System.currentTimeMillis(), searchCase);
                             } else if (1200 < ascII && ascII <= 1300) {
-                                paths.add(SettingsFrame.dataPath + "\\list0-100.txt");
-                                for (int i = 1200; i < 2500; i += 100) {
-                                    int name = i + 100;
-                                    listPath = SettingsFrame.dataPath + "\\list" + i + "-" + name + ".txt";
-                                    paths.add(listPath);
+                                for (int j = 0; j < Search.diskCount; j++) {
+                                    paths.add(SettingsFrame.dataPath + "\\" + j + "\\list0-100.txt");
                                 }
-                                paths.add(SettingsFrame.dataPath + "\\list2500-.txt");
+                                for (int i = 1200; i < 2500; i += 100) {
+                                    for (int j = 0; j < Search.diskCount; j++) {
+                                        int name = i + 100;
+                                        listPath = SettingsFrame.dataPath + "\\" + j + "\\list" + i + "-" + name + ".txt";
+                                        paths.add(listPath);
+                                    }
+                                }
+                                for (int j = 0; j < Search.diskCount; j++) {
+                                    paths.add(SettingsFrame.dataPath + "\\" + j + "\\list2500-.txt");
+                                }
                                 addResult(paths, searchText, System.currentTimeMillis(), searchCase);
                             } else if (1300 < ascII && ascII <= 1400) {
-                                paths.add(SettingsFrame.dataPath + "\\list0-100.txt");
-                                for (int i = 1300; i < 2500; i += 100) {
-                                    int name = i + 100;
-                                    listPath = SettingsFrame.dataPath + "\\list" + i + "-" + name + ".txt";
-                                    paths.add(listPath);
+                                for (int j = 0; j < Search.diskCount; j++) {
+                                    paths.add(SettingsFrame.dataPath + "\\" + j + "\\list0-100.txt");
                                 }
-                                paths.add(SettingsFrame.dataPath + "\\list2500-.txt");
+                                for (int i = 1300; i < 2500; i += 100) {
+                                    for (int j = 0; j < Search.diskCount; j++) {
+                                        int name = i + 100;
+                                        listPath = SettingsFrame.dataPath + "\\" + j + "\\list" + i + "-" + name + ".txt";
+                                        paths.add(listPath);
+                                    }
+                                }
+                                for (int j = 0; j < Search.diskCount; j++) {
+                                    paths.add(SettingsFrame.dataPath + "\\" + j + "\\list2500-.txt");
+                                }
                                 addResult(paths, searchText, System.currentTimeMillis(), searchCase);
                             } else if (1400 < ascII && ascII <= 1500) {
-                                paths.add(SettingsFrame.dataPath + "\\list0-100.txt");
-                                for (int i = 1400; i < 2500; i += 100) {
-                                    int name = i + 100;
-                                    listPath = SettingsFrame.dataPath + "\\list" + i + "-" + name + ".txt";
-                                    paths.add(listPath);
+                                for (int j = 0; j < Search.diskCount; j++) {
+                                    paths.add(SettingsFrame.dataPath + "\\" + j + "\\list0-100.txt");
                                 }
-                                paths.add(SettingsFrame.dataPath + "\\list2500-.txt");
+                                for (int i = 1400; i < 2500; i += 100) {
+                                    for (int j = 0; j < Search.diskCount; j++) {
+                                        int name = i + 100;
+                                        listPath = SettingsFrame.dataPath + "\\" + j + "\\list" + i + "-" + name + ".txt";
+                                        paths.add(listPath);
+                                    }
+                                }
+                                for (int j = 0; j < Search.diskCount; j++) {
+                                    paths.add(SettingsFrame.dataPath + "\\" + j + "\\list2500-.txt");
+                                }
                                 addResult(paths, searchText, System.currentTimeMillis(), searchCase);
                             } else if (1500 < ascII && ascII <= 1600) {
-                                paths.add(SettingsFrame.dataPath + "\\list0-100.txt");
-                                for (int i = 1500; i < 2500; i += 100) {
-                                    int name = i + 100;
-                                    listPath = SettingsFrame.dataPath + "\\list" + i + "-" + name + ".txt";
-                                    paths.add(listPath);
+                                for (int j = 0; j < Search.diskCount; j++) {
+                                    paths.add(SettingsFrame.dataPath + "\\" + j + "\\list0-100.txt");
                                 }
-                                paths.add(SettingsFrame.dataPath + "\\list2500-.txt");
+                                for (int i = 1500; i < 2500; i += 100) {
+                                    for (int j = 0; j < Search.diskCount; j++) {
+                                        int name = i + 100;
+                                        listPath = SettingsFrame.dataPath + "\\" + j + "\\list" + i + "-" + name + ".txt";
+                                        paths.add(listPath);
+                                    }
+                                }
+                                for (int j = 0; j < Search.diskCount; j++) {
+                                    paths.add(SettingsFrame.dataPath + "\\" + j + "\\list2500-.txt");
+                                }
                                 addResult(paths, searchText, System.currentTimeMillis(), searchCase);
                             } else if (1600 < ascII && ascII <= 1700) {
-                                paths.add(SettingsFrame.dataPath + "\\list0-100.txt");
-                                for (int i = 1600; i < 2500; i += 100) {
-                                    int name = i + 100;
-                                    listPath = SettingsFrame.dataPath + "\\list" + i + "-" + name + ".txt";
-                                    paths.add(listPath);
+                                for (int j = 0; j < Search.diskCount; j++) {
+                                    paths.add(SettingsFrame.dataPath + "\\" + j + "\\list0-100.txt");
                                 }
-                                paths.add(SettingsFrame.dataPath + "\\list2500-.txt");
+                                for (int i = 1600; i < 2500; i += 100) {
+                                    for (int j = 0; j < Search.diskCount; j++) {
+                                        int name = i + 100;
+                                        listPath = SettingsFrame.dataPath + "\\" + j + "\\list" + i + "-" + name + ".txt";
+                                        paths.add(listPath);
+                                    }
+                                }
+                                for (int j = 0; j < Search.diskCount; j++) {
+                                    paths.add(SettingsFrame.dataPath + "\\" + j + "\\list2500-.txt");
+                                }
                                 addResult(paths, searchText, System.currentTimeMillis(), searchCase);
                             } else if (1700 < ascII && ascII <= 1800) {
-                                paths.add(SettingsFrame.dataPath + "\\list0-100.txt");
-                                for (int i = 1700; i < 2500; i += 100) {
-                                    int name = i + 100;
-                                    listPath = SettingsFrame.dataPath + "\\list" + i + "-" + name + ".txt";
-                                    paths.add(listPath);
+                                for (int j = 0; j < Search.diskCount; j++) {
+                                    paths.add(SettingsFrame.dataPath + "\\" + j + "\\list0-100.txt");
                                 }
-                                paths.add(SettingsFrame.dataPath + "\\list2500-.txt");
+                                for (int i = 1700; i < 2500; i += 100) {
+                                    for (int j = 0; j < Search.diskCount; j++) {
+                                        int name = i + 100;
+                                        listPath = SettingsFrame.dataPath + "\\" + j + "\\list" + i + "-" + name + ".txt";
+                                        paths.add(listPath);
+                                    }
+                                }
+                                for (int j = 0; j < Search.diskCount; j++) {
+                                    paths.add(SettingsFrame.dataPath + "\\" + j + "\\list2500-.txt");
+                                }
                                 addResult(paths, searchText, System.currentTimeMillis(), searchCase);
                             } else if (1800 < ascII && ascII <= 1900) {
-                                paths.add(SettingsFrame.dataPath + "\\list0-100.txt");
-                                for (int i = 1800; i < 2500; i += 100) {
-                                    int name = i + 100;
-                                    listPath = SettingsFrame.dataPath + "\\list" + i + "-" + name + ".txt";
-                                    paths.add(listPath);
+                                for (int j = 0; j < Search.diskCount; j++) {
+                                    paths.add(SettingsFrame.dataPath + "\\" + j + "\\list0-100.txt");
                                 }
-                                paths.add(SettingsFrame.dataPath + "\\list2500-.txt");
+                                for (int i = 1800; i < 2500; i += 100) {
+                                    for (int j = 0; j < Search.diskCount; j++) {
+                                        int name = i + 100;
+                                        listPath = SettingsFrame.dataPath + "\\" + j + "\\list" + i + "-" + name + ".txt";
+                                        paths.add(listPath);
+                                    }
+                                }
+                                for (int j = 0; j < Search.diskCount; j++) {
+                                    paths.add(SettingsFrame.dataPath + "\\" + j + "\\list2500-.txt");
+                                }
                                 addResult(paths, searchText, System.currentTimeMillis(), searchCase);
                             } else if (1900 < ascII && ascII <= 2000) {
-                                paths.add(SettingsFrame.dataPath + "\\list0-100.txt");
-                                for (int i = 1900; i < 2500; i += 100) {
-                                    int name = i + 100;
-                                    listPath = SettingsFrame.dataPath + "\\list" + i + "-" + name + ".txt";
-                                    paths.add(listPath);
+                                for (int j = 0; j < Search.diskCount; j++) {
+                                    paths.add(SettingsFrame.dataPath + "\\" + j + "\\list0-100.txt");
                                 }
-                                paths.add(SettingsFrame.dataPath + "\\list2500-.txt");
+                                for (int i = 1900; i < 2500; i += 100) {
+                                    for (int j = 0; j < Search.diskCount; j++) {
+                                        int name = i + 100;
+                                        listPath = SettingsFrame.dataPath + "\\" + j + "\\list" + i + "-" + name + ".txt";
+                                        paths.add(listPath);
+                                    }
+                                }
+                                for (int j = 0; j < Search.diskCount; j++) {
+                                    paths.add(SettingsFrame.dataPath + "\\" + j + "\\list2500-.txt");
+                                }
                                 addResult(paths, searchText, System.currentTimeMillis(), searchCase);
                             } else if (2000 < ascII && ascII <= 2100) {
-                                paths.add(SettingsFrame.dataPath + "\\list0-100.txt");
-                                for (int i = 2000; i < 2500; i += 100) {
-                                    int name = i + 100;
-                                    listPath = SettingsFrame.dataPath + "\\list" + i + "-" + name + ".txt";
-                                    paths.add(listPath);
+                                for (int j = 0; j < Search.diskCount; j++) {
+                                    paths.add(SettingsFrame.dataPath + "\\" + j + "\\list0-100.txt");
                                 }
-                                paths.add(SettingsFrame.dataPath + "\\list2500-.txt");
+                                for (int i = 2000; i < 2500; i += 100) {
+                                    for (int j = 0; j < Search.diskCount; j++) {
+                                        int name = i + 100;
+                                        listPath = SettingsFrame.dataPath + "\\" + j + "\\list" + i + "-" + name + ".txt";
+                                        paths.add(listPath);
+                                    }
+                                }
+                                for (int j = 0; j < Search.diskCount; j++) {
+                                    paths.add(SettingsFrame.dataPath + "\\" + j + "\\list2500-.txt");
+                                }
                                 addResult(paths, searchText, System.currentTimeMillis(), searchCase);
                             } else if (2100 < ascII && ascII <= 2200) {
-                                paths.add(SettingsFrame.dataPath + "\\list0-100.txt");
-                                for (int i = 2100; i < 2500; i += 100) {
-                                    int name = i + 100;
-                                    listPath = SettingsFrame.dataPath + "\\list" + i + "-" + name + ".txt";
-                                    paths.add(listPath);
+                                for (int j = 0; j < Search.diskCount; j++) {
+                                    paths.add(SettingsFrame.dataPath + "\\" + j + "\\list0-100.txt");
                                 }
-                                paths.add(SettingsFrame.dataPath + "\\list2500-.txt");
+                                for (int i = 2100; i < 2500; i += 100) {
+                                    for (int j = 0; j < Search.diskCount; j++) {
+                                        int name = i + 100;
+                                        listPath = SettingsFrame.dataPath + "\\" + j + "\\list" + i + "-" + name + ".txt";
+                                        paths.add(listPath);
+                                    }
+                                }
+                                for (int j = 0; j < Search.diskCount; j++) {
+                                    paths.add(SettingsFrame.dataPath + "\\" + j + "\\list2500-.txt");
+                                }
                                 addResult(paths, searchText, System.currentTimeMillis(), searchCase);
                             } else if (2200 < ascII && ascII <= 2300) {
-                                paths.add(SettingsFrame.dataPath + "\\list0-100.txt");
-                                for (int i = 2200; i < 2500; i += 100) {
-                                    int name = i + 100;
-                                    listPath = SettingsFrame.dataPath + "\\list" + i + "-" + name + ".txt";
-                                    paths.add(listPath);
+                                for (int j = 0; j < Search.diskCount; j++) {
+                                    paths.add(SettingsFrame.dataPath + "\\" + j + "\\list0-100.txt");
                                 }
-                                paths.add(SettingsFrame.dataPath + "\\list2500-.txt");
+                                for (int i = 2200; i < 2500; i += 100) {
+                                    for (int j = 0; j < Search.diskCount; j++) {
+                                        int name = i + 100;
+                                        listPath = SettingsFrame.dataPath + "\\" + j + "\\list" + i + "-" + name + ".txt";
+                                        paths.add(listPath);
+                                    }
+                                }
+                                for (int j = 0; j < Search.diskCount; j++) {
+                                    paths.add(SettingsFrame.dataPath + "\\" + j + "\\list2500-.txt");
+                                }
                                 addResult(paths, searchText, System.currentTimeMillis(), searchCase);
                             } else if (2300 < ascII && ascII <= 2400) {
-                                paths.add(SettingsFrame.dataPath + "\\list0-100.txt");
-                                for (int i = 2300; i < 2500; i += 100) {
-                                    int name = i + 100;
-                                    listPath = SettingsFrame.dataPath + "\\list" + i + "-" + name + ".txt";
-                                    paths.add(listPath);
+                                for (int j = 0; j < Search.diskCount; j++) {
+                                    paths.add(SettingsFrame.dataPath + "\\" + j + "\\list0-100.txt");
                                 }
-                                paths.add(SettingsFrame.dataPath + "\\list2500-.txt");
+                                for (int i = 2300; i < 2500; i += 100) {
+                                    for (int j = 0; j < Search.diskCount; j++) {
+                                        int name = i + 100;
+                                        listPath = SettingsFrame.dataPath + "\\" + j + "\\list" + i + "-" + name + ".txt";
+                                        paths.add(listPath);
+                                    }
+                                }
+                                for (int j = 0; j < Search.diskCount; j++) {
+                                    paths.add(SettingsFrame.dataPath + "\\" + j + "\\list2500-.txt");
+                                }
                                 addResult(paths, searchText, System.currentTimeMillis(), searchCase);
                             } else if (2400 < ascII && ascII <= 2500) {
-                                paths.add(SettingsFrame.dataPath + "\\list0-100.txt");
-                                for (int i = 2400; i < 2500; i += 100) {
-                                    int name = i + 100;
-                                    listPath = SettingsFrame.dataPath + "\\list" + i + "-" + name + ".txt";
-                                    paths.add(listPath);
+                                for (int j = 0; j < Search.diskCount; j++) {
+                                    paths.add(SettingsFrame.dataPath + "\\" + j + "\\list0-100.txt");
                                 }
-                                paths.add(SettingsFrame.dataPath + "\\list2500-.txt");
+                                for (int i = 2400; i < 2500; i += 100) {
+                                    for (int j = 0; j < Search.diskCount; j++) {
+                                        int name = i + 100;
+                                        listPath = SettingsFrame.dataPath + "\\" + j + "\\list" + i + "-" + name + ".txt";
+                                        paths.add(listPath);
+                                    }
+                                }
+                                for (int j = 0; j < Search.diskCount; j++) {
+                                    paths.add(SettingsFrame.dataPath + "\\" + j + "\\list2500-.txt");
+                                }
                                 addResult(paths, searchText, System.currentTimeMillis(), searchCase);
                             } else {
-                                paths.add(SettingsFrame.dataPath + "\\list2500-.txt");
+                                for (int j = 0; j < Search.diskCount; j++) {
+                                    paths.add(SettingsFrame.dataPath + "\\" + j + "\\list2500-.txt");
+                                }
                                 addResult(paths, searchText, System.currentTimeMillis(), searchCase);
                             }
                         }
@@ -2486,42 +2636,42 @@ public class SearchBar {
             try (BufferedReader reader = new BufferedReader(new FileReader(cache))) {
                 while ((cacheResult = reader.readLine()) != null) {
                     String[] caches = semicolon.split(cacheResult);
-                    for (String cach : caches) {
-                        if (!(new File(cach).exists())) {
-                            cachesToDel.add(cach);
+                    for (String eachCache : caches) {
+                        if (!(new File(eachCache).exists())) {
+                            cachesToDel.add(eachCache);
                         } else {
-                            String eachCacheName = getFileName(cach);
+                            String eachCacheName = getFileName(eachCache);
                             if (isMatched(eachCacheName, text)) {
-                                if (!listResult.contains(cach)) {
+                                if (!listResult.contains(eachCache)) {
                                     boolean fullMatched = eachCacheName.toLowerCase().equals(text.toLowerCase());
                                     switch (searchCase) {
                                         case "F":
-                                            if (isFile(cach)) {
-                                                listResult.add(cach);
+                                            if (isFile(eachCache)) {
+                                                listResult.add(eachCache);
                                             }
                                             break;
                                         case "D":
-                                            if (isDirectory(cach)) {
-                                                listResult.add(cach);
+                                            if (isDirectory(eachCache)) {
+                                                listResult.add(eachCache);
                                             }
                                             break;
                                         case "FULL":
                                             if (fullMatched) {
-                                                listResult.add(cach);
+                                                listResult.add(eachCache);
                                             }
                                             break;
                                         case "DFULL":
-                                            if (fullMatched && isDirectory(cach)) {
-                                                listResult.add(cach);
+                                            if (fullMatched && isDirectory(eachCache)) {
+                                                listResult.add(eachCache);
                                             }
                                             break;
                                         case "FFULL":
-                                            if (fullMatched && isFile(cach)) {
-                                                listResult.add(cach);
+                                            if (fullMatched && isFile(eachCache)) {
+                                                listResult.add(eachCache);
                                             }
                                             break;
                                         default:
-                                            listResult.add(cach);
+                                            listResult.add(eachCache);
                                     }
                                     if (listResult.size() > 100) {
                                         break;
@@ -2659,8 +2809,7 @@ public class SearchBar {
             if (searchBar.isVisible()) {
                 searchBar.setVisible(false);
             }
-            CheckHotKey hotkeyListener = CheckHotKey.getInstance();
-            hotkeyListener.setShowSearchBar(false);
+            CheckHotKey.getInstance().setShowSearchBar(false);
             clearLabel();
             startTime = System.currentTimeMillis();//½áÊøËÑË÷
             isUsing = false;
@@ -2720,6 +2869,5 @@ class TextBorderUtlis extends LineBorder {
         }
         g2.setColor(oldColor);
     }
-
 }
 
