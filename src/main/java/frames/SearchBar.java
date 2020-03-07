@@ -287,16 +287,10 @@ public class SearchBar {
             try {
                 while (!mainExit) {
                     if (!search.isManualUpdate() && !isUsing) {
-                        if (search.getRecycleBinSize() > 3000) {
+                        if (search.getRecycleBinSize() > 1000) {
                             System.out.println("已检测到回收站过大，自动清理");
                             search.setUsable(false);
                             search.mergeAndClearRecycleBin();
-                            search.setUsable(true);
-                        }
-                        if (search.getLoadListSize() > 3000) {
-                            System.out.println("加载缓存空间过大，自动清理");
-                            search.setUsable(false);
-                            search.mergeFileToList();
                             search.setUsable(true);
                         }
                     }
@@ -2207,10 +2201,12 @@ public class SearchBar {
     private void addResult(HashSet<String> paths, String searchText, long time, String searchCase) {
         //为label添加结果
         String each;
+        loop:
         for (String path : paths) {
             try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(path)))) {
                 while ((each = br.readLine()) != null) {
                     if (startTime > time) { //用户重新输入了信息
+                        br.close();
                         return;
                     }
                     if (search.isUsable()) {
@@ -2222,7 +2218,8 @@ public class SearchBar {
                                             if (isExist(each)) {
                                                 listResult.add(each);
                                                 if (listResult.size() > 100) {
-                                                    return;
+                                                    br.close();
+                                                    break loop;
                                                 }
                                             }
                                         }
@@ -2234,7 +2231,8 @@ public class SearchBar {
                                             if (isExist(each)) {
                                                 listResult.add(each);
                                                 if (listResult.size() > 100) {
-                                                    return;
+                                                    br.close();
+                                                    break loop;
                                                 }
                                             }
                                         }
@@ -2246,7 +2244,8 @@ public class SearchBar {
                                             if (isExist(each)) {
                                                 listResult.add(each);
                                                 if (listResult.size() > 100) {
-                                                    return;
+                                                    br.close();
+                                                    break loop;
                                                 }
                                             }
                                         }
@@ -2259,7 +2258,8 @@ public class SearchBar {
                                                 if (isExist(each)) {
                                                     listResult.add(each);
                                                     if (listResult.size() > 100) {
-                                                        return;
+                                                        br.close();
+                                                        break loop;
                                                     }
                                                 }
                                             }
@@ -2273,7 +2273,8 @@ public class SearchBar {
                                                 if (isExist(each)) {
                                                     listResult.add(each);
                                                     if (listResult.size() > 100) {
-                                                        return;
+                                                        br.close();
+                                                        break loop;
                                                     }
                                                 }
                                             }
@@ -2285,7 +2286,8 @@ public class SearchBar {
                                         if (isExist(each)) {
                                             listResult.add(each);
                                             if (listResult.size() > 100) {
-                                                return;
+                                                br.close();
+                                                break loop;
                                             }
                                         }
                                     }
@@ -2309,7 +2311,7 @@ public class SearchBar {
     public void showSearchbar() {
         textField.setCaretPosition(0);
         //添加更新文件
-        textField.requestFocusInWindow();
+        textField.grabFocus();
         isUsing = true;
         searchBar.setVisible(true);
     }
