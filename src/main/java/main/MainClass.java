@@ -322,7 +322,7 @@ public class MainClass {
 
 
         File[] roots = File.listRoots();
-        ExecutorService fixedThreadPool = Executors.newFixedThreadPool(roots.length + 4);
+        ExecutorService fixedThreadPool = Executors.newFixedThreadPool(roots.length + 5);
 
 
         data = new File(SettingsFrame.dataPath);
@@ -368,23 +368,15 @@ public class MainClass {
 
 
         fixedThreadPool.execute(() -> {
-            //检测文件改动线程
+            //检测文件添加线程
             String filesToAdd;
-            String filesToRemove;
-            try (BufferedReader readerAdd = new BufferedReader(new InputStreamReader(new FileInputStream(new File(SettingsFrame.tmp.getAbsolutePath() + "\\fileAdded.txt")))); BufferedReader readerRemove = new BufferedReader(new InputStreamReader(new FileInputStream(new File(SettingsFrame.tmp.getAbsolutePath() + "\\fileRemoved.txt"))))) {
-                //分割字符串
+            try (BufferedReader readerAdd = new BufferedReader(new InputStreamReader(new FileInputStream(new File(SettingsFrame.tmp.getAbsolutePath() + "\\fileAdded.txt"))))) {
                 while (!mainExit) {
                     if (!search.isManualUpdate()) {
-                        while ((filesToAdd = readerAdd.readLine()) != null) {
+                        if ((filesToAdd = readerAdd.readLine()) != null) {
                             if (!filesToAdd.contains(SettingsFrame.dataPath)) {
                                 search.addFileToLoadBin(filesToAdd);
                                 System.out.println("添加" + filesToAdd);
-                            }
-                        }
-                        while ((filesToRemove = readerRemove.readLine()) != null) {
-                            if (!filesToRemove.contains(SettingsFrame.dataPath)) {
-                                search.addToRecycleBin(filesToRemove);
-                                System.out.println("删除" + filesToRemove);
                             }
                         }
                     }
@@ -395,26 +387,38 @@ public class MainClass {
             }
         });
 
+        fixedThreadPool.execute(() -> {
+            String filesToRemove;
+            try (BufferedReader readerRemove = new BufferedReader(new InputStreamReader(new FileInputStream(new File(SettingsFrame.tmp.getAbsolutePath() + "\\fileRemoved.txt"))))) {
+                while (!mainExit) {
+                    if (!search.isManualUpdate()) {
+                        if ((filesToRemove = readerRemove.readLine()) != null) {
+                            if (!filesToRemove.contains(SettingsFrame.dataPath)) {
+                                search.addToRecycleBin(filesToRemove);
+                                System.out.println("删除" + filesToRemove);
+                            }
+                        }
+                    }
+                    Thread.sleep(1);
+                }
+            } catch (InterruptedException | IOException e) {
+                e.printStackTrace();
+            }
+        });
+
 
         fixedThreadPool.execute(() -> {
             // 时间检测线程
             long count = 0;
-            long gcCount = 0;
             try {
                 while (!mainExit) {
                     boolean isUsing = searchBar.isUsing();
                     count++;
-                    gcCount++;
                     if (count >= (SettingsFrame.updateTimeLimit << 10) && !isUsing && !search.isManualUpdate()) {
                         count = 0;
                         if (search.isUsable() && (!searchBar.isUsing())) {
                             search.mergeFileToList();
                         }
-                    }
-                    if (gcCount > 600000) {
-                        System.out.println("正在释放内存空间");
-                        System.gc();
-                        gcCount = 0;
                     }
                     Thread.sleep(1);
                 }
