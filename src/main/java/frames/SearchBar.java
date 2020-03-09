@@ -135,6 +135,7 @@ public class SearchBar {
         textField.setHorizontalAlignment(JTextField.LEFT);
         textField.setBackground(Color.WHITE);
         textField.setLocation(3, 0);
+        textField.setOpaque(true);
         textField.addFocusListener(new FocusListener() {
             @Override
             public void focusGained(FocusEvent e) {
