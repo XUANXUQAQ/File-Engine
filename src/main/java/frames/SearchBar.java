@@ -309,10 +309,10 @@ public class SearchBar {
 
         fixedThreadPool.execute(() -> {
             //接收insertUpdate的信息并进行搜索
-            //停顿时间0.5s，每一次输入会更新一次startTime，该线程记录endTime
+            //停顿时间0.25s，每一次输入会更新一次startTime，该线程记录endTime
             while (!mainExit) {
                 long endTime = System.currentTimeMillis();
-                if ((endTime - startTime > 500) && (timer)) {
+                if ((endTime - startTime > 250) && (timer)) {
                     timer = false; //开始搜索 计时停止
                     labelCount = 0;
                     clearLabel();
@@ -2329,7 +2329,6 @@ public class SearchBar {
     }
 
     private void showResults() {
-
         if (!isCommandMode) {
             try {
                 String path = listResult.get(0);
@@ -2517,29 +2516,33 @@ public class SearchBar {
     }
 
     private void openWithoutAdmin(String path) {
-        File name = new File(path);
-        if (name.exists()) {
+        if (isExist(path)) {
             try {
-                if (path.endsWith(".exe")) {
-                    Runtime.getRuntime().exec("cmd /c runas /trustlevel:0x20000 \"" + name.getAbsolutePath() + "\"", null, name.getParentFile());
+                if (path.endsWith(".lnk")) {
+                    Runtime.getRuntime().exec("cmd /c explorer.exe " + "\"" + path + "\"");
                 } else {
-                    File fileToOpen = new File("user/fileToOpen.txt");
-                    File fileOpener = new File("user/fileOpener.exe");
-                    try (BufferedWriter buffw = new BufferedWriter(new FileWriter(fileToOpen))) {
-                        buffw.write(name.getAbsolutePath() + "\n");
-                        buffw.write(name.getParent());
-                    }
-                    Runtime.getRuntime().exec("cmd /c runas /trustlevel:0x20000 \"" + fileOpener.getAbsolutePath() + "\"", null, fileOpener.getParentFile());
+                    //创建快捷方式到临时文件夹，打开后删除
+                    createShortCut(path, SettingsFrame.tmp.getAbsolutePath() + "\\open");
+                    Runtime.getRuntime().exec("cmd /c explorer.exe " + "\"" + SettingsFrame.tmp.getAbsolutePath() + "\\open.lnk" + "\"");
                 }
             } catch (IOException e) {
                 //打开上级文件夹
                 try {
-                    Runtime.getRuntime().exec("explorer.exe /select, \"" + name.getAbsolutePath() + "\"");
+                    Runtime.getRuntime().exec("explorer.exe /select, \"" + path + "\"");
                 } catch (IOException ignored) {
 
                 }
             }
         }
+    }
+
+    private void createShortCut(String fileOrFolderPath, String writeShortCutPath) throws IOException {
+        File shortcutGen = new File("user/shortcutGenerator.vbs");
+        String shortcutGenPath = shortcutGen.getAbsolutePath();
+        String start = "cmd /c start " + shortcutGenPath.substring(0, 2);
+        String end = "\"" + shortcutGenPath.substring(2) + "\"";
+        String commandToGenLnk = start + end + " /target:" + "\"" + fileOrFolderPath + "\"" + " " + "/shortcut:" + "\"" + writeShortCutPath + "\"" + " /workingdir:" + "\"" + fileOrFolderPath.substring(0, fileOrFolderPath.lastIndexOf("\\")) + "\"";
+        Runtime.getRuntime().exec("cmd /c " + commandToGenLnk);
     }
 
     public String getFileName(String path) {
@@ -2867,6 +2870,7 @@ class TextBorderUtlis extends LineBorder {
         super(color, thickness, roundedCorners);
     }
 
+    @Override
     public void paintBorder(Component c, Graphics g, int x, int y, int width, int height) {
         RenderingHints rh = new RenderingHints(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         Color oldColor = g.getColor();
