@@ -2319,11 +2319,12 @@ public class SearchBar {
     }
 
     public void showSearchbar() {
+        searchBar.setVisible(true);
         searchBar.requestFocusInWindow();
+        searchBar.setAlwaysOnTop(true);
         textField.setCaretPosition(0);
         textField.requestFocusInWindow();
         isUsing = true;
-        searchBar.setVisible(true);
     }
 
     private void showResults() {
