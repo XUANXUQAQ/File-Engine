@@ -142,11 +142,13 @@ public class MainClass {
             }
             if (!isCopied) {
                 try {
-                    new File("user/fileMonitor.dll").delete();
-                    new File("user/fileSearcher.exe").delete();
-                    new File("user/getAscII.dll").delete();
-                    new File("user/fileOpener.exe").delete();
-                    new File("user/hotkeyListener.dll").delete();
+                    for (File each : Objects.requireNonNull(user.listFiles())) {
+                        String name = each.getName();
+                        if (name.equals("settings.json") || name.equals("cmds.txt") || name.equals("cache.dat")) {
+                            continue;
+                        }
+                        each.delete();
+                    }
                     File originFile = new File(name);
                     File updated = new File("_" + name);
                     copyFile(new FileInputStream(originFile), updated);
@@ -224,19 +226,18 @@ public class MainClass {
         File target;
         InputStream fileSearcher64 = MainClass.class.getResourceAsStream("/fileSearcher64.exe");
         InputStream fileSearcher86 = MainClass.class.getResourceAsStream("/fileSearcher86.exe");
-        InputStream fileOpener64 = MainClass.class.getResourceAsStream("/fileOpener64.exe");
-        InputStream fileOpener86 = MainClass.class.getResourceAsStream("/fileOpener86.exe");
         InputStream fileMonitor64Dll = MainClass.class.getResourceAsStream("/win32-x86-64/fileMonitor64.dll");
         InputStream fileMonitor86Dll = MainClass.class.getResourceAsStream("/win32-x86/fileMonitor86.dll");
         InputStream getAscII64Dll = MainClass.class.getResourceAsStream("/win32-x86-64/getAscII64.dll");
         InputStream getAscII86Dll = MainClass.class.getResourceAsStream("/win32-x86/getAscII86.dll");
         InputStream hotkeyListener64Dll = MainClass.class.getResourceAsStream("/win32-x86-64/hotkeyListener64.dll");
         InputStream hotkeyListener86Dll = MainClass.class.getResourceAsStream("/win32-x86/hotkeyListener86.dll");
+        InputStream shortcutGen = MainClass.class.getResourceAsStream("/shortcutGenerator.vbs");
 
         boolean is64Bit = name.contains("x64");
 
+        target = new File("user/fileMonitor.dll");
         if (is64Bit) {
-            target = new File("user/fileMonitor.dll");
             if (!target.exists()) {
                 copyFile(fileMonitor64Dll, target);
             }
@@ -249,7 +250,6 @@ public class MainClass {
                 copyFile(hotkeyListener64Dll, target);
             }
         } else {
-            target = new File("user/fileMonitor.dll");
             if (!target.exists()) {
                 copyFile(fileMonitor86Dll, target);
             }
@@ -279,15 +279,10 @@ public class MainClass {
         if (!target.exists()) {
             target.mkdir();
         }
-        target = new File("user/fileOpener.exe");
+        target = new File("user/shortcutGenerator.vbs");
         if (!target.exists()) {
-            if (is64Bit) {
-                copyFile(fileOpener64, target);
-                System.out.println("已加载64位fileOpener");
-            } else {
-                copyFile(fileOpener86, target);
-                System.out.println("已加载32位fileOpener");
-            }
+            copyFile(shortcutGen, target);
+            System.out.println("已导出快捷方式生成器");
         }
 
         if (!caches.exists()) {
