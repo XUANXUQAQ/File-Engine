@@ -42,10 +42,6 @@ public class Search {
         return RecycleBin.size();
     }
 
-    public int getLoadListSize() {
-        return listToLoad.size();
-    }
-
     public void addToRecycleBin(String path) {
         RecycleBin.add(path);
     }
