@@ -19,6 +19,7 @@ import java.awt.event.*;
 import java.io.*;
 import java.net.URL;
 import java.util.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -56,6 +57,8 @@ public class SearchBar {
     private JPanel panel = new JPanel();
     private long mouseWheelTime = 0;
     private boolean isCopyPathPressed = false;
+    private ExecutorService threadPool = Executors.newFixedThreadPool(4);
+    private int iconSideLength;
 
 
     private SearchBar() {
@@ -87,6 +90,8 @@ public class SearchBar {
         label1.setForeground(fontColor);
         label1.setOpaque(true);
         label1.setBackground(null);
+
+        iconSideLength = label1.getHeight() / 3; //定义图标边长
 
 
         label2.setSize(searchBarWidth, (int) (searchBarHeight * 0.2));
@@ -1049,7 +1054,7 @@ public class SearchBar {
                                             ImageIcon icon1;
                                             if (isDirectory(path) || isFile(path)) {
                                                 icon1 = (ImageIcon) GetIcon.getBigIcon(path);
-                                                icon1 = changeIcon(icon1, label1.getHeight() / 3, label1.getHeight() / 3);
+                                                icon1 = changeIcon(icon1, iconSideLength, iconSideLength);
                                                 label1.setIcon(icon1);
                                                 label1.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>>" + getParentPath(path) + "</font></body></html>");
                                             } else {
@@ -1062,7 +1067,7 @@ public class SearchBar {
 
                                             if (isDirectory(path) || isFile(path)) {
                                                 icon1 = (ImageIcon) GetIcon.getBigIcon(path);
-                                                icon1 = changeIcon(icon1, label1.getHeight() / 3, label1.getHeight() / 3);
+                                                icon1 = changeIcon(icon1, iconSideLength, iconSideLength);
                                                 label2.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>>" + getParentPath(path) + "</body></html>");
                                                 label2.setIcon(icon1);
                                             } else {
@@ -1076,7 +1081,7 @@ public class SearchBar {
 
                                             if (isDirectory(path) || isFile(path)) {
                                                 icon1 = (ImageIcon) GetIcon.getBigIcon(path);
-                                                icon1 = changeIcon(icon1, label1.getHeight() / 3, label1.getHeight() / 3);
+                                                icon1 = changeIcon(icon1, iconSideLength, iconSideLength);
                                                 label3.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>>" + getParentPath(path) + "</body></html>");
                                                 label3.setIcon(icon1);
                                             } else {
@@ -1090,7 +1095,7 @@ public class SearchBar {
 
                                             if (isDirectory(path) || isFile(path)) {
                                                 icon1 = (ImageIcon) GetIcon.getBigIcon(path);
-                                                icon1 = changeIcon(icon1, label1.getHeight() / 3, label1.getHeight() / 3);
+                                                icon1 = changeIcon(icon1, iconSideLength, iconSideLength);
                                                 label4.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>>" + getParentPath(path) + "</body></html>");
                                                 label4.setIcon(icon1);
                                             } else {
@@ -1232,7 +1237,7 @@ public class SearchBar {
                                         ImageIcon icon1;
                                         if (isDirectory(path) || isFile(path)) {
                                             icon1 = (ImageIcon) GetIcon.getBigIcon(path);
-                                            icon1 = changeIcon(icon1, label1.getHeight() / 3, label1.getHeight() / 3);
+                                            icon1 = changeIcon(icon1, iconSideLength, iconSideLength);
                                             label1.setIcon(icon1);
                                             label1.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>>" + getParentPath(path) + "</body></html>");
                                         } else {
@@ -1245,7 +1250,7 @@ public class SearchBar {
 
                                         if (isDirectory(path) || isFile(path)) {
                                             icon1 = (ImageIcon) GetIcon.getBigIcon(path);
-                                            icon1 = changeIcon(icon1, label1.getHeight() / 3, label1.getHeight() / 3);
+                                            icon1 = changeIcon(icon1, iconSideLength, iconSideLength);
                                             label2.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>>" + getParentPath(path) + "</body></html>");
                                             label2.setIcon(icon1);
                                         } else {
@@ -1259,7 +1264,7 @@ public class SearchBar {
 
                                         if (isDirectory(path) || isFile(path)) {
                                             icon1 = (ImageIcon) GetIcon.getBigIcon(path);
-                                            icon1 = changeIcon(icon1, label1.getHeight() / 3, label1.getHeight() / 3);
+                                            icon1 = changeIcon(icon1, iconSideLength, iconSideLength);
                                             label3.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>>" + getParentPath(path) + "</body></html>");
                                             label3.setIcon(icon1);
                                         } else {
@@ -1273,7 +1278,7 @@ public class SearchBar {
 
                                         if (isDirectory(path) || isFile(path)) {
                                             icon1 = (ImageIcon) GetIcon.getBigIcon(path);
-                                            icon1 = changeIcon(icon1, label1.getHeight() / 3, label1.getHeight() / 3);
+                                            icon1 = changeIcon(icon1, iconSideLength, iconSideLength);
                                             label4.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>>" + getParentPath(path) + "</body></html>");
                                             label4.setIcon(icon1);
                                         } else {
@@ -1627,7 +1632,7 @@ public class SearchBar {
                                                     ImageIcon icon;
                                                     if (isDirectory(path) || isFile(path)) {
                                                         icon = (ImageIcon) GetIcon.getBigIcon(path);
-                                                        icon = changeIcon(icon, label1.getHeight() / 3, label1.getHeight() / 3);
+                                                        icon = changeIcon(icon, iconSideLength, iconSideLength);
                                                         label1.setIcon(icon);
                                                         label1.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>>" + getParentPath(path) + "</body></html>");
                                                     } else {
@@ -1640,7 +1645,7 @@ public class SearchBar {
 
                                                     if (isDirectory(path) || isFile(path)) {
                                                         icon = (ImageIcon) GetIcon.getBigIcon(path);
-                                                        icon = changeIcon(icon, label1.getHeight() / 3, label1.getHeight() / 3);
+                                                        icon = changeIcon(icon, iconSideLength, iconSideLength);
                                                         label2.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>>" + getParentPath(path) + "</body></html>");
                                                         label2.setIcon(icon);
                                                     } else {
@@ -1654,7 +1659,7 @@ public class SearchBar {
 
                                                     if (isDirectory(path) || isFile(path)) {
                                                         icon = (ImageIcon) GetIcon.getBigIcon(path);
-                                                        icon = changeIcon(icon, label1.getHeight() / 3, label1.getHeight() / 3);
+                                                        icon = changeIcon(icon, iconSideLength, iconSideLength);
                                                         label3.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>>" + getParentPath(path) + "</body></html>");
                                                         label3.setIcon(icon);
                                                     } else {
@@ -1668,7 +1673,7 @@ public class SearchBar {
 
                                                     if (isDirectory(path) || isFile(path)) {
                                                         icon = (ImageIcon) GetIcon.getBigIcon(path);
-                                                        icon = changeIcon(icon, label1.getHeight() / 3, label1.getHeight() / 3);
+                                                        icon = changeIcon(icon, iconSideLength, iconSideLength);
                                                         label4.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>>" + getParentPath(path) + "</body></html>");
                                                         label4.setIcon(icon);
                                                     } else {
@@ -1971,7 +1976,7 @@ public class SearchBar {
                                                         ImageIcon icon;
                                                         if (isDirectory(path) || isFile(path)) {
                                                             icon = (ImageIcon) GetIcon.getBigIcon(path);
-                                                            icon = changeIcon(icon, label1.getHeight() / 3, label1.getHeight() / 3);
+                                                            icon = changeIcon(icon, iconSideLength, iconSideLength);
                                                             label1.setIcon(icon);
                                                             label1.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>>" + getParentPath(path) + "</body></html>");
                                                         } else {
@@ -1984,7 +1989,7 @@ public class SearchBar {
 
                                                         if (isDirectory(path) || isFile(path)) {
                                                             icon = (ImageIcon) GetIcon.getBigIcon(path);
-                                                            icon = changeIcon(icon, label1.getHeight() / 3, label1.getHeight() / 3);
+                                                            icon = changeIcon(icon, iconSideLength, iconSideLength);
                                                             label2.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>>" + getParentPath(path) + "</body></html>");
                                                             label2.setIcon(icon);
                                                         } else {
@@ -1998,7 +2003,7 @@ public class SearchBar {
 
                                                         if (isDirectory(path) || isFile(path)) {
                                                             icon = (ImageIcon) GetIcon.getBigIcon(path);
-                                                            icon = changeIcon(icon, label1.getHeight() / 3, label1.getHeight() / 3);
+                                                            icon = changeIcon(icon, iconSideLength, iconSideLength);
                                                             label3.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>>" + getParentPath(path) + "</body></html>");
                                                             label3.setIcon(icon);
                                                         } else {
@@ -2012,7 +2017,7 @@ public class SearchBar {
 
                                                         if (isDirectory(path) || isFile(path)) {
                                                             icon = (ImageIcon) GetIcon.getBigIcon(path);
-                                                            icon = changeIcon(icon, label1.getHeight() / 3, label1.getHeight() / 3);
+                                                            icon = changeIcon(icon, iconSideLength, iconSideLength);
                                                             label4.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>>" + getParentPath(path) + "</body></html>");
                                                             label4.setIcon(icon);
                                                         } else {
@@ -2200,105 +2205,110 @@ public class SearchBar {
 
     private void addResult(HashSet<String> paths, String searchText, long time, String searchCase) {
         //为label添加结果
-        String each;
-        loop:
-        for (String path : paths) {
-            try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(path)))) {
-                while ((each = br.readLine()) != null) {
-                    if (startTime > time) { //用户重新输入了信息
-                        br.close();
-                        return;
-                    }
-                    if (search.isUsable()) {
-                        if (isMatched(getFileName(each), searchText)) {
-                            switch (searchCase) {
-                                case "F":
-                                    if (isFile(each)) {
-                                        if (!listResult.contains(each)) {
-                                            if (isExist(each)) {
-                                                listResult.add(each);
-                                                if (listResult.size() > 100) {
-                                                    br.close();
-                                                    break loop;
+        ConcurrentLinkedQueue<String> taskQueue = new ConcurrentLinkedQueue<>(paths);
+        for (int i = 0; i < 4; i++) {
+            threadPool.execute(() -> {
+                String path;
+                String each;
+                while ((path = taskQueue.poll()) != null) {
+                    try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(path)))) {
+                        while ((each = br.readLine()) != null) {
+                            if (startTime > time) { //用户重新输入了信息
+                                br.close();
+                                return;
+                            }
+                            if (search.isUsable()) {
+                                if (isMatched(getFileName(each), searchText)) {
+                                    switch (searchCase) {
+                                        case "F":
+                                            if (isFile(each)) {
+                                                if (!listResult.contains(each)) {
+                                                    if (isExist(each)) {
+                                                        listResult.add(each);
+                                                        if (listResult.size() > 100) {
+                                                            br.close();
+                                                            return;
+                                                        }
+                                                    }
                                                 }
                                             }
-                                        }
-                                    }
-                                    break;
-                                case "D":
-                                    if (isDirectory(each)) {
-                                        if (!listResult.contains(each)) {
-                                            if (isExist(each)) {
-                                                listResult.add(each);
-                                                if (listResult.size() > 100) {
-                                                    br.close();
-                                                    break loop;
+                                            break;
+                                        case "D":
+                                            if (isDirectory(each)) {
+                                                if (!listResult.contains(each)) {
+                                                    if (isExist(each)) {
+                                                        listResult.add(each);
+                                                        if (listResult.size() > 100) {
+                                                            br.close();
+                                                            return;
+                                                        }
+                                                    }
                                                 }
                                             }
-                                        }
-                                    }
-                                    break;
-                                case "FULL":
-                                    if (getFileName(each).toLowerCase().equals(searchText.toLowerCase())) {
-                                        if (!listResult.contains(each)) {
-                                            if (isExist(each)) {
-                                                listResult.add(each);
-                                                if (listResult.size() > 100) {
-                                                    br.close();
-                                                    break loop;
+                                            break;
+                                        case "FULL":
+                                            if (getFileName(each).toLowerCase().equals(searchText.toLowerCase())) {
+                                                if (!listResult.contains(each)) {
+                                                    if (isExist(each)) {
+                                                        listResult.add(each);
+                                                        if (listResult.size() > 100) {
+                                                            br.close();
+                                                            return;
+                                                        }
+                                                    }
                                                 }
                                             }
-                                        }
-                                    }
-                                    break;
-                                case "DFULL":
-                                    if (getFileName(each).toLowerCase().equals(searchText.toLowerCase())) {
-                                        if (isDirectory(each)) {
+                                            break;
+                                        case "DFULL":
+                                            if (getFileName(each).toLowerCase().equals(searchText.toLowerCase())) {
+                                                if (isDirectory(each)) {
+                                                    if (!listResult.contains(each)) {
+                                                        if (isExist(each)) {
+                                                            listResult.add(each);
+                                                            if (listResult.size() > 100) {
+                                                                br.close();
+                                                                return;
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                            break;
+                                        case "FFULL":
+                                            if (getFileName(each).toLowerCase().equals(searchText.toLowerCase())) {
+                                                if (isFile(each)) {
+                                                    if (!listResult.contains(each)) {
+                                                        if (isExist(each)) {
+                                                            listResult.add(each);
+                                                            if (listResult.size() > 100) {
+                                                                br.close();
+                                                                return;
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                            break;
+                                        default:
                                             if (!listResult.contains(each)) {
                                                 if (isExist(each)) {
                                                     listResult.add(each);
                                                     if (listResult.size() > 100) {
                                                         br.close();
-                                                        break loop;
+                                                        return;
                                                     }
                                                 }
                                             }
-                                        }
+                                            break;
                                     }
-                                    break;
-                                case "FFULL":
-                                    if (getFileName(each).toLowerCase().equals(searchText.toLowerCase())) {
-                                        if (isFile(each)) {
-                                            if (!listResult.contains(each)) {
-                                                if (isExist(each)) {
-                                                    listResult.add(each);
-                                                    if (listResult.size() > 100) {
-                                                        br.close();
-                                                        break loop;
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                    break;
-                                default:
-                                    if (!listResult.contains(each)) {
-                                        if (isExist(each)) {
-                                            listResult.add(each);
-                                            if (listResult.size() > 100) {
-                                                br.close();
-                                                break loop;
-                                            }
-                                        }
-                                    }
-                                    break;
+                                }
                             }
                         }
+                    } catch (IOException ignored) {
+
                     }
                 }
-            } catch (IOException ignored) {
-
-            }
+            });
         }
         if (!textField.getText().equals("")) {
             delRepeated();
@@ -2309,14 +2319,15 @@ public class SearchBar {
     }
 
     public void showSearchbar() {
+        searchBar.requestFocusInWindow();
         textField.setCaretPosition(0);
-        //添加更新文件
-        textField.grabFocus();
+        textField.requestFocusInWindow();
         isUsing = true;
         searchBar.setVisible(true);
     }
 
     private void showResults() {
+
         if (!isCommandMode) {
             try {
                 String path = listResult.get(0);
@@ -2324,7 +2335,7 @@ public class SearchBar {
                 ImageIcon icon;
                 if (isDirectory(path) || isFile(path)) {
                     icon = (ImageIcon) GetIcon.getBigIcon(path);
-                    icon = changeIcon(icon, label1.getHeight() / 3, label1.getHeight() / 3);
+                    icon = changeIcon(icon, iconSideLength, iconSideLength);
                     label1.setIcon(icon);
                     label1.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>>" + getParentPath(path) + "</body></html>");
                     if (labelCount == 0) {
@@ -2348,7 +2359,7 @@ public class SearchBar {
 
                 if (isDirectory(path) || isFile(path)) {
                     icon = (ImageIcon) GetIcon.getBigIcon(path);
-                    icon = changeIcon(icon, label1.getHeight() / 3, label1.getHeight() / 3);
+                    icon = changeIcon(icon, iconSideLength, iconSideLength);
                     label2.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>>" + getParentPath(path) + "</body></html>");
                     label2.setIcon(icon);
                     if (labelCount == 1) {
@@ -2372,7 +2383,7 @@ public class SearchBar {
 
                 if (isDirectory(path) || isFile(path)) {
                     icon = (ImageIcon) GetIcon.getBigIcon(path);
-                    icon = changeIcon(icon, label1.getHeight() / 3, label1.getHeight() / 3);
+                    icon = changeIcon(icon, iconSideLength, iconSideLength);
                     label3.setIcon(icon);
                     label3.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>>" + getParentPath(path) + "</body></html>");
                     if (labelCount == 2) {
@@ -2396,7 +2407,7 @@ public class SearchBar {
 
                 if (isDirectory(path) || isFile(path)) {
                     icon = (ImageIcon) GetIcon.getBigIcon(path);
-                    icon = changeIcon(icon, label1.getHeight() / 3, label1.getHeight() / 3);
+                    icon = changeIcon(icon, iconSideLength, iconSideLength);
                     label4.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>>" + getParentPath(path) + "</body></html>");
                     label4.setIcon(icon);
                     if (labelCount >= 3) {
@@ -2855,7 +2866,6 @@ class TextBorderUtlis extends LineBorder {
     }
 
     public void paintBorder(Component c, Graphics g, int x, int y, int width, int height) {
-
         RenderingHints rh = new RenderingHints(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         Color oldColor = g.getColor();
         Graphics2D g2 = (Graphics2D) g;
