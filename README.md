@@ -20,7 +20,7 @@ A tool can make you work more efficiently.
 [下载最新测试版32位](https://github.com/XUANXUQAQ/File-Engine/releases/download/1.7-pre/File-Engine-x86.V1.6.rar)
 1. 默认Ctrl + Alt + J 呼出搜索菜单，可以在设置中更改。
 
-2. 按下Ctrl + Enter可以打开对应文件所在的文件夹, Shift + Enter以管理员方式运行。
+2. 按下Ctrl + Enter可以打开对应文件所在的文件夹, Shift + Enter以管理员方式运行，Alt + Enter复制文件路径。
 
 3. 在搜索框中加入 “:full” 为全字匹配，":D"为只搜索文件夹(Directory)，“:F”只搜索文件(File)，可以进行组合，如 ":Dfull"  ":Ffull"，不区分大小写。
 
@@ -36,7 +36,7 @@ A tool can make you work more efficiently.
 
 9. 支持多个关键字搜索，更加准确。
 
-##Demo:
+## Demos:
 ![8PPdxS.gif](https://s2.ax1x.com/2020/03/10/8PPdxS.gif)
 
 ![8PCEff.png](https://s2.ax1x.com/2020/03/10/8PCEff.png)
