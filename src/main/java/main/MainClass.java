@@ -204,7 +204,7 @@ public class MainClass {
             json.put("isStartup", false);
             json.put("updateTimeLimit", 5);
             json.put("cacheNumLimit", 1000);
-            json.put("searchDepth", 6);
+            json.put("searchDepth", 8);
             json.put("priorityFolder", "");
             json.put("dataPath", data.getAbsolutePath());
             json.put("isDefaultAdmin", false);

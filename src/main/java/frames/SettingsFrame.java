@@ -46,7 +46,7 @@ public class SettingsFrame {
     private JTextArea textAreaIgnorePath;
     private JTextField textFieldSearchDepth;
     private JCheckBox checkBox1;
-    private JFrame frame = new JFrame("设置-吾爱破解论坛");
+    private JFrame frame = new JFrame("设置");
     private JLabel label3;
     private JLabel label1;
     private JLabel label2;
