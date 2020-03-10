@@ -1166,25 +1166,37 @@ public class SearchBar {
                                             String[] info = semicolon.split(command);
                                             String path = info[1];
                                             String name = info[0];
-                                            label1.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br>&nbsp;&nbsp;" + "<font size=\"-1\">" + "&nbsp;&nbsp;" + ">>>" + path + "</font></body></html>");
+                                            ImageIcon imageIcon = (ImageIcon) GetIcon.getBigIcon(path);
+                                            imageIcon = changeIcon(imageIcon, iconSideLength, iconSideLength);
+                                            label1.setIcon(imageIcon);
+                                            label1.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>>" + path + "</font></body></html>");
 
                                             command = listResult.get(labelCount - 2);
                                             info = semicolon.split(command);
                                             path = info[1];
                                             name = info[0];
-                                            label2.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br>&nbsp;&nbsp;" + "<font size=\"-1\">" + "&nbsp;&nbsp;" + ">>>" + path + "</font></body></html>");
+                                            imageIcon = (ImageIcon) GetIcon.getBigIcon(path);
+                                            imageIcon = changeIcon(imageIcon, iconSideLength, iconSideLength);
+                                            label2.setIcon(imageIcon);
+                                            label2.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>>" + path + "</font></body></html>");
 
                                             command = listResult.get(labelCount - 1);
                                             info = semicolon.split(command);
                                             path = info[1];
                                             name = info[0];
-                                            label3.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br>&nbsp;&nbsp;" + "<font size=\"-1\">" + "&nbsp;&nbsp;" + ">>>" + path + "</font></body></html>");
+                                            imageIcon = (ImageIcon) GetIcon.getBigIcon(path);
+                                            imageIcon = changeIcon(imageIcon, iconSideLength, iconSideLength);
+                                            label3.setIcon(imageIcon);
+                                            label3.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>>" + path + "</font></body></html>");
 
                                             command = listResult.get(labelCount);
                                             info = semicolon.split(command);
                                             path = info[1];
                                             name = info[0];
-                                            label4.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br>&nbsp;&nbsp;" + "<font size=\"-1\">" + "&nbsp;&nbsp;" + ">>>" + path + "</font></body></html>");
+                                            imageIcon = (ImageIcon) GetIcon.getBigIcon(path);
+                                            imageIcon = changeIcon(imageIcon, iconSideLength, iconSideLength);
+                                            label4.setIcon(imageIcon);
+                                            label4.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>>" + path + "</font></body></html>");
                                         } catch (ArrayIndexOutOfBoundsException ignored) {
 
                                         }
@@ -1355,25 +1367,37 @@ public class SearchBar {
                                         String[] info = semicolon.split(command);
                                         String path = info[1];
                                         String name = info[0];
-                                        label1.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br>&nbsp;&nbsp;" + "<font size=\"-1\">" + "&nbsp;&nbsp;" + ">>>" + path + "</font></body></html>");
+                                        ImageIcon imageIcon = (ImageIcon) GetIcon.getBigIcon(path);
+                                        imageIcon = changeIcon(imageIcon, iconSideLength, iconSideLength);
+                                        label1.setIcon(imageIcon);
+                                        label1.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>>" + path + "</font></body></html>");
 
                                         command = listResult.get(labelCount + 1);
                                         info = semicolon.split(command);
                                         path = info[1];
                                         name = info[0];
-                                        label2.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br>&nbsp;&nbsp;" + "<font size=\"-1\">" + "&nbsp;&nbsp;" + ">>>" + path + "</font></body></html>");
+                                        imageIcon = (ImageIcon) GetIcon.getBigIcon(path);
+                                        imageIcon = changeIcon(imageIcon, iconSideLength, iconSideLength);
+                                        label2.setIcon(imageIcon);
+                                        label2.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>>" + path + "</font></body></html>");
 
                                         command = listResult.get(labelCount + 2);
                                         info = semicolon.split(command);
                                         path = info[1];
                                         name = info[0];
-                                        label3.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br>&nbsp;&nbsp;" + "<font size=\"-1\">" + "&nbsp;&nbsp;" + ">>>" + path + "</font></body></html>");
+                                        imageIcon = (ImageIcon) GetIcon.getBigIcon(path);
+                                        imageIcon = changeIcon(imageIcon, iconSideLength, iconSideLength);
+                                        label3.setIcon(imageIcon);
+                                        label3.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>>" + path + "</font></body></html>");
 
                                         command = listResult.get(labelCount + 3);
                                         info = semicolon.split(command);
                                         path = info[1];
                                         name = info[0];
-                                        label4.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br>&nbsp;&nbsp;" + "<font size=\"-1\">" + "&nbsp;&nbsp;" + ">>>" + path + "</font></body></html>");
+                                        imageIcon = (ImageIcon) GetIcon.getBigIcon(path);
+                                        imageIcon = changeIcon(imageIcon, iconSideLength, iconSideLength);
+                                        label4.setIcon(imageIcon);
+                                        label4.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>>" + path + "</font></body></html>");
                                     } catch (ArrayIndexOutOfBoundsException ignored) {
 
                                     }
@@ -1750,25 +1774,37 @@ public class SearchBar {
                                                     String[] info = semicolon.split(command);
                                                     String path = info[1];
                                                     String name = info[0];
-                                                    label1.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br>&nbsp;&nbsp;" + "<font size=\"-1\">" + "&nbsp;&nbsp;" + ">>>" + path + "</font></body></html>");
+                                                    ImageIcon imageIcon = (ImageIcon) GetIcon.getBigIcon(path);
+                                                    imageIcon = changeIcon(imageIcon, iconSideLength, iconSideLength);
+                                                    label1.setIcon(imageIcon);
+                                                    label1.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>>" + path + "</font></body></html>");
 
                                                     command = listResult.get(labelCount + 1);
                                                     info = semicolon.split(command);
                                                     path = info[1];
                                                     name = info[0];
-                                                    label2.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br>&nbsp;&nbsp;" + "<font size=\"-1\">" + "&nbsp;&nbsp;" + ">>>" + path + "</font></body></html>");
+                                                    imageIcon = (ImageIcon) GetIcon.getBigIcon(path);
+                                                    imageIcon = changeIcon(imageIcon, iconSideLength, iconSideLength);
+                                                    label2.setIcon(imageIcon);
+                                                    label2.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>>" + path + "</font></body></html>");
 
                                                     command = listResult.get(labelCount + 2);
                                                     info = semicolon.split(command);
                                                     path = info[1];
                                                     name = info[0];
-                                                    label3.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br>&nbsp;&nbsp;" + "<font size=\"-1\">" + "&nbsp;&nbsp;" + ">>>" + path + "</font></body></html>");
+                                                    imageIcon = (ImageIcon) GetIcon.getBigIcon(path);
+                                                    imageIcon = changeIcon(imageIcon, iconSideLength, iconSideLength);
+                                                    label3.setIcon(imageIcon);
+                                                    label3.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>>" + path + "</font></body></html>");
 
                                                     command = listResult.get(labelCount + 3);
                                                     info = semicolon.split(command);
                                                     path = info[1];
                                                     name = info[0];
-                                                    label4.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br>&nbsp;&nbsp;" + "<font size=\"-1\">" + "&nbsp;&nbsp;" + ">>>" + path + "</font></body></html>");
+                                                    imageIcon = (ImageIcon) GetIcon.getBigIcon(path);
+                                                    imageIcon = changeIcon(imageIcon, iconSideLength, iconSideLength);
+                                                    label4.setIcon(imageIcon);
+                                                    label4.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>>" + path + "</font></body></html>");
                                                 } catch (ArrayIndexOutOfBoundsException ignored) {
 
                                                 }
@@ -2088,25 +2124,37 @@ public class SearchBar {
                                                         String[] info = semicolon.split(command);
                                                         String path = info[1];
                                                         String name = info[0];
-                                                        label1.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br>&nbsp;&nbsp;" + "<font size=\"-1\">" + "&nbsp;&nbsp;" + ">>>" + path + "</font></body></html>");
+                                                        ImageIcon imageIcon = (ImageIcon) GetIcon.getBigIcon(path);
+                                                        imageIcon = changeIcon(imageIcon, iconSideLength, iconSideLength);
+                                                        label1.setIcon(imageIcon);
+                                                        label1.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>>" + path + "</font></body></html>");
 
                                                         command = listResult.get(labelCount - 2);
                                                         info = semicolon.split(command);
                                                         path = info[1];
                                                         name = info[0];
-                                                        label2.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br>&nbsp;&nbsp;" + "<font size=\"-1\">" + "&nbsp;&nbsp;" + ">>>" + path + "</font></body></html>");
+                                                        imageIcon = (ImageIcon) GetIcon.getBigIcon(path);
+                                                        imageIcon = changeIcon(imageIcon, iconSideLength, iconSideLength);
+                                                        label2.setIcon(imageIcon);
+                                                        label2.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>>" + path + "</font></body></html>");
 
                                                         command = listResult.get(labelCount - 1);
                                                         info = semicolon.split(command);
                                                         path = info[1];
                                                         name = info[0];
-                                                        label3.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br>&nbsp;&nbsp;" + "<font size=\"-1\">" + "&nbsp;&nbsp;" + ">>>" + path + "</font></body></html>");
+                                                        imageIcon = (ImageIcon) GetIcon.getBigIcon(path);
+                                                        imageIcon = changeIcon(imageIcon, iconSideLength, iconSideLength);
+                                                        label3.setIcon(imageIcon);
+                                                        label3.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>>" + path + "</font></body></html>");
 
                                                         command = listResult.get(labelCount);
                                                         info = semicolon.split(command);
                                                         path = info[1];
                                                         name = info[0];
-                                                        label4.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br>&nbsp;&nbsp;" + "<font size=\"-1\">" + "&nbsp;&nbsp;" + ">>>" + path + "</font></body></html>");
+                                                        imageIcon = (ImageIcon) GetIcon.getBigIcon(path);
+                                                        imageIcon = changeIcon(imageIcon, iconSideLength, iconSideLength);
+                                                        label4.setIcon(imageIcon);
+                                                        label4.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>>" + path + "</font></body></html>");
                                                     } catch (ArrayIndexOutOfBoundsException ignored) {
 
                                                     }
@@ -2435,7 +2483,10 @@ public class SearchBar {
                 String[] info = semicolon.split(command);
                 String path = info[1];
                 String name = info[0];
-                label1.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br>&nbsp;&nbsp;" + "<font size=\"-1\">" + "&nbsp;&nbsp;" + ">>>" + path + "</font></body></html>");
+                ImageIcon imageIcon = (ImageIcon) GetIcon.getBigIcon(path);
+                imageIcon = changeIcon(imageIcon, iconSideLength, iconSideLength);
+                label1.setIcon(imageIcon);
+                label1.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>>" + path + "</font></body></html>");
                 if (labelCount == 0) {
                     label1.setBackground(labelColor);
                 } else {
@@ -2446,7 +2497,10 @@ public class SearchBar {
                 info = semicolon.split(command);
                 path = info[1];
                 name = info[0];
-                label2.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br>&nbsp;&nbsp;" + "<font size=\"-1\">" + "&nbsp;&nbsp;" + ">>>" + path + "</font></body></html>");
+                imageIcon = (ImageIcon) GetIcon.getBigIcon(path);
+                imageIcon = changeIcon(imageIcon, iconSideLength, iconSideLength);
+                label2.setIcon(imageIcon);
+                label2.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>>" + path + "</font></body></html>");
                 if (labelCount == 1) {
                     label2.setBackground(labelColor);
                 } else {
@@ -2457,7 +2511,10 @@ public class SearchBar {
                 info = semicolon.split(command);
                 path = info[1];
                 name = info[0];
-                label3.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br>&nbsp;&nbsp;" + "<font size=\"-1\">" + "&nbsp;&nbsp;" + ">>>" + path + "</font></body></html>");
+                imageIcon = (ImageIcon) GetIcon.getBigIcon(path);
+                imageIcon = changeIcon(imageIcon, iconSideLength, iconSideLength);
+                label3.setIcon(imageIcon);
+                label3.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>>" + path + "</font></body></html>");
                 if (labelCount == 2) {
                     label3.setBackground(labelColor);
                 } else {
@@ -2468,7 +2525,10 @@ public class SearchBar {
                 info = semicolon.split(command);
                 path = info[1];
                 name = info[0];
-                label4.setText("<html><body>" + "&nbsp;&nbsp;" + "&nbsp;&nbsp;" + name + "<br>&nbsp;&nbsp;" + "<font size=\"-1\">" + "&nbsp;&nbsp;" + ">>>" + path + "</font></body></html>");
+                imageIcon = (ImageIcon) GetIcon.getBigIcon(path);
+                imageIcon = changeIcon(imageIcon, iconSideLength, iconSideLength);
+                label4.setIcon(imageIcon);
+                label4.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>>" + path + "</font></body></html>");
                 if (labelCount >= 3) {
                     label4.setBackground(labelColor);
                 } else {
