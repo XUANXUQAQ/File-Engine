@@ -2525,7 +2525,7 @@ public class SearchBar {
                     createShortCut(path, SettingsFrame.tmp.getAbsolutePath() + "\\open");
                     Runtime.getRuntime().exec("cmd /c explorer.exe " + "\"" + SettingsFrame.tmp.getAbsolutePath() + "\\open.lnk" + "\"");
                 }
-            } catch (IOException e) {
+            } catch (Exception e) {
                 //打开上级文件夹
                 try {
                     Runtime.getRuntime().exec("explorer.exe /select, \"" + path + "\"");
@@ -2536,13 +2536,16 @@ public class SearchBar {
         }
     }
 
-    private void createShortCut(String fileOrFolderPath, String writeShortCutPath) throws IOException {
+    private void createShortCut(String fileOrFolderPath, String writeShortCutPath) throws Exception {
         File shortcutGen = new File("user/shortcutGenerator.vbs");
         String shortcutGenPath = shortcutGen.getAbsolutePath();
         String start = "cmd /c start " + shortcutGenPath.substring(0, 2);
         String end = "\"" + shortcutGenPath.substring(2) + "\"";
         String commandToGenLnk = start + end + " /target:" + "\"" + fileOrFolderPath + "\"" + " " + "/shortcut:" + "\"" + writeShortCutPath + "\"" + " /workingdir:" + "\"" + fileOrFolderPath.substring(0, fileOrFolderPath.lastIndexOf("\\")) + "\"";
-        Runtime.getRuntime().exec("cmd /c " + commandToGenLnk);
+        Process p = Runtime.getRuntime().exec("cmd /c " + commandToGenLnk);
+        while (p.isAlive()){
+            Thread.sleep(1);
+        }
     }
 
     public String getFileName(String path) {
