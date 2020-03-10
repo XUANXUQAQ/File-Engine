@@ -34,10 +34,12 @@ A tool can make you work more efficiently.
 
 8. 设置优先搜索文件夹，常用的文件可以放入其中。
 
-9. 支持多个关键字搜索，更加准确。
+9. 支持多个关键字搜索，更加准确，不同关键字请用 ";" 隔开"。
 
 ## Demos:
 ![8PPdxS.gif](https://s2.ax1x.com/2020/03/10/8PPdxS.gif)
+
+![8PZ3S1.png](https://s2.ax1x.com/2020/03/10/8PZ3S1.png)
 
 ![8PCZp8.png](https://s2.ax1x.com/2020/03/10/8PCZp8.png)
 
