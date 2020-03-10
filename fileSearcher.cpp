@@ -14,32 +14,33 @@ using namespace std;
 vector<string> ignorePathVector;
 int searchDepth;
 char *searchPath;
-string results0_100;
-string results100_200;
-string results200_300;
-string results300_400;
-string results400_500;
-string results500_600;
-string results600_700;
-string results700_800;
-string results800_900;
-string results900_1000;
-string results1000_1100;
-string results1100_1200;
-string results1200_1300;
-string results1300_1400;
-string results1400_1500;
-string results1500_1600;
-string results1600_1700;
-string results1700_1800;
-string results1800_1900;
-string results1900_2000;
-string results2000_2100;
-string results2100_2200;
-string results2200_2300;
-string results2300_2400;
-string results2400_2500;
-string results2500_;
+ofstream results0;
+ofstream results1;
+ofstream results2;
+ofstream results3;
+ofstream results4;
+ofstream results5;
+ofstream results6;
+ofstream results7;
+ofstream results8;
+ofstream results9;
+ofstream results10;
+ofstream results11;
+ofstream results12;
+ofstream results13;
+ofstream results14;
+ofstream results15;
+ofstream results16;
+ofstream results17;
+ofstream results18;
+ofstream results19;
+ofstream results20;
+ofstream results21;
+ofstream results22;
+ofstream results23;
+ofstream results24;
+ofstream results25;
+
 
 void searchFiles(const char *path, const char *exd);
 void addIgnorePath(const char *path);
@@ -69,133 +70,133 @@ void saveResult(string path, int ascII)
 {
     if (0 < ascII && ascII <= 100)
     {
-        results0_100.append(path);
-        results0_100.append("\n");
+        results0 << (path);
+        results0<< ("\n");
     }
     else if (100 < ascII && ascII <= 200)
     {
-        results100_200.append(path);
-        results100_200.append("\n");
+        results1 << (path);
+        results1 << ("\n");
     }
     else if (200 < ascII && ascII <= 300)
     {
-        results200_300.append(path);
-        results200_300.append("\n");
+        results2 << (path);
+        results2 << ("\n");
     }
     else if (300 < ascII && ascII <= 400)
     {
-        results300_400.append(path);
-        results300_400.append("\n");
+        results3 << (path);
+        results3 << ("\n");
     }
     else if (400 < ascII && ascII <= 500)
     {
-        results400_500.append(path);
-        results400_500.append("\n");
+        results4 << (path);
+        results4 << ("\n");
     }
     else if (500 < ascII && ascII <= 600)
     {
-        results500_600.append(path);
-        results500_600.append("\n");
+        results5 << (path);
+        results5 << ("\n");
     }
     else if (600 < ascII && ascII <= 700)
     {
-        results600_700.append(path);
-        results600_700.append("\n");
+        results6 << (path);
+        results6 << ("\n");
     }
     else if (700 < ascII && ascII <= 800)
     {
-        results700_800.append(path);
-        results700_800.append("\n");
+        results7 << (path);
+        results7 << ("\n");
     }
     else if (800 < ascII && ascII <= 900)
     {
-        results800_900.append(path);
-        results800_900.append("\n");
+        results8 << (path);
+        results8 << ("\n");
     }
     else if (900 < ascII && ascII <= 1000)
     {
-        results900_1000.append(path);
-        results900_1000.append("\n");
+        results9 << (path);
+        results9 << ("\n");
     }
     else if (1000 < ascII && ascII <= 1100)
     {
-        results1000_1100.append(path);
-        results1000_1100.append("\n");
+        results10 << (path);
+        results10 << ("\n");
     }
     else if (1100 < ascII && ascII <= 1200)
     {
-        results1100_1200.append(path);
-        results1100_1200.append("\n");
+        results11 << (path);
+        results11 << ("\n");
     }
     else if (1200 < ascII && ascII <= 1300)
     {
-        results1200_1300.append(path);
-        results1200_1300.append("\n");
+        results12 << (path);
+        results12 << ("\n");
     }
     else if (1300 < ascII && ascII <= 1400)
     {
-        results1300_1400.append(path);
-        results1300_1400.append("\n");
+        results13 << (path);
+        results13 << ("\n");
     }
     else if (1400 < ascII && ascII <= 1500)
     {
-        results1400_1500.append(path);
-        results1400_1500.append("\n");
+        results14 << (path);
+        results14 << ("\n");
     }
     else if (1500 < ascII && ascII <= 1600)
     {
-        results1500_1600.append(path);
-        results1500_1600.append("\n");
+        results15 << (path);
+        results15 << ("\n");
     }
     else if (1600 < ascII && ascII <= 1700)
     {
-        results1600_1700.append(path);
-        results1600_1700.append("\n");
+        results16 << (path);
+        results16 << ("\n");
     }
     else if (1700 < ascII && ascII <= 1800)
     {
-        results1700_1800.append(path);
-        results1700_1800.append("\n");
+        results17 << (path);
+        results17 << ("\n");
     }
     else if (1800 < ascII && ascII <= 1900)
     {
-        results1800_1900.append(path);
-        results1800_1900.append("\n");
+        results18 << (path);
+        results18 << ("\n");
     }
     else if (1900 < ascII && ascII <= 2000)
     {
-        results1900_2000.append(path);
-        results1900_2000.append("\n");
+        results19 << (path);
+        results19 << ("\n");
     }
     else if (2000 < ascII && ascII <= 2100)
     {
-        results2000_2100.append(path);
-        results2000_2100.append("\n");
+        results20 << (path);
+        results20 << ("\n");
     }
     else if (2100 < ascII && ascII <= 2200)
     {
-        results2100_2200.append(path);
-        results2100_2200.append("\n");
+        results21 << (path);
+        results21 << ("\n");
     }
     else if (2200 < ascII && ascII <= 2300)
     {
-        results2200_2300.append(path);
-        results2200_2300.append("\n");
+        results22 << (path);
+        results22 << ("\n");
     }
     else if (2300 < ascII && ascII <= 2400)
     {
-        results2300_2400.append(path);
-        results2300_2400.append("\n");
+        results23 << (path);
+        results23 << ("\n");
     }
     else if (2400 < ascII && ascII <= 2500)
     {
-        results2400_2500.append(path);
-        results2400_2500.append("\n");
+        results24 << (path);
+        results24 << ("\n");
     }
     else
     {
-        results2500_.append(path);
-        results2500_.append("\n");
+        results25 << (path);
+        results25 << ("\n");
     }
 }
 
@@ -455,7 +456,7 @@ int main(int argc, char *argv[])
     hwnd=FindWindow(TEXT("ConsoleWindowClass"),NULL); //处理顶级窗口的类名和窗口名称匹配指定的字符串,不搜索子窗口。  
     if(hwnd)  
     {  
-        ShowWindow(hwnd,SW_HIDE);               //设置指定窗口的显示状态  
+        //ShowWindow(hwnd,SW_HIDE);               //设置指定窗口的显示状态  
     }  
     char searchPath[260];
     char searchDepth[50];
@@ -489,7 +490,6 @@ int main(int argc, char *argv[])
     char output2400_2500[260];
     char output2500_[260];
 
-    ofstream outfile;
     if (argc == 6)
     {
         strcpy(searchPath, argv[1]);
@@ -550,6 +550,33 @@ int main(int argc, char *argv[])
         strcat(output2400_2500, "\\list2400-2500.txt");
         strcpy(output2500_, output);
         strcat(output2500_, "\\list2500-.txt");
+        results0.open(output0_100, ios::app);
+        results1.open(output100_200, ios::app);
+        results2.open(output200_300, ios::app);
+        results3.open(output300_400, ios::app);
+        results4.open(output400_500, ios::app);
+        results5.open(output500_600, ios::app);
+        results6.open(output600_700, ios::app);
+        results7.open(output700_800, ios::app);
+        results8.open(output800_900, ios::app);
+        results9.open(output900_1000, ios::app);
+        results10.open(output1000_1100, ios::app);
+        results11.open(output1100_1200, ios::app);
+        results12.open(output1200_1300, ios::app);
+        results13.open(output1300_1400, ios::app);
+        results14.open(output1400_1500, ios::app);
+        results15.open(output1500_1600, ios::app);
+        results16.open(output1600_1700, ios::app);
+        results17.open(output1700_1800, ios::app);
+        results18.open(output1800_1900, ios::app);
+        results19.open(output1900_2000, ios::app);
+        results20.open(output2000_2100, ios::app);
+        results21.open(output2100_2200, ios::app);
+        results22.open(output2200_2300, ios::app);
+        results23.open(output2300_2400, ios::app);
+        results24.open(output2400_2500, ios::app);
+        results25.open(output2500_, ios::app);
+
         cout << "searchPath:" << searchPath << endl;
         cout << "searchDepth:" << searchDepth << endl;
         cout << "ignorePath:" << ignorePath << endl;
@@ -577,171 +604,38 @@ int main(int argc, char *argv[])
         {
             cout << "ignore searchDepth!!!" << endl;
             searchFilesIgnoreSearchDepth(searchPath, "*");
-            //将结果写入文件
-            outfile.open(output0_100, ios::app);
-            outfile << results0_100 << endl;
-            outfile.close();
-            outfile.open(output100_200, ios::app);
-            outfile << results100_200 << endl;
-            outfile.close();
-            outfile.open(output200_300, ios::app);
-            outfile << results200_300 << endl;
-            outfile.close();
-            outfile.open(output300_400, ios::app);
-            outfile << results300_400 << endl;
-            outfile.close();
-            outfile.open(output400_500, ios::app);
-            outfile << results400_500 << endl;
-            outfile.close();
-            outfile.open(output500_600, ios::app);
-            outfile << results500_600 << endl;
-            outfile.close();
-            outfile.open(output600_700, ios::app);
-            outfile << results600_700 << endl;
-            outfile.close();
-            outfile.open(output700_800, ios::app);
-            outfile << results700_800 << endl;
-            outfile.close();
-            outfile.open(output800_900, ios::app);
-            outfile << results800_900 << endl;
-            outfile.close();
-            outfile.open(output900_1000, ios::app);
-            outfile << results900_1000 << endl;
-            outfile.close();
-            outfile.open(output1000_1100, ios::app);
-            outfile << results1000_1100 << endl;
-            outfile.close();
-            outfile.open(output1100_1200, ios::app);
-            outfile << results1100_1200 << endl;
-            outfile.close();
-            outfile.open(output1200_1300, ios::app);
-            outfile << results1200_1300 << endl;
-            outfile.close();
-            outfile.open(output1300_1400, ios::app);
-            outfile << results1300_1400 << endl;
-            outfile.close();
-            outfile.open(output1400_1500, ios::app);
-            outfile << results1400_1500 << endl;
-            outfile.close();
-            outfile.open(output1500_1600, ios::app);
-            outfile << results1500_1600 << endl;
-            outfile.close();
-            outfile.open(output1600_1700, ios::app);
-            outfile << results1600_1700 << endl;
-            outfile.close();
-            outfile.open(output1700_1800, ios::app);
-            outfile << results1700_1800 << endl;
-            outfile.close();
-            outfile.open(output1800_1900, ios::app);
-            outfile << results1800_1900 << endl;
-            outfile.close();
-            outfile.open(output1900_2000, ios::app);
-            outfile << results1900_2000 << endl;
-            outfile.close();
-            outfile.open(output2000_2100, ios::app);
-            outfile << results2000_2100 << endl;
-            outfile.close();
-            outfile.open(output2100_2200, ios::app);
-            outfile << results2100_2200 << endl;
-            outfile.close();
-            outfile.open(output2200_2300, ios::app);
-            outfile << results2200_2300 << endl;
-            outfile.close();
-            outfile.open(output2300_2400, ios::app);
-            outfile << results2300_2400 << endl;
-            outfile.close();
-            outfile.open(output2400_2500, ios::app);
-            outfile << results2400_2500 << endl;
-            outfile.close();
-            outfile.open(output2500_, ios::app);
-            outfile << results2500_ << endl;
-            outfile.close();
         }
         else
         {
             cout << "normal search" << endl;
             searchFiles(searchPath, "*");
-            //将结果写入文件
-            outfile.open(output0_100, ios::app);
-            outfile << results0_100 << endl;
-            outfile.close();
-            outfile.open(output100_200, ios::app);
-            outfile << results100_200 << endl;
-            outfile.close();
-            outfile.open(output200_300, ios::app);
-            outfile << results200_300 << endl;
-            outfile.close();
-            outfile.open(output300_400, ios::app);
-            outfile << results300_400 << endl;
-            outfile.close();
-            outfile.open(output400_500, ios::app);
-            outfile << results400_500 << endl;
-            outfile.close();
-            outfile.open(output500_600, ios::app);
-            outfile << results500_600 << endl;
-            outfile.close();
-            outfile.open(output600_700, ios::app);
-            outfile << results600_700 << endl;
-            outfile.close();
-            outfile.open(output700_800, ios::app);
-            outfile << results700_800 << endl;
-            outfile.close();
-            outfile.open(output800_900, ios::app);
-            outfile << results800_900 << endl;
-            outfile.close();
-            outfile.open(output900_1000, ios::app);
-            outfile << results900_1000 << endl;
-            outfile.close();
-            outfile.open(output1000_1100, ios::app);
-            outfile << results1000_1100 << endl;
-            outfile.close();
-            outfile.open(output1100_1200, ios::app);
-            outfile << results1100_1200 << endl;
-            outfile.close();
-            outfile.open(output1200_1300, ios::app);
-            outfile << results1200_1300 << endl;
-            outfile.close();
-            outfile.open(output1300_1400, ios::app);
-            outfile << results1300_1400 << endl;
-            outfile.close();
-            outfile.open(output1400_1500, ios::app);
-            outfile << results1400_1500 << endl;
-            outfile.close();
-            outfile.open(output1500_1600, ios::app);
-            outfile << results1500_1600 << endl;
-            outfile.close();
-            outfile.open(output1600_1700, ios::app);
-            outfile << results1600_1700 << endl;
-            outfile.close();
-            outfile.open(output1700_1800, ios::app);
-            outfile << results1700_1800 << endl;
-            outfile.close();
-            outfile.open(output1800_1900, ios::app);
-            outfile << results1800_1900 << endl;
-            outfile.close();
-            outfile.open(output1900_2000, ios::app);
-            outfile << results1900_2000 << endl;
-            outfile.close();
-            outfile.open(output2000_2100, ios::app);
-            outfile << results2000_2100 << endl;
-            outfile.close();
-            outfile.open(output2100_2200, ios::app);
-            outfile << results2100_2200 << endl;
-            outfile.close();
-            outfile.open(output2200_2300, ios::app);
-            outfile << results2200_2300 << endl;
-            outfile.close();
-            outfile.open(output2300_2400, ios::app);
-            outfile << results2300_2400 << endl;
-            outfile.close();
-            outfile.open(output2400_2500, ios::app);
-            outfile << results2400_2500 << endl;
-            outfile.close();
-            outfile.open(output2500_, ios::app);
-            outfile << results2500_ << endl;
-            outfile.close();
         }
-
+        results0.close();
+        results1.close();
+        results2.close();
+        results3.close();
+        results4.close();
+        results5.close();
+        results6.close();
+        results7.close();
+        results8.close();
+        results9.close();
+        results10.close();
+        results11.close();
+        results12.close();
+        results13.close();
+        results14.close();
+        results15.close();
+        results16.close();
+        results17.close();
+        results18.close();
+        results19.close();
+        results20.close();
+        results21.close();
+        results22.close();
+        results23.close();
+        results24.close();
+        results25.close();
         return 0;
     }
     else
