@@ -39,8 +39,6 @@ A tool can make you work more efficiently.
 ## Demos:
 ![8PPdxS.gif](https://s2.ax1x.com/2020/03/10/8PPdxS.gif)
 
-![8PCEff.png](https://s2.ax1x.com/2020/03/10/8PCEff.png)
-
 ![8PCZp8.png](https://s2.ax1x.com/2020/03/10/8PCZp8.png)
 
 ![8PCe1S.png](https://s2.ax1x.com/2020/03/10/8PCe1S.png)
