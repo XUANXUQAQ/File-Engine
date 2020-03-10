@@ -1610,8 +1610,11 @@ public class SearchBar {
 
             @Override
             public void keyPressed(KeyEvent arg0) {
+                int key = arg0.getKeyCode();
+                if (key == 8 && textField.getText().equals("")) {
+                    arg0.consume();
+                }
                 if (!listResult.isEmpty()) {
-                    int key = arg0.getKeyCode();
                     if (38 == key) {
                         //ÉÏ¼ü±»µã»÷
                         if (isFirstPress || System.currentTimeMillis() - pressTime > timeLimit) {
