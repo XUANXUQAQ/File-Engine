@@ -212,6 +212,7 @@ public class MainClass {
             json.put("openLastFolderKeyCode", 17);
             json.put("runAsAdminKeyCode", 16);
             json.put("copyPathKeyCode", 18);
+            json.put("transparency", 0.8f);
             try (BufferedWriter buffW = new BufferedWriter(new FileWriter(settings))) {
                 buffW.write(json.toJSONString());
             } catch (IOException ignored) {
