@@ -34,9 +34,10 @@ public class SettingsFrame {
     public static int openLastFolderKeyCode;
     public static int runAsAdminKeyCode;
     public static int copyPathKeyCode;
+    public static float transparency;
     private static int _copyPathKeyCode;
     public static File tmp = new File("tmp");
-    public static File settings = new File("./user/settings.json");
+    public static File settings = new File("user/settings.json");
     public static HashSet<String> cmdSet = new HashSet<>();
     private static int _openLastFolderKeyCode;
     private static int _runAsAdminKeyCode;
@@ -110,14 +111,17 @@ public class SettingsFrame {
     private JPanel tab4;
     private JPanel tab5;
     private JPanel tab6;
+    private JTextField textFieldTransparency;
+    private JLabel labelTransparency;
+    private JLabel labelPlaceHolder5;
     private static boolean isStartup;
     private Unzip unzipInstance = Unzip.getInstance();
     private Thread updateThread = null;
 
 
     public SettingsFrame() {
-        Color trans = new Color(0, 0, 0, 0);
-        UIManager.put("TabbedPane.focus", trans);
+        Color transColor = new Color(0, 0, 0, 0);
+        UIManager.put("TabbedPane.focus", transColor);
         labelAboutGithub.setText("<html><a href='https://github.com/XUANXUQAQ/File-Engine'><font size=\"4\">File-Engine</font></a></html>");
         ImageIcon imageIcon = new ImageIcon(SettingsFrame.class.getResource("/icons/frame.png"));
         labelIcon.setIcon(imageIcon);
@@ -285,19 +289,13 @@ public class SettingsFrame {
                 checkBox1.setSelected(false);
             }
             updateTimeLimit = settings.getInteger("updateTimeLimit");
-            String MaxUpdateTime = "";
-            MaxUpdateTime = MaxUpdateTime + updateTimeLimit;
-            textFieldUpdateTime.setText(MaxUpdateTime);
+            textFieldUpdateTime.setText(String.valueOf(updateTimeLimit));
             ignorePath = settings.getString("ignorePath");
             textAreaIgnorePath.setText(ignorePath.replaceAll(",", ",\n"));
             cacheNumLimit = settings.getInteger("cacheNumLimit");
-            String MaxCacheNum = "";
-            MaxCacheNum = MaxCacheNum + cacheNumLimit;
-            textFieldCacheNum.setText(MaxCacheNum);
-            String searchDepth = "";
-            int searchDepthInSettings = settings.getInteger("searchDepth");
-            searchDepth = searchDepth + searchDepthInSettings;
-            textFieldSearchDepth.setText(searchDepth);
+            textFieldCacheNum.setText(String.valueOf(cacheNumLimit));
+            searchDepth = settings.getInteger("searchDepth");
+            textFieldSearchDepth.setText(String.valueOf(searchDepth));
             textFieldHotkey.setText(hotkey);
             textFieldDataPath.setText(dataPath);
             textFieldPriorityFolder.setText(priorityFolder);
@@ -307,6 +305,8 @@ public class SettingsFrame {
             checkBoxLoseFocus.setSelected(isLoseFocusClose);
             runAsAdminKeyCode = settings.getInteger("runAsAdminKeyCode");
             openLastFolderKeyCode = settings.getInteger("openLastFolderKeyCode");
+            transparency = settings.getFloat("transparency");
+            textFieldTransparency.setText(String.valueOf(transparency));
             if (runAsAdminKeyCode == 17) {
                 textFieldRunAsAdmin.setText("Ctrl + Enter");
             } else if (runAsAdminKeyCode == 16) {
@@ -566,6 +566,11 @@ public class SettingsFrame {
                 copyPathKeyCode = 18;
             }
             _copyPathKeyCode = copyPathKeyCode;
+            if (settings.containsKey("transparency")) {
+                transparency = settings.getFloat("transparency");
+            } else {
+                transparency = 0.8f;
+            }
         } catch (NullPointerException | IOException ignored) {
 
         }
@@ -584,6 +589,7 @@ public class SettingsFrame {
         allSettings.put("runAsAdminKeyCode", runAsAdminKeyCode);
         allSettings.put("openLastFolderKeyCode", openLastFolderKeyCode);
         allSettings.put("copyPathKeyCode", copyPathKeyCode);
+        allSettings.put("transparency", transparency);
         try (BufferedWriter buffW = new BufferedWriter(new FileWriter(settings))) {
             buffW.write(allSettings.toJSONString());
         } catch (IOException ignored) {
@@ -669,97 +675,118 @@ public class SettingsFrame {
 
 
     private void saveChanges() {
-        {
-            JSONObject allSettings = new JSONObject();
-            String MaxUpdateTime = textFieldUpdateTime.getText();
-            try {
-                updateTimeLimit = Integer.parseInt(MaxUpdateTime);
-            } catch (Exception e1) {
-                updateTimeLimit = -1; // 输入不正确
-            }
-            if (updateTimeLimit > 3600 || updateTimeLimit <= 0) {
-                JOptionPane.showMessageDialog(null, "文件索引更新设置错误，请更改");
-                return;
-            }
-            isStartup = checkBox1.isSelected();
-            String MaxCacheNum = textFieldCacheNum.getText();
-            try {
-                cacheNumLimit = Integer.parseInt(MaxCacheNum);
-            } catch (Exception e1) {
-                cacheNumLimit = -1;
-            }
-            if (cacheNumLimit > 10000 || cacheNumLimit <= 0) {
-                JOptionPane.showMessageDialog(null, "缓存容量设置错误，请更改");
-                return;
-            }
-            ignorePath = textAreaIgnorePath.getText();
-            ignorePath = ignorePath.replaceAll("\n", "");
-            if (!ignorePath.toLowerCase().contains("c:\\windows")) {
-                ignorePath = ignorePath + "C:\\Windows,";
-            }
-            try {
-                searchDepth = Integer.parseInt(textFieldSearchDepth.getText());
-            } catch (Exception e1) {
-                searchDepth = -1;
-            }
+        JSONObject allSettings = new JSONObject();
+        int updateTimeLimitTemp;
+        int cacheNumLimitTemp;
+        String ignorePathTemp;
+        int searchDepthTemp;
+        float transparencyTemp;
 
-            if (searchDepth > 10 || searchDepth <= 0) {
-                JOptionPane.showMessageDialog(null, "搜索深度设置错误，请更改");
-                return;
-            }
+        try {
+            updateTimeLimitTemp = Integer.parseInt(textFieldUpdateTime.getText());
+        } catch (Exception e1) {
+            updateTimeLimitTemp = -1; // 输入不正确
+        }
+        if (updateTimeLimitTemp > 3600 || updateTimeLimitTemp <= 0) {
+            JOptionPane.showMessageDialog(null, "文件索引更新设置错误，请更改");
+            return;
+        }
+        isStartup = checkBox1.isSelected();
+        try {
+            cacheNumLimitTemp = Integer.parseInt(textFieldCacheNum.getText());
+        } catch (Exception e1) {
+            cacheNumLimitTemp = -1;
+        }
+        if (cacheNumLimitTemp > 10000 || cacheNumLimitTemp <= 0) {
+            JOptionPane.showMessageDialog(null, "缓存容量设置错误，请更改");
+            return;
+        }
+        ignorePathTemp = textAreaIgnorePath.getText();
+        ignorePathTemp = ignorePathTemp.replaceAll("\n", "");
+        if (!ignorePathTemp.toLowerCase().contains("c:\\windows")) {
+            ignorePathTemp = ignorePathTemp + "C:\\Windows,";
+        }
+        try {
+            searchDepthTemp = Integer.parseInt(textFieldSearchDepth.getText());
+        } catch (Exception e1) {
+            searchDepthTemp = -1;
+        }
 
-            String _hotkey = textFieldHotkey.getText();
-            if (_hotkey.length() == 1) {
+        if (searchDepthTemp > 10 || searchDepthTemp <= 0) {
+            JOptionPane.showMessageDialog(null, "搜索深度设置错误，请更改");
+            return;
+        }
+
+        String _hotkey = textFieldHotkey.getText();
+        if (_hotkey.length() == 1) {
+            JOptionPane.showMessageDialog(null, "快捷键设置错误");
+            return;
+        } else {
+            if (!(64 < _hotkey.charAt(_hotkey.length() - 1) && _hotkey.charAt(_hotkey.length() - 1) < 91)) {
                 JOptionPane.showMessageDialog(null, "快捷键设置错误");
                 return;
-            } else {
-                if (!(64 < _hotkey.charAt(_hotkey.length() - 1) && _hotkey.charAt(_hotkey.length() - 1) < 91)) {
-                    JOptionPane.showMessageDialog(null, "快捷键设置错误");
-                    return;
-                }
             }
-            if (_openLastFolderKeyCode == _runAsAdminKeyCode || _openLastFolderKeyCode == _copyPathKeyCode || _runAsAdminKeyCode == _copyPathKeyCode) {
-                JOptionPane.showMessageDialog(null, "快捷键冲突");
-                return;
-            } else {
-                openLastFolderKeyCode = _openLastFolderKeyCode;
-                runAsAdminKeyCode = _runAsAdminKeyCode;
-                copyPathKeyCode = _copyPathKeyCode;
-            }
-            priorityFolder = textFieldPriorityFolder.getText();
-            dataPath = textFieldDataPath.getText();
-            hotkey = textFieldHotkey.getText();
-            HotKeyListener.changeHotKey(hotkey);
-            allSettings.put("hotkey", hotkey);
-            allSettings.put("isStartup", isStartup);
-            allSettings.put("cacheNumLimit", cacheNumLimit);
-            allSettings.put("updateTimeLimit", updateTimeLimit);
-            allSettings.put("ignorePath", ignorePath);
-            allSettings.put("searchDepth", searchDepth);
-            allSettings.put("priorityFolder", priorityFolder);
-            allSettings.put("dataPath", dataPath);
-            allSettings.put("isDefaultAdmin", isDefaultAdmin);
-            allSettings.put("isLoseFocusClose", isLoseFocusClose);
-            allSettings.put("runAsAdminKeyCode", runAsAdminKeyCode);
-            allSettings.put("openLastFolderKeyCode", openLastFolderKeyCode);
-            allSettings.put("copyPathKeyCode", copyPathKeyCode);
-            try (BufferedWriter buffW = new BufferedWriter(new FileWriter(settings))) {
-                buffW.write(allSettings.toJSONString());
-                JOptionPane.showMessageDialog(null, "保存成功");
-            } catch (IOException ignored) {
+        }
+        try {
+            transparencyTemp = Float.parseFloat(textFieldTransparency.getText());
+        } catch (Exception e) {
+            transparencyTemp = -1f;
+        }
+        if (transparencyTemp > 1 || transparencyTemp <= 0) {
+            JOptionPane.showMessageDialog(null, "透明度设置错误");
+            return;
+        }
 
-            }
-            //保存自定义命令
-            StringBuilder strb = new StringBuilder();
-            for (String each : cmdSet) {
-                strb.append(each);
-                strb.append("\n");
-            }
-            try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File("user/cmds.txt")))) {
-                bw.write(strb.toString());
-            } catch (IOException ignored) {
+        if (_openLastFolderKeyCode == _runAsAdminKeyCode || _openLastFolderKeyCode == _copyPathKeyCode || _runAsAdminKeyCode == _copyPathKeyCode) {
+            JOptionPane.showMessageDialog(null, "快捷键冲突");
+            return;
+        } else {
+            openLastFolderKeyCode = _openLastFolderKeyCode;
+            runAsAdminKeyCode = _runAsAdminKeyCode;
+            copyPathKeyCode = _copyPathKeyCode;
+        }
 
-            }
+        priorityFolder = textFieldPriorityFolder.getText();
+        dataPath = textFieldDataPath.getText();
+        hotkey = textFieldHotkey.getText();
+        HotKeyListener.changeHotKey(hotkey);
+        cacheNumLimit = cacheNumLimitTemp;
+        updateTimeLimit = updateTimeLimitTemp;
+        ignorePath = ignorePathTemp;
+        searchDepth = searchDepthTemp;
+        transparency = transparencyTemp;
+        SearchBar.getInstance().setTransparency(transparency);
+
+        allSettings.put("hotkey", hotkey);
+        allSettings.put("isStartup", isStartup);
+        allSettings.put("cacheNumLimit", cacheNumLimit);
+        allSettings.put("updateTimeLimit", updateTimeLimit);
+        allSettings.put("ignorePath", ignorePath);
+        allSettings.put("searchDepth", searchDepth);
+        allSettings.put("priorityFolder", priorityFolder);
+        allSettings.put("dataPath", dataPath);
+        allSettings.put("isDefaultAdmin", isDefaultAdmin);
+        allSettings.put("isLoseFocusClose", isLoseFocusClose);
+        allSettings.put("runAsAdminKeyCode", runAsAdminKeyCode);
+        allSettings.put("openLastFolderKeyCode", openLastFolderKeyCode);
+        allSettings.put("copyPathKeyCode", copyPathKeyCode);
+        allSettings.put("transparency", transparency);
+        try (BufferedWriter buffW = new BufferedWriter(new FileWriter(settings))) {
+            buffW.write(allSettings.toJSONString());
+            JOptionPane.showMessageDialog(null, "保存成功");
+        } catch (IOException ignored) {
+
+        }
+        //保存自定义命令
+        StringBuilder strb = new StringBuilder();
+        for (String each : cmdSet) {
+            strb.append(each);
+            strb.append("\n");
+        }
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File("user/cmds.txt")))) {
+            bw.write(strb.toString());
+        } catch (IOException ignored) {
+
         }
     }
 

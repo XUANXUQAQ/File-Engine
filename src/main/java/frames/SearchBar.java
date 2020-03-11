@@ -76,7 +76,7 @@ public class SearchBar {
         searchBar.setUndecorated(true);
         searchBar.getRootPane().setWindowDecorationStyle(JRootPane.NONE);
         searchBar.setBackground(null);
-        searchBar.setOpacity(0.8f);
+        searchBar.setOpacity(SettingsFrame.transparency);
         searchBar.setContentPane(panel);
         searchBar.setType(JFrame.Type.UTILITY);
 
@@ -2881,6 +2881,10 @@ public class SearchBar {
                 }
             }
         }
+    }
+
+    public void setTransparency(float trans) {
+        searchBar.setOpacity(trans);
     }
 
     private void clearTextFieldText() {
