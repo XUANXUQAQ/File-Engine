@@ -8,7 +8,6 @@ import main.MainClass;
 import search.Search;
 
 import javax.swing.*;
-import javax.swing.border.LineBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.*;
@@ -19,23 +18,20 @@ import java.awt.event.*;
 import java.io.*;
 import java.net.URL;
 import java.util.*;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 import java.util.regex.Pattern;
 
 import static main.MainClass.mainExit;
 
 
 public class SearchBar {
-    private static SearchBar searchBarInstance = new SearchBar();
+    private volatile static SearchBar searchBarInstance = new SearchBar();
     private JFrame searchBar = new JFrame();
     private CopyOnWriteArrayList<String> listResult = new CopyOnWriteArrayList<>();
-    private JLabel label1 = new JLabel();
-    private JLabel label2 = new JLabel();
-    private JLabel label3 = new JLabel();
-    private JLabel label4 = new JLabel();
+    private JLabel label1;
+    private JLabel label2;
+    private JLabel label3;
+    private JLabel label4;
     private boolean isOpenLastFolderPressed = false;
     private int labelCount = 0;
     private JTextField textField;
@@ -58,7 +54,6 @@ public class SearchBar {
     private long mouseWheelTime = 0;
     private boolean isCopyPathPressed = false;
     private int iconSideLength;
-    private HashSet<String> paths = new HashSet<>();
 
 
     private SearchBar() {
@@ -84,6 +79,7 @@ public class SearchBar {
         //labels
         Font font = new Font("Microsoft JhengHei", Font.BOLD, (int) ((height * 0.1) / 96 * 72) / 4);
         Color fontColor = new Color(197, 197, 197, 255);
+        label1 = new JLabel();
         label1.setSize(searchBarWidth, (int) (searchBarHeight * 0.2));
         label1.setLocation(0, (int) (searchBarHeight * 0.2));
         label1.setFont(font);
@@ -93,7 +89,7 @@ public class SearchBar {
 
         iconSideLength = label1.getHeight() / 3; //定义图标边长
 
-
+        label2 = new JLabel();
         label2.setSize(searchBarWidth, (int) (searchBarHeight * 0.2));
         label2.setLocation(0, (int) (searchBarHeight * 0.4));
         label2.setFont(font);
@@ -101,7 +97,7 @@ public class SearchBar {
         label2.setOpaque(true);
         label2.setBackground(null);
 
-
+        label3 = new JLabel();
         label3.setSize(searchBarWidth, (int) (searchBarHeight * 0.2));
         label3.setLocation(0, (int) (searchBarHeight * 0.6));
         label3.setFont(font);
@@ -109,7 +105,7 @@ public class SearchBar {
         label3.setOpaque(true);
         label3.setBackground(null);
 
-
+        label4 = new JLabel();
         label4.setSize(searchBarWidth, (int) (searchBarHeight * 0.2));
         label4.setLocation(0, (int) (searchBarHeight * 0.8));
         label4.setFont(font);
@@ -121,16 +117,16 @@ public class SearchBar {
         URL icon = TaskBar.class.getResource("/icons/taskbar_32x32.png");
         Image image = new ImageIcon(icon).getImage();
         searchBar.setIconImage(image);
-        searchBar.setBackground(new Color(0, 0, 0, 0));
+        Color transparentColor = new Color(0, 0, 0, 0);
+        searchBar.setBackground(transparentColor);
 
 
         //TextField
         textField = new JTextField(300);
-        TextBorderUtlis border = new TextBorderUtlis(new Color(73, 162, 255, 255), 1, true);
-        textField.setBorder(border);
         textField.setSize(searchBarWidth - 6, (int) (searchBarHeight * 0.2) - 5);
         Font textFieldFont = new Font("Microsoft JhengHei", Font.PLAIN, (int) (((height * 0.1) / 96 * 72 / 1.2)));
         textField.setFont(textFieldFont);
+        textField.setBorder(BorderFactory.createLineBorder(new Color(73, 162, 255, 255)));
         textField.setForeground(Color.BLACK);
         textField.setHorizontalAlignment(JTextField.LEFT);
         textField.setBackground(Color.WHITE);
@@ -152,7 +148,7 @@ public class SearchBar {
 
         //panel
         panel.setLayout(null);
-        panel.setBackground(new Color(0, 0, 0, 0));
+        panel.setBackground(transparentColor);
         panel.add(textField);
         panel.add(label1);
         panel.add(label2);
@@ -235,7 +231,7 @@ public class SearchBar {
             while (!mainExit) {
                 if (labelCount < listResult.size()) {//有结果可以显示
                     try {
-                        if (label2.getText().equals("") || label3.getText().equals("") || label4.getText().equals("") || label1.getText().equals("")) {
+                        if (label2.getText().isEmpty() || label3.getText().isEmpty() || label4.getText().isEmpty() || label1.getText().isEmpty()) {
                             showResults();
                         }
                     } catch (NullPointerException e) {
@@ -243,33 +239,33 @@ public class SearchBar {
                     }
                 }
                 String text = textField.getText();
-                if (text.equals("")) {
+                if (text.isEmpty()) {
                     clearLabel();
                     listResult.clear();
                 }
                 try {
-                    if (!isUserPressed && !label1.getText().equals("")) {
+                    if (!isUserPressed && !label1.getText().isEmpty()) {
                         if (labelCount == 0) {
                             label1.setBackground(labelColor);
                         } else {
                             label1.setBackground(backgroundColorLight);
                         }
                     }
-                    if (!isUserPressed && !label2.getText().equals("")) {
+                    if (!isUserPressed && !label2.getText().isEmpty()) {
                         if (labelCount == 1) {
                             label2.setBackground(labelColor);
                         } else {
                             label2.setBackground(backgroundColor);
                         }
                     }
-                    if (!isUserPressed && !label3.getText().equals("")) {
+                    if (!isUserPressed && !label3.getText().isEmpty()) {
                         if (labelCount == 2) {
                             label3.setBackground(labelColor);
                         } else {
                             label3.setBackground(backgroundColorLight);
                         }
                     }
-                    if (!isUserPressed && !label4.getText().equals("")) {
+                    if (!isUserPressed && !label4.getText().isEmpty()) {
                         if (labelCount == 3) {
                             label4.setBackground(labelColor);
                         } else {
@@ -316,7 +312,7 @@ public class SearchBar {
                     timer = false; //开始搜索 计时停止
                     labelCount = 0;
                     clearLabel();
-                    if (!textField.getText().equals("")) {
+                    if (!textField.getText().isEmpty()) {
                         label1.setBackground(labelColor);
                     } else {
                         clearLabel();
@@ -398,7 +394,7 @@ public class SearchBar {
                             strings = resultSplit.split(text);
                             length = strings.length;
                             if (length == 2) {
-                                searchCase = strings[1].toUpperCase();
+                                searchCase = strings[1].toLowerCase();
                                 searchText = strings[0];
                             } else {
                                 searchText = strings[0];
@@ -410,6 +406,7 @@ public class SearchBar {
 
                             String listPath;
                             int ascII = getAscIISum(searchText);
+                            HashSet<String> paths = new HashSet<>();
 
                             if (0 < ascII && ascII <= 100) {
                                 for (int i = 0; i < 2500; i += 100) {
@@ -423,7 +420,7 @@ public class SearchBar {
                                     paths.add(SettingsFrame.dataPath + "\\" + j + "\\list2500-.txt");
                                 }
                                 addResult(paths, searchText, System.currentTimeMillis(), searchCase);
-                                paths.clear();
+
                             } else if (100 < ascII && ascII <= 200) {
                                 for (int j = 0; j < Search.diskCount; j++) {
                                     paths.add(SettingsFrame.dataPath + "\\" + j + "\\list0-100.txt");
@@ -439,7 +436,7 @@ public class SearchBar {
                                     paths.add(SettingsFrame.dataPath + "\\" + j + "\\list2500-.txt");
                                 }
                                 addResult(paths, searchText, System.currentTimeMillis(), searchCase);
-                                paths.clear();
+
                             } else if (200 < ascII && ascII <= 300) {
                                 for (int j = 0; j < Search.diskCount; j++) {
                                     paths.add(SettingsFrame.dataPath + "\\" + j + "\\list0-100.txt");
@@ -455,7 +452,7 @@ public class SearchBar {
                                     paths.add(SettingsFrame.dataPath + "\\" + j + "\\list2500-.txt");
                                 }
                                 addResult(paths, searchText, System.currentTimeMillis(), searchCase);
-                                paths.clear();
+
                             } else if (300 < ascII && ascII <= 400) {
                                 for (int j = 0; j < Search.diskCount; j++) {
                                     paths.add(SettingsFrame.dataPath + "\\" + j + "\\list0-100.txt");
@@ -471,7 +468,7 @@ public class SearchBar {
                                     paths.add(SettingsFrame.dataPath + "\\" + j + "\\list2500-.txt");
                                 }
                                 addResult(paths, searchText, System.currentTimeMillis(), searchCase);
-                                paths.clear();
+
                             } else if (400 < ascII && ascII <= 500) {
                                 for (int j = 0; j < Search.diskCount; j++) {
                                     paths.add(SettingsFrame.dataPath + "\\" + j + "\\list0-100.txt");
@@ -487,7 +484,7 @@ public class SearchBar {
                                     paths.add(SettingsFrame.dataPath + "\\" + j + "\\list2500-.txt");
                                 }
                                 addResult(paths, searchText, System.currentTimeMillis(), searchCase);
-                                paths.clear();
+
                             } else if (500 < ascII && ascII <= 600) {
                                 for (int j = 0; j < Search.diskCount; j++) {
                                     paths.add(SettingsFrame.dataPath + "\\" + j + "\\list0-100.txt");
@@ -503,7 +500,7 @@ public class SearchBar {
                                     paths.add(SettingsFrame.dataPath + "\\" + j + "\\list2500-.txt");
                                 }
                                 addResult(paths, searchText, System.currentTimeMillis(), searchCase);
-                                paths.clear();
+
                             } else if (600 < ascII && ascII <= 700) {
                                 for (int j = 0; j < Search.diskCount; j++) {
                                     paths.add(SettingsFrame.dataPath + "\\" + j + "\\list0-100.txt");
@@ -519,7 +516,7 @@ public class SearchBar {
                                     paths.add(SettingsFrame.dataPath + "\\" + j + "\\list2500-.txt");
                                 }
                                 addResult(paths, searchText, System.currentTimeMillis(), searchCase);
-                                paths.clear();
+
                             } else if (700 < ascII && ascII <= 800) {
                                 for (int j = 0; j < Search.diskCount; j++) {
                                     paths.add(SettingsFrame.dataPath + "\\" + j + "\\list0-100.txt");
@@ -535,7 +532,7 @@ public class SearchBar {
                                     paths.add(SettingsFrame.dataPath + "\\" + j + "\\list2500-.txt");
                                 }
                                 addResult(paths, searchText, System.currentTimeMillis(), searchCase);
-                                paths.clear();
+
                             } else if (800 < ascII && ascII <= 900) {
                                 for (int j = 0; j < Search.diskCount; j++) {
                                     paths.add(SettingsFrame.dataPath + "\\" + j + "\\list0-100.txt");
@@ -551,7 +548,7 @@ public class SearchBar {
                                     paths.add(SettingsFrame.dataPath + "\\" + j + "\\list2500-.txt");
                                 }
                                 addResult(paths, searchText, System.currentTimeMillis(), searchCase);
-                                paths.clear();
+
                             } else if (900 < ascII && ascII <= 1000) {
                                 for (int j = 0; j < Search.diskCount; j++) {
                                     paths.add(SettingsFrame.dataPath + "\\" + j + "\\list0-100.txt");
@@ -567,7 +564,7 @@ public class SearchBar {
                                     paths.add(SettingsFrame.dataPath + "\\" + j + "\\list2500-.txt");
                                 }
                                 addResult(paths, searchText, System.currentTimeMillis(), searchCase);
-                                paths.clear();
+
                             } else if (1000 < ascII && ascII <= 1100) {
                                 for (int j = 0; j < Search.diskCount; j++) {
                                     paths.add(SettingsFrame.dataPath + "\\" + j + "\\list0-100.txt");
@@ -583,7 +580,7 @@ public class SearchBar {
                                     paths.add(SettingsFrame.dataPath + "\\" + j + "\\list2500-.txt");
                                 }
                                 addResult(paths, searchText, System.currentTimeMillis(), searchCase);
-                                paths.clear();
+
                             } else if (1100 < ascII && ascII <= 1200) {
                                 for (int j = 0; j < Search.diskCount; j++) {
                                     paths.add(SettingsFrame.dataPath + "\\" + j + "\\list0-100.txt");
@@ -599,7 +596,7 @@ public class SearchBar {
                                     paths.add(SettingsFrame.dataPath + "\\" + j + "\\list2500-.txt");
                                 }
                                 addResult(paths, searchText, System.currentTimeMillis(), searchCase);
-                                paths.clear();
+
                             } else if (1200 < ascII && ascII <= 1300) {
                                 for (int j = 0; j < Search.diskCount; j++) {
                                     paths.add(SettingsFrame.dataPath + "\\" + j + "\\list0-100.txt");
@@ -615,7 +612,7 @@ public class SearchBar {
                                     paths.add(SettingsFrame.dataPath + "\\" + j + "\\list2500-.txt");
                                 }
                                 addResult(paths, searchText, System.currentTimeMillis(), searchCase);
-                                paths.clear();
+
                             } else if (1300 < ascII && ascII <= 1400) {
                                 for (int j = 0; j < Search.diskCount; j++) {
                                     paths.add(SettingsFrame.dataPath + "\\" + j + "\\list0-100.txt");
@@ -631,7 +628,7 @@ public class SearchBar {
                                     paths.add(SettingsFrame.dataPath + "\\" + j + "\\list2500-.txt");
                                 }
                                 addResult(paths, searchText, System.currentTimeMillis(), searchCase);
-                                paths.clear();
+
                             } else if (1400 < ascII && ascII <= 1500) {
                                 for (int j = 0; j < Search.diskCount; j++) {
                                     paths.add(SettingsFrame.dataPath + "\\" + j + "\\list0-100.txt");
@@ -647,7 +644,7 @@ public class SearchBar {
                                     paths.add(SettingsFrame.dataPath + "\\" + j + "\\list2500-.txt");
                                 }
                                 addResult(paths, searchText, System.currentTimeMillis(), searchCase);
-                                paths.clear();
+
                             } else if (1500 < ascII && ascII <= 1600) {
                                 for (int j = 0; j < Search.diskCount; j++) {
                                     paths.add(SettingsFrame.dataPath + "\\" + j + "\\list0-100.txt");
@@ -663,7 +660,7 @@ public class SearchBar {
                                     paths.add(SettingsFrame.dataPath + "\\" + j + "\\list2500-.txt");
                                 }
                                 addResult(paths, searchText, System.currentTimeMillis(), searchCase);
-                                paths.clear();
+
                             } else if (1600 < ascII && ascII <= 1700) {
                                 for (int j = 0; j < Search.diskCount; j++) {
                                     paths.add(SettingsFrame.dataPath + "\\" + j + "\\list0-100.txt");
@@ -679,7 +676,7 @@ public class SearchBar {
                                     paths.add(SettingsFrame.dataPath + "\\" + j + "\\list2500-.txt");
                                 }
                                 addResult(paths, searchText, System.currentTimeMillis(), searchCase);
-                                paths.clear();
+
                             } else if (1700 < ascII && ascII <= 1800) {
                                 for (int j = 0; j < Search.diskCount; j++) {
                                     paths.add(SettingsFrame.dataPath + "\\" + j + "\\list0-100.txt");
@@ -695,7 +692,7 @@ public class SearchBar {
                                     paths.add(SettingsFrame.dataPath + "\\" + j + "\\list2500-.txt");
                                 }
                                 addResult(paths, searchText, System.currentTimeMillis(), searchCase);
-                                paths.clear();
+
                             } else if (1800 < ascII && ascII <= 1900) {
                                 for (int j = 0; j < Search.diskCount; j++) {
                                     paths.add(SettingsFrame.dataPath + "\\" + j + "\\list0-100.txt");
@@ -711,7 +708,7 @@ public class SearchBar {
                                     paths.add(SettingsFrame.dataPath + "\\" + j + "\\list2500-.txt");
                                 }
                                 addResult(paths, searchText, System.currentTimeMillis(), searchCase);
-                                paths.clear();
+
                             } else if (1900 < ascII && ascII <= 2000) {
                                 for (int j = 0; j < Search.diskCount; j++) {
                                     paths.add(SettingsFrame.dataPath + "\\" + j + "\\list0-100.txt");
@@ -727,7 +724,7 @@ public class SearchBar {
                                     paths.add(SettingsFrame.dataPath + "\\" + j + "\\list2500-.txt");
                                 }
                                 addResult(paths, searchText, System.currentTimeMillis(), searchCase);
-                                paths.clear();
+
                             } else if (2000 < ascII && ascII <= 2100) {
                                 for (int j = 0; j < Search.diskCount; j++) {
                                     paths.add(SettingsFrame.dataPath + "\\" + j + "\\list0-100.txt");
@@ -743,7 +740,7 @@ public class SearchBar {
                                     paths.add(SettingsFrame.dataPath + "\\" + j + "\\list2500-.txt");
                                 }
                                 addResult(paths, searchText, System.currentTimeMillis(), searchCase);
-                                paths.clear();
+
                             } else if (2100 < ascII && ascII <= 2200) {
                                 for (int j = 0; j < Search.diskCount; j++) {
                                     paths.add(SettingsFrame.dataPath + "\\" + j + "\\list0-100.txt");
@@ -759,7 +756,7 @@ public class SearchBar {
                                     paths.add(SettingsFrame.dataPath + "\\" + j + "\\list2500-.txt");
                                 }
                                 addResult(paths, searchText, System.currentTimeMillis(), searchCase);
-                                paths.clear();
+
                             } else if (2200 < ascII && ascII <= 2300) {
                                 for (int j = 0; j < Search.diskCount; j++) {
                                     paths.add(SettingsFrame.dataPath + "\\" + j + "\\list0-100.txt");
@@ -775,7 +772,7 @@ public class SearchBar {
                                     paths.add(SettingsFrame.dataPath + "\\" + j + "\\list2500-.txt");
                                 }
                                 addResult(paths, searchText, System.currentTimeMillis(), searchCase);
-                                paths.clear();
+
                             } else if (2300 < ascII && ascII <= 2400) {
                                 for (int j = 0; j < Search.diskCount; j++) {
                                     paths.add(SettingsFrame.dataPath + "\\" + j + "\\list0-100.txt");
@@ -791,7 +788,7 @@ public class SearchBar {
                                     paths.add(SettingsFrame.dataPath + "\\" + j + "\\list2500-.txt");
                                 }
                                 addResult(paths, searchText, System.currentTimeMillis(), searchCase);
-                                paths.clear();
+
                             } else if (2400 < ascII && ascII <= 2500) {
                                 for (int j = 0; j < Search.diskCount; j++) {
                                     paths.add(SettingsFrame.dataPath + "\\" + j + "\\list0-100.txt");
@@ -807,13 +804,13 @@ public class SearchBar {
                                     paths.add(SettingsFrame.dataPath + "\\" + j + "\\list2500-.txt");
                                 }
                                 addResult(paths, searchText, System.currentTimeMillis(), searchCase);
-                                paths.clear();
+
                             } else {
                                 for (int j = 0; j < Search.diskCount; j++) {
                                     paths.add(SettingsFrame.dataPath + "\\" + j + "\\list2500-.txt");
                                 }
                                 addResult(paths, searchText, System.currentTimeMillis(), searchCase);
-                                paths.clear();
+
                             }
                         }
                     } else {
@@ -872,7 +869,7 @@ public class SearchBar {
                 labelCount = 0;
                 String t = textField.getText();
 
-                if (t.equals("")) {
+                if (t.isEmpty()) {
                     clearLabel();
                     listResult.clear();
                     labelCount = 0;
@@ -965,7 +962,7 @@ public class SearchBar {
             if (e.getPreciseWheelRotation() > 0) {
                 //向下滚动
                 try {
-                    if (!label1.getText().equals("") && !label2.getText().equals("") && !label3.getText().equals("") && !label4.getText().equals("")) {
+                    if (!label1.getText().isEmpty() && !label2.getText().isEmpty() && !label3.getText().isEmpty() && !label4.getText().isEmpty()) {
                         isUserPressed = true;
                     }
                 } catch (NullPointerException ignored) {
@@ -974,7 +971,7 @@ public class SearchBar {
                 boolean isNextExist = false;
                 if (labelCount == 0) {
                     try {
-                        if (!label2.getText().equals("")) {
+                        if (!label2.getText().isEmpty()) {
                             isNextExist = true;
                         }
                     } catch (NullPointerException ignored) {
@@ -982,7 +979,7 @@ public class SearchBar {
                     }
                 } else if (labelCount == 1) {
                     try {
-                        if (!label3.getText().equals("")) {
+                        if (!label3.getText().isEmpty()) {
                             isNextExist = true;
                         }
                     } catch (NullPointerException ignored) {
@@ -990,7 +987,7 @@ public class SearchBar {
                     }
                 } else if (labelCount == 2) {
                     try {
-                        if (!label4.getText().equals("")) {
+                        if (!label4.getText().isEmpty()) {
                             isNextExist = true;
                         }
                     } catch (NullPointerException ignored) {
@@ -1000,7 +997,7 @@ public class SearchBar {
                     isNextExist = true;
                 }
                 if (isNextExist) {
-                    if (!textField.getText().equals("")) {
+                    if (!textField.getText().isEmpty()) {
                         labelCount++;
                         if (labelCount < 0) {
                             labelCount = 0;
@@ -1236,13 +1233,13 @@ public class SearchBar {
             } else if (e.getPreciseWheelRotation() < 0) {
                 //向上滚动
                 try {
-                    if (!label1.getText().equals("") && !label2.getText().equals("") && !label3.getText().equals("") && !label4.getText().equals("")) {
+                    if (!label1.getText().isEmpty() && !label2.getText().isEmpty() && !label3.getText().isEmpty() && !label4.getText().isEmpty()) {
                         isUserPressed = true;
                     }
                 } catch (NullPointerException ignored) {
 
                 }
-                if (!textField.getText().equals("")) {
+                if (!textField.getText().isEmpty()) {
                     labelCount--;
                     if (labelCount < 0) {
                         labelCount = 0;
@@ -1330,16 +1327,16 @@ public class SearchBar {
                                     break;
                                 case 1:
                                     try {
-                                        if (!label1.getText().equals("")) {
+                                        if (!label1.getText().isEmpty()) {
                                             label1.setBackground(labelColor);
                                         }
-                                        if (!label2.getText().equals("")) {
+                                        if (!label2.getText().isEmpty()) {
                                             label2.setBackground(backgroundColor);
                                         }
-                                        if (!label3.getText().equals("")) {
+                                        if (!label3.getText().isEmpty()) {
                                             label3.setBackground(backgroundColorLight);
                                         }
-                                        if (!label4.getText().equals("")) {
+                                        if (!label4.getText().isEmpty()) {
                                             label4.setBackground(backgroundColor);
                                         }
                                     } catch (NullPointerException ignored) {
@@ -1348,16 +1345,16 @@ public class SearchBar {
                                     break;
                                 case 2:
                                     try {
-                                        if (!label1.getText().equals("")) {
+                                        if (!label1.getText().isEmpty()) {
                                             label1.setBackground(backgroundColorLight);
                                         }
-                                        if (!label2.getText().equals("")) {
+                                        if (!label2.getText().isEmpty()) {
                                             label2.setBackground(labelColor);
                                         }
-                                        if (!label3.getText().equals("")) {
+                                        if (!label3.getText().isEmpty()) {
                                             label3.setBackground(backgroundColorLight);
                                         }
-                                        if (!label4.getText().equals("")) {
+                                        if (!label4.getText().isEmpty()) {
                                             label4.setBackground(backgroundColor);
                                         }
                                     } catch (NullPointerException ignored) {
@@ -1366,16 +1363,16 @@ public class SearchBar {
                                     break;
                                 case 3:
                                     try {
-                                        if (!label1.getText().equals("")) {
+                                        if (!label1.getText().isEmpty()) {
                                             label1.setBackground(backgroundColorLight);
                                         }
-                                        if (!label2.getText().equals("")) {
+                                        if (!label2.getText().isEmpty()) {
                                             label2.setBackground(backgroundColor);
                                         }
-                                        if (!label3.getText().equals("")) {
+                                        if (!label3.getText().isEmpty()) {
                                             label3.setBackground(labelColor);
                                         }
-                                        if (!label4.getText().equals("")) {
+                                        if (!label4.getText().isEmpty()) {
                                             label4.setBackground(backgroundColor);
                                         }
                                     } catch (NullPointerException ignored) {
@@ -1429,16 +1426,16 @@ public class SearchBar {
                                     break;
                                 case 1:
                                     try {
-                                        if (!label1.getText().equals("")) {
+                                        if (!label1.getText().isEmpty()) {
                                             label1.setBackground(labelColor);
                                         }
-                                        if (!label2.getText().equals("")) {
+                                        if (!label2.getText().isEmpty()) {
                                             label2.setBackground(backgroundColor);
                                         }
-                                        if (!label3.getText().equals("")) {
+                                        if (!label3.getText().isEmpty()) {
                                             label3.setBackground(backgroundColorLight);
                                         }
-                                        if (!label4.getText().equals("")) {
+                                        if (!label4.getText().isEmpty()) {
                                             label4.setBackground(backgroundColor);
                                         }
                                     } catch (NullPointerException ignored) {
@@ -1447,16 +1444,16 @@ public class SearchBar {
                                     break;
                                 case 2:
                                     try {
-                                        if (!label1.getText().equals("")) {
+                                        if (!label1.getText().isEmpty()) {
                                             label1.setBackground(backgroundColorLight);
                                         }
-                                        if (!label2.getText().equals("")) {
+                                        if (!label2.getText().isEmpty()) {
                                             label2.setBackground(labelColor);
                                         }
-                                        if (!label3.getText().equals("")) {
+                                        if (!label3.getText().isEmpty()) {
                                             label3.setBackground(backgroundColorLight);
                                         }
-                                        if (!label4.getText().equals("")) {
+                                        if (!label4.getText().isEmpty()) {
                                             label4.setBackground(backgroundColor);
                                         }
                                     } catch (NullPointerException ignored) {
@@ -1465,16 +1462,16 @@ public class SearchBar {
                                     break;
                                 case 3:
                                     try {
-                                        if (!label1.getText().equals("")) {
+                                        if (!label1.getText().isEmpty()) {
                                             label1.setBackground(backgroundColorLight);
                                         }
-                                        if (!label2.getText().equals("")) {
+                                        if (!label2.getText().isEmpty()) {
                                             label2.setBackground(backgroundColor);
                                         }
-                                        if (!label3.getText().equals("")) {
+                                        if (!label3.getText().isEmpty()) {
                                             label3.setBackground(labelColor);
                                         }
-                                        if (!label4.getText().equals("")) {
+                                        if (!label4.getText().isEmpty()) {
                                             label4.setBackground(backgroundColor);
                                         }
                                     } catch (NullPointerException ignored) {
@@ -1483,16 +1480,16 @@ public class SearchBar {
                                     break;
                                 case 4:
                                     try {
-                                        if (!label1.getText().equals("")) {
+                                        if (!label1.getText().isEmpty()) {
                                             label1.setBackground(backgroundColorLight);
                                         }
-                                        if (!label2.getText().equals("")) {
+                                        if (!label2.getText().isEmpty()) {
                                             label2.setBackground(backgroundColor);
                                         }
-                                        if (!label3.getText().equals("")) {
+                                        if (!label3.getText().isEmpty()) {
                                             label3.setBackground(backgroundColorLight);
                                         }
-                                        if (!label4.getText().equals("")) {
+                                        if (!label4.getText().isEmpty()) {
                                             label4.setBackground(labelColor);
                                         }
                                     } catch (NullPointerException ignored) {
@@ -1552,16 +1549,16 @@ public class SearchBar {
                         switch (mousePosition) {
                             case 0:
                                 try {
-                                    if (!label1.getText().equals("")) {
+                                    if (!label1.getText().isEmpty()) {
                                         label1.setBackground(labelColor);
                                     }
-                                    if (!label2.getText().equals("")) {
+                                    if (!label2.getText().isEmpty()) {
                                         label2.setBackground(backgroundColor);
                                     }
-                                    if (!label3.getText().equals("")) {
+                                    if (!label3.getText().isEmpty()) {
                                         label3.setBackground(backgroundColorLight);
                                     }
-                                    if (!label4.getText().equals("")) {
+                                    if (!label4.getText().isEmpty()) {
                                         label4.setBackground(backgroundColor);
                                     }
                                 } catch (NullPointerException ignored) {
@@ -1570,16 +1567,16 @@ public class SearchBar {
                                 break;
                             case 1:
                                 try {
-                                    if (!label1.getText().equals("")) {
+                                    if (!label1.getText().isEmpty()) {
                                         label1.setBackground(backgroundColorLight);
                                     }
-                                    if (!label2.getText().equals("")) {
+                                    if (!label2.getText().isEmpty()) {
                                         label2.setBackground(labelColor);
                                     }
-                                    if (!label3.getText().equals("")) {
+                                    if (!label3.getText().isEmpty()) {
                                         label3.setBackground(backgroundColorLight);
                                     }
-                                    if (!label4.getText().equals("")) {
+                                    if (!label4.getText().isEmpty()) {
                                         label4.setBackground(backgroundColor);
                                     }
                                 } catch (NullPointerException ignored) {
@@ -1588,16 +1585,16 @@ public class SearchBar {
                                 break;
                             case 2:
                                 try {
-                                    if (!label1.getText().equals("")) {
+                                    if (!label1.getText().isEmpty()) {
                                         label1.setBackground(backgroundColorLight);
                                     }
-                                    if (!label2.getText().equals("")) {
+                                    if (!label2.getText().isEmpty()) {
                                         label2.setBackground(backgroundColor);
                                     }
-                                    if (!label3.getText().equals("")) {
+                                    if (!label3.getText().isEmpty()) {
                                         label3.setBackground(labelColor);
                                     }
-                                    if (!label4.getText().equals("")) {
+                                    if (!label4.getText().isEmpty()) {
                                         label4.setBackground(backgroundColor);
                                     }
                                 } catch (NullPointerException ignored) {
@@ -1606,16 +1603,16 @@ public class SearchBar {
                                 break;
                             case 3:
                                 try {
-                                    if (!label1.getText().equals("")) {
+                                    if (!label1.getText().isEmpty()) {
                                         label1.setBackground(backgroundColorLight);
                                     }
-                                    if (!label2.getText().equals("")) {
+                                    if (!label2.getText().isEmpty()) {
                                         label2.setBackground(backgroundColor);
                                     }
-                                    if (!label3.getText().equals("")) {
+                                    if (!label3.getText().isEmpty()) {
                                         label3.setBackground(backgroundColorLight);
                                     }
-                                    if (!label4.getText().equals("")) {
+                                    if (!label4.getText().isEmpty()) {
                                         label4.setBackground(labelColor);
                                     }
                                 } catch (NullPointerException ignored) {
@@ -1636,7 +1633,7 @@ public class SearchBar {
             @Override
             public void keyPressed(KeyEvent arg0) {
                 int key = arg0.getKeyCode();
-                if (key == 8 && textField.getText().equals("")) {
+                if (key == 8 && textField.getText().isEmpty()) {
                     arg0.consume();
                 }
                 if (!listResult.isEmpty()) {
@@ -1646,13 +1643,13 @@ public class SearchBar {
                             pressTime = System.currentTimeMillis();
                             isFirstPress = false;
                             try {
-                                if (!label1.getText().equals("") && !label2.getText().equals("") && !label3.getText().equals("") && !label4.getText().equals("")) {
+                                if (!label1.getText().isEmpty() && !label2.getText().isEmpty() && !label3.getText().isEmpty() && !label4.getText().isEmpty()) {
                                     isUserPressed = true;
                                 }
                             } catch (NullPointerException ignored) {
 
                             }
-                            if (!textField.getText().equals("")) {
+                            if (!textField.getText().isEmpty()) {
                                 labelCount--;
                                 if (labelCount < 0) {
                                     labelCount = 0;
@@ -1740,16 +1737,16 @@ public class SearchBar {
                                                 break;
                                             case 1:
                                                 try {
-                                                    if (!label1.getText().equals("")) {
+                                                    if (!label1.getText().isEmpty()) {
                                                         label1.setBackground(labelColor);
                                                     }
-                                                    if (!label2.getText().equals("")) {
+                                                    if (!label2.getText().isEmpty()) {
                                                         label2.setBackground(backgroundColor);
                                                     }
-                                                    if (!label3.getText().equals("")) {
+                                                    if (!label3.getText().isEmpty()) {
                                                         label3.setBackground(backgroundColorLight);
                                                     }
-                                                    if (!label4.getText().equals("")) {
+                                                    if (!label4.getText().isEmpty()) {
                                                         label4.setBackground(backgroundColor);
                                                     }
                                                 } catch (NullPointerException ignored) {
@@ -1758,16 +1755,16 @@ public class SearchBar {
                                                 break;
                                             case 2:
                                                 try {
-                                                    if (!label1.getText().equals("")) {
+                                                    if (!label1.getText().isEmpty()) {
                                                         label1.setBackground(backgroundColorLight);
                                                     }
-                                                    if (!label2.getText().equals("")) {
+                                                    if (!label2.getText().isEmpty()) {
                                                         label2.setBackground(labelColor);
                                                     }
-                                                    if (!label3.getText().equals("")) {
+                                                    if (!label3.getText().isEmpty()) {
                                                         label3.setBackground(backgroundColorLight);
                                                     }
-                                                    if (!label4.getText().equals("")) {
+                                                    if (!label4.getText().isEmpty()) {
                                                         label4.setBackground(backgroundColor);
                                                     }
                                                 } catch (NullPointerException ignored) {
@@ -1776,16 +1773,16 @@ public class SearchBar {
                                                 break;
                                             case 3:
                                                 try {
-                                                    if (!label1.getText().equals("")) {
+                                                    if (!label1.getText().isEmpty()) {
                                                         label1.setBackground(backgroundColorLight);
                                                     }
-                                                    if (!label2.getText().equals("")) {
+                                                    if (!label2.getText().isEmpty()) {
                                                         label2.setBackground(backgroundColor);
                                                     }
-                                                    if (!label3.getText().equals("")) {
+                                                    if (!label3.getText().isEmpty()) {
                                                         label3.setBackground(labelColor);
                                                     }
-                                                    if (!label4.getText().equals("")) {
+                                                    if (!label4.getText().isEmpty()) {
                                                         label4.setBackground(backgroundColor);
                                                     }
                                                 } catch (NullPointerException ignored) {
@@ -1839,16 +1836,16 @@ public class SearchBar {
                                                 break;
                                             case 1:
                                                 try {
-                                                    if (!label1.getText().equals("")) {
+                                                    if (!label1.getText().isEmpty()) {
                                                         label1.setBackground(labelColor);
                                                     }
-                                                    if (!label2.getText().equals("")) {
+                                                    if (!label2.getText().isEmpty()) {
                                                         label2.setBackground(backgroundColor);
                                                     }
-                                                    if (!label3.getText().equals("")) {
+                                                    if (!label3.getText().isEmpty()) {
                                                         label3.setBackground(backgroundColorLight);
                                                     }
-                                                    if (!label4.getText().equals("")) {
+                                                    if (!label4.getText().isEmpty()) {
                                                         label4.setBackground(backgroundColor);
                                                     }
                                                 } catch (NullPointerException ignored) {
@@ -1857,16 +1854,16 @@ public class SearchBar {
                                                 break;
                                             case 2:
                                                 try {
-                                                    if (!label1.getText().equals("")) {
+                                                    if (!label1.getText().isEmpty()) {
                                                         label1.setBackground(backgroundColorLight);
                                                     }
-                                                    if (!label2.getText().equals("")) {
+                                                    if (!label2.getText().isEmpty()) {
                                                         label2.setBackground(labelColor);
                                                     }
-                                                    if (!label3.getText().equals("")) {
+                                                    if (!label3.getText().isEmpty()) {
                                                         label3.setBackground(backgroundColorLight);
                                                     }
-                                                    if (!label4.getText().equals("")) {
+                                                    if (!label4.getText().isEmpty()) {
                                                         label4.setBackground(backgroundColor);
                                                     }
                                                 } catch (NullPointerException ignored) {
@@ -1875,16 +1872,16 @@ public class SearchBar {
                                                 break;
                                             case 3:
                                                 try {
-                                                    if (!label1.getText().equals("")) {
+                                                    if (!label1.getText().isEmpty()) {
                                                         label1.setBackground(backgroundColorLight);
                                                     }
-                                                    if (!label2.getText().equals("")) {
+                                                    if (!label2.getText().isEmpty()) {
                                                         label2.setBackground(backgroundColor);
                                                     }
-                                                    if (!label3.getText().equals("")) {
+                                                    if (!label3.getText().isEmpty()) {
                                                         label3.setBackground(labelColor);
                                                     }
-                                                    if (!label4.getText().equals("")) {
+                                                    if (!label4.getText().isEmpty()) {
                                                         label4.setBackground(backgroundColor);
                                                     }
                                                 } catch (NullPointerException ignored) {
@@ -1893,16 +1890,16 @@ public class SearchBar {
                                                 break;
                                             case 4:
                                                 try {
-                                                    if (!label1.getText().equals("")) {
+                                                    if (!label1.getText().isEmpty()) {
                                                         label1.setBackground(backgroundColorLight);
                                                     }
-                                                    if (!label2.getText().equals("")) {
+                                                    if (!label2.getText().isEmpty()) {
                                                         label2.setBackground(backgroundColor);
                                                     }
-                                                    if (!label3.getText().equals("")) {
+                                                    if (!label3.getText().isEmpty()) {
                                                         label3.setBackground(backgroundColorLight);
                                                     }
-                                                    if (!label4.getText().equals("")) {
+                                                    if (!label4.getText().isEmpty()) {
                                                         label4.setBackground(labelColor);
                                                     }
                                                 } catch (NullPointerException ignored) {
@@ -1926,7 +1923,7 @@ public class SearchBar {
                             pressTime = System.currentTimeMillis();
                             isFirstPress = false;
                             try {
-                                if (!label1.getText().equals("") && !label2.getText().equals("") && !label3.getText().equals("") && !label4.getText().equals("")) {
+                                if (!label1.getText().isEmpty() && !label2.getText().isEmpty() && !label3.getText().isEmpty() && !label4.getText().isEmpty()) {
                                     isUserPressed = true;
                                 }
                             } catch (NullPointerException ignored) {
@@ -1935,7 +1932,7 @@ public class SearchBar {
                             boolean isNextExist = false;
                             if (labelCount == 0) {
                                 try {
-                                    if (!label2.getText().equals("")) {
+                                    if (!label2.getText().isEmpty()) {
                                         isNextExist = true;
                                     }
                                 } catch (NullPointerException ignored) {
@@ -1943,7 +1940,7 @@ public class SearchBar {
                                 }
                             } else if (labelCount == 1) {
                                 try {
-                                    if (!label3.getText().equals("")) {
+                                    if (!label3.getText().isEmpty()) {
                                         isNextExist = true;
                                     }
                                 } catch (NullPointerException ignored) {
@@ -1951,7 +1948,7 @@ public class SearchBar {
                                 }
                             } else if (labelCount == 2) {
                                 try {
-                                    if (!label4.getText().equals("")) {
+                                    if (!label4.getText().isEmpty()) {
                                         isNextExist = true;
                                     }
                                 } catch (NullPointerException ignored) {
@@ -1961,7 +1958,7 @@ public class SearchBar {
                                 isNextExist = true;
                             }
                             if (isNextExist) {
-                                if (!textField.getText().equals("")) {
+                                if (!textField.getText().isEmpty()) {
                                     labelCount++;
                                     if (labelCount < 0) {
                                         labelCount = 0;
@@ -2282,9 +2279,9 @@ public class SearchBar {
 
     private void addResult(HashSet<String> paths, String searchText, long time, String searchCase) {
         //为label添加结果
-        ExecutorService threadPool = Executors.newFixedThreadPool(4);
+        ExecutorService threadPool = Executors.newFixedThreadPool(2);
         ConcurrentLinkedQueue<String> taskQueue = new ConcurrentLinkedQueue<>(paths);
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < 2; i++) {
             threadPool.execute(() -> {
                 String path;
                 String each;
@@ -2292,81 +2289,75 @@ public class SearchBar {
                     try (BufferedReader br = new BufferedReader(new FileReader(path))) {
                         while ((each = br.readLine()) != null) {
                             if (startTime > time) { //用户重新输入了信息
-                                br.close();
-                                threadPool.shutdownNow();
-                                return;
+                                taskQueue.clear();
+                                break;
                             }
                             if (search.isUsable()) {
                                 if (isMatched(getFileName(each), searchText)) {
                                     switch (searchCase) {
-                                        case "F":
+                                        case "f":
                                             if (isFile(each)) {
                                                 if (!listResult.contains(each)) {
                                                     if (isExist(each)) {
                                                         listResult.add(each);
                                                         if (listResult.size() > 100) {
-                                                            br.close();
-                                                            threadPool.shutdownNow();
-                                                            return;
+                                                            taskQueue.clear();
+                                                            break;
                                                         }
                                                     }
                                                 }
                                             }
                                             break;
-                                        case "D":
+                                        case "d":
                                             if (isDirectory(each)) {
                                                 if (!listResult.contains(each)) {
                                                     if (isExist(each)) {
                                                         listResult.add(each);
                                                         if (listResult.size() > 100) {
-                                                            br.close();
-                                                            threadPool.shutdownNow();
-                                                            return;
+                                                            taskQueue.clear();
+                                                            break;
                                                         }
                                                     }
                                                 }
                                             }
                                             break;
-                                        case "FULL":
+                                        case "full":
                                             if (getFileName(each).toLowerCase().equals(searchText.toLowerCase())) {
                                                 if (!listResult.contains(each)) {
                                                     if (isExist(each)) {
                                                         listResult.add(each);
                                                         if (listResult.size() > 100) {
-                                                            br.close();
-                                                            threadPool.shutdownNow();
-                                                            return;
+                                                            taskQueue.clear();
+                                                            break;
                                                         }
                                                     }
                                                 }
                                             }
                                             break;
-                                        case "DFULL":
+                                        case "dfull":
                                             if (getFileName(each).toLowerCase().equals(searchText.toLowerCase())) {
                                                 if (isDirectory(each)) {
                                                     if (!listResult.contains(each)) {
                                                         if (isExist(each)) {
                                                             listResult.add(each);
                                                             if (listResult.size() > 100) {
-                                                                br.close();
-                                                                threadPool.shutdownNow();
-                                                                return;
+                                                                taskQueue.clear();
+                                                                break;
                                                             }
                                                         }
                                                     }
                                                 }
                                             }
                                             break;
-                                        case "FFULL":
+                                        case "ffull":
                                             if (getFileName(each).toLowerCase().equals(searchText.toLowerCase())) {
                                                 if (isFile(each)) {
                                                     if (!listResult.contains(each)) {
                                                         if (isExist(each)) {
                                                             listResult.add(each);
                                                             if (listResult.size() > 100) {
-                                                                br.close();
-                                                                threadPool.shutdownNow();
-                                                                return;
+                                                                taskQueue.clear();
+                                                                break;
                                                             }
                                                         }
                                                     }
@@ -2378,9 +2369,8 @@ public class SearchBar {
                                                 if (isExist(each)) {
                                                     listResult.add(each);
                                                     if (listResult.size() > 100) {
-                                                        br.close();
-                                                        threadPool.shutdownNow();
-                                                        return;
+                                                        taskQueue.clear();
+                                                        break;
                                                     }
                                                 }
                                             }
@@ -2395,11 +2385,17 @@ public class SearchBar {
                 }
             });
         }
-        threadPool.shutdownNow();
-        if (!textField.getText().equals("")) {
+        threadPool.shutdown();
+        try {
+            threadPool.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS);
+        } catch (InterruptedException ignored) {
+
+        }
+        if (!textField.getText().isEmpty()) {
             delRepeated();
             if (listResult.size() == 0) {
                 label1.setText("无结果");
+                label1.setIcon(null);
             }
         }
     }
@@ -2571,7 +2567,7 @@ public class SearchBar {
                 } else {
                     label4.setBackground(backgroundColor);
                 }
-            } catch (ArrayIndexOutOfBoundsException ignored) {
+            } catch (IndexOutOfBoundsException ignored) {
 
             }
         }
@@ -2812,7 +2808,7 @@ public class SearchBar {
     }
 
     private boolean isMatched(String srcText, String txt) {
-        if (!txt.equals("")) {
+        if (!txt.isEmpty()) {
             srcText = srcText.toLowerCase();
             txt = txt.toLowerCase();
             String[] keyWords = semicolon.split(txt);
@@ -2963,33 +2959,6 @@ public class SearchBar {
     private boolean isDirectory(String text) {
         File file = new File(text);
         return file.isDirectory();
-    }
-}
-
-class TextBorderUtlis extends LineBorder {
-
-    private static final long serialVersionUID = 1L;
-
-    public TextBorderUtlis(Color color, int thickness, boolean roundedCorners) {
-        super(color, thickness, roundedCorners);
-    }
-
-    @Override
-    public void paintBorder(Component c, Graphics g, int x, int y, int width, int height) {
-        RenderingHints rh = new RenderingHints(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        Color oldColor = g.getColor();
-        Graphics2D g2 = (Graphics2D) g;
-        int i;
-        g2.setRenderingHints(rh);
-        g2.setColor(lineColor);
-        for (i = 0; i < thickness; i++) {
-            if (!roundedCorners) {
-                g2.drawRect(x + i, y + i, width - i - i - 1, height - i - i - 1);
-            } else {
-                g2.drawRoundRect(x + i, y + i, width - i - i - 1, height - i - i - 1, 5, 5);
-            }
-        }
-        g2.setColor(oldColor);
     }
 }
 

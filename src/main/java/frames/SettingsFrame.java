@@ -181,7 +181,7 @@ public class SettingsFrame {
                     }
                 } else if (64 < key && key < 91) {
                     String txt = textFieldHotkey.getText();
-                    if (!txt.equals("")) {
+                    if (!txt.isEmpty()) {
                         char c1 = Character.toUpperCase(txt.charAt(txt.length() - 1));
                         if (64 < c1 && c1 < 91) {
                             String text = txt.substring(0, txt.length() - 1);
@@ -383,7 +383,7 @@ public class SettingsFrame {
         });
         buttonAddCMD.addActionListener(e -> {
             String name = JOptionPane.showInputDialog("请输入对该命令的标识,之后你可以在搜索框中输入 \": 标识符\" 直接执行该命令");
-            if (name == null || name.equals("")) {
+            if (name == null || name.isEmpty()) {
                 //未输入
                 return;
             }
@@ -811,7 +811,7 @@ public class SettingsFrame {
                 while ((line = outPut.readLine()) != null) {
                     result.append(line);
                 }
-                if (!result.toString().equals("")) {
+                if (!result.toString().isEmpty()) {
                     checkBox1.setSelected(false);
                     JOptionPane.showMessageDialog(null, "添加到开机启动失败，请尝试以管理员身份运行");
                 }
@@ -828,7 +828,7 @@ public class SettingsFrame {
                 while ((line = outPut.readLine()) != null) {
                     result.append(line);
                 }
-                if (!result.toString().equals("")) {
+                if (!result.toString().isEmpty()) {
                     checkBox1.setSelected(true);
                     JOptionPane.showMessageDialog(null, "删除开机启动失败，请尝试以管理员身份运行");
                 }

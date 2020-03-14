@@ -50,6 +50,7 @@ public class MainClass {
                 String nextLine = scanner.nextLine();
                 if (printedErrorlevel) {
                     int errorlevel = Integer.parseInt(nextLine);
+                    scanner.close();
                     return errorlevel == 0;
                 } else if (nextLine.equals("echo %errorlevel%")) {
                     printedErrorlevel = true;
