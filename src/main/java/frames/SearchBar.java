@@ -406,7 +406,7 @@ public class SearchBar {
 
                             String listPath;
                             int ascII = getAscIISum(searchText);
-                            HashSet<String> paths = new HashSet<>();
+                            LinkedHashSet<String> paths = new LinkedHashSet<>();
 
                             if (0 < ascII && ascII <= 100) {
                                 for (int i = 0; i < 2500; i += 100) {
@@ -2277,7 +2277,7 @@ public class SearchBar {
         return f.exists();
     }
 
-    private void addResult(HashSet<String> paths, String searchText, long time, String searchCase) {
+    private void addResult(LinkedHashSet<String> paths, String searchText, long time, String searchCase) {
         //为label添加结果
         ExecutorService threadPool = Executors.newFixedThreadPool(2);
         ConcurrentLinkedQueue<String> taskQueue = new ConcurrentLinkedQueue<>(paths);
