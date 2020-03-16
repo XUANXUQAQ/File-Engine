@@ -365,7 +365,10 @@ public class SearchBar {
                                     try {
                                         File[] roots = File.listRoots();
                                         for (File root : roots) {
-                                            Runtime.getRuntime().exec("cmd /c rd /s /q " + root.getAbsolutePath() + "$Recycle.Bin");
+                                            Process p = Runtime.getRuntime().exec("cmd /c rd /s /q " + root.getAbsolutePath() + "$Recycle.Bin");
+                                            p.getErrorStream().close();
+                                            p.getOutputStream().close();
+                                            p.getInputStream().close();
                                         }
                                         JOptionPane.showMessageDialog(null, "清空回收站成功");
                                     } catch (IOException e) {
@@ -909,7 +912,10 @@ public class SearchBar {
                                 //打开上级文件夹
                                 File open = new File(listResult.get(labelCount));
                                 try {
-                                    Runtime.getRuntime().exec("explorer.exe /select, \"" + open.getAbsolutePath() + "\"");
+                                    Process p = Runtime.getRuntime().exec("explorer.exe /select, \"" + open.getAbsolutePath() + "\"");
+                                    p.getInputStream().close();
+                                    p.getOutputStream().close();
+                                    p.getErrorStream().close();
                                 } catch (IOException e1) {
                                     e1.printStackTrace();
                                 }
@@ -2200,7 +2206,10 @@ public class SearchBar {
                                 //打开上级文件夹
                                 File open = new File(listResult.get(labelCount));
                                 try {
-                                    Runtime.getRuntime().exec("explorer.exe /select, \"" + open.getAbsolutePath() + "\"");
+                                    Process p = Runtime.getRuntime().exec("explorer.exe /select, \"" + open.getAbsolutePath() + "\"");
+                                    p.getOutputStream().close();
+                                    p.getErrorStream().close();
+                                    p.getInputStream().close();
                                 } catch (IOException e) {
                                     e.printStackTrace();
                                 }
@@ -2590,13 +2599,17 @@ public class SearchBar {
     }
 
     private void openWithAdmin(String path) {
+        searchBar.setVisible(false);
         File name = new File(path);
         if (name.exists()) {
             try {
                 String command = name.getAbsolutePath();
                 String start = "cmd /c start " + command.substring(0, 2);
                 String end = "\"" + command.substring(2) + "\"";
-                Runtime.getRuntime().exec(start + end, null, name.getParentFile());
+                Process p = Runtime.getRuntime().exec(start + end, null, name.getParentFile());
+                p.getInputStream().close();
+                p.getOutputStream().close();
+                p.getErrorStream().close();
             } catch (IOException e) {
                 //打开上级文件夹
                 try {
@@ -2609,19 +2622,36 @@ public class SearchBar {
     }
 
     private void openWithoutAdmin(String path) {
+        searchBar.setVisible(false);
         if (isExist(path)) {
             try {
-                if (path.endsWith(".lnk")) {
-                    Runtime.getRuntime().exec("cmd /c explorer.exe " + "\"" + path + "\"");
+                if (path.toLowerCase().endsWith(".lnk")) {
+                    String command = "cmd /c explorer.exe " + "\"" + path + "\"";
+                    Process p = Runtime.getRuntime().exec(command);
+                    p.getOutputStream().close();
+                    p.getErrorStream().close();
+                    p.getInputStream().close();
+                } else if (path.toLowerCase().endsWith(".url")) {
+                    Desktop desktop;
+                    if (Desktop.isDesktopSupported()) {
+                        desktop = Desktop.getDesktop();
+                        desktop.open(new File(path));
+                    }
                 } else {
                     //创建快捷方式到临时文件夹，打开后删除
                     createShortCut(path, SettingsFrame.tmp.getAbsolutePath() + "\\open");
-                    Runtime.getRuntime().exec("cmd /c explorer.exe " + "\"" + SettingsFrame.tmp.getAbsolutePath() + "\\open.lnk" + "\"");
+                    Process p = Runtime.getRuntime().exec("cmd /c explorer.exe " + "\"" + SettingsFrame.tmp.getAbsolutePath() + "\\open.lnk" + "\"");
+                    p.getInputStream().close();
+                    p.getOutputStream().close();
+                    p.getErrorStream().close();
                 }
             } catch (Exception e) {
                 //打开上级文件夹
                 try {
-                    Runtime.getRuntime().exec("explorer.exe /select, \"" + path + "\"");
+                    Process p = Runtime.getRuntime().exec("explorer.exe /select, \"" + path + "\"");
+                    p.getOutputStream().close();
+                    p.getErrorStream().close();
+                    p.getInputStream().close();
                 } catch (IOException ignored) {
 
                 }
@@ -2636,6 +2666,9 @@ public class SearchBar {
         String end = "\"" + shortcutGenPath.substring(2) + "\"";
         String commandToGenLnk = start + end + " /target:" + "\"" + fileOrFolderPath + "\"" + " " + "/shortcut:" + "\"" + writeShortCutPath + "\"" + " /workingdir:" + "\"" + fileOrFolderPath.substring(0, fileOrFolderPath.lastIndexOf("\\")) + "\"";
         Process p = Runtime.getRuntime().exec("cmd /c " + commandToGenLnk);
+        p.getInputStream().close();
+        p.getOutputStream().close();
+        p.getErrorStream().close();
         while (p.isAlive()) {
             Thread.sleep(1);
         }
