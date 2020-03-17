@@ -36,10 +36,10 @@ public class SearchBar {
     private int labelCount = 0;
     private JTextField textField;
     private Search search = Search.getInstance();
-    private Color labelColor = new Color(255, 152, 104, 255);
-    private Color backgroundColor = new Color(108, 108, 108, 255);
-    private Color backgroundColorLight = new Color(75, 75, 75, 255);
-    private Color fontColorWithCoverage = new Color(0x1C0EFF);
+    private Color labelColor;
+    private Color backgroundColor;
+    private Color backgroundColorLight;
+    private Color fontColorWithCoverage;
     private long startTime = 0;
     private boolean timer = false;
     private Thread searchWaiter = null;
@@ -64,6 +64,11 @@ public class SearchBar {
         int searchBarHeight = (int) (height * 0.5);
         int positionX = width / 2 - searchBarWidth / 2;
         int positionY = height / 2 - searchBarHeight / 2;
+
+        labelColor = new Color(SettingsFrame.labelColor);
+        fontColorWithCoverage = new Color(SettingsFrame.fontColorWithCoverage);
+        backgroundColorLight = new Color(SettingsFrame.backgroundColorLight);
+        backgroundColor = new Color(SettingsFrame.backgroundColor);
 
         //frame
         searchBar.setBounds(positionX, positionY, searchBarWidth, searchBarHeight);
@@ -1538,8 +1543,7 @@ public class SearchBar {
                         position = 3;
                     }
                     int mousePosition = 0;
-                    if (labelPosition <= e.getY() && e.getY() < labelPosition2) {
-                    } else if (labelPosition2 <= e.getY() && e.getY() < labelPosition3) {
+                    if (labelPosition2 <= e.getY() && e.getY() < labelPosition3) {
                         mousePosition = 1;
                     } else if (labelPosition3 <= e.getY() && e.getY() < labelPosition4) {
                         mousePosition = 2;
@@ -2992,6 +2996,22 @@ public class SearchBar {
     private boolean isDirectory(String text) {
         File file = new File(text);
         return file.isDirectory();
+    }
+
+    public void setFontColorWithCoverage(int colorNum) {
+        fontColorWithCoverage = new Color(colorNum);
+    }
+
+    public void setBackgroundColor(int colorNum) {
+        backgroundColor = new Color(colorNum);
+    }
+
+    public void setBackgroundColorLight(int colorNum) {
+        backgroundColorLight = new Color(colorNum);
+    }
+
+    public void setLabelColor(int colorNum) {
+        labelColor = new Color(colorNum);
     }
 }
 

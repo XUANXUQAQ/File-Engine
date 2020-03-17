@@ -214,6 +214,10 @@ public class MainClass {
             json.put("runAsAdminKeyCode", 16);
             json.put("copyPathKeyCode", 18);
             json.put("transparency", 0.8f);
+            json.put("labelColor", 0xFF9868);
+            json.put("backgroundColor", 0x6C6C6C);
+            json.put("backgroundColorLight", 0x4B4B4B);
+            json.put("fontColorWithCoverage", 0x1C0EFF);
             try (BufferedWriter buffW = new BufferedWriter(new FileWriter(settings))) {
                 buffW.write(json.toJSONString());
             } catch (IOException ignored) {
