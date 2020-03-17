@@ -22,7 +22,7 @@ public class moveFiles {
                 }
             }
         }
-        if (dir.getAbsolutePath().equals(origin)) {
+        if (dir.getAbsolutePath().equals(origin) || dir.getName().equals("desktop.ini")) {
             return true;
         } else {
             return dir.delete();
@@ -39,28 +39,30 @@ public class moveFiles {
             File temp;
             assert file != null;
             for (String s : file) {
-                // 如果oldPath以路径分隔符/或者\结尾，那么则oldPath/文件名就可以了
-                if (oldPath.endsWith(File.separator)) {
-                    temp = new File(oldPath + s);
-                } else {
-                    temp = new File(oldPath + File.separator + s);
-                }
-
-                if (temp.isFile()) {
-                    FileInputStream input = new FileInputStream(temp);
-                    FileOutputStream output = new FileOutputStream(newPath
-                            + "/" + (temp.getName()));
-                    byte[] bufferarray = new byte[1024 * 64];
-                    int prereadlength;
-                    while ((prereadlength = input.read(bufferarray)) != -1) {
-                        output.write(bufferarray, 0, prereadlength);
+                if (!s.endsWith("desktop.ini")) {
+                    // 如果oldPath以路径分隔符/或者\结尾，那么则oldPath/文件名就可以了
+                    if (oldPath.endsWith(File.separator)) {
+                        temp = new File(oldPath + s);
+                    } else {
+                        temp = new File(oldPath + File.separator + s);
                     }
-                    output.flush();
-                    output.close();
-                    input.close();
-                }
-                if (temp.isDirectory()) {
-                    copyFolder(oldPath + "/" + s, newPath + "/" + s);
+
+                    if (temp.isFile()) {
+                        FileInputStream input = new FileInputStream(temp);
+                        FileOutputStream output = new FileOutputStream(newPath
+                                + "/" + (temp.getName()));
+                        byte[] bufferarray = new byte[1024 * 64];
+                        int prereadlength;
+                        while ((prereadlength = input.read(bufferarray)) != -1) {
+                            output.write(bufferarray, 0, prereadlength);
+                        }
+                        output.flush();
+                        output.close();
+                        input.close();
+                    }
+                    if (temp.isDirectory()) {
+                        copyFolder(oldPath + "/" + s, newPath + "/" + s);
+                    }
                 }
             }
         } catch (Exception e) {
