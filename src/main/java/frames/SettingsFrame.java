@@ -42,6 +42,10 @@ public class SettingsFrame {
     private static int _openLastFolderKeyCode;
     private static int _runAsAdminKeyCode;
     private static CheckHotKey HotKeyListener;
+    public static int labelColor;
+    public static int backgroundColor;
+    public static int backgroundColorLight;
+    public static int fontColorWithCoverage;
     private JTextField textFieldUpdateTime;
     private JTextField textFieldCacheNum;
     private JTextArea textAreaIgnorePath;
@@ -114,6 +118,21 @@ public class SettingsFrame {
     private JTextField textFieldTransparency;
     private JLabel labelTransparency;
     private JLabel labelPlaceHolder5;
+    private JPanel tab7;
+    private JLabel labelColorTip;
+    private JTextField textFieldBackgroundColorLight;
+    private JTextField textFieldBackground;
+    private JTextField textFieldFontColorWithCoverage;
+    private JTextField textFieldLabelColor;
+    private JLabel labelLabelColor;
+    private JLabel labelFontColor;
+    private JLabel labelBackgroundColor;
+    private JLabel labelLightColor;
+    private JLabel labelSharp1;
+    private JLabel labelSharp2;
+    private JLabel labelSharp3;
+    private JLabel labelSharp4;
+    private JButton buttonResetColor;
     private static boolean isStartup;
     private Unzip unzipInstance = Unzip.getInstance();
     private Thread updateThread = null;
@@ -302,6 +321,10 @@ public class SettingsFrame {
             isDefaultAdmin = settings.getBoolean("isDefaultAdmin");
             checkBoxAdmin.setSelected(isDefaultAdmin);
             isLoseFocusClose = settings.getBoolean("isLoseFocusClose");
+            textFieldBackground.setText(Integer.toHexString(backgroundColor));
+            textFieldBackgroundColorLight.setText(Integer.toHexString(backgroundColorLight));
+            textFieldLabelColor.setText(Integer.toHexString(labelColor));
+            textFieldFontColorWithCoverage.setText(Integer.toHexString(fontColorWithCoverage));
             checkBoxLoseFocus.setSelected(isLoseFocusClose);
             runAsAdminKeyCode = settings.getInteger("runAsAdminKeyCode");
             openLastFolderKeyCode = settings.getInteger("openLastFolderKeyCode");
@@ -452,6 +475,16 @@ public class SettingsFrame {
                 }
             }
         });
+        buttonResetColor.addActionListener(e -> {
+            backgroundColor = 0x6C6C6C;
+            backgroundColorLight = 0x4B4B4B;
+            labelColor = 0xFF9868;
+            fontColorWithCoverage = 0x1C0EFF;
+            textFieldFontColorWithCoverage.setText(Integer.toHexString(fontColorWithCoverage));
+            textFieldLabelColor.setText(Integer.toHexString(labelColor));
+            textFieldBackgroundColorLight.setText(Integer.toHexString(backgroundColorLight));
+            textFieldBackground.setText(Integer.toHexString(backgroundColor));
+        });
     }
 
     private boolean isRepeatCommand(String name) {
@@ -571,6 +604,26 @@ public class SettingsFrame {
             } else {
                 transparency = 0.8f;
             }
+            if (settings.containsKey("backgroundColor")) {
+                backgroundColor = settings.getInteger("backgroundColor");
+            } else {
+                backgroundColor = 0x6C6C6C;
+            }
+            if (settings.containsKey("backgroundColorLight")) {
+                backgroundColorLight = settings.getInteger("backgroundColorLight");
+            } else {
+                backgroundColorLight = 0x4B4B4B;
+            }
+            if (settings.containsKey("fontColorWithCoverage")) {
+                fontColorWithCoverage = settings.getInteger("fontColorWithCoverage");
+            } else {
+                fontColorWithCoverage = 0x1C0EFF;
+            }
+            if (settings.containsKey("labelColor")) {
+                labelColor = settings.getInteger("labelColor");
+            } else {
+                labelColor = 0xFF9868;
+            }
         } catch (NullPointerException | IOException ignored) {
 
         }
@@ -597,7 +650,7 @@ public class SettingsFrame {
         }
 
         //获取所有自定义命令
-        try (BufferedReader br = new BufferedReader(new FileReader(new File("./user/cmds.txt")))) {
+        try (BufferedReader br = new BufferedReader(new FileReader(new File("user/cmds.txt")))) {
             String each;
             while ((each = br.readLine()) != null) {
                 cmdSet.add(each);
@@ -746,6 +799,47 @@ public class SettingsFrame {
             copyPathKeyCode = _copyPathKeyCode;
         }
 
+        int _labelColor;
+        try {
+            _labelColor = Integer.parseInt(textFieldLabelColor.getText(), 16);
+        } catch (Exception e) {
+            _labelColor = -1;
+        }
+        if (_labelColor < 0) {
+            JOptionPane.showMessageDialog(null, "选中框颜色设置错误");
+            return;
+        }
+        int _fontColorWithCoverage;
+        try {
+            _fontColorWithCoverage = Integer.parseInt(textFieldFontColorWithCoverage.getText(), 16);
+        } catch (Exception e) {
+            _fontColorWithCoverage = -1;
+        }
+        if (_fontColorWithCoverage < 0) {
+            JOptionPane.showMessageDialog(null, "选中框字体颜色设置错误");
+            return;
+        }
+        int _backgroundColor;
+        try {
+            _backgroundColor = Integer.parseInt(textFieldBackground.getText(), 16);
+        } catch (Exception e) {
+            _backgroundColor = -1;
+        }
+        if (_backgroundColor < 0) {
+            JOptionPane.showMessageDialog(null, "2、4框默认颜色设置错误");
+            return;
+        }
+        int _backgroundColorLight;
+        try {
+            _backgroundColorLight = Integer.parseInt(textFieldBackgroundColorLight.getText(), 16);
+        } catch (Exception e) {
+            _backgroundColorLight = -1;
+        }
+        if (_backgroundColorLight < 0) {
+            JOptionPane.showMessageDialog(null, "1、3框默认颜色设置错误");
+            return;
+        }
+
         priorityFolder = textFieldPriorityFolder.getText();
         dataPath = textFieldDataPath.getText();
         hotkey = textFieldHotkey.getText();
@@ -756,6 +850,15 @@ public class SettingsFrame {
         searchDepth = searchDepthTemp;
         transparency = transparencyTemp;
         SearchBar.getInstance().setTransparency(transparency);
+        labelColor = _labelColor;
+        backgroundColorLight = _backgroundColorLight;
+        backgroundColor = _backgroundColor;
+        fontColorWithCoverage = _fontColorWithCoverage;
+        SearchBar instance = SearchBar.getInstance();
+        instance.setBackgroundColor(backgroundColor);
+        instance.setBackgroundColorLight(backgroundColorLight);
+        instance.setLabelColor(labelColor);
+        instance.setFontColorWithCoverage(fontColorWithCoverage);
 
         allSettings.put("hotkey", hotkey);
         allSettings.put("isStartup", isStartup);
@@ -771,6 +874,10 @@ public class SettingsFrame {
         allSettings.put("openLastFolderKeyCode", openLastFolderKeyCode);
         allSettings.put("copyPathKeyCode", copyPathKeyCode);
         allSettings.put("transparency", transparency);
+        allSettings.put("labelColor", labelColor);
+        allSettings.put("backgroundColor", backgroundColor);
+        allSettings.put("backgroundColorLight", backgroundColorLight);
+        allSettings.put("fontColorWithCoverage", fontColorWithCoverage);
         try (BufferedWriter buffW = new BufferedWriter(new FileWriter(settings))) {
             buffW.write(allSettings.toJSONString());
             JOptionPane.showMessageDialog(null, "保存成功");
