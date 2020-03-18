@@ -643,6 +643,10 @@ public class SettingsFrame {
         allSettings.put("openLastFolderKeyCode", openLastFolderKeyCode);
         allSettings.put("copyPathKeyCode", copyPathKeyCode);
         allSettings.put("transparency", transparency);
+        allSettings.put("labelColor", labelColor);
+        allSettings.put("backgroundColor", backgroundColor);
+        allSettings.put("backgroundColorLight", backgroundColorLight);
+        allSettings.put("fontColorWithCoverage", fontColorWithCoverage);
         try (BufferedWriter buffW = new BufferedWriter(new FileWriter(settings))) {
             buffW.write(allSettings.toJSONString());
         } catch (IOException ignored) {
