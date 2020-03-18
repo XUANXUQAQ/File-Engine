@@ -20,9 +20,9 @@ A tool can make you work more efficiently.
 ## 使用
 请下载系统对应位数的程序，否则可能会出现错误。
 
-[下载最新稳定版64位](https://github.com/XUANXUQAQ/File-Engine/releases/download/1.6/File-Engine-x64.V1.6.rar)
+[下载最新稳定版64位](https://github.com/XUANXUQAQ/File-Engine/releases/download/1.7/File-Engine-x64.V1.6.rar)
 
-[下载最新稳定版32位](https://github.com/XUANXUQAQ/File-Engine/releases/download/1.6/File-Engine-x86.V1.6.rar)
+[下载最新稳定版32位](https://github.com/XUANXUQAQ/File-Engine/releases/download/1.7/File-Engine-x86.V1.6.rar)
 
 [下载最新测试版64位](https://github.com/XUANXUQAQ/File-Engine/releases/download/1.7-pre2/File-Engine-x64.V1.7.rar)
 
