@@ -8,6 +8,7 @@ import main.MainClass;
 import search.Search;
 
 import javax.swing.*;
+import javax.swing.border.Border;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.*;
@@ -65,6 +66,8 @@ public class SearchBar {
         int searchBarHeight = (int) (height * 0.5);
         int positionX = width / 2 - searchBarWidth / 2;
         int positionY = height / 2 - searchBarHeight / 2;
+
+        Border border = BorderFactory.createLineBorder(new Color(73, 162, 255, 255));
 
         labelColor = new Color(SettingsFrame.labelColor);
         fontColorWithCoverage = new Color(SettingsFrame.fontColorWithCoverage);
@@ -132,7 +135,7 @@ public class SearchBar {
         textField.setSize(searchBarWidth - 6, (int) (searchBarHeight * 0.2) - 5);
         Font textFieldFont = new Font("Microsoft JhengHei", Font.PLAIN, (int) (((height * 0.1) / 96 * 72 / 1.2)));
         textField.setFont(textFieldFont);
-        textField.setBorder(BorderFactory.createLineBorder(new Color(73, 162, 255, 255)));
+        textField.setBorder(border);
         textField.setForeground(Color.BLACK);
         textField.setHorizontalAlignment(JTextField.LEFT);
         textField.setBackground(Color.WHITE);
@@ -162,7 +165,40 @@ public class SearchBar {
         panel.add(label4);
 
 
-        ExecutorService fixedThreadPool = Executors.newFixedThreadPool(6);
+        ExecutorService fixedThreadPool = Executors.newFixedThreadPool(7);
+
+        fixedThreadPool.execute(() -> {
+            //设置边框
+            while (!mainExit) {
+                int size = listResult.size();
+                try {
+                    if (size == 1) {
+                        label1.setBorder(border);
+                        label2.setBorder(null);
+                        label3.setBorder(null);
+                        label4.setBorder(null);
+                    } else if (size == 2) {
+                        label1.setBorder(border);
+                        label2.setBorder(border);
+                        label3.setBorder(null);
+                        label4.setBorder(null);
+                    } else if (size == 3) {
+                        label1.setBorder(border);
+                        label2.setBorder(border);
+                        label3.setBorder(border);
+                        label4.setBorder(null);
+                    } else if (size > 3) {
+                        label1.setBorder(border);
+                        label2.setBorder(border);
+                        label3.setBorder(border);
+                        label4.setBorder(border);
+                    }
+                    Thread.sleep(5);
+                } catch (NullPointerException | InterruptedException ignored) {
+
+                }
+            }
+        });
 
         fixedThreadPool.execute(() -> {
             //锁住MouseMotion检测，阻止同时发出两个动作
@@ -193,6 +229,7 @@ public class SearchBar {
         fixedThreadPool.execute(() -> {
             try {
                 while (!mainExit) {
+                    //字体染色线程
                     //判定当前选定位置
                     int position;
                     if (label1.getBackground() == labelColor) {
@@ -2589,6 +2626,10 @@ public class SearchBar {
 
 
     private void clearLabel() {
+        label1.setBorder(null);
+        label2.setBorder(null);
+        label3.setBorder(null);
+        label4.setBorder(null);
         label1.setIcon(null);
         label2.setIcon(null);
         label3.setIcon(null);
