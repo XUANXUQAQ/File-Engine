@@ -19,7 +19,7 @@ import java.util.concurrent.Executors;
 
 
 public class MainClass {
-    public static final String version = "1.7"; //TODO 更改版本号
+    public static final String version = "1.8"; //TODO 更改版本号
     public static boolean mainExit = false;
     public static String name;
     private static Search search = Search.getInstance();
@@ -218,6 +218,7 @@ public class MainClass {
             json.put("backgroundColor", 0x6C6C6C);
             json.put("backgroundColorLight", 0x4B4B4B);
             json.put("fontColorWithCoverage", 0x1C0EFF);
+            json.put("fontColor", 0xC5C5C5);
             try (BufferedWriter buffW = new BufferedWriter(new FileWriter(settings))) {
                 buffW.write(json.toJSONString());
             } catch (IOException ignored) {
