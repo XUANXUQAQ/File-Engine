@@ -40,6 +40,7 @@ public class SearchBar {
     private Color backgroundColor;
     private Color backgroundColorLight;
     private Color fontColorWithCoverage;
+    private Color fontColor;
     private long startTime = 0;
     private boolean timer = false;
     private Thread searchWaiter = null;
@@ -69,6 +70,7 @@ public class SearchBar {
         fontColorWithCoverage = new Color(SettingsFrame.fontColorWithCoverage);
         backgroundColorLight = new Color(SettingsFrame.backgroundColorLight);
         backgroundColor = new Color(SettingsFrame.backgroundColor);
+        fontColor = new Color(SettingsFrame.fontColor);
 
         //frame
         searchBar.setBounds(positionX, positionY, searchBarWidth, searchBarHeight);
@@ -83,7 +85,6 @@ public class SearchBar {
 
         //labels
         Font font = new Font("Microsoft JhengHei", Font.BOLD, (int) ((height * 0.1) / 96 * 72) / 4);
-        Color fontColor = new Color(197, 197, 197, 255);
         label1 = new JLabel();
         label1.setSize(searchBarWidth, (int) (searchBarHeight * 0.2));
         label1.setLocation(0, (int) (searchBarHeight * 0.2));
@@ -2294,7 +2295,7 @@ public class SearchBar {
         //为label添加结果
         ExecutorService threadPool = Executors.newFixedThreadPool(2);
         ConcurrentLinkedQueue<String> taskQueue = new ConcurrentLinkedQueue<>(paths);
-        for (int i = 0; i < 2; i++) {
+        for (int i = 0; i < 4; i++) {
             threadPool.execute(() -> {
                 String path;
                 String each;
@@ -3012,6 +3013,10 @@ public class SearchBar {
 
     public void setLabelColor(int colorNum) {
         labelColor = new Color(colorNum);
+    }
+
+    public void setFontColor(int colorNum) {
+        fontColor = new Color(colorNum);
     }
 }
 
