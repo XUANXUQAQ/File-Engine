@@ -183,7 +183,7 @@ public class SearchBar {
             try {
                 while (!mainExit) {
                     panel.repaint();
-                    Thread.sleep(100);
+                    Thread.sleep(10);
                 }
             } catch (Exception ignored) {
 
@@ -195,11 +195,11 @@ public class SearchBar {
                 while (!mainExit) {
                     //判定当前选定位置
                     int position;
-                    if (label1.getBackground().equals(labelColor)) {
+                    if (label1.getBackground() == labelColor) {
                         position = 0;
-                    } else if (label2.getBackground().equals(labelColor)) {
+                    } else if (label2.getBackground() == labelColor) {
                         position = 1;
-                    } else if (label3.getBackground().equals(labelColor)) {
+                    } else if (label3.getBackground() == labelColor) {
                         position = 2;
                     } else {
                         position = 3;
@@ -1022,11 +1022,11 @@ public class SearchBar {
                         //判定当前选定位置
                         int position;
                         try {
-                            if (label1.getBackground().equals(labelColor)) {
+                            if (label1.getBackground() == labelColor) {
                                 position = 0;
-                            } else if (label2.getBackground().equals(labelColor)) {
+                            } else if (label2.getBackground() == labelColor) {
                                 position = 1;
-                            } else if (label3.getBackground().equals(labelColor)) {
+                            } else if (label3.getBackground() == labelColor) {
                                 position = 2;
                             } else {
                                 position = 3;
@@ -1265,11 +1265,11 @@ public class SearchBar {
                     //判定当前选定位置
                     int position;
                     try {
-                        if (label1.getBackground().equals(labelColor)) {
+                        if (label1.getBackground() == labelColor) {
                             position = 0;
-                        } else if (label2.getBackground().equals(labelColor)) {
+                        } else if (label2.getBackground() == labelColor) {
                             position = 1;
-                        } else if (label3.getBackground().equals(labelColor)) {
+                        } else if (label3.getBackground() == labelColor) {
                             position = 2;
                         } else {
                             position = 3;
@@ -1534,11 +1534,11 @@ public class SearchBar {
                 //判定当前位置
                 if (!isLockMouseMotion) {
                     int position;
-                    if (label1.getBackground().equals(labelColor)) {
+                    if (label1.getBackground() == labelColor) {
                         position = 0;
-                    } else if (label2.getBackground().equals(labelColor)) {
+                    } else if (label2.getBackground() == labelColor) {
                         position = 1;
-                    } else if (label3.getBackground().equals(labelColor)) {
+                    } else if (label3.getBackground() == labelColor) {
                         position = 2;
                     } else {
                         position = 3;
@@ -1674,11 +1674,11 @@ public class SearchBar {
                                 //判定当前选定位置
                                 int position;
                                 try {
-                                    if (label1.getBackground().equals(labelColor)) {
+                                    if (label1.getBackground() == labelColor) {
                                         position = 0;
-                                    } else if (label2.getBackground().equals(labelColor)) {
+                                    } else if (label2.getBackground() == labelColor) {
                                         position = 1;
-                                    } else if (label3.getBackground().equals(labelColor)) {
+                                    } else if (label3.getBackground() == labelColor) {
                                         position = 2;
                                     } else {
                                         position = 3;
@@ -1982,11 +1982,11 @@ public class SearchBar {
                                     //判定当前选定位置
                                     int position;
                                     try {
-                                        if (label1.getBackground().equals(labelColor)) {
+                                        if (label1.getBackground() == labelColor) {
                                             position = 0;
-                                        } else if (label2.getBackground().equals(labelColor)) {
+                                        } else if (label2.getBackground() == labelColor) {
                                             position = 1;
-                                        } else if (label3.getBackground().equals(labelColor)) {
+                                        } else if (label3.getBackground() == labelColor) {
                                             position = 2;
                                         } else {
                                             position = 3;
