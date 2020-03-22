@@ -2330,7 +2330,7 @@ public class SearchBar {
 
     private void addResult(LinkedHashSet<String> paths, String searchText, long time, String searchCase) {
         //为label添加结果
-        ExecutorService threadPool = Executors.newFixedThreadPool(2);
+        ExecutorService threadPool = Executors.newFixedThreadPool(4);
         ConcurrentLinkedQueue<String> taskQueue = new ConcurrentLinkedQueue<>(paths);
         for (int i = 0; i < 4; i++) {
             threadPool.execute(() -> {
