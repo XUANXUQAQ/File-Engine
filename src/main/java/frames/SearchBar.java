@@ -2452,12 +2452,14 @@ public class SearchBar {
     }
 
     public void showSearchbar() {
-        searchBar.setVisible(true);
-        searchBar.requestFocusInWindow();
-        searchBar.setAlwaysOnTop(true);
-        textField.setCaretPosition(0);
-        textField.requestFocusInWindow();
-        isUsing = true;
+        if (!searchBar.isVisible()) {
+            searchBar.setVisible(true);
+            searchBar.requestFocusInWindow();
+            searchBar.setAlwaysOnTop(true);
+            textField.setCaretPosition(0);
+            textField.requestFocusInWindow();
+            isUsing = true;
+        }
     }
 
     private void showResults() {
@@ -3002,11 +3004,8 @@ public class SearchBar {
     }
 
     public void closedTodo() {
-        Runnable todo = () -> {
-            if (searchBar.isVisible()) {
-                searchBar.setVisible(false);
-            }
-            CheckHotKey.getInstance().setShowSearchBar(false);
+        if (searchBar.isVisible()) {
+            searchBar.setVisible(false);
             clearLabel();
             startTime = System.currentTimeMillis();//½áÊøËÑË÷
             isUsing = false;
@@ -3021,8 +3020,11 @@ public class SearchBar {
             } catch (NullPointerException ignored) {
 
             }
-        };
-        SwingUtilities.invokeLater(todo);
+        }
+    }
+
+    public boolean isVisible() {
+        return searchBar.isVisible();
     }
 
     private String getParentPath(String path) {
