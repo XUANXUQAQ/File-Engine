@@ -3,7 +3,6 @@ package frames;
 
 import getAscII.GetAscII;
 import getIcon.GetIcon;
-import hotkeyListener.CheckHotKey;
 import main.MainClass;
 import search.Search;
 
