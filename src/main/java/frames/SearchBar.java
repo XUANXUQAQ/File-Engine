@@ -3003,23 +3003,26 @@ public class SearchBar {
     }
 
     public void closedTodo() {
-        if (searchBar.isVisible()) {
-            searchBar.setVisible(false);
-            clearLabel();
-            startTime = System.currentTimeMillis();//½áÊøËÑË÷
-            isUsing = false;
-            labelCount = 0;
-            listResult.clear();
-            textField.setText(null);
-            isOpenLastFolderPressed = false;
-            isRunAsAdminPressed = false;
-            isCopyPathPressed = false;
-            try {
-                searchWaiter.interrupt();
-            } catch (NullPointerException ignored) {
+        Runnable todo = () -> {
+            if (searchBar.isVisible()) {
+                searchBar.setVisible(false);
+                clearLabel();
+                startTime = System.currentTimeMillis();//½áÊøËÑË÷
+                isUsing = false;
+                labelCount = 0;
+                listResult.clear();
+                textField.setText(null);
+                isOpenLastFolderPressed = false;
+                isRunAsAdminPressed = false;
+                isCopyPathPressed = false;
+                try {
+                    searchWaiter.interrupt();
+                } catch (NullPointerException ignored) {
 
+                }
             }
-        }
+        };
+        SwingUtilities.invokeLater(todo);
     }
 
     public boolean isVisible() {
