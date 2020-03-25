@@ -30,12 +30,28 @@ public class Search {
     }
 
     private static void writeRecordToFile(String record, String srcPath) {
-        try (BufferedWriter bw = new BufferedWriter(new FileWriter(srcPath, true))) {
-            bw.write(record);
-            bw.write("\n");
+        if (!isContained(record, srcPath)) {
+            try (BufferedWriter bw = new BufferedWriter(new FileWriter(srcPath, true))) {
+                bw.write(record);
+                bw.write("\n");
+            } catch (IOException ignored) {
+
+            }
+        }
+    }
+
+    private static boolean isContained(String record, String filePath) {
+        try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
+            String eachLine;
+            while ((eachLine = br.readLine()) != null) {
+                if (eachLine.equals(record)) {
+                    return true;
+                }
+            }
         } catch (IOException ignored) {
 
         }
+        return false;
     }
 
     public int getRecycleBinSize() {
@@ -79,7 +95,7 @@ public class Search {
                 for (String i : RecycleBin) {
                     SearchBar instance = SearchBar.getInstance();
                     int ascII = instance.getAscIISum(instance.getFileName(i));
-                    if (0 < ascII && ascII < 100) {
+                    if (0 <= ascII && ascII <= 100) {
                         set0.add(i);
                     } else if (100 < ascII && ascII <= 200) {
                         set100.add(i);
