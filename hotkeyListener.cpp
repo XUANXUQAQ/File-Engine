@@ -10,11 +10,11 @@ extern "C" __declspec(dllexport) void startListen();
 extern "C" __declspec(dllexport) void stopListen();
 bool isExist(const char *FileName);
 
-bool isKeyPressed = false;
-bool isStop = false;
-int hotkey1;
-int hotkey2;
-int hotkey3;
+static bool isKeyPressed = false;
+static bool isStop = false;
+static int hotkey1;
+static int hotkey2;
+static int hotkey3;
 
 void stopListen()
 {

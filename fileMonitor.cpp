@@ -140,7 +140,18 @@ __declspec(dllexport) void monitor(char* path, char* output, char* closePosition
 
                     
                     case FILE_ACTION_MODIFIED:
-                        //cout << "file modified : " << setw(5) << file_name << endl;
+                        if (strstr(file_name, "$RECYCLE.BIN")==NULL && strstr(file_name, "fileAdded.txt") == NULL && strstr(file_name, "fileRemoved.txt") == NULL){                            
+                            //cout << "file add : " << file_name << endl; 
+                            cout << "file add : ";       
+                            string data;
+                            data.append(path);
+                            data.append(file_name);                     
+                            cout << data << endl;
+							ofstream outfile;
+                            outfile.open(fileAdded, ios::app);
+                            outfile << data << endl;
+                            outfile.close();
+                        }
                         break;
                     
 

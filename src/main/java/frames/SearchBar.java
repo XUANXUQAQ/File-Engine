@@ -55,6 +55,7 @@ public class SearchBar {
     private long mouseWheelTime = 0;
     private boolean isCopyPathPressed = false;
     private int iconSideLength;
+    private long visibleStartTime = 0;
 
 
     private SearchBar() {
@@ -148,8 +149,10 @@ public class SearchBar {
 
             @Override
             public void focusLost(FocusEvent e) {
-                if (SettingsFrame.isLoseFocusClose) {
-                    closedTodo();
+                if (System.currentTimeMillis() - visibleStartTime > 500) {
+                    if (SettingsFrame.isLoseFocusClose) {
+                        closedTodo();
+                    }
                 }
             }
         });
@@ -2458,6 +2461,7 @@ public class SearchBar {
             textField.setCaretPosition(0);
             textField.requestFocusInWindow();
             isUsing = true;
+            visibleStartTime = System.currentTimeMillis();
         }
     }
 
