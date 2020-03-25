@@ -2843,27 +2843,27 @@ public class SearchBar {
                                 if (!listResult.contains(eachCache)) {
                                     boolean fullMatched = eachCacheName.toLowerCase().equals(text.toLowerCase());
                                     switch (searchCase) {
-                                        case "F":
+                                        case "f":
                                             if (isFile(eachCache)) {
                                                 listResult.add(eachCache);
                                             }
                                             break;
-                                        case "D":
+                                        case "d":
                                             if (isDirectory(eachCache)) {
                                                 listResult.add(eachCache);
                                             }
                                             break;
-                                        case "FULL":
+                                        case "full":
                                             if (fullMatched) {
                                                 listResult.add(eachCache);
                                             }
                                             break;
-                                        case "DFULL":
+                                        case "dfull":
                                             if (fullMatched && isDirectory(eachCache)) {
                                                 listResult.add(eachCache);
                                             }
                                             break;
-                                        case "FFULL":
+                                        case "ffull":
                                             if (fullMatched && isFile(eachCache)) {
                                                 listResult.add(eachCache);
                                             }
@@ -2921,27 +2921,27 @@ public class SearchBar {
                 for (File each : files) {
                     if (isMatched(getFileName(each.getAbsolutePath()), text)) {
                         switch (searchCase) {
-                            case "F":
+                            case "f":
                                 if (each.isFile()) {
                                     listResult.add(0, each.getAbsolutePath());
                                 }
                                 break;
-                            case "D":
+                            case "d":
                                 if (each.isDirectory()) {
                                     listResult.add(0, each.getAbsolutePath());
                                 }
                                 break;
-                            case "FULL":
+                            case "full":
                                 if (each.getName().equals(text)) {
                                     listResult.add(0, each.getAbsolutePath());
                                 }
                                 break;
-                            case "DFULL":
+                            case "dfull":
                                 if (each.getName().equals(text) && each.isDirectory()) {
                                     listResult.add(0, each.getAbsolutePath());
                                 }
                                 break;
-                            case "FFULL":
+                            case "ffull":
                                 if (each.getName().equals(text) && each.isFile()) {
                                     listResult.add(0, each.getAbsolutePath());
                                 }
