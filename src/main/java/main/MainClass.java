@@ -10,7 +10,6 @@ import search.Search;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileSystemView;
-import java.awt.*;
 import java.io.*;
 import java.util.Objects;
 import java.util.Scanner;
@@ -126,73 +125,32 @@ public class MainClass {
             for (File each : userFiles) {
                 if (each.getName().equals("update")) {
                     isUpdate = true;
+                    each.delete();
                     break;
                 }
             }
         }
-        //判断是否_File-Engine存在
+        //复制updater.exe
+        File updaterExe = new File("updater.exe");
         if (isUpdate) {
-            boolean isCopied = false;
-            String currentPath = System.getProperty("user.dir");
-            File[] files = new File(currentPath).listFiles();
-            assert files != null;
-            for (File i : files) {
-                if (i.getName().startsWith("_File-Engine")) {
-                    isCopied = true;
-                    new File("user/update").delete();
-                }
-            }
-            //更新第一阶段，_File-Engine复制新文件并启动
-            if (!isCopied) {
-                try {
-                    for (File each : Objects.requireNonNull(user.listFiles())) {
-                        String name = each.getName();
-                        if (name.equals("settings.json") || name.equals("cmds.txt") || name.equals("cache.dat")) {
-                            continue;
-                        }
-                        each.delete();
-                    }
-                    File originFile = new File(name);
-                    File updated = new File("_" + name);
-                    copyFile(new FileInputStream(originFile), updated);
-                    Desktop desktop;
-                    if (Desktop.isDesktopSupported()) {
-                        desktop = Desktop.getDesktop();
-                        //复制并重命名自己后退出，打开复制后的程序
-                        desktop.open(updated);
-                        System.exit(0);
-                    }
-                } catch (Exception ignored) {
-
-                }
+            InputStream updater;
+            if (name.contains("x64")) {
+                updater = MainClass.class.getResourceAsStream("/updater64.exe");
             } else {
-                try {
-                    copyFile(new FileInputStream(new File("tmp\\" + name)), new File(name));
-                    Desktop desktop;
-                    if (Desktop.isDesktopSupported()) {
-                        desktop = Desktop.getDesktop();
-                        //复制并重命名自己后退出，打开复制后的程序
-                        desktop.open(new File(name));
-                        System.exit(0);
-                    }
-                } catch (IOException ignored) {
+                updater = MainClass.class.getResourceAsStream("/updater86.exe");
+            }
+            copyFile(updater, updaterExe);
+            String absPath = updaterExe.getAbsolutePath();
+            String path = absPath.substring(0, 2) + "\"" + absPath.substring(2) + "\"";
+            String command = "cmd /c " + path + " " + "\"" + name + "\"";
+            try {
+                Runtime.getRuntime().exec(command);
+                System.exit(0);
+            } catch (Exception ignored) {
 
-                }
             }
         } else {
-            File pre = new File("_" + name);
-            if (pre.exists()) {
-                int count = 0;
-                while (count < 500) {
-                    count++;
-                    try {
-                        pre.delete();
-                        Thread.sleep(10);
-                    } catch (Exception ignored) {
-
-                    }
-                }
-            }
+            updaterExe.delete();
         }
 
         File settings = SettingsFrame.settings;
