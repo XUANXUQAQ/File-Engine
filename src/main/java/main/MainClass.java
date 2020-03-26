@@ -130,6 +130,7 @@ public class MainClass {
                 }
             }
         }
+        //判断是否_File-Engine存在
         if (isUpdate) {
             boolean isCopied = false;
             String currentPath = System.getProperty("user.dir");
@@ -141,6 +142,7 @@ public class MainClass {
                     new File("user/update").delete();
                 }
             }
+            //更新第一阶段，_File-Engine复制新文件并启动
             if (!isCopied) {
                 try {
                     for (File each : Objects.requireNonNull(user.listFiles())) {
