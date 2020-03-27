@@ -191,41 +191,38 @@ public class MainClass {
         MainClass.deleteDir(SettingsFrame.tmp.getAbsolutePath());
 
         File target;
-        InputStream fileSearcher64 = MainClass.class.getResourceAsStream("/fileSearcher64.exe");
-        InputStream fileSearcher86 = MainClass.class.getResourceAsStream("/fileSearcher86.exe");
-        InputStream fileMonitor64Dll = MainClass.class.getResourceAsStream("/win32-x86-64/fileMonitor64.dll");
-        InputStream fileMonitor86Dll = MainClass.class.getResourceAsStream("/win32-x86/fileMonitor86.dll");
-        InputStream getAscII64Dll = MainClass.class.getResourceAsStream("/win32-x86-64/getAscII64.dll");
-        InputStream getAscII86Dll = MainClass.class.getResourceAsStream("/win32-x86/getAscII86.dll");
-        InputStream hotkeyListener64Dll = MainClass.class.getResourceAsStream("/win32-x86-64/hotkeyListener64.dll");
-        InputStream hotkeyListener86Dll = MainClass.class.getResourceAsStream("/win32-x86/hotkeyListener86.dll");
-        InputStream shortcutGen = MainClass.class.getResourceAsStream("/shortcutGenerator.vbs");
 
         boolean is64Bit = name.contains("x64");
 
         target = new File("user/fileMonitor.dll");
         if (is64Bit) {
             if (!target.exists()) {
+                InputStream fileMonitor64Dll = MainClass.class.getResourceAsStream("/win32-x86-64/fileMonitor64.dll");
                 copyFile(fileMonitor64Dll, target);
             }
             target = new File("user/getAscII.dll");
             if (!target.exists()) {
+                InputStream getAscII64Dll = MainClass.class.getResourceAsStream("/win32-x86-64/getAscII64.dll");
                 copyFile(getAscII64Dll, target);
             }
             target = new File("user/hotkeyListener.dll");
             if (!target.exists()) {
+                InputStream hotkeyListener64Dll = MainClass.class.getResourceAsStream("/win32-x86-64/hotkeyListener64.dll");
                 copyFile(hotkeyListener64Dll, target);
             }
         } else {
             if (!target.exists()) {
+                InputStream fileMonitor86Dll = MainClass.class.getResourceAsStream("/win32-x86/fileMonitor86.dll");
                 copyFile(fileMonitor86Dll, target);
             }
             target = new File("user/getAscII.dll");
             if (!target.exists()) {
+                InputStream getAscII86Dll = MainClass.class.getResourceAsStream("/win32-x86/getAscII86.dll");
                 copyFile(getAscII86Dll, target);
             }
             target = new File("user/hotkeyListener.dll");
             if (!target.exists()) {
+                InputStream hotkeyListener86Dll = MainClass.class.getResourceAsStream("/win32-x86/hotkeyListener86.dll");
                 copyFile(hotkeyListener86Dll, target);
             }
         }
@@ -234,12 +231,12 @@ public class MainClass {
 
         target = new File("user/fileSearcher.exe");
         if (!target.exists()) {
+            InputStream fileSearcher64 = MainClass.class.getResourceAsStream("/fileSearcher64.exe");
+            InputStream fileSearcher86 = MainClass.class.getResourceAsStream("/fileSearcher86.exe");
             if (is64Bit) {
                 copyFile(fileSearcher64, target);
-                System.out.println("已加载64位fileSearcher");
             } else {
                 copyFile(fileSearcher86, target);
-                System.out.println("已加载32位fileSearcher");
             }
         }
         target = new File(SettingsFrame.dataPath);
@@ -248,8 +245,19 @@ public class MainClass {
         }
         target = new File("user/shortcutGenerator.vbs");
         if (!target.exists()) {
+            InputStream shortcutGen = MainClass.class.getResourceAsStream("/shortcutGenerator.vbs");
             copyFile(shortcutGen, target);
             System.out.println("已导出快捷方式生成器");
+        }
+        target = new File("user/restart.exe");
+        if (!target.exists()) {
+            InputStream restart64 = MainClass.class.getResourceAsStream("/restart64.exe");
+            InputStream restart86 = MainClass.class.getResourceAsStream("/restart86.exe");
+            if (is64Bit) {
+                copyFile(restart64, target);
+            } else {
+                copyFile(restart86, target);
+            }
         }
 
         if (!caches.exists()) {
@@ -413,7 +421,7 @@ public class MainClass {
                     CheckHotKey.getInstance().stopListen();
                     File CLOSEDLL = new File(SettingsFrame.tmp.getAbsolutePath() + "\\CLOSE");
                     CLOSEDLL.createNewFile();
-                    Thread.sleep(10000);
+                    Thread.sleep(8000);
                     fixedThreadPool.shutdown();
                     System.exit(0);
                 }
