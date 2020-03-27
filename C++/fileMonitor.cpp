@@ -210,7 +210,7 @@ __declspec(dllexport) void monitor(char* path, char* output, char* closePosition
 
 #ifdef TEST
 int main(){    
-    char monitorPath[]= "D:\\";
+    char monitorPath[]= "C:\\Users\\13927\\Desktop\\test";
     monitor(monitorPath, "D:\\Code\\C++", "D:\\Code\\C++\\CLOSE");
     return 0;
 }
