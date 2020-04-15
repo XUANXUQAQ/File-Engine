@@ -137,6 +137,11 @@ public class SettingsFrame {
     private JTextField textFieldFontColor;
     private JLabel labelSharp5;
     private JLabel labelFontColors;
+    private JLabel labelColorChooser;
+    private JLabel FontColorWithCoverageChooser;
+    private JLabel backgroundColorChooser;
+    private JLabel backgroundLightChooser;
+    private JLabel FontColorChooser;
     private static boolean isStartup;
     private Unzip unzipInstance = Unzip.getInstance();
     private Thread updateThread = null;
@@ -326,15 +331,30 @@ public class SettingsFrame {
             checkBoxAdmin.setSelected(isDefaultAdmin);
             isLoseFocusClose = settings.getBoolean("isLoseFocusClose");
             textFieldBackground.setText(Integer.toHexString(backgroundColor));
+            Color _backgroundColor = new Color(backgroundColor);
+            backgroundColorChooser.setBackground(_backgroundColor);
+            backgroundColorChooser.setForeground(_backgroundColor);
             textFieldBackgroundColorLight.setText(Integer.toHexString(backgroundColorLight));
+            Color _backgroundColorLight = new Color(backgroundColorLight);
+            backgroundLightChooser.setBackground(_backgroundColorLight);
+            backgroundLightChooser.setForeground(_backgroundColorLight);
             textFieldLabelColor.setText(Integer.toHexString(labelColor));
+            Color _labelColor = new Color(labelColor);
+            labelColorChooser.setBackground(_labelColor);
+            labelColorChooser.setForeground(_labelColor);
             textFieldFontColorWithCoverage.setText(Integer.toHexString(fontColorWithCoverage));
+            Color _fontColorWithCoverage = new Color(fontColorWithCoverage);
+            FontColorWithCoverageChooser.setBackground(_fontColorWithCoverage);
+            FontColorWithCoverageChooser.setForeground(_fontColorWithCoverage);
             checkBoxLoseFocus.setSelected(isLoseFocusClose);
             runAsAdminKeyCode = settings.getInteger("runAsAdminKeyCode");
             openLastFolderKeyCode = settings.getInteger("openLastFolderKeyCode");
             transparency = settings.getFloat("transparency");
             textFieldTransparency.setText(String.valueOf(transparency));
             textFieldFontColor.setText(Integer.toHexString(fontColor));
+            Color _fontColor = new Color(fontColor);
+            FontColorChooser.setBackground(_fontColor);
+            FontColorChooser.setForeground(_fontColor);
             if (runAsAdminKeyCode == 17) {
                 textFieldRunAsAdmin.setText("Ctrl + Enter");
             } else if (runAsAdminKeyCode == 16) {
@@ -486,6 +506,163 @@ public class SettingsFrame {
             textFieldBackgroundColorLight.setText(Integer.toHexString(0x4B4B4B));
             textFieldBackground.setText(Integer.toHexString(0x6C6C6C));
             textFieldFontColor.setText(Integer.toHexString(0xC5C5C5));
+        });
+
+
+        labelColorChooser.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                Color color = JColorChooser.showDialog(null, "选择颜色", null);
+                if (color == null) {
+                    return;
+                }
+                int r = color.getRed();
+                int g = color.getGreen();
+                int b = color.getBlue();
+                StringBuilder rgb = new StringBuilder();
+                if (r == 0) {
+                    rgb.append("00");
+                } else {
+                    rgb.append(Integer.toHexString(r));
+                }
+                if (g == 0) {
+                    rgb.append("00");
+                } else {
+                    rgb.append(Integer.toHexString(g));
+                }
+                if (b == 0) {
+                    rgb.append("00");
+                } else {
+                    rgb.append(Integer.toHexString(b));
+                }
+                textFieldLabelColor.setText(rgb.toString());
+                labelColorChooser.setBackground(color);
+                labelColorChooser.setForeground(color);
+            }
+        });
+        FontColorWithCoverageChooser.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                Color color = JColorChooser.showDialog(null, "选择颜色", null);
+                if (color == null) {
+                    return;
+                }
+                int r = color.getRed();
+                int g = color.getGreen();
+                int b = color.getBlue();
+                StringBuilder rgb = new StringBuilder();
+                if (r == 0) {
+                    rgb.append("00");
+                } else {
+                    rgb.append(Integer.toHexString(r));
+                }
+                if (g == 0) {
+                    rgb.append("00");
+                } else {
+                    rgb.append(Integer.toHexString(g));
+                }
+                if (b == 0) {
+                    rgb.append("00");
+                } else {
+                    rgb.append(Integer.toHexString(b));
+                }
+                textFieldFontColorWithCoverage.setText(rgb.toString());
+                FontColorWithCoverageChooser.setBackground(color);
+                FontColorWithCoverageChooser.setForeground(color);
+            }
+        });
+        backgroundColorChooser.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                Color color = JColorChooser.showDialog(null, "选择颜色", null);
+                if (color == null) {
+                    return;
+                }
+                int r = color.getRed();
+                int g = color.getGreen();
+                int b = color.getBlue();
+                StringBuilder rgb = new StringBuilder();
+                if (r == 0) {
+                    rgb.append("00");
+                } else {
+                    rgb.append(Integer.toHexString(r));
+                }
+                if (g == 0) {
+                    rgb.append("00");
+                } else {
+                    rgb.append(Integer.toHexString(g));
+                }
+                if (b == 0) {
+                    rgb.append("00");
+                } else {
+                    rgb.append(Integer.toHexString(b));
+                }
+                textFieldBackground.setText(rgb.toString());
+                backgroundColorChooser.setBackground(color);
+                backgroundColorChooser.setForeground(color);
+            }
+        });
+        backgroundLightChooser.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                Color color = JColorChooser.showDialog(null, "选择颜色", null);
+                if (color == null) {
+                    return;
+                }
+                int r = color.getRed();
+                int g = color.getGreen();
+                int b = color.getBlue();
+                StringBuilder rgb = new StringBuilder();
+                if (r == 0) {
+                    rgb.append("00");
+                } else {
+                    rgb.append(Integer.toHexString(r));
+                }
+                if (g == 0) {
+                    rgb.append("00");
+                } else {
+                    rgb.append(Integer.toHexString(g));
+                }
+                if (b == 0) {
+                    rgb.append("00");
+                } else {
+                    rgb.append(Integer.toHexString(b));
+                }
+                textFieldBackgroundColorLight.setText(rgb.toString());
+                backgroundLightChooser.setBackground(color);
+                backgroundLightChooser.setForeground(color);
+            }
+        });
+        FontColorChooser.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                Color color = JColorChooser.showDialog(null, "选择颜色", null);
+                if (color == null) {
+                    return;
+                }
+                int r = color.getRed();
+                int g = color.getGreen();
+                int b = color.getBlue();
+                StringBuilder rgb = new StringBuilder();
+                if (r == 0) {
+                    rgb.append("00");
+                } else {
+                    rgb.append(Integer.toHexString(r));
+                }
+                if (g == 0) {
+                    rgb.append("00");
+                } else {
+                    rgb.append(Integer.toHexString(g));
+                }
+                if (b == 0) {
+                    rgb.append("00");
+                } else {
+                    rgb.append(Integer.toHexString(b));
+                }
+                textFieldFontColor.setText(rgb.toString());
+                FontColorChooser.setBackground(color);
+                FontColorChooser.setForeground(color);
+            }
         });
     }
 
@@ -883,6 +1060,21 @@ public class SettingsFrame {
         instance.setLabelColor(labelColor);
         instance.setFontColorWithCoverage(fontColorWithCoverage);
         instance.setFontColor(fontColor);
+        Color _tmp = new Color(labelColor);
+        labelColorChooser.setBackground(_tmp);
+        labelColorChooser.setForeground(_tmp);
+        _tmp = new Color(backgroundColorLight);
+        backgroundLightChooser.setBackground(_tmp);
+        backgroundLightChooser.setForeground(_tmp);
+        _tmp = new Color(backgroundColor);
+        backgroundColorChooser.setForeground(_tmp);
+        backgroundColorChooser.setBackground(_tmp);
+        _tmp = new Color(fontColorWithCoverage);
+        FontColorWithCoverageChooser.setBackground(_tmp);
+        FontColorWithCoverageChooser.setForeground(_tmp);
+        _tmp = new Color(fontColor);
+        FontColorChooser.setBackground(_tmp);
+        FontColorChooser.setForeground(_tmp);
 
         allSettings.put("hotkey", hotkey);
         allSettings.put("isStartup", isStartup);
