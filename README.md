@@ -24,9 +24,9 @@ A tool can make you work more efficiently.
 
 [下载最新稳定版32位](https://github.com/XUANXUQAQ/File-Engine/releases/download/1.8/File-Engine-x86.V1.8.rar)
 
-[下载最新测试版64位](https://github.com/XUANXUQAQ/File-Engine/releases/download/1.8-pre/File-Engine-x64.V1.8.rar)
+[下载最新测试版64位](https://github.com/XUANXUQAQ/File-Engine/releases/download/1.9-pre/File-Engine-x64.V1.9.rar)
 
-[下载最新测试版32位](https://github.com/XUANXUQAQ/File-Engine/releases/download/1.8-pre/File-Engine-x86.V1.8.rar)
+[下载最新测试版32位](https://github.com/XUANXUQAQ/File-Engine/releases/download/1.9-pre/File-Engine-x86.V1.9.rar)
 1. 默认Ctrl + Alt + J 呼出搜索菜单，可以在设置中更改。
 
 2. 按下Ctrl + Enter可以打开对应文件所在的文件夹, Shift + Enter以管理员方式运行，Alt + Enter复制文件路径。
