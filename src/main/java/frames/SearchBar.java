@@ -2385,7 +2385,6 @@ public class SearchBar {
                         ReaderInfo readerInfo = readerMap.get(path);
                         if (readerInfo != null) {
                             BufferedReader reader = readerInfo.reader;
-                            reader.mark((int) getFileLength(path) + 1);
                             while ((each = reader.readLine()) != null) {
                                 if (startTime > time) { //用户重新输入了信息
                                     taskQueue.clear();
@@ -2478,11 +2477,17 @@ public class SearchBar {
                                     }
                                 }
                             }
-                            readerInfo.time = System.currentTimeMillis();
-                            reader.reset();
+                            reader.close();
+                            readerInfo = new ReaderInfo(System.currentTimeMillis(), new BufferedReader(new FileReader(path)));
+                            readerMap.put(path, readerInfo);
                         } else {
                             BufferedReader reader = new BufferedReader(new FileReader(path));
-                            reader.mark((int) getFileLength(path) + 1);
+                            boolean isClose = true;
+                            if (readerMap.size() < SettingsFrame.maxConnectionNum) {
+                                ReaderInfo _tmpInfo = new ReaderInfo(System.currentTimeMillis(), reader);
+                                readerMap.put(path, _tmpInfo);
+                                isClose = false;
+                            }
                             while ((each = reader.readLine()) != null) {
                                 if (startTime > time) { //用户重新输入了信息
                                     taskQueue.clear();
@@ -2575,11 +2580,7 @@ public class SearchBar {
                                     }
                                 }
                             }
-                            if (readerMap.size() < SettingsFrame.maxConnectionNum) {
-                                reader.reset();
-                                ReaderInfo _tmpInfo = new ReaderInfo(System.currentTimeMillis(), reader);
-                                readerMap.put(path, _tmpInfo);
-                            } else {
+                            if (isClose) {
                                 reader.close();
                             }
                         }
