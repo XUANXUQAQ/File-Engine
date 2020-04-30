@@ -43,10 +43,16 @@ public class SettingsFrame {
     private static int _runAsAdminKeyCode;
     private static CheckHotKey HotKeyListener;
     public static int labelColor;
-    public static int backgroundColor;
-    public static int backgroundColorLight;
+    public static int backgroundColor1;
+    public static int backgroundColor2;
+    public static int backgroundColor3;
+    public static int backgroundColor4;
     public static int fontColorWithCoverage;
     public static int fontColor;
+    public static int searchBarColor;
+    public static int maxConnectionNum;
+    public static int minConnectionNum;
+    public static int connectionTimeLimit;
     private JTextField textFieldUpdateTime;
     private JTextField textFieldCacheNum;
     private JTextArea textAreaIgnorePath;
@@ -121,14 +127,14 @@ public class SettingsFrame {
     private JLabel labelPlaceHolder5;
     private JPanel tab7;
     private JLabel labelColorTip;
-    private JTextField textFieldBackgroundColorLight;
-    private JTextField textFieldBackground;
+    private JTextField textFieldBackground1;
+    private JTextField textFieldBackground2;
     private JTextField textFieldFontColorWithCoverage;
     private JTextField textFieldLabelColor;
     private JLabel labelLabelColor;
     private JLabel labelFontColor;
-    private JLabel labelBackgroundColor;
-    private JLabel labelLightColor;
+    private JLabel label_2_Color;
+    private JLabel label_1_Color;
     private JLabel labelSharp1;
     private JLabel labelSharp2;
     private JLabel labelSharp3;
@@ -139,9 +145,32 @@ public class SettingsFrame {
     private JLabel labelFontColors;
     private JLabel labelColorChooser;
     private JLabel FontColorWithCoverageChooser;
-    private JLabel backgroundColorChooser;
-    private JLabel backgroundLightChooser;
+    private JLabel background2Chooser;
+    private JLabel background1Chooser;
     private JLabel FontColorChooser;
+    private JLabel label_3_Color;
+    private JLabel labelSharp6;
+    private JTextField textFieldBackground3;
+    private JLabel label_4_Color;
+    private JLabel labelSharp7;
+    private JTextField textFieldBackground4;
+    private JLabel background3Chooser;
+    private JLabel background4Chooser;
+    private JLabel labelSearchBarColor;
+    private JLabel labelSharp8;
+    private JTextField textFieldSearchBarColor;
+    private JLabel searchBarColorChooser;
+    private JPanel tab8;
+    private JLabel labelFileConnectionTip;
+    private JLabel labelMaxConnection;
+    private JLabel labelMinConnection;
+    private JTextField textFieldMaxConnectionNum;
+    private JTextField textFieldMinConnectionNum;
+    private JLabel labelFileConnectionTip3;
+    private JTextField textFieldConnectionTimeLimit;
+    private JLabel labelPlaceHolderF1;
+    private JLabel labelPlaceHolderF2;
+    private JLabel labelTip4F;
     private static boolean isStartup;
     private Unzip unzipInstance = Unzip.getInstance();
     private Thread updateThread = null;
@@ -330,31 +359,56 @@ public class SettingsFrame {
             isDefaultAdmin = settings.getBoolean("isDefaultAdmin");
             checkBoxAdmin.setSelected(isDefaultAdmin);
             isLoseFocusClose = settings.getBoolean("isLoseFocusClose");
-            textFieldBackground.setText(Integer.toHexString(backgroundColor));
-            Color _backgroundColor = new Color(backgroundColor);
-            backgroundColorChooser.setBackground(_backgroundColor);
-            backgroundColorChooser.setForeground(_backgroundColor);
-            textFieldBackgroundColorLight.setText(Integer.toHexString(backgroundColorLight));
-            Color _backgroundColorLight = new Color(backgroundColorLight);
-            backgroundLightChooser.setBackground(_backgroundColorLight);
-            backgroundLightChooser.setForeground(_backgroundColorLight);
+            textFieldMaxConnectionNum.setText(String.valueOf(maxConnectionNum));
+            textFieldMinConnectionNum.setText(String.valueOf(minConnectionNum));
+            textFieldConnectionTimeLimit.setText(String.valueOf(connectionTimeLimit / 1000));
+
+            textFieldSearchBarColor.setText(Integer.toHexString(searchBarColor));
+            Color _searchBarColor = new Color(searchBarColor);
+            searchBarColorChooser.setBackground(_searchBarColor);
+            searchBarColorChooser.setForeground(_searchBarColor);
+
+            textFieldBackground1.setText(Integer.toHexString(backgroundColor1));
+            Color _backgroundColor1 = new Color(backgroundColor1);
+            background1Chooser.setBackground(_backgroundColor1);
+            background1Chooser.setForeground(_backgroundColor1);
+
+            textFieldBackground2.setText(Integer.toHexString(backgroundColor2));
+            Color _backgroundColor2 = new Color(backgroundColor2);
+            background2Chooser.setBackground(_backgroundColor2);
+            background2Chooser.setForeground(_backgroundColor2);
+
+            textFieldBackground3.setText(Integer.toHexString(backgroundColor3));
+            Color _backgroundColor3 = new Color(backgroundColor3);
+            background3Chooser.setBackground(_backgroundColor3);
+            background3Chooser.setForeground(_backgroundColor3);
+
+            textFieldBackground4.setText(Integer.toHexString(backgroundColor4));
+            Color _backgroundColor4 = new Color(backgroundColor4);
+            background4Chooser.setBackground(_backgroundColor4);
+            background4Chooser.setForeground(_backgroundColor4);
+
             textFieldLabelColor.setText(Integer.toHexString(labelColor));
             Color _labelColor = new Color(labelColor);
             labelColorChooser.setBackground(_labelColor);
             labelColorChooser.setForeground(_labelColor);
+
             textFieldFontColorWithCoverage.setText(Integer.toHexString(fontColorWithCoverage));
             Color _fontColorWithCoverage = new Color(fontColorWithCoverage);
             FontColorWithCoverageChooser.setBackground(_fontColorWithCoverage);
             FontColorWithCoverageChooser.setForeground(_fontColorWithCoverage);
+
             checkBoxLoseFocus.setSelected(isLoseFocusClose);
             runAsAdminKeyCode = settings.getInteger("runAsAdminKeyCode");
             openLastFolderKeyCode = settings.getInteger("openLastFolderKeyCode");
             transparency = settings.getFloat("transparency");
             textFieldTransparency.setText(String.valueOf(transparency));
+
             textFieldFontColor.setText(Integer.toHexString(fontColor));
             Color _fontColor = new Color(fontColor);
             FontColorChooser.setBackground(_fontColor);
             FontColorChooser.setForeground(_fontColor);
+
             if (runAsAdminKeyCode == 17) {
                 textFieldRunAsAdmin.setText("Ctrl + Enter");
             } else if (runAsAdminKeyCode == 16) {
@@ -502,9 +556,12 @@ public class SettingsFrame {
         });
         buttonResetColor.addActionListener(e -> {
             textFieldFontColorWithCoverage.setText(Integer.toHexString(0x1C0EFF));
+            textFieldSearchBarColor.setText(Integer.toHexString(0xffffff));
             textFieldLabelColor.setText(Integer.toHexString(0xFF9868));
-            textFieldBackgroundColorLight.setText(Integer.toHexString(0x4B4B4B));
-            textFieldBackground.setText(Integer.toHexString(0x6C6C6C));
+            textFieldBackground1.setText(Integer.toHexString(0xffffff));
+            textFieldBackground2.setText(Integer.toHexString(0xffffff));
+            textFieldBackground3.setText(Integer.toHexString(0xffffff));
+            textFieldBackground4.setText(Integer.toHexString(0xffffff));
             textFieldFontColor.setText(Integer.toHexString(0xC5C5C5));
         });
 
@@ -571,7 +628,7 @@ public class SettingsFrame {
                 FontColorWithCoverageChooser.setForeground(color);
             }
         });
-        backgroundColorChooser.addMouseListener(new MouseAdapter() {
+        background2Chooser.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
                 Color color = JColorChooser.showDialog(null, "选择颜色", null);
@@ -597,12 +654,12 @@ public class SettingsFrame {
                 } else {
                     rgb.append(Integer.toHexString(b));
                 }
-                textFieldBackground.setText(rgb.toString());
-                backgroundColorChooser.setBackground(color);
-                backgroundColorChooser.setForeground(color);
+                textFieldBackground2.setText(rgb.toString());
+                background2Chooser.setBackground(color);
+                background2Chooser.setForeground(color);
             }
         });
-        backgroundLightChooser.addMouseListener(new MouseAdapter() {
+        background1Chooser.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
                 Color color = JColorChooser.showDialog(null, "选择颜色", null);
@@ -628,9 +685,9 @@ public class SettingsFrame {
                 } else {
                     rgb.append(Integer.toHexString(b));
                 }
-                textFieldBackgroundColorLight.setText(rgb.toString());
-                backgroundLightChooser.setBackground(color);
-                backgroundLightChooser.setForeground(color);
+                textFieldBackground1.setText(rgb.toString());
+                background1Chooser.setBackground(color);
+                background1Chooser.setForeground(color);
             }
         });
         FontColorChooser.addMouseListener(new MouseAdapter() {
@@ -662,6 +719,100 @@ public class SettingsFrame {
                 textFieldFontColor.setText(rgb.toString());
                 FontColorChooser.setBackground(color);
                 FontColorChooser.setForeground(color);
+            }
+        });
+
+        background3Chooser.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                Color color = JColorChooser.showDialog(null, "选择颜色", null);
+                if (color == null) {
+                    return;
+                }
+                int r = color.getRed();
+                int g = color.getGreen();
+                int b = color.getBlue();
+                StringBuilder rgb = new StringBuilder();
+                if (r == 0) {
+                    rgb.append("00");
+                } else {
+                    rgb.append(Integer.toHexString(r));
+                }
+                if (g == 0) {
+                    rgb.append("00");
+                } else {
+                    rgb.append(Integer.toHexString(g));
+                }
+                if (b == 0) {
+                    rgb.append("00");
+                } else {
+                    rgb.append(Integer.toHexString(b));
+                }
+                textFieldBackground3.setText(rgb.toString());
+                background3Chooser.setBackground(color);
+                background3Chooser.setForeground(color);
+            }
+        });
+        background4Chooser.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                Color color = JColorChooser.showDialog(null, "选择颜色", null);
+                if (color == null) {
+                    return;
+                }
+                int r = color.getRed();
+                int g = color.getGreen();
+                int b = color.getBlue();
+                StringBuilder rgb = new StringBuilder();
+                if (r == 0) {
+                    rgb.append("00");
+                } else {
+                    rgb.append(Integer.toHexString(r));
+                }
+                if (g == 0) {
+                    rgb.append("00");
+                } else {
+                    rgb.append(Integer.toHexString(g));
+                }
+                if (b == 0) {
+                    rgb.append("00");
+                } else {
+                    rgb.append(Integer.toHexString(b));
+                }
+                textFieldBackground4.setText(rgb.toString());
+                background4Chooser.setBackground(color);
+                background4Chooser.setForeground(color);
+            }
+        });
+        searchBarColorChooser.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                Color color = JColorChooser.showDialog(null, "选择颜色", null);
+                if (color == null) {
+                    return;
+                }
+                int r = color.getRed();
+                int g = color.getGreen();
+                int b = color.getBlue();
+                StringBuilder rgb = new StringBuilder();
+                if (r == 0) {
+                    rgb.append("00");
+                } else {
+                    rgb.append(Integer.toHexString(r));
+                }
+                if (g == 0) {
+                    rgb.append("00");
+                } else {
+                    rgb.append(Integer.toHexString(g));
+                }
+                if (b == 0) {
+                    rgb.append("00");
+                } else {
+                    rgb.append(Integer.toHexString(b));
+                }
+                textFieldSearchBarColor.setText(rgb.toString());
+                searchBarColorChooser.setBackground(color);
+                searchBarColorChooser.setForeground(color);
             }
         });
     }
@@ -783,15 +934,30 @@ public class SettingsFrame {
             } else {
                 transparency = 0.8f;
             }
-            if (settings.containsKey("backgroundColor")) {
-                backgroundColor = settings.getInteger("backgroundColor");
+            if (settings.containsKey("searchBarColor")) {
+                searchBarColor = settings.getInteger("searchBarColor");
             } else {
-                backgroundColor = 0x6C6C6C;
+                searchBarColor = 0xfffff;
             }
-            if (settings.containsKey("backgroundColorLight")) {
-                backgroundColorLight = settings.getInteger("backgroundColorLight");
+            if (settings.containsKey("backgroundColor1")) {
+                backgroundColor1 = settings.getInteger("backgroundColor1");
             } else {
-                backgroundColorLight = 0x4B4B4B;
+                backgroundColor1 = 0xffffff;
+            }
+            if (settings.containsKey("backgroundColor2")) {
+                backgroundColor2 = settings.getInteger("backgroundColor2");
+            } else {
+                backgroundColor2 = 0xffffff;
+            }
+            if (settings.containsKey("backgroundColor3")) {
+                backgroundColor3 = settings.getInteger("backgroundColor3");
+            } else {
+                backgroundColor3 = 0xffffff;
+            }
+            if (settings.containsKey("backgroundColor4")) {
+                backgroundColor4 = settings.getInteger("backgroundColor4");
+            } else {
+                backgroundColor4 = 0xffffff;
             }
             if (settings.containsKey("fontColorWithCoverage")) {
                 fontColorWithCoverage = settings.getInteger("fontColorWithCoverage");
@@ -807,6 +973,21 @@ public class SettingsFrame {
                 fontColor = settings.getInteger("fontColor");
             } else {
                 fontColor = 0xC5C5C5;
+            }
+            if (settings.containsKey("maxConnectionNum")) {
+                maxConnectionNum = settings.getInteger("maxConnectionNum");
+            } else {
+                maxConnectionNum = 10;
+            }
+            if (settings.containsKey("minConnectionNum")) {
+                minConnectionNum = settings.getInteger("minConnectionNum");
+            } else {
+                minConnectionNum = 5;
+            }
+            if (settings.containsKey("connectionTimeLimit")) {
+                connectionTimeLimit = settings.getInteger("connectionTimeLimit");
+            } else {
+                connectionTimeLimit = 600000;
             }
         } catch (NullPointerException | IOException ignored) {
 
@@ -828,10 +1009,16 @@ public class SettingsFrame {
         allSettings.put("copyPathKeyCode", copyPathKeyCode);
         allSettings.put("transparency", transparency);
         allSettings.put("labelColor", labelColor);
-        allSettings.put("backgroundColor", backgroundColor);
-        allSettings.put("backgroundColorLight", backgroundColorLight);
+        allSettings.put("backgroundColor1", backgroundColor1);
+        allSettings.put("backgroundColor2", backgroundColor2);
+        allSettings.put("backgroundColor3", backgroundColor3);
+        allSettings.put("backgroundColor4", backgroundColor4);
+        allSettings.put("searchBarColor", searchBarColor);
         allSettings.put("fontColorWithCoverage", fontColorWithCoverage);
         allSettings.put("fontColor", fontColor);
+        allSettings.put("maxConnectionNum", maxConnectionNum);
+        allSettings.put("minConnectionNum", minConnectionNum);
+        allSettings.put("connectionTimeLimit", connectionTimeLimit);
         try (BufferedWriter buffW = new BufferedWriter(new FileWriter(settings))) {
             buffW.write(allSettings.toJSONString());
         } catch (IOException ignored) {
@@ -1008,24 +1195,44 @@ public class SettingsFrame {
             JOptionPane.showMessageDialog(null, "选中框字体颜色设置错误");
             return;
         }
-        int _backgroundColor;
+        int _backgroundColor1;
         try {
-            _backgroundColor = Integer.parseInt(textFieldBackground.getText(), 16);
+            _backgroundColor1 = Integer.parseInt(textFieldBackground1.getText(), 16);
         } catch (Exception e) {
-            _backgroundColor = -1;
+            _backgroundColor1 = -1;
         }
-        if (_backgroundColor < 0) {
-            JOptionPane.showMessageDialog(null, "2、4框默认颜色设置错误");
+        if (_backgroundColor1 < 0) {
+            JOptionPane.showMessageDialog(null, "1框默认颜色设置错误");
             return;
         }
-        int _backgroundColorLight;
+        int _backgroundColor2;
         try {
-            _backgroundColorLight = Integer.parseInt(textFieldBackgroundColorLight.getText(), 16);
+            _backgroundColor2 = Integer.parseInt(textFieldBackground2.getText(), 16);
         } catch (Exception e) {
-            _backgroundColorLight = -1;
+            _backgroundColor2 = -1;
         }
-        if (_backgroundColorLight < 0) {
-            JOptionPane.showMessageDialog(null, "1、3框默认颜色设置错误");
+        if (_backgroundColor2 < 0) {
+            JOptionPane.showMessageDialog(null, "2框默认颜色设置错误");
+            return;
+        }
+        int _backgroundColor3;
+        try {
+            _backgroundColor3 = Integer.parseInt(textFieldBackground3.getText(), 16);
+        } catch (Exception e) {
+            _backgroundColor3 = -1;
+        }
+        if (_backgroundColor3 < 0) {
+            JOptionPane.showMessageDialog(null, "3框默认颜色设置错误");
+            return;
+        }
+        int _backgroundColor4;
+        try {
+            _backgroundColor4 = Integer.parseInt(textFieldBackground4.getText(), 16);
+        } catch (Exception e) {
+            _backgroundColor4 = -1;
+        }
+        if (_backgroundColor4 < 0) {
+            JOptionPane.showMessageDialog(null, "4框默认颜色设置错误");
             return;
         }
         int _fontColor;
@@ -1036,6 +1243,46 @@ public class SettingsFrame {
         }
         if (_fontColor < 0) {
             JOptionPane.showMessageDialog(null, "未选中框内字体颜色设置错误");
+            return;
+        }
+        int _searchBarColor;
+        try {
+            _searchBarColor = Integer.parseInt(textFieldSearchBarColor.getText(), 16);
+        } catch (Exception e) {
+            _searchBarColor = -1;
+        }
+        if (_searchBarColor < 0) {
+            JOptionPane.showMessageDialog(null, "1框默认颜色设置错误");
+            return;
+        }
+        int _maxConnectionNum;
+        try {
+            _maxConnectionNum = Integer.parseInt(textFieldMaxConnectionNum.getText());
+        } catch (Exception e) {
+            _maxConnectionNum = -1;
+        }
+        if (_maxConnectionNum < 0 || _maxConnectionNum > 50) {
+            JOptionPane.showMessageDialog(null, "最大连接保持数量设置错误");
+            return;
+        }
+        int _minConnectionNum;
+        try {
+            _minConnectionNum = Integer.parseInt(textFieldMinConnectionNum.getText());
+        } catch (Exception e) {
+            _minConnectionNum = -1;
+        }
+        if (_minConnectionNum < 0 || _minConnectionNum > 50) {
+            JOptionPane.showMessageDialog(null, "最小连接保持数量设置错误");
+            return;
+        }
+        int _connectionTimeLimit;
+        try {
+            _connectionTimeLimit = Integer.parseInt(textFieldConnectionTimeLimit.getText()) * 1000;
+        } catch (Exception e) {
+            _connectionTimeLimit = -1;
+        }
+        if (_connectionTimeLimit < 0 || _connectionTimeLimit > 1800000) {
+            JOptionPane.showMessageDialog(null, "连接保持时间设置错误");
             return;
         }
 
@@ -1050,25 +1297,37 @@ public class SettingsFrame {
         transparency = transparencyTemp;
         SearchBar.getInstance().setTransparency(transparency);
         labelColor = _labelColor;
-        backgroundColorLight = _backgroundColorLight;
-        backgroundColor = _backgroundColor;
+        backgroundColor2 = _backgroundColor2;
+        backgroundColor1 = _backgroundColor1;
+        backgroundColor3 = _backgroundColor3;
+        backgroundColor4 = _backgroundColor4;
+        searchBarColor = _searchBarColor;
         fontColorWithCoverage = _fontColorWithCoverage;
         fontColor = _fontColor;
         SearchBar instance = SearchBar.getInstance();
-        instance.setBackgroundColor(backgroundColor);
-        instance.setBackgroundColorLight(backgroundColorLight);
+        instance.setBackgroundColor1(backgroundColor1);
+        instance.setBackgroundColor2(backgroundColor2);
+        instance.setBackgroundColor3(backgroundColor3);
+        instance.setBackgroundColor4(backgroundColor4);
         instance.setLabelColor(labelColor);
         instance.setFontColorWithCoverage(fontColorWithCoverage);
         instance.setFontColor(fontColor);
+        instance.setSearchBarColor(searchBarColor);
         Color _tmp = new Color(labelColor);
         labelColorChooser.setBackground(_tmp);
         labelColorChooser.setForeground(_tmp);
-        _tmp = new Color(backgroundColorLight);
-        backgroundLightChooser.setBackground(_tmp);
-        backgroundLightChooser.setForeground(_tmp);
-        _tmp = new Color(backgroundColor);
-        backgroundColorChooser.setForeground(_tmp);
-        backgroundColorChooser.setBackground(_tmp);
+        _tmp = new Color(backgroundColor1);
+        background1Chooser.setBackground(_tmp);
+        background1Chooser.setForeground(_tmp);
+        _tmp = new Color(backgroundColor2);
+        background2Chooser.setForeground(_tmp);
+        background2Chooser.setBackground(_tmp);
+        _tmp = new Color(backgroundColor3);
+        background3Chooser.setForeground(_tmp);
+        background3Chooser.setBackground(_tmp);
+        _tmp = new Color(backgroundColor4);
+        background4Chooser.setForeground(_tmp);
+        background4Chooser.setBackground(_tmp);
         _tmp = new Color(fontColorWithCoverage);
         FontColorWithCoverageChooser.setBackground(_tmp);
         FontColorWithCoverageChooser.setForeground(_tmp);
@@ -1091,10 +1350,16 @@ public class SettingsFrame {
         allSettings.put("copyPathKeyCode", copyPathKeyCode);
         allSettings.put("transparency", transparency);
         allSettings.put("labelColor", labelColor);
-        allSettings.put("backgroundColor", backgroundColor);
-        allSettings.put("backgroundColorLight", backgroundColorLight);
+        allSettings.put("backgroundColor1", backgroundColor1);
+        allSettings.put("backgroundColor2", backgroundColor2);
+        allSettings.put("backgroundColor3", backgroundColor3);
+        allSettings.put("backgroundColor4", backgroundColor4);
+        allSettings.put("searchBarColor", searchBarColor);
         allSettings.put("fontColorWithCoverage", fontColorWithCoverage);
         allSettings.put("fontColor", fontColor);
+        allSettings.put("maxConnectionNum", maxConnectionNum);
+        allSettings.put("minConnectionNum", minConnectionNum);
+        allSettings.put("connectionTimeLimit", connectionTimeLimit);
         try (BufferedWriter buffW = new BufferedWriter(new FileWriter(settings))) {
             buffW.write(allSettings.toJSONString());
             JOptionPane.showMessageDialog(null, "保存成功");
