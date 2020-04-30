@@ -28,6 +28,7 @@ public class SearchBar {
     private volatile static SearchBar searchBarInstance = new SearchBar();
     private JFrame searchBar = new JFrame();
     private CopyOnWriteArrayList<String> listResult = new CopyOnWriteArrayList<>();
+    private ConcurrentHashMap<String, ReaderInfo> readerMap = new ConcurrentHashMap<>();
     private JLabel label1;
     private JLabel label2;
     private JLabel label3;
@@ -37,8 +38,10 @@ public class SearchBar {
     private JTextField textField;
     private Search search = Search.getInstance();
     private Color labelColor;
-    private Color backgroundColor;
-    private Color backgroundColorLight;
+    private Color backgroundColor1;
+    private Color backgroundColor2;
+    private Color backgroundColor3;
+    private Color backgroundColor4;
     private Color fontColorWithCoverage;
     private Color fontColor;
     private long startTime = 0;
@@ -71,8 +74,10 @@ public class SearchBar {
 
         labelColor = new Color(SettingsFrame.labelColor);
         fontColorWithCoverage = new Color(SettingsFrame.fontColorWithCoverage);
-        backgroundColorLight = new Color(SettingsFrame.backgroundColorLight);
-        backgroundColor = new Color(SettingsFrame.backgroundColor);
+        backgroundColor2 = new Color(SettingsFrame.backgroundColor2);
+        backgroundColor1 = new Color(SettingsFrame.backgroundColor1);
+        backgroundColor3 = new Color(SettingsFrame.backgroundColor3);
+        backgroundColor4 = new Color(SettingsFrame.backgroundColor4);
         fontColor = new Color(SettingsFrame.fontColor);
 
         //frame
@@ -167,7 +172,7 @@ public class SearchBar {
         panel.add(label4);
 
 
-        ExecutorService fixedThreadPool = Executors.newFixedThreadPool(7);
+        ExecutorService fixedThreadPool = Executors.newFixedThreadPool(8);
 
         fixedThreadPool.execute(() -> {
             //设置边框
@@ -213,6 +218,41 @@ public class SearchBar {
                 }
             } catch (Exception ignored) {
 
+            }
+        });
+
+        fixedThreadPool.execute(() -> {
+            //连接管理线程
+            try {
+                while (!mainExit) {
+                    if (!isUsing) {
+                        long currentTime = System.currentTimeMillis();
+                        for (String eachKey : readerMap.keySet()) {
+                            ReaderInfo info = readerMap.get(eachKey);
+                            if (currentTime - info.time > SettingsFrame.connectionTimeLimit) {
+                                info.reader.close();
+                                readerMap.remove(eachKey);
+                            }
+                        }
+                        if (readerMap.size() < SettingsFrame.minConnectionNum) {
+                            if (Search.diskCount > 0) {
+                                Random random = new Random();
+                                String path;
+                                int randomInt = random.nextInt(26);
+                                if (randomInt < 25) {
+                                    path = SettingsFrame.dataPath + "\\" + random.nextInt(Search.diskCount) + "\\list" + randomInt * 100 + "-" + (randomInt + 1) * 100 + ".txt";
+                                } else {
+                                    path = SettingsFrame.dataPath + "\\" + random.nextInt(Search.diskCount) + "\\list2500-.txt";
+                                }
+                                ReaderInfo _tmp = new ReaderInfo(System.currentTimeMillis(), new BufferedReader(new FileReader(path)));
+                                readerMap.put(path, _tmp);
+                            }
+                        }
+                    }
+                    Thread.sleep(100);
+                }
+            } catch (InterruptedException | IOException e) {
+                e.printStackTrace();
             }
         });
 
@@ -293,28 +333,28 @@ public class SearchBar {
                         if (labelCount == 0) {
                             label1.setBackground(labelColor);
                         } else {
-                            label1.setBackground(backgroundColorLight);
+                            label1.setBackground(backgroundColor1);
                         }
                     }
                     if (!isUserPressed && !label2.getText().isEmpty()) {
                         if (labelCount == 1) {
                             label2.setBackground(labelColor);
                         } else {
-                            label2.setBackground(backgroundColor);
+                            label2.setBackground(backgroundColor2);
                         }
                     }
                     if (!isUserPressed && !label3.getText().isEmpty()) {
                         if (labelCount == 2) {
                             label3.setBackground(labelColor);
                         } else {
-                            label3.setBackground(backgroundColorLight);
+                            label3.setBackground(backgroundColor3);
                         }
                     }
                     if (!isUserPressed && !label4.getText().isEmpty()) {
                         if (labelCount == 3) {
                             label4.setBackground(labelColor);
                         } else {
-                            label4.setBackground(backgroundColor);
+                            label4.setBackground(backgroundColor4);
                         }
                     }
                 } catch (NullPointerException ignored) {
@@ -335,6 +375,7 @@ public class SearchBar {
                 while (!mainExit) {
                     if (!search.isManualUpdate() && !isUsing) {
                         if (search.getRecycleBinSize() > 1000) {
+                            clearReaderMap();
                             System.out.println("已检测到回收站过大，自动清理");
                             search.setUsable(false);
                             search.mergeAndClearRecycleBin();
@@ -367,6 +408,7 @@ public class SearchBar {
                     if (search.isUsable()) {
                         if (isCommandMode) {
                             if (text.equals(":update")) {
+                                clearReaderMap();
                                 clearLabel();
                                 MainClass.showMessage("提示", "正在更新文件索引");
                                 clearTextFieldText();
@@ -1075,48 +1117,48 @@ public class SearchBar {
                                     case 0:
                                         int size = listResult.size();
                                         if (size == 2) {
-                                            label1.setBackground(backgroundColorLight);
+                                            label1.setBackground(backgroundColor1);
                                             label2.setBackground(labelColor);
                                         } else if (size == 3) {
-                                            label1.setBackground(backgroundColorLight);
+                                            label1.setBackground(backgroundColor1);
                                             label2.setBackground(labelColor);
-                                            label3.setBackground(backgroundColorLight);
+                                            label3.setBackground(backgroundColor3);
                                         } else if (size > 3) {
-                                            label1.setBackground(backgroundColorLight);
+                                            label1.setBackground(backgroundColor1);
                                             label2.setBackground(labelColor);
-                                            label3.setBackground(backgroundColorLight);
-                                            label4.setBackground(backgroundColor);
+                                            label3.setBackground(backgroundColor3);
+                                            label4.setBackground(backgroundColor4);
                                         }
                                         break;
                                     case 1:
                                         size = listResult.size();
                                         if (size == 2) {
-                                            label1.setBackground(backgroundColorLight);
-                                            label2.setBackground(backgroundColor);
+                                            label1.setBackground(backgroundColor1);
+                                            label2.setBackground(backgroundColor2);
                                         } else if (size == 3) {
-                                            label1.setBackground(backgroundColorLight);
-                                            label2.setBackground(backgroundColor);
+                                            label1.setBackground(backgroundColor1);
+                                            label2.setBackground(backgroundColor2);
                                             label3.setBackground(labelColor);
                                         } else if (size > 3) {
-                                            label1.setBackground(backgroundColorLight);
-                                            label2.setBackground(backgroundColor);
+                                            label1.setBackground(backgroundColor1);
+                                            label2.setBackground(backgroundColor2);
                                             label3.setBackground(labelColor);
-                                            label4.setBackground(backgroundColor);
+                                            label4.setBackground(backgroundColor4);
                                         }
                                         break;
                                     case 2:
                                         size = listResult.size();
                                         if (size == 2) {
-                                            label1.setBackground(backgroundColorLight);
-                                            label2.setBackground(backgroundColor);
+                                            label1.setBackground(backgroundColor1);
+                                            label2.setBackground(backgroundColor2);
                                         } else if (size == 3) {
-                                            label1.setBackground(backgroundColorLight);
-                                            label2.setBackground(backgroundColor);
-                                            label3.setBackground(backgroundColorLight);
+                                            label1.setBackground(backgroundColor1);
+                                            label2.setBackground(backgroundColor2);
+                                            label3.setBackground(backgroundColor3);
                                         } else if (size > 3) {
-                                            label1.setBackground(backgroundColorLight);
-                                            label2.setBackground(backgroundColor);
-                                            label3.setBackground(backgroundColorLight);
+                                            label1.setBackground(backgroundColor1);
+                                            label2.setBackground(backgroundColor2);
+                                            label3.setBackground(backgroundColor3);
                                             label4.setBackground(labelColor);
                                         }
                                         break;
@@ -1187,48 +1229,48 @@ public class SearchBar {
                                     case 0:
                                         int size = listResult.size();
                                         if (size == 2) {
-                                            label1.setBackground(backgroundColorLight);
+                                            label1.setBackground(backgroundColor1);
                                             label2.setBackground(labelColor);
                                         } else if (size == 3) {
-                                            label1.setBackground(backgroundColorLight);
+                                            label1.setBackground(backgroundColor1);
                                             label2.setBackground(labelColor);
-                                            label3.setBackground(backgroundColorLight);
+                                            label3.setBackground(backgroundColor3);
                                         } else if (size > 3) {
-                                            label1.setBackground(backgroundColorLight);
+                                            label1.setBackground(backgroundColor1);
                                             label2.setBackground(labelColor);
-                                            label3.setBackground(backgroundColorLight);
-                                            label4.setBackground(backgroundColor);
+                                            label3.setBackground(backgroundColor3);
+                                            label4.setBackground(backgroundColor4);
                                         }
                                         break;
                                     case 1:
                                         size = listResult.size();
                                         if (size == 2) {
-                                            label1.setBackground(backgroundColorLight);
-                                            label2.setBackground(backgroundColor);
+                                            label1.setBackground(backgroundColor1);
+                                            label2.setBackground(backgroundColor2);
                                         } else if (size == 3) {
-                                            label1.setBackground(backgroundColorLight);
-                                            label2.setBackground(backgroundColor);
+                                            label1.setBackground(backgroundColor1);
+                                            label2.setBackground(backgroundColor2);
                                             label3.setBackground(labelColor);
                                         } else if (size > 3) {
-                                            label1.setBackground(backgroundColorLight);
-                                            label2.setBackground(backgroundColor);
+                                            label1.setBackground(backgroundColor1);
+                                            label2.setBackground(backgroundColor2);
                                             label3.setBackground(labelColor);
-                                            label4.setBackground(backgroundColor);
+                                            label4.setBackground(backgroundColor4);
                                         }
                                         break;
                                     case 2:
                                         size = listResult.size();
                                         if (size == 2) {
-                                            label1.setBackground(backgroundColorLight);
-                                            label2.setBackground(backgroundColor);
+                                            label1.setBackground(backgroundColor1);
+                                            label2.setBackground(backgroundColor2);
                                         } else if (size == 3) {
-                                            label1.setBackground(backgroundColorLight);
-                                            label2.setBackground(backgroundColor);
-                                            label3.setBackground(backgroundColorLight);
+                                            label1.setBackground(backgroundColor1);
+                                            label2.setBackground(backgroundColor2);
+                                            label3.setBackground(backgroundColor3);
                                         } else if (size > 3) {
-                                            label1.setBackground(backgroundColorLight);
-                                            label2.setBackground(backgroundColor);
-                                            label3.setBackground(backgroundColorLight);
+                                            label1.setBackground(backgroundColor1);
+                                            label2.setBackground(backgroundColor2);
+                                            label3.setBackground(backgroundColor3);
                                             label4.setBackground(labelColor);
                                         }
                                         break;
@@ -1382,13 +1424,13 @@ public class SearchBar {
                                             label1.setBackground(labelColor);
                                         }
                                         if (!label2.getText().isEmpty()) {
-                                            label2.setBackground(backgroundColor);
+                                            label2.setBackground(backgroundColor2);
                                         }
                                         if (!label3.getText().isEmpty()) {
-                                            label3.setBackground(backgroundColorLight);
+                                            label3.setBackground(backgroundColor3);
                                         }
                                         if (!label4.getText().isEmpty()) {
-                                            label4.setBackground(backgroundColor);
+                                            label4.setBackground(backgroundColor4);
                                         }
                                     } catch (NullPointerException ignored) {
 
@@ -1397,16 +1439,16 @@ public class SearchBar {
                                 case 2:
                                     try {
                                         if (!label1.getText().isEmpty()) {
-                                            label1.setBackground(backgroundColorLight);
+                                            label1.setBackground(backgroundColor1);
                                         }
                                         if (!label2.getText().isEmpty()) {
                                             label2.setBackground(labelColor);
                                         }
                                         if (!label3.getText().isEmpty()) {
-                                            label3.setBackground(backgroundColorLight);
+                                            label3.setBackground(backgroundColor3);
                                         }
                                         if (!label4.getText().isEmpty()) {
-                                            label4.setBackground(backgroundColor);
+                                            label4.setBackground(backgroundColor4);
                                         }
                                     } catch (NullPointerException ignored) {
 
@@ -1415,16 +1457,16 @@ public class SearchBar {
                                 case 3:
                                     try {
                                         if (!label1.getText().isEmpty()) {
-                                            label1.setBackground(backgroundColorLight);
+                                            label1.setBackground(backgroundColor1);
                                         }
                                         if (!label2.getText().isEmpty()) {
-                                            label2.setBackground(backgroundColor);
+                                            label2.setBackground(backgroundColor2);
                                         }
                                         if (!label3.getText().isEmpty()) {
                                             label3.setBackground(labelColor);
                                         }
                                         if (!label4.getText().isEmpty()) {
-                                            label4.setBackground(backgroundColor);
+                                            label4.setBackground(backgroundColor4);
                                         }
                                     } catch (NullPointerException ignored) {
 
@@ -1481,13 +1523,13 @@ public class SearchBar {
                                             label1.setBackground(labelColor);
                                         }
                                         if (!label2.getText().isEmpty()) {
-                                            label2.setBackground(backgroundColor);
+                                            label2.setBackground(backgroundColor2);
                                         }
                                         if (!label3.getText().isEmpty()) {
-                                            label3.setBackground(backgroundColorLight);
+                                            label3.setBackground(backgroundColor3);
                                         }
                                         if (!label4.getText().isEmpty()) {
-                                            label4.setBackground(backgroundColor);
+                                            label4.setBackground(backgroundColor4);
                                         }
                                     } catch (NullPointerException ignored) {
 
@@ -1496,16 +1538,16 @@ public class SearchBar {
                                 case 2:
                                     try {
                                         if (!label1.getText().isEmpty()) {
-                                            label1.setBackground(backgroundColorLight);
+                                            label1.setBackground(backgroundColor1);
                                         }
                                         if (!label2.getText().isEmpty()) {
                                             label2.setBackground(labelColor);
                                         }
                                         if (!label3.getText().isEmpty()) {
-                                            label3.setBackground(backgroundColorLight);
+                                            label3.setBackground(backgroundColor3);
                                         }
                                         if (!label4.getText().isEmpty()) {
-                                            label4.setBackground(backgroundColor);
+                                            label4.setBackground(backgroundColor4);
                                         }
                                     } catch (NullPointerException ignored) {
 
@@ -1514,16 +1556,16 @@ public class SearchBar {
                                 case 3:
                                     try {
                                         if (!label1.getText().isEmpty()) {
-                                            label1.setBackground(backgroundColorLight);
+                                            label1.setBackground(backgroundColor1);
                                         }
                                         if (!label2.getText().isEmpty()) {
-                                            label2.setBackground(backgroundColor);
+                                            label2.setBackground(backgroundColor2);
                                         }
                                         if (!label3.getText().isEmpty()) {
                                             label3.setBackground(labelColor);
                                         }
                                         if (!label4.getText().isEmpty()) {
-                                            label4.setBackground(backgroundColor);
+                                            label4.setBackground(backgroundColor4);
                                         }
                                     } catch (NullPointerException ignored) {
 
@@ -1532,13 +1574,13 @@ public class SearchBar {
                                 case 4:
                                     try {
                                         if (!label1.getText().isEmpty()) {
-                                            label1.setBackground(backgroundColorLight);
+                                            label1.setBackground(backgroundColor1);
                                         }
                                         if (!label2.getText().isEmpty()) {
-                                            label2.setBackground(backgroundColor);
+                                            label2.setBackground(backgroundColor2);
                                         }
                                         if (!label3.getText().isEmpty()) {
-                                            label3.setBackground(backgroundColorLight);
+                                            label3.setBackground(backgroundColor3);
                                         }
                                         if (!label4.getText().isEmpty()) {
                                             label4.setBackground(labelColor);
@@ -1603,13 +1645,13 @@ public class SearchBar {
                                         label1.setBackground(labelColor);
                                     }
                                     if (!label2.getText().isEmpty()) {
-                                        label2.setBackground(backgroundColor);
+                                        label2.setBackground(backgroundColor2);
                                     }
                                     if (!label3.getText().isEmpty()) {
-                                        label3.setBackground(backgroundColorLight);
+                                        label3.setBackground(backgroundColor3);
                                     }
                                     if (!label4.getText().isEmpty()) {
-                                        label4.setBackground(backgroundColor);
+                                        label4.setBackground(backgroundColor4);
                                     }
                                 } catch (NullPointerException ignored) {
 
@@ -1618,16 +1660,16 @@ public class SearchBar {
                             case 1:
                                 try {
                                     if (!label1.getText().isEmpty()) {
-                                        label1.setBackground(backgroundColorLight);
+                                        label1.setBackground(backgroundColor1);
                                     }
                                     if (!label2.getText().isEmpty()) {
                                         label2.setBackground(labelColor);
                                     }
                                     if (!label3.getText().isEmpty()) {
-                                        label3.setBackground(backgroundColorLight);
+                                        label3.setBackground(backgroundColor3);
                                     }
                                     if (!label4.getText().isEmpty()) {
-                                        label4.setBackground(backgroundColor);
+                                        label4.setBackground(backgroundColor4);
                                     }
                                 } catch (NullPointerException ignored) {
 
@@ -1636,16 +1678,16 @@ public class SearchBar {
                             case 2:
                                 try {
                                     if (!label1.getText().isEmpty()) {
-                                        label1.setBackground(backgroundColorLight);
+                                        label1.setBackground(backgroundColor1);
                                     }
                                     if (!label2.getText().isEmpty()) {
-                                        label2.setBackground(backgroundColor);
+                                        label2.setBackground(backgroundColor2);
                                     }
                                     if (!label3.getText().isEmpty()) {
                                         label3.setBackground(labelColor);
                                     }
                                     if (!label4.getText().isEmpty()) {
-                                        label4.setBackground(backgroundColor);
+                                        label4.setBackground(backgroundColor4);
                                     }
                                 } catch (NullPointerException ignored) {
 
@@ -1654,13 +1696,13 @@ public class SearchBar {
                             case 3:
                                 try {
                                     if (!label1.getText().isEmpty()) {
-                                        label1.setBackground(backgroundColorLight);
+                                        label1.setBackground(backgroundColor1);
                                     }
                                     if (!label2.getText().isEmpty()) {
-                                        label2.setBackground(backgroundColor);
+                                        label2.setBackground(backgroundColor2);
                                     }
                                     if (!label3.getText().isEmpty()) {
-                                        label3.setBackground(backgroundColorLight);
+                                        label3.setBackground(backgroundColor3);
                                     }
                                     if (!label4.getText().isEmpty()) {
                                         label4.setBackground(labelColor);
@@ -1791,13 +1833,13 @@ public class SearchBar {
                                                         label1.setBackground(labelColor);
                                                     }
                                                     if (!label2.getText().isEmpty()) {
-                                                        label2.setBackground(backgroundColor);
+                                                        label2.setBackground(backgroundColor2);
                                                     }
                                                     if (!label3.getText().isEmpty()) {
-                                                        label3.setBackground(backgroundColorLight);
+                                                        label3.setBackground(backgroundColor3);
                                                     }
                                                     if (!label4.getText().isEmpty()) {
-                                                        label4.setBackground(backgroundColor);
+                                                        label4.setBackground(backgroundColor4);
                                                     }
                                                 } catch (NullPointerException ignored) {
 
@@ -1806,16 +1848,16 @@ public class SearchBar {
                                             case 2:
                                                 try {
                                                     if (!label1.getText().isEmpty()) {
-                                                        label1.setBackground(backgroundColorLight);
+                                                        label1.setBackground(backgroundColor1);
                                                     }
                                                     if (!label2.getText().isEmpty()) {
                                                         label2.setBackground(labelColor);
                                                     }
                                                     if (!label3.getText().isEmpty()) {
-                                                        label3.setBackground(backgroundColorLight);
+                                                        label3.setBackground(backgroundColor3);
                                                     }
                                                     if (!label4.getText().isEmpty()) {
-                                                        label4.setBackground(backgroundColor);
+                                                        label4.setBackground(backgroundColor4);
                                                     }
                                                 } catch (NullPointerException ignored) {
 
@@ -1824,16 +1866,16 @@ public class SearchBar {
                                             case 3:
                                                 try {
                                                     if (!label1.getText().isEmpty()) {
-                                                        label1.setBackground(backgroundColorLight);
+                                                        label1.setBackground(backgroundColor1);
                                                     }
                                                     if (!label2.getText().isEmpty()) {
-                                                        label2.setBackground(backgroundColor);
+                                                        label2.setBackground(backgroundColor2);
                                                     }
                                                     if (!label3.getText().isEmpty()) {
                                                         label3.setBackground(labelColor);
                                                     }
                                                     if (!label4.getText().isEmpty()) {
-                                                        label4.setBackground(backgroundColor);
+                                                        label4.setBackground(backgroundColor4);
                                                     }
                                                 } catch (NullPointerException ignored) {
 
@@ -1890,13 +1932,13 @@ public class SearchBar {
                                                         label1.setBackground(labelColor);
                                                     }
                                                     if (!label2.getText().isEmpty()) {
-                                                        label2.setBackground(backgroundColor);
+                                                        label2.setBackground(backgroundColor2);
                                                     }
                                                     if (!label3.getText().isEmpty()) {
-                                                        label3.setBackground(backgroundColorLight);
+                                                        label3.setBackground(backgroundColor3);
                                                     }
                                                     if (!label4.getText().isEmpty()) {
-                                                        label4.setBackground(backgroundColor);
+                                                        label4.setBackground(backgroundColor4);
                                                     }
                                                 } catch (NullPointerException ignored) {
 
@@ -1905,16 +1947,16 @@ public class SearchBar {
                                             case 2:
                                                 try {
                                                     if (!label1.getText().isEmpty()) {
-                                                        label1.setBackground(backgroundColorLight);
+                                                        label1.setBackground(backgroundColor1);
                                                     }
                                                     if (!label2.getText().isEmpty()) {
                                                         label2.setBackground(labelColor);
                                                     }
                                                     if (!label3.getText().isEmpty()) {
-                                                        label3.setBackground(backgroundColorLight);
+                                                        label3.setBackground(backgroundColor3);
                                                     }
                                                     if (!label4.getText().isEmpty()) {
-                                                        label4.setBackground(backgroundColor);
+                                                        label4.setBackground(backgroundColor4);
                                                     }
                                                 } catch (NullPointerException ignored) {
 
@@ -1923,16 +1965,16 @@ public class SearchBar {
                                             case 3:
                                                 try {
                                                     if (!label1.getText().isEmpty()) {
-                                                        label1.setBackground(backgroundColorLight);
+                                                        label1.setBackground(backgroundColor1);
                                                     }
                                                     if (!label2.getText().isEmpty()) {
-                                                        label2.setBackground(backgroundColor);
+                                                        label2.setBackground(backgroundColor2);
                                                     }
                                                     if (!label3.getText().isEmpty()) {
                                                         label3.setBackground(labelColor);
                                                     }
                                                     if (!label4.getText().isEmpty()) {
-                                                        label4.setBackground(backgroundColor);
+                                                        label4.setBackground(backgroundColor4);
                                                     }
                                                 } catch (NullPointerException ignored) {
 
@@ -1941,13 +1983,13 @@ public class SearchBar {
                                             case 4:
                                                 try {
                                                     if (!label1.getText().isEmpty()) {
-                                                        label1.setBackground(backgroundColorLight);
+                                                        label1.setBackground(backgroundColor1);
                                                     }
                                                     if (!label2.getText().isEmpty()) {
-                                                        label2.setBackground(backgroundColor);
+                                                        label2.setBackground(backgroundColor2);
                                                     }
                                                     if (!label3.getText().isEmpty()) {
-                                                        label3.setBackground(backgroundColorLight);
+                                                        label3.setBackground(backgroundColor3);
                                                     }
                                                     if (!label4.getText().isEmpty()) {
                                                         label4.setBackground(labelColor);
@@ -2035,48 +2077,48 @@ public class SearchBar {
                                                 case 0:
                                                     int size = listResult.size();
                                                     if (size == 2) {
-                                                        label1.setBackground(backgroundColorLight);
+                                                        label1.setBackground(backgroundColor1);
                                                         label2.setBackground(labelColor);
                                                     } else if (size == 3) {
-                                                        label1.setBackground(backgroundColorLight);
+                                                        label1.setBackground(backgroundColor1);
                                                         label2.setBackground(labelColor);
-                                                        label3.setBackground(backgroundColorLight);
+                                                        label3.setBackground(backgroundColor3);
                                                     } else if (size > 3) {
-                                                        label1.setBackground(backgroundColorLight);
+                                                        label1.setBackground(backgroundColor1);
                                                         label2.setBackground(labelColor);
-                                                        label3.setBackground(backgroundColorLight);
-                                                        label4.setBackground(backgroundColor);
+                                                        label3.setBackground(backgroundColor3);
+                                                        label4.setBackground(backgroundColor4);
                                                     }
                                                     break;
                                                 case 1:
                                                     size = listResult.size();
                                                     if (size == 2) {
-                                                        label1.setBackground(backgroundColorLight);
-                                                        label2.setBackground(backgroundColor);
+                                                        label1.setBackground(backgroundColor1);
+                                                        label2.setBackground(backgroundColor2);
                                                     } else if (size == 3) {
-                                                        label1.setBackground(backgroundColorLight);
-                                                        label2.setBackground(backgroundColor);
+                                                        label1.setBackground(backgroundColor1);
+                                                        label2.setBackground(backgroundColor2);
                                                         label3.setBackground(labelColor);
                                                     } else if (size > 3) {
-                                                        label1.setBackground(backgroundColorLight);
-                                                        label2.setBackground(backgroundColor);
+                                                        label1.setBackground(backgroundColor1);
+                                                        label2.setBackground(backgroundColor2);
                                                         label3.setBackground(labelColor);
-                                                        label4.setBackground(backgroundColor);
+                                                        label4.setBackground(backgroundColor4);
                                                     }
                                                     break;
                                                 case 2:
                                                     size = listResult.size();
                                                     if (size == 2) {
-                                                        label1.setBackground(backgroundColorLight);
-                                                        label2.setBackground(backgroundColor);
+                                                        label1.setBackground(backgroundColor1);
+                                                        label2.setBackground(backgroundColor2);
                                                     } else if (size == 3) {
-                                                        label1.setBackground(backgroundColorLight);
-                                                        label2.setBackground(backgroundColor);
-                                                        label3.setBackground(backgroundColorLight);
+                                                        label1.setBackground(backgroundColor1);
+                                                        label2.setBackground(backgroundColor2);
+                                                        label3.setBackground(backgroundColor3);
                                                     } else if (size > 3) {
-                                                        label1.setBackground(backgroundColorLight);
-                                                        label2.setBackground(backgroundColor);
-                                                        label3.setBackground(backgroundColorLight);
+                                                        label1.setBackground(backgroundColor1);
+                                                        label2.setBackground(backgroundColor2);
+                                                        label3.setBackground(backgroundColor3);
                                                         label4.setBackground(labelColor);
                                                     }
                                                     break;
@@ -2147,48 +2189,48 @@ public class SearchBar {
                                                 case 0:
                                                     int size = listResult.size();
                                                     if (size == 2) {
-                                                        label1.setBackground(backgroundColorLight);
+                                                        label1.setBackground(backgroundColor1);
                                                         label2.setBackground(labelColor);
                                                     } else if (size == 3) {
-                                                        label1.setBackground(backgroundColorLight);
+                                                        label1.setBackground(backgroundColor1);
                                                         label2.setBackground(labelColor);
-                                                        label3.setBackground(backgroundColorLight);
+                                                        label3.setBackground(backgroundColor3);
                                                     } else if (size > 3) {
-                                                        label1.setBackground(backgroundColorLight);
+                                                        label1.setBackground(backgroundColor1);
                                                         label2.setBackground(labelColor);
-                                                        label3.setBackground(backgroundColorLight);
-                                                        label4.setBackground(backgroundColor);
+                                                        label3.setBackground(backgroundColor3);
+                                                        label4.setBackground(backgroundColor4);
                                                     }
                                                     break;
                                                 case 1:
                                                     size = listResult.size();
                                                     if (size == 2) {
-                                                        label1.setBackground(backgroundColorLight);
-                                                        label2.setBackground(backgroundColor);
+                                                        label1.setBackground(backgroundColor1);
+                                                        label2.setBackground(backgroundColor2);
                                                     } else if (size == 3) {
-                                                        label1.setBackground(backgroundColorLight);
-                                                        label2.setBackground(backgroundColor);
+                                                        label1.setBackground(backgroundColor1);
+                                                        label2.setBackground(backgroundColor2);
                                                         label3.setBackground(labelColor);
                                                     } else if (size > 3) {
-                                                        label1.setBackground(backgroundColorLight);
-                                                        label2.setBackground(backgroundColor);
+                                                        label1.setBackground(backgroundColor1);
+                                                        label2.setBackground(backgroundColor2);
                                                         label3.setBackground(labelColor);
-                                                        label4.setBackground(backgroundColor);
+                                                        label4.setBackground(backgroundColor4);
                                                     }
                                                     break;
                                                 case 2:
                                                     size = listResult.size();
                                                     if (size == 2) {
-                                                        label1.setBackground(backgroundColorLight);
-                                                        label2.setBackground(backgroundColor);
+                                                        label1.setBackground(backgroundColor1);
+                                                        label2.setBackground(backgroundColor2);
                                                     } else if (size == 3) {
-                                                        label1.setBackground(backgroundColorLight);
-                                                        label2.setBackground(backgroundColor);
-                                                        label3.setBackground(backgroundColorLight);
+                                                        label1.setBackground(backgroundColor1);
+                                                        label2.setBackground(backgroundColor2);
+                                                        label3.setBackground(backgroundColor3);
                                                     } else if (size > 3) {
-                                                        label1.setBackground(backgroundColorLight);
-                                                        label2.setBackground(backgroundColor);
-                                                        label3.setBackground(backgroundColorLight);
+                                                        label1.setBackground(backgroundColor1);
+                                                        label2.setBackground(backgroundColor2);
+                                                        label3.setBackground(backgroundColor3);
                                                         label4.setBackground(labelColor);
                                                     }
                                                     break;
@@ -2336,74 +2378,23 @@ public class SearchBar {
         ConcurrentLinkedQueue<String> taskQueue = new ConcurrentLinkedQueue<>(paths);
         for (int i = 0; i < 4; i++) {
             threadPool.execute(() -> {
-                String path;
-                String each;
-                while ((path = taskQueue.poll()) != null) {
-                    try (BufferedReader br = new BufferedReader(new FileReader(path))) {
-                        while ((each = br.readLine()) != null) {
-                            if (startTime > time) { //用户重新输入了信息
-                                taskQueue.clear();
-                                break;
-                            }
-                            if (search.isUsable()) {
-                                if (isMatched(getFileName(each), searchText)) {
-                                    switch (searchCase) {
-                                        case "f":
-                                            if (isFile(each)) {
-                                                if (!listResult.contains(each)) {
-                                                    if (isExist(each)) {
-                                                        listResult.add(each);
-                                                        if (listResult.size() > 100) {
-                                                            taskQueue.clear();
-                                                            break;
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                            break;
-                                        case "d":
-                                            if (isDirectory(each)) {
-                                                if (!listResult.contains(each)) {
-                                                    if (isExist(each)) {
-                                                        listResult.add(each);
-                                                        if (listResult.size() > 100) {
-                                                            taskQueue.clear();
-                                                            break;
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                            break;
-                                        case "full":
-                                            if (getFileName(each).toLowerCase().equals(searchText.toLowerCase())) {
-                                                if (!listResult.contains(each)) {
-                                                    if (isExist(each)) {
-                                                        listResult.add(each);
-                                                        if (listResult.size() > 100) {
-                                                            taskQueue.clear();
-                                                            break;
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                            break;
-                                        case "dfull":
-                                            if (getFileName(each).toLowerCase().equals(searchText.toLowerCase())) {
-                                                if (isDirectory(each)) {
-                                                    if (!listResult.contains(each)) {
-                                                        if (isExist(each)) {
-                                                            listResult.add(each);
-                                                            if (listResult.size() > 100) {
-                                                                taskQueue.clear();
-                                                                break;
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                            break;
-                                        case "ffull":
-                                            if (getFileName(each).toLowerCase().equals(searchText.toLowerCase())) {
+                try {
+                    String path;
+                    String each;
+                    while ((path = taskQueue.poll()) != null) {
+                        ReaderInfo readerInfo = readerMap.get(path);
+                        if (readerInfo != null) {
+                            BufferedReader reader = readerInfo.reader;
+                            reader.mark((int) getFileLength(path) + 1);
+                            while ((each = reader.readLine()) != null) {
+                                if (startTime > time) { //用户重新输入了信息
+                                    taskQueue.clear();
+                                    break;
+                                }
+                                if (search.isUsable()) {
+                                    if (isMatched(getFileName(each), searchText)) {
+                                        switch (searchCase) {
+                                            case "f":
                                                 if (isFile(each)) {
                                                     if (!listResult.contains(each)) {
                                                         if (isExist(each)) {
@@ -2415,26 +2406,186 @@ public class SearchBar {
                                                         }
                                                     }
                                                 }
-                                            }
-                                            break;
-                                        default:
-                                            if (!listResult.contains(each)) {
-                                                if (isExist(each)) {
-                                                    listResult.add(each);
-                                                    if (listResult.size() > 100) {
-                                                        taskQueue.clear();
-                                                        break;
+                                                break;
+                                            case "d":
+                                                if (isDirectory(each)) {
+                                                    if (!listResult.contains(each)) {
+                                                        if (isExist(each)) {
+                                                            listResult.add(each);
+                                                            if (listResult.size() > 100) {
+                                                                taskQueue.clear();
+                                                                break;
+                                                            }
+                                                        }
                                                     }
                                                 }
-                                            }
-                                            break;
+                                                break;
+                                            case "full":
+                                                if (getFileName(each).toLowerCase().equals(searchText.toLowerCase())) {
+                                                    if (!listResult.contains(each)) {
+                                                        if (isExist(each)) {
+                                                            listResult.add(each);
+                                                            if (listResult.size() > 100) {
+                                                                taskQueue.clear();
+                                                                break;
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                                break;
+                                            case "dfull":
+                                                if (getFileName(each).toLowerCase().equals(searchText.toLowerCase())) {
+                                                    if (isDirectory(each)) {
+                                                        if (!listResult.contains(each)) {
+                                                            if (isExist(each)) {
+                                                                listResult.add(each);
+                                                                if (listResult.size() > 100) {
+                                                                    taskQueue.clear();
+                                                                    break;
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                                break;
+                                            case "ffull":
+                                                if (getFileName(each).toLowerCase().equals(searchText.toLowerCase())) {
+                                                    if (isFile(each)) {
+                                                        if (!listResult.contains(each)) {
+                                                            if (isExist(each)) {
+                                                                listResult.add(each);
+                                                                if (listResult.size() > 100) {
+                                                                    taskQueue.clear();
+                                                                    break;
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                                break;
+                                            default:
+                                                if (!listResult.contains(each)) {
+                                                    if (isExist(each)) {
+                                                        listResult.add(each);
+                                                        if (listResult.size() > 100) {
+                                                            taskQueue.clear();
+                                                            break;
+                                                        }
+                                                    }
+                                                }
+                                                break;
+                                        }
                                     }
                                 }
                             }
+                            readerInfo.time = System.currentTimeMillis();
+                            reader.reset();
+                        } else {
+                            BufferedReader reader = new BufferedReader(new FileReader(path));
+                            reader.mark((int) getFileLength(path) + 1);
+                            while ((each = reader.readLine()) != null) {
+                                if (startTime > time) { //用户重新输入了信息
+                                    taskQueue.clear();
+                                    break;
+                                }
+                                if (search.isUsable()) {
+                                    if (isMatched(getFileName(each), searchText)) {
+                                        switch (searchCase) {
+                                            case "f":
+                                                if (isFile(each)) {
+                                                    if (!listResult.contains(each)) {
+                                                        if (isExist(each)) {
+                                                            listResult.add(each);
+                                                            if (listResult.size() > 100) {
+                                                                taskQueue.clear();
+                                                                break;
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                                break;
+                                            case "d":
+                                                if (isDirectory(each)) {
+                                                    if (!listResult.contains(each)) {
+                                                        if (isExist(each)) {
+                                                            listResult.add(each);
+                                                            if (listResult.size() > 100) {
+                                                                taskQueue.clear();
+                                                                break;
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                                break;
+                                            case "full":
+                                                if (getFileName(each).toLowerCase().equals(searchText.toLowerCase())) {
+                                                    if (!listResult.contains(each)) {
+                                                        if (isExist(each)) {
+                                                            listResult.add(each);
+                                                            if (listResult.size() > 100) {
+                                                                taskQueue.clear();
+                                                                break;
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                                break;
+                                            case "dfull":
+                                                if (getFileName(each).toLowerCase().equals(searchText.toLowerCase())) {
+                                                    if (isDirectory(each)) {
+                                                        if (!listResult.contains(each)) {
+                                                            if (isExist(each)) {
+                                                                listResult.add(each);
+                                                                if (listResult.size() > 100) {
+                                                                    taskQueue.clear();
+                                                                    break;
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                                break;
+                                            case "ffull":
+                                                if (getFileName(each).toLowerCase().equals(searchText.toLowerCase())) {
+                                                    if (isFile(each)) {
+                                                        if (!listResult.contains(each)) {
+                                                            if (isExist(each)) {
+                                                                listResult.add(each);
+                                                                if (listResult.size() > 100) {
+                                                                    taskQueue.clear();
+                                                                    break;
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                                break;
+                                            default:
+                                                if (!listResult.contains(each)) {
+                                                    if (isExist(each)) {
+                                                        listResult.add(each);
+                                                        if (listResult.size() > 100) {
+                                                            taskQueue.clear();
+                                                            break;
+                                                        }
+                                                    }
+                                                }
+                                                break;
+                                        }
+                                    }
+                                }
+                            }
+                            if (readerMap.size() < SettingsFrame.maxConnectionNum) {
+                                reader.reset();
+                                ReaderInfo _tmpInfo = new ReaderInfo(System.currentTimeMillis(), reader);
+                                readerMap.put(path, _tmpInfo);
+                            } else {
+                                reader.close();
+                            }
                         }
-                    } catch (IOException ignored) {
-
                     }
+                } catch (Exception ignored) {
+
                 }
             });
         }
@@ -2479,7 +2630,7 @@ public class SearchBar {
                     if (labelCount == 0) {
                         label1.setBackground(labelColor);
                     } else {
-                        label1.setBackground(backgroundColorLight);
+                        label1.setBackground(backgroundColor1);
                     }
                 } else {
                     label1.setIcon(null);
@@ -2487,7 +2638,7 @@ public class SearchBar {
                     if (labelCount == 0) {
                         label1.setBackground(labelColor);
                     } else {
-                        label1.setBackground(backgroundColorLight);
+                        label1.setBackground(backgroundColor1);
                     }
                     search.addToRecycleBin(path);
                 }
@@ -2503,7 +2654,7 @@ public class SearchBar {
                     if (labelCount == 1) {
                         label2.setBackground(labelColor);
                     } else {
-                        label2.setBackground(backgroundColor);
+                        label2.setBackground(backgroundColor2);
                     }
                 } else {
                     label2.setIcon(null);
@@ -2511,7 +2662,7 @@ public class SearchBar {
                     if (labelCount == 1) {
                         label2.setBackground(labelColor);
                     } else {
-                        label2.setBackground(backgroundColor);
+                        label2.setBackground(backgroundColor2);
                     }
                     search.addToRecycleBin(path);
                 }
@@ -2527,7 +2678,7 @@ public class SearchBar {
                     if (labelCount == 2) {
                         label3.setBackground(labelColor);
                     } else {
-                        label3.setBackground(backgroundColorLight);
+                        label3.setBackground(backgroundColor3);
                     }
                 } else {
                     label3.setIcon(null);
@@ -2535,7 +2686,7 @@ public class SearchBar {
                     if (labelCount == 2) {
                         label3.setBackground(labelColor);
                     } else {
-                        label3.setBackground(backgroundColorLight);
+                        label3.setBackground(backgroundColor3);
                     }
                     search.addToRecycleBin(path);
                 }
@@ -2551,7 +2702,7 @@ public class SearchBar {
                     if (labelCount >= 3) {
                         label4.setBackground(labelColor);
                     } else {
-                        label4.setBackground(backgroundColor);
+                        label4.setBackground(backgroundColor4);
                     }
                 } else {
                     label4.setIcon(null);
@@ -2559,7 +2710,7 @@ public class SearchBar {
                     if (labelCount >= 3) {
                         label4.setBackground(labelColor);
                     } else {
-                        label4.setBackground(backgroundColor);
+                        label4.setBackground(backgroundColor4);
                     }
                     search.addToRecycleBin(path);
                 }
@@ -2579,7 +2730,7 @@ public class SearchBar {
                 if (labelCount == 0) {
                     label1.setBackground(labelColor);
                 } else {
-                    label1.setBackground(backgroundColorLight);
+                    label1.setBackground(backgroundColor1);
                 }
 
                 command = listResult.get(1);
@@ -2593,7 +2744,7 @@ public class SearchBar {
                 if (labelCount == 1) {
                     label2.setBackground(labelColor);
                 } else {
-                    label2.setBackground(backgroundColor);
+                    label2.setBackground(backgroundColor2);
                 }
 
                 command = listResult.get(2);
@@ -2607,7 +2758,7 @@ public class SearchBar {
                 if (labelCount == 2) {
                     label3.setBackground(labelColor);
                 } else {
-                    label3.setBackground(backgroundColorLight);
+                    label3.setBackground(backgroundColor3);
                 }
 
                 command = listResult.get(3);
@@ -2621,7 +2772,7 @@ public class SearchBar {
                 if (labelCount >= 3) {
                     label4.setBackground(labelColor);
                 } else {
-                    label4.setBackground(backgroundColor);
+                    label4.setBackground(backgroundColor4);
                 }
             } catch (IndexOutOfBoundsException ignored) {
 
@@ -2631,22 +2782,22 @@ public class SearchBar {
 
 
     private void clearLabel() {
-        label1.setBorder(null);
-        label2.setBorder(null);
-        label3.setBorder(null);
         label4.setBorder(null);
-        label1.setIcon(null);
-        label2.setIcon(null);
-        label3.setIcon(null);
+        label3.setBorder(null);
+        label2.setBorder(null);
+        label1.setBorder(null);
         label4.setIcon(null);
-        label1.setText(null);
-        label2.setText(null);
-        label3.setText(null);
+        label3.setIcon(null);
+        label2.setIcon(null);
+        label1.setIcon(null);
         label4.setText(null);
-        label1.setBackground(null);
-        label2.setBackground(null);
-        label3.setBackground(null);
+        label3.setText(null);
+        label2.setText(null);
+        label1.setText(null);
         label4.setBackground(null);
+        label3.setBackground(null);
+        label2.setBackground(null);
+        label1.setBackground(null);
     }
 
     private void openWithAdmin(String path) {
@@ -3043,21 +3194,38 @@ public class SearchBar {
         return file.isFile();
     }
 
+    private long getFileLength(String path) {
+        File file = new File(path);
+        return file.length();
+    }
+
     private boolean isDirectory(String text) {
         File file = new File(text);
         return file.isDirectory();
+    }
+
+    private void clearReaderMap() {
+        readerMap.clear();
     }
 
     public void setFontColorWithCoverage(int colorNum) {
         fontColorWithCoverage = new Color(colorNum);
     }
 
-    public void setBackgroundColor(int colorNum) {
-        backgroundColor = new Color(colorNum);
+    public void setBackgroundColor1(int colorNum) {
+        backgroundColor1 = new Color(colorNum);
     }
 
-    public void setBackgroundColorLight(int colorNum) {
-        backgroundColorLight = new Color(colorNum);
+    public void setBackgroundColor2(int colorNum) {
+        backgroundColor2 = new Color(colorNum);
+    }
+
+    public void setBackgroundColor3(int colorNum) {
+        backgroundColor3 = new Color(colorNum);
+    }
+
+    public void setBackgroundColor4(int colorNum) {
+        backgroundColor4 = new Color(colorNum);
     }
 
     public void setLabelColor(int colorNum) {
@@ -3066,6 +3234,20 @@ public class SearchBar {
 
     public void setFontColor(int colorNum) {
         fontColor = new Color(colorNum);
+    }
+
+    public void setSearchBarColor(int colorNum) {
+        textField.setBackground(new Color(colorNum));
+    }
+}
+
+class ReaderInfo {
+    public long time;
+    public BufferedReader reader;
+
+    public ReaderInfo(long _time, BufferedReader _reader) {
+        this.time = _time;
+        this.reader = _reader;
     }
 }
 
