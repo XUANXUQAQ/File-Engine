@@ -249,7 +249,7 @@ public class SearchBar {
                             }
                         }
                     }
-                    Thread.sleep(100);
+                    Thread.sleep(60000);
                 }
             } catch (InterruptedException | IOException e) {
                 e.printStackTrace();
@@ -2368,40 +2368,64 @@ public class SearchBar {
 
     private void addResult(LinkedHashSet<String> paths, String searchText, long time, String searchCase) {
         //为label添加结果
-        ExecutorService threadPool = Executors.newFixedThreadPool(4);
-        ConcurrentLinkedQueue<String> taskQueue = new ConcurrentLinkedQueue<>(paths);
-        for (int i = 0; i < 4; i++) {
-            threadPool.execute(() -> {
-                try {
-                    String path;
-                    String each;
-                    while ((path = taskQueue.poll()) != null) {
-                        ReaderInfo readerInfo = readerMap.get(path);
-                        if (readerInfo != null) {
-                            BufferedReader reader = readerInfo.reader;
-                            labelOut:
-                            while ((each = reader.readLine()) != null) {
-                                if (startTime > time) { //用户重新输入了信息
-                                    taskQueue.clear();
-                                    break;
-                                }
-                                if (search.isUsable()) {
-                                    if (isMatched(getFileName(each), searchText)) {
-                                        switch (searchCase) {
-                                            case "f":
-                                                if (isFile(each)) {
-                                                    if (!listResult.contains(each)) {
-                                                        if (isExist(each)) {
-                                                            listResult.add(each);
-                                                            if (listResult.size() > 100) {
-                                                                taskQueue.clear();
-                                                                break labelOut;
-                                                            }
+        Queue<String> taskQueue = new LinkedList<>(paths);
+            try {
+                String path;
+                String each;
+                while ((path = taskQueue.poll()) != null) {
+                    ReaderInfo readerInfo = readerMap.get(path);
+                    if (readerInfo != null) {
+                        BufferedReader reader = readerInfo.reader;
+                        labelOut:
+                        while ((each = reader.readLine()) != null) {
+                            if (startTime > time) { //用户重新输入了信息
+                                taskQueue.clear();
+                                break;
+                            }
+                            if (search.isUsable()) {
+                                if (isMatched(getFileName(each), searchText)) {
+                                    switch (searchCase) {
+                                        case "f":
+                                            if (isFile(each)) {
+                                                if (!listResult.contains(each)) {
+                                                    if (isExist(each)) {
+                                                        listResult.add(each);
+                                                        if (listResult.size() > 100) {
+                                                            taskQueue.clear();
+                                                            break labelOut;
                                                         }
                                                     }
                                                 }
-                                                break;
-                                            case "d":
+                                            }
+                                            break;
+                                        case "d":
+                                            if (isDirectory(each)) {
+                                                if (!listResult.contains(each)) {
+                                                    if (isExist(each)) {
+                                                        listResult.add(each);
+                                                        if (listResult.size() > 100) {
+                                                            taskQueue.clear();
+                                                            break labelOut;
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                            break;
+                                        case "full":
+                                            if (getFileName(each).toLowerCase().equals(searchText.toLowerCase())) {
+                                                if (!listResult.contains(each)) {
+                                                    if (isExist(each)) {
+                                                        listResult.add(each);
+                                                        if (listResult.size() > 100) {
+                                                            taskQueue.clear();
+                                                            break labelOut;
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                            break;
+                                        case "dfull":
+                                            if (getFileName(each).toLowerCase().equals(searchText.toLowerCase())) {
                                                 if (isDirectory(each)) {
                                                     if (!listResult.contains(each)) {
                                                         if (isExist(each)) {
@@ -2413,86 +2437,10 @@ public class SearchBar {
                                                         }
                                                     }
                                                 }
-                                                break;
-                                            case "full":
-                                                if (getFileName(each).toLowerCase().equals(searchText.toLowerCase())) {
-                                                    if (!listResult.contains(each)) {
-                                                        if (isExist(each)) {
-                                                            listResult.add(each);
-                                                            if (listResult.size() > 100) {
-                                                                taskQueue.clear();
-                                                                break labelOut;
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                                break;
-                                            case "dfull":
-                                                if (getFileName(each).toLowerCase().equals(searchText.toLowerCase())) {
-                                                    if (isDirectory(each)) {
-                                                        if (!listResult.contains(each)) {
-                                                            if (isExist(each)) {
-                                                                listResult.add(each);
-                                                                if (listResult.size() > 100) {
-                                                                    taskQueue.clear();
-                                                                    break labelOut;
-                                                                }
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                                break;
-                                            case "ffull":
-                                                if (getFileName(each).toLowerCase().equals(searchText.toLowerCase())) {
-                                                    if (isFile(each)) {
-                                                        if (!listResult.contains(each)) {
-                                                            if (isExist(each)) {
-                                                                listResult.add(each);
-                                                                if (listResult.size() > 100) {
-                                                                    taskQueue.clear();
-                                                                    break labelOut;
-                                                                }
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                                break;
-                                            default:
-                                                if (!listResult.contains(each)) {
-                                                    if (isExist(each)) {
-                                                        listResult.add(each);
-                                                        if (listResult.size() > 100) {
-                                                            taskQueue.clear();
-                                                            break labelOut;
-                                                        }
-                                                    }
-                                                }
-                                                break;
-                                        }
-                                    }
-                                }
-                            }
-                            reader.close();
-                            readerInfo = new ReaderInfo(System.currentTimeMillis(), new BufferedReader(new FileReader(path)));
-                            readerMap.put(path, readerInfo);
-                        } else {
-                            BufferedReader reader = new BufferedReader(new FileReader(path));
-                            boolean isClose = true;
-                            if (readerMap.size() < SettingsFrame.maxConnectionNum) {
-                                ReaderInfo _tmpInfo = new ReaderInfo(System.currentTimeMillis(), reader);
-                                readerMap.put(path, _tmpInfo);
-                                isClose = false;
-                            }
-                            labelOut:
-                            while ((each = reader.readLine()) != null) {
-                                if (startTime > time) { //用户重新输入了信息
-                                    taskQueue.clear();
-                                    break;
-                                }
-                                if (search.isUsable()) {
-                                    if (isMatched(getFileName(each), searchText)) {
-                                        switch (searchCase) {
-                                            case "f":
+                                            }
+                                            break;
+                                        case "ffull":
+                                            if (getFileName(each).toLowerCase().equals(searchText.toLowerCase())) {
                                                 if (isFile(each)) {
                                                     if (!listResult.contains(each)) {
                                                         if (isExist(each)) {
@@ -2504,94 +2452,135 @@ public class SearchBar {
                                                         }
                                                     }
                                                 }
-                                                break;
-                                            case "d":
-                                                if (isDirectory(each)) {
-                                                    if (!listResult.contains(each)) {
-                                                        if (isExist(each)) {
-                                                            listResult.add(each);
-                                                            if (listResult.size() > 100) {
-                                                                taskQueue.clear();
-                                                                break labelOut;
-                                                            }
-                                                        }
+                                            }
+                                            break;
+                                        default:
+                                            if (!listResult.contains(each)) {
+                                                if (isExist(each)) {
+                                                    listResult.add(each);
+                                                    if (listResult.size() > 100) {
+                                                        taskQueue.clear();
+                                                        break labelOut;
                                                     }
                                                 }
-                                                break;
-                                            case "full":
-                                                if (getFileName(each).toLowerCase().equals(searchText.toLowerCase())) {
-                                                    if (!listResult.contains(each)) {
-                                                        if (isExist(each)) {
-                                                            listResult.add(each);
-                                                            if (listResult.size() > 100) {
-                                                                taskQueue.clear();
-                                                                break labelOut;
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                                break;
-                                            case "dfull":
-                                                if (getFileName(each).toLowerCase().equals(searchText.toLowerCase())) {
-                                                    if (isDirectory(each)) {
-                                                        if (!listResult.contains(each)) {
-                                                            if (isExist(each)) {
-                                                                listResult.add(each);
-                                                                if (listResult.size() > 100) {
-                                                                    taskQueue.clear();
-                                                                    break labelOut;
-                                                                }
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                                break;
-                                            case "ffull":
-                                                if (getFileName(each).toLowerCase().equals(searchText.toLowerCase())) {
-                                                    if (isFile(each)) {
-                                                        if (!listResult.contains(each)) {
-                                                            if (isExist(each)) {
-                                                                listResult.add(each);
-                                                                if (listResult.size() > 100) {
-                                                                    taskQueue.clear();
-                                                                    break labelOut;
-                                                                }
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                                break;
-                                            default:
-                                                if (!listResult.contains(each)) {
-                                                    if (isExist(each)) {
-                                                        listResult.add(each);
-                                                        if (listResult.size() > 100) {
-                                                            taskQueue.clear();
-                                                            break labelOut;
-                                                        }
-                                                    }
-                                                }
-                                                break;
-                                        }
+                                            }
+                                            break;
                                     }
                                 }
-                            }
-                            if (isClose) {
-                                reader.close();
                             }
                         }
+                        reader.close();
+                        readerInfo = new ReaderInfo(System.currentTimeMillis(), new BufferedReader(new FileReader(path)));
+                        readerMap.put(path, readerInfo);
+                    } else {
+                        BufferedReader reader = new BufferedReader(new FileReader(path));
+                        boolean isClose = true;
+                        if (readerMap.size() < SettingsFrame.maxConnectionNum) {
+                            ReaderInfo _tmpInfo = new ReaderInfo(System.currentTimeMillis(), reader);
+                            readerMap.put(path, _tmpInfo);
+                            isClose = false;
+                        }
+                        labelOut:
+                        while ((each = reader.readLine()) != null) {
+                            if (startTime > time) { //用户重新输入了信息
+                                taskQueue.clear();
+                                break;
+                            }
+                            if (search.isUsable()) {
+                                if (isMatched(getFileName(each), searchText)) {
+                                    switch (searchCase) {
+                                        case "f":
+                                            if (isFile(each)) {
+                                                if (!listResult.contains(each)) {
+                                                    if (isExist(each)) {
+                                                        listResult.add(each);
+                                                        if (listResult.size() > 100) {
+                                                            taskQueue.clear();
+                                                            break labelOut;
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                            break;
+                                        case "d":
+                                            if (isDirectory(each)) {
+                                                if (!listResult.contains(each)) {
+                                                    if (isExist(each)) {
+                                                        listResult.add(each);
+                                                        if (listResult.size() > 100) {
+                                                            taskQueue.clear();
+                                                            break labelOut;
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                            break;
+                                        case "full":
+                                            if (getFileName(each).toLowerCase().equals(searchText.toLowerCase())) {
+                                                if (!listResult.contains(each)) {
+                                                    if (isExist(each)) {
+                                                        listResult.add(each);
+                                                        if (listResult.size() > 100) {
+                                                            taskQueue.clear();
+                                                            break labelOut;
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                            break;
+                                        case "dfull":
+                                            if (getFileName(each).toLowerCase().equals(searchText.toLowerCase())) {
+                                                if (isDirectory(each)) {
+                                                    if (!listResult.contains(each)) {
+                                                        if (isExist(each)) {
+                                                            listResult.add(each);
+                                                            if (listResult.size() > 100) {
+                                                                taskQueue.clear();
+                                                                break labelOut;
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                            break;
+                                        case "ffull":
+                                            if (getFileName(each).toLowerCase().equals(searchText.toLowerCase())) {
+                                                if (isFile(each)) {
+                                                    if (!listResult.contains(each)) {
+                                                        if (isExist(each)) {
+                                                            listResult.add(each);
+                                                            if (listResult.size() > 100) {
+                                                                taskQueue.clear();
+                                                                break labelOut;
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                            break;
+                                        default:
+                                            if (!listResult.contains(each)) {
+                                                if (isExist(each)) {
+                                                    listResult.add(each);
+                                                    if (listResult.size() > 100) {
+                                                        taskQueue.clear();
+                                                        break labelOut;
+                                                    }
+                                                }
+                                            }
+                                            break;
+                                    }
+                                }
+                            }
+                        }
+                        if (isClose) {
+                            reader.close();
+                        }
                     }
-                } catch (Exception ignored) {
-
                 }
-            });
-        }
-        threadPool.shutdown();
-        try {
-            threadPool.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS);
-        } catch (InterruptedException ignored) {
+            } catch (Exception ignored) {
 
-        }
+            }
         if (!textField.getText().isEmpty()) {
             delRepeated();
             if (listResult.size() == 0) {
