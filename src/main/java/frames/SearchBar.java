@@ -225,7 +225,7 @@ public class SearchBar {
             //连接管理线程
             try {
                 while (!mainExit) {
-                    if (!isUsing) {
+                    if ((!isUsing) && Search.getInstance().isUsable()) {
                         for (String eachKey : readerMap.keySet()) {
                             ReaderInfo info = readerMap.get(eachKey);
                             if (System.currentTimeMillis() - info.time > SettingsFrame.connectionTimeLimit) {
@@ -2370,9 +2370,10 @@ public class SearchBar {
 
     private void addResult(LinkedHashSet<String> paths, String searchText, long time, String searchCase) {
         //为label添加结果
-        ExecutorService threadPool = Executors.newFixedThreadPool(4);
+        int cpuCores = Runtime.getRuntime().availableProcessors();
+        ExecutorService threadPool = Executors.newFixedThreadPool(cpuCores);
         ConcurrentLinkedQueue<String> queue = new ConcurrentLinkedQueue<>(paths);
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < cpuCores; i++) {
             threadPool.execute(() -> {
                 String each;
                 String path;
@@ -2394,7 +2395,7 @@ public class SearchBar {
                                                     if (!listResult.contains(each)) {
                                                         if (isExist(each)) {
                                                             listResult.add(each);
-                                                            if (listResult.size() > 100) {
+                                                            if (listResult.size() > 50) {
                                                                 break labelOut;
                                                             }
                                                         }
@@ -2406,7 +2407,7 @@ public class SearchBar {
                                                     if (!listResult.contains(each)) {
                                                         if (isExist(each)) {
                                                             listResult.add(each);
-                                                            if (listResult.size() > 100) {
+                                                            if (listResult.size() > 50) {
                                                                 break labelOut;
                                                             }
                                                         }
@@ -2418,7 +2419,7 @@ public class SearchBar {
                                                     if (!listResult.contains(each)) {
                                                         if (isExist(each)) {
                                                             listResult.add(each);
-                                                            if (listResult.size() > 100) {
+                                                            if (listResult.size() > 50) {
                                                                 break labelOut;
                                                             }
                                                         }
@@ -2431,7 +2432,7 @@ public class SearchBar {
                                                         if (!listResult.contains(each)) {
                                                             if (isExist(each)) {
                                                                 listResult.add(each);
-                                                                if (listResult.size() > 100) {
+                                                                if (listResult.size() > 50) {
                                                                     break labelOut;
                                                                 }
                                                             }
@@ -2445,7 +2446,7 @@ public class SearchBar {
                                                         if (!listResult.contains(each)) {
                                                             if (isExist(each)) {
                                                                 listResult.add(each);
-                                                                if (listResult.size() > 100) {
+                                                                if (listResult.size() > 50) {
                                                                     break labelOut;
                                                                 }
                                                             }
@@ -2457,7 +2458,7 @@ public class SearchBar {
                                                 if (!listResult.contains(each)) {
                                                     if (isExist(each)) {
                                                         listResult.add(each);
-                                                        if (listResult.size() > 100) {
+                                                        if (listResult.size() > 50) {
                                                             break labelOut;
                                                         }
                                                     }
@@ -2468,7 +2469,8 @@ public class SearchBar {
                                 }
                             }
                             reader.close();
-                            readerInfo = new ReaderInfo(System.currentTimeMillis(), new BufferedReader(new FileReader(path)));
+                            reader = new BufferedReader(new FileReader(path));
+                            readerInfo = new ReaderInfo(System.currentTimeMillis(), reader);
                             readerMap.put(path, readerInfo);
                         } else {
                             BufferedReader reader = new BufferedReader(new FileReader(path));
@@ -2485,7 +2487,7 @@ public class SearchBar {
                                                     if (!listResult.contains(each)) {
                                                         if (isExist(each)) {
                                                             listResult.add(each);
-                                                            if (listResult.size() > 100) {
+                                                            if (listResult.size() > 50) {
                                                                 break labelOut;
                                                             }
                                                         }
@@ -2497,7 +2499,7 @@ public class SearchBar {
                                                     if (!listResult.contains(each)) {
                                                         if (isExist(each)) {
                                                             listResult.add(each);
-                                                            if (listResult.size() > 100) {
+                                                            if (listResult.size() > 50) {
                                                                 break labelOut;
                                                             }
                                                         }
@@ -2509,7 +2511,7 @@ public class SearchBar {
                                                     if (!listResult.contains(each)) {
                                                         if (isExist(each)) {
                                                             listResult.add(each);
-                                                            if (listResult.size() > 100) {
+                                                            if (listResult.size() > 50) {
                                                                 break labelOut;
                                                             }
                                                         }
@@ -2522,7 +2524,7 @@ public class SearchBar {
                                                         if (!listResult.contains(each)) {
                                                             if (isExist(each)) {
                                                                 listResult.add(each);
-                                                                if (listResult.size() > 100) {
+                                                                if (listResult.size() > 50) {
                                                                     break labelOut;
                                                                 }
                                                             }
@@ -2536,7 +2538,7 @@ public class SearchBar {
                                                         if (!listResult.contains(each)) {
                                                             if (isExist(each)) {
                                                                 listResult.add(each);
-                                                                if (listResult.size() > 100) {
+                                                                if (listResult.size() > 50) {
                                                                     break labelOut;
                                                                 }
                                                             }
@@ -2548,7 +2550,7 @@ public class SearchBar {
                                                 if (!listResult.contains(each)) {
                                                     if (isExist(each)) {
                                                         listResult.add(each);
-                                                        if (listResult.size() > 100) {
+                                                        if (listResult.size() > 50) {
                                                             break labelOut;
                                                         }
                                                     }
@@ -2559,7 +2561,8 @@ public class SearchBar {
                                 }
                             }
                             if (readerMap.size() < SettingsFrame.maxConnectionNum) {
-                                ReaderInfo temp = new ReaderInfo(System.currentTimeMillis(), new BufferedReader(new FileReader(path)));
+                                reader = new BufferedReader(new FileReader(path));
+                                ReaderInfo temp = new ReaderInfo(System.currentTimeMillis(), reader);
                                 readerMap.put(path, temp);
                             } else {
                                 reader.close();
@@ -3005,7 +3008,7 @@ public class SearchBar {
                                         default:
                                             listResult.add(eachCache);
                                     }
-                                    if (listResult.size() > 100) {
+                                    if (listResult.size() > 50) {
                                         break;
                                     }
                                 } else {
