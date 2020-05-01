@@ -3,10 +3,15 @@ package moveFiles;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.util.ArrayList;
 
 
 public class moveFiles {
-    private String origin;
+    private ArrayList<String> preserveFiles;
+
+    public moveFiles(ArrayList<String> _preserveFiles) {
+        this.preserveFiles = _preserveFiles;
+    }
 
     private boolean deleteDir(File dir) {
         // 如果是文件夹
@@ -22,7 +27,7 @@ public class moveFiles {
                 }
             }
         }
-        if (dir.getAbsolutePath().equals(origin) || dir.getName().equals("desktop.ini")) {
+        if (preserveFiles.contains(dir.getAbsolutePath()) || dir.getName().equals("desktop.ini")) {
             return true;
         } else {
             return dir.delete();
@@ -30,7 +35,8 @@ public class moveFiles {
     }
 
     // 复制某个目录及目录下的所有子目录和文件到新文件夹
-    private void copyFolder(String oldPath, String newPath) {
+    private boolean copyFolder(String oldPath, String newPath) {
+        boolean isHasRepeatFiles = false;
         try {
             (new File(newPath)).mkdirs();
             // 读取整个文件夹的内容到file字符串数组，下面设置一个游标i，不停地向下移开始读这个数组
@@ -48,17 +54,22 @@ public class moveFiles {
                     }
 
                     if (temp.isFile()) {
-                        FileInputStream input = new FileInputStream(temp);
-                        FileOutputStream output = new FileOutputStream(newPath
-                                + "/" + (temp.getName()));
-                        byte[] bufferarray = new byte[1024 * 64];
-                        int prereadlength;
-                        while ((prereadlength = input.read(bufferarray)) != -1) {
-                            output.write(bufferarray, 0, prereadlength);
+                        if (!isFileExist(newPath + "/" + (temp.getName()))) {
+                            FileInputStream input = new FileInputStream(temp);
+                            FileOutputStream output = new FileOutputStream(newPath
+                                    + "/" + (temp.getName()));
+                            byte[] bufferarray = new byte[1024 * 64];
+                            int prereadlength;
+                            while ((prereadlength = input.read(bufferarray)) != -1) {
+                                output.write(bufferarray, 0, prereadlength);
+                            }
+                            output.flush();
+                            output.close();
+                            input.close();
+                        } else {
+                            preserveFiles.add(temp.getAbsolutePath());
+                            isHasRepeatFiles = true;
                         }
-                        output.flush();
-                        output.close();
-                        input.close();
                     }
                     if (temp.isDirectory()) {
                         copyFolder(oldPath + "/" + s, newPath + "/" + s);
@@ -68,12 +79,17 @@ public class moveFiles {
         } catch (Exception e) {
             System.out.println("复制整个文件夹内容操作出错");
         }
+        return isHasRepeatFiles;
     }
 
-    public void moveFolder(String oldPath, String newPath) {
+    public boolean moveFolder(String oldPath, String newPath) {
         // 先复制文件
-        copyFolder(oldPath, newPath);
-        origin = oldPath;
+        boolean isHasRepeated = copyFolder(oldPath, newPath);
         deleteDir(new File(oldPath));
+        return isHasRepeated;
+    }
+
+    private boolean isFileExist(String path) {
+        return new File(path).exists();
     }
 }
