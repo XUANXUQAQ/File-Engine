@@ -21,6 +21,32 @@ public class Search {
     private CopyOnWriteArraySet<String> RecycleBin = new CopyOnWriteArraySet<>();
     private CopyOnWriteArraySet<String> listToLoad = new CopyOnWriteArraySet<>();
     public static int diskCount = 0;
+    CopyOnWriteArraySet<String> set0 = new CopyOnWriteArraySet<>();
+    CopyOnWriteArraySet<String> set100 = new CopyOnWriteArraySet<>();
+    CopyOnWriteArraySet<String> set200 = new CopyOnWriteArraySet<>();
+    CopyOnWriteArraySet<String> set300 = new CopyOnWriteArraySet<>();
+    CopyOnWriteArraySet<String> set400 = new CopyOnWriteArraySet<>();
+    CopyOnWriteArraySet<String> set500 = new CopyOnWriteArraySet<>();
+    CopyOnWriteArraySet<String> set600 = new CopyOnWriteArraySet<>();
+    CopyOnWriteArraySet<String> set700 = new CopyOnWriteArraySet<>();
+    CopyOnWriteArraySet<String> set800 = new CopyOnWriteArraySet<>();
+    CopyOnWriteArraySet<String> set900 = new CopyOnWriteArraySet<>();
+    CopyOnWriteArraySet<String> set1000 = new CopyOnWriteArraySet<>();
+    CopyOnWriteArraySet<String> set1100 = new CopyOnWriteArraySet<>();
+    CopyOnWriteArraySet<String> set1200 = new CopyOnWriteArraySet<>();
+    CopyOnWriteArraySet<String> set1300 = new CopyOnWriteArraySet<>();
+    CopyOnWriteArraySet<String> set1400 = new CopyOnWriteArraySet<>();
+    CopyOnWriteArraySet<String> set1500 = new CopyOnWriteArraySet<>();
+    CopyOnWriteArraySet<String> set1600 = new CopyOnWriteArraySet<>();
+    CopyOnWriteArraySet<String> set1700 = new CopyOnWriteArraySet<>();
+    CopyOnWriteArraySet<String> set1800 = new CopyOnWriteArraySet<>();
+    CopyOnWriteArraySet<String> set1900 = new CopyOnWriteArraySet<>();
+    CopyOnWriteArraySet<String> set2000 = new CopyOnWriteArraySet<>();
+    CopyOnWriteArraySet<String> set2100 = new CopyOnWriteArraySet<>();
+    CopyOnWriteArraySet<String> set2200 = new CopyOnWriteArraySet<>();
+    CopyOnWriteArraySet<String> set2300 = new CopyOnWriteArraySet<>();
+    CopyOnWriteArraySet<String> set2400 = new CopyOnWriteArraySet<>();
+    CopyOnWriteArraySet<String> set2500 = new CopyOnWriteArraySet<>();
 
     private Search() {
     }
@@ -65,32 +91,6 @@ public class Search {
     public void mergeAndClearRecycleBin() {
         if (!isManualUpdate) {
             isUsable = false;
-            CopyOnWriteArraySet<String> set0 = new CopyOnWriteArraySet<>();
-            CopyOnWriteArraySet<String> set100 = new CopyOnWriteArraySet<>();
-            CopyOnWriteArraySet<String> set200 = new CopyOnWriteArraySet<>();
-            CopyOnWriteArraySet<String> set300 = new CopyOnWriteArraySet<>();
-            CopyOnWriteArraySet<String> set400 = new CopyOnWriteArraySet<>();
-            CopyOnWriteArraySet<String> set500 = new CopyOnWriteArraySet<>();
-            CopyOnWriteArraySet<String> set600 = new CopyOnWriteArraySet<>();
-            CopyOnWriteArraySet<String> set700 = new CopyOnWriteArraySet<>();
-            CopyOnWriteArraySet<String> set800 = new CopyOnWriteArraySet<>();
-            CopyOnWriteArraySet<String> set900 = new CopyOnWriteArraySet<>();
-            CopyOnWriteArraySet<String> set1000 = new CopyOnWriteArraySet<>();
-            CopyOnWriteArraySet<String> set1100 = new CopyOnWriteArraySet<>();
-            CopyOnWriteArraySet<String> set1200 = new CopyOnWriteArraySet<>();
-            CopyOnWriteArraySet<String> set1300 = new CopyOnWriteArraySet<>();
-            CopyOnWriteArraySet<String> set1400 = new CopyOnWriteArraySet<>();
-            CopyOnWriteArraySet<String> set1500 = new CopyOnWriteArraySet<>();
-            CopyOnWriteArraySet<String> set1600 = new CopyOnWriteArraySet<>();
-            CopyOnWriteArraySet<String> set1700 = new CopyOnWriteArraySet<>();
-            CopyOnWriteArraySet<String> set1800 = new CopyOnWriteArraySet<>();
-            CopyOnWriteArraySet<String> set1900 = new CopyOnWriteArraySet<>();
-            CopyOnWriteArraySet<String> set2000 = new CopyOnWriteArraySet<>();
-            CopyOnWriteArraySet<String> set2100 = new CopyOnWriteArraySet<>();
-            CopyOnWriteArraySet<String> set2200 = new CopyOnWriteArraySet<>();
-            CopyOnWriteArraySet<String> set2300 = new CopyOnWriteArraySet<>();
-            CopyOnWriteArraySet<String> set2400 = new CopyOnWriteArraySet<>();
-            CopyOnWriteArraySet<String> set2500 = new CopyOnWriteArraySet<>();
             try { //À¬»ø·ÖÀà
                 for (String i : RecycleBin) {
                     SearchBar instance = SearchBar.getInstance();
@@ -393,6 +393,32 @@ public class Search {
             } catch (ConcurrentModificationException ignored) {
 
             } finally {
+                set0.clear();
+                set100.clear();
+                set200.clear();
+                set300.clear();
+                set400.clear();
+                set500.clear();
+                set600.clear();
+                set700.clear();
+                set800.clear();
+                set900.clear();
+                set1000.clear();
+                set1100.clear();
+                set1200.clear();
+                set1300.clear();
+                set1400.clear();
+                set1500.clear();
+                set1600.clear();
+                set1700.clear();
+                set1800.clear();
+                set1900.clear();
+                set2000.clear();
+                set2100.clear();
+                set2200.clear();
+                set2300.clear();
+                set2400.clear();
+                set2500.clear();
                 isUsable = true;
             }
         }

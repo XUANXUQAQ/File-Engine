@@ -172,7 +172,7 @@ public class SearchBar {
         panel.add(label4);
 
 
-        ExecutorService fixedThreadPool = Executors.newFixedThreadPool(8);
+        ExecutorService fixedThreadPool = Executors.newFixedThreadPool(7);
 
         fixedThreadPool.execute(() -> {
             //设置边框
@@ -253,18 +253,6 @@ public class SearchBar {
                 }
             } catch (InterruptedException | IOException e) {
                 e.printStackTrace();
-            }
-        });
-
-        //刷新屏幕线程
-        fixedThreadPool.execute(() -> {
-            try {
-                while (!mainExit) {
-                    panel.repaint();
-                    Thread.sleep(10);
-                }
-            } catch (Exception ignored) {
-
             }
         });
 
@@ -944,6 +932,7 @@ public class SearchBar {
         textField.getDocument().addDocumentListener(new DocumentListener() {
             @Override
             public void insertUpdate(DocumentEvent e) {
+                panel.repaint();
                 clearLabel();
                 listResult.clear();
                 labelCount = 0;
@@ -954,6 +943,7 @@ public class SearchBar {
 
             @Override
             public void removeUpdate(DocumentEvent e) {
+                panel.repaint();
                 clearLabel();
                 listResult.clear();
                 labelCount = 0;
@@ -985,11 +975,12 @@ public class SearchBar {
         searchBar.addMouseListener(new MouseListener() {
             @Override
             public void mouseClicked(MouseEvent e) {
-
+                panel.repaint();
             }
 
             @Override
             public void mousePressed(MouseEvent e) {
+                panel.repaint();
                 int count = e.getClickCount();
                 if (count == 2) {
                     closedTodo();
@@ -1035,21 +1026,22 @@ public class SearchBar {
 
             @Override
             public void mouseReleased(MouseEvent e) {
-
+                panel.repaint();
             }
 
             @Override
             public void mouseEntered(MouseEvent e) {
-
+                panel.repaint();
             }
 
             @Override
             public void mouseExited(MouseEvent e) {
-
+                panel.repaint();
             }
         });
 
         searchBar.addMouseWheelListener(e -> {
+            panel.repaint();
             mouseWheelTime = System.currentTimeMillis();
             isLockMouseMotion = true;
             if (e.getPreciseWheelRotation() > 0) {
@@ -1724,6 +1716,7 @@ public class SearchBar {
 
             @Override
             public void keyPressed(KeyEvent arg0) {
+                panel.repaint();
                 int key = arg0.getKeyCode();
                 if (key == 8 && textField.getText().isEmpty()) {
                     arg0.consume();
@@ -2340,6 +2333,7 @@ public class SearchBar {
 
             @Override
             public void keyReleased(KeyEvent arg0) {
+                panel.repaint();
                 int key = arg0.getKeyCode();
                 if (SettingsFrame.openLastFolderKeyCode == key) {
                     //复位按键状态
@@ -2353,7 +2347,7 @@ public class SearchBar {
 
             @Override
             public void keyTyped(KeyEvent arg0) {
-
+                panel.repaint();
             }
         });
     }
@@ -2385,6 +2379,7 @@ public class SearchBar {
                         ReaderInfo readerInfo = readerMap.get(path);
                         if (readerInfo != null) {
                             BufferedReader reader = readerInfo.reader;
+                            labelOut:
                             while ((each = reader.readLine()) != null) {
                                 if (startTime > time) { //用户重新输入了信息
                                     taskQueue.clear();
@@ -2400,7 +2395,7 @@ public class SearchBar {
                                                             listResult.add(each);
                                                             if (listResult.size() > 100) {
                                                                 taskQueue.clear();
-                                                                break;
+                                                                break labelOut;
                                                             }
                                                         }
                                                     }
@@ -2413,7 +2408,7 @@ public class SearchBar {
                                                             listResult.add(each);
                                                             if (listResult.size() > 100) {
                                                                 taskQueue.clear();
-                                                                break;
+                                                                break labelOut;
                                                             }
                                                         }
                                                     }
@@ -2426,7 +2421,7 @@ public class SearchBar {
                                                             listResult.add(each);
                                                             if (listResult.size() > 100) {
                                                                 taskQueue.clear();
-                                                                break;
+                                                                break labelOut;
                                                             }
                                                         }
                                                     }
@@ -2440,7 +2435,7 @@ public class SearchBar {
                                                                 listResult.add(each);
                                                                 if (listResult.size() > 100) {
                                                                     taskQueue.clear();
-                                                                    break;
+                                                                    break labelOut;
                                                                 }
                                                             }
                                                         }
@@ -2455,7 +2450,7 @@ public class SearchBar {
                                                                 listResult.add(each);
                                                                 if (listResult.size() > 100) {
                                                                     taskQueue.clear();
-                                                                    break;
+                                                                    break labelOut;
                                                                 }
                                                             }
                                                         }
@@ -2468,7 +2463,7 @@ public class SearchBar {
                                                         listResult.add(each);
                                                         if (listResult.size() > 100) {
                                                             taskQueue.clear();
-                                                            break;
+                                                            break labelOut;
                                                         }
                                                     }
                                                 }
@@ -2488,6 +2483,7 @@ public class SearchBar {
                                 readerMap.put(path, _tmpInfo);
                                 isClose = false;
                             }
+                            labelOut:
                             while ((each = reader.readLine()) != null) {
                                 if (startTime > time) { //用户重新输入了信息
                                     taskQueue.clear();
@@ -2503,7 +2499,7 @@ public class SearchBar {
                                                             listResult.add(each);
                                                             if (listResult.size() > 100) {
                                                                 taskQueue.clear();
-                                                                break;
+                                                                break labelOut;
                                                             }
                                                         }
                                                     }
@@ -2516,7 +2512,7 @@ public class SearchBar {
                                                             listResult.add(each);
                                                             if (listResult.size() > 100) {
                                                                 taskQueue.clear();
-                                                                break;
+                                                                break labelOut;
                                                             }
                                                         }
                                                     }
@@ -2529,7 +2525,7 @@ public class SearchBar {
                                                             listResult.add(each);
                                                             if (listResult.size() > 100) {
                                                                 taskQueue.clear();
-                                                                break;
+                                                                break labelOut;
                                                             }
                                                         }
                                                     }
@@ -2543,7 +2539,7 @@ public class SearchBar {
                                                                 listResult.add(each);
                                                                 if (listResult.size() > 100) {
                                                                     taskQueue.clear();
-                                                                    break;
+                                                                    break labelOut;
                                                                 }
                                                             }
                                                         }
@@ -2558,7 +2554,7 @@ public class SearchBar {
                                                                 listResult.add(each);
                                                                 if (listResult.size() > 100) {
                                                                     taskQueue.clear();
-                                                                    break;
+                                                                    break labelOut;
                                                                 }
                                                             }
                                                         }
@@ -2571,7 +2567,7 @@ public class SearchBar {
                                                         listResult.add(each);
                                                         if (listResult.size() > 100) {
                                                             taskQueue.clear();
-                                                            break;
+                                                            break labelOut;
                                                         }
                                                     }
                                                 }
@@ -2618,6 +2614,7 @@ public class SearchBar {
     }
 
     private void showResults() {
+        panel.repaint();
         if (!isCommandMode) {
             try {
                 String path = listResult.get(0);
