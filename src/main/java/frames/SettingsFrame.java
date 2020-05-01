@@ -17,6 +17,7 @@ import java.io.*;
 import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Objects;
 
@@ -184,7 +185,10 @@ public class SettingsFrame {
         labelAboutGithub.setText("<html><a href='https://github.com/XUANXUQAQ/File-Engine'><font size=\"4\">File-Engine</font></a></html>");
         ImageIcon imageIcon = new ImageIcon(SettingsFrame.class.getResource("/icons/frame.png"));
         labelIcon.setIcon(imageIcon);
+
         checkBox1.addActionListener(e -> setStartup(checkBox1.isSelected()));
+
+
         buttonSaveAndRemoveDesktop.addActionListener(e -> {
             String currentFolder = new File("").getAbsolutePath();
             if (currentFolder.equals(FileSystemView.getFileSystemView().getHomeDirectory().getAbsolutePath()) || currentFolder.equals("C:\\Users\\Public\\Desktop")) {
@@ -197,6 +201,7 @@ public class SettingsFrame {
                 fileMover.start();
             }
         });
+
         Button3.addActionListener(e -> {
             JFileChooser fileChooser = new JFileChooser();
             fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
@@ -206,6 +211,7 @@ public class SettingsFrame {
                 textAreaIgnorePath.append(file.getAbsolutePath() + ",\n");
             }
         });
+
         textFieldHotkey.addKeyListener(new KeyListener() {
             boolean reset = true;
 
@@ -1099,7 +1105,7 @@ public class SettingsFrame {
         URL frameIcon = SettingsFrame.class.getResource("/icons/frame.png");
         frame.setIconImage(new ImageIcon(frameIcon).getImage());
         frame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
-        frame.setSize(800, 800);
+        frame.setSize(1024, 768);
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
     }
@@ -1469,14 +1475,22 @@ public class SettingsFrame {
 
         @Override
         public void run() {
+            boolean desktop1;
+            boolean desktop2;
             File fileDesktop = FileSystemView.getFileSystemView().getHomeDirectory();
             File fileBackUp = new File("Files");
             if (!fileBackUp.exists()) {
                 fileBackUp.mkdir();
             }
-            moveFiles moveFiles = new moveFiles();
-            moveFiles.moveFolder(fileDesktop.toString(), fileBackUp.getAbsolutePath());
-            moveFiles.moveFolder("C:\\Users\\Public\\Desktop", fileBackUp.getAbsolutePath());
+            ArrayList<String> preserveFiles = new ArrayList<>();
+            preserveFiles.add(fileDesktop.getAbsolutePath());
+            preserveFiles.add("C:\\Users\\Public\\Desktop");
+            moveFiles moveFiles = new moveFiles(preserveFiles);
+            desktop1 = moveFiles.moveFolder(fileDesktop.getAbsolutePath(), fileBackUp.getAbsolutePath());
+            desktop2 = moveFiles.moveFolder("C:\\Users\\Public\\Desktop", fileBackUp.getAbsolutePath());
+            if (desktop1 || desktop2) {
+                JOptionPane.showMessageDialog(null, "检测到重名文件，请自行移动");
+            }
         }
     }
 }
