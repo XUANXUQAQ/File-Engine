@@ -226,12 +226,11 @@ public class SearchBar {
             try {
                 while (!mainExit) {
                     if (!isUsing) {
-                        long currentTime = System.currentTimeMillis();
                         for (String eachKey : readerMap.keySet()) {
                             ReaderInfo info = readerMap.get(eachKey);
-                            if (currentTime - info.time > SettingsFrame.connectionTimeLimit) {
+                            if (System.currentTimeMillis() - info.time > SettingsFrame.connectionTimeLimit) {
                                 info.reader.close();
-                                readerMap.remove(eachKey);
+                                readerMap.remove(eachKey, info);
                             }
                         }
                         if (readerMap.size() < SettingsFrame.minConnectionNum) {
@@ -244,13 +243,16 @@ public class SearchBar {
                                 } else {
                                     path = SettingsFrame.dataPath + "\\" + random.nextInt(Search.diskCount) + "\\list2500-.txt";
                                 }
-                                ReaderInfo _tmp = new ReaderInfo(System.currentTimeMillis(), new BufferedReader(new FileReader(path)));
-                                readerMap.put(path, _tmp);
+                                if (readerMap.get(path) == null) {
+                                    ReaderInfo _tmp = new ReaderInfo(System.currentTimeMillis(), new BufferedReader(new FileReader(path)));
+                                    readerMap.put(path, _tmp);
+                                }
                             }
                         }
                     }
-                    Thread.sleep(60000);
+                    Thread.sleep(500);
                 }
+                closeAllConnection();
             } catch (InterruptedException | IOException e) {
                 e.printStackTrace();
             }
@@ -2368,18 +2370,15 @@ public class SearchBar {
 
     private void addResult(LinkedHashSet<String> paths, String searchText, long time, String searchCase) {
         //为label添加结果
-        Queue<String> taskQueue = new LinkedList<>(paths);
             try {
-                String path;
                 String each;
-                while ((path = taskQueue.poll()) != null) {
+                for (String path : paths) {
                     ReaderInfo readerInfo = readerMap.get(path);
                     if (readerInfo != null) {
                         BufferedReader reader = readerInfo.reader;
                         labelOut:
                         while ((each = reader.readLine()) != null) {
                             if (startTime > time) { //用户重新输入了信息
-                                taskQueue.clear();
                                 break;
                             }
                             if (search.isUsable()) {
@@ -2391,7 +2390,6 @@ public class SearchBar {
                                                     if (isExist(each)) {
                                                         listResult.add(each);
                                                         if (listResult.size() > 100) {
-                                                            taskQueue.clear();
                                                             break labelOut;
                                                         }
                                                     }
@@ -2404,7 +2402,6 @@ public class SearchBar {
                                                     if (isExist(each)) {
                                                         listResult.add(each);
                                                         if (listResult.size() > 100) {
-                                                            taskQueue.clear();
                                                             break labelOut;
                                                         }
                                                     }
@@ -2417,7 +2414,6 @@ public class SearchBar {
                                                     if (isExist(each)) {
                                                         listResult.add(each);
                                                         if (listResult.size() > 100) {
-                                                            taskQueue.clear();
                                                             break labelOut;
                                                         }
                                                     }
@@ -2431,7 +2427,6 @@ public class SearchBar {
                                                         if (isExist(each)) {
                                                             listResult.add(each);
                                                             if (listResult.size() > 100) {
-                                                                taskQueue.clear();
                                                                 break labelOut;
                                                             }
                                                         }
@@ -2446,7 +2441,6 @@ public class SearchBar {
                                                         if (isExist(each)) {
                                                             listResult.add(each);
                                                             if (listResult.size() > 100) {
-                                                                taskQueue.clear();
                                                                 break labelOut;
                                                             }
                                                         }
@@ -2459,7 +2453,6 @@ public class SearchBar {
                                                 if (isExist(each)) {
                                                     listResult.add(each);
                                                     if (listResult.size() > 100) {
-                                                        taskQueue.clear();
                                                         break labelOut;
                                                     }
                                                 }
@@ -2474,16 +2467,9 @@ public class SearchBar {
                         readerMap.put(path, readerInfo);
                     } else {
                         BufferedReader reader = new BufferedReader(new FileReader(path));
-                        boolean isClose = true;
-                        if (readerMap.size() < SettingsFrame.maxConnectionNum) {
-                            ReaderInfo _tmpInfo = new ReaderInfo(System.currentTimeMillis(), reader);
-                            readerMap.put(path, _tmpInfo);
-                            isClose = false;
-                        }
                         labelOut:
                         while ((each = reader.readLine()) != null) {
                             if (startTime > time) { //用户重新输入了信息
-                                taskQueue.clear();
                                 break;
                             }
                             if (search.isUsable()) {
@@ -2495,7 +2481,6 @@ public class SearchBar {
                                                     if (isExist(each)) {
                                                         listResult.add(each);
                                                         if (listResult.size() > 100) {
-                                                            taskQueue.clear();
                                                             break labelOut;
                                                         }
                                                     }
@@ -2508,7 +2493,6 @@ public class SearchBar {
                                                     if (isExist(each)) {
                                                         listResult.add(each);
                                                         if (listResult.size() > 100) {
-                                                            taskQueue.clear();
                                                             break labelOut;
                                                         }
                                                     }
@@ -2521,7 +2505,6 @@ public class SearchBar {
                                                     if (isExist(each)) {
                                                         listResult.add(each);
                                                         if (listResult.size() > 100) {
-                                                            taskQueue.clear();
                                                             break labelOut;
                                                         }
                                                     }
@@ -2535,7 +2518,6 @@ public class SearchBar {
                                                         if (isExist(each)) {
                                                             listResult.add(each);
                                                             if (listResult.size() > 100) {
-                                                                taskQueue.clear();
                                                                 break labelOut;
                                                             }
                                                         }
@@ -2550,7 +2532,6 @@ public class SearchBar {
                                                         if (isExist(each)) {
                                                             listResult.add(each);
                                                             if (listResult.size() > 100) {
-                                                                taskQueue.clear();
                                                                 break labelOut;
                                                             }
                                                         }
@@ -2563,7 +2544,6 @@ public class SearchBar {
                                                 if (isExist(each)) {
                                                     listResult.add(each);
                                                     if (listResult.size() > 100) {
-                                                        taskQueue.clear();
                                                         break labelOut;
                                                     }
                                                 }
@@ -2573,7 +2553,10 @@ public class SearchBar {
                                 }
                             }
                         }
-                        if (isClose) {
+                        if (readerMap.size() < SettingsFrame.maxConnectionNum) {
+                            ReaderInfo temp = new ReaderInfo(System.currentTimeMillis(), new BufferedReader(new FileReader(path)));
+                            readerMap.put(path, temp);
+                        } else {
                             reader.close();
                         }
                     }
@@ -3181,11 +3164,6 @@ public class SearchBar {
         return file.isFile();
     }
 
-    private long getFileLength(String path) {
-        File file = new File(path);
-        return file.length();
-    }
-
     private boolean isDirectory(String text) {
         File file = new File(text);
         return file.isDirectory();
@@ -3225,6 +3203,22 @@ public class SearchBar {
 
     public void setSearchBarColor(int colorNum) {
         textField.setBackground(new Color(colorNum));
+    }
+
+    public int currentConnectionNum() {
+        return readerMap.size();
+    }
+
+    public void closeAllConnection() {
+        try {
+            for (String eachKey : readerMap.keySet()) {
+                ReaderInfo tmp = readerMap.get(eachKey);
+                tmp.reader.close();
+                readerMap.remove(eachKey, tmp);
+            }
+        } catch (IOException ignored) {
+
+        }
     }
 }
 

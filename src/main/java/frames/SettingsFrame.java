@@ -20,6 +20,8 @@ import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Objects;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 
 public class SettingsFrame {
@@ -174,6 +176,9 @@ public class SettingsFrame {
     private JLabel labelPlaceHolder;
     private JLabel labelFileConnectionTip2;
     private JLabel labelCmdTip2;
+    private JLabel labelCurrentConnection;
+    private JLabel currentConnection;
+    private JButton buttonClearConnection;
     private static boolean isStartup;
     private Unzip unzipInstance = Unzip.getInstance();
     private Thread updateThread = null;
@@ -823,6 +828,20 @@ public class SettingsFrame {
                 searchBarColorChooser.setForeground(color);
             }
         });
+
+        ExecutorService fixedThreadPool = Executors.newFixedThreadPool(1);
+        fixedThreadPool.execute(() -> {
+            try {
+                while (!MainClass.mainExit) {
+                    Thread.sleep(50);
+                    currentConnection.setText(String.valueOf(SearchBar.getInstance().currentConnectionNum()));
+                }
+            } catch (InterruptedException ignored) {
+
+            }
+        });
+
+        buttonClearConnection.addActionListener(e -> SearchBar.getInstance().closeAllConnection());
     }
 
     private boolean isRepeatCommand(String name) {
