@@ -97,7 +97,6 @@ public class SettingsFrame {
     private JList<Object> listCmds;
     private JLabel labelPlaceHoder4;
     private JButton buttonSave;
-    private JLabel labelCmdTip;
     private JLabel labelPlaceHoder6;
     private JLabel labelPlaceHolder7;
     private JLabel labelPlaceHolder8;
@@ -119,9 +118,9 @@ public class SettingsFrame {
     private JPanel tab1;
     private JPanel tab2;
     private JPanel tab3;
-    private JPanel tab4;
     private JPanel tab5;
     private JPanel tab6;
+    private JPanel tab8;
     private JTextField textFieldTransparency;
     private JLabel labelTransparency;
     private JLabel labelPlaceHolder5;
@@ -160,7 +159,7 @@ public class SettingsFrame {
     private JLabel labelSharp8;
     private JTextField textFieldSearchBarColor;
     private JLabel searchBarColorChooser;
-    private JPanel tab8;
+    private JPanel tab4;
     private JLabel labelFileConnectionTip;
     private JLabel labelMaxConnection;
     private JLabel labelMinConnection;
@@ -171,6 +170,9 @@ public class SettingsFrame {
     private JLabel labelPlaceHolderF1;
     private JLabel labelPlaceHolderF2;
     private JLabel labelTip4F;
+    private JLabel labelPlaceHolder;
+    private JLabel labelFileConnectionTip2;
+    private JLabel labelCmdTip2;
     private static boolean isStartup;
     private Unzip unzipInstance = Unzip.getInstance();
     private Thread updateThread = null;
@@ -562,7 +564,7 @@ public class SettingsFrame {
             textFieldBackground2.setText(Integer.toHexString(0xffffff));
             textFieldBackground3.setText(Integer.toHexString(0xffffff));
             textFieldBackground4.setText(Integer.toHexString(0xffffff));
-            textFieldFontColor.setText(Integer.toHexString(0xC5C5C5));
+            textFieldFontColor.setText(Integer.toHexString(0x333333));
         });
 
 
@@ -1097,7 +1099,7 @@ public class SettingsFrame {
         URL frameIcon = SettingsFrame.class.getResource("/icons/frame.png");
         frame.setIconImage(new ImageIcon(frameIcon).getImage());
         frame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
-        frame.setSize(800, 600);
+        frame.setSize(800, 800);
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
     }

@@ -344,7 +344,118 @@
               </component>
             </children>
           </grid>
-          <grid id="61eb8" binding="tab4" layout-manager="GridLayoutManager" row-count="4" column-count="3" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+          <grid id="ea6cf" binding="tab4" layout-manager="GridLayoutManager" row-count="8" column-count="4" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+            <margin top="0" left="0" bottom="0" right="0"/>
+            <constraints>
+              <tabbedpane title="文件连接设置"/>
+            </constraints>
+            <properties/>
+            <border type="none"/>
+            <children>
+              <component id="6756" class="javax.swing.JLabel" binding="labelFileConnectionTip">
+                <constraints>
+                  <grid row="0" column="1" row-span="1" col-span="2" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                </constraints>
+                <properties>
+                  <text value="提示：文件连接保持数越大，搜索速度越快，但会消耗更多的内存"/>
+                </properties>
+              </component>
+              <component id="8172" class="javax.swing.JLabel" binding="labelMinConnection">
+                <constraints>
+                  <grid row="4" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                </constraints>
+                <properties>
+                  <text value="最小保持连接数量："/>
+                </properties>
+              </component>
+              <component id="26390" class="javax.swing.JTextField" binding="textFieldMaxConnectionNum">
+                <constraints>
+                  <grid row="2" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
+                    <preferred-size width="150" height="-1"/>
+                  </grid>
+                </constraints>
+                <properties/>
+              </component>
+              <component id="85c01" class="javax.swing.JTextField" binding="textFieldMinConnectionNum">
+                <constraints>
+                  <grid row="4" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
+                    <preferred-size width="150" height="-1"/>
+                  </grid>
+                </constraints>
+                <properties/>
+              </component>
+              <component id="dbed7" class="javax.swing.JLabel" binding="labelMaxConnection">
+                <constraints>
+                  <grid row="2" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                </constraints>
+                <properties>
+                  <text value="最大连接保持数量："/>
+                </properties>
+              </component>
+              <vspacer id="4299b">
+                <constraints>
+                  <grid row="7" column="2" row-span="1" col-span="1" vsize-policy="6" hsize-policy="1" anchor="0" fill="2" indent="0" use-parent-layout="false"/>
+                </constraints>
+              </vspacer>
+              <component id="7d276" class="javax.swing.JLabel" binding="labelFileConnectionTip3">
+                <constraints>
+                  <grid row="6" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                </constraints>
+                <properties>
+                  <text value="连接保持时间："/>
+                </properties>
+              </component>
+              <component id="87d49" class="javax.swing.JTextField" binding="textFieldConnectionTimeLimit">
+                <constraints>
+                  <grid row="6" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
+                    <preferred-size width="150" height="-1"/>
+                  </grid>
+                </constraints>
+                <properties/>
+              </component>
+              <component id="317b9" class="javax.swing.JLabel" binding="labelPlaceHolderF1">
+                <constraints>
+                  <grid row="3" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                </constraints>
+                <properties>
+                  <text value=""/>
+                </properties>
+              </component>
+              <component id="64984" class="javax.swing.JLabel" binding="labelPlaceHolderF2">
+                <constraints>
+                  <grid row="5" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                </constraints>
+                <properties>
+                  <text value=""/>
+                </properties>
+              </component>
+              <component id="51627" class="javax.swing.JLabel" binding="labelTip4F">
+                <constraints>
+                  <grid row="6" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                </constraints>
+                <properties>
+                  <text value="（秒）"/>
+                </properties>
+              </component>
+              <component id="b9f8b" class="javax.swing.JLabel" binding="labelPlaceHolder">
+                <constraints>
+                  <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                </constraints>
+                <properties>
+                  <text value=""/>
+                </properties>
+              </component>
+              <component id="e96b7" class="javax.swing.JLabel" binding="labelFileConnectionTip2">
+                <constraints>
+                  <grid row="1" column="1" row-span="1" col-span="2" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                </constraints>
+                <properties>
+                  <text value="File-Engine默认会在你进行搜索后保持10分钟对文件的连接，你可以在下方进行修改"/>
+                </properties>
+              </component>
+            </children>
+          </grid>
+          <grid id="61eb8" binding="tab5" layout-manager="GridLayoutManager" row-count="4" column-count="3" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
             <margin top="0" left="0" bottom="0" right="0"/>
             <constraints>
               <tabbedpane title="快捷键设置"/>
@@ -433,6 +544,58 @@
                 </constraints>
                 <properties>
                   <editable value="false"/>
+                </properties>
+              </component>
+            </children>
+          </grid>
+          <grid id="42c04" binding="tab6" layout-manager="GridLayoutManager" row-count="3" column-count="2" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+            <margin top="0" left="0" bottom="0" right="0"/>
+            <constraints>
+              <tabbedpane title="自定义命令"/>
+            </constraints>
+            <properties>
+              <opaque value="false"/>
+            </properties>
+            <border type="none"/>
+            <children>
+              <scrollpane id="2db" binding="scrollPaneCmd">
+                <constraints>
+                  <grid row="1" column="0" row-span="2" col-span="1" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+                </constraints>
+                <properties/>
+                <border type="none"/>
+                <children>
+                  <component id="7be97" class="javax.swing.JList" binding="listCmds">
+                    <constraints/>
+                    <properties>
+                      <opaque value="true"/>
+                    </properties>
+                  </component>
+                </children>
+              </scrollpane>
+              <component id="fd4a1" class="javax.swing.JButton" binding="buttonAddCMD">
+                <constraints>
+                  <grid row="1" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                </constraints>
+                <properties>
+                  <text value="添加"/>
+                </properties>
+              </component>
+              <component id="53930" class="javax.swing.JButton" binding="buttonDelCmd">
+                <constraints>
+                  <grid row="2" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                </constraints>
+                <properties>
+                  <text value="删除"/>
+                </properties>
+              </component>
+              <component id="6f921" class="javax.swing.JLabel" binding="labelCmdTip2">
+                <constraints>
+                  <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                </constraints>
+                <properties>
+                  <text value="你可以在这里添加自定义命令，添加后，你可以在搜索框中输入 “： + 你设置的标识符”快捷打开"/>
+                  <verticalTextPosition value="0"/>
                 </properties>
               </component>
             </children>
@@ -741,153 +904,7 @@
               </component>
             </children>
           </grid>
-          <grid id="ea6cf" binding="tab8" layout-manager="GridLayoutManager" row-count="7" column-count="3" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
-            <margin top="0" left="0" bottom="0" right="0"/>
-            <constraints>
-              <tabbedpane title="文件连接设置"/>
-            </constraints>
-            <properties/>
-            <border type="none"/>
-            <children>
-              <component id="6756" class="javax.swing.JLabel" binding="labelFileConnectionTip">
-                <constraints>
-                  <grid row="0" column="0" row-span="1" col-span="2" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
-                </constraints>
-                <properties>
-                  <text value="提示：文件连接保持数越大，搜索速度越快，但会消耗更多的内存"/>
-                </properties>
-              </component>
-              <component id="8172" class="javax.swing.JLabel" binding="labelMinConnection">
-                <constraints>
-                  <grid row="3" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
-                </constraints>
-                <properties>
-                  <text value="最小保持连接数量："/>
-                </properties>
-              </component>
-              <component id="26390" class="javax.swing.JTextField" binding="textFieldMaxConnectionNum">
-                <constraints>
-                  <grid row="1" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
-                    <preferred-size width="150" height="-1"/>
-                  </grid>
-                </constraints>
-                <properties/>
-              </component>
-              <component id="85c01" class="javax.swing.JTextField" binding="textFieldMinConnectionNum">
-                <constraints>
-                  <grid row="3" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
-                    <preferred-size width="150" height="-1"/>
-                  </grid>
-                </constraints>
-                <properties/>
-              </component>
-              <component id="dbed7" class="javax.swing.JLabel" binding="labelMaxConnection">
-                <constraints>
-                  <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
-                </constraints>
-                <properties>
-                  <text value="最大连接保持数量："/>
-                </properties>
-              </component>
-              <vspacer id="4299b">
-                <constraints>
-                  <grid row="6" column="1" row-span="1" col-span="1" vsize-policy="6" hsize-policy="1" anchor="0" fill="2" indent="0" use-parent-layout="false"/>
-                </constraints>
-              </vspacer>
-              <component id="7d276" class="javax.swing.JLabel" binding="labelFileConnectionTip3">
-                <constraints>
-                  <grid row="5" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
-                </constraints>
-                <properties>
-                  <text value="连接保持时间："/>
-                </properties>
-              </component>
-              <component id="87d49" class="javax.swing.JTextField" binding="textFieldConnectionTimeLimit">
-                <constraints>
-                  <grid row="5" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
-                    <preferred-size width="150" height="-1"/>
-                  </grid>
-                </constraints>
-                <properties/>
-              </component>
-              <component id="317b9" class="javax.swing.JLabel" binding="labelPlaceHolderF1">
-                <constraints>
-                  <grid row="2" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
-                </constraints>
-                <properties>
-                  <text value=""/>
-                </properties>
-              </component>
-              <component id="64984" class="javax.swing.JLabel" binding="labelPlaceHolderF2">
-                <constraints>
-                  <grid row="4" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
-                </constraints>
-                <properties>
-                  <text value=""/>
-                </properties>
-              </component>
-              <component id="51627" class="javax.swing.JLabel" binding="labelTip4F">
-                <constraints>
-                  <grid row="5" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
-                </constraints>
-                <properties>
-                  <text value="（秒）"/>
-                </properties>
-              </component>
-            </children>
-          </grid>
-          <grid id="42c04" binding="tab5" layout-manager="GridLayoutManager" row-count="3" column-count="2" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
-            <margin top="0" left="0" bottom="0" right="0"/>
-            <constraints>
-              <tabbedpane title="自定义命令"/>
-            </constraints>
-            <properties>
-              <opaque value="false"/>
-            </properties>
-            <border type="none"/>
-            <children>
-              <scrollpane id="2db" binding="scrollPaneCmd">
-                <constraints>
-                  <grid row="1" column="0" row-span="2" col-span="1" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
-                </constraints>
-                <properties/>
-                <border type="none"/>
-                <children>
-                  <component id="7be97" class="javax.swing.JList" binding="listCmds">
-                    <constraints/>
-                    <properties>
-                      <opaque value="true"/>
-                    </properties>
-                  </component>
-                </children>
-              </scrollpane>
-              <component id="fd4a1" class="javax.swing.JButton" binding="buttonAddCMD">
-                <constraints>
-                  <grid row="1" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
-                </constraints>
-                <properties>
-                  <text value="添加"/>
-                </properties>
-              </component>
-              <component id="53930" class="javax.swing.JButton" binding="buttonDelCmd">
-                <constraints>
-                  <grid row="2" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
-                </constraints>
-                <properties>
-                  <text value="删除"/>
-                </properties>
-              </component>
-              <component id="a8dd1" class="javax.swing.JLabel" binding="labelCmdTip">
-                <constraints>
-                  <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
-                </constraints>
-                <properties>
-                  <text value="自定义命令，设置后在搜索框中输入&quot;: + 你的标识符&quot;即可快捷打开"/>
-                </properties>
-              </component>
-            </children>
-          </grid>
-          <grid id="9b15a" binding="tab6" layout-manager="GridLayoutManager" row-count="11" column-count="7" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+          <grid id="9b15a" binding="tab8" layout-manager="GridLayoutManager" row-count="11" column-count="7" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
             <margin top="0" left="0" bottom="0" right="0"/>
             <constraints>
               <tabbedpane title="关于"/>
