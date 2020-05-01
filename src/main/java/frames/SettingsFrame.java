@@ -1283,6 +1283,10 @@ public class SettingsFrame {
             JOptionPane.showMessageDialog(null, "最小连接保持数量设置错误");
             return;
         }
+        if (_minConnectionNum > _maxConnectionNum) {
+            JOptionPane.showMessageDialog(null, "最小连接保持数量需要大于最大连接保持数量");
+            return;
+        }
         int _connectionTimeLimit;
         try {
             _connectionTimeLimit = Integer.parseInt(textFieldConnectionTimeLimit.getText()) * 1000;
@@ -1342,6 +1346,9 @@ public class SettingsFrame {
         _tmp = new Color(fontColor);
         FontColorChooser.setBackground(_tmp);
         FontColorChooser.setForeground(_tmp);
+        maxConnectionNum = _maxConnectionNum;
+        minConnectionNum = _minConnectionNum;
+        connectionTimeLimit = _connectionTimeLimit;
 
         allSettings.put("hotkey", hotkey);
         allSettings.put("isStartup", isStartup);
