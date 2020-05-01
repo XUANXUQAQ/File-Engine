@@ -340,7 +340,7 @@ public class MainClass {
         fixedThreadPool.execute(() -> {
             //检测文件添加线程
             String filesToAdd;
-            try (BufferedReader readerAdd = new BufferedReader(new InputStreamReader(new FileInputStream(new File(SettingsFrame.tmp.getAbsolutePath() + "\\fileAdded.txt"))))) {
+            try (BufferedReader readerAdd = new BufferedReader(new FileReader(SettingsFrame.tmp.getAbsolutePath() + "\\fileAdded.txt"))) {
                 while (!mainExit) {
                     if (!search.isManualUpdate()) {
                         if ((filesToAdd = readerAdd.readLine()) != null) {
@@ -350,7 +350,7 @@ public class MainClass {
                             }
                         }
                     }
-                    Thread.sleep(1);
+                    Thread.sleep(5);
                 }
             } catch (IOException | InterruptedException e) {
                 e.printStackTrace();
@@ -359,7 +359,7 @@ public class MainClass {
 
         fixedThreadPool.execute(() -> {
             String filesToRemove;
-            try (BufferedReader readerRemove = new BufferedReader(new InputStreamReader(new FileInputStream(new File(SettingsFrame.tmp.getAbsolutePath() + "\\fileRemoved.txt"))))) {
+            try (BufferedReader readerRemove = new BufferedReader(new FileReader(SettingsFrame.tmp.getAbsolutePath() + "\\fileRemoved.txt"))) {
                 while (!mainExit) {
                     if (!search.isManualUpdate()) {
                         if ((filesToRemove = readerRemove.readLine()) != null) {
@@ -369,7 +369,7 @@ public class MainClass {
                             }
                         }
                     }
-                    Thread.sleep(1);
+                    Thread.sleep(5);
                 }
             } catch (InterruptedException | IOException e) {
                 e.printStackTrace();
@@ -406,7 +406,7 @@ public class MainClass {
                         search.setUsable(false);
                         search.updateLists(SettingsFrame.ignorePath, SettingsFrame.searchDepth);
                     }
-                    Thread.sleep(1);
+                    Thread.sleep(5);
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -416,7 +416,7 @@ public class MainClass {
         try {
             while (true) {
                 // 主循环开始
-                Thread.sleep(1);
+                Thread.sleep(5);
                 if (mainExit) {
                     CheckHotKey.getInstance().stopListen();
                     File CLOSEDLL = new File(SettingsFrame.tmp.getAbsolutePath() + "\\CLOSE");
