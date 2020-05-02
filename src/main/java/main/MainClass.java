@@ -11,7 +11,6 @@ import search.Search;
 import javax.swing.*;
 import javax.swing.filechooser.FileSystemView;
 import java.io.*;
-import java.util.Objects;
 import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -91,7 +90,7 @@ public class MainClass {
                     temp.delete();//删除空目录
                 } else {
                     if (!temp.delete()) {//直接删除文件
-                        System.err.println("Failed to delete " + name);
+                        System.out.println("Failed to delete " + name);
                     }
                 }
             }
@@ -302,12 +301,19 @@ public class MainClass {
 
 
         data = new File(SettingsFrame.dataPath);
+        File[] files = data.listFiles();
         if (!data.exists()) {
             System.out.println("无data文件，正在搜索并重建");
             search.setManualUpdate(true);
-        } else if (Objects.requireNonNull(data.listFiles()).length != 26) {
+        } else if (files == null) {
             System.out.println("data文件损坏，正在搜索并重建");
             search.setManualUpdate(true);
+        } else {
+            assert false;
+            if (files.length != 26) {
+                System.out.println("data文件损坏，正在搜索并重建");
+                search.setManualUpdate(true);
+            }
         }
 
         FileSystemView sys = FileSystemView.getFileSystemView();
