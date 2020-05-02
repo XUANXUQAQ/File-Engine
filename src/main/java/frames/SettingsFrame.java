@@ -56,6 +56,7 @@ public class SettingsFrame {
     public static int maxConnectionNum;
     public static int minConnectionNum;
     public static int connectionTimeLimit;
+    public static int diskCount;
     private JTextField textFieldUpdateTime;
     private JTextField textFieldCacheNum;
     private JTextArea textAreaIgnorePath;
@@ -872,6 +873,13 @@ public class SettingsFrame {
 
     public static void initSettings() {
         //获取所有设置信息
+        FileSystemView sys = FileSystemView.getFileSystemView();
+        for (File root : File.listRoots()) {
+            String driveType = sys.getSystemTypeDescription(root);
+            if (driveType.equals("本地磁盘")) {
+                diskCount++;
+            }
+        }
         try (BufferedReader buffR = new BufferedReader(new FileReader(settings))) {
             String line;
             StringBuilder result = new StringBuilder();
@@ -1004,12 +1012,12 @@ public class SettingsFrame {
             if (settings.containsKey("maxConnectionNum")) {
                 maxConnectionNum = settings.getInteger("maxConnectionNum");
             } else {
-                maxConnectionNum = 10;
+                maxConnectionNum = 15;
             }
             if (settings.containsKey("minConnectionNum")) {
                 minConnectionNum = settings.getInteger("minConnectionNum");
             } else {
-                minConnectionNum = 5;
+                minConnectionNum = 10;
             }
             if (settings.containsKey("connectionTimeLimit")) {
                 connectionTimeLimit = settings.getInteger("connectionTimeLimit");
