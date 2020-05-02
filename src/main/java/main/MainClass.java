@@ -305,7 +305,7 @@ public class MainClass {
         if (!data.exists()) {
             System.out.println("无data文件，正在搜索并重建");
             search.setManualUpdate(true);
-        } else if (data.listFiles() == null || Objects.requireNonNull(data.listFiles()).length != 26) {
+        } else if (Objects.requireNonNull(data.listFiles()).length != 26) {
             System.out.println("data文件损坏，正在搜索并重建");
             search.setManualUpdate(true);
         }
