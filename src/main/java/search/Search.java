@@ -669,7 +669,7 @@ public class Search {
             MainClass.deleteDir(path);
             boolean isDeleted = new File(path).delete();
             if (!isDeleted) {
-                System.err.println("文件夹" + i + "删除失败");
+                System.out.println("文件夹" + i + "删除失败");
             }
         }
         MainClass.showMessage("提示", "搜索完成");
@@ -705,7 +705,7 @@ public class Search {
         try {
             p = Runtime.getRuntime().exec(command);
             while (p.isAlive()) {
-                Thread.sleep(1);
+                Thread.sleep(10);
             }
         } catch (IOException | InterruptedException ignored) {
 
@@ -722,7 +722,7 @@ public class Search {
         try {
             p = Runtime.getRuntime().exec(command);
             while (p.isAlive()) {
-                Thread.sleep(1);
+                Thread.sleep(10);
             }
         } catch (IOException | InterruptedException ignored) {
 
@@ -734,5 +734,4 @@ public class Search {
         MainClass.deleteDir(SettingsFrame.dataPath);
         searchFile(ignorePath, searchDepth);
     }
-
 }

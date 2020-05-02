@@ -380,10 +380,10 @@ public class SearchBar {
 
         fixedThreadPool.execute(() -> {
             //接收insertUpdate的信息并进行搜索
-            //停顿时间0.25s，每一次输入会更新一次startTime，该线程记录endTime
+            //停顿时间0.5s，每一次输入会更新一次startTime，该线程记录endTime
             while (!mainExit) {
                 long endTime = System.currentTimeMillis();
-                if ((endTime - startTime > 250) && (timer)) {
+                if ((endTime - startTime > 500) && (timer)) {
                     timer = false; //开始搜索 计时停止
                     labelCount = 0;
                     clearLabel();
