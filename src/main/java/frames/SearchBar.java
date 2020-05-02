@@ -349,12 +349,11 @@ public class SearchBar {
                     }
                 } catch (NullPointerException ignored) {
 
-                } finally {
-                    try {
-                        Thread.sleep(10);
-                    } catch (InterruptedException ignored) {
+                }
+                try {
+                    Thread.sleep(10);
+                } catch (InterruptedException ignored) {
 
-                    }
                 }
             }
         });
@@ -486,7 +485,7 @@ public class SearchBar {
 
                             String listPath;
                             int ascII = getAscIISum(searchText);
-                            LinkedHashSet<String> paths = new LinkedHashSet<>();
+                            ConcurrentLinkedQueue<String> paths = new ConcurrentLinkedQueue<>();
 
                             if (0 < ascII && ascII <= 100) {
                                 for (int i = 0; i < 2500; i += 100) {
@@ -2219,16 +2218,15 @@ public class SearchBar {
         return f.exists();
     }
 
-    private void addResult(LinkedHashSet<String> paths, String searchText, long time, String searchCase) {
+    private void addResult(ConcurrentLinkedQueue<String> paths, String searchText, long time, String searchCase) {
         //为label添加结果
         ExecutorService threadPool = Executors.newFixedThreadPool(4);
-        ConcurrentLinkedQueue<String> queue = new ConcurrentLinkedQueue<>(paths);
         for (int i = 0; i < 4; i++) {
             threadPool.execute(() -> {
                 String each;
                 String path;
                 try {
-                    while ((path = queue.poll()) != null) {
+                    while ((path = paths.poll()) != null) {
                         ReaderInfo readerInfo = readerMap.get(path);
                         if (readerInfo != null) {
                             BufferedReader reader = readerInfo.reader;
