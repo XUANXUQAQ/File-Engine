@@ -153,242 +153,136 @@ public class Search {
                 RecycleBin.clear();
                 String srcPath;
                 String destPath;
-                File src;
-                File target;
 
                 if (!set0.isEmpty()) {
                     srcPath = SettingsFrame.dataPath + "\\list0-100.txt";
                     destPath = SettingsFrame.dataPath + "\\_list0-100.txt";
-                    deleteRecordInFile(set0, srcPath, destPath);
-                    src = new File(srcPath);
-                    src.delete();
-                    target = new File(destPath);
-                    target.renameTo(src);
+                    generateNewLocalRecord(srcPath, destPath, set0);
                 }
                 if (!set100.isEmpty()) {
                     srcPath = SettingsFrame.dataPath + "\\list100-200.txt";
                     destPath = SettingsFrame.dataPath + "\\_list100-200.txt";
-                    deleteRecordInFile(set100, srcPath, destPath);
-                    src = new File(srcPath);
-                    src.delete();
-                    target = new File(destPath);
-                    target.renameTo(src);
+                    generateNewLocalRecord(srcPath, destPath, set100);
                 }
                 if (!set200.isEmpty()) {
                     srcPath = SettingsFrame.dataPath + "\\list200-300.txt";
                     destPath = SettingsFrame.dataPath + "\\_list200-300.txt";
-                    deleteRecordInFile(set200, srcPath, destPath);
-                    src = new File(srcPath);
-                    src.delete();
-                    target = new File(destPath);
-                    target.renameTo(src);
+                    generateNewLocalRecord(srcPath, destPath, set200);
                 }
                 if (!set300.isEmpty()) {
                     srcPath = SettingsFrame.dataPath + "\\list300-400.txt";
                     destPath = SettingsFrame.dataPath + "\\_list300-400.txt";
-                    deleteRecordInFile(set300, srcPath, destPath);
-                    src = new File(srcPath);
-                    src.delete();
-                    target = new File(destPath);
-                    target.renameTo(src);
+                    generateNewLocalRecord(srcPath, destPath, set300);
                 }
                 if (!set400.isEmpty()) {
                     srcPath = SettingsFrame.dataPath + "\\list400-500.txt";
                     destPath = SettingsFrame.dataPath + "\\_list400-500.txt";
-                    deleteRecordInFile(set400, srcPath, destPath);
-                    src = new File(srcPath);
-                    src.delete();
-                    target = new File(destPath);
-                    target.renameTo(src);
+                    generateNewLocalRecord(srcPath, destPath, set400);
                 }
                 if (!set500.isEmpty()) {
                     srcPath = SettingsFrame.dataPath + "\\list500-600.txt";
                     destPath = SettingsFrame.dataPath + "\\_list500-600.txt";
-                    deleteRecordInFile(set500, srcPath, destPath);
-                    src = new File(srcPath);
-                    src.delete();
-                    target = new File(destPath);
-                    target.renameTo(src);
+                    generateNewLocalRecord(srcPath, destPath, set500);
                 }
                 if (!set600.isEmpty()) {
                     srcPath = SettingsFrame.dataPath + "\\list600-700.txt";
                     destPath = SettingsFrame.dataPath + "\\_list600-700.txt";
-                    deleteRecordInFile(set600, srcPath, destPath);
-                    src = new File(srcPath);
-                    src.delete();
-                    target = new File(destPath);
-                    target.renameTo(src);
+                    generateNewLocalRecord(srcPath, destPath, set600);
                 }
                 if (!set700.isEmpty()) {
                     srcPath = SettingsFrame.dataPath + "\\list700-800.txt";
                     destPath = SettingsFrame.dataPath + "\\_list700-800.txt";
-                    deleteRecordInFile(set700, srcPath, destPath);
-                    src = new File(srcPath);
-                    src.delete();
-                    target = new File(destPath);
-                    target.renameTo(src);
+                    generateNewLocalRecord(srcPath, destPath, set700);
                 }
                 if (!set800.isEmpty()) {
                     srcPath = SettingsFrame.dataPath + "\\list800-900.txt";
                     destPath = SettingsFrame.dataPath + "\\_list800-900.txt";
-                    deleteRecordInFile(set800, srcPath, destPath);
-                    src = new File(srcPath);
-                    src.delete();
-                    target = new File(destPath);
-                    target.renameTo(src);
+                    generateNewLocalRecord(srcPath, destPath, set800);
                 }
                 if (!set900.isEmpty()) {
                     srcPath = SettingsFrame.dataPath + "\\list900-1000.txt";
                     destPath = SettingsFrame.dataPath + "\\_list900-1000.txt";
-                    deleteRecordInFile(set900, srcPath, destPath);
-                    src = new File(srcPath);
-                    src.delete();
-                    target = new File(destPath);
-                    target.renameTo(src);
+                    generateNewLocalRecord(srcPath, destPath, set900);
                 }
                 if (!set1000.isEmpty()) {
                     srcPath = SettingsFrame.dataPath + "\\list1000-1100.txt";
                     destPath = SettingsFrame.dataPath + "\\_list1000-1100.txt";
-                    deleteRecordInFile(set1000, srcPath, destPath);
-                    src = new File(srcPath);
-                    src.delete();
-                    target = new File(destPath);
-                    target.renameTo(src);
+                    generateNewLocalRecord(srcPath, destPath, set1000);
                 }
                 if (!set1100.isEmpty()) {
                     srcPath = SettingsFrame.dataPath + "\\list1100-1200.txt";
                     destPath = SettingsFrame.dataPath + "\\_list1100-1200.txt";
-                    deleteRecordInFile(set1100, srcPath, destPath);
-                    src = new File(srcPath);
-                    src.delete();
-                    target = new File(destPath);
-                    target.renameTo(src);
+                    generateNewLocalRecord(srcPath, destPath, set1100);
                 }
                 if (!set1200.isEmpty()) {
                     srcPath = SettingsFrame.dataPath + "\\list1200-1300.txt";
                     destPath = SettingsFrame.dataPath + "\\_list1200-1300.txt";
-                    deleteRecordInFile(set1200, srcPath, destPath);
-                    src = new File(srcPath);
-                    src.delete();
-                    target = new File(destPath);
-                    target.renameTo(src);
+                    generateNewLocalRecord(srcPath, destPath, set1200);
                 }
                 if (!set1300.isEmpty()) {
                     srcPath = SettingsFrame.dataPath + "\\list1300-1400.txt";
                     destPath = SettingsFrame.dataPath + "\\_list1300-1400.txt";
-                    deleteRecordInFile(set1300, srcPath, destPath);
-                    src = new File(srcPath);
-                    src.delete();
-                    target = new File(destPath);
-                    target.renameTo(src);
+                    generateNewLocalRecord(srcPath, destPath, set1300);
                 }
                 if (!set1400.isEmpty()) {
                     srcPath = SettingsFrame.dataPath + "\\list1400-1500.txt";
                     destPath = SettingsFrame.dataPath + "\\_list1400-1500.txt";
-                    deleteRecordInFile(set1400, srcPath, destPath);
-                    src = new File(srcPath);
-                    src.delete();
-                    target = new File(destPath);
-                    target.renameTo(src);
+                    generateNewLocalRecord(srcPath, destPath, set1400);
                 }
                 if (!set1500.isEmpty()) {
                     srcPath = SettingsFrame.dataPath + "\\list1500-1600.txt";
                     destPath = SettingsFrame.dataPath + "\\_list1500-1600.txt";
-                    deleteRecordInFile(set1500, srcPath, destPath);
-                    src = new File(srcPath);
-                    src.delete();
-                    target = new File(destPath);
-                    target.renameTo(src);
+                    generateNewLocalRecord(srcPath, destPath, set1500);
                 }
                 if (!set1600.isEmpty()) {
                     srcPath = SettingsFrame.dataPath + "\\list1600-1700.txt";
                     destPath = SettingsFrame.dataPath + "\\_list1600-1700.txt";
-                    deleteRecordInFile(set1500, srcPath, destPath);
-                    src = new File(srcPath);
-                    src.delete();
-                    target = new File(destPath);
-                    target.renameTo(src);
+                    generateNewLocalRecord(srcPath, destPath, set1600);
                 }
                 if (!set1700.isEmpty()) {
                     srcPath = SettingsFrame.dataPath + "\\list1700-1800.txt";
                     destPath = SettingsFrame.dataPath + "\\_list1700-1800.txt";
-                    deleteRecordInFile(set1500, srcPath, destPath);
-                    src = new File(srcPath);
-                    src.delete();
-                    target = new File(destPath);
-                    target.renameTo(src);
+                    generateNewLocalRecord(srcPath, destPath, set1700);
                 }
                 if (!set1800.isEmpty()) {
                     srcPath = SettingsFrame.dataPath + "\\list1800-1900.txt";
                     destPath = SettingsFrame.dataPath + "\\_list1800-1900.txt";
-                    deleteRecordInFile(set1500, srcPath, destPath);
-                    src = new File(srcPath);
-                    src.delete();
-                    target = new File(destPath);
-                    target.renameTo(src);
+                    generateNewLocalRecord(srcPath, destPath, set1800);
                 }
                 if (!set1900.isEmpty()) {
                     srcPath = SettingsFrame.dataPath + "\\list1900-2000.txt";
                     destPath = SettingsFrame.dataPath + "\\_list1900-2000.txt";
-                    deleteRecordInFile(set1500, srcPath, destPath);
-                    src = new File(srcPath);
-                    src.delete();
-                    target = new File(destPath);
-                    target.renameTo(src);
+                    generateNewLocalRecord(srcPath, destPath, set1900);
                 }
                 if (!set2000.isEmpty()) {
                     srcPath = SettingsFrame.dataPath + "\\list2000-2100.txt";
                     destPath = SettingsFrame.dataPath + "\\_list2000-2100.txt";
-                    deleteRecordInFile(set1500, srcPath, destPath);
-                    src = new File(srcPath);
-                    src.delete();
-                    target = new File(destPath);
-                    target.renameTo(src);
+                    generateNewLocalRecord(srcPath, destPath, set2000);
                 }
                 if (!set2100.isEmpty()) {
                     srcPath = SettingsFrame.dataPath + "\\list2100-2200.txt";
                     destPath = SettingsFrame.dataPath + "\\_list2100-2200.txt";
-                    deleteRecordInFile(set1500, srcPath, destPath);
-                    src = new File(srcPath);
-                    src.delete();
-                    target = new File(destPath);
-                    target.renameTo(src);
+                    generateNewLocalRecord(srcPath, destPath, set2100);
                 }
                 if (!set2200.isEmpty()) {
                     srcPath = SettingsFrame.dataPath + "\\list2200-2300.txt";
                     destPath = SettingsFrame.dataPath + "\\_list2200-2300.txt";
-                    deleteRecordInFile(set1500, srcPath, destPath);
-                    src = new File(srcPath);
-                    src.delete();
-                    target = new File(destPath);
-                    target.renameTo(src);
+                    generateNewLocalRecord(srcPath, destPath, set2200);
                 }
                 if (!set2300.isEmpty()) {
                     srcPath = SettingsFrame.dataPath + "\\list2300-2400.txt";
                     destPath = SettingsFrame.dataPath + "\\_list2300-2400.txt";
-                    deleteRecordInFile(set1500, srcPath, destPath);
-                    src = new File(srcPath);
-                    src.delete();
-                    target = new File(destPath);
-                    target.renameTo(src);
+                    generateNewLocalRecord(srcPath, destPath, set2300);
                 }
                 if (!set2400.isEmpty()) {
                     srcPath = SettingsFrame.dataPath + "\\list2400-2500.txt";
                     destPath = SettingsFrame.dataPath + "\\_list2400-2500.txt";
-                    deleteRecordInFile(set1500, srcPath, destPath);
-                    src = new File(srcPath);
-                    src.delete();
-                    target = new File(destPath);
-                    target.renameTo(src);
+                    generateNewLocalRecord(srcPath, destPath, set2400);
                 }
                 if (!set2500.isEmpty()) {
                     srcPath = SettingsFrame.dataPath + "\\list2500-.txt";
                     destPath = SettingsFrame.dataPath + "\\_list2500-.txt";
-                    deleteRecordInFile(set1500, srcPath, destPath);
-                    src = new File(srcPath);
-                    src.delete();
-                    target = new File(destPath);
-                    target.renameTo(src);
+                    generateNewLocalRecord(srcPath, destPath, set2500);
                 }
 
             } catch (ConcurrentModificationException ignored) {
@@ -423,6 +317,15 @@ public class Search {
                 isUsable = true;
             }
         }
+    }
+
+    private void generateNewLocalRecord(String srcPath, String destPath, Set<String> set) {
+        File src, target;
+        deleteRecordInFile(set, srcPath, destPath);
+        src = new File(srcPath);
+        src.delete();
+        target = new File(destPath);
+        target.renameTo(src);
     }
 
     private void deleteRecordInFile(Set<String> recordToDel, String srcText, String destText) {

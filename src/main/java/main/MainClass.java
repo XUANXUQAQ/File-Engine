@@ -408,6 +408,7 @@ public class MainClass {
                 while (!mainExit) {
                     if (search.isManualUpdate()) {
                         search.setUsable(false);
+                        SearchBar.getInstance().closeAllConnection();
                         search.updateLists(SettingsFrame.ignorePath, SettingsFrame.searchDepth);
                     }
                     Thread.sleep(5);
