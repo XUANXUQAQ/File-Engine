@@ -161,24 +161,30 @@ public class MainClass {
             String ignorePath = "C:\\Windows,";
             JSONObject json = new JSONObject();
             json.put("hotkey", "Ctrl + Alt + J");
-            json.put("ignorePath", ignorePath);
             json.put("isStartup", false);
-            json.put("updateTimeLimit", 5);
             json.put("cacheNumLimit", 1000);
+            json.put("updateTimeLimit", 5);
+            json.put("ignorePath", ignorePath);
             json.put("searchDepth", 8);
             json.put("priorityFolder", "");
             json.put("dataPath", data.getAbsolutePath());
             json.put("isDefaultAdmin", false);
             json.put("isLoseFocusClose", true);
-            json.put("openLastFolderKeyCode", 17);
             json.put("runAsAdminKeyCode", 16);
+            json.put("openLastFolderKeyCode", 17);
             json.put("copyPathKeyCode", 18);
             json.put("transparency", 0.8f);
             json.put("labelColor", 0xFF9868);
-            json.put("backgroundColor", 0x6C6C6C);
-            json.put("backgroundColorLight", 0x4B4B4B);
+            json.put("backgroundColor1", 0xffffff);
+            json.put("backgroundColor2", 0xffffff);
+            json.put("backgroundColor3", 0xffffff);
+            json.put("backgroundColor4", 0xffffff);
+            json.put("searchBarColor", 0xffffff);
             json.put("fontColorWithCoverage", 0x1C0EFF);
-            json.put("fontColor", 0xC5C5C5);
+            json.put("fontColor", 0x000000);
+            json.put("maxConnectionNum", 15);
+            json.put("minConnectionNum", 10);
+            json.put("connectionTimeLimit", 600);
             try (BufferedWriter buffW = new BufferedWriter(new FileWriter(settings))) {
                 buffW.write(json.toJSONString());
             } catch (IOException ignored) {
@@ -299,17 +305,9 @@ public class MainClass {
         if (!data.exists()) {
             System.out.println("无data文件，正在搜索并重建");
             search.setManualUpdate(true);
-        } else if (!data.isDirectory()) {
-            System.out.println("无data文件，正在搜索并重建");
+        } else if (data.listFiles() == null || Objects.requireNonNull(data.listFiles()).length != 26) {
+            System.out.println("data文件损坏，正在搜索并重建");
             search.setManualUpdate(true);
-        } else if (data.isDirectory() && Objects.requireNonNull(data.listFiles()).length == 0) {
-            System.out.println("无data文件，正在搜索并重建");
-            search.setManualUpdate(true);
-        } else if (data.isDirectory() && Objects.requireNonNull(data.listFiles()).length == 26) {
-            System.out.println("无data文件，正在搜索并重建");
-            search.setManualUpdate(true);
-        } else {
-            Search.diskCount = Objects.requireNonNull(data.listFiles()).length;
         }
 
         FileSystemView sys = FileSystemView.getFileSystemView();
@@ -350,7 +348,7 @@ public class MainClass {
                             }
                         }
                     }
-                    Thread.sleep(5);
+                    Thread.sleep(50);
                 }
             } catch (IOException | InterruptedException e) {
                 e.printStackTrace();
@@ -369,7 +367,7 @@ public class MainClass {
                             }
                         }
                     }
-                    Thread.sleep(5);
+                    Thread.sleep(50);
                 }
             } catch (InterruptedException | IOException e) {
                 e.printStackTrace();
@@ -383,14 +381,14 @@ public class MainClass {
             try {
                 while (!mainExit) {
                     boolean isUsing = searchBar.isUsing();
-                    count++;
+                    count += 10;
                     if (count >= (SettingsFrame.updateTimeLimit << 10) && !isUsing && !search.isManualUpdate()) {
                         count = 0;
                         if (search.isUsable() && (!searchBar.isUsing())) {
                             search.mergeFileToList();
                         }
                     }
-                    Thread.sleep(1);
+                    Thread.sleep(10);
                 }
             } catch (InterruptedException ignore) {
 
