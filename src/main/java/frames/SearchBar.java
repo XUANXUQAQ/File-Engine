@@ -364,7 +364,7 @@ public class SearchBar {
                 while (!mainExit) {
                     if (!search.isManualUpdate() && !isUsing) {
                         if (search.getRecycleBinSize() > 1000) {
-                            clearReaderMap();
+                            closeAllConnection();
                             System.out.println("已检测到回收站过大，自动清理");
                             search.setUsable(false);
                             search.mergeAndClearRecycleBin();
@@ -397,7 +397,7 @@ public class SearchBar {
                     if (search.isUsable()) {
                         if (isCommandMode) {
                             if (text.equals(":update")) {
-                                clearReaderMap();
+                                closeAllConnection();
                                 clearLabel();
                                 MainClass.showMessage("提示", "正在更新文件索引");
                                 clearTextFieldText();
@@ -3031,10 +3031,6 @@ public class SearchBar {
     private boolean isDirectory(String text) {
         File file = new File(text);
         return file.isDirectory();
-    }
-
-    private void clearReaderMap() {
-        readerMap.clear();
     }
 
     public void setFontColorWithCoverage(int colorNum) {
