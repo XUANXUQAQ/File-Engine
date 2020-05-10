@@ -84,7 +84,6 @@ public class SettingsFrame {
     private JTextField textFieldPriorityFolder;
     private JButton ButtonDataPath;
     private JButton ButtonPriorityFolder;
-    private JButton buttonHelp;
     private JTabbedPane tabbedPane1;
     private JCheckBox checkBoxAdmin;
     private JLabel labelplaceholder1;
@@ -180,15 +179,20 @@ public class SettingsFrame {
     private JLabel labelCurrentConnection;
     private JLabel currentConnection;
     private JButton buttonClearConnection;
+    private JLabel labelDesciption;
+    private JLabel labelBeautyEye;
+    private JLabel labelFastJson;
+    private JLabel labelJna;
     private static boolean isStartup;
     private Unzip unzipInstance = Unzip.getInstance();
     private Thread updateThread = null;
 
 
     public SettingsFrame() {
-        Color transColor = new Color(0, 0, 0, 0);
-        UIManager.put("TabbedPane.focus", transColor);
         labelAboutGithub.setText("<html><a href='https://github.com/XUANXUQAQ/File-Engine'><font size=\"4\">File-Engine</font></a></html>");
+        labelBeautyEye.setText("1.beautyeye");
+        labelFastJson.setText("2.fastjson");
+        labelJna.setText("3.jna");
         ImageIcon imageIcon = new ImageIcon(SettingsFrame.class.getResource("/icons/frame.png"));
         labelIcon.setIcon(imageIcon);
 
@@ -448,21 +452,7 @@ public class SettingsFrame {
         } catch (IOException ignored) {
 
         }
-        buttonHelp.addActionListener(e -> JOptionPane.showMessageDialog(null, "帮助：\n" +
-                "1.默认Ctrl + Alt + J打开搜索框\n" +
-                "2.Enter键运行程序\n" +
-                "3.Ctrl + Enter键打开并选中文件所在文件夹\n" +
-                "4.Shift + Enter键以管理员权限运行程序（前提是该程序拥有管理员权限）\n" +
-                "5.在搜索框中输入  : update  强制重建本地索引\n" +
-                "6.在搜索框中输入  : version  查看当前版本\n" +
-                "7.在搜索框中输入  : clearbin  清空回收站\n" +
-                "8.在搜索框中输入  : help  查看帮助\n" +
-                "9.在设置中可以自定义命令，在搜索框中输入  : 自定义标识  运行自己的命令\n" +
-                "10.在输入的文件名后输入  : full  可全字匹配\n" +
-                "11.在输入的文件名后输入  : F  可只匹配文件\n" +
-                "12.在输入的文件名后输入  : D  可只匹配文件夹\n" +
-                "13.在输入的文件名后输入  : Ffull  可只匹配文件并全字匹配\n" +
-                "14.在输入的文件名后输入  : Dfull  可只匹配文件夹并全字匹配"));
+
         checkBoxAdmin.addActionListener(e -> isDefaultAdmin = checkBoxAdmin.isSelected());
         checkBoxLoseFocus.addActionListener(e -> isLoseFocusClose = checkBoxLoseFocus.isSelected());
         textFieldRunAsAdmin.addKeyListener(new KeyAdapter() {
@@ -1132,7 +1122,7 @@ public class SettingsFrame {
         URL frameIcon = SettingsFrame.class.getResource("/icons/frame.png");
         frame.setIconImage(new ImageIcon(frameIcon).getImage());
         frame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
-        frame.setSize(1024, 768);
+        frame.setSize(942, 600);
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
     }

@@ -412,26 +412,6 @@ public class SearchBar {
                                 closedTodo();
                                 JOptionPane.showMessageDialog(null, "当前版本：" + MainClass.version);
                             }
-                            if (text.equals(":help")) {
-                                clearLabel();
-                                clearTextFieldText();
-                                closedTodo();
-                                JOptionPane.showMessageDialog(null, "帮助：\n" +
-                                        "1.默认Ctrl + Alt + J打开搜索框\n" +
-                                        "2.Enter键运行程序\n" +
-                                        "3.Ctrl + Enter键打开并选中文件所在文件夹\n" +
-                                        "4.Shift + Enter键以管理员权限运行程序（前提是该程序拥有管理员权限）\n" +
-                                        "5.在搜索框中输入  : update  强制重建本地索引\n" +
-                                        "6.在搜索框中输入  : version  查看当前版本\n" +
-                                        "7.在搜索框中输入  : clearbin  清空回收站\n" +
-                                        "8.在搜索框中输入  : help  查看帮助\"\n" +
-                                        "9.在设置中可以自定义命令，在搜索框中输入  : 自定义标识  运行自己的命令\n" +
-                                        "10.在输入的文件名后输入  : full  可全字匹配\n" +
-                                        "11.在输入的文件名后输入  : F  可只匹配文件\n" +
-                                        "12.在输入的文件名后输入  : D  可只匹配文件夹\n" +
-                                        "13.在输入的文件名后输入  : Ffull  可只匹配文件并全字匹配\n" +
-                                        "14.在输入的文件名后输入  : Dfull  可只匹配文件夹并全字匹配");
-                            }
                             if (text.equals(":clearbin")) {
                                 clearLabel();
                                 clearTextFieldText();
@@ -2221,7 +2201,10 @@ public class SearchBar {
     private void addResult(ConcurrentLinkedQueue<String> paths, String searchText, long time, String searchCase) {
         //为label添加结果
         ExecutorService threadPool = Executors.newFixedThreadPool(4);
+        searchText = searchText.toLowerCase();
+        String[] keywords = semicolon.split(searchText);
         for (int i = 0; i < 4; i++) {
+            String finalSearchText = searchText;
             threadPool.execute(() -> {
                 String each;
                 String path;
@@ -2236,7 +2219,7 @@ public class SearchBar {
                                     break;
                                 }
                                 if (search.isUsable()) {
-                                    if (isMatched(getFileName(each), searchText)) {
+                                    if (isMatched(getFileName(each), keywords)) {
                                         switch (searchCase) {
                                             case "f":
                                                 if (isFile(each)) {
@@ -2263,7 +2246,7 @@ public class SearchBar {
                                                 }
                                                 break;
                                             case "full":
-                                                if (getFileName(each).toLowerCase().equals(searchText.toLowerCase())) {
+                                                if (getFileName(each).toLowerCase().equals(finalSearchText)) {
                                                     if (!listResult.contains(each)) {
                                                         if (isExist(each)) {
                                                             listResult.add(each);
@@ -2275,7 +2258,7 @@ public class SearchBar {
                                                 }
                                                 break;
                                             case "dfull":
-                                                if (getFileName(each).toLowerCase().equals(searchText.toLowerCase())) {
+                                                if (getFileName(each).toLowerCase().equals(finalSearchText.toLowerCase())) {
                                                     if (isDirectory(each)) {
                                                         if (!listResult.contains(each)) {
                                                             if (isExist(each)) {
@@ -2289,7 +2272,7 @@ public class SearchBar {
                                                 }
                                                 break;
                                             case "ffull":
-                                                if (getFileName(each).toLowerCase().equals(searchText.toLowerCase())) {
+                                                if (getFileName(each).toLowerCase().equals(finalSearchText.toLowerCase())) {
                                                     if (isFile(each)) {
                                                         if (!listResult.contains(each)) {
                                                             if (isExist(each)) {
@@ -2328,7 +2311,7 @@ public class SearchBar {
                                     break;
                                 }
                                 if (search.isUsable()) {
-                                    if (isMatched(getFileName(each), searchText)) {
+                                    if (isMatched(getFileName(each), keywords)) {
                                         switch (searchCase) {
                                             case "f":
                                                 if (isFile(each)) {
@@ -2355,7 +2338,7 @@ public class SearchBar {
                                                 }
                                                 break;
                                             case "full":
-                                                if (getFileName(each).toLowerCase().equals(searchText.toLowerCase())) {
+                                                if (getFileName(each).toLowerCase().equals(finalSearchText.toLowerCase())) {
                                                     if (!listResult.contains(each)) {
                                                         if (isExist(each)) {
                                                             listResult.add(each);
@@ -2367,7 +2350,7 @@ public class SearchBar {
                                                 }
                                                 break;
                                             case "dfull":
-                                                if (getFileName(each).toLowerCase().equals(searchText.toLowerCase())) {
+                                                if (getFileName(each).toLowerCase().equals(finalSearchText.toLowerCase())) {
                                                     if (isDirectory(each)) {
                                                         if (!listResult.contains(each)) {
                                                             if (isExist(each)) {
@@ -2381,7 +2364,7 @@ public class SearchBar {
                                                 }
                                                 break;
                                             case "ffull":
-                                                if (getFileName(each).toLowerCase().equals(searchText.toLowerCase())) {
+                                                if (getFileName(each).toLowerCase().equals(finalSearchText.toLowerCase())) {
                                                     if (isFile(each)) {
                                                         if (!listResult.contains(each)) {
                                                             if (isExist(each)) {
@@ -2649,7 +2632,10 @@ public class SearchBar {
             } catch (IOException e) {
                 //打开上级文件夹
                 try {
-                    Runtime.getRuntime().exec("explorer.exe /select, \"" + name.getAbsolutePath() + "\"");
+                    Process p = Runtime.getRuntime().exec("explorer.exe /select, \"" + name.getAbsolutePath() + "\"");
+                    p.getErrorStream().close();
+                    p.getOutputStream().close();
+                    p.getInputStream().close();
                 } catch (IOException ignored) {
 
                 }
@@ -2749,7 +2735,8 @@ public class SearchBar {
             }
         }
         if (cacheNum < SettingsFrame.cacheNumLimit) {
-            isRepeated = isMatched(oldCaches.toString() + ";", (content));
+            String _temp = oldCaches.append(";").toString().toLowerCase();
+            isRepeated = _temp.contains(content.toLowerCase());   //Strstr.INSTANCE.isSubString(oldCaches.toString() + ";", content);
             if (!isRepeated) {
                 try (BufferedWriter out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(new File("user/cache.dat"), true)))) {
                     out.write(content + "\r\n");
@@ -2814,6 +2801,8 @@ public class SearchBar {
         String cacheResult;
         boolean isCacheRepeated = false;
         ArrayList<String> cachesToDel = new ArrayList<>();
+        text = text.toLowerCase();
+        String[] keywords = semicolon.split(text);
         File cache = new File("user/cache.dat");
         if (cache.exists()) {
             try (BufferedReader reader = new BufferedReader(new FileReader(cache))) {
@@ -2824,7 +2813,7 @@ public class SearchBar {
                             cachesToDel.add(eachCache);
                         } else {
                             String eachCacheName = getFileName(eachCache);
-                            if (isMatched(eachCacheName, text)) {
+                            if (isMatched(eachCacheName, keywords)) {
                                 if (!listResult.contains(eachCache)) {
                                     boolean fullMatched = eachCacheName.toLowerCase().equals(text.toLowerCase());
                                     switch (searchCase) {
@@ -2876,15 +2865,11 @@ public class SearchBar {
         }
     }
 
-    private boolean isMatched(String srcText, String txt) {
-        if (!txt.isEmpty()) {
-            srcText = srcText.toLowerCase();
-            txt = txt.toLowerCase();
-            String[] keyWords = semicolon.split(txt);
-            for (String each : keyWords) {
-                if (!srcText.contains(each)) {
-                    return false;
-                }
+    private boolean isMatched(String srcText, String[] txt) {
+        srcText = srcText.toLowerCase();
+        for (String each : txt) {
+            if (!srcText.contains(each)) {
+                return false;
             }
         }
         return true;
@@ -2900,11 +2885,13 @@ public class SearchBar {
         File path = new File(SettingsFrame.priorityFolder);
         boolean exist = path.exists();
         LinkedList<File> listRemain = new LinkedList<>();
+        text = text.toLowerCase();
+        String[] keywords = semicolon.split(text);
         if (exist) {
             File[] files = path.listFiles();
             if (!(null == files || files.length == 0)) {
                 for (File each : files) {
-                    if (isMatched(getFileName(each.getAbsolutePath()), text)) {
+                    if (isMatched(getFileName(each.getAbsolutePath()), keywords)) {
                         switch (searchCase) {
                             case "f":
                                 if (each.isFile()) {
@@ -2944,7 +2931,7 @@ public class SearchBar {
                     File[] allFiles = remain.listFiles();
                     assert allFiles != null;
                     for (File each : allFiles) {
-                        if (isMatched(getFileName(each.getAbsolutePath()), text)) {
+                        if (isMatched(getFileName(each.getAbsolutePath()), keywords)) {
                             switch (searchCase) {
                                 case "F":
                                     if (each.isFile()) {
