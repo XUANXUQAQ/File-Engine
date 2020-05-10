@@ -1074,7 +1074,7 @@ public class SettingsFrame {
         File test = new File("TEST");
         if (Double.parseDouble(latestVersion) > Double.parseDouble(MainClass.version) || test.exists()) {
             String description = updateInfo.getString("description");
-            int result = JOptionPane.showConfirmDialog(null, "有新版本" + latestVersion + "，是否更新\n更新内容：" + description);
+            int result = JOptionPane.showConfirmDialog(null, "有新版本" + latestVersion + "，是否更新\n更新内容：\n" + description);
             if (result == 0) {
                 //开始更新,下载更新文件到tmp
                 String urlChoose;
