@@ -234,14 +234,7 @@ public class SearchBar {
                             }
                         }
                         if (readerMap.size() < SettingsFrame.minConnectionNum) {
-                            Random random = new Random();
-                            String path;
-                            int randomInt = random.nextInt(26);
-                            if (randomInt < 25) {
-                                path = SettingsFrame.dataPath + "\\" + "\\list" + randomInt * 100 + "-" + (randomInt + 1) * 100 + ".txt";
-                            } else {
-                                path = SettingsFrame.dataPath + "\\" + "\\list2500-.txt";
-                            }
+                            String path = randomGeneratePath();
                             if (isExist(path)) {
                                 if (readerMap.get(path) == null) {
                                     ReaderInfo _tmp = new ReaderInfo(System.currentTimeMillis(), new BufferedReader(new FileReader(path)));
@@ -2999,6 +2992,18 @@ public class SearchBar {
             }
         };
         SwingUtilities.invokeLater(todo);
+    }
+
+    private String randomGeneratePath() {
+        Random random = new Random();
+        String path;
+        int randomInt = random.nextInt(26);
+        if (randomInt < 25) {
+            path = SettingsFrame.dataPath + "\\" + "\\list" + randomInt * 100 + "-" + (randomInt + 1) * 100 + ".txt";
+        } else {
+            path = SettingsFrame.dataPath + "\\" + "\\list2500-.txt";
+        }
+        return path;
     }
 
     public boolean isVisible() {

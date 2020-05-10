@@ -22,32 +22,32 @@ public class Search {
     private static Search searchInstance = new Search();
     private Set<String> RecycleBin = ConcurrentHashMap.newKeySet();
     private Set<String> listToLoad = ConcurrentHashMap.newKeySet();
-    Set<String> set0 = ConcurrentHashMap.newKeySet();
-    Set<String> set100 = ConcurrentHashMap.newKeySet();
-    Set<String> set200 = ConcurrentHashMap.newKeySet();
-    Set<String> set300 = ConcurrentHashMap.newKeySet();
-    Set<String> set400 = ConcurrentHashMap.newKeySet();
-    Set<String> set500 = ConcurrentHashMap.newKeySet();
-    Set<String> set600 = ConcurrentHashMap.newKeySet();
-    Set<String> set700 = ConcurrentHashMap.newKeySet();
-    Set<String> set800 = ConcurrentHashMap.newKeySet();
-    Set<String> set900 = ConcurrentHashMap.newKeySet();
-    Set<String> set1000 = ConcurrentHashMap.newKeySet();
-    Set<String> set1100 = ConcurrentHashMap.newKeySet();
-    Set<String> set1200 = ConcurrentHashMap.newKeySet();
-    Set<String> set1300 = ConcurrentHashMap.newKeySet();
-    Set<String> set1400 = ConcurrentHashMap.newKeySet();
-    Set<String> set1500 = ConcurrentHashMap.newKeySet();
-    Set<String> set1600 = ConcurrentHashMap.newKeySet();
-    Set<String> set1700 = ConcurrentHashMap.newKeySet();
-    Set<String> set1800 = ConcurrentHashMap.newKeySet();
-    Set<String> set1900 = ConcurrentHashMap.newKeySet();
-    Set<String> set2000 = ConcurrentHashMap.newKeySet();
-    Set<String> set2100 = ConcurrentHashMap.newKeySet();
-    Set<String> set2200 = ConcurrentHashMap.newKeySet();
-    Set<String> set2300 = ConcurrentHashMap.newKeySet();
-    Set<String> set2400 = ConcurrentHashMap.newKeySet();
-    Set<String> set2500 = ConcurrentHashMap.newKeySet();
+    private Set<String> set0 = ConcurrentHashMap.newKeySet();
+    private Set<String> set100 = ConcurrentHashMap.newKeySet();
+    private Set<String> set200 = ConcurrentHashMap.newKeySet();
+    private Set<String> set300 = ConcurrentHashMap.newKeySet();
+    private Set<String> set400 = ConcurrentHashMap.newKeySet();
+    private Set<String> set500 = ConcurrentHashMap.newKeySet();
+    private Set<String> set600 = ConcurrentHashMap.newKeySet();
+    private Set<String> set700 = ConcurrentHashMap.newKeySet();
+    private Set<String> set800 = ConcurrentHashMap.newKeySet();
+    private Set<String> set900 = ConcurrentHashMap.newKeySet();
+    private Set<String> set1000 = ConcurrentHashMap.newKeySet();
+    private Set<String> set1100 = ConcurrentHashMap.newKeySet();
+    private Set<String> set1200 = ConcurrentHashMap.newKeySet();
+    private Set<String> set1300 = ConcurrentHashMap.newKeySet();
+    private Set<String> set1400 = ConcurrentHashMap.newKeySet();
+    private Set<String> set1500 = ConcurrentHashMap.newKeySet();
+    private Set<String> set1600 = ConcurrentHashMap.newKeySet();
+    private Set<String> set1700 = ConcurrentHashMap.newKeySet();
+    private Set<String> set1800 = ConcurrentHashMap.newKeySet();
+    private Set<String> set1900 = ConcurrentHashMap.newKeySet();
+    private Set<String> set2000 = ConcurrentHashMap.newKeySet();
+    private Set<String> set2100 = ConcurrentHashMap.newKeySet();
+    private Set<String> set2200 = ConcurrentHashMap.newKeySet();
+    private Set<String> set2300 = ConcurrentHashMap.newKeySet();
+    private Set<String> set2400 = ConcurrentHashMap.newKeySet();
+    private Set<String> set2500 = ConcurrentHashMap.newKeySet();
 
     private Search() {
     }
@@ -548,21 +548,14 @@ public class Search {
         commands.add(strb.toString());
 
         //合并所有搜索结果
-        try {
-            for (String each : commands) {
-                Process p = Runtime.getRuntime().exec(each);
-                p.getOutputStream().close();
-                p.getErrorStream().close();
-                BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
-                String line;
-                while ((line = br.readLine()) != null) {
-                    System.out.println(line);
-                }
-                br.close();
+        for (String each : commands) {
+            Process p;
+            try {
+                p = Runtime.getRuntime().exec(each);
                 p.waitFor();
+            } catch (IOException | InterruptedException e) {
+                e.printStackTrace();
             }
-        } catch (IOException | InterruptedException ignored) {
-
         }
 
 
