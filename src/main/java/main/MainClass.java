@@ -17,7 +17,7 @@ import java.util.concurrent.Executors;
 
 
 public class MainClass {
-    public static final String version = "1.9"; //TODO 更改版本号
+    public static final String version = "2.0"; //TODO 更改版本号
     public static boolean mainExit = false;
     public static String name;
     private static Search search = Search.getInstance();
@@ -231,6 +231,7 @@ public class MainClass {
                 copyFile(hotkeyListener86Dll, target);
             }
         }
+
         SettingsFrame.initSettings();
         SearchBar searchBar = SearchBar.getInstance();
 
