@@ -200,7 +200,7 @@ public class SearchBar {
                         label3.setBorder(border);
                         label4.setBorder(border);
                     }
-                    Thread.sleep(5);
+                    Thread.sleep(100);
                 } catch (NullPointerException | InterruptedException ignored) {
 
                 }
@@ -214,7 +214,7 @@ public class SearchBar {
                     if (System.currentTimeMillis() - mouseWheelTime > 500) {
                         isLockMouseMotion = false;
                     }
-                    Thread.sleep(5);
+                    Thread.sleep(100);
                 }
             } catch (Exception ignored) {
 
@@ -287,7 +287,7 @@ public class SearchBar {
                         label3.setForeground(fontColor);
                         label4.setForeground(fontColorWithCoverage);
                     }
-                    Thread.sleep(5);
+                    Thread.sleep(100);
                 }
             } catch (Exception ignored) {
 
@@ -344,7 +344,7 @@ public class SearchBar {
 
                 }
                 try {
-                    Thread.sleep(10);
+                    Thread.sleep(100);
                 } catch (InterruptedException ignored) {
 
                 }
