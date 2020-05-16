@@ -288,35 +288,39 @@ public class Search {
             } catch (ConcurrentModificationException ignored) {
 
             } finally {
-                set0.clear();
-                set100.clear();
-                set200.clear();
-                set300.clear();
-                set400.clear();
-                set500.clear();
-                set600.clear();
-                set700.clear();
-                set800.clear();
-                set900.clear();
-                set1000.clear();
-                set1100.clear();
-                set1200.clear();
-                set1300.clear();
-                set1400.clear();
-                set1500.clear();
-                set1600.clear();
-                set1700.clear();
-                set1800.clear();
-                set1900.clear();
-                set2000.clear();
-                set2100.clear();
-                set2200.clear();
-                set2300.clear();
-                set2400.clear();
-                set2500.clear();
+                clearAllSets();
                 isUsable = true;
             }
         }
+    }
+
+    private void clearAllSets() {
+        set0.clear();
+        set100.clear();
+        set200.clear();
+        set300.clear();
+        set400.clear();
+        set500.clear();
+        set600.clear();
+        set700.clear();
+        set800.clear();
+        set900.clear();
+        set1000.clear();
+        set1100.clear();
+        set1200.clear();
+        set1300.clear();
+        set1400.clear();
+        set1500.clear();
+        set1600.clear();
+        set1700.clear();
+        set1800.clear();
+        set1900.clear();
+        set2000.clear();
+        set2100.clear();
+        set2200.clear();
+        set2300.clear();
+        set2400.clear();
+        set2500.clear();
     }
 
     private void generateNewLocalRecord(String srcPath, String destPath, Set<String> set) {

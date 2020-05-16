@@ -355,7 +355,7 @@ public class MainClass {
                             }
                         }
                     }
-                    Thread.sleep(50);
+                    Thread.sleep(100);
                 }
             } catch (IOException | InterruptedException e) {
                 e.printStackTrace();
@@ -374,7 +374,7 @@ public class MainClass {
                             }
                         }
                     }
-                    Thread.sleep(50);
+                    Thread.sleep(100);
                 }
             } catch (InterruptedException | IOException e) {
                 e.printStackTrace();
@@ -388,14 +388,14 @@ public class MainClass {
             try {
                 while (!mainExit) {
                     boolean isUsing = searchBar.isUsing();
-                    count += 10;
+                    count += 100;
                     if (count >= (SettingsFrame.updateTimeLimit << 10) && !isUsing && !search.isManualUpdate()) {
                         count = 0;
                         if (search.isUsable() && (!searchBar.isUsing())) {
                             search.mergeFileToList();
                         }
                     }
-                    Thread.sleep(10);
+                    Thread.sleep(100);
                 }
             } catch (InterruptedException ignore) {
 
@@ -412,7 +412,7 @@ public class MainClass {
                         SearchBar.getInstance().closeAllConnection();
                         search.updateLists(SettingsFrame.ignorePath, SettingsFrame.searchDepth);
                     }
-                    Thread.sleep(5);
+                    Thread.sleep(100);
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -422,7 +422,7 @@ public class MainClass {
         try {
             while (true) {
                 // 主循环开始
-                Thread.sleep(5);
+                Thread.sleep(100);
                 if (mainExit) {
                     CheckHotKey.getInstance().stopListen();
                     File CLOSEDLL = new File(SettingsFrame.tmp.getAbsolutePath() + "\\CLOSE");
