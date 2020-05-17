@@ -150,140 +150,10 @@ public class Search {
                         set2500.add(i);
                     }
                 }
+                //清空回收站
                 RecycleBin.clear();
-                String srcPath;
-                String destPath;
-
-                if (!set0.isEmpty()) {
-                    srcPath = SettingsFrame.dataPath + "\\list0-100.txt";
-                    destPath = SettingsFrame.dataPath + "\\_list0-100.txt";
-                    generateNewLocalRecord(srcPath, destPath, set0);
-                }
-                if (!set100.isEmpty()) {
-                    srcPath = SettingsFrame.dataPath + "\\list100-200.txt";
-                    destPath = SettingsFrame.dataPath + "\\_list100-200.txt";
-                    generateNewLocalRecord(srcPath, destPath, set100);
-                }
-                if (!set200.isEmpty()) {
-                    srcPath = SettingsFrame.dataPath + "\\list200-300.txt";
-                    destPath = SettingsFrame.dataPath + "\\_list200-300.txt";
-                    generateNewLocalRecord(srcPath, destPath, set200);
-                }
-                if (!set300.isEmpty()) {
-                    srcPath = SettingsFrame.dataPath + "\\list300-400.txt";
-                    destPath = SettingsFrame.dataPath + "\\_list300-400.txt";
-                    generateNewLocalRecord(srcPath, destPath, set300);
-                }
-                if (!set400.isEmpty()) {
-                    srcPath = SettingsFrame.dataPath + "\\list400-500.txt";
-                    destPath = SettingsFrame.dataPath + "\\_list400-500.txt";
-                    generateNewLocalRecord(srcPath, destPath, set400);
-                }
-                if (!set500.isEmpty()) {
-                    srcPath = SettingsFrame.dataPath + "\\list500-600.txt";
-                    destPath = SettingsFrame.dataPath + "\\_list500-600.txt";
-                    generateNewLocalRecord(srcPath, destPath, set500);
-                }
-                if (!set600.isEmpty()) {
-                    srcPath = SettingsFrame.dataPath + "\\list600-700.txt";
-                    destPath = SettingsFrame.dataPath + "\\_list600-700.txt";
-                    generateNewLocalRecord(srcPath, destPath, set600);
-                }
-                if (!set700.isEmpty()) {
-                    srcPath = SettingsFrame.dataPath + "\\list700-800.txt";
-                    destPath = SettingsFrame.dataPath + "\\_list700-800.txt";
-                    generateNewLocalRecord(srcPath, destPath, set700);
-                }
-                if (!set800.isEmpty()) {
-                    srcPath = SettingsFrame.dataPath + "\\list800-900.txt";
-                    destPath = SettingsFrame.dataPath + "\\_list800-900.txt";
-                    generateNewLocalRecord(srcPath, destPath, set800);
-                }
-                if (!set900.isEmpty()) {
-                    srcPath = SettingsFrame.dataPath + "\\list900-1000.txt";
-                    destPath = SettingsFrame.dataPath + "\\_list900-1000.txt";
-                    generateNewLocalRecord(srcPath, destPath, set900);
-                }
-                if (!set1000.isEmpty()) {
-                    srcPath = SettingsFrame.dataPath + "\\list1000-1100.txt";
-                    destPath = SettingsFrame.dataPath + "\\_list1000-1100.txt";
-                    generateNewLocalRecord(srcPath, destPath, set1000);
-                }
-                if (!set1100.isEmpty()) {
-                    srcPath = SettingsFrame.dataPath + "\\list1100-1200.txt";
-                    destPath = SettingsFrame.dataPath + "\\_list1100-1200.txt";
-                    generateNewLocalRecord(srcPath, destPath, set1100);
-                }
-                if (!set1200.isEmpty()) {
-                    srcPath = SettingsFrame.dataPath + "\\list1200-1300.txt";
-                    destPath = SettingsFrame.dataPath + "\\_list1200-1300.txt";
-                    generateNewLocalRecord(srcPath, destPath, set1200);
-                }
-                if (!set1300.isEmpty()) {
-                    srcPath = SettingsFrame.dataPath + "\\list1300-1400.txt";
-                    destPath = SettingsFrame.dataPath + "\\_list1300-1400.txt";
-                    generateNewLocalRecord(srcPath, destPath, set1300);
-                }
-                if (!set1400.isEmpty()) {
-                    srcPath = SettingsFrame.dataPath + "\\list1400-1500.txt";
-                    destPath = SettingsFrame.dataPath + "\\_list1400-1500.txt";
-                    generateNewLocalRecord(srcPath, destPath, set1400);
-                }
-                if (!set1500.isEmpty()) {
-                    srcPath = SettingsFrame.dataPath + "\\list1500-1600.txt";
-                    destPath = SettingsFrame.dataPath + "\\_list1500-1600.txt";
-                    generateNewLocalRecord(srcPath, destPath, set1500);
-                }
-                if (!set1600.isEmpty()) {
-                    srcPath = SettingsFrame.dataPath + "\\list1600-1700.txt";
-                    destPath = SettingsFrame.dataPath + "\\_list1600-1700.txt";
-                    generateNewLocalRecord(srcPath, destPath, set1600);
-                }
-                if (!set1700.isEmpty()) {
-                    srcPath = SettingsFrame.dataPath + "\\list1700-1800.txt";
-                    destPath = SettingsFrame.dataPath + "\\_list1700-1800.txt";
-                    generateNewLocalRecord(srcPath, destPath, set1700);
-                }
-                if (!set1800.isEmpty()) {
-                    srcPath = SettingsFrame.dataPath + "\\list1800-1900.txt";
-                    destPath = SettingsFrame.dataPath + "\\_list1800-1900.txt";
-                    generateNewLocalRecord(srcPath, destPath, set1800);
-                }
-                if (!set1900.isEmpty()) {
-                    srcPath = SettingsFrame.dataPath + "\\list1900-2000.txt";
-                    destPath = SettingsFrame.dataPath + "\\_list1900-2000.txt";
-                    generateNewLocalRecord(srcPath, destPath, set1900);
-                }
-                if (!set2000.isEmpty()) {
-                    srcPath = SettingsFrame.dataPath + "\\list2000-2100.txt";
-                    destPath = SettingsFrame.dataPath + "\\_list2000-2100.txt";
-                    generateNewLocalRecord(srcPath, destPath, set2000);
-                }
-                if (!set2100.isEmpty()) {
-                    srcPath = SettingsFrame.dataPath + "\\list2100-2200.txt";
-                    destPath = SettingsFrame.dataPath + "\\_list2100-2200.txt";
-                    generateNewLocalRecord(srcPath, destPath, set2100);
-                }
-                if (!set2200.isEmpty()) {
-                    srcPath = SettingsFrame.dataPath + "\\list2200-2300.txt";
-                    destPath = SettingsFrame.dataPath + "\\_list2200-2300.txt";
-                    generateNewLocalRecord(srcPath, destPath, set2200);
-                }
-                if (!set2300.isEmpty()) {
-                    srcPath = SettingsFrame.dataPath + "\\list2300-2400.txt";
-                    destPath = SettingsFrame.dataPath + "\\_list2300-2400.txt";
-                    generateNewLocalRecord(srcPath, destPath, set2300);
-                }
-                if (!set2400.isEmpty()) {
-                    srcPath = SettingsFrame.dataPath + "\\list2400-2500.txt";
-                    destPath = SettingsFrame.dataPath + "\\_list2400-2500.txt";
-                    generateNewLocalRecord(srcPath, destPath, set2400);
-                }
-                if (!set2500.isEmpty()) {
-                    srcPath = SettingsFrame.dataPath + "\\list2500-.txt";
-                    destPath = SettingsFrame.dataPath + "\\_list2500-.txt";
-                    generateNewLocalRecord(srcPath, destPath, set2500);
-                }
+                //复制到新文件
+                generateAllNewLocalRecord();
 
             } catch (ConcurrentModificationException ignored) {
 
@@ -291,6 +161,142 @@ public class Search {
                 clearAllSets();
                 isUsable = true;
             }
+        }
+    }
+
+    private void generateAllNewLocalRecord() {
+        String srcPath;
+        String destPath;
+
+        if (!set0.isEmpty()) {
+            srcPath = SettingsFrame.dataPath + "\\list0-100.txt";
+            destPath = SettingsFrame.dataPath + "\\_list0-100.txt";
+            generateNewLocalRecord(srcPath, destPath, set0);
+        }
+        if (!set100.isEmpty()) {
+            srcPath = SettingsFrame.dataPath + "\\list100-200.txt";
+            destPath = SettingsFrame.dataPath + "\\_list100-200.txt";
+            generateNewLocalRecord(srcPath, destPath, set100);
+        }
+        if (!set200.isEmpty()) {
+            srcPath = SettingsFrame.dataPath + "\\list200-300.txt";
+            destPath = SettingsFrame.dataPath + "\\_list200-300.txt";
+            generateNewLocalRecord(srcPath, destPath, set200);
+        }
+        if (!set300.isEmpty()) {
+            srcPath = SettingsFrame.dataPath + "\\list300-400.txt";
+            destPath = SettingsFrame.dataPath + "\\_list300-400.txt";
+            generateNewLocalRecord(srcPath, destPath, set300);
+        }
+        if (!set400.isEmpty()) {
+            srcPath = SettingsFrame.dataPath + "\\list400-500.txt";
+            destPath = SettingsFrame.dataPath + "\\_list400-500.txt";
+            generateNewLocalRecord(srcPath, destPath, set400);
+        }
+        if (!set500.isEmpty()) {
+            srcPath = SettingsFrame.dataPath + "\\list500-600.txt";
+            destPath = SettingsFrame.dataPath + "\\_list500-600.txt";
+            generateNewLocalRecord(srcPath, destPath, set500);
+        }
+        if (!set600.isEmpty()) {
+            srcPath = SettingsFrame.dataPath + "\\list600-700.txt";
+            destPath = SettingsFrame.dataPath + "\\_list600-700.txt";
+            generateNewLocalRecord(srcPath, destPath, set600);
+        }
+        if (!set700.isEmpty()) {
+            srcPath = SettingsFrame.dataPath + "\\list700-800.txt";
+            destPath = SettingsFrame.dataPath + "\\_list700-800.txt";
+            generateNewLocalRecord(srcPath, destPath, set700);
+        }
+        if (!set800.isEmpty()) {
+            srcPath = SettingsFrame.dataPath + "\\list800-900.txt";
+            destPath = SettingsFrame.dataPath + "\\_list800-900.txt";
+            generateNewLocalRecord(srcPath, destPath, set800);
+        }
+        if (!set900.isEmpty()) {
+            srcPath = SettingsFrame.dataPath + "\\list900-1000.txt";
+            destPath = SettingsFrame.dataPath + "\\_list900-1000.txt";
+            generateNewLocalRecord(srcPath, destPath, set900);
+        }
+        if (!set1000.isEmpty()) {
+            srcPath = SettingsFrame.dataPath + "\\list1000-1100.txt";
+            destPath = SettingsFrame.dataPath + "\\_list1000-1100.txt";
+            generateNewLocalRecord(srcPath, destPath, set1000);
+        }
+        if (!set1100.isEmpty()) {
+            srcPath = SettingsFrame.dataPath + "\\list1100-1200.txt";
+            destPath = SettingsFrame.dataPath + "\\_list1100-1200.txt";
+            generateNewLocalRecord(srcPath, destPath, set1100);
+        }
+        if (!set1200.isEmpty()) {
+            srcPath = SettingsFrame.dataPath + "\\list1200-1300.txt";
+            destPath = SettingsFrame.dataPath + "\\_list1200-1300.txt";
+            generateNewLocalRecord(srcPath, destPath, set1200);
+        }
+        if (!set1300.isEmpty()) {
+            srcPath = SettingsFrame.dataPath + "\\list1300-1400.txt";
+            destPath = SettingsFrame.dataPath + "\\_list1300-1400.txt";
+            generateNewLocalRecord(srcPath, destPath, set1300);
+        }
+        if (!set1400.isEmpty()) {
+            srcPath = SettingsFrame.dataPath + "\\list1400-1500.txt";
+            destPath = SettingsFrame.dataPath + "\\_list1400-1500.txt";
+            generateNewLocalRecord(srcPath, destPath, set1400);
+        }
+        if (!set1500.isEmpty()) {
+            srcPath = SettingsFrame.dataPath + "\\list1500-1600.txt";
+            destPath = SettingsFrame.dataPath + "\\_list1500-1600.txt";
+            generateNewLocalRecord(srcPath, destPath, set1500);
+        }
+        if (!set1600.isEmpty()) {
+            srcPath = SettingsFrame.dataPath + "\\list1600-1700.txt";
+            destPath = SettingsFrame.dataPath + "\\_list1600-1700.txt";
+            generateNewLocalRecord(srcPath, destPath, set1600);
+        }
+        if (!set1700.isEmpty()) {
+            srcPath = SettingsFrame.dataPath + "\\list1700-1800.txt";
+            destPath = SettingsFrame.dataPath + "\\_list1700-1800.txt";
+            generateNewLocalRecord(srcPath, destPath, set1700);
+        }
+        if (!set1800.isEmpty()) {
+            srcPath = SettingsFrame.dataPath + "\\list1800-1900.txt";
+            destPath = SettingsFrame.dataPath + "\\_list1800-1900.txt";
+            generateNewLocalRecord(srcPath, destPath, set1800);
+        }
+        if (!set1900.isEmpty()) {
+            srcPath = SettingsFrame.dataPath + "\\list1900-2000.txt";
+            destPath = SettingsFrame.dataPath + "\\_list1900-2000.txt";
+            generateNewLocalRecord(srcPath, destPath, set1900);
+        }
+        if (!set2000.isEmpty()) {
+            srcPath = SettingsFrame.dataPath + "\\list2000-2100.txt";
+            destPath = SettingsFrame.dataPath + "\\_list2000-2100.txt";
+            generateNewLocalRecord(srcPath, destPath, set2000);
+        }
+        if (!set2100.isEmpty()) {
+            srcPath = SettingsFrame.dataPath + "\\list2100-2200.txt";
+            destPath = SettingsFrame.dataPath + "\\_list2100-2200.txt";
+            generateNewLocalRecord(srcPath, destPath, set2100);
+        }
+        if (!set2200.isEmpty()) {
+            srcPath = SettingsFrame.dataPath + "\\list2200-2300.txt";
+            destPath = SettingsFrame.dataPath + "\\_list2200-2300.txt";
+            generateNewLocalRecord(srcPath, destPath, set2200);
+        }
+        if (!set2300.isEmpty()) {
+            srcPath = SettingsFrame.dataPath + "\\list2300-2400.txt";
+            destPath = SettingsFrame.dataPath + "\\_list2300-2400.txt";
+            generateNewLocalRecord(srcPath, destPath, set2300);
+        }
+        if (!set2400.isEmpty()) {
+            srcPath = SettingsFrame.dataPath + "\\list2400-2500.txt";
+            destPath = SettingsFrame.dataPath + "\\_list2400-2500.txt";
+            generateNewLocalRecord(srcPath, destPath, set2400);
+        }
+        if (!set2500.isEmpty()) {
+            srcPath = SettingsFrame.dataPath + "\\list2500-.txt";
+            destPath = SettingsFrame.dataPath + "\\_list2500-.txt";
+            generateNewLocalRecord(srcPath, destPath, set2500);
         }
     }
 
@@ -323,6 +329,7 @@ public class Search {
         set2500.clear();
     }
 
+    //将旧文件内容复制到新文件，需要删除的不复制
     private void generateNewLocalRecord(String srcPath, String destPath, Set<String> set) {
         File src, target;
         deleteRecordInFile(set, srcPath, destPath);
