@@ -9,8 +9,10 @@ A tool can make you work more efficiently.
 
 感谢以下项目：
 
-1.fastjson (https://github.com/alibaba/fastjson)\
-2.Material-UI-Swing (https://github.com/vincenzopalazzo/material-ui-swing)\
+1.fastjson (https://github.com/alibaba/fastjson)
+
+2.Material-UI-Swing (https://github.com/vincenzopalazzo/material-ui-swing)
+
 3.jna (https://github.com/java-native-access/jna)
 
 ## 特性
