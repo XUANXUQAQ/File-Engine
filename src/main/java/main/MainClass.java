@@ -6,6 +6,7 @@ import frames.SearchBar;
 import frames.SettingsFrame;
 import frames.TaskBar;
 import hotkeyListener.CheckHotKey;
+import mdlaf.MaterialLookAndFeel;
 import search.Search;
 
 import javax.swing.*;
@@ -102,8 +103,7 @@ public class MainClass {
         try {
             System.setProperty("sun.java2d.noddraw", "true");
             System.setProperty("jna.library.path", new File("user").getAbsolutePath() + "\\");
-            org.jb2011.lnf.beautyeye.BeautyEyeLNFHelper.launchBeautyEyeLNF();
-            UIManager.put("RootPane.setupButtonVisible", false);
+            UIManager.setLookAndFeel(new MaterialLookAndFeel(new MaterialDesign.materialLookAndFeel()));
         } catch (Exception e) {
             e.printStackTrace();
         }

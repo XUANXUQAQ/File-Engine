@@ -7,7 +7,7 @@
     </constraints>
     <properties>
       <background color="-1"/>
-      <opaque value="true"/>
+      <opaque value="false"/>
     </properties>
     <border type="none"/>
     <children>
@@ -59,7 +59,7 @@
                   </grid>
                 </constraints>
                 <properties>
-                  <opaque value="true"/>
+                  <opaque value="false"/>
                 </properties>
               </component>
               <component id="a0920" class="javax.swing.JLabel" binding="labeltip2">
@@ -78,7 +78,7 @@
                 </constraints>
                 <properties>
                   <editable value="false"/>
-                  <opaque value="true"/>
+                  <opaque value="false"/>
                 </properties>
               </component>
               <component id="7f288" class="javax.swing.JButton" binding="ButtonDataPath">
@@ -106,7 +106,7 @@
                   </grid>
                 </constraints>
                 <properties>
-                  <opaque value="true"/>
+                  <opaque value="false"/>
                 </properties>
               </component>
               <component id="5bad1" class="javax.swing.JLabel" binding="label5">
@@ -207,7 +207,7 @@
                   </grid>
                 </constraints>
                 <properties>
-                  <opaque value="true"/>
+                  <opaque value="false"/>
                 </properties>
               </component>
               <component id="6522f" class="javax.swing.JLabel" binding="labeltip3">
@@ -226,7 +226,7 @@
                 </constraints>
                 <properties>
                   <editable value="false"/>
-                  <opaque value="true"/>
+                  <opaque value="false"/>
                 </properties>
               </component>
               <component id="38bd5" class="javax.swing.JButton" binding="ButtonPriorityFolder">
@@ -307,7 +307,9 @@
                     <preferred-size width="150" height="-1"/>
                   </grid>
                 </constraints>
-                <properties/>
+                <properties>
+                  <opaque value="false"/>
+                </properties>
               </component>
               <component id="9578" class="javax.swing.JButton" binding="ButtonRecoverAdmin">
                 <constraints>
@@ -375,7 +377,9 @@
                     <preferred-size width="150" height="-1"/>
                   </grid>
                 </constraints>
-                <properties/>
+                <properties>
+                  <opaque value="false"/>
+                </properties>
               </component>
               <component id="85c01" class="javax.swing.JTextField" binding="textFieldMinConnectionNum">
                 <constraints>
@@ -383,7 +387,9 @@
                     <preferred-size width="150" height="-1"/>
                   </grid>
                 </constraints>
-                <properties/>
+                <properties>
+                  <opaque value="false"/>
+                </properties>
               </component>
               <component id="dbed7" class="javax.swing.JLabel" binding="labelMaxConnection">
                 <constraints>
@@ -412,7 +418,9 @@
                     <preferred-size width="150" height="-1"/>
                   </grid>
                 </constraints>
-                <properties/>
+                <properties>
+                  <opaque value="false"/>
+                </properties>
               </component>
               <component id="317b9" class="javax.swing.JLabel" binding="labelPlaceHolderF1">
                 <constraints>
@@ -504,7 +512,7 @@
                 <properties>
                   <editable value="false"/>
                   <enabled value="true"/>
-                  <opaque value="true"/>
+                  <opaque value="false"/>
                 </properties>
               </component>
               <component id="f9ebf" class="javax.swing.JLabel" binding="label2">
@@ -531,7 +539,7 @@
                 </constraints>
                 <properties>
                   <editable value="false"/>
-                  <opaque value="true"/>
+                  <opaque value="false"/>
                 </properties>
               </component>
               <hspacer id="19e36">
@@ -555,7 +563,7 @@
                 </constraints>
                 <properties>
                   <editable value="false"/>
-                  <opaque value="true"/>
+                  <opaque value="false"/>
                 </properties>
               </component>
               <component id="a65dc" class="javax.swing.JLabel" binding="labelOpenFolder">
@@ -574,6 +582,7 @@
                 </constraints>
                 <properties>
                   <editable value="false"/>
+                  <opaque value="false"/>
                 </properties>
               </component>
             </children>
@@ -598,7 +607,7 @@
                   <component id="7be97" class="javax.swing.JList" binding="listCmds">
                     <constraints/>
                     <properties>
-                      <opaque value="true"/>
+                      <opaque value="false"/>
                     </properties>
                   </component>
                 </children>
@@ -654,7 +663,9 @@
                     <preferred-size width="150" height="-1"/>
                   </grid>
                 </constraints>
-                <properties/>
+                <properties>
+                  <opaque value="false"/>
+                </properties>
               </component>
               <component id="879aa" class="javax.swing.JTextField" binding="textFieldFontColorWithCoverage">
                 <constraints>
@@ -662,7 +673,9 @@
                     <preferred-size width="150" height="-1"/>
                   </grid>
                 </constraints>
-                <properties/>
+                <properties>
+                  <opaque value="false"/>
+                </properties>
               </component>
               <component id="1de84" class="javax.swing.JTextField" binding="textFieldLabelColor">
                 <constraints>
@@ -670,7 +683,9 @@
                     <preferred-size width="150" height="-1"/>
                   </grid>
                 </constraints>
-                <properties/>
+                <properties>
+                  <opaque value="false"/>
+                </properties>
               </component>
               <hspacer id="43ba6">
                 <constraints>
@@ -754,7 +769,9 @@
                     <preferred-size width="150" height="-1"/>
                   </grid>
                 </constraints>
-                <properties/>
+                <properties>
+                  <opaque value="false"/>
+                </properties>
               </component>
               <component id="5d2c9" class="javax.swing.JLabel" binding="labelSharp5">
                 <constraints>
@@ -814,7 +831,9 @@
                     <preferred-size width="150" height="-1"/>
                   </grid>
                 </constraints>
-                <properties/>
+                <properties>
+                  <opaque value="false"/>
+                </properties>
               </component>
               <component id="3ae86" class="javax.swing.JLabel" binding="labelSharp4">
                 <constraints>
@@ -855,7 +874,9 @@
                     <preferred-size width="150" height="-1"/>
                   </grid>
                 </constraints>
-                <properties/>
+                <properties>
+                  <opaque value="false"/>
+                </properties>
               </component>
               <component id="ed491" class="javax.swing.JLabel" binding="background3Chooser">
                 <constraints>
@@ -888,7 +909,9 @@
                     <preferred-size width="150" height="-1"/>
                   </grid>
                 </constraints>
-                <properties/>
+                <properties>
+                  <opaque value="false"/>
+                </properties>
               </component>
               <component id="299d5" class="javax.swing.JLabel" binding="background4Chooser">
                 <constraints>
@@ -923,7 +946,9 @@
                     <preferred-size width="150" height="-1"/>
                   </grid>
                 </constraints>
-                <properties/>
+                <properties>
+                  <opaque value="false"/>
+                </properties>
               </component>
               <component id="6a50b" class="javax.swing.JLabel" binding="searchBarColorChooser">
                 <constraints>
