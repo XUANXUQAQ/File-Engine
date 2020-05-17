@@ -7,7 +7,12 @@ A tool can make you work more efficiently.
 
 注意：该程序需要管理员权限来监控文件更改事件。在 "搜索窗口与权限设置" 中可以取消UAC弹窗。
 
-~~本程序支持拼音搜索，无需输入汉字。~~(因为性能问题，暂时删除。)
+感谢以下项目：
+
+1.fastjson (https://github.com/alibaba/fastjson)\
+2.Material-UI-Swing (https://github.com/vincenzopalazzo/material-ui-swing)\
+3.jna (https://github.com/java-native-access/jna)
+
 ## 特性
 * 绿色便携软件，所有配置文件均在自身目录。
 * 快速搜索，打开文件。
@@ -56,7 +61,7 @@ A tool can make you work more efficiently.
 
 ![8PCAtP.png](https://s2.ax1x.com/2020/03/10/8PCAtP.png)
  
-![8PPlKe.png](https://s1.ax1x.com/2020/05/10/Y3UWW9.png)
+![8PPlKe.png](https://s1.ax1x.com/2020/05/17/Y2uk2q.png)
 ### 更多功能敬请期待
     
    
