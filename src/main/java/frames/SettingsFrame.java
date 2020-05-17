@@ -189,10 +189,18 @@ public class SettingsFrame {
 
 
     public SettingsFrame() {
+        //…Ë÷√±≥æ∞
+        ImageIcon background = new ImageIcon(SettingsFrame.class.getResource("/background.jpg"));
+        JLabel backgroundLabel = new JLabel(background);
+        backgroundLabel.setBounds(0, 0, 942, 600);
+        frame.getRootPane().add(backgroundLabel, new Integer(Integer.MAX_VALUE));
+        JPanel j = (JPanel) frame.getContentPane();
+        j.setOpaque(false);
+
         labelAboutGithub.setText("<html><a href='https://github.com/XUANXUQAQ/File-Engine'><font size=\"4\">File-Engine</font></a></html>");
-        labelBeautyEye.setText("1.beautyeye");
-        labelFastJson.setText("2.fastjson");
-        labelJna.setText("3.jna");
+        labelBeautyEye.setText("1.Material-UI-Swing");
+        labelFastJson.setText("2.FastJson");
+        labelJna.setText("3.Java-Native-Access");
         ImageIcon imageIcon = new ImageIcon(SettingsFrame.class.getResource("/icons/frame.png"));
         labelIcon.setIcon(imageIcon);
 
