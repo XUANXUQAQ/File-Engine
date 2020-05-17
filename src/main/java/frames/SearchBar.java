@@ -59,7 +59,7 @@ public class SearchBar {
     private boolean isCopyPathPressed = false;
     private int iconSideLength;
     private long visibleStartTime = 0;
-    private Border border = BorderFactory.createLineBorder(new Color(73, 162, 255, 255));
+    private static Border border = BorderFactory.createLineBorder(new Color(73, 162, 255, 255));
     private ExecutorService fixedThreadPool = Executors.newFixedThreadPool(7);
 
 
@@ -1651,7 +1651,7 @@ public class SearchBar {
                         label3.setBorder(border);
                         label4.setBorder(border);
                     }
-                    Thread.sleep(100);
+                    Thread.sleep(200);
                 } catch (NullPointerException | InterruptedException ignored) {
 
                 }
@@ -1665,7 +1665,7 @@ public class SearchBar {
                     if (System.currentTimeMillis() - mouseWheelTime > 500) {
                         isLockMouseMotion = false;
                     }
-                    Thread.sleep(10);
+                    Thread.sleep(50);
                 }
             } catch (Exception ignored) {
 
