@@ -1665,7 +1665,7 @@ public class SearchBar {
                     if (System.currentTimeMillis() - mouseWheelTime > 500) {
                         isLockMouseMotion = false;
                     }
-                    Thread.sleep(100);
+                    Thread.sleep(10);
                 }
             } catch (Exception ignored) {
 
