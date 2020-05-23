@@ -7,9 +7,9 @@ import java.io.FileNotFoundException;
 public class GetIcon {
 
     /**
-     * »ñÈ¡´óÍ¼±ê
+     * è·å–å¤§å›¾æ ‡
      *
-     * @param path Â·¾¶
+     * @param path è·¯å¾„
      * @return Image or null
      */
     public static Icon getBigIcon(String path) {

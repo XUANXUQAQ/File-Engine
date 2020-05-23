@@ -14,11 +14,11 @@ public class moveFiles {
     }
 
     private boolean deleteDir(File dir) {
-        // Èç¹ûÊÇÎÄ¼ş¼Ğ
+        // å¦‚æœæ˜¯æ–‡ä»¶å¤¹
         if (dir.isDirectory()) {
-            // Ôò¶Á³ö¸ÃÎÄ¼ş¼ĞÏÂµÄµÄËùÓĞÎÄ¼ş
+            // åˆ™è¯»å‡ºè¯¥æ–‡ä»¶å¤¹ä¸‹çš„çš„æ‰€æœ‰æ–‡ä»¶
             String[] children = dir.list();
-            // µİ¹éÉ¾³ıÄ¿Â¼ÖĞµÄ×ÓÄ¿Â¼ÏÂ
+            // é€’å½’åˆ é™¤ç›®å½•ä¸­çš„å­ç›®å½•ä¸‹
             assert children != null;
             for (String child : children) {
                 boolean isDelete = deleteDir(new File(dir, child));
@@ -34,19 +34,19 @@ public class moveFiles {
         }
     }
 
-    // ¸´ÖÆÄ³¸öÄ¿Â¼¼°Ä¿Â¼ÏÂµÄËùÓĞ×ÓÄ¿Â¼ºÍÎÄ¼şµ½ĞÂÎÄ¼ş¼Ğ
+    // å¤åˆ¶æŸä¸ªç›®å½•åŠç›®å½•ä¸‹çš„æ‰€æœ‰å­ç›®å½•å’Œæ–‡ä»¶åˆ°æ–°æ–‡ä»¶å¤¹
     private boolean copyFolder(String oldPath, String newPath) {
         boolean isHasRepeatFiles = false;
         try {
             (new File(newPath)).mkdirs();
-            // ¶ÁÈ¡Õû¸öÎÄ¼ş¼ĞµÄÄÚÈİµ½file×Ö·û´®Êı×é£¬ÏÂÃæÉèÖÃÒ»¸öÓÎ±êi£¬²»Í£µØÏòÏÂÒÆ¿ªÊ¼¶ÁÕâ¸öÊı×é
+            // è¯»å–æ•´ä¸ªæ–‡ä»¶å¤¹çš„å†…å®¹åˆ°fileå­—ç¬¦ä¸²æ•°ç»„ï¼Œä¸‹é¢è®¾ç½®ä¸€ä¸ªæ¸¸æ ‡iï¼Œä¸åœåœ°å‘ä¸‹ç§»å¼€å§‹è¯»è¿™ä¸ªæ•°ç»„
             File filelist = new File(oldPath);
             String[] file = filelist.list();
             File temp;
             assert file != null;
             for (String s : file) {
                 if (!s.endsWith("desktop.ini")) {
-                    // Èç¹ûoldPathÒÔÂ·¾¶·Ö¸ô·û/»òÕß\½áÎ²£¬ÄÇÃ´ÔòoldPath/ÎÄ¼şÃû¾Í¿ÉÒÔÁË
+                    // å¦‚æœoldPathä»¥è·¯å¾„åˆ†éš”ç¬¦/æˆ–è€…\ç»“å°¾ï¼Œé‚£ä¹ˆåˆ™oldPath/æ–‡ä»¶åå°±å¯ä»¥äº†
                     if (oldPath.endsWith(File.separator)) {
                         temp = new File(oldPath + s);
                     } else {
@@ -77,13 +77,13 @@ public class moveFiles {
                 }
             }
         } catch (Exception e) {
-            System.out.println("¸´ÖÆÕû¸öÎÄ¼ş¼ĞÄÚÈİ²Ù×÷³ö´í");
+            System.out.println("å¤åˆ¶æ•´ä¸ªæ–‡ä»¶å¤¹å†…å®¹æ“ä½œå‡ºé”™");
         }
         return isHasRepeatFiles;
     }
 
     public boolean moveFolder(String oldPath, String newPath) {
-        // ÏÈ¸´ÖÆÎÄ¼ş
+        // å…ˆå¤åˆ¶æ–‡ä»¶
         boolean isHasRepeated = copyFolder(oldPath, newPath);
         deleteDir(new File(oldPath));
         return isHasRepeated;

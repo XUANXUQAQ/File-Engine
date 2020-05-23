@@ -1,7 +1,8 @@
 package main;
 
+import DllInterface.FileMonitor;
+import DllInterface.IsLocalDisk;
 import com.alibaba.fastjson.JSONObject;
-import fileMonitor.FileMonitor;
 import frames.SearchBar;
 import frames.SettingsFrame;
 import frames.TaskBar;
@@ -10,7 +11,6 @@ import mdlaf.MaterialLookAndFeel;
 import search.Search;
 
 import javax.swing.*;
-import javax.swing.filechooser.FileSystemView;
 import java.io.*;
 import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
@@ -18,7 +18,7 @@ import java.util.concurrent.Executors;
 
 
 public class MainClass {
-    public static final String version = "2.0"; //TODO ¸ü¸Ä°æ±¾ºÅ
+    public static final String version = "2.0"; //TODO æ›´æ”¹ç‰ˆæœ¬å·
     public static boolean mainExit = false;
     public static String name;
     private static Search search = Search.getInstance();
@@ -60,14 +60,14 @@ public class MainClass {
         }
     }
 
-    public static void copyFile(InputStream source, File dest) {
+    private static void copyFile(InputStream source, File dest) {
         try (OutputStream os = new FileOutputStream(dest); BufferedInputStream bis = new BufferedInputStream(source); BufferedOutputStream bos = new BufferedOutputStream(os)) {
             byte[] buffer = new byte[8192];
             int count = bis.read(buffer);
             while (count != -1) {
-                //Ê¹ÓÃ»º³åÁ÷Ð´Êý¾Ý
+                //ä½¿ç”¨ç¼“å†²æµå†™æ•°æ®
                 bos.write(buffer, 0, count);
-                //Ë¢ÐÂ
+                //åˆ·æ–°
                 bos.flush();
                 count = bis.read(buffer);
             }
@@ -76,21 +76,21 @@ public class MainClass {
         }
     }
 
-    public static void deleteDir(String path) {
+    private static void deleteDir(String path) {
         File file = new File(path);
-        if (!file.exists()) {//ÅÐ¶ÏÊÇ·ñ´ýÉ¾³ýÄ¿Â¼ÊÇ·ñ´æÔÚ
+        if (!file.exists()) {//åˆ¤æ–­æ˜¯å¦å¾…åˆ é™¤ç›®å½•æ˜¯å¦å­˜åœ¨
             return;
         }
 
-        String[] content = file.list();//È¡µÃµ±Ç°Ä¿Â¼ÏÂËùÓÐÎÄ¼þºÍÎÄ¼þ¼Ð
+        String[] content = file.list();//å–å¾—å½“å‰ç›®å½•ä¸‹æ‰€æœ‰æ–‡ä»¶å’Œæ–‡ä»¶å¤¹
         if (content != null) {
             for (String name : content) {
                 File temp = new File(path, name);
-                if (temp.isDirectory()) {//ÅÐ¶ÏÊÇ·ñÊÇÄ¿Â¼
-                    deleteDir(temp.getAbsolutePath());//µÝ¹éµ÷ÓÃ£¬É¾³ýÄ¿Â¼ÀïµÄÄÚÈÝ
-                    temp.delete();//É¾³ý¿ÕÄ¿Â¼
+                if (temp.isDirectory()) {//åˆ¤æ–­æ˜¯å¦æ˜¯ç›®å½•
+                    deleteDir(temp.getAbsolutePath());//é€’å½’è°ƒç”¨ï¼Œåˆ é™¤ç›®å½•é‡Œçš„å†…å®¹
+                    temp.delete();//åˆ é™¤ç©ºç›®å½•
                 } else {
-                    if (!temp.delete()) {//Ö±½ÓÉ¾³ýÎÄ¼þ
+                    if (!temp.delete()) {//ç›´æŽ¥åˆ é™¤æ–‡ä»¶
                         System.out.println("Failed to delete " + name);
                     }
                 }
@@ -129,7 +129,7 @@ public class MainClass {
                 }
             }
         }
-        //¸´ÖÆupdater.exe
+        //å¤åˆ¶updater.exe
         File updaterExe = new File("updater.exe");
         if (isUpdate) {
             InputStream updater;
@@ -152,48 +152,20 @@ public class MainClass {
             updaterExe.delete();
         }
 
-        File settings = SettingsFrame.settings;
+        File settings = SettingsFrame.getSettings();
         File caches = new File("user/cache.dat");
-        File data = new File("data");
 
         if (!settings.exists()) {
-            String ignorePath = "C:\\Windows,";
-            JSONObject json = new JSONObject();
-            json.put("hotkey", "Ctrl + Alt + J");
-            json.put("isStartup", false);
-            json.put("cacheNumLimit", 1000);
-            json.put("updateTimeLimit", 5);
-            json.put("ignorePath", ignorePath);
-            json.put("searchDepth", 8);
-            json.put("priorityFolder", "");
-            json.put("dataPath", data.getAbsolutePath());
-            json.put("isDefaultAdmin", false);
-            json.put("isLoseFocusClose", true);
-            json.put("runAsAdminKeyCode", 16);
-            json.put("openLastFolderKeyCode", 17);
-            json.put("copyPathKeyCode", 18);
-            json.put("transparency", 0.8f);
-            json.put("labelColor", 0xFF9868);
-            json.put("backgroundColor1", 0xffffff);
-            json.put("backgroundColor2", 0xffffff);
-            json.put("backgroundColor3", 0xffffff);
-            json.put("backgroundColor4", 0xffffff);
-            json.put("searchBarColor", 0xffffff);
-            json.put("fontColorWithCoverage", 0x1C0EFF);
-            json.put("fontColor", 0x000000);
-            json.put("maxConnectionNum", 15);
-            json.put("minConnectionNum", 10);
-            json.put("connectionTimeLimit", 600);
-            try (BufferedWriter buffW = new BufferedWriter(new FileWriter(settings))) {
-                buffW.write(json.toJSONString());
-            } catch (IOException ignored) {
-
+            try {
+                settings.createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
 
 
-        //Çå¿Õtmp
-        MainClass.deleteDir(SettingsFrame.tmp.getAbsolutePath());
+        //æ¸…ç©ºtmp
+        MainClass.deleteDir(SettingsFrame.getTmp().getAbsolutePath());
 
         File target;
 
@@ -215,6 +187,11 @@ public class MainClass {
                 InputStream hotkeyListener64Dll = MainClass.class.getResourceAsStream("/win32-x86-64/hotkeyListener64.dll");
                 copyFile(hotkeyListener64Dll, target);
             }
+            target = new File("user/isLocalDisk.dll");
+            if (!target.exists()) {
+                InputStream isLocakDisk64Dll = MainClass.class.getResourceAsStream("/win32-x86-64/isLocalDisk64.dll");
+                copyFile(isLocakDisk64Dll, target);
+            }
         } else {
             if (!target.exists()) {
                 InputStream fileMonitor86Dll = MainClass.class.getResourceAsStream("/win32-x86/fileMonitor86.dll");
@@ -229,6 +206,11 @@ public class MainClass {
             if (!target.exists()) {
                 InputStream hotkeyListener86Dll = MainClass.class.getResourceAsStream("/win32-x86/hotkeyListener86.dll");
                 copyFile(hotkeyListener86Dll, target);
+            }
+            target = new File("user/isLocalDisk.dll");
+            if (!target.exists()) {
+                InputStream isLocalDisk86Dll = MainClass.class.getResourceAsStream("/win32-x86/isLocalDisk86.dll");
+                copyFile(isLocalDisk86Dll, target);
             }
         }
 
@@ -245,7 +227,7 @@ public class MainClass {
                 copyFile(fileSearcher86, target);
             }
         }
-        target = new File(SettingsFrame.dataPath);
+        target = new File(SettingsFrame.getDataPath());
         if (!target.exists()) {
             target.mkdir();
         }
@@ -253,7 +235,6 @@ public class MainClass {
         if (!target.exists()) {
             InputStream shortcutGen = MainClass.class.getResourceAsStream("/shortcutGenerator.vbs");
             copyFile(shortcutGen, target);
-            System.out.println("ÒÑµ¼³ö¿ì½Ý·½Ê½Éú³ÉÆ÷");
         }
         target = new File("user/restart.exe");
         if (!target.exists()) {
@@ -270,15 +251,16 @@ public class MainClass {
             try {
                 caches.createNewFile();
             } catch (IOException e) {
-                JOptionPane.showMessageDialog(null, "´´½¨»º´æÎÄ¼þÊ§°Ü£¬³ÌÐòÕýÔÚÍË³ö");
+                JOptionPane.showMessageDialog(null, "åˆ›å»ºç¼“å­˜æ–‡ä»¶å¤±è´¥ï¼Œç¨‹åºæ­£åœ¨é€€å‡º");
                 mainExit = true;
             }
         }
-        if (!SettingsFrame.tmp.exists()) {
-            SettingsFrame.tmp.mkdir();
+        File temp = SettingsFrame.getTmp();
+        if (!temp.exists()) {
+            temp.mkdir();
         }
-        File fileAdded = new File(SettingsFrame.tmp.getAbsolutePath() + "\\fileAdded.txt");
-        File fileRemoved = new File(SettingsFrame.tmp.getAbsolutePath() + "\\fileRemoved.txt");
+        File fileAdded = new File(temp.getAbsolutePath() + "\\fileAdded.txt");
+        File fileRemoved = new File(temp.getAbsolutePath() + "\\fileRemoved.txt");
         if (!fileAdded.exists()) {
             try {
                 fileAdded.createNewFile();
@@ -301,41 +283,40 @@ public class MainClass {
         ExecutorService fixedThreadPool = Executors.newFixedThreadPool(roots.length + 5);
 
 
-        data = new File(SettingsFrame.dataPath);
+        File data = new File(SettingsFrame.getDataPath());
         File[] files = data.listFiles();
         if (!data.exists()) {
-            System.out.println("ÎÞdataÎÄ¼þ£¬ÕýÔÚËÑË÷²¢ÖØ½¨");
+            System.out.println("æ— dataæ–‡ä»¶ï¼Œæ­£åœ¨æœç´¢å¹¶é‡å»º");
             search.setManualUpdate(true);
         } else if (files == null) {
-            System.out.println("dataÎÄ¼þËð»µ£¬ÕýÔÚËÑË÷²¢ÖØ½¨");
+            System.out.println("dataæ–‡ä»¶æŸåï¼Œæ­£åœ¨æœç´¢å¹¶é‡å»º");
             search.setManualUpdate(true);
         } else {
             assert false;
             if (files.length != 26) {
-                System.out.println("dataÎÄ¼þËð»µ£¬ÕýÔÚËÑË÷²¢ÖØ½¨");
+                System.out.println("dataæ–‡ä»¶æŸåï¼Œæ­£åœ¨æœç´¢å¹¶é‡å»º");
                 search.setManualUpdate(true);
             }
         }
 
-        FileSystemView sys = FileSystemView.getFileSystemView();
         if (isAdmin()) {
             for (File root : roots) {
-                String dirveType = sys.getSystemTypeDescription(root);
-                if (dirveType.equals("±¾µØ´ÅÅÌ")) {
-                    fixedThreadPool.execute(() -> FileMonitor.INSTANCE.monitor(root.getAbsolutePath(), SettingsFrame.tmp.getAbsolutePath(), SettingsFrame.tmp.getAbsolutePath() + "\\CLOSE"));
+                boolean isLocal = IsLocalDisk.INSTANCE.isLocalDisk(root.getAbsolutePath());
+                if (isLocal) {
+                    fixedThreadPool.execute(() -> FileMonitor.INSTANCE.monitor(root.getAbsolutePath(), SettingsFrame.getTmp().getAbsolutePath(), SettingsFrame.getTmp().getAbsolutePath() + "\\CLOSE"));
                 }
             }
         } else {
-            System.out.println("ÎÞ¹ÜÀíÔ±È¨ÏÞ£¬ÎÄ¼þ¼à¿Ø¹¦ÄÜÒÑ¹Ø±Õ");
-            taskBar.showMessage("¾¯¸æ", "ÎÞ¹ÜÀíÔ±È¨ÏÞ£¬ÎÄ¼þ¼à¿Ø¹¦ÄÜÒÑ¹Ø±Õ");
+            System.out.println("æ— ç®¡ç†å‘˜æƒé™ï¼Œæ–‡ä»¶ç›‘æŽ§åŠŸèƒ½å·²å…³é—­");
+            taskBar.showMessage("è­¦å‘Š", "æ— ç®¡ç†å‘˜æƒé™ï¼Œæ–‡ä»¶ç›‘æŽ§åŠŸèƒ½å·²å…³é—­");
         }
 
-        //¼ì²âÊÇ·ñÎª×îÐÂ°æ±¾
+        //æ£€æµ‹æ˜¯å¦ä¸ºæœ€æ–°ç‰ˆæœ¬
         try {
             JSONObject info = SettingsFrame.getInfo();
             String latestVersion = info.getString("version");
             if (Double.parseDouble(latestVersion) > Double.parseDouble(version)) {
-                showMessage("ÌáÊ¾", "ÓÐÐÂ°æ±¾¿É¸üÐÂ");
+                showMessage("æç¤º", "æœ‰æ–°ç‰ˆæœ¬å¯æ›´æ–°");
             }
         } catch (IOException ignored) {
 
@@ -343,15 +324,15 @@ public class MainClass {
 
 
         fixedThreadPool.execute(() -> {
-            //¼ì²âÎÄ¼þÌí¼ÓÏß³Ì
+            //æ£€æµ‹æ–‡ä»¶æ·»åŠ çº¿ç¨‹
             String filesToAdd;
-            try (BufferedReader readerAdd = new BufferedReader(new FileReader(SettingsFrame.tmp.getAbsolutePath() + "\\fileAdded.txt"))) {
+            try (BufferedReader readerAdd = new BufferedReader(new FileReader(SettingsFrame.getTmp().getAbsolutePath() + "\\fileAdded.txt"))) {
                 while (!mainExit) {
                     if (!search.isManualUpdate()) {
                         if ((filesToAdd = readerAdd.readLine()) != null) {
-                            if (!filesToAdd.contains(SettingsFrame.dataPath)) {
+                            if (!filesToAdd.contains(SettingsFrame.getDataPath())) {
                                 search.addFileToLoadBin(filesToAdd);
-                                System.out.println("Ìí¼Ó" + filesToAdd);
+                                System.out.println("æ·»åŠ " + filesToAdd);
                             }
                         }
                     }
@@ -364,13 +345,13 @@ public class MainClass {
 
         fixedThreadPool.execute(() -> {
             String filesToRemove;
-            try (BufferedReader readerRemove = new BufferedReader(new FileReader(SettingsFrame.tmp.getAbsolutePath() + "\\fileRemoved.txt"))) {
+            try (BufferedReader readerRemove = new BufferedReader(new FileReader(SettingsFrame.getTmp().getAbsolutePath() + "\\fileRemoved.txt"))) {
                 while (!mainExit) {
                     if (!search.isManualUpdate()) {
                         if ((filesToRemove = readerRemove.readLine()) != null) {
-                            if (!filesToRemove.contains(SettingsFrame.dataPath)) {
+                            if (!filesToRemove.contains(SettingsFrame.getDataPath())) {
                                 search.addToRecycleBin(filesToRemove);
-                                System.out.println("É¾³ý" + filesToRemove);
+                                System.out.println("åˆ é™¤" + filesToRemove);
                             }
                         }
                     }
@@ -383,13 +364,13 @@ public class MainClass {
 
 
         fixedThreadPool.execute(() -> {
-            // Ê±¼ä¼ì²âÏß³Ì
+            // æ—¶é—´æ£€æµ‹çº¿ç¨‹
             long count = 0;
             try {
                 while (!mainExit) {
                     boolean isUsing = searchBar.isUsing();
                     count += 100;
-                    if (count >= (SettingsFrame.updateTimeLimit << 10) && !isUsing && !search.isManualUpdate()) {
+                    if (count >= (SettingsFrame.getUpdateTimeLimit() << 10) && !isUsing && !search.isManualUpdate()) {
                         count = 0;
                         if (search.isUsable() && (!searchBar.isUsing())) {
                             search.mergeFileToList();
@@ -403,14 +384,14 @@ public class MainClass {
         });
 
 
-        //ËÑË÷Ïß³Ì
+        //æœç´¢çº¿ç¨‹
         fixedThreadPool.execute(() -> {
             try {
                 while (!mainExit) {
                     if (search.isManualUpdate()) {
                         search.setUsable(false);
                         SearchBar.getInstance().closeAllConnection();
-                        search.updateLists(SettingsFrame.ignorePath, SettingsFrame.searchDepth);
+                        search.updateLists(SettingsFrame.getIgnorePath(), SettingsFrame.getSearchDepth());
                     }
                     Thread.sleep(100);
                 }
@@ -421,11 +402,11 @@ public class MainClass {
 
         try {
             while (true) {
-                // Ö÷Ñ­»·¿ªÊ¼
+                // ä¸»å¾ªçŽ¯å¼€å§‹
                 Thread.sleep(100);
                 if (mainExit) {
                     CheckHotKey.getInstance().stopListen();
-                    File CLOSEDLL = new File(SettingsFrame.tmp.getAbsolutePath() + "\\CLOSE");
+                    File CLOSEDLL = new File(SettingsFrame.getTmp().getAbsolutePath() + "\\CLOSE");
                     CLOSEDLL.createNewFile();
                     Thread.sleep(8000);
                     fixedThreadPool.shutdown();

@@ -7,6 +7,7 @@
 #include <ctime>
 #include <tchar.h>
 #include <windows.h>
+#include <locale>
 
 using namespace std;
 //#define TEST
@@ -50,154 +51,207 @@ bool isIgnore(string path);
 void search(string path, string exd);
 void searchIgnoreSearchDepth(string path, string exd);
 void clearResults();
-bool includeChinese(string strs);
 
 int getAscIISum(string name)
 {
-    if (includeChinese(name)){
-        return 1;
-    }
     int sum = 0;
     int length = name.length();
     for (int i = 0; i < length; i++)
     {
-        sum += name[i];
+        if (name[i] > 0) 
+        {
+            sum += name[i];
+        }
     }
     return sum;
 }
 
+std::string to_utf8(const wchar_t* buffer, int len)
+{
+        int nChars =::WideCharToMultiByte(
+                CP_UTF8,
+                0,
+                buffer,
+                len,
+                NULL,
+                0,
+                NULL,
+                NULL);
+        if(nChars ==0)
+        {
+            return"";
+        }
+        string newbuffer;
+        newbuffer.resize(nChars);
+        ::WideCharToMultiByte(
+                CP_UTF8,
+                0,
+                buffer,
+                len,
+                const_cast<char*>(newbuffer.c_str()),
+                nChars,
+                NULL,
+                NULL); 
+
+        return newbuffer;
+}
+
+std::string to_utf8(const std::wstring& str)
+{
+        return to_utf8(str.c_str(),(int)str.size());
+}
+
+std::wstring StringToWString(const std::string& str)
+{
+    setlocale(LC_ALL, "chs");
+    const char* point_to_source = str.c_str();
+    size_t new_size = str.size() + 1;
+    wchar_t *point_to_destination = new wchar_t[new_size];
+    wmemset(point_to_destination, 0, new_size);
+    mbstowcs(point_to_destination, point_to_source, new_size);
+    std::wstring result = point_to_destination;
+    delete[]point_to_destination;
+    setlocale(LC_ALL, "C");
+    return result;
+}
+
 void saveResult(string path, int ascII)
 {
+    #ifndef TEST
     if (0 < ascII && ascII <= 100)
     {
-        results0 << (path);
+        results0 << to_utf8(StringToWString(path));
         results0<< ("\n");
     }
     else if (100 < ascII && ascII <= 200)
     {
-        results1 << (path);
+        results1 << to_utf8(StringToWString(path));
         results1 << ("\n");
     }
     else if (200 < ascII && ascII <= 300)
     {
-        results2 << (path);
+        results2 << to_utf8(StringToWString(path));
         results2 << ("\n");
     }
     else if (300 < ascII && ascII <= 400)
     {
-        results3 << (path);
+        results3 << to_utf8(StringToWString(path));
         results3 << ("\n");
     }
     else if (400 < ascII && ascII <= 500)
     {
-        results4 << (path);
+        results4 << to_utf8(StringToWString(path));
         results4 << ("\n");
     }
     else if (500 < ascII && ascII <= 600)
     {
-        results5 << (path);
+        results5 << to_utf8(StringToWString(path));
         results5 << ("\n");
     }
     else if (600 < ascII && ascII <= 700)
     {
-        results6 << (path);
+        results6 << to_utf8(StringToWString(path));
         results6 << ("\n");
     }
     else if (700 < ascII && ascII <= 800)
     {
-        results7 << (path);
+        results7 << to_utf8(StringToWString(path));
         results7 << ("\n");
     }
     else if (800 < ascII && ascII <= 900)
     {
-        results8 << (path);
+        results8 << to_utf8(StringToWString(path));
         results8 << ("\n");
     }
     else if (900 < ascII && ascII <= 1000)
     {
-        results9 << (path);
+        results9 << to_utf8(StringToWString(path));
         results9 << ("\n");
     }
     else if (1000 < ascII && ascII <= 1100)
     {
-        results10 << (path);
+        results10 << to_utf8(StringToWString(path));
         results10 << ("\n");
     }
     else if (1100 < ascII && ascII <= 1200)
     {
-        results11 << (path);
+        results11 << to_utf8(StringToWString(path));
         results11 << ("\n");
     }
     else if (1200 < ascII && ascII <= 1300)
     {
-        results12 << (path);
+        results12 << to_utf8(StringToWString(path));
         results12 << ("\n");
     }
     else if (1300 < ascII && ascII <= 1400)
     {
-        results13 << (path);
+        results13 << to_utf8(StringToWString(path));
         results13 << ("\n");
     }
     else if (1400 < ascII && ascII <= 1500)
     {
-        results14 << (path);
+        results14 << to_utf8(StringToWString(path));
         results14 << ("\n");
     }
     else if (1500 < ascII && ascII <= 1600)
     {
-        results15 << (path);
+        results15 << to_utf8(StringToWString(path));
         results15 << ("\n");
     }
     else if (1600 < ascII && ascII <= 1700)
     {
-        results16 << (path);
+        results16 << to_utf8(StringToWString(path));
         results16 << ("\n");
     }
     else if (1700 < ascII && ascII <= 1800)
     {
-        results17 << (path);
+        results17 << to_utf8(StringToWString(path));
         results17 << ("\n");
     }
     else if (1800 < ascII && ascII <= 1900)
     {
-        results18 << (path);
+        results18 << to_utf8(StringToWString(path));
         results18 << ("\n");
     }
     else if (1900 < ascII && ascII <= 2000)
     {
-        results19 << (path);
+        results19 << to_utf8(StringToWString(path));
         results19 << ("\n");
     }
     else if (2000 < ascII && ascII <= 2100)
     {
-        results20 << (path);
+        results20 << to_utf8(StringToWString(path));
         results20 << ("\n");
     }
     else if (2100 < ascII && ascII <= 2200)
     {
-        results21 << (path);
+        results21 << to_utf8(StringToWString(path));
         results21 << ("\n");
     }
     else if (2200 < ascII && ascII <= 2300)
     {
-        results22 << (path);
+        results22 << to_utf8(StringToWString(path));
         results22 << ("\n");
     }
     else if (2300 < ascII && ascII <= 2400)
     {
-        results23 << (path);
+        results23 << to_utf8(StringToWString(path));
         results23 << ("\n");
     }
     else if (2400 < ascII && ascII <= 2500)
     {
-        results24 << (path);
+        results24 << to_utf8(StringToWString(path));
         results24 << ("\n");
     }
     else
     {
-        results25 << (path);
+        results25 << to_utf8(StringToWString(path));
         results25 << ("\n");
     }
+    #else
+    wstring record = to_utf8(StringToWString(path));
+    results0 << record << endl;
+    #endif
 }
 
 void searchFilesIgnoreSearchDepth(const char *path, const char *exd)
@@ -212,9 +266,9 @@ void searchFilesIgnoreSearchDepth(const char *path, const char *exd)
 void searchIgnoreSearchDepth(string path, string exd)
 {
     //cout << "getFiles()" << path<< endl;
-    //ÎÄ¼þ¾ä±ú
+    //æ–‡ä»¶å¥æŸ„
     long hFile = 0;
-    //ÎÄ¼þÐÅÏ¢
+    //æ–‡ä»¶ä¿¡æ¯
     struct _finddata_t fileinfo;
     string pathName, exdName;
 
@@ -233,8 +287,8 @@ void searchIgnoreSearchDepth(string path, string exd)
         {
             //cout << fileinfo.name << endl;
 
-            //Èç¹ûÊÇÎÄ¼þ¼ÐÖÐÈÔÓÐÎÄ¼þ¼Ð,¼ÓÈëÁÐ±íºóµü´ú
-            //Èç¹û²»ÊÇ,¼ÓÈëÁÐ±í
+            //å¦‚æžœæ˜¯æ–‡ä»¶å¤¹ä¸­ä»æœ‰æ–‡ä»¶å¤¹,åŠ å…¥åˆ—è¡¨åŽè¿­ä»£
+            //å¦‚æžœä¸æ˜¯,åŠ å…¥åˆ—è¡¨
             if ((fileinfo.attrib & _A_SUBDIR))
             {
                 if (strcmp(fileinfo.name, ".") != 0 && strcmp(fileinfo.name, "..") != 0)
@@ -352,30 +406,12 @@ bool isIgnore(string path)
     return false;
 }
 
-bool includeChinese(string strs)
-{
-    char _str[260];
-    strcpy(_str, strs.c_str());
-    char *str = _str;
-    char c;
-    while (1)
-    {
-        c = *str++;
-        if (c == 0)
-            break;    //Èç¹ûµ½×Ö·û´®Î²ÔòËµÃ÷¸Ã×Ö·û´®Ã»ÓÐÖÐÎÄ×Ö·û
-        if (c & 0x80) //Èç¹û×Ö·û¸ßÎ»Îª1ÇÒÏÂÒ»×Ö·û¸ßÎ»Ò²ÊÇ1ÔòÓÐÖÐÎÄ×Ö·û
-            if (*str & 0x80)
-                return true;
-    }
-    return false;
-}
-
 void search(string path, string exd)
 {
     //cout << "getFiles()" << path<< endl;
-    //ÎÄ¼þ¾ä±ú
+    //æ–‡ä»¶å¥æŸ„
     long hFile = 0;
-    //ÎÄ¼þÐÅÏ¢
+    //æ–‡ä»¶ä¿¡æ¯
     struct _finddata_t fileinfo;
     string pathName, exdName;
 
@@ -394,8 +430,8 @@ void search(string path, string exd)
         {
             //cout << fileinfo.name << endl;
 
-            //Èç¹ûÊÇÎÄ¼þ¼ÐÖÐÈÔÓÐÎÄ¼þ¼Ð,¼ÓÈëÁÐ±íºóµü´ú
-            //Èç¹û²»ÊÇ,¼ÓÈëÁÐ±í
+            //å¦‚æžœæ˜¯æ–‡ä»¶å¤¹ä¸­ä»æœ‰æ–‡ä»¶å¤¹,åŠ å…¥åˆ—è¡¨åŽè¿­ä»£
+            //å¦‚æžœä¸æ˜¯,åŠ å…¥åˆ—è¡¨
             if ((fileinfo.attrib & _A_SUBDIR))
             {
                 if (strcmp(fileinfo.name, ".") != 0 && strcmp(fileinfo.name, "..") != 0)
@@ -451,13 +487,7 @@ void search(string path, string exd)
 
 #ifndef TEST
 int main(int argc, char *argv[])
-{
-    HWND hwnd;  
-    hwnd=FindWindow(TEXT("ConsoleWindowClass"),NULL); //´¦Àí¶¥¼¶´°¿ÚµÄÀàÃûºÍ´°¿ÚÃû³ÆÆ¥ÅäÖ¸¶¨µÄ×Ö·û´®,²»ËÑË÷×Ó´°¿Ú¡£  
-    if(hwnd)  
-    {  
-        //ShowWindow(hwnd,SW_HIDE);               //ÉèÖÃÖ¸¶¨´°¿ÚµÄÏÔÊ¾×´Ì¬  
-    }  
+{ 
     char searchPath[260];
     char searchDepth[50];
     char ignorePath[3000];
@@ -551,31 +581,57 @@ int main(int argc, char *argv[])
         strcpy(output2500_, output);
         strcat(output2500_, "\\list2500-.txt");
         results0.open(output0_100, ios::app);
+        
         results1.open(output100_200, ios::app);
+        
         results2.open(output200_300, ios::app);
+        
         results3.open(output300_400, ios::app);
+        
         results4.open(output400_500, ios::app);
+       
         results5.open(output500_600, ios::app);
+  
         results6.open(output600_700, ios::app);
+      
         results7.open(output700_800, ios::app);
+  
         results8.open(output800_900, ios::app);
+      
         results9.open(output900_1000, ios::app);
+        
         results10.open(output1000_1100, ios::app);
+        
         results11.open(output1100_1200, ios::app);
+        
         results12.open(output1200_1300, ios::app);
+        
         results13.open(output1300_1400, ios::app);
+        
         results14.open(output1400_1500, ios::app);
+        
         results15.open(output1500_1600, ios::app);
+        
         results16.open(output1600_1700, ios::app);
+        
         results17.open(output1700_1800, ios::app);
+        
         results18.open(output1800_1900, ios::app);
+        
         results19.open(output1900_2000, ios::app);
+        
         results20.open(output2000_2100, ios::app);
+        
         results21.open(output2100_2200, ios::app);
+        
         results22.open(output2200_2300, ios::app);
+        
         results23.open(output2300_2400, ios::app);
+        
         results24.open(output2400_2500, ios::app);
+        
         results25.open(output2500_, ios::app);
+        
 
         cout << "searchPath:" << searchPath << endl;
         cout << "searchDepth:" << searchDepth << endl;
@@ -646,8 +702,11 @@ int main(int argc, char *argv[])
 #else
 int main()
 {
+    std::locale::global(std::locale(""));
     setSearchDepth(6);
-    searchFiles("D:", "*");
+    results0.open("D:\\Code\\C++\\output\\list0-100.txt", ios::app);
+    searchFiles("D:\\Code\\C++\\TEST", "*");
+    results0.close();
     getchar();
 }
 

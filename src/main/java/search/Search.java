@@ -17,10 +17,8 @@ import java.util.concurrent.TimeUnit;
 
 
 public class Search {
-    private static boolean isUsable = true;
+    private volatile static boolean isUsable = true;
     private static boolean isManualUpdate = false;
-    private static Search searchInstance = new Search();
-    private Set<String> RecycleBin = ConcurrentHashMap.newKeySet();
     private Set<String> listToLoad = ConcurrentHashMap.newKeySet();
     private Set<String> set0 = ConcurrentHashMap.newKeySet();
     private Set<String> set100 = ConcurrentHashMap.newKeySet();
@@ -48,17 +46,22 @@ public class Search {
     private Set<String> set2300 = ConcurrentHashMap.newKeySet();
     private Set<String> set2400 = ConcurrentHashMap.newKeySet();
     private Set<String> set2500 = ConcurrentHashMap.newKeySet();
+    private SearchBar instance = SearchBar.getInstance();
+
+    private static class SearchBuilder {
+        private static Search instance = new Search();
+    }
 
     private Search() {
     }
 
     public static Search getInstance() {
-        return searchInstance;
+        return SearchBuilder.instance;
     }
 
     private static void writeRecordToFile(String record, String srcPath) {
         if (!isContained(record, srcPath)) {
-            try (BufferedWriter bw = new BufferedWriter(new FileWriter(srcPath, true))) {
+            try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(srcPath, true), StandardCharsets.UTF_8))) {
                 bw.write(record);
                 bw.write("\n");
             } catch (IOException ignored) {
@@ -68,7 +71,7 @@ public class Search {
     }
 
     private static boolean isContained(String record, String filePath) {
-        try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(filePath), StandardCharsets.UTF_8))) {
             String eachLine;
             while ((eachLine = br.readLine()) != null) {
                 if (eachLine.equals(record)) {
@@ -82,82 +85,78 @@ public class Search {
     }
 
     public int getRecycleBinSize() {
-        return RecycleBin.size();
+        return set0.size() + set100.size() + set200.size() + set300.size() + set400.size() + set500.size() + set600.size()
+                + set700.size() + set800.size() + set900.size() + set1000.size() + set1100.size() + set1200.size() + set1300.size()
+                + set1400.size() + set1500.size() + set1600.size() + set1700.size() + set1800.size() + set1900.size() + set2000.size()
+                + set2100.size() + set2200.size() + set2300.size() + set2400.size() + set2500.size();
     }
 
     public void addToRecycleBin(String path) {
-        RecycleBin.add(path);
+        int ascII = instance.getAscIISum(instance.getFileName(path));
+        if (0 <= ascII && ascII <= 100) {
+            set0.add(path);
+        } else if (100 < ascII && ascII <= 200) {
+            set100.add(path);
+        } else if (200 < ascII && ascII <= 300) {
+            set200.add(path);
+        } else if (300 < ascII && ascII <= 400) {
+            set300.add(path);
+        } else if (400 < ascII && ascII <= 500) {
+            set400.add(path);
+        } else if (500 < ascII && ascII <= 600) {
+            set500.add(path);
+        } else if (600 < ascII && ascII <= 700) {
+            set600.add(path);
+        } else if (700 < ascII && ascII <= 800) {
+            set700.add(path);
+        } else if (800 < ascII && ascII <= 900) {
+            set800.add(path);
+        } else if (900 < ascII && ascII <= 1000) {
+            set900.add(path);
+        } else if (1000 < ascII && ascII <= 1100) {
+            set1000.add(path);
+        } else if (1100 < ascII && ascII <= 1200) {
+            set1100.add(path);
+        } else if (1200 < ascII && ascII <= 1300) {
+            set1200.add(path);
+        } else if (1300 < ascII && ascII <= 1400) {
+            set1300.add(path);
+        } else if (1400 < ascII && ascII <= 1500) {
+            set1400.add(path);
+        } else if (1500 < ascII && ascII <= 1600) {
+            set1500.add(path);
+        } else if (1600 < ascII && ascII <= 1700) {
+            set1600.add(path);
+        } else if (1700 < ascII && ascII <= 1800) {
+            set1700.add(path);
+        } else if (1800 < ascII && ascII <= 1900) {
+            set1800.add(path);
+        } else if (1900 < ascII && ascII <= 2000) {
+            set1900.add(path);
+        } else if (2000 < ascII && ascII <= 2100) {
+            set2000.add(path);
+        } else if (2100 < ascII && ascII <= 2200) {
+            set2100.add(path);
+        } else if (2200 < ascII && ascII <= 2300) {
+            set2200.add(path);
+        } else if (2300 < ascII && ascII <= 2400) {
+            set2300.add(path);
+        } else if (2400 < ascII && ascII <= 2500) {
+            set2400.add(path);
+        } else {
+            set2500.add(path);
+        }
     }
 
     public void mergeAndClearRecycleBin() {
         if (!isManualUpdate) {
             isUsable = false;
-            try { //À¬»ø·ÖÀà
-                for (String i : RecycleBin) {
-                    SearchBar instance = SearchBar.getInstance();
-                    int ascII = instance.getAscIISum(instance.getFileName(i));
-                    if (0 <= ascII && ascII <= 100) {
-                        set0.add(i);
-                    } else if (100 < ascII && ascII <= 200) {
-                        set100.add(i);
-                    } else if (200 < ascII && ascII <= 300) {
-                        set200.add(i);
-                    } else if (300 < ascII && ascII <= 400) {
-                        set300.add(i);
-                    } else if (400 < ascII && ascII <= 500) {
-                        set400.add(i);
-                    } else if (500 < ascII && ascII <= 600) {
-                        set500.add(i);
-                    } else if (600 < ascII && ascII <= 700) {
-                        set600.add(i);
-                    } else if (700 < ascII && ascII <= 800) {
-                        set700.add(i);
-                    } else if (800 < ascII && ascII <= 900) {
-                        set800.add(i);
-                    } else if (900 < ascII && ascII <= 1000) {
-                        set900.add(i);
-                    } else if (1000 < ascII && ascII <= 1100) {
-                        set1000.add(i);
-                    } else if (1100 < ascII && ascII <= 1200) {
-                        set1100.add(i);
-                    } else if (1200 < ascII && ascII <= 1300) {
-                        set1200.add(i);
-                    } else if (1300 < ascII && ascII <= 1400) {
-                        set1300.add(i);
-                    } else if (1400 < ascII && ascII <= 1500) {
-                        set1400.add(i);
-                    } else if (1500 < ascII && ascII <= 1600) {
-                        set1500.add(i);
-                    } else if (1600 < ascII && ascII <= 1700) {
-                        set1600.add(i);
-                    } else if (1700 < ascII && ascII <= 1800) {
-                        set1700.add(i);
-                    } else if (1800 < ascII && ascII <= 1900) {
-                        set1800.add(i);
-                    } else if (1900 < ascII && ascII <= 2000) {
-                        set1900.add(i);
-                    } else if (2000 < ascII && ascII <= 2100) {
-                        set2000.add(i);
-                    } else if (2100 < ascII && ascII <= 2200) {
-                        set2100.add(i);
-                    } else if (2200 < ascII && ascII <= 2300) {
-                        set2200.add(i);
-                    } else if (2300 < ascII && ascII <= 2400) {
-                        set2300.add(i);
-                    } else if (2400 < ascII && ascII <= 2500) {
-                        set2400.add(i);
-                    } else {
-                        set2500.add(i);
-                    }
-                }
-                //Çå¿Õ»ØÊÕÕ¾
-                RecycleBin.clear();
-                //¸´ÖÆµ½ÐÂÎÄ¼þ
+            try {
                 generateAllNewLocalRecord();
-
             } catch (ConcurrentModificationException ignored) {
 
             } finally {
+                //æ¸…ç©ºå›žæ”¶ç«™
                 clearAllSets();
                 isUsable = true;
             }
@@ -169,133 +168,133 @@ public class Search {
         String destPath;
 
         if (!set0.isEmpty()) {
-            srcPath = SettingsFrame.dataPath + "\\list0-100.txt";
-            destPath = SettingsFrame.dataPath + "\\_list0-100.txt";
+            srcPath = SettingsFrame.getDataPath() + "\\list0-100.txt";
+            destPath = SettingsFrame.getDataPath() + "\\_list0-100.txt";
             generateNewLocalRecord(srcPath, destPath, set0);
         }
         if (!set100.isEmpty()) {
-            srcPath = SettingsFrame.dataPath + "\\list100-200.txt";
-            destPath = SettingsFrame.dataPath + "\\_list100-200.txt";
+            srcPath = SettingsFrame.getDataPath() + "\\list100-200.txt";
+            destPath = SettingsFrame.getDataPath() + "\\_list100-200.txt";
             generateNewLocalRecord(srcPath, destPath, set100);
         }
         if (!set200.isEmpty()) {
-            srcPath = SettingsFrame.dataPath + "\\list200-300.txt";
-            destPath = SettingsFrame.dataPath + "\\_list200-300.txt";
+            srcPath = SettingsFrame.getDataPath() + "\\list200-300.txt";
+            destPath = SettingsFrame.getDataPath() + "\\_list200-300.txt";
             generateNewLocalRecord(srcPath, destPath, set200);
         }
         if (!set300.isEmpty()) {
-            srcPath = SettingsFrame.dataPath + "\\list300-400.txt";
-            destPath = SettingsFrame.dataPath + "\\_list300-400.txt";
+            srcPath = SettingsFrame.getDataPath() + "\\list300-400.txt";
+            destPath = SettingsFrame.getDataPath() + "\\_list300-400.txt";
             generateNewLocalRecord(srcPath, destPath, set300);
         }
         if (!set400.isEmpty()) {
-            srcPath = SettingsFrame.dataPath + "\\list400-500.txt";
-            destPath = SettingsFrame.dataPath + "\\_list400-500.txt";
+            srcPath = SettingsFrame.getDataPath() + "\\list400-500.txt";
+            destPath = SettingsFrame.getDataPath() + "\\_list400-500.txt";
             generateNewLocalRecord(srcPath, destPath, set400);
         }
         if (!set500.isEmpty()) {
-            srcPath = SettingsFrame.dataPath + "\\list500-600.txt";
-            destPath = SettingsFrame.dataPath + "\\_list500-600.txt";
+            srcPath = SettingsFrame.getDataPath() + "\\list500-600.txt";
+            destPath = SettingsFrame.getDataPath() + "\\_list500-600.txt";
             generateNewLocalRecord(srcPath, destPath, set500);
         }
         if (!set600.isEmpty()) {
-            srcPath = SettingsFrame.dataPath + "\\list600-700.txt";
-            destPath = SettingsFrame.dataPath + "\\_list600-700.txt";
+            srcPath = SettingsFrame.getDataPath() + "\\list600-700.txt";
+            destPath = SettingsFrame.getDataPath() + "\\_list600-700.txt";
             generateNewLocalRecord(srcPath, destPath, set600);
         }
         if (!set700.isEmpty()) {
-            srcPath = SettingsFrame.dataPath + "\\list700-800.txt";
-            destPath = SettingsFrame.dataPath + "\\_list700-800.txt";
+            srcPath = SettingsFrame.getDataPath() + "\\list700-800.txt";
+            destPath = SettingsFrame.getDataPath() + "\\_list700-800.txt";
             generateNewLocalRecord(srcPath, destPath, set700);
         }
         if (!set800.isEmpty()) {
-            srcPath = SettingsFrame.dataPath + "\\list800-900.txt";
-            destPath = SettingsFrame.dataPath + "\\_list800-900.txt";
+            srcPath = SettingsFrame.getDataPath() + "\\list800-900.txt";
+            destPath = SettingsFrame.getDataPath() + "\\_list800-900.txt";
             generateNewLocalRecord(srcPath, destPath, set800);
         }
         if (!set900.isEmpty()) {
-            srcPath = SettingsFrame.dataPath + "\\list900-1000.txt";
-            destPath = SettingsFrame.dataPath + "\\_list900-1000.txt";
+            srcPath = SettingsFrame.getDataPath() + "\\list900-1000.txt";
+            destPath = SettingsFrame.getDataPath() + "\\_list900-1000.txt";
             generateNewLocalRecord(srcPath, destPath, set900);
         }
         if (!set1000.isEmpty()) {
-            srcPath = SettingsFrame.dataPath + "\\list1000-1100.txt";
-            destPath = SettingsFrame.dataPath + "\\_list1000-1100.txt";
+            srcPath = SettingsFrame.getDataPath() + "\\list1000-1100.txt";
+            destPath = SettingsFrame.getDataPath() + "\\_list1000-1100.txt";
             generateNewLocalRecord(srcPath, destPath, set1000);
         }
         if (!set1100.isEmpty()) {
-            srcPath = SettingsFrame.dataPath + "\\list1100-1200.txt";
-            destPath = SettingsFrame.dataPath + "\\_list1100-1200.txt";
+            srcPath = SettingsFrame.getDataPath() + "\\list1100-1200.txt";
+            destPath = SettingsFrame.getDataPath() + "\\_list1100-1200.txt";
             generateNewLocalRecord(srcPath, destPath, set1100);
         }
         if (!set1200.isEmpty()) {
-            srcPath = SettingsFrame.dataPath + "\\list1200-1300.txt";
-            destPath = SettingsFrame.dataPath + "\\_list1200-1300.txt";
+            srcPath = SettingsFrame.getDataPath() + "\\list1200-1300.txt";
+            destPath = SettingsFrame.getDataPath() + "\\_list1200-1300.txt";
             generateNewLocalRecord(srcPath, destPath, set1200);
         }
         if (!set1300.isEmpty()) {
-            srcPath = SettingsFrame.dataPath + "\\list1300-1400.txt";
-            destPath = SettingsFrame.dataPath + "\\_list1300-1400.txt";
+            srcPath = SettingsFrame.getDataPath() + "\\list1300-1400.txt";
+            destPath = SettingsFrame.getDataPath() + "\\_list1300-1400.txt";
             generateNewLocalRecord(srcPath, destPath, set1300);
         }
         if (!set1400.isEmpty()) {
-            srcPath = SettingsFrame.dataPath + "\\list1400-1500.txt";
-            destPath = SettingsFrame.dataPath + "\\_list1400-1500.txt";
+            srcPath = SettingsFrame.getDataPath() + "\\list1400-1500.txt";
+            destPath = SettingsFrame.getDataPath() + "\\_list1400-1500.txt";
             generateNewLocalRecord(srcPath, destPath, set1400);
         }
         if (!set1500.isEmpty()) {
-            srcPath = SettingsFrame.dataPath + "\\list1500-1600.txt";
-            destPath = SettingsFrame.dataPath + "\\_list1500-1600.txt";
+            srcPath = SettingsFrame.getDataPath() + "\\list1500-1600.txt";
+            destPath = SettingsFrame.getDataPath() + "\\_list1500-1600.txt";
             generateNewLocalRecord(srcPath, destPath, set1500);
         }
         if (!set1600.isEmpty()) {
-            srcPath = SettingsFrame.dataPath + "\\list1600-1700.txt";
-            destPath = SettingsFrame.dataPath + "\\_list1600-1700.txt";
+            srcPath = SettingsFrame.getDataPath() + "\\list1600-1700.txt";
+            destPath = SettingsFrame.getDataPath() + "\\_list1600-1700.txt";
             generateNewLocalRecord(srcPath, destPath, set1600);
         }
         if (!set1700.isEmpty()) {
-            srcPath = SettingsFrame.dataPath + "\\list1700-1800.txt";
-            destPath = SettingsFrame.dataPath + "\\_list1700-1800.txt";
+            srcPath = SettingsFrame.getDataPath() + "\\list1700-1800.txt";
+            destPath = SettingsFrame.getDataPath() + "\\_list1700-1800.txt";
             generateNewLocalRecord(srcPath, destPath, set1700);
         }
         if (!set1800.isEmpty()) {
-            srcPath = SettingsFrame.dataPath + "\\list1800-1900.txt";
-            destPath = SettingsFrame.dataPath + "\\_list1800-1900.txt";
+            srcPath = SettingsFrame.getDataPath() + "\\list1800-1900.txt";
+            destPath = SettingsFrame.getDataPath() + "\\_list1800-1900.txt";
             generateNewLocalRecord(srcPath, destPath, set1800);
         }
         if (!set1900.isEmpty()) {
-            srcPath = SettingsFrame.dataPath + "\\list1900-2000.txt";
-            destPath = SettingsFrame.dataPath + "\\_list1900-2000.txt";
+            srcPath = SettingsFrame.getDataPath() + "\\list1900-2000.txt";
+            destPath = SettingsFrame.getDataPath() + "\\_list1900-2000.txt";
             generateNewLocalRecord(srcPath, destPath, set1900);
         }
         if (!set2000.isEmpty()) {
-            srcPath = SettingsFrame.dataPath + "\\list2000-2100.txt";
-            destPath = SettingsFrame.dataPath + "\\_list2000-2100.txt";
+            srcPath = SettingsFrame.getDataPath() + "\\list2000-2100.txt";
+            destPath = SettingsFrame.getDataPath() + "\\_list2000-2100.txt";
             generateNewLocalRecord(srcPath, destPath, set2000);
         }
         if (!set2100.isEmpty()) {
-            srcPath = SettingsFrame.dataPath + "\\list2100-2200.txt";
-            destPath = SettingsFrame.dataPath + "\\_list2100-2200.txt";
+            srcPath = SettingsFrame.getDataPath() + "\\list2100-2200.txt";
+            destPath = SettingsFrame.getDataPath() + "\\_list2100-2200.txt";
             generateNewLocalRecord(srcPath, destPath, set2100);
         }
         if (!set2200.isEmpty()) {
-            srcPath = SettingsFrame.dataPath + "\\list2200-2300.txt";
-            destPath = SettingsFrame.dataPath + "\\_list2200-2300.txt";
+            srcPath = SettingsFrame.getDataPath() + "\\list2200-2300.txt";
+            destPath = SettingsFrame.getDataPath() + "\\_list2200-2300.txt";
             generateNewLocalRecord(srcPath, destPath, set2200);
         }
         if (!set2300.isEmpty()) {
-            srcPath = SettingsFrame.dataPath + "\\list2300-2400.txt";
-            destPath = SettingsFrame.dataPath + "\\_list2300-2400.txt";
+            srcPath = SettingsFrame.getDataPath() + "\\list2300-2400.txt";
+            destPath = SettingsFrame.getDataPath() + "\\_list2300-2400.txt";
             generateNewLocalRecord(srcPath, destPath, set2300);
         }
         if (!set2400.isEmpty()) {
-            srcPath = SettingsFrame.dataPath + "\\list2400-2500.txt";
-            destPath = SettingsFrame.dataPath + "\\_list2400-2500.txt";
+            srcPath = SettingsFrame.getDataPath() + "\\list2400-2500.txt";
+            destPath = SettingsFrame.getDataPath() + "\\_list2400-2500.txt";
             generateNewLocalRecord(srcPath, destPath, set2400);
         }
         if (!set2500.isEmpty()) {
-            srcPath = SettingsFrame.dataPath + "\\list2500-.txt";
-            destPath = SettingsFrame.dataPath + "\\_list2500-.txt";
+            srcPath = SettingsFrame.getDataPath() + "\\list2500-.txt";
+            destPath = SettingsFrame.getDataPath() + "\\_list2500-.txt";
             generateNewLocalRecord(srcPath, destPath, set2500);
         }
     }
@@ -329,7 +328,7 @@ public class Search {
         set2500.clear();
     }
 
-    //½«¾ÉÎÄ¼þÄÚÈÝ¸´ÖÆµ½ÐÂÎÄ¼þ£¬ÐèÒªÉ¾³ýµÄ²»¸´ÖÆ
+    //å°†æ—§æ–‡ä»¶å†…å®¹å¤åˆ¶åˆ°æ–°æ–‡ä»¶ï¼Œéœ€è¦åˆ é™¤çš„ä¸å¤åˆ¶
     private void generateNewLocalRecord(String srcPath, String destPath, Set<String> set) {
         File src, target;
         deleteRecordInFile(set, srcPath, destPath);
@@ -340,7 +339,8 @@ public class Search {
     }
 
     private void deleteRecordInFile(Set<String> recordToDel, String srcText, String destText) {
-        try (BufferedReader br = new BufferedReader(new FileReader(srcText)); BufferedWriter bw = new BufferedWriter(new FileWriter(destText, true))) {
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(srcText), StandardCharsets.UTF_8));
+             BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(destText, true), StandardCharsets.UTF_8))) {
             String eachLine;
             while ((eachLine = br.readLine()) != null) {
                 if (!recordToDel.contains(eachLine)) {
@@ -396,99 +396,99 @@ public class Search {
         int ascII = SearchBar.getInstance().getAscIISum(file.getName());
         String listPath;
         if (0 < ascII && ascII <= 100) {
-            listPath = SettingsFrame.dataPath + "\\list0-100.txt";
+            listPath = SettingsFrame.getDataPath() + "\\list0-100.txt";
             writeRecordToFile(path, listPath);
         } else if (100 < ascII && ascII <= 200) {
-            listPath = SettingsFrame.dataPath + "\\list100-200.txt";
+            listPath = SettingsFrame.getDataPath() + "\\list100-200.txt";
             writeRecordToFile(path, listPath);
         } else if (200 < ascII && ascII <= 300) {
-            listPath = SettingsFrame.dataPath + "\\list200-300.txt";
+            listPath = SettingsFrame.getDataPath() + "\\list200-300.txt";
             writeRecordToFile(path, listPath);
         } else if (300 < ascII && ascII <= 400) {
-            listPath = SettingsFrame.dataPath + "\\list300-400.txt";
+            listPath = SettingsFrame.getDataPath() + "\\list300-400.txt";
             writeRecordToFile(path, listPath);
         } else if (400 < ascII && ascII <= 500) {
-            listPath = SettingsFrame.dataPath + "\\list400-500.txt";
+            listPath = SettingsFrame.getDataPath() + "\\list400-500.txt";
 
             writeRecordToFile(path, listPath);
         } else if (500 < ascII && ascII <= 600) {
-            listPath = SettingsFrame.dataPath + "\\list500-600.txt";
+            listPath = SettingsFrame.getDataPath() + "\\list500-600.txt";
 
             writeRecordToFile(path, listPath);
         } else if (600 < ascII && ascII <= 700) {
-            listPath = SettingsFrame.dataPath + "\\list600-700.txt";
+            listPath = SettingsFrame.getDataPath() + "\\list600-700.txt";
             writeRecordToFile(path, listPath);
         } else if (700 < ascII && ascII <= 800) {
-            listPath = SettingsFrame.dataPath + "\\list700-800.txt";
+            listPath = SettingsFrame.getDataPath() + "\\list700-800.txt";
 
             writeRecordToFile(path, listPath);
         } else if (800 < ascII && ascII <= 900) {
-            listPath = SettingsFrame.dataPath + "\\list800-900.txt";
+            listPath = SettingsFrame.getDataPath() + "\\list800-900.txt";
 
             writeRecordToFile(path, listPath);
         } else if (900 < ascII && ascII <= 1000) {
-            listPath = SettingsFrame.dataPath + "\\list900-1000.txt";
+            listPath = SettingsFrame.getDataPath() + "\\list900-1000.txt";
             writeRecordToFile(path, listPath);
         } else if (1000 < ascII && ascII <= 1100) {
-            listPath = SettingsFrame.dataPath + "\\list1000-1100.txt";
+            listPath = SettingsFrame.getDataPath() + "\\list1000-1100.txt";
 
             writeRecordToFile(path, listPath);
         } else if (1100 < ascII && ascII <= 1200) {
-            listPath = SettingsFrame.dataPath + "\\list1100-1200.txt";
+            listPath = SettingsFrame.getDataPath() + "\\list1100-1200.txt";
             writeRecordToFile(path, listPath);
         } else if (1200 < ascII && ascII <= 1300) {
-            listPath = SettingsFrame.dataPath + "\\list1200-1300.txt";
+            listPath = SettingsFrame.getDataPath() + "\\list1200-1300.txt";
             writeRecordToFile(path, listPath);
         } else if (1300 < ascII && ascII <= 1400) {
-            listPath = SettingsFrame.dataPath + "\\list1300-1400.txt";
+            listPath = SettingsFrame.getDataPath() + "\\list1300-1400.txt";
 
             writeRecordToFile(path, listPath);
         } else if (1400 < ascII && ascII <= 1500) {
-            listPath = SettingsFrame.dataPath + "\\list1400-1500.txt";
+            listPath = SettingsFrame.getDataPath() + "\\list1400-1500.txt";
 
             writeRecordToFile(path, listPath);
         } else if (1500 < ascII && ascII <= 1600) {
-            listPath = SettingsFrame.dataPath + "\\list1500-1600.txt";
+            listPath = SettingsFrame.getDataPath() + "\\list1500-1600.txt";
 
             writeRecordToFile(path, listPath);
         } else if (1600 < ascII && ascII <= 1700) {
-            listPath = SettingsFrame.dataPath + "\\list1600-1700.txt";
+            listPath = SettingsFrame.getDataPath() + "\\list1600-1700.txt";
 
             writeRecordToFile(path, listPath);
         } else if (1700 < ascII && ascII <= 1800) {
-            listPath = SettingsFrame.dataPath + "\\list1700-1800.txt";
+            listPath = SettingsFrame.getDataPath() + "\\list1700-1800.txt";
 
             writeRecordToFile(path, listPath);
         } else if (1800 < ascII && ascII <= 1900) {
-            listPath = SettingsFrame.dataPath + "\\list1800-1900.txt";
+            listPath = SettingsFrame.getDataPath() + "\\list1800-1900.txt";
 
             writeRecordToFile(path, listPath);
         } else if (1900 < ascII && ascII <= 2000) {
-            listPath = SettingsFrame.dataPath + "\\list1900-2000.txt";
+            listPath = SettingsFrame.getDataPath() + "\\list1900-2000.txt";
 
             writeRecordToFile(path, listPath);
         } else if (2000 < ascII && ascII <= 2100) {
-            listPath = SettingsFrame.dataPath + "\\list2000-2100.txt";
+            listPath = SettingsFrame.getDataPath() + "\\list2000-2100.txt";
 
             writeRecordToFile(path, listPath);
         } else if (2100 < ascII && ascII <= 2200) {
-            listPath = SettingsFrame.dataPath + "\\list2100-2200.txt";
+            listPath = SettingsFrame.getDataPath() + "\\list2100-2200.txt";
 
             writeRecordToFile(path, listPath);
         } else if (2200 < ascII && ascII <= 2300) {
-            listPath = SettingsFrame.dataPath + "\\list2200-2300.txt";
+            listPath = SettingsFrame.getDataPath() + "\\list2200-2300.txt";
 
             writeRecordToFile(path, listPath);
         } else if (2300 < ascII && ascII <= 2400) {
-            listPath = SettingsFrame.dataPath + "\\list2300-2400.txt";
+            listPath = SettingsFrame.getDataPath() + "\\list2300-2400.txt";
 
             writeRecordToFile(path, listPath);
         } else if (2400 < ascII && ascII <= 2500) {
-            listPath = SettingsFrame.dataPath + "\\list2400-2500.txt";
+            listPath = SettingsFrame.getDataPath() + "\\list2400-2500.txt";
 
             writeRecordToFile(path, listPath);
         } else {
-            listPath = SettingsFrame.dataPath + "\\list2500-.txt";
+            listPath = SettingsFrame.getDataPath() + "\\list2500-.txt";
             writeRecordToFile(path, listPath);
         }
 
@@ -502,9 +502,9 @@ public class Search {
         File[] roots = File.listRoots();
         FileSystemView sys = FileSystemView.getFileSystemView();
         ExecutorService pool = Executors.newFixedThreadPool(roots.length);
-        //´´½¨ËÑË÷½á¹û´æ·ÅÎÄ¼þ¼Ð
-        for (int i = 0; i < SettingsFrame.diskCount; i++) {
-            File eachResults = new File(SettingsFrame.dataPath + "\\" + i);
+        //åˆ›å»ºæœç´¢ç»“æžœå­˜æ”¾æ–‡ä»¶å¤¹
+        for (int i = 0; i < SettingsFrame.getDiskCount(); i++) {
+            File eachResults = new File(SettingsFrame.getDataPath() + "\\" + i);
             if (!eachResults.exists()) {
                 eachResults.mkdir();
             }
@@ -512,7 +512,7 @@ public class Search {
         int count = 0;
         for (File root : roots) {
             String driveType = sys.getSystemTypeDescription(root);
-            if (driveType.equals("±¾µØ´ÅÅÌ")) {
+            if (driveType.equals("æœ¬åœ°ç£ç›˜")) {
                 String path = root.getAbsolutePath();
                 path = path.substring(0, 2);
                 String finalPath = path;
@@ -530,35 +530,35 @@ public class Search {
         __searchFileIgnoreSearchDepth(getStartMenu(), ignorePath);
         __searchFileIgnoreSearchDepth("C:\\ProgramData\\Microsoft\\Windows\\Start Menu", ignorePath);
 
-        //Éú³ÉºÏ²¢ËÑË÷½á¹ûcmdÃüÁî
+        //ç”Ÿæˆåˆå¹¶æœç´¢ç»“æžœcmdå‘½ä»¤
         StringBuilder strb = new StringBuilder();
         strb.append("cmd.exe /c copy ");
         StringBuilder listPath = new StringBuilder();
         HashSet<String> commands = new HashSet<>();
         for (int i = 0; i < 2500; i += 100) {
             int name = i + 100;
-            for (int j = 0; j < SettingsFrame.diskCount; j++) {
-                String _temp = SettingsFrame.dataPath + "\\" + j + "\\list" + i + "-" + name + ".txt";
+            for (int j = 0; j < SettingsFrame.getDiskCount(); j++) {
+                String _temp = SettingsFrame.getDataPath() + "\\" + j + "\\list" + i + "-" + name + ".txt";
                 String _tempPath = _temp.substring(0, 2) + "\"" + _temp.substring(2) + "\"";
                 listPath.append(_tempPath).append("+");
             }
-            strb.append(listPath.toString(), 0, listPath.length() - 1).append(" ").append("\"").append(SettingsFrame.dataPath)
+            strb.append(listPath.toString(), 0, listPath.length() - 1).append(" ").append("\"").append(SettingsFrame.getDataPath())
                     .append("\\list").append(i).append("-").append(name).append(".txt").append("\"");
             commands.add(strb.toString());
             listPath.delete(0, listPath.length());
             strb.delete(0, strb.length());
             strb.append("cmd.exe /c copy ");
         }
-        for (int j = 0; j < SettingsFrame.diskCount; j++) {
-            String _temp = SettingsFrame.dataPath + "\\" + j + "\\list2500-.txt";
+        for (int j = 0; j < SettingsFrame.getDiskCount(); j++) {
+            String _temp = SettingsFrame.getDataPath() + "\\" + j + "\\list2500-.txt";
             String _tempPath = _temp.substring(0, 2) + "\"" + _temp.substring(2) + "\"";
             listPath.append(_tempPath).append("+");
         }
-        strb.append(listPath.toString(), 0, listPath.length() - 1).append(" ").append("\"").append(SettingsFrame.dataPath)
+        strb.append(listPath.toString(), 0, listPath.length() - 1).append(" ").append("\"").append(SettingsFrame.getDataPath())
                 .append("\\list2500-.txt").append("\"");
         commands.add(strb.toString());
 
-        //ºÏ²¢ËùÓÐËÑË÷½á¹û
+        //åˆå¹¶æ‰€æœ‰æœç´¢ç»“æžœ
         for (String each : commands) {
             Process p;
             try {
@@ -570,16 +570,16 @@ public class Search {
         }
 
 
-        //É¾³ýÖ®Ç°µÄ½á¹û
-        for (int i = 0; i < SettingsFrame.diskCount; i++) {
-            String path = SettingsFrame.dataPath + "\\" + i;
-            MainClass.deleteDir(path);
+        //åˆ é™¤ä¹‹å‰çš„ç»“æžœ
+        for (int i = 0; i < SettingsFrame.getDiskCount(); i++) {
+            String path = SettingsFrame.getDataPath() + "\\" + i;
+            deleteDir(path);
             boolean isDeleted = new File(path).delete();
             if (!isDeleted) {
-                System.out.println("ÎÄ¼þ¼Ð" + i + "É¾³ýÊ§°Ü");
+                System.out.println("æ–‡ä»¶å¤¹" + i + "åˆ é™¤å¤±è´¥");
             }
         }
-        MainClass.showMessage("ÌáÊ¾", "ËÑË÷Íê³É");
+        MainClass.showMessage("æç¤º", "æœç´¢å®Œæˆ");
         isManualUpdate = false;
         isUsable = true;
     }
@@ -607,7 +607,7 @@ public class Search {
         String absPath = fileSearcher.getAbsolutePath();
         String start = absPath.substring(0, 2);
         String end = "\"" + absPath.substring(2) + "\"";
-        String command = "cmd /c " + start + end + " \"" + path + "\"" + " \"6\" " + "\"" + ignorePath + "\" " + "\"" + SettingsFrame.dataPath + "\\0" + "\" " + "\"" + "1" + "\"";
+        String command = "cmd /c " + start + end + " \"" + path + "\"" + " \"6\" " + "\"" + ignorePath + "\" " + "\"" + SettingsFrame.getDataPath() + "\\0" + "\" " + "\"" + "1" + "\"";
         Process p;
         try {
             p = Runtime.getRuntime().exec(command);
@@ -624,7 +624,7 @@ public class Search {
         String absPath = fileSearcher.getAbsolutePath();
         String start = absPath.substring(0, 2);
         String end = "\"" + absPath.substring(2) + "\"";
-        String command = "cmd /c " + start + end + " \"" + path + "\"" + " \"" + searchDepth + "\" " + "\"" + ignorePath + "\" " + "\"" + SettingsFrame.dataPath + "\\" + count + "\" " + "\"" + "0" + "\"";
+        String command = "cmd /c " + start + end + " \"" + path + "\"" + " \"" + searchDepth + "\" " + "\"" + ignorePath + "\" " + "\"" + SettingsFrame.getDataPath() + "\\" + count + "\" " + "\"" + "0" + "\"";
         Process p;
         try {
             p = Runtime.getRuntime().exec(command);
@@ -638,7 +638,29 @@ public class Search {
 
 
     public void updateLists(String ignorePath, int searchDepth) {
-        MainClass.deleteDir(SettingsFrame.dataPath);
+        deleteDir(SettingsFrame.getDataPath());
         searchFile(ignorePath, searchDepth);
+    }
+
+    private static void deleteDir(String path) {
+        File file = new File(path);
+        if (!file.exists()) {//åˆ¤æ–­æ˜¯å¦å¾…åˆ é™¤ç›®å½•æ˜¯å¦å­˜åœ¨
+            return;
+        }
+
+        String[] content = file.list();//å–å¾—å½“å‰ç›®å½•ä¸‹æ‰€æœ‰æ–‡ä»¶å’Œæ–‡ä»¶å¤¹
+        if (content != null) {
+            for (String name : content) {
+                File temp = new File(path, name);
+                if (temp.isDirectory()) {//åˆ¤æ–­æ˜¯å¦æ˜¯ç›®å½•
+                    deleteDir(temp.getAbsolutePath());//é€’å½’è°ƒç”¨ï¼Œåˆ é™¤ç›®å½•é‡Œçš„å†…å®¹
+                    temp.delete();//åˆ é™¤ç©ºç›®å½•
+                } else {
+                    if (!temp.delete()) {//ç›´æŽ¥åˆ é™¤æ–‡ä»¶
+                        System.out.println("Failed to delete " + name);
+                    }
+                }
+            }
+        }
     }
 }

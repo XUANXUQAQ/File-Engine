@@ -1,5 +1,6 @@
 package hotkeyListener;
 
+import DllInterface.HotkeyListener;
 import frames.SearchBar;
 import main.MainClass;
 
@@ -10,12 +11,16 @@ import java.util.concurrent.Executors;
 
 public class CheckHotKey {
 
-    private static CheckHotKey hotKeyListener = new CheckHotKey();
+    private static CheckHotKey hotKeyListener = null;
     private HashMap<String, Integer> map = new HashMap<>();
-    private ExecutorService threadPool = Executors.newFixedThreadPool(2);
+    private ExecutorService threadPool;
+
+    private static class CheckHotKeyBuilder {
+        private static CheckHotKey instance = new CheckHotKey();
+    }
 
     public static CheckHotKey getInstance() {
-        return hotKeyListener;
+        return CheckHotKeyBuilder.instance;
     }
 
 
@@ -68,6 +73,7 @@ public class CheckHotKey {
     }
 
     private CheckHotKey() {
+        threadPool = Executors.newFixedThreadPool(2);
         map.put("Ctrl", KeyEvent.VK_CONTROL);
         map.put("Alt", KeyEvent.VK_ALT);
         map.put("Shift", KeyEvent.VK_SHIFT);

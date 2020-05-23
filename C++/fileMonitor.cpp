@@ -22,12 +22,12 @@ int CountLines(char *filename)
     ifstream ReadFile;
     int n=0;
     string tmp;
-    ReadFile.open(filename,ios::in);//ios::in ±íÊ¾ÒÔÖ»¶ÁµÄ·½Ê½¶ÁÈ¡ÎÄ¼ş
-    if(ReadFile.fail())//ÎÄ¼ş´ò¿ªÊ§°Ü:·µ»Ø0
+    ReadFile.open(filename,ios::in);//ios::in è¡¨ç¤ºä»¥åªè¯»çš„æ–¹å¼è¯»å–æ–‡ä»¶
+    if(ReadFile.fail())//æ–‡ä»¶æ‰“å¼€å¤±è´¥:è¿”å›0
     {
         return 0;
     }
-    else//ÎÄ¼ş´æÔÚ
+    else//æ–‡ä»¶å­˜åœ¨
     {
         while(getline(ReadFile,tmp,'\n'))
         {
@@ -56,8 +56,8 @@ bool isExist(const char* FileName)
 
 __declspec(dllexport) void monitor(char* path, char* output, char* closePosition){
     DWORD cbBytes;
-    char file_name[MAX_PATH]; //ÉèÖÃÎÄ¼şÃû
-    char file_rename[MAX_PATH]; //ÉèÖÃÎÄ¼şÖØÃüÃûºóµÄÃû×Ö;
+    char file_name[MAX_PATH]; //è®¾ç½®æ–‡ä»¶å
+    char file_rename[MAX_PATH]; //è®¾ç½®æ–‡ä»¶é‡å‘½ååçš„åå­—;
     char notify[1024];
     char _path[300];
     ofstream file;
@@ -86,7 +86,7 @@ __declspec(dllexport) void monitor(char* path, char* output, char* closePosition
         FILE_FLAG_BACKUP_SEMANTICS,
         NULL);
 
-    if (dirHandle == INVALID_HANDLE_VALUE) //ÈôÍøÂçÖØ¶¨Ïò»òÄ¿±êÎÄ¼şÏµÍ³²»Ö§³Ö¸Ã²Ù×÷£¬º¯ÊıÊ§°Ü£¬Í¬Ê±µ÷ÓÃGetLastError()·µ»ØERROR_INVALID_FUNCTION
+    if (dirHandle == INVALID_HANDLE_VALUE) //è‹¥ç½‘ç»œé‡å®šå‘æˆ–ç›®æ ‡æ–‡ä»¶ç³»ç»Ÿä¸æ”¯æŒè¯¥æ“ä½œï¼Œå‡½æ•°å¤±è´¥ï¼ŒåŒæ—¶è°ƒç”¨GetLastError()è¿”å›ERROR_INVALID_FUNCTION
     {
         cout << "error" + GetLastError() << endl;
     }
@@ -96,7 +96,7 @@ __declspec(dllexport) void monitor(char* path, char* output, char* closePosition
                 FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_DIR_NAME | FILE_NOTIFY_CHANGE_SIZE,
                 &cbBytes, NULL, NULL))
             {
-                //×ª»»ÎÄ¼şÃûÎª¶à×Ö½Ú×Ö·û´®;
+                //è½¬æ¢æ–‡ä»¶åä¸ºå¤šå­—èŠ‚å­—ç¬¦ä¸²;
                 if (pnotify->FileName)
                 {
                     memset(file_name, 0, sizeof(file_name));
@@ -105,7 +105,7 @@ __declspec(dllexport) void monitor(char* path, char* output, char* closePosition
                     WideCharToMultiByte(CP_ACP, 0, pnotify->FileName, pnotify->FileNameLength / 2, file_name, 250, NULL, NULL);
                 }
 
-                //»ñÈ¡ÖØÃüÃûµÄÎÄ¼şÃû;
+                //è·å–é‡å‘½åçš„æ–‡ä»¶å;
                 if (pnotify->NextEntryOffset != 0 && (pnotify->FileNameLength > 0 && pnotify->FileNameLength < MAX_PATH))
                 {
                     PFILE_NOTIFY_INFORMATION p = (PFILE_NOTIFY_INFORMATION)((char*)pnotify + pnotify->NextEntryOffset);
@@ -120,7 +120,7 @@ __declspec(dllexport) void monitor(char* path, char* output, char* closePosition
                 }
                 
 
-                //ÉèÖÃÀàĞÍ¹ıÂËÆ÷,¼àÌıÎÄ¼ş´´½¨¡¢¸ü¸Ä¡¢É¾³ı¡¢ÖØÃüÃûµÈ;
+                //è®¾ç½®ç±»å‹è¿‡æ»¤å™¨,ç›‘å¬æ–‡ä»¶åˆ›å»ºã€æ›´æ”¹ã€åˆ é™¤ã€é‡å‘½åç­‰;
                 switch (pnotify->Action)
                 {
                     case FILE_ACTION_ADDED:

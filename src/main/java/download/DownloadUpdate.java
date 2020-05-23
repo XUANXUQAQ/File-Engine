@@ -25,7 +25,7 @@ public class DownloadUpdate {
         buttonCancel.addActionListener(e -> {
             frame.setVisible(false);
         });
-        buttonCancel.setText("È¡Ïû");
+        buttonCancel.setText("å–æ¶ˆ");
         panel.setLayout(new BorderLayout());
         panel.add(progressBar, BorderLayout.CENTER);
         panel.add(buttonCancel, BorderLayout.SOUTH);
@@ -35,7 +35,7 @@ public class DownloadUpdate {
         URL frameIcon = SettingsFrame.class.getResource("/icons/frame.png");
         frame.setIconImage(new ImageIcon(frameIcon).getImage());
         frame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
-        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize(); // »ñÈ¡µ±Ç°·Ö±æÂÊ
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize(); // è·å–å½“å‰åˆ†è¾¨ç‡
         int width = screenSize.width;
         int height = screenSize.height;
         frame.setSize(width / 3, height / 4);
@@ -43,28 +43,26 @@ public class DownloadUpdate {
     }
 
 
-
-
     /**
-     * ´ÓÍøÂçUrlÖĞÏÂÔØÎÄ¼ş
+     * ä»ç½‘ç»œUrlä¸­ä¸‹è½½æ–‡ä»¶
      *
-     * @param urlStr   µØÖ·
-     * @param savePath ±£´æÎ»ÖÃ
+     * @param urlStr   åœ°å€
+     * @param savePath ä¿å­˜ä½ç½®
      */
     public void downLoadFromUrl(String urlStr, String fileName, String savePath) throws Exception {
         System.setProperty("http.keepAlive", "false"); // must be set
         frame.setVisible(true);
         URL url = new URL(urlStr);
         URLConnection con = url.openConnection();
-        //ÉèÖÃ³¬Ê±Îª3Ãë
+        //è®¾ç½®è¶…æ—¶ä¸º3ç§’
         con.setConnectTimeout(3 * 1000);
-        //·ÀÖ¹ÆÁ±Î³ÌĞò×¥È¡¶ø·µ»Ø403´íÎó
+        //é˜²æ­¢å±è”½ç¨‹åºæŠ“å–è€Œè¿”å›403é”™è¯¯
         con.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.116 Safari/537.36 Edg/80.0.361.57");
         InputStream in = con.getInputStream();
         byte[] buffer = new byte[1024];
         int progress = 0;
         int len;
-        //ÎÄ¼ş±£´æÎ»ÖÃ
+        //æ–‡ä»¶ä¿å­˜ä½ç½®
         File saveDir = new File(savePath);
         if (!saveDir.exists()) {
             saveDir.mkdir();
@@ -80,10 +78,10 @@ public class DownloadUpdate {
             fos.write(buffer, 0, len);
             progress += len;
             progressBar.setValue(progress);
-            progressBar.setString("ÒÑÏÂÔØ£º" + (int) (progressBar.getPercentComplete() * 100) + "%");
+            progressBar.setString("å·²ä¸‹è½½ï¼š" + (int) (progressBar.getPercentComplete() * 100) + "%");
             if (!frame.isVisible()) {
                 fos.close();
-                throw new Exception("ÓÃ»§ÖĞ¶ÏÏÂÔØ");
+                throw new Exception("ç”¨æˆ·ä¸­æ–­ä¸‹è½½");
             }
         }
         fos.close();

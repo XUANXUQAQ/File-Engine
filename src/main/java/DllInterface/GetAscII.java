@@ -1,4 +1,4 @@
-package getAscII;
+package DllInterface;
 
 import com.sun.jna.Library;
 import com.sun.jna.Native;

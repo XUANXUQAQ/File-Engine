@@ -9,7 +9,7 @@ string GetExePath(void)
 {
     char szFilePath[MAX_PATH + 1] = {0};
     GetModuleFileNameA(NULL, szFilePath, MAX_PATH);
-    (strrchr(szFilePath, '\\'))[0] = 0; // É¾³ıÎÄ¼şÃû£¬Ö»»ñµÃÂ·¾¶×Ö´®
+    (strrchr(szFilePath, '\\'))[0] = 0; // åˆ é™¤æ–‡ä»¶åï¼Œåªè·å¾—è·¯å¾„å­—ä¸²
     string path = szFilePath;
 
     return path;
@@ -74,8 +74,8 @@ int main(int argc, char *argv[])
 			Sleep(50);
 			if (count > 20)
 			{
-				cout << "³¬Ê±" << endl;
-				return 0; //³¬Ê±
+				cout << "over time" << endl;
+				return 0; //è¶…æ—¶
 			}
 			if (!IsExistProcess(name)){
 				break;

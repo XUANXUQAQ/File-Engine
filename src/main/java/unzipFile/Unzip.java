@@ -18,7 +18,7 @@ public class Unzip {
 
     public void unZipFiles(File zipFile, String descDir) {
 
-        ZipFile zip = null;//½â¾öÖĞÎÄÎÄ¼ş¼ĞÂÒÂë
+        ZipFile zip = null;//è§£å†³ä¸­æ–‡æ–‡ä»¶å¤¹ä¹±ç 
         try {
             zip = new ZipFile(zipFile, Charset.forName("GBK"));
         } catch (IOException ignored) {
@@ -31,12 +31,12 @@ public class Unzip {
             String zipEntryName = entry.getName();
             try (InputStream in = zip.getInputStream(entry)) {
                 String outPath = (descDir + "/" + zipEntryName).replaceAll("\\*", "/");
-                // ÅĞ¶ÏÂ·¾¶ÊÇ·ñ´æÔÚ,²»´æÔÚÔò´´½¨ÎÄ¼şÂ·¾¶
+                // åˆ¤æ–­è·¯å¾„æ˜¯å¦å­˜åœ¨,ä¸å­˜åœ¨åˆ™åˆ›å»ºæ–‡ä»¶è·¯å¾„
                 File file = new File(outPath.substring(0, outPath.lastIndexOf('/')));
                 if (!file.exists()) {
                     file.mkdirs();
                 }
-                // ÅĞ¶ÏÎÄ¼şÈ«Â·¾¶ÊÇ·ñÎªÎÄ¼ş¼Ğ,Èç¹ûÊÇÉÏÃæÒÑ¾­ÉÏ´«,²»ĞèÒª½âÑ¹
+                // åˆ¤æ–­æ–‡ä»¶å…¨è·¯å¾„æ˜¯å¦ä¸ºæ–‡ä»¶å¤¹,å¦‚æœæ˜¯ä¸Šé¢å·²ç»ä¸Šä¼ ,ä¸éœ€è¦è§£å‹
                 if (new File(outPath).isDirectory()) {
                     continue;
                 }
