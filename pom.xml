@@ -21,7 +21,7 @@
         </plugins>
     </build>
     <properties>
-        <project.build.sourceEncoding>GBK</project.build.sourceEncoding>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
     <dependencies>
         <dependency>

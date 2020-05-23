@@ -53,7 +53,7 @@ void startListen()
             isKey3Pressed = -1;
         }
 
-        if (isKey1Pressed < 0 && isKey2Pressed < 0 && isKey3Pressed < 0) //Èç¹ûÄ³¼ü±»°´ÏÂ
+        if (isKey1Pressed < 0 && isKey2Pressed < 0 && isKey3Pressed < 0) //å¦‚æœæŸé”®è¢«æŒ‰ä¸‹
         {
             isKeyPressed = true;
             #ifdef TEST

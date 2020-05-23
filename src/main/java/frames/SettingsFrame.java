@@ -25,44 +25,44 @@ import java.util.concurrent.Executors;
 
 
 public class SettingsFrame {
-    public static int cacheNumLimit;
-    public static String hotkey;
-    public static int updateTimeLimit;
-    public static String ignorePath;
-    public static String dataPath;
-    public static String priorityFolder;
-    public static int searchDepth;
-    public static boolean isDefaultAdmin;
-    public static boolean isLoseFocusClose;
-    public static int openLastFolderKeyCode;
-    public static int runAsAdminKeyCode;
-    public static int copyPathKeyCode;
-    public static float transparency;
+    private static int cacheNumLimit;
+    private static String hotkey;
+    private static int updateTimeLimit;
+    private static String ignorePath;
+    private static String dataPath;
+    private static String priorityFolder;
+    private static int searchDepth;
+    private static boolean isDefaultAdmin;
+    private static boolean isLoseFocusClose;
+    private static int openLastFolderKeyCode;
+    private static int runAsAdminKeyCode;
+    private static int copyPathKeyCode;
+    private static float transparency;
     private static int _copyPathKeyCode;
-    public static File tmp = new File("tmp");
-    public static File settings = new File("user/settings.json");
-    public static HashSet<String> cmdSet = new HashSet<>();
+    private static File tmp = new File("tmp");
+    private static File settings = new File("user/settings.json");
+    private static HashSet<String> cmdSet = new HashSet<>();
     private static int _openLastFolderKeyCode;
     private static int _runAsAdminKeyCode;
     private static CheckHotKey HotKeyListener;
-    public static int labelColor;
-    public static int backgroundColor1;
-    public static int backgroundColor2;
-    public static int backgroundColor3;
-    public static int backgroundColor4;
-    public static int fontColorWithCoverage;
-    public static int fontColor;
-    public static int searchBarColor;
-    public static int maxConnectionNum;
-    public static int minConnectionNum;
-    public static int connectionTimeLimit;
-    public static int diskCount;
+    private static int labelColor;
+    private static int backgroundColor1;
+    private static int backgroundColor2;
+    private static int backgroundColor3;
+    private static int backgroundColor4;
+    private static int fontColorWithCoverage;
+    private static int fontColor;
+    private static int searchBarColor;
+    private static int maxConnectionNum;
+    private static int minConnectionNum;
+    private static int connectionTimeLimit;
+    private static int diskCount;
     private JTextField textFieldUpdateTime;
     private JTextField textFieldCacheNum;
     private JTextArea textAreaIgnorePath;
     private JTextField textFieldSearchDepth;
     private JCheckBox checkBox1;
-    private JFrame frame = new JFrame("ÉèÖÃ");
+    private JFrame frame = new JFrame("è®¾ç½®");
     private JLabel label3;
     private JLabel label1;
     private JLabel label2;
@@ -188,8 +188,113 @@ public class SettingsFrame {
     private Thread updateThread = null;
 
 
+    public static int getCacheNumLimit() {
+        return cacheNumLimit;
+    }
+
+    public static int getUpdateTimeLimit() {
+        return updateTimeLimit;
+    }
+
+    public static String getIgnorePath() {
+        return ignorePath;
+    }
+
+    public static String getDataPath() {
+        return dataPath;
+    }
+
+    public static String getPriorityFolder() {
+        return priorityFolder;
+    }
+
+    public static int getSearchDepth() {
+        return searchDepth;
+    }
+
+    public static boolean isDefaultAdmin() {
+        return isDefaultAdmin;
+    }
+
+    public static int getDiskCount() {
+        return diskCount;
+    }
+
+    public static boolean isLoseFocusClose() {
+        return isLoseFocusClose;
+    }
+
+    public static int getOpenLastFolderKeyCode() {
+        return openLastFolderKeyCode;
+    }
+
+    public static int getRunAsAdminKeyCode() {
+        return runAsAdminKeyCode;
+    }
+
+    public static int getCopyPathKeyCode() {
+        return copyPathKeyCode;
+    }
+
+    public static float getTransparency() {
+        return transparency;
+    }
+
+    public static File getTmp() {
+        return tmp;
+    }
+
+    public static File getSettings() {
+        return settings;
+    }
+
+    public static HashSet<String> getCmdSet() {
+        return cmdSet;
+    }
+
+    public static int getLabelColor() {
+        return labelColor;
+    }
+
+    public static int getBackgroundColor1() {
+        return backgroundColor1;
+    }
+
+    public static int getBackgroundColor2() {
+        return backgroundColor2;
+    }
+
+    public static int getBackgroundColor3() {
+        return backgroundColor3;
+    }
+
+    public static int getBackgroundColor4() {
+        return backgroundColor4;
+    }
+
+    public static int getFontColorWithCoverage() {
+        return fontColorWithCoverage;
+    }
+
+    public static int getFontColor() {
+        return fontColor;
+    }
+
+    public static int getMaxConnectionNum() {
+        return maxConnectionNum;
+    }
+
+    public static int getMinConnectionNum() {
+        return minConnectionNum;
+    }
+
+    public static int getConnectionTimeLimit() {
+        return connectionTimeLimit;
+    }
+
+
     public SettingsFrame() {
-        //ÉèÖÃ±³¾°
+        //è®¾ç½®èƒŒæ™¯
         ImageIcon background = new ImageIcon(SettingsFrame.class.getResource("/background.jpg"));
         JLabel backgroundLabel = new JLabel(background);
         backgroundLabel.setBounds(0, 0, 942, 600);
@@ -210,10 +315,10 @@ public class SettingsFrame {
         buttonSaveAndRemoveDesktop.addActionListener(e -> {
             String currentFolder = new File("").getAbsolutePath();
             if (currentFolder.equals(FileSystemView.getFileSystemView().getHomeDirectory().getAbsolutePath()) || currentFolder.equals("C:\\Users\\Public\\Desktop")) {
-                JOptionPane.showMessageDialog(null, "¼ì²âµ½¸Ã³ÌĞòÔÚ×ÀÃæ£¬ÎŞ·¨ÒÆ¶¯");
+                JOptionPane.showMessageDialog(null, "æ£€æµ‹åˆ°è¯¥ç¨‹åºåœ¨æ¡Œé¢ï¼Œæ— æ³•ç§»åŠ¨");
                 return;
             }
-            int isConfirmed = JOptionPane.showConfirmDialog(null, "ÊÇ·ñÒÆ³ı²¢±¸·İ×ÀÃæÉÏµÄËùÓĞÎÄ¼ş\nËüÃÇ»áÔÚ¸Ã³ÌĞòµÄFilesÎÄ¼ş¼ĞÖĞ\nÕâ¿ÉÄÜĞèÒª¼¸·ÖÖÓÊ±¼ä");
+            int isConfirmed = JOptionPane.showConfirmDialog(null, "æ˜¯å¦ç§»é™¤å¹¶å¤‡ä»½æ¡Œé¢ä¸Šçš„æ‰€æœ‰æ–‡ä»¶\nå®ƒä»¬ä¼šåœ¨è¯¥ç¨‹åºçš„Filesæ–‡ä»¶å¤¹ä¸­\nè¿™å¯èƒ½éœ€è¦å‡ åˆ†é’Ÿæ—¶é—´");
             if (isConfirmed == 0) {
                 Thread fileMover = new Thread(new moveDesktopFiles());
                 fileMover.start();
@@ -223,7 +328,7 @@ public class SettingsFrame {
         Button3.addActionListener(e -> {
             JFileChooser fileChooser = new JFileChooser();
             fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-            int returnValue = fileChooser.showDialog(new JLabel(), "Ñ¡Ôñ");
+            int returnValue = fileChooser.showDialog(new JLabel(), "é€‰æ‹©");
             File file = fileChooser.getSelectedFile();
             if (file != null && returnValue == JFileChooser.APPROVE_OPTION) {
                 textAreaIgnorePath.append(file.getAbsolutePath() + ",\n");
@@ -287,7 +392,7 @@ public class SettingsFrame {
         });
         ButtonCloseAdmin.addActionListener(e -> {
             if (MainClass.isAdmin()) {
-                JOptionPane.showMessageDialog(null, "Çë½«µ¯³ö´°¿ÚµÄ×îºóÒ»À¸¸ÄÎªµ±Ç°ÎÄ¼ş¼Ğ£¬\nĞŞ¸Ä³É¹¦ºóÇëÖØĞÂÉèÖÃ¿ª»úÆô¶¯£¬\nÏÂ´ÎÆô¶¯Ê±ÇëÊ¹ÓÃ´ø(elevated)µÄ¿ì½İ·½Ê½¡£");
+                JOptionPane.showMessageDialog(null, "è¯·å°†å¼¹å‡ºçª—å£çš„æœ€åä¸€æ æ”¹ä¸ºå½“å‰æ–‡ä»¶å¤¹ï¼Œ\nä¿®æ”¹æˆåŠŸåè¯·é‡æ–°è®¾ç½®å¼€æœºå¯åŠ¨ï¼Œ\nä¸‹æ¬¡å¯åŠ¨æ—¶è¯·ä½¿ç”¨å¸¦(elevated)çš„å¿«æ·æ–¹å¼ã€‚");
                 InputStream UAC = getClass().getResourceAsStream("/UACTrustShortCut.zip");
                 File target = new File(tmp.getAbsolutePath() + "/UACTrustShortCut.zip");
                 if (!target.exists()) {
@@ -304,12 +409,12 @@ public class SettingsFrame {
 
                 }
             } else {
-                JOptionPane.showMessageDialog(null, "ÇëÒÔ¹ÜÀíÔ±Éí·İÔËĞĞ");
+                JOptionPane.showMessageDialog(null, "è¯·ä»¥ç®¡ç†å‘˜èº«ä»½è¿è¡Œ");
             }
         });
         ButtonRecoverAdmin.addActionListener(e -> {
             if (MainClass.isAdmin()) {
-                JOptionPane.showMessageDialog(null, "µã»÷×îºóÒ»¸öRemove shortcut¼´¿ÉÑ¡ÔñÉ¾³ı¿ì½İ·½Ê½£¬\nĞŞ¸Ä³É¹¦ºóÇëÖØĞÂÉèÖÃ¿ª»úÆô¶¯¡£");
+                JOptionPane.showMessageDialog(null, "ç‚¹å‡»æœ€åä¸€ä¸ªRemove shortcutå³å¯é€‰æ‹©åˆ é™¤å¿«æ·æ–¹å¼ï¼Œ\nä¿®æ”¹æˆåŠŸåè¯·é‡æ–°è®¾ç½®å¼€æœºå¯åŠ¨ã€‚");
                 InputStream UAC = getClass().getResourceAsStream("/UACTrustShortCut.zip");
                 File target = new File(tmp.getAbsolutePath() + "/UACTrustShortCut.zip");
                 if (!target.exists()) {
@@ -325,13 +430,13 @@ public class SettingsFrame {
 
                 }
             } else {
-                JOptionPane.showMessageDialog(null, "ÇëÒÔ¹ÜÀíÔ±Éí·İÔËĞĞ");
+                JOptionPane.showMessageDialog(null, "è¯·ä»¥ç®¡ç†å‘˜èº«ä»½è¿è¡Œ");
             }
         });
         ButtonDataPath.addActionListener(e -> {
             JFileChooser fileChooser = new JFileChooser();
             fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-            int returnValue = fileChooser.showDialog(new JLabel(), "Ñ¡Ôñ");
+            int returnValue = fileChooser.showDialog(new JLabel(), "é€‰æ‹©");
             File file = fileChooser.getSelectedFile();
             if (file != null && returnValue == JFileChooser.APPROVE_OPTION) {
                 textFieldDataPath.setText(file.getAbsolutePath());
@@ -341,7 +446,7 @@ public class SettingsFrame {
         ButtonPriorityFolder.addActionListener(e -> {
             JFileChooser fileChooser = new JFileChooser();
             fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-            int returnValue = fileChooser.showDialog(new JLabel(), "Ñ¡Ôñ");
+            int returnValue = fileChooser.showDialog(new JLabel(), "é€‰æ‹©");
             File file = fileChooser.getSelectedFile();
             if (returnValue == JFileChooser.APPROVE_OPTION) {
                 textFieldPriorityFolder.setText(file.getAbsolutePath());
@@ -357,7 +462,7 @@ public class SettingsFrame {
 
             }
         });
-        labelVersion.setText("µ±Ç°°æ±¾£º" + MainClass.version);
+        labelVersion.setText("å½“å‰ç‰ˆæœ¬ï¼š" + MainClass.version);
         try (BufferedReader buffR = new BufferedReader(new FileReader(settings))) {
             String line;
             StringBuilder result = new StringBuilder();
@@ -496,20 +601,20 @@ public class SettingsFrame {
             }
         });
         buttonAddCMD.addActionListener(e -> {
-            String name = JOptionPane.showInputDialog("ÇëÊäÈë¶Ô¸ÃÃüÁîµÄ±êÊ¶,Ö®ºóÄã¿ÉÒÔÔÚËÑË÷¿òÖĞÊäÈë \": ±êÊ¶·û\" Ö±½ÓÖ´ĞĞ¸ÃÃüÁî");
+            String name = JOptionPane.showInputDialog("è¯·è¾“å…¥å¯¹è¯¥å‘½ä»¤çš„æ ‡è¯†,ä¹‹åä½ å¯ä»¥åœ¨æœç´¢æ¡†ä¸­è¾“å…¥ \": æ ‡è¯†ç¬¦\" ç›´æ¥æ‰§è¡Œè¯¥å‘½ä»¤");
             if (name == null || name.isEmpty()) {
-                //Î´ÊäÈë
+                //æœªè¾“å…¥
                 return;
             }
             if (name.equals("update") || name.equals("clearbin") || name.equals("help") || name.equals("version") || isRepeatCommand(name)) {
-                JOptionPane.showMessageDialog(null, "ºÍÒÑÓĞµÄÃüÁî³åÍ»");
+                JOptionPane.showMessageDialog(null, "å’Œå·²æœ‰çš„å‘½ä»¤å†²çª");
                 return;
             }
             String cmd;
-            JOptionPane.showMessageDialog(null, "ÇëÑ¡Ôñ¿ÉÖ´ĞĞÎÄ¼şÎ»ÖÃ(ÎÄ¼ş¼ĞÒ²¿ÉÒÔ)");
+            JOptionPane.showMessageDialog(null, "è¯·é€‰æ‹©å¯æ‰§è¡Œæ–‡ä»¶ä½ç½®(æ–‡ä»¶å¤¹ä¹Ÿå¯ä»¥)");
             JFileChooser fileChooser = new JFileChooser();
             fileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
-            int returnValue = fileChooser.showDialog(new Label(), "Ñ¡Ôñ");
+            int returnValue = fileChooser.showDialog(new Label(), "é€‰æ‹©");
             if (returnValue == JFileChooser.APPROVE_OPTION) {
                 cmd = fileChooser.getSelectedFile().getAbsolutePath();
                 cmdSet.add(":" + name + ";" + cmd);
@@ -581,7 +686,7 @@ public class SettingsFrame {
         labelColorChooser.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                Color color = JColorChooser.showDialog(null, "Ñ¡ÔñÑÕÉ«", null);
+                Color color = JColorChooser.showDialog(null, "é€‰æ‹©é¢œè‰²", null);
                 if (color == null) {
                     return;
                 }
@@ -612,7 +717,7 @@ public class SettingsFrame {
         FontColorWithCoverageChooser.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                Color color = JColorChooser.showDialog(null, "Ñ¡ÔñÑÕÉ«", null);
+                Color color = JColorChooser.showDialog(null, "é€‰æ‹©é¢œè‰²", null);
                 if (color == null) {
                     return;
                 }
@@ -643,7 +748,7 @@ public class SettingsFrame {
         background2Chooser.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                Color color = JColorChooser.showDialog(null, "Ñ¡ÔñÑÕÉ«", null);
+                Color color = JColorChooser.showDialog(null, "é€‰æ‹©é¢œè‰²", null);
                 if (color == null) {
                     return;
                 }
@@ -674,7 +779,7 @@ public class SettingsFrame {
         background1Chooser.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                Color color = JColorChooser.showDialog(null, "Ñ¡ÔñÑÕÉ«", null);
+                Color color = JColorChooser.showDialog(null, "é€‰æ‹©é¢œè‰²", null);
                 if (color == null) {
                     return;
                 }
@@ -705,7 +810,7 @@ public class SettingsFrame {
         FontColorChooser.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                Color color = JColorChooser.showDialog(null, "Ñ¡ÔñÑÕÉ«", null);
+                Color color = JColorChooser.showDialog(null, "é€‰æ‹©é¢œè‰²", null);
                 if (color == null) {
                     return;
                 }
@@ -737,7 +842,7 @@ public class SettingsFrame {
         background3Chooser.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                Color color = JColorChooser.showDialog(null, "Ñ¡ÔñÑÕÉ«", null);
+                Color color = JColorChooser.showDialog(null, "é€‰æ‹©é¢œè‰²", null);
                 if (color == null) {
                     return;
                 }
@@ -768,7 +873,7 @@ public class SettingsFrame {
         background4Chooser.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                Color color = JColorChooser.showDialog(null, "Ñ¡ÔñÑÕÉ«", null);
+                Color color = JColorChooser.showDialog(null, "é€‰æ‹©é¢œè‰²", null);
                 if (color == null) {
                     return;
                 }
@@ -799,7 +904,7 @@ public class SettingsFrame {
         searchBarColorChooser.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                Color color = JColorChooser.showDialog(null, "Ñ¡ÔñÑÕÉ«", null);
+                Color color = JColorChooser.showDialog(null, "é€‰æ‹©é¢œè‰²", null);
                 if (color == null) {
                     return;
                 }
@@ -858,7 +963,7 @@ public class SettingsFrame {
         URL updateServer = new URL("https://gitee.com/xuanxuF/File-Engine/raw/master/version.json");
         URLConnection uc = updateServer.openConnection();
         uc.setConnectTimeout(3 * 1000);
-        //·ÀÖ¹ÆÁ±Î³ÌĞò×¥È¡¶ø·µ»Ø403´íÎó
+        //é˜²æ­¢å±è”½ç¨‹åºæŠ“å–è€Œè¿”å›403é”™è¯¯
         uc.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.116 Safari/537.36 Edg/80.0.361.57");
         try (BufferedReader br = new BufferedReader(new InputStreamReader(uc.getInputStream()))) {
             String eachLine;
@@ -870,11 +975,11 @@ public class SettingsFrame {
     }
 
     public static void initSettings() {
-        //»ñÈ¡ËùÓĞÉèÖÃĞÅÏ¢
+        //è·å–æ‰€æœ‰è®¾ç½®ä¿¡æ¯
         FileSystemView sys = FileSystemView.getFileSystemView();
         for (File root : File.listRoots()) {
             String driveType = sys.getSystemTypeDescription(root);
-            if (driveType.equals("±¾µØ´ÅÅÌ")) {
+            if (driveType.equals("æœ¬åœ°ç£ç›˜")) {
                 diskCount++;
             }
         }
@@ -906,7 +1011,7 @@ public class SettingsFrame {
                 dataPath = settings.getString("dataPath");
                 File data = new File(dataPath);
                 if (!data.exists()) {
-                    MainClass.showMessage("ÌáÊ¾", "¼ì²âµ½»º´æ²»´æÔÚ£¬ÕıÔÚÖØĞÂËÑË÷");
+                    MainClass.showMessage("æç¤º", "æ£€æµ‹åˆ°ç¼“å­˜ä¸å­˜åœ¨ï¼Œæ­£åœ¨é‡æ–°æœç´¢");
                     data = new File("data");
                     dataPath = data.getAbsolutePath();
                     Search.getInstance().setManualUpdate(true);
@@ -1026,6 +1131,18 @@ public class SettingsFrame {
 
         }
 
+        SearchBar instance = SearchBar.getInstance();
+        instance.setTransparency(transparency);
+        instance.setBackgroundColor1(backgroundColor1);
+        instance.setBackgroundColor2(backgroundColor2);
+        instance.setBackgroundColor3(backgroundColor3);
+        instance.setBackgroundColor4(backgroundColor4);
+        instance.setLabelColor(labelColor);
+        instance.setFontColorWithCoverage(fontColorWithCoverage);
+        instance.setFontColor(fontColor);
+        instance.setSearchBarColor(searchBarColor);
+
+        //ä¿å­˜è®¾ç½®
         JSONObject allSettings = new JSONObject();
         allSettings.put("hotkey", hotkey);
         allSettings.put("isStartup", isStartup);
@@ -1058,7 +1175,7 @@ public class SettingsFrame {
 
         }
 
-        //»ñÈ¡ËùÓĞ×Ô¶¨ÒåÃüÁî
+        //è·å–æ‰€æœ‰è‡ªå®šä¹‰å‘½ä»¤
         try (BufferedReader br = new BufferedReader(new FileReader(new File("user/cmds.txt")))) {
             String each;
             while ((each = br.readLine()) != null) {
@@ -1076,15 +1193,15 @@ public class SettingsFrame {
             updateInfo = getInfo();
             latestVersion = updateInfo.getString("version");
         } catch (IOException e1) {
-            JOptionPane.showMessageDialog(null, "¼ì²é¸üĞÂÊ§°Ü");
+            JOptionPane.showMessageDialog(null, "æ£€æŸ¥æ›´æ–°å¤±è´¥");
             return;
         }
         File test = new File("TEST");
         if (Double.parseDouble(latestVersion) > Double.parseDouble(MainClass.version) || test.exists()) {
             String description = updateInfo.getString("description");
-            int result = JOptionPane.showConfirmDialog(null, "ÓĞĞÂ°æ±¾" + latestVersion + "£¬ÊÇ·ñ¸üĞÂ\n¸üĞÂÄÚÈİ£º\n" + description);
+            int result = JOptionPane.showConfirmDialog(null, "æœ‰æ–°ç‰ˆæœ¬" + latestVersion + "ï¼Œæ˜¯å¦æ›´æ–°\næ›´æ–°å†…å®¹ï¼š\n" + description);
             if (result == 0) {
-                //¿ªÊ¼¸üĞÂ,ÏÂÔØ¸üĞÂÎÄ¼şµ½tmp
+                //å¼€å§‹æ›´æ–°,ä¸‹è½½æ›´æ–°æ–‡ä»¶åˆ°tmp
                 String urlChoose;
                 String fileName;
                 if (MainClass.name.contains("x64")) {
@@ -1098,13 +1215,13 @@ public class SettingsFrame {
                 try {
                     download.downLoadFromUrl(updateInfo.getString(urlChoose), fileName, tmp.getAbsolutePath());
                 } catch (Exception e) {
-                    if (!e.getMessage().equals("ÓÃ»§ÖĞ¶ÏÏÂÔØ")) {
-                        JOptionPane.showMessageDialog(null, "ÏÂÔØÊ§°Ü");
+                    if (!e.getMessage().equals("ç”¨æˆ·ä¸­æ–­ä¸‹è½½")) {
+                        JOptionPane.showMessageDialog(null, "ä¸‹è½½å¤±è´¥");
                     }
                     download.hideFrame();
                     return;
                 }
-                MainClass.showMessage("ÌáÊ¾", "ÏÂÔØÍê³É£¬¸üĞÂ½«ÔÚÏÂ´ÎÆô¶¯Ê±¿ªÊ¼");
+                MainClass.showMessage("æç¤º", "ä¸‹è½½å®Œæˆï¼Œæ›´æ–°å°†åœ¨ä¸‹æ¬¡å¯åŠ¨æ—¶å¼€å§‹");
                 try {
                     File updateSignal = new File("user/update");
                     updateSignal.createNewFile();
@@ -1113,7 +1230,7 @@ public class SettingsFrame {
                 }
             }
         } else {
-            JOptionPane.showMessageDialog(null, "×îĞÂ°æ±¾£º" + latestVersion + "\nµ±Ç°°æ±¾ÒÑÊÇ×îĞÂ");
+            JOptionPane.showMessageDialog(null, "æœ€æ–°ç‰ˆæœ¬ï¼š" + latestVersion + "\nå½“å‰ç‰ˆæœ¬å·²æ˜¯æœ€æ–°");
         }
     }
 
@@ -1148,10 +1265,10 @@ public class SettingsFrame {
         try {
             updateTimeLimitTemp = Integer.parseInt(textFieldUpdateTime.getText());
         } catch (Exception e1) {
-            updateTimeLimitTemp = -1; // ÊäÈë²»ÕıÈ·
+            updateTimeLimitTemp = -1; // è¾“å…¥ä¸æ­£ç¡®
         }
         if (updateTimeLimitTemp > 3600 || updateTimeLimitTemp <= 0) {
-            JOptionPane.showMessageDialog(null, "ÎÄ¼şË÷Òı¸üĞÂÉèÖÃ´íÎó£¬Çë¸ü¸Ä");
+            JOptionPane.showMessageDialog(null, "æ–‡ä»¶ç´¢å¼•æ›´æ–°è®¾ç½®é”™è¯¯ï¼Œè¯·æ›´æ”¹");
             return;
         }
         isStartup = checkBox1.isSelected();
@@ -1161,7 +1278,7 @@ public class SettingsFrame {
             cacheNumLimitTemp = -1;
         }
         if (cacheNumLimitTemp > 10000 || cacheNumLimitTemp <= 0) {
-            JOptionPane.showMessageDialog(null, "»º´æÈİÁ¿ÉèÖÃ´íÎó£¬Çë¸ü¸Ä");
+            JOptionPane.showMessageDialog(null, "ç¼“å­˜å®¹é‡è®¾ç½®é”™è¯¯ï¼Œè¯·æ›´æ”¹");
             return;
         }
         ignorePathTemp = textAreaIgnorePath.getText();
@@ -1176,17 +1293,17 @@ public class SettingsFrame {
         }
 
         if (searchDepthTemp > 10 || searchDepthTemp <= 0) {
-            JOptionPane.showMessageDialog(null, "ËÑË÷Éî¶ÈÉèÖÃ´íÎó£¬Çë¸ü¸Ä");
+            JOptionPane.showMessageDialog(null, "æœç´¢æ·±åº¦è®¾ç½®é”™è¯¯ï¼Œè¯·æ›´æ”¹");
             return;
         }
 
         String _hotkey = textFieldHotkey.getText();
         if (_hotkey.length() == 1) {
-            JOptionPane.showMessageDialog(null, "¿ì½İ¼üÉèÖÃ´íÎó");
+            JOptionPane.showMessageDialog(null, "å¿«æ·é”®è®¾ç½®é”™è¯¯");
             return;
         } else {
             if (!(64 < _hotkey.charAt(_hotkey.length() - 1) && _hotkey.charAt(_hotkey.length() - 1) < 91)) {
-                JOptionPane.showMessageDialog(null, "¿ì½İ¼üÉèÖÃ´íÎó");
+                JOptionPane.showMessageDialog(null, "å¿«æ·é”®è®¾ç½®é”™è¯¯");
                 return;
             }
         }
@@ -1196,12 +1313,12 @@ public class SettingsFrame {
             transparencyTemp = -1f;
         }
         if (transparencyTemp > 1 || transparencyTemp <= 0) {
-            JOptionPane.showMessageDialog(null, "Í¸Ã÷¶ÈÉèÖÃ´íÎó");
+            JOptionPane.showMessageDialog(null, "é€æ˜åº¦è®¾ç½®é”™è¯¯");
             return;
         }
 
         if (_openLastFolderKeyCode == _runAsAdminKeyCode || _openLastFolderKeyCode == _copyPathKeyCode || _runAsAdminKeyCode == _copyPathKeyCode) {
-            JOptionPane.showMessageDialog(null, "¿ì½İ¼ü³åÍ»");
+            JOptionPane.showMessageDialog(null, "å¿«æ·é”®å†²çª");
             return;
         } else {
             openLastFolderKeyCode = _openLastFolderKeyCode;
@@ -1216,7 +1333,7 @@ public class SettingsFrame {
             _labelColor = -1;
         }
         if (_labelColor < 0) {
-            JOptionPane.showMessageDialog(null, "Ñ¡ÖĞ¿òÑÕÉ«ÉèÖÃ´íÎó");
+            JOptionPane.showMessageDialog(null, "é€‰ä¸­æ¡†é¢œè‰²è®¾ç½®é”™è¯¯");
             return;
         }
         int _fontColorWithCoverage;
@@ -1226,7 +1343,7 @@ public class SettingsFrame {
             _fontColorWithCoverage = -1;
         }
         if (_fontColorWithCoverage < 0) {
-            JOptionPane.showMessageDialog(null, "Ñ¡ÖĞ¿ò×ÖÌåÑÕÉ«ÉèÖÃ´íÎó");
+            JOptionPane.showMessageDialog(null, "é€‰ä¸­æ¡†å­—ä½“é¢œè‰²è®¾ç½®é”™è¯¯");
             return;
         }
         int _backgroundColor1;
@@ -1236,7 +1353,7 @@ public class SettingsFrame {
             _backgroundColor1 = -1;
         }
         if (_backgroundColor1 < 0) {
-            JOptionPane.showMessageDialog(null, "1¿òÄ¬ÈÏÑÕÉ«ÉèÖÃ´íÎó");
+            JOptionPane.showMessageDialog(null, "1æ¡†é»˜è®¤é¢œè‰²è®¾ç½®é”™è¯¯");
             return;
         }
         int _backgroundColor2;
@@ -1246,7 +1363,7 @@ public class SettingsFrame {
             _backgroundColor2 = -1;
         }
         if (_backgroundColor2 < 0) {
-            JOptionPane.showMessageDialog(null, "2¿òÄ¬ÈÏÑÕÉ«ÉèÖÃ´íÎó");
+            JOptionPane.showMessageDialog(null, "2æ¡†é»˜è®¤é¢œè‰²è®¾ç½®é”™è¯¯");
             return;
         }
         int _backgroundColor3;
@@ -1256,7 +1373,7 @@ public class SettingsFrame {
             _backgroundColor3 = -1;
         }
         if (_backgroundColor3 < 0) {
-            JOptionPane.showMessageDialog(null, "3¿òÄ¬ÈÏÑÕÉ«ÉèÖÃ´íÎó");
+            JOptionPane.showMessageDialog(null, "3æ¡†é»˜è®¤é¢œè‰²è®¾ç½®é”™è¯¯");
             return;
         }
         int _backgroundColor4;
@@ -1266,7 +1383,7 @@ public class SettingsFrame {
             _backgroundColor4 = -1;
         }
         if (_backgroundColor4 < 0) {
-            JOptionPane.showMessageDialog(null, "4¿òÄ¬ÈÏÑÕÉ«ÉèÖÃ´íÎó");
+            JOptionPane.showMessageDialog(null, "4æ¡†é»˜è®¤é¢œè‰²è®¾ç½®é”™è¯¯");
             return;
         }
         int _fontColor;
@@ -1276,7 +1393,7 @@ public class SettingsFrame {
             _fontColor = -1;
         }
         if (_fontColor < 0) {
-            JOptionPane.showMessageDialog(null, "Î´Ñ¡ÖĞ¿òÄÚ×ÖÌåÑÕÉ«ÉèÖÃ´íÎó");
+            JOptionPane.showMessageDialog(null, "æœªé€‰ä¸­æ¡†å†…å­—ä½“é¢œè‰²è®¾ç½®é”™è¯¯");
             return;
         }
         int _searchBarColor;
@@ -1286,7 +1403,7 @@ public class SettingsFrame {
             _searchBarColor = -1;
         }
         if (_searchBarColor < 0) {
-            JOptionPane.showMessageDialog(null, "1¿òÄ¬ÈÏÑÕÉ«ÉèÖÃ´íÎó");
+            JOptionPane.showMessageDialog(null, "1æ¡†é»˜è®¤é¢œè‰²è®¾ç½®é”™è¯¯");
             return;
         }
         int _maxConnectionNum;
@@ -1296,7 +1413,7 @@ public class SettingsFrame {
             _maxConnectionNum = -1;
         }
         if (_maxConnectionNum < 0 || _maxConnectionNum > 50) {
-            JOptionPane.showMessageDialog(null, "×î´óÁ¬½Ó±£³ÖÊıÁ¿ÉèÖÃ´íÎó");
+            JOptionPane.showMessageDialog(null, "æœ€å¤§è¿æ¥ä¿æŒæ•°é‡è®¾ç½®é”™è¯¯");
             return;
         }
         int _minConnectionNum;
@@ -1306,11 +1423,11 @@ public class SettingsFrame {
             _minConnectionNum = -1;
         }
         if (_minConnectionNum < 0 || _minConnectionNum > 50) {
-            JOptionPane.showMessageDialog(null, "×îĞ¡Á¬½Ó±£³ÖÊıÁ¿ÉèÖÃ´íÎó");
+            JOptionPane.showMessageDialog(null, "æœ€å°è¿æ¥ä¿æŒæ•°é‡è®¾ç½®é”™è¯¯");
             return;
         }
         if (_minConnectionNum > _maxConnectionNum) {
-            JOptionPane.showMessageDialog(null, "×îĞ¡Á¬½Ó±£³ÖÊıÁ¿ĞèÒª´óÓÚ×î´óÁ¬½Ó±£³ÖÊıÁ¿");
+            JOptionPane.showMessageDialog(null, "æœ€å°è¿æ¥ä¿æŒæ•°é‡éœ€è¦å¤§äºæœ€å¤§è¿æ¥ä¿æŒæ•°é‡");
             return;
         }
         int _connectionTimeLimit;
@@ -1320,7 +1437,7 @@ public class SettingsFrame {
             _connectionTimeLimit = -1;
         }
         if (_connectionTimeLimit < 0 || _connectionTimeLimit > 1800000) {
-            JOptionPane.showMessageDialog(null, "Á¬½Ó±£³ÖÊ±¼äÉèÖÃ´íÎó");
+            JOptionPane.showMessageDialog(null, "è¿æ¥ä¿æŒæ—¶é—´è®¾ç½®é”™è¯¯");
             return;
         }
 
@@ -1333,7 +1450,6 @@ public class SettingsFrame {
         ignorePath = ignorePathTemp;
         searchDepth = searchDepthTemp;
         transparency = transparencyTemp;
-        SearchBar.getInstance().setTransparency(transparency);
         labelColor = _labelColor;
         backgroundColor2 = _backgroundColor2;
         backgroundColor1 = _backgroundColor1;
@@ -1343,6 +1459,7 @@ public class SettingsFrame {
         fontColorWithCoverage = _fontColorWithCoverage;
         fontColor = _fontColor;
         SearchBar instance = SearchBar.getInstance();
+        instance.setTransparency(transparency);
         instance.setBackgroundColor1(backgroundColor1);
         instance.setBackgroundColor2(backgroundColor2);
         instance.setBackgroundColor3(backgroundColor3);
@@ -1376,6 +1493,7 @@ public class SettingsFrame {
         minConnectionNum = _minConnectionNum;
         connectionTimeLimit = _connectionTimeLimit;
 
+        //ä¿å­˜è®¾ç½®
         allSettings.put("hotkey", hotkey);
         allSettings.put("isStartup", isStartup);
         allSettings.put("cacheNumLimit", cacheNumLimit);
@@ -1403,11 +1521,11 @@ public class SettingsFrame {
         allSettings.put("connectionTimeLimit", connectionTimeLimit);
         try (BufferedWriter buffW = new BufferedWriter(new FileWriter(settings))) {
             buffW.write(allSettings.toJSONString());
-            JOptionPane.showMessageDialog(null, "±£´æ³É¹¦");
+            JOptionPane.showMessageDialog(null, "ä¿å­˜æˆåŠŸ");
         } catch (IOException ignored) {
 
         }
-        //±£´æ×Ô¶¨ÒåÃüÁî
+        //ä¿å­˜è‡ªå®šä¹‰å‘½ä»¤
         StringBuilder strb = new StringBuilder();
         for (String each : cmdSet) {
             strb.append(each);
@@ -1443,7 +1561,7 @@ public class SettingsFrame {
                 }
                 if (!result.toString().isEmpty()) {
                     checkBox1.setSelected(false);
-                    JOptionPane.showMessageDialog(null, "Ìí¼Óµ½¿ª»úÆô¶¯Ê§°Ü£¬Çë³¢ÊÔÒÔ¹ÜÀíÔ±Éí·İÔËĞĞ");
+                    JOptionPane.showMessageDialog(null, "æ·»åŠ åˆ°å¼€æœºå¯åŠ¨å¤±è´¥ï¼Œè¯·å°è¯•ä»¥ç®¡ç†å‘˜èº«ä»½è¿è¡Œ");
                 }
             } catch (IOException | InterruptedException ignored) {
 
@@ -1460,7 +1578,7 @@ public class SettingsFrame {
                 }
                 if (!result.toString().isEmpty()) {
                     checkBox1.setSelected(true);
-                    JOptionPane.showMessageDialog(null, "É¾³ı¿ª»úÆô¶¯Ê§°Ü£¬Çë³¢ÊÔÒÔ¹ÜÀíÔ±Éí·İÔËĞĞ");
+                    JOptionPane.showMessageDialog(null, "åˆ é™¤å¼€æœºå¯åŠ¨å¤±è´¥ï¼Œè¯·å°è¯•ä»¥ç®¡ç†å‘˜èº«ä»½è¿è¡Œ");
                 }
             } catch (IOException | InterruptedException ignored) {
 
@@ -1489,13 +1607,13 @@ public class SettingsFrame {
 
     private void copyFile(InputStream source, File dest) {
         try (OutputStream os = new FileOutputStream(dest); BufferedInputStream bis = new BufferedInputStream(source); BufferedOutputStream bos = new BufferedOutputStream(os)) {
-            // ´´½¨»º³åÁ÷
+            // åˆ›å»ºç¼“å†²æµ
             byte[] buffer = new byte[8192];
             int count = bis.read(buffer);
             while (count != -1) {
-                //Ê¹ÓÃ»º³åÁ÷Ğ´Êı¾İ
+                //ä½¿ç”¨ç¼“å†²æµå†™æ•°æ®
                 bos.write(buffer, 0, count);
-                //Ë¢ĞÂ
+                //åˆ·æ–°
                 bos.flush();
                 count = bis.read(buffer);
             }
@@ -1522,7 +1640,7 @@ public class SettingsFrame {
             desktop1 = moveFiles.moveFolder(fileDesktop.getAbsolutePath(), fileBackUp.getAbsolutePath());
             desktop2 = moveFiles.moveFolder("C:\\Users\\Public\\Desktop", fileBackUp.getAbsolutePath());
             if (desktop1 || desktop2) {
-                JOptionPane.showMessageDialog(null, "¼ì²âµ½ÖØÃûÎÄ¼ş£¬Çë×ÔĞĞÒÆ¶¯");
+                JOptionPane.showMessageDialog(null, "æ£€æµ‹åˆ°é‡åæ–‡ä»¶ï¼Œè¯·è‡ªè¡Œç§»åŠ¨");
             }
         }
     }

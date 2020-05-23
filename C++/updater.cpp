@@ -55,7 +55,7 @@ string GetExePath(void)
 {
     char szFilePath[MAX_PATH + 1] = {0};
     GetModuleFileNameA(NULL, szFilePath, MAX_PATH);
-    (strrchr(szFilePath, '\\'))[0] = 0; // É¾³ıÎÄ¼şÃû£¬Ö»»ñµÃÂ·¾¶×Ö´®
+    (strrchr(szFilePath, '\\'))[0] = 0; // åˆ é™¤æ–‡ä»¶åï¼Œåªè·å¾—è·¯å¾„å­—ä¸²
     string path = szFilePath;
 
     return path;
@@ -84,7 +84,7 @@ void copyFile(string file, string dest)
     char _dest[500];
     strcpy(_file, file.c_str());
     strcpy(_dest, dest.c_str());
-    in.open(_file, ios::binary); //¶ÁÈ¡ÎÄ¼ş
+    in.open(_file, ios::binary); //è¯»å–æ–‡ä»¶
     out.open(_dest, ios::binary);
     while (!in.eof())
     {
@@ -125,7 +125,7 @@ int main(int argc, char *argv[])
         string origin;
         origin.append(currentPath);
         origin.append("\\");
-        origin.append(fileName); //Æ´½ÓÔ­ÎÄ¼şµØÖ·
+        origin.append(fileName); //æ‹¼æ¥åŸæ–‡ä»¶åœ°å€
         cout << "origin:" << origin.c_str() << endl;
         string newFile;
         newFile.append(currentPath);
