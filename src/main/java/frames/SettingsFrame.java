@@ -1,5 +1,6 @@
 package frames;
 
+import DllInterface.IsLocalDisk;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.serializer.SerializerFeature;
@@ -978,10 +979,8 @@ public class SettingsFrame {
 
     public static void initSettings() {
         //获取所有设置信息
-        FileSystemView sys = FileSystemView.getFileSystemView();
         for (File root : File.listRoots()) {
-            String driveType = sys.getSystemTypeDescription(root);
-            if (driveType.equals("本地磁盘")) {
+            if (IsLocalDisk.INSTANCE.isLocalDisk(root.getAbsolutePath())) {
                 diskCount++;
             }
         }
