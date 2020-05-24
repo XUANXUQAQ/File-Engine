@@ -42,7 +42,6 @@ ofstream results23;
 ofstream results24;
 ofstream results25;
 
-
 void searchFiles(const char *path, const char *exd);
 void addIgnorePath(const char *path);
 int count(string path, string pattern);
@@ -58,7 +57,7 @@ int getAscIISum(string name)
     int length = name.length();
     for (int i = 0; i < length; i++)
     {
-        if (name[i] > 0) 
+        if (name[i] > 0)
         {
             sum += name[i];
         }
@@ -66,62 +65,62 @@ int getAscIISum(string name)
     return sum;
 }
 
-std::string to_utf8(const wchar_t* buffer, int len)
+std::string to_utf8(const wchar_t *buffer, int len)
 {
-        int nChars =::WideCharToMultiByte(
-                CP_UTF8,
-                0,
-                buffer,
-                len,
-                NULL,
-                0,
-                NULL,
-                NULL);
-        if(nChars ==0)
-        {
-            return"";
-        }
-        string newbuffer;
-        newbuffer.resize(nChars);
-        ::WideCharToMultiByte(
-                CP_UTF8,
-                0,
-                buffer,
-                len,
-                const_cast<char*>(newbuffer.c_str()),
-                nChars,
-                NULL,
-                NULL); 
+    int nChars = ::WideCharToMultiByte(
+        CP_UTF8,
+        0,
+        buffer,
+        len,
+        NULL,
+        0,
+        NULL,
+        NULL);
+    if (nChars == 0)
+    {
+        return "";
+    }
+    string newbuffer;
+    newbuffer.resize(nChars);
+    ::WideCharToMultiByte(
+        CP_UTF8,
+        0,
+        buffer,
+        len,
+        const_cast<char *>(newbuffer.c_str()),
+        nChars,
+        NULL,
+        NULL);
 
-        return newbuffer;
+    return newbuffer;
 }
 
-std::string to_utf8(const std::wstring& str)
+std::string to_utf8(const std::wstring &str)
 {
-        return to_utf8(str.c_str(),(int)str.size());
+    return to_utf8(str.c_str(), (int)str.size());
 }
 
-std::wstring StringToWString(const std::string& str)
+std::wstring StringToWString(const std::string &str)
 {
     setlocale(LC_ALL, "chs");
-    const char* point_to_source = str.c_str();
+    const char *point_to_source = str.c_str();
     size_t new_size = str.size() + 1;
     wchar_t *point_to_destination = new wchar_t[new_size];
     wmemset(point_to_destination, 0, new_size);
     mbstowcs(point_to_destination, point_to_source, new_size);
     std::wstring result = point_to_destination;
-    delete[]point_to_destination;
+    delete[] point_to_destination;
     setlocale(LC_ALL, "C");
     return result;
 }
 
 void saveResult(string path, int ascII)
 {
-    #ifndef TEST
+#ifndef TEST
     if (0 < ascII && ascII <= 100)
     {
         results0 << to_utf8(StringToWString(path));
-        results0<< ("\n");
+        results0 << ("\n");
     }
     else if (100 < ascII && ascII <= 200)
     {
@@ -248,10 +247,10 @@ void saveResult(string path, int ascII)
         results25 << to_utf8(StringToWString(path));
         results25 << ("\n");
     }
-    #else
+#else
     wstring record = to_utf8(StringToWString(path));
     results0 << record << endl;
-    #endif
+#endif
 }
 
 void searchFilesIgnoreSearchDepth(const char *path, const char *exd)
@@ -487,7 +486,7 @@ void search(string path, string exd)
 
 #ifndef TEST
 int main(int argc, char *argv[])
-{ 
+{
     char searchPath[260];
     char searchDepth[50];
     char ignorePath[3000];
@@ -581,57 +580,56 @@ int main(int argc, char *argv[])
         strcpy(output2500_, output);
         strcat(output2500_, "\\list2500-.txt");
         results0.open(output0_100, ios::app);
-        
+
         results1.open(output100_200, ios::app);
-        
+
         results2.open(output200_300, ios::app);
-        
+
         results3.open(output300_400, ios::app);
-        
+
         results4.open(output400_500, ios::app);
-       
+
         results5.open(output500_600, ios::app);
-  
+
         results6.open(output600_700, ios::app);
-      
+
         results7.open(output700_800, ios::app);
-  
+
         results8.open(output800_900, ios::app);
-      
+
         results9.open(output900_1000, ios::app);
-        
+
         results10.open(output1000_1100, ios::app);
-        
+
         results11.open(output1100_1200, ios::app);
-        
+
         results12.open(output1200_1300, ios::app);
-        
+
         results13.open(output1300_1400, ios::app);
-        
+
         results14.open(output1400_1500, ios::app);
-        
+
         results15.open(output1500_1600, ios::app);
-        
+
         results16.open(output1600_1700, ios::app);
-        
+
         results17.open(output1700_1800, ios::app);
-        
+
         results18.open(output1800_1900, ios::app);
-        
+
         results19.open(output1900_2000, ios::app);
-        
+
         results20.open(output2000_2100, ios::app);
-        
+
         results21.open(output2100_2200, ios::app);
-        
+
         results22.open(output2200_2300, ios::app);
-        
+
         results23.open(output2300_2400, ios::app);
-        
+
         results24.open(output2400_2500, ios::app);
-        
+
         results25.open(output2500_, ios::app);
-        
 
         cout << "searchPath:" << searchPath << endl;
         cout << "searchDepth:" << searchDepth << endl;
