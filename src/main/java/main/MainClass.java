@@ -284,20 +284,9 @@ public class MainClass {
         ExecutorService fixedThreadPool = Executors.newFixedThreadPool(roots.length + 5);
 
 
-        File data = new File(SettingsFrame.getDataPath());
-        File[] files = data.listFiles();
-        if (!data.exists()) {
+        if (searchBar.isDataDamaged()) {
             System.out.println("无data文件，正在搜索并重建");
             search.setManualUpdate(true);
-        } else if (files == null) {
-            System.out.println("data文件损坏，正在搜索并重建");
-            search.setManualUpdate(true);
-        } else {
-            assert false;
-            if (files.length != 26) {
-                System.out.println("data文件损坏，正在搜索并重建");
-                search.setManualUpdate(true);
-            }
         }
 
         if (isAdmin()) {

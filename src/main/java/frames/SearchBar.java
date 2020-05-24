@@ -1741,7 +1741,7 @@ public class SearchBar {
                         label3.setForeground(fontColor);
                         label4.setForeground(fontColorWithCoverage);
                     }
-                    Thread.sleep(100);
+                    Thread.sleep(20);
                 }
             } catch (Exception ignored) {
 
@@ -1920,229 +1920,229 @@ public class SearchBar {
                             if (0 < ascII && ascII <= 100) {
                                 for (int i = 0; i < 2500; i += 100) {
                                     int name = i + 100;
-                                    listPath = dataPath + "\\" + "\\list" + i + "-" + name + ".txt";
+                                    listPath = dataPath + "\\" + "\\list" + i + "-" + name + ".dat";
                                     paths.add(listPath);
                                 }
-                                paths.add(dataPath + "\\" + "\\list2500-.txt");
+                                paths.add(dataPath + "\\" + "\\list2500-.dat");
 
                             } else if (100 < ascII && ascII <= 200) {
 
                                 for (int i = 100; i < 2500; i += 100) {
                                     int name = i + 100;
-                                    listPath = dataPath + "\\" + "\\list" + i + "-" + name + ".txt";
+                                    listPath = dataPath + "\\" + "\\list" + i + "-" + name + ".dat";
                                     paths.add(listPath);
                                 }
-                                paths.add(dataPath + "\\" + "\\list2500-.txt");
+                                paths.add(dataPath + "\\" + "\\list2500-.dat");
 
                             } else if (200 < ascII && ascII <= 300) {
 
                                 for (int i = 200; i < 2500; i += 100) {
                                     int name = i + 100;
-                                    listPath = dataPath + "\\" + "\\list" + i + "-" + name + ".txt";
+                                    listPath = dataPath + "\\" + "\\list" + i + "-" + name + ".dat";
                                     paths.add(listPath);
                                 }
-                                paths.add(dataPath + "\\" + "\\list2500-.txt");
+                                paths.add(dataPath + "\\" + "\\list2500-.dat");
 
                             } else if (300 < ascII && ascII <= 400) {
 
                                 for (int i = 300; i < 2500; i += 100) {
                                     int name = i + 100;
-                                    listPath = dataPath + "\\" + "\\list" + i + "-" + name + ".txt";
+                                    listPath = dataPath + "\\" + "\\list" + i + "-" + name + ".dat";
                                     paths.add(listPath);
                                 }
-                                paths.add(dataPath + "\\" + "\\list2500-.txt");
+                                paths.add(dataPath + "\\" + "\\list2500-.dat");
 
                             } else if (400 < ascII && ascII <= 500) {
 
                                 for (int i = 400; i < 2500; i += 100) {
                                     int name = i + 100;
-                                    listPath = dataPath + "\\" + "\\list" + i + "-" + name + ".txt";
+                                    listPath = dataPath + "\\" + "\\list" + i + "-" + name + ".dat";
                                     paths.add(listPath);
                                 }
-                                paths.add(dataPath + "\\" + "\\list2500-.txt");
+                                paths.add(dataPath + "\\" + "\\list2500-.dat");
 
                             } else if (500 < ascII && ascII <= 600) {
 
                                 for (int i = 500; i < 2500; i += 100) {
                                     int name = i + 100;
-                                    listPath = dataPath + "\\" + "\\list" + i + "-" + name + ".txt";
+                                    listPath = dataPath + "\\" + "\\list" + i + "-" + name + ".dat";
                                     paths.add(listPath);
                                 }
-                                paths.add(dataPath + "\\" + "\\list2500-.txt");
+                                paths.add(dataPath + "\\" + "\\list2500-.dat");
 
                             } else if (600 < ascII && ascII <= 700) {
 
                                 for (int i = 600; i < 2500; i += 100) {
                                     int name = i + 100;
-                                    listPath = dataPath + "\\" + "\\list" + i + "-" + name + ".txt";
+                                    listPath = dataPath + "\\" + "\\list" + i + "-" + name + ".dat";
                                     paths.add(listPath);
                                 }
-                                paths.add(dataPath + "\\" + "\\list2500-.txt");
+                                paths.add(dataPath + "\\" + "\\list2500-.dat");
 
                             } else if (700 < ascII && ascII <= 800) {
 
                                 for (int i = 700; i < 2500; i += 100) {
                                     int name = i + 100;
-                                    listPath = dataPath + "\\" + "\\list" + i + "-" + name + ".txt";
+                                    listPath = dataPath + "\\" + "\\list" + i + "-" + name + ".dat";
                                     paths.add(listPath);
                                 }
-                                paths.add(dataPath + "\\" + "\\list2500-.txt");
+                                paths.add(dataPath + "\\" + "\\list2500-.dat");
 
                             } else if (800 < ascII && ascII <= 900) {
 
                                 for (int i = 800; i < 2500; i += 100) {
                                     int name = i + 100;
-                                    listPath = dataPath + "\\" + "\\list" + i + "-" + name + ".txt";
+                                    listPath = dataPath + "\\" + "\\list" + i + "-" + name + ".dat";
                                     paths.add(listPath);
                                 }
-                                paths.add(dataPath + "\\" + "\\list2500-.txt");
+                                paths.add(dataPath + "\\" + "\\list2500-.dat");
 
                             } else if (900 < ascII && ascII <= 1000) {
 
                                 for (int i = 900; i < 2500; i += 100) {
                                     int name = i + 100;
-                                    listPath = dataPath + "\\" + "\\list" + i + "-" + name + ".txt";
+                                    listPath = dataPath + "\\" + "\\list" + i + "-" + name + ".dat";
                                     paths.add(listPath);
                                 }
-                                paths.add(dataPath + "\\" + "\\list2500-.txt");
+                                paths.add(dataPath + "\\" + "\\list2500-.dat");
 
                             } else if (1000 < ascII && ascII <= 1100) {
 
                                 for (int i = 1000; i < 2500; i += 100) {
                                     int name = i + 100;
-                                    listPath = dataPath + "\\" + "\\list" + i + "-" + name + ".txt";
+                                    listPath = dataPath + "\\" + "\\list" + i + "-" + name + ".dat";
                                     paths.add(listPath);
                                 }
-                                paths.add(dataPath + "\\" + "\\list2500-.txt");
+                                paths.add(dataPath + "\\" + "\\list2500-.dat");
 
                             } else if (1100 < ascII && ascII <= 1200) {
 
                                 for (int i = 1100; i < 2500; i += 100) {
                                     int name = i + 100;
-                                    listPath = dataPath + "\\" + "\\list" + i + "-" + name + ".txt";
+                                    listPath = dataPath + "\\" + "\\list" + i + "-" + name + ".dat";
                                     paths.add(listPath);
                                 }
-                                paths.add(dataPath + "\\" + "\\list2500-.txt");
+                                paths.add(dataPath + "\\" + "\\list2500-.dat");
 
                             } else if (1200 < ascII && ascII <= 1300) {
 
                                 for (int i = 1200; i < 2500; i += 100) {
                                     int name = i + 100;
-                                    listPath = dataPath + "\\" + "\\list" + i + "-" + name + ".txt";
+                                    listPath = dataPath + "\\" + "\\list" + i + "-" + name + ".dat";
                                     paths.add(listPath);
                                 }
-                                paths.add(dataPath + "\\" + "\\list2500-.txt");
+                                paths.add(dataPath + "\\" + "\\list2500-.dat");
 
                             } else if (1300 < ascII && ascII <= 1400) {
 
                                 for (int i = 1300; i < 2500; i += 100) {
                                     int name = i + 100;
-                                    listPath = dataPath + "\\" + "\\list" + i + "-" + name + ".txt";
+                                    listPath = dataPath + "\\" + "\\list" + i + "-" + name + ".dat";
                                     paths.add(listPath);
                                 }
-                                paths.add(dataPath + "\\" + "\\list2500-.txt");
+                                paths.add(dataPath + "\\" + "\\list2500-.dat");
 
                             } else if (1400 < ascII && ascII <= 1500) {
 
                                 for (int i = 1400; i < 2500; i += 100) {
                                     int name = i + 100;
-                                    listPath = dataPath + "\\" + "\\list" + i + "-" + name + ".txt";
+                                    listPath = dataPath + "\\" + "\\list" + i + "-" + name + ".dat";
                                     paths.add(listPath);
                                 }
-                                paths.add(dataPath + "\\" + "\\list2500-.txt");
+                                paths.add(dataPath + "\\" + "\\list2500-.dat");
 
                             } else if (1500 < ascII && ascII <= 1600) {
 
                                 for (int i = 1500; i < 2500; i += 100) {
                                     int name = i + 100;
-                                    listPath = dataPath + "\\" + "\\list" + i + "-" + name + ".txt";
+                                    listPath = dataPath + "\\" + "\\list" + i + "-" + name + ".dat";
                                     paths.add(listPath);
                                 }
-                                paths.add(dataPath + "\\" + "\\list2500-.txt");
+                                paths.add(dataPath + "\\" + "\\list2500-.dat");
 
                             } else if (1600 < ascII && ascII <= 1700) {
 
                                 for (int i = 1600; i < 2500; i += 100) {
                                     int name = i + 100;
-                                    listPath = dataPath + "\\" + "\\list" + i + "-" + name + ".txt";
+                                    listPath = dataPath + "\\" + "\\list" + i + "-" + name + ".dat";
                                     paths.add(listPath);
                                 }
-                                paths.add(dataPath + "\\" + "\\list2500-.txt");
+                                paths.add(dataPath + "\\" + "\\list2500-.dat");
 
                             } else if (1700 < ascII && ascII <= 1800) {
 
                                 for (int i = 1700; i < 2500; i += 100) {
                                     int name = i + 100;
-                                    listPath = dataPath + "\\" + "\\list" + i + "-" + name + ".txt";
+                                    listPath = dataPath + "\\" + "\\list" + i + "-" + name + ".dat";
                                     paths.add(listPath);
                                 }
-                                paths.add(dataPath + "\\" + "\\list2500-.txt");
+                                paths.add(dataPath + "\\" + "\\list2500-.dat");
 
                             } else if (1800 < ascII && ascII <= 1900) {
 
                                 for (int i = 1800; i < 2500; i += 100) {
                                     int name = i + 100;
-                                    listPath = dataPath + "\\" + "\\list" + i + "-" + name + ".txt";
+                                    listPath = dataPath + "\\" + "\\list" + i + "-" + name + ".dat";
                                     paths.add(listPath);
                                 }
-                                paths.add(dataPath + "\\" + "\\list2500-.txt");
+                                paths.add(dataPath + "\\" + "\\list2500-.dat");
 
                             } else if (1900 < ascII && ascII <= 2000) {
 
                                 for (int i = 1900; i < 2500; i += 100) {
                                     int name = i + 100;
-                                    listPath = dataPath + "\\" + "\\list" + i + "-" + name + ".txt";
+                                    listPath = dataPath + "\\" + "\\list" + i + "-" + name + ".dat";
                                     paths.add(listPath);
                                 }
-                                paths.add(dataPath + "\\" + "\\list2500-.txt");
+                                paths.add(dataPath + "\\" + "\\list2500-.dat");
 
                             } else if (2000 < ascII && ascII <= 2100) {
 
                                 for (int i = 2000; i < 2500; i += 100) {
                                     int name = i + 100;
-                                    listPath = dataPath + "\\" + "\\list" + i + "-" + name + ".txt";
+                                    listPath = dataPath + "\\" + "\\list" + i + "-" + name + ".dat";
                                     paths.add(listPath);
                                 }
-                                paths.add(dataPath + "\\" + "\\list2500-.txt");
+                                paths.add(dataPath + "\\" + "\\list2500-.dat");
 
                             } else if (2100 < ascII && ascII <= 2200) {
 
                                 for (int i = 2100; i < 2500; i += 100) {
                                     int name = i + 100;
-                                    listPath = dataPath + "\\" + "\\list" + i + "-" + name + ".txt";
+                                    listPath = dataPath + "\\" + "\\list" + i + "-" + name + ".dat";
                                     paths.add(listPath);
                                 }
-                                paths.add(dataPath + "\\" + "\\list2500-.txt");
+                                paths.add(dataPath + "\\" + "\\list2500-.dat");
 
                             } else if (2200 < ascII && ascII <= 2300) {
 
                                 for (int i = 2200; i < 2500; i += 100) {
                                     int name = i + 100;
-                                    listPath = dataPath + "\\" + "\\list" + i + "-" + name + ".txt";
+                                    listPath = dataPath + "\\" + "\\list" + i + "-" + name + ".dat";
                                     paths.add(listPath);
                                 }
-                                paths.add(dataPath + "\\" + "\\list2500-.txt");
+                                paths.add(dataPath + "\\" + "\\list2500-.dat");
 
                             } else if (2300 < ascII && ascII <= 2400) {
 
                                 for (int i = 2300; i < 2500; i += 100) {
                                     int name = i + 100;
-                                    listPath = dataPath + "\\" + "\\list" + i + "-" + name + ".txt";
+                                    listPath = dataPath + "\\" + "\\list" + i + "-" + name + ".dat";
                                     paths.add(listPath);
                                 }
-                                paths.add(dataPath + "\\" + "\\list2500-.txt");
+                                paths.add(dataPath + "\\" + "\\list2500-.dat");
 
                             } else if (2400 < ascII && ascII <= 2500) {
 
                                 for (int i = 2400; i < 2500; i += 100) {
                                     int name = i + 100;
-                                    listPath = dataPath + "\\" + "\\list" + i + "-" + name + ".txt";
+                                    listPath = dataPath + "\\" + "\\list" + i + "-" + name + ".dat";
                                     paths.add(listPath);
                                 }
-                                paths.add(dataPath + "\\" + "\\list2500-.txt");
+                                paths.add(dataPath + "\\" + "\\list2500-.dat");
 
                             } else {
-                                paths.add(dataPath + "\\" + "\\list2500-.txt");
+                                paths.add(dataPath + "\\" + "\\list2500-.dat");
                             }
                             addResult(paths, searchText, System.currentTimeMillis(), searchCase);
                         }
@@ -3023,9 +3023,9 @@ public class SearchBar {
         int randomInt = random.nextInt(26);
         String dataPath = SettingsFrame.getDataPath();
         if (randomInt < 25) {
-            path = dataPath + "\\" + "\\list" + randomInt * 100 + "-" + (randomInt + 1) * 100 + ".txt";
+            path = dataPath + "\\" + "\\list" + randomInt * 100 + "-" + (randomInt + 1) * 100 + ".dat";
         } else {
-            path = dataPath + "\\" + "\\list2500-.txt";
+            path = dataPath + "\\" + "\\list2500-.dat";
         }
         return path;
     }
@@ -3095,6 +3095,21 @@ public class SearchBar {
         } catch (IOException ignored) {
 
         }
+    }
+
+    public boolean isDataDamaged() {
+        File data = new File(SettingsFrame.getDataPath() + "\\" + "\\list2500-.dat");
+        if (!data.exists()) {
+            return true;
+        }
+        for (int i = 0; i < 2500; i += 100) {
+            int name = i + 100;
+            data = new File(SettingsFrame.getDataPath() + "\\" + "\\list" + i + "-" + name + ".dat");
+            if (!data.exists()) {
+                return true;
+            }
+        }
+        return false;
     }
 }
 
