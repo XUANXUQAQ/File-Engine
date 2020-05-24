@@ -12,6 +12,7 @@ import search.Search;
 
 import javax.swing.*;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -165,7 +166,7 @@ public class MainClass {
 
 
         //清空tmp
-        MainClass.deleteDir(SettingsFrame.getTmp().getAbsolutePath());
+        deleteDir(SettingsFrame.getTmp().getAbsolutePath());
 
         File target;
 
@@ -326,7 +327,8 @@ public class MainClass {
         fixedThreadPool.execute(() -> {
             //检测文件添加线程
             String filesToAdd;
-            try (BufferedReader readerAdd = new BufferedReader(new FileReader(SettingsFrame.getTmp().getAbsolutePath() + "\\fileAdded.txt"))) {
+            try (BufferedReader readerAdd = new BufferedReader(new InputStreamReader(
+                    new FileInputStream(SettingsFrame.getTmp().getAbsolutePath() + "\\fileAdded.txt"), StandardCharsets.UTF_8))) {
                 while (!mainExit) {
                     if (!search.isManualUpdate()) {
                         if ((filesToAdd = readerAdd.readLine()) != null) {
@@ -345,7 +347,8 @@ public class MainClass {
 
         fixedThreadPool.execute(() -> {
             String filesToRemove;
-            try (BufferedReader readerRemove = new BufferedReader(new FileReader(SettingsFrame.getTmp().getAbsolutePath() + "\\fileRemoved.txt"))) {
+            try (BufferedReader readerRemove = new BufferedReader(new InputStreamReader(
+                    new FileInputStream(SettingsFrame.getTmp().getAbsolutePath() + "\\fileRemoved.txt"), StandardCharsets.UTF_8))) {
                 while (!mainExit) {
                     if (!search.isManualUpdate()) {
                         if ((filesToRemove = readerRemove.readLine()) != null) {
@@ -409,6 +412,7 @@ public class MainClass {
                     File CLOSEDLL = new File(SettingsFrame.getTmp().getAbsolutePath() + "\\CLOSE");
                     CLOSEDLL.createNewFile();
                     Thread.sleep(8000);
+                    deleteDir(SettingsFrame.getTmp().getAbsolutePath());
                     fixedThreadPool.shutdown();
                     System.exit(0);
                 }

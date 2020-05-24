@@ -10,33 +10,67 @@
 
 extern "C" __declspec(dllexport) void monitor(char* path, char* output, char* closePosition);
 
+std::string to_utf8(const std::wstring& str);
+std::string to_utf8(const wchar_t* buffer, int len);
+std::wstring StringToWString(const std::string& str);
+__declspec(dllexport) void monitor(char* path, char* output, char* closePosition);
+bool isExist(const char* FileName);
+
 using namespace std;
 
 wchar_t fileName[300];
 wchar_t fileRename[300];
 
 
-
-int CountLines(char *filename)
+std::string to_utf8(const wchar_t* buffer, int len)
 {
-    ifstream ReadFile;
-    int n=0;
-    string tmp;
-    ReadFile.open(filename,ios::in);//ios::in 表示以只读的方式读取文件
-    if(ReadFile.fail())//文件打开失败:返回0
-    {
-        return 0;
-    }
-    else//文件存在
-    {
-        while(getline(ReadFile,tmp,'\n'))
+        int nChars =::WideCharToMultiByte(
+                CP_UTF8,
+                0,
+                buffer,
+                len,
+                NULL,
+                0,
+                NULL,
+                NULL);
+        if(nChars ==0)
         {
-            n++;
+            return"";
         }
-        ReadFile.close();
-        return n;
-    }
+        string newbuffer;
+        newbuffer.resize(nChars);
+        ::WideCharToMultiByte(
+                CP_UTF8,
+                0,
+                buffer,
+                len,
+                const_cast<char*>(newbuffer.c_str()),
+                nChars,
+                NULL,
+                NULL); 
+
+        return newbuffer;
 }
+
+std::string to_utf8(const std::wstring& str)
+{
+        return to_utf8(str.c_str(),(int)str.size());
+}
+
+std::wstring StringToWString(const std::string& str)
+{
+    setlocale(LC_ALL, "chs");
+    const char* point_to_source = str.c_str();
+    size_t new_size = str.size() + 1;
+    wchar_t *point_to_destination = new wchar_t[new_size];
+    wmemset(point_to_destination, 0, new_size);
+    mbstowcs(point_to_destination, point_to_source, new_size);
+    std::wstring result = point_to_destination;
+    delete[]point_to_destination;
+    setlocale(LC_ALL, "C");
+    return result;
+}
+
 
 bool isExist(const char* FileName)
 {
@@ -60,7 +94,6 @@ __declspec(dllexport) void monitor(char* path, char* output, char* closePosition
     char file_rename[MAX_PATH]; //设置文件重命名后的名字;
     char notify[1024];
     char _path[300];
-    ofstream file;
     strcpy(_path, path);
     cout << "Start Monitor..." << _path << endl;
     char OUTPUT[300];
@@ -124,16 +157,19 @@ __declspec(dllexport) void monitor(char* path, char* output, char* closePosition
                 switch (pnotify->Action)
                 {
                     case FILE_ACTION_ADDED:
-                        if (strstr(file_name, "$RECYCLE.BIN")==NULL){                            
-                            //cout << "file add : " << file_name << endl; 
-                            cout << "file add : ";       
+                        if (strstr(file_name, "$RECYCLE.BIN")==NULL){              
+                            #ifdef TEST              
+                            cout << "file add : ";    
+                            #endif   
                             string data;
                             data.append(path);
-                            data.append(file_name);                     
+                            data.append(file_name);    
+                            #ifdef TEST                 
                             cout << data << endl;
+                            #endif
 							ofstream outfile;
                             outfile.open(fileAdded, ios::app);
-                            outfile << data << endl;
+                            outfile << to_utf8(StringToWString(data)) << endl;
                             outfile.close();
                         }
                         break;
@@ -141,15 +177,18 @@ __declspec(dllexport) void monitor(char* path, char* output, char* closePosition
                     
                     case FILE_ACTION_MODIFIED:
                         if (strstr(file_name, "$RECYCLE.BIN")==NULL && strstr(file_name, "fileAdded.txt") == NULL && strstr(file_name, "fileRemoved.txt") == NULL){                            
-                            //cout << "file add : " << file_name << endl; 
-                            cout << "file add : ";       
+                            #ifdef TEST    
+                            cout << "file add : ";     
+                              #endif 
                             string data;
                             data.append(path);
-                            data.append(file_name);                     
+                            data.append(file_name);   
+                            #ifdef TEST                      
                             cout << data << endl;
+                            #endif 
 							ofstream outfile;
                             outfile.open(fileAdded, ios::app);
-                            outfile << data << endl;
+                            outfile << to_utf8(StringToWString(data)) << endl;
                             outfile.close();
                         }
                         break;
@@ -157,16 +196,19 @@ __declspec(dllexport) void monitor(char* path, char* output, char* closePosition
 
                     case FILE_ACTION_REMOVED:
                         if (strstr(file_name, "$RECYCLE.BIN")==NULL){
-                            //cout << setw(5) << "file removed : " << path << setw(5) << file_name << endl;
-                            cout << "file removed : ";                      
+                            #ifdef TEST    
+                            cout << "file removed : ";   
+                            #endif                    
                             string data;
                             data.append(path);
                             data.append(file_name);
-                            cout << data << endl;   
+                            #ifdef TEST    
+                            cout << data << endl; 
+                            #endif   
 							ofstream outfile;  
 
                             outfile.open(fileRemoved, ios::app);
-                            outfile << data <<endl;
+                            outfile << to_utf8(StringToWString(data)) <<endl;
                             outfile.close();
                         
                         }
@@ -174,25 +216,29 @@ __declspec(dllexport) void monitor(char* path, char* output, char* closePosition
 
                     case FILE_ACTION_RENAMED_OLD_NAME:
                         if (strstr(file_name, "$RECYCLE.BIN")==NULL){
-                            //cout << "file renamed : " << setw(5) << path << file_name << "->" << path << file_rename << endl;  
-
-                            cout << "file renamed : ";        
+                            #ifdef TEST    
+                            cout << "file renamed : ";     
+                           #endif   
                             string data;
                             data.append(path);                    
                             data.append(file_name);
+                            #ifdef TEST    
                             cout << data << "->";
+                            #endif 
                             ofstream outfile;  
                             outfile.open(fileRemoved, ios::app);
-                            outfile << data <<endl;
+                            outfile << to_utf8(StringToWString(data)) <<endl;
                             outfile.close();
                         
                             data.clear();
                             data.append(path);
-                            data.append(file_rename);   
-                            cout << data << endl;     
+                            data.append(file_rename);  
+                            #ifdef TEST     
+                            cout << data << endl;   
+                            #endif   
 
                             outfile.open(fileAdded, ios::app);
-                            outfile << data << endl;
+                            outfile << to_utf8(StringToWString(data)) << endl;
                             outfile.close();
                                                                         
                         }

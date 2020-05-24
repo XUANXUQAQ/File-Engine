@@ -2,6 +2,7 @@ package frames;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.serializer.SerializerFeature;
 import download.DownloadUpdate;
 import hotkeyListener.CheckHotKey;
 import main.MainClass;
@@ -17,6 +18,7 @@ import java.io.*;
 import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Objects;
@@ -463,7 +465,7 @@ public class SettingsFrame {
             }
         });
         labelVersion.setText("当前版本：" + MainClass.version);
-        try (BufferedReader buffR = new BufferedReader(new FileReader(settings))) {
+        try (BufferedReader buffR = new BufferedReader(new InputStreamReader(new FileInputStream(settings), StandardCharsets.UTF_8))) {
             String line;
             StringBuilder result = new StringBuilder();
             while (null != (line = buffR.readLine())) {
@@ -965,7 +967,7 @@ public class SettingsFrame {
         uc.setConnectTimeout(3 * 1000);
         //防止屏蔽程序抓取而返回403错误
         uc.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.116 Safari/537.36 Edg/80.0.361.57");
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(uc.getInputStream()))) {
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(uc.getInputStream(), StandardCharsets.UTF_8))) {
             String eachLine;
             while ((eachLine = br.readLine()) != null) {
                 jsonUpdate.append(eachLine);
@@ -1169,14 +1171,15 @@ public class SettingsFrame {
         allSettings.put("maxConnectionNum", maxConnectionNum);
         allSettings.put("minConnectionNum", minConnectionNum);
         allSettings.put("connectionTimeLimit", connectionTimeLimit);
-        try (BufferedWriter buffW = new BufferedWriter(new FileWriter(settings))) {
-            buffW.write(allSettings.toJSONString());
+        try (BufferedWriter buffW = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(settings), StandardCharsets.UTF_8))) {
+            String format = JSON.toJSONString(allSettings, SerializerFeature.PrettyFormat, SerializerFeature.WriteMapNullValue, SerializerFeature.WriteDateUseDateFormat);
+            buffW.write(format);
         } catch (IOException ignored) {
 
         }
 
         //获取所有自定义命令
-        try (BufferedReader br = new BufferedReader(new FileReader(new File("user/cmds.txt")))) {
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream("user/cmds.txt"), StandardCharsets.UTF_8))) {
             String each;
             while ((each = br.readLine()) != null) {
                 cmdSet.add(each);
@@ -1520,7 +1523,8 @@ public class SettingsFrame {
         allSettings.put("minConnectionNum", minConnectionNum);
         allSettings.put("connectionTimeLimit", connectionTimeLimit);
         try (BufferedWriter buffW = new BufferedWriter(new FileWriter(settings))) {
-            buffW.write(allSettings.toJSONString());
+            String format = JSON.toJSONString(allSettings, SerializerFeature.PrettyFormat, SerializerFeature.WriteMapNullValue, SerializerFeature.WriteDateUseDateFormat);
+            buffW.write(format);
             JOptionPane.showMessageDialog(null, "保存成功");
         } catch (IOException ignored) {
 
@@ -1531,7 +1535,7 @@ public class SettingsFrame {
             strb.append(each);
             strb.append("\n");
         }
-        try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File("user/cmds.txt")))) {
+        try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("user/cmds.txt"), StandardCharsets.UTF_8))) {
             bw.write(strb.toString());
         } catch (IOException ignored) {
 
@@ -1586,7 +1590,7 @@ public class SettingsFrame {
         }
         boolean isSelected = checkBox1.isSelected();
         JSONObject allSettings = null;
-        try (BufferedReader buffR1 = new BufferedReader(new FileReader(settings))) {
+        try (BufferedReader buffR1 = new BufferedReader(new InputStreamReader(new FileInputStream(settings), StandardCharsets.UTF_8))) {
             String line;
             StringBuilder result = new StringBuilder();
             while (null != (line = buffR1.readLine())) {
@@ -1597,7 +1601,7 @@ public class SettingsFrame {
         } catch (IOException ignored) {
 
         }
-        try (BufferedWriter buffW = new BufferedWriter(new FileWriter(settings))) {
+        try (BufferedWriter buffW = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(settings), StandardCharsets.UTF_8))) {
             assert allSettings != null;
             buffW.write(allSettings.toJSONString());
         } catch (IOException ignored) {
