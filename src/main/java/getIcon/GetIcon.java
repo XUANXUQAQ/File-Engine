@@ -1,8 +1,8 @@
 package getIcon;
 
 import javax.swing.*;
+import javax.swing.filechooser.FileSystemView;
 import java.io.File;
-import java.io.FileNotFoundException;
 
 public class GetIcon {
 
@@ -16,11 +16,9 @@ public class GetIcon {
         File f = new File(path);
         if (f.exists()) {
             try {
-                sun.awt.shell.ShellFolder sf = sun.awt.shell.ShellFolder.getShellFolder(f);
-                return new ImageIcon(sf.getIcon(true));
-                /*FileSystemView fsv = FileSystemView.getFileSystemView();
-                return fsv.getSystemIcon(f);*/
-            } catch (NullPointerException | FileNotFoundException ignored) {
+                FileSystemView fsv = FileSystemView.getFileSystemView();
+                return fsv.getSystemIcon(f);
+            } catch (NullPointerException ignored) {
 
             }
         }

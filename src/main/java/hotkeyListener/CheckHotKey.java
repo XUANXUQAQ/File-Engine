@@ -2,7 +2,7 @@ package hotkeyListener;
 
 import DllInterface.HotkeyListener;
 import frames.SearchBar;
-import main.MainClass;
+import frames.SettingsFrame;
 
 import java.awt.event.KeyEvent;
 import java.util.HashMap;
@@ -84,7 +84,7 @@ public class CheckHotKey {
             SearchBar searchBar = SearchBar.getInstance();
             HotkeyListener instance = HotkeyListener.INSTANCE;
             try {
-                while (!MainClass.mainExit) {
+                while (!SettingsFrame.mainExit) {
                     if (!isExecuted && instance.getKeyStatus()) {
                         isExecuted = true;
                         if (!searchBar.isVisible()) {

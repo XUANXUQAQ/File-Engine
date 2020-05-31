@@ -6,10 +6,8 @@ import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.serializer.SerializerFeature;
 import download.DownloadUpdate;
 import hotkeyListener.CheckHotKey;
-import main.MainClass;
 import moveFiles.moveFiles;
 import search.Search;
-import unzipFile.Unzip;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileSystemView;
@@ -22,12 +20,15 @@ import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Objects;
+import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 
 public class SettingsFrame {
+    public static final String version = "2.0"; //TODO 更改版本号
+    public static volatile boolean mainExit = false;
+    public static String name;
     private static int cacheNumLimit;
     private static String hotkey;
     private static int updateTimeLimit;
@@ -49,10 +50,7 @@ public class SettingsFrame {
     private static int _runAsAdminKeyCode;
     private static CheckHotKey HotKeyListener;
     private static int labelColor;
-    private static int backgroundColor1;
-    private static int backgroundColor2;
-    private static int backgroundColor3;
-    private static int backgroundColor4;
+    private static int defaultBackgroundColor;
     private static int fontColorWithCoverage;
     private static int fontColor;
     private static int searchBarColor;
@@ -79,8 +77,6 @@ public class SettingsFrame {
     private JScrollPane scrollpane;
     private JLabel labelplaceholder2;
     private JTextField textFieldHotkey;
-    private JButton ButtonCloseAdmin;
-    private JButton ButtonRecoverAdmin;
     private JLabel labeltip2;
     private JLabel labeltip3;
     private JTextField textFieldDataPath;
@@ -132,17 +128,14 @@ public class SettingsFrame {
     private JLabel labelPlaceHolder5;
     private JPanel tab7;
     private JLabel labelColorTip;
-    private JTextField textFieldBackground1;
-    private JTextField textFieldBackground2;
+    private JTextField textFieldBackgroundDefault;
     private JTextField textFieldFontColorWithCoverage;
     private JTextField textFieldLabelColor;
     private JLabel labelLabelColor;
     private JLabel labelFontColor;
-    private JLabel label_2_Color;
-    private JLabel label_1_Color;
+    private JLabel label_default_Color;
     private JLabel labelSharp1;
     private JLabel labelSharp2;
-    private JLabel labelSharp3;
     private JLabel labelSharp4;
     private JButton buttonResetColor;
     private JTextField textFieldFontColor;
@@ -150,17 +143,8 @@ public class SettingsFrame {
     private JLabel labelFontColors;
     private JLabel labelColorChooser;
     private JLabel FontColorWithCoverageChooser;
-    private JLabel background2Chooser;
-    private JLabel background1Chooser;
+    private JLabel defaultBackgroundChooser;
     private JLabel FontColorChooser;
-    private JLabel label_3_Color;
-    private JLabel labelSharp6;
-    private JTextField textFieldBackground3;
-    private JLabel label_4_Color;
-    private JLabel labelSharp7;
-    private JTextField textFieldBackground4;
-    private JLabel background3Chooser;
-    private JLabel background4Chooser;
     private JLabel labelSearchBarColor;
     private JLabel labelSharp8;
     private JTextField textFieldSearchBarColor;
@@ -187,7 +171,6 @@ public class SettingsFrame {
     private JLabel labelFastJson;
     private JLabel labelJna;
     private static boolean isStartup;
-    private Unzip unzipInstance = Unzip.getInstance();
     private Thread updateThread = null;
 
 
@@ -259,20 +242,8 @@ public class SettingsFrame {
         return labelColor;
     }
 
-    public static int getBackgroundColor1() {
-        return backgroundColor1;
-    }
-
-    public static int getBackgroundColor2() {
-        return backgroundColor2;
-    }
-
-    public static int getBackgroundColor3() {
-        return backgroundColor3;
-    }
-
-    public static int getBackgroundColor4() {
-        return backgroundColor4;
+    public static int getDefaultBackgroundColor() {
+        return defaultBackgroundColor;
     }
 
     public static int getFontColorWithCoverage() {
@@ -393,49 +364,6 @@ public class SettingsFrame {
                 reset = true;
             }
         });
-        ButtonCloseAdmin.addActionListener(e -> {
-            if (MainClass.isAdmin()) {
-                JOptionPane.showMessageDialog(null, "请将弹出窗口的最后一栏改为当前文件夹，\n修改成功后请重新设置开机启动，\n下次启动时请使用带(elevated)的快捷方式。");
-                InputStream UAC = getClass().getResourceAsStream("/UACTrustShortCut.zip");
-                File target = new File(tmp.getAbsolutePath() + "/UACTrustShortCut.zip");
-                if (!target.exists()) {
-                    copyFile(UAC, target);
-                }
-                File mainUAC = new File(tmp.getAbsolutePath() + "/UACTrustShortCut/ElevatedShortcut.exe");
-                if (!mainUAC.exists()) {
-                    unzipInstance.unZipFiles(target, tmp.getAbsolutePath());
-                }
-                File mainFile = new File(MainClass.name);
-                try {
-                    Runtime.getRuntime().exec("\"" + mainUAC.getAbsolutePath() + "\"" + " \"" + mainFile.getAbsolutePath() + "\"");
-                } catch (IOException ignored) {
-
-                }
-            } else {
-                JOptionPane.showMessageDialog(null, "请以管理员身份运行");
-            }
-        });
-        ButtonRecoverAdmin.addActionListener(e -> {
-            if (MainClass.isAdmin()) {
-                JOptionPane.showMessageDialog(null, "点击最后一个Remove shortcut即可选择删除快捷方式，\n修改成功后请重新设置开机启动。");
-                InputStream UAC = getClass().getResourceAsStream("/UACTrustShortCut.zip");
-                File target = new File(tmp.getAbsolutePath() + "/UACTrustShortCut.zip");
-                if (!target.exists()) {
-                    copyFile(UAC, target);
-                }
-                File mainUAC = new File(tmp.getAbsolutePath() + "/UACTrustShortCut/ElevatedShortcut.exe");
-                if (!mainUAC.exists()) {
-                    unzipInstance.unZipFiles(target, tmp.getAbsolutePath());
-                }
-                try {
-                    Runtime.getRuntime().exec("\"" + mainUAC.getAbsolutePath() + "\"");
-                } catch (IOException ignored) {
-
-                }
-            } else {
-                JOptionPane.showMessageDialog(null, "请以管理员身份运行");
-            }
-        });
         ButtonDataPath.addActionListener(e -> {
             JFileChooser fileChooser = new JFileChooser();
             fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
@@ -465,7 +393,7 @@ public class SettingsFrame {
 
             }
         });
-        labelVersion.setText("当前版本：" + MainClass.version);
+        labelVersion.setText("当前版本：" + version);
         try (BufferedReader buffR = new BufferedReader(new InputStreamReader(new FileInputStream(settings), StandardCharsets.UTF_8))) {
             String line;
             StringBuilder result = new StringBuilder();
@@ -502,25 +430,10 @@ public class SettingsFrame {
             searchBarColorChooser.setBackground(_searchBarColor);
             searchBarColorChooser.setForeground(_searchBarColor);
 
-            textFieldBackground1.setText(Integer.toHexString(backgroundColor1));
-            Color _backgroundColor1 = new Color(backgroundColor1);
-            background1Chooser.setBackground(_backgroundColor1);
-            background1Chooser.setForeground(_backgroundColor1);
-
-            textFieldBackground2.setText(Integer.toHexString(backgroundColor2));
-            Color _backgroundColor2 = new Color(backgroundColor2);
-            background2Chooser.setBackground(_backgroundColor2);
-            background2Chooser.setForeground(_backgroundColor2);
-
-            textFieldBackground3.setText(Integer.toHexString(backgroundColor3));
-            Color _backgroundColor3 = new Color(backgroundColor3);
-            background3Chooser.setBackground(_backgroundColor3);
-            background3Chooser.setForeground(_backgroundColor3);
-
-            textFieldBackground4.setText(Integer.toHexString(backgroundColor4));
-            Color _backgroundColor4 = new Color(backgroundColor4);
-            background4Chooser.setBackground(_backgroundColor4);
-            background4Chooser.setForeground(_backgroundColor4);
+            textFieldBackgroundDefault.setText(Integer.toHexString(defaultBackgroundColor));
+            Color _defaultBackgroundColor = new Color(defaultBackgroundColor);
+            defaultBackgroundChooser.setBackground(_defaultBackgroundColor);
+            defaultBackgroundChooser.setForeground(_defaultBackgroundColor);
 
             textFieldLabelColor.setText(Integer.toHexString(labelColor));
             Color _labelColor = new Color(labelColor);
@@ -678,10 +591,7 @@ public class SettingsFrame {
             textFieldFontColorWithCoverage.setText(Integer.toHexString(0x1C0EFF));
             textFieldSearchBarColor.setText(Integer.toHexString(0xffffff));
             textFieldLabelColor.setText(Integer.toHexString(0xFF9868));
-            textFieldBackground1.setText(Integer.toHexString(0xffffff));
-            textFieldBackground2.setText(Integer.toHexString(0xffffff));
-            textFieldBackground3.setText(Integer.toHexString(0xffffff));
-            textFieldBackground4.setText(Integer.toHexString(0xffffff));
+            textFieldBackgroundDefault.setText(Integer.toHexString(0xffffff));
             textFieldFontColor.setText(Integer.toHexString(0x333333));
         });
 
@@ -748,7 +658,7 @@ public class SettingsFrame {
                 FontColorWithCoverageChooser.setForeground(color);
             }
         });
-        background2Chooser.addMouseListener(new MouseAdapter() {
+        defaultBackgroundChooser.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
                 Color color = JColorChooser.showDialog(null, "选择颜色", null);
@@ -774,40 +684,9 @@ public class SettingsFrame {
                 } else {
                     rgb.append(Integer.toHexString(b));
                 }
-                textFieldBackground2.setText(rgb.toString());
-                background2Chooser.setBackground(color);
-                background2Chooser.setForeground(color);
-            }
-        });
-        background1Chooser.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                Color color = JColorChooser.showDialog(null, "选择颜色", null);
-                if (color == null) {
-                    return;
-                }
-                int r = color.getRed();
-                int g = color.getGreen();
-                int b = color.getBlue();
-                StringBuilder rgb = new StringBuilder();
-                if (r == 0) {
-                    rgb.append("00");
-                } else {
-                    rgb.append(Integer.toHexString(r));
-                }
-                if (g == 0) {
-                    rgb.append("00");
-                } else {
-                    rgb.append(Integer.toHexString(g));
-                }
-                if (b == 0) {
-                    rgb.append("00");
-                } else {
-                    rgb.append(Integer.toHexString(b));
-                }
-                textFieldBackground1.setText(rgb.toString());
-                background1Chooser.setBackground(color);
-                background1Chooser.setForeground(color);
+                textFieldBackgroundDefault.setText(rgb.toString());
+                defaultBackgroundChooser.setBackground(color);
+                defaultBackgroundChooser.setForeground(color);
             }
         });
         FontColorChooser.addMouseListener(new MouseAdapter() {
@@ -842,68 +721,6 @@ public class SettingsFrame {
             }
         });
 
-        background3Chooser.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                Color color = JColorChooser.showDialog(null, "选择颜色", null);
-                if (color == null) {
-                    return;
-                }
-                int r = color.getRed();
-                int g = color.getGreen();
-                int b = color.getBlue();
-                StringBuilder rgb = new StringBuilder();
-                if (r == 0) {
-                    rgb.append("00");
-                } else {
-                    rgb.append(Integer.toHexString(r));
-                }
-                if (g == 0) {
-                    rgb.append("00");
-                } else {
-                    rgb.append(Integer.toHexString(g));
-                }
-                if (b == 0) {
-                    rgb.append("00");
-                } else {
-                    rgb.append(Integer.toHexString(b));
-                }
-                textFieldBackground3.setText(rgb.toString());
-                background3Chooser.setBackground(color);
-                background3Chooser.setForeground(color);
-            }
-        });
-        background4Chooser.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                Color color = JColorChooser.showDialog(null, "选择颜色", null);
-                if (color == null) {
-                    return;
-                }
-                int r = color.getRed();
-                int g = color.getGreen();
-                int b = color.getBlue();
-                StringBuilder rgb = new StringBuilder();
-                if (r == 0) {
-                    rgb.append("00");
-                } else {
-                    rgb.append(Integer.toHexString(r));
-                }
-                if (g == 0) {
-                    rgb.append("00");
-                } else {
-                    rgb.append(Integer.toHexString(g));
-                }
-                if (b == 0) {
-                    rgb.append("00");
-                } else {
-                    rgb.append(Integer.toHexString(b));
-                }
-                textFieldBackground4.setText(rgb.toString());
-                background4Chooser.setBackground(color);
-                background4Chooser.setForeground(color);
-            }
-        });
         searchBarColorChooser.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -939,7 +756,7 @@ public class SettingsFrame {
         ExecutorService fixedThreadPool = Executors.newFixedThreadPool(1);
         fixedThreadPool.execute(() -> {
             try {
-                while (!MainClass.mainExit) {
+                while (!mainExit) {
                     Thread.sleep(50);
                     currentConnection.setText(String.valueOf(SearchBar.getInstance().currentConnectionNum()));
                 }
@@ -949,6 +766,36 @@ public class SettingsFrame {
         });
 
         buttonClearConnection.addActionListener(e -> SearchBar.getInstance().closeAllConnection());
+    }
+
+    public static void setMainExit(boolean b) {
+        mainExit = b;
+    }
+
+    public static boolean isAdmin() {
+        try {
+            ProcessBuilder processBuilder = new ProcessBuilder("cmd.exe");
+            Process process = processBuilder.start();
+            PrintStream printStream = new PrintStream(process.getOutputStream(), true);
+            Scanner scanner = new Scanner(process.getInputStream());
+            printStream.println("@echo off");
+            printStream.println(">nul 2>&1 \"%SYSTEMROOT%\\system32\\cacls.exe\" \"%SYSTEMROOT%\\system32\\config\\system\"");
+            printStream.println("echo %errorlevel%");
+
+            boolean printedErrorlevel = false;
+            while (true) {
+                String nextLine = scanner.nextLine();
+                if (printedErrorlevel) {
+                    int errorlevel = Integer.parseInt(nextLine);
+                    scanner.close();
+                    return errorlevel == 0;
+                } else if (nextLine.equals("echo %errorlevel%")) {
+                    printedErrorlevel = true;
+                }
+            }
+        } catch (IOException e) {
+            return false;
+        }
     }
 
     private boolean isRepeatCommand(String name) {
@@ -1012,7 +859,7 @@ public class SettingsFrame {
                 dataPath = settings.getString("dataPath");
                 File data = new File(dataPath);
                 if (!data.exists()) {
-                    MainClass.showMessage("提示", "检测到缓存不存在，正在重新搜索");
+                    TaskBar.getInstance().showMessage("提示", "检测到缓存不存在，正在重新搜索");
                     data = new File("data");
                     dataPath = data.getAbsolutePath();
                     Search.getInstance().setManualUpdate(true);
@@ -1078,25 +925,10 @@ public class SettingsFrame {
             } else {
                 searchBarColor = 0xfffff;
             }
-            if (settings.containsKey("backgroundColor1")) {
-                backgroundColor1 = settings.getInteger("backgroundColor1");
+            if (settings.containsKey("defaultBackground")) {
+                defaultBackgroundColor = settings.getInteger("defaultBackground");
             } else {
-                backgroundColor1 = 0xffffff;
-            }
-            if (settings.containsKey("backgroundColor2")) {
-                backgroundColor2 = settings.getInteger("backgroundColor2");
-            } else {
-                backgroundColor2 = 0xffffff;
-            }
-            if (settings.containsKey("backgroundColor3")) {
-                backgroundColor3 = settings.getInteger("backgroundColor3");
-            } else {
-                backgroundColor3 = 0xffffff;
-            }
-            if (settings.containsKey("backgroundColor4")) {
-                backgroundColor4 = settings.getInteger("backgroundColor4");
-            } else {
-                backgroundColor4 = 0xffffff;
+                defaultBackgroundColor = 0xffffff;
             }
             if (settings.containsKey("fontColorWithCoverage")) {
                 fontColorWithCoverage = settings.getInteger("fontColorWithCoverage");
@@ -1134,10 +966,7 @@ public class SettingsFrame {
 
         SearchBar instance = SearchBar.getInstance();
         instance.setTransparency(transparency);
-        instance.setBackgroundColor1(backgroundColor1);
-        instance.setBackgroundColor2(backgroundColor2);
-        instance.setBackgroundColor3(backgroundColor3);
-        instance.setBackgroundColor4(backgroundColor4);
+        instance.setDefaultBackgroundColor(defaultBackgroundColor);
         instance.setLabelColor(labelColor);
         instance.setFontColorWithCoverage(fontColorWithCoverage);
         instance.setFontColor(fontColor);
@@ -1160,10 +989,7 @@ public class SettingsFrame {
         allSettings.put("copyPathKeyCode", copyPathKeyCode);
         allSettings.put("transparency", transparency);
         allSettings.put("labelColor", labelColor);
-        allSettings.put("backgroundColor1", backgroundColor1);
-        allSettings.put("backgroundColor2", backgroundColor2);
-        allSettings.put("backgroundColor3", backgroundColor3);
-        allSettings.put("backgroundColor4", backgroundColor4);
+        allSettings.put("defaultBackground", defaultBackgroundColor);
         allSettings.put("searchBarColor", searchBarColor);
         allSettings.put("fontColorWithCoverage", fontColorWithCoverage);
         allSettings.put("fontColor", fontColor);
@@ -1199,14 +1025,14 @@ public class SettingsFrame {
             return;
         }
         File test = new File("TEST");
-        if (Double.parseDouble(latestVersion) > Double.parseDouble(MainClass.version) || test.exists()) {
+        if (Double.parseDouble(latestVersion) > Double.parseDouble(version) || test.exists()) {
             String description = updateInfo.getString("description");
             int result = JOptionPane.showConfirmDialog(null, "有新版本" + latestVersion + "，是否更新\n更新内容：\n" + description);
             if (result == 0) {
                 //开始更新,下载更新文件到tmp
                 String urlChoose;
                 String fileName;
-                if (MainClass.name.contains("x64")) {
+                if (name.contains("x64")) {
                     urlChoose = "url64";
                     fileName = "File-Engine-x64.exe";
                 } else {
@@ -1223,7 +1049,7 @@ public class SettingsFrame {
                     download.hideFrame();
                     return;
                 }
-                MainClass.showMessage("提示", "下载完成，更新将在下次启动时开始");
+                TaskBar.getInstance().showMessage("提示", "下载完成，更新将在下次启动时开始");
                 try {
                     File updateSignal = new File("user/update");
                     updateSignal.createNewFile();
@@ -1349,44 +1175,14 @@ public class SettingsFrame {
             JOptionPane.showMessageDialog(null, "选中框字体颜色设置错误");
             return;
         }
-        int _backgroundColor1;
+        int _defaultBackgroundColor;
         try {
-            _backgroundColor1 = Integer.parseInt(textFieldBackground1.getText(), 16);
+            _defaultBackgroundColor = Integer.parseInt(textFieldBackgroundDefault.getText(), 16);
         } catch (Exception e) {
-            _backgroundColor1 = -1;
+            _defaultBackgroundColor = -1;
         }
-        if (_backgroundColor1 < 0) {
+        if (_defaultBackgroundColor < 0) {
             JOptionPane.showMessageDialog(null, "1框默认颜色设置错误");
-            return;
-        }
-        int _backgroundColor2;
-        try {
-            _backgroundColor2 = Integer.parseInt(textFieldBackground2.getText(), 16);
-        } catch (Exception e) {
-            _backgroundColor2 = -1;
-        }
-        if (_backgroundColor2 < 0) {
-            JOptionPane.showMessageDialog(null, "2框默认颜色设置错误");
-            return;
-        }
-        int _backgroundColor3;
-        try {
-            _backgroundColor3 = Integer.parseInt(textFieldBackground3.getText(), 16);
-        } catch (Exception e) {
-            _backgroundColor3 = -1;
-        }
-        if (_backgroundColor3 < 0) {
-            JOptionPane.showMessageDialog(null, "3框默认颜色设置错误");
-            return;
-        }
-        int _backgroundColor4;
-        try {
-            _backgroundColor4 = Integer.parseInt(textFieldBackground4.getText(), 16);
-        } catch (Exception e) {
-            _backgroundColor4 = -1;
-        }
-        if (_backgroundColor4 < 0) {
-            JOptionPane.showMessageDialog(null, "4框默认颜色设置错误");
             return;
         }
         int _fontColor;
@@ -1454,19 +1250,13 @@ public class SettingsFrame {
         searchDepth = searchDepthTemp;
         transparency = transparencyTemp;
         labelColor = _labelColor;
-        backgroundColor2 = _backgroundColor2;
-        backgroundColor1 = _backgroundColor1;
-        backgroundColor3 = _backgroundColor3;
-        backgroundColor4 = _backgroundColor4;
+        defaultBackgroundColor = _defaultBackgroundColor;
         searchBarColor = _searchBarColor;
         fontColorWithCoverage = _fontColorWithCoverage;
         fontColor = _fontColor;
         SearchBar instance = SearchBar.getInstance();
         instance.setTransparency(transparency);
-        instance.setBackgroundColor1(backgroundColor1);
-        instance.setBackgroundColor2(backgroundColor2);
-        instance.setBackgroundColor3(backgroundColor3);
-        instance.setBackgroundColor4(backgroundColor4);
+        instance.setDefaultBackgroundColor(defaultBackgroundColor);
         instance.setLabelColor(labelColor);
         instance.setFontColorWithCoverage(fontColorWithCoverage);
         instance.setFontColor(fontColor);
@@ -1474,18 +1264,9 @@ public class SettingsFrame {
         Color _tmp = new Color(labelColor);
         labelColorChooser.setBackground(_tmp);
         labelColorChooser.setForeground(_tmp);
-        _tmp = new Color(backgroundColor1);
-        background1Chooser.setBackground(_tmp);
-        background1Chooser.setForeground(_tmp);
-        _tmp = new Color(backgroundColor2);
-        background2Chooser.setForeground(_tmp);
-        background2Chooser.setBackground(_tmp);
-        _tmp = new Color(backgroundColor3);
-        background3Chooser.setForeground(_tmp);
-        background3Chooser.setBackground(_tmp);
-        _tmp = new Color(backgroundColor4);
-        background4Chooser.setForeground(_tmp);
-        background4Chooser.setBackground(_tmp);
+        _tmp = new Color(defaultBackgroundColor);
+        defaultBackgroundChooser.setBackground(_tmp);
+        defaultBackgroundChooser.setForeground(_tmp);
         _tmp = new Color(fontColorWithCoverage);
         FontColorWithCoverageChooser.setBackground(_tmp);
         FontColorWithCoverageChooser.setForeground(_tmp);
@@ -1512,10 +1293,7 @@ public class SettingsFrame {
         allSettings.put("copyPathKeyCode", copyPathKeyCode);
         allSettings.put("transparency", transparency);
         allSettings.put("labelColor", labelColor);
-        allSettings.put("backgroundColor1", backgroundColor1);
-        allSettings.put("backgroundColor2", backgroundColor2);
-        allSettings.put("backgroundColor3", backgroundColor3);
-        allSettings.put("backgroundColor4", backgroundColor4);
+        allSettings.put("defaultBackground", defaultBackgroundColor);
         allSettings.put("searchBarColor", searchBarColor);
         allSettings.put("fontColorWithCoverage", fontColorWithCoverage);
         allSettings.put("fontColor", fontColor);
@@ -1543,19 +1321,19 @@ public class SettingsFrame {
     }
 
     private void setStartup(boolean b) {
-        Process p;
-        File FileEngine = new File(MainClass.name);
+        try {
+            Runtime.getRuntime().exec("reg delete \"HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run\" /v FileEngine /f");
+        } catch (IOException ignored) {
+
+        }
         if (b) {
+            String command = "cmd.exe /c schtasks /create /ru \"administrators\" /rl HIGHEST /sc ONLOGON /tn \"File-Engine\" /tr ";
+            File FileEngine = new File(name);
+            String absolutePath = "\"\"" + FileEngine.getAbsolutePath() + "\"\" /f";
+            command += absolutePath;
+            Process p;
             try {
-                String currentPath = System.getProperty("user.dir");
-                File file = new File(currentPath);
-                for (File each : Objects.requireNonNull(file.listFiles())) {
-                    if (each.getName().contains("elevated")) {
-                        FileEngine = each;
-                        break;
-                    }
-                }
-                p = Runtime.getRuntime().exec("reg add \"HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run\" /v FileEngine /t REG_SZ /d " + "\"" + FileEngine.getAbsolutePath() + "\"" + " /f");
+                p = Runtime.getRuntime().exec(command);
                 p.waitFor();
                 BufferedReader outPut = new BufferedReader(new InputStreamReader(p.getErrorStream()));
                 String line;
@@ -1563,16 +1341,19 @@ public class SettingsFrame {
                 while ((line = outPut.readLine()) != null) {
                     result.append(line);
                 }
+                outPut.close();
                 if (!result.toString().isEmpty()) {
                     checkBox1.setSelected(false);
                     JOptionPane.showMessageDialog(null, "添加到开机启动失败，请尝试以管理员身份运行");
                 }
-            } catch (IOException | InterruptedException ignored) {
-
+            } catch (IOException | InterruptedException e) {
+                e.printStackTrace();
             }
         } else {
+            String command = "cmd.exe /c schtasks /delete /tn \"File-Engine\" /f";
+            Process p;
             try {
-                p = Runtime.getRuntime().exec("reg delete \"HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run\" /v FileEngine /f");
+                p = Runtime.getRuntime().exec(command);
                 p.waitFor();
                 BufferedReader outPut = new BufferedReader(new InputStreamReader(p.getErrorStream()));
                 String line;
@@ -1580,6 +1361,7 @@ public class SettingsFrame {
                 while ((line = outPut.readLine()) != null) {
                     result.append(line);
                 }
+                outPut.close();
                 if (!result.toString().isEmpty()) {
                     checkBox1.setSelected(true);
                     JOptionPane.showMessageDialog(null, "删除开机启动失败，请尝试以管理员身份运行");
@@ -1588,6 +1370,7 @@ public class SettingsFrame {
 
             }
         }
+
         boolean isSelected = checkBox1.isSelected();
         JSONObject allSettings = null;
         try (BufferedReader buffR1 = new BufferedReader(new InputStreamReader(new FileInputStream(settings), StandardCharsets.UTF_8))) {
@@ -1601,9 +1384,10 @@ public class SettingsFrame {
         } catch (IOException ignored) {
 
         }
+        //保存设置
         try (BufferedWriter buffW = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(settings), StandardCharsets.UTF_8))) {
-            assert allSettings != null;
-            buffW.write(allSettings.toJSONString());
+            String format = JSON.toJSONString(allSettings, SerializerFeature.PrettyFormat, SerializerFeature.WriteMapNullValue, SerializerFeature.WriteDateUseDateFormat);
+            buffW.write(format);
         } catch (IOException ignored) {
 
         }

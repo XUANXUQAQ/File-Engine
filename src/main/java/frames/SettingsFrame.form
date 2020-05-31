@@ -239,10 +239,10 @@
               </component>
             </children>
           </grid>
-          <grid id="dcaba" binding="tab3" layout-manager="GridLayoutManager" row-count="8" column-count="5" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+          <grid id="dcaba" binding="tab3" layout-manager="GridLayoutManager" row-count="7" column-count="5" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
             <margin top="0" left="0" bottom="0" right="0"/>
             <constraints>
-              <tabbedpane title="搜索窗口与权限设置"/>
+              <tabbedpane title="搜索窗口设置"/>
             </constraints>
             <properties>
               <opaque value="false"/>
@@ -251,17 +251,17 @@
             <children>
               <hspacer id="ccbbe">
                 <constraints>
-                  <grid row="2" column="4" row-span="5" col-span="1" vsize-policy="1" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                  <grid row="2" column="4" row-span="4" col-span="1" vsize-policy="1" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
                 </constraints>
               </hspacer>
               <hspacer id="9a23c">
                 <constraints>
-                  <grid row="7" column="4" row-span="1" col-span="1" vsize-policy="1" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                  <grid row="6" column="4" row-span="1" col-span="1" vsize-policy="1" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
                 </constraints>
               </hspacer>
               <component id="c39c" class="javax.swing.JLabel" binding="labelPlaceHoder6">
                 <constraints>
-                  <grid row="4" column="1" row-span="3" col-span="2" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                  <grid row="3" column="1" row-span="3" col-span="2" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
                   <text value=""/>
@@ -269,7 +269,7 @@
               </component>
               <component id="386a3" class="javax.swing.JLabel" binding="labelPlaceHolder7">
                 <constraints>
-                  <grid row="6" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                  <grid row="5" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
                   <text value=""/>
@@ -277,7 +277,7 @@
               </component>
               <component id="8d72b" class="javax.swing.JLabel" binding="labelPlaceHolder8">
                 <constraints>
-                  <grid row="5" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                  <grid row="4" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
                   <text value=""/>
@@ -309,22 +309,6 @@
                 </constraints>
                 <properties>
                   <opaque value="false"/>
-                </properties>
-              </component>
-              <component id="9578" class="javax.swing.JButton" binding="ButtonRecoverAdmin">
-                <constraints>
-                  <grid row="3" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
-                </constraints>
-                <properties>
-                  <text value="取消关闭管理员权限弹窗"/>
-                </properties>
-              </component>
-              <component id="cbaa1" class="javax.swing.JButton" binding="ButtonCloseAdmin">
-                <constraints>
-                  <grid row="4" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
-                </constraints>
-                <properties>
-                  <text value="关闭管理员权限弹窗"/>
                 </properties>
               </component>
               <component id="2062a" class="javax.swing.JLabel" binding="labelTransparency">
@@ -639,7 +623,7 @@
               </component>
             </children>
           </grid>
-          <grid id="d679f" binding="tab7" layout-manager="GridLayoutManager" row-count="10" column-count="6" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+          <grid id="d679f" binding="tab7" layout-manager="GridLayoutManager" row-count="7" column-count="6" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
             <margin top="0" left="0" bottom="0" right="0"/>
             <constraints>
               <tabbedpane title="颜色设置"/>
@@ -655,16 +639,6 @@
                 </constraints>
                 <properties>
                   <text value="请输入RGB颜色的16进制数值"/>
-                </properties>
-              </component>
-              <component id="8c837" class="javax.swing.JTextField" binding="textFieldBackground2">
-                <constraints>
-                  <grid row="5" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
-                    <preferred-size width="150" height="-1"/>
-                  </grid>
-                </constraints>
-                <properties>
-                  <opaque value="false"/>
                 </properties>
               </component>
               <component id="879aa" class="javax.swing.JTextField" binding="textFieldFontColorWithCoverage">
@@ -708,14 +682,6 @@
                   <text value="选中框内字体颜色："/>
                 </properties>
               </component>
-              <component id="709d9" class="javax.swing.JLabel" binding="label_2_Color">
-                <constraints>
-                  <grid row="5" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
-                </constraints>
-                <properties>
-                  <text value="2框未选中颜色："/>
-                </properties>
-              </component>
               <component id="ba7bc" class="javax.swing.JLabel" binding="labelSharp1">
                 <constraints>
                   <grid row="2" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="4" fill="0" indent="0" use-parent-layout="false"/>
@@ -734,17 +700,9 @@
                   <text value="#"/>
                 </properties>
               </component>
-              <component id="c899d" class="javax.swing.JLabel" binding="labelSharp3">
-                <constraints>
-                  <grid row="5" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="4" fill="0" indent="0" use-parent-layout="false"/>
-                </constraints>
-                <properties>
-                  <text value="#"/>
-                </properties>
-              </component>
               <component id="85c72" class="javax.swing.JButton" binding="buttonResetColor">
                 <constraints>
-                  <grid row="9" column="4" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                  <grid row="6" column="4" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
                   <text value="恢复为默认"/>
@@ -752,12 +710,12 @@
               </component>
               <hspacer id="9adec">
                 <constraints>
-                  <grid row="9" column="5" row-span="1" col-span="1" vsize-policy="1" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                  <grid row="6" column="5" row-span="1" col-span="1" vsize-policy="1" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
                 </constraints>
               </hspacer>
               <component id="47b1e" class="javax.swing.JLabel" binding="labelFontColors">
                 <constraints>
-                  <grid row="8" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                  <grid row="5" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
                   <text value="未选中框内字体颜色："/>
@@ -765,7 +723,7 @@
               </component>
               <component id="e5e4e" class="javax.swing.JTextField" binding="textFieldFontColor">
                 <constraints>
-                  <grid row="8" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
+                  <grid row="5" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
                     <preferred-size width="150" height="-1"/>
                   </grid>
                 </constraints>
@@ -775,7 +733,7 @@
               </component>
               <component id="5d2c9" class="javax.swing.JLabel" binding="labelSharp5">
                 <constraints>
-                  <grid row="8" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="4" fill="0" indent="0" use-parent-layout="false"/>
+                  <grid row="5" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="4" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
                   <text value="#"/>
@@ -799,33 +757,24 @@
                   <text value="预览"/>
                 </properties>
               </component>
-              <component id="41b4" class="javax.swing.JLabel" binding="background2Chooser">
-                <constraints>
-                  <grid row="5" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
-                </constraints>
-                <properties>
-                  <opaque value="true"/>
-                  <text value="预览"/>
-                </properties>
-              </component>
               <component id="fc70b" class="javax.swing.JLabel" binding="FontColorChooser">
                 <constraints>
-                  <grid row="8" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                  <grid row="5" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
                   <opaque value="true"/>
                   <text value="预览"/>
                 </properties>
               </component>
-              <component id="12259" class="javax.swing.JLabel" binding="label_1_Color">
+              <component id="12259" class="javax.swing.JLabel" binding="label_default_Color">
                 <constraints>
                   <grid row="4" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
-                  <text value="1框未选中颜色："/>
+                  <text value="默认背景颜色："/>
                 </properties>
               </component>
-              <component id="a6d89" class="javax.swing.JTextField" binding="textFieldBackground1">
+              <component id="a6d89" class="javax.swing.JTextField" binding="textFieldBackgroundDefault">
                 <constraints>
                   <grid row="4" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
                     <preferred-size width="150" height="-1"/>
@@ -843,79 +792,9 @@
                   <text value="#"/>
                 </properties>
               </component>
-              <component id="99b7a" class="javax.swing.JLabel" binding="background1Chooser">
+              <component id="99b7a" class="javax.swing.JLabel" binding="defaultBackgroundChooser">
                 <constraints>
                   <grid row="4" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
-                </constraints>
-                <properties>
-                  <opaque value="true"/>
-                  <text value="预览"/>
-                </properties>
-              </component>
-              <component id="a323d" class="javax.swing.JLabel" binding="label_3_Color">
-                <constraints>
-                  <grid row="6" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
-                </constraints>
-                <properties>
-                  <text value="3框未选中颜色："/>
-                </properties>
-              </component>
-              <component id="a911b" class="javax.swing.JLabel" binding="labelSharp6">
-                <constraints>
-                  <grid row="6" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="4" fill="0" indent="0" use-parent-layout="false"/>
-                </constraints>
-                <properties>
-                  <text value="#"/>
-                </properties>
-              </component>
-              <component id="19a5c" class="javax.swing.JTextField" binding="textFieldBackground3">
-                <constraints>
-                  <grid row="6" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
-                    <preferred-size width="150" height="-1"/>
-                  </grid>
-                </constraints>
-                <properties>
-                  <opaque value="false"/>
-                </properties>
-              </component>
-              <component id="ed491" class="javax.swing.JLabel" binding="background3Chooser">
-                <constraints>
-                  <grid row="6" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
-                </constraints>
-                <properties>
-                  <opaque value="true"/>
-                  <text value="预览"/>
-                </properties>
-              </component>
-              <component id="416a8" class="javax.swing.JLabel" binding="label_4_Color">
-                <constraints>
-                  <grid row="7" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
-                </constraints>
-                <properties>
-                  <text value="4框未选中颜色："/>
-                </properties>
-              </component>
-              <component id="9d8a9" class="javax.swing.JLabel" binding="labelSharp7">
-                <constraints>
-                  <grid row="7" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="4" fill="0" indent="0" use-parent-layout="false"/>
-                </constraints>
-                <properties>
-                  <text value="#"/>
-                </properties>
-              </component>
-              <component id="47167" class="javax.swing.JTextField" binding="textFieldBackground4">
-                <constraints>
-                  <grid row="7" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
-                    <preferred-size width="150" height="-1"/>
-                  </grid>
-                </constraints>
-                <properties>
-                  <opaque value="false"/>
-                </properties>
-              </component>
-              <component id="299d5" class="javax.swing.JLabel" binding="background4Chooser">
-                <constraints>
-                  <grid row="7" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
                   <opaque value="true"/>
