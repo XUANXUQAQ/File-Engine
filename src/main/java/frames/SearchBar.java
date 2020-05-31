@@ -261,6 +261,10 @@ public class SearchBar {
         });
     }
 
+    private String getTextFieldText() {
+        return textField.getText();
+    }
+
     private void addTextFieldKeyListener() {
         textField.addKeyListener(new KeyListener() {
             int timeLimit = 50;
@@ -271,7 +275,7 @@ public class SearchBar {
             public void keyPressed(KeyEvent arg0) {
 
                 int key = arg0.getKeyCode();
-                if (key == 8 && textField.getText().isEmpty()) {
+                if (key == 8 && getTextFieldText().isEmpty()) {
                     arg0.consume();
                 }
                 if (!listResults.isEmpty()) {
@@ -288,7 +292,7 @@ public class SearchBar {
                             } catch (NullPointerException ignored) {
 
                             }
-                            if (!textField.getText().isEmpty()) {
+                            if (!getTextFieldText().isEmpty()) {
                                 labelCount.decrementAndGet();
                                 if (labelCount.get() < 0) {
                                     labelCount.set(0);
@@ -836,7 +840,7 @@ public class SearchBar {
                             }
                             boolean isNextLabelValid = isNextLabelValid();
                             if (isNextLabelValid) {
-                                if (!textField.getText().isEmpty()) {
+                                if (!getTextFieldText().isEmpty()) {
                                     labelCount.incrementAndGet();
                                     if (labelCount.get() < 0) {
                                         labelCount.set(0);
@@ -1796,7 +1800,7 @@ public class SearchBar {
                 boolean isNextLabelValid = isNextLabelValid();
 
                 if (isNextLabelValid) {
-                    if (!textField.getText().isEmpty()) {
+                    if (!getTextFieldText().isEmpty()) {
                         labelCount.incrementAndGet();
                         if (labelCount.get() < 0) {
                             labelCount.set(0);
@@ -2328,7 +2332,7 @@ public class SearchBar {
                 } catch (NullPointerException ignored) {
 
                 }
-                if (!textField.getText().isEmpty()) {
+                if (!getTextFieldText().isEmpty()) {
                     labelCount.getAndDecrement();
                     if (labelCount.get() < 0) {
                         labelCount.set(0);
@@ -2877,7 +2881,7 @@ public class SearchBar {
                 isCacheAndPrioritySearched = false;
                 startTime = System.currentTimeMillis();
                 timer = true;
-                isCommandMode = textField.getText().charAt(0) == ':';
+                isCommandMode = getTextFieldText().charAt(0) == ':';
             }
 
             @Override
@@ -2888,7 +2892,7 @@ public class SearchBar {
                 tempResults.clear();
                 labelCount.set(0);
                 isCacheAndPrioritySearched = false;
-                String t = textField.getText();
+                String t = getTextFieldText();
 
                 if (t.isEmpty()) {
                     clearLabel();
@@ -2900,7 +2904,7 @@ public class SearchBar {
                     timer = true;
                 }
                 try {
-                    isCommandMode = textField.getText().charAt(0) == ':';
+                    isCommandMode = getTextFieldText().charAt(0) == ':';
                 } catch (StringIndexOutOfBoundsException ignored) {
 
                 }
@@ -3112,7 +3116,7 @@ public class SearchBar {
                                     isLabel5Chosen, isLabel6Chosen, isLabel7Chosen, isLabel8Chosen);
                         }
                     }
-                    String text = textField.getText();
+                    String text = getTextFieldText();
                     if (text.isEmpty()) {
                         clearLabel();
                         listResults.clear();
@@ -3237,7 +3241,7 @@ public class SearchBar {
                     if (isStartSearchLocal) {
                         isStartSearchLocal = false;
                         tempResults.clear();
-                        text = textField.getText();
+                        text = getTextFieldText();
                         strings = resultSplit.split(text);
                         length = strings.length;
                         if (length == 2) {
@@ -3251,7 +3255,7 @@ public class SearchBar {
                         ConcurrentLinkedQueue<String> paths = new ConcurrentLinkedQueue<>();
                         String dataPath = SettingsFrame.getDataPath();
 
-                        if (0 < ascII && ascII <= 100) {
+                        if (0 <= ascII && ascII <= 100) {
                             for (int i = 0; i < 2500; i += 100) {
                                 int name = i + 100;
                                 listPath = dataPath + "\\" + "\\list" + i + "-" + name + ".dat";
@@ -3478,9 +3482,7 @@ public class SearchBar {
                         } else {
                             paths.add(dataPath + "\\" + "\\list2500-.dat");
                         }
-                        String _searchText = searchText;
-                        String _searchCase = searchCase;
-                        addResult(paths, _searchText, System.currentTimeMillis(), _searchCase);
+                        addResult(paths, searchText, System.currentTimeMillis(), searchCase);
 
                     }
                     Thread.sleep(20);
@@ -3499,13 +3501,13 @@ public class SearchBar {
                     timer = false; //开始搜索 计时停止
                     labelCount.set(0);
                     clearLabel();
-                    if (!textField.getText().isEmpty()) {
+                    if (!getTextFieldText().isEmpty()) {
                         label1.setBackground(labelColor);
                     } else {
                         clearLabel();
                     }
                     listResults.clear();
-                    String text = textField.getText();
+                    String text = getTextFieldText();
                     Search instance = Search.getInstance();
                     if (instance.isUsable()) {
                         if (isCommandMode) {
@@ -3777,7 +3779,7 @@ public class SearchBar {
         }
 
 
-        if (!textField.getText().isEmpty()) {
+        if (!getTextFieldText().isEmpty()) {
             if (listResults.isEmpty() && tempResults.isEmpty()) {
                 label1.setText("无结果");
                 label1.setBorder(border);
