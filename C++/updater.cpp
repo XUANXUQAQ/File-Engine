@@ -122,6 +122,7 @@ int main(int argc, char *argv[])
         string hotkeyListenerPath = currentPath + "\\user\\hotkeyListener.dll";
         string getAscIIPath = currentPath + "\\user\\getAscII.dll";
         string shortcutGenPath = currentPath + "\\user\\shortcutGenerator.vbs";
+        string isLocalDiskPath = currentPath + "\\user\\isLocalDisk.dll";
         string origin;
         origin.append(currentPath);
         origin.append("\\");
@@ -198,6 +199,10 @@ int main(int argc, char *argv[])
         else
         {
             cout << "shortcutGenerator remove successfully" << endl;
+        }
+        if (!removeFile(isLocalDiskPath))
+        {
+            cout << "isLocaldisk dll remove successfully" << endl;
         }
         cout << "copy new File" << endl;
         copyFile(newFile, origin);

@@ -1,7 +1,5 @@
 package frames;
 
-import main.MainClass;
-
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
@@ -16,6 +14,19 @@ public class TaskBar {
     private SettingsFrame settingsFrame = new SettingsFrame();
     private SystemTray systemTray;
 
+    private static class TaskBarBuilder {
+        private static TaskBar instance = new TaskBar();
+    }
+
+    private TaskBar() {
+    }
+
+    ;
+
+    public static TaskBar getInstance() {
+        return TaskBarBuilder.instance;
+    }
+
     public void showTaskBar() {
         // 判断是否支持系统托盘
         if (SystemTray.isSupported()) {
@@ -27,21 +38,21 @@ public class TaskBar {
             // 创建托盘图标
             trayIcon = new TrayIcon(image);
             // 添加工具提示文本
-            trayIcon.setToolTip("超级搜索");
+            trayIcon.setToolTip("Super Search");
             // 创建弹出菜单
             PopupMenu popupMenu = new PopupMenu();
 
-            MenuItem settings = new MenuItem("设置");
+            MenuItem settings = new MenuItem("Settings");
             settings.addActionListener(e -> settingsFrame.showWindow());
-            MenuItem close = new MenuItem("退出");
+            MenuItem close = new MenuItem("Exit");
             close.addActionListener(e -> closeAndExit());
-            MenuItem restart = new MenuItem("重启");
+            MenuItem restart = new MenuItem("Restart");
             restart.addActionListener(e -> {
                 File restartExe = new File("user/restart.exe");
-                File mainExe = new File(MainClass.name);
+                File mainExe = new File(SettingsFrame.name);
                 try {
                     String command = "cmd /c " + restartExe.getAbsolutePath().substring(0, 2) + "\"" + restartExe.getAbsolutePath().substring(2) + "\" \""
-                            + mainExe.getAbsolutePath() + "\" " + "\"" + MainClass.name + "\"";
+                            + mainExe.getAbsolutePath() + "\" " + "\"" + SettingsFrame.name + "\"";
                     Process p = Runtime.getRuntime().exec(command);
                     p.getInputStream().close();
                     p.getOutputStream().close();
@@ -78,7 +89,7 @@ public class TaskBar {
     }
 
     public void closeAndExit() {
-        MainClass.setMainExit(true);
+        SettingsFrame.setMainExit(true);
         systemTray.remove(trayIcon);
         settingsFrame.hideFrame();
     }

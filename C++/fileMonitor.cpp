@@ -75,7 +75,9 @@ bool isExist(const char *FileName)
     strcpy(FILENAME, FileName);
     fstream _file;
     _file.open(FILENAME, ios::in);
-    if (!_file)
+    bool result = !_file;
+    _file.close();
+    if (result)
     {
         return false;
     }

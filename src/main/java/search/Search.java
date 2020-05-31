@@ -3,7 +3,7 @@ package search;
 import DllInterface.IsLocalDisk;
 import frames.SearchBar;
 import frames.SettingsFrame;
-import main.MainClass;
+import frames.TaskBar;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -577,7 +577,7 @@ public class Search {
                 System.out.println("文件夹" + i + "删除失败");
             }
         }
-        MainClass.showMessage("提示", "搜索完成");
+        TaskBar.getInstance().showMessage("提示", "搜索完成");
         isManualUpdate = false;
         isUsable = true;
     }
