@@ -25,7 +25,7 @@ public class DownloadUpdate {
         buttonCancel.addActionListener(e -> {
             frame.setVisible(false);
         });
-        buttonCancel.setText("取消");
+        buttonCancel.setText(SettingsFrame.getTranslation("cancel"));
         panel.setLayout(new BorderLayout());
         panel.add(progressBar, BorderLayout.CENTER);
         panel.add(buttonCancel, BorderLayout.SOUTH);
@@ -78,10 +78,10 @@ public class DownloadUpdate {
             fos.write(buffer, 0, len);
             progress += len;
             progressBar.setValue(progress);
-            progressBar.setString("已下载：" + (int) (progressBar.getPercentComplete() * 100) + "%");
+            progressBar.setString(SettingsFrame.getTranslation("Downloaded:") + (int) (progressBar.getPercentComplete() * 100) + "%");
             if (!frame.isVisible()) {
                 fos.close();
-                throw new Exception("用户中断下载");
+                throw new Exception("User Interrupted");
             }
         }
         fos.close();

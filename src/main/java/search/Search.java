@@ -46,7 +46,6 @@ public class Search {
     private Set<String> set2300 = ConcurrentHashMap.newKeySet();
     private Set<String> set2400 = ConcurrentHashMap.newKeySet();
     private Set<String> set2500 = ConcurrentHashMap.newKeySet();
-    private SearchBar instance = SearchBar.getInstance();
 
     private static class SearchBuilder {
         private static Search instance = new Search();
@@ -92,7 +91,8 @@ public class Search {
     }
 
     public void addToRecycleBin(String path) {
-        int ascII = instance.getAscIISum(instance.getFileName(path));
+        SearchBar searchBar = SearchBar.getInstance();
+        int ascII = searchBar.getAscIISum(searchBar.getFileName(path));
         if (0 <= ascII && ascII <= 100) {
             set0.add(path);
         } else if (100 < ascII && ascII <= 200) {
@@ -577,7 +577,7 @@ public class Search {
                 System.out.println("文件夹" + i + "删除失败");
             }
         }
-        TaskBar.getInstance().showMessage("提示", "搜索完成");
+        TaskBar.getInstance().showMessage(SettingsFrame.getTranslation("Info"), SettingsFrame.getTranslation("Search Done"));
         isManualUpdate = false;
         isUsable = true;
     }

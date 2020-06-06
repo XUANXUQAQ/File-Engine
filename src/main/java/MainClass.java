@@ -16,9 +16,8 @@ import java.util.concurrent.Executors;
 
 
 public class MainClass {
-    private static Search search = Search.getInstance();
-    private static TaskBar taskBar = TaskBar.getInstance();
-
+    private static Search search;
+    private static SearchBar searchBar;
 
     private static void copyFile(InputStream source, File dest) {
         try (OutputStream os = new FileOutputStream(dest); BufferedInputStream bis = new BufferedInputStream(source); BufferedOutputStream bos = new BufferedOutputStream(os)) {
@@ -58,19 +57,20 @@ public class MainClass {
         }
     }
 
-    private static boolean deleteFile(String path) {
+    private static void deleteFile(String path) {
         File file = new File(path);
-        return file.delete();
+        file.delete();
     }
 
 
     public static void main(String[] args) {
         try {
+            System.setProperty("jna.library.path", new File("user").getAbsolutePath() + File.separator);
             System.setProperty("sun.java2d.noddraw", "true");
-            System.setProperty("jna.library.path", new File("user").getAbsolutePath() + "\\");
             UIManager.setLookAndFeel(new MaterialLookAndFeel(new MaterialDesign.materialLookAndFeel()));
         } catch (Exception e) {
             e.printStackTrace();
+            return;
         }
         String osArch = System.getProperty("os.arch");
         if (osArch.contains("64")) {
@@ -79,229 +79,27 @@ public class MainClass {
             SettingsFrame.name = "File-Engine-x86.exe";
         }
 
-        File user = new File("user");
-        if (!user.exists()) {
-            user.mkdir();
+        if (!initSettingsJson()) {
+            System.err.println("initialize failed");
+            System.exit(-1);
         }
-        File[] userFiles = user.listFiles();
-        boolean isUpdate = false;
-        if (userFiles != null) {
-            for (File each : userFiles) {
-                if (each.getName().equals("update")) {
-                    isUpdate = true;
-                    each.delete();
-                    break;
-                }
-            }
-        }
-        //复制updater.exe
-        File updaterExe = new File("updater.exe");
-        if (isUpdate) {
-            InputStream updater;
-            if (SettingsFrame.name.contains("x64")) {
-                updater = MainClass.class.getResourceAsStream("/updater64.exe");
-            } else {
-                updater = MainClass.class.getResourceAsStream("/updater86.exe");
-            }
-            copyFile(updater, updaterExe);
-            String absPath = updaterExe.getAbsolutePath();
-            String path = absPath.substring(0, 2) + "\"" + absPath.substring(2) + "\"";
-            String command = "cmd /c " + path + " " + "\"" + SettingsFrame.name + "\"";
-            try {
-                Runtime.getRuntime().exec(command);
-                System.exit(0);
-            } catch (Exception ignored) {
+        SettingsFrame.getInstance();
 
-            }
-        } else {
-            updaterExe.delete();
-        }
-
-        File settings = SettingsFrame.getSettings();
-        File caches = new File("user/cache.dat");
-
-        if (!settings.exists()) {
-            try {
-                settings.createNewFile();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
+        startOrIgnoreUpdateAndExit(isUpdateSignExist());
 
         //清空tmp
         deleteDir(SettingsFrame.getTmp().getAbsolutePath());
 
-        File target;
-
-        boolean is64Bit = SettingsFrame.name.contains("x64");
-
-        target = new File("user/fileMonitor.dll");
-        if (is64Bit) {
-            if (!target.exists()) {
-                InputStream fileMonitor64Dll = MainClass.class.getResourceAsStream("/win32-x86-64/fileMonitor64.dll");
-                copyFile(fileMonitor64Dll, target);
-                try {
-                    fileMonitor64Dll.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-            target = new File("user/getAscII.dll");
-            if (!target.exists()) {
-                InputStream getAscII64Dll = MainClass.class.getResourceAsStream("/win32-x86-64/getAscII64.dll");
-                copyFile(getAscII64Dll, target);
-                try {
-                    getAscII64Dll.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-            target = new File("user/hotkeyListener.dll");
-            if (!target.exists()) {
-                InputStream hotkeyListener64Dll = MainClass.class.getResourceAsStream("/win32-x86-64/hotkeyListener64.dll");
-                copyFile(hotkeyListener64Dll, target);
-                try {
-                    hotkeyListener64Dll.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-            target = new File("user/isLocalDisk.dll");
-            if (!target.exists()) {
-                InputStream isLocalDisk64Dll = MainClass.class.getResourceAsStream("/win32-x86-64/isLocalDisk64.dll");
-                copyFile(isLocalDisk64Dll, target);
-                try {
-                    isLocalDisk64Dll.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        } else {
-            if (!target.exists()) {
-                InputStream fileMonitor86Dll = MainClass.class.getResourceAsStream("/win32-x86/fileMonitor86.dll");
-                copyFile(fileMonitor86Dll, target);
-                try {
-                    fileMonitor86Dll.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-            target = new File("user/getAscII.dll");
-            if (!target.exists()) {
-                InputStream getAscII86Dll = MainClass.class.getResourceAsStream("/win32-x86/getAscII86.dll");
-                copyFile(getAscII86Dll, target);
-                try {
-                    getAscII86Dll.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-            target = new File("user/hotkeyListener.dll");
-            if (!target.exists()) {
-                InputStream hotkeyListener86Dll = MainClass.class.getResourceAsStream("/win32-x86/hotkeyListener86.dll");
-                copyFile(hotkeyListener86Dll, target);
-                try {
-                    hotkeyListener86Dll.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-            target = new File("user/isLocalDisk.dll");
-            if (!target.exists()) {
-                InputStream isLocalDisk86Dll = MainClass.class.getResourceAsStream("/win32-x86/isLocalDisk86.dll");
-                copyFile(isLocalDisk86Dll, target);
-                try {
-                    isLocalDisk86Dll.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
+        if (!initFoldersAndFiles()) {
+            System.err.println("initialize failed");
+            System.exit(-1);
         }
 
-        SettingsFrame.initSettings();
-        SearchBar searchBar = SearchBar.getInstance();
+        searchBar = SearchBar.getInstance();
+        search = Search.getInstance();
 
-        target = new File("user/fileSearcher.exe");
-        if (!target.exists()) {
-            InputStream fileSearcher64 = MainClass.class.getResourceAsStream("/fileSearcher64.exe");
-            InputStream fileSearcher86 = MainClass.class.getResourceAsStream("/fileSearcher86.exe");
-            if (is64Bit) {
-                copyFile(fileSearcher64, target);
-            } else {
-                copyFile(fileSearcher86, target);
-            }
-            try {
-                fileSearcher64.close();
-                fileSearcher86.close();
-            } catch (IOException ignored) {
-
-            }
-        }
-        target = new File(SettingsFrame.getDataPath());
-        if (!target.exists()) {
-            target.mkdir();
-        }
-        target = new File("user/shortcutGenerator.vbs");
-        if (!target.exists()) {
-            InputStream shortcutGen = MainClass.class.getResourceAsStream("/shortcutGenerator.vbs");
-            copyFile(shortcutGen, target);
-            try {
-                shortcutGen.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        target = new File("user/restart.exe");
-        if (!target.exists()) {
-            InputStream restart64 = MainClass.class.getResourceAsStream("/restart64.exe");
-            InputStream restart86 = MainClass.class.getResourceAsStream("/restart86.exe");
-            if (is64Bit) {
-                copyFile(restart64, target);
-            } else {
-                copyFile(restart86, target);
-            }
-            try {
-                restart64.close();
-                restart86.close();
-            } catch (IOException ignored) {
-
-            }
-        }
-
-        if (!caches.exists()) {
-            try {
-                caches.createNewFile();
-            } catch (IOException e) {
-                JOptionPane.showMessageDialog(null, "创建缓存文件失败，程序正在退出");
-                SettingsFrame.mainExit = true;
-            }
-        }
-        File temp = SettingsFrame.getTmp();
-        if (!temp.exists()) {
-            temp.mkdir();
-        }
-        File fileAdded = new File(temp.getAbsolutePath() + "\\fileAdded.txt");
-        File fileRemoved = new File(temp.getAbsolutePath() + "\\fileRemoved.txt");
-        if (!fileAdded.exists()) {
-            try {
-                fileAdded.createNewFile();
-            } catch (IOException ignored) {
-
-            }
-        }
-        if (!fileRemoved.exists()) {
-            try {
-                fileRemoved.createNewFile();
-            } catch (IOException ignored) {
-
-            }
-        }
+        TaskBar taskBar = TaskBar.getInstance();
         taskBar.showTaskBar();
-
-
-        File[] roots = File.listRoots();
-        ExecutorService fixedThreadPool = Executors.newFixedThreadPool(roots.length + 5);
 
 
         if (searchBar.isDataDamaged()) {
@@ -309,35 +107,31 @@ public class MainClass {
             search.setManualUpdate(true);
         }
 
+        if (!isLatest()) {
+            taskBar.showMessage(SettingsFrame.getTranslation("Info"), SettingsFrame.getTranslation("New version can be updated"));
+        }
+
+
+        File[] roots = File.listRoots();
+        int size = roots.length + 5;
+        ExecutorService fixedThreadPool = Executors.newFixedThreadPool(size);
         if (SettingsFrame.isAdmin()) {
             for (File root : roots) {
                 boolean isLocal = IsLocalDisk.INSTANCE.isLocalDisk(root.getAbsolutePath());
                 if (isLocal) {
-                    fixedThreadPool.execute(() -> FileMonitor.INSTANCE.monitor(root.getAbsolutePath(), SettingsFrame.getTmp().getAbsolutePath(), SettingsFrame.getTmp().getAbsolutePath() + "\\CLOSE"));
+                    fixedThreadPool.execute(() -> FileMonitor.INSTANCE.monitor(root.getAbsolutePath(), SettingsFrame.getTmp().getAbsolutePath(), SettingsFrame.getTmp().getAbsolutePath() + "/CLOSE"));
                 }
             }
         } else {
-            System.out.println("无管理员权限，文件监控功能已关闭");
-            taskBar.showMessage("警告", "无管理员权限，文件监控功能已关闭");
+            System.out.println("Not administrator, file monitoring function is turned off");
+            taskBar.showMessage(SettingsFrame.getTranslation("Warning"), SettingsFrame.getTranslation("Not administrator, file monitoring function is turned off"));
         }
-
-        //检测是否为最新版本
-        try {
-            JSONObject info = SettingsFrame.getInfo();
-            String latestVersion = info.getString("version");
-            if (Double.parseDouble(latestVersion) > Double.parseDouble(SettingsFrame.version)) {
-                taskBar.showMessage("提示", "有新版本可更新");
-            }
-        } catch (IOException ignored) {
-
-        }
-
 
         fixedThreadPool.execute(() -> {
             //检测文件添加线程
             String filesToAdd;
             try (BufferedReader readerAdd = new BufferedReader(new InputStreamReader(
-                    new FileInputStream(SettingsFrame.getTmp().getAbsolutePath() + "\\fileAdded.txt"), StandardCharsets.UTF_8))) {
+                    new FileInputStream(SettingsFrame.getTmp().getAbsolutePath() + File.separator + "fileAdded.txt"), StandardCharsets.UTF_8))) {
                 while (!SettingsFrame.mainExit) {
                     if (!search.isManualUpdate()) {
                         if ((filesToAdd = readerAdd.readLine()) != null) {
@@ -357,7 +151,7 @@ public class MainClass {
         fixedThreadPool.execute(() -> {
             String filesToRemove;
             try (BufferedReader readerRemove = new BufferedReader(new InputStreamReader(
-                    new FileInputStream(SettingsFrame.getTmp().getAbsolutePath() + "\\fileRemoved.txt"), StandardCharsets.UTF_8))) {
+                    new FileInputStream(SettingsFrame.getTmp().getAbsolutePath() + File.separator + "fileRemoved.txt"), StandardCharsets.UTF_8))) {
                 while (!SettingsFrame.mainExit) {
                     if (!search.isManualUpdate()) {
                         if ((filesToRemove = readerRemove.readLine()) != null) {
@@ -402,13 +196,13 @@ public class MainClass {
                 while (!SettingsFrame.mainExit) {
                     if (search.isManualUpdate()) {
                         search.setUsable(false);
-                        SearchBar.getInstance().closeAllConnection();
+                        searchBar.closeAllConnection();
                         search.updateLists(SettingsFrame.getIgnorePath(), SettingsFrame.getSearchDepth());
                     }
                     Thread.sleep(100);
                 }
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+            } catch (InterruptedException ignored) {
+
             }
         });
 
@@ -418,12 +212,12 @@ public class MainClass {
                 Thread.sleep(100);
                 if (SettingsFrame.mainExit) {
                     CheckHotKey.getInstance().stopListen();
-                    File CLOSEDLL = new File(SettingsFrame.getTmp().getAbsolutePath() + "\\CLOSE");
-                    CLOSEDLL.createNewFile();
-                    deleteFile(SettingsFrame.getTmp().getAbsolutePath() + "\\fileAdded.txt");
-                    deleteFile(SettingsFrame.getTmp().getAbsolutePath() + "\\fileRemoved.txt");
-                    fixedThreadPool.shutdown();
-                    SearchBar.getInstance().closeThreadPool();
+                    File CLOSESign = new File(SettingsFrame.getTmp().getAbsolutePath() + File.separator + "CLOSE");
+                    CLOSESign.createNewFile();
+                    fixedThreadPool.shutdownNow();
+                    deleteFile(SettingsFrame.getTmp().getAbsolutePath() + File.separator + "fileAdded.txt");
+                    deleteFile(SettingsFrame.getTmp().getAbsolutePath() + File.separator + "fileRemoved.txt");
+                    searchBar.closeThreadPool();
                     Thread.sleep(8000);
                     System.exit(0);
                 }
@@ -432,5 +226,134 @@ public class MainClass {
         } catch (InterruptedException | IOException ignored) {
 
         }
+    }
+
+    private static void releaseAllDependence(boolean is64Bit) {
+        if (is64Bit) {
+            copyOrIgnoreFile("user/fileMonitor.dll", "/win32-x86-64/fileMonitor64.dll");
+            copyOrIgnoreFile("user/getAscII.dll", "/win32-x86-64/getAscII64.dll");
+            copyOrIgnoreFile("user/hotkeyListener.dll", "/win32-x86-64/hotkeyListener64.dll");
+            copyOrIgnoreFile("user/isLocalDisk.dll", "/win32-x86-64/isLocalDisk64.dll");
+            copyOrIgnoreFile("user/fileSearcher.exe", "/fileSearcher64.exe");
+            copyOrIgnoreFile("user/restart.exe", "/restart64.exe");
+        } else {
+            copyOrIgnoreFile("user/fileMonitor.dll", "/win32-x86/fileMonitor86.dll");
+            copyOrIgnoreFile("user/getAscII.dll", "/win32-x86/getAscII86.dll");
+            copyOrIgnoreFile("user/hotkeyListener.dll", "/win32-x86/hotkeyListener86.dll");
+            copyOrIgnoreFile("user/isLocalDisk.dll", "/win32-x86/isLocalDisk86.dll");
+            copyOrIgnoreFile("user/fileSearcher.exe", "/fileSearcher86.exe");
+            copyOrIgnoreFile("user/restart.exe", "/restart86.exe");
+        }
+        copyOrIgnoreFile("user/shortcutGenerator.vbs", "/shortcutGenerator.vbs");
+    }
+
+    private static void copyOrIgnoreFile(String path, String rootPath) {
+        File target;
+        target = new File(path);
+        if (!target.exists()) {
+            InputStream resource = MainClass.class.getResourceAsStream(rootPath);
+            copyFile(resource, target);
+            try {
+                resource.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private static void startOrIgnoreUpdateAndExit(boolean isUpdate) {
+        //复制updater.exe
+        if (isUpdate) {
+            if (SettingsFrame.name.contains("x64")) {
+                copyOrIgnoreFile("updater.exe", "/updater64.exe");
+            } else {
+                copyOrIgnoreFile("updater.exe", "/updater86.exe");
+            }
+            File updaterExe = new File("updater.exe");
+            String absPath = updaterExe.getAbsolutePath();
+            String path = absPath.substring(0, 2) + "\"" + absPath.substring(2) + "\"";
+            String command = "cmd.exe /c " + path + " " + "\"" + SettingsFrame.name + "\"";
+            try {
+                Runtime.getRuntime().exec(command);
+                System.exit(0);
+            } catch (Exception ignored) {
+
+            }
+        } else {
+            deleteFile("updater.exe");
+        }
+    }
+
+    private static boolean initFoldersAndFiles() {
+        boolean isFailed;
+        //user
+        isFailed = createFileOrFolder("user", false);
+        //tmp
+        File tmp = SettingsFrame.getTmp();
+        String tempPath = tmp.getAbsolutePath();
+        isFailed = isFailed && createFileOrFolder(tmp, false);
+        isFailed = isFailed && createFileOrFolder(tempPath + File.separator + "fileAdded.txt", true);
+        isFailed = isFailed && createFileOrFolder(tempPath + File.separator + "fileRemoved.txt", true);
+        //cache.dat
+        isFailed = isFailed && createFileOrFolder("user/cache.dat", true);
+        releaseAllDependence(SettingsFrame.name.contains("x64"));
+        return isFailed;
+    }
+
+    private static boolean initSettingsJson() {
+        return createFileOrFolder("user/settings.json", true);
+    }
+
+    private static boolean createFileOrFolder(File file, boolean isFile) {
+        boolean result;
+        try {
+            if (!file.exists()) {
+                if (isFile) {
+                    result = file.createNewFile();
+                } else {
+                    result = file.mkdirs();
+                }
+            } else {
+                result = true;
+            }
+        } catch (IOException e) {
+            result = false;
+        }
+        return result;
+    }
+
+    private static boolean createFileOrFolder(String path, boolean isFile) {
+        File file = new File(path);
+        return createFileOrFolder(file, isFile);
+    }
+
+    private static boolean isLatest() {
+        //检测是否为最新版本
+        try {
+            JSONObject info = SettingsFrame.getInfo();
+            String latestVersion = info.getString("version");
+            if (Double.parseDouble(latestVersion) > Double.parseDouble(SettingsFrame.version)) {
+                return false;
+            }
+        } catch (IOException ignored) {
+
+        }
+        return true;
+    }
+
+    private static boolean isUpdateSignExist() {
+        File user = new File("user");
+        File[] userFiles = user.listFiles();
+        boolean isUpdate = false;
+        if (userFiles != null) {
+            for (File each : userFiles) {
+                if (each.getName().equals("update")) {
+                    isUpdate = true;
+                    each.delete();
+                    break;
+                }
+            }
+        }
+        return isUpdate;
     }
 }
