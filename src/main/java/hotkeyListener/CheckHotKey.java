@@ -85,7 +85,7 @@ public class CheckHotKey {
             SearchBar searchBar = SearchBar.getInstance();
             HotkeyListener instance = HotkeyListener.INSTANCE;
             try {
-                while (!SettingsFrame.mainExit) {
+                while (!SettingsFrame.getMainExit()) {
                     if (!isExecuted && instance.getKeyStatus()) {
                         isExecuted = true;
                         if (!searchBar.isVisible()) {

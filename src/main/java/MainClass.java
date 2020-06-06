@@ -65,8 +65,6 @@ public class MainClass {
 
     public static void main(String[] args) {
         try {
-            System.setProperty("jna.library.path", new File("user").getAbsolutePath() + File.separator);
-            System.setProperty("sun.java2d.noddraw", "true");
             UIManager.setLookAndFeel(new MaterialLookAndFeel(new MaterialDesign.materialLookAndFeel()));
         } catch (Exception e) {
             e.printStackTrace();
@@ -132,7 +130,7 @@ public class MainClass {
             String filesToAdd;
             try (BufferedReader readerAdd = new BufferedReader(new InputStreamReader(
                     new FileInputStream(SettingsFrame.getTmp().getAbsolutePath() + File.separator + "fileAdded.txt"), StandardCharsets.UTF_8))) {
-                while (!SettingsFrame.mainExit) {
+                while (!SettingsFrame.getMainExit()) {
                     if (!search.isManualUpdate()) {
                         if ((filesToAdd = readerAdd.readLine()) != null) {
                             if (!filesToAdd.contains(SettingsFrame.getDataPath())) {
@@ -152,7 +150,7 @@ public class MainClass {
             String filesToRemove;
             try (BufferedReader readerRemove = new BufferedReader(new InputStreamReader(
                     new FileInputStream(SettingsFrame.getTmp().getAbsolutePath() + File.separator + "fileRemoved.txt"), StandardCharsets.UTF_8))) {
-                while (!SettingsFrame.mainExit) {
+                while (!SettingsFrame.getMainExit()) {
                     if (!search.isManualUpdate()) {
                         if ((filesToRemove = readerRemove.readLine()) != null) {
                             if (!filesToRemove.contains(SettingsFrame.getDataPath())) {
@@ -173,7 +171,7 @@ public class MainClass {
             // 时间检测线程
             long count = 0;
             try {
-                while (!SettingsFrame.mainExit) {
+                while (!SettingsFrame.getMainExit()) {
                     boolean isUsing = searchBar.isUsing();
                     count += 100;
                     if (count >= (SettingsFrame.getUpdateTimeLimit() << 10) && !isUsing && !search.isManualUpdate()) {
@@ -193,7 +191,7 @@ public class MainClass {
         //搜索线程
         fixedThreadPool.execute(() -> {
             try {
-                while (!SettingsFrame.mainExit) {
+                while (!SettingsFrame.getMainExit()) {
                     if (search.isManualUpdate()) {
                         search.setUsable(false);
                         searchBar.closeAllConnection();
@@ -207,22 +205,19 @@ public class MainClass {
         });
 
         try {
-            while (true) {
+            while (!SettingsFrame.getMainExit()) {
                 // 主循环开始
                 Thread.sleep(100);
-                if (SettingsFrame.mainExit) {
-                    CheckHotKey.getInstance().stopListen();
-                    File CLOSESign = new File(SettingsFrame.getTmp().getAbsolutePath() + File.separator + "CLOSE");
-                    CLOSESign.createNewFile();
-                    fixedThreadPool.shutdownNow();
-                    deleteFile(SettingsFrame.getTmp().getAbsolutePath() + File.separator + "fileAdded.txt");
-                    deleteFile(SettingsFrame.getTmp().getAbsolutePath() + File.separator + "fileRemoved.txt");
-                    searchBar.closeThreadPool();
-                    Thread.sleep(8000);
-                    System.exit(0);
-                }
             }
-
+            CheckHotKey.getInstance().stopListen();
+            File CLOSESign = new File(SettingsFrame.getTmp().getAbsolutePath() + File.separator + "CLOSE");
+            CLOSESign.createNewFile();
+            fixedThreadPool.shutdownNow();
+            deleteFile(SettingsFrame.getTmp().getAbsolutePath() + File.separator + "fileAdded.txt");
+            deleteFile(SettingsFrame.getTmp().getAbsolutePath() + File.separator + "fileRemoved.txt");
+            searchBar.closeThreadPool();
+            Thread.sleep(8000);
+            System.exit(0);
         } catch (InterruptedException | IOException ignored) {
 
         }

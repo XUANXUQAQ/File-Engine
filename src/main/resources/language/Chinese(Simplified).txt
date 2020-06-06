@@ -99,3 +99,4 @@ Delete startup failure, please try to run as administrator=删除开机启动失
 Files with the same name are detected, please move them manually=检测到同名文件,请自行移动
 Choose a language=选择语言
 cancel=取消
+Save successfully=保存成功
