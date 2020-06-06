@@ -22,7 +22,6 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
-import static frames.SettingsFrame.mainExit;
 
 
 public class SearchBar {
@@ -48,9 +47,9 @@ public class SearchBar {
     private Color fontColor;
     private volatile long startTime = 0;
     private Thread searchWaiter = null;
-    private Pattern semicolon;
-    private Pattern resultSplit;
-    private boolean isUserPressed = false;
+    private static Pattern semicolon;
+    private static Pattern resultSplit;
+    private volatile boolean isUserPressed = false;
     private volatile boolean isCommandMode = false;
     private volatile boolean isLockMouseMotion = false;
     private volatile boolean isOpenLastFolderPressed = false;
@@ -132,6 +131,7 @@ public class SearchBar {
         initLabel(font, searchBarWidth, labelHeight, labelHeight * 6, label6);
         initLabel(font, searchBarWidth, labelHeight, labelHeight * 7, label7);
         initLabel(font, searchBarWidth, labelHeight, labelHeight * 8, label8);
+
         iconSideLength = label1.getHeight() / 3; //定义图标边长
 
         URL icon = TaskBar.class.getResource("/icons/taskbar_32x32.png");
@@ -361,7 +361,7 @@ public class SearchBar {
                         }
                     } else if (10 == key) {
                         //enter被点击
-                        closedTodo();
+                        searchBar.setVisible(false);
                         if (!isCommandMode) {
                             if (isOpenLastFolderPressed) {
                                 //打开上级文件夹
@@ -401,6 +401,7 @@ public class SearchBar {
                                 }
                             }
                         }
+                        closedTodo();
                     } else if (SettingsFrame.getOpenLastFolderKeyCode() == key) {
                         //打开上级文件夹热键被点击
                         isOpenLastFolderPressed = true;
@@ -1918,7 +1919,7 @@ public class SearchBar {
             //合并搜索结果线程
             try {
                 String record;
-                while (!mainExit) {
+                while (!SettingsFrame.getMainExit()) {
                     if (isCacheAndPrioritySearched) {
                         while ((record = tempResults.poll()) != null) {
                             if (!listResults.contains(record)) {
@@ -1936,7 +1937,7 @@ public class SearchBar {
         fixedThreadPool.execute(() -> {
             //锁住MouseMotion检测，阻止同时发出两个动作
             try {
-                while (!mainExit) {
+                while (!SettingsFrame.getMainExit()) {
                     if (System.currentTimeMillis() - mouseWheelTime > 500) {
                         isLockMouseMotion = false;
                     }
@@ -1950,7 +1951,7 @@ public class SearchBar {
         fixedThreadPool.execute(() -> {
             //连接管理线程
             try {
-                while (!mainExit) {
+                while (!SettingsFrame.getMainExit()) {
                     if ((!isUsing) && search.isUsable()) {
                         for (String eachKey : readerMap.keySet()) {
                             ReaderInfo info = readerMap.get(eachKey);
@@ -1973,14 +1974,14 @@ public class SearchBar {
                     Thread.sleep(500);
                 }
                 closeAllConnection();
-            } catch (InterruptedException | IOException e) {
-                e.printStackTrace();
+            } catch (InterruptedException | IOException ignored) {
+
             }
         });
 
         fixedThreadPool.execute(() -> {
             try {
-                while (!mainExit) {
+                while (!SettingsFrame.getMainExit()) {
                     //字体染色线程
                     //判定当前选定位置
                     int position = getCurrentPos();
@@ -2069,7 +2070,7 @@ public class SearchBar {
             try {
                 boolean isLabel1Chosen, isLabel2Chosen, isLabel3Chosen, isLabel4Chosen,
                         isLabel5Chosen, isLabel6Chosen, isLabel7Chosen, isLabel8Chosen;
-                while (!mainExit) {
+                while (!SettingsFrame.getMainExit()) {
                     isLabel1Chosen = false;
                     isLabel2Chosen = false;
                     isLabel3Chosen = false;
@@ -2192,7 +2193,7 @@ public class SearchBar {
 
         fixedThreadPool.execute(() -> {
             try {
-                while (!mainExit) {
+                while (!SettingsFrame.getMainExit()) {
                     if (isUsing) {
                         panel.repaint();
                     }
@@ -2206,7 +2207,7 @@ public class SearchBar {
         fixedThreadPool.execute(() -> {
             //检测缓存大小 过大时进行清理
             try {
-                while (!mainExit) {
+                while (!SettingsFrame.getMainExit()) {
                     if (!search.isManualUpdate() && !isUsing) {
                         if (search.getRecycleBinSize() > 1000) {
                             closeAllConnection();
@@ -2228,7 +2229,7 @@ public class SearchBar {
             String listPath;
             int ascII;
             try {
-                while (!mainExit) {
+                while (!SettingsFrame.getMainExit()) {
                     if (isStartSearchLocal) {
                         isStartSearchLocal = false;
                         tempResults.clear();
@@ -2474,7 +2475,7 @@ public class SearchBar {
             fixedThreadPool.execute(() -> {
                 String path;
                 try {
-                    while (!mainExit) {
+                    while (!SettingsFrame.getMainExit()) {
                         if (!pathQueue.isEmpty()) {
                             while ((path = pathQueue.poll()) != null) {
                                 searchAndAddToTempResults(System.currentTimeMillis(), path);
@@ -2491,7 +2492,7 @@ public class SearchBar {
         fixedThreadPool.execute(() -> {
             //缓存和常用文件夹搜索线程
             //停顿时间0.5s，每一次输入会更新一次startTime，该线程记录endTime
-            while (!mainExit) {
+            while (!SettingsFrame.getMainExit()) {
                 long endTime = System.currentTimeMillis();
                 if ((endTime - startTime > 500) && (timer)) {
                     timer = false; //开始搜索 计时停止
@@ -2507,12 +2508,12 @@ public class SearchBar {
                     if (search.isUsable()) {
                         if (isCommandMode) {
                             if (text.equals(":update")) {
+                                search.setManualUpdate(true);
                                 closeAllConnection();
                                 clearLabel();
                                 taskBar.showMessage(SettingsFrame.getTranslation("Info"), SettingsFrame.getTranslation("Updating file index"));
                                 clearTextFieldText();
                                 closedTodo();
-                                search.setManualUpdate(true);
                                 timer = false;
                                 continue;
                             }
@@ -2582,7 +2583,7 @@ public class SearchBar {
                         if (search.isManualUpdate()) {
                             if (searchWaiter == null || !searchWaiter.isAlive()) {
                                 searchWaiter = new Thread(() -> {
-                                    while (!mainExit) {
+                                    while (!SettingsFrame.getMainExit()) {
                                         if (Thread.currentThread().isInterrupted()) {
                                             break;
                                         }
@@ -2891,7 +2892,7 @@ public class SearchBar {
     }
 
     public void closeThreadPool() {
-        fixedThreadPool.shutdown();
+        fixedThreadPool.shutdownNow();
     }
 
     private void clearLabel() {

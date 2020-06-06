@@ -522,8 +522,8 @@ public class Search {
         pool.shutdown();
         try {
             pool.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        } catch (InterruptedException ignored) {
+
         }
         __searchFileIgnoreSearchDepth(getStartMenu(), ignorePath);
         __searchFileIgnoreSearchDepth("C:\\ProgramData\\Microsoft\\Windows\\Start Menu", ignorePath);
@@ -562,8 +562,8 @@ public class Search {
             try {
                 p = Runtime.getRuntime().exec(each);
                 p.waitFor();
-            } catch (IOException | InterruptedException e) {
-                e.printStackTrace();
+            } catch (IOException | InterruptedException ignored) {
+
             }
         }
 

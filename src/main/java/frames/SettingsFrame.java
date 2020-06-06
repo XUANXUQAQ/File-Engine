@@ -29,7 +29,7 @@ import java.util.regex.Pattern;
 
 public class SettingsFrame {
     public static final String version = "2.0"; //TODO 更改版本号
-    public static volatile boolean mainExit = false;
+    private static volatile boolean mainExit = false;
     public static String name;
     private static int cacheNumLimit;
     private static String hotkey;
@@ -193,6 +193,10 @@ public class SettingsFrame {
         return SettingsFrameBuilder.instance;
     }
 
+    public static boolean getMainExit() {
+        return mainExit;
+    }
+
     public static int getCacheNumLimit() {
         return cacheNumLimit;
     }
@@ -314,10 +318,10 @@ public class SettingsFrame {
         buttonSaveAndRemoveDesktop.addActionListener(e -> {
             String currentFolder = new File("").getAbsolutePath();
             if (currentFolder.equals(FileSystemView.getFileSystemView().getHomeDirectory().getAbsolutePath()) || currentFolder.equals("C:\\Users\\Public\\Desktop")) {
-                JOptionPane.showMessageDialog(null, SettingsFrame.getTranslation("The program is detected on the desktop and cannot be moved"));
+                JOptionPane.showMessageDialog(frame, SettingsFrame.getTranslation("The program is detected on the desktop and cannot be moved"));
                 return;
             }
-            int isConfirmed = JOptionPane.showConfirmDialog(null, SettingsFrame.getTranslation("Whether to remove and backup all files on the desktop," +
+            int isConfirmed = JOptionPane.showConfirmDialog(frame, SettingsFrame.getTranslation("Whether to remove and backup all files on the desktop," +
                     "they will be in the program's Files folder, which may take a few minutes"));
             if (isConfirmed == 0) {
                 Thread fileMover = new Thread(new moveDesktopFiles());
@@ -528,11 +532,11 @@ public class SettingsFrame {
                 return;
             }
             if (name.equals("update") || name.equals("clearbin") || name.equals("help") || name.equals("version") || isRepeatCommand(name)) {
-                JOptionPane.showMessageDialog(null, SettingsFrame.getTranslation("Conflict with existing commands"));
+                JOptionPane.showMessageDialog(frame, SettingsFrame.getTranslation("Conflict with existing commands"));
                 return;
             }
             String cmd;
-            JOptionPane.showMessageDialog(null, SettingsFrame.getTranslation("Please select the location of the executable file (a folder is also acceptable)"));
+            JOptionPane.showMessageDialog(frame, SettingsFrame.getTranslation("Please select the location of the executable file (a folder is also acceptable)"));
             JFileChooser fileChooser = new JFileChooser();
             fileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
             int returnValue = fileChooser.showDialog(new Label(), SettingsFrame.getTranslation("Choose"));
@@ -840,10 +844,10 @@ public class SettingsFrame {
     private static void initTranslations(String language) {
         if (!language.equals("English(US)")) {
             String filePath = fileMap.get(language);
-            InputStream inputStream = SettingsFrame.class.getResourceAsStream(filePath);
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
+            try (InputStream inputStream = SettingsFrame.class.getResourceAsStream(filePath); BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
+                    line = line.trim();
                     String[] record = equalSign.split(line);
                     translationMap.put(record[0], record[1]);
                 }
@@ -1133,13 +1137,13 @@ public class SettingsFrame {
             updateInfo = getInfo();
             latestVersion = updateInfo.getString("version");
         } catch (IOException e1) {
-            JOptionPane.showMessageDialog(null, getTranslation("Check update failed"));
+            JOptionPane.showMessageDialog(frame, getTranslation("Check update failed"));
             return;
         }
         File test = new File("TEST");
         if (Double.parseDouble(latestVersion) > Double.parseDouble(version) || test.exists()) {
             String description = updateInfo.getString("description");
-            int result = JOptionPane.showConfirmDialog(null,
+            int result = JOptionPane.showConfirmDialog(frame,
                     getTranslation("New Version available") + latestVersion + "," + getTranslation("Whether to update") + "\n" + getTranslation("update content") + "\n" + description);
             if (result == 0) {
                 //开始更新,下载更新文件到tmp
@@ -1157,7 +1161,7 @@ public class SettingsFrame {
                     download.downLoadFromUrl(updateInfo.getString(urlChoose), fileName, tmp.getAbsolutePath());
                 } catch (Exception e) {
                     if (!e.getMessage().equals("User Interrupted")) {
-                        JOptionPane.showMessageDialog(null, getTranslation("Download failed"));
+                        JOptionPane.showMessageDialog(frame, getTranslation("Download failed"));
                     }
                     download.hideFrame();
                     return;
@@ -1171,7 +1175,7 @@ public class SettingsFrame {
                 }
             }
         } else {
-            JOptionPane.showMessageDialog(null, getTranslation("Latest version:") + latestVersion + "\n" + getTranslation("The current version is the latest"));
+            JOptionPane.showMessageDialog(frame, getTranslation("Latest version:") + latestVersion + "\n" + getTranslation("The current version is the latest"));
         }
     }
 
@@ -1210,7 +1214,7 @@ public class SettingsFrame {
             updateTimeLimitTemp = -1; // 输入不正确
         }
         if (updateTimeLimitTemp > 3600 || updateTimeLimitTemp <= 0) {
-            JOptionPane.showMessageDialog(null, getTranslation("The file index update setting is wrong, please change"));
+            JOptionPane.showMessageDialog(frame, getTranslation("The file index update setting is wrong, please change"));
             return;
         }
         isStartup = checkBox1.isSelected();
@@ -1220,7 +1224,7 @@ public class SettingsFrame {
             cacheNumLimitTemp = -1;
         }
         if (cacheNumLimitTemp > 10000 || cacheNumLimitTemp <= 0) {
-            JOptionPane.showMessageDialog(null, getTranslation("The cache capacity is set incorrectly, please change"));
+            JOptionPane.showMessageDialog(frame, getTranslation("The cache capacity is set incorrectly, please change"));
             return;
         }
         ignorePathTemp = textAreaIgnorePath.getText();
@@ -1235,17 +1239,17 @@ public class SettingsFrame {
         }
 
         if (searchDepthTemp > 10 || searchDepthTemp <= 0) {
-            JOptionPane.showMessageDialog(null, getTranslation("Search depth setting is wrong, please change"));
+            JOptionPane.showMessageDialog(frame, getTranslation("Search depth setting is wrong, please change"));
             return;
         }
 
         String _hotkey = textFieldHotkey.getText();
         if (_hotkey.length() == 1) {
-            JOptionPane.showMessageDialog(null, getTranslation("Hotkey setting is wrong, please change"));
+            JOptionPane.showMessageDialog(frame, getTranslation("Hotkey setting is wrong, please change"));
             return;
         } else {
             if (!(64 < _hotkey.charAt(_hotkey.length() - 1) && _hotkey.charAt(_hotkey.length() - 1) < 91)) {
-                JOptionPane.showMessageDialog(null, getTranslation("Hotkey setting is wrong, please change"));
+                JOptionPane.showMessageDialog(frame, getTranslation("Hotkey setting is wrong, please change"));
                 return;
             }
         }
@@ -1255,12 +1259,12 @@ public class SettingsFrame {
             transparencyTemp = -1f;
         }
         if (transparencyTemp > 1 || transparencyTemp <= 0) {
-            JOptionPane.showMessageDialog(null, getTranslation("Transparency setting error"));
+            JOptionPane.showMessageDialog(frame, getTranslation("Transparency setting error"));
             return;
         }
 
         if (_openLastFolderKeyCode == _runAsAdminKeyCode || _openLastFolderKeyCode == _copyPathKeyCode || _runAsAdminKeyCode == _copyPathKeyCode) {
-            JOptionPane.showMessageDialog(null, getTranslation("HotKey conflict"));
+            JOptionPane.showMessageDialog(frame, getTranslation("HotKey conflict"));
             return;
         } else {
             openLastFolderKeyCode = _openLastFolderKeyCode;
@@ -1277,7 +1281,7 @@ public class SettingsFrame {
             _labelColor = -1;
         }
         if (_labelColor < 0) {
-            JOptionPane.showMessageDialog(null, getTranslation("Chosen label color is set incorrectly"));
+            JOptionPane.showMessageDialog(frame, getTranslation("Chosen label color is set incorrectly"));
             return;
         }
         int _fontColorWithCoverage;
@@ -1287,7 +1291,7 @@ public class SettingsFrame {
             _fontColorWithCoverage = -1;
         }
         if (_fontColorWithCoverage < 0) {
-            JOptionPane.showMessageDialog(null, getTranslation("Chosen label font color is set incorrectly"));
+            JOptionPane.showMessageDialog(frame, getTranslation("Chosen label font color is set incorrectly"));
             return;
         }
         int _defaultBackgroundColor;
@@ -1297,7 +1301,7 @@ public class SettingsFrame {
             _defaultBackgroundColor = -1;
         }
         if (_defaultBackgroundColor < 0) {
-            JOptionPane.showMessageDialog(null, getTranslation("Incorrect defaultBackground color setting"));
+            JOptionPane.showMessageDialog(frame, getTranslation("Incorrect defaultBackground color setting"));
             return;
         }
         int _fontColor;
@@ -1307,7 +1311,7 @@ public class SettingsFrame {
             _fontColor = -1;
         }
         if (_fontColor < 0) {
-            JOptionPane.showMessageDialog(null, "Unchosen label font color is set incorrectly");
+            JOptionPane.showMessageDialog(frame, "Unchosen label font color is set incorrectly");
             return;
         }
         int _searchBarColor;
@@ -1317,7 +1321,7 @@ public class SettingsFrame {
             _searchBarColor = -1;
         }
         if (_searchBarColor < 0) {
-            JOptionPane.showMessageDialog(null, getTranslation("The color of the search bar is set incorrectly"));
+            JOptionPane.showMessageDialog(frame, getTranslation("The color of the search bar is set incorrectly"));
             return;
         }
         int _maxConnectionNum;
@@ -1327,7 +1331,7 @@ public class SettingsFrame {
             _maxConnectionNum = -1;
         }
         if (_maxConnectionNum < 0 || _maxConnectionNum > 50) {
-            JOptionPane.showMessageDialog(null, getTranslation("The maximum number of connections to keep is set incorrectly"));
+            JOptionPane.showMessageDialog(frame, getTranslation("The maximum number of connections to keep is set incorrectly"));
             return;
         }
         int _minConnectionNum;
@@ -1337,11 +1341,11 @@ public class SettingsFrame {
             _minConnectionNum = -1;
         }
         if (_minConnectionNum < 0 || _minConnectionNum > 50) {
-            JOptionPane.showMessageDialog(null, "");
+            JOptionPane.showMessageDialog(frame, "");
             return;
         }
         if (_minConnectionNum > _maxConnectionNum) {
-            JOptionPane.showMessageDialog(null, getTranslation("The minimum number of connections to keep is set incorrectly"));
+            JOptionPane.showMessageDialog(frame, getTranslation("The minimum number of connections to keep is set incorrectly"));
             return;
         }
         int _connectionTimeLimit;
@@ -1351,7 +1355,7 @@ public class SettingsFrame {
             _connectionTimeLimit = -1;
         }
         if (_connectionTimeLimit < 0 || _connectionTimeLimit > 1800000) {
-            JOptionPane.showMessageDialog(null, getTranslation("Incorrect connection hold time setting"));
+            JOptionPane.showMessageDialog(frame, getTranslation("Incorrect connection hold time setting"));
             return;
         }
 
@@ -1420,7 +1424,7 @@ public class SettingsFrame {
         try (BufferedWriter buffW = new BufferedWriter(new FileWriter(settings))) {
             String format = JSON.toJSONString(allSettings, SerializerFeature.PrettyFormat, SerializerFeature.WriteMapNullValue, SerializerFeature.WriteDateUseDateFormat);
             buffW.write(format);
-            JOptionPane.showMessageDialog(null, "保存成功");
+            JOptionPane.showMessageDialog(frame, getTranslation("Save successfully"));
         } catch (IOException ignored) {
 
         }
@@ -1456,10 +1460,10 @@ public class SettingsFrame {
                 outPut.close();
                 if (!result.toString().isEmpty()) {
                     checkBox1.setSelected(false);
-                    JOptionPane.showMessageDialog(null, getTranslation("Add to startup failed, please try to run as administrator"));
+                    JOptionPane.showMessageDialog(frame, getTranslation("Add to startup failed, please try to run as administrator"));
                 }
-            } catch (IOException | InterruptedException e) {
-                e.printStackTrace();
+            } catch (IOException | InterruptedException ignored) {
+
             }
         } else {
             String command = "cmd.exe /c schtasks /delete /tn \"File-Engine\" /f";
@@ -1476,7 +1480,7 @@ public class SettingsFrame {
                 outPut.close();
                 if (!result.toString().isEmpty()) {
                     checkBox1.setSelected(true);
-                    JOptionPane.showMessageDialog(null, getTranslation("Delete startup failure, please try to run as administrator"));
+                    JOptionPane.showMessageDialog(frame, getTranslation("Delete startup failure, please try to run as administrator"));
                 }
             } catch (IOException | InterruptedException ignored) {
 
@@ -1504,26 +1508,26 @@ public class SettingsFrame {
 
         }
     }
+}
 
-    static class moveDesktopFiles implements Runnable {
-        @Override
-        public void run() {
-            boolean desktop1;
-            boolean desktop2;
-            File fileDesktop = FileSystemView.getFileSystemView().getHomeDirectory();
-            File fileBackUp = new File("Files");
-            if (!fileBackUp.exists()) {
-                fileBackUp.mkdir();
-            }
-            ArrayList<String> preserveFiles = new ArrayList<>();
-            preserveFiles.add(fileDesktop.getAbsolutePath());
-            preserveFiles.add("C:\\Users\\Public\\Desktop");
-            moveFiles moveFiles = new moveFiles(preserveFiles);
-            desktop1 = moveFiles.moveFolder(fileDesktop.getAbsolutePath(), fileBackUp.getAbsolutePath());
-            desktop2 = moveFiles.moveFolder("C:\\Users\\Public\\Desktop", fileBackUp.getAbsolutePath());
-            if (desktop1 || desktop2) {
-                JOptionPane.showMessageDialog(null, getTranslation("Files with the same name are detected, please move it by yourself"));
-            }
+class moveDesktopFiles implements Runnable {
+    @Override
+    public void run() {
+        boolean desktop1;
+        boolean desktop2;
+        File fileDesktop = FileSystemView.getFileSystemView().getHomeDirectory();
+        File fileBackUp = new File("Files");
+        if (!fileBackUp.exists()) {
+            fileBackUp.mkdir();
+        }
+        ArrayList<String> preserveFiles = new ArrayList<>();
+        preserveFiles.add(fileDesktop.getAbsolutePath());
+        preserveFiles.add("C:\\Users\\Public\\Desktop");
+        moveFiles moveFiles = new moveFiles(preserveFiles);
+        desktop1 = moveFiles.moveFolder(fileDesktop.getAbsolutePath(), fileBackUp.getAbsolutePath());
+        desktop2 = moveFiles.moveFolder("C:\\Users\\Public\\Desktop", fileBackUp.getAbsolutePath());
+        if (desktop1 || desktop2) {
+            JOptionPane.showMessageDialog(null, SettingsFrame.getTranslation("Files with the same name are detected, please move it by yourself"));
         }
     }
 }
