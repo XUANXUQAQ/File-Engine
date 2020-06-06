@@ -76,8 +76,8 @@ public class moveFiles {
                     }
                 }
             }
-        } catch (Exception e) {
-            System.out.println("复制整个文件夹内容操作出错");
+        } catch (Exception ignored) {
+
         }
         return isHasRepeatFiles;
     }

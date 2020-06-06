@@ -28,10 +28,10 @@ import static frames.SettingsFrame.mainExit;
 public class SearchBar {
     private static volatile boolean isCacheAndPrioritySearched = false;
     private static volatile boolean isStartSearchLocal = false;
-    private static Border border = BorderFactory.createLineBorder(new Color(73, 162, 255, 255));
-    private JFrame searchBar = new JFrame();
-    private CopyOnWriteArrayList<String> listResults = new CopyOnWriteArrayList<>();
-    private ConcurrentHashMap<String, ReaderInfo> readerMap = new ConcurrentHashMap<>();
+    private static Border border;
+    private JFrame searchBar;
+    private CopyOnWriteArrayList<String> listResults;
+    private ConcurrentHashMap<String, ReaderInfo> readerMap;
     private JLabel label1;
     private JLabel label2;
     private JLabel label3;
@@ -40,7 +40,7 @@ public class SearchBar {
     private JLabel label6;
     private JLabel label7;
     private JLabel label8;
-    private volatile AtomicInteger labelCount = new AtomicInteger(0);
+    private volatile AtomicInteger labelCount;
     private JTextField textField;
     private Color labelColor;
     private Color backgroundColor;
@@ -48,8 +48,8 @@ public class SearchBar {
     private Color fontColor;
     private volatile long startTime = 0;
     private Thread searchWaiter = null;
-    private Pattern semicolon = Pattern.compile(";");
-    private Pattern resultSplit = Pattern.compile(":");
+    private Pattern semicolon;
+    private Pattern resultSplit;
     private boolean isUserPressed = false;
     private volatile boolean isCommandMode = false;
     private volatile boolean isLockMouseMotion = false;
@@ -58,15 +58,35 @@ public class SearchBar {
     private volatile boolean isRunAsAdminPressed = false;
     private volatile boolean isCopyPathPressed = false;
     private volatile boolean timer = false;
-    private JPanel panel = new JPanel();
+    private JPanel panel;
     private long mouseWheelTime = 0;
     private int iconSideLength;
     private long visibleStartTime = 0;
-    private ExecutorService fixedThreadPool = Executors.newFixedThreadPool(9);
-    private ConcurrentLinkedQueue<String> tempResults = new ConcurrentLinkedQueue<>();
+    private ExecutorService fixedThreadPool;
+    private ConcurrentLinkedQueue<String> tempResults;
+    private ConcurrentLinkedQueue<String> pathQueue;
+    private volatile String[] searchCase;
+    private volatile String searchText;
+    private volatile String[] keywords;
+    private Search search;
+    private TaskBar taskBar;
 
 
     private SearchBar() {
+        listResults = new CopyOnWriteArrayList<>();
+        border = BorderFactory.createLineBorder(new Color(73, 162, 255, 255));
+        searchBar = new JFrame();
+        readerMap = new ConcurrentHashMap<>();
+        labelCount = new AtomicInteger(0);
+        semicolon = Pattern.compile(";");
+        resultSplit = Pattern.compile(":");
+        panel = new JPanel();
+        fixedThreadPool = Executors.newFixedThreadPool(15);
+        tempResults = new ConcurrentLinkedQueue<>();
+        pathQueue = new ConcurrentLinkedQueue<>();
+        search = Search.getInstance();
+        taskBar = TaskBar.getInstance();
+
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize(); // 获取屏幕大小
         int width = screenSize.width;
         int height = screenSize.height;
@@ -237,7 +257,7 @@ public class SearchBar {
                                 try {
                                     desktop.open(new File(semicolon.split(command)[1]));
                                 } catch (Exception e1) {
-                                    JOptionPane.showMessageDialog(null, "执行失败");
+                                    JOptionPane.showMessageDialog(null, SettingsFrame.getTranslation("Execute failed"));
                                 }
                             }
                         }
@@ -303,523 +323,7 @@ public class SearchBar {
                                     labelCount.set(listResults.size() - 1);
                                 }
 
-                                //判定当前选定位置
-                                int position, size;
-                                try {
-                                    position = getCurrentPos();
-                                    if (!isCommandMode) {
-                                        switch (position) {
-                                            case 0:
-                                                //到达了最上端，刷新显示
-                                                try {
-                                                    String path = listResults.get(labelCount.get());
-                                                    autoShowResultOnLabel(path, label1, true);
-
-                                                    path = listResults.get(labelCount.get() + 1);
-                                                    autoShowResultOnLabel(path, label2, false);
-
-                                                    path = listResults.get(labelCount.get() + 2);
-                                                    autoShowResultOnLabel(path, label3, false);
-
-                                                    path = listResults.get(labelCount.get() + 3);
-                                                    autoShowResultOnLabel(path, label4, false);
-
-                                                    path = listResults.get(labelCount.get() + 4);
-                                                    autoShowResultOnLabel(path, label5, false);
-
-                                                    path = listResults.get(labelCount.get() + 5);
-                                                    autoShowResultOnLabel(path, label6, false);
-
-                                                    path = listResults.get(labelCount.get() + 6);
-                                                    autoShowResultOnLabel(path, label7, false);
-
-                                                    path = listResults.get(labelCount.get() + 7);
-                                                    autoShowResultOnLabel(path, label8, false);
-                                                } catch (ArrayIndexOutOfBoundsException ignored) {
-
-                                                }
-                                                break;
-                                            case 1:
-                                                size = listResults.size();
-                                                if (size == 2) {
-                                                    label1.setBackground(labelColor);
-                                                    label2.setBackground(backgroundColor);
-                                                } else if (size == 3) {
-                                                    label1.setBackground(labelColor);
-                                                    label2.setBackground(backgroundColor);
-                                                    label3.setBackground(backgroundColor);
-                                                } else if (size == 4) {
-                                                    label1.setBackground(labelColor);
-                                                    label2.setBackground(backgroundColor);
-                                                    label3.setBackground(backgroundColor);
-                                                    label4.setBackground(backgroundColor);
-                                                } else if (size == 5) {
-                                                    label1.setBackground(labelColor);
-                                                    label2.setBackground(backgroundColor);
-                                                    label3.setBackground(backgroundColor);
-                                                    label4.setBackground(backgroundColor);
-                                                    label5.setBackground(backgroundColor);
-                                                } else if (size == 6) {
-                                                    label1.setBackground(labelColor);
-                                                    label2.setBackground(backgroundColor);
-                                                    label3.setBackground(backgroundColor);
-                                                    label4.setBackground(backgroundColor);
-                                                    label5.setBackground(backgroundColor);
-                                                    label6.setBackground(backgroundColor);
-                                                } else if (size == 7) {
-                                                    label1.setBackground(labelColor);
-                                                    label2.setBackground(backgroundColor);
-                                                    label3.setBackground(backgroundColor);
-                                                    label4.setBackground(backgroundColor);
-                                                    label5.setBackground(backgroundColor);
-                                                    label6.setBackground(backgroundColor);
-                                                    label7.setBackground(backgroundColor);
-                                                } else if (size > 7) {
-                                                    label1.setBackground(labelColor);
-                                                    label2.setBackground(backgroundColor);
-                                                    label3.setBackground(backgroundColor);
-                                                    label4.setBackground(backgroundColor);
-                                                    label5.setBackground(backgroundColor);
-                                                    label6.setBackground(backgroundColor);
-                                                    label7.setBackground(backgroundColor);
-                                                    label8.setBackground(backgroundColor);
-                                                }
-                                                break;
-                                            case 2:
-                                                size = listResults.size();
-                                                if (size == 3) {
-                                                    label1.setBackground(backgroundColor);
-                                                    label2.setBackground(labelColor);
-                                                    label3.setBackground(backgroundColor);
-                                                } else if (size == 4) {
-                                                    label1.setBackground(backgroundColor);
-                                                    label2.setBackground(labelColor);
-                                                    label3.setBackground(backgroundColor);
-                                                    label4.setBackground(backgroundColor);
-                                                } else if (size == 5) {
-                                                    label1.setBackground(backgroundColor);
-                                                    label2.setBackground(labelColor);
-                                                    label3.setBackground(backgroundColor);
-                                                    label4.setBackground(backgroundColor);
-                                                    label5.setBackground(backgroundColor);
-                                                } else if (size == 6) {
-                                                    label1.setBackground(backgroundColor);
-                                                    label2.setBackground(labelColor);
-                                                    label3.setBackground(backgroundColor);
-                                                    label4.setBackground(backgroundColor);
-                                                    label5.setBackground(backgroundColor);
-                                                    label6.setBackground(backgroundColor);
-                                                } else if (size == 7) {
-                                                    label1.setBackground(backgroundColor);
-                                                    label2.setBackground(labelColor);
-                                                    label3.setBackground(backgroundColor);
-                                                    label4.setBackground(backgroundColor);
-                                                    label5.setBackground(backgroundColor);
-                                                    label6.setBackground(backgroundColor);
-                                                    label7.setBackground(backgroundColor);
-                                                } else if (size > 7) {
-                                                    label1.setBackground(backgroundColor);
-                                                    label2.setBackground(labelColor);
-                                                    label3.setBackground(backgroundColor);
-                                                    label4.setBackground(backgroundColor);
-                                                    label5.setBackground(backgroundColor);
-                                                    label6.setBackground(backgroundColor);
-                                                    label7.setBackground(backgroundColor);
-                                                    label8.setBackground(backgroundColor);
-                                                }
-                                                break;
-                                            case 3:
-                                                size = listResults.size();
-                                                if (size == 4) {
-                                                    label1.setBackground(backgroundColor);
-                                                    label2.setBackground(backgroundColor);
-                                                    label3.setBackground(labelColor);
-                                                    label4.setBackground(backgroundColor);
-                                                } else if (size == 5) {
-                                                    label1.setBackground(backgroundColor);
-                                                    label2.setBackground(backgroundColor);
-                                                    label3.setBackground(labelColor);
-                                                    label4.setBackground(backgroundColor);
-                                                    label5.setBackground(backgroundColor);
-                                                } else if (size == 6) {
-                                                    label1.setBackground(backgroundColor);
-                                                    label2.setBackground(backgroundColor);
-                                                    label3.setBackground(labelColor);
-                                                    label4.setBackground(backgroundColor);
-                                                    label5.setBackground(backgroundColor);
-                                                    label6.setBackground(backgroundColor);
-                                                } else if (size == 7) {
-                                                    label1.setBackground(backgroundColor);
-                                                    label2.setBackground(backgroundColor);
-                                                    label3.setBackground(labelColor);
-                                                    label4.setBackground(backgroundColor);
-                                                    label5.setBackground(backgroundColor);
-                                                    label6.setBackground(backgroundColor);
-                                                    label7.setBackground(backgroundColor);
-                                                } else if (size > 7) {
-                                                    label1.setBackground(backgroundColor);
-                                                    label2.setBackground(backgroundColor);
-                                                    label3.setBackground(labelColor);
-                                                    label4.setBackground(backgroundColor);
-                                                    label5.setBackground(backgroundColor);
-                                                    label6.setBackground(backgroundColor);
-                                                    label7.setBackground(backgroundColor);
-                                                    label8.setBackground(backgroundColor);
-                                                }
-                                                break;
-                                            case 4:
-                                                size = listResults.size();
-                                                if (size == 5) {
-                                                    label1.setBackground(backgroundColor);
-                                                    label2.setBackground(backgroundColor);
-                                                    label3.setBackground(backgroundColor);
-                                                    label4.setBackground(labelColor);
-                                                    label5.setBackground(backgroundColor);
-                                                } else if (size == 6) {
-                                                    label1.setBackground(backgroundColor);
-                                                    label2.setBackground(backgroundColor);
-                                                    label3.setBackground(backgroundColor);
-                                                    label4.setBackground(labelColor);
-                                                    label5.setBackground(backgroundColor);
-                                                    label6.setBackground(backgroundColor);
-                                                } else if (size == 7) {
-                                                    label1.setBackground(backgroundColor);
-                                                    label2.setBackground(backgroundColor);
-                                                    label3.setBackground(backgroundColor);
-                                                    label4.setBackground(labelColor);
-                                                    label5.setBackground(backgroundColor);
-                                                    label6.setBackground(backgroundColor);
-                                                    label7.setBackground(backgroundColor);
-                                                } else if (size > 7) {
-                                                    label1.setBackground(backgroundColor);
-                                                    label2.setBackground(backgroundColor);
-                                                    label3.setBackground(backgroundColor);
-                                                    label4.setBackground(labelColor);
-                                                    label5.setBackground(backgroundColor);
-                                                    label6.setBackground(backgroundColor);
-                                                    label7.setBackground(backgroundColor);
-                                                    label8.setBackground(backgroundColor);
-                                                }
-                                                break;
-                                            case 5:
-                                                size = listResults.size();
-                                                if (size == 6) {
-                                                    label1.setBackground(backgroundColor);
-                                                    label2.setBackground(backgroundColor);
-                                                    label3.setBackground(backgroundColor);
-                                                    label4.setBackground(backgroundColor);
-                                                    label5.setBackground(labelColor);
-                                                    label6.setBackground(backgroundColor);
-                                                } else if (size == 7) {
-                                                    label1.setBackground(backgroundColor);
-                                                    label2.setBackground(backgroundColor);
-                                                    label3.setBackground(backgroundColor);
-                                                    label4.setBackground(backgroundColor);
-                                                    label5.setBackground(labelColor);
-                                                    label6.setBackground(backgroundColor);
-                                                    label7.setBackground(backgroundColor);
-                                                } else if (size > 7) {
-                                                    label1.setBackground(backgroundColor);
-                                                    label2.setBackground(backgroundColor);
-                                                    label3.setBackground(backgroundColor);
-                                                    label4.setBackground(backgroundColor);
-                                                    label5.setBackground(labelColor);
-                                                    label6.setBackground(backgroundColor);
-                                                    label7.setBackground(backgroundColor);
-                                                    label8.setBackground(backgroundColor);
-                                                }
-                                                break;
-                                            case 6:
-                                                size = listResults.size();
-                                                if (size == 7) {
-                                                    label1.setBackground(backgroundColor);
-                                                    label2.setBackground(backgroundColor);
-                                                    label3.setBackground(backgroundColor);
-                                                    label4.setBackground(backgroundColor);
-                                                    label5.setBackground(backgroundColor);
-                                                    label6.setBackground(labelColor);
-                                                    label7.setBackground(backgroundColor);
-                                                } else if (size > 7) {
-                                                    label1.setBackground(backgroundColor);
-                                                    label2.setBackground(backgroundColor);
-                                                    label3.setBackground(backgroundColor);
-                                                    label4.setBackground(backgroundColor);
-                                                    label5.setBackground(backgroundColor);
-                                                    label6.setBackground(labelColor);
-                                                    label7.setBackground(backgroundColor);
-                                                    label8.setBackground(backgroundColor);
-                                                }
-                                                break;
-                                            case 7:
-                                                label1.setBackground(backgroundColor);
-                                                label2.setBackground(backgroundColor);
-                                                label3.setBackground(backgroundColor);
-                                                label4.setBackground(backgroundColor);
-                                                label5.setBackground(backgroundColor);
-                                                label6.setBackground(backgroundColor);
-                                                label7.setBackground(labelColor);
-                                                label8.setBackground(backgroundColor);
-                                                break;
-                                        }
-                                    } else {
-                                        switch (position) {
-                                            case 0:
-                                                //到达了最上端，刷新显示
-                                                try {
-                                                    String command = listResults.get(labelCount.get());
-                                                    showCommandOnLabel(command, label1, true);
-
-                                                    command = listResults.get(labelCount.get() + 1);
-                                                    showCommandOnLabel(command, label2, false);
-
-                                                    command = listResults.get(labelCount.get() + 2);
-                                                    showCommandOnLabel(command, label3, false);
-
-                                                    command = listResults.get(labelCount.get() + 3);
-                                                    showCommandOnLabel(command, label4, false);
-
-                                                    command = listResults.get(labelCount.get() + 4);
-                                                    showCommandOnLabel(command, label5, false);
-
-                                                    command = listResults.get(labelCount.get() + 5);
-                                                    showCommandOnLabel(command, label6, false);
-
-                                                    command = listResults.get(labelCount.get() + 6);
-                                                    showCommandOnLabel(command, label7, false);
-
-                                                    command = listResults.get(labelCount.get() + 7);
-                                                    showCommandOnLabel(command, label8, false);
-                                                } catch (ArrayIndexOutOfBoundsException ignored) {
-
-                                                }
-                                                break;
-                                            case 1:
-                                                size = listResults.size();
-                                                if (size == 2) {
-                                                    label1.setBackground(labelColor);
-                                                    label2.setBackground(backgroundColor);
-                                                } else if (size == 3) {
-                                                    label1.setBackground(labelColor);
-                                                    label2.setBackground(backgroundColor);
-                                                    label3.setBackground(backgroundColor);
-                                                } else if (size == 4) {
-                                                    label1.setBackground(labelColor);
-                                                    label2.setBackground(backgroundColor);
-                                                    label3.setBackground(backgroundColor);
-                                                    label4.setBackground(backgroundColor);
-                                                } else if (size == 5) {
-                                                    label1.setBackground(labelColor);
-                                                    label2.setBackground(backgroundColor);
-                                                    label3.setBackground(backgroundColor);
-                                                    label4.setBackground(backgroundColor);
-                                                    label5.setBackground(backgroundColor);
-                                                } else if (size == 6) {
-                                                    label1.setBackground(labelColor);
-                                                    label2.setBackground(backgroundColor);
-                                                    label3.setBackground(backgroundColor);
-                                                    label4.setBackground(backgroundColor);
-                                                    label5.setBackground(backgroundColor);
-                                                    label6.setBackground(backgroundColor);
-                                                } else if (size == 7) {
-                                                    label1.setBackground(labelColor);
-                                                    label2.setBackground(backgroundColor);
-                                                    label3.setBackground(backgroundColor);
-                                                    label4.setBackground(backgroundColor);
-                                                    label5.setBackground(backgroundColor);
-                                                    label6.setBackground(backgroundColor);
-                                                    label7.setBackground(backgroundColor);
-                                                } else if (size > 7) {
-                                                    label1.setBackground(labelColor);
-                                                    label2.setBackground(backgroundColor);
-                                                    label3.setBackground(backgroundColor);
-                                                    label4.setBackground(backgroundColor);
-                                                    label5.setBackground(backgroundColor);
-                                                    label6.setBackground(backgroundColor);
-                                                    label7.setBackground(backgroundColor);
-                                                    label8.setBackground(backgroundColor);
-                                                }
-                                                break;
-                                            case 2:
-                                                size = listResults.size();
-                                                if (size == 3) {
-                                                    label1.setBackground(backgroundColor);
-                                                    label2.setBackground(labelColor);
-                                                    label3.setBackground(backgroundColor);
-                                                } else if (size == 4) {
-                                                    label1.setBackground(backgroundColor);
-                                                    label2.setBackground(labelColor);
-                                                    label3.setBackground(backgroundColor);
-                                                    label4.setBackground(backgroundColor);
-                                                } else if (size == 5) {
-                                                    label1.setBackground(backgroundColor);
-                                                    label2.setBackground(labelColor);
-                                                    label3.setBackground(backgroundColor);
-                                                    label4.setBackground(backgroundColor);
-                                                    label5.setBackground(backgroundColor);
-                                                } else if (size == 6) {
-                                                    label1.setBackground(backgroundColor);
-                                                    label2.setBackground(labelColor);
-                                                    label3.setBackground(backgroundColor);
-                                                    label4.setBackground(backgroundColor);
-                                                    label5.setBackground(backgroundColor);
-                                                    label6.setBackground(backgroundColor);
-                                                } else if (size == 7) {
-                                                    label1.setBackground(backgroundColor);
-                                                    label2.setBackground(labelColor);
-                                                    label3.setBackground(backgroundColor);
-                                                    label4.setBackground(backgroundColor);
-                                                    label5.setBackground(backgroundColor);
-                                                    label6.setBackground(backgroundColor);
-                                                    label7.setBackground(backgroundColor);
-                                                } else if (size > 7) {
-                                                    label1.setBackground(backgroundColor);
-                                                    label2.setBackground(labelColor);
-                                                    label3.setBackground(backgroundColor);
-                                                    label4.setBackground(backgroundColor);
-                                                    label5.setBackground(backgroundColor);
-                                                    label6.setBackground(backgroundColor);
-                                                    label7.setBackground(backgroundColor);
-                                                    label8.setBackground(backgroundColor);
-                                                }
-                                                break;
-                                            case 3:
-                                                size = listResults.size();
-                                                if (size == 4) {
-                                                    label1.setBackground(backgroundColor);
-                                                    label2.setBackground(backgroundColor);
-                                                    label3.setBackground(labelColor);
-                                                    label4.setBackground(backgroundColor);
-                                                } else if (size == 5) {
-                                                    label1.setBackground(backgroundColor);
-                                                    label2.setBackground(backgroundColor);
-                                                    label3.setBackground(labelColor);
-                                                    label4.setBackground(backgroundColor);
-                                                    label5.setBackground(backgroundColor);
-                                                } else if (size == 6) {
-                                                    label1.setBackground(backgroundColor);
-                                                    label2.setBackground(backgroundColor);
-                                                    label3.setBackground(labelColor);
-                                                    label4.setBackground(backgroundColor);
-                                                    label5.setBackground(backgroundColor);
-                                                    label6.setBackground(backgroundColor);
-                                                } else if (size == 7) {
-                                                    label1.setBackground(backgroundColor);
-                                                    label2.setBackground(backgroundColor);
-                                                    label3.setBackground(labelColor);
-                                                    label4.setBackground(backgroundColor);
-                                                    label5.setBackground(backgroundColor);
-                                                    label6.setBackground(backgroundColor);
-                                                    label7.setBackground(backgroundColor);
-                                                } else if (size > 7) {
-                                                    label1.setBackground(backgroundColor);
-                                                    label2.setBackground(backgroundColor);
-                                                    label3.setBackground(labelColor);
-                                                    label4.setBackground(backgroundColor);
-                                                    label5.setBackground(backgroundColor);
-                                                    label6.setBackground(backgroundColor);
-                                                    label7.setBackground(backgroundColor);
-                                                    label8.setBackground(backgroundColor);
-                                                }
-                                                break;
-                                            case 4:
-                                                size = listResults.size();
-                                                if (size == 5) {
-                                                    label1.setBackground(backgroundColor);
-                                                    label2.setBackground(backgroundColor);
-                                                    label3.setBackground(backgroundColor);
-                                                    label4.setBackground(labelColor);
-                                                    label5.setBackground(backgroundColor);
-                                                } else if (size == 6) {
-                                                    label1.setBackground(backgroundColor);
-                                                    label2.setBackground(backgroundColor);
-                                                    label3.setBackground(backgroundColor);
-                                                    label4.setBackground(labelColor);
-                                                    label5.setBackground(backgroundColor);
-                                                    label6.setBackground(backgroundColor);
-                                                } else if (size == 7) {
-                                                    label1.setBackground(backgroundColor);
-                                                    label2.setBackground(backgroundColor);
-                                                    label3.setBackground(backgroundColor);
-                                                    label4.setBackground(labelColor);
-                                                    label5.setBackground(backgroundColor);
-                                                    label6.setBackground(backgroundColor);
-                                                    label7.setBackground(backgroundColor);
-                                                } else if (size > 7) {
-                                                    label1.setBackground(backgroundColor);
-                                                    label2.setBackground(backgroundColor);
-                                                    label3.setBackground(backgroundColor);
-                                                    label4.setBackground(labelColor);
-                                                    label5.setBackground(backgroundColor);
-                                                    label6.setBackground(backgroundColor);
-                                                    label7.setBackground(backgroundColor);
-                                                    label8.setBackground(backgroundColor);
-                                                }
-                                                break;
-                                            case 5:
-                                                size = listResults.size();
-                                                if (size == 6) {
-                                                    label1.setBackground(backgroundColor);
-                                                    label2.setBackground(backgroundColor);
-                                                    label3.setBackground(backgroundColor);
-                                                    label4.setBackground(backgroundColor);
-                                                    label5.setBackground(labelColor);
-                                                    label6.setBackground(backgroundColor);
-                                                } else if (size == 7) {
-                                                    label1.setBackground(backgroundColor);
-                                                    label2.setBackground(backgroundColor);
-                                                    label3.setBackground(backgroundColor);
-                                                    label4.setBackground(backgroundColor);
-                                                    label5.setBackground(labelColor);
-                                                    label6.setBackground(backgroundColor);
-                                                    label7.setBackground(backgroundColor);
-                                                } else if (size > 7) {
-                                                    label1.setBackground(backgroundColor);
-                                                    label2.setBackground(backgroundColor);
-                                                    label3.setBackground(backgroundColor);
-                                                    label4.setBackground(backgroundColor);
-                                                    label5.setBackground(labelColor);
-                                                    label6.setBackground(backgroundColor);
-                                                    label7.setBackground(backgroundColor);
-                                                    label8.setBackground(backgroundColor);
-                                                }
-                                                break;
-                                            case 6:
-                                                size = listResults.size();
-                                                if (size == 7) {
-                                                    label1.setBackground(backgroundColor);
-                                                    label2.setBackground(backgroundColor);
-                                                    label3.setBackground(backgroundColor);
-                                                    label4.setBackground(backgroundColor);
-                                                    label5.setBackground(backgroundColor);
-                                                    label6.setBackground(labelColor);
-                                                    label7.setBackground(backgroundColor);
-                                                } else if (size > 7) {
-                                                    label1.setBackground(backgroundColor);
-                                                    label2.setBackground(backgroundColor);
-                                                    label3.setBackground(backgroundColor);
-                                                    label4.setBackground(backgroundColor);
-                                                    label5.setBackground(backgroundColor);
-                                                    label6.setBackground(labelColor);
-                                                    label7.setBackground(backgroundColor);
-                                                    label8.setBackground(backgroundColor);
-                                                }
-                                                break;
-                                            case 7:
-                                                label1.setBackground(backgroundColor);
-                                                label2.setBackground(backgroundColor);
-                                                label3.setBackground(backgroundColor);
-                                                label4.setBackground(backgroundColor);
-                                                label5.setBackground(backgroundColor);
-                                                label6.setBackground(backgroundColor);
-                                                label7.setBackground(labelColor);
-                                                label8.setBackground(backgroundColor);
-                                                break;
-                                        }
-                                    }
-                                } catch (NullPointerException ignored) {
-
-                                }
-
+                                moveUpward(getCurrentPos());
                             }
                             if (labelCount.get() < 0) {
                                 labelCount.set(0);
@@ -850,522 +354,8 @@ public class SearchBar {
                                     if (labelCount.get() >= listResults.size()) {
                                         labelCount.set(listResults.size() - 1);
                                     }
-                                    //判定当前选定位置
-                                    int position;
-                                    try {
-                                        position = getCurrentPos();
-                                        if (!isCommandMode) {
-                                            switch (position) {
-                                                case 0:
-                                                    int size = listResults.size();
-                                                    if (size == 2) {
-                                                        label1.setBackground(backgroundColor);
-                                                        label2.setBackground(labelColor);
-                                                    } else if (size == 3) {
-                                                        label1.setBackground(backgroundColor);
-                                                        label2.setBackground(labelColor);
-                                                        label3.setBackground(backgroundColor);
-                                                    } else if (size == 4) {
-                                                        label1.setBackground(backgroundColor);
-                                                        label2.setBackground(labelColor);
-                                                        label3.setBackground(backgroundColor);
-                                                        label4.setBackground(backgroundColor);
-                                                    } else if (size == 5) {
-                                                        label1.setBackground(backgroundColor);
-                                                        label2.setBackground(labelColor);
-                                                        label3.setBackground(backgroundColor);
-                                                        label4.setBackground(backgroundColor);
-                                                        label5.setBackground(backgroundColor);
-                                                    } else if (size == 6) {
-                                                        label1.setBackground(backgroundColor);
-                                                        label2.setBackground(labelColor);
-                                                        label3.setBackground(backgroundColor);
-                                                        label4.setBackground(backgroundColor);
-                                                        label5.setBackground(backgroundColor);
-                                                        label6.setBackground(backgroundColor);
-                                                    } else if (size == 7) {
-                                                        label1.setBackground(backgroundColor);
-                                                        label2.setBackground(labelColor);
-                                                        label3.setBackground(backgroundColor);
-                                                        label4.setBackground(backgroundColor);
-                                                        label5.setBackground(backgroundColor);
-                                                        label6.setBackground(backgroundColor);
-                                                        label7.setBackground(backgroundColor);
-                                                    } else if (size > 7) {
-                                                        label1.setBackground(backgroundColor);
-                                                        label2.setBackground(labelColor);
-                                                        label3.setBackground(backgroundColor);
-                                                        label4.setBackground(backgroundColor);
-                                                        label5.setBackground(backgroundColor);
-                                                        label6.setBackground(backgroundColor);
-                                                        label7.setBackground(backgroundColor);
-                                                        label8.setBackground(backgroundColor);
-                                                    }
-                                                    break;
-                                                case 1:
-                                                    size = listResults.size();
-                                                    if (size == 3) {
-                                                        label1.setBackground(backgroundColor);
-                                                        label2.setBackground(backgroundColor);
-                                                        label3.setBackground(labelColor);
-                                                    } else if (size == 4) {
-                                                        label1.setBackground(backgroundColor);
-                                                        label2.setBackground(backgroundColor);
-                                                        label3.setBackground(labelColor);
-                                                        label4.setBackground(backgroundColor);
-                                                    } else if (size == 5) {
-                                                        label1.setBackground(backgroundColor);
-                                                        label2.setBackground(backgroundColor);
-                                                        label3.setBackground(labelColor);
-                                                        label4.setBackground(backgroundColor);
-                                                        label5.setBackground(backgroundColor);
-                                                    } else if (size == 6) {
-                                                        label1.setBackground(backgroundColor);
-                                                        label2.setBackground(backgroundColor);
-                                                        label3.setBackground(labelColor);
-                                                        label4.setBackground(backgroundColor);
-                                                        label5.setBackground(backgroundColor);
-                                                        label6.setBackground(backgroundColor);
-                                                    } else if (size == 7) {
-                                                        label1.setBackground(backgroundColor);
-                                                        label2.setBackground(backgroundColor);
-                                                        label3.setBackground(labelColor);
-                                                        label4.setBackground(backgroundColor);
-                                                        label5.setBackground(backgroundColor);
-                                                        label6.setBackground(backgroundColor);
-                                                        label7.setBackground(backgroundColor);
-                                                    } else if (size > 7) {
-                                                        label1.setBackground(backgroundColor);
-                                                        label2.setBackground(backgroundColor);
-                                                        label3.setBackground(labelColor);
-                                                        label4.setBackground(backgroundColor);
-                                                        label5.setBackground(backgroundColor);
-                                                        label6.setBackground(backgroundColor);
-                                                        label7.setBackground(backgroundColor);
-                                                        label8.setBackground(backgroundColor);
-                                                    }
-                                                    break;
-                                                case 2:
-                                                    size = listResults.size();
-                                                    if (size == 4) {
-                                                        label1.setBackground(backgroundColor);
-                                                        label2.setBackground(backgroundColor);
-                                                        label3.setBackground(backgroundColor);
-                                                        label4.setBackground(labelColor);
-                                                    } else if (size == 5) {
-                                                        label1.setBackground(backgroundColor);
-                                                        label2.setBackground(backgroundColor);
-                                                        label3.setBackground(backgroundColor);
-                                                        label4.setBackground(labelColor);
-                                                        label5.setBackground(backgroundColor);
-                                                    } else if (size == 6) {
-                                                        label1.setBackground(backgroundColor);
-                                                        label2.setBackground(backgroundColor);
-                                                        label3.setBackground(backgroundColor);
-                                                        label4.setBackground(labelColor);
-                                                        label5.setBackground(backgroundColor);
-                                                        label6.setBackground(backgroundColor);
-                                                    } else if (size == 7) {
-                                                        label1.setBackground(backgroundColor);
-                                                        label2.setBackground(backgroundColor);
-                                                        label3.setBackground(backgroundColor);
-                                                        label4.setBackground(labelColor);
-                                                        label5.setBackground(backgroundColor);
-                                                        label6.setBackground(backgroundColor);
-                                                        label7.setBackground(backgroundColor);
-                                                    } else if (size > 7) {
-                                                        label1.setBackground(backgroundColor);
-                                                        label2.setBackground(backgroundColor);
-                                                        label3.setBackground(backgroundColor);
-                                                        label4.setBackground(labelColor);
-                                                        label5.setBackground(backgroundColor);
-                                                        label6.setBackground(backgroundColor);
-                                                        label7.setBackground(backgroundColor);
-                                                        label8.setBackground(backgroundColor);
-                                                    }
-                                                    break;
-                                                case 3:
-                                                    size = listResults.size();
-                                                    if (size == 5) {
-                                                        label1.setBackground(backgroundColor);
-                                                        label2.setBackground(backgroundColor);
-                                                        label3.setBackground(backgroundColor);
-                                                        label4.setBackground(backgroundColor);
-                                                        label5.setBackground(labelColor);
-                                                    } else if (size == 6) {
-                                                        label1.setBackground(backgroundColor);
-                                                        label2.setBackground(backgroundColor);
-                                                        label3.setBackground(backgroundColor);
-                                                        label4.setBackground(backgroundColor);
-                                                        label5.setBackground(labelColor);
-                                                        label6.setBackground(backgroundColor);
-                                                    } else if (size == 7) {
-                                                        label1.setBackground(backgroundColor);
-                                                        label2.setBackground(backgroundColor);
-                                                        label3.setBackground(backgroundColor);
-                                                        label4.setBackground(backgroundColor);
-                                                        label5.setBackground(labelColor);
-                                                        label6.setBackground(backgroundColor);
-                                                        label7.setBackground(backgroundColor);
-                                                    } else if (size > 7) {
-                                                        label1.setBackground(backgroundColor);
-                                                        label2.setBackground(backgroundColor);
-                                                        label3.setBackground(backgroundColor);
-                                                        label4.setBackground(backgroundColor);
-                                                        label5.setBackground(labelColor);
-                                                        label6.setBackground(backgroundColor);
-                                                        label7.setBackground(backgroundColor);
-                                                        label8.setBackground(backgroundColor);
-                                                    }
-                                                    break;
-                                                case 4:
-                                                    size = listResults.size();
-                                                    if (size == 6) {
-                                                        label1.setBackground(backgroundColor);
-                                                        label2.setBackground(backgroundColor);
-                                                        label3.setBackground(backgroundColor);
-                                                        label4.setBackground(backgroundColor);
-                                                        label5.setBackground(backgroundColor);
-                                                        label6.setBackground(labelColor);
-                                                    } else if (size == 7) {
-                                                        label1.setBackground(backgroundColor);
-                                                        label2.setBackground(backgroundColor);
-                                                        label3.setBackground(backgroundColor);
-                                                        label4.setBackground(backgroundColor);
-                                                        label5.setBackground(backgroundColor);
-                                                        label6.setBackground(labelColor);
-                                                        label7.setBackground(backgroundColor);
-                                                    } else if (size > 7) {
-                                                        label1.setBackground(backgroundColor);
-                                                        label2.setBackground(backgroundColor);
-                                                        label3.setBackground(backgroundColor);
-                                                        label4.setBackground(backgroundColor);
-                                                        label5.setBackground(backgroundColor);
-                                                        label6.setBackground(labelColor);
-                                                        label7.setBackground(backgroundColor);
-                                                        label8.setBackground(backgroundColor);
-                                                    }
-                                                    break;
-                                                case 5:
-                                                    size = listResults.size();
-                                                    if (size == 7) {
-                                                        label1.setBackground(backgroundColor);
-                                                        label2.setBackground(backgroundColor);
-                                                        label3.setBackground(backgroundColor);
-                                                        label4.setBackground(backgroundColor);
-                                                        label5.setBackground(backgroundColor);
-                                                        label6.setBackground(backgroundColor);
-                                                        label7.setBackground(labelColor);
-                                                    } else if (size > 7) {
-                                                        label1.setBackground(backgroundColor);
-                                                        label2.setBackground(backgroundColor);
-                                                        label3.setBackground(backgroundColor);
-                                                        label4.setBackground(backgroundColor);
-                                                        label5.setBackground(backgroundColor);
-                                                        label6.setBackground(backgroundColor);
-                                                        label7.setBackground(labelColor);
-                                                        label8.setBackground(backgroundColor);
-                                                    }
-                                                    break;
-                                                case 6:
-                                                    label1.setBackground(backgroundColor);
-                                                    label2.setBackground(backgroundColor);
-                                                    label3.setBackground(backgroundColor);
-                                                    label4.setBackground(backgroundColor);
-                                                    label5.setBackground(backgroundColor);
-                                                    label6.setBackground(backgroundColor);
-                                                    label7.setBackground(backgroundColor);
-                                                    label8.setBackground(labelColor);
-                                                    break;
-                                                case 7:
-                                                    //到达最下端，刷新显示
-                                                    try {
-                                                        String path = listResults.get(labelCount.get() - 7);
-                                                        autoShowResultOnLabel(path, label1, false);
 
-                                                        path = listResults.get(labelCount.get() - 6);
-                                                        autoShowResultOnLabel(path, label2, false);
-
-                                                        path = listResults.get(labelCount.get() - 5);
-                                                        autoShowResultOnLabel(path, label3, false);
-
-                                                        path = listResults.get(labelCount.get() - 4);
-                                                        autoShowResultOnLabel(path, label4, false);
-
-                                                        path = listResults.get(labelCount.get() - 3);
-                                                        autoShowResultOnLabel(path, label5, false);
-
-                                                        path = listResults.get(labelCount.get() - 2);
-                                                        autoShowResultOnLabel(path, label6, false);
-
-                                                        path = listResults.get(labelCount.get() - 1);
-                                                        autoShowResultOnLabel(path, label7, false);
-
-                                                        path = listResults.get(labelCount.get());
-                                                        autoShowResultOnLabel(path, label8, true);
-                                                    } catch (ArrayIndexOutOfBoundsException ignored) {
-
-                                                    }
-                                                    break;
-                                            }
-                                        } else {
-                                            switch (position) {
-                                                case 0:
-                                                    int size = listResults.size();
-                                                    if (size == 2) {
-                                                        label1.setBackground(backgroundColor);
-                                                        label2.setBackground(labelColor);
-                                                    } else if (size == 3) {
-                                                        label1.setBackground(backgroundColor);
-                                                        label2.setBackground(labelColor);
-                                                        label3.setBackground(backgroundColor);
-                                                    } else if (size == 4) {
-                                                        label1.setBackground(backgroundColor);
-                                                        label2.setBackground(labelColor);
-                                                        label3.setBackground(backgroundColor);
-                                                        label4.setBackground(backgroundColor);
-                                                    } else if (size == 5) {
-                                                        label1.setBackground(backgroundColor);
-                                                        label2.setBackground(labelColor);
-                                                        label3.setBackground(backgroundColor);
-                                                        label4.setBackground(backgroundColor);
-                                                        label5.setBackground(backgroundColor);
-                                                    } else if (size == 6) {
-                                                        label1.setBackground(backgroundColor);
-                                                        label2.setBackground(labelColor);
-                                                        label3.setBackground(backgroundColor);
-                                                        label4.setBackground(backgroundColor);
-                                                        label5.setBackground(backgroundColor);
-                                                        label6.setBackground(backgroundColor);
-                                                    } else if (size == 7) {
-                                                        label1.setBackground(backgroundColor);
-                                                        label2.setBackground(labelColor);
-                                                        label3.setBackground(backgroundColor);
-                                                        label4.setBackground(backgroundColor);
-                                                        label5.setBackground(backgroundColor);
-                                                        label6.setBackground(backgroundColor);
-                                                        label7.setBackground(backgroundColor);
-                                                    } else if (size > 7) {
-                                                        label1.setBackground(backgroundColor);
-                                                        label2.setBackground(labelColor);
-                                                        label3.setBackground(backgroundColor);
-                                                        label4.setBackground(backgroundColor);
-                                                        label5.setBackground(backgroundColor);
-                                                        label6.setBackground(backgroundColor);
-                                                        label7.setBackground(backgroundColor);
-                                                        label8.setBackground(backgroundColor);
-                                                    }
-                                                    break;
-                                                case 1:
-                                                    size = listResults.size();
-                                                    if (size == 3) {
-                                                        label1.setBackground(backgroundColor);
-                                                        label2.setBackground(backgroundColor);
-                                                        label3.setBackground(labelColor);
-                                                    } else if (size == 4) {
-                                                        label1.setBackground(backgroundColor);
-                                                        label2.setBackground(backgroundColor);
-                                                        label3.setBackground(labelColor);
-                                                        label4.setBackground(backgroundColor);
-                                                    } else if (size == 5) {
-                                                        label1.setBackground(backgroundColor);
-                                                        label2.setBackground(backgroundColor);
-                                                        label3.setBackground(labelColor);
-                                                        label4.setBackground(backgroundColor);
-                                                        label5.setBackground(backgroundColor);
-                                                    } else if (size == 6) {
-                                                        label1.setBackground(backgroundColor);
-                                                        label2.setBackground(backgroundColor);
-                                                        label3.setBackground(labelColor);
-                                                        label4.setBackground(backgroundColor);
-                                                        label5.setBackground(backgroundColor);
-                                                        label6.setBackground(backgroundColor);
-                                                    } else if (size == 7) {
-                                                        label1.setBackground(backgroundColor);
-                                                        label2.setBackground(backgroundColor);
-                                                        label3.setBackground(labelColor);
-                                                        label4.setBackground(backgroundColor);
-                                                        label5.setBackground(backgroundColor);
-                                                        label6.setBackground(backgroundColor);
-                                                        label7.setBackground(backgroundColor);
-                                                    } else if (size > 7) {
-                                                        label1.setBackground(backgroundColor);
-                                                        label2.setBackground(backgroundColor);
-                                                        label3.setBackground(labelColor);
-                                                        label4.setBackground(backgroundColor);
-                                                        label5.setBackground(backgroundColor);
-                                                        label6.setBackground(backgroundColor);
-                                                        label7.setBackground(backgroundColor);
-                                                        label8.setBackground(backgroundColor);
-                                                    }
-                                                    break;
-                                                case 2:
-                                                    size = listResults.size();
-                                                    if (size == 4) {
-                                                        label1.setBackground(backgroundColor);
-                                                        label2.setBackground(backgroundColor);
-                                                        label3.setBackground(backgroundColor);
-                                                        label4.setBackground(labelColor);
-                                                    } else if (size == 5) {
-                                                        label1.setBackground(backgroundColor);
-                                                        label2.setBackground(backgroundColor);
-                                                        label3.setBackground(backgroundColor);
-                                                        label4.setBackground(labelColor);
-                                                        label5.setBackground(backgroundColor);
-                                                    } else if (size == 6) {
-                                                        label1.setBackground(backgroundColor);
-                                                        label2.setBackground(backgroundColor);
-                                                        label3.setBackground(backgroundColor);
-                                                        label4.setBackground(labelColor);
-                                                        label5.setBackground(backgroundColor);
-                                                        label6.setBackground(backgroundColor);
-                                                    } else if (size == 7) {
-                                                        label1.setBackground(backgroundColor);
-                                                        label2.setBackground(backgroundColor);
-                                                        label3.setBackground(backgroundColor);
-                                                        label4.setBackground(labelColor);
-                                                        label5.setBackground(backgroundColor);
-                                                        label6.setBackground(backgroundColor);
-                                                        label7.setBackground(backgroundColor);
-                                                    } else if (size > 7) {
-                                                        label1.setBackground(backgroundColor);
-                                                        label2.setBackground(backgroundColor);
-                                                        label3.setBackground(backgroundColor);
-                                                        label4.setBackground(labelColor);
-                                                        label5.setBackground(backgroundColor);
-                                                        label6.setBackground(backgroundColor);
-                                                        label7.setBackground(backgroundColor);
-                                                        label8.setBackground(backgroundColor);
-                                                    }
-                                                    break;
-                                                case 3:
-                                                    size = listResults.size();
-                                                    if (size == 5) {
-                                                        label1.setBackground(backgroundColor);
-                                                        label2.setBackground(backgroundColor);
-                                                        label3.setBackground(backgroundColor);
-                                                        label4.setBackground(backgroundColor);
-                                                        label5.setBackground(labelColor);
-                                                    } else if (size == 6) {
-                                                        label1.setBackground(backgroundColor);
-                                                        label2.setBackground(backgroundColor);
-                                                        label3.setBackground(backgroundColor);
-                                                        label4.setBackground(backgroundColor);
-                                                        label5.setBackground(labelColor);
-                                                        label6.setBackground(backgroundColor);
-                                                    } else if (size == 7) {
-                                                        label1.setBackground(backgroundColor);
-                                                        label2.setBackground(backgroundColor);
-                                                        label3.setBackground(backgroundColor);
-                                                        label4.setBackground(backgroundColor);
-                                                        label5.setBackground(labelColor);
-                                                        label6.setBackground(backgroundColor);
-                                                        label7.setBackground(backgroundColor);
-                                                    } else if (size > 7) {
-                                                        label1.setBackground(backgroundColor);
-                                                        label2.setBackground(backgroundColor);
-                                                        label3.setBackground(backgroundColor);
-                                                        label4.setBackground(backgroundColor);
-                                                        label5.setBackground(labelColor);
-                                                        label6.setBackground(backgroundColor);
-                                                        label7.setBackground(backgroundColor);
-                                                        label8.setBackground(backgroundColor);
-                                                    }
-                                                    break;
-                                                case 4:
-                                                    size = listResults.size();
-                                                    if (size == 6) {
-                                                        label1.setBackground(backgroundColor);
-                                                        label2.setBackground(backgroundColor);
-                                                        label3.setBackground(backgroundColor);
-                                                        label4.setBackground(backgroundColor);
-                                                        label5.setBackground(backgroundColor);
-                                                        label6.setBackground(labelColor);
-                                                    } else if (size == 7) {
-                                                        label1.setBackground(backgroundColor);
-                                                        label2.setBackground(backgroundColor);
-                                                        label3.setBackground(backgroundColor);
-                                                        label4.setBackground(backgroundColor);
-                                                        label5.setBackground(backgroundColor);
-                                                        label6.setBackground(labelColor);
-                                                        label7.setBackground(backgroundColor);
-                                                    } else if (size > 7) {
-                                                        label1.setBackground(backgroundColor);
-                                                        label2.setBackground(backgroundColor);
-                                                        label3.setBackground(backgroundColor);
-                                                        label4.setBackground(backgroundColor);
-                                                        label5.setBackground(backgroundColor);
-                                                        label6.setBackground(labelColor);
-                                                        label7.setBackground(backgroundColor);
-                                                        label8.setBackground(backgroundColor);
-                                                    }
-                                                    break;
-                                                case 5:
-                                                    size = listResults.size();
-                                                    if (size == 7) {
-                                                        label1.setBackground(backgroundColor);
-                                                        label2.setBackground(backgroundColor);
-                                                        label3.setBackground(backgroundColor);
-                                                        label4.setBackground(backgroundColor);
-                                                        label5.setBackground(backgroundColor);
-                                                        label6.setBackground(backgroundColor);
-                                                        label7.setBackground(labelColor);
-                                                    } else if (size > 7) {
-                                                        label1.setBackground(backgroundColor);
-                                                        label2.setBackground(backgroundColor);
-                                                        label3.setBackground(backgroundColor);
-                                                        label4.setBackground(backgroundColor);
-                                                        label5.setBackground(backgroundColor);
-                                                        label6.setBackground(backgroundColor);
-                                                        label7.setBackground(labelColor);
-                                                        label8.setBackground(backgroundColor);
-                                                    }
-                                                    break;
-                                                case 6:
-                                                    label1.setBackground(backgroundColor);
-                                                    label2.setBackground(backgroundColor);
-                                                    label3.setBackground(backgroundColor);
-                                                    label4.setBackground(backgroundColor);
-                                                    label5.setBackground(backgroundColor);
-                                                    label6.setBackground(backgroundColor);
-                                                    label7.setBackground(backgroundColor);
-                                                    label8.setBackground(labelColor);
-                                                    break;
-                                                case 7:
-                                                    //到达了最下端，刷新显示
-                                                    try {
-                                                        String command = listResults.get(labelCount.get() - 7);
-                                                        showCommandOnLabel(command, label1, false);
-
-                                                        command = listResults.get(labelCount.get() - 6);
-                                                        showCommandOnLabel(command, label2, false);
-
-                                                        command = listResults.get(labelCount.get() - 5);
-                                                        showCommandOnLabel(command, label3, false);
-
-                                                        command = listResults.get(labelCount.get() - 4);
-                                                        showCommandOnLabel(command, label4, false);
-
-                                                        command = listResults.get(labelCount.get() - 3);
-                                                        showCommandOnLabel(command, label5, false);
-
-                                                        command = listResults.get(labelCount.get() - 2);
-                                                        showCommandOnLabel(command, label6, false);
-
-                                                        command = listResults.get(labelCount.get() - 1);
-                                                        showCommandOnLabel(command, label7, false);
-
-                                                        command = listResults.get(labelCount.get());
-                                                        showCommandOnLabel(command, label8, true);
-                                                    } catch (ArrayIndexOutOfBoundsException ignored) {
-
-                                                    }
-                                                    break;
-                                            }
-                                        }
-                                    } catch (NullPointerException ignored) {
-
-                                    }
+                                    moveDownward(getCurrentPos());
                                 }
                             }
                         }
@@ -1407,7 +397,7 @@ public class SearchBar {
                                 try {
                                     desktop.open(new File(semicolon.split(command)[1]));
                                 } catch (Exception e) {
-                                    JOptionPane.showMessageDialog(null, "执行失败");
+                                    JOptionPane.showMessageDialog(null, SettingsFrame.getTranslation("Execute failed"));
                                 }
                             }
                         }
@@ -1810,516 +800,7 @@ public class SearchBar {
                         if (labelCount.get() >= listResults.size()) {
                             labelCount.set(listResults.size() - 1);
                         }
-                        try {
-                            int position = getCurrentPos();
-                            if (!isCommandMode) {
-                                switch (position) {
-                                    case 0:
-                                        int size = listResults.size();
-                                        if (size == 2) {
-                                            label1.setBackground(backgroundColor);
-                                            label2.setBackground(labelColor);
-                                        } else if (size == 3) {
-                                            label1.setBackground(backgroundColor);
-                                            label2.setBackground(labelColor);
-                                            label3.setBackground(backgroundColor);
-                                        } else if (size == 4) {
-                                            label1.setBackground(backgroundColor);
-                                            label2.setBackground(labelColor);
-                                            label3.setBackground(backgroundColor);
-                                            label4.setBackground(backgroundColor);
-                                        } else if (size == 5) {
-                                            label1.setBackground(backgroundColor);
-                                            label2.setBackground(labelColor);
-                                            label3.setBackground(backgroundColor);
-                                            label4.setBackground(backgroundColor);
-                                            label5.setBackground(backgroundColor);
-                                        } else if (size == 6) {
-                                            label1.setBackground(backgroundColor);
-                                            label2.setBackground(labelColor);
-                                            label3.setBackground(backgroundColor);
-                                            label4.setBackground(backgroundColor);
-                                            label5.setBackground(backgroundColor);
-                                            label6.setBackground(backgroundColor);
-                                        } else if (size == 7) {
-                                            label1.setBackground(backgroundColor);
-                                            label2.setBackground(labelColor);
-                                            label3.setBackground(backgroundColor);
-                                            label4.setBackground(backgroundColor);
-                                            label5.setBackground(backgroundColor);
-                                            label6.setBackground(backgroundColor);
-                                            label7.setBackground(backgroundColor);
-                                        } else if (size > 7) {
-                                            label1.setBackground(backgroundColor);
-                                            label2.setBackground(labelColor);
-                                            label3.setBackground(backgroundColor);
-                                            label4.setBackground(backgroundColor);
-                                            label5.setBackground(backgroundColor);
-                                            label6.setBackground(backgroundColor);
-                                            label7.setBackground(backgroundColor);
-                                            label8.setBackground(backgroundColor);
-                                        }
-                                        break;
-                                    case 1:
-                                        size = listResults.size();
-                                        if (size == 3) {
-                                            label1.setBackground(backgroundColor);
-                                            label2.setBackground(backgroundColor);
-                                            label3.setBackground(labelColor);
-                                        } else if (size == 4) {
-                                            label1.setBackground(backgroundColor);
-                                            label2.setBackground(backgroundColor);
-                                            label3.setBackground(labelColor);
-                                            label4.setBackground(backgroundColor);
-                                        } else if (size == 5) {
-                                            label1.setBackground(backgroundColor);
-                                            label2.setBackground(backgroundColor);
-                                            label3.setBackground(labelColor);
-                                            label4.setBackground(backgroundColor);
-                                            label5.setBackground(backgroundColor);
-                                        } else if (size == 6) {
-                                            label1.setBackground(backgroundColor);
-                                            label2.setBackground(backgroundColor);
-                                            label3.setBackground(labelColor);
-                                            label4.setBackground(backgroundColor);
-                                            label5.setBackground(backgroundColor);
-                                            label6.setBackground(backgroundColor);
-                                        } else if (size == 7) {
-                                            label1.setBackground(backgroundColor);
-                                            label2.setBackground(backgroundColor);
-                                            label3.setBackground(labelColor);
-                                            label4.setBackground(backgroundColor);
-                                            label5.setBackground(backgroundColor);
-                                            label6.setBackground(backgroundColor);
-                                            label7.setBackground(backgroundColor);
-                                        } else if (size > 7) {
-                                            label1.setBackground(backgroundColor);
-                                            label2.setBackground(backgroundColor);
-                                            label3.setBackground(labelColor);
-                                            label4.setBackground(backgroundColor);
-                                            label5.setBackground(backgroundColor);
-                                            label6.setBackground(backgroundColor);
-                                            label7.setBackground(backgroundColor);
-                                            label8.setBackground(backgroundColor);
-                                        }
-                                        break;
-                                    case 2:
-                                        size = listResults.size();
-                                        if (size == 4) {
-                                            label1.setBackground(backgroundColor);
-                                            label2.setBackground(backgroundColor);
-                                            label3.setBackground(backgroundColor);
-                                            label4.setBackground(labelColor);
-                                        } else if (size == 5) {
-                                            label1.setBackground(backgroundColor);
-                                            label2.setBackground(backgroundColor);
-                                            label3.setBackground(backgroundColor);
-                                            label4.setBackground(labelColor);
-                                            label5.setBackground(backgroundColor);
-                                        } else if (size == 6) {
-                                            label1.setBackground(backgroundColor);
-                                            label2.setBackground(backgroundColor);
-                                            label3.setBackground(backgroundColor);
-                                            label4.setBackground(labelColor);
-                                            label5.setBackground(backgroundColor);
-                                            label6.setBackground(backgroundColor);
-                                        } else if (size == 7) {
-                                            label1.setBackground(backgroundColor);
-                                            label2.setBackground(backgroundColor);
-                                            label3.setBackground(backgroundColor);
-                                            label4.setBackground(labelColor);
-                                            label5.setBackground(backgroundColor);
-                                            label6.setBackground(backgroundColor);
-                                            label7.setBackground(backgroundColor);
-                                        } else if (size > 7) {
-                                            label1.setBackground(backgroundColor);
-                                            label2.setBackground(backgroundColor);
-                                            label3.setBackground(backgroundColor);
-                                            label4.setBackground(labelColor);
-                                            label5.setBackground(backgroundColor);
-                                            label6.setBackground(backgroundColor);
-                                            label7.setBackground(backgroundColor);
-                                            label8.setBackground(backgroundColor);
-                                        }
-                                        break;
-                                    case 3:
-                                        size = listResults.size();
-                                        if (size == 5) {
-                                            label1.setBackground(backgroundColor);
-                                            label2.setBackground(backgroundColor);
-                                            label3.setBackground(backgroundColor);
-                                            label4.setBackground(backgroundColor);
-                                            label5.setBackground(labelColor);
-                                        } else if (size == 6) {
-                                            label1.setBackground(backgroundColor);
-                                            label2.setBackground(backgroundColor);
-                                            label3.setBackground(backgroundColor);
-                                            label4.setBackground(backgroundColor);
-                                            label5.setBackground(labelColor);
-                                            label6.setBackground(backgroundColor);
-                                        } else if (size == 7) {
-                                            label1.setBackground(backgroundColor);
-                                            label2.setBackground(backgroundColor);
-                                            label3.setBackground(backgroundColor);
-                                            label4.setBackground(backgroundColor);
-                                            label5.setBackground(labelColor);
-                                            label6.setBackground(backgroundColor);
-                                            label7.setBackground(backgroundColor);
-                                        } else if (size > 7) {
-                                            label1.setBackground(backgroundColor);
-                                            label2.setBackground(backgroundColor);
-                                            label3.setBackground(backgroundColor);
-                                            label4.setBackground(backgroundColor);
-                                            label5.setBackground(labelColor);
-                                            label6.setBackground(backgroundColor);
-                                            label7.setBackground(backgroundColor);
-                                            label8.setBackground(backgroundColor);
-                                        }
-                                        break;
-                                    case 4:
-                                        size = listResults.size();
-                                        if (size == 6) {
-                                            label1.setBackground(backgroundColor);
-                                            label2.setBackground(backgroundColor);
-                                            label3.setBackground(backgroundColor);
-                                            label4.setBackground(backgroundColor);
-                                            label5.setBackground(backgroundColor);
-                                            label6.setBackground(labelColor);
-                                        } else if (size == 7) {
-                                            label1.setBackground(backgroundColor);
-                                            label2.setBackground(backgroundColor);
-                                            label3.setBackground(backgroundColor);
-                                            label4.setBackground(backgroundColor);
-                                            label5.setBackground(backgroundColor);
-                                            label6.setBackground(labelColor);
-                                            label7.setBackground(backgroundColor);
-                                        } else if (size > 7) {
-                                            label1.setBackground(backgroundColor);
-                                            label2.setBackground(backgroundColor);
-                                            label3.setBackground(backgroundColor);
-                                            label4.setBackground(backgroundColor);
-                                            label5.setBackground(backgroundColor);
-                                            label6.setBackground(labelColor);
-                                            label7.setBackground(backgroundColor);
-                                            label8.setBackground(backgroundColor);
-                                        }
-                                        break;
-                                    case 5:
-                                        size = listResults.size();
-                                        if (size == 7) {
-                                            label1.setBackground(backgroundColor);
-                                            label2.setBackground(backgroundColor);
-                                            label3.setBackground(backgroundColor);
-                                            label4.setBackground(backgroundColor);
-                                            label5.setBackground(backgroundColor);
-                                            label6.setBackground(backgroundColor);
-                                            label7.setBackground(labelColor);
-                                        } else if (size > 7) {
-                                            label1.setBackground(backgroundColor);
-                                            label2.setBackground(backgroundColor);
-                                            label3.setBackground(backgroundColor);
-                                            label4.setBackground(backgroundColor);
-                                            label5.setBackground(backgroundColor);
-                                            label6.setBackground(backgroundColor);
-                                            label7.setBackground(labelColor);
-                                            label8.setBackground(backgroundColor);
-                                        }
-                                        break;
-                                    case 6:
-                                        label1.setBackground(backgroundColor);
-                                        label2.setBackground(backgroundColor);
-                                        label3.setBackground(backgroundColor);
-                                        label4.setBackground(backgroundColor);
-                                        label5.setBackground(backgroundColor);
-                                        label6.setBackground(backgroundColor);
-                                        label7.setBackground(backgroundColor);
-                                        label8.setBackground(labelColor);
-                                        break;
-                                    case 7:
-                                        //到达最下端，刷新显示
-                                        String path = listResults.get(labelCount.get() - 7);
-                                        autoShowResultOnLabel(path, label1, false);
-
-                                        path = listResults.get(labelCount.get() - 6);
-                                        autoShowResultOnLabel(path, label2, false);
-
-                                        path = listResults.get(labelCount.get() - 5);
-                                        autoShowResultOnLabel(path, label3, false);
-
-                                        path = listResults.get(labelCount.get() - 4);
-                                        autoShowResultOnLabel(path, label4, false);
-
-                                        path = listResults.get(labelCount.get() - 3);
-                                        autoShowResultOnLabel(path, label5, false);
-
-                                        path = listResults.get(labelCount.get() - 2);
-                                        autoShowResultOnLabel(path, label6, false);
-
-                                        path = listResults.get(labelCount.get() - 1);
-                                        autoShowResultOnLabel(path, label7, false);
-
-                                        path = listResults.get(labelCount.get());
-                                        autoShowResultOnLabel(path, label8, true);
-                                        break;
-                                }
-                            } else {
-                                switch (position) {
-                                    case 0:
-                                        int size = listResults.size();
-                                        if (size == 2) {
-                                            label1.setBackground(backgroundColor);
-                                            label2.setBackground(labelColor);
-                                        } else if (size == 3) {
-                                            label1.setBackground(backgroundColor);
-                                            label2.setBackground(labelColor);
-                                            label3.setBackground(backgroundColor);
-                                        } else if (size == 4) {
-                                            label1.setBackground(backgroundColor);
-                                            label2.setBackground(labelColor);
-                                            label3.setBackground(backgroundColor);
-                                            label4.setBackground(backgroundColor);
-                                        } else if (size == 5) {
-                                            label1.setBackground(backgroundColor);
-                                            label2.setBackground(labelColor);
-                                            label3.setBackground(backgroundColor);
-                                            label4.setBackground(backgroundColor);
-                                            label5.setBackground(backgroundColor);
-                                        } else if (size == 6) {
-                                            label1.setBackground(backgroundColor);
-                                            label2.setBackground(labelColor);
-                                            label3.setBackground(backgroundColor);
-                                            label4.setBackground(backgroundColor);
-                                            label5.setBackground(backgroundColor);
-                                            label6.setBackground(backgroundColor);
-                                        } else if (size == 7) {
-                                            label1.setBackground(backgroundColor);
-                                            label2.setBackground(labelColor);
-                                            label3.setBackground(backgroundColor);
-                                            label4.setBackground(backgroundColor);
-                                            label5.setBackground(backgroundColor);
-                                            label6.setBackground(backgroundColor);
-                                            label7.setBackground(backgroundColor);
-                                        } else if (size > 7) {
-                                            label1.setBackground(backgroundColor);
-                                            label2.setBackground(labelColor);
-                                            label3.setBackground(backgroundColor);
-                                            label4.setBackground(backgroundColor);
-                                            label5.setBackground(backgroundColor);
-                                            label6.setBackground(backgroundColor);
-                                            label7.setBackground(backgroundColor);
-                                            label8.setBackground(backgroundColor);
-                                        }
-                                        break;
-                                    case 1:
-                                        size = listResults.size();
-                                        if (size == 3) {
-                                            label1.setBackground(backgroundColor);
-                                            label2.setBackground(backgroundColor);
-                                            label3.setBackground(labelColor);
-                                        } else if (size == 4) {
-                                            label1.setBackground(backgroundColor);
-                                            label2.setBackground(backgroundColor);
-                                            label3.setBackground(labelColor);
-                                            label4.setBackground(backgroundColor);
-                                        } else if (size == 5) {
-                                            label1.setBackground(backgroundColor);
-                                            label2.setBackground(backgroundColor);
-                                            label3.setBackground(labelColor);
-                                            label4.setBackground(backgroundColor);
-                                            label5.setBackground(backgroundColor);
-                                        } else if (size == 6) {
-                                            label1.setBackground(backgroundColor);
-                                            label2.setBackground(backgroundColor);
-                                            label3.setBackground(labelColor);
-                                            label4.setBackground(backgroundColor);
-                                            label5.setBackground(backgroundColor);
-                                            label6.setBackground(backgroundColor);
-                                        } else if (size == 7) {
-                                            label1.setBackground(backgroundColor);
-                                            label2.setBackground(backgroundColor);
-                                            label3.setBackground(labelColor);
-                                            label4.setBackground(backgroundColor);
-                                            label5.setBackground(backgroundColor);
-                                            label6.setBackground(backgroundColor);
-                                            label7.setBackground(backgroundColor);
-                                        } else if (size > 7) {
-                                            label1.setBackground(backgroundColor);
-                                            label2.setBackground(backgroundColor);
-                                            label3.setBackground(labelColor);
-                                            label4.setBackground(backgroundColor);
-                                            label5.setBackground(backgroundColor);
-                                            label6.setBackground(backgroundColor);
-                                            label7.setBackground(backgroundColor);
-                                            label8.setBackground(backgroundColor);
-                                        }
-                                        break;
-                                    case 2:
-                                        size = listResults.size();
-                                        if (size == 4) {
-                                            label1.setBackground(backgroundColor);
-                                            label2.setBackground(backgroundColor);
-                                            label3.setBackground(backgroundColor);
-                                            label4.setBackground(labelColor);
-                                        } else if (size == 5) {
-                                            label1.setBackground(backgroundColor);
-                                            label2.setBackground(backgroundColor);
-                                            label3.setBackground(backgroundColor);
-                                            label4.setBackground(labelColor);
-                                            label5.setBackground(backgroundColor);
-                                        } else if (size == 6) {
-                                            label1.setBackground(backgroundColor);
-                                            label2.setBackground(backgroundColor);
-                                            label3.setBackground(backgroundColor);
-                                            label4.setBackground(labelColor);
-                                            label5.setBackground(backgroundColor);
-                                            label6.setBackground(backgroundColor);
-                                        } else if (size == 7) {
-                                            label1.setBackground(backgroundColor);
-                                            label2.setBackground(backgroundColor);
-                                            label3.setBackground(backgroundColor);
-                                            label4.setBackground(labelColor);
-                                            label5.setBackground(backgroundColor);
-                                            label6.setBackground(backgroundColor);
-                                            label7.setBackground(backgroundColor);
-                                        } else if (size > 7) {
-                                            label1.setBackground(backgroundColor);
-                                            label2.setBackground(backgroundColor);
-                                            label3.setBackground(backgroundColor);
-                                            label4.setBackground(labelColor);
-                                            label5.setBackground(backgroundColor);
-                                            label6.setBackground(backgroundColor);
-                                            label7.setBackground(backgroundColor);
-                                            label8.setBackground(backgroundColor);
-                                        }
-                                        break;
-                                    case 3:
-                                        size = listResults.size();
-                                        if (size == 5) {
-                                            label1.setBackground(backgroundColor);
-                                            label2.setBackground(backgroundColor);
-                                            label3.setBackground(backgroundColor);
-                                            label4.setBackground(backgroundColor);
-                                            label5.setBackground(labelColor);
-                                        } else if (size == 6) {
-                                            label1.setBackground(backgroundColor);
-                                            label2.setBackground(backgroundColor);
-                                            label3.setBackground(backgroundColor);
-                                            label4.setBackground(backgroundColor);
-                                            label5.setBackground(labelColor);
-                                            label6.setBackground(backgroundColor);
-                                        } else if (size == 7) {
-                                            label1.setBackground(backgroundColor);
-                                            label2.setBackground(backgroundColor);
-                                            label3.setBackground(backgroundColor);
-                                            label4.setBackground(backgroundColor);
-                                            label5.setBackground(labelColor);
-                                            label6.setBackground(backgroundColor);
-                                            label7.setBackground(backgroundColor);
-                                        } else if (size > 7) {
-                                            label1.setBackground(backgroundColor);
-                                            label2.setBackground(backgroundColor);
-                                            label3.setBackground(backgroundColor);
-                                            label4.setBackground(backgroundColor);
-                                            label5.setBackground(labelColor);
-                                            label6.setBackground(backgroundColor);
-                                            label7.setBackground(backgroundColor);
-                                            label8.setBackground(backgroundColor);
-                                        }
-                                        break;
-                                    case 4:
-                                        size = listResults.size();
-                                        if (size == 6) {
-                                            label1.setBackground(backgroundColor);
-                                            label2.setBackground(backgroundColor);
-                                            label3.setBackground(backgroundColor);
-                                            label4.setBackground(backgroundColor);
-                                            label5.setBackground(backgroundColor);
-                                            label6.setBackground(labelColor);
-                                        } else if (size == 7) {
-                                            label1.setBackground(backgroundColor);
-                                            label2.setBackground(backgroundColor);
-                                            label3.setBackground(backgroundColor);
-                                            label4.setBackground(backgroundColor);
-                                            label5.setBackground(backgroundColor);
-                                            label6.setBackground(labelColor);
-                                            label7.setBackground(backgroundColor);
-                                        } else if (size > 7) {
-                                            label1.setBackground(backgroundColor);
-                                            label2.setBackground(backgroundColor);
-                                            label3.setBackground(backgroundColor);
-                                            label4.setBackground(backgroundColor);
-                                            label5.setBackground(backgroundColor);
-                                            label6.setBackground(labelColor);
-                                            label7.setBackground(backgroundColor);
-                                            label8.setBackground(backgroundColor);
-                                        }
-                                        break;
-                                    case 5:
-                                        size = listResults.size();
-                                        if (size == 7) {
-                                            label1.setBackground(backgroundColor);
-                                            label2.setBackground(backgroundColor);
-                                            label3.setBackground(backgroundColor);
-                                            label4.setBackground(backgroundColor);
-                                            label5.setBackground(backgroundColor);
-                                            label6.setBackground(backgroundColor);
-                                            label7.setBackground(labelColor);
-                                        } else if (size > 7) {
-                                            label1.setBackground(backgroundColor);
-                                            label2.setBackground(backgroundColor);
-                                            label3.setBackground(backgroundColor);
-                                            label4.setBackground(backgroundColor);
-                                            label5.setBackground(backgroundColor);
-                                            label6.setBackground(backgroundColor);
-                                            label7.setBackground(labelColor);
-                                            label8.setBackground(backgroundColor);
-                                        }
-                                        break;
-                                    case 6:
-                                        label1.setBackground(backgroundColor);
-                                        label2.setBackground(backgroundColor);
-                                        label3.setBackground(backgroundColor);
-                                        label4.setBackground(backgroundColor);
-                                        label5.setBackground(backgroundColor);
-                                        label6.setBackground(backgroundColor);
-                                        label7.setBackground(backgroundColor);
-                                        label8.setBackground(labelColor);
-                                        break;
-                                    case 7:
-                                        //到达了最下端，刷新显示
-                                        try {
-                                            String command = listResults.get(labelCount.get() - 7);
-                                            showCommandOnLabel(command, label1, false);
-
-                                            command = listResults.get(labelCount.get() - 6);
-                                            showCommandOnLabel(command, label2, false);
-
-                                            command = listResults.get(labelCount.get() - 5);
-                                            showCommandOnLabel(command, label3, false);
-
-                                            command = listResults.get(labelCount.get() - 4);
-                                            showCommandOnLabel(command, label4, false);
-
-                                            command = listResults.get(labelCount.get() - 3);
-                                            showCommandOnLabel(command, label5, false);
-
-                                            command = listResults.get(labelCount.get() - 2);
-                                            showCommandOnLabel(command, label6, false);
-
-                                            command = listResults.get(labelCount.get() - 1);
-                                            showCommandOnLabel(command, label7, false);
-
-                                            command = listResults.get(labelCount.get());
-                                            showCommandOnLabel(command, label8, true);
-                                        } catch (ArrayIndexOutOfBoundsException ignored) {
-
-                                        }
-                                        break;
-                                }
-                            }
-                        } catch (NullPointerException ignored) {
-
-                        }
+                        moveDownward(getCurrentPos());
                     }
                 }
             } else if (e.getPreciseWheelRotation() < 0) {
@@ -2342,523 +823,7 @@ public class SearchBar {
                     if (labelCount.get() >= listResults.size()) {
                         labelCount.set(listResults.size() - 1);
                     }
-
-                    //判定当前选定位置
-                    int position = getCurrentPos();
-                    int size;
-                    try {
-                        if (!isCommandMode) {
-                            switch (position) {
-                                case 0:
-                                    //到达了最上端，刷新显示
-                                    try {
-                                        String path = listResults.get(labelCount.get());
-                                        autoShowResultOnLabel(path, label1, true);
-
-                                        path = listResults.get(labelCount.get() + 1);
-                                        autoShowResultOnLabel(path, label2, false);
-
-                                        path = listResults.get(labelCount.get() + 2);
-                                        autoShowResultOnLabel(path, label3, false);
-
-                                        path = listResults.get(labelCount.get() + 3);
-                                        autoShowResultOnLabel(path, label4, false);
-
-                                        path = listResults.get(labelCount.get() + 4);
-                                        autoShowResultOnLabel(path, label5, false);
-
-                                        path = listResults.get(labelCount.get() + 5);
-                                        autoShowResultOnLabel(path, label6, false);
-
-                                        path = listResults.get(labelCount.get() + 6);
-                                        autoShowResultOnLabel(path, label7, false);
-
-                                        path = listResults.get(labelCount.get() + 7);
-                                        autoShowResultOnLabel(path, label8, false);
-                                    } catch (ArrayIndexOutOfBoundsException ignored) {
-
-                                    }
-                                    break;
-                                case 1:
-                                    size = listResults.size();
-                                    if (size == 2) {
-                                        label1.setBackground(labelColor);
-                                        label2.setBackground(backgroundColor);
-                                    } else if (size == 3) {
-                                        label1.setBackground(labelColor);
-                                        label2.setBackground(backgroundColor);
-                                        label3.setBackground(backgroundColor);
-                                    } else if (size == 4) {
-                                        label1.setBackground(labelColor);
-                                        label2.setBackground(backgroundColor);
-                                        label3.setBackground(backgroundColor);
-                                        label4.setBackground(backgroundColor);
-                                    } else if (size == 5) {
-                                        label1.setBackground(labelColor);
-                                        label2.setBackground(backgroundColor);
-                                        label3.setBackground(backgroundColor);
-                                        label4.setBackground(backgroundColor);
-                                        label5.setBackground(backgroundColor);
-                                    } else if (size == 6) {
-                                        label1.setBackground(labelColor);
-                                        label2.setBackground(backgroundColor);
-                                        label3.setBackground(backgroundColor);
-                                        label4.setBackground(backgroundColor);
-                                        label5.setBackground(backgroundColor);
-                                        label6.setBackground(backgroundColor);
-                                    } else if (size == 7) {
-                                        label1.setBackground(labelColor);
-                                        label2.setBackground(backgroundColor);
-                                        label3.setBackground(backgroundColor);
-                                        label4.setBackground(backgroundColor);
-                                        label5.setBackground(backgroundColor);
-                                        label6.setBackground(backgroundColor);
-                                        label7.setBackground(backgroundColor);
-                                    } else if (size > 7) {
-                                        label1.setBackground(labelColor);
-                                        label2.setBackground(backgroundColor);
-                                        label3.setBackground(backgroundColor);
-                                        label4.setBackground(backgroundColor);
-                                        label5.setBackground(backgroundColor);
-                                        label6.setBackground(backgroundColor);
-                                        label7.setBackground(backgroundColor);
-                                        label8.setBackground(backgroundColor);
-                                    }
-                                    break;
-                                case 2:
-                                    size = listResults.size();
-                                    if (size == 3) {
-                                        label1.setBackground(backgroundColor);
-                                        label2.setBackground(labelColor);
-                                        label3.setBackground(backgroundColor);
-                                    } else if (size == 4) {
-                                        label1.setBackground(backgroundColor);
-                                        label2.setBackground(labelColor);
-                                        label3.setBackground(backgroundColor);
-                                        label4.setBackground(backgroundColor);
-                                    } else if (size == 5) {
-                                        label1.setBackground(backgroundColor);
-                                        label2.setBackground(labelColor);
-                                        label3.setBackground(backgroundColor);
-                                        label4.setBackground(backgroundColor);
-                                        label5.setBackground(backgroundColor);
-                                    } else if (size == 6) {
-                                        label1.setBackground(backgroundColor);
-                                        label2.setBackground(labelColor);
-                                        label3.setBackground(backgroundColor);
-                                        label4.setBackground(backgroundColor);
-                                        label5.setBackground(backgroundColor);
-                                        label6.setBackground(backgroundColor);
-                                    } else if (size == 7) {
-                                        label1.setBackground(backgroundColor);
-                                        label2.setBackground(labelColor);
-                                        label3.setBackground(backgroundColor);
-                                        label4.setBackground(backgroundColor);
-                                        label5.setBackground(backgroundColor);
-                                        label6.setBackground(backgroundColor);
-                                        label7.setBackground(backgroundColor);
-                                    } else if (size > 7) {
-                                        label1.setBackground(backgroundColor);
-                                        label2.setBackground(labelColor);
-                                        label3.setBackground(backgroundColor);
-                                        label4.setBackground(backgroundColor);
-                                        label5.setBackground(backgroundColor);
-                                        label6.setBackground(backgroundColor);
-                                        label7.setBackground(backgroundColor);
-                                        label8.setBackground(backgroundColor);
-                                    }
-                                    break;
-                                case 3:
-                                    size = listResults.size();
-                                    if (size == 4) {
-                                        label1.setBackground(backgroundColor);
-                                        label2.setBackground(backgroundColor);
-                                        label3.setBackground(labelColor);
-                                        label4.setBackground(backgroundColor);
-                                    } else if (size == 5) {
-                                        label1.setBackground(backgroundColor);
-                                        label2.setBackground(backgroundColor);
-                                        label3.setBackground(labelColor);
-                                        label4.setBackground(backgroundColor);
-                                        label5.setBackground(backgroundColor);
-                                    } else if (size == 6) {
-                                        label1.setBackground(backgroundColor);
-                                        label2.setBackground(backgroundColor);
-                                        label3.setBackground(labelColor);
-                                        label4.setBackground(backgroundColor);
-                                        label5.setBackground(backgroundColor);
-                                        label6.setBackground(backgroundColor);
-                                    } else if (size == 7) {
-                                        label1.setBackground(backgroundColor);
-                                        label2.setBackground(backgroundColor);
-                                        label3.setBackground(labelColor);
-                                        label4.setBackground(backgroundColor);
-                                        label5.setBackground(backgroundColor);
-                                        label6.setBackground(backgroundColor);
-                                        label7.setBackground(backgroundColor);
-                                    } else if (size > 7) {
-                                        label1.setBackground(backgroundColor);
-                                        label2.setBackground(backgroundColor);
-                                        label3.setBackground(labelColor);
-                                        label4.setBackground(backgroundColor);
-                                        label5.setBackground(backgroundColor);
-                                        label6.setBackground(backgroundColor);
-                                        label7.setBackground(backgroundColor);
-                                        label8.setBackground(backgroundColor);
-                                    }
-                                    break;
-                                case 4:
-                                    size = listResults.size();
-                                    if (size == 5) {
-                                        label1.setBackground(backgroundColor);
-                                        label2.setBackground(backgroundColor);
-                                        label3.setBackground(backgroundColor);
-                                        label4.setBackground(labelColor);
-                                        label5.setBackground(backgroundColor);
-                                    } else if (size == 6) {
-                                        label1.setBackground(backgroundColor);
-                                        label2.setBackground(backgroundColor);
-                                        label3.setBackground(backgroundColor);
-                                        label4.setBackground(labelColor);
-                                        label5.setBackground(backgroundColor);
-                                        label6.setBackground(backgroundColor);
-                                    } else if (size == 7) {
-                                        label1.setBackground(backgroundColor);
-                                        label2.setBackground(backgroundColor);
-                                        label3.setBackground(backgroundColor);
-                                        label4.setBackground(labelColor);
-                                        label5.setBackground(backgroundColor);
-                                        label6.setBackground(backgroundColor);
-                                        label7.setBackground(backgroundColor);
-                                    } else if (size > 7) {
-                                        label1.setBackground(backgroundColor);
-                                        label2.setBackground(backgroundColor);
-                                        label3.setBackground(backgroundColor);
-                                        label4.setBackground(labelColor);
-                                        label5.setBackground(backgroundColor);
-                                        label6.setBackground(backgroundColor);
-                                        label7.setBackground(backgroundColor);
-                                        label8.setBackground(backgroundColor);
-                                    }
-                                    break;
-                                case 5:
-                                    size = listResults.size();
-                                    if (size == 6) {
-                                        label1.setBackground(backgroundColor);
-                                        label2.setBackground(backgroundColor);
-                                        label3.setBackground(backgroundColor);
-                                        label4.setBackground(backgroundColor);
-                                        label5.setBackground(labelColor);
-                                        label6.setBackground(backgroundColor);
-                                    } else if (size == 7) {
-                                        label1.setBackground(backgroundColor);
-                                        label2.setBackground(backgroundColor);
-                                        label3.setBackground(backgroundColor);
-                                        label4.setBackground(backgroundColor);
-                                        label5.setBackground(labelColor);
-                                        label6.setBackground(backgroundColor);
-                                        label7.setBackground(backgroundColor);
-                                    } else if (size > 7) {
-                                        label1.setBackground(backgroundColor);
-                                        label2.setBackground(backgroundColor);
-                                        label3.setBackground(backgroundColor);
-                                        label4.setBackground(backgroundColor);
-                                        label5.setBackground(labelColor);
-                                        label6.setBackground(backgroundColor);
-                                        label7.setBackground(backgroundColor);
-                                        label8.setBackground(backgroundColor);
-                                    }
-                                    break;
-                                case 6:
-                                    size = listResults.size();
-                                    if (size == 7) {
-                                        label1.setBackground(backgroundColor);
-                                        label2.setBackground(backgroundColor);
-                                        label3.setBackground(backgroundColor);
-                                        label4.setBackground(backgroundColor);
-                                        label5.setBackground(backgroundColor);
-                                        label6.setBackground(labelColor);
-                                        label7.setBackground(backgroundColor);
-                                    } else if (size > 7) {
-                                        label1.setBackground(backgroundColor);
-                                        label2.setBackground(backgroundColor);
-                                        label3.setBackground(backgroundColor);
-                                        label4.setBackground(backgroundColor);
-                                        label5.setBackground(backgroundColor);
-                                        label6.setBackground(labelColor);
-                                        label7.setBackground(backgroundColor);
-                                        label8.setBackground(backgroundColor);
-                                    }
-                                    break;
-                                case 7:
-                                    label1.setBackground(backgroundColor);
-                                    label2.setBackground(backgroundColor);
-                                    label3.setBackground(backgroundColor);
-                                    label4.setBackground(backgroundColor);
-                                    label5.setBackground(backgroundColor);
-                                    label6.setBackground(backgroundColor);
-                                    label7.setBackground(labelColor);
-                                    label8.setBackground(backgroundColor);
-                                    break;
-                            }
-                        } else {
-                            switch (position) {
-                                case 0:
-                                    //到达了最上端，刷新显示
-                                    try {
-                                        String command = listResults.get(labelCount.get());
-                                        showCommandOnLabel(command, label1, true);
-
-                                        command = listResults.get(labelCount.get() + 1);
-                                        showCommandOnLabel(command, label2, false);
-
-                                        command = listResults.get(labelCount.get() + 2);
-                                        showCommandOnLabel(command, label3, false);
-
-                                        command = listResults.get(labelCount.get() + 3);
-                                        showCommandOnLabel(command, label4, false);
-
-                                        command = listResults.get(labelCount.get() + 4);
-                                        showCommandOnLabel(command, label5, false);
-
-                                        command = listResults.get(labelCount.get() + 5);
-                                        showCommandOnLabel(command, label6, false);
-
-                                        command = listResults.get(labelCount.get() + 6);
-                                        showCommandOnLabel(command, label7, false);
-
-                                        command = listResults.get(labelCount.get() + 7);
-                                        showCommandOnLabel(command, label8, false);
-                                    } catch (ArrayIndexOutOfBoundsException ignored) {
-
-                                    }
-                                    break;
-                                case 1:
-                                    size = listResults.size();
-                                    if (size == 2) {
-                                        label1.setBackground(labelColor);
-                                        label2.setBackground(backgroundColor);
-                                    } else if (size == 3) {
-                                        label1.setBackground(labelColor);
-                                        label2.setBackground(backgroundColor);
-                                        label3.setBackground(backgroundColor);
-                                    } else if (size == 4) {
-                                        label1.setBackground(labelColor);
-                                        label2.setBackground(backgroundColor);
-                                        label3.setBackground(backgroundColor);
-                                        label4.setBackground(backgroundColor);
-                                    } else if (size == 5) {
-                                        label1.setBackground(labelColor);
-                                        label2.setBackground(backgroundColor);
-                                        label3.setBackground(backgroundColor);
-                                        label4.setBackground(backgroundColor);
-                                        label5.setBackground(backgroundColor);
-                                    } else if (size == 6) {
-                                        label1.setBackground(labelColor);
-                                        label2.setBackground(backgroundColor);
-                                        label3.setBackground(backgroundColor);
-                                        label4.setBackground(backgroundColor);
-                                        label5.setBackground(backgroundColor);
-                                        label6.setBackground(backgroundColor);
-                                    } else if (size == 7) {
-                                        label1.setBackground(labelColor);
-                                        label2.setBackground(backgroundColor);
-                                        label3.setBackground(backgroundColor);
-                                        label4.setBackground(backgroundColor);
-                                        label5.setBackground(backgroundColor);
-                                        label6.setBackground(backgroundColor);
-                                        label7.setBackground(backgroundColor);
-                                    } else if (size > 7) {
-                                        label1.setBackground(labelColor);
-                                        label2.setBackground(backgroundColor);
-                                        label3.setBackground(backgroundColor);
-                                        label4.setBackground(backgroundColor);
-                                        label5.setBackground(backgroundColor);
-                                        label6.setBackground(backgroundColor);
-                                        label7.setBackground(backgroundColor);
-                                        label8.setBackground(backgroundColor);
-                                    }
-                                    break;
-                                case 2:
-                                    size = listResults.size();
-                                    if (size == 3) {
-                                        label1.setBackground(backgroundColor);
-                                        label2.setBackground(labelColor);
-                                        label3.setBackground(backgroundColor);
-                                    } else if (size == 4) {
-                                        label1.setBackground(backgroundColor);
-                                        label2.setBackground(labelColor);
-                                        label3.setBackground(backgroundColor);
-                                        label4.setBackground(backgroundColor);
-                                    } else if (size == 5) {
-                                        label1.setBackground(backgroundColor);
-                                        label2.setBackground(labelColor);
-                                        label3.setBackground(backgroundColor);
-                                        label4.setBackground(backgroundColor);
-                                        label5.setBackground(backgroundColor);
-                                    } else if (size == 6) {
-                                        label1.setBackground(backgroundColor);
-                                        label2.setBackground(labelColor);
-                                        label3.setBackground(backgroundColor);
-                                        label4.setBackground(backgroundColor);
-                                        label5.setBackground(backgroundColor);
-                                        label6.setBackground(backgroundColor);
-                                    } else if (size == 7) {
-                                        label1.setBackground(backgroundColor);
-                                        label2.setBackground(labelColor);
-                                        label3.setBackground(backgroundColor);
-                                        label4.setBackground(backgroundColor);
-                                        label5.setBackground(backgroundColor);
-                                        label6.setBackground(backgroundColor);
-                                        label7.setBackground(backgroundColor);
-                                    } else if (size > 7) {
-                                        label1.setBackground(backgroundColor);
-                                        label2.setBackground(labelColor);
-                                        label3.setBackground(backgroundColor);
-                                        label4.setBackground(backgroundColor);
-                                        label5.setBackground(backgroundColor);
-                                        label6.setBackground(backgroundColor);
-                                        label7.setBackground(backgroundColor);
-                                        label8.setBackground(backgroundColor);
-                                    }
-                                    break;
-                                case 3:
-                                    size = listResults.size();
-                                    if (size == 4) {
-                                        label1.setBackground(backgroundColor);
-                                        label2.setBackground(backgroundColor);
-                                        label3.setBackground(labelColor);
-                                        label4.setBackground(backgroundColor);
-                                    } else if (size == 5) {
-                                        label1.setBackground(backgroundColor);
-                                        label2.setBackground(backgroundColor);
-                                        label3.setBackground(labelColor);
-                                        label4.setBackground(backgroundColor);
-                                        label5.setBackground(backgroundColor);
-                                    } else if (size == 6) {
-                                        label1.setBackground(backgroundColor);
-                                        label2.setBackground(backgroundColor);
-                                        label3.setBackground(labelColor);
-                                        label4.setBackground(backgroundColor);
-                                        label5.setBackground(backgroundColor);
-                                        label6.setBackground(backgroundColor);
-                                    } else if (size == 7) {
-                                        label1.setBackground(backgroundColor);
-                                        label2.setBackground(backgroundColor);
-                                        label3.setBackground(labelColor);
-                                        label4.setBackground(backgroundColor);
-                                        label5.setBackground(backgroundColor);
-                                        label6.setBackground(backgroundColor);
-                                        label7.setBackground(backgroundColor);
-                                    } else if (size > 7) {
-                                        label1.setBackground(backgroundColor);
-                                        label2.setBackground(backgroundColor);
-                                        label3.setBackground(labelColor);
-                                        label4.setBackground(backgroundColor);
-                                        label5.setBackground(backgroundColor);
-                                        label6.setBackground(backgroundColor);
-                                        label7.setBackground(backgroundColor);
-                                        label8.setBackground(backgroundColor);
-                                    }
-                                    break;
-                                case 4:
-                                    size = listResults.size();
-                                    if (size == 5) {
-                                        label1.setBackground(backgroundColor);
-                                        label2.setBackground(backgroundColor);
-                                        label3.setBackground(backgroundColor);
-                                        label4.setBackground(labelColor);
-                                        label5.setBackground(backgroundColor);
-                                    } else if (size == 6) {
-                                        label1.setBackground(backgroundColor);
-                                        label2.setBackground(backgroundColor);
-                                        label3.setBackground(backgroundColor);
-                                        label4.setBackground(labelColor);
-                                        label5.setBackground(backgroundColor);
-                                        label6.setBackground(backgroundColor);
-                                    } else if (size == 7) {
-                                        label1.setBackground(backgroundColor);
-                                        label2.setBackground(backgroundColor);
-                                        label3.setBackground(backgroundColor);
-                                        label4.setBackground(labelColor);
-                                        label5.setBackground(backgroundColor);
-                                        label6.setBackground(backgroundColor);
-                                        label7.setBackground(backgroundColor);
-                                    } else if (size > 7) {
-                                        label1.setBackground(backgroundColor);
-                                        label2.setBackground(backgroundColor);
-                                        label3.setBackground(backgroundColor);
-                                        label4.setBackground(labelColor);
-                                        label5.setBackground(backgroundColor);
-                                        label6.setBackground(backgroundColor);
-                                        label7.setBackground(backgroundColor);
-                                        label8.setBackground(backgroundColor);
-                                    }
-                                    break;
-                                case 5:
-                                    size = listResults.size();
-                                    if (size == 6) {
-                                        label1.setBackground(backgroundColor);
-                                        label2.setBackground(backgroundColor);
-                                        label3.setBackground(backgroundColor);
-                                        label4.setBackground(backgroundColor);
-                                        label5.setBackground(labelColor);
-                                        label6.setBackground(backgroundColor);
-                                    } else if (size == 7) {
-                                        label1.setBackground(backgroundColor);
-                                        label2.setBackground(backgroundColor);
-                                        label3.setBackground(backgroundColor);
-                                        label4.setBackground(backgroundColor);
-                                        label5.setBackground(labelColor);
-                                        label6.setBackground(backgroundColor);
-                                        label7.setBackground(backgroundColor);
-                                    } else if (size > 7) {
-                                        label1.setBackground(backgroundColor);
-                                        label2.setBackground(backgroundColor);
-                                        label3.setBackground(backgroundColor);
-                                        label4.setBackground(backgroundColor);
-                                        label5.setBackground(labelColor);
-                                        label6.setBackground(backgroundColor);
-                                        label7.setBackground(backgroundColor);
-                                        label8.setBackground(backgroundColor);
-                                    }
-                                    break;
-                                case 6:
-                                    size = listResults.size();
-                                    if (size == 7) {
-                                        label1.setBackground(backgroundColor);
-                                        label2.setBackground(backgroundColor);
-                                        label3.setBackground(backgroundColor);
-                                        label4.setBackground(backgroundColor);
-                                        label5.setBackground(backgroundColor);
-                                        label6.setBackground(labelColor);
-                                        label7.setBackground(backgroundColor);
-                                    } else if (size > 7) {
-                                        label1.setBackground(backgroundColor);
-                                        label2.setBackground(backgroundColor);
-                                        label3.setBackground(backgroundColor);
-                                        label4.setBackground(backgroundColor);
-                                        label5.setBackground(backgroundColor);
-                                        label6.setBackground(labelColor);
-                                        label7.setBackground(backgroundColor);
-                                        label8.setBackground(backgroundColor);
-                                    }
-                                    break;
-                                case 7:
-                                    label1.setBackground(backgroundColor);
-                                    label2.setBackground(backgroundColor);
-                                    label3.setBackground(backgroundColor);
-                                    label4.setBackground(backgroundColor);
-                                    label5.setBackground(backgroundColor);
-                                    label6.setBackground(backgroundColor);
-                                    label7.setBackground(labelColor);
-                                    label8.setBackground(backgroundColor);
-                                    break;
-                            }
-                        }
-                    } catch (NullPointerException ignored) {
-
-                    }
+                    moveUpward(getCurrentPos());
 
                     if (labelCount.get() < 0) {
                         labelCount.set(0);
@@ -2869,11 +834,1043 @@ public class SearchBar {
         });
     }
 
+    private void moveDownward(int position) {
+        try {
+            if (!isCommandMode) {
+                switch (position) {
+                    case 0:
+                        int size = listResults.size();
+                        if (size == 2) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(labelColor);
+                        } else if (size == 3) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(labelColor);
+                            label3.setBackground(backgroundColor);
+                        } else if (size == 4) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(labelColor);
+                            label3.setBackground(backgroundColor);
+                            label4.setBackground(backgroundColor);
+                        } else if (size == 5) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(labelColor);
+                            label3.setBackground(backgroundColor);
+                            label4.setBackground(backgroundColor);
+                            label5.setBackground(backgroundColor);
+                        } else if (size == 6) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(labelColor);
+                            label3.setBackground(backgroundColor);
+                            label4.setBackground(backgroundColor);
+                            label5.setBackground(backgroundColor);
+                            label6.setBackground(backgroundColor);
+                        } else if (size == 7) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(labelColor);
+                            label3.setBackground(backgroundColor);
+                            label4.setBackground(backgroundColor);
+                            label5.setBackground(backgroundColor);
+                            label6.setBackground(backgroundColor);
+                            label7.setBackground(backgroundColor);
+                        } else if (size > 7) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(labelColor);
+                            label3.setBackground(backgroundColor);
+                            label4.setBackground(backgroundColor);
+                            label5.setBackground(backgroundColor);
+                            label6.setBackground(backgroundColor);
+                            label7.setBackground(backgroundColor);
+                            label8.setBackground(backgroundColor);
+                        }
+                        break;
+                    case 1:
+                        size = listResults.size();
+                        if (size == 3) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(labelColor);
+                        } else if (size == 4) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(labelColor);
+                            label4.setBackground(backgroundColor);
+                        } else if (size == 5) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(labelColor);
+                            label4.setBackground(backgroundColor);
+                            label5.setBackground(backgroundColor);
+                        } else if (size == 6) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(labelColor);
+                            label4.setBackground(backgroundColor);
+                            label5.setBackground(backgroundColor);
+                            label6.setBackground(backgroundColor);
+                        } else if (size == 7) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(labelColor);
+                            label4.setBackground(backgroundColor);
+                            label5.setBackground(backgroundColor);
+                            label6.setBackground(backgroundColor);
+                            label7.setBackground(backgroundColor);
+                        } else if (size > 7) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(labelColor);
+                            label4.setBackground(backgroundColor);
+                            label5.setBackground(backgroundColor);
+                            label6.setBackground(backgroundColor);
+                            label7.setBackground(backgroundColor);
+                            label8.setBackground(backgroundColor);
+                        }
+                        break;
+                    case 2:
+                        size = listResults.size();
+                        if (size == 4) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(backgroundColor);
+                            label4.setBackground(labelColor);
+                        } else if (size == 5) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(backgroundColor);
+                            label4.setBackground(labelColor);
+                            label5.setBackground(backgroundColor);
+                        } else if (size == 6) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(backgroundColor);
+                            label4.setBackground(labelColor);
+                            label5.setBackground(backgroundColor);
+                            label6.setBackground(backgroundColor);
+                        } else if (size == 7) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(backgroundColor);
+                            label4.setBackground(labelColor);
+                            label5.setBackground(backgroundColor);
+                            label6.setBackground(backgroundColor);
+                            label7.setBackground(backgroundColor);
+                        } else if (size > 7) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(backgroundColor);
+                            label4.setBackground(labelColor);
+                            label5.setBackground(backgroundColor);
+                            label6.setBackground(backgroundColor);
+                            label7.setBackground(backgroundColor);
+                            label8.setBackground(backgroundColor);
+                        }
+                        break;
+                    case 3:
+                        size = listResults.size();
+                        if (size == 5) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(backgroundColor);
+                            label4.setBackground(backgroundColor);
+                            label5.setBackground(labelColor);
+                        } else if (size == 6) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(backgroundColor);
+                            label4.setBackground(backgroundColor);
+                            label5.setBackground(labelColor);
+                            label6.setBackground(backgroundColor);
+                        } else if (size == 7) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(backgroundColor);
+                            label4.setBackground(backgroundColor);
+                            label5.setBackground(labelColor);
+                            label6.setBackground(backgroundColor);
+                            label7.setBackground(backgroundColor);
+                        } else if (size > 7) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(backgroundColor);
+                            label4.setBackground(backgroundColor);
+                            label5.setBackground(labelColor);
+                            label6.setBackground(backgroundColor);
+                            label7.setBackground(backgroundColor);
+                            label8.setBackground(backgroundColor);
+                        }
+                        break;
+                    case 4:
+                        size = listResults.size();
+                        if (size == 6) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(backgroundColor);
+                            label4.setBackground(backgroundColor);
+                            label5.setBackground(backgroundColor);
+                            label6.setBackground(labelColor);
+                        } else if (size == 7) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(backgroundColor);
+                            label4.setBackground(backgroundColor);
+                            label5.setBackground(backgroundColor);
+                            label6.setBackground(labelColor);
+                            label7.setBackground(backgroundColor);
+                        } else if (size > 7) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(backgroundColor);
+                            label4.setBackground(backgroundColor);
+                            label5.setBackground(backgroundColor);
+                            label6.setBackground(labelColor);
+                            label7.setBackground(backgroundColor);
+                            label8.setBackground(backgroundColor);
+                        }
+                        break;
+                    case 5:
+                        size = listResults.size();
+                        if (size == 7) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(backgroundColor);
+                            label4.setBackground(backgroundColor);
+                            label5.setBackground(backgroundColor);
+                            label6.setBackground(backgroundColor);
+                            label7.setBackground(labelColor);
+                        } else if (size > 7) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(backgroundColor);
+                            label4.setBackground(backgroundColor);
+                            label5.setBackground(backgroundColor);
+                            label6.setBackground(backgroundColor);
+                            label7.setBackground(labelColor);
+                            label8.setBackground(backgroundColor);
+                        }
+                        break;
+                    case 6:
+                        label1.setBackground(backgroundColor);
+                        label2.setBackground(backgroundColor);
+                        label3.setBackground(backgroundColor);
+                        label4.setBackground(backgroundColor);
+                        label5.setBackground(backgroundColor);
+                        label6.setBackground(backgroundColor);
+                        label7.setBackground(backgroundColor);
+                        label8.setBackground(labelColor);
+                        break;
+                    case 7:
+                        //到达最下端，刷新显示
+                        try {
+                            String path = listResults.get(labelCount.get() - 7);
+                            autoShowResultOnLabel(path, label1, false);
+
+                            path = listResults.get(labelCount.get() - 6);
+                            autoShowResultOnLabel(path, label2, false);
+
+                            path = listResults.get(labelCount.get() - 5);
+                            autoShowResultOnLabel(path, label3, false);
+
+                            path = listResults.get(labelCount.get() - 4);
+                            autoShowResultOnLabel(path, label4, false);
+
+                            path = listResults.get(labelCount.get() - 3);
+                            autoShowResultOnLabel(path, label5, false);
+
+                            path = listResults.get(labelCount.get() - 2);
+                            autoShowResultOnLabel(path, label6, false);
+
+                            path = listResults.get(labelCount.get() - 1);
+                            autoShowResultOnLabel(path, label7, false);
+
+                            path = listResults.get(labelCount.get());
+                            autoShowResultOnLabel(path, label8, true);
+                        } catch (ArrayIndexOutOfBoundsException ignored) {
+
+                        }
+                        break;
+                }
+            } else {
+                switch (position) {
+                    case 0:
+                        int size = listResults.size();
+                        if (size == 2) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(labelColor);
+                        } else if (size == 3) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(labelColor);
+                            label3.setBackground(backgroundColor);
+                        } else if (size == 4) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(labelColor);
+                            label3.setBackground(backgroundColor);
+                            label4.setBackground(backgroundColor);
+                        } else if (size == 5) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(labelColor);
+                            label3.setBackground(backgroundColor);
+                            label4.setBackground(backgroundColor);
+                            label5.setBackground(backgroundColor);
+                        } else if (size == 6) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(labelColor);
+                            label3.setBackground(backgroundColor);
+                            label4.setBackground(backgroundColor);
+                            label5.setBackground(backgroundColor);
+                            label6.setBackground(backgroundColor);
+                        } else if (size == 7) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(labelColor);
+                            label3.setBackground(backgroundColor);
+                            label4.setBackground(backgroundColor);
+                            label5.setBackground(backgroundColor);
+                            label6.setBackground(backgroundColor);
+                            label7.setBackground(backgroundColor);
+                        } else if (size > 7) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(labelColor);
+                            label3.setBackground(backgroundColor);
+                            label4.setBackground(backgroundColor);
+                            label5.setBackground(backgroundColor);
+                            label6.setBackground(backgroundColor);
+                            label7.setBackground(backgroundColor);
+                            label8.setBackground(backgroundColor);
+                        }
+                        break;
+                    case 1:
+                        size = listResults.size();
+                        if (size == 3) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(labelColor);
+                        } else if (size == 4) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(labelColor);
+                            label4.setBackground(backgroundColor);
+                        } else if (size == 5) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(labelColor);
+                            label4.setBackground(backgroundColor);
+                            label5.setBackground(backgroundColor);
+                        } else if (size == 6) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(labelColor);
+                            label4.setBackground(backgroundColor);
+                            label5.setBackground(backgroundColor);
+                            label6.setBackground(backgroundColor);
+                        } else if (size == 7) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(labelColor);
+                            label4.setBackground(backgroundColor);
+                            label5.setBackground(backgroundColor);
+                            label6.setBackground(backgroundColor);
+                            label7.setBackground(backgroundColor);
+                        } else if (size > 7) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(labelColor);
+                            label4.setBackground(backgroundColor);
+                            label5.setBackground(backgroundColor);
+                            label6.setBackground(backgroundColor);
+                            label7.setBackground(backgroundColor);
+                            label8.setBackground(backgroundColor);
+                        }
+                        break;
+                    case 2:
+                        size = listResults.size();
+                        if (size == 4) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(backgroundColor);
+                            label4.setBackground(labelColor);
+                        } else if (size == 5) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(backgroundColor);
+                            label4.setBackground(labelColor);
+                            label5.setBackground(backgroundColor);
+                        } else if (size == 6) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(backgroundColor);
+                            label4.setBackground(labelColor);
+                            label5.setBackground(backgroundColor);
+                            label6.setBackground(backgroundColor);
+                        } else if (size == 7) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(backgroundColor);
+                            label4.setBackground(labelColor);
+                            label5.setBackground(backgroundColor);
+                            label6.setBackground(backgroundColor);
+                            label7.setBackground(backgroundColor);
+                        } else if (size > 7) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(backgroundColor);
+                            label4.setBackground(labelColor);
+                            label5.setBackground(backgroundColor);
+                            label6.setBackground(backgroundColor);
+                            label7.setBackground(backgroundColor);
+                            label8.setBackground(backgroundColor);
+                        }
+                        break;
+                    case 3:
+                        size = listResults.size();
+                        if (size == 5) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(backgroundColor);
+                            label4.setBackground(backgroundColor);
+                            label5.setBackground(labelColor);
+                        } else if (size == 6) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(backgroundColor);
+                            label4.setBackground(backgroundColor);
+                            label5.setBackground(labelColor);
+                            label6.setBackground(backgroundColor);
+                        } else if (size == 7) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(backgroundColor);
+                            label4.setBackground(backgroundColor);
+                            label5.setBackground(labelColor);
+                            label6.setBackground(backgroundColor);
+                            label7.setBackground(backgroundColor);
+                        } else if (size > 7) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(backgroundColor);
+                            label4.setBackground(backgroundColor);
+                            label5.setBackground(labelColor);
+                            label6.setBackground(backgroundColor);
+                            label7.setBackground(backgroundColor);
+                            label8.setBackground(backgroundColor);
+                        }
+                        break;
+                    case 4:
+                        size = listResults.size();
+                        if (size == 6) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(backgroundColor);
+                            label4.setBackground(backgroundColor);
+                            label5.setBackground(backgroundColor);
+                            label6.setBackground(labelColor);
+                        } else if (size == 7) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(backgroundColor);
+                            label4.setBackground(backgroundColor);
+                            label5.setBackground(backgroundColor);
+                            label6.setBackground(labelColor);
+                            label7.setBackground(backgroundColor);
+                        } else if (size > 7) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(backgroundColor);
+                            label4.setBackground(backgroundColor);
+                            label5.setBackground(backgroundColor);
+                            label6.setBackground(labelColor);
+                            label7.setBackground(backgroundColor);
+                            label8.setBackground(backgroundColor);
+                        }
+                        break;
+                    case 5:
+                        size = listResults.size();
+                        if (size == 7) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(backgroundColor);
+                            label4.setBackground(backgroundColor);
+                            label5.setBackground(backgroundColor);
+                            label6.setBackground(backgroundColor);
+                            label7.setBackground(labelColor);
+                        } else if (size > 7) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(backgroundColor);
+                            label4.setBackground(backgroundColor);
+                            label5.setBackground(backgroundColor);
+                            label6.setBackground(backgroundColor);
+                            label7.setBackground(labelColor);
+                            label8.setBackground(backgroundColor);
+                        }
+                        break;
+                    case 6:
+                        label1.setBackground(backgroundColor);
+                        label2.setBackground(backgroundColor);
+                        label3.setBackground(backgroundColor);
+                        label4.setBackground(backgroundColor);
+                        label5.setBackground(backgroundColor);
+                        label6.setBackground(backgroundColor);
+                        label7.setBackground(backgroundColor);
+                        label8.setBackground(labelColor);
+                        break;
+                    case 7:
+                        //到达了最下端，刷新显示
+                        try {
+                            String command = listResults.get(labelCount.get() - 7);
+                            showCommandOnLabel(command, label1, false);
+
+                            command = listResults.get(labelCount.get() - 6);
+                            showCommandOnLabel(command, label2, false);
+
+                            command = listResults.get(labelCount.get() - 5);
+                            showCommandOnLabel(command, label3, false);
+
+                            command = listResults.get(labelCount.get() - 4);
+                            showCommandOnLabel(command, label4, false);
+
+                            command = listResults.get(labelCount.get() - 3);
+                            showCommandOnLabel(command, label5, false);
+
+                            command = listResults.get(labelCount.get() - 2);
+                            showCommandOnLabel(command, label6, false);
+
+                            command = listResults.get(labelCount.get() - 1);
+                            showCommandOnLabel(command, label7, false);
+
+                            command = listResults.get(labelCount.get());
+                            showCommandOnLabel(command, label8, true);
+                        } catch (ArrayIndexOutOfBoundsException ignored) {
+
+                        }
+                        break;
+                }
+            }
+        } catch (NullPointerException ignored) {
+
+        }
+    }
+
+    private void moveUpward(int position) {
+        int size;
+        try {
+            if (!isCommandMode) {
+                switch (position) {
+                    case 0:
+                        //到达了最上端，刷新显示
+                        try {
+                            String path = listResults.get(labelCount.get());
+                            autoShowResultOnLabel(path, label1, true);
+
+                            path = listResults.get(labelCount.get() + 1);
+                            autoShowResultOnLabel(path, label2, false);
+
+                            path = listResults.get(labelCount.get() + 2);
+                            autoShowResultOnLabel(path, label3, false);
+
+                            path = listResults.get(labelCount.get() + 3);
+                            autoShowResultOnLabel(path, label4, false);
+
+                            path = listResults.get(labelCount.get() + 4);
+                            autoShowResultOnLabel(path, label5, false);
+
+                            path = listResults.get(labelCount.get() + 5);
+                            autoShowResultOnLabel(path, label6, false);
+
+                            path = listResults.get(labelCount.get() + 6);
+                            autoShowResultOnLabel(path, label7, false);
+
+                            path = listResults.get(labelCount.get() + 7);
+                            autoShowResultOnLabel(path, label8, false);
+                        } catch (ArrayIndexOutOfBoundsException ignored) {
+
+                        }
+                        break;
+                    case 1:
+                        size = listResults.size();
+                        if (size == 2) {
+                            label1.setBackground(labelColor);
+                            label2.setBackground(backgroundColor);
+                        } else if (size == 3) {
+                            label1.setBackground(labelColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(backgroundColor);
+                        } else if (size == 4) {
+                            label1.setBackground(labelColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(backgroundColor);
+                            label4.setBackground(backgroundColor);
+                        } else if (size == 5) {
+                            label1.setBackground(labelColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(backgroundColor);
+                            label4.setBackground(backgroundColor);
+                            label5.setBackground(backgroundColor);
+                        } else if (size == 6) {
+                            label1.setBackground(labelColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(backgroundColor);
+                            label4.setBackground(backgroundColor);
+                            label5.setBackground(backgroundColor);
+                            label6.setBackground(backgroundColor);
+                        } else if (size == 7) {
+                            label1.setBackground(labelColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(backgroundColor);
+                            label4.setBackground(backgroundColor);
+                            label5.setBackground(backgroundColor);
+                            label6.setBackground(backgroundColor);
+                            label7.setBackground(backgroundColor);
+                        } else if (size > 7) {
+                            label1.setBackground(labelColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(backgroundColor);
+                            label4.setBackground(backgroundColor);
+                            label5.setBackground(backgroundColor);
+                            label6.setBackground(backgroundColor);
+                            label7.setBackground(backgroundColor);
+                            label8.setBackground(backgroundColor);
+                        }
+                        break;
+                    case 2:
+                        size = listResults.size();
+                        if (size == 3) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(labelColor);
+                            label3.setBackground(backgroundColor);
+                        } else if (size == 4) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(labelColor);
+                            label3.setBackground(backgroundColor);
+                            label4.setBackground(backgroundColor);
+                        } else if (size == 5) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(labelColor);
+                            label3.setBackground(backgroundColor);
+                            label4.setBackground(backgroundColor);
+                            label5.setBackground(backgroundColor);
+                        } else if (size == 6) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(labelColor);
+                            label3.setBackground(backgroundColor);
+                            label4.setBackground(backgroundColor);
+                            label5.setBackground(backgroundColor);
+                            label6.setBackground(backgroundColor);
+                        } else if (size == 7) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(labelColor);
+                            label3.setBackground(backgroundColor);
+                            label4.setBackground(backgroundColor);
+                            label5.setBackground(backgroundColor);
+                            label6.setBackground(backgroundColor);
+                            label7.setBackground(backgroundColor);
+                        } else if (size > 7) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(labelColor);
+                            label3.setBackground(backgroundColor);
+                            label4.setBackground(backgroundColor);
+                            label5.setBackground(backgroundColor);
+                            label6.setBackground(backgroundColor);
+                            label7.setBackground(backgroundColor);
+                            label8.setBackground(backgroundColor);
+                        }
+                        break;
+                    case 3:
+                        size = listResults.size();
+                        if (size == 4) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(labelColor);
+                            label4.setBackground(backgroundColor);
+                        } else if (size == 5) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(labelColor);
+                            label4.setBackground(backgroundColor);
+                            label5.setBackground(backgroundColor);
+                        } else if (size == 6) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(labelColor);
+                            label4.setBackground(backgroundColor);
+                            label5.setBackground(backgroundColor);
+                            label6.setBackground(backgroundColor);
+                        } else if (size == 7) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(labelColor);
+                            label4.setBackground(backgroundColor);
+                            label5.setBackground(backgroundColor);
+                            label6.setBackground(backgroundColor);
+                            label7.setBackground(backgroundColor);
+                        } else if (size > 7) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(labelColor);
+                            label4.setBackground(backgroundColor);
+                            label5.setBackground(backgroundColor);
+                            label6.setBackground(backgroundColor);
+                            label7.setBackground(backgroundColor);
+                            label8.setBackground(backgroundColor);
+                        }
+                        break;
+                    case 4:
+                        size = listResults.size();
+                        if (size == 5) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(backgroundColor);
+                            label4.setBackground(labelColor);
+                            label5.setBackground(backgroundColor);
+                        } else if (size == 6) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(backgroundColor);
+                            label4.setBackground(labelColor);
+                            label5.setBackground(backgroundColor);
+                            label6.setBackground(backgroundColor);
+                        } else if (size == 7) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(backgroundColor);
+                            label4.setBackground(labelColor);
+                            label5.setBackground(backgroundColor);
+                            label6.setBackground(backgroundColor);
+                            label7.setBackground(backgroundColor);
+                        } else if (size > 7) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(backgroundColor);
+                            label4.setBackground(labelColor);
+                            label5.setBackground(backgroundColor);
+                            label6.setBackground(backgroundColor);
+                            label7.setBackground(backgroundColor);
+                            label8.setBackground(backgroundColor);
+                        }
+                        break;
+                    case 5:
+                        size = listResults.size();
+                        if (size == 6) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(backgroundColor);
+                            label4.setBackground(backgroundColor);
+                            label5.setBackground(labelColor);
+                            label6.setBackground(backgroundColor);
+                        } else if (size == 7) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(backgroundColor);
+                            label4.setBackground(backgroundColor);
+                            label5.setBackground(labelColor);
+                            label6.setBackground(backgroundColor);
+                            label7.setBackground(backgroundColor);
+                        } else if (size > 7) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(backgroundColor);
+                            label4.setBackground(backgroundColor);
+                            label5.setBackground(labelColor);
+                            label6.setBackground(backgroundColor);
+                            label7.setBackground(backgroundColor);
+                            label8.setBackground(backgroundColor);
+                        }
+                        break;
+                    case 6:
+                        size = listResults.size();
+                        if (size == 7) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(backgroundColor);
+                            label4.setBackground(backgroundColor);
+                            label5.setBackground(backgroundColor);
+                            label6.setBackground(labelColor);
+                            label7.setBackground(backgroundColor);
+                        } else if (size > 7) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(backgroundColor);
+                            label4.setBackground(backgroundColor);
+                            label5.setBackground(backgroundColor);
+                            label6.setBackground(labelColor);
+                            label7.setBackground(backgroundColor);
+                            label8.setBackground(backgroundColor);
+                        }
+                        break;
+                    case 7:
+                        label1.setBackground(backgroundColor);
+                        label2.setBackground(backgroundColor);
+                        label3.setBackground(backgroundColor);
+                        label4.setBackground(backgroundColor);
+                        label5.setBackground(backgroundColor);
+                        label6.setBackground(backgroundColor);
+                        label7.setBackground(labelColor);
+                        label8.setBackground(backgroundColor);
+                        break;
+                }
+            } else {
+                switch (position) {
+                    case 0:
+                        //到达了最上端，刷新显示
+                        try {
+                            String command = listResults.get(labelCount.get());
+                            showCommandOnLabel(command, label1, true);
+
+                            command = listResults.get(labelCount.get() + 1);
+                            showCommandOnLabel(command, label2, false);
+
+                            command = listResults.get(labelCount.get() + 2);
+                            showCommandOnLabel(command, label3, false);
+
+                            command = listResults.get(labelCount.get() + 3);
+                            showCommandOnLabel(command, label4, false);
+
+                            command = listResults.get(labelCount.get() + 4);
+                            showCommandOnLabel(command, label5, false);
+
+                            command = listResults.get(labelCount.get() + 5);
+                            showCommandOnLabel(command, label6, false);
+
+                            command = listResults.get(labelCount.get() + 6);
+                            showCommandOnLabel(command, label7, false);
+
+                            command = listResults.get(labelCount.get() + 7);
+                            showCommandOnLabel(command, label8, false);
+                        } catch (ArrayIndexOutOfBoundsException ignored) {
+
+                        }
+                        break;
+                    case 1:
+                        size = listResults.size();
+                        if (size == 2) {
+                            label1.setBackground(labelColor);
+                            label2.setBackground(backgroundColor);
+                        } else if (size == 3) {
+                            label1.setBackground(labelColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(backgroundColor);
+                        } else if (size == 4) {
+                            label1.setBackground(labelColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(backgroundColor);
+                            label4.setBackground(backgroundColor);
+                        } else if (size == 5) {
+                            label1.setBackground(labelColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(backgroundColor);
+                            label4.setBackground(backgroundColor);
+                            label5.setBackground(backgroundColor);
+                        } else if (size == 6) {
+                            label1.setBackground(labelColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(backgroundColor);
+                            label4.setBackground(backgroundColor);
+                            label5.setBackground(backgroundColor);
+                            label6.setBackground(backgroundColor);
+                        } else if (size == 7) {
+                            label1.setBackground(labelColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(backgroundColor);
+                            label4.setBackground(backgroundColor);
+                            label5.setBackground(backgroundColor);
+                            label6.setBackground(backgroundColor);
+                            label7.setBackground(backgroundColor);
+                        } else if (size > 7) {
+                            label1.setBackground(labelColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(backgroundColor);
+                            label4.setBackground(backgroundColor);
+                            label5.setBackground(backgroundColor);
+                            label6.setBackground(backgroundColor);
+                            label7.setBackground(backgroundColor);
+                            label8.setBackground(backgroundColor);
+                        }
+                        break;
+                    case 2:
+                        size = listResults.size();
+                        if (size == 3) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(labelColor);
+                            label3.setBackground(backgroundColor);
+                        } else if (size == 4) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(labelColor);
+                            label3.setBackground(backgroundColor);
+                            label4.setBackground(backgroundColor);
+                        } else if (size == 5) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(labelColor);
+                            label3.setBackground(backgroundColor);
+                            label4.setBackground(backgroundColor);
+                            label5.setBackground(backgroundColor);
+                        } else if (size == 6) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(labelColor);
+                            label3.setBackground(backgroundColor);
+                            label4.setBackground(backgroundColor);
+                            label5.setBackground(backgroundColor);
+                            label6.setBackground(backgroundColor);
+                        } else if (size == 7) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(labelColor);
+                            label3.setBackground(backgroundColor);
+                            label4.setBackground(backgroundColor);
+                            label5.setBackground(backgroundColor);
+                            label6.setBackground(backgroundColor);
+                            label7.setBackground(backgroundColor);
+                        } else if (size > 7) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(labelColor);
+                            label3.setBackground(backgroundColor);
+                            label4.setBackground(backgroundColor);
+                            label5.setBackground(backgroundColor);
+                            label6.setBackground(backgroundColor);
+                            label7.setBackground(backgroundColor);
+                            label8.setBackground(backgroundColor);
+                        }
+                        break;
+                    case 3:
+                        size = listResults.size();
+                        if (size == 4) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(labelColor);
+                            label4.setBackground(backgroundColor);
+                        } else if (size == 5) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(labelColor);
+                            label4.setBackground(backgroundColor);
+                            label5.setBackground(backgroundColor);
+                        } else if (size == 6) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(labelColor);
+                            label4.setBackground(backgroundColor);
+                            label5.setBackground(backgroundColor);
+                            label6.setBackground(backgroundColor);
+                        } else if (size == 7) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(labelColor);
+                            label4.setBackground(backgroundColor);
+                            label5.setBackground(backgroundColor);
+                            label6.setBackground(backgroundColor);
+                            label7.setBackground(backgroundColor);
+                        } else if (size > 7) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(labelColor);
+                            label4.setBackground(backgroundColor);
+                            label5.setBackground(backgroundColor);
+                            label6.setBackground(backgroundColor);
+                            label7.setBackground(backgroundColor);
+                            label8.setBackground(backgroundColor);
+                        }
+                        break;
+                    case 4:
+                        size = listResults.size();
+                        if (size == 5) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(backgroundColor);
+                            label4.setBackground(labelColor);
+                            label5.setBackground(backgroundColor);
+                        } else if (size == 6) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(backgroundColor);
+                            label4.setBackground(labelColor);
+                            label5.setBackground(backgroundColor);
+                            label6.setBackground(backgroundColor);
+                        } else if (size == 7) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(backgroundColor);
+                            label4.setBackground(labelColor);
+                            label5.setBackground(backgroundColor);
+                            label6.setBackground(backgroundColor);
+                            label7.setBackground(backgroundColor);
+                        } else if (size > 7) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(backgroundColor);
+                            label4.setBackground(labelColor);
+                            label5.setBackground(backgroundColor);
+                            label6.setBackground(backgroundColor);
+                            label7.setBackground(backgroundColor);
+                            label8.setBackground(backgroundColor);
+                        }
+                        break;
+                    case 5:
+                        size = listResults.size();
+                        if (size == 6) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(backgroundColor);
+                            label4.setBackground(backgroundColor);
+                            label5.setBackground(labelColor);
+                            label6.setBackground(backgroundColor);
+                        } else if (size == 7) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(backgroundColor);
+                            label4.setBackground(backgroundColor);
+                            label5.setBackground(labelColor);
+                            label6.setBackground(backgroundColor);
+                            label7.setBackground(backgroundColor);
+                        } else if (size > 7) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(backgroundColor);
+                            label4.setBackground(backgroundColor);
+                            label5.setBackground(labelColor);
+                            label6.setBackground(backgroundColor);
+                            label7.setBackground(backgroundColor);
+                            label8.setBackground(backgroundColor);
+                        }
+                        break;
+                    case 6:
+                        size = listResults.size();
+                        if (size == 7) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(backgroundColor);
+                            label4.setBackground(backgroundColor);
+                            label5.setBackground(backgroundColor);
+                            label6.setBackground(labelColor);
+                            label7.setBackground(backgroundColor);
+                        } else if (size > 7) {
+                            label1.setBackground(backgroundColor);
+                            label2.setBackground(backgroundColor);
+                            label3.setBackground(backgroundColor);
+                            label4.setBackground(backgroundColor);
+                            label5.setBackground(backgroundColor);
+                            label6.setBackground(labelColor);
+                            label7.setBackground(backgroundColor);
+                            label8.setBackground(backgroundColor);
+                        }
+                        break;
+                    case 7:
+                        label1.setBackground(backgroundColor);
+                        label2.setBackground(backgroundColor);
+                        label3.setBackground(backgroundColor);
+                        label4.setBackground(backgroundColor);
+                        label5.setBackground(backgroundColor);
+                        label6.setBackground(backgroundColor);
+                        label7.setBackground(labelColor);
+                        label8.setBackground(backgroundColor);
+                        break;
+                }
+            }
+        } catch (NullPointerException ignored) {
+
+        }
+    }
+
     private void addTextFieldDocumentListener() {
         textField.getDocument().addDocumentListener(new DocumentListener() {
             @Override
             public void insertUpdate(DocumentEvent e) {
-
                 clearLabel();
                 listResults.clear();
                 tempResults.clear();
@@ -2886,16 +1883,15 @@ public class SearchBar {
 
             @Override
             public void removeUpdate(DocumentEvent e) {
-
-                clearLabel();
                 listResults.clear();
                 tempResults.clear();
+                clearLabel();
                 labelCount.set(0);
                 isCacheAndPrioritySearched = false;
                 String t = getTextFieldText();
 
                 if (t.isEmpty()) {
-                    clearLabel();
+                    panel.repaint();
                     labelCount.set(0);
                     startTime = System.currentTimeMillis();
                     timer = false;
@@ -2955,7 +1951,7 @@ public class SearchBar {
             //连接管理线程
             try {
                 while (!mainExit) {
-                    if ((!isUsing) && Search.getInstance().isUsable()) {
+                    if ((!isUsing) && search.isUsable()) {
                         for (String eachKey : readerMap.keySet()) {
                             ReaderInfo info = readerMap.get(eachKey);
                             if (System.currentTimeMillis() - info.time > SettingsFrame.getConnectionTimeLimit()) {
@@ -3211,14 +2207,13 @@ public class SearchBar {
             //检测缓存大小 过大时进行清理
             try {
                 while (!mainExit) {
-                    Search instance = Search.getInstance();
-                    if (!instance.isManualUpdate() && !isUsing) {
-                        if (instance.getRecycleBinSize() > 1000) {
+                    if (!search.isManualUpdate() && !isUsing) {
+                        if (search.getRecycleBinSize() > 1000) {
                             closeAllConnection();
-                            System.out.println("已检测到回收站过大，自动清理");
-                            instance.setUsable(false);
-                            instance.mergeAndClearRecycleBin();
-                            instance.setUsable(true);
+                            System.out.println("The recycle bin has been detected to be too large, and it is automatically cleaned up");
+                            search.setUsable(false);
+                            search.mergeAndClearRecycleBin();
+                            search.setUsable(true);
                         }
                     }
                     Thread.sleep(5000);
@@ -3229,261 +2224,244 @@ public class SearchBar {
         });
 
         fixedThreadPool.execute(() -> {
-            //本地搜索线程
+            //添加搜索路径线程
             String listPath;
             int ascII;
-            String text;
-            String[] strings;
-            int length;
-            String searchCase, searchText;
             try {
                 while (!mainExit) {
                     if (isStartSearchLocal) {
                         isStartSearchLocal = false;
                         tempResults.clear();
-                        text = getTextFieldText();
-                        strings = resultSplit.split(text);
-                        length = strings.length;
-                        if (length == 2) {
-                            searchCase = strings[1].toLowerCase();
-                            searchText = strings[0];
-                        } else {
-                            searchText = strings[0];
-                            searchCase = "";
-                        }
                         ascII = getAscIISum(searchText);
-                        ConcurrentLinkedQueue<String> paths = new ConcurrentLinkedQueue<>();
                         String dataPath = SettingsFrame.getDataPath();
 
                         if (0 <= ascII && ascII <= 100) {
                             for (int i = 0; i < 2500; i += 100) {
                                 int name = i + 100;
-                                listPath = dataPath + "\\" + "\\list" + i + "-" + name + ".dat";
-                                paths.add(listPath);
+                                listPath = dataPath + File.separator + "list" + i + "-" + name + ".dat";
+                                pathQueue.add(listPath);
                             }
-                            paths.add(dataPath + "\\" + "\\list2500-.dat");
+                            pathQueue.add(dataPath + File.separator + "list2500-.dat");
 
                         } else if (100 < ascII && ascII <= 200) {
 
                             for (int i = 100; i < 2500; i += 100) {
                                 int name = i + 100;
-                                listPath = dataPath + "\\" + "\\list" + i + "-" + name + ".dat";
-                                paths.add(listPath);
+                                listPath = dataPath + File.separator + "list" + i + "-" + name + ".dat";
+                                pathQueue.add(listPath);
                             }
-                            paths.add(dataPath + "\\" + "\\list2500-.dat");
+                            pathQueue.add(dataPath + File.separator + "list2500-.dat");
 
                         } else if (200 < ascII && ascII <= 300) {
 
                             for (int i = 200; i < 2500; i += 100) {
                                 int name = i + 100;
-                                listPath = dataPath + "\\" + "\\list" + i + "-" + name + ".dat";
-                                paths.add(listPath);
+                                listPath = dataPath + File.separator + "list" + i + "-" + name + ".dat";
+                                pathQueue.add(listPath);
                             }
-                            paths.add(dataPath + "\\" + "\\list2500-.dat");
+                            pathQueue.add(dataPath + File.separator + "list2500-.dat");
 
                         } else if (300 < ascII && ascII <= 400) {
 
                             for (int i = 300; i < 2500; i += 100) {
                                 int name = i + 100;
-                                listPath = dataPath + "\\" + "\\list" + i + "-" + name + ".dat";
-                                paths.add(listPath);
+                                listPath = dataPath + File.separator + "list" + i + "-" + name + ".dat";
+                                pathQueue.add(listPath);
                             }
-                            paths.add(dataPath + "\\" + "\\list2500-.dat");
+                            pathQueue.add(dataPath + File.separator + "list2500-.dat");
 
                         } else if (400 < ascII && ascII <= 500) {
 
                             for (int i = 400; i < 2500; i += 100) {
                                 int name = i + 100;
-                                listPath = dataPath + "\\" + "\\list" + i + "-" + name + ".dat";
-                                paths.add(listPath);
+                                listPath = dataPath + File.separator + "list" + i + "-" + name + ".dat";
+                                pathQueue.add(listPath);
                             }
-                            paths.add(dataPath + "\\" + "\\list2500-.dat");
+                            pathQueue.add(dataPath + File.separator + "list2500-.dat");
 
                         } else if (500 < ascII && ascII <= 600) {
 
                             for (int i = 500; i < 2500; i += 100) {
                                 int name = i + 100;
-                                listPath = dataPath + "\\" + "\\list" + i + "-" + name + ".dat";
-                                paths.add(listPath);
+                                listPath = dataPath + File.separator + "list" + i + "-" + name + ".dat";
+                                pathQueue.add(listPath);
                             }
-                            paths.add(dataPath + "\\" + "\\list2500-.dat");
+                            pathQueue.add(dataPath + File.separator + "list2500-.dat");
 
                         } else if (600 < ascII && ascII <= 700) {
 
                             for (int i = 600; i < 2500; i += 100) {
                                 int name = i + 100;
-                                listPath = dataPath + "\\" + "\\list" + i + "-" + name + ".dat";
-                                paths.add(listPath);
+                                listPath = dataPath + File.separator + "list" + i + "-" + name + ".dat";
+                                pathQueue.add(listPath);
                             }
-                            paths.add(dataPath + "\\" + "\\list2500-.dat");
+                            pathQueue.add(dataPath + File.separator + "list2500-.dat");
 
                         } else if (700 < ascII && ascII <= 800) {
 
                             for (int i = 700; i < 2500; i += 100) {
                                 int name = i + 100;
-                                listPath = dataPath + "\\" + "\\list" + i + "-" + name + ".dat";
-                                paths.add(listPath);
+                                listPath = dataPath + File.separator + "list" + i + "-" + name + ".dat";
+                                pathQueue.add(listPath);
                             }
-                            paths.add(dataPath + "\\" + "\\list2500-.dat");
+                            pathQueue.add(dataPath + File.separator + "list2500-.dat");
 
                         } else if (800 < ascII && ascII <= 900) {
 
                             for (int i = 800; i < 2500; i += 100) {
                                 int name = i + 100;
-                                listPath = dataPath + "\\" + "\\list" + i + "-" + name + ".dat";
-                                paths.add(listPath);
+                                listPath = dataPath + File.separator + "list" + i + "-" + name + ".dat";
+                                pathQueue.add(listPath);
                             }
-                            paths.add(dataPath + "\\" + "\\list2500-.dat");
+                            pathQueue.add(dataPath + File.separator + "list2500-.dat");
 
                         } else if (900 < ascII && ascII <= 1000) {
 
                             for (int i = 900; i < 2500; i += 100) {
                                 int name = i + 100;
-                                listPath = dataPath + "\\" + "\\list" + i + "-" + name + ".dat";
-                                paths.add(listPath);
+                                listPath = dataPath + File.separator + "list" + i + "-" + name + ".dat";
+                                pathQueue.add(listPath);
                             }
-                            paths.add(dataPath + "\\" + "\\list2500-.dat");
+                            pathQueue.add(dataPath + File.separator + "list2500-.dat");
 
                         } else if (1000 < ascII && ascII <= 1100) {
 
                             for (int i = 1000; i < 2500; i += 100) {
                                 int name = i + 100;
-                                listPath = dataPath + "\\" + "\\list" + i + "-" + name + ".dat";
-                                paths.add(listPath);
+                                listPath = dataPath + File.separator + "list" + i + "-" + name + ".dat";
+                                pathQueue.add(listPath);
                             }
-                            paths.add(dataPath + "\\" + "\\list2500-.dat");
+                            pathQueue.add(dataPath + File.separator + "list2500-.dat");
 
                         } else if (1100 < ascII && ascII <= 1200) {
 
                             for (int i = 1100; i < 2500; i += 100) {
                                 int name = i + 100;
-                                listPath = dataPath + "\\" + "\\list" + i + "-" + name + ".dat";
-                                paths.add(listPath);
+                                listPath = dataPath + File.separator + "list" + i + "-" + name + ".dat";
+                                pathQueue.add(listPath);
                             }
-                            paths.add(dataPath + "\\" + "\\list2500-.dat");
+                            pathQueue.add(dataPath + File.separator + "list2500-.dat");
 
                         } else if (1200 < ascII && ascII <= 1300) {
 
                             for (int i = 1200; i < 2500; i += 100) {
                                 int name = i + 100;
-                                listPath = dataPath + "\\" + "\\list" + i + "-" + name + ".dat";
-                                paths.add(listPath);
+                                listPath = dataPath + File.separator + "list" + i + "-" + name + ".dat";
+                                pathQueue.add(listPath);
                             }
-                            paths.add(dataPath + "\\" + "\\list2500-.dat");
+                            pathQueue.add(dataPath + File.separator + "list2500-.dat");
 
                         } else if (1300 < ascII && ascII <= 1400) {
 
                             for (int i = 1300; i < 2500; i += 100) {
                                 int name = i + 100;
-                                listPath = dataPath + "\\" + "\\list" + i + "-" + name + ".dat";
-                                paths.add(listPath);
+                                listPath = dataPath + File.separator + "list" + i + "-" + name + ".dat";
+                                pathQueue.add(listPath);
                             }
-                            paths.add(dataPath + "\\" + "\\list2500-.dat");
+                            pathQueue.add(dataPath + File.separator + "list2500-.dat");
 
                         } else if (1400 < ascII && ascII <= 1500) {
 
                             for (int i = 1400; i < 2500; i += 100) {
                                 int name = i + 100;
-                                listPath = dataPath + "\\" + "\\list" + i + "-" + name + ".dat";
-                                paths.add(listPath);
+                                listPath = dataPath + File.separator + "list" + i + "-" + name + ".dat";
+                                pathQueue.add(listPath);
                             }
-                            paths.add(dataPath + "\\" + "\\list2500-.dat");
+                            pathQueue.add(dataPath + File.separator + "list2500-.dat");
 
                         } else if (1500 < ascII && ascII <= 1600) {
 
                             for (int i = 1500; i < 2500; i += 100) {
                                 int name = i + 100;
-                                listPath = dataPath + "\\" + "\\list" + i + "-" + name + ".dat";
-                                paths.add(listPath);
+                                listPath = dataPath + File.separator + "list" + i + "-" + name + ".dat";
+                                pathQueue.add(listPath);
                             }
-                            paths.add(dataPath + "\\" + "\\list2500-.dat");
+                            pathQueue.add(dataPath + File.separator + "list2500-.dat");
 
                         } else if (1600 < ascII && ascII <= 1700) {
 
                             for (int i = 1600; i < 2500; i += 100) {
                                 int name = i + 100;
-                                listPath = dataPath + "\\" + "\\list" + i + "-" + name + ".dat";
-                                paths.add(listPath);
+                                listPath = dataPath + File.separator + "list" + i + "-" + name + ".dat";
+                                pathQueue.add(listPath);
                             }
-                            paths.add(dataPath + "\\" + "\\list2500-.dat");
+                            pathQueue.add(dataPath + File.separator + "list2500-.dat");
 
                         } else if (1700 < ascII && ascII <= 1800) {
 
                             for (int i = 1700; i < 2500; i += 100) {
                                 int name = i + 100;
-                                listPath = dataPath + "\\" + "\\list" + i + "-" + name + ".dat";
-                                paths.add(listPath);
+                                listPath = dataPath + File.separator + "list" + i + "-" + name + ".dat";
+                                pathQueue.add(listPath);
                             }
-                            paths.add(dataPath + "\\" + "\\list2500-.dat");
+                            pathQueue.add(dataPath + File.separator + "list2500-.dat");
 
                         } else if (1800 < ascII && ascII <= 1900) {
 
                             for (int i = 1800; i < 2500; i += 100) {
                                 int name = i + 100;
-                                listPath = dataPath + "\\" + "\\list" + i + "-" + name + ".dat";
-                                paths.add(listPath);
+                                listPath = dataPath + File.separator + "list" + i + "-" + name + ".dat";
+                                pathQueue.add(listPath);
                             }
-                            paths.add(dataPath + "\\" + "\\list2500-.dat");
+                            pathQueue.add(dataPath + File.separator + "list2500-.dat");
 
                         } else if (1900 < ascII && ascII <= 2000) {
 
                             for (int i = 1900; i < 2500; i += 100) {
                                 int name = i + 100;
-                                listPath = dataPath + "\\" + "\\list" + i + "-" + name + ".dat";
-                                paths.add(listPath);
+                                listPath = dataPath + File.separator + "list" + i + "-" + name + ".dat";
+                                pathQueue.add(listPath);
                             }
-                            paths.add(dataPath + "\\" + "\\list2500-.dat");
+                            pathQueue.add(dataPath + File.separator + "list2500-.dat");
 
                         } else if (2000 < ascII && ascII <= 2100) {
 
                             for (int i = 2000; i < 2500; i += 100) {
                                 int name = i + 100;
-                                listPath = dataPath + "\\" + "\\list" + i + "-" + name + ".dat";
-                                paths.add(listPath);
+                                listPath = dataPath + File.separator + "list" + i + "-" + name + ".dat";
+                                pathQueue.add(listPath);
                             }
-                            paths.add(dataPath + "\\" + "\\list2500-.dat");
+                            pathQueue.add(dataPath + File.separator + "list2500-.dat");
 
                         } else if (2100 < ascII && ascII <= 2200) {
 
                             for (int i = 2100; i < 2500; i += 100) {
                                 int name = i + 100;
-                                listPath = dataPath + "\\" + "\\list" + i + "-" + name + ".dat";
-                                paths.add(listPath);
+                                listPath = dataPath + File.separator + "list" + i + "-" + name + ".dat";
+                                pathQueue.add(listPath);
                             }
-                            paths.add(dataPath + "\\" + "\\list2500-.dat");
+                            pathQueue.add(dataPath + File.separator + "list2500-.dat");
 
                         } else if (2200 < ascII && ascII <= 2300) {
 
                             for (int i = 2200; i < 2500; i += 100) {
                                 int name = i + 100;
-                                listPath = dataPath + "\\" + "\\list" + i + "-" + name + ".dat";
-                                paths.add(listPath);
+                                listPath = dataPath + File.separator + "list" + i + "-" + name + ".dat";
+                                pathQueue.add(listPath);
                             }
-                            paths.add(dataPath + "\\" + "\\list2500-.dat");
+                            pathQueue.add(dataPath + File.separator + "list2500-.dat");
 
                         } else if (2300 < ascII && ascII <= 2400) {
 
                             for (int i = 2300; i < 2500; i += 100) {
                                 int name = i + 100;
-                                listPath = dataPath + "\\" + "\\list" + i + "-" + name + ".dat";
-                                paths.add(listPath);
+                                listPath = dataPath + File.separator + "list" + i + "-" + name + ".dat";
+                                pathQueue.add(listPath);
                             }
-                            paths.add(dataPath + "\\" + "\\list2500-.dat");
+                            pathQueue.add(dataPath + File.separator + "list2500-.dat");
 
                         } else if (2400 < ascII && ascII <= 2500) {
 
                             for (int i = 2400; i < 2500; i += 100) {
                                 int name = i + 100;
-                                listPath = dataPath + "\\" + "\\list" + i + "-" + name + ".dat";
-                                paths.add(listPath);
+                                listPath = dataPath + File.separator + "list" + i + "-" + name + ".dat";
+                                pathQueue.add(listPath);
                             }
-                            paths.add(dataPath + "\\" + "\\list2500-.dat");
+                            pathQueue.add(dataPath + File.separator + "list2500-.dat");
 
                         } else {
-                            paths.add(dataPath + "\\" + "\\list2500-.dat");
+                            pathQueue.add(dataPath + File.separator + "list2500-.dat");
                         }
-                        addResult(paths, searchText, System.currentTimeMillis(), searchCase);
-
                     }
                     Thread.sleep(20);
                 }
@@ -3491,6 +2469,24 @@ public class SearchBar {
 
             }
         });
+
+        for (int i = 0; i < 6; i++) {
+            fixedThreadPool.execute(() -> {
+                String path;
+                try {
+                    while (!mainExit) {
+                        if (!pathQueue.isEmpty()) {
+                            while ((path = pathQueue.poll()) != null) {
+                                searchAndAddToTempResults(System.currentTimeMillis(), path);
+                            }
+                        }
+                        Thread.sleep(10);
+                    }
+                } catch (InterruptedException ignored) {
+
+                }
+            });
+        }
 
         fixedThreadPool.execute(() -> {
             //缓存和常用文件夹搜索线程
@@ -3508,16 +2504,15 @@ public class SearchBar {
                     }
                     listResults.clear();
                     String text = getTextFieldText();
-                    Search instance = Search.getInstance();
-                    if (instance.isUsable()) {
+                    if (search.isUsable()) {
                         if (isCommandMode) {
                             if (text.equals(":update")) {
                                 closeAllConnection();
                                 clearLabel();
-                                TaskBar.getInstance().showMessage("提示", "正在更新文件索引");
+                                taskBar.showMessage(SettingsFrame.getTranslation("Info"), SettingsFrame.getTranslation("Updating file index"));
                                 clearTextFieldText();
                                 closedTodo();
-                                instance.setManualUpdate(true);
+                                search.setManualUpdate(true);
                                 timer = false;
                                 continue;
                             }
@@ -3525,13 +2520,13 @@ public class SearchBar {
                                 clearLabel();
                                 clearTextFieldText();
                                 closedTodo();
-                                JOptionPane.showMessageDialog(null, "当前版本：" + SettingsFrame.version);
+                                JOptionPane.showMessageDialog(null, SettingsFrame.getTranslation("Current Version:") + SettingsFrame.version);
                             }
                             if (text.equals(":clearbin")) {
                                 clearLabel();
                                 clearTextFieldText();
                                 closedTodo();
-                                int r = JOptionPane.showConfirmDialog(null, "你确定要清空回收站吗");
+                                int r = JOptionPane.showConfirmDialog(null, SettingsFrame.getTranslation("Are you sure you want to empty the recycle bin"));
                                 if (r == 0) {
                                     try {
                                         File[] roots = File.listRoots();
@@ -3541,15 +2536,15 @@ public class SearchBar {
                                             p.getOutputStream().close();
                                             p.getInputStream().close();
                                         }
-                                        JOptionPane.showMessageDialog(null, "清空回收站成功");
+                                        JOptionPane.showMessageDialog(null, SettingsFrame.getTranslation("Successfully empty the recycle bin"));
                                     } catch (IOException e) {
-                                        JOptionPane.showMessageDialog(null, "清空回收站失败");
+                                        JOptionPane.showMessageDialog(null, SettingsFrame.getTranslation("Failed to empty the recycle bin"));
                                     }
                                 }
                             }
                             for (String i : SettingsFrame.getCmdSet()) {
                                 if (i.startsWith(text)) {
-                                    listResults.add("运行命令" + i);
+                                    listResults.add(SettingsFrame.getTranslation("Run command") + i);
                                 }
                                 String[] cmdInfo = semicolon.split(i);
                                 if (cmdInfo[0].equals(text)) {
@@ -3564,34 +2559,34 @@ public class SearchBar {
                         } else {
                             isStartSearchLocal = true;
                             String[] strings;
-                            String searchCase;
-                            String searchText;
                             int length;
                             strings = resultSplit.split(text);
                             length = strings.length;
                             if (length == 2) {
-                                searchCase = strings[1].toLowerCase();
+                                searchCase = semicolon.split(strings[1]);
                                 searchText = strings[0];
                             } else {
                                 searchText = strings[0];
-                                searchCase = "";
+                                searchCase = null;
                             }
+                            keywords = semicolon.split(searchText);
+                            searchCaseToLowerAndRemoveConflict();
                             isCacheAndPrioritySearched = false;
-                            searchPriorityFolder(searchText, searchCase);
-                            searchCache(searchText, searchCase);
+                            searchPriorityFolder();
+                            searchCache();
                             isCacheAndPrioritySearched = true;
                         }
                         showResults(true, false, false, false,
                                 false, false, false, false);
                     } else {
-                        if (instance.isManualUpdate()) {
+                        if (search.isManualUpdate()) {
                             if (searchWaiter == null || !searchWaiter.isAlive()) {
                                 searchWaiter = new Thread(() -> {
                                     while (!mainExit) {
                                         if (Thread.currentThread().isInterrupted()) {
                                             break;
                                         }
-                                        if (instance.isUsable()) {
+                                        if (search.isUsable()) {
                                             startTime = System.currentTimeMillis() - 500;
                                             timer = true;
                                             break;
@@ -3607,9 +2602,9 @@ public class SearchBar {
                             }
                         }
                         clearLabel();
-                        if (!instance.isUsable()) {
+                        if (!search.isUsable()) {
                             label1.setBackground(labelColor);
-                            label1.setText("正在建立索引...");
+                            label1.setText(SettingsFrame.getTranslation("Updating file index") + "...");
                         }
                     }
                 }
@@ -3622,6 +2617,27 @@ public class SearchBar {
         });
     }
 
+    private void searchCaseToLowerAndRemoveConflict() {
+        if (searchCase == null || searchCase.length == 0) {
+            return;
+        }
+        ArrayList<String> list = new ArrayList<>();
+        for (String each : searchCase) {
+            list.add(each.toLowerCase());
+        }
+        if (list.contains("f") && list.contains("d")) {
+            list.remove("f");
+            list.remove("d");
+        }
+        if (list.isEmpty()) {
+            searchCase = null;
+        } else {
+            String[] tmp = new String[list.size()];
+            list.toArray(tmp);
+            searchCase = tmp;
+        }
+    }
+
     public boolean isUsing() {
         //窗口是否正在显示
         return this.isUsing;
@@ -3632,159 +2648,102 @@ public class SearchBar {
         return f.exists();
     }
 
-    //searchText 用于全字匹配
-    private boolean checkIsMatched(String searchText, String searchCase, String recordInFile, String[] keywords) {
-        if (isMatched(getFileName(recordInFile), keywords)) {
-            switch (searchCase) {
-                case "f":
-                    if (isFile(recordInFile)) {
-                        if (!tempResults.contains(recordInFile)) {
-                            if (isExist(recordInFile)) {
-                                tempResults.add(recordInFile);
-                                if (listResults.size() > 100) {
-                                    return true;
-                                }
+
+    private boolean check(String path) {
+        String name = getFileName(path);
+        if (searchCase == null || searchCase.length == 0) {
+            return isMatched(name, true);
+        } else {
+            if (isMatched(name, true)) {
+                for (String eachCase : searchCase) {
+                    switch (eachCase) {
+                        case "f":
+                            if (!isFile(path)) {
+                                return false;
                             }
-                        }
-                    }
-                    break;
-                case "d":
-                    if (isDirectory(recordInFile)) {
-                        if (!tempResults.contains(recordInFile)) {
-                            if (isExist(recordInFile)) {
-                                tempResults.add(recordInFile);
-                                if (listResults.size() > 100) {
-                                    return true;
-                                }
+                            break;
+                        case "d":
+                            if (!isDirectory(path)) {
+                                return false;
                             }
-                        }
-                    }
-                    break;
-                case "full":
-                    if (getFileName(recordInFile).toLowerCase().equals(searchText)) {
-                        if (!tempResults.contains(recordInFile)) {
-                            if (isExist(recordInFile)) {
-                                tempResults.add(recordInFile);
-                                if (listResults.size() > 100) {
-                                    return true;
-                                }
+                            break;
+                        case "full":
+                            if (!name.equalsIgnoreCase(searchText)) {
+                                return false;
                             }
-                        }
-                    }
-                    break;
-                case "dfull":
-                    if (getFileName(recordInFile).toLowerCase().equals(searchText.toLowerCase())) {
-                        if (isDirectory(recordInFile)) {
-                            if (!tempResults.contains(recordInFile)) {
-                                if (isExist(recordInFile)) {
-                                    tempResults.add(recordInFile);
-                                    if (listResults.size() > 100) {
-                                        return true;
-                                    }
-                                }
+                            break;
+                        case "case":
+                            if (!isMatched(name, false)) {
+                                return false;
                             }
-                        }
                     }
-                    break;
-                case "ffull":
-                    if (getFileName(recordInFile).toLowerCase().equals(searchText.toLowerCase())) {
-                        if (isFile(recordInFile)) {
-                            if (!tempResults.contains(recordInFile)) {
-                                if (isExist(recordInFile)) {
-                                    tempResults.add(recordInFile);
-                                    if (listResults.size() > 100) {
-                                        return true;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    break;
-                default:
-                    if (!tempResults.contains(recordInFile)) {
-                        if (isExist(recordInFile)) {
-                            tempResults.add(recordInFile);
-                            if (listResults.size() > 100) {
-                                return true;
-                            }
-                        }
-                    }
-                    break;
+                }
+                //所有规则均已匹配
+                return true;
             }
         }
         return false;
     }
 
-    private void addResult(ConcurrentLinkedQueue<String> paths, String searchText, long time, String searchCase) {
-        //为label添加结果
-        searchText = searchText.toLowerCase();
-        String[] keywords = semicolon.split(searchText);
-        Search instance = Search.getInstance();
-        String _searchText = searchText;
+    private boolean checkIsMatchedAndAddToList(String path, boolean isPutToTemp) {
+        if (check(path)) {
+            if (isPutToTemp) {
+                tempResults.add(path);
+            } else {
+                listResults.add(path);
+            }
+        }
+        return listResults.size() > 100;
+    }
 
+    private void searchAndAddToTempResults(long time, String path) {
+        //为label添加结果
         try {
             String each;
             boolean isResultsExcessive = false;
-            for (String path : paths) {
-                ReaderInfo readerInfo = readerMap.get(path);
-                if (readerInfo != null) {
-                    BufferedReader reader = readerInfo.reader;
-                    while ((each = reader.readLine()) != null) {
-                        if (startTime > time) { //用户重新输入了信息
-                            break;
-                        }
-                        if (instance.isUsable()) {
-                            isResultsExcessive = checkIsMatched(_searchText, searchCase, each, keywords);
-                        }
-                        if (isResultsExcessive) {
-                            break;
-                        }
+            ReaderInfo readerInfo = readerMap.get(path);
+            if (readerInfo != null) {
+                BufferedReader reader = readerInfo.reader;
+                while ((each = reader.readLine()) != null) {
+                    if (startTime > time) { //用户重新输入了信息
+                        break;
                     }
-                    reader.close();
+                    if (search.isUsable()) {
+                        isResultsExcessive = checkIsMatchedAndAddToList(each, true);
+                    }
+                    if (isResultsExcessive) {
+                        break;
+                    }
+                }
+                //关闭输入流并打开一个新的流放入map
+                reader.close();
+                reader = new BufferedReader(new InputStreamReader(new FileInputStream(path), StandardCharsets.UTF_8), getBufferSize(path));
+                readerInfo = new ReaderInfo(System.currentTimeMillis(), reader);
+                readerMap.put(path, readerInfo);
+            } else {
+                BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(path), StandardCharsets.UTF_8), getBufferSize(path));
+                while ((each = reader.readLine()) != null) {
+                    if (startTime > time) { //用户重新输入了信息
+                        break;
+                    }
+                    if (search.isUsable()) {
+                        isResultsExcessive = checkIsMatchedAndAddToList(each, true);
+                    }
+                    if (isResultsExcessive) {
+                        break;
+                    }
+                }
+                //检测大小，过大则关闭，否则放入map
+                if (readerMap.size() < SettingsFrame.getMaxConnectionNum()) {
                     reader = new BufferedReader(new InputStreamReader(new FileInputStream(path), StandardCharsets.UTF_8), getBufferSize(path));
-                    readerInfo = new ReaderInfo(System.currentTimeMillis(), reader);
-                    readerMap.put(path, readerInfo);
-                    //若发现listResults数量大于50或者用户重新输入则不必再搜索余下的文件
-                    if (isResultsExcessive || startTime > time) {
-                        return;
-                    }
+                    ReaderInfo temp = new ReaderInfo(System.currentTimeMillis(), reader);
+                    readerMap.put(path, temp);
                 } else {
-                    BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(path), StandardCharsets.UTF_8), getBufferSize(path));
-                    while ((each = reader.readLine()) != null) {
-                        if (startTime > time) { //用户重新输入了信息
-                            break;
-                        }
-                        if (instance.isUsable()) {
-                            isResultsExcessive = checkIsMatched(_searchText, searchCase, each, keywords);
-                        }
-                        if (isResultsExcessive) {
-                            break;
-                        }
-                    }
-                    if (readerMap.size() < SettingsFrame.getMaxConnectionNum()) {
-                        reader = new BufferedReader(new InputStreamReader(new FileInputStream(path), StandardCharsets.UTF_8), getBufferSize(path));
-                        ReaderInfo temp = new ReaderInfo(System.currentTimeMillis(), reader);
-                        readerMap.put(path, temp);
-                    } else {
-                        reader.close();
-                    }
-                    //若发现listResults数量大于50或者用户重新输入则不必再搜索余下的文件
-                    if (isResultsExcessive || startTime > time) {
-                        return;
-                    }
+                    reader.close();
                 }
             }
         } catch (IOException ignored) {
 
-        }
-
-
-        if (!getTextFieldText().isEmpty()) {
-            if (listResults.isEmpty() && tempResults.isEmpty()) {
-                label1.setText("无结果");
-                label1.setBorder(border);
-                label1.setIcon(null);
-            }
         }
     }
 
@@ -3805,7 +2764,7 @@ public class SearchBar {
             showResultOnLabel(path, label, isChosen);
         } else {
             showInvalidOnLabel(label, isChosen);
-            Search.getInstance().addToRecycleBin(path);
+            search.addToRecycleBin(path);
         }
     }
 
@@ -3825,14 +2784,13 @@ public class SearchBar {
 
     private void showInvalidOnLabel(JLabel label, boolean isChosen) {
         label.setIcon(null);
-        label.setText("无效文件");
+        label.setText(SettingsFrame.getTranslation("Invalid file"));
         if (isChosen) {
             label.setBackground(labelColor);
         } else {
             label.setBackground(backgroundColor);
         }
         label.setBorder(border);
-
     }
 
     private void showCommandOnLabel(String command, JLabel label, boolean isChosen) {
@@ -3991,8 +2949,8 @@ public class SearchBar {
                     }
                 } else {
                     //创建快捷方式到临时文件夹，打开后删除
-                    createShortCut(path, SettingsFrame.getTmp().getAbsolutePath() + "\\open");
-                    Process p = Runtime.getRuntime().exec("explorer.exe " + "\"" + SettingsFrame.getTmp().getAbsolutePath() + "\\open.lnk" + "\"");
+                    createShortCut(path, SettingsFrame.getTmp().getAbsolutePath() + File.separator + "open");
+                    Process p = Runtime.getRuntime().exec("explorer.exe " + "\"" + SettingsFrame.getTmp().getAbsolutePath() + File.separator + "open.lnk" + "\"");
                     p.getInputStream().close();
                     p.getOutputStream().close();
                     p.getErrorStream().close();
@@ -4016,7 +2974,7 @@ public class SearchBar {
         String shortcutGenPath = shortcutGen.getAbsolutePath();
         String start = "cmd.exe /c start " + shortcutGenPath.substring(0, 2);
         String end = "\"" + shortcutGenPath.substring(2) + "\"";
-        String commandToGenLnk = start + end + " /target:" + "\"" + fileOrFolderPath + "\"" + " " + "/shortcut:" + "\"" + writeShortCutPath + "\"" + " /workingdir:" + "\"" + fileOrFolderPath.substring(0, fileOrFolderPath.lastIndexOf("\\")) + "\"";
+        String commandToGenLnk = start + end + " /target:" + "\"" + fileOrFolderPath + "\"" + " " + "/shortcut:" + "\"" + writeShortCutPath + "\"" + " /workingdir:" + "\"" + fileOrFolderPath.substring(0, fileOrFolderPath.lastIndexOf(File.separator)) + "\"";
         Process p = Runtime.getRuntime().exec("cmd.exe /c " + commandToGenLnk);
         p.getInputStream().close();
         p.getOutputStream().close();
@@ -4027,7 +2985,7 @@ public class SearchBar {
     }
 
     public String getFileName(String path) {
-        int index = path.lastIndexOf("\\");
+        int index = path.lastIndexOf(File.separator);
         return path.substring(index + 1);
     }
 
@@ -4065,8 +3023,8 @@ public class SearchBar {
             }
         }
         if (cacheNum < SettingsFrame.getCacheNumLimit()) {
-            String _temp = oldCaches.append(";").toString().toLowerCase();
-            isRepeated = _temp.contains(content.toLowerCase());
+            String _temp = oldCaches.append(";").toString();
+            isRepeated = _temp.contains(content);
             if (!isRepeated) {
                 try (BufferedWriter out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(new File("user/cache.dat"), true), StandardCharsets.UTF_8))) {
                     out.write(content + "\r\n");
@@ -4127,60 +3085,22 @@ public class SearchBar {
         }
     }
 
-    private void searchCache(String text, String searchCase) {
+    private void searchCache() {
         String cacheResult;
         boolean isCacheRepeated = false;
         ArrayList<String> cachesToDel = new ArrayList<>();
-        text = text.toLowerCase();
-        String[] keywords = semicolon.split(text);
         File cache = new File("user/cache.dat");
         if (cache.exists()) {
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(cache), StandardCharsets.UTF_8))) {
                 while ((cacheResult = reader.readLine()) != null) {
                     String[] caches = semicolon.split(cacheResult);
                     for (String eachCache : caches) {
-                        if (!(new File(eachCache).exists())) {
+                        if (!(isExist(eachCache))) {
                             cachesToDel.add(eachCache);
                         } else {
-                            String eachCacheName = getFileName(eachCache);
-                            if (isMatched(eachCacheName, keywords)) {
-                                if (!listResults.contains(eachCache)) {
-                                    boolean fullMatched = eachCacheName.toLowerCase().equals(text.toLowerCase());
-                                    switch (searchCase) {
-                                        case "f":
-                                            if (isFile(eachCache)) {
-                                                listResults.add(eachCache);
-                                            }
-                                            break;
-                                        case "d":
-                                            if (isDirectory(eachCache)) {
-                                                listResults.add(eachCache);
-                                            }
-                                            break;
-                                        case "full":
-                                            if (fullMatched) {
-                                                listResults.add(eachCache);
-                                            }
-                                            break;
-                                        case "dfull":
-                                            if (fullMatched && isDirectory(eachCache)) {
-                                                listResults.add(eachCache);
-                                            }
-                                            break;
-                                        case "ffull":
-                                            if (fullMatched && isFile(eachCache)) {
-                                                listResults.add(eachCache);
-                                            }
-                                            break;
-                                        default:
-                                            listResults.add(eachCache);
-                                    }
-                                    if (listResults.size() > 50) {
-                                        break;
-                                    }
-                                } else {
-                                    isCacheRepeated = true;
-                                }
+                            if (check(eachCache) && listResults.contains(eachCache)) {
+                                isCacheRepeated = true;
+                                listResults.add(eachCache);
                             }
                         }
                     }
@@ -4195,57 +3115,30 @@ public class SearchBar {
         }
     }
 
-    private boolean isMatched(String srcText, String[] txt) {
-        srcText = srcText.toLowerCase();
-        for (String each : txt) {
-            if (!srcText.contains(each)) {
-                return false;
+    private boolean isMatched(String name, boolean isIgnoreCase) {
+        for (String each : keywords) {
+            if (isIgnoreCase) {
+                if (!name.toLowerCase().contains(each.toLowerCase())) {
+                    return false;
+                }
+            } else {
+                if (!name.contains(each)) {
+                    return false;
+                }
             }
         }
         return true;
     }
 
-    private void searchPriorityFolder(String text, String searchCase) {
+    private void searchPriorityFolder() {
         File path = new File(SettingsFrame.getPriorityFolder());
         boolean exist = path.exists();
         LinkedList<File> listRemain = new LinkedList<>();
-        text = text.toLowerCase();
-        String[] keywords = semicolon.split(text);
         if (exist) {
             File[] files = path.listFiles();
             if (!(null == files || files.length == 0)) {
                 for (File each : files) {
-                    if (isMatched(getFileName(each.getAbsolutePath()), keywords)) {
-                        switch (searchCase) {
-                            case "f":
-                                if (each.isFile()) {
-                                    listResults.add(0, each.getAbsolutePath());
-                                }
-                                break;
-                            case "d":
-                                if (each.isDirectory()) {
-                                    listResults.add(0, each.getAbsolutePath());
-                                }
-                                break;
-                            case "full":
-                                if (each.getName().equals(text)) {
-                                    listResults.add(0, each.getAbsolutePath());
-                                }
-                                break;
-                            case "dfull":
-                                if (each.getName().equals(text) && each.isDirectory()) {
-                                    listResults.add(0, each.getAbsolutePath());
-                                }
-                                break;
-                            case "ffull":
-                                if (each.getName().equals(text) && each.isFile()) {
-                                    listResults.add(0, each.getAbsolutePath());
-                                }
-                                break;
-                            default:
-                                listResults.add(0, each.getAbsolutePath());
-                        }
-                    }
+                    checkIsMatchedAndAddToList(each.getAbsolutePath(), false);
                     if (each.isDirectory()) {
                         listRemain.add(each);
                     }
@@ -4255,35 +3148,7 @@ public class SearchBar {
                     File[] allFiles = remain.listFiles();
                     assert allFiles != null;
                     for (File each : allFiles) {
-                        if (isMatched(getFileName(each.getAbsolutePath()), keywords)) {
-                            switch (searchCase) {
-                                case "F":
-                                    if (each.isFile()) {
-                                        listResults.add(0, each.getAbsolutePath());
-                                    }
-                                    break;
-                                case "D":
-                                    if (each.isDirectory()) {
-                                        listResults.add(0, each.getAbsolutePath());
-                                    }
-                                    break;
-                                case "FULL":
-                                    if (each.getName().toLowerCase().equals(text.toLowerCase())) {
-                                        listResults.add(0, each.getAbsolutePath());
-                                    }
-                                    break;
-                                case "DFULL":
-                                    if (each.getName().toLowerCase().equals(text.toLowerCase()) && each.isDirectory()) {
-                                        listResults.add(0, each.getAbsolutePath());
-                                    }
-                                    break;
-                                case "FFULL":
-                                    if (each.getName().toLowerCase().equals(text.toLowerCase()) && each.isFile()) {
-                                        listResults.add(0, each.getAbsolutePath());
-                                    }
-                                    break;
-                            }
-                        }
+                        checkIsMatchedAndAddToList(each.getAbsolutePath(), false);
                         if (each.isDirectory()) {
                             listRemain.add(each);
                         }
@@ -4303,34 +3168,32 @@ public class SearchBar {
     }
 
     public void closedTodo() {
-        Runnable todo = () -> {
-            if (searchBar.isVisible()) {
-                searchBar.setVisible(false);
-            }
-            clearLabel();
-            startTime = System.currentTimeMillis();//结束搜索
-            isUsing = false;
-            labelCount.set(0);
-            listResults.clear();
-            tempResults.clear();
-            textField.setText(null);
-            isUserPressed = false;
-            isCommandMode = false;
-            isLockMouseMotion = false;
-            isOpenLastFolderPressed = false;
-            isUsing = false;
-            isRunAsAdminPressed = false;
-            isCopyPathPressed = false;
-            timer = false;
-            isCacheAndPrioritySearched = false;
-            isStartSearchLocal = false;
-            try {
-                searchWaiter.interrupt();
-            } catch (NullPointerException ignored) {
+        if (searchBar.isVisible()) {
+            searchBar.setVisible(false);
+        }
+        clearLabel();
+        pathQueue.clear();
+        startTime = System.currentTimeMillis();//结束搜索
+        isUsing = false;
+        labelCount.set(0);
+        listResults.clear();
+        tempResults.clear();
+        textField.setText(null);
+        isUserPressed = false;
+        isCommandMode = false;
+        isLockMouseMotion = false;
+        isOpenLastFolderPressed = false;
+        isUsing = false;
+        isRunAsAdminPressed = false;
+        isCopyPathPressed = false;
+        timer = false;
+        isCacheAndPrioritySearched = false;
+        isStartSearchLocal = false;
+        try {
+            searchWaiter.interrupt();
+        } catch (NullPointerException ignored) {
 
-            }
-        };
-        SwingUtilities.invokeLater(todo);
+        }
     }
 
     private String randomGeneratePath() {
@@ -4339,9 +3202,9 @@ public class SearchBar {
         int randomInt = random.nextInt(26);
         String dataPath = SettingsFrame.getDataPath();
         if (randomInt < 25) {
-            path = dataPath + "\\" + "\\list" + randomInt * 100 + "-" + (randomInt + 1) * 100 + ".dat";
+            path = dataPath + File.separator + "list" + randomInt * 100 + "-" + (randomInt + 1) * 100 + ".dat";
         } else {
-            path = dataPath + "\\" + "\\list2500-.dat";
+            path = dataPath + File.separator + "list2500-.dat";
         }
         return path;
     }
@@ -4402,13 +3265,13 @@ public class SearchBar {
     }
 
     public boolean isDataDamaged() {
-        File data = new File(SettingsFrame.getDataPath() + "\\" + "\\list2500-.dat");
+        File data = new File(SettingsFrame.getDataPath() + File.separator + "list2500-.dat");
         if (!data.exists()) {
             return true;
         }
         for (int i = 0; i < 2500; i += 100) {
             int name = i + 100;
-            data = new File(SettingsFrame.getDataPath() + "\\" + "\\list" + i + "-" + name + ".dat");
+            data = new File(SettingsFrame.getDataPath() + File.separator + "list" + i + "-" + name + ".dat");
             if (!data.exists()) {
                 return true;
             }

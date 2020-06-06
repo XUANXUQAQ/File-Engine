@@ -21,8 +21,10 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Scanner;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.regex.Pattern;
 
 
 public class SettingsFrame {
@@ -43,9 +45,13 @@ public class SettingsFrame {
     private static int copyPathKeyCode;
     private static float transparency;
     private static int _copyPathKeyCode;
-    private static File tmp = new File("tmp");
-    private static File settings = new File("user/settings.json");
-    private static HashSet<String> cmdSet = new HashSet<>();
+    private static File tmp;
+    private static File settings;
+    private static HashSet<String> cmdSet;
+    private static HashSet<String> languageSet;
+    private static ConcurrentHashMap<String, String> translationMap;
+    private static ConcurrentHashMap<String, String> fileMap;
+    private static Pattern equalSign;
     private static int _openLastFolderKeyCode;
     private static int _runAsAdminKeyCode;
     private static CheckHotKey HotKeyListener;
@@ -58,12 +64,18 @@ public class SettingsFrame {
     private static int minConnectionNum;
     private static int connectionTimeLimit;
     private static int diskCount;
+    private static String language;
+    private static boolean isStartup;
+    private static SearchBar searchBar;
+    private static TaskBar taskBar;
+    private static Search search;
+    private Thread updateThread = null;
+    private JFrame frame = new JFrame("设置");
     private JTextField textFieldUpdateTime;
     private JTextField textFieldCacheNum;
     private JTextArea textAreaIgnorePath;
     private JTextField textFieldSearchDepth;
     private JCheckBox checkBox1;
-    private JFrame frame = new JFrame("设置");
     private JLabel label3;
     private JLabel label1;
     private JLabel label2;
@@ -120,13 +132,13 @@ public class SettingsFrame {
     private JPanel tab1;
     private JPanel tab2;
     private JPanel tab3;
-    private JPanel tab5;
     private JPanel tab6;
-    private JPanel tab8;
+    private JPanel tab7;
+    private JPanel tab9;
     private JTextField textFieldTransparency;
     private JLabel labelTransparency;
     private JLabel labelPlaceHolder5;
-    private JPanel tab7;
+    private JPanel tab8;
     private JLabel labelColorTip;
     private JTextField textFieldBackgroundDefault;
     private JTextField textFieldFontColorWithCoverage;
@@ -140,7 +152,7 @@ public class SettingsFrame {
     private JButton buttonResetColor;
     private JTextField textFieldFontColor;
     private JLabel labelSharp5;
-    private JLabel labelFontColors;
+    private JLabel labelNotChosenFontColor;
     private JLabel labelColorChooser;
     private JLabel FontColorWithCoverageChooser;
     private JLabel defaultBackgroundChooser;
@@ -170,9 +182,16 @@ public class SettingsFrame {
     private JLabel labelBeautyEye;
     private JLabel labelFastJson;
     private JLabel labelJna;
-    private static boolean isStartup;
-    private Thread updateThread = null;
+    private JPanel tab5;
+    private JList<Object> listLanguage;
+    private JLabel labelLanguage;
+    private JLabel labelPlaceHolderL;
+    private JLabel labelLanTip2;
 
+
+    public static SettingsFrame getInstance() {
+        return SettingsFrameBuilder.instance;
+    }
 
     public static int getCacheNumLimit() {
         return cacheNumLimit;
@@ -230,10 +249,6 @@ public class SettingsFrame {
         return tmp;
     }
 
-    public static File getSettings() {
-        return settings;
-    }
-
     public static HashSet<String> getCmdSet() {
         return cmdSet;
     }
@@ -266,15 +281,26 @@ public class SettingsFrame {
         return connectionTimeLimit;
     }
 
+    private static class SettingsFrameBuilder {
+        private static SettingsFrame instance = new SettingsFrame();
+    }
 
-    public SettingsFrame() {
-        //设置背景
-        ImageIcon background = new ImageIcon(SettingsFrame.class.getResource("/background.jpg"));
-        JLabel backgroundLabel = new JLabel(background);
-        backgroundLabel.setBounds(0, 0, 942, 600);
-        frame.getRootPane().add(backgroundLabel, new Integer(Integer.MAX_VALUE));
-        JPanel j = (JPanel) frame.getContentPane();
-        j.setOpaque(false);
+    private SettingsFrame() {
+        tmp = new File("tmp");
+        settings = new File("user/settings.json");
+        cmdSet = new HashSet<>();
+        equalSign = Pattern.compile("=");
+        fileMap = new ConcurrentHashMap<>();
+        translationMap = new ConcurrentHashMap<>();
+        languageSet = new HashSet<>();
+        HotKeyListener = CheckHotKey.getInstance();
+        searchBar = SearchBar.getInstance();
+        taskBar = TaskBar.getInstance();
+        search = Search.getInstance();
+
+        readAndSetAllSettings();
+        initLanguageFileMap();
+        translate(language);
 
         labelAboutGithub.setText("<html><a href='https://github.com/XUANXUQAQ/File-Engine'><font size=\"4\">File-Engine</font></a></html>");
         labelBeautyEye.setText("1.Material-UI-Swing");
@@ -285,14 +311,14 @@ public class SettingsFrame {
 
         checkBox1.addActionListener(e -> setStartup(checkBox1.isSelected()));
 
-
         buttonSaveAndRemoveDesktop.addActionListener(e -> {
             String currentFolder = new File("").getAbsolutePath();
             if (currentFolder.equals(FileSystemView.getFileSystemView().getHomeDirectory().getAbsolutePath()) || currentFolder.equals("C:\\Users\\Public\\Desktop")) {
-                JOptionPane.showMessageDialog(null, "检测到该程序在桌面，无法移动");
+                JOptionPane.showMessageDialog(null, SettingsFrame.getTranslation("The program is detected on the desktop and cannot be moved"));
                 return;
             }
-            int isConfirmed = JOptionPane.showConfirmDialog(null, "是否移除并备份桌面上的所有文件\n它们会在该程序的Files文件夹中\n这可能需要几分钟时间");
+            int isConfirmed = JOptionPane.showConfirmDialog(null, SettingsFrame.getTranslation("Whether to remove and backup all files on the desktop," +
+                    "they will be in the program's Files folder, which may take a few minutes"));
             if (isConfirmed == 0) {
                 Thread fileMover = new Thread(new moveDesktopFiles());
                 fileMover.start();
@@ -302,7 +328,7 @@ public class SettingsFrame {
         Button3.addActionListener(e -> {
             JFileChooser fileChooser = new JFileChooser();
             fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-            int returnValue = fileChooser.showDialog(new JLabel(), "选择");
+            int returnValue = fileChooser.showDialog(new JLabel(), SettingsFrame.getTranslation("Choose"));
             File file = fileChooser.getSelectedFile();
             if (file != null && returnValue == JFileChooser.APPROVE_OPTION) {
                 textAreaIgnorePath.append(file.getAbsolutePath() + ",\n");
@@ -367,7 +393,7 @@ public class SettingsFrame {
         ButtonDataPath.addActionListener(e -> {
             JFileChooser fileChooser = new JFileChooser();
             fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-            int returnValue = fileChooser.showDialog(new JLabel(), "选择");
+            int returnValue = fileChooser.showDialog(new JLabel(), SettingsFrame.getTranslation("Choose"));
             File file = fileChooser.getSelectedFile();
             if (file != null && returnValue == JFileChooser.APPROVE_OPTION) {
                 textFieldDataPath.setText(file.getAbsolutePath());
@@ -377,7 +403,7 @@ public class SettingsFrame {
         ButtonPriorityFolder.addActionListener(e -> {
             JFileChooser fileChooser = new JFileChooser();
             fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-            int returnValue = fileChooser.showDialog(new JLabel(), "选择");
+            int returnValue = fileChooser.showDialog(new JLabel(), SettingsFrame.getTranslation("Choose"));
             File file = fileChooser.getSelectedFile();
             if (returnValue == JFileChooser.APPROVE_OPTION) {
                 textFieldPriorityFolder.setText(file.getAbsolutePath());
@@ -393,69 +419,47 @@ public class SettingsFrame {
 
             }
         });
-        labelVersion.setText("当前版本：" + version);
-        try (BufferedReader buffR = new BufferedReader(new InputStreamReader(new FileInputStream(settings), StandardCharsets.UTF_8))) {
-            String line;
-            StringBuilder result = new StringBuilder();
-            while (null != (line = buffR.readLine())) {
-                result.append(line);
-            }
-            JSONObject settings = JSON.parseObject(result.toString());
-            isStartup = settings.getBoolean("isStartup");
+
+        { //设置窗口显示
+            labelVersion.setText(getTranslation("Current Version:") + version);
             if (isStartup) {
                 checkBox1.setSelected(true);
             } else {
                 checkBox1.setSelected(false);
             }
-            updateTimeLimit = settings.getInteger("updateTimeLimit");
             textFieldUpdateTime.setText(String.valueOf(updateTimeLimit));
-            ignorePath = settings.getString("ignorePath");
             textAreaIgnorePath.setText(ignorePath.replaceAll(",", ",\n"));
-            cacheNumLimit = settings.getInteger("cacheNumLimit");
             textFieldCacheNum.setText(String.valueOf(cacheNumLimit));
-            searchDepth = settings.getInteger("searchDepth");
             textFieldSearchDepth.setText(String.valueOf(searchDepth));
             textFieldHotkey.setText(hotkey);
             textFieldDataPath.setText(dataPath);
             textFieldPriorityFolder.setText(priorityFolder);
-            isDefaultAdmin = settings.getBoolean("isDefaultAdmin");
             checkBoxAdmin.setSelected(isDefaultAdmin);
-            isLoseFocusClose = settings.getBoolean("isLoseFocusClose");
             textFieldMaxConnectionNum.setText(String.valueOf(maxConnectionNum));
             textFieldMinConnectionNum.setText(String.valueOf(minConnectionNum));
             textFieldConnectionTimeLimit.setText(String.valueOf(connectionTimeLimit / 1000));
-
             textFieldSearchBarColor.setText(Integer.toHexString(searchBarColor));
             Color _searchBarColor = new Color(searchBarColor);
             searchBarColorChooser.setBackground(_searchBarColor);
             searchBarColorChooser.setForeground(_searchBarColor);
-
             textFieldBackgroundDefault.setText(Integer.toHexString(defaultBackgroundColor));
             Color _defaultBackgroundColor = new Color(defaultBackgroundColor);
             defaultBackgroundChooser.setBackground(_defaultBackgroundColor);
             defaultBackgroundChooser.setForeground(_defaultBackgroundColor);
-
             textFieldLabelColor.setText(Integer.toHexString(labelColor));
             Color _labelColor = new Color(labelColor);
             labelColorChooser.setBackground(_labelColor);
             labelColorChooser.setForeground(_labelColor);
-
             textFieldFontColorWithCoverage.setText(Integer.toHexString(fontColorWithCoverage));
             Color _fontColorWithCoverage = new Color(fontColorWithCoverage);
             FontColorWithCoverageChooser.setBackground(_fontColorWithCoverage);
             FontColorWithCoverageChooser.setForeground(_fontColorWithCoverage);
-
             checkBoxLoseFocus.setSelected(isLoseFocusClose);
-            runAsAdminKeyCode = settings.getInteger("runAsAdminKeyCode");
-            openLastFolderKeyCode = settings.getInteger("openLastFolderKeyCode");
-            transparency = settings.getFloat("transparency");
             textFieldTransparency.setText(String.valueOf(transparency));
-
             textFieldFontColor.setText(Integer.toHexString(fontColor));
             Color _fontColor = new Color(fontColor);
             FontColorChooser.setBackground(_fontColor);
             FontColorChooser.setForeground(_fontColor);
-
             if (runAsAdminKeyCode == 17) {
                 textFieldRunAsAdmin.setText("Ctrl + Enter");
             } else if (runAsAdminKeyCode == 16) {
@@ -478,9 +482,10 @@ public class SettingsFrame {
                 textFieldCopyPath.setText("Alt + Enter");
             }
             listCmds.setListData(cmdSet.toArray());
-        } catch (IOException ignored) {
-
+            listLanguage.setListData(languageSet.toArray());
+            listLanguage.setSelectedValue(language, true);
         }
+
 
         checkBoxAdmin.addActionListener(e -> isDefaultAdmin = checkBoxAdmin.isSelected());
         checkBoxLoseFocus.addActionListener(e -> isLoseFocusClose = checkBoxLoseFocus.isSelected());
@@ -517,20 +522,20 @@ public class SettingsFrame {
             }
         });
         buttonAddCMD.addActionListener(e -> {
-            String name = JOptionPane.showInputDialog("请输入对该命令的标识,之后你可以在搜索框中输入 \": 标识符\" 直接执行该命令");
+            String name = JOptionPane.showInputDialog(SettingsFrame.getTranslation("Please enter the ID of the command, then you can enter \": identifier\" in the search box to execute the command directly"));
             if (name == null || name.isEmpty()) {
                 //未输入
                 return;
             }
             if (name.equals("update") || name.equals("clearbin") || name.equals("help") || name.equals("version") || isRepeatCommand(name)) {
-                JOptionPane.showMessageDialog(null, "和已有的命令冲突");
+                JOptionPane.showMessageDialog(null, SettingsFrame.getTranslation("Conflict with existing commands"));
                 return;
             }
             String cmd;
-            JOptionPane.showMessageDialog(null, "请选择可执行文件位置(文件夹也可以)");
+            JOptionPane.showMessageDialog(null, SettingsFrame.getTranslation("Please select the location of the executable file (a folder is also acceptable)"));
             JFileChooser fileChooser = new JFileChooser();
             fileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
-            int returnValue = fileChooser.showDialog(new Label(), "选择");
+            int returnValue = fileChooser.showDialog(new Label(), SettingsFrame.getTranslation("Choose"));
             if (returnValue == JFileChooser.APPROVE_OPTION) {
                 cmd = fileChooser.getSelectedFile().getAbsolutePath();
                 cmdSet.add(":" + name + ";" + cmd);
@@ -599,7 +604,7 @@ public class SettingsFrame {
         labelColorChooser.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                Color color = JColorChooser.showDialog(null, "选择颜色", null);
+                Color color = JColorChooser.showDialog(null, SettingsFrame.getTranslation("Choose Color"), null);
                 if (color == null) {
                     return;
                 }
@@ -630,7 +635,7 @@ public class SettingsFrame {
         FontColorWithCoverageChooser.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                Color color = JColorChooser.showDialog(null, "选择颜色", null);
+                Color color = JColorChooser.showDialog(null, SettingsFrame.getTranslation("Choose Color"), null);
                 if (color == null) {
                     return;
                 }
@@ -661,7 +666,7 @@ public class SettingsFrame {
         defaultBackgroundChooser.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                Color color = JColorChooser.showDialog(null, "选择颜色", null);
+                Color color = JColorChooser.showDialog(null, SettingsFrame.getTranslation("Choose Color"), null);
                 if (color == null) {
                     return;
                 }
@@ -692,7 +697,7 @@ public class SettingsFrame {
         FontColorChooser.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                Color color = JColorChooser.showDialog(null, "选择颜色", null);
+                Color color = JColorChooser.showDialog(null, SettingsFrame.getTranslation("Choose Color"), null);
                 if (color == null) {
                     return;
                 }
@@ -724,7 +729,7 @@ public class SettingsFrame {
         searchBarColorChooser.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                Color color = JColorChooser.showDialog(null, "选择颜色", null);
+                Color color = JColorChooser.showDialog(null, SettingsFrame.getTranslation("Choose Color"), null);
                 if (color == null) {
                     return;
                 }
@@ -758,14 +763,108 @@ public class SettingsFrame {
             try {
                 while (!mainExit) {
                     Thread.sleep(50);
-                    currentConnection.setText(String.valueOf(SearchBar.getInstance().currentConnectionNum()));
+                    currentConnection.setText(String.valueOf(searchBar.currentConnectionNum()));
                 }
             } catch (InterruptedException ignored) {
 
             }
         });
 
-        buttonClearConnection.addActionListener(e -> SearchBar.getInstance().closeAllConnection());
+        buttonClearConnection.addActionListener(e -> searchBar.closeAllConnection());
+    }
+
+    private void translate(String language) {
+        initTranslations(language);
+        tabbedPane1.setTitleAt(0, getTranslation("General"));
+        tabbedPane1.setTitleAt(1, getTranslation("Search settings"));
+        tabbedPane1.setTitleAt(2, getTranslation("Search bar settings"));
+        tabbedPane1.setTitleAt(3, getTranslation("File connection settings"));
+        tabbedPane1.setTitleAt(4, getTranslation("Language settings"));
+        tabbedPane1.setTitleAt(5, getTranslation("Hotkey settings"));
+        tabbedPane1.setTitleAt(6, getTranslation("My commands"));
+        tabbedPane1.setTitleAt(7, getTranslation("Color settings"));
+        tabbedPane1.setTitleAt(8, getTranslation("About"));
+        checkBox1.setText(getTranslation("Add to startup"));
+        buttonSaveAndRemoveDesktop.setText(getTranslation("Backup and remove all desktop files"));
+        label4.setText(getTranslation("Set the maximum number of caches:"));
+        labeltip2.setText(getTranslation("Local index location:"));
+        ButtonDataPath.setText(getTranslation("Choose"));
+        ButtonPriorityFolder.setText(getTranslation("Choose"));
+        Button3.setText(getTranslation("Choose"));
+        label1.setText(getTranslation("File update detection interval:"));
+        label5.setText(getTranslation("Seconds"));
+        label6.setText(getTranslation("Search depth (too large may affect performance):"));
+        labeltip3.setText(getTranslation("Priority search folder location (double-click to clear):"));
+        label7.setText(getTranslation("Separate different paths with commas, and ignore C:\\Windows by default"));
+        label3.setText(getTranslation("Set ignore folder:"));
+        checkBoxLoseFocus.setText(getTranslation("Close search bar when focus lost"));
+        checkBoxAdmin.setText(getTranslation("Open other programs as an administrator (provided that the software has privileges)"));
+        labelTransparency.setText(getTranslation("Search bar transparency:"));
+        labelFileConnectionTip.setText(getTranslation("The larger the number of file connections maintained, the faster the search speed, but it will consume more memory"));
+        labelFileConnectionTip2.setText(getTranslation("File-Engine will keep the connection to the file for 10 minutes after you search by default, you can modify it below"));
+        labelFileConnectionTip3.setText(getTranslation("Connection hold time:"));
+        labelCurrentConnection.setText(getTranslation("Current number of connections:"));
+        labelMaxConnection.setText(getTranslation("Maximum number of connections maintained:"));
+        labelMinConnection.setText(getTranslation("Minimum number of connections maintained:"));
+        labelTip4F.setText(getTranslation("Seconds"));
+        buttonClearConnection.setText(getTranslation("Close all connections"));
+        label2.setText(getTranslation("Open search bar:"));
+        labelRunAsAdmin.setText(getTranslation("Run as administrator:"));
+        labelOpenFolder.setText(getTranslation("Open the parent folder:"));
+        labelCopyPath.setText(getTranslation("Copy path:"));
+        labelCmdTip2.setText(getTranslation("You can add custom commands here. After adding, you can enter \": + your set identifier\" in the search box to quickly open"));
+        buttonAddCMD.setText(getTranslation("Add"));
+        buttonDelCmd.setText(getTranslation("Delete"));
+        labelColorTip.setText(getTranslation("Please enter the hexadecimal value of RGB color"));
+        labelSearchBarColor.setText(getTranslation("Search bar Color:"));
+        labelLabelColor.setText(getTranslation("Chosen label color:"));
+        labelFontColor.setText(getTranslation("Chosen label font Color:"));
+        label_default_Color.setText(getTranslation("Default background Color:"));
+        labelNotChosenFontColor.setText(getTranslation("Unchosen label Color:"));
+        buttonResetColor.setText(getTranslation("Reset to default"));
+        labelGitHubTip.setText(getTranslation("This is an open source software,GitHub:"));
+        labelGithubIssue.setText(getTranslation("If you find a bug or have some suggestions, welcome to GitHub for feedback"));
+        buttonCheckUpdate.setText(getTranslation("Check for update"));
+        labelDesciption.setText(getTranslation("Thanks for the following project"));
+        buttonSave.setText(getTranslation("Save"));
+        labelLanTip2.setText(getTranslation("The translation might not be 100% correct"));
+        labelLanguage.setText(getTranslation("Choose a language"));
+        labelVersion.setText(getTranslation(getTranslation("Current Version:") + version));
+    }
+
+    private static void initLanguageSet() {
+        languageSet.add("简体中文");
+        languageSet.add("English(US)");
+    }
+
+    private static void initTranslations(String language) {
+        if (!language.equals("English(US)")) {
+            String filePath = fileMap.get(language);
+            InputStream inputStream = SettingsFrame.class.getResourceAsStream(filePath);
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    String[] record = equalSign.split(line);
+                    translationMap.put(record[0], record[1]);
+                }
+            } catch (IOException ignored) {
+
+            }
+        }
+    }
+
+    private static void initLanguageFileMap() {
+        fileMap.put("简体中文", "/language/Chinese(Simplified).txt");
+    }
+
+    public static String getTranslation(String text) {
+        String translated;
+        if (language.equals("English(US)")) {
+            translated = text;
+        } else {
+            translated = translationMap.get(text);
+        }
+        return translated;
     }
 
     public static void setMainExit(boolean b) {
@@ -824,153 +923,156 @@ public class SettingsFrame {
         return JSONObject.parseObject(jsonUpdate.toString());
     }
 
-    public static void initSettings() {
-        //获取所有设置信息
-        for (File root : File.listRoots()) {
-            if (IsLocalDisk.INSTANCE.isLocalDisk(root.getAbsolutePath())) {
-                diskCount++;
-            }
-        }
-        try (BufferedReader buffR = new BufferedReader(new FileReader(settings))) {
+    private static void readAndSetAllSettings() {
+        JSONObject settingsInJson = null;
+        try (BufferedReader buffR = new BufferedReader(new InputStreamReader(new FileInputStream(settings), StandardCharsets.UTF_8))) {
             String line;
             StringBuilder result = new StringBuilder();
             while (null != (line = buffR.readLine())) {
                 result.append(line);
             }
-            JSONObject settings = JSON.parseObject(result.toString());
-            if (settings.containsKey("isStartup")) {
-                isStartup = settings.getBoolean("isStartup");
-            } else {
-                isStartup = false;
-            }
-            if (settings.containsKey("cacheNumLimit")) {
-                cacheNumLimit = settings.getInteger("cacheNumLimit");
-            } else {
-                cacheNumLimit = 1000;
-            }
-            if (settings.containsKey("hotkey")) {
-                hotkey = settings.getString("hotkey");
-            } else {
-                hotkey = "Ctrl + Alt + J";
-            }
-            HotKeyListener = CheckHotKey.getInstance();
-            HotKeyListener.registerHotkey(hotkey);
-            if (settings.containsKey("dataPath")) {
-                dataPath = settings.getString("dataPath");
-                File data = new File(dataPath);
-                if (!data.exists()) {
-                    TaskBar.getInstance().showMessage("提示", "检测到缓存不存在，正在重新搜索");
-                    data = new File("data");
-                    dataPath = data.getAbsolutePath();
-                    Search.getInstance().setManualUpdate(true);
-                }
-            } else {
-                dataPath = new File("data").getAbsolutePath();
-            }
-            if (settings.containsKey("priorityFolder")) {
-                priorityFolder = settings.getString("priorityFolder");
-            } else {
-                priorityFolder = "";
-            }
-            if (settings.containsKey("searchDepth")) {
-                searchDepth = settings.getInteger("searchDepth");
-            } else {
-                searchDepth = 6;
-            }
-            if (settings.containsKey("ignorePath")) {
-                ignorePath = settings.getString("ignorePath");
-            } else {
-                ignorePath = "C:\\Windows,";
-            }
-            if (settings.containsKey("updateTimeLimit")) {
-                updateTimeLimit = settings.getInteger("updateTimeLimit");
-            } else {
-                updateTimeLimit = 5;
-            }
-            if (settings.containsKey("isDefaultAdmin")) {
-                isDefaultAdmin = settings.getBoolean("isDefaultAdmin");
-            } else {
-                isDefaultAdmin = false;
-            }
-            if (settings.containsKey("isLoseFocusClose")) {
-                isLoseFocusClose = settings.getBoolean("isLoseFocusClose");
-            } else {
-                isLoseFocusClose = true;
-            }
-            if (settings.containsKey("openLastFolderKeyCode")) {
-                openLastFolderKeyCode = settings.getInteger("openLastFolderKeyCode");
-            } else {
-                openLastFolderKeyCode = 17;
-            }
-            _openLastFolderKeyCode = openLastFolderKeyCode;
-            if (settings.containsKey("runAsAdminKeyCode")) {
-                runAsAdminKeyCode = settings.getInteger("runAsAdminKeyCode");
-            } else {
-                runAsAdminKeyCode = 16;
-            }
-            _runAsAdminKeyCode = runAsAdminKeyCode;
-            if (settings.containsKey("copyPathKeyCode")) {
-                copyPathKeyCode = settings.getInteger("copyPathKeyCode");
-            } else {
-                copyPathKeyCode = 18;
-            }
-            _copyPathKeyCode = copyPathKeyCode;
-            if (settings.containsKey("transparency")) {
-                transparency = settings.getFloat("transparency");
-            } else {
-                transparency = 0.8f;
-            }
-            if (settings.containsKey("searchBarColor")) {
-                searchBarColor = settings.getInteger("searchBarColor");
-            } else {
-                searchBarColor = 0xfffff;
-            }
-            if (settings.containsKey("defaultBackground")) {
-                defaultBackgroundColor = settings.getInteger("defaultBackground");
-            } else {
-                defaultBackgroundColor = 0xffffff;
-            }
-            if (settings.containsKey("fontColorWithCoverage")) {
-                fontColorWithCoverage = settings.getInteger("fontColorWithCoverage");
-            } else {
-                fontColorWithCoverage = 0x1C0EFF;
-            }
-            if (settings.containsKey("labelColor")) {
-                labelColor = settings.getInteger("labelColor");
-            } else {
-                labelColor = 0xFF9868;
-            }
-            if (settings.containsKey("fontColor")) {
-                fontColor = settings.getInteger("fontColor");
-            } else {
-                fontColor = 0xC5C5C5;
-            }
-            if (settings.containsKey("maxConnectionNum")) {
-                maxConnectionNum = settings.getInteger("maxConnectionNum");
-            } else {
-                maxConnectionNum = 15;
-            }
-            if (settings.containsKey("minConnectionNum")) {
-                minConnectionNum = settings.getInteger("minConnectionNum");
-            } else {
-                minConnectionNum = 10;
-            }
-            if (settings.containsKey("connectionTimeLimit")) {
-                connectionTimeLimit = settings.getInteger("connectionTimeLimit");
-            } else {
-                connectionTimeLimit = 600000;
-            }
+            settingsInJson = JSON.parseObject(result.toString());
         } catch (NullPointerException | IOException ignored) {
 
         }
+        assert settingsInJson != null;
+        if (settingsInJson.containsKey("isStartup")) {
+            isStartup = settingsInJson.getBoolean("isStartup");
+        } else {
+            isStartup = false;
+        }
+        if (settingsInJson.containsKey("cacheNumLimit")) {
+            cacheNumLimit = settingsInJson.getInteger("cacheNumLimit");
+        } else {
+            cacheNumLimit = 1000;
+        }
+        if (settingsInJson.containsKey("hotkey")) {
+            hotkey = settingsInJson.getString("hotkey");
+        } else {
+            hotkey = "Ctrl + Alt + J";
+        }
 
-        SearchBar instance = SearchBar.getInstance();
-        instance.setTransparency(transparency);
-        instance.setDefaultBackgroundColor(defaultBackgroundColor);
-        instance.setLabelColor(labelColor);
-        instance.setFontColorWithCoverage(fontColorWithCoverage);
-        instance.setFontColor(fontColor);
-        instance.setSearchBarColor(searchBarColor);
+        HotKeyListener.registerHotkey(hotkey);
+        if (settingsInJson.containsKey("dataPath")) {
+            dataPath = settingsInJson.getString("dataPath");
+            File data = new File(dataPath);
+            if (!data.exists()) {
+                taskBar.showMessage(getTranslation("Info"), getTranslation("Detected that the cache does not exist and is searching again"));
+                data = new File("data");
+                dataPath = data.getAbsolutePath();
+                search.setManualUpdate(true);
+            }
+        } else {
+            dataPath = new File("data").getAbsolutePath();
+        }
+        if (settingsInJson.containsKey("priorityFolder")) {
+            priorityFolder = settingsInJson.getString("priorityFolder");
+        } else {
+            priorityFolder = "";
+        }
+        if (settingsInJson.containsKey("searchDepth")) {
+            searchDepth = settingsInJson.getInteger("searchDepth");
+        } else {
+            searchDepth = 6;
+        }
+        if (settingsInJson.containsKey("ignorePath")) {
+            ignorePath = settingsInJson.getString("ignorePath");
+        } else {
+            ignorePath = "C:\\Windows,";
+        }
+        if (settingsInJson.containsKey("updateTimeLimit")) {
+            updateTimeLimit = settingsInJson.getInteger("updateTimeLimit");
+        } else {
+            updateTimeLimit = 5;
+        }
+        if (settingsInJson.containsKey("isDefaultAdmin")) {
+            isDefaultAdmin = settingsInJson.getBoolean("isDefaultAdmin");
+        } else {
+            isDefaultAdmin = false;
+        }
+        if (settingsInJson.containsKey("isLoseFocusClose")) {
+            isLoseFocusClose = settingsInJson.getBoolean("isLoseFocusClose");
+        } else {
+            isLoseFocusClose = true;
+        }
+        if (settingsInJson.containsKey("openLastFolderKeyCode")) {
+            openLastFolderKeyCode = settingsInJson.getInteger("openLastFolderKeyCode");
+        } else {
+            openLastFolderKeyCode = 17;
+        }
+        _openLastFolderKeyCode = openLastFolderKeyCode;
+        if (settingsInJson.containsKey("runAsAdminKeyCode")) {
+            runAsAdminKeyCode = settingsInJson.getInteger("runAsAdminKeyCode");
+        } else {
+            runAsAdminKeyCode = 16;
+        }
+        _runAsAdminKeyCode = runAsAdminKeyCode;
+        if (settingsInJson.containsKey("copyPathKeyCode")) {
+            copyPathKeyCode = settingsInJson.getInteger("copyPathKeyCode");
+        } else {
+            copyPathKeyCode = 18;
+        }
+        _copyPathKeyCode = copyPathKeyCode;
+        if (settingsInJson.containsKey("transparency")) {
+            transparency = settingsInJson.getFloat("transparency");
+        } else {
+            transparency = 0.8f;
+        }
+        if (settingsInJson.containsKey("searchBarColor")) {
+            searchBarColor = settingsInJson.getInteger("searchBarColor");
+        } else {
+            searchBarColor = 0xfffff;
+        }
+        if (settingsInJson.containsKey("defaultBackground")) {
+            defaultBackgroundColor = settingsInJson.getInteger("defaultBackground");
+        } else {
+            defaultBackgroundColor = 0xffffff;
+        }
+        if (settingsInJson.containsKey("fontColorWithCoverage")) {
+            fontColorWithCoverage = settingsInJson.getInteger("fontColorWithCoverage");
+        } else {
+            fontColorWithCoverage = 0x1C0EFF;
+        }
+        if (settingsInJson.containsKey("labelColor")) {
+            labelColor = settingsInJson.getInteger("labelColor");
+        } else {
+            labelColor = 0xFF9868;
+        }
+        if (settingsInJson.containsKey("fontColor")) {
+            fontColor = settingsInJson.getInteger("fontColor");
+        } else {
+            fontColor = 0xC5C5C5;
+        }
+        if (settingsInJson.containsKey("maxConnectionNum")) {
+            maxConnectionNum = settingsInJson.getInteger("maxConnectionNum");
+        } else {
+            maxConnectionNum = 15;
+        }
+        if (settingsInJson.containsKey("minConnectionNum")) {
+            minConnectionNum = settingsInJson.getInteger("minConnectionNum");
+        } else {
+            minConnectionNum = 10;
+        }
+        if (settingsInJson.containsKey("connectionTimeLimit")) {
+            connectionTimeLimit = settingsInJson.getInteger("connectionTimeLimit");
+        } else {
+            connectionTimeLimit = 600000;
+        }
+        if (settingsInJson.containsKey("language")) {
+            language = settingsInJson.getString("language");
+        } else {
+            language = "English(US)";
+        }
+
+        searchBar.setTransparency(transparency);
+        searchBar.setDefaultBackgroundColor(defaultBackgroundColor);
+        searchBar.setLabelColor(labelColor);
+        searchBar.setFontColorWithCoverage(fontColorWithCoverage);
+        searchBar.setFontColor(fontColor);
+        searchBar.setSearchBarColor(searchBarColor);
+
+        initLanguageSet();
+        initCmdSetSettings();
 
         //保存设置
         JSONObject allSettings = new JSONObject();
@@ -996,11 +1098,21 @@ public class SettingsFrame {
         allSettings.put("maxConnectionNum", maxConnectionNum);
         allSettings.put("minConnectionNum", minConnectionNum);
         allSettings.put("connectionTimeLimit", connectionTimeLimit);
+        allSettings.put("language", language);
         try (BufferedWriter buffW = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(settings), StandardCharsets.UTF_8))) {
             String format = JSON.toJSONString(allSettings, SerializerFeature.PrettyFormat, SerializerFeature.WriteMapNullValue, SerializerFeature.WriteDateUseDateFormat);
             buffW.write(format);
         } catch (IOException ignored) {
 
+        }
+    }
+
+    private static void initCmdSetSettings() {
+        //获取所有设置信息
+        for (File root : File.listRoots()) {
+            if (IsLocalDisk.INSTANCE.isLocalDisk(root.getAbsolutePath())) {
+                diskCount++;
+            }
         }
 
         //获取所有自定义命令
@@ -1021,13 +1133,14 @@ public class SettingsFrame {
             updateInfo = getInfo();
             latestVersion = updateInfo.getString("version");
         } catch (IOException e1) {
-            JOptionPane.showMessageDialog(null, "检查更新失败");
+            JOptionPane.showMessageDialog(null, getTranslation("Check update failed"));
             return;
         }
         File test = new File("TEST");
         if (Double.parseDouble(latestVersion) > Double.parseDouble(version) || test.exists()) {
             String description = updateInfo.getString("description");
-            int result = JOptionPane.showConfirmDialog(null, "有新版本" + latestVersion + "，是否更新\n更新内容：\n" + description);
+            int result = JOptionPane.showConfirmDialog(null,
+                    getTranslation("New Version available") + latestVersion + "," + getTranslation("Whether to update") + "\n" + getTranslation("update content") + "\n" + description);
             if (result == 0) {
                 //开始更新,下载更新文件到tmp
                 String urlChoose;
@@ -1043,13 +1156,13 @@ public class SettingsFrame {
                 try {
                     download.downLoadFromUrl(updateInfo.getString(urlChoose), fileName, tmp.getAbsolutePath());
                 } catch (Exception e) {
-                    if (!e.getMessage().equals("用户中断下载")) {
-                        JOptionPane.showMessageDialog(null, "下载失败");
+                    if (!e.getMessage().equals("User Interrupted")) {
+                        JOptionPane.showMessageDialog(null, getTranslation("Download failed"));
                     }
                     download.hideFrame();
                     return;
                 }
-                TaskBar.getInstance().showMessage("提示", "下载完成，更新将在下次启动时开始");
+                TaskBar.getInstance().showMessage(getTranslation("Info"), getTranslation("The download is complete and the update will start at the next boot"));
                 try {
                     File updateSignal = new File("user/update");
                     updateSignal.createNewFile();
@@ -1058,7 +1171,7 @@ public class SettingsFrame {
                 }
             }
         } else {
-            JOptionPane.showMessageDialog(null, "最新版本：" + latestVersion + "\n当前版本已是最新");
+            JOptionPane.showMessageDialog(null, getTranslation("Latest version:") + latestVersion + "\n" + getTranslation("The current version is the latest"));
         }
     }
 
@@ -1078,7 +1191,7 @@ public class SettingsFrame {
         frame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
         frame.setSize(942, 600);
         frame.setLocationRelativeTo(null);
-        frame.setResizable(false);
+        //frame.setResizable(false);
         frame.setVisible(true);
     }
 
@@ -1097,7 +1210,7 @@ public class SettingsFrame {
             updateTimeLimitTemp = -1; // 输入不正确
         }
         if (updateTimeLimitTemp > 3600 || updateTimeLimitTemp <= 0) {
-            JOptionPane.showMessageDialog(null, "文件索引更新设置错误，请更改");
+            JOptionPane.showMessageDialog(null, getTranslation("The file index update setting is wrong, please change"));
             return;
         }
         isStartup = checkBox1.isSelected();
@@ -1107,7 +1220,7 @@ public class SettingsFrame {
             cacheNumLimitTemp = -1;
         }
         if (cacheNumLimitTemp > 10000 || cacheNumLimitTemp <= 0) {
-            JOptionPane.showMessageDialog(null, "缓存容量设置错误，请更改");
+            JOptionPane.showMessageDialog(null, getTranslation("The cache capacity is set incorrectly, please change"));
             return;
         }
         ignorePathTemp = textAreaIgnorePath.getText();
@@ -1122,17 +1235,17 @@ public class SettingsFrame {
         }
 
         if (searchDepthTemp > 10 || searchDepthTemp <= 0) {
-            JOptionPane.showMessageDialog(null, "搜索深度设置错误，请更改");
+            JOptionPane.showMessageDialog(null, getTranslation("Search depth setting is wrong, please change"));
             return;
         }
 
         String _hotkey = textFieldHotkey.getText();
         if (_hotkey.length() == 1) {
-            JOptionPane.showMessageDialog(null, "快捷键设置错误");
+            JOptionPane.showMessageDialog(null, getTranslation("Hotkey setting is wrong, please change"));
             return;
         } else {
             if (!(64 < _hotkey.charAt(_hotkey.length() - 1) && _hotkey.charAt(_hotkey.length() - 1) < 91)) {
-                JOptionPane.showMessageDialog(null, "快捷键设置错误");
+                JOptionPane.showMessageDialog(null, getTranslation("Hotkey setting is wrong, please change"));
                 return;
             }
         }
@@ -1142,18 +1255,20 @@ public class SettingsFrame {
             transparencyTemp = -1f;
         }
         if (transparencyTemp > 1 || transparencyTemp <= 0) {
-            JOptionPane.showMessageDialog(null, "透明度设置错误");
+            JOptionPane.showMessageDialog(null, getTranslation("Transparency setting error"));
             return;
         }
 
         if (_openLastFolderKeyCode == _runAsAdminKeyCode || _openLastFolderKeyCode == _copyPathKeyCode || _runAsAdminKeyCode == _copyPathKeyCode) {
-            JOptionPane.showMessageDialog(null, "快捷键冲突");
+            JOptionPane.showMessageDialog(null, getTranslation("HotKey conflict"));
             return;
         } else {
             openLastFolderKeyCode = _openLastFolderKeyCode;
             runAsAdminKeyCode = _runAsAdminKeyCode;
             copyPathKeyCode = _copyPathKeyCode;
         }
+
+        language = (String) listLanguage.getSelectedValue();
 
         int _labelColor;
         try {
@@ -1162,7 +1277,7 @@ public class SettingsFrame {
             _labelColor = -1;
         }
         if (_labelColor < 0) {
-            JOptionPane.showMessageDialog(null, "选中框颜色设置错误");
+            JOptionPane.showMessageDialog(null, getTranslation("Chosen label color is set incorrectly"));
             return;
         }
         int _fontColorWithCoverage;
@@ -1172,7 +1287,7 @@ public class SettingsFrame {
             _fontColorWithCoverage = -1;
         }
         if (_fontColorWithCoverage < 0) {
-            JOptionPane.showMessageDialog(null, "选中框字体颜色设置错误");
+            JOptionPane.showMessageDialog(null, getTranslation("Chosen label font color is set incorrectly"));
             return;
         }
         int _defaultBackgroundColor;
@@ -1182,7 +1297,7 @@ public class SettingsFrame {
             _defaultBackgroundColor = -1;
         }
         if (_defaultBackgroundColor < 0) {
-            JOptionPane.showMessageDialog(null, "1框默认颜色设置错误");
+            JOptionPane.showMessageDialog(null, getTranslation("Incorrect defaultBackground color setting"));
             return;
         }
         int _fontColor;
@@ -1192,7 +1307,7 @@ public class SettingsFrame {
             _fontColor = -1;
         }
         if (_fontColor < 0) {
-            JOptionPane.showMessageDialog(null, "未选中框内字体颜色设置错误");
+            JOptionPane.showMessageDialog(null, "Unchosen label font color is set incorrectly");
             return;
         }
         int _searchBarColor;
@@ -1202,7 +1317,7 @@ public class SettingsFrame {
             _searchBarColor = -1;
         }
         if (_searchBarColor < 0) {
-            JOptionPane.showMessageDialog(null, "1框默认颜色设置错误");
+            JOptionPane.showMessageDialog(null, getTranslation("The color of the search bar is set incorrectly"));
             return;
         }
         int _maxConnectionNum;
@@ -1212,7 +1327,7 @@ public class SettingsFrame {
             _maxConnectionNum = -1;
         }
         if (_maxConnectionNum < 0 || _maxConnectionNum > 50) {
-            JOptionPane.showMessageDialog(null, "最大连接保持数量设置错误");
+            JOptionPane.showMessageDialog(null, getTranslation("The maximum number of connections to keep is set incorrectly"));
             return;
         }
         int _minConnectionNum;
@@ -1222,11 +1337,11 @@ public class SettingsFrame {
             _minConnectionNum = -1;
         }
         if (_minConnectionNum < 0 || _minConnectionNum > 50) {
-            JOptionPane.showMessageDialog(null, "最小连接保持数量设置错误");
+            JOptionPane.showMessageDialog(null, "");
             return;
         }
         if (_minConnectionNum > _maxConnectionNum) {
-            JOptionPane.showMessageDialog(null, "最小连接保持数量需要大于最大连接保持数量");
+            JOptionPane.showMessageDialog(null, getTranslation("The minimum number of connections to keep is set incorrectly"));
             return;
         }
         int _connectionTimeLimit;
@@ -1236,7 +1351,7 @@ public class SettingsFrame {
             _connectionTimeLimit = -1;
         }
         if (_connectionTimeLimit < 0 || _connectionTimeLimit > 1800000) {
-            JOptionPane.showMessageDialog(null, "连接保持时间设置错误");
+            JOptionPane.showMessageDialog(null, getTranslation("Incorrect connection hold time setting"));
             return;
         }
 
@@ -1276,6 +1391,7 @@ public class SettingsFrame {
         maxConnectionNum = _maxConnectionNum;
         minConnectionNum = _minConnectionNum;
         connectionTimeLimit = _connectionTimeLimit;
+        translate(language);
 
         //保存设置
         allSettings.put("hotkey", hotkey);
@@ -1300,6 +1416,7 @@ public class SettingsFrame {
         allSettings.put("maxConnectionNum", maxConnectionNum);
         allSettings.put("minConnectionNum", minConnectionNum);
         allSettings.put("connectionTimeLimit", connectionTimeLimit);
+        allSettings.put("language", language);
         try (BufferedWriter buffW = new BufferedWriter(new FileWriter(settings))) {
             String format = JSON.toJSONString(allSettings, SerializerFeature.PrettyFormat, SerializerFeature.WriteMapNullValue, SerializerFeature.WriteDateUseDateFormat);
             buffW.write(format);
@@ -1321,11 +1438,6 @@ public class SettingsFrame {
     }
 
     private void setStartup(boolean b) {
-        try {
-            Runtime.getRuntime().exec("reg delete \"HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run\" /v FileEngine /f");
-        } catch (IOException ignored) {
-
-        }
         if (b) {
             String command = "cmd.exe /c schtasks /create /ru \"administrators\" /rl HIGHEST /sc ONLOGON /tn \"File-Engine\" /tr ";
             File FileEngine = new File(name);
@@ -1344,7 +1456,7 @@ public class SettingsFrame {
                 outPut.close();
                 if (!result.toString().isEmpty()) {
                     checkBox1.setSelected(false);
-                    JOptionPane.showMessageDialog(null, "添加到开机启动失败，请尝试以管理员身份运行");
+                    JOptionPane.showMessageDialog(null, getTranslation("Add to startup failed, please try to run as administrator"));
                 }
             } catch (IOException | InterruptedException e) {
                 e.printStackTrace();
@@ -1364,7 +1476,7 @@ public class SettingsFrame {
                 outPut.close();
                 if (!result.toString().isEmpty()) {
                     checkBox1.setSelected(true);
-                    JOptionPane.showMessageDialog(null, "删除开机启动失败，请尝试以管理员身份运行");
+                    JOptionPane.showMessageDialog(null, getTranslation("Delete startup failure, please try to run as administrator"));
                 }
             } catch (IOException | InterruptedException ignored) {
 
@@ -1393,25 +1505,7 @@ public class SettingsFrame {
         }
     }
 
-    private void copyFile(InputStream source, File dest) {
-        try (OutputStream os = new FileOutputStream(dest); BufferedInputStream bis = new BufferedInputStream(source); BufferedOutputStream bos = new BufferedOutputStream(os)) {
-            // 创建缓冲流
-            byte[] buffer = new byte[8192];
-            int count = bis.read(buffer);
-            while (count != -1) {
-                //使用缓冲流写数据
-                bos.write(buffer, 0, count);
-                //刷新
-                bos.flush();
-                count = bis.read(buffer);
-            }
-        } catch (IOException ignored) {
-
-        }
-    }
-
     static class moveDesktopFiles implements Runnable {
-
         @Override
         public void run() {
             boolean desktop1;
@@ -1428,7 +1522,7 @@ public class SettingsFrame {
             desktop1 = moveFiles.moveFolder(fileDesktop.getAbsolutePath(), fileBackUp.getAbsolutePath());
             desktop2 = moveFiles.moveFolder("C:\\Users\\Public\\Desktop", fileBackUp.getAbsolutePath());
             if (desktop1 || desktop2) {
-                JOptionPane.showMessageDialog(null, "检测到重名文件，请自行移动");
+                JOptionPane.showMessageDialog(null, getTranslation("Files with the same name are detected, please move it by yourself"));
             }
         }
     }

@@ -11,8 +11,7 @@ import java.util.concurrent.Executors;
 
 public class CheckHotKey {
 
-    private static CheckHotKey hotKeyListener = null;
-    private HashMap<String, Integer> map = new HashMap<>();
+    private HashMap<String, Integer> map;
     private ExecutorService threadPool;
 
     private static class CheckHotKeyBuilder {
@@ -73,6 +72,8 @@ public class CheckHotKey {
     }
 
     private CheckHotKey() {
+        map = new HashMap<>();
+
         threadPool = Executors.newFixedThreadPool(2);
         map.put("Ctrl", KeyEvent.VK_CONTROL);
         map.put("Alt", KeyEvent.VK_ALT);

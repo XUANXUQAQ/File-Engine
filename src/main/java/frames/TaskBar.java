@@ -11,7 +11,6 @@ import java.net.URL;
 
 public class TaskBar {
     private TrayIcon trayIcon = null;
-    private SettingsFrame settingsFrame = new SettingsFrame();
     private SystemTray systemTray;
 
     private static class TaskBarBuilder {
@@ -21,13 +20,13 @@ public class TaskBar {
     private TaskBar() {
     }
 
-    ;
 
     public static TaskBar getInstance() {
         return TaskBarBuilder.instance;
     }
 
     public void showTaskBar() {
+        SettingsFrame settingsFrame = SettingsFrame.getInstance();
         // 判断是否支持系统托盘
         if (SystemTray.isSupported()) {
             Image image;
@@ -59,7 +58,7 @@ public class TaskBar {
                     p.getErrorStream().close();
                     closeAndExit();
                 } catch (IOException ex) {
-                    showMessage("提示", "重启失败");
+                    showMessage(SettingsFrame.getTranslation("Warning"), SettingsFrame.getTranslation("Restart failed"));
                 }
             });
             popupMenu.add(settings);
@@ -83,15 +82,13 @@ public class TaskBar {
             } catch (Exception ignored) {
 
             }
-        } else {
-            JOptionPane.showMessageDialog(null, "not support");
         }
     }
 
     public void closeAndExit() {
         SettingsFrame.setMainExit(true);
         systemTray.remove(trayIcon);
-        settingsFrame.hideFrame();
+        SettingsFrame.getInstance().hideFrame();
     }
 
     public void showMessage(String caption, String message) {
