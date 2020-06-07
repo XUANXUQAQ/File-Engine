@@ -22,8 +22,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Scanner;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.regex.Pattern;
 
 
@@ -60,9 +58,6 @@ public class SettingsFrame {
     private static int fontColorWithCoverage;
     private static int fontColor;
     private static int searchBarColor;
-    private static int maxConnectionNum;
-    private static int minConnectionNum;
-    private static int connectionTimeLimit;
     private static int diskCount;
     private static String language;
     private static boolean isStartup;
@@ -70,6 +65,7 @@ public class SettingsFrame {
     private static TaskBar taskBar;
     private static Search search;
     private Thread updateThread = null;
+    private static volatile SettingsFrame instance;
     private JFrame frame = new JFrame("设置");
     private JTextField textFieldUpdateTime;
     private JTextField textFieldCacheNum;
@@ -89,11 +85,8 @@ public class SettingsFrame {
     private JScrollPane scrollpane;
     private JLabel labelplaceholder2;
     private JTextField textFieldHotkey;
-    private JLabel labeltip2;
     private JLabel labeltip3;
-    private JTextField textFieldDataPath;
     private JTextField textFieldPriorityFolder;
-    private JButton ButtonDataPath;
     private JButton ButtonPriorityFolder;
     private JTabbedPane tabbedPane1;
     private JCheckBox checkBoxAdmin;
@@ -161,23 +154,7 @@ public class SettingsFrame {
     private JLabel labelSharp8;
     private JTextField textFieldSearchBarColor;
     private JLabel searchBarColorChooser;
-    private JPanel tab4;
-    private JLabel labelFileConnectionTip;
-    private JLabel labelMaxConnection;
-    private JLabel labelMinConnection;
-    private JTextField textFieldMaxConnectionNum;
-    private JTextField textFieldMinConnectionNum;
-    private JLabel labelFileConnectionTip3;
-    private JTextField textFieldConnectionTimeLimit;
-    private JLabel labelPlaceHolderF1;
-    private JLabel labelPlaceHolderF2;
-    private JLabel labelTip4F;
-    private JLabel labelPlaceHolder;
-    private JLabel labelFileConnectionTip2;
     private JLabel labelCmdTip2;
-    private JLabel labelCurrentConnection;
-    private JLabel currentConnection;
-    private JButton buttonClearConnection;
     private JLabel labelDesciption;
     private JLabel labelBeautyEye;
     private JLabel labelFastJson;
@@ -190,11 +167,18 @@ public class SettingsFrame {
 
 
     public static SettingsFrame getInstance() {
-        return SettingsFrameBuilder.instance;
+        if (instance == null) {
+            synchronized (SettingsFrame.class) {
+                if (instance == null) {
+                    instance = new SettingsFrame();
+                }
+            }
+        }
+        return instance;
     }
 
-    public static boolean getMainExit() {
-        return mainExit;
+    public static boolean isNotMainExit() {
+        return !mainExit;
     }
 
     public static int getCacheNumLimit() {
@@ -207,10 +191,6 @@ public class SettingsFrame {
 
     public static String getIgnorePath() {
         return ignorePath;
-    }
-
-    public static String getDataPath() {
-        return dataPath;
     }
 
     public static String getPriorityFolder() {
@@ -273,22 +253,6 @@ public class SettingsFrame {
         return fontColor;
     }
 
-    public static int getMaxConnectionNum() {
-        return maxConnectionNum;
-    }
-
-    public static int getMinConnectionNum() {
-        return minConnectionNum;
-    }
-
-    public static int getConnectionTimeLimit() {
-        return connectionTimeLimit;
-    }
-
-    private static class SettingsFrameBuilder {
-        private static SettingsFrame instance = new SettingsFrame();
-    }
-
     private SettingsFrame() {
         tmp = new File("tmp");
         settings = new File("user/settings.json");
@@ -302,7 +266,7 @@ public class SettingsFrame {
         taskBar = TaskBar.getInstance();
         search = Search.getInstance();
 
-        readAndSetAllSettings();
+        setAllSettings();
         initLanguageFileMap();
         translate(language);
 
@@ -394,16 +358,6 @@ public class SettingsFrame {
                 reset = true;
             }
         });
-        ButtonDataPath.addActionListener(e -> {
-            JFileChooser fileChooser = new JFileChooser();
-            fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-            int returnValue = fileChooser.showDialog(new JLabel(), SettingsFrame.getTranslation("Choose"));
-            File file = fileChooser.getSelectedFile();
-            if (file != null && returnValue == JFileChooser.APPROVE_OPTION) {
-                textFieldDataPath.setText(file.getAbsolutePath());
-            }
-
-        });
         ButtonPriorityFolder.addActionListener(e -> {
             JFileChooser fileChooser = new JFileChooser();
             fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
@@ -436,12 +390,8 @@ public class SettingsFrame {
             textFieldCacheNum.setText(String.valueOf(cacheNumLimit));
             textFieldSearchDepth.setText(String.valueOf(searchDepth));
             textFieldHotkey.setText(hotkey);
-            textFieldDataPath.setText(dataPath);
             textFieldPriorityFolder.setText(priorityFolder);
             checkBoxAdmin.setSelected(isDefaultAdmin);
-            textFieldMaxConnectionNum.setText(String.valueOf(maxConnectionNum));
-            textFieldMinConnectionNum.setText(String.valueOf(minConnectionNum));
-            textFieldConnectionTimeLimit.setText(String.valueOf(connectionTimeLimit / 1000));
             textFieldSearchBarColor.setText(Integer.toHexString(searchBarColor));
             Color _searchBarColor = new Color(searchBarColor);
             searchBarColorChooser.setBackground(_searchBarColor);
@@ -761,20 +711,6 @@ public class SettingsFrame {
                 searchBarColorChooser.setForeground(color);
             }
         });
-
-        ExecutorService fixedThreadPool = Executors.newFixedThreadPool(1);
-        fixedThreadPool.execute(() -> {
-            try {
-                while (!mainExit) {
-                    Thread.sleep(50);
-                    currentConnection.setText(String.valueOf(searchBar.currentConnectionNum()));
-                }
-            } catch (InterruptedException ignored) {
-
-            }
-        });
-
-        buttonClearConnection.addActionListener(e -> searchBar.closeAllConnection());
     }
 
     private void translate(String language) {
@@ -782,17 +718,14 @@ public class SettingsFrame {
         tabbedPane1.setTitleAt(0, getTranslation("General"));
         tabbedPane1.setTitleAt(1, getTranslation("Search settings"));
         tabbedPane1.setTitleAt(2, getTranslation("Search bar settings"));
-        tabbedPane1.setTitleAt(3, getTranslation("File connection settings"));
-        tabbedPane1.setTitleAt(4, getTranslation("Language settings"));
-        tabbedPane1.setTitleAt(5, getTranslation("Hotkey settings"));
-        tabbedPane1.setTitleAt(6, getTranslation("My commands"));
-        tabbedPane1.setTitleAt(7, getTranslation("Color settings"));
-        tabbedPane1.setTitleAt(8, getTranslation("About"));
+        tabbedPane1.setTitleAt(3, getTranslation("Language settings"));
+        tabbedPane1.setTitleAt(4, getTranslation("Hotkey settings"));
+        tabbedPane1.setTitleAt(5, getTranslation("My commands"));
+        tabbedPane1.setTitleAt(6, getTranslation("Color settings"));
+        tabbedPane1.setTitleAt(7, getTranslation("About"));
         checkBox1.setText(getTranslation("Add to startup"));
         buttonSaveAndRemoveDesktop.setText(getTranslation("Backup and remove all desktop files"));
         label4.setText(getTranslation("Set the maximum number of caches:"));
-        labeltip2.setText(getTranslation("Local index location:"));
-        ButtonDataPath.setText(getTranslation("Choose"));
         ButtonPriorityFolder.setText(getTranslation("Choose"));
         Button3.setText(getTranslation("Choose"));
         label1.setText(getTranslation("File update detection interval:"));
@@ -804,14 +737,6 @@ public class SettingsFrame {
         checkBoxLoseFocus.setText(getTranslation("Close search bar when focus lost"));
         checkBoxAdmin.setText(getTranslation("Open other programs as an administrator (provided that the software has privileges)"));
         labelTransparency.setText(getTranslation("Search bar transparency:"));
-        labelFileConnectionTip.setText(getTranslation("The larger the number of file connections maintained, the faster the search speed, but it will consume more memory"));
-        labelFileConnectionTip2.setText(getTranslation("File-Engine will keep the connection to the file for 10 minutes after you search by default, you can modify it below"));
-        labelFileConnectionTip3.setText(getTranslation("Connection hold time:"));
-        labelCurrentConnection.setText(getTranslation("Current number of connections:"));
-        labelMaxConnection.setText(getTranslation("Maximum number of connections maintained:"));
-        labelMinConnection.setText(getTranslation("Minimum number of connections maintained:"));
-        labelTip4F.setText(getTranslation("Seconds"));
-        buttonClearConnection.setText(getTranslation("Close all connections"));
         label2.setText(getTranslation("Open search bar:"));
         labelRunAsAdmin.setText(getTranslation("Run as administrator:"));
         labelOpenFolder.setText(getTranslation("Open the parent folder:"));
@@ -834,6 +759,7 @@ public class SettingsFrame {
         labelLanTip2.setText(getTranslation("The translation might not be 100% correct"));
         labelLanguage.setText(getTranslation("Choose a language"));
         labelVersion.setText(getTranslation(getTranslation("Current Version:") + version));
+        frame.setVisible(false);
     }
 
     private static void initLanguageSet() {
@@ -847,13 +773,15 @@ public class SettingsFrame {
             try (InputStream inputStream = SettingsFrame.class.getResourceAsStream(filePath); BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
-                    line = line.trim();
                     String[] record = equalSign.split(line);
-                    translationMap.put(record[0], record[1]);
+                    translationMap.put(record[0].trim(), record[1].trim());
                 }
             } catch (IOException ignored) {
 
             }
+        } else {
+            translationMap.put("#frame_width", String.valueOf(1100));
+            translationMap.put("#frame_height", String.valueOf(600));
         }
     }
 
@@ -927,145 +855,131 @@ public class SettingsFrame {
         return JSONObject.parseObject(jsonUpdate.toString());
     }
 
-    private static void readAndSetAllSettings() {
-        JSONObject settingsInJson = null;
+    public static void readAllSettings() {
         try (BufferedReader buffR = new BufferedReader(new InputStreamReader(new FileInputStream(settings), StandardCharsets.UTF_8))) {
             String line;
             StringBuilder result = new StringBuilder();
             while (null != (line = buffR.readLine())) {
                 result.append(line);
             }
-            settingsInJson = JSON.parseObject(result.toString());
+            JSONObject settingsInJson = JSON.parseObject(result.toString());
+            if (settingsInJson.containsKey("isStartup")) {
+                isStartup = settingsInJson.getBoolean("isStartup");
+            } else {
+                isStartup = false;
+            }
+            if (settingsInJson.containsKey("cacheNumLimit")) {
+                cacheNumLimit = settingsInJson.getInteger("cacheNumLimit");
+            } else {
+                cacheNumLimit = 1000;
+            }
+            if (settingsInJson.containsKey("hotkey")) {
+                hotkey = settingsInJson.getString("hotkey");
+            } else {
+                hotkey = "Ctrl + Alt + J";
+            }
+            if (settingsInJson.containsKey("dataPath")) {
+                dataPath = settingsInJson.getString("dataPath");
+            } else {
+                dataPath = new File("data.db").getAbsolutePath();
+            }
+            if (settingsInJson.containsKey("priorityFolder")) {
+                priorityFolder = settingsInJson.getString("priorityFolder");
+            } else {
+                priorityFolder = "";
+            }
+            if (settingsInJson.containsKey("searchDepth")) {
+                searchDepth = settingsInJson.getInteger("searchDepth");
+            } else {
+                searchDepth = 6;
+            }
+            if (settingsInJson.containsKey("ignorePath")) {
+                ignorePath = settingsInJson.getString("ignorePath");
+            } else {
+                ignorePath = "C:\\Windows,";
+            }
+            if (settingsInJson.containsKey("updateTimeLimit")) {
+                updateTimeLimit = settingsInJson.getInteger("updateTimeLimit");
+            } else {
+                updateTimeLimit = 5;
+            }
+            if (settingsInJson.containsKey("isDefaultAdmin")) {
+                isDefaultAdmin = settingsInJson.getBoolean("isDefaultAdmin");
+            } else {
+                isDefaultAdmin = false;
+            }
+            if (settingsInJson.containsKey("isLoseFocusClose")) {
+                isLoseFocusClose = settingsInJson.getBoolean("isLoseFocusClose");
+            } else {
+                isLoseFocusClose = true;
+            }
+            if (settingsInJson.containsKey("openLastFolderKeyCode")) {
+                openLastFolderKeyCode = settingsInJson.getInteger("openLastFolderKeyCode");
+            } else {
+                openLastFolderKeyCode = 17;
+            }
+            _openLastFolderKeyCode = openLastFolderKeyCode;
+            if (settingsInJson.containsKey("runAsAdminKeyCode")) {
+                runAsAdminKeyCode = settingsInJson.getInteger("runAsAdminKeyCode");
+            } else {
+                runAsAdminKeyCode = 16;
+            }
+            _runAsAdminKeyCode = runAsAdminKeyCode;
+            if (settingsInJson.containsKey("copyPathKeyCode")) {
+                copyPathKeyCode = settingsInJson.getInteger("copyPathKeyCode");
+            } else {
+                copyPathKeyCode = 18;
+            }
+            _copyPathKeyCode = copyPathKeyCode;
+            if (settingsInJson.containsKey("transparency")) {
+                transparency = settingsInJson.getFloat("transparency");
+            } else {
+                transparency = 0.8f;
+            }
+            if (settingsInJson.containsKey("searchBarColor")) {
+                searchBarColor = settingsInJson.getInteger("searchBarColor");
+            } else {
+                searchBarColor = 0xfffff;
+            }
+            if (settingsInJson.containsKey("defaultBackground")) {
+                defaultBackgroundColor = settingsInJson.getInteger("defaultBackground");
+            } else {
+                defaultBackgroundColor = 0xffffff;
+            }
+            if (settingsInJson.containsKey("fontColorWithCoverage")) {
+                fontColorWithCoverage = settingsInJson.getInteger("fontColorWithCoverage");
+            } else {
+                fontColorWithCoverage = 0x1C0EFF;
+            }
+            if (settingsInJson.containsKey("labelColor")) {
+                labelColor = settingsInJson.getInteger("labelColor");
+            } else {
+                labelColor = 0xFF9868;
+            }
+            if (settingsInJson.containsKey("fontColor")) {
+                fontColor = settingsInJson.getInteger("fontColor");
+            } else {
+                fontColor = 0xC5C5C5;
+            }
+            if (settingsInJson.containsKey("language")) {
+                language = settingsInJson.getString("language");
+            } else {
+                language = "English(US)";
+            }
         } catch (NullPointerException | IOException ignored) {
 
         }
-        assert settingsInJson != null;
-        if (settingsInJson.containsKey("isStartup")) {
-            isStartup = settingsInJson.getBoolean("isStartup");
-        } else {
-            isStartup = false;
-        }
-        if (settingsInJson.containsKey("cacheNumLimit")) {
-            cacheNumLimit = settingsInJson.getInteger("cacheNumLimit");
-        } else {
-            cacheNumLimit = 1000;
-        }
-        if (settingsInJson.containsKey("hotkey")) {
-            hotkey = settingsInJson.getString("hotkey");
-        } else {
-            hotkey = "Ctrl + Alt + J";
-        }
+    }
 
+    private static void setAllSettings() {
+        readAllSettings();
         HotKeyListener.registerHotkey(hotkey);
-        if (settingsInJson.containsKey("dataPath")) {
-            dataPath = settingsInJson.getString("dataPath");
-            File data = new File(dataPath);
-            if (!data.exists()) {
-                taskBar.showMessage(getTranslation("Info"), getTranslation("Detected that the cache does not exist and is searching again"));
-                data = new File("data");
-                dataPath = data.getAbsolutePath();
-                search.setManualUpdate(true);
-            }
-        } else {
-            dataPath = new File("data").getAbsolutePath();
-        }
-        if (settingsInJson.containsKey("priorityFolder")) {
-            priorityFolder = settingsInJson.getString("priorityFolder");
-        } else {
-            priorityFolder = "";
-        }
-        if (settingsInJson.containsKey("searchDepth")) {
-            searchDepth = settingsInJson.getInteger("searchDepth");
-        } else {
-            searchDepth = 6;
-        }
-        if (settingsInJson.containsKey("ignorePath")) {
-            ignorePath = settingsInJson.getString("ignorePath");
-        } else {
-            ignorePath = "C:\\Windows,";
-        }
-        if (settingsInJson.containsKey("updateTimeLimit")) {
-            updateTimeLimit = settingsInJson.getInteger("updateTimeLimit");
-        } else {
-            updateTimeLimit = 5;
-        }
-        if (settingsInJson.containsKey("isDefaultAdmin")) {
-            isDefaultAdmin = settingsInJson.getBoolean("isDefaultAdmin");
-        } else {
-            isDefaultAdmin = false;
-        }
-        if (settingsInJson.containsKey("isLoseFocusClose")) {
-            isLoseFocusClose = settingsInJson.getBoolean("isLoseFocusClose");
-        } else {
-            isLoseFocusClose = true;
-        }
-        if (settingsInJson.containsKey("openLastFolderKeyCode")) {
-            openLastFolderKeyCode = settingsInJson.getInteger("openLastFolderKeyCode");
-        } else {
-            openLastFolderKeyCode = 17;
-        }
-        _openLastFolderKeyCode = openLastFolderKeyCode;
-        if (settingsInJson.containsKey("runAsAdminKeyCode")) {
-            runAsAdminKeyCode = settingsInJson.getInteger("runAsAdminKeyCode");
-        } else {
-            runAsAdminKeyCode = 16;
-        }
-        _runAsAdminKeyCode = runAsAdminKeyCode;
-        if (settingsInJson.containsKey("copyPathKeyCode")) {
-            copyPathKeyCode = settingsInJson.getInteger("copyPathKeyCode");
-        } else {
-            copyPathKeyCode = 18;
-        }
-        _copyPathKeyCode = copyPathKeyCode;
-        if (settingsInJson.containsKey("transparency")) {
-            transparency = settingsInJson.getFloat("transparency");
-        } else {
-            transparency = 0.8f;
-        }
-        if (settingsInJson.containsKey("searchBarColor")) {
-            searchBarColor = settingsInJson.getInteger("searchBarColor");
-        } else {
-            searchBarColor = 0xfffff;
-        }
-        if (settingsInJson.containsKey("defaultBackground")) {
-            defaultBackgroundColor = settingsInJson.getInteger("defaultBackground");
-        } else {
-            defaultBackgroundColor = 0xffffff;
-        }
-        if (settingsInJson.containsKey("fontColorWithCoverage")) {
-            fontColorWithCoverage = settingsInJson.getInteger("fontColorWithCoverage");
-        } else {
-            fontColorWithCoverage = 0x1C0EFF;
-        }
-        if (settingsInJson.containsKey("labelColor")) {
-            labelColor = settingsInJson.getInteger("labelColor");
-        } else {
-            labelColor = 0xFF9868;
-        }
-        if (settingsInJson.containsKey("fontColor")) {
-            fontColor = settingsInJson.getInteger("fontColor");
-        } else {
-            fontColor = 0xC5C5C5;
-        }
-        if (settingsInJson.containsKey("maxConnectionNum")) {
-            maxConnectionNum = settingsInJson.getInteger("maxConnectionNum");
-        } else {
-            maxConnectionNum = 15;
-        }
-        if (settingsInJson.containsKey("minConnectionNum")) {
-            minConnectionNum = settingsInJson.getInteger("minConnectionNum");
-        } else {
-            minConnectionNum = 10;
-        }
-        if (settingsInJson.containsKey("connectionTimeLimit")) {
-            connectionTimeLimit = settingsInJson.getInteger("connectionTimeLimit");
-        } else {
-            connectionTimeLimit = 600000;
-        }
-        if (settingsInJson.containsKey("language")) {
-            language = settingsInJson.getString("language");
-        } else {
-            language = "English(US)";
+        File data = new File(dataPath);
+        if (!data.exists()) {
+            taskBar.showMessage(getTranslation("Info"), getTranslation("Detected that the cache does not exist and is searching again"));
+            data = new File("data.db");
+            dataPath = data.getAbsolutePath();
+            search.setManualUpdate(true);
         }
 
         searchBar.setTransparency(transparency);
@@ -1099,9 +1013,6 @@ public class SettingsFrame {
         allSettings.put("searchBarColor", searchBarColor);
         allSettings.put("fontColorWithCoverage", fontColorWithCoverage);
         allSettings.put("fontColor", fontColor);
-        allSettings.put("maxConnectionNum", maxConnectionNum);
-        allSettings.put("minConnectionNum", minConnectionNum);
-        allSettings.put("connectionTimeLimit", connectionTimeLimit);
         allSettings.put("language", language);
         try (BufferedWriter buffW = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(settings), StandardCharsets.UTF_8))) {
             String format = JSON.toJSONString(allSettings, SerializerFeature.PrettyFormat, SerializerFeature.WriteMapNullValue, SerializerFeature.WriteDateUseDateFormat);
@@ -1113,6 +1024,7 @@ public class SettingsFrame {
 
     private static void initCmdSetSettings() {
         //获取所有设置信息
+        diskCount = 0;
         for (File root : File.listRoots()) {
             if (IsLocalDisk.INSTANCE.isLocalDisk(root.getAbsolutePath())) {
                 diskCount++;
@@ -1193,9 +1105,8 @@ public class SettingsFrame {
         URL frameIcon = SettingsFrame.class.getResource("/icons/frame.png");
         frame.setIconImage(new ImageIcon(frameIcon).getImage());
         frame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
-        frame.setSize(942, 600);
+        frame.setSize(Integer.parseInt(translationMap.get("#frame_width")), Integer.parseInt(translationMap.get("#frame_height")));
         frame.setLocationRelativeTo(null);
-        //frame.setResizable(false);
         frame.setVisible(true);
     }
 
@@ -1284,6 +1195,8 @@ public class SettingsFrame {
             JOptionPane.showMessageDialog(frame, getTranslation("Chosen label color is set incorrectly"));
             return;
         }
+
+
         int _fontColorWithCoverage;
         try {
             _fontColorWithCoverage = Integer.parseInt(textFieldFontColorWithCoverage.getText(), 16);
@@ -1294,6 +1207,8 @@ public class SettingsFrame {
             JOptionPane.showMessageDialog(frame, getTranslation("Chosen label font color is set incorrectly"));
             return;
         }
+
+
         int _defaultBackgroundColor;
         try {
             _defaultBackgroundColor = Integer.parseInt(textFieldBackgroundDefault.getText(), 16);
@@ -1304,6 +1219,8 @@ public class SettingsFrame {
             JOptionPane.showMessageDialog(frame, getTranslation("Incorrect defaultBackground color setting"));
             return;
         }
+
+
         int _fontColor;
         try {
             _fontColor = Integer.parseInt(textFieldFontColor.getText(), 16);
@@ -1314,6 +1231,8 @@ public class SettingsFrame {
             JOptionPane.showMessageDialog(frame, "Unchosen label font color is set incorrectly");
             return;
         }
+
+
         int _searchBarColor;
         try {
             _searchBarColor = Integer.parseInt(textFieldSearchBarColor.getText(), 16);
@@ -1324,43 +1243,8 @@ public class SettingsFrame {
             JOptionPane.showMessageDialog(frame, getTranslation("The color of the search bar is set incorrectly"));
             return;
         }
-        int _maxConnectionNum;
-        try {
-            _maxConnectionNum = Integer.parseInt(textFieldMaxConnectionNum.getText());
-        } catch (Exception e) {
-            _maxConnectionNum = -1;
-        }
-        if (_maxConnectionNum < 0 || _maxConnectionNum > 50) {
-            JOptionPane.showMessageDialog(frame, getTranslation("The maximum number of connections to keep is set incorrectly"));
-            return;
-        }
-        int _minConnectionNum;
-        try {
-            _minConnectionNum = Integer.parseInt(textFieldMinConnectionNum.getText());
-        } catch (Exception e) {
-            _minConnectionNum = -1;
-        }
-        if (_minConnectionNum < 0 || _minConnectionNum > 50) {
-            JOptionPane.showMessageDialog(frame, "");
-            return;
-        }
-        if (_minConnectionNum > _maxConnectionNum) {
-            JOptionPane.showMessageDialog(frame, getTranslation("The minimum number of connections to keep is set incorrectly"));
-            return;
-        }
-        int _connectionTimeLimit;
-        try {
-            _connectionTimeLimit = Integer.parseInt(textFieldConnectionTimeLimit.getText()) * 1000;
-        } catch (Exception e) {
-            _connectionTimeLimit = -1;
-        }
-        if (_connectionTimeLimit < 0 || _connectionTimeLimit > 1800000) {
-            JOptionPane.showMessageDialog(frame, getTranslation("Incorrect connection hold time setting"));
-            return;
-        }
 
         priorityFolder = textFieldPriorityFolder.getText();
-        dataPath = textFieldDataPath.getText();
         hotkey = textFieldHotkey.getText();
         HotKeyListener.changeHotKey(hotkey);
         cacheNumLimit = cacheNumLimitTemp;
@@ -1392,10 +1276,8 @@ public class SettingsFrame {
         _tmp = new Color(fontColor);
         FontColorChooser.setBackground(_tmp);
         FontColorChooser.setForeground(_tmp);
-        maxConnectionNum = _maxConnectionNum;
-        minConnectionNum = _minConnectionNum;
-        connectionTimeLimit = _connectionTimeLimit;
         translate(language);
+
 
         //保存设置
         allSettings.put("hotkey", hotkey);
@@ -1417,9 +1299,6 @@ public class SettingsFrame {
         allSettings.put("searchBarColor", searchBarColor);
         allSettings.put("fontColorWithCoverage", fontColorWithCoverage);
         allSettings.put("fontColor", fontColor);
-        allSettings.put("maxConnectionNum", maxConnectionNum);
-        allSettings.put("minConnectionNum", minConnectionNum);
-        allSettings.put("connectionTimeLimit", connectionTimeLimit);
         allSettings.put("language", language);
         try (BufferedWriter buffW = new BufferedWriter(new FileWriter(settings))) {
             String format = JSON.toJSONString(allSettings, SerializerFeature.PrettyFormat, SerializerFeature.WriteMapNullValue, SerializerFeature.WriteDateUseDateFormat);

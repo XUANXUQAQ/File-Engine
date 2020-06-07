@@ -13,13 +13,17 @@ public class CheckHotKey {
 
     private HashMap<String, Integer> map;
     private ExecutorService threadPool;
-
-    private static class CheckHotKeyBuilder {
-        private static CheckHotKey instance = new CheckHotKey();
-    }
+    private static volatile CheckHotKey instance;
 
     public static CheckHotKey getInstance() {
-        return CheckHotKeyBuilder.instance;
+        if (instance == null) {
+            synchronized (CheckHotKey.class) {
+                if (instance == null) {
+                    instance = new CheckHotKey();
+                }
+            }
+        }
+        return instance;
     }
 
 
@@ -85,7 +89,7 @@ public class CheckHotKey {
             SearchBar searchBar = SearchBar.getInstance();
             HotkeyListener instance = HotkeyListener.INSTANCE;
             try {
-                while (!SettingsFrame.getMainExit()) {
+                while (SettingsFrame.isNotMainExit()) {
                     if (!isExecuted && instance.getKeyStatus()) {
                         isExecuted = true;
                         if (!searchBar.isVisible()) {

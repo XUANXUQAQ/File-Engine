@@ -1,5 +1,4 @@
 import DllInterface.FileMonitor;
-import DllInterface.IsLocalDisk;
 import com.alibaba.fastjson.JSONObject;
 import frames.SearchBar;
 import frames.SettingsFrame;
@@ -10,14 +9,13 @@ import search.Search;
 
 import javax.swing.*;
 import java.io.*;
-import java.nio.charset.StandardCharsets;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Statement;
 
 
 public class MainClass {
-    private static Search search;
-    private static SearchBar searchBar;
 
     private static void copyFile(InputStream source, File dest) {
         try (OutputStream os = new FileOutputStream(dest); BufferedInputStream bis = new BufferedInputStream(source); BufferedOutputStream bos = new BufferedOutputStream(os)) {
@@ -35,8 +33,7 @@ public class MainClass {
         }
     }
 
-    private static void deleteDir(String path) {
-        File file = new File(path);
+    private static void deleteDir(File file) {
         if (!file.exists()) {//判断是否待删除目录是否存在
             return;
         }
@@ -44,7 +41,7 @@ public class MainClass {
         String[] content = file.list();//取得当前目录下所有文件和文件夹
         if (content != null) {
             for (String name : content) {
-                File temp = new File(path, name);
+                File temp = new File(file.getAbsolutePath(), name);
                 if (temp.isDirectory()) {//判断是否是目录
                     deleteDir(temp.getAbsolutePath());//递归调用，删除目录里的内容
                     temp.delete();//删除空目录
@@ -55,6 +52,11 @@ public class MainClass {
                 }
             }
         }
+    }
+
+    private static void deleteDir(String path) {
+        File file = new File(path);
+        deleteDir(file);
     }
 
     private static void deleteFile(String path) {
@@ -77,31 +79,40 @@ public class MainClass {
             SettingsFrame.name = "File-Engine-x86.exe";
         }
 
+        File database = new File("data.db");
+        boolean isManualUpdate = false;
+        if (!database.exists()) {
+            System.out.println("无data文件，正在搜索并重建");
+            //初始化数据库
+            initDatabase();
+            isManualUpdate = true;
+        }
+
         if (!initSettingsJson()) {
             System.err.println("initialize failed");
             System.exit(-1);
         }
-        SettingsFrame.getInstance();
+
+        SettingsFrame.readAllSettings();
 
         startOrIgnoreUpdateAndExit(isUpdateSignExist());
 
         //清空tmp
-        deleteDir(SettingsFrame.getTmp().getAbsolutePath());
+        deleteDir(new File("tmp"));
 
         if (!initFoldersAndFiles()) {
             System.err.println("initialize failed");
             System.exit(-1);
         }
 
-        searchBar = SearchBar.getInstance();
-        search = Search.getInstance();
+        SettingsFrame.getInstance();
 
+        SearchBar searchBar = SearchBar.getInstance();
+        Search search = Search.getInstance();
         TaskBar taskBar = TaskBar.getInstance();
         taskBar.showTaskBar();
 
-
-        if (searchBar.isDataDamaged()) {
-            System.out.println("无data文件，正在搜索并重建");
+        if (isManualUpdate) {
             search.setManualUpdate(true);
         }
 
@@ -110,136 +121,68 @@ public class MainClass {
         }
 
 
-        File[] roots = File.listRoots();
-        int size = roots.length + 5;
-        ExecutorService fixedThreadPool = Executors.newFixedThreadPool(size);
-        if (SettingsFrame.isAdmin()) {
-            for (File root : roots) {
-                boolean isLocal = IsLocalDisk.INSTANCE.isLocalDisk(root.getAbsolutePath());
-                if (isLocal) {
-                    fixedThreadPool.execute(() -> FileMonitor.INSTANCE.monitor(root.getAbsolutePath(), SettingsFrame.getTmp().getAbsolutePath(), SettingsFrame.getTmp().getAbsolutePath() + "/CLOSE"));
-                }
-            }
-        } else {
-            System.out.println("Not administrator, file monitoring function is turned off");
-            taskBar.showMessage(SettingsFrame.getTranslation("Warning"), SettingsFrame.getTranslation("Not administrator, file monitoring function is turned off"));
-        }
-
-        fixedThreadPool.execute(() -> {
-            //检测文件添加线程
-            String filesToAdd;
-            try (BufferedReader readerAdd = new BufferedReader(new InputStreamReader(
-                    new FileInputStream(SettingsFrame.getTmp().getAbsolutePath() + File.separator + "fileAdded.txt"), StandardCharsets.UTF_8))) {
-                while (!SettingsFrame.getMainExit()) {
-                    if (!search.isManualUpdate()) {
-                        if ((filesToAdd = readerAdd.readLine()) != null) {
-                            if (!filesToAdd.contains(SettingsFrame.getDataPath())) {
-                                search.addFileToLoadBin(filesToAdd);
-                                System.out.println("添加" + filesToAdd);
-                            }
-                        }
-                    }
-                    Thread.sleep(100);
-                }
-            } catch (IOException | InterruptedException ignored) {
-
-            }
-        });
-
-        fixedThreadPool.execute(() -> {
-            String filesToRemove;
-            try (BufferedReader readerRemove = new BufferedReader(new InputStreamReader(
-                    new FileInputStream(SettingsFrame.getTmp().getAbsolutePath() + File.separator + "fileRemoved.txt"), StandardCharsets.UTF_8))) {
-                while (!SettingsFrame.getMainExit()) {
-                    if (!search.isManualUpdate()) {
-                        if ((filesToRemove = readerRemove.readLine()) != null) {
-                            if (!filesToRemove.contains(SettingsFrame.getDataPath())) {
-                                search.addToRecycleBin(filesToRemove);
-                                System.out.println("删除" + filesToRemove);
-                            }
-                        }
-                    }
-                    Thread.sleep(100);
-                }
-            } catch (InterruptedException | IOException ignored) {
-
-            }
-        });
-
-
-        fixedThreadPool.execute(() -> {
-            // 时间检测线程
-            long count = 0;
-            try {
-                while (!SettingsFrame.getMainExit()) {
-                    boolean isUsing = searchBar.isUsing();
-                    count += 100;
-                    if (count >= (SettingsFrame.getUpdateTimeLimit() << 10) && !isUsing && !search.isManualUpdate()) {
-                        count = 0;
-                        if (search.isUsable() && (!searchBar.isUsing())) {
-                            search.mergeFileToList();
-                        }
-                    }
-                    Thread.sleep(100);
-                }
-            } catch (InterruptedException ignore) {
-
-            }
-        });
-
-
-        //搜索线程
-        fixedThreadPool.execute(() -> {
-            try {
-                while (!SettingsFrame.getMainExit()) {
-                    if (search.isManualUpdate()) {
-                        search.setUsable(false);
-                        searchBar.closeAllConnection();
-                        search.updateLists(SettingsFrame.getIgnorePath(), SettingsFrame.getSearchDepth());
-                    }
-                    Thread.sleep(100);
-                }
-            } catch (InterruptedException ignored) {
-
-            }
-        });
-
         try {
-            while (!SettingsFrame.getMainExit()) {
+            while (SettingsFrame.isNotMainExit()) {
                 // 主循环开始
                 Thread.sleep(100);
             }
             CheckHotKey.getInstance().stopListen();
-            File CLOSESign = new File(SettingsFrame.getTmp().getAbsolutePath() + File.separator + "CLOSE");
-            CLOSESign.createNewFile();
-            fixedThreadPool.shutdownNow();
+            FileMonitor.INSTANCE.stop_monitor();
+            Thread.sleep(8000);
             deleteFile(SettingsFrame.getTmp().getAbsolutePath() + File.separator + "fileAdded.txt");
             deleteFile(SettingsFrame.getTmp().getAbsolutePath() + File.separator + "fileRemoved.txt");
-            searchBar.closeThreadPool();
-            Thread.sleep(8000);
             System.exit(0);
-        } catch (InterruptedException | IOException ignored) {
+        } catch (InterruptedException ignored) {
 
+        }
+    }
+
+    private static void initDatabase() {
+        Connection conn = null;
+        Statement stmt;
+        String sql = "CREATE TABLE list";
+        try {
+            Class.forName("org.sqlite.JDBC");
+            conn = DriverManager.getConnection("jdbc:sqlite:data.db");
+            System.out.println("open database successfully");
+            stmt = conn.createStatement();
+            stmt.execute("BEGIN;");
+            for (int i = 0; i < 26; i++) {
+                String command = sql + i + " " + "(PATH text unique)" + ";";
+                stmt.executeUpdate(command);
+            }
+            stmt.execute("COMMIT");
+        } catch (Exception e) {
+            System.err.println("initialize database error");
+        } finally {
+            try {
+                if (conn != null) {
+                    conn.close();
+                }
+            } catch (SQLException ignored) {
+
+            }
         }
     }
 
     private static void releaseAllDependence(boolean is64Bit) {
         if (is64Bit) {
-            copyOrIgnoreFile("user/fileMonitor.dll", "/win32-x86-64/fileMonitor64.dll");
-            copyOrIgnoreFile("user/getAscII.dll", "/win32-x86-64/getAscII64.dll");
-            copyOrIgnoreFile("user/hotkeyListener.dll", "/win32-x86-64/hotkeyListener64.dll");
-            copyOrIgnoreFile("user/isLocalDisk.dll", "/win32-x86-64/isLocalDisk64.dll");
-            copyOrIgnoreFile("user/fileSearcher.exe", "/fileSearcher64.exe");
-            copyOrIgnoreFile("user/restart.exe", "/restart64.exe");
+            copyOrIgnoreFile("user/fileMonitor.dll", "/win32-x86-64/fileMonitor.dll");
+            copyOrIgnoreFile("user/getAscII.dll", "/win32-x86-64/getAscII.dll");
+            copyOrIgnoreFile("user/hotkeyListener.dll", "/win32-x86-64/hotkeyListener.dll");
+            copyOrIgnoreFile("user/isLocalDisk.dll", "/win32-x86-64/isLocalDisk.dll");
+            copyOrIgnoreFile("user/fileSearcher.exe", "/win32-x86-64/fileSearcher.exe");
+            copyOrIgnoreFile("user/restart.exe", "/win32-x86-64/restart.exe");
         } else {
-            copyOrIgnoreFile("user/fileMonitor.dll", "/win32-x86/fileMonitor86.dll");
-            copyOrIgnoreFile("user/getAscII.dll", "/win32-x86/getAscII86.dll");
-            copyOrIgnoreFile("user/hotkeyListener.dll", "/win32-x86/hotkeyListener86.dll");
-            copyOrIgnoreFile("user/isLocalDisk.dll", "/win32-x86/isLocalDisk86.dll");
-            copyOrIgnoreFile("user/fileSearcher.exe", "/fileSearcher86.exe");
-            copyOrIgnoreFile("user/restart.exe", "/restart86.exe");
+            copyOrIgnoreFile("user/fileMonitor.dll", "/win32-x86/fileMonitor.dll");
+            copyOrIgnoreFile("user/getAscII.dll", "/win32-x86/getAscII.dll");
+            copyOrIgnoreFile("user/hotkeyListener.dll", "/win32-x86/hotkeyListener.dll");
+            copyOrIgnoreFile("user/isLocalDisk.dll", "/win32-x86/isLocalDisk.dll");
+            copyOrIgnoreFile("user/fileSearcher.exe", "/win32-x86/fileSearcher.exe");
+            copyOrIgnoreFile("user/restart.exe", "/win32-x86/restart.exe");
         }
         copyOrIgnoreFile("user/shortcutGenerator.vbs", "/shortcutGenerator.vbs");
+        copyOrIgnoreFile("user/sqlite3.dll", "/sqlite3.dll");
     }
 
     private static void copyOrIgnoreFile(String path, String rootPath) {
@@ -260,9 +203,9 @@ public class MainClass {
         //复制updater.exe
         if (isUpdate) {
             if (SettingsFrame.name.contains("x64")) {
-                copyOrIgnoreFile("updater.exe", "/updater64.exe");
+                copyOrIgnoreFile("updater.exe", "/win32-x86-64/updater.exe");
             } else {
-                copyOrIgnoreFile("updater.exe", "/updater86.exe");
+                copyOrIgnoreFile("updater.exe", "/win32-x86/updater.exe");
             }
             File updaterExe = new File("updater.exe");
             String absPath = updaterExe.getAbsolutePath();
@@ -284,13 +227,15 @@ public class MainClass {
         //user
         isFailed = createFileOrFolder("user", false);
         //tmp
-        File tmp = SettingsFrame.getTmp();
+        File tmp = new File("tmp");
         String tempPath = tmp.getAbsolutePath();
         isFailed = isFailed && createFileOrFolder(tmp, false);
         isFailed = isFailed && createFileOrFolder(tempPath + File.separator + "fileAdded.txt", true);
         isFailed = isFailed && createFileOrFolder(tempPath + File.separator + "fileRemoved.txt", true);
         //cache.dat
         isFailed = isFailed && createFileOrFolder("user/cache.dat", true);
+        //cmd.txt
+        isFailed = isFailed && createFileOrFolder("user/cmds.txt", true);
         releaseAllDependence(SettingsFrame.name.contains("x64"));
         return isFailed;
     }

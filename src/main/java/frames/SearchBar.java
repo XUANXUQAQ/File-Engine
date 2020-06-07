@@ -1,7 +1,9 @@
 package frames;
 
 
+import DllInterface.FileMonitor;
 import DllInterface.GetAscII;
+import DllInterface.IsLocalDisk;
 import getIcon.GetIcon;
 import search.Search;
 
@@ -17,8 +19,15 @@ import java.awt.event.*;
 import java.io.*;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
-import java.util.concurrent.*;
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
@@ -30,7 +39,6 @@ public class SearchBar {
     private static Border border;
     private JFrame searchBar;
     private CopyOnWriteArrayList<String> listResults;
-    private ConcurrentHashMap<String, ReaderInfo> readerMap;
     private JLabel label1;
     private JLabel label2;
     private JLabel label3;
@@ -63,28 +71,29 @@ public class SearchBar {
     private long visibleStartTime = 0;
     private ExecutorService fixedThreadPool;
     private ConcurrentLinkedQueue<String> tempResults;
-    private ConcurrentLinkedQueue<String> pathQueue;
+    private ConcurrentLinkedQueue<String> commandQueue;
     private volatile String[] searchCase;
     private volatile String searchText;
     private volatile String[] keywords;
     private Search search;
     private TaskBar taskBar;
+    private static volatile SearchBar instance;
 
 
     private SearchBar() {
         listResults = new CopyOnWriteArrayList<>();
         border = BorderFactory.createLineBorder(new Color(73, 162, 255, 255));
         searchBar = new JFrame();
-        readerMap = new ConcurrentHashMap<>();
         labelCount = new AtomicInteger(0);
         semicolon = Pattern.compile(";");
         resultSplit = Pattern.compile(":");
         panel = new JPanel();
-        fixedThreadPool = Executors.newFixedThreadPool(15);
+        fixedThreadPool = Executors.newFixedThreadPool(18);
         tempResults = new ConcurrentLinkedQueue<>();
-        pathQueue = new ConcurrentLinkedQueue<>();
+        commandQueue = new ConcurrentLinkedQueue<>();
         search = Search.getInstance();
         taskBar = TaskBar.getInstance();
+
 
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize(); // 获取屏幕大小
         int width = screenSize.width;
@@ -202,7 +211,14 @@ public class SearchBar {
     }
 
     public static SearchBar getInstance() {
-        return SearchBarBuilder.instance;
+        if (instance == null) {
+            synchronized (SearchBar.class) {
+                if (instance == null) {
+                    instance = new SearchBar();
+                }
+            }
+        }
+        return instance;
     }
 
     private void initLabel(Font font, int width, int height, int positionY, JLabel label) {
@@ -1914,12 +1930,30 @@ public class SearchBar {
         });
     }
 
+    private void startMonitorDisk() {
+        File[] roots = File.listRoots();
+        if (SettingsFrame.isAdmin()) {
+            FileMonitor.INSTANCE.set_output(SettingsFrame.getTmp().getAbsolutePath());
+            for (File root : roots) {
+                boolean isLocal = IsLocalDisk.INSTANCE.isLocalDisk(root.getAbsolutePath());
+                if (isLocal) {
+                    FileMonitor.INSTANCE.monitor(root.getAbsolutePath());
+                }
+            }
+        } else {
+            System.out.println("Not administrator, file monitoring function is turned off");
+            taskBar.showMessage(SettingsFrame.getTranslation("Warning"), SettingsFrame.getTranslation("Not administrator, file monitoring function is turned off"));
+        }
+    }
+
     private void initThreadPool() {
+        //监控磁盘变化
+        fixedThreadPool.execute(this::startMonitorDisk);
         fixedThreadPool.execute(() -> {
             //合并搜索结果线程
             try {
                 String record;
-                while (!SettingsFrame.getMainExit()) {
+                while (SettingsFrame.isNotMainExit()) {
                     if (isCacheAndPrioritySearched) {
                         while ((record = tempResults.poll()) != null) {
                             if (!listResults.contains(record)) {
@@ -1937,7 +1971,7 @@ public class SearchBar {
         fixedThreadPool.execute(() -> {
             //锁住MouseMotion检测，阻止同时发出两个动作
             try {
-                while (!SettingsFrame.getMainExit()) {
+                while (SettingsFrame.isNotMainExit()) {
                     if (System.currentTimeMillis() - mouseWheelTime > 500) {
                         isLockMouseMotion = false;
                     }
@@ -1949,39 +1983,8 @@ public class SearchBar {
         });
 
         fixedThreadPool.execute(() -> {
-            //连接管理线程
             try {
-                while (!SettingsFrame.getMainExit()) {
-                    if ((!isUsing) && search.isUsable()) {
-                        for (String eachKey : readerMap.keySet()) {
-                            ReaderInfo info = readerMap.get(eachKey);
-                            if (System.currentTimeMillis() - info.time > SettingsFrame.getConnectionTimeLimit()) {
-                                info.reader.close();
-                                readerMap.remove(eachKey, info);
-                            }
-                        }
-                        if (readerMap.size() < SettingsFrame.getMinConnectionNum()) {
-                            String path = randomGeneratePath();
-                            if (isExist(path)) {
-                                if (readerMap.get(path) == null) {
-                                    ReaderInfo _tmp = new ReaderInfo(System.currentTimeMillis(),
-                                            new BufferedReader(new InputStreamReader(new FileInputStream(path), StandardCharsets.UTF_8), getBufferSize(path)));
-                                    readerMap.put(path, _tmp);
-                                }
-                            }
-                        }
-                    }
-                    Thread.sleep(500);
-                }
-                closeAllConnection();
-            } catch (InterruptedException | IOException ignored) {
-
-            }
-        });
-
-        fixedThreadPool.execute(() -> {
-            try {
-                while (!SettingsFrame.getMainExit()) {
+                while (SettingsFrame.isNotMainExit()) {
                     //字体染色线程
                     //判定当前选定位置
                     int position = getCurrentPos();
@@ -2070,7 +2073,7 @@ public class SearchBar {
             try {
                 boolean isLabel1Chosen, isLabel2Chosen, isLabel3Chosen, isLabel4Chosen,
                         isLabel5Chosen, isLabel6Chosen, isLabel7Chosen, isLabel8Chosen;
-                while (!SettingsFrame.getMainExit()) {
+                while (SettingsFrame.isNotMainExit()) {
                     isLabel1Chosen = false;
                     isLabel2Chosen = false;
                     isLabel3Chosen = false;
@@ -2193,7 +2196,7 @@ public class SearchBar {
 
         fixedThreadPool.execute(() -> {
             try {
-                while (!SettingsFrame.getMainExit()) {
+                while (SettingsFrame.isNotMainExit()) {
                     if (isUsing) {
                         panel.repaint();
                     }
@@ -2205,266 +2208,147 @@ public class SearchBar {
         });
 
         fixedThreadPool.execute(() -> {
-            //检测缓存大小 过大时进行清理
-            try {
-                while (!SettingsFrame.getMainExit()) {
-                    if (!search.isManualUpdate() && !isUsing) {
-                        if (search.getRecycleBinSize() > 1000) {
-                            closeAllConnection();
-                            System.out.println("The recycle bin has been detected to be too large, and it is automatically cleaned up");
-                            search.setUsable(false);
-                            search.mergeAndClearRecycleBin();
-                            search.setUsable(true);
-                        }
-                    }
-                    Thread.sleep(5000);
-                }
-            } catch (InterruptedException ignored) {
-
-            }
-        });
-
-        fixedThreadPool.execute(() -> {
             //添加搜索路径线程
-            String listPath;
+            String command;
             int ascII;
             try {
-                while (!SettingsFrame.getMainExit()) {
+                while (SettingsFrame.isNotMainExit()) {
                     if (isStartSearchLocal) {
                         isStartSearchLocal = false;
                         tempResults.clear();
                         ascII = getAscIISum(searchText);
-                        String dataPath = SettingsFrame.getDataPath();
 
                         if (0 <= ascII && ascII <= 100) {
-                            for (int i = 0; i < 2500; i += 100) {
-                                int name = i + 100;
-                                listPath = dataPath + File.separator + "list" + i + "-" + name + ".dat";
-                                pathQueue.add(listPath);
+                            for (int i = 0; i < 26; i++) {
+                                command = "SELECT * FROM list" + i + ";";
+                                commandQueue.add(command);
                             }
-                            pathQueue.add(dataPath + File.separator + "list2500-.dat");
-
                         } else if (100 < ascII && ascII <= 200) {
-
-                            for (int i = 100; i < 2500; i += 100) {
-                                int name = i + 100;
-                                listPath = dataPath + File.separator + "list" + i + "-" + name + ".dat";
-                                pathQueue.add(listPath);
+                            for (int i = 1; i < 26; i++) {
+                                command = "SELECT * FROM list" + i + ";";
+                                commandQueue.add(command);
                             }
-                            pathQueue.add(dataPath + File.separator + "list2500-.dat");
-
                         } else if (200 < ascII && ascII <= 300) {
-
-                            for (int i = 200; i < 2500; i += 100) {
-                                int name = i + 100;
-                                listPath = dataPath + File.separator + "list" + i + "-" + name + ".dat";
-                                pathQueue.add(listPath);
+                            for (int i = 2; i < 26; i++) {
+                                command = "SELECT * FROM list" + i + ";";
+                                commandQueue.add(command);
                             }
-                            pathQueue.add(dataPath + File.separator + "list2500-.dat");
-
                         } else if (300 < ascII && ascII <= 400) {
-
-                            for (int i = 300; i < 2500; i += 100) {
-                                int name = i + 100;
-                                listPath = dataPath + File.separator + "list" + i + "-" + name + ".dat";
-                                pathQueue.add(listPath);
+                            for (int i = 3; i < 26; i++) {
+                                command = "SELECT * FROM list" + i + ";";
+                                commandQueue.add(command);
                             }
-                            pathQueue.add(dataPath + File.separator + "list2500-.dat");
-
                         } else if (400 < ascII && ascII <= 500) {
-
-                            for (int i = 400; i < 2500; i += 100) {
-                                int name = i + 100;
-                                listPath = dataPath + File.separator + "list" + i + "-" + name + ".dat";
-                                pathQueue.add(listPath);
+                            for (int i = 4; i < 26; i++) {
+                                command = "SELECT * FROM list" + i + ";";
+                                commandQueue.add(command);
                             }
-                            pathQueue.add(dataPath + File.separator + "list2500-.dat");
-
                         } else if (500 < ascII && ascII <= 600) {
-
-                            for (int i = 500; i < 2500; i += 100) {
-                                int name = i + 100;
-                                listPath = dataPath + File.separator + "list" + i + "-" + name + ".dat";
-                                pathQueue.add(listPath);
+                            for (int i = 5; i < 26; i++) {
+                                command = "SELECT * FROM list" + i + ";";
+                                commandQueue.add(command);
                             }
-                            pathQueue.add(dataPath + File.separator + "list2500-.dat");
-
                         } else if (600 < ascII && ascII <= 700) {
-
-                            for (int i = 600; i < 2500; i += 100) {
-                                int name = i + 100;
-                                listPath = dataPath + File.separator + "list" + i + "-" + name + ".dat";
-                                pathQueue.add(listPath);
+                            for (int i = 6; i < 26; i++) {
+                                command = "SELECT * FROM list" + i + ";";
+                                commandQueue.add(command);
                             }
-                            pathQueue.add(dataPath + File.separator + "list2500-.dat");
-
                         } else if (700 < ascII && ascII <= 800) {
-
-                            for (int i = 700; i < 2500; i += 100) {
-                                int name = i + 100;
-                                listPath = dataPath + File.separator + "list" + i + "-" + name + ".dat";
-                                pathQueue.add(listPath);
+                            for (int i = 7; i < 26; i++) {
+                                command = "SELECT * FROM list" + i + ";";
+                                commandQueue.add(command);
                             }
-                            pathQueue.add(dataPath + File.separator + "list2500-.dat");
-
                         } else if (800 < ascII && ascII <= 900) {
-
-                            for (int i = 800; i < 2500; i += 100) {
-                                int name = i + 100;
-                                listPath = dataPath + File.separator + "list" + i + "-" + name + ".dat";
-                                pathQueue.add(listPath);
+                            for (int i = 8; i < 26; i++) {
+                                command = "SELECT * FROM list" + i + ";";
+                                commandQueue.add(command);
                             }
-                            pathQueue.add(dataPath + File.separator + "list2500-.dat");
-
                         } else if (900 < ascII && ascII <= 1000) {
-
-                            for (int i = 900; i < 2500; i += 100) {
-                                int name = i + 100;
-                                listPath = dataPath + File.separator + "list" + i + "-" + name + ".dat";
-                                pathQueue.add(listPath);
+                            for (int i = 9; i < 26; i++) {
+                                command = "SELECT * FROM list" + i + ";";
+                                commandQueue.add(command);
                             }
-                            pathQueue.add(dataPath + File.separator + "list2500-.dat");
-
                         } else if (1000 < ascII && ascII <= 1100) {
-
-                            for (int i = 1000; i < 2500; i += 100) {
-                                int name = i + 100;
-                                listPath = dataPath + File.separator + "list" + i + "-" + name + ".dat";
-                                pathQueue.add(listPath);
+                            for (int i = 10; i < 26; i++) {
+                                command = "SELECT * FROM list" + i + ";";
+                                commandQueue.add(command);
                             }
-                            pathQueue.add(dataPath + File.separator + "list2500-.dat");
-
                         } else if (1100 < ascII && ascII <= 1200) {
-
-                            for (int i = 1100; i < 2500; i += 100) {
-                                int name = i + 100;
-                                listPath = dataPath + File.separator + "list" + i + "-" + name + ".dat";
-                                pathQueue.add(listPath);
+                            for (int i = 11; i < 26; i++) {
+                                command = "SELECT * FROM list" + i + ";";
+                                commandQueue.add(command);
                             }
-                            pathQueue.add(dataPath + File.separator + "list2500-.dat");
-
                         } else if (1200 < ascII && ascII <= 1300) {
-
-                            for (int i = 1200; i < 2500; i += 100) {
-                                int name = i + 100;
-                                listPath = dataPath + File.separator + "list" + i + "-" + name + ".dat";
-                                pathQueue.add(listPath);
+                            for (int i = 12; i < 26; i++) {
+                                command = "SELECT * FROM list" + i + ";";
+                                commandQueue.add(command);
                             }
-                            pathQueue.add(dataPath + File.separator + "list2500-.dat");
-
                         } else if (1300 < ascII && ascII <= 1400) {
-
-                            for (int i = 1300; i < 2500; i += 100) {
-                                int name = i + 100;
-                                listPath = dataPath + File.separator + "list" + i + "-" + name + ".dat";
-                                pathQueue.add(listPath);
+                            for (int i = 13; i < 26; i++) {
+                                command = "SELECT * FROM list" + i + ";";
+                                commandQueue.add(command);
                             }
-                            pathQueue.add(dataPath + File.separator + "list2500-.dat");
-
                         } else if (1400 < ascII && ascII <= 1500) {
-
-                            for (int i = 1400; i < 2500; i += 100) {
-                                int name = i + 100;
-                                listPath = dataPath + File.separator + "list" + i + "-" + name + ".dat";
-                                pathQueue.add(listPath);
+                            for (int i = 14; i < 26; i++) {
+                                command = "SELECT * FROM list" + i + ";";
+                                commandQueue.add(command);
                             }
-                            pathQueue.add(dataPath + File.separator + "list2500-.dat");
-
                         } else if (1500 < ascII && ascII <= 1600) {
-
-                            for (int i = 1500; i < 2500; i += 100) {
-                                int name = i + 100;
-                                listPath = dataPath + File.separator + "list" + i + "-" + name + ".dat";
-                                pathQueue.add(listPath);
+                            for (int i = 15; i < 26; i++) {
+                                command = "SELECT * FROM list" + i + ";";
+                                commandQueue.add(command);
                             }
-                            pathQueue.add(dataPath + File.separator + "list2500-.dat");
-
                         } else if (1600 < ascII && ascII <= 1700) {
-
-                            for (int i = 1600; i < 2500; i += 100) {
-                                int name = i + 100;
-                                listPath = dataPath + File.separator + "list" + i + "-" + name + ".dat";
-                                pathQueue.add(listPath);
+                            for (int i = 16; i < 26; i++) {
+                                command = "SELECT * FROM list" + i + ";";
+                                commandQueue.add(command);
                             }
-                            pathQueue.add(dataPath + File.separator + "list2500-.dat");
-
                         } else if (1700 < ascII && ascII <= 1800) {
-
-                            for (int i = 1700; i < 2500; i += 100) {
-                                int name = i + 100;
-                                listPath = dataPath + File.separator + "list" + i + "-" + name + ".dat";
-                                pathQueue.add(listPath);
+                            for (int i = 17; i < 26; i++) {
+                                command = "SELECT * FROM list" + i + ";";
+                                commandQueue.add(command);
                             }
-                            pathQueue.add(dataPath + File.separator + "list2500-.dat");
-
                         } else if (1800 < ascII && ascII <= 1900) {
-
-                            for (int i = 1800; i < 2500; i += 100) {
-                                int name = i + 100;
-                                listPath = dataPath + File.separator + "list" + i + "-" + name + ".dat";
-                                pathQueue.add(listPath);
+                            for (int i = 18; i < 26; i++) {
+                                command = "SELECT * FROM list" + i + ";";
+                                commandQueue.add(command);
                             }
-                            pathQueue.add(dataPath + File.separator + "list2500-.dat");
-
                         } else if (1900 < ascII && ascII <= 2000) {
-
-                            for (int i = 1900; i < 2500; i += 100) {
-                                int name = i + 100;
-                                listPath = dataPath + File.separator + "list" + i + "-" + name + ".dat";
-                                pathQueue.add(listPath);
+                            for (int i = 19; i < 26; i++) {
+                                command = "SELECT * FROM list" + i + ";";
+                                commandQueue.add(command);
                             }
-                            pathQueue.add(dataPath + File.separator + "list2500-.dat");
-
                         } else if (2000 < ascII && ascII <= 2100) {
-
-                            for (int i = 2000; i < 2500; i += 100) {
-                                int name = i + 100;
-                                listPath = dataPath + File.separator + "list" + i + "-" + name + ".dat";
-                                pathQueue.add(listPath);
+                            for (int i = 20; i < 26; i++) {
+                                command = "SELECT * FROM list" + i + ";";
+                                commandQueue.add(command);
                             }
-                            pathQueue.add(dataPath + File.separator + "list2500-.dat");
-
                         } else if (2100 < ascII && ascII <= 2200) {
-
-                            for (int i = 2100; i < 2500; i += 100) {
-                                int name = i + 100;
-                                listPath = dataPath + File.separator + "list" + i + "-" + name + ".dat";
-                                pathQueue.add(listPath);
+                            for (int i = 21; i < 26; i++) {
+                                command = "SELECT * FROM list" + i + ";";
+                                commandQueue.add(command);
                             }
-                            pathQueue.add(dataPath + File.separator + "list2500-.dat");
-
                         } else if (2200 < ascII && ascII <= 2300) {
-
-                            for (int i = 2200; i < 2500; i += 100) {
-                                int name = i + 100;
-                                listPath = dataPath + File.separator + "list" + i + "-" + name + ".dat";
-                                pathQueue.add(listPath);
+                            for (int i = 22; i < 26; i++) {
+                                command = "SELECT * FROM list" + i + ";";
+                                commandQueue.add(command);
                             }
-                            pathQueue.add(dataPath + File.separator + "list2500-.dat");
-
                         } else if (2300 < ascII && ascII <= 2400) {
-
-                            for (int i = 2300; i < 2500; i += 100) {
-                                int name = i + 100;
-                                listPath = dataPath + File.separator + "list" + i + "-" + name + ".dat";
-                                pathQueue.add(listPath);
+                            for (int i = 23; i < 26; i++) {
+                                command = "SELECT * FROM list" + i + ";";
+                                commandQueue.add(command);
                             }
-                            pathQueue.add(dataPath + File.separator + "list2500-.dat");
-
                         } else if (2400 < ascII && ascII <= 2500) {
-
-                            for (int i = 2400; i < 2500; i += 100) {
-                                int name = i + 100;
-                                listPath = dataPath + File.separator + "list" + i + "-" + name + ".dat";
-                                pathQueue.add(listPath);
+                            for (int i = 24; i < 26; i++) {
+                                command = "SELECT * FROM list" + i + ";";
+                                commandQueue.add(command);
                             }
-                            pathQueue.add(dataPath + File.separator + "list2500-.dat");
-
                         } else {
-                            pathQueue.add(dataPath + File.separator + "list2500-.dat");
+                            command = "SELECT * FROM list25;";
+                            commandQueue.add(command);
                         }
                     }
-                    Thread.sleep(20);
+                    Thread.sleep(10);
                 }
             } catch (InterruptedException ignored) {
 
@@ -2473,17 +2357,17 @@ public class SearchBar {
 
         for (int i = 0; i < 6; i++) {
             fixedThreadPool.execute(() -> {
-                String path;
-                try {
-                    while (!SettingsFrame.getMainExit()) {
-                        if (!pathQueue.isEmpty()) {
-                            while ((path = pathQueue.poll()) != null) {
-                                searchAndAddToTempResults(System.currentTimeMillis(), path);
+                String command;
+                try (Connection databaseConn = DriverManager.getConnection("jdbc:sqlite:data.db"); Statement stmt = databaseConn.createStatement()) {
+                    while (SettingsFrame.isNotMainExit()) {
+                        if (!commandQueue.isEmpty()) {
+                            while ((command = commandQueue.poll()) != null) {
+                                searchAndAddToTempResults(System.currentTimeMillis(), command, stmt);
                             }
                         }
                         Thread.sleep(10);
                     }
-                } catch (InterruptedException ignored) {
+                } catch (SQLException | InterruptedException ignored) {
 
                 }
             });
@@ -2492,7 +2376,7 @@ public class SearchBar {
         fixedThreadPool.execute(() -> {
             //缓存和常用文件夹搜索线程
             //停顿时间0.5s，每一次输入会更新一次startTime，该线程记录endTime
-            while (!SettingsFrame.getMainExit()) {
+            while (SettingsFrame.isNotMainExit()) {
                 long endTime = System.currentTimeMillis();
                 if ((endTime - startTime > 500) && (timer)) {
                     timer = false; //开始搜索 计时停止
@@ -2509,7 +2393,7 @@ public class SearchBar {
                         if (isCommandMode) {
                             if (text.equals(":update")) {
                                 search.setManualUpdate(true);
-                                closeAllConnection();
+                                clearDatabaseTables();
                                 clearLabel();
                                 taskBar.showMessage(SettingsFrame.getTranslation("Info"), SettingsFrame.getTranslation("Updating file index"));
                                 clearTextFieldText();
@@ -2583,7 +2467,7 @@ public class SearchBar {
                         if (search.isManualUpdate()) {
                             if (searchWaiter == null || !searchWaiter.isAlive()) {
                                 searchWaiter = new Thread(() -> {
-                                    while (!SettingsFrame.getMainExit()) {
+                                    while (SettingsFrame.isNotMainExit()) {
                                         if (Thread.currentThread().isInterrupted()) {
                                             break;
                                         }
@@ -2614,6 +2498,80 @@ public class SearchBar {
                 } catch (InterruptedException ignored) {
 
                 }
+            }
+        });
+
+        fixedThreadPool.execute(() -> {
+            //检测文件添加线程
+            String filesToAdd;
+            try (BufferedReader readerAdd = new BufferedReader(new InputStreamReader(
+                    new FileInputStream(SettingsFrame.getTmp().getAbsolutePath() + File.separator + "fileAdded.txt"), StandardCharsets.UTF_8))) {
+                while (SettingsFrame.isNotMainExit()) {
+                    if (!search.isManualUpdate()) {
+                        if ((filesToAdd = readerAdd.readLine()) != null) {
+                            search.addFileToLoadBin(filesToAdd);
+                            System.out.println("添加" + filesToAdd);
+                        }
+                    }
+                    Thread.sleep(100);
+                }
+            } catch (IOException | InterruptedException ignored) {
+
+            }
+        });
+
+        fixedThreadPool.execute(() -> {
+            String filesToRemove;
+            try (BufferedReader readerRemove = new BufferedReader(new InputStreamReader(
+                    new FileInputStream(SettingsFrame.getTmp().getAbsolutePath() + File.separator + "fileRemoved.txt"), StandardCharsets.UTF_8))) {
+                while (SettingsFrame.isNotMainExit()) {
+                    if (!search.isManualUpdate()) {
+                        if ((filesToRemove = readerRemove.readLine()) != null) {
+                            search.addToRecycleBin(filesToRemove);
+                            System.out.println("删除" + filesToRemove);
+                        }
+                    }
+                    Thread.sleep(100);
+                }
+            } catch (InterruptedException | IOException ignored) {
+
+            }
+        });
+
+
+        fixedThreadPool.execute(() -> {
+            // 时间检测线程
+            long count = 0;
+            try (Connection databaseConn = DriverManager.getConnection("jdbc:sqlite:data.db"); Statement stmt = databaseConn.createStatement()) {
+                while (SettingsFrame.isNotMainExit()) {
+                    count += 100;
+                    if (count >= (SettingsFrame.getUpdateTimeLimit() << 10) && !isUsing && !search.isManualUpdate()) {
+                        count = 0;
+                        if (search.isUsable()) {
+                            search.executeAllCommands(stmt);
+                        }
+                    }
+                    Thread.sleep(100);
+                }
+            } catch (InterruptedException | SQLException ignore) {
+
+            }
+        });
+
+
+        //搜索本地数据线程
+        fixedThreadPool.execute(() -> {
+            try (Connection databaseConn = DriverManager.getConnection("jdbc:sqlite:data.db"); Statement stmt = databaseConn.createStatement()) {
+                while (SettingsFrame.isNotMainExit()) {
+                    if (search.isManualUpdate()) {
+                        search.setUsable(false);
+                        clearDatabaseTables();
+                        search.updateLists(SettingsFrame.getIgnorePath(), SettingsFrame.getSearchDepth(), stmt);
+                    }
+                    Thread.sleep(100);
+                }
+            } catch (SQLException | InterruptedException ignored) {
+
             }
         });
     }
@@ -2694,56 +2652,30 @@ public class SearchBar {
                 listResults.add(path);
             }
         }
-        return listResults.size() > 100;
+        return listResults.size() + tempResults.size() > 100;
     }
 
-    private void searchAndAddToTempResults(long time, String path) {
+    private void searchAndAddToTempResults(long time, String command, Statement stmt) {
         //为label添加结果
         try {
             String each;
             boolean isResultsExcessive = false;
-            ReaderInfo readerInfo = readerMap.get(path);
-            if (readerInfo != null) {
-                BufferedReader reader = readerInfo.reader;
-                while ((each = reader.readLine()) != null) {
-                    if (startTime > time) { //用户重新输入了信息
-                        break;
-                    }
-                    if (search.isUsable()) {
-                        isResultsExcessive = checkIsMatchedAndAddToList(each, true);
-                    }
-                    if (isResultsExcessive) {
-                        break;
-                    }
+            ResultSet resultSet = stmt.executeQuery(command);
+            while (resultSet.next()) {
+                each = resultSet.getString("PATH");
+                if (startTime > time) { //用户重新输入了信息
+                    resultSet.close();
+                    break;
                 }
-                //关闭输入流并打开一个新的流放入map
-                reader.close();
-                reader = new BufferedReader(new InputStreamReader(new FileInputStream(path), StandardCharsets.UTF_8), getBufferSize(path));
-                readerInfo = new ReaderInfo(System.currentTimeMillis(), reader);
-                readerMap.put(path, readerInfo);
-            } else {
-                BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(path), StandardCharsets.UTF_8), getBufferSize(path));
-                while ((each = reader.readLine()) != null) {
-                    if (startTime > time) { //用户重新输入了信息
-                        break;
-                    }
-                    if (search.isUsable()) {
-                        isResultsExcessive = checkIsMatchedAndAddToList(each, true);
-                    }
-                    if (isResultsExcessive) {
-                        break;
-                    }
+                if (search.isUsable()) {
+                    isResultsExcessive = checkIsMatchedAndAddToList(each, true);
                 }
-                //检测大小，过大则关闭，否则放入map
-                if (readerMap.size() < SettingsFrame.getMaxConnectionNum()) {
-                    reader = new BufferedReader(new InputStreamReader(new FileInputStream(path), StandardCharsets.UTF_8), getBufferSize(path));
-                    ReaderInfo temp = new ReaderInfo(System.currentTimeMillis(), reader);
-                    readerMap.put(path, temp);
-                } else {
-                    reader.close();
+                if (isResultsExcessive) {
+                    resultSet.close();
+                    break;
                 }
             }
-        } catch (IOException ignored) {
+        } catch (SQLException ignored) {
 
         }
     }
@@ -2872,27 +2804,11 @@ public class SearchBar {
 
     }
 
-    private int getBufferSize(String filePath) {
-        File file = new File(filePath);
-        long fileSize = file.length();
-        int bufferSize = (int) fileSize / 150;
-        if (bufferSize < 8192) {
-            return 8192;
-        } else if (bufferSize > 50000) {
-            return 50000;
-        }
-        return bufferSize;
-    }
-
     private void clearALabel(JLabel label) {
         label.setBackground(null);
         label.setText(null);
         label.setIcon(null);
         label.setBorder(null);
-    }
-
-    public void closeThreadPool() {
-        fixedThreadPool.shutdownNow();
     }
 
     private void clearLabel() {
@@ -3173,7 +3089,7 @@ public class SearchBar {
             searchBar.setVisible(false);
         }
         clearLabel();
-        pathQueue.clear();
+        commandQueue.clear();
         startTime = System.currentTimeMillis();//结束搜索
         isUsing = false;
         labelCount.set(0);
@@ -3195,19 +3111,6 @@ public class SearchBar {
         } catch (NullPointerException ignored) {
 
         }
-    }
-
-    private String randomGeneratePath() {
-        Random random = new Random();
-        String path;
-        int randomInt = random.nextInt(26);
-        String dataPath = SettingsFrame.getDataPath();
-        if (randomInt < 25) {
-            path = dataPath + File.separator + "list" + randomInt * 100 + "-" + (randomInt + 1) * 100 + ".dat";
-        } else {
-            path = dataPath + File.separator + "list2500-.dat";
-        }
-        return path;
     }
 
     public boolean isVisible() {
@@ -3249,49 +3152,17 @@ public class SearchBar {
         textField.setBackground(new Color(colorNum));
     }
 
-    public int currentConnectionNum() {
-        return readerMap.size();
-    }
-
-    public void closeAllConnection() {
-        try {
-            for (String eachKey : readerMap.keySet()) {
-                ReaderInfo tmp = readerMap.get(eachKey);
-                tmp.reader.close();
-                readerMap.remove(eachKey, tmp);
+    public void clearDatabaseTables() {
+        try (Connection databaseConn = DriverManager.getConnection("jdbc:sqlite:data.db"); Statement stmt = databaseConn.createStatement()) {
+            stmt.execute("BEGIN;");
+            for (int i = 0; i < 26; i++) {
+                String command = "delete from list" + i + ";";
+                stmt.executeUpdate(command);
             }
-        } catch (IOException ignored) {
+            stmt.execute("COMMIT;");
+        } catch (SQLException ignored) {
 
         }
-    }
-
-    public boolean isDataDamaged() {
-        File data = new File(SettingsFrame.getDataPath() + File.separator + "list2500-.dat");
-        if (!data.exists()) {
-            return true;
-        }
-        for (int i = 0; i < 2500; i += 100) {
-            int name = i + 100;
-            data = new File(SettingsFrame.getDataPath() + File.separator + "list" + i + "-" + name + ".dat");
-            if (!data.exists()) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private static class SearchBarBuilder {
-        private static SearchBar instance = new SearchBar();
-    }
-}
-
-class ReaderInfo {
-    public long time;
-    public BufferedReader reader;
-
-    public ReaderInfo(long _time, BufferedReader _reader) {
-        this.time = _time;
-        this.reader = _reader;
     }
 }
 

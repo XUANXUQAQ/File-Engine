@@ -39,5 +39,10 @@
             <artifactId>material-ui-swing</artifactId>
             <version>1.1.1_pre-release_6.1</version>
         </dependency>
+        <dependency>
+            <groupId>org.xerial</groupId>
+            <artifactId>sqlite-jdbc</artifactId>
+            <version>3.31.1</version>
+        </dependency>
     </dependencies>
 </project>
