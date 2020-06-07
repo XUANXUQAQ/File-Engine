@@ -10,5 +10,9 @@ public interface FileMonitor extends Library {
     File f = new File("user");
     FileMonitor INSTANCE = Native.load(f.getAbsolutePath() + File.separator + "fileMonitor.dll", FileMonitor.class);
 
-    void monitor(String path, String output, String closePosition);
+    void monitor(String path);
+
+    void stop_monitor();
+
+    void set_output(String path);
 }
