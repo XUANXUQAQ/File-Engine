@@ -1,0 +1,12 @@
+﻿  fileSearcher.cpp
+D:\Code\C++\fileSearcher\fileSearcher\fileSearcher.cpp(62,31): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
+D:\Code\C++\fileSearcher\fileSearcher\fileSearcher.cpp(310,28): warning C4244: “=”: 从“intptr_t”转换到“long”，可能丢失数据
+D:\Code\C++\fileSearcher\fileSearcher\fileSearcher.cpp(384,68): warning C4267: “=”: 从“size_t”转换到“int”，可能丢失数据
+D:\Code\C++\fileSearcher\fileSearcher\fileSearcher.cpp(387,41): warning C4267: “=”: 从“size_t”转换到“int”，可能丢失数据
+D:\Code\C++\fileSearcher\fileSearcher\fileSearcher.cpp(409,39): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
+  正在生成代码
+  182 of 604 functions (30.1%) were compiled, the rest were copied from previous compilation.
+    78 functions were new in current compilation
+    71 functions had inline decision re-evaluated but remain unchanged
+  已完成代码的生成
+  fileSearcher.vcxproj -> D:\Code\C++\fileSearcher\x64\Release\fileSearcher.exe

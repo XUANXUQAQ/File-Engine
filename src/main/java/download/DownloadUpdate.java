@@ -11,15 +11,20 @@ import java.net.URL;
 import java.net.URLConnection;
 
 public class DownloadUpdate {
-    private JFrame frame = new JFrame();
-    private JProgressBar progressBar = new JProgressBar();
-    private static DownloadUpdate downloadupdate = new DownloadUpdate();
+    private JFrame frame;
+    private JProgressBar progressBar;
+
+    private static class DownloadUpdateBuilder {
+        private static DownloadUpdate instance = new DownloadUpdate();
+    }
 
     public static DownloadUpdate getInstance() {
-        return downloadupdate;
+        return DownloadUpdateBuilder.instance;
     }
 
     private DownloadUpdate() {
+        frame = new JFrame();
+        progressBar = new JProgressBar();
         JPanel panel = new JPanel();
         JButton buttonCancel = new JButton();
         buttonCancel.addActionListener(e -> {

@@ -1,21 +1,28 @@
 import DllInterface.FileMonitor;
+import com.alee.laf.WebLookAndFeel;
 import com.alibaba.fastjson.JSONObject;
-import frames.SearchBar;
 import frames.SettingsFrame;
 import frames.TaskBar;
 import hotkeyListener.CheckHotKey;
-import mdlaf.MaterialLookAndFeel;
 import search.Search;
 
-import javax.swing.*;
 import java.io.*;
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.SQLException;
 import java.sql.Statement;
 
 
 public class MainClass {
+    private static void initializeDllInterface() {
+        try {
+            Class.forName("DllInterface.FileMonitor");
+            Class.forName("DllInterface.IsLocalDisk");
+            Class.forName("DllInterface.HotkeyListener");
+            Class.forName("DllInterface.GetAscII");
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
 
     private static void copyFile(InputStream source, File dest) {
         try (OutputStream os = new FileOutputStream(dest); BufferedInputStream bis = new BufferedInputStream(source); BufferedOutputStream bos = new BufferedOutputStream(os)) {
@@ -67,7 +74,8 @@ public class MainClass {
 
     public static void main(String[] args) {
         try {
-            UIManager.setLookAndFeel(new MaterialLookAndFeel(new MaterialDesign.materialLookAndFeel()));
+            Class.forName("org.sqlite.JDBC");
+            WebLookAndFeel.install();
         } catch (Exception e) {
             e.printStackTrace();
             return;
@@ -78,6 +86,7 @@ public class MainClass {
         } else {
             SettingsFrame.name = "File-Engine-x86.exe";
         }
+
 
         File database = new File("data.db");
         boolean isManualUpdate = false;
@@ -93,8 +102,6 @@ public class MainClass {
             System.exit(-1);
         }
 
-        SettingsFrame.readAllSettings();
-
         startOrIgnoreUpdateAndExit(isUpdateSignExist());
 
         //清空tmp
@@ -105,9 +112,8 @@ public class MainClass {
             System.exit(-1);
         }
 
-        SettingsFrame.getInstance();
+        initializeDllInterface();
 
-        SearchBar searchBar = SearchBar.getInstance();
         Search search = Search.getInstance();
         TaskBar taskBar = TaskBar.getInstance();
         taskBar.showTaskBar();
@@ -129,8 +135,6 @@ public class MainClass {
             CheckHotKey.getInstance().stopListen();
             FileMonitor.INSTANCE.stop_monitor();
             Thread.sleep(8000);
-            deleteFile(SettingsFrame.getTmp().getAbsolutePath() + File.separator + "fileAdded.txt");
-            deleteFile(SettingsFrame.getTmp().getAbsolutePath() + File.separator + "fileRemoved.txt");
             System.exit(0);
         } catch (InterruptedException ignored) {
 
@@ -138,12 +142,9 @@ public class MainClass {
     }
 
     private static void initDatabase() {
-        Connection conn = null;
         Statement stmt;
         String sql = "CREATE TABLE list";
-        try {
-            Class.forName("org.sqlite.JDBC");
-            conn = DriverManager.getConnection("jdbc:sqlite:data.db");
+        try (Connection conn = DriverManager.getConnection("jdbc:sqlite:data.db")) {
             System.out.println("open database successfully");
             stmt = conn.createStatement();
             stmt.execute("BEGIN;");
@@ -154,14 +155,6 @@ public class MainClass {
             stmt.execute("COMMIT");
         } catch (Exception e) {
             System.err.println("initialize database error");
-        } finally {
-            try {
-                if (conn != null) {
-                    conn.close();
-                }
-            } catch (SQLException ignored) {
-
-            }
         }
     }
 
@@ -225,26 +218,26 @@ public class MainClass {
     private static boolean initFoldersAndFiles() {
         boolean isFailed;
         //user
-        isFailed = createFileOrFolder("user", false);
+        isFailed = createFileOrFolder("user", false, false);
         //tmp
         File tmp = new File("tmp");
         String tempPath = tmp.getAbsolutePath();
-        isFailed = isFailed && createFileOrFolder(tmp, false);
-        isFailed = isFailed && createFileOrFolder(tempPath + File.separator + "fileAdded.txt", true);
-        isFailed = isFailed && createFileOrFolder(tempPath + File.separator + "fileRemoved.txt", true);
+        isFailed = isFailed && createFileOrFolder(tmp, false, false);
+        isFailed = isFailed && createFileOrFolder(tempPath + File.separator + "fileAdded.txt", true, true);
+        isFailed = isFailed && createFileOrFolder(tempPath + File.separator + "fileRemoved.txt", true, true);
         //cache.dat
-        isFailed = isFailed && createFileOrFolder("user/cache.dat", true);
+        isFailed = isFailed && createFileOrFolder("user/cache.dat", true, false);
         //cmd.txt
-        isFailed = isFailed && createFileOrFolder("user/cmds.txt", true);
+        isFailed = isFailed && createFileOrFolder("user/cmds.txt", true, false);
         releaseAllDependence(SettingsFrame.name.contains("x64"));
         return isFailed;
     }
 
     private static boolean initSettingsJson() {
-        return createFileOrFolder("user/settings.json", true);
+        return createFileOrFolder("user/settings.json", true, false);
     }
 
-    private static boolean createFileOrFolder(File file, boolean isFile) {
+    private static boolean createFileOrFolder(File file, boolean isFile, boolean isDeleteOnExit) {
         boolean result;
         try {
             if (!file.exists()) {
@@ -252,6 +245,9 @@ public class MainClass {
                     result = file.createNewFile();
                 } else {
                     result = file.mkdirs();
+                }
+                if (isDeleteOnExit) {
+                    file.deleteOnExit();
                 }
             } else {
                 result = true;
@@ -262,9 +258,9 @@ public class MainClass {
         return result;
     }
 
-    private static boolean createFileOrFolder(String path, boolean isFile) {
+    private static boolean createFileOrFolder(String path, boolean isFile, boolean isDeleteOnExit) {
         File file = new File(path);
-        return createFileOrFolder(file, isFile);
+        return createFileOrFolder(file, isFile, isDeleteOnExit);
     }
 
     private static boolean isLatest() {

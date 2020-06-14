@@ -20,10 +20,7 @@ import java.io.*;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.LinkedList;
+import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
@@ -32,23 +29,22 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
 
-
 public class SearchBar {
     private static volatile boolean isCacheAndPrioritySearched = false;
     private static volatile boolean isStartSearchLocal = false;
     private static Border border;
     private JFrame searchBar;
     private CopyOnWriteArrayList<String> listResults;
-    private JLabel label1;
-    private JLabel label2;
-    private JLabel label3;
-    private JLabel label4;
-    private JLabel label5;
-    private JLabel label6;
-    private JLabel label7;
-    private JLabel label8;
+    private volatile JLabel label1;
+    private volatile JLabel label2;
+    private volatile JLabel label3;
+    private volatile JLabel label4;
+    private volatile JLabel label5;
+    private volatile JLabel label6;
+    private volatile JLabel label7;
+    private volatile JLabel label8;
     private volatile AtomicInteger labelCount;
-    private JTextField textField;
+    private volatile JTextField textField;
     private Color labelColor;
     private Color backgroundColor;
     private Color fontColorWithCoverage;
@@ -69,16 +65,18 @@ public class SearchBar {
     private long mouseWheelTime = 0;
     private int iconSideLength;
     private long visibleStartTime = 0;
-    private ExecutorService fixedThreadPool;
+    private ExecutorService cachedThreadPool;
     private ConcurrentLinkedQueue<String> tempResults;
     private ConcurrentLinkedQueue<String> commandQueue;
     private volatile String[] searchCase;
     private volatile String searchText;
     private volatile String[] keywords;
-    private Search search;
-    private TaskBar taskBar;
-    private static volatile SearchBar instance;
+    private static Search search;
+    private static TaskBar taskBar;
 
+    private static class SearchBarBuilder {
+        private static SearchBar instance = new SearchBar();
+    }
 
     private SearchBar() {
         listResults = new CopyOnWriteArrayList<>();
@@ -88,7 +86,7 @@ public class SearchBar {
         semicolon = Pattern.compile(";");
         resultSplit = Pattern.compile(":");
         panel = new JPanel();
-        fixedThreadPool = Executors.newFixedThreadPool(18);
+        cachedThreadPool = Executors.newCachedThreadPool();
         tempResults = new ConcurrentLinkedQueue<>();
         commandQueue = new ConcurrentLinkedQueue<>();
         search = Search.getInstance();
@@ -211,14 +209,8 @@ public class SearchBar {
     }
 
     public static SearchBar getInstance() {
-        if (instance == null) {
-            synchronized (SearchBar.class) {
-                if (instance == null) {
-                    instance = new SearchBar();
-                }
-            }
-        }
-        return instance;
+
+        return SearchBarBuilder.instance;
     }
 
     private void initLabel(Font font, int width, int height, int positionY, JLabel label) {
@@ -325,8 +317,10 @@ public class SearchBar {
                                         && isLabelNotEmpty(label5) && isLabelNotEmpty(label6) && isLabelNotEmpty(label7) && isLabelNotEmpty(label8)) {
                                     isUserPressed = true;
                                 }
-                            } catch (NullPointerException ignored) {
-
+                            } catch (NullPointerException e) {
+                                if (SettingsFrame.isDebug()) {
+                                    e.printStackTrace();
+                                }
                             }
                             if (!getTextFieldText().isEmpty()) {
                                 labelCount.decrementAndGet();
@@ -355,8 +349,10 @@ public class SearchBar {
                                         && isLabelNotEmpty(label5) && isLabelNotEmpty(label6) && isLabelNotEmpty(label7) && isLabelNotEmpty(label8)) {
                                     isUserPressed = true;
                                 }
-                            } catch (NullPointerException ignored) {
-
+                            } catch (NullPointerException e) {
+                                if (SettingsFrame.isDebug()) {
+                                    e.printStackTrace();
+                                }
                             }
                             boolean isNextLabelValid = isNextLabelValid();
                             if (isNextLabelValid) {
@@ -784,8 +780,10 @@ public class SearchBar {
             } else if (label8.getBackground() == labelColor) {
                 position = 7;
             }
-        } catch (NullPointerException ignored) {
-
+        } catch (NullPointerException e) {
+            if (SettingsFrame.isDebug()) {
+                e.printStackTrace();
+            }
         }
         return position;
     }
@@ -801,8 +799,10 @@ public class SearchBar {
                             && isLabelNotEmpty(label5) && isLabelNotEmpty(label6) && isLabelNotEmpty(label7) && isLabelNotEmpty(label8)) {
                         isUserPressed = true;
                     }
-                } catch (NullPointerException ignored) {
-
+                } catch (NullPointerException e1) {
+                    if (SettingsFrame.isDebug()) {
+                        e1.printStackTrace();
+                    }
                 }
                 boolean isNextLabelValid = isNextLabelValid();
 
@@ -827,8 +827,10 @@ public class SearchBar {
                             && isLabelNotEmpty(label5) && isLabelNotEmpty(label6) && isLabelNotEmpty(label7) && isLabelNotEmpty(label8)) {
                         isUserPressed = true;
                     }
-                } catch (NullPointerException ignored) {
-
+                } catch (NullPointerException e1) {
+                    if (SettingsFrame.isDebug()) {
+                        e1.printStackTrace();
+                    }
                 }
                 if (!getTextFieldText().isEmpty()) {
                     labelCount.getAndDecrement();
@@ -1080,30 +1082,32 @@ public class SearchBar {
                         //到达最下端，刷新显示
                         try {
                             String path = listResults.get(labelCount.get() - 7);
-                            autoShowResultOnLabel(path, label1, false);
+                            showResultOnLabel(path, label1, false);
 
                             path = listResults.get(labelCount.get() - 6);
-                            autoShowResultOnLabel(path, label2, false);
+                            showResultOnLabel(path, label2, false);
 
                             path = listResults.get(labelCount.get() - 5);
-                            autoShowResultOnLabel(path, label3, false);
+                            showResultOnLabel(path, label3, false);
 
                             path = listResults.get(labelCount.get() - 4);
-                            autoShowResultOnLabel(path, label4, false);
+                            showResultOnLabel(path, label4, false);
 
                             path = listResults.get(labelCount.get() - 3);
-                            autoShowResultOnLabel(path, label5, false);
+                            showResultOnLabel(path, label5, false);
 
                             path = listResults.get(labelCount.get() - 2);
-                            autoShowResultOnLabel(path, label6, false);
+                            showResultOnLabel(path, label6, false);
 
                             path = listResults.get(labelCount.get() - 1);
-                            autoShowResultOnLabel(path, label7, false);
+                            showResultOnLabel(path, label7, false);
 
                             path = listResults.get(labelCount.get());
-                            autoShowResultOnLabel(path, label8, true);
-                        } catch (ArrayIndexOutOfBoundsException ignored) {
-
+                            showResultOnLabel(path, label8, true);
+                        } catch (ArrayIndexOutOfBoundsException e) {
+                            if (SettingsFrame.isDebug()) {
+                                e.printStackTrace();
+                            }
                         }
                         break;
                 }
@@ -1356,14 +1360,18 @@ public class SearchBar {
 
                             command = listResults.get(labelCount.get());
                             showCommandOnLabel(command, label8, true);
-                        } catch (ArrayIndexOutOfBoundsException ignored) {
-
+                        } catch (ArrayIndexOutOfBoundsException e) {
+                            if (SettingsFrame.isDebug()) {
+                                e.printStackTrace();
+                            }
                         }
                         break;
                 }
             }
-        } catch (NullPointerException ignored) {
-
+        } catch (NullPointerException e) {
+            if (SettingsFrame.isDebug()) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -1376,30 +1384,32 @@ public class SearchBar {
                         //到达了最上端，刷新显示
                         try {
                             String path = listResults.get(labelCount.get());
-                            autoShowResultOnLabel(path, label1, true);
+                            showResultOnLabel(path, label1, true);
 
                             path = listResults.get(labelCount.get() + 1);
-                            autoShowResultOnLabel(path, label2, false);
+                            showResultOnLabel(path, label2, false);
 
                             path = listResults.get(labelCount.get() + 2);
-                            autoShowResultOnLabel(path, label3, false);
+                            showResultOnLabel(path, label3, false);
 
                             path = listResults.get(labelCount.get() + 3);
-                            autoShowResultOnLabel(path, label4, false);
+                            showResultOnLabel(path, label4, false);
 
                             path = listResults.get(labelCount.get() + 4);
-                            autoShowResultOnLabel(path, label5, false);
+                            showResultOnLabel(path, label5, false);
 
                             path = listResults.get(labelCount.get() + 5);
-                            autoShowResultOnLabel(path, label6, false);
+                            showResultOnLabel(path, label6, false);
 
                             path = listResults.get(labelCount.get() + 6);
-                            autoShowResultOnLabel(path, label7, false);
+                            showResultOnLabel(path, label7, false);
 
                             path = listResults.get(labelCount.get() + 7);
-                            autoShowResultOnLabel(path, label8, false);
-                        } catch (ArrayIndexOutOfBoundsException ignored) {
-
+                            showResultOnLabel(path, label8, false);
+                        } catch (ArrayIndexOutOfBoundsException e) {
+                            if (SettingsFrame.isDebug()) {
+                                e.printStackTrace();
+                            }
                         }
                         break;
                     case 1:
@@ -1652,8 +1662,10 @@ public class SearchBar {
 
                             command = listResults.get(labelCount.get() + 7);
                             showCommandOnLabel(command, label8, false);
-                        } catch (ArrayIndexOutOfBoundsException ignored) {
-
+                        } catch (ArrayIndexOutOfBoundsException e) {
+                            if (SettingsFrame.isDebug()) {
+                                e.printStackTrace();
+                            }
                         }
                         break;
                     case 1:
@@ -1879,8 +1891,10 @@ public class SearchBar {
                         break;
                 }
             }
-        } catch (NullPointerException ignored) {
-
+        } catch (NullPointerException e) {
+            if (SettingsFrame.isDebug()) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -1900,13 +1914,17 @@ public class SearchBar {
 
             @Override
             public void removeUpdate(DocumentEvent e) {
+                clearLabel();
                 listResults.clear();
                 tempResults.clear();
-                clearLabel();
                 labelCount.set(0);
                 isCacheAndPrioritySearched = false;
                 String t = getTextFieldText();
+                try {
+                    isCommandMode = t.charAt(0) == ':';
+                } catch (StringIndexOutOfBoundsException ignored) {
 
+                }
                 if (t.isEmpty()) {
                     panel.repaint();
                     labelCount.set(0);
@@ -1916,40 +1934,39 @@ public class SearchBar {
                     startTime = System.currentTimeMillis();
                     timer = true;
                 }
-                try {
-                    isCommandMode = getTextFieldText().charAt(0) == ':';
-                } catch (StringIndexOutOfBoundsException ignored) {
-
-                }
             }
 
             @Override
             public void changedUpdate(DocumentEvent e) {
-
+                listResults.clear();
+                tempResults.clear();
             }
         });
     }
 
-    private void startMonitorDisk() {
-        File[] roots = File.listRoots();
-        if (SettingsFrame.isAdmin()) {
-            FileMonitor.INSTANCE.set_output(SettingsFrame.getTmp().getAbsolutePath());
-            for (File root : roots) {
-                boolean isLocal = IsLocalDisk.INSTANCE.isLocalDisk(root.getAbsolutePath());
-                if (isLocal) {
-                    FileMonitor.INSTANCE.monitor(root.getAbsolutePath());
+    public void startMonitorDisk() {
+        cachedThreadPool.execute(() -> {
+            File[] roots = File.listRoots();
+            if (SettingsFrame.isAdmin()) {
+                FileMonitor.INSTANCE.set_output(SettingsFrame.getTmp().getAbsolutePath());
+                for (File root : roots) {
+                    boolean isLocal = IsLocalDisk.INSTANCE.isLocalDisk(root.getAbsolutePath());
+                    if (isLocal) {
+                        FileMonitor.INSTANCE.monitor(root.getAbsolutePath());
+                    }
                 }
+            } else {
+                System.out.println("Not administrator, file monitoring function is turned off");
+                taskBar.showMessage(SettingsFrame.getTranslation("Warning"), SettingsFrame.getTranslation("Not administrator, file monitoring function is turned off"));
             }
-        } else {
-            System.out.println("Not administrator, file monitoring function is turned off");
-            taskBar.showMessage(SettingsFrame.getTranslation("Warning"), SettingsFrame.getTranslation("Not administrator, file monitoring function is turned off"));
-        }
+        });
     }
 
     private void initThreadPool() {
         //监控磁盘变化
-        fixedThreadPool.execute(this::startMonitorDisk);
-        fixedThreadPool.execute(() -> {
+        startMonitorDisk();
+
+        cachedThreadPool.execute(() -> {
             //合并搜索结果线程
             try {
                 String record;
@@ -1963,12 +1980,14 @@ public class SearchBar {
                     }
                     Thread.sleep(20);
                 }
-            } catch (Exception ignored) {
-
+            } catch (Exception e) {
+                if (SettingsFrame.isDebug() && !(e instanceof InterruptedException)) {
+                    e.printStackTrace();
+                }
             }
         });
 
-        fixedThreadPool.execute(() -> {
+        cachedThreadPool.execute(() -> {
             //锁住MouseMotion检测，阻止同时发出两个动作
             try {
                 while (SettingsFrame.isNotMainExit()) {
@@ -1977,12 +1996,14 @@ public class SearchBar {
                     }
                     Thread.sleep(50);
                 }
-            } catch (Exception ignored) {
-
+            } catch (Exception e) {
+                if (SettingsFrame.isDebug() && !(e instanceof InterruptedException)) {
+                    e.printStackTrace();
+                }
             }
         });
 
-        fixedThreadPool.execute(() -> {
+        cachedThreadPool.execute(() -> {
             try {
                 while (SettingsFrame.isNotMainExit()) {
                     //字体染色线程
@@ -2063,12 +2084,14 @@ public class SearchBar {
                     }
                     Thread.sleep(20);
                 }
-            } catch (Exception ignored) {
-
+            } catch (Exception e) {
+                if (SettingsFrame.isDebug() && !(e instanceof InterruptedException)) {
+                    e.printStackTrace();
+                }
             }
         });
 
-        fixedThreadPool.execute(() -> {
+        cachedThreadPool.execute(() -> {
             //显示结果线程
             try {
                 boolean isLabel1Chosen, isLabel2Chosen, isLabel3Chosen, isLabel4Chosen,
@@ -2119,8 +2142,6 @@ public class SearchBar {
                     String text = getTextFieldText();
                     if (text.isEmpty()) {
                         clearLabel();
-                        listResults.clear();
-                        tempResults.clear();
                     }
 
                     if (!isUserPressed && isLabelNotEmpty(label1)) {
@@ -2187,27 +2208,27 @@ public class SearchBar {
                         }
                         label8.setBorder(border);
                     }
-                    Thread.sleep(500);
+                    Thread.sleep(50);
                 }
             } catch (InterruptedException ignored) {
 
             }
         });
 
-        fixedThreadPool.execute(() -> {
+        cachedThreadPool.execute(() -> {
             try {
                 while (SettingsFrame.isNotMainExit()) {
                     if (isUsing) {
                         panel.repaint();
                     }
-                    Thread.sleep(500);
+                    Thread.sleep(250);
                 }
             } catch (InterruptedException ignored) {
 
             }
         });
 
-        fixedThreadPool.execute(() -> {
+        cachedThreadPool.execute(() -> {
             //添加搜索路径线程
             String command;
             int ascII;
@@ -2215,7 +2236,6 @@ public class SearchBar {
                 while (SettingsFrame.isNotMainExit()) {
                     if (isStartSearchLocal) {
                         isStartSearchLocal = false;
-                        tempResults.clear();
                         ascII = getAscIISum(searchText);
 
                         if (0 <= ascII && ascII <= 100) {
@@ -2355,30 +2375,39 @@ public class SearchBar {
             }
         });
 
-        for (int i = 0; i < 6; i++) {
-            fixedThreadPool.execute(() -> {
-                String command;
-                try (Connection databaseConn = DriverManager.getConnection("jdbc:sqlite:data.db"); Statement stmt = databaseConn.createStatement()) {
-                    while (SettingsFrame.isNotMainExit()) {
-                        if (!commandQueue.isEmpty()) {
-                            while ((command = commandQueue.poll()) != null) {
-                                searchAndAddToTempResults(System.currentTimeMillis(), command, stmt);
+        for (int i = 0; i < 4; i++) {
+            cachedThreadPool.execute(() -> {
+                while (SettingsFrame.isNotMainExit()) {
+                    String command;
+                    try (Connection databaseConn = DriverManager.getConnection("jdbc:sqlite:data.db"); Statement stmt = databaseConn.createStatement()) {
+                        while (SettingsFrame.isNotMainExit()) {
+                            if (!commandQueue.isEmpty()) {
+                                while ((command = commandQueue.poll()) != null) {
+                                    searchAndAddToTempResults(System.currentTimeMillis(), command, stmt);
+                                }
                             }
+                            Thread.sleep(10);
                         }
-                        Thread.sleep(10);
+                    } catch (SQLException | InterruptedException e) {
+                        if (SettingsFrame.isDebug() && !(e instanceof InterruptedException)) {
+                            e.printStackTrace();
+                        }
                     }
-                } catch (SQLException | InterruptedException ignored) {
+                    try {
+                        Thread.sleep(500);
+                    } catch (InterruptedException ignored) {
 
+                    }
                 }
             });
         }
 
-        fixedThreadPool.execute(() -> {
+        cachedThreadPool.execute(() -> {
             //缓存和常用文件夹搜索线程
             //停顿时间0.5s，每一次输入会更新一次startTime，该线程记录endTime
             while (SettingsFrame.isNotMainExit()) {
                 long endTime = System.currentTimeMillis();
-                if ((endTime - startTime > 500) && (timer)) {
+                if ((endTime - startTime > 500) && timer) {
                     timer = false; //开始搜索 计时停止
                     labelCount.set(0);
                     clearLabel();
@@ -2388,28 +2417,22 @@ public class SearchBar {
                         clearLabel();
                     }
                     listResults.clear();
+                    tempResults.clear();
                     String text = getTextFieldText();
                     if (search.isUsable()) {
                         if (isCommandMode) {
                             if (text.equals(":update")) {
-                                search.setManualUpdate(true);
-                                clearDatabaseTables();
-                                clearLabel();
-                                taskBar.showMessage(SettingsFrame.getTranslation("Info"), SettingsFrame.getTranslation("Updating file index"));
-                                clearTextFieldText();
                                 closedTodo();
+                                search.setManualUpdate(true);
+                                taskBar.showMessage(SettingsFrame.getTranslation("Info"), SettingsFrame.getTranslation("Updating file index"));
                                 timer = false;
                                 continue;
                             }
                             if (text.equals(":version")) {
-                                clearLabel();
-                                clearTextFieldText();
                                 closedTodo();
                                 JOptionPane.showMessageDialog(null, SettingsFrame.getTranslation("Current Version:") + SettingsFrame.version);
                             }
                             if (text.equals(":clearbin")) {
-                                clearLabel();
-                                clearTextFieldText();
                                 closedTodo();
                                 int r = JOptionPane.showConfirmDialog(null, SettingsFrame.getTranslation("Are you sure you want to empty the recycle bin"));
                                 if (r == 0) {
@@ -2433,8 +2456,6 @@ public class SearchBar {
                                 }
                                 String[] cmdInfo = semicolon.split(i);
                                 if (cmdInfo[0].equals(text)) {
-                                    clearLabel();
-                                    clearTextFieldText();
                                     closedTodo();
                                     openWithAdmin(cmdInfo[1]);
                                 }
@@ -2501,7 +2522,7 @@ public class SearchBar {
             }
         });
 
-        fixedThreadPool.execute(() -> {
+        cachedThreadPool.execute(() -> {
             //检测文件添加线程
             String filesToAdd;
             try (BufferedReader readerAdd = new BufferedReader(new InputStreamReader(
@@ -2510,17 +2531,21 @@ public class SearchBar {
                     if (!search.isManualUpdate()) {
                         if ((filesToAdd = readerAdd.readLine()) != null) {
                             search.addFileToLoadBin(filesToAdd);
-                            System.out.println("添加" + filesToAdd);
+                            if (SettingsFrame.isDebug()) {
+                                System.out.println("添加" + filesToAdd);
+                            }
                         }
                     }
                     Thread.sleep(100);
                 }
-            } catch (IOException | InterruptedException ignored) {
-
+            } catch (IOException | InterruptedException e) {
+                if (SettingsFrame.isDebug() && !(e instanceof InterruptedException)) {
+                    e.printStackTrace();
+                }
             }
         });
 
-        fixedThreadPool.execute(() -> {
+        cachedThreadPool.execute(() -> {
             String filesToRemove;
             try (BufferedReader readerRemove = new BufferedReader(new InputStreamReader(
                     new FileInputStream(SettingsFrame.getTmp().getAbsolutePath() + File.separator + "fileRemoved.txt"), StandardCharsets.UTF_8))) {
@@ -2528,50 +2553,69 @@ public class SearchBar {
                     if (!search.isManualUpdate()) {
                         if ((filesToRemove = readerRemove.readLine()) != null) {
                             search.addToRecycleBin(filesToRemove);
-                            System.out.println("删除" + filesToRemove);
+                            if (SettingsFrame.isDebug()) {
+                                System.out.println("删除" + filesToRemove);
+                            }
                         }
                     }
                     Thread.sleep(100);
                 }
-            } catch (InterruptedException | IOException ignored) {
-
+            } catch (InterruptedException | IOException e) {
+                if (SettingsFrame.isDebug() && !(e instanceof InterruptedException)) {
+                    e.printStackTrace();
+                }
             }
         });
 
 
-        fixedThreadPool.execute(() -> {
+        cachedThreadPool.execute(() -> {
             // 时间检测线程
-            long count = 0;
-            try (Connection databaseConn = DriverManager.getConnection("jdbc:sqlite:data.db"); Statement stmt = databaseConn.createStatement()) {
-                while (SettingsFrame.isNotMainExit()) {
-                    count += 100;
-                    if (count >= (SettingsFrame.getUpdateTimeLimit() << 10) && !isUsing && !search.isManualUpdate()) {
-                        count = 0;
-                        if (search.isUsable()) {
-                            search.executeAllCommands(stmt);
+            while (SettingsFrame.isNotMainExit()) {
+                long count = 0;
+                try (Connection databaseConn = DriverManager.getConnection("jdbc:sqlite:data.db"); Statement stmt = databaseConn.createStatement()) {
+                    while (SettingsFrame.isNotMainExit()) {
+                        count += 100;
+                        if (count >= (SettingsFrame.getUpdateTimeLimit() << 10) && !isUsing && !search.isManualUpdate()) {
+                            count = 0;
+                            if (search.isUsable()) {
+                                search.executeAllCommands(stmt);
+                            }
                         }
+                        Thread.sleep(100);
                     }
-                    Thread.sleep(100);
-                }
-            } catch (InterruptedException | SQLException ignore) {
+                } catch (InterruptedException | SQLException ignore) {
 
+                }
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException ignored) {
+
+                }
             }
         });
 
 
         //搜索本地数据线程
-        fixedThreadPool.execute(() -> {
-            try (Connection databaseConn = DriverManager.getConnection("jdbc:sqlite:data.db"); Statement stmt = databaseConn.createStatement()) {
-                while (SettingsFrame.isNotMainExit()) {
-                    if (search.isManualUpdate()) {
-                        search.setUsable(false);
-                        clearDatabaseTables();
-                        search.updateLists(SettingsFrame.getIgnorePath(), SettingsFrame.getSearchDepth(), stmt);
+        cachedThreadPool.execute(() -> {
+            while (SettingsFrame.isNotMainExit()) {
+                try (Connection databaseConn = DriverManager.getConnection("jdbc:sqlite:data.db"); Statement stmt = databaseConn.createStatement()) {
+                    while (SettingsFrame.isNotMainExit()) {
+                        if (search.isManualUpdate()) {
+                            search.setUsable(false);
+                            search.updateLists(SettingsFrame.getIgnorePath(), SettingsFrame.getSearchDepth(), stmt);
+                        }
+                        Thread.sleep(100);
                     }
-                    Thread.sleep(100);
+                } catch (SQLException | InterruptedException e) {
+                    if (SettingsFrame.isDebug() && !(e instanceof InterruptedException)) {
+                        e.printStackTrace();
+                    }
                 }
-            } catch (SQLException | InterruptedException ignored) {
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException ignored) {
 
+                }
             }
         });
     }
@@ -2595,11 +2639,6 @@ public class SearchBar {
             list.toArray(tmp);
             searchCase = tmp;
         }
-    }
-
-    public boolean isUsing() {
-        //窗口是否正在显示
-        return this.isUsing;
     }
 
     private boolean isExist(String path) {
@@ -2647,12 +2686,26 @@ public class SearchBar {
     private boolean checkIsMatchedAndAddToList(String path, boolean isPutToTemp) {
         if (check(path)) {
             if (isPutToTemp) {
-                tempResults.add(path);
+                if (isExist(path)) {
+                    tempResults.add(path);
+                    if (SettingsFrame.isDebug()) {
+                        System.out.println("Adding record to tempResults:" + path);
+                    }
+                } else {
+                    search.addToRecycleBin(path);
+                }
             } else {
-                listResults.add(path);
+                if (isExist(path)) {
+                    listResults.add(path);
+                    if (SettingsFrame.isDebug()) {
+                        System.out.println("Adding record to listResults:" + path);
+                    }
+                } else {
+                    search.addToRecycleBin(path);
+                }
             }
         }
-        return listResults.size() + tempResults.size() > 100;
+        return listResults.size() + tempResults.size() >= 50;
     }
 
     private void searchAndAddToTempResults(long time, String command, Statement stmt) {
@@ -2663,20 +2716,20 @@ public class SearchBar {
             ResultSet resultSet = stmt.executeQuery(command);
             while (resultSet.next()) {
                 each = resultSet.getString("PATH");
-                if (startTime > time) { //用户重新输入了信息
-                    resultSet.close();
-                    break;
-                }
                 if (search.isUsable()) {
                     isResultsExcessive = checkIsMatchedAndAddToList(each, true);
                 }
-                if (isResultsExcessive) {
-                    resultSet.close();
+
+                //用户重新输入了信息
+                if (isResultsExcessive || (startTime > time)) {
                     break;
                 }
             }
-        } catch (SQLException ignored) {
-
+            resultSet.close();
+        } catch (SQLException e) {
+            if (SettingsFrame.isDebug()) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -2692,38 +2745,18 @@ public class SearchBar {
         }
     }
 
-    private void autoShowResultOnLabel(String path, JLabel label, boolean isChosen) {
-        if (isDirectory(path) || isFile(path)) {
-            showResultOnLabel(path, label, isChosen);
-        } else {
-            showInvalidOnLabel(label, isChosen);
-            search.addToRecycleBin(path);
-        }
-    }
-
     private void showResultOnLabel(String path, JLabel label, boolean isChosen) {
         String name = getFileName(path);
         ImageIcon icon = (ImageIcon) GetIcon.getBigIcon(path);
         icon = changeIcon(icon, iconSideLength, iconSideLength);
         label.setIcon(icon);
-        label.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>>" + getParentPath(path) + "</body></html>");
         label.setBorder(border);
+        label.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>" + getParentPath(path) + "</body></html>");
         if (isChosen) {
             label.setBackground(labelColor);
         } else {
             label.setBackground(backgroundColor);
         }
-    }
-
-    private void showInvalidOnLabel(JLabel label, boolean isChosen) {
-        label.setIcon(null);
-        label.setText(SettingsFrame.getTranslation("Invalid file"));
-        if (isChosen) {
-            label.setBackground(labelColor);
-        } else {
-            label.setBackground(backgroundColor);
-        }
-        label.setBorder(border);
     }
 
     private void showCommandOnLabel(String command, JLabel label, boolean isChosen) {
@@ -2733,7 +2766,7 @@ public class SearchBar {
         ImageIcon imageIcon = (ImageIcon) GetIcon.getBigIcon(path);
         imageIcon = changeIcon(imageIcon, iconSideLength, iconSideLength);
         label.setIcon(imageIcon);
-        label.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>>" + path + "</font></body></html>");
+        label.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>" + path + "</font></body></html>");
         if (isChosen) {
             label.setBackground(labelColor);
         } else {
@@ -2747,28 +2780,28 @@ public class SearchBar {
         if (!isCommandMode) {
             try {
                 String path = listResults.get(0);
-                autoShowResultOnLabel(path, label1, isLabel1Chosen);
+                showResultOnLabel(path, label1, isLabel1Chosen);
 
                 path = listResults.get(1);
-                autoShowResultOnLabel(path, label2, isLabel2Chosen);
+                showResultOnLabel(path, label2, isLabel2Chosen);
 
                 path = listResults.get(2);
-                autoShowResultOnLabel(path, label3, isLabel3Chosen);
+                showResultOnLabel(path, label3, isLabel3Chosen);
 
                 path = listResults.get(3);
-                autoShowResultOnLabel(path, label4, isLabel4Chosen);
+                showResultOnLabel(path, label4, isLabel4Chosen);
 
                 path = listResults.get(4);
-                autoShowResultOnLabel(path, label5, isLabel5Chosen);
+                showResultOnLabel(path, label5, isLabel5Chosen);
 
                 path = listResults.get(5);
-                autoShowResultOnLabel(path, label6, isLabel6Chosen);
+                showResultOnLabel(path, label6, isLabel6Chosen);
 
                 path = listResults.get(6);
-                autoShowResultOnLabel(path, label7, isLabel7Chosen);
+                showResultOnLabel(path, label7, isLabel7Chosen);
 
                 path = listResults.get(7);
-                autoShowResultOnLabel(path, label8, isLabel8Chosen);
+                showResultOnLabel(path, label8, isLabel8Chosen);
             } catch (IndexOutOfBoundsException ignored) {
 
             }
@@ -2841,8 +2874,10 @@ public class SearchBar {
                     p.getErrorStream().close();
                     p.getOutputStream().close();
                     p.getInputStream().close();
-                } catch (IOException ignored) {
-
+                } catch (IOException e1) {
+                    if (SettingsFrame.isDebug()) {
+                        e.printStackTrace();
+                    }
                 }
             }
         }
@@ -2879,8 +2914,10 @@ public class SearchBar {
                     p.getOutputStream().close();
                     p.getErrorStream().close();
                     p.getInputStream().close();
-                } catch (IOException ignored) {
-
+                } catch (IOException e1) {
+                    if (SettingsFrame.isDebug()) {
+                        e1.printStackTrace();
+                    }
                 }
             }
         }
@@ -2935,8 +2972,10 @@ public class SearchBar {
                     oldCaches.append(eachLine);
                     cacheNum++;
                 }
-            } catch (IOException ignored) {
-
+            } catch (IOException e) {
+                if (SettingsFrame.isDebug()) {
+                    e.printStackTrace();
+                }
             }
         }
         if (cacheNum < SettingsFrame.getCacheNumLimit()) {
@@ -2963,16 +3002,20 @@ public class SearchBar {
                     String[] each = semicolon.split(eachLine);
                     Collections.addAll(set, each);
                 }
-            } catch (IOException ignored) {
-
+            } catch (IOException e) {
+                if (SettingsFrame.isDebug()) {
+                    e.printStackTrace();
+                }
             }
             try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(cacheFile), StandardCharsets.UTF_8))) {
                 for (String cache : set) {
                     allCaches.append(cache).append(";\n");
                 }
                 bw.write(allCaches.toString());
-            } catch (IOException ignored) {
-
+            } catch (IOException e) {
+                if (SettingsFrame.isDebug()) {
+                    e.printStackTrace();
+                }
             }
         }
     }
@@ -2991,13 +3034,17 @@ public class SearchBar {
                         }
                     }
                 }
-            } catch (IOException ignored) {
-
+            } catch (IOException e) {
+                if (SettingsFrame.isDebug()) {
+                    e.printStackTrace();
+                }
             }
             try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(cacheFile), StandardCharsets.UTF_8))) {
                 bw.write(allCaches.toString());
-            } catch (IOException ignored) {
-
+            } catch (IOException e) {
+                if (SettingsFrame.isDebug()) {
+                    e.printStackTrace();
+                }
             }
         }
     }
@@ -3022,8 +3069,10 @@ public class SearchBar {
                         }
                     }
                 }
-            } catch (IOException ignored) {
-
+            } catch (IOException e) {
+                if (SettingsFrame.isDebug()) {
+                    e.printStackTrace();
+                }
             }
         }
         delCache(cachesToDel);
@@ -3089,6 +3138,7 @@ public class SearchBar {
             searchBar.setVisible(false);
         }
         clearLabel();
+        clearTextFieldText();
         commandQueue.clear();
         startTime = System.currentTimeMillis();//结束搜索
         isUsing = false;
@@ -3152,17 +3202,5 @@ public class SearchBar {
         textField.setBackground(new Color(colorNum));
     }
 
-    public void clearDatabaseTables() {
-        try (Connection databaseConn = DriverManager.getConnection("jdbc:sqlite:data.db"); Statement stmt = databaseConn.createStatement()) {
-            stmt.execute("BEGIN;");
-            for (int i = 0; i < 26; i++) {
-                String command = "delete from list" + i + ";";
-                stmt.executeUpdate(command);
-            }
-            stmt.execute("COMMIT;");
-        } catch (SQLException ignored) {
-
-        }
-    }
 }
 
