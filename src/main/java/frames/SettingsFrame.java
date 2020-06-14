@@ -161,6 +161,12 @@ public class SettingsFrame {
     private JLabel labelLanguage;
     private JLabel labelPlaceHolderL;
     private JLabel labelLanTip2;
+    private JLabel labelPlaceHolder0;
+    private JLabel labelPlaceHolder1;
+    private JLabel labelPlaceHolder;
+    private JLabel labelPlaceHolder14;
+    private JLabel labelPlaceHolderWhatever;
+    private JLabel labelPlaceHolderWhatever2;
 
 
     private static class SettingsFrameBuilder {
@@ -1355,7 +1361,7 @@ public class SettingsFrame {
                 outPut.close();
                 if (!result.toString().isEmpty()) {
                     checkBox1.setSelected(true);
-                    JOptionPane.showMessageDialog(frame, getTranslation("Delete startup failure, please try to run as administrator"));
+                    JOptionPane.showMessageDialog(frame, getTranslation("Delete startup failed, please try to run as administrator"));
                 }
             } catch (IOException | InterruptedException ignored) {
 
@@ -1402,7 +1408,7 @@ class moveDesktopFiles implements Runnable {
         desktop1 = moveFiles.moveFolder(fileDesktop.getAbsolutePath(), fileBackUp.getAbsolutePath());
         desktop2 = moveFiles.moveFolder("C:\\Users\\Public\\Desktop", fileBackUp.getAbsolutePath());
         if (desktop1 || desktop2) {
-            JOptionPane.showMessageDialog(null, SettingsFrame.getTranslation("Files with the same name are detected, please move it by yourself"));
+            JOptionPane.showMessageDialog(null, SettingsFrame.getTranslation("Files with the same name are detected, please move them by yourself"));
         }
     }
 }
