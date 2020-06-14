@@ -2696,7 +2696,9 @@ public class SearchBar {
                 }
             } else {
                 if (isExist(path)) {
-                    listResults.add(path);
+                    if (!listResults.contains(path)) {
+                        listResults.add(path);
+                    }
                     if (SettingsFrame.isDebug()) {
                         System.out.println("Adding record to listResults:" + path);
                     }
@@ -3064,7 +3066,9 @@ public class SearchBar {
                         } else {
                             if (check(eachCache) && listResults.contains(eachCache)) {
                                 isCacheRepeated = true;
-                                listResults.add(eachCache);
+                                if (!listResults.contains(eachCache)) {
+                                    listResults.add(eachCache);
+                                }
                             }
                         }
                     }
