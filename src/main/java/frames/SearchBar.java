@@ -3064,7 +3064,7 @@ public class SearchBar {
                         if (!(isExist(eachCache))) {
                             cachesToDel.add(eachCache);
                         } else {
-                            if (check(eachCache) && listResults.contains(eachCache)) {
+                            if (check(eachCache)) {
                                 isCacheRepeated = true;
                                 if (!listResults.contains(eachCache)) {
                                     listResults.add(eachCache);
