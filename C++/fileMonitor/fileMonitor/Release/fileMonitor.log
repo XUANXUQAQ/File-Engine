@@ -1,0 +1,8 @@
+﻿  pch.cpp
+  dllmain.cpp
+    正在创建库 D:\Code\C++\fileMonitor\Release\fileMonitor.lib 和对象 D:\Code\C++\fileMonitor\Release\fileMonitor.exp
+  正在生成代码
+  Previous IPDB not found, fall back to full compilation.
+  All 545 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  已完成代码的生成
+  fileMonitor.vcxproj -> D:\Code\C++\fileMonitor\Release\fileMonitor.dll

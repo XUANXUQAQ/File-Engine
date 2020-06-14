@@ -1,0 +1,9 @@
+﻿  pch.cpp
+  dllmain.cpp
+    正在创建库 D:\Code\File-Engine\C++\fileMonitor\x64\Release\fileMonitor.lib 和对象 D:\Code\File-Engine\C++\fileMonitor\x64\Release\fileMonitor.exp
+  正在生成代码
+  534 of 545 functions (98.0%) were compiled, the rest were copied from previous compilation.
+    6 functions were new in current compilation
+    3 functions had inline decision re-evaluated but remain unchanged
+  已完成代码的生成
+  fileMonitor.vcxproj -> D:\Code\File-Engine\C++\fileMonitor\x64\Release\fileMonitor.dll

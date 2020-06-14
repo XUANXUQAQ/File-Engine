@@ -1,0 +1,9 @@
+﻿  dllmain.cpp
+D:\Code\C++\isLocalDisk\isLocalDisk\dllmain.cpp(33,96): warning C4267: “参数”: 从“size_t”转换到“int”，可能丢失数据
+    正在创建库 D:\Code\C++\isLocalDisk\x64\Release\isLocalDisk.lib 和对象 D:\Code\C++\isLocalDisk\x64\Release\isLocalDisk.exp
+  正在生成代码
+  1 of 2 functions (50.0%) were compiled, the rest were copied from previous compilation.
+    0 functions were new in current compilation
+    0 functions had inline decision re-evaluated but remain unchanged
+  已完成代码的生成
+  isLocalDisk.vcxproj -> D:\Code\C++\isLocalDisk\x64\Release\isLocalDisk.dll

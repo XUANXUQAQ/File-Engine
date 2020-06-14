@@ -13,17 +13,13 @@ public class CheckHotKey {
 
     private HashMap<String, Integer> map;
     private ExecutorService threadPool;
-    private static volatile CheckHotKey instance;
+
+    private static class CheckHotKeyBuilder {
+        private static CheckHotKey instance = new CheckHotKey();
+    }
 
     public static CheckHotKey getInstance() {
-        if (instance == null) {
-            synchronized (CheckHotKey.class) {
-                if (instance == null) {
-                    instance = new CheckHotKey();
-                }
-            }
-        }
-        return instance;
+        return CheckHotKeyBuilder.instance;
     }
 
 

@@ -1,6 +1,5 @@
 package frames;
 
-import DllInterface.IsLocalDisk;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.serializer.SerializerFeature;
@@ -58,15 +57,13 @@ public class SettingsFrame {
     private static int fontColorWithCoverage;
     private static int fontColor;
     private static int searchBarColor;
-    private static int diskCount;
     private static String language;
     private static boolean isStartup;
     private static SearchBar searchBar;
     private static TaskBar taskBar;
     private static Search search;
     private Thread updateThread = null;
-    private static volatile SettingsFrame instance;
-    private JFrame frame = new JFrame("设置");
+    private JFrame frame;
     private JTextField textFieldUpdateTime;
     private JTextField textFieldCacheNum;
     private JTextArea textAreaIgnorePath;
@@ -166,15 +163,12 @@ public class SettingsFrame {
     private JLabel labelLanTip2;
 
 
+    private static class SettingsFrameBuilder {
+        private static SettingsFrame instance = new SettingsFrame();
+    }
+
     public static SettingsFrame getInstance() {
-        if (instance == null) {
-            synchronized (SettingsFrame.class) {
-                if (instance == null) {
-                    instance = new SettingsFrame();
-                }
-            }
-        }
-        return instance;
+        return SettingsFrameBuilder.instance;
     }
 
     public static boolean isNotMainExit() {
@@ -203,10 +197,6 @@ public class SettingsFrame {
 
     public static boolean isDefaultAdmin() {
         return isDefaultAdmin;
-    }
-
-    public static int getDiskCount() {
-        return diskCount;
     }
 
     public static boolean isLoseFocusClose() {
@@ -254,6 +244,7 @@ public class SettingsFrame {
     }
 
     private SettingsFrame() {
+        frame = new JFrame("设置");
         tmp = new File("tmp");
         settings = new File("user/settings.json");
         cmdSet = new HashSet<>();
@@ -271,7 +262,7 @@ public class SettingsFrame {
         translate(language);
 
         labelAboutGithub.setText("<html><a href='https://github.com/XUANXUQAQ/File-Engine'><font size=\"4\">File-Engine</font></a></html>");
-        labelBeautyEye.setText("1.Material-UI-Swing");
+        labelBeautyEye.setText("1.WebLaF");
         labelFastJson.setText("2.FastJson");
         labelJna.setText("3.Java-Native-Access");
         ImageIcon imageIcon = new ImageIcon(SettingsFrame.class.getResource("/icons/frame.png"));
@@ -503,7 +494,10 @@ public class SettingsFrame {
             listCmds.setListData(cmdSet.toArray());
 
         });
-        buttonSave.addActionListener(e -> saveChanges());
+        buttonSave.addActionListener(e -> {
+            saveChanges();
+            hideFrame();
+        });
         labelAboutGithub.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -756,10 +750,9 @@ public class SettingsFrame {
         buttonCheckUpdate.setText(getTranslation("Check for update"));
         labelDesciption.setText(getTranslation("Thanks for the following project"));
         buttonSave.setText(getTranslation("Save"));
-        labelLanTip2.setText(getTranslation("The translation might not be 100% correct"));
+        labelLanTip2.setText(getTranslation("The translation might not be 100% accurate"));
         labelLanguage.setText(getTranslation("Choose a language"));
         labelVersion.setText(getTranslation(getTranslation("Current Version:") + version));
-        frame.setVisible(false);
     }
 
     private static void initLanguageSet() {
@@ -855,7 +848,7 @@ public class SettingsFrame {
         return JSONObject.parseObject(jsonUpdate.toString());
     }
 
-    public static void readAllSettings() {
+    private static void readAllSettings() {
         try (BufferedReader buffR = new BufferedReader(new InputStreamReader(new FileInputStream(settings), StandardCharsets.UTF_8))) {
             String line;
             StringBuilder result = new StringBuilder();
@@ -1023,14 +1016,6 @@ public class SettingsFrame {
     }
 
     private static void initCmdSetSettings() {
-        //获取所有设置信息
-        diskCount = 0;
-        for (File root : File.listRoots()) {
-            if (IsLocalDisk.INSTANCE.isLocalDisk(root.getAbsolutePath())) {
-                diskCount++;
-            }
-        }
-
         //获取所有自定义命令
         try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream("user/cmds.txt"), StandardCharsets.UTF_8))) {
             String each;
@@ -1101,11 +1086,13 @@ public class SettingsFrame {
     }
 
     public void showWindow() {
-        frame.setContentPane(new SettingsFrame().panel);
+        frame.setContentPane(SettingsFrameBuilder.instance.panel);
         URL frameIcon = SettingsFrame.class.getResource("/icons/frame.png");
         frame.setIconImage(new ImageIcon(frameIcon).getImage());
         frame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
+        frame.setResizable(true);
         frame.setSize(Integer.parseInt(translationMap.get("#frame_width")), Integer.parseInt(translationMap.get("#frame_height")));
+        frame.setResizable(false);
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
     }
@@ -1183,8 +1170,6 @@ public class SettingsFrame {
             copyPathKeyCode = _copyPathKeyCode;
         }
 
-        language = (String) listLanguage.getSelectedValue();
-
         int _labelColor;
         try {
             _labelColor = Integer.parseInt(textFieldLabelColor.getText(), 16);
@@ -1243,6 +1228,10 @@ public class SettingsFrame {
             JOptionPane.showMessageDialog(frame, getTranslation("The color of the search bar is set incorrectly"));
             return;
         }
+        if (!listLanguage.getSelectedValue().equals(language)) {
+            language = (String) listLanguage.getSelectedValue();
+            translate(language);
+        }
 
         priorityFolder = textFieldPriorityFolder.getText();
         hotkey = textFieldHotkey.getText();
@@ -1276,7 +1265,6 @@ public class SettingsFrame {
         _tmp = new Color(fontColor);
         FontColorChooser.setBackground(_tmp);
         FontColorChooser.setForeground(_tmp);
-        translate(language);
 
 
         //保存设置
@@ -1303,7 +1291,6 @@ public class SettingsFrame {
         try (BufferedWriter buffW = new BufferedWriter(new FileWriter(settings))) {
             String format = JSON.toJSONString(allSettings, SerializerFeature.PrettyFormat, SerializerFeature.WriteMapNullValue, SerializerFeature.WriteDateUseDateFormat);
             buffW.write(format);
-            JOptionPane.showMessageDialog(frame, getTranslation("Save successfully"));
         } catch (IOException ignored) {
 
         }
@@ -1317,6 +1304,15 @@ public class SettingsFrame {
             bw.write(strb.toString());
         } catch (IOException ignored) {
 
+        }
+    }
+
+    public static boolean isDebug() {
+        try {
+            String res = System.getProperty("File_Engine_Debug");
+            return res.equalsIgnoreCase("true");
+        } catch (NullPointerException e) {
+            return false;
         }
     }
 

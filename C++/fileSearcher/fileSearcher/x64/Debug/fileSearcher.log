@@ -1,0 +1,7 @@
+﻿  fileSearcher.cpp
+D:\Code\C++\fileSearcher\fileSearcher\fileSearcher.cpp(62,31): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
+D:\Code\C++\fileSearcher\fileSearcher\fileSearcher.cpp(310,28): warning C4244: “=”: 从“intptr_t”转换到“long”，可能丢失数据
+D:\Code\C++\fileSearcher\fileSearcher\fileSearcher.cpp(399,68): warning C4267: “=”: 从“size_t”转换到“int”，可能丢失数据
+D:\Code\C++\fileSearcher\fileSearcher\fileSearcher.cpp(402,41): warning C4267: “=”: 从“size_t”转换到“int”，可能丢失数据
+D:\Code\C++\fileSearcher\fileSearcher\fileSearcher.cpp(424,39): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
+  fileSearcher.vcxproj -> D:\Code\C++\fileSearcher\x64\Debug\fileSearcher.exe
