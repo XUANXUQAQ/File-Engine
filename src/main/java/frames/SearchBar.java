@@ -2236,7 +2236,7 @@ public class SearchBar {
                 while (SettingsFrame.isNotMainExit()) {
                     if (isStartSearchLocal) {
                         isStartSearchLocal = false;
-                        ascII = getAscIISum(searchText);
+                        ascII = getAscIISum(searchText.toUpperCase());
 
                         if (0 <= ascII && ascII <= 100) {
                             for (int i = 0; i < 26; i++) {
