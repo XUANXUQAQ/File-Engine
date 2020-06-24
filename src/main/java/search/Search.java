@@ -269,7 +269,7 @@ public class Search {
         commandSet.clear();
         //删除所有表
         for (int i = 0; i < 26; i++) {
-            commandSet.add("DROP TABLE list" + i + ";");
+            commandSet.add("DROP TABLE IF EXISTS list" + i + ";");
         }
         executeAllCommands(stmt);
         //创建新表

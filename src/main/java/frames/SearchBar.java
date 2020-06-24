@@ -2381,30 +2381,34 @@ public class SearchBar {
             }
         });
 
-        cachedThreadPool.execute(() -> {
-            while (SettingsFrame.isNotMainExit()) {
-                String command;
-                try (Connection databaseConn = DriverManager.getConnection("jdbc:sqlite:data.db"); Statement stmt = databaseConn.createStatement()) {
-                    while (SettingsFrame.isNotMainExit()) {
-                        if (!commandQueue.isEmpty()) {
-                            while ((command = commandQueue.poll()) != null) {
-                                searchAndAddToTempResults(System.currentTimeMillis(), command, stmt);
+        for (int i = 0; i < 2; i++) {
+            cachedThreadPool.execute(() -> {
+                while (SettingsFrame.isNotMainExit()) {
+                    String command;
+                    try (Connection databaseConn = DriverManager.getConnection("jdbc:sqlite:data.db"); Statement stmt = databaseConn.createStatement()) {
+                        while (SettingsFrame.isNotMainExit()) {
+                            if (!isCommandMode) {
+                                if (!commandQueue.isEmpty()) {
+                                    while ((command = commandQueue.poll()) != null) {
+                                        searchAndAddToTempResults(System.currentTimeMillis(), command, stmt);
+                                    }
+                                }
                             }
+                            Thread.sleep(10);
                         }
-                        Thread.sleep(10);
+                    } catch (SQLException | InterruptedException e) {
+                        if (SettingsFrame.isDebug() && !(e instanceof InterruptedException)) {
+                            e.printStackTrace();
+                        }
                     }
-                } catch (SQLException | InterruptedException e) {
-                    if (SettingsFrame.isDebug() && !(e instanceof InterruptedException)) {
-                        e.printStackTrace();
-                    }
-                }
-                try {
-                    Thread.sleep(500);
-                } catch (InterruptedException ignored) {
+                    try {
+                        Thread.sleep(500);
+                    } catch (InterruptedException ignored) {
 
+                    }
                 }
-            }
-        });
+            });
+        }
 
         cachedThreadPool.execute(() -> {
             //缓存和常用文件夹搜索线程
