@@ -4,8 +4,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.io.File;
-import java.io.IOException;
 import java.net.URL;
 
 
@@ -45,24 +43,8 @@ public class TaskBar {
             settings.addActionListener(e -> settingsFrame.showWindow());
             MenuItem close = new MenuItem("Exit");
             close.addActionListener(e -> closeAndExit());
-            MenuItem restart = new MenuItem("Restart");
-            restart.addActionListener(e -> {
-                File restartExe = new File("user/restart.exe");
-                File mainExe = new File(SettingsFrame.name);
-                try {
-                    String command = "cmd /c " + restartExe.getAbsolutePath().substring(0, 2) + "\"" + restartExe.getAbsolutePath().substring(2) + "\" \""
-                            + mainExe.getAbsolutePath() + "\" " + "\"" + SettingsFrame.name + "\"";
-                    Process p = Runtime.getRuntime().exec(command);
-                    p.getInputStream().close();
-                    p.getOutputStream().close();
-                    p.getErrorStream().close();
-                    closeAndExit();
-                } catch (IOException ex) {
-                    showMessage(SettingsFrame.getTranslation("Warning"), SettingsFrame.getTranslation("Restart failed"));
-                }
-            });
+
             popupMenu.add(settings);
-            popupMenu.add(restart);
             popupMenu.add(close);
 
             // 为托盘图标加弹出菜弹

@@ -43,7 +43,7 @@ public class SearchBar {
     private volatile JLabel label6;
     private volatile JLabel label7;
     private volatile JLabel label8;
-    private volatile AtomicInteger labelCount;
+    private static AtomicInteger labelCount;
     private volatile JTextField textField;
     private Color labelColor;
     private Color backgroundColor;
@@ -73,6 +73,7 @@ public class SearchBar {
     private volatile String[] keywords;
     private static Search search;
     private static TaskBar taskBar;
+    private static AtomicInteger resultCount;
 
     private static class SearchBarBuilder {
         private static SearchBar instance = new SearchBar();
@@ -83,6 +84,7 @@ public class SearchBar {
         border = BorderFactory.createLineBorder(new Color(73, 162, 255, 255));
         searchBar = new JFrame();
         labelCount = new AtomicInteger(0);
+        resultCount = new AtomicInteger(0);
         semicolon = Pattern.compile(";");
         resultSplit = Pattern.compile(":");
         panel = new JPanel();
@@ -233,7 +235,7 @@ public class SearchBar {
                 int count = e.getClickCount();
                 if (count == 2) {
                     closedTodo();
-                    if (listResults.size() != 0) {
+                    if (!listResults.isEmpty()) {
                         if (!isCommandMode) {
                             if (isOpenLastFolderPressed) {
                                 //打开上级文件夹
@@ -1905,6 +1907,7 @@ public class SearchBar {
                 clearLabel();
                 listResults.clear();
                 tempResults.clear();
+                resultCount.set(0);
                 labelCount.set(0);
                 isCacheAndPrioritySearched = false;
                 startTime = System.currentTimeMillis();
@@ -1917,6 +1920,7 @@ public class SearchBar {
                 clearLabel();
                 listResults.clear();
                 tempResults.clear();
+                resultCount.set(0);
                 labelCount.set(0);
                 isCacheAndPrioritySearched = false;
                 String t = getTextFieldText();
@@ -1927,6 +1931,7 @@ public class SearchBar {
                 }
                 if (t.isEmpty()) {
                     panel.repaint();
+                    resultCount.set(0);
                     labelCount.set(0);
                     startTime = System.currentTimeMillis();
                     timer = false;
@@ -1974,6 +1979,7 @@ public class SearchBar {
                     if (isCacheAndPrioritySearched) {
                         while ((record = tempResults.poll()) != null) {
                             if (!listResults.contains(record)) {
+                                resultCount.incrementAndGet();
                                 listResults.add(record);
                             }
                         }
@@ -2375,32 +2381,30 @@ public class SearchBar {
             }
         });
 
-        for (int i = 0; i < 2; i++) {
-            cachedThreadPool.execute(() -> {
-                while (SettingsFrame.isNotMainExit()) {
-                    String command;
-                    try (Connection databaseConn = DriverManager.getConnection("jdbc:sqlite:data.db"); Statement stmt = databaseConn.createStatement()) {
-                        while (SettingsFrame.isNotMainExit()) {
-                            if (!commandQueue.isEmpty()) {
-                                while ((command = commandQueue.poll()) != null) {
-                                    searchAndAddToTempResults(System.currentTimeMillis(), command, stmt);
-                                }
+        cachedThreadPool.execute(() -> {
+            while (SettingsFrame.isNotMainExit()) {
+                String command;
+                try (Connection databaseConn = DriverManager.getConnection("jdbc:sqlite:data.db"); Statement stmt = databaseConn.createStatement()) {
+                    while (SettingsFrame.isNotMainExit()) {
+                        if (!commandQueue.isEmpty()) {
+                            while ((command = commandQueue.poll()) != null) {
+                                searchAndAddToTempResults(System.currentTimeMillis(), command, stmt);
                             }
-                            Thread.sleep(10);
                         }
-                    } catch (SQLException | InterruptedException e) {
-                        if (SettingsFrame.isDebug() && !(e instanceof InterruptedException)) {
-                            e.printStackTrace();
-                        }
+                        Thread.sleep(10);
                     }
-                    try {
-                        Thread.sleep(500);
-                    } catch (InterruptedException ignored) {
-
+                } catch (SQLException | InterruptedException e) {
+                    if (SettingsFrame.isDebug() && !(e instanceof InterruptedException)) {
+                        e.printStackTrace();
                     }
                 }
-            });
-        }
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException ignored) {
+
+                }
+            }
+        });
 
         cachedThreadPool.execute(() -> {
             //缓存和常用文件夹搜索线程
@@ -2409,6 +2413,7 @@ public class SearchBar {
                 long endTime = System.currentTimeMillis();
                 if ((endTime - startTime > 500) && timer) {
                     timer = false; //开始搜索 计时停止
+                    resultCount.set(0);
                     labelCount.set(0);
                     clearLabel();
                     if (!getTextFieldText().isEmpty()) {
@@ -2452,6 +2457,7 @@ public class SearchBar {
                             }
                             for (String i : SettingsFrame.getCmdSet()) {
                                 if (i.startsWith(text)) {
+                                    resultCount.incrementAndGet();
                                     listResults.add(SettingsFrame.getTranslation("Run command") + i);
                                 }
                                 String[] cmdInfo = semicolon.split(i);
@@ -2687,6 +2693,7 @@ public class SearchBar {
         if (check(path)) {
             if (isPutToTemp) {
                 if (isExist(path)) {
+                    resultCount.incrementAndGet();
                     tempResults.add(path);
                     if (SettingsFrame.isDebug()) {
                         System.out.println("Adding record to tempResults:" + path);
@@ -2697,6 +2704,7 @@ public class SearchBar {
             } else {
                 if (isExist(path)) {
                     if (!listResults.contains(path)) {
+                        resultCount.incrementAndGet();
                         listResults.add(path);
                     }
                     if (SettingsFrame.isDebug()) {
@@ -2707,7 +2715,7 @@ public class SearchBar {
                 }
             }
         }
-        return listResults.size() + tempResults.size() >= 50;
+        return resultCount.get() >= 100;
     }
 
     private void searchAndAddToTempResults(long time, String command, Statement stmt) {
@@ -3067,6 +3075,7 @@ public class SearchBar {
                             if (check(eachCache)) {
                                 isCacheRepeated = true;
                                 if (!listResults.contains(eachCache)) {
+                                    resultCount.incrementAndGet();
                                     listResults.add(eachCache);
                                 }
                             }
@@ -3103,24 +3112,24 @@ public class SearchBar {
     private void searchPriorityFolder() {
         File path = new File(SettingsFrame.getPriorityFolder());
         boolean exist = path.exists();
-        LinkedList<File> listRemain = new LinkedList<>();
+        Queue<String> listRemain = new LinkedList<>();
         if (exist) {
             File[] files = path.listFiles();
             if (!(null == files || files.length == 0)) {
                 for (File each : files) {
                     checkIsMatchedAndAddToList(each.getAbsolutePath(), false);
                     if (each.isDirectory()) {
-                        listRemain.add(each);
+                        listRemain.add(each.getAbsolutePath());
                     }
                 }
                 while (!listRemain.isEmpty()) {
-                    File remain = listRemain.pop();
-                    File[] allFiles = remain.listFiles();
+                    String remain = listRemain.poll();
+                    File[] allFiles = new File(remain).listFiles();
                     assert allFiles != null;
                     for (File each : allFiles) {
                         checkIsMatchedAndAddToList(each.getAbsolutePath(), false);
                         if (each.isDirectory()) {
-                            listRemain.add(each);
+                            listRemain.add(each.getAbsolutePath());
                         }
                     }
                 }
@@ -3147,6 +3156,7 @@ public class SearchBar {
         startTime = System.currentTimeMillis();//结束搜索
         isUsing = false;
         labelCount.set(0);
+        resultCount.set(0);
         listResults.clear();
         tempResults.clear();
         textField.setText(null);
