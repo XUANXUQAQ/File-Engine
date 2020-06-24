@@ -24,7 +24,6 @@ public class MainClass {
     private static final String getAscII86Md5 = "e370e53ce6c18758a5468fe11ccca652";
     private static final String hotkeyListener86Md5 = "15bd4db12a4939969c27c03ac9e57ddd";
     private static final String isLocalDisk86Md5 = "9b1c4c4fc44b52bff4f226b39c1ac46f";
-    private static final String restart86Md5 = "fcc373d827476ce3e9d89dae8416ef2e";
     private static final String updater86Md5 = "b11a1307c497f00e570b238224173ba2";
     //64bit
     private static final String fileMonitor64Md5 = "db64b40ed1ccec6a7f2af1b40c1d22ab";
@@ -32,7 +31,6 @@ public class MainClass {
     private static final String getAscII64Md5 = "eff607d2dd4a7e4c878948fe8f24b3ea";
     private static final String hotkeyListener64Md5 = "41388e31d6fc22fb430f636d402cf608";
     private static final String isLocalDisk64Md5 = "64f64bc828f477aa9ce6f5f8fd6010f3";
-    private static final String restart64Md5 = "6eeeb628326c9c87c5d7e9aae5ba2e58";
     private static final String updater64Md5 = "bf8482e14b1457395f2ef1ec200f95c0";
 
     private static final String shortcutGeneratorMd5 = "fa4e26f99f3dcd58d827828c411ea5d7";
@@ -210,14 +208,12 @@ public class MainClass {
             copyOrIgnoreFile("user/hotkeyListener.dll", "/win32-x86-64/hotkeyListener.dll", hotkeyListener64Md5);
             copyOrIgnoreFile("user/isLocalDisk.dll", "/win32-x86-64/isLocalDisk.dll", isLocalDisk64Md5);
             copyOrIgnoreFile("user/fileSearcher.exe", "/win32-x86-64/fileSearcher.exe", fileSearcher64Md5);
-            copyOrIgnoreFile("user/restart.exe", "/win32-x86-64/restart.exe", restart64Md5);
         } else {
             copyOrIgnoreFile("user/fileMonitor.dll", "/win32-x86/fileMonitor.dll", fileMonitor86Md5);
             copyOrIgnoreFile("user/getAscII.dll", "/win32-x86/getAscII.dll", getAscII86Md5);
             copyOrIgnoreFile("user/hotkeyListener.dll", "/win32-x86/hotkeyListener.dll", hotkeyListener86Md5);
             copyOrIgnoreFile("user/isLocalDisk.dll", "/win32-x86/isLocalDisk.dll", isLocalDisk86Md5);
             copyOrIgnoreFile("user/fileSearcher.exe", "/win32-x86/fileSearcher.exe", fileSearcher86Md5);
-            copyOrIgnoreFile("user/restart.exe", "/win32-x86/restart.exe", restart86Md5);
         }
         copyOrIgnoreFile("user/shortcutGenerator.vbs", "/shortcutGenerator.vbs", shortcutGeneratorMd5);
         copyOrIgnoreFile("user/sqlite3.dll", "/sqlite3.dll", sqlite3Md5);
