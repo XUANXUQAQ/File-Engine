@@ -8,7 +8,7 @@
 //#define TEST
 
 using namespace std;
-extern "C" __declspec(dllexport) void registerHotKey(int key1, int key2, int key3);
+extern "C" __declspec(dllexport) void registerHotKey(int key1, int key2, int key3, int key4, int key5);
 extern "C" __declspec(dllexport) bool getKeyStatus();
 extern "C" __declspec(dllexport) void startListen();
 extern "C" __declspec(dllexport) void stopListen();

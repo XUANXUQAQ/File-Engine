@@ -1,18 +1,43 @@
 import DllInterface.FileMonitor;
-import com.alee.laf.WebLookAndFeel;
+import br.com.margel.weblaf.WebLookAndFeel;
 import com.alibaba.fastjson.JSONObject;
 import frames.SettingsFrame;
 import frames.TaskBar;
 import hotkeyListener.CheckHotKey;
 import search.Search;
 
+import javax.swing.*;
 import java.io.*;
+import java.math.BigInteger;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.Statement;
+import java.util.Objects;
 
 
 public class MainClass {
+    //32bit
+    private static final String fileMonitor86Md5 = "1005aa7fa75ae86d314afcfc5df0af6b";
+    private static final String fileSearcher86Md5 = "522c79b0d6d977a9e351d5368747db22";
+    private static final String getAscII86Md5 = "e370e53ce6c18758a5468fe11ccca652";
+    private static final String hotkeyListener86Md5 = "15bd4db12a4939969c27c03ac9e57ddd";
+    private static final String isLocalDisk86Md5 = "9b1c4c4fc44b52bff4f226b39c1ac46f";
+    private static final String restart86Md5 = "fcc373d827476ce3e9d89dae8416ef2e";
+    private static final String updater86Md5 = "b11a1307c497f00e570b238224173ba2";
+    //64bit
+    private static final String fileMonitor64Md5 = "db64b40ed1ccec6a7f2af1b40c1d22ab";
+    private static final String fileSearcher64Md5 = "8e9ad434aa07ff02a264af7dde6b5f43";
+    private static final String getAscII64Md5 = "eff607d2dd4a7e4c878948fe8f24b3ea";
+    private static final String hotkeyListener64Md5 = "41388e31d6fc22fb430f636d402cf608";
+    private static final String isLocalDisk64Md5 = "64f64bc828f477aa9ce6f5f8fd6010f3";
+    private static final String restart64Md5 = "6eeeb628326c9c87c5d7e9aae5ba2e58";
+    private static final String updater64Md5 = "bf8482e14b1457395f2ef1ec200f95c0";
+
+    private static final String shortcutGeneratorMd5 = "fa4e26f99f3dcd58d827828c411ea5d7";
+    private static final String sqlite3Md5 = "658c71b8b93ba4eb5b4936f46a112449";
+
     private static void initializeDllInterface() {
         try {
             Class.forName("DllInterface.FileMonitor");
@@ -66,16 +91,34 @@ public class MainClass {
         deleteDir(file);
     }
 
-    private static void deleteFile(String path) {
-        File file = new File(path);
+    private static void deleteUpdater() {
+        File file = new File("updater.exe");
         file.delete();
+    }
+
+    private static String getMD5(String filePath) {
+        byte[] buffer = new byte[8192];
+        BigInteger bigInteger;
+        int len;
+        try (FileInputStream fis = new FileInputStream(filePath)) {
+            MessageDigest md = MessageDigest.getInstance("MD5");
+            while ((len = fis.read(buffer)) != -1) {
+                md.update(buffer, 0, len);
+            }
+            byte[] b = md.digest();
+            bigInteger = new BigInteger(1, b);
+            return bigInteger.toString(16);
+        } catch (NoSuchAlgorithmException | IOException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
 
     public static void main(String[] args) {
         try {
             Class.forName("org.sqlite.JDBC");
-            WebLookAndFeel.install();
+            UIManager.setLookAndFeel(new WebLookAndFeel());
         } catch (Exception e) {
             e.printStackTrace();
             return;
@@ -152,9 +195,9 @@ public class MainClass {
                 String command = sql + i + " " + "(PATH text unique)" + ";";
                 stmt.executeUpdate(command);
             }
+            stmt.execute("COMMIT;");
             stmt.execute("PRAGMA journal_mode=WAL;");
             stmt.execute("PRAGMA synchronous = OFF;");
-            stmt.execute("COMMIT;");
         } catch (Exception e) {
             System.err.println("initialize database error");
         }
@@ -162,28 +205,32 @@ public class MainClass {
 
     private static void releaseAllDependence(boolean is64Bit) {
         if (is64Bit) {
-            copyOrIgnoreFile("user/fileMonitor.dll", "/win32-x86-64/fileMonitor.dll");
-            copyOrIgnoreFile("user/getAscII.dll", "/win32-x86-64/getAscII.dll");
-            copyOrIgnoreFile("user/hotkeyListener.dll", "/win32-x86-64/hotkeyListener.dll");
-            copyOrIgnoreFile("user/isLocalDisk.dll", "/win32-x86-64/isLocalDisk.dll");
-            copyOrIgnoreFile("user/fileSearcher.exe", "/win32-x86-64/fileSearcher.exe");
-            copyOrIgnoreFile("user/restart.exe", "/win32-x86-64/restart.exe");
+            copyOrIgnoreFile("user/fileMonitor.dll", "/win32-x86-64/fileMonitor.dll", fileMonitor64Md5);
+            copyOrIgnoreFile("user/getAscII.dll", "/win32-x86-64/getAscII.dll", getAscII64Md5);
+            copyOrIgnoreFile("user/hotkeyListener.dll", "/win32-x86-64/hotkeyListener.dll", hotkeyListener64Md5);
+            copyOrIgnoreFile("user/isLocalDisk.dll", "/win32-x86-64/isLocalDisk.dll", isLocalDisk64Md5);
+            copyOrIgnoreFile("user/fileSearcher.exe", "/win32-x86-64/fileSearcher.exe", fileSearcher64Md5);
+            copyOrIgnoreFile("user/restart.exe", "/win32-x86-64/restart.exe", restart64Md5);
         } else {
-            copyOrIgnoreFile("user/fileMonitor.dll", "/win32-x86/fileMonitor.dll");
-            copyOrIgnoreFile("user/getAscII.dll", "/win32-x86/getAscII.dll");
-            copyOrIgnoreFile("user/hotkeyListener.dll", "/win32-x86/hotkeyListener.dll");
-            copyOrIgnoreFile("user/isLocalDisk.dll", "/win32-x86/isLocalDisk.dll");
-            copyOrIgnoreFile("user/fileSearcher.exe", "/win32-x86/fileSearcher.exe");
-            copyOrIgnoreFile("user/restart.exe", "/win32-x86/restart.exe");
+            copyOrIgnoreFile("user/fileMonitor.dll", "/win32-x86/fileMonitor.dll", fileMonitor86Md5);
+            copyOrIgnoreFile("user/getAscII.dll", "/win32-x86/getAscII.dll", getAscII86Md5);
+            copyOrIgnoreFile("user/hotkeyListener.dll", "/win32-x86/hotkeyListener.dll", hotkeyListener86Md5);
+            copyOrIgnoreFile("user/isLocalDisk.dll", "/win32-x86/isLocalDisk.dll", isLocalDisk86Md5);
+            copyOrIgnoreFile("user/fileSearcher.exe", "/win32-x86/fileSearcher.exe", fileSearcher86Md5);
+            copyOrIgnoreFile("user/restart.exe", "/win32-x86/restart.exe", restart86Md5);
         }
-        copyOrIgnoreFile("user/shortcutGenerator.vbs", "/shortcutGenerator.vbs");
-        copyOrIgnoreFile("user/sqlite3.dll", "/sqlite3.dll");
+        copyOrIgnoreFile("user/shortcutGenerator.vbs", "/shortcutGenerator.vbs", shortcutGeneratorMd5);
+        copyOrIgnoreFile("user/sqlite3.dll", "/sqlite3.dll", sqlite3Md5);
     }
 
-    private static void copyOrIgnoreFile(String path, String rootPath) {
+    private static void copyOrIgnoreFile(String path, String rootPath, String md5) {
         File target;
         target = new File(path);
-        if (!target.exists()) {
+        String fileMd5 = getMD5(path);
+        if (!target.exists() || !Objects.equals(fileMd5, md5)) {
+            if (SettingsFrame.isDebug()) {
+                System.out.println("正在重新释放文件：" + path);
+            }
             InputStream resource = MainClass.class.getResourceAsStream(rootPath);
             copyFile(resource, target);
             try {
@@ -198,9 +245,9 @@ public class MainClass {
         //复制updater.exe
         if (isUpdate) {
             if (SettingsFrame.name.contains("x64")) {
-                copyOrIgnoreFile("updater.exe", "/win32-x86-64/updater.exe");
+                copyOrIgnoreFile("updater.exe", "/win32-x86-64/updater.exe", updater64Md5);
             } else {
-                copyOrIgnoreFile("updater.exe", "/win32-x86/updater.exe");
+                copyOrIgnoreFile("updater.exe", "/win32-x86/updater.exe", updater86Md5);
             }
             File updaterExe = new File("updater.exe");
             String absPath = updaterExe.getAbsolutePath();
@@ -213,7 +260,7 @@ public class MainClass {
 
             }
         } else {
-            deleteFile("updater.exe");
+            deleteUpdater();
         }
     }
 
