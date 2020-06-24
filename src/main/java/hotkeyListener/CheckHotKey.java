@@ -8,11 +8,13 @@ import java.awt.event.KeyEvent;
 import java.util.HashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.regex.Pattern;
 
 public class CheckHotKey {
 
     private HashMap<String, Integer> map;
     private ExecutorService threadPool;
+    private Pattern plus;
 
     private static class CheckHotKeyBuilder {
         private static CheckHotKey instance = new CheckHotKey();
@@ -28,50 +30,65 @@ public class CheckHotKey {
     }
 
     public void registerHotkey(String hotkey) {
-        int hotkey1 = -1, hotkey2 = -1, hotkey3 = -1;
-        int count = 0;
-        String[] hotkeys = hotkey.split(" \\+ ");
-        for (String each : hotkeys) {
-            if (each.length() != 1) {
-                if (count == 0) {
-                    hotkey1 = map.get(each);
-                } else if (count == 1) {
-                    hotkey2 = map.get(each);
-                }
-                count++;
-            } else {
-                hotkey3 = each.charAt(0);
+        int hotkey1 = -1, hotkey2 = -1, hotkey3 = -1, hotkey4 = -1, hotkey5 = -1;
+        String[] hotkeys = plus.split(hotkey);
+        int length = hotkeys.length;
+        for (int i = 0; i < length - 1; i++) {
+            if (i == 0) {
+                hotkey1 = map.get(hotkeys[i]);
+            } else if (i == 1) {
+                hotkey2 = map.get(hotkeys[i]);
+            } else if (i == 2) {
+                hotkey3 = map.get(hotkeys[i]);
+            } else if (i == 4) {
+                hotkey4 = map.get(hotkeys[i]);
             }
         }
+        hotkey5 = hotkeys[length - 1].charAt(0);
         int finalHotkey = hotkey1;
         int finalHotkey1 = hotkey2;
         int finalHotkey2 = hotkey3;
+        int finalHotkey3 = hotkey4;
+        int finalHotkey4 = hotkey5;
         threadPool.execute(() -> {
-            HotkeyListener.INSTANCE.registerHotKey(finalHotkey, finalHotkey1, finalHotkey2);
+            HotkeyListener.INSTANCE.registerHotKey(finalHotkey, finalHotkey1, finalHotkey2, finalHotkey3, finalHotkey4);
             HotkeyListener.INSTANCE.startListen();
         });
     }
 
-    public void changeHotKey(String hotkey) {
-        int hotkey1 = -1, hotkey2 = -1, hotkey3 = -1;
-        int count = 0;
-        String[] hotkeys = hotkey.split(" \\+ ");
-        for (String each : hotkeys) {
-            if (each.length() != 1) {
-                if (count == 0) {
-                    hotkey1 = map.get(each);
-                } else if (count == 1) {
-                    hotkey2 = map.get(each);
-                }
-                count++;
-            } else {
-                hotkey3 = each.charAt(0);
+    public boolean isHotkeyAvailable(String hotkey) {
+        String[] hotkeys = plus.split(hotkey);
+        int length = hotkeys.length;
+        for (int i = 0; i < length - 1; i++) {
+            String each = hotkeys[i];
+            if (!map.containsKey(each)) {
+                return false;
             }
         }
-        HotkeyListener.INSTANCE.registerHotKey(hotkey1, hotkey2, hotkey3);
+        return 64 < hotkey.charAt(hotkey.length() - 1) && hotkey.charAt(hotkey.length() - 1) < 91;
+    }
+
+    public void changeHotKey(String hotkey) {
+        int hotkey1 = -1, hotkey2 = -1, hotkey3 = -1, hotkey4 = -1, hotkey5 = -1;
+        String[] hotkeys = plus.split(hotkey);
+        int length = hotkeys.length;
+        for (int i = 0; i < length - 1; i++) {
+            if (i == 0) {
+                hotkey1 = map.get(hotkeys[i]);
+            } else if (i == 1) {
+                hotkey2 = map.get(hotkeys[i]);
+            } else if (i == 2) {
+                hotkey3 = map.get(hotkeys[i]);
+            } else if (i == 4) {
+                hotkey4 = map.get(hotkeys[i]);
+            }
+        }
+        hotkey5 = hotkeys[length - 1].charAt(0);
+        HotkeyListener.INSTANCE.registerHotKey(hotkey1, hotkey2, hotkey3, hotkey4, hotkey5);
     }
 
     private CheckHotKey() {
+        plus = Pattern.compile(" \\+ ");
         map = new HashMap<>();
 
         threadPool = Executors.newFixedThreadPool(2);

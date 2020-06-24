@@ -152,7 +152,9 @@ public class MainClass {
                 String command = sql + i + " " + "(PATH text unique)" + ";";
                 stmt.executeUpdate(command);
             }
-            stmt.execute("COMMIT");
+            stmt.execute("PRAGMA journal_mode=WAL;");
+            stmt.execute("PRAGMA synchronous = OFF;");
+            stmt.execute("COMMIT;");
         } catch (Exception e) {
             System.err.println("initialize database error");
         }

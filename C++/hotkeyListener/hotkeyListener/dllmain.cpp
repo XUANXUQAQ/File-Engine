@@ -18,6 +18,8 @@ static volatile bool isStop = false;
 static volatile int hotkey1;
 static volatile int hotkey2;
 static volatile int hotkey3;
+static volatile int hotkey4;
+static volatile int hotkey5;
 
 BOOL APIENTRY DllMain( HMODULE hModule,
                        DWORD  ul_reason_for_call,
@@ -45,6 +47,8 @@ __declspec(dllexport) void startListen()
     short isKey1Pressed;
     short isKey2Pressed;
     short isKey3Pressed;
+    short isKey4Pressed;
+    short isKey5Pressed;
     while (!isStop)
     {
         if (hotkey1 > 0)
@@ -71,8 +75,23 @@ __declspec(dllexport) void startListen()
         {
             isKey3Pressed = -1;
         }
-
-        if (isKey1Pressed < 0 && isKey2Pressed < 0 && isKey3Pressed < 0) //如果某键被按下
+        if (hotkey4 > 0)
+        {
+            isKey4Pressed = GetKeyState(hotkey4);
+        }
+        else
+        {
+            isKey4Pressed = -1;
+        }
+        if (hotkey5 > 0)
+        {
+            isKey5Pressed = GetKeyState(hotkey5);
+        }
+        else
+        {
+            isKey5Pressed = -1;
+        }
+        if (isKey1Pressed < 0 && isKey2Pressed < 0 && isKey3Pressed < 0 && isKey4Pressed < 0 && isKey5Pressed < 0) //如果某键被按下
         {
             isKeyPressed = true;
 #ifdef TEST
@@ -91,11 +110,13 @@ __declspec(dllexport) bool getKeyStatus()
 {
     return isKeyPressed;
 }
-__declspec(dllexport) void registerHotKey(int key1, int key2, int key3)
+__declspec(dllexport) void registerHotKey(int key1, int key2, int key3, int key4, int key5)
 {
     hotkey1 = key1;
     hotkey2 = key2;
     hotkey3 = key3;
+    hotkey4 = key4;
+    hotkey5 = key5;
 }
 
 #ifdef TEST
