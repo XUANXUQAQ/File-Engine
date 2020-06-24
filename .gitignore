@@ -23,6 +23,8 @@ TEST
 C++/isLocalDisk/Debug/
 C++/restart/Debug/
 data.db
+data.db-shm
+data.db-wal
 
 
 ### VisualStudio ###

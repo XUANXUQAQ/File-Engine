@@ -268,7 +268,7 @@ public class SettingsFrame {
         translate(language);
 
         labelAboutGithub.setText("<html><a href='https://github.com/XUANXUQAQ/File-Engine'><font size=\"4\">File-Engine</font></a></html>");
-        labelBeautyEye.setText("1.WebLaF");
+        labelBeautyEye.setText("1.WebLookAndFeel");
         labelFastJson.setText("2.FastJson");
         labelJna.setText("3.Java-Native-Access");
         ImageIcon imageIcon = new ImageIcon(SettingsFrame.class.getResource("/icons/frame.png"));
@@ -1043,8 +1043,8 @@ public class SettingsFrame {
             JOptionPane.showMessageDialog(frame, getTranslation("Check update failed"));
             return;
         }
-        File test = new File("TEST");
-        if (Double.parseDouble(latestVersion) > Double.parseDouble(version) || test.exists()) {
+
+        if (Double.parseDouble(latestVersion) > Double.parseDouble(version) || isDebug()) {
             String description = updateInfo.getString("description");
             int result = JOptionPane.showConfirmDialog(frame,
                     getTranslation("New Version available") + latestVersion + "," + getTranslation("Whether to update") + "\n" + getTranslation("update content") + "\n" + description);

@@ -2375,7 +2375,7 @@ public class SearchBar {
             }
         });
 
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < 2; i++) {
             cachedThreadPool.execute(() -> {
                 while (SettingsFrame.isNotMainExit()) {
                     String command;

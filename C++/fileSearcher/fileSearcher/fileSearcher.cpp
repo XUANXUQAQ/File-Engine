@@ -7,13 +7,20 @@
 #include <algorithm>
 #include <ctime>
 #include <tchar.h>
-#include <windows.h>
+#include <Windows.h>
 #include <locale>
 #include <set>
+#include <unordered_map>
 //#define TEST
 
 using namespace std;
 
+typedef struct {
+    ULONGLONG parent;
+    char name[1024];
+} FILE_INFO;
+
+typedef unordered_map<LONGLONG, FILE_INFO> UsnMap;
 
 set<string> command0;
 set<string> command1;
@@ -42,6 +49,8 @@ set<string> command23;
 set<string> command24;
 set<string> command25;
 vector<string> ignorePathVector;
+UsnMap usnMap;
+
 int searchDepth;
 char* searchPath;
 sqlite3* db;
@@ -55,6 +64,8 @@ bool isSearchDepthOut(string path);
 bool isIgnore(string path);
 void search(string path, string exd);
 void searchIgnoreSearchDepth(string path, string exd);
+std::wstring StringToWString(const std::string& str);
+
 
 int getAscIISum(string name)
 {
@@ -121,162 +132,109 @@ std::wstring StringToWString(const std::string& str)
 
 void saveResult(string path, int ascII)
 {
-    string sql;
     if (0 <= ascII && ascII <= 100)
     {
-        sql = "INSERT OR IGNORE INTO list0  VALUES (\"";
-        sql.append(to_utf8(StringToWString(path))).append("\");");
-        command0.insert(sql);
+        command0.insert(to_utf8(StringToWString(path)));
     }
     else if (100 < ascII && ascII <= 200)
     {
-        sql = "INSERT OR IGNORE INTO list1  VALUES (\"";
-        sql.append(to_utf8(StringToWString(path))).append("\");");
-        command1.insert(sql);
+        command1.insert(to_utf8(StringToWString(path)));
     }
     else if (200 < ascII && ascII <= 300)
     {
-        sql = "INSERT OR IGNORE INTO list2  VALUES (\"";
-        sql.append(to_utf8(StringToWString(path))).append("\");");
-        command2.insert(sql);
+        command2.insert(to_utf8(StringToWString(path)));
     }
     else if (300 < ascII && ascII <= 400)
     {
-        sql = "INSERT OR IGNORE INTO list3  VALUES (\"";
-        sql.append(to_utf8(StringToWString(path))).append("\");");
-        command3.insert(sql);
+        command3.insert(to_utf8(StringToWString(path)));
     }
     else if (400 < ascII && ascII <= 500)
     {
-        sql = "INSERT OR IGNORE INTO list4  VALUES (\"";
-        sql.append(to_utf8(StringToWString(path))).append("\");");
-        command4.insert(sql);
+        command4.insert(to_utf8(StringToWString(path)));
     }
     else if (500 < ascII && ascII <= 600)
     {
-        sql = "INSERT OR IGNORE INTO list5  VALUES (\"";
-        sql.append(to_utf8(StringToWString(path))).append("\");");
-        command5.insert(sql);
+        command5.insert(to_utf8(StringToWString(path)));
     }
     else if (600 < ascII && ascII <= 700)
     {
-        sql = "INSERT OR IGNORE INTO list6  VALUES (\"";
-        sql.append(to_utf8(StringToWString(path))).append("\");");
-        command6.insert(sql);
+        command6.insert(to_utf8(StringToWString(path)));
     }
     else if (700 < ascII && ascII <= 800)
     {
-        sql = "INSERT OR IGNORE INTO list7  VALUES (\"";
-        sql.append(to_utf8(StringToWString(path))).append("\");");
-        command7.insert(sql);
+        command7.insert(to_utf8(StringToWString(path)));
     }
     else if (800 < ascII && ascII <= 900)
     {
-        sql = "INSERT OR IGNORE INTO list8  VALUES (\"";
-        sql.append(to_utf8(StringToWString(path))).append("\");");
-        command8.insert(sql);
+        command8.insert(to_utf8(StringToWString(path)));
     }
     else if (900 < ascII && ascII <= 1000)
     {
-        sql = "INSERT OR IGNORE INTO list9  VALUES (\"";
-        sql.append(to_utf8(StringToWString(path))).append("\");");
-        command9.insert(sql);
+        command9.insert(to_utf8(StringToWString(path)));
     }
     else if (1000 < ascII && ascII <= 1100)
     {
-        sql = "INSERT OR IGNORE INTO list10  VALUES (\"";
-        sql.append(to_utf8(StringToWString(path))).append("\");");
-        command10.insert(sql);
+        command10.insert(to_utf8(StringToWString(path)));
     }
     else if (1100 < ascII && ascII <= 1200)
     {
-        sql = "INSERT OR IGNORE INTO list11  VALUES (\"";
-        sql.append(to_utf8(StringToWString(path))).append("\");");
-        command11.insert(sql);
+        command11.insert(to_utf8(StringToWString(path)));
     }
     else if (1200 < ascII && ascII <= 1300)
     {
-        sql = "INSERT OR IGNORE INTO list12  VALUES (\"";
-        sql.append(to_utf8(StringToWString(path))).append("\");");
-        command12.insert(sql);
+        command12.insert(to_utf8(StringToWString(path)));
     }
     else if (1300 < ascII && ascII <= 1400)
     {
-        sql = "INSERT OR IGNORE INTO list13  VALUES (\"";
-        sql.append(to_utf8(StringToWString(path))).append("\");");
-        command13.insert(sql);
+        command13.insert(to_utf8(StringToWString(path)));
     }
     else if (1400 < ascII && ascII <= 1500)
     {
-        sql = "INSERT OR IGNORE INTO list14  VALUES (\"";
-        sql.append(to_utf8(StringToWString(path))).append("\");");
-        command14.insert(sql);
+        command14.insert(to_utf8(StringToWString(path)));
     }
     else if (1500 < ascII && ascII <= 1600)
     {
-        sql = "INSERT OR IGNORE INTO list15  VALUES (\"";
-        sql.append(to_utf8(StringToWString(path))).append("\");");
-        command15.insert(sql);
+        command15.insert(to_utf8(StringToWString(path)));
     }
     else if (1600 < ascII && ascII <= 1700)
     {
-        sql = "INSERT OR IGNORE INTO list16  VALUES (\"";
-        sql.append(to_utf8(StringToWString(path))).append("\");");
-        command16.insert(sql);
+        command16.insert(to_utf8(StringToWString(path)));
     }
     else if (1700 < ascII && ascII <= 1800)
     {
-        sql = "INSERT OR IGNORE INTO list17  VALUES (\"";
-        sql.append(to_utf8(StringToWString(path))).append("\");");
-        command17.insert(sql);
+        command17.insert(to_utf8(StringToWString(path)));
     }
     else if (1800 < ascII && ascII <= 1900)
     {
-        sql = "INSERT OR IGNORE INTO list18  VALUES (\"";
-        sql.append(to_utf8(StringToWString(path))).append("\");");
-        command18.insert(sql);
+        command18.insert(to_utf8(StringToWString(path)));
     }
     else if (1900 < ascII && ascII <= 2000)
     {
-        sql = "INSERT OR IGNORE INTO list19  VALUES (\"";
-        sql.append(to_utf8(StringToWString(path))).append("\");");
-        command19.insert(sql);
+        command19.insert(to_utf8(StringToWString(path)));
     }
     else if (2000 < ascII && ascII <= 2100)
     {
-        sql = "INSERT OR IGNORE INTO list20  VALUES (\"";
-        sql.append(to_utf8(StringToWString(path))).append("\");");
-        command20.insert(sql);
+        command20.insert(to_utf8(StringToWString(path)));
     }
     else if (2100 < ascII && ascII <= 2200)
     {
-        sql = "INSERT OR IGNORE INTO list21  VALUES (\"";
-        sql.append(to_utf8(StringToWString(path))).append("\");");
-        command21.insert(sql);
+        command21.insert(to_utf8(StringToWString(path)));
     }
     else if (2200 < ascII && ascII <= 2300)
     {
-        sql = "INSERT OR IGNORE INTO list22  VALUES (\"";
-        sql.append(to_utf8(StringToWString(path))).append("\");");
-        command22.insert(sql);
+        command22.insert(to_utf8(StringToWString(path)));
     }
     else if (2300 < ascII && ascII <= 2400)
     {
-        sql = "INSERT OR IGNORE INTO list23  VALUES (\"";
-        sql.append(to_utf8(StringToWString(path))).append("\");");
-        command23.insert(sql);
+        command23.insert(to_utf8(StringToWString(path)));
     }
     else if (2400 < ascII && ascII <= 2500)
     {
-        sql = "INSERT OR IGNORE INTO list24  VALUES (\"";
-        sql.append(to_utf8(StringToWString(path))).append("\");");
-        command24.insert(sql);
+        command24.insert(to_utf8(StringToWString(path)));
     }
     else
     {
-        sql = "INSERT OR IGNORE INTO list25  VALUES (\"";
-        sql.append(to_utf8(StringToWString(path))).append("\");");
-        command25.insert(sql);
+        command25.insert(to_utf8(StringToWString(path)));
     }
 }
 
@@ -319,7 +277,6 @@ void searchIgnoreSearchDepth(string path, string exd)
             {
                 if (strcmp(fileinfo.name, ".") != 0 && strcmp(fileinfo.name, "..") != 0)
                 {
-
                     string name(fileinfo.name);
                     string _path = pathName.assign(path).append("\\").append(fileinfo.name);
                     transform(name.begin(), name.end(), name.begin(), ::toupper);
@@ -355,12 +312,23 @@ void searchIgnoreSearchDepth(string path, string exd)
     }
 }
 
+void buildPath(std::string& str, LONGLONG fileReferenceNum)
+{
+    UsnMap::iterator iter;
+    iter = usnMap.find(fileReferenceNum);
+    if (iter == usnMap.end())
+        return;
+    str.insert(0, "\\").insert(0, iter->second.name);
+    buildPath(str, iter->second.parent);
+}
+
 void searchFiles(const char* path, const char* exd)
 {
+    bool ret;
+    cout << "start Search" << endl;
     string file(path);
     string suffix(exd);
-    cout << "start Search" << endl;
-    search(file, exd);
+    search(file, suffix);
     cout << "end Search" << endl;
 }
 
@@ -482,20 +450,27 @@ void search(string path, string exd)
     }
 }
 
-void executeAll(std::set<string>& command)
+void executeAll(std::set<string>& command, const char* init)
 {
     std::set<string>::iterator iter;
-    string _sql_command;
-    char sql_command[1000];
+    string _path;
+    sqlite3_stmt* stmt;
+    char _init_sql[1000];
     if (!command.empty())
     {
+        memset(_init_sql, 0, 1000);
+        strcpy_s(_init_sql, 1000, init);
+        
+        sqlite3_prepare_v2(db, _init_sql, strlen(_init_sql), &stmt, 0); 
         sqlite3_exec(db, "BEGIN;", NULL, NULL, NULL);
         for (iter = command.begin(); iter != command.end(); iter++)
         {
-            _sql_command = *iter;
-            strcpy_s(sql_command, 1000, _sql_command.c_str());
-            sqlite3_exec(db, sql_command, NULL, NULL, NULL);
+            _path = *iter;
+            sqlite3_reset(stmt);
+            sqlite3_bind_text(stmt, 1, _path.c_str(), -1, SQLITE_TRANSIENT);
+            sqlite3_step(stmt);
         }
+        sqlite3_finalize(stmt);
         sqlite3_exec(db, "COMMIT;", NULL, NULL, NULL);
     }
 }
@@ -566,33 +541,33 @@ int main(int argc, char* argv[])
             cout << "normal search" << endl;
             searchFiles(searchPath, "*");
         }
-        
-        executeAll(command0);
-        executeAll(command1);
-        executeAll(command2);
-        executeAll(command3);
-        executeAll(command4);
-        executeAll(command5);
-        executeAll(command6);
-        executeAll(command7);
-        executeAll(command8);
-        executeAll(command9);
-        executeAll(command10);
-        executeAll(command11);
-        executeAll(command12);
-        executeAll(command13);
-        executeAll(command14);
-        executeAll(command15);
-        executeAll(command16);
-        executeAll(command17);
-        executeAll(command18);
-        executeAll(command19);
-        executeAll(command20);
-        executeAll(command21);
-        executeAll(command22);
-        executeAll(command23);
-        executeAll(command24);
-        executeAll(command25);
+
+        executeAll(command0, "INSERT OR IGNORE INTO list0  VALUES(?);");
+        executeAll(command1, "INSERT OR IGNORE INTO list1  VALUES(?);");
+        executeAll(command2, "INSERT OR IGNORE INTO list2  VALUES(?);");
+        executeAll(command3, "INSERT OR IGNORE INTO list3  VALUES(?);");
+        executeAll(command4, "INSERT OR IGNORE INTO list4  VALUES(?);");
+        executeAll(command5, "INSERT OR IGNORE INTO list5  VALUES(?);");
+        executeAll(command6, "INSERT OR IGNORE INTO list6  VALUES(?);");
+        executeAll(command7, "INSERT OR IGNORE INTO list7  VALUES(?);");
+        executeAll(command8, "INSERT OR IGNORE INTO list8  VALUES(?);");
+        executeAll(command9, "INSERT OR IGNORE INTO list9  VALUES(?);");
+        executeAll(command10, "INSERT OR IGNORE INTO list10  VALUES(?);");
+        executeAll(command11, "INSERT OR IGNORE INTO list11  VALUES(?);");
+        executeAll(command12, "INSERT OR IGNORE INTO list12  VALUES(?);");
+        executeAll(command13, "INSERT OR IGNORE INTO list13  VALUES(?);");
+        executeAll(command14, "INSERT OR IGNORE INTO list14  VALUES(?);");
+        executeAll(command15, "INSERT OR IGNORE INTO list15  VALUES(?);");
+        executeAll(command16, "INSERT OR IGNORE INTO list16  VALUES(?);");
+        executeAll(command17, "INSERT OR IGNORE INTO list17  VALUES(?);");
+        executeAll(command18, "INSERT OR IGNORE INTO list18  VALUES(?);");
+        executeAll(command19, "INSERT OR IGNORE INTO list19  VALUES(?);");
+        executeAll(command20, "INSERT OR IGNORE INTO list20  VALUES(?);");
+        executeAll(command21, "INSERT OR IGNORE INTO list21  VALUES(?);");
+        executeAll(command22, "INSERT OR IGNORE INTO list22  VALUES(?);");
+        executeAll(command23, "INSERT OR IGNORE INTO list23  VALUES(?);");
+        executeAll(command24, "INSERT OR IGNORE INTO list24  VALUES(?);");
+        executeAll(command25, "INSERT OR IGNORE INTO list25  VALUES(?);");
         sqlite3_close(db);
         return 0;
     }
@@ -615,37 +590,35 @@ int main()
         cout << "open database successfully" << endl << endl;
     }
 
-    sqlite3_exec(db, "PRAGMA synchronous = OFF; ", 0, 0, 0);
-
     setSearchDepth(6);
     addIgnorePath("C:\\Windows");
     searchFiles("C:", "*");
-    executeAll(command0);
-    executeAll(command1);
-    executeAll(command2);
-    executeAll(command3);
-    executeAll(command4);
-    executeAll(command5);
-    executeAll(command6);
-    executeAll(command7);
-    executeAll(command8);
-    executeAll(command9);
-    executeAll(command10);
-    executeAll(command11);
-    executeAll(command12);
-    executeAll(command13);
-    executeAll(command14);
-    executeAll(command15);
-    executeAll(command16);
-    executeAll(command17);
-    executeAll(command18);
-    executeAll(command19);
-    executeAll(command20);
-    executeAll(command21);
-    executeAll(command22);
-    executeAll(command23);
-    executeAll(command24);
-    executeAll(command25);
+    executeAll(command0, "INSERT OR IGNORE INTO list0  VALUES(?);");
+    executeAll(command1, "INSERT OR IGNORE INTO list1  VALUES(?);");
+    executeAll(command2, "INSERT OR IGNORE INTO list2  VALUES(?);");
+    executeAll(command3, "INSERT OR IGNORE INTO list3  VALUES(?);");
+    executeAll(command4, "INSERT OR IGNORE INTO list4  VALUES(?);");
+    executeAll(command5, "INSERT OR IGNORE INTO list5  VALUES(?);");
+    executeAll(command6, "INSERT OR IGNORE INTO list6  VALUES(?);");
+    executeAll(command7, "INSERT OR IGNORE INTO list7  VALUES(?);");
+    executeAll(command8, "INSERT OR IGNORE INTO list8  VALUES(?);");
+    executeAll(command9, "INSERT OR IGNORE INTO list9  VALUES(?);");
+    executeAll(command10, "INSERT OR IGNORE INTO list10  VALUES(?);");
+    executeAll(command11, "INSERT OR IGNORE INTO list11  VALUES(?);");
+    executeAll(command12, "INSERT OR IGNORE INTO list12  VALUES(?);");
+    executeAll(command13, "INSERT OR IGNORE INTO list13  VALUES(?);");
+    executeAll(command14, "INSERT OR IGNORE INTO list14  VALUES(?);");
+    executeAll(command15, "INSERT OR IGNORE INTO list15  VALUES(?);");
+    executeAll(command16, "INSERT OR IGNORE INTO list16  VALUES(?);");
+    executeAll(command17, "INSERT OR IGNORE INTO list17  VALUES(?);");
+    executeAll(command18, "INSERT OR IGNORE INTO list18  VALUES(?);");
+    executeAll(command19, "INSERT OR IGNORE INTO list19  VALUES(?);");
+    executeAll(command20, "INSERT OR IGNORE INTO list20  VALUES(?);");
+    executeAll(command21, "INSERT OR IGNORE INTO list21  VALUES(?);");
+    executeAll(command22, "INSERT OR IGNORE INTO list22  VALUES(?);");
+    executeAll(command23, "INSERT OR IGNORE INTO list23  VALUES(?);");
+    executeAll(command24, "INSERT OR IGNORE INTO list24  VALUES(?);");
+    executeAll(command25, "INSERT OR IGNORE INTO list25  VALUES(?);");
     sqlite3_close(db);
     getchar();
 }
