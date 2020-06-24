@@ -1152,7 +1152,7 @@ public class SettingsFrame {
             JOptionPane.showMessageDialog(frame, getTranslation("Hotkey setting is wrong, please change"));
             return;
         } else {
-            if (!(64 < _hotkey.charAt(_hotkey.length() - 1) && _hotkey.charAt(_hotkey.length() - 1) < 91)) {
+            if (!CheckHotKey.getInstance().isHotkeyAvailable(_hotkey)) {
                 JOptionPane.showMessageDialog(frame, getTranslation("Hotkey setting is wrong, please change"));
                 return;
             }

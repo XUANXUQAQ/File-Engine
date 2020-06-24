@@ -139,7 +139,7 @@ public class SearchBar {
         initLabel(font, searchBarWidth, labelHeight, labelHeight * 7, label7);
         initLabel(font, searchBarWidth, labelHeight, labelHeight * 8, label8);
 
-        iconSideLength = label1.getHeight() / 3; //定义图标边长
+        iconSideLength = labelHeight / 3; //定义图标边长
 
         URL icon = TaskBar.class.getResource("/icons/taskbar_32x32.png");
         Image image = new ImageIcon(icon).getImage();

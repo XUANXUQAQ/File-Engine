@@ -21,7 +21,7 @@ public class Search {
     private volatile static boolean isUsable = true;
     private static volatile boolean isManualUpdate = false;
     private Set<String> commandSet = ConcurrentHashMap.newKeySet();
-
+    private ConcurrentLinkedQueue<String> commandQueue = new ConcurrentLinkedQueue<>();
 
     private static class SearchBuilder {
         private static Search instance = new Search();
@@ -158,13 +158,14 @@ public class Search {
         try {
             if (!commandSet.isEmpty()) {
                 isUsable = false;
-                ConcurrentLinkedQueue<String> queue = new ConcurrentLinkedQueue<>(commandSet);
+                commandQueue.addAll(commandSet);
                 commandSet.clear();
                 stmt.execute("BEGIN;");
-                for (String each : queue) {
+                for (String each : commandQueue) {
                     stmt.executeUpdate(each);
                 }
                 stmt.execute("COMMIT;");
+                commandQueue.clear();
                 isUsable = true;
             }
         } catch (SQLException ignored) {
@@ -266,8 +267,16 @@ public class Search {
 
     private void clearAllTables(Statement stmt) {
         commandSet.clear();
+        //删除所有表
         for (int i = 0; i < 26; i++) {
-            commandSet.add("DELETE FROM list" + i + ";");
+            commandSet.add("DROP TABLE list" + i + ";");
+        }
+        executeAllCommands(stmt);
+        //创建新表
+        String sql = "CREATE TABLE list";
+        for (int i = 0; i < 26; i++) {
+            String command = sql + i + " " + "(PATH text unique)" + ";";
+            commandSet.add(command);
         }
         executeAllCommands(stmt);
     }
