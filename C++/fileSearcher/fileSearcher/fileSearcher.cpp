@@ -10,17 +10,9 @@
 #include <Windows.h>
 #include <locale>
 #include <set>
-#include <unordered_map>
 //#define TEST
 
 using namespace std;
-
-typedef struct {
-    ULONGLONG parent;
-    char name[1024];
-} FILE_INFO;
-
-typedef unordered_map<LONGLONG, FILE_INFO> UsnMap;
 
 set<string> command0;
 set<string> command1;
@@ -49,7 +41,6 @@ set<string> command23;
 set<string> command24;
 set<string> command25;
 vector<string> ignorePathVector;
-UsnMap usnMap;
 
 int searchDepth;
 char* searchPath;
@@ -312,15 +303,6 @@ void searchIgnoreSearchDepth(string path, string exd)
     }
 }
 
-void buildPath(std::string& str, LONGLONG fileReferenceNum)
-{
-    UsnMap::iterator iter;
-    iter = usnMap.find(fileReferenceNum);
-    if (iter == usnMap.end())
-        return;
-    str.insert(0, "\\").insert(0, iter->second.name);
-    buildPath(str, iter->second.parent);
-}
 
 void searchFiles(const char* path, const char* exd)
 {
