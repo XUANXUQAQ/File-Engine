@@ -759,8 +759,10 @@ public class SettingsFrame {
     }
 
     private static void initLanguageSet() {
+        //TODO 添加语言
         languageSet.add("简体中文");
         languageSet.add("English(US)");
+        languageSet.add("日本語");
     }
 
     private static void initTranslations(String language) {
@@ -782,7 +784,9 @@ public class SettingsFrame {
     }
 
     private static void initLanguageFileMap() {
+        //TODO 添加语言
         fileMap.put("简体中文", "/language/Chinese(Simplified).txt");
+        fileMap.put("日本語", "/language/Japanese.txt");
     }
 
     public static String getTranslation(String text) {
