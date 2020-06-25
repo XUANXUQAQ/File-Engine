@@ -1,14 +1,12 @@
 package search;
 
 import DllInterface.IsLocalDisk;
+import DllInterface.isNTFS;
 import frames.SearchBar;
 import frames.SettingsFrame;
 import frames.TaskBar;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -194,28 +192,53 @@ public class Search {
     }
 
 
-    private void searchFile(String ignorePath, int searchDepth) {
+    private void searchFile(String ignorePath, int searchDepth) throws IOException, InterruptedException {
+        boolean needSearchIgnoreSearchDepth = true;
         File[] roots = File.listRoots();
+        StringBuilder strb = new StringBuilder(26);
         for (File root : roots) {
             if (IsLocalDisk.INSTANCE.isLocalDisk(root.getAbsolutePath())) {
-                String path = root.getAbsolutePath();
-                path = path.substring(0, 2);
-                __searchFile(path, searchDepth, ignorePath);
+                if (isNTFS.INSTANCE.isDiskNTFS(root.getAbsolutePath())) {
+                    needSearchIgnoreSearchDepth = false;
+                    strb.append(root.getAbsolutePath()).append(",");
+                } else {
+                    String path = root.getAbsolutePath();
+                    path = path.substring(0, 2);
+                    __searchFile(path, searchDepth, ignorePath);
+                }
             }
         }
-
-        __searchFileIgnoreSearchDepth(getStartMenu(), ignorePath);
-        __searchFileIgnoreSearchDepth("C:\\ProgramData\\Microsoft\\Windows\\Start Menu", ignorePath);
-
+        if (needSearchIgnoreSearchDepth) {
+            __searchFileIgnoreSearchDepth(getStartMenu(), ignorePath);
+            __searchFileIgnoreSearchDepth("C:\\ProgramData\\Microsoft\\Windows\\Start Menu", ignorePath);
+        } else {
+            searchByUSN(strb.toString());
+        }
         TaskBar.getInstance().showMessage(SettingsFrame.getTranslation("Info"), SettingsFrame.getTranslation("Search Done"));
         isManualUpdate = false;
         isUsable = true;
     }
 
+    private void searchByUSN(String paths) throws IOException, InterruptedException {
+        File fileSearcherUSN = new File("user/fileSearcherUSN.exe");
+        String absPath = fileSearcherUSN.getAbsolutePath();
+        String start = absPath.substring(0, 2);
+        String end = "\"" + absPath.substring(2) + "\"";
+        File database = new File("data.db");
+        try (BufferedWriter buffW = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("user/MFTSearchInfo.dat"), StandardCharsets.UTF_8))) {
+            buffW.write(paths + "\n");
+            buffW.write(database.getAbsolutePath());
+        }
+        String command = "cmd.exe /c " + start + end;
+        Process p = Runtime.getRuntime().exec(command, null, new File("user"));
+        p.waitFor();
+
+    }
+
     private String getStartMenu() {
-        String startMenu;
-        BufferedReader bufrIn;
         try {
+            String startMenu;
+            BufferedReader bufrIn;
             Process getStartMenu = Runtime.getRuntime().exec("reg query \"HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders\" " + "/v " + "\"Start Menu\"");
             bufrIn = new BufferedReader(new InputStreamReader(getStartMenu.getInputStream(), StandardCharsets.UTF_8));
             while ((startMenu = bufrIn.readLine()) != null) {
@@ -224,8 +247,8 @@ public class Search {
                     return startMenu;
                 }
             }
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (IOException ignored) {
+
         }
         return null;
     }
@@ -245,24 +268,26 @@ public class Search {
         }
     }
 
-    private void __searchFile(String path, int searchDepth, String ignorePath) {
+    private void __searchFile(String path, int searchDepth, String ignorePath) throws InterruptedException, IOException {
         File fileSearcher = new File("user/fileSearcher.exe");
         String absPath = fileSearcher.getAbsolutePath();
         String start = absPath.substring(0, 2);
         String end = "\"" + absPath.substring(2) + "\"";
         File database = new File("data.db");
         String command = "cmd.exe /c " + start + end + " \"" + path + "\"" + " \"" + searchDepth + "\" " + "\"" + ignorePath + "\" " + "\"" + database.getAbsolutePath() + "\" " + "\"" + "0" + "\"";
-        try {
-            Process p = Runtime.getRuntime().exec(command);
-            p.waitFor();
-        } catch (IOException | InterruptedException ignored) {
-
-        }
+        Process p = Runtime.getRuntime().exec(command);
+        p.waitFor();
     }
 
     public void updateLists(String ignorePath, int searchDepth, Statement stmt) {
-        clearAllTables(stmt);
-        searchFile(ignorePath, searchDepth);
+        try {
+            clearAllTables(stmt);
+            searchFile(ignorePath, searchDepth);
+        } catch (IOException | InterruptedException e) {
+            if (SettingsFrame.isDebug()) {
+                e.printStackTrace();
+            }
+        }
     }
 
     private void clearAllTables(Statement stmt) {
