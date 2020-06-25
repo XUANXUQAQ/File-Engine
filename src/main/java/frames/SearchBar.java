@@ -234,41 +234,45 @@ public class SearchBar {
             public void mousePressed(MouseEvent e) {
                 int count = e.getClickCount();
                 if (count == 2) {
-                    closedTodo();
-                    if (!listResults.isEmpty()) {
-                        if (!isCommandMode) {
-                            if (isOpenLastFolderPressed) {
-                                //打开上级文件夹
-                                File open = new File(listResults.get(labelCount.get()));
-                                try {
-                                    Runtime.getRuntime().exec("explorer.exe /select, \"" + open.getAbsolutePath() + "\"");
-                                } catch (IOException e1) {
-                                    e1.printStackTrace();
-                                }
-                            } else if (SettingsFrame.isDefaultAdmin() || isRunAsAdminPressed) {
-                                openWithAdmin(listResults.get(labelCount.get()));
-                            } else {
-                                String openFile = listResults.get(labelCount.get());
-                                if (openFile.endsWith(".bat") || openFile.endsWith(".cmd")) {
-                                    openWithAdmin(openFile);
-                                } else {
-                                    openWithoutAdmin(openFile);
-                                }
+                    //enter被点击
+                    searchBar.setVisible(false);
+                    if (!isCommandMode) {
+                        if (isOpenLastFolderPressed) {
+                            //打开上级文件夹
+                            File open = new File(listResults.get(labelCount.get()));
+                            try {
+                                Runtime.getRuntime().exec("explorer.exe /select, \"" + open.getAbsolutePath() + "\"");
+                            } catch (IOException e1) {
+                                e1.printStackTrace();
                             }
-                            saveCache(listResults.get(labelCount.get()) + ';');
+                        } else if (SettingsFrame.isDefaultAdmin() || isRunAsAdminPressed) {
+                            openWithAdmin(listResults.get(labelCount.get()));
+                        } else if (isCopyPathPressed) {
+                            Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+                            Transferable trans = new StringSelection(listResults.get(labelCount.get()));
+                            clipboard.setContents(trans, null);
                         } else {
-                            //直接打开
-                            String command = listResults.get(labelCount.get());
-                            if (Desktop.isDesktopSupported()) {
-                                Desktop desktop = Desktop.getDesktop();
-                                try {
-                                    desktop.open(new File(semicolon.split(command)[1]));
-                                } catch (Exception e1) {
-                                    JOptionPane.showMessageDialog(null, SettingsFrame.getTranslation("Execute failed"));
-                                }
+                            String openFile = listResults.get(labelCount.get());
+                            if (openFile.endsWith(".bat") || openFile.endsWith(".cmd")) {
+                                openWithAdmin(openFile);
+                            } else {
+                                openWithoutAdmin(openFile);
+                            }
+                        }
+                        saveCache(listResults.get(labelCount.get()) + ';');
+                    } else {
+                        //直接打开
+                        String command = listResults.get(labelCount.get());
+                        if (Desktop.isDesktopSupported()) {
+                            Desktop desktop = Desktop.getDesktop();
+                            try {
+                                desktop.open(new File(semicolon.split(command)[1]));
+                            } catch (Exception e1) {
+                                JOptionPane.showMessageDialog(null, SettingsFrame.getTranslation("Execute failed"));
                             }
                         }
                     }
+                    closedTodo();
                 }
             }
 
