@@ -6,7 +6,6 @@ import com.alibaba.fastjson.serializer.SerializerFeature;
 import download.DownloadUpdate;
 import hotkeyListener.CheckHotKey;
 import moveFiles.moveFiles;
-import search.Search;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileSystemView;
@@ -28,20 +27,19 @@ public class SettingsFrame {
     public static final String version = "2.0"; //TODO 更改版本号
     private static volatile boolean mainExit = false;
     public static String name;
-    private static int cacheNumLimit;
-    private static String hotkey;
-    private static int updateTimeLimit;
-    private static String ignorePath;
-    private static String dataPath;
-    private static String priorityFolder;
-    private static int searchDepth;
-    private static boolean isDefaultAdmin;
-    private static boolean isLoseFocusClose;
-    private static int openLastFolderKeyCode;
-    private static int runAsAdminKeyCode;
-    private static int copyPathKeyCode;
-    private static float transparency;
-    private static int _copyPathKeyCode;
+    private static volatile int cacheNumLimit;
+    private static volatile String hotkey;
+    private static volatile int updateTimeLimit;
+    private static volatile String ignorePath;
+    private static volatile String priorityFolder;
+    private static volatile int searchDepth;
+    private static volatile boolean isDefaultAdmin;
+    private static volatile boolean isLoseFocusClose;
+    private static volatile int openLastFolderKeyCode;
+    private static volatile int runAsAdminKeyCode;
+    private static volatile int copyPathKeyCode;
+    private static volatile float transparency;
+    private static volatile int _copyPathKeyCode;
     private static File tmp;
     private static File settings;
     private static HashSet<String> cmdSet;
@@ -49,19 +47,17 @@ public class SettingsFrame {
     private static ConcurrentHashMap<String, String> translationMap;
     private static ConcurrentHashMap<String, String> fileMap;
     private static Pattern equalSign;
-    private static int _openLastFolderKeyCode;
-    private static int _runAsAdminKeyCode;
+    private static volatile int _openLastFolderKeyCode;
+    private static volatile int _runAsAdminKeyCode;
     private static CheckHotKey HotKeyListener;
-    private static int labelColor;
-    private static int defaultBackgroundColor;
-    private static int fontColorWithCoverage;
-    private static int fontColor;
-    private static int searchBarColor;
-    private static String language;
-    private static boolean isStartup;
+    private static volatile int labelColor;
+    private static volatile int defaultBackgroundColor;
+    private static volatile int fontColorWithCoverage;
+    private static volatile int fontColor;
+    private static volatile int searchBarColor;
+    private volatile static String language;
+    private static volatile boolean isStartup;
     private static SearchBar searchBar;
-    private static TaskBar taskBar;
-    private static Search search;
     private Thread updateThread = null;
     private JFrame frame;
     private JTextField textFieldUpdateTime;
@@ -258,12 +254,13 @@ public class SettingsFrame {
         fileMap = new ConcurrentHashMap<>();
         translationMap = new ConcurrentHashMap<>();
         languageSet = new HashSet<>();
+        readAllSettings();
+
         HotKeyListener = CheckHotKey.getInstance();
         searchBar = SearchBar.getInstance();
-        taskBar = TaskBar.getInstance();
-        search = Search.getInstance();
 
         setAllSettings();
+
         initLanguageFileMap();
         translate(language);
 
@@ -855,7 +852,7 @@ public class SettingsFrame {
     }
 
     private static void readAllSettings() {
-        try (BufferedReader buffR = new BufferedReader(new InputStreamReader(new FileInputStream(settings), StandardCharsets.UTF_8))) {
+        try (BufferedReader buffR = new BufferedReader(new InputStreamReader(new FileInputStream("user/settings.json"), StandardCharsets.UTF_8))) {
             String line;
             StringBuilder result = new StringBuilder();
             while (null != (line = buffR.readLine())) {
@@ -876,11 +873,6 @@ public class SettingsFrame {
                 hotkey = settingsInJson.getString("hotkey");
             } else {
                 hotkey = "Ctrl + Alt + J";
-            }
-            if (settingsInJson.containsKey("dataPath")) {
-                dataPath = settingsInJson.getString("dataPath");
-            } else {
-                dataPath = new File("data.db").getAbsolutePath();
             }
             if (settingsInJson.containsKey("priorityFolder")) {
                 priorityFolder = settingsInJson.getString("priorityFolder");
@@ -965,22 +957,15 @@ public class SettingsFrame {
             } else {
                 language = "English(US)";
             }
-        } catch (NullPointerException | IOException ignored) {
-
+        } catch (NullPointerException | IOException e) {
+            if (isDebug()) {
+                e.printStackTrace();
+            }
         }
     }
 
     private static void setAllSettings() {
-        readAllSettings();
         HotKeyListener.registerHotkey(hotkey);
-        File data = new File(dataPath);
-        if (!data.exists()) {
-            taskBar.showMessage(getTranslation("Info"), getTranslation("Detected that the cache does not exist and is searching again"));
-            data = new File("data.db");
-            dataPath = data.getAbsolutePath();
-            search.setManualUpdate(true);
-        }
-
         searchBar.setTransparency(transparency);
         searchBar.setDefaultBackgroundColor(defaultBackgroundColor);
         searchBar.setLabelColor(labelColor);
@@ -1000,7 +985,6 @@ public class SettingsFrame {
         allSettings.put("ignorePath", ignorePath);
         allSettings.put("searchDepth", searchDepth);
         allSettings.put("priorityFolder", priorityFolder);
-        allSettings.put("dataPath", dataPath);
         allSettings.put("isDefaultAdmin", isDefaultAdmin);
         allSettings.put("isLoseFocusClose", isLoseFocusClose);
         allSettings.put("runAsAdminKeyCode", runAsAdminKeyCode);
@@ -1281,7 +1265,6 @@ public class SettingsFrame {
         allSettings.put("ignorePath", ignorePath);
         allSettings.put("searchDepth", searchDepth);
         allSettings.put("priorityFolder", priorityFolder);
-        allSettings.put("dataPath", dataPath);
         allSettings.put("isDefaultAdmin", isDefaultAdmin);
         allSettings.put("isLoseFocusClose", isLoseFocusClose);
         allSettings.put("runAsAdminKeyCode", runAsAdminKeyCode);
