@@ -5,8 +5,6 @@ A tool can make you work more efficiently.
 提高工作效率。
 这是一个绿色软件，不必安装，随时使用。
 
-注意：该程序需要管理员权限来监控文件更改事件。在 "搜索窗口与权限设置" 中可以取消UAC弹窗。
-
 感谢以下项目：
 
 1.fastjson (https://github.com/alibaba/fastjson)
@@ -27,13 +25,10 @@ A tool can make you work more efficiently.
 ## 使用
 请下载系统对应位数的程序，否则可能会出现错误。
 
-[下载最新稳定版64位](https://github.com/XUANXUQAQ/File-Engine/releases/download/1.9/File-Engine-x64.V1.9.rar)
+[下载最新稳定版64位](https://github.com/XUANXUQAQ/File-Engine/releases/download/2.0/File-Engine-x64.V2.0.7z)
 
-[下载最新稳定版32位](https://github.com/XUANXUQAQ/File-Engine/releases/download/1.9/File-Engine-x86.V1.9.rar)
+[下载最新稳定版32位](https://github.com/XUANXUQAQ/File-Engine/releases/download/2.0/File-Engine-x86.V2.0.7z)
 
-[下载最新测试版64位](https://github.com/XUANXUQAQ/File-Engine/releases/download/1.9/File-Engine-x64.V1.9.rar)
-
-[下载最新测试版32位](https://github.com/XUANXUQAQ/File-Engine/releases/download/1.9/File-Engine-x86.V1.9.rar)
 1. 默认Ctrl + Alt + J 呼出搜索菜单，可以在设置中更改。
 
 2. 按下Ctrl + Enter可以打开对应文件所在的文件夹, Shift + Enter以管理员方式运行，Alt + Enter复制文件路径。
@@ -53,17 +48,14 @@ A tool can make you work more efficiently.
 9. 支持多个关键字搜索，更加准确，不同关键字请用 ";" 隔开"。
 
 ## Demos:
-![8PPdxS.gif](https://s2.ax1x.com/2020/03/10/8PPdxS.gif)
+![8PPdxS.gif](https://github.com/XUANXUQAQ/File-Engine/raw/2.0/%E6%BC%94%E7%A4%BA.gif)
 
-![8PZ3S1.png](https://s2.ax1x.com/2020/03/10/8PZ3S1.png)
+![8PZ3S1.png](https://s1.ax1x.com/2020/06/26/NrTznJ.png)
 
-![8PCZp8.png](https://s2.ax1x.com/2020/03/10/8PCZp8.png)
+![8PCZp8.png](https://s1.ax1x.com/2020/06/26/NrTvX4.png)
 
-![8PCe1S.png](https://s2.ax1x.com/2020/03/10/8PCe1S.png)
+![8PCe1S.png](https://s1.ax1x.com/2020/06/26/NrTjcF.png)
 
-![8PCAtP.png](https://s2.ax1x.com/2020/03/10/8PCAtP.png)
- 
-![8PPlKe.png](https://s1.ax1x.com/2020/05/17/Y2uk2q.png)
 ### 更多功能敬请期待
     
    
