@@ -20,25 +20,26 @@ import java.util.Objects;
 public class MainClass {
     //32bit
     private static final String fileMonitor86Md5 = "1005aa7fa75ae86d314afcfc5df0af6b";
-    private static final String fileSearcher86Md5 = "542ee02c8fd80fb5803d905fcf18ebb2";
+    private static final String fileSearcher86Md5 = "2a7d5828ad3fe946de44a15854377acc";
     private static final String getAscII86Md5 = "e370e53ce6c18758a5468fe11ccca652";
     private static final String hotkeyListener86Md5 = "15bd4db12a4939969c27c03ac9e57ddd";
     private static final String isLocalDisk86Md5 = "9b1c4c4fc44b52bff4f226b39c1ac46f";
     private static final String updater86Md5 = "b11a1307c497f00e570b238224173ba2";
-    private static final String fileSearcherUSN86Md5 = "881f1b650ddf9203d1e47c2b25954308";
+    private static final String fileSearcherUSN86Md5 = "cd660a6d84f7210abd7fc485f7c544ea";
     private static final String isNTFS86Md5 = "2aff387756192c704c0c876f2ad12fa2";
+    private static final String sqlite386Md5 = "82b03cdb95fb0ef88b876d141b478a6d";
     //64bit
     private static final String fileMonitor64Md5 = "db64b40ed1ccec6a7f2af1b40c1d22ab";
-    private static final String fileSearcher64Md5 = "7a18965a5d001484b941b6cb8a5cc8cd";
+    private static final String fileSearcher64Md5 = "d627c6f995cd13e2ded8556332bbbb9d";
     private static final String getAscII64Md5 = "eff607d2dd4a7e4c878948fe8f24b3ea";
     private static final String hotkeyListener64Md5 = "41388e31d6fc22fb430f636d402cf608";
     private static final String isLocalDisk64Md5 = "64f64bc828f477aa9ce6f5f8fd6010f3";
     private static final String updater64Md5 = "bf8482e14b1457395f2ef1ec200f95c0";
-    private static final String fileSearcherUSN64Md5 = "7f5df217915205769fbf84d456895534";
+    private static final String fileSearcherUSN64Md5 = "1107e96a7f219088ec4c8dee295a4866";
     private static final String isNTFS64Md5 = "b5f7ea2923a42873883a3bcda2bafd2";
+    private static final String sqlite364Md5 = "658c71b8b93ba4eb5b4936f46a112449";
 
     private static final String shortcutGeneratorMd5 = "fa4e26f99f3dcd58d827828c411ea5d7";
-    private static final String sqlite3Md5 = "658c71b8b93ba4eb5b4936f46a112449";
 
     private static void initializeDllInterface() {
         try {
@@ -216,6 +217,7 @@ public class MainClass {
             copyOrIgnoreFile("user/fileSearcher.exe", "/win32-x86-64/fileSearcher.exe", fileSearcher64Md5);
             copyOrIgnoreFile("user/fileSearcherUSN.exe", "/win32-x86-64/fileSearcherUSN.exe", fileSearcherUSN64Md5);
             copyOrIgnoreFile("user/isNTFS.dll", "/win32-x86-64/isNTFS.dll", isNTFS64Md5);
+            copyOrIgnoreFile("user/sqlite3.dll", "/win32-x86-64/sqlite3.dll", sqlite364Md5);
         } else {
             copyOrIgnoreFile("user/fileMonitor.dll", "/win32-x86/fileMonitor.dll", fileMonitor86Md5);
             copyOrIgnoreFile("user/getAscII.dll", "/win32-x86/getAscII.dll", getAscII86Md5);
@@ -224,9 +226,9 @@ public class MainClass {
             copyOrIgnoreFile("user/fileSearcher.exe", "/win32-x86/fileSearcher.exe", fileSearcher86Md5);
             copyOrIgnoreFile("user/fileSearcherUSN.exe", "/win32-x86/fileSearcherUSN.exe", fileSearcherUSN86Md5);
             copyOrIgnoreFile("user/isNTFS.dll", "/win32-x86/isNTFS.dll", isNTFS86Md5);
+            copyOrIgnoreFile("user/sqlite3.dll", "/win32-x86/sqlite3.dll", sqlite386Md5);
         }
         copyOrIgnoreFile("user/shortcutGenerator.vbs", "/shortcutGenerator.vbs", shortcutGeneratorMd5);
-        copyOrIgnoreFile("user/sqlite3.dll", "/sqlite3.dll", sqlite3Md5);
     }
 
     private static void copyOrIgnoreFile(String path, String rootPath, String md5) {

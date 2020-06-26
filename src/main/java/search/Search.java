@@ -232,7 +232,6 @@ public class Search {
         String command = "cmd.exe /c " + start + end;
         Process p = Runtime.getRuntime().exec(command, null, new File("user"));
         p.waitFor();
-
     }
 
     private String getStartMenu() {
