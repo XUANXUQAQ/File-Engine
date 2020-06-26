@@ -79,8 +79,6 @@ int main() {
 	while (taskFinishedNum != diskCount) {
 		Sleep(5);
 	}
-	sqlite3_exec(db, "PRAGMA synchronous = OFF;", NULL, NULL, NULL);
-	sqlite3_exec(db, "PRAGMA SQLITE_TEMP_STORE=2;", NULL, NULL, NULL);
 	vector<Volume>::iterator iter = volumeList.begin();
 	vector<Volume>::iterator end = volumeList.end();
 	for (; iter != end; ++iter) {

@@ -142,6 +142,7 @@ public class SearchBar {
         initLabel(font, searchBarWidth, labelHeight, labelHeight * 8, label8);
 
         iconSideLength = labelHeight / 3; //定义图标边长
+        GetIcon.initIconCache(iconSideLength, iconSideLength);
 
         URL icon = TaskBar.class.getResource("/icons/taskbar_32x32.png");
         Image image = new ImageIcon(icon).getImage();
@@ -2357,7 +2358,7 @@ public class SearchBar {
         });
 
         int cpuCores = Runtime.getRuntime().availableProcessors();
-        for (int i = 0; i < cpuCores / 2; i++) {
+        for (int i = 0; i < cpuCores - 2; i++) {
             cachedThreadPool.execute(() -> {
                 try {
                     while (SettingsFrame.isNotMainExit()) {
@@ -2725,8 +2726,7 @@ public class SearchBar {
 
     private void showResultOnLabel(String path, JLabel label, boolean isChosen) {
         String name = getFileName(path);
-        ImageIcon icon = (ImageIcon) GetIcon.getBigIcon(path);
-        icon = changeIcon(icon, iconSideLength, iconSideLength);
+        ImageIcon icon = GetIcon.getBigIcon(path, iconSideLength, iconSideLength);
         label.setIcon(icon);
         label.setBorder(border);
         label.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>" + getParentPath(path) + "</body></html>");
@@ -2741,8 +2741,7 @@ public class SearchBar {
         String[] info = semicolon.split(command);
         String path = info[1];
         String name = info[0];
-        ImageIcon imageIcon = (ImageIcon) GetIcon.getBigIcon(path);
-        imageIcon = changeIcon(imageIcon, iconSideLength, iconSideLength);
+        ImageIcon imageIcon = GetIcon.getBigIcon(path, iconSideLength, iconSideLength);
         label.setIcon(imageIcon);
         label.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>" + path + "</font></body></html>");
         if (isChosen) {
@@ -2901,15 +2900,6 @@ public class SearchBar {
     public String getFileName(String path) {
         int index = path.lastIndexOf(File.separator);
         return path.substring(index + 1);
-    }
-
-    private ImageIcon changeIcon(ImageIcon icon, int width, int height) {
-        try {
-            Image image = icon.getImage().getScaledInstance(width, height, Image.SCALE_DEFAULT);
-            return new ImageIcon(image);
-        } catch (NullPointerException e) {
-            return null;
-        }
     }
 
     public int getAscIISum(String path) {
