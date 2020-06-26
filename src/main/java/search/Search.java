@@ -257,7 +257,7 @@ public class Search {
         String end = "\"" + absPath.substring(2) + "\"";
         File database = new File("data.db");
         try (BufferedWriter buffW = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("user/MFTSearchInfo.dat"), StandardCharsets.UTF_8))) {
-            buffW.write(paths + "\n");
+            buffW.write(paths + "\r\n");
             buffW.write(database.getAbsolutePath());
         }
         String command = "cmd.exe /c " + start + end;

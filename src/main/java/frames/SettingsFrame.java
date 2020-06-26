@@ -499,7 +499,6 @@ public class SettingsFrame {
         });
         buttonSave.addActionListener(e -> {
             saveChanges();
-            hideFrame();
         });
         labelAboutGithub.addMouseListener(new MouseAdapter() {
             @Override
@@ -877,21 +876,30 @@ public class SettingsFrame {
             }
             if (settingsInJson.containsKey("hotkey")) {
                 hotkey = settingsInJson.getString("hotkey");
+                if (hotkey == null) {
+                    hotkey = "Ctrl + Alt + J";
+                }
             } else {
                 hotkey = "Ctrl + Alt + J";
             }
             if (settingsInJson.containsKey("priorityFolder")) {
                 priorityFolder = settingsInJson.getString("priorityFolder");
+                if (priorityFolder == null) {
+                    priorityFolder = "";
+                }
             } else {
                 priorityFolder = "";
             }
             if (settingsInJson.containsKey("searchDepth")) {
                 searchDepth = settingsInJson.getInteger("searchDepth");
             } else {
-                searchDepth = 6;
+                searchDepth = 8;
             }
             if (settingsInJson.containsKey("ignorePath")) {
                 ignorePath = settingsInJson.getString("ignorePath");
+                if (ignorePath == null) {
+                    ignorePath = "C:\\Windows,";
+                }
             } else {
                 ignorePath = "C:\\Windows,";
             }
@@ -936,7 +944,7 @@ public class SettingsFrame {
             if (settingsInJson.containsKey("searchBarColor")) {
                 searchBarColor = settingsInJson.getInteger("searchBarColor");
             } else {
-                searchBarColor = 0xfffff;
+                searchBarColor = 0xffffff;
             }
             if (settingsInJson.containsKey("defaultBackground")) {
                 defaultBackgroundColor = settingsInJson.getInteger("defaultBackground");
@@ -956,17 +964,39 @@ public class SettingsFrame {
             if (settingsInJson.containsKey("fontColor")) {
                 fontColor = settingsInJson.getInteger("fontColor");
             } else {
-                fontColor = 0xC5C5C5;
+                fontColor = 0x333333;
             }
             if (settingsInJson.containsKey("language")) {
                 language = settingsInJson.getString("language");
+                if (language == null) {
+                    language = "English(US)";
+                }
             } else {
                 language = "English(US)";
             }
         } catch (NullPointerException | IOException e) {
-            if (isDebug()) {
-                e.printStackTrace();
-            }
+            isStartup = false;
+            cacheNumLimit = 1000;
+            hotkey = "Ctrl + Alt + J";
+            priorityFolder = "";
+            searchDepth = 8;
+            ignorePath = "C:\\Windows,";
+            updateTimeLimit = 5;
+            isDefaultAdmin = false;
+            isLoseFocusClose = true;
+            openLastFolderKeyCode = 17;
+            runAsAdminKeyCode = 16;
+            copyPathKeyCode = 18;
+            transparency = 0.8f;
+            searchBarColor = 0xffffff;
+            defaultBackgroundColor = 0xffffff;
+            fontColorWithCoverage = 0x1C0EFF;
+            labelColor = 0xFF9868;
+            fontColor = 0x333333;
+            language = "English(US)";
+            _openLastFolderKeyCode = openLastFolderKeyCode;
+            _runAsAdminKeyCode = runAsAdminKeyCode;
+            _copyPathKeyCode = copyPathKeyCode;
         }
     }
 
@@ -1301,6 +1331,7 @@ public class SettingsFrame {
         } catch (IOException ignored) {
 
         }
+        hideFrame();
     }
 
     public static boolean isDebug() {
