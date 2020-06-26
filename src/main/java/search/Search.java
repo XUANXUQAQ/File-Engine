@@ -8,6 +8,8 @@ import frames.TaskBar;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Set;
@@ -171,6 +173,34 @@ public class Search {
         }
     }
 
+    public static void initDatabase() {
+        Statement stmt;
+        String sql = "CREATE TABLE list";
+        try (Connection conn = DriverManager.getConnection("jdbc:sqlite:data.db")) {
+            if (SettingsFrame.isDebug()) {
+                System.out.println("open database successfully");
+            }
+            stmt = conn.createStatement();
+            stmt.execute("BEGIN;");
+            for (int i = 0; i < 26; i++) {
+                String command = sql + i + " " + "(PATH text unique)" + ";";
+                stmt.executeUpdate(command);
+            }
+            stmt.execute("COMMIT;");
+            stmt.execute("PRAGMA SQLITE_THREADSAFE=2;");
+            stmt.execute("PRAGMA SQLITE_TEMP_STORE=2;");
+            stmt.execute("PRAGMA journal_mode=WAL;");
+            stmt.execute("PRAGMA synchronous=OFF;");
+            stmt.execute("PRAGMA page_size=4000;");
+            stmt.execute("PRAGMA cache_size=4000;");
+            stmt.execute("PRAGMA mmap_size=4096;");
+        } catch (Exception e) {
+            if (SettingsFrame.isDebug()) {
+                e.printStackTrace();
+            }
+        }
+    }
+
     public boolean isManualUpdate() {
         return isManualUpdate;
     }
@@ -280,6 +310,7 @@ public class Search {
 
     public void updateLists(String ignorePath, int searchDepth, Statement stmt) {
         try {
+            TaskBar.getInstance().showMessage(SettingsFrame.getTranslation("Info"), SettingsFrame.getTranslation("Updating file index"));
             clearAllTables(stmt);
             searchFile(ignorePath, searchDepth);
         } catch (IOException | InterruptedException e) {
@@ -296,12 +327,6 @@ public class Search {
             commandSet.add("DROP TABLE IF EXISTS list" + i + ";");
         }
         executeAllCommands(stmt);
-        //创建新表
-        String sql = "CREATE TABLE list";
-        for (int i = 0; i < 26; i++) {
-            String command = sql + i + " " + "(PATH text unique)" + ";";
-            commandSet.add(command);
-        }
-        executeAllCommands(stmt);
+        initDatabase();
     }
 }
