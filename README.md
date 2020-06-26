@@ -5,8 +5,6 @@ A tool can make you work more efficiently.
 提高工作效率。
 这是一个绿色软件，不必安装，随时使用。
 
-注意：该程序需要管理员权限来监控文件更改事件。在 "搜索窗口与权限设置" 中可以取消UAC弹窗。
-
 感谢以下项目：
 
 1.fastjson (https://github.com/alibaba/fastjson)
