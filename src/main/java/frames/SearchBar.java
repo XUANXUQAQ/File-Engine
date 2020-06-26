@@ -1975,7 +1975,7 @@ public class SearchBar {
                     if (System.currentTimeMillis() - mouseWheelTime > 500) {
                         isLockMouseMotion = false;
                     }
-                    Thread.sleep(50);
+                    Thread.sleep(20);
                 }
             } catch (Exception e) {
                 if (SettingsFrame.isDebug() && !(e instanceof InterruptedException)) {
@@ -2356,22 +2356,19 @@ public class SearchBar {
             }
         });
 
-        for (int i = 0; i < 2; i++) {
+        int cpuCores = Runtime.getRuntime().availableProcessors();
+        for (int i = 0; i < cpuCores / 2; i++) {
             cachedThreadPool.execute(() -> {
                 try {
-                    while (SettingsFrame.isNotMainExit()) {
-                        String command;
-                        try (Connection databaseConn = DriverManager.getConnection("jdbc:sqlite:data.db"); Statement stmt = databaseConn.createStatement()) {
-                            while (SettingsFrame.isNotMainExit()) {
-                                if (!isCommandMode) {
-                                    if (!commandQueue.isEmpty()) {
-                                        while ((command = commandQueue.poll()) != null) {
-                                            searchAndAddToTempResults(System.currentTimeMillis(), command, stmt);
-                                        }
-                                    }
+                    String command;
+                    try (Connection databaseConn = DriverManager.getConnection("jdbc:sqlite:data.db"); Statement stmt = databaseConn.createStatement()) {
+                        while (SettingsFrame.isNotMainExit()) {
+                            if (!isCommandMode) {
+                                while ((command = commandQueue.poll()) != null) {
+                                    searchAndAddToTempResults(System.currentTimeMillis(), command, stmt);
                                 }
-                                Thread.sleep(10);
                             }
+                            Thread.sleep(10);
                         }
                     }
                 } catch (SQLException | InterruptedException e) {
@@ -2550,24 +2547,24 @@ public class SearchBar {
         cachedThreadPool.execute(() -> {
             // 时间检测线程
             try {
-                while (SettingsFrame.isNotMainExit()) {
-                    long count = 0;
-                    try (Connection databaseConn = DriverManager.getConnection("jdbc:sqlite:data.db"); Statement stmt = databaseConn.createStatement()) {
-                        while (SettingsFrame.isNotMainExit()) {
-                            count += 100;
-                            if (count >= (SettingsFrame.getUpdateTimeLimit() << 10) && !isUsing && !search.isManualUpdate()) {
-                                count = 0;
-                                if (search.isUsable()) {
-                                    search.executeAllCommands(stmt);
-                                }
+                long count = 0;
+                long updateTimeLimit = SettingsFrame.getUpdateTimeLimit() << 10;
+                try (Connection databaseConn = DriverManager.getConnection("jdbc:sqlite:data.db"); Statement stmt = databaseConn.createStatement()) {
+                    while (SettingsFrame.isNotMainExit()) {
+                        count += 100;
+                        if (count >= updateTimeLimit && !isUsing && !search.isManualUpdate()) {
+                            count = 0;
+                            if (search.isUsable()) {
+                                search.executeAllCommands(stmt);
                             }
-                            Thread.sleep(100);
                         }
+                        Thread.sleep(100);
                     }
-                    Thread.sleep(500);
                 }
-            } catch (InterruptedException | SQLException ignored) {
-
+            } catch (InterruptedException | SQLException e) {
+                if (SettingsFrame.isDebug()) {
+                    e.printStackTrace();
+                }
             }
         });
 
@@ -2575,17 +2572,14 @@ public class SearchBar {
         //搜索本地数据线程
         cachedThreadPool.execute(() -> {
             try {
-                while (SettingsFrame.isNotMainExit()) {
-                    try (Connection databaseConn = DriverManager.getConnection("jdbc:sqlite:data.db"); Statement stmt = databaseConn.createStatement()) {
-                        while (SettingsFrame.isNotMainExit()) {
-                            if (search.isManualUpdate()) {
-                                search.setUsable(false);
-                                search.updateLists(SettingsFrame.getIgnorePath(), SettingsFrame.getSearchDepth(), stmt);
-                            }
-                            Thread.sleep(100);
+                try (Connection databaseConn = DriverManager.getConnection("jdbc:sqlite:data.db"); Statement stmt = databaseConn.createStatement()) {
+                    while (SettingsFrame.isNotMainExit()) {
+                        if (search.isManualUpdate()) {
+                            search.setUsable(false);
+                            search.updateLists(SettingsFrame.getIgnorePath(), SettingsFrame.getSearchDepth(), stmt);
                         }
+                        Thread.sleep(100);
                     }
-                    Thread.sleep(500);
                 }
             } catch (InterruptedException | SQLException e) {
                 if (SettingsFrame.isDebug() && !(e instanceof InterruptedException)) {
@@ -2664,9 +2658,6 @@ public class SearchBar {
                 if (isExist(path)) {
                     resultCount.incrementAndGet();
                     tempResults.add(path);
-                    if (SettingsFrame.isDebug()) {
-                        System.out.println("Adding record to tempResults:" + path);
-                    }
                 } else {
                     search.addToRecycleBin(path);
                 }

@@ -148,31 +148,31 @@ private:
 	int getAscIISum(string name);
 	void initAllVector() {
 		command0.reserve(2000);
-		command1.reserve(2000);
-		command2.reserve(2000);
-		command3.reserve(2000);
-		command4.reserve(2000);
-		command5.reserve(2000);
-		command6.reserve(2000);
-		command7.reserve(2000);
-		command8.reserve(2000);
-		command9.reserve(2000);
-		command10.reserve(2000);
-		command11.reserve(2000);
-		command12.reserve(2000);
-		command13.reserve(2000);
-		command14.reserve(2000);
-		command15.reserve(2000);
-		command16.reserve(2000);
-		command17.reserve(2000);
-		command18.reserve(2000);
-		command19.reserve(2000);
-		command20.reserve(2000);
-		command21.reserve(2000);
-		command22.reserve(2000);
-		command23.reserve(2000);
-		command24.reserve(2000);
-		command25.reserve(2000);
+		command1.reserve(3000);
+		command2.reserve(3000);
+		command3.reserve(3000);
+		command4.reserve(3000);
+		command5.reserve(3000);
+		command6.reserve(5000);
+		command7.reserve(5000);
+		command8.reserve(5000);
+		command9.reserve(5000);
+		command10.reserve(5000);
+		command11.reserve(5000);
+		command12.reserve(5000);
+		command13.reserve(5000);
+		command14.reserve(4000);
+		command15.reserve(4000);
+		command16.reserve(4000);
+		command17.reserve(4000);
+		command18.reserve(4000);
+		command19.reserve(4000);
+		command20.reserve(3000);
+		command21.reserve(3000);
+		command22.reserve(3000);
+		command23.reserve(3000);
+		command24.reserve(3000);
+		command25.reserve(10000);
 	}
 };
 
@@ -195,7 +195,7 @@ void Volume::executeAll(vector<string>& vec, const char* init) {
 }
 
 void Volume::saveResult(string path, int ascII) {
-	if (0 <= ascII && ascII <= 100)
+	if (2500 <= ascII <= 4000)
 	{
 		command0.push_back(path);
 	}
@@ -295,7 +295,7 @@ void Volume::saveResult(string path, int ascII) {
 	{
 		command24.push_back(path);
 	}
-	else if (2500 < ascII <= 4000)
+	else if (0 <= ascII && ascII <= 100)
 	{
 		command25.push_back(path);
 	}
