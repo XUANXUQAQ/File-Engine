@@ -763,6 +763,7 @@ public class SettingsFrame {
         languageSet.add("简体中文");
         languageSet.add("English(US)");
         languageSet.add("日本語");
+        languageSet.add("繁體中文");
     }
 
     private static void initTranslations(String language) {
@@ -787,6 +788,7 @@ public class SettingsFrame {
         //TODO 添加语言
         fileMap.put("简体中文", "/language/Chinese(Simplified).txt");
         fileMap.put("日本語", "/language/Japanese.txt");
+        fileMap.put("繁體中文", "/language/Chinese(Traditional).txt");
     }
 
     public static String getTranslation(String text) {
@@ -1088,6 +1090,7 @@ public class SettingsFrame {
         frame.setSize(Integer.parseInt(translationMap.get("#frame_width")), Integer.parseInt(translationMap.get("#frame_height")));
         frame.setResizable(false);
         frame.setLocationRelativeTo(null);
+        tabbedPane1.setSelectedIndex(0);
         frame.setVisible(true);
     }
 
