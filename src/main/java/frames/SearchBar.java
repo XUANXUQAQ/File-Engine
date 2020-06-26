@@ -2221,131 +2221,131 @@ public class SearchBar {
 
                         if (0 <= ascII && ascII <= 100) {
                             for (int i = 0; i < 26; i++) {
-                                command = "SELECT * FROM list" + i + ";";
+                                command = "SELECT PATH FROM list" + i + ";";
                                 commandQueue.add(command);
                             }
                         } else if (100 < ascII && ascII <= 200) {
                             for (int i = 1; i < 26; i++) {
-                                command = "SELECT * FROM list" + i + ";";
+                                command = "SELECT PATH FROM list" + i + ";";
                                 commandQueue.add(command);
                             }
                         } else if (200 < ascII && ascII <= 300) {
                             for (int i = 2; i < 26; i++) {
-                                command = "SELECT * FROM list" + i + ";";
+                                command = "SELECT PATH FROM list" + i + ";";
                                 commandQueue.add(command);
                             }
                         } else if (300 < ascII && ascII <= 400) {
                             for (int i = 3; i < 26; i++) {
-                                command = "SELECT * FROM list" + i + ";";
+                                command = "SELECT PATH FROM list" + i + ";";
                                 commandQueue.add(command);
                             }
                         } else if (400 < ascII && ascII <= 500) {
                             for (int i = 4; i < 26; i++) {
-                                command = "SELECT * FROM list" + i + ";";
+                                command = "SELECT PATH FROM list" + i + ";";
                                 commandQueue.add(command);
                             }
                         } else if (500 < ascII && ascII <= 600) {
                             for (int i = 5; i < 26; i++) {
-                                command = "SELECT * FROM list" + i + ";";
+                                command = "SELECT PATH FROM list" + i + ";";
                                 commandQueue.add(command);
                             }
                         } else if (600 < ascII && ascII <= 700) {
                             for (int i = 6; i < 26; i++) {
-                                command = "SELECT * FROM list" + i + ";";
+                                command = "SELECT PATH FROM list" + i + ";";
                                 commandQueue.add(command);
                             }
                         } else if (700 < ascII && ascII <= 800) {
                             for (int i = 7; i < 26; i++) {
-                                command = "SELECT * FROM list" + i + ";";
+                                command = "SELECT PATH FROM list" + i + ";";
                                 commandQueue.add(command);
                             }
                         } else if (800 < ascII && ascII <= 900) {
                             for (int i = 8; i < 26; i++) {
-                                command = "SELECT * FROM list" + i + ";";
+                                command = "SELECT PATH FROM list" + i + ";";
                                 commandQueue.add(command);
                             }
                         } else if (900 < ascII && ascII <= 1000) {
                             for (int i = 9; i < 26; i++) {
-                                command = "SELECT * FROM list" + i + ";";
+                                command = "SELECT PATH FROM list" + i + ";";
                                 commandQueue.add(command);
                             }
                         } else if (1000 < ascII && ascII <= 1100) {
                             for (int i = 10; i < 26; i++) {
-                                command = "SELECT * FROM list" + i + ";";
+                                command = "SELECT PATH FROM list" + i + ";";
                                 commandQueue.add(command);
                             }
                         } else if (1100 < ascII && ascII <= 1200) {
                             for (int i = 11; i < 26; i++) {
-                                command = "SELECT * FROM list" + i + ";";
+                                command = "SELECT PATH FROM list" + i + ";";
                                 commandQueue.add(command);
                             }
                         } else if (1200 < ascII && ascII <= 1300) {
                             for (int i = 12; i < 26; i++) {
-                                command = "SELECT * FROM list" + i + ";";
+                                command = "SELECT PATH FROM list" + i + ";";
                                 commandQueue.add(command);
                             }
                         } else if (1300 < ascII && ascII <= 1400) {
                             for (int i = 13; i < 26; i++) {
-                                command = "SELECT * FROM list" + i + ";";
+                                command = "SELECT PATH FROM list" + i + ";";
                                 commandQueue.add(command);
                             }
                         } else if (1400 < ascII && ascII <= 1500) {
                             for (int i = 14; i < 26; i++) {
-                                command = "SELECT * FROM list" + i + ";";
+                                command = "SELECT PATH FROM list" + i + ";";
                                 commandQueue.add(command);
                             }
                         } else if (1500 < ascII && ascII <= 1600) {
                             for (int i = 15; i < 26; i++) {
-                                command = "SELECT * FROM list" + i + ";";
+                                command = "SELECT PATH FROM list" + i + ";";
                                 commandQueue.add(command);
                             }
                         } else if (1600 < ascII && ascII <= 1700) {
                             for (int i = 16; i < 26; i++) {
-                                command = "SELECT * FROM list" + i + ";";
+                                command = "SELECT PATH FROM list" + i + ";";
                                 commandQueue.add(command);
                             }
                         } else if (1700 < ascII && ascII <= 1800) {
                             for (int i = 17; i < 26; i++) {
-                                command = "SELECT * FROM list" + i + ";";
+                                command = "SELECT PATH FROM list" + i + ";";
                                 commandQueue.add(command);
                             }
                         } else if (1800 < ascII && ascII <= 1900) {
                             for (int i = 18; i < 26; i++) {
-                                command = "SELECT * FROM list" + i + ";";
+                                command = "SELECT PATH FROM list" + i + ";";
                                 commandQueue.add(command);
                             }
                         } else if (1900 < ascII && ascII <= 2000) {
                             for (int i = 19; i < 26; i++) {
-                                command = "SELECT * FROM list" + i + ";";
+                                command = "SELECT PATH FROM list" + i + ";";
                                 commandQueue.add(command);
                             }
                         } else if (2000 < ascII && ascII <= 2100) {
                             for (int i = 20; i < 26; i++) {
-                                command = "SELECT * FROM list" + i + ";";
+                                command = "SELECT PATH FROM list" + i + ";";
                                 commandQueue.add(command);
                             }
                         } else if (2100 < ascII && ascII <= 2200) {
                             for (int i = 21; i < 26; i++) {
-                                command = "SELECT * FROM list" + i + ";";
+                                command = "SELECT PATH FROM list" + i + ";";
                                 commandQueue.add(command);
                             }
                         } else if (2200 < ascII && ascII <= 2300) {
                             for (int i = 22; i < 26; i++) {
-                                command = "SELECT * FROM list" + i + ";";
+                                command = "SELECT PATH FROM list" + i + ";";
                                 commandQueue.add(command);
                             }
                         } else if (2300 < ascII && ascII <= 2400) {
                             for (int i = 23; i < 26; i++) {
-                                command = "SELECT * FROM list" + i + ";";
+                                command = "SELECT PATH FROM list" + i + ";";
                                 commandQueue.add(command);
                             }
                         } else if (2400 < ascII && ascII <= 2500) {
                             for (int i = 24; i < 26; i++) {
-                                command = "SELECT * FROM list" + i + ";";
+                                command = "SELECT PATH FROM list" + i + ";";
                                 commandQueue.add(command);
                             }
                         } else {
-                            command = "SELECT * FROM list25;";
+                            command = "SELECT PATH FROM list25;";
                             commandQueue.add(command);
                         }
                     }
@@ -2360,16 +2360,19 @@ public class SearchBar {
         for (int i = 0; i < cpuCores / 2; i++) {
             cachedThreadPool.execute(() -> {
                 try {
-                    String command;
-                    try (Connection databaseConn = DriverManager.getConnection("jdbc:sqlite:data.db"); Statement stmt = databaseConn.createStatement()) {
-                        while (SettingsFrame.isNotMainExit()) {
-                            if (!isCommandMode) {
-                                while ((command = commandQueue.poll()) != null) {
-                                    searchAndAddToTempResults(System.currentTimeMillis(), command, stmt);
+                    while (SettingsFrame.isNotMainExit()) {
+                        String command;
+                        try (Connection databaseConn = DriverManager.getConnection("jdbc:sqlite:data.db"); Statement stmt = databaseConn.createStatement()) {
+                            while (SettingsFrame.isNotMainExit()) {
+                                if (!isCommandMode) {
+                                    while ((command = commandQueue.poll()) != null) {
+                                        searchAndAddToTempResults(System.currentTimeMillis(), command, stmt);
+                                    }
                                 }
+                                Thread.sleep(10);
                             }
-                            Thread.sleep(10);
                         }
+                        Thread.sleep(500);
                     }
                 } catch (SQLException | InterruptedException e) {
                     if (SettingsFrame.isDebug() && !(e instanceof InterruptedException)) {
@@ -2403,7 +2406,6 @@ public class SearchBar {
                                 if (text.equals(":update")) {
                                     closedTodo();
                                     search.setManualUpdate(true);
-                                    taskBar.showMessage(SettingsFrame.getTranslation("Info"), SettingsFrame.getTranslation("Updating file index"));
                                     timer = false;
                                     continue;
                                 }
@@ -2547,19 +2549,22 @@ public class SearchBar {
         cachedThreadPool.execute(() -> {
             // 时间检测线程
             try {
-                long count = 0;
-                long updateTimeLimit = SettingsFrame.getUpdateTimeLimit() << 10;
-                try (Connection databaseConn = DriverManager.getConnection("jdbc:sqlite:data.db"); Statement stmt = databaseConn.createStatement()) {
-                    while (SettingsFrame.isNotMainExit()) {
-                        count += 100;
-                        if (count >= updateTimeLimit && !isUsing && !search.isManualUpdate()) {
-                            count = 0;
-                            if (search.isUsable()) {
-                                search.executeAllCommands(stmt);
+                while (SettingsFrame.isNotMainExit()) {
+                    long count = 0;
+                    long updateTimeLimit = SettingsFrame.getUpdateTimeLimit() * 10;
+                    try (Connection databaseConn = DriverManager.getConnection("jdbc:sqlite:data.db"); Statement stmt = databaseConn.createStatement()) {
+                        while (SettingsFrame.isNotMainExit()) {
+                            count += 100;
+                            if (count >= updateTimeLimit && !isUsing && !search.isManualUpdate()) {
+                                count = 0;
+                                if (search.isUsable()) {
+                                    search.executeAllCommands(stmt);
+                                }
                             }
+                            Thread.sleep(100);
                         }
-                        Thread.sleep(100);
                     }
+                    Thread.sleep(500);
                 }
             } catch (InterruptedException | SQLException e) {
                 if (SettingsFrame.isDebug()) {
@@ -2572,14 +2577,17 @@ public class SearchBar {
         //搜索本地数据线程
         cachedThreadPool.execute(() -> {
             try {
-                try (Connection databaseConn = DriverManager.getConnection("jdbc:sqlite:data.db"); Statement stmt = databaseConn.createStatement()) {
-                    while (SettingsFrame.isNotMainExit()) {
-                        if (search.isManualUpdate()) {
-                            search.setUsable(false);
-                            search.updateLists(SettingsFrame.getIgnorePath(), SettingsFrame.getSearchDepth(), stmt);
+                while (SettingsFrame.isNotMainExit()) {
+                    try (Connection databaseConn = DriverManager.getConnection("jdbc:sqlite:data.db"); Statement stmt = databaseConn.createStatement()) {
+                        while (SettingsFrame.isNotMainExit()) {
+                            if (search.isManualUpdate()) {
+                                search.setUsable(false);
+                                search.updateLists(SettingsFrame.getIgnorePath(), SettingsFrame.getSearchDepth(), stmt);
+                            }
+                            Thread.sleep(10);
                         }
-                        Thread.sleep(100);
                     }
+                    Thread.sleep(500);
                 }
             } catch (InterruptedException | SQLException e) {
                 if (SettingsFrame.isDebug() && !(e instanceof InterruptedException)) {

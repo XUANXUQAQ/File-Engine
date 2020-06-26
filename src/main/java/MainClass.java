@@ -11,9 +11,6 @@ import java.io.*;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.Statement;
 import java.util.Objects;
 
 
@@ -25,7 +22,7 @@ public class MainClass {
     private static final String hotkeyListener86Md5 = "15bd4db12a4939969c27c03ac9e57ddd";
     private static final String isLocalDisk86Md5 = "9b1c4c4fc44b52bff4f226b39c1ac46f";
     private static final String updater86Md5 = "b11a1307c497f00e570b238224173ba2";
-    private static final String fileSearcherUSN86Md5 = "cd660a6d84f7210abd7fc485f7c544ea";
+    private static final String fileSearcherUSN86Md5 = "c49e53bdb9de4ea7545735058dcc27b4";
     private static final String isNTFS86Md5 = "2aff387756192c704c0c876f2ad12fa2";
     private static final String sqlite386Md5 = "82b03cdb95fb0ef88b876d141b478a6d";
     //64bit
@@ -35,7 +32,7 @@ public class MainClass {
     private static final String hotkeyListener64Md5 = "41388e31d6fc22fb430f636d402cf608";
     private static final String isLocalDisk64Md5 = "64f64bc828f477aa9ce6f5f8fd6010f3";
     private static final String updater64Md5 = "bf8482e14b1457395f2ef1ec200f95c0";
-    private static final String fileSearcherUSN64Md5 = "1107e96a7f219088ec4c8dee295a4866";
+    private static final String fileSearcherUSN64Md5 = "bf6da34600a8cc584f6d15a0cc0a30eb";
     private static final String isNTFS64Md5 = "b5f7ea2923a42873883a3bcda2bafd2";
     private static final String sqlite364Md5 = "658c71b8b93ba4eb5b4936f46a112449";
 
@@ -139,7 +136,7 @@ public class MainClass {
         if (!database.exists()) {
             System.out.println("无data文件，正在搜索并重建");
             //初始化数据库
-            initDatabase();
+            Search.initDatabase();
             isManualUpdate = true;
         }
 
@@ -184,27 +181,6 @@ public class MainClass {
             System.exit(0);
         } catch (InterruptedException ignored) {
 
-        }
-    }
-
-    private static void initDatabase() {
-        Statement stmt;
-        String sql = "CREATE TABLE list";
-        try (Connection conn = DriverManager.getConnection("jdbc:sqlite:data.db")) {
-            System.out.println("open database successfully");
-            stmt = conn.createStatement();
-            stmt.execute("BEGIN;");
-            for (int i = 0; i < 26; i++) {
-                String command = sql + i + " " + "(PATH text unique)" + ";";
-                stmt.executeUpdate(command);
-            }
-            stmt.execute("COMMIT;");
-            stmt.execute("PRAGMA SQLITE_THREADSAFE=2");
-            stmt.execute("PRAGMA journal_mode=WAL;");
-            stmt.execute("PRAGMA synchronous = OFF;");
-            stmt.execute("PRAGMA SQLITE_TEMP_STORE=2;");
-        } catch (Exception e) {
-            e.printStackTrace();
         }
     }
 

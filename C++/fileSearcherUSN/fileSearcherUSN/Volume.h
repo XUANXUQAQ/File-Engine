@@ -195,9 +195,9 @@ void Volume::executeAll(vector<string>& vec, const char* init) {
 }
 
 void Volume::saveResult(string path, int ascII) {
-	if (2500 <= ascII <= 4000)
+	if (2500 <= ascII && ascII <= 4000)
 	{
-		command0.push_back(path);
+		command25.push_back(path);
 	}
 	else if (100 < ascII && ascII <= 200)
 	{
@@ -297,7 +297,7 @@ void Volume::saveResult(string path, int ascII) {
 	}
 	else if (0 <= ascII && ascII <= 100)
 	{
-		command25.push_back(path);
+		command0.push_back(path);
 	}
 }
 
