@@ -191,8 +191,9 @@ public class Search {
             stmt.execute("PRAGMA SQLITE_TEMP_STORE=2;");
             stmt.execute("PRAGMA journal_mode=WAL;");
             stmt.execute("PRAGMA synchronous=OFF;");
-            stmt.execute("PRAGMA page_size=4000;");
-            stmt.execute("PRAGMA cache_size=4000;");
+            stmt.execute("PRAGMA page_size=4096;");
+            stmt.execute("PRAGMA cache_size=8000;");
+            stmt.execute("PRAGMA auto_vacuum=0;");
             stmt.execute("PRAGMA mmap_size=4096;");
         } catch (Exception e) {
             if (SettingsFrame.isDebug()) {
