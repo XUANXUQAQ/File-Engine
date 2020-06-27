@@ -1,6 +1,6 @@
 {
-  "version": "1.9",
-  "url64": "https://github.com/XUANXUQAQ/File-Engine/releases/download/1.9/File-Engine-x64.exe",
-  "url86": "https://github.com/XUANXUQAQ/File-Engine/releases/download/1.9/File-Engine-x86.exe",
-  "description": "1.提高搜索速度\n2.添加更多颜色设置\n3.降低CPU占用率"
+  "version": "2.0",
+  "url64": "https://github.com/XUANXUQAQ/File-Engine/releases/download/2.0/File-Engine-x64.exe",
+  "url86": "https://github.com/XUANXUQAQ/File-Engine/releases/download/2.0/File-Engine-x86.exe",
+  "description": "Use usn to search, greatly improve work efficiency.\nUse database to save index and reduce CPU usage."
 }
