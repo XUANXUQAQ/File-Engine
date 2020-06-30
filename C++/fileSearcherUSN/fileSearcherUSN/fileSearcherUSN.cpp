@@ -21,7 +21,8 @@ int main()
 #else
 
 void initUSN(char disk) {
-	if ((65 <= disk <= 90) || (97 <= disk <= 122)) {
+	bool ret = (65 <= disk && disk <= 90) || (97 <= disk && disk <= 122);
+	if (ret) {
 		Volume volume(disk, db);
 		volume.initVolume();
 		volumeList.push_back(volume);
@@ -43,6 +44,7 @@ int main() {
 	input.getline(output, 1000);
 	input.close();
 
+	volumeList.reserve(26);
 	
 	int ret = sqlite3_open(output, &db);
 	if (ret) {
@@ -75,17 +77,30 @@ int main() {
 		}
 	}
 
-	//wait for threads
+	//等待线程
 	while (taskFinishedNum != diskCount) {
-		Sleep(5);
+		Sleep(1);
 	}
 	vector<Volume>::iterator iter = volumeList.begin();
 	vector<Volume>::iterator end = volumeList.end();
+	sqlite3_exec(db, "BEGIN;", NULL, NULL, NULL);
 	for (; iter != end; ++iter) {
 		Volume volume = *iter;
 		volume.saveToDatabase();
 		cout << "The search for drive " << volume.getPath() << " has completed" << endl;
 	}
+	sqlite3_exec(db, "COMMIT;", NULL, NULL, NULL);
+	//创建索引
+	sqlite3_exec(db, "BEGIN;", NULL, NULL, NULL);
+	char num[5];
+	string str;
+	for (int i = 0; i < 40; i++) {
+		_itoa_s(i, num, 10);
+		str.append("CREATE UNIQUE INDEX list").append(num).append("_index ON list").append(num).append("(PATH)").append(";");
+		sqlite3_exec(db, str.c_str(), NULL, NULL, NULL);
+		str.clear();
+	}
+	sqlite3_exec(db, "COMMIT;", NULL, NULL, NULL);
 	sqlite3_close(db);
 	return 0;
 }
