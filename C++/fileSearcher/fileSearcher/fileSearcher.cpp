@@ -9,37 +9,51 @@
 #include <tchar.h>
 #include <Windows.h>
 #include <locale>
-#include <set>
 //#define TEST
 
 using namespace std;
 
-set<string> command0;
-set<string> command1;
-set<string> command2;
-set<string> command3;
-set<string> command4;
-set<string> command5;
-set<string> command6;
-set<string> command7;
-set<string> command8;
-set<string> command9;
-set<string> command10;
-set<string> command11;
-set<string> command12;
-set<string> command13;
-set<string> command14;
-set<string> command15;
-set<string> command16;
-set<string> command17;
-set<string> command18;
-set<string> command19;
-set<string> command20;
-set<string> command21;
-set<string> command22;
-set<string> command23;
-set<string> command24;
-set<string> command25;
+vector<string> command0;
+vector<string> command1;
+vector<string> command2;
+vector<string> command3;
+vector<string> command4;
+vector<string> command5;
+vector<string> command6;
+vector<string> command7;
+vector<string> command8;
+vector<string> command9;
+vector<string> command10;
+vector<string> command11;
+vector<string> command12;
+vector<string> command13;
+vector<string> command14;
+vector<string> command15;
+vector<string> command16;
+vector<string> command17;
+vector<string> command18;
+vector<string> command19;
+vector<string> command20;
+vector<string> command21;
+vector<string> command22;
+vector<string> command23;
+vector<string> command24;
+vector<string> command25;
+vector<string> command26;
+vector<string> command27;
+vector<string> command28;
+vector<string> command29;
+vector<string> command30;
+vector<string> command31;
+vector<string> command32;
+vector<string> command33;
+vector<string> command34;
+vector<string> command35;
+vector<string> command36;
+vector<string> command37;
+vector<string> command38;
+vector<string> command39;
+vector<string> command40;
 vector<string> ignorePathVector;
 
 int searchDepth;
@@ -56,12 +70,14 @@ bool isIgnore(string path);
 void search(string path, string exd);
 void searchIgnoreSearchDepth(string path, string exd);
 std::wstring StringToWString(const std::string& str);
+void executeAll(vector<string>& vec, const char* init);
+void initAllVector();
 
 
 int getAscIISum(string name)
 {
     int sum = 0;
-    int length = name.length();
+    size_t length = name.length();
     for (int i = 0; i < length; i++)
     {
         if (name[i] > 0)
@@ -121,111 +137,206 @@ std::wstring StringToWString(const std::string& str)
     return result;
 }
 
+void initAllVector() {
+    command0.reserve(5000);
+    command1.reserve(5000);
+    command2.reserve(5000);
+    command3.reserve(5000);
+    command4.reserve(5000);
+    command5.reserve(5000);
+    command6.reserve(5000);
+    command7.reserve(5000);
+    command8.reserve(5000);
+    command9.reserve(5000);
+    command10.reserve(5000);
+    command11.reserve(5000);
+    command12.reserve(5000);
+    command13.reserve(5000);
+    command14.reserve(5000);
+    command15.reserve(5000);
+    command16.reserve(5000);
+    command17.reserve(5000);
+    command18.reserve(5000);
+    command19.reserve(5000);
+    command20.reserve(5000);
+    command21.reserve(5000);
+    command22.reserve(5000);
+    command23.reserve(5000);
+    command24.reserve(5000);
+    command25.reserve(5000);
+    command26.reserve(5000);
+    command27.reserve(5000);
+    command28.reserve(5000);
+    command29.reserve(5000);
+    command30.reserve(5000);
+    command31.reserve(5000);
+    command32.reserve(5000);
+    command33.reserve(5000);
+    command34.reserve(5000);
+    command35.reserve(5000);
+    command36.reserve(5000);
+    command37.reserve(5000);
+    command38.reserve(5000);
+    command39.reserve(5000);
+    command40.reserve(5000);
+}
+
 void saveResult(string path, int ascII)
 {
-    if (0 <= ascII && ascII <= 100)
+    int asciiGroup = ascII / 100;
+    switch (asciiGroup)
     {
-        command0.insert(to_utf8(StringToWString(path)));
-    }
-    else if (100 < ascII && ascII <= 200)
-    {
-        command1.insert(to_utf8(StringToWString(path)));
-    }
-    else if (200 < ascII && ascII <= 300)
-    {
-        command2.insert(to_utf8(StringToWString(path)));
-    }
-    else if (300 < ascII && ascII <= 400)
-    {
-        command3.insert(to_utf8(StringToWString(path)));
-    }
-    else if (400 < ascII && ascII <= 500)
-    {
-        command4.insert(to_utf8(StringToWString(path)));
-    }
-    else if (500 < ascII && ascII <= 600)
-    {
-        command5.insert(to_utf8(StringToWString(path)));
-    }
-    else if (600 < ascII && ascII <= 700)
-    {
-        command6.insert(to_utf8(StringToWString(path)));
-    }
-    else if (700 < ascII && ascII <= 800)
-    {
-        command7.insert(to_utf8(StringToWString(path)));
-    }
-    else if (800 < ascII && ascII <= 900)
-    {
-        command8.insert(to_utf8(StringToWString(path)));
-    }
-    else if (900 < ascII && ascII <= 1000)
-    {
-        command9.insert(to_utf8(StringToWString(path)));
-    }
-    else if (1000 < ascII && ascII <= 1100)
-    {
-        command10.insert(to_utf8(StringToWString(path)));
-    }
-    else if (1100 < ascII && ascII <= 1200)
-    {
-        command11.insert(to_utf8(StringToWString(path)));
-    }
-    else if (1200 < ascII && ascII <= 1300)
-    {
-        command12.insert(to_utf8(StringToWString(path)));
-    }
-    else if (1300 < ascII && ascII <= 1400)
-    {
-        command13.insert(to_utf8(StringToWString(path)));
-    }
-    else if (1400 < ascII && ascII <= 1500)
-    {
-        command14.insert(to_utf8(StringToWString(path)));
-    }
-    else if (1500 < ascII && ascII <= 1600)
-    {
-        command15.insert(to_utf8(StringToWString(path)));
-    }
-    else if (1600 < ascII && ascII <= 1700)
-    {
-        command16.insert(to_utf8(StringToWString(path)));
-    }
-    else if (1700 < ascII && ascII <= 1800)
-    {
-        command17.insert(to_utf8(StringToWString(path)));
-    }
-    else if (1800 < ascII && ascII <= 1900)
-    {
-        command18.insert(to_utf8(StringToWString(path)));
-    }
-    else if (1900 < ascII && ascII <= 2000)
-    {
-        command19.insert(to_utf8(StringToWString(path)));
-    }
-    else if (2000 < ascII && ascII <= 2100)
-    {
-        command20.insert(to_utf8(StringToWString(path)));
-    }
-    else if (2100 < ascII && ascII <= 2200)
-    {
-        command21.insert(to_utf8(StringToWString(path)));
-    }
-    else if (2200 < ascII && ascII <= 2300)
-    {
-        command22.insert(to_utf8(StringToWString(path)));
-    }
-    else if (2300 < ascII && ascII <= 2400)
-    {
-        command23.insert(to_utf8(StringToWString(path)));
-    }
-    else if (2400 < ascII && ascII <= 2500)
-    {
-        command24.insert(to_utf8(StringToWString(path)));
-    }
-    else
-    {
-        command25.insert(to_utf8(StringToWString(path)));
+    case 0:
+        command0.push_back(path);
+        break;
+
+    case 1:
+        command1.push_back(path);
+        break;
+
+    case 2:
+        command2.push_back(path);
+        break;
+
+    case 3:
+        command3.push_back(path);
+        break;
+
+    case 4:
+        command4.push_back(path);
+        break;
+
+    case 5:
+        command5.push_back(path);
+        break;
+    case 6:
+        command6.push_back(path);
+        break;
+
+    case 7:
+        command7.push_back(path);
+        break;
+
+    case 8:
+        command8.push_back(path);
+        break;
+
+    case 9:
+        command9.push_back(path);
+        break;
+
+    case 10:
+        command10.push_back(path);
+        break;
+
+    case 11:
+        command11.push_back(path);
+        break;
+
+    case 12:
+        command12.push_back(path);
+        break;
+
+    case 13:
+        command13.push_back(path);
+        break;
+
+    case 14:
+        command14.push_back(path);
+        break;
+
+    case 15:
+        command15.push_back(path);
+        break;
+
+    case 16:
+        command16.push_back(path);
+        break;
+
+    case 17:
+        command17.push_back(path);
+        break;
+
+    case 18:
+        command18.push_back(path);
+        break;
+
+    case 19:
+        command19.push_back(path);
+        break;
+
+    case 20:
+        command20.push_back(path);
+        break;
+
+    case 21:
+        command21.push_back(path);
+        break;
+
+    case 22:
+        command22.push_back(path);
+        break;
+
+    case 23:
+        command23.push_back(path);
+        break;
+
+    case 24:
+        command24.push_back(path);
+        break;
+
+    case 25:
+        command25.push_back(path);
+        break;
+
+    case 26:
+        command26.push_back(path);
+        break;
+    case 27:
+        command27.push_back(path);
+        break;
+    case 28:
+        command28.push_back(path);
+        break;
+    case 29:
+        command29.push_back(path);
+        break;
+    case 30:
+        command30.push_back(path);
+        break;
+    case 31:
+        command31.push_back(path);
+        break;
+    case 32:
+        command32.push_back(path);
+        break;
+    case 33:
+        command33.push_back(path);
+        break;
+    case 34:
+        command34.push_back(path);
+        break;
+    case 35:
+        command35.push_back(path);
+        break;
+    case 36:
+        command36.push_back(path);
+        break;
+    case 37:
+        command37.push_back(path);
+        break;
+    case 38:
+        command38.push_back(path);
+        break;
+    case 39:
+        command39.push_back(path);
+        break;
+    case 40:
+        command40.push_back(path);
+        break;
+
+    default:
+        break;
     }
 }
 
@@ -306,7 +417,6 @@ void searchIgnoreSearchDepth(string path, string exd)
 
 void searchFiles(const char* path, const char* exd)
 {
-    bool ret;
     cout << "start Search" << endl;
     string file(path);
     string suffix(exd);
@@ -329,7 +439,7 @@ void setSearchDepth(int i)
 
 int count(string path, string pattern)
 {
-    int begin = -1;
+    size_t begin = -1;
     int count = 0;
     while ((begin = path.find(pattern, (unsigned __int64)begin + 1)) != string::npos)
     {
@@ -356,7 +466,7 @@ bool isIgnore(string path)
         return true;
     }
     transform(path.begin(), path.end(), path.begin(), ::tolower);
-    int size = ignorePathVector.size();
+    size_t size = ignorePathVector.size();
     for (int i = 0; i < size; i++)
     {
         if (path.find(ignorePathVector[i]) != string::npos)
@@ -432,29 +542,22 @@ void search(string path, string exd)
     }
 }
 
-void executeAll(std::set<string>& command, const char* init)
-{
-    std::set<string>::iterator iter;
-    string _path;
-    sqlite3_stmt* stmt;
-    char _init_sql[1000];
-    if (!command.empty())
-    {
-        memset(_init_sql, 0, 1000);
-        strcpy_s(_init_sql, 1000, init);
-        
-        sqlite3_prepare_v2(db, _init_sql, strlen(_init_sql), &stmt, 0); 
-        sqlite3_exec(db, "BEGIN;", NULL, NULL, NULL);
-        for (iter = command.begin(); iter != command.end(); iter++)
-        {
-            _path = *iter;
-            sqlite3_reset(stmt);
-            sqlite3_bind_text(stmt, 1, _path.c_str(), -1, SQLITE_TRANSIENT);
-            sqlite3_step(stmt);
-        }
-        sqlite3_finalize(stmt);
-        sqlite3_exec(db, "COMMIT;", NULL, NULL, NULL);
+void executeAll(vector<string>& vec, const char* init) {
+    sqlite3_exec(db, "BEGIN;", NULL, NULL, NULL);
+    sqlite3_stmt* stmt = NULL;
+    string str;
+    size_t rc = sqlite3_prepare_v2(db, init, strlen(init), &stmt, NULL);
+    if (rc != SQLITE_OK) {
+        cout << "error preparing statement" << endl;
+        exit(-1);
     }
+    for (vector<string>::iterator iter = vec.begin(); iter != vec.end(); ++iter) {
+        str = *iter;
+        sqlite3_reset(stmt);
+        sqlite3_bind_text(stmt, 1, str.c_str(), -1, SQLITE_STATIC);
+        sqlite3_step(stmt);
+    }
+    sqlite3_exec(db, "COMMIT;", NULL, NULL, NULL);
 }
 
 #ifndef TEST
@@ -524,32 +627,58 @@ int main(int argc, char* argv[])
             searchFiles(searchPath, "*");
         }
 
-        executeAll(command0, "INSERT OR IGNORE INTO list0  VALUES(?);");
-        executeAll(command1, "INSERT OR IGNORE INTO list1  VALUES(?);");
-        executeAll(command2, "INSERT OR IGNORE INTO list2  VALUES(?);");
-        executeAll(command3, "INSERT OR IGNORE INTO list3  VALUES(?);");
-        executeAll(command4, "INSERT OR IGNORE INTO list4  VALUES(?);");
-        executeAll(command5, "INSERT OR IGNORE INTO list5  VALUES(?);");
-        executeAll(command6, "INSERT OR IGNORE INTO list6  VALUES(?);");
-        executeAll(command7, "INSERT OR IGNORE INTO list7  VALUES(?);");
-        executeAll(command8, "INSERT OR IGNORE INTO list8  VALUES(?);");
-        executeAll(command9, "INSERT OR IGNORE INTO list9  VALUES(?);");
-        executeAll(command10, "INSERT OR IGNORE INTO list10  VALUES(?);");
-        executeAll(command11, "INSERT OR IGNORE INTO list11  VALUES(?);");
-        executeAll(command12, "INSERT OR IGNORE INTO list12  VALUES(?);");
-        executeAll(command13, "INSERT OR IGNORE INTO list13  VALUES(?);");
-        executeAll(command14, "INSERT OR IGNORE INTO list14  VALUES(?);");
-        executeAll(command15, "INSERT OR IGNORE INTO list15  VALUES(?);");
-        executeAll(command16, "INSERT OR IGNORE INTO list16  VALUES(?);");
-        executeAll(command17, "INSERT OR IGNORE INTO list17  VALUES(?);");
-        executeAll(command18, "INSERT OR IGNORE INTO list18  VALUES(?);");
-        executeAll(command19, "INSERT OR IGNORE INTO list19  VALUES(?);");
-        executeAll(command20, "INSERT OR IGNORE INTO list20  VALUES(?);");
-        executeAll(command21, "INSERT OR IGNORE INTO list21  VALUES(?);");
-        executeAll(command22, "INSERT OR IGNORE INTO list22  VALUES(?);");
-        executeAll(command23, "INSERT OR IGNORE INTO list23  VALUES(?);");
-        executeAll(command24, "INSERT OR IGNORE INTO list24  VALUES(?);");
-        executeAll(command25, "INSERT OR IGNORE INTO list25  VALUES(?);");
+        executeAll(command0, "INSERT INTO list0(PATH) VALUES(?);");
+        executeAll(command1, "INSERT INTO list1(PATH) VALUES(?);");
+        executeAll(command2, "INSERT INTO list2(PATH) VALUES(?);");
+        executeAll(command3, "INSERT INTO list3(PATH) VALUES(?);");
+        executeAll(command4, "INSERT INTO list4(PATH) VALUES(?);");
+        executeAll(command5, "INSERT INTO list5(PATH) VALUES(?);");
+        executeAll(command6, "INSERT INTO list6(PATH) VALUES(?);");
+        executeAll(command7, "INSERT INTO list7(PATH) VALUES(?);");
+        executeAll(command8, "INSERT INTO list8(PATH) VALUES(?);");
+        executeAll(command9, "INSERT INTO list9(PATH) VALUES(?);");
+        executeAll(command10, "INSERT INTO list10(PATH) VALUES(?);");
+        executeAll(command11, "INSERT INTO list11(PATH) VALUES(?);");
+        executeAll(command12, "INSERT INTO list12(PATH) VALUES(?);");
+        executeAll(command13, "INSERT INTO list13(PATH) VALUES(?);");
+        executeAll(command14, "INSERT INTO list14(PATH) VALUES(?);");
+        executeAll(command15, "INSERT INTO list15(PATH) VALUES(?);");
+        executeAll(command16, "INSERT INTO list16(PATH) VALUES(?);");
+        executeAll(command17, "INSERT INTO list17(PATH) VALUES(?);");
+        executeAll(command18, "INSERT INTO list18(PATH) VALUES(?);");
+        executeAll(command19, "INSERT INTO list19(PATH) VALUES(?);");
+        executeAll(command20, "INSERT INTO list20(PATH) VALUES(?);");
+        executeAll(command21, "INSERT INTO list21(PATH) VALUES(?);");
+        executeAll(command22, "INSERT INTO list22(PATH) VALUES(?);");
+        executeAll(command23, "INSERT INTO list23(PATH) VALUES(?);");
+        executeAll(command24, "INSERT INTO list24(PATH) VALUES(?);");
+        executeAll(command25, "INSERT INTO list25(PATH) VALUES(?);");
+        executeAll(command26, "INSERT INTO list26(PATH) VALUES(?);");
+        executeAll(command27, "INSERT INTO list27(PATH) VALUES(?);");
+        executeAll(command28, "INSERT INTO list28(PATH) VALUES(?);");
+        executeAll(command29, "INSERT INTO list29(PATH) VALUES(?);");
+        executeAll(command30, "INSERT INTO list30(PATH) VALUES(?);");
+        executeAll(command31, "INSERT INTO list31(PATH) VALUES(?);");
+        executeAll(command32, "INSERT INTO list32(PATH) VALUES(?);");
+        executeAll(command33, "INSERT INTO list33(PATH) VALUES(?);");
+        executeAll(command34, "INSERT INTO list34(PATH) VALUES(?);");
+        executeAll(command35, "INSERT INTO list35(PATH) VALUES(?);");
+        executeAll(command36, "INSERT INTO list36(PATH) VALUES(?);");
+        executeAll(command37, "INSERT INTO list37(PATH) VALUES(?);");
+        executeAll(command38, "INSERT INTO list38(PATH) VALUES(?);");
+        executeAll(command39, "INSERT INTO list39(PATH) VALUES(?);");
+        executeAll(command40, "INSERT INTO list40(PATH) VALUES(?);");
+        //创建索引
+        sqlite3_exec(db, "BEGIN;", NULL, NULL, NULL);
+        char num[5];
+        string str;
+        for (int i = 0; i < 40; i++) {
+            _itoa_s(i, num, 10);
+            str.append("CREATE UNIQUE INDEX list").append(num).append("_index ON list").append(num).append("(PATH)").append(";");
+            sqlite3_exec(db, str.c_str(), NULL, NULL, NULL);
+            str.clear();
+        }
+        sqlite3_exec(db, "COMMIT;", NULL, NULL, NULL);
         sqlite3_close(db);
         return 0;
     }
@@ -575,32 +704,47 @@ int main()
     setSearchDepth(6);
     addIgnorePath("C:\\Windows");
     searchFiles("C:", "*");
-    executeAll(command0, "INSERT OR IGNORE INTO list0  VALUES(?);");
-    executeAll(command1, "INSERT OR IGNORE INTO list1  VALUES(?);");
-    executeAll(command2, "INSERT OR IGNORE INTO list2  VALUES(?);");
-    executeAll(command3, "INSERT OR IGNORE INTO list3  VALUES(?);");
-    executeAll(command4, "INSERT OR IGNORE INTO list4  VALUES(?);");
-    executeAll(command5, "INSERT OR IGNORE INTO list5  VALUES(?);");
-    executeAll(command6, "INSERT OR IGNORE INTO list6  VALUES(?);");
-    executeAll(command7, "INSERT OR IGNORE INTO list7  VALUES(?);");
-    executeAll(command8, "INSERT OR IGNORE INTO list8  VALUES(?);");
-    executeAll(command9, "INSERT OR IGNORE INTO list9  VALUES(?);");
-    executeAll(command10, "INSERT OR IGNORE INTO list10  VALUES(?);");
-    executeAll(command11, "INSERT OR IGNORE INTO list11  VALUES(?);");
-    executeAll(command12, "INSERT OR IGNORE INTO list12  VALUES(?);");
-    executeAll(command13, "INSERT OR IGNORE INTO list13  VALUES(?);");
-    executeAll(command14, "INSERT OR IGNORE INTO list14  VALUES(?);");
-    executeAll(command15, "INSERT OR IGNORE INTO list15  VALUES(?);");
-    executeAll(command16, "INSERT OR IGNORE INTO list16  VALUES(?);");
-    executeAll(command17, "INSERT OR IGNORE INTO list17  VALUES(?);");
-    executeAll(command18, "INSERT OR IGNORE INTO list18  VALUES(?);");
-    executeAll(command19, "INSERT OR IGNORE INTO list19  VALUES(?);");
-    executeAll(command20, "INSERT OR IGNORE INTO list20  VALUES(?);");
-    executeAll(command21, "INSERT OR IGNORE INTO list21  VALUES(?);");
-    executeAll(command22, "INSERT OR IGNORE INTO list22  VALUES(?);");
-    executeAll(command23, "INSERT OR IGNORE INTO list23  VALUES(?);");
-    executeAll(command24, "INSERT OR IGNORE INTO list24  VALUES(?);");
-    executeAll(command25, "INSERT OR IGNORE INTO list25  VALUES(?);");
+    executeAll(command0, "INSERT INTO list0(PATH) VALUES(?);");
+    executeAll(command1, "INSERT INTO list1(PATH) VALUES(?);");
+    executeAll(command2, "INSERT INTO list2(PATH) VALUES(?);");
+    executeAll(command3, "INSERT INTO list3(PATH) VALUES(?);");
+    executeAll(command4, "INSERT INTO list4(PATH) VALUES(?);");
+    executeAll(command5, "INSERT INTO list5(PATH) VALUES(?);");
+    executeAll(command6, "INSERT INTO list6(PATH) VALUES(?);");
+    executeAll(command7, "INSERT INTO list7(PATH) VALUES(?);");
+    executeAll(command8, "INSERT INTO list8(PATH) VALUES(?);");
+    executeAll(command9, "INSERT INTO list9(PATH) VALUES(?);");
+    executeAll(command10, "INSERT INTO list10(PATH) VALUES(?);");
+    executeAll(command11, "INSERT INTO list11(PATH) VALUES(?);");
+    executeAll(command12, "INSERT INTO list12(PATH) VALUES(?);");
+    executeAll(command13, "INSERT INTO list13(PATH) VALUES(?);");
+    executeAll(command14, "INSERT INTO list14(PATH) VALUES(?);");
+    executeAll(command15, "INSERT INTO list15(PATH) VALUES(?);");
+    executeAll(command16, "INSERT INTO list16(PATH) VALUES(?);");
+    executeAll(command17, "INSERT INTO list17(PATH) VALUES(?);");
+    executeAll(command18, "INSERT INTO list18(PATH) VALUES(?);");
+    executeAll(command19, "INSERT INTO list19(PATH) VALUES(?);");
+    executeAll(command20, "INSERT INTO list20(PATH) VALUES(?);");
+    executeAll(command21, "INSERT INTO list21(PATH) VALUES(?);");
+    executeAll(command22, "INSERT INTO list22(PATH) VALUES(?);");
+    executeAll(command23, "INSERT INTO list23(PATH) VALUES(?);");
+    executeAll(command24, "INSERT INTO list24(PATH) VALUES(?);");
+    executeAll(command25, "INSERT INTO list25(PATH) VALUES(?);");
+    executeAll(command26, "INSERT INTO list26(PATH) VALUES(?);");
+    executeAll(command27, "INSERT INTO list27(PATH) VALUES(?);");
+    executeAll(command28, "INSERT INTO list28(PATH) VALUES(?);");
+    executeAll(command29, "INSERT INTO list29(PATH) VALUES(?);");
+    executeAll(command30, "INSERT INTO list30(PATH) VALUES(?);");
+    executeAll(command31, "INSERT INTO list31(PATH) VALUES(?);");
+    executeAll(command32, "INSERT INTO list32(PATH) VALUES(?);");
+    executeAll(command33, "INSERT INTO list33(PATH) VALUES(?);");
+    executeAll(command34, "INSERT INTO list34(PATH) VALUES(?);");
+    executeAll(command35, "INSERT INTO list35(PATH) VALUES(?);");
+    executeAll(command36, "INSERT INTO list36(PATH) VALUES(?);");
+    executeAll(command37, "INSERT INTO list37(PATH) VALUES(?);");
+    executeAll(command38, "INSERT INTO list38(PATH) VALUES(?);");
+    executeAll(command39, "INSERT INTO list39(PATH) VALUES(?);");
+    executeAll(command40, "INSERT INTO list40(PATH) VALUES(?);");
     sqlite3_close(db);
     getchar();
 }

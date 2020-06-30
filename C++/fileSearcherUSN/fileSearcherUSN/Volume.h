@@ -89,6 +89,23 @@ public:
 			// 06. 删除 USN 日志文件 ( 也可以不删除 ) 
 			deleteUSN()) {
 			initAllVector();
+			int ascii = 0;
+			wstring name;
+			CString path;
+			string _utf8;
+			wstring record;
+			Frn_Pfrn_Name_Map::iterator endIter = frnPfrnNameMap.end();
+			for (Frn_Pfrn_Name_Map::iterator iter = frnPfrnNameMap.begin(); iter != endIter; ++iter) {
+				name = iter->second.filename;
+				if (name.find(_T("$")) == wstring::npos) {
+					ascii = getAscIISum(to_utf8(name));
+					path = L"\0";
+					getPath(iter->first, path);
+					record = path;
+					_utf8 = to_utf8(record);
+					saveResult(_utf8, ascii);
+				}
+			}
 			return true;
 		}
 		else {
@@ -136,6 +153,21 @@ private:
 	vector<string> command23;
 	vector<string> command24;
 	vector<string> command25;
+	vector<string> command26;
+	vector<string> command27;
+	vector<string> command28;
+	vector<string> command29;
+	vector<string> command30;
+	vector<string> command31;
+	vector<string> command32;
+	vector<string> command33;
+	vector<string> command34;
+	vector<string> command35;
+	vector<string> command36;
+	vector<string> command37;
+	vector<string> command38;
+	vector<string> command39;
+	vector<string> command40;
 
 	bool getHandle();
 	bool createUSN();
@@ -147,12 +179,12 @@ private:
 	void getPath(DWORDLONG frn, CString& path);
 	int getAscIISum(string name);
 	void initAllVector() {
-		command0.reserve(2000);
-		command1.reserve(3000);
-		command2.reserve(3000);
-		command3.reserve(3000);
-		command4.reserve(3000);
-		command5.reserve(3000);
+		command0.reserve(5000);
+		command1.reserve(5000);
+		command2.reserve(5000);
+		command3.reserve(5000);
+		command4.reserve(5000);
+		command5.reserve(5000);
 		command6.reserve(5000);
 		command7.reserve(5000);
 		command8.reserve(5000);
@@ -161,26 +193,40 @@ private:
 		command11.reserve(5000);
 		command12.reserve(5000);
 		command13.reserve(5000);
-		command14.reserve(4000);
-		command15.reserve(4000);
-		command16.reserve(4000);
-		command17.reserve(4000);
-		command18.reserve(4000);
-		command19.reserve(4000);
-		command20.reserve(3000);
-		command21.reserve(3000);
-		command22.reserve(3000);
-		command23.reserve(3000);
-		command24.reserve(3000);
-		command25.reserve(10000);
+		command14.reserve(5000);
+		command15.reserve(5000);
+		command16.reserve(5000);
+		command17.reserve(5000);
+		command18.reserve(5000);
+		command19.reserve(5000);
+		command20.reserve(5000);
+		command21.reserve(5000);
+		command22.reserve(5000);
+		command23.reserve(5000);
+		command24.reserve(5000);
+		command25.reserve(5000);
+		command26.reserve(5000);
+		command27.reserve(5000);
+		command28.reserve(5000);
+		command29.reserve(5000);
+		command30.reserve(5000);
+		command31.reserve(5000);
+		command32.reserve(5000);
+		command33.reserve(5000);
+		command34.reserve(5000);
+		command35.reserve(5000);
+		command36.reserve(5000);
+		command37.reserve(5000);
+		command38.reserve(5000);
+		command39.reserve(5000);
+		command40.reserve(5000);
 	}
 };
 
 void Volume::executeAll(vector<string>& vec, const char* init) {
-	sqlite3_exec(db, "BEGIN;", NULL, NULL, NULL);
 	sqlite3_stmt* stmt = NULL;
 	string str;
-	int rc = sqlite3_prepare_v2(db, init, strlen(init), &stmt, NULL);
+	size_t rc = sqlite3_prepare_v2(db, init, strlen(init), &stmt, NULL);
 	if (rc != SQLITE_OK) {
 		cout << "error preparing statement" << endl;
 		exit(-1);
@@ -191,134 +237,167 @@ void Volume::executeAll(vector<string>& vec, const char* init) {
 		sqlite3_bind_text(stmt, 1, str.c_str(), -1, SQLITE_STATIC);
 		sqlite3_step(stmt);
 	}
-	sqlite3_exec(db, "COMMIT;", NULL, NULL, NULL);
 }
 
 void Volume::saveResult(string path, int ascII) {
-	if (2500 <= ascII && ascII <= 4000)
+	int asciiGroup = ascII / 100;
+	switch (asciiGroup)
 	{
-		command25.push_back(path);
-	}
-	else if (100 < ascII && ascII <= 200)
-	{
-		command1.push_back(path);
-	}
-	else if (200 < ascII && ascII <= 300)
-	{
-		command2.push_back(path);
-	}
-	else if (300 < ascII && ascII <= 400)
-	{
-		command3.push_back(path);
-	}
-	else if (400 < ascII && ascII <= 500)
-	{
-		command4.push_back(path);
-	}
-	else if (500 < ascII && ascII <= 600)
-	{
-		command5.push_back(path);
-	}
-	else if (600 < ascII && ascII <= 700)
-	{
-		command6.push_back(path);
-	}
-	else if (700 < ascII && ascII <= 800)
-	{
-		command7.push_back(path);
-	}
-	else if (800 < ascII && ascII <= 900)
-	{
-		command8.push_back(path);
-	}
-	else if (900 < ascII && ascII <= 1000)
-	{
-		command9.push_back(path);
-	}
-	else if (1000 < ascII && ascII <= 1100)
-	{
-		command10.push_back(path);
-	}
-	else if (1100 < ascII && ascII <= 1200)
-	{
-		command11.push_back(path);
-	}
-	else if (1200 < ascII && ascII <= 1300)
-	{
-		command12.push_back(path);
-	}
-	else if (1300 < ascII && ascII <= 1400)
-	{
-		command13.push_back(path);
-	}
-	else if (1400 < ascII && ascII <= 1500)
-	{
-		command14.push_back(path);
-	}
-	else if (1500 < ascII && ascII <= 1600)
-	{
-		command15.push_back(path);
-	}
-	else if (1600 < ascII && ascII <= 1700)
-	{
-		command16.push_back(path);
-	}
-	else if (1700 < ascII && ascII <= 1800)
-	{
-		command17.push_back(path);
-	}
-	else if (1800 < ascII && ascII <= 1900)
-	{
-		command18.push_back(path);
-	}
-	else if (1900 < ascII && ascII <= 2000)
-	{
-		command19.push_back(path);
-	}
-	else if (2000 < ascII && ascII <= 2100)
-	{
-		command20.push_back(path);
-	}
-	else if (2100 < ascII && ascII <= 2200)
-	{
-		command21.push_back(path);
-	}
-	else if (2200 < ascII && ascII <= 2300)
-	{
-		command22.push_back(path);
-	}
-	else if (2300 < ascII && ascII <= 2400)
-	{
-		command23.push_back(path);
-	}
-	else if (2400 < ascII && ascII <= 2500)
-	{
-		command24.push_back(path);
-	}
-	else if (0 <= ascII && ascII <= 100)
-	{
+	case 0:
 		command0.push_back(path);
+		break;
+
+	case 1:
+		command1.push_back(path);
+		break;
+
+	case 2:
+		command2.push_back(path);
+		break;
+
+	case 3:
+		command3.push_back(path);
+		break;
+
+	case 4:
+		command4.push_back(path);
+		break;
+
+	case 5:
+		command5.push_back(path);
+		break;
+	case 6:
+		command6.push_back(path);
+		break;
+
+	case 7:
+		command7.push_back(path);
+		break;
+
+	case 8:
+		command8.push_back(path);
+		break;
+
+	case 9:
+		command9.push_back(path);
+		break;
+
+	case 10:
+		command10.push_back(path);
+		break;
+
+	case 11:
+		command11.push_back(path);
+		break;
+
+	case 12:
+		command12.push_back(path);
+		break;
+
+	case 13:
+		command13.push_back(path);
+		break;
+
+	case 14:
+		command14.push_back(path);
+		break;
+
+	case 15:
+		command15.push_back(path);
+		break;
+
+	case 16:
+		command16.push_back(path);
+		break;
+
+	case 17:
+		command17.push_back(path);
+		break;
+
+	case 18:
+		command18.push_back(path);
+		break;
+
+	case 19:
+		command19.push_back(path);
+		break;
+
+	case 20:
+		command20.push_back(path);
+		break;
+
+	case 21:
+		command21.push_back(path);
+		break;
+
+	case 22:
+		command22.push_back(path);
+		break;
+
+	case 23:
+		command23.push_back(path);
+		break;
+
+	case 24:
+		command24.push_back(path);
+		break;
+
+	case 25:
+		command25.push_back(path);
+		break;
+
+	case 26:
+		command26.push_back(path);
+		break;
+	case 27:
+		command27.push_back(path);
+		break;
+	case 28:
+		command28.push_back(path);
+		break;
+	case 29:
+		command29.push_back(path);
+		break;
+	case 30:
+		command30.push_back(path);
+		break;
+	case 31:
+		command31.push_back(path);
+		break;
+	case 32:
+		command32.push_back(path);
+		break;
+	case 33:
+		command33.push_back(path);
+		break;
+	case 34:
+		command34.push_back(path);
+		break;
+	case 35:
+		command35.push_back(path);
+		break;
+	case 36:
+		command36.push_back(path);
+		break;
+	case 37:
+		command37.push_back(path);
+		break;
+	case 38:
+		command38.push_back(path);
+		break;
+	case 39:
+		command39.push_back(path);
+		break;
+	case 40:
+		command40.push_back(path);
+		break;
+
+	default:
+		break;
 	}
 }
 
 void Volume::saveToDatabase() {
-	int ascii = 0;
-	wstring name;
-	CString path;
-	string _utf8;
-	wstring record;
-	Frn_Pfrn_Name_Map::iterator endIter = frnPfrnNameMap.end();
-	for (Frn_Pfrn_Name_Map::iterator iter = frnPfrnNameMap.begin(); iter != endIter; ++iter) {		
-		name = iter->second.filename;
-		if (name.find(_T("$")) == wstring::npos) {
-			ascii = getAscIISum(to_utf8(name));
-			path = L"\0";
-			getPath(iter->first, path);
-			record = path;
-			_utf8 = to_utf8(record);
-			saveResult(_utf8, ascii);
-		}
-	}
 	executeAll(command0, "INSERT INTO list0(PATH) VALUES(?);");
 	executeAll(command1, "INSERT INTO list1(PATH) VALUES(?);");
 	executeAll(command2, "INSERT INTO list2(PATH) VALUES(?);");
@@ -345,6 +424,21 @@ void Volume::saveToDatabase() {
 	executeAll(command23, "INSERT INTO list23(PATH) VALUES(?);");
 	executeAll(command24, "INSERT INTO list24(PATH) VALUES(?);");
 	executeAll(command25, "INSERT INTO list25(PATH) VALUES(?);");
+	executeAll(command26, "INSERT INTO list26(PATH) VALUES(?);");
+	executeAll(command27, "INSERT INTO list27(PATH) VALUES(?);");
+	executeAll(command28, "INSERT INTO list28(PATH) VALUES(?);");
+	executeAll(command29, "INSERT INTO list29(PATH) VALUES(?);");
+	executeAll(command30, "INSERT INTO list30(PATH) VALUES(?);");
+	executeAll(command31, "INSERT INTO list31(PATH) VALUES(?);");
+	executeAll(command32, "INSERT INTO list32(PATH) VALUES(?);");
+	executeAll(command33, "INSERT INTO list33(PATH) VALUES(?);");
+	executeAll(command34, "INSERT INTO list34(PATH) VALUES(?);");
+	executeAll(command35, "INSERT INTO list35(PATH) VALUES(?);");
+	executeAll(command36, "INSERT INTO list36(PATH) VALUES(?);");
+	executeAll(command37, "INSERT INTO list37(PATH) VALUES(?);");
+	executeAll(command38, "INSERT INTO list38(PATH) VALUES(?);");
+	executeAll(command39, "INSERT INTO list39(PATH) VALUES(?);");
+	executeAll(command40, "INSERT INTO list40(PATH) VALUES(?);");
 }
 
 int Volume::getAscIISum(string name) {

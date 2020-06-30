@@ -2219,135 +2219,276 @@ public class SearchBar {
                     if (isStartSearchLocal) {
                         isStartSearchLocal = false;
                         ascII = getAscIISum(searchText.toUpperCase());
+                        int asciiGroup = ascII / 100;
 
-                        if (0 <= ascII && ascII <= 100) {
-                            for (int i = 0; i < 26; i++) {
-                                command = "SELECT PATH FROM list" + i + ";";
+                        switch (asciiGroup) {
+                            case 0:
+                                for (int i = 0; i < 40; i++) {
+                                    command = "SELECT PATH FROM list" + i + ";";
+                                    commandQueue.add(command);
+                                }
+                                break;
+                            case 1:
+                                for (int i = 1; i < 40; i++) {
+                                    command = "SELECT PATH FROM list" + i + ";";
+                                    commandQueue.add(command);
+                                }
+                                break;
+
+                            case 2:
+                                for (int i = 2; i < 40; i++) {
+                                    command = "SELECT PATH FROM list" + i + ";";
+                                    commandQueue.add(command);
+                                }
+                                break;
+
+                            case 3:
+                                for (int i = 3; i < 40; i++) {
+                                    command = "SELECT PATH FROM list" + i + ";";
+                                    commandQueue.add(command);
+                                }
+                                break;
+
+                            case 4:
+                                for (int i = 4; i < 40; i++) {
+                                    command = "SELECT PATH FROM list" + i + ";";
+                                    commandQueue.add(command);
+                                }
+                                break;
+
+                            case 5:
+                                for (int i = 5; i < 40; i++) {
+                                    command = "SELECT PATH FROM list" + i + ";";
+                                    commandQueue.add(command);
+                                }
+                                break;
+                            case 6:
+                                for (int i = 6; i < 40; i++) {
+                                    command = "SELECT PATH FROM list" + i + ";";
+                                    commandQueue.add(command);
+                                }
+                                break;
+
+                            case 7:
+                                for (int i = 7; i < 40; i++) {
+                                    command = "SELECT PATH FROM list" + i + ";";
+                                    commandQueue.add(command);
+                                }
+                                break;
+
+                            case 8:
+                                for (int i = 8; i < 40; i++) {
+                                    command = "SELECT PATH FROM list" + i + ";";
+                                    commandQueue.add(command);
+                                }
+                                break;
+
+                            case 9:
+                                for (int i = 9; i < 40; i++) {
+                                    command = "SELECT PATH FROM list" + i + ";";
+                                    commandQueue.add(command);
+                                }
+                                break;
+
+                            case 10:
+                                for (int i = 10; i < 40; i++) {
+                                    command = "SELECT PATH FROM list" + i + ";";
+                                    commandQueue.add(command);
+                                }
+                                break;
+
+                            case 11:
+                                for (int i = 11; i < 40; i++) {
+                                    command = "SELECT PATH FROM list" + i + ";";
+                                    commandQueue.add(command);
+                                }
+                                break;
+
+                            case 12:
+                                for (int i = 12; i < 40; i++) {
+                                    command = "SELECT PATH FROM list" + i + ";";
+                                    commandQueue.add(command);
+                                }
+                                break;
+
+                            case 13:
+                                for (int i = 13; i < 40; i++) {
+                                    command = "SELECT PATH FROM list" + i + ";";
+                                    commandQueue.add(command);
+                                }
+                                break;
+
+                            case 14:
+                                for (int i = 14; i < 40; i++) {
+                                    command = "SELECT PATH FROM list" + i + ";";
+                                    commandQueue.add(command);
+                                }
+                                break;
+
+                            case 15:
+                                for (int i = 15; i < 40; i++) {
+                                    command = "SELECT PATH FROM list" + i + ";";
+                                    commandQueue.add(command);
+                                }
+                                break;
+
+                            case 16:
+                                for (int i = 16; i < 40; i++) {
+                                    command = "SELECT PATH FROM list" + i + ";";
+                                    commandQueue.add(command);
+                                }
+                                break;
+
+                            case 17:
+                                for (int i = 17; i < 40; i++) {
+                                    command = "SELECT PATH FROM list" + i + ";";
+                                    commandQueue.add(command);
+                                }
+                                break;
+
+                            case 18:
+                                for (int i = 18; i < 40; i++) {
+                                    command = "SELECT PATH FROM list" + i + ";";
+                                    commandQueue.add(command);
+                                }
+                                break;
+
+                            case 19:
+                                for (int i = 19; i < 40; i++) {
+                                    command = "SELECT PATH FROM list" + i + ";";
+                                    commandQueue.add(command);
+                                }
+                                break;
+
+                            case 20:
+                                for (int i = 20; i < 40; i++) {
+                                    command = "SELECT PATH FROM list" + i + ";";
+                                    commandQueue.add(command);
+                                }
+                                break;
+
+                            case 21:
+                                for (int i = 21; i < 40; i++) {
+                                    command = "SELECT PATH FROM list" + i + ";";
+                                    commandQueue.add(command);
+                                }
+                                break;
+
+                            case 22:
+                                for (int i = 22; i < 40; i++) {
+                                    command = "SELECT PATH FROM list" + i + ";";
+                                    commandQueue.add(command);
+                                }
+                                break;
+
+                            case 23:
+                                for (int i = 23; i < 40; i++) {
+                                    command = "SELECT PATH FROM list" + i + ";";
+                                    commandQueue.add(command);
+                                }
+                                break;
+
+                            case 24:
+                                for (int i = 24; i < 40; i++) {
+                                    command = "SELECT PATH FROM list" + i + ";";
+                                    commandQueue.add(command);
+                                }
+                                break;
+
+                            case 25:
+                                for (int i = 25; i < 40; i++) {
+                                    command = "SELECT PATH FROM list" + i + ";";
+                                    commandQueue.add(command);
+                                }
+                                break;
+                            case 26:
+                                for (int i = 26; i < 40; i++) {
+                                    command = "SELECT PATH FROM list" + i + ";";
+                                    commandQueue.add(command);
+                                }
+                                break;
+                            case 27:
+                                for (int i = 27; i < 40; i++) {
+                                    command = "SELECT PATH FROM list" + i + ";";
+                                    commandQueue.add(command);
+                                }
+                                break;
+                            case 28:
+                                for (int i = 28; i < 40; i++) {
+                                    command = "SELECT PATH FROM list" + i + ";";
+                                    commandQueue.add(command);
+                                }
+                                break;
+                            case 29:
+                                for (int i = 29; i < 40; i++) {
+                                    command = "SELECT PATH FROM list" + i + ";";
+                                    commandQueue.add(command);
+                                }
+                                break;
+                            case 30:
+                                for (int i = 30; i < 40; i++) {
+                                    command = "SELECT PATH FROM list" + i + ";";
+                                    commandQueue.add(command);
+                                }
+                                break;
+                            case 31:
+                                for (int i = 31; i < 40; i++) {
+                                    command = "SELECT PATH FROM list" + i + ";";
+                                    commandQueue.add(command);
+                                }
+                                break;
+                            case 32:
+                                for (int i = 32; i < 40; i++) {
+                                    command = "SELECT PATH FROM list" + i + ";";
+                                    commandQueue.add(command);
+                                }
+                                break;
+                            case 33:
+                                for (int i = 33; i < 40; i++) {
+                                    command = "SELECT PATH FROM list" + i + ";";
+                                    commandQueue.add(command);
+                                }
+                                break;
+                            case 34:
+                                for (int i = 34; i < 40; i++) {
+                                    command = "SELECT PATH FROM list" + i + ";";
+                                    commandQueue.add(command);
+                                }
+                                break;
+                            case 35:
+                                for (int i = 35; i < 40; i++) {
+                                    command = "SELECT PATH FROM list" + i + ";";
+                                    commandQueue.add(command);
+                                }
+                                break;
+                            case 36:
+                                for (int i = 36; i < 40; i++) {
+                                    command = "SELECT PATH FROM list" + i + ";";
+                                    commandQueue.add(command);
+                                }
+                                break;
+                            case 37:
+                                for (int i = 37; i < 40; i++) {
+                                    command = "SELECT PATH FROM list" + i + ";";
+                                    commandQueue.add(command);
+                                }
+                                break;
+                            case 38:
+                                for (int i = 38; i < 40; i++) {
+                                    command = "SELECT PATH FROM list" + i + ";";
+                                    commandQueue.add(command);
+                                }
+                                break;
+                            case 39:
+                                for (int i = 39; i < 40; i++) {
+                                    command = "SELECT PATH FROM list" + i + ";";
+                                    commandQueue.add(command);
+                                }
+                                break;
+                            case 40:
+                                command = "SELECT PATH FROM list40;";
                                 commandQueue.add(command);
-                            }
-                        } else if (100 < ascII && ascII <= 200) {
-                            for (int i = 1; i < 26; i++) {
-                                command = "SELECT PATH FROM list" + i + ";";
-                                commandQueue.add(command);
-                            }
-                        } else if (200 < ascII && ascII <= 300) {
-                            for (int i = 2; i < 26; i++) {
-                                command = "SELECT PATH FROM list" + i + ";";
-                                commandQueue.add(command);
-                            }
-                        } else if (300 < ascII && ascII <= 400) {
-                            for (int i = 3; i < 26; i++) {
-                                command = "SELECT PATH FROM list" + i + ";";
-                                commandQueue.add(command);
-                            }
-                        } else if (400 < ascII && ascII <= 500) {
-                            for (int i = 4; i < 26; i++) {
-                                command = "SELECT PATH FROM list" + i + ";";
-                                commandQueue.add(command);
-                            }
-                        } else if (500 < ascII && ascII <= 600) {
-                            for (int i = 5; i < 26; i++) {
-                                command = "SELECT PATH FROM list" + i + ";";
-                                commandQueue.add(command);
-                            }
-                        } else if (600 < ascII && ascII <= 700) {
-                            for (int i = 6; i < 26; i++) {
-                                command = "SELECT PATH FROM list" + i + ";";
-                                commandQueue.add(command);
-                            }
-                        } else if (700 < ascII && ascII <= 800) {
-                            for (int i = 7; i < 26; i++) {
-                                command = "SELECT PATH FROM list" + i + ";";
-                                commandQueue.add(command);
-                            }
-                        } else if (800 < ascII && ascII <= 900) {
-                            for (int i = 8; i < 26; i++) {
-                                command = "SELECT PATH FROM list" + i + ";";
-                                commandQueue.add(command);
-                            }
-                        } else if (900 < ascII && ascII <= 1000) {
-                            for (int i = 9; i < 26; i++) {
-                                command = "SELECT PATH FROM list" + i + ";";
-                                commandQueue.add(command);
-                            }
-                        } else if (1000 < ascII && ascII <= 1100) {
-                            for (int i = 10; i < 26; i++) {
-                                command = "SELECT PATH FROM list" + i + ";";
-                                commandQueue.add(command);
-                            }
-                        } else if (1100 < ascII && ascII <= 1200) {
-                            for (int i = 11; i < 26; i++) {
-                                command = "SELECT PATH FROM list" + i + ";";
-                                commandQueue.add(command);
-                            }
-                        } else if (1200 < ascII && ascII <= 1300) {
-                            for (int i = 12; i < 26; i++) {
-                                command = "SELECT PATH FROM list" + i + ";";
-                                commandQueue.add(command);
-                            }
-                        } else if (1300 < ascII && ascII <= 1400) {
-                            for (int i = 13; i < 26; i++) {
-                                command = "SELECT PATH FROM list" + i + ";";
-                                commandQueue.add(command);
-                            }
-                        } else if (1400 < ascII && ascII <= 1500) {
-                            for (int i = 14; i < 26; i++) {
-                                command = "SELECT PATH FROM list" + i + ";";
-                                commandQueue.add(command);
-                            }
-                        } else if (1500 < ascII && ascII <= 1600) {
-                            for (int i = 15; i < 26; i++) {
-                                command = "SELECT PATH FROM list" + i + ";";
-                                commandQueue.add(command);
-                            }
-                        } else if (1600 < ascII && ascII <= 1700) {
-                            for (int i = 16; i < 26; i++) {
-                                command = "SELECT PATH FROM list" + i + ";";
-                                commandQueue.add(command);
-                            }
-                        } else if (1700 < ascII && ascII <= 1800) {
-                            for (int i = 17; i < 26; i++) {
-                                command = "SELECT PATH FROM list" + i + ";";
-                                commandQueue.add(command);
-                            }
-                        } else if (1800 < ascII && ascII <= 1900) {
-                            for (int i = 18; i < 26; i++) {
-                                command = "SELECT PATH FROM list" + i + ";";
-                                commandQueue.add(command);
-                            }
-                        } else if (1900 < ascII && ascII <= 2000) {
-                            for (int i = 19; i < 26; i++) {
-                                command = "SELECT PATH FROM list" + i + ";";
-                                commandQueue.add(command);
-                            }
-                        } else if (2000 < ascII && ascII <= 2100) {
-                            for (int i = 20; i < 26; i++) {
-                                command = "SELECT PATH FROM list" + i + ";";
-                                commandQueue.add(command);
-                            }
-                        } else if (2100 < ascII && ascII <= 2200) {
-                            for (int i = 21; i < 26; i++) {
-                                command = "SELECT PATH FROM list" + i + ";";
-                                commandQueue.add(command);
-                            }
-                        } else if (2200 < ascII && ascII <= 2300) {
-                            for (int i = 22; i < 26; i++) {
-                                command = "SELECT PATH FROM list" + i + ";";
-                                commandQueue.add(command);
-                            }
-                        } else if (2300 < ascII && ascII <= 2400) {
-                            for (int i = 23; i < 26; i++) {
-                                command = "SELECT PATH FROM list" + i + ";";
-                                commandQueue.add(command);
-                            }
-                        } else if (2400 < ascII && ascII <= 2500) {
-                            for (int i = 24; i < 26; i++) {
-                                command = "SELECT PATH FROM list" + i + ";";
-                                commandQueue.add(command);
-                            }
-                        } else {
-                            command = "SELECT PATH FROM list25;";
-                            commandQueue.add(command);
+                                break;
                         }
                     }
                     Thread.sleep(10);
@@ -2358,7 +2499,10 @@ public class SearchBar {
         });
 
         int cpuCores = Runtime.getRuntime().availableProcessors();
-        for (int i = 0; i < cpuCores - 2; i++) {
+        if (cpuCores > 20) {
+            cpuCores = 20;
+        }
+        for (int i = 0; i < cpuCores; i++) {
             cachedThreadPool.execute(() -> {
                 try {
                     while (SettingsFrame.isNotMainExit()) {
@@ -2509,7 +2653,7 @@ public class SearchBar {
                 while (SettingsFrame.isNotMainExit()) {
                     if (!search.isManualUpdate()) {
                         if ((filesToAdd = readerAdd.readLine()) != null) {
-                            search.addFileToLoadBin(filesToAdd);
+                            search.addFileToDatabase(filesToAdd);
                             if (SettingsFrame.isDebug()) {
                                 System.out.println("添加" + filesToAdd);
                             }
@@ -2531,7 +2675,7 @@ public class SearchBar {
                 while (SettingsFrame.isNotMainExit()) {
                     if (!search.isManualUpdate()) {
                         if ((filesToRemove = readerRemove.readLine()) != null) {
-                            search.addToRecycleBin(filesToRemove);
+                            search.removeFileFromDatabase(filesToRemove);
                             if (SettingsFrame.isDebug()) {
                                 System.out.println("删除" + filesToRemove);
                             }
@@ -2668,7 +2812,7 @@ public class SearchBar {
                     resultCount.incrementAndGet();
                     tempResults.add(path);
                 } else {
-                    search.addToRecycleBin(path);
+                    search.removeFileFromDatabase(path);
                 }
             } else {
                 if (isExist(path)) {
@@ -2680,7 +2824,7 @@ public class SearchBar {
                         System.out.println("Adding record to listResults:" + path);
                     }
                 } else {
-                    search.addToRecycleBin(path);
+                    search.removeFileFromDatabase(path);
                 }
             }
         }

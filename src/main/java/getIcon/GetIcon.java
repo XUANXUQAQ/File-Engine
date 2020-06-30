@@ -8,7 +8,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class GetIcon {
-    private static ConcurrentHashMap<String, ImageIcon> iconCache = new ConcurrentHashMap<>(300);
+    private static ConcurrentHashMap<String, ImageIcon> iconCache = new ConcurrentHashMap<>(1000);
     private static FileSystemView fsv = FileSystemView.getFileSystemView();
     private static AtomicInteger cacheNum = new AtomicInteger(0);
     private static ImageIcon dllImageIcon;
@@ -42,7 +42,7 @@ public class GetIcon {
                     imageIcon = changeIcon((ImageIcon) fsv.getSystemIcon(f), width, height);
                 }
                 if (imageIcon != null) {
-                    if (cacheNum.get() < 300) {
+                    if (cacheNum.get() < 1000) {
                         if (!iconCache.containsKey(path)) {
                             iconCache.put(path, imageIcon);
                             cacheNum.incrementAndGet();

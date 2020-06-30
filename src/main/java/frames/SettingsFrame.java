@@ -877,10 +877,10 @@ public class SettingsFrame {
             if (settingsInJson.containsKey("hotkey")) {
                 hotkey = settingsInJson.getString("hotkey");
                 if (hotkey == null) {
-                    hotkey = "Ctrl + Alt + J";
+                    hotkey = "Ctrl + Alt + K";
                 }
             } else {
-                hotkey = "Ctrl + Alt + J";
+                hotkey = "Ctrl + Alt + K";
             }
             if (settingsInJson.containsKey("priorityFolder")) {
                 priorityFolder = settingsInJson.getString("priorityFolder");
@@ -977,7 +977,7 @@ public class SettingsFrame {
         } catch (NullPointerException | IOException e) {
             isStartup = false;
             cacheNumLimit = 1000;
-            hotkey = "Ctrl + Alt + J";
+            hotkey = "Ctrl + Alt + K";
             priorityFolder = "";
             searchDepth = 8;
             ignorePath = "C:\\Windows,";

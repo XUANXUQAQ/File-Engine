@@ -1,6 +1,11 @@
-﻿  正在生成代码
-  1 of 604 functions ( 0.2%) were compiled, the rest were copied from previous compilation.
-    0 functions were new in current compilation
-    4 functions had inline decision re-evaluated but remain unchanged
+﻿  fileSearcher.cpp
+D:\Code\File-Engine\C++\fileSearcher\fileSearcher\fileSearcher.cpp(81,23): warning C4018: “<”: 有符号/无符号不匹配
+D:\Code\File-Engine\C++\fileSearcher\fileSearcher\fileSearcher.cpp(470,23): warning C4018: “<”: 有符号/无符号不匹配
+D:\Code\File-Engine\C++\fileSearcher\fileSearcher\fileSearcher.cpp(540,28): warning C4244: “参数”: 从“__int64”转换到“intptr_t”，可能丢失数据
+D:\Code\File-Engine\C++\fileSearcher\fileSearcher\fileSearcher.cpp(541,20): warning C4244: “参数”: 从“__int64”转换到“intptr_t”，可能丢失数据
+  正在生成代码
+  211 of 557 functions (37.9%) were compiled, the rest were copied from previous compilation.
+    46 functions were new in current compilation
+    55 functions had inline decision re-evaluated but remain unchanged
   已完成代码的生成
   fileSearcher.vcxproj -> D:\Code\File-Engine\C++\fileSearcher\Release\fileSearcher.exe

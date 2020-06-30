@@ -21,7 +21,7 @@
       </component>
       <tabbedpane id="ba668" binding="tabbedPane1" default-binding="true">
         <constraints>
-          <grid row="0" column="0" row-span="1" col-span="3" vsize-policy="7" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false">
+          <grid row="0" column="0" row-span="1" col-span="3" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false">
             <preferred-size width="200" height="200"/>
           </grid>
         </constraints>
@@ -29,7 +29,7 @@
           <background color="-1"/>
           <focusable value="false"/>
           <tabLayoutPolicy value="0"/>
-          <tabPlacement value="2"/>
+          <tabPlacement value="1"/>
         </properties>
         <border type="none"/>
         <children>
