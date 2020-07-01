@@ -85,7 +85,6 @@ public class SettingsFrame {
     private JCheckBox checkBoxAdmin;
     private JLabel labelplaceholder1;
     private JCheckBox checkBoxLoseFocus;
-    private JLabel labelPlaceHolder2;
     private JLabel labelPlaceHolder3;
     private JLabel labelRunAsAdmin;
     private JTextField textFieldRunAsAdmin;
@@ -95,7 +94,6 @@ public class SettingsFrame {
     private JButton buttonDelCmd;
     private JScrollPane scrollPaneCmd;
     private JList<Object> listCmds;
-    private JLabel labelPlaceHoder4;
     private JButton buttonSave;
     private JLabel labelPlaceHoder6;
     private JLabel labelPlaceHolder7;
@@ -163,6 +161,7 @@ public class SettingsFrame {
     private JLabel labelPlaceHolder14;
     private JLabel labelPlaceHolderWhatever;
     private JLabel labelPlaceHolderWhatever2;
+    private JLabel labelPlaceHolderN;
 
 
     private static class SettingsFrameBuilder {
