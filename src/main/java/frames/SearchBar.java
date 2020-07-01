@@ -20,6 +20,7 @@ import java.io.*;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.sql.*;
+import java.util.Queue;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -2504,14 +2505,21 @@ public class SearchBar {
         }
         for (int i = 0; i < cpuCores; i++) {
             cachedThreadPool.execute(() -> {
+                Statement stmt = null;
                 try {
+                    ArrayList<String> listSQL = new ArrayList<>();
                     while (SettingsFrame.isNotMainExit()) {
                         String command;
-                        try (Connection databaseConn = DriverManager.getConnection("jdbc:sqlite:data.db"); Statement stmt = databaseConn.createStatement()) {
+                        try (Connection databaseConn = DriverManager.getConnection("jdbc:sqlite:data.db")) {
+                            stmt = databaseConn.createStatement();
                             while (SettingsFrame.isNotMainExit()) {
                                 if (!isCommandMode) {
                                     while ((command = commandQueue.poll()) != null) {
-                                        searchAndAddToTempResults(System.currentTimeMillis(), command, stmt);
+                                        listSQL.add(command);
+                                    }
+                                    if (!listSQL.isEmpty()) {
+                                        searchAndAddToTempResults(System.currentTimeMillis(), listSQL, stmt);
+                                        listSQL.clear();
                                     }
                                 }
                                 Thread.sleep(10);
@@ -2522,6 +2530,14 @@ public class SearchBar {
                 } catch (SQLException | InterruptedException e) {
                     if (SettingsFrame.isDebug() && !(e instanceof InterruptedException)) {
                         e.printStackTrace();
+                    }
+                } finally {
+                    if (stmt != null) {
+                        try {
+                            stmt.close();
+                        } catch (SQLException ignored) {
+
+                        }
                     }
                 }
             });
@@ -2693,11 +2709,13 @@ public class SearchBar {
 
         cachedThreadPool.execute(() -> {
             // 时间检测线程
+            Statement stmt = null;
             try {
                 while (SettingsFrame.isNotMainExit()) {
                     long count = 0;
                     long updateTimeLimit = SettingsFrame.getUpdateTimeLimit() * 10;
-                    try (Connection databaseConn = DriverManager.getConnection("jdbc:sqlite:data.db"); Statement stmt = databaseConn.createStatement()) {
+                    try (Connection databaseConn = DriverManager.getConnection("jdbc:sqlite:data.db")) {
+                        stmt = databaseConn.createStatement();
                         while (SettingsFrame.isNotMainExit()) {
                             count += 100;
                             if (count >= updateTimeLimit && !isUsing && !search.isManualUpdate()) {
@@ -2715,15 +2733,25 @@ public class SearchBar {
                 if (SettingsFrame.isDebug()) {
                     e.printStackTrace();
                 }
+            } finally {
+                if (stmt != null) {
+                    try {
+                        stmt.close();
+                    } catch (SQLException ignored) {
+
+                    }
+                }
             }
         });
 
 
         //搜索本地数据线程
         cachedThreadPool.execute(() -> {
+            Statement stmt = null;
             try {
                 while (SettingsFrame.isNotMainExit()) {
-                    try (Connection databaseConn = DriverManager.getConnection("jdbc:sqlite:data.db"); Statement stmt = databaseConn.createStatement()) {
+                    try (Connection databaseConn = DriverManager.getConnection("jdbc:sqlite:data.db")) {
+                        stmt = databaseConn.createStatement();
                         while (SettingsFrame.isNotMainExit()) {
                             if (search.isManualUpdate()) {
                                 search.setUsable(false);
@@ -2737,6 +2765,14 @@ public class SearchBar {
             } catch (InterruptedException | SQLException e) {
                 if (SettingsFrame.isDebug() && !(e instanceof InterruptedException)) {
                     e.printStackTrace();
+                }
+            } finally {
+                if (stmt != null) {
+                    try {
+                        stmt.close();
+                    } catch (SQLException ignored) {
+
+                    }
                 }
             }
         });
@@ -2831,27 +2867,37 @@ public class SearchBar {
         return resultCount.get() >= 100;
     }
 
-    private void searchAndAddToTempResults(long time, String command, Statement stmt) {
+    private void searchAndAddToTempResults(long time, ArrayList<String> commands, Statement stmt) {
         //为label添加结果
+        ResultSet resultSet = null;
         try {
             String each;
             boolean isResultsExcessive = false;
-            ResultSet resultSet = stmt.executeQuery(command);
-            while (resultSet.next()) {
-                each = resultSet.getString("PATH");
-                if (search.isUsable()) {
-                    isResultsExcessive = checkIsMatchedAndAddToList(each, true);
-                }
 
-                //用户重新输入了信息
-                if (isResultsExcessive || (startTime > time)) {
-                    break;
+            for (String command : commands) {
+                resultSet = stmt.executeQuery(command);
+                while (resultSet.next()) {
+                    each = resultSet.getString("PATH");
+                    if (search.isUsable()) {
+                        isResultsExcessive = checkIsMatchedAndAddToList(each, true);
+                    }
+                    //用户重新输入了信息
+                    if (isResultsExcessive || (startTime > time)) {
+                        break;
+                    }
                 }
             }
-            resultSet.close();
         } catch (SQLException e) {
             if (SettingsFrame.isDebug()) {
                 e.printStackTrace();
+            }
+        } finally {
+            if (resultSet != null) {
+                try {
+                    resultSet.close();
+                } catch (SQLException ignored) {
+
+                }
             }
         }
     }

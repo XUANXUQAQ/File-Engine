@@ -92,7 +92,7 @@ public:
 			int ascii = 0;
 			wstring name;
 			CString path;
-			string _utf8;
+			string* _utf8;
 			wstring record;
 			Frn_Pfrn_Name_Map::iterator endIter = frnPfrnNameMap.end();
 			for (Frn_Pfrn_Name_Map::iterator iter = frnPfrnNameMap.begin(); iter != endIter; ++iter) {
@@ -101,8 +101,8 @@ public:
 					ascii = getAscIISum(to_utf8(name));
 					path = L"\0";
 					getPath(iter->first, path);
-					record = path;
-					_utf8 = to_utf8(record);
+					record = vol + path;
+					_utf8 = new string(to_utf8(record));
 					saveResult(_utf8, ascii);
 				}
 			}
@@ -127,103 +127,103 @@ private:
 	CREATE_USN_JOURNAL_DATA cujd;
 	vector<string> ignorePathVector;
 
-	vector<string> command0;
-	vector<string> command1;
-	vector<string> command2;
-	vector<string> command3;
-	vector<string> command4;
-	vector<string> command5;
-	vector<string> command6;
-	vector<string> command7;
-	vector<string> command8;
-	vector<string> command9;
-	vector<string> command10;
-	vector<string> command11;
-	vector<string> command12;
-	vector<string> command13;
-	vector<string> command14;
-	vector<string> command15;
-	vector<string> command16;
-	vector<string> command17;
-	vector<string> command18;
-	vector<string> command19;
-	vector<string> command20;
-	vector<string> command21;
-	vector<string> command22;
-	vector<string> command23;
-	vector<string> command24;
-	vector<string> command25;
-	vector<string> command26;
-	vector<string> command27;
-	vector<string> command28;
-	vector<string> command29;
-	vector<string> command30;
-	vector<string> command31;
-	vector<string> command32;
-	vector<string> command33;
-	vector<string> command34;
-	vector<string> command35;
-	vector<string> command36;
-	vector<string> command37;
-	vector<string> command38;
-	vector<string> command39;
-	vector<string> command40;
+	vector<string*> command0;
+	vector<string*> command1;
+	vector<string*> command2;
+	vector<string*> command3;
+	vector<string*> command4;
+	vector<string*> command5;
+	vector<string*> command6;
+	vector<string*> command7;
+	vector<string*> command8;
+	vector<string*> command9;
+	vector<string*> command10;
+	vector<string*> command11;
+	vector<string*> command12;
+	vector<string*> command13;
+	vector<string*> command14;
+	vector<string*> command15;
+	vector<string*> command16;
+	vector<string*> command17;
+	vector<string*> command18;
+	vector<string*> command19;
+	vector<string*> command20;
+	vector<string*> command21;
+	vector<string*> command22;
+	vector<string*> command23;
+	vector<string*> command24;
+	vector<string*> command25;
+	vector<string*> command26;
+	vector<string*> command27;
+	vector<string*> command28;
+	vector<string*> command29;
+	vector<string*> command30;
+	vector<string*> command31;
+	vector<string*> command32;
+	vector<string*> command33;
+	vector<string*> command34;
+	vector<string*> command35;
+	vector<string*> command36;
+	vector<string*> command37;
+	vector<string*> command38;
+	vector<string*> command39;
+	vector<string*> command40;
 
 	bool getHandle();
 	bool createUSN();
 	bool getUSNInfo();
 	bool getUSNJournal();
 	bool deleteUSN();
-	void executeAll(vector<string>& vec, const char* init);
-	void saveResult(string path, int ascII);
+	void executeAll(vector<string*>& vec, const char* init);
+	void saveResult(string* path, int ascII);
 	void getPath(DWORDLONG frn, CString& path);
 	int getAscIISum(string name);
 	void initAllVector() {
-		command0.reserve(5000);
-		command1.reserve(5000);
-		command2.reserve(5000);
-		command3.reserve(5000);
-		command4.reserve(5000);
-		command5.reserve(5000);
-		command6.reserve(5000);
-		command7.reserve(5000);
-		command8.reserve(5000);
-		command9.reserve(5000);
-		command10.reserve(5000);
-		command11.reserve(5000);
-		command12.reserve(5000);
-		command13.reserve(5000);
-		command14.reserve(5000);
-		command15.reserve(5000);
-		command16.reserve(5000);
-		command17.reserve(5000);
-		command18.reserve(5000);
-		command19.reserve(5000);
-		command20.reserve(5000);
-		command21.reserve(5000);
-		command22.reserve(5000);
-		command23.reserve(5000);
-		command24.reserve(5000);
-		command25.reserve(5000);
-		command26.reserve(5000);
-		command27.reserve(5000);
-		command28.reserve(5000);
-		command29.reserve(5000);
-		command30.reserve(5000);
-		command31.reserve(5000);
-		command32.reserve(5000);
-		command33.reserve(5000);
-		command34.reserve(5000);
-		command35.reserve(5000);
-		command36.reserve(5000);
-		command37.reserve(5000);
-		command38.reserve(5000);
+		command0.reserve(3000);
+		command1.reserve(50000);
+		command2.reserve(50000);
+		command3.reserve(50000);
+		command4.reserve(50000);
+		command5.reserve(50000);
+		command6.reserve(50000);
+		command7.reserve(50000);
+		command8.reserve(50000);
+		command9.reserve(50000);
+		command10.reserve(50000);
+		command11.reserve(50000);
+		command12.reserve(50000);
+		command13.reserve(50000);
+		command14.reserve(50000);
+		command15.reserve(50000);
+		command16.reserve(50000);
+		command17.reserve(50000);
+		command18.reserve(50000);
+		command19.reserve(50000);
+		command20.reserve(50000);
+		command21.reserve(50000);
+		command22.reserve(50000);
+		command23.reserve(50000);
+		command24.reserve(50000);
+		command25.reserve(50000);
+		command26.reserve(50000);
+		command27.reserve(50000);
+		command28.reserve(20000);
+		command29.reserve(10000);
+		command30.reserve(10000);
+		command31.reserve(10000);
+		command32.reserve(10000);
+		command33.reserve(10000);
+		command34.reserve(10000);
+		command35.reserve(10000);
+		command36.reserve(10000);
+		command37.reserve(10000);
+		command38.reserve(10000);
 		command39.reserve(5000);
 		command40.reserve(5000);
 	}
 };
 
-void Volume::executeAll(vector<string>& vec, const char* init) {
+void Volume::executeAll(vector<string*>& vec, const char* init) {
 	sqlite3_stmt* stmt = NULL;
 	string str;
 	size_t rc = sqlite3_prepare_v2(db, init, strlen(init), &stmt, NULL);
@@ -231,165 +231,166 @@ void Volume::executeAll(vector<string>& vec, const char* init) {
 		cout << "error preparing statement" << endl;
 		exit(-1);
 	}
-	for (vector<string>::iterator iter = vec.begin(); iter != vec.end(); ++iter) {
-		str = *iter;
+	for (vector<string*>::iterator iter = vec.begin(); iter != vec.end(); ++iter) {
+		str = **iter;
 		sqlite3_reset(stmt);
 		sqlite3_bind_text(stmt, 1, str.c_str(), -1, SQLITE_STATIC);
 		sqlite3_step(stmt);
 	}
+	sqlite3_finalize(stmt);
 }
 
-void Volume::saveResult(string path, int ascII) {
+void Volume::saveResult(string* path, int ascII) {
 	int asciiGroup = ascII / 100;
 	switch (asciiGroup)
 	{
 	case 0:
-		command0.push_back(path);
+		command0.emplace_back(path);
 		break;
 
 	case 1:
-		command1.push_back(path);
+		command1.emplace_back(path);
 		break;
 
 	case 2:
-		command2.push_back(path);
+		command2.emplace_back(path);
 		break;
 
 	case 3:
-		command3.push_back(path);
+		command3.emplace_back(path);
 		break;
 
 	case 4:
-		command4.push_back(path);
+		command4.emplace_back(path);
 		break;
 
 	case 5:
-		command5.push_back(path);
+		command5.emplace_back(path);
 		break;
 	case 6:
-		command6.push_back(path);
+		command6.emplace_back(path);
 		break;
 
 	case 7:
-		command7.push_back(path);
+		command7.emplace_back(path);
 		break;
 
 	case 8:
-		command8.push_back(path);
+		command8.emplace_back(path);
 		break;
 
 	case 9:
-		command9.push_back(path);
+		command9.emplace_back(path);
 		break;
 
 	case 10:
-		command10.push_back(path);
+		command10.emplace_back(path);
 		break;
 
 	case 11:
-		command11.push_back(path);
+		command11.emplace_back(path);
 		break;
 
 	case 12:
-		command12.push_back(path);
+		command12.emplace_back(path);
 		break;
 
 	case 13:
-		command13.push_back(path);
+		command13.emplace_back(path);
 		break;
 
 	case 14:
-		command14.push_back(path);
+		command14.emplace_back(path);
 		break;
 
 	case 15:
-		command15.push_back(path);
+		command15.emplace_back(path);
 		break;
 
 	case 16:
-		command16.push_back(path);
+		command16.emplace_back(path);
 		break;
 
 	case 17:
-		command17.push_back(path);
+		command17.emplace_back(path);
 		break;
 
 	case 18:
-		command18.push_back(path);
+		command18.emplace_back(path);
 		break;
 
 	case 19:
-		command19.push_back(path);
+		command19.emplace_back(path);
 		break;
 
 	case 20:
-		command20.push_back(path);
+		command20.emplace_back(path);
 		break;
 
 	case 21:
-		command21.push_back(path);
+		command21.emplace_back(path);
 		break;
 
 	case 22:
-		command22.push_back(path);
+		command22.emplace_back(path);
 		break;
 
 	case 23:
-		command23.push_back(path);
+		command23.emplace_back(path);
 		break;
 
 	case 24:
-		command24.push_back(path);
+		command24.emplace_back(path);
 		break;
 
 	case 25:
-		command25.push_back(path);
+		command25.emplace_back(path);
 		break;
 
 	case 26:
-		command26.push_back(path);
+		command26.emplace_back(path);
 		break;
 	case 27:
-		command27.push_back(path);
+		command27.emplace_back(path);
 		break;
 	case 28:
-		command28.push_back(path);
+		command28.emplace_back(path);
 		break;
 	case 29:
-		command29.push_back(path);
+		command29.emplace_back(path);
 		break;
 	case 30:
-		command30.push_back(path);
+		command30.emplace_back(path);
 		break;
 	case 31:
-		command31.push_back(path);
+		command31.emplace_back(path);
 		break;
 	case 32:
-		command32.push_back(path);
+		command32.emplace_back(path);
 		break;
 	case 33:
-		command33.push_back(path);
+		command33.emplace_back(path);
 		break;
 	case 34:
-		command34.push_back(path);
+		command34.emplace_back(path);
 		break;
 	case 35:
-		command35.push_back(path);
+		command35.emplace_back(path);
 		break;
 	case 36:
-		command36.push_back(path);
+		command36.emplace_back(path);
 		break;
 	case 37:
-		command37.push_back(path);
+		command37.emplace_back(path);
 		break;
 	case 38:
-		command38.push_back(path);
+		command38.emplace_back(path);
 		break;
 	case 39:
-		command39.push_back(path);
+		command39.emplace_back(path);
 		break;
 	case 40:
-		command40.push_back(path);
+		command40.emplace_back(path);
 		break;
 
 	default:
@@ -460,7 +461,8 @@ void Volume::getPath(DWORDLONG frn, CString& path) {
 	while (true) {
 		it = frnPfrnNameMap.find(frn);
 		if (it == end) {
-			path = path.Right(path.GetLength() - 1);
+			//path = path.Right(path.GetLength() - 1);
+			path = L":" + path;
 			return;
 		}
 		path = _T("\\") + it->second.filename + path;
@@ -544,8 +546,8 @@ bool Volume::getUSNJournal() {
 	// 根目录
 	CString tmp(_T("C:"));
 	tmp.SetAt(0, vol);
-	frnPfrnNameMap[0x5000000000005].filename = tmp;
-	frnPfrnNameMap[0x5000000000005].pfrn = 0;
+	frnPfrnNameMap[0x20000000000005].filename = tmp;
+	frnPfrnNameMap[0x20000000000005].pfrn = 0;
 
 	constexpr auto BUF_LEN = 0x3900;	// 尽可能地大，提高效率;
 

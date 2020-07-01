@@ -90,11 +90,12 @@ int main() {
 		cout << "The search for drive " << volume.getPath() << " has completed" << endl;
 	}
 	sqlite3_exec(db, "COMMIT;", NULL, NULL, NULL);
+
 	//创建索引
 	sqlite3_exec(db, "BEGIN;", NULL, NULL, NULL);
 	char num[5];
 	string str;
-	for (int i = 0; i < 40; i++) {
+	for (int i = 0; i <= 40; i++) {
 		_itoa_s(i, num, 10);
 		str.append("CREATE UNIQUE INDEX list").append(num).append("_index ON list").append(num).append("(PATH)").append(";");
 		sqlite3_exec(db, str.c_str(), NULL, NULL, NULL);

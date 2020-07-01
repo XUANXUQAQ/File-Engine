@@ -138,47 +138,47 @@ std::wstring StringToWString(const std::string& str)
 }
 
 void initAllVector() {
-    command0.reserve(5000);
-    command1.reserve(5000);
-    command2.reserve(5000);
-    command3.reserve(5000);
-    command4.reserve(5000);
-    command5.reserve(5000);
-    command6.reserve(5000);
-    command7.reserve(5000);
-    command8.reserve(5000);
-    command9.reserve(5000);
-    command10.reserve(5000);
-    command11.reserve(5000);
-    command12.reserve(5000);
-    command13.reserve(5000);
-    command14.reserve(5000);
-    command15.reserve(5000);
-    command16.reserve(5000);
-    command17.reserve(5000);
-    command18.reserve(5000);
-    command19.reserve(5000);
-    command20.reserve(5000);
-    command21.reserve(5000);
-    command22.reserve(5000);
-    command23.reserve(5000);
-    command24.reserve(5000);
-    command25.reserve(5000);
-    command26.reserve(5000);
-    command27.reserve(5000);
-    command28.reserve(5000);
-    command29.reserve(5000);
-    command30.reserve(5000);
-    command31.reserve(5000);
-    command32.reserve(5000);
-    command33.reserve(5000);
-    command34.reserve(5000);
-    command35.reserve(5000);
-    command36.reserve(5000);
-    command37.reserve(5000);
-    command38.reserve(5000);
-    command39.reserve(5000);
-    command40.reserve(5000);
+    command0.reserve(30000);
+    command1.reserve(30000);
+    command2.reserve(30000);
+    command3.reserve(30000);
+    command4.reserve(30000);
+    command5.reserve(30000);
+    command6.reserve(30000);
+    command7.reserve(30000);
+    command8.reserve(30000);
+    command9.reserve(30000);
+    command10.reserve(30000);
+    command11.reserve(30000);
+    command12.reserve(30000);
+    command13.reserve(30000);
+    command14.reserve(30000);
+    command15.reserve(30000);
+    command16.reserve(30000);
+    command17.reserve(30000);
+    command18.reserve(30000);
+    command19.reserve(30000);
+    command20.reserve(30000);
+    command21.reserve(30000);
+    command22.reserve(30000);
+    command23.reserve(30000);
+    command24.reserve(30000);
+    command25.reserve(30000);
+    command26.reserve(30000);
+    command27.reserve(30000);
+    command28.reserve(30000);
+    command29.reserve(30000);
+    command30.reserve(30000);
+    command31.reserve(30000);
+    command32.reserve(30000);
+    command33.reserve(30000);
+    command34.reserve(30000);
+    command35.reserve(30000);
+    command36.reserve(30000);
+    command37.reserve(30000);
+    command38.reserve(30000);
+    command39.reserve(30000);
+    command40.reserve(30000);
 }
 
 void saveResult(string path, int ascII)
@@ -187,152 +187,152 @@ void saveResult(string path, int ascII)
     switch (asciiGroup)
     {
     case 0:
-        command0.push_back(path);
+        command0.emplace_back(path);
         break;
 
     case 1:
-        command1.push_back(path);
+        command1.emplace_back(path);
         break;
 
     case 2:
-        command2.push_back(path);
+        command2.emplace_back(path);
         break;
 
     case 3:
-        command3.push_back(path);
+        command3.emplace_back(path);
         break;
 
     case 4:
-        command4.push_back(path);
+        command4.emplace_back(path);
         break;
 
     case 5:
-        command5.push_back(path);
+        command5.emplace_back(path);
         break;
     case 6:
-        command6.push_back(path);
+        command6.emplace_back(path);
         break;
 
     case 7:
-        command7.push_back(path);
+        command7.emplace_back(path);
         break;
 
     case 8:
-        command8.push_back(path);
+        command8.emplace_back(path);
         break;
 
     case 9:
-        command9.push_back(path);
+        command9.emplace_back(path);
         break;
 
     case 10:
-        command10.push_back(path);
+        command10.emplace_back(path);
         break;
 
     case 11:
-        command11.push_back(path);
+        command11.emplace_back(path);
         break;
 
     case 12:
-        command12.push_back(path);
+        command12.emplace_back(path);
         break;
 
     case 13:
-        command13.push_back(path);
+        command13.emplace_back(path);
         break;
 
     case 14:
-        command14.push_back(path);
+        command14.emplace_back(path);
         break;
 
     case 15:
-        command15.push_back(path);
+        command15.emplace_back(path);
         break;
 
     case 16:
-        command16.push_back(path);
+        command16.emplace_back(path);
         break;
 
     case 17:
-        command17.push_back(path);
+        command17.emplace_back(path);
         break;
 
     case 18:
-        command18.push_back(path);
+        command18.emplace_back(path);
         break;
 
     case 19:
-        command19.push_back(path);
+        command19.emplace_back(path);
         break;
 
     case 20:
-        command20.push_back(path);
+        command20.emplace_back(path);
         break;
 
     case 21:
-        command21.push_back(path);
+        command21.emplace_back(path);
         break;
 
     case 22:
-        command22.push_back(path);
+        command22.emplace_back(path);
         break;
 
     case 23:
-        command23.push_back(path);
+        command23.emplace_back(path);
         break;
 
     case 24:
-        command24.push_back(path);
+        command24.emplace_back(path);
         break;
 
     case 25:
-        command25.push_back(path);
+        command25.emplace_back(path);
         break;
 
     case 26:
-        command26.push_back(path);
+        command26.emplace_back(path);
         break;
     case 27:
-        command27.push_back(path);
+        command27.emplace_back(path);
         break;
     case 28:
-        command28.push_back(path);
+        command28.emplace_back(path);
         break;
     case 29:
-        command29.push_back(path);
+        command29.emplace_back(path);
         break;
     case 30:
-        command30.push_back(path);
+        command30.emplace_back(path);
         break;
     case 31:
-        command31.push_back(path);
+        command31.emplace_back(path);
         break;
     case 32:
-        command32.push_back(path);
+        command32.emplace_back(path);
         break;
     case 33:
-        command33.push_back(path);
+        command33.emplace_back(path);
         break;
     case 34:
-        command34.push_back(path);
+        command34.emplace_back(path);
         break;
     case 35:
-        command35.push_back(path);
+        command35.emplace_back(path);
         break;
     case 36:
-        command36.push_back(path);
+        command36.emplace_back(path);
         break;
     case 37:
-        command37.push_back(path);
+        command37.emplace_back(path);
         break;
     case 38:
-        command38.push_back(path);
+        command38.emplace_back(path);
         break;
     case 39:
-        command39.push_back(path);
+        command39.emplace_back(path);
         break;
     case 40:
-        command40.push_back(path);
+        command40.emplace_back(path);
         break;
 
     default:
@@ -429,7 +429,7 @@ void addIgnorePath(const char* path)
     string str(path);
     transform(str.begin(), str.end(), str.begin(), ::tolower);
     cout << "adding ignorePath:" << str << "..." << endl;
-    ignorePathVector.push_back(str);
+    ignorePathVector.emplace_back(str);
 }
 
 void setSearchDepth(int i)
@@ -557,6 +557,7 @@ void executeAll(vector<string>& vec, const char* init) {
         sqlite3_bind_text(stmt, 1, str.c_str(), -1, SQLITE_STATIC);
         sqlite3_step(stmt);
     }
+    sqlite3_finalize(stmt);
     sqlite3_exec(db, "COMMIT;", NULL, NULL, NULL);
 }
 
@@ -594,8 +595,6 @@ int main(int argc, char* argv[])
         else {
             cout << "open database successfully" << endl << endl;
         }
-
-        sqlite3_exec(db, "PRAGMA synchronous = OFF; ", 0, 0, 0);
 
         char* p = NULL;
         char* _ignorepath = ignorePath;
