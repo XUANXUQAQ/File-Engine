@@ -1227,7 +1227,7 @@ public class SettingsFrame {
             _defaultBackgroundColor = -1;
         }
         if (_defaultBackgroundColor < 0) {
-            JOptionPane.showMessageDialog(frame, getTranslation("Incorrect defaultBackground color setting"));
+            JOptionPane.showMessageDialog(frame, getTranslation("Incorrect default background color setting"));
             return;
         }
 
