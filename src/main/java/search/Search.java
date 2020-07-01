@@ -5,6 +5,7 @@ import DllInterface.isNTFS;
 import frames.SearchBar;
 import frames.SettingsFrame;
 import frames.TaskBar;
+import org.sqlite.SQLiteConfig;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -22,6 +23,7 @@ public class Search {
     private static volatile boolean isManualUpdate = false;
     private Set<String> commandSet = ConcurrentHashMap.newKeySet();
     private ConcurrentLinkedQueue<String> commandQueue = new ConcurrentLinkedQueue<>();
+    private static SQLiteConfig sqLiteConfig = new SQLiteConfig();
 
     private static class SearchBuilder {
         private static Search instance = new Search();
@@ -347,27 +349,15 @@ public class Search {
     }
 
     public static void initDatabase() {
-        Statement stmt;
         String sql = "CREATE TABLE list";
-        try (Connection conn = DriverManager.getConnection("jdbc:sqlite:data.db")) {
-            if (SettingsFrame.isDebug()) {
-                System.out.println("open database successfully");
-            }
-            stmt = conn.createStatement();
+        try (Connection conn = DriverManager.getConnection("jdbc:sqlite:data.db"); Statement stmt = conn.createStatement()) {
+            stmt.execute("pragma journal_mode = WAL;");
             stmt.execute("BEGIN;");
             for (int i = 0; i <= 40; i++) {
                 String command = sql + i + " " + "(PATH text unique)" + ";";
                 stmt.executeUpdate(command);
             }
             stmt.execute("COMMIT;");
-            stmt.execute("PRAGMA SQLITE_THREADSAFE=2;");
-            stmt.execute("PRAGMA SQLITE_TEMP_STORE=2;");
-            stmt.execute("PRAGMA journal_mode=WAL;");
-            stmt.execute("PRAGMA synchronous=OFF;");
-            stmt.execute("PRAGMA page_size=4096;");
-            stmt.execute("PRAGMA cache_size=8000;");
-            stmt.execute("PRAGMA auto_vacuum=0;");
-            stmt.execute("PRAGMA mmap_size=4096;");
         } catch (Exception e) {
             if (SettingsFrame.isDebug()) {
                 e.printStackTrace();
