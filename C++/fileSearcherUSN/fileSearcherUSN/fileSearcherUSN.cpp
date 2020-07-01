@@ -55,6 +55,13 @@ int main() {
 		cout << "open database successfully" << endl;
 	}
 
+	sqlite3_exec(db, "PRAGMA TEMP_STORE=MEMORY;", 0, 0, 0);
+	sqlite3_exec(db, "PRAGMA journal_mode=OFF;", 0, 0, 0);
+	sqlite3_exec(db, "PRAGMA page_size=4096;", 0, 0, 0);
+	sqlite3_exec(db, "PRAGMA cache_size=8000;", 0, 0, 0);
+	sqlite3_exec(db, "PRAGMA auto_vacuum=0;", 0, 0, 0);
+	sqlite3_exec(db, "PRAGMA mmap_size=4096;", 0, 0, 0);
+
 	_diskPath = diskPath;
 	p = strtok_s(_diskPath, ",", &remainDisk);
 	if (p != NULL) {
