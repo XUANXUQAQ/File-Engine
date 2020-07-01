@@ -2512,6 +2512,7 @@ public class SearchBar {
                         String command;
                         try (Connection databaseConn = DriverManager.getConnection("jdbc:sqlite:data.db")) {
                             stmt = databaseConn.createStatement();
+                            Search.getInstance().executeAllPragma(stmt);
                             while (SettingsFrame.isNotMainExit()) {
                                 if (!isCommandMode) {
                                     while ((command = commandQueue.poll()) != null) {
@@ -2716,6 +2717,7 @@ public class SearchBar {
                     long updateTimeLimit = SettingsFrame.getUpdateTimeLimit() * 10;
                     try (Connection databaseConn = DriverManager.getConnection("jdbc:sqlite:data.db")) {
                         stmt = databaseConn.createStatement();
+                        Search.getInstance().executeAllPragma(stmt);
                         while (SettingsFrame.isNotMainExit()) {
                             count += 100;
                             if (count >= updateTimeLimit && !isUsing && !search.isManualUpdate()) {
@@ -2752,6 +2754,7 @@ public class SearchBar {
                 while (SettingsFrame.isNotMainExit()) {
                     try (Connection databaseConn = DriverManager.getConnection("jdbc:sqlite:data.db")) {
                         stmt = databaseConn.createStatement();
+                        Search.getInstance().executeAllPragma(stmt);
                         while (SettingsFrame.isNotMainExit()) {
                             if (search.isManualUpdate()) {
                                 search.setUsable(false);
