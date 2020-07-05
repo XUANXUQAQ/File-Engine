@@ -12,7 +12,6 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -23,19 +22,12 @@ public class Search {
     private static volatile boolean isManualUpdate = false;
     private Set<String> commandSet = ConcurrentHashMap.newKeySet();
     private ConcurrentLinkedQueue<String> commandQueue = new ConcurrentLinkedQueue<>();
-    private static ArrayList<String> pragmaCommands = new ArrayList<>(5);
 
     private static class SearchBuilder {
         private static Search instance = new Search();
     }
 
     private Search() {
-        pragmaCommands.add("PRAGMA TEMP_STORE=MEMORY;");
-        pragmaCommands.add("PRAGMA journal_mode=OFF;");
-        pragmaCommands.add("PRAGMA page_size=4096;");
-        pragmaCommands.add("PRAGMA cache_size=8000;");
-        pragmaCommands.add("PRAGMA auto_vacuum=0;");
-        pragmaCommands.add("PRAGMA mmap_size=4096;");
     }
 
     public static Search getInstance() {
@@ -102,7 +94,6 @@ public class Search {
             case 16:
                 command = "DELETE from list16 where PATH=" + "\"" + path + "\";";
                 break;
-
             case 17:
                 command = "DELETE from list17 where PATH=" + "\"" + path + "\";";
                 break;
@@ -388,12 +379,6 @@ public class Search {
             isUsable = b;
         } else {
             isUsable = false;
-        }
-    }
-
-    public void executeAllPragma(Statement stmt) throws SQLException {
-        for (String each : pragmaCommands) {
-            stmt.execute(each);
         }
     }
 

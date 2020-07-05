@@ -171,6 +171,9 @@
   <ItemGroup>
     <ClCompile Include="fileSearcher.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Search.h" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
