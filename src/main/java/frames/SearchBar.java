@@ -2500,11 +2500,7 @@ public class SearchBar {
             }
         });
 
-        int cpuCores = Runtime.getRuntime().availableProcessors();
-        if (cpuCores > 20) {
-            cpuCores = 20;
-        }
-        for (int i = 0; i < cpuCores; i++) {
+        for (int i = 0; i < 4; i++) {
             cachedThreadPool.execute(() -> {
                 try {
                     ArrayList<String> listSQL = new ArrayList<>();
