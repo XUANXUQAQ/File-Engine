@@ -2500,35 +2500,28 @@ public class SearchBar {
             }
         });
 
-        for (int i = 0; i < 4; i++) {
-            cachedThreadPool.execute(() -> {
-                try {
-                    ArrayList<String> listSQL = new ArrayList<>();
-                    while (SettingsFrame.isNotMainExit()) {
-                        String command;
-                        try (Connection databaseConn = SQLiteUtil.getConnection("jdbc:sqlite:data.db"); Statement stmt = databaseConn.createStatement()) {
-                            while (SettingsFrame.isNotMainExit()) {
-                                if (!isCommandMode) {
-                                    while ((command = commandQueue.poll()) != null) {
-                                        listSQL.add(command);
-                                    }
-                                    if (!listSQL.isEmpty()) {
-                                        searchAndAddToTempResults(System.currentTimeMillis(), listSQL, stmt);
-                                        listSQL.clear();
-                                    }
+        cachedThreadPool.execute(() -> {
+            try {
+                while (SettingsFrame.isNotMainExit()) {
+                    String command;
+                    try (Connection databaseConn = SQLiteUtil.getConnection("jdbc:sqlite:data.db"); Statement stmt = databaseConn.createStatement()) {
+                        while (SettingsFrame.isNotMainExit()) {
+                            if (!isCommandMode) {
+                                while ((command = commandQueue.poll()) != null) {
+                                    searchAndAddToTempResults(System.currentTimeMillis(), command, stmt);
                                 }
-                                Thread.sleep(10);
                             }
+                            Thread.sleep(10);
                         }
-                        Thread.sleep(500);
                     }
-                } catch (SQLException | InterruptedException e) {
-                    if (SettingsFrame.isDebug() && !(e instanceof InterruptedException)) {
-                        e.printStackTrace();
-                    }
+                    Thread.sleep(500);
                 }
-            });
-        }
+            } catch (SQLException | InterruptedException e) {
+                if (SettingsFrame.isDebug() && !(e instanceof InterruptedException)) {
+                    e.printStackTrace();
+                }
+            }
+        });
 
         cachedThreadPool.execute(() -> {
             //缓存和常用文件夹搜索线程
@@ -2834,24 +2827,22 @@ public class SearchBar {
         return resultCount.get() >= 100;
     }
 
-    private void searchAndAddToTempResults(long time, ArrayList<String> commands, Statement stmt) {
+    private void searchAndAddToTempResults(long time, String command, Statement stmt) {
         //为label添加结果
         ResultSet resultSet = null;
         try {
             String each;
             boolean isResultsExcessive = false;
 
-            for (String command : commands) {
-                resultSet = stmt.executeQuery(command);
-                while (resultSet.next()) {
-                    each = resultSet.getString("PATH");
-                    if (search.isUsable()) {
-                        isResultsExcessive = checkIsMatchedAndAddToList(each, true);
-                    }
-                    //用户重新输入了信息
-                    if (isResultsExcessive || (startTime > time)) {
-                        break;
-                    }
+            resultSet = stmt.executeQuery(command);
+            while (resultSet.next()) {
+                each = resultSet.getString("PATH");
+                if (search.isUsable()) {
+                    isResultsExcessive = checkIsMatchedAndAddToList(each, true);
+                }
+                //用户重新输入了信息
+                if (isResultsExcessive || (startTime > time)) {
+                    break;
                 }
             }
         } catch (SQLException e) {

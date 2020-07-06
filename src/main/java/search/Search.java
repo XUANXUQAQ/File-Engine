@@ -403,14 +403,14 @@ public class Search {
             __searchFileIgnoreSearchDepth(getStartMenu(), ignorePath);
             __searchFileIgnoreSearchDepth("C:\\ProgramData\\Microsoft\\Windows\\Start Menu", ignorePath);
         } else {
-            searchByUSN(strb.toString());
+            searchByUSN(strb.toString(), ignorePath.toLowerCase());
         }
         TaskBar.getInstance().showMessage(SettingsFrame.getTranslation("Info"), SettingsFrame.getTranslation("Search Done"));
         isManualUpdate = false;
         isUsable = true;
     }
 
-    private void searchByUSN(String paths) throws IOException, InterruptedException {
+    private void searchByUSN(String paths, String ignorePath) throws IOException, InterruptedException {
         File fileSearcherUSN = new File("user/fileSearcherUSN.exe");
         String absPath = fileSearcherUSN.getAbsolutePath();
         String start = absPath.substring(0, 2);
@@ -420,10 +420,15 @@ public class Search {
             buffW.write(paths);
             buffW.newLine();
             buffW.write(database.getAbsolutePath());
+            buffW.newLine();
+            buffW.write(ignorePath);
         }
         String command = "cmd.exe /c " + start + end;
         Process p = Runtime.getRuntime().exec(command, null, new File("user"));
         p.waitFor();
+        try (BufferedWriter buffW = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("user/MFTSearchInfo.dat"), StandardCharsets.UTF_8))) {
+            buffW.write("");
+        }
     }
 
     private String getStartMenu() {
