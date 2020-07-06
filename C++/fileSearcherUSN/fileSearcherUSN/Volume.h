@@ -18,7 +18,7 @@ std::string to_utf8(const std::wstring& str);
 std::string to_utf8(const wchar_t* buffer, int len);
 
 typedef struct _pfrn_name {
-	DWORDLONG pfrn;
+	DWORDLONG pfrn = 0;
 	CString filename;
 }Pfrn_Name;
 
@@ -63,11 +63,12 @@ std::string to_utf8(const std::wstring& str)
 
 class Volume {
 public:
-	Volume(char vol, sqlite3* database) {
+	Volume(char vol, sqlite3* database, vector<string> ignorePaths) {
 		this->vol = vol;
 		hVol = NULL;
 		path = "";
 		db = database;
+		addIgnorePath(ignorePaths);
 	}
 	~Volume() {
 	}
@@ -97,12 +98,13 @@ public:
 			Frn_Pfrn_Name_Map::iterator endIter = frnPfrnNameMap.end();
 			for (Frn_Pfrn_Name_Map::iterator iter = frnPfrnNameMap.begin(); iter != endIter; ++iter) {
 				name = iter->second.filename;
-				if (name.find(_T("$")) == wstring::npos) {
-					ascii = getAscIISum(to_utf8(name));
-					path = L"\0";
-					getPath(iter->first, path);
-					record = vol + path;
-					_utf8 = new string(to_utf8(record));
+				ascii = getAscIISum(to_utf8(name));
+				path = L"\0";
+				getPath(iter->first, path);
+				record = vol + path;
+				string fullPath = to_utf8(record);
+				if (!(isIgnore(fullPath))) {
+					_utf8 = new string(fullPath);
 					saveResult(_utf8, ascii);
 				}
 			}
@@ -125,6 +127,7 @@ private:
 
 	USN_JOURNAL_DATA ujd;
 	CREATE_USN_JOURNAL_DATA cujd;
+
 	vector<string> ignorePathVector;
 
 	vector<string*> command0;
@@ -178,6 +181,10 @@ private:
 	void saveResult(string* path, int ascII);
 	void getPath(DWORDLONG frn, CString& path);
 	int getAscIISum(string name);
+	bool isIgnore(string path);
+	void addIgnorePath(vector<string> vec) {
+		ignorePathVector = vec;
+	}
 	void initAllVector() {
 		command0.reserve(3000);
 		command1.reserve(50000);
@@ -220,13 +227,31 @@ private:
 		command38.reserve(10000);
 		command39.reserve(5000);
 		command40.reserve(5000);
+		ignorePathVector.reserve(50);
 	}
 };
+
+bool Volume::isIgnore(string path) {
+	if (path.find("$") != string::npos)
+	{
+		return true;
+	}
+	transform(path.begin(), path.end(), path.begin(), ::tolower);
+	size_t size = ignorePathVector.size();
+	for (int i = 0; i < size; i++)
+	{
+		if (path.find(ignorePathVector[i]) != string::npos)
+		{
+			return true;
+		}
+	}
+	return false;
+}
 
 void Volume::executeAll(vector<string*>& vec, const char* init) {
 	sqlite3_stmt* stmt = NULL;
 	string str;
-	size_t rc = sqlite3_prepare_v2(db, init, strlen(init), &stmt, NULL);
+	size_t rc = sqlite3_prepare_v2(db, init, strlen(init), &stmt, 0);
 	if (rc != SQLITE_OK) {
 		cout << "error preparing statement" << endl;
 		exit(-1);

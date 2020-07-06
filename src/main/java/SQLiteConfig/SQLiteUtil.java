@@ -13,8 +13,9 @@ public class SQLiteUtil {
     private static void init() {
         sqLiteConfig = new SQLiteConfig();
         sqLiteConfig.setTempStore(SQLiteConfig.TempStore.MEMORY);
-        sqLiteConfig.setJournalMode(SQLiteConfig.JournalMode.WAL);
-        sqLiteConfig.setCacheSize(8000);
+        sqLiteConfig.setJournalMode(SQLiteConfig.JournalMode.OFF);
+        sqLiteConfig.setPageSize(8192);
+        sqLiteConfig.setCacheSize(50000);
         sqLiteConfig.setSynchronous(SQLiteConfig.SynchronousMode.OFF);
         sqLiteConfig.setLockingMode(SQLiteConfig.LockingMode.NORMAL);
     }
