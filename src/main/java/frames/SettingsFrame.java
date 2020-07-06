@@ -1153,9 +1153,7 @@ public class SettingsFrame {
         }
         ignorePathTemp = textAreaIgnorePath.getText();
         ignorePathTemp = ignorePathTemp.replaceAll("\n", "");
-        if (!ignorePathTemp.toLowerCase().contains("c:\\windows")) {
-            ignorePathTemp = ignorePathTemp + "C:\\Windows,";
-        }
+
         try {
             searchDepthTemp = Integer.parseInt(textFieldSearchDepth.getText());
         } catch (Exception e1) {
