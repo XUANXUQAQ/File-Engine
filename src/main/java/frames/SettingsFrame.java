@@ -261,34 +261,13 @@ public class SettingsFrame {
         }
     }
 
-    private SettingsFrame() {
-        frame = new JFrame("设置");
-        tmp = new File("tmp");
-        settings = new File("user/settings.json");
-        cmdSet = new HashSet<>();
-        equalSign = Pattern.compile("=");
-        fileMap = new ConcurrentHashMap<>();
-        translationMap = new ConcurrentHashMap<>();
-        languageSet = new HashSet<>();
-        readAllSettings();
-
-        HotKeyListener = CheckHotKey.getInstance();
-        searchBar = SearchBar.getInstance();
-
-        setAllSettings();
-
-        initLanguageFileMap();
-        translate(language);
-
-        labelAboutGithub.setText("<html><a href='https://github.com/XUANXUQAQ/File-Engine'><font size=\"4\">File-Engine</font></a></html>");
-        labelBeautyEye.setText("1.WebLookAndFeel");
-        labelFastJson.setText("2.FastJson");
-        labelJna.setText("3.Java-Native-Access");
-        ImageIcon imageIcon = new ImageIcon(SettingsFrame.class.getResource("/icons/frame.png"));
-        labelIcon.setIcon(imageIcon);
-
+    private void addCheckboxListener() {
         checkBox1.addActionListener(e -> setStartup(checkBox1.isSelected()));
+        checkBoxAdmin.addActionListener(e -> isDefaultAdmin = checkBoxAdmin.isSelected());
+        checkBoxLoseFocus.addActionListener(e -> isLoseFocusClose = checkBoxLoseFocus.isSelected());
+    }
 
+    private void addButtonRemoveDesktopListener() {
         buttonSaveAndRemoveDesktop.addActionListener(e -> {
             String currentFolder = new File("").getAbsolutePath();
             if (currentFolder.equals(FileSystemView.getFileSystemView().getHomeDirectory().getAbsolutePath()) || currentFolder.equals("C:\\Users\\Public\\Desktop")) {
@@ -302,7 +281,9 @@ public class SettingsFrame {
                 fileMover.start();
             }
         });
+    }
 
+    private void addFileChooserButtonListener() {
         Button3.addActionListener(e -> {
             JFileChooser fileChooser = new JFileChooser();
             fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
@@ -312,7 +293,9 @@ public class SettingsFrame {
                 textAreaIgnorePath.append(file.getAbsolutePath() + ",\n");
             }
         });
+    }
 
+    private void addTextFieldListener() {
         textFieldHotkey.addKeyListener(new KeyListener() {
             boolean reset = true;
 
@@ -368,91 +351,64 @@ public class SettingsFrame {
                 reset = true;
             }
         });
-        ButtonPriorityFolder.addActionListener(e -> {
-            JFileChooser fileChooser = new JFileChooser();
-            fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-            int returnValue = fileChooser.showDialog(new JLabel(), SettingsFrame.getTranslation("Choose"));
-            File file = fileChooser.getSelectedFile();
-            if (returnValue == JFileChooser.APPROVE_OPTION) {
-                textFieldPriorityFolder.setText(file.getAbsolutePath());
+        textFieldHotkey.addKeyListener(new KeyListener() {
+            boolean reset = true;
+
+            @Override
+            public void keyTyped(KeyEvent e) {
+
             }
 
-        });
-        textFieldPriorityFolder.addMouseListener(new MouseAdapter() {
             @Override
-            public void mouseClicked(MouseEvent e) {
-                if (e.getClickCount() == 2) {
-                    textFieldPriorityFolder.setText(null);
+            public void keyPressed(KeyEvent e) {
+                int key = e.getKeyCode();
+                if (reset) {
+                    textFieldHotkey.setText(null);
+                    reset = false;
+                }
+                textFieldHotkey.setCaretPosition(textFieldHotkey.getText().length());
+                if (key == 17) {
+                    if (!textFieldHotkey.getText().contains("Ctrl + ")) {
+                        textFieldHotkey.setText(textFieldHotkey.getText() + "Ctrl + ");
+                    }
+                } else if (key == 18) {
+                    if (!textFieldHotkey.getText().contains("Alt + ")) {
+                        textFieldHotkey.setText(textFieldHotkey.getText() + "Alt + ");
+                    }
+                } else if (key == 524) {
+                    if (!textFieldHotkey.getText().contains("Win + ")) {
+                        textFieldHotkey.setText(textFieldHotkey.getText() + "Win + ");
+                    }
+                } else if (key == 16) {
+                    if (!textFieldHotkey.getText().contains("Shift + ")) {
+                        textFieldHotkey.setText(textFieldHotkey.getText() + "Shift + ");
+                    }
+                } else if (64 < key && key < 91) {
+                    String txt = textFieldHotkey.getText();
+                    if (!txt.isEmpty()) {
+                        char c1 = Character.toUpperCase(txt.charAt(txt.length() - 1));
+                        if (64 < c1 && c1 < 91) {
+                            String text = txt.substring(0, txt.length() - 1);
+                            textFieldHotkey.setText(text + (char) key);
+                        } else {
+                            textFieldHotkey.setText(txt + (char) key);
+                        }
+                    }
+                    if (txt.length() == 1) {
+                        textFieldHotkey.setText(null);
+                    }
                 }
 
             }
+
+            @Override
+            public void keyReleased(KeyEvent e) {
+                reset = true;
+            }
         });
+    }
 
-        { //设置窗口显示
-            labelVersion.setText(getTranslation("Current Version:") + version);
-            if (isStartup) {
-                checkBox1.setSelected(true);
-            } else {
-                checkBox1.setSelected(false);
-            }
-            textFieldUpdateTime.setText(String.valueOf(updateTimeLimit));
-            textAreaIgnorePath.setText(ignorePath.replaceAll(",", ",\n"));
-            textFieldCacheNum.setText(String.valueOf(cacheNumLimit));
-            textFieldSearchDepth.setText(String.valueOf(searchDepth));
-            textFieldHotkey.setText(hotkey);
-            textFieldPriorityFolder.setText(priorityFolder);
-            checkBoxAdmin.setSelected(isDefaultAdmin);
-            textFieldSearchBarColor.setText(Integer.toHexString(searchBarColor));
-            Color _searchBarColor = new Color(searchBarColor);
-            searchBarColorChooser.setBackground(_searchBarColor);
-            searchBarColorChooser.setForeground(_searchBarColor);
-            textFieldBackgroundDefault.setText(Integer.toHexString(defaultBackgroundColor));
-            Color _defaultBackgroundColor = new Color(defaultBackgroundColor);
-            defaultBackgroundChooser.setBackground(_defaultBackgroundColor);
-            defaultBackgroundChooser.setForeground(_defaultBackgroundColor);
-            textFieldLabelColor.setText(Integer.toHexString(labelColor));
-            Color _labelColor = new Color(labelColor);
-            labelColorChooser.setBackground(_labelColor);
-            labelColorChooser.setForeground(_labelColor);
-            textFieldFontColorWithCoverage.setText(Integer.toHexString(fontColorWithCoverage));
-            Color _fontColorWithCoverage = new Color(fontColorWithCoverage);
-            FontColorWithCoverageChooser.setBackground(_fontColorWithCoverage);
-            FontColorWithCoverageChooser.setForeground(_fontColorWithCoverage);
-            checkBoxLoseFocus.setSelected(isLoseFocusClose);
-            textFieldTransparency.setText(String.valueOf(transparency));
-            textFieldFontColor.setText(Integer.toHexString(fontColor));
-            Color _fontColor = new Color(fontColor);
-            FontColorChooser.setBackground(_fontColor);
-            FontColorChooser.setForeground(_fontColor);
-            if (runAsAdminKeyCode == 17) {
-                textFieldRunAsAdmin.setText("Ctrl + Enter");
-            } else if (runAsAdminKeyCode == 16) {
-                textFieldRunAsAdmin.setText("Shift + Enter");
-            } else if (runAsAdminKeyCode == 18) {
-                textFieldRunAsAdmin.setText("Alt + Enter");
-            }
-            if (openLastFolderKeyCode == 17) {
-                textFieldOpenLastFolder.setText("Ctrl + Enter");
-            } else if (openLastFolderKeyCode == 16) {
-                textFieldOpenLastFolder.setText("Shift + Enter");
-            } else if (openLastFolderKeyCode == 18) {
-                textFieldOpenLastFolder.setText("Alt + Enter");
-            }
-            if (copyPathKeyCode == 17) {
-                textFieldCopyPath.setText("Ctrl + Enter");
-            } else if (copyPathKeyCode == 16) {
-                textFieldCopyPath.setText("Shift + Enter");
-            } else if (copyPathKeyCode == 18) {
-                textFieldCopyPath.setText("Alt + Enter");
-            }
-            listCmds.setListData(cmdSet.toArray());
-            listLanguage.setListData(languageSet.toArray());
-            listLanguage.setSelectedValue(language, true);
-        }
-
-
-        checkBoxAdmin.addActionListener(e -> isDefaultAdmin = checkBoxAdmin.isSelected());
-        checkBoxLoseFocus.addActionListener(e -> isLoseFocusClose = checkBoxLoseFocus.isSelected());
+    private void addTextFieldRunAsAdminListener() {
         textFieldRunAsAdmin.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
@@ -469,6 +425,34 @@ public class SettingsFrame {
                 }
             }
         });
+    }
+
+    private void addPrioriyFileChooserListener() {
+        ButtonPriorityFolder.addActionListener(e -> {
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+            int returnValue = fileChooser.showDialog(new JLabel(), SettingsFrame.getTranslation("Choose"));
+            File file = fileChooser.getSelectedFile();
+            if (returnValue == JFileChooser.APPROVE_OPTION) {
+                textFieldPriorityFolder.setText(file.getAbsolutePath());
+            }
+
+        });
+    }
+
+    private void addPriorityTextFieldListener() {
+        textFieldPriorityFolder.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2) {
+                    textFieldPriorityFolder.setText(null);
+                }
+
+            }
+        });
+    }
+
+    private void addTextFieldOpenLastFolderListener() {
         textFieldOpenLastFolder.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
@@ -485,6 +469,9 @@ public class SettingsFrame {
                 }
             }
         });
+    }
+
+    private void addButtonCMDListener() {
         buttonAddCMD.addActionListener(e -> {
             String name = JOptionPane.showInputDialog(SettingsFrame.getTranslation("Please enter the ID of the command, then you can enter \": identifier\" in the search box to execute the command directly"));
             if (name == null || name.isEmpty()) {
@@ -507,13 +494,22 @@ public class SettingsFrame {
             }
 
         });
+    }
+
+    private void addButtonDelCMDListener() {
         buttonDelCmd.addActionListener(e -> {
             String del = (String) listCmds.getSelectedValue();
             cmdSet.remove(del);
             listCmds.setListData(cmdSet.toArray());
 
         });
+    }
+
+    private void addButtonSaveListener() {
         buttonSave.addActionListener(e -> saveChanges());
+    }
+
+    private void addGitHubLabelListener() {
         labelAboutGithub.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -529,6 +525,9 @@ public class SettingsFrame {
                 }
             }
         });
+    }
+
+    private void addCheckForUpdateButtonListener() {
         buttonCheckUpdate.addActionListener(e -> {
             try {
                 if (!updateThread.isAlive()) {
@@ -540,6 +539,9 @@ public class SettingsFrame {
                 updateThread.start();
             }
         });
+    }
+
+    private void addTextFieldCopyPathListener() {
         textFieldCopyPath.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
@@ -556,6 +558,9 @@ public class SettingsFrame {
                 }
             }
         });
+    }
+
+    private void addResetColorButtonListener() {
         buttonResetColor.addActionListener(e -> {
             textFieldFontColorWithCoverage.setText(Integer.toHexString(0x1C0EFF));
             textFieldSearchBarColor.setText(Integer.toHexString(0xffffff));
@@ -563,8 +568,9 @@ public class SettingsFrame {
             textFieldBackgroundDefault.setText(Integer.toHexString(0xffffff));
             textFieldFontColor.setText(Integer.toHexString(0x333333));
         });
+    }
 
-
+    private void addColorChooserLabelListener() {
         labelColorChooser.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -723,6 +729,129 @@ public class SettingsFrame {
         });
     }
 
+    private void initAll() {
+        //设置窗口显示
+        labelAboutGithub.setText("<html><a href='https://github.com/XUANXUQAQ/File-Engine'><font size=\"4\">File-Engine</font></a></html>");
+        labelBeautyEye.setText("1.WebLookAndFeel");
+        labelFastJson.setText("2.FastJson");
+        labelJna.setText("3.Java-Native-Access");
+        ImageIcon imageIcon = new ImageIcon(SettingsFrame.class.getResource("/icons/frame.png"));
+        labelIcon.setIcon(imageIcon);
+        labelVersion.setText(getTranslation("Current Version:") + version);
+        if (isStartup) {
+            checkBox1.setSelected(true);
+        } else {
+            checkBox1.setSelected(false);
+        }
+        textFieldUpdateTime.setText(String.valueOf(updateTimeLimit));
+        textAreaIgnorePath.setText(ignorePath.replaceAll(",", ",\n"));
+        textFieldCacheNum.setText(String.valueOf(cacheNumLimit));
+        textFieldSearchDepth.setText(String.valueOf(searchDepth));
+        textFieldHotkey.setText(hotkey);
+        textFieldPriorityFolder.setText(priorityFolder);
+        checkBoxAdmin.setSelected(isDefaultAdmin);
+        textFieldSearchBarColor.setText(Integer.toHexString(searchBarColor));
+        Color _searchBarColor = new Color(searchBarColor);
+        searchBarColorChooser.setBackground(_searchBarColor);
+        searchBarColorChooser.setForeground(_searchBarColor);
+        textFieldBackgroundDefault.setText(Integer.toHexString(defaultBackgroundColor));
+        Color _defaultBackgroundColor = new Color(defaultBackgroundColor);
+        defaultBackgroundChooser.setBackground(_defaultBackgroundColor);
+        defaultBackgroundChooser.setForeground(_defaultBackgroundColor);
+        textFieldLabelColor.setText(Integer.toHexString(labelColor));
+        Color _labelColor = new Color(labelColor);
+        labelColorChooser.setBackground(_labelColor);
+        labelColorChooser.setForeground(_labelColor);
+        textFieldFontColorWithCoverage.setText(Integer.toHexString(fontColorWithCoverage));
+        Color _fontColorWithCoverage = new Color(fontColorWithCoverage);
+        FontColorWithCoverageChooser.setBackground(_fontColorWithCoverage);
+        FontColorWithCoverageChooser.setForeground(_fontColorWithCoverage);
+        checkBoxLoseFocus.setSelected(isLoseFocusClose);
+        textFieldTransparency.setText(String.valueOf(transparency));
+        textFieldFontColor.setText(Integer.toHexString(fontColor));
+        Color _fontColor = new Color(fontColor);
+        FontColorChooser.setBackground(_fontColor);
+        FontColorChooser.setForeground(_fontColor);
+        if (runAsAdminKeyCode == 17) {
+            textFieldRunAsAdmin.setText("Ctrl + Enter");
+        } else if (runAsAdminKeyCode == 16) {
+            textFieldRunAsAdmin.setText("Shift + Enter");
+        } else if (runAsAdminKeyCode == 18) {
+            textFieldRunAsAdmin.setText("Alt + Enter");
+        }
+        if (openLastFolderKeyCode == 17) {
+            textFieldOpenLastFolder.setText("Ctrl + Enter");
+        } else if (openLastFolderKeyCode == 16) {
+            textFieldOpenLastFolder.setText("Shift + Enter");
+        } else if (openLastFolderKeyCode == 18) {
+            textFieldOpenLastFolder.setText("Alt + Enter");
+        }
+        if (copyPathKeyCode == 17) {
+            textFieldCopyPath.setText("Ctrl + Enter");
+        } else if (copyPathKeyCode == 16) {
+            textFieldCopyPath.setText("Shift + Enter");
+        } else if (copyPathKeyCode == 18) {
+            textFieldCopyPath.setText("Alt + Enter");
+        }
+        listCmds.setListData(cmdSet.toArray());
+        listLanguage.setListData(languageSet.toArray());
+        listLanguage.setSelectedValue(language, true);
+    }
+
+    private SettingsFrame() {
+        frame = new JFrame("设置");
+        tmp = new File("tmp");
+        settings = new File("user/settings.json");
+        cmdSet = new HashSet<>();
+        equalSign = Pattern.compile("=");
+        fileMap = new ConcurrentHashMap<>();
+        translationMap = new ConcurrentHashMap<>();
+        languageSet = new HashSet<>();
+        readAllSettings();
+
+        HotKeyListener = CheckHotKey.getInstance();
+        searchBar = SearchBar.getInstance();
+
+        setAllSettings();
+
+        initLanguageFileMap();
+        translate(language);
+
+        addCheckboxListener();
+
+        addButtonRemoveDesktopListener();
+
+        addFileChooserButtonListener();
+
+        addTextFieldListener();
+
+        addPrioriyFileChooserListener();
+
+        addPriorityTextFieldListener();
+
+        addTextFieldRunAsAdminListener();
+
+        addTextFieldOpenLastFolderListener();
+
+        addButtonCMDListener();
+
+        addButtonDelCMDListener();
+
+        addButtonSaveListener();
+
+        addGitHubLabelListener();
+
+        addCheckForUpdateButtonListener();
+
+        addTextFieldCopyPathListener();
+
+        addResetColorButtonListener();
+
+        addColorChooserLabelListener();
+
+        initAll();
+    }
+
     private void translate(String language) {
         initTranslations(language);
         tabbedPane1.setTitleAt(0, getTranslation("General"));
@@ -805,6 +934,7 @@ public class SettingsFrame {
     }
 
     private static String getDefaultLang() {
+        //TODO 添加语言
         Locale l = Locale.getDefault();
         String lang = l.toLanguageTag();
         switch (lang) {
