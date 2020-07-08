@@ -892,7 +892,7 @@
                   <grid row="12" column="2" row-span="1" col-span="1" vsize-policy="6" hsize-policy="1" anchor="0" fill="2" indent="0" use-parent-layout="false"/>
                 </constraints>
               </vspacer>
-              <component id="64edc" class="javax.swing.JLabel" binding="labelDesciption">
+              <component id="64edc" class="javax.swing.JLabel" binding="labelDescription">
                 <constraints>
                   <grid row="8" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>

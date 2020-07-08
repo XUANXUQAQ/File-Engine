@@ -18,6 +18,7 @@ import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Scanner;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
@@ -26,7 +27,6 @@ import java.util.regex.Pattern;
 public class SettingsFrame {
     public static final String version = "2.1"; //TODO 更改版本号
     private static volatile boolean mainExit = false;
-    public static String name;
     private static boolean is64Bit;
     private static volatile int cacheNumLimit;
     private static volatile String hotkey;
@@ -147,7 +147,7 @@ public class SettingsFrame {
     private JTextField textFieldSearchBarColor;
     private JLabel searchBarColorChooser;
     private JLabel labelCmdTip2;
-    private JLabel labelDesciption;
+    private JLabel labelDescription;
     private JLabel labelBeautyEye;
     private JLabel labelFastJson;
     private JLabel labelJna;
@@ -251,6 +251,14 @@ public class SettingsFrame {
 
     public static int getFontColor() {
         return fontColor;
+    }
+
+    public static String getName() {
+        if (is64Bit) {
+            return "File-Engine-x64.exe";
+        } else {
+            return "File-Engine-x86.exe";
+        }
     }
 
     private SettingsFrame() {
@@ -505,9 +513,7 @@ public class SettingsFrame {
             listCmds.setListData(cmdSet.toArray());
 
         });
-        buttonSave.addActionListener(e -> {
-            saveChanges();
-        });
+        buttonSave.addActionListener(e -> saveChanges());
         labelAboutGithub.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -758,7 +764,7 @@ public class SettingsFrame {
         labelGitHubTip.setText(getTranslation("This is an open source software,GitHub:"));
         labelGithubIssue.setText(getTranslation("If you find a bug or have some suggestions, welcome to GitHub for feedback"));
         buttonCheckUpdate.setText(getTranslation("Check for update"));
-        labelDesciption.setText(getTranslation("Thanks for the following project"));
+        labelDescription.setText(getTranslation("Thanks for the following project"));
         buttonSave.setText(getTranslation("Save"));
         labelLanTip2.setText(getTranslation("The translation might not be 100% accurate"));
         labelLanguage.setText(getTranslation("Choose a language"));
@@ -796,6 +802,24 @@ public class SettingsFrame {
         fileMap.put("简体中文", "/language/Chinese(Simplified).txt");
         fileMap.put("日本語", "/language/Japanese.txt");
         fileMap.put("繁體中文", "/language/Chinese(Traditional).txt");
+    }
+
+    private static String getDefaultLang() {
+        Locale l = Locale.getDefault();
+        String lang = l.toLanguageTag();
+        switch (lang) {
+            case "zh-CN":
+                return "简体中文";
+            case "ja-JP":
+            case "ja-JP-u-ca-japanese":
+            case "ja-JP-x-lvariant-JP":
+                return "日本語";
+            case "zh-HK":
+            case "zh-TW":
+                return "繁體中文";
+            default:
+                return "English(US)";
+        }
     }
 
     public static String getTranslation(String text) {
@@ -977,10 +1001,10 @@ public class SettingsFrame {
             if (settingsInJson.containsKey("language")) {
                 language = settingsInJson.getString("language");
                 if (language == null) {
-                    language = "English(US)";
+                    language = getDefaultLang();
                 }
             } else {
-                language = "English(US)";
+                language = getDefaultLang();
             }
         } catch (NullPointerException | IOException e) {
             isStartup = false;
@@ -1001,7 +1025,7 @@ public class SettingsFrame {
             fontColorWithCoverage = 0x1C0EFF;
             labelColor = 0xFF9868;
             fontColor = 0x333333;
-            language = "English(US)";
+            language = getDefaultLang();
             _openLastFolderKeyCode = openLastFolderKeyCode;
             _runAsAdminKeyCode = runAsAdminKeyCode;
             _copyPathKeyCode = copyPathKeyCode;
@@ -1352,7 +1376,7 @@ public class SettingsFrame {
     private void setStartup(boolean b) {
         if (b) {
             String command = "cmd.exe /c schtasks /create /ru \"administrators\" /rl HIGHEST /sc ONLOGON /tn \"File-Engine\" /tr ";
-            File FileEngine = new File(name);
+            File FileEngine = new File(getName());
             String absolutePath = "\"\"" + FileEngine.getAbsolutePath() + "\"\" /f";
             command += absolutePath;
             Process p;
