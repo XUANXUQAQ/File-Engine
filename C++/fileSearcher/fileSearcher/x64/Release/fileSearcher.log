@@ -2,7 +2,7 @@
 D:\Code\File-Engine\C++\fileSearcher\fileSearcher\Search.h(406,71): warning C4267: “参数”: 从“size_t”转换到“int”，可能丢失数据
 D:\Code\File-Engine\C++\fileSearcher\fileSearcher\Search.h(448,28): warning C4244: “=”: 从“intptr_t”转换到“long”，可能丢失数据
   正在生成代码
-  1 of 556 functions ( 0.2%) were compiled, the rest were copied from previous compilation.
+  1 of 554 functions ( 0.2%) were compiled, the rest were copied from previous compilation.
     0 functions were new in current compilation
     0 functions had inline decision re-evaluated but remain unchanged
   已完成代码的生成

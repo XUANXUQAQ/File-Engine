@@ -24,9 +24,10 @@ import java.util.regex.Pattern;
 
 
 public class SettingsFrame {
-    public static final String version = "2.0"; //TODO 更改版本号
+    public static final String version = "2.1"; //TODO 更改版本号
     private static volatile boolean mainExit = false;
     public static String name;
+    private static boolean is64Bit;
     private static volatile int cacheNumLimit;
     private static volatile String hotkey;
     private static volatile int updateTimeLimit;
@@ -166,6 +167,14 @@ public class SettingsFrame {
 
     private static class SettingsFrameBuilder {
         private static SettingsFrame instance = new SettingsFrame();
+    }
+
+    public static void set64Bit(boolean b) {
+        is64Bit = b;
+    }
+
+    public static boolean is64Bit() {
+        return is64Bit;
     }
 
     public static SettingsFrame getInstance() {
@@ -1071,7 +1080,7 @@ public class SettingsFrame {
                 //开始更新,下载更新文件到tmp
                 String urlChoose;
                 String fileName;
-                if (name.contains("x64")) {
+                if (is64Bit) {
                     urlChoose = "url64";
                     fileName = "File-Engine-x64.exe";
                 } else {
