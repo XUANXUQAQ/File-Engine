@@ -20,7 +20,9 @@ import java.awt.event.*;
 import java.io.*;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.sql.*;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Queue;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -56,7 +58,7 @@ public class SearchBar {
     private static Pattern semicolon;
     private static Pattern resultSplit;
     private volatile boolean isUserPressed = false;
-    private volatile boolean isCommandMode = false;
+    private static AtomicInteger runningMode;
     private volatile boolean isLockMouseMotion = false;
     private volatile boolean isOpenLastFolderPressed = false;
     private volatile boolean isUsing = false;
@@ -77,6 +79,9 @@ public class SearchBar {
     private static TaskBar taskBar;
     private static AtomicInteger resultCount;
 
+    private static final int NORMAL_MODE = 0;
+    private static final int COMMAND_MODE = 1;
+
     private static class SearchBarBuilder {
         private static SearchBar instance = new SearchBar();
     }
@@ -87,6 +92,7 @@ public class SearchBar {
         searchBar = new JFrame();
         labelCount = new AtomicInteger(0);
         resultCount = new AtomicInteger(0);
+        runningMode = new AtomicInteger(0);
         semicolon = Pattern.compile(";");
         resultSplit = Pattern.compile(":");
         panel = new JPanel();
@@ -144,7 +150,6 @@ public class SearchBar {
         initLabel(font, searchBarWidth, labelHeight, labelHeight * 8, label8);
 
         iconSideLength = labelHeight / 3; //定义图标边长
-        GetIcon.initIconCache(iconSideLength, iconSideLength);
 
         URL icon = TaskBar.class.getResource("/icons/taskbar_32x32.png");
         Image image = new ImageIcon(icon).getImage();
@@ -239,7 +244,7 @@ public class SearchBar {
                 if (count == 2) {
                     //enter被点击
                     searchBar.setVisible(false);
-                    if (!isCommandMode) {
+                    if (runningMode.get() == NORMAL_MODE) {
                         if (isOpenLastFolderPressed) {
                             //打开上级文件夹
                             File open = new File(listResults.get(labelCount.get()));
@@ -263,7 +268,7 @@ public class SearchBar {
                             }
                         }
                         saveCache(listResults.get(labelCount.get()) + ';');
-                    } else {
+                    } else if (runningMode.get() == COMMAND_MODE) {
                         //直接打开
                         String command = listResults.get(labelCount.get());
                         if (Desktop.isDesktopSupported()) {
@@ -285,12 +290,10 @@ public class SearchBar {
 
             @Override
             public void mouseEntered(MouseEvent e) {
-
             }
 
             @Override
             public void mouseExited(MouseEvent e) {
-
             }
         });
     }
@@ -307,7 +310,6 @@ public class SearchBar {
 
             @Override
             public void keyPressed(KeyEvent arg0) {
-
                 int key = arg0.getKeyCode();
                 if (key == 8 && getTextFieldText().isEmpty()) {
                     arg0.consume();
@@ -369,7 +371,7 @@ public class SearchBar {
                     } else if (10 == key) {
                         //enter被点击
                         searchBar.setVisible(false);
-                        if (!isCommandMode) {
+                        if (runningMode.get() == NORMAL_MODE) {
                             if (isOpenLastFolderPressed) {
                                 //打开上级文件夹
                                 File open = new File(listResults.get(labelCount.get()));
@@ -393,7 +395,7 @@ public class SearchBar {
                                 }
                             }
                             saveCache(listResults.get(labelCount.get()) + ';');
-                        } else {
+                        } else if (runningMode.get() == COMMAND_MODE) {
                             //直接打开
                             String command = listResults.get(labelCount.get());
                             if (Desktop.isDesktopSupported()) {
@@ -835,7 +837,7 @@ public class SearchBar {
 
     private void moveDownward(int position) {
         try {
-            if (!isCommandMode) {
+            if (runningMode.get() == NORMAL_MODE) {
                 switch (position) {
                     case 0:
                         int size = listResults.size();
@@ -1091,7 +1093,7 @@ public class SearchBar {
                         }
                         break;
                 }
-            } else {
+            } else if (runningMode.get() == COMMAND_MODE) {
                 switch (position) {
                     case 0:
                         int size = listResults.size();
@@ -1358,7 +1360,7 @@ public class SearchBar {
     private void moveUpward(int position) {
         int size;
         try {
-            if (!isCommandMode) {
+            if (runningMode.get() == NORMAL_MODE) {
                 switch (position) {
                     case 0:
                         //到达了最上端，刷新显示
@@ -1614,7 +1616,7 @@ public class SearchBar {
                         label8.setBackground(backgroundColor);
                         break;
                 }
-            } else {
+            } else if (runningMode.get() == COMMAND_MODE) {
                 switch (position) {
                     case 0:
                         //到达了最上端，刷新显示
@@ -1890,7 +1892,12 @@ public class SearchBar {
                 isCacheAndPrioritySearched = false;
                 startTime = System.currentTimeMillis();
                 timer = true;
-                isCommandMode = getTextFieldText().charAt(0) == ':';
+                char first = getTextFieldText().charAt(0);
+                if (first == ':') {
+                    runningMode.set(COMMAND_MODE);
+                } else {
+                    runningMode.set(NORMAL_MODE);
+                }
             }
 
             @Override
@@ -1903,9 +1910,14 @@ public class SearchBar {
                 isCacheAndPrioritySearched = false;
                 String t = getTextFieldText();
                 try {
-                    isCommandMode = t.charAt(0) == ':';
+                    char first = t.charAt(0);
+                    if (first == ':') {
+                        runningMode.set(COMMAND_MODE);
+                    } else {
+                        runningMode.set(NORMAL_MODE);
+                    }
                 } catch (StringIndexOutOfBoundsException e1) {
-                    isCommandMode = false;
+                    runningMode.set(NORMAL_MODE);
                 }
                 if (t.isEmpty()) {
                     panel.repaint();
@@ -1921,6 +1933,7 @@ public class SearchBar {
 
             @Override
             public void changedUpdate(DocumentEvent e) {
+                startTime = System.currentTimeMillis();
                 listResults.clear();
                 tempResults.clear();
             }
@@ -2504,22 +2517,24 @@ public class SearchBar {
             try {
                 while (SettingsFrame.isNotMainExit()) {
                     String command;
-                    try (Connection databaseConn = SQLiteUtil.getConnection("jdbc:sqlite:data.db"); Statement stmt = databaseConn.createStatement()) {
+                    try (Statement stmt = SQLiteUtil.getStatement("jdbc:sqlite:data.db")) {
                         while (SettingsFrame.isNotMainExit()) {
-                            if (!isCommandMode) {
+                            if (runningMode.get() == NORMAL_MODE) {
                                 while ((command = commandQueue.poll()) != null) {
                                     searchAndAddToTempResults(System.currentTimeMillis(), command, stmt);
                                 }
                             }
                             Thread.sleep(10);
                         }
+                    } catch (SQLException e) {
+                        if (SettingsFrame.isDebug()) {
+                            e.printStackTrace();
+                        }
                     }
                     Thread.sleep(500);
                 }
-            } catch (SQLException | InterruptedException e) {
-                if (SettingsFrame.isDebug() && !(e instanceof InterruptedException)) {
-                    e.printStackTrace();
-                }
+            } catch (InterruptedException e) {
+                SettingsFrame.isDebug();
             }
         });
 
@@ -2543,7 +2558,7 @@ public class SearchBar {
                         tempResults.clear();
                         String text = getTextFieldText();
                         if (search.isUsable()) {
-                            if (isCommandMode) {
+                            if (runningMode.get() == COMMAND_MODE) {
                                 if (text.equals(":update")) {
                                     closedTodo();
                                     search.setManualUpdate(true);
@@ -2582,7 +2597,7 @@ public class SearchBar {
                                 }
                                 showResults(true, false, false, false,
                                         false, false, false, false);
-                            } else {
+                            } else if (runningMode.get() == NORMAL_MODE) {
                                 isStartSearchLocal = true;
                                 String[] strings;
                                 int length;
@@ -2604,7 +2619,9 @@ public class SearchBar {
                             }
                             showResults(true, false, false, false,
                                     false, false, false, false);
+
                         } else {
+                            //开启线程等待搜索完成
                             if (search.isManualUpdate()) {
                                 if (searchWaiter == null || !searchWaiter.isAlive()) {
                                     searchWaiter = new Thread(() -> {
@@ -2689,28 +2706,35 @@ public class SearchBar {
 
         cachedThreadPool.execute(() -> {
             // 时间检测线程
+            long count = 0;
+            long updateTimeLimit = SettingsFrame.getUpdateTimeLimit() * 1000;
             try {
                 while (SettingsFrame.isNotMainExit()) {
-                    long count = 0;
-                    long updateTimeLimit = SettingsFrame.getUpdateTimeLimit() * 10;
-                    try (Connection databaseConn = SQLiteUtil.getConnection("jdbc:sqlite:data.db"); Statement stmt = databaseConn.createStatement()) {
+                    try (Statement stmt = SQLiteUtil.getStatement("jdbc:sqlite:data.db")) {
                         while (SettingsFrame.isNotMainExit()) {
-                            count += 100;
+                            count += 1000;
                             if (count >= updateTimeLimit && !isUsing && !search.isManualUpdate()) {
                                 count = 0;
                                 if (search.isUsable()) {
-                                    search.executeAllCommands(stmt);
+                                    if (SettingsFrame.isDebug()) {
+                                        System.out.println("----------------------------------------------");
+                                        System.out.println("执行SQL命令");
+                                        System.out.println("----------------------------------------------");
+                                        search.executeAllCommands(stmt);
+                                    }
                                 }
                             }
-                            Thread.sleep(100);
+                            Thread.sleep(1000);
+                        }
+                    } catch (SQLException | InterruptedException e) {
+                        if (SettingsFrame.isDebug()) {
+                            e.printStackTrace();
                         }
                     }
                     Thread.sleep(500);
                 }
-            } catch (InterruptedException | SQLException e) {
-                if (SettingsFrame.isDebug()) {
-                    e.printStackTrace();
-                }
+            } catch (Exception ignored) {
+
             }
         });
 
@@ -2719,16 +2743,13 @@ public class SearchBar {
         cachedThreadPool.execute(() -> {
             try {
                 while (SettingsFrame.isNotMainExit()) {
-                    try (Connection databaseConn = SQLiteUtil.getConnection("jdbc:sqlite:data.db"); Statement stmt = databaseConn.createStatement()) {
-                        while (SettingsFrame.isNotMainExit()) {
-                            if (search.isManualUpdate()) {
-                                search.setUsable(false);
-                                search.updateLists(SettingsFrame.getIgnorePath(), SettingsFrame.getSearchDepth(), stmt);
-                            }
-                            Thread.sleep(10);
+                    if (search.isManualUpdate()) {
+                        search.setUsable(false);
+                        try (Statement stmt = SQLiteUtil.getStatement("jdbc:sqlite:data.db")) {
+                            search.updateLists(SettingsFrame.getIgnorePath(), SettingsFrame.getSearchDepth(), stmt);
                         }
                     }
-                    Thread.sleep(500);
+                    Thread.sleep(10);
                 }
             } catch (InterruptedException | SQLException e) {
                 if (SettingsFrame.isDebug() && !(e instanceof InterruptedException)) {
@@ -2827,35 +2848,21 @@ public class SearchBar {
         return resultCount.get() >= 100;
     }
 
-    private void searchAndAddToTempResults(long time, String command, Statement stmt) {
+    private void searchAndAddToTempResults(long time, String command, Statement stmt) throws SQLException {
         //为label添加结果
-        ResultSet resultSet = null;
-        try {
-            String each;
-            boolean isResultsExcessive = false;
+        ResultSet resultSet;
+        String each;
+        boolean isResultsExcessive = false;
 
-            resultSet = stmt.executeQuery(command);
-            while (resultSet.next()) {
-                each = resultSet.getString("PATH");
-                if (search.isUsable()) {
-                    isResultsExcessive = checkIsMatchedAndAddToList(each, true);
-                }
-                //用户重新输入了信息
-                if (isResultsExcessive || (startTime > time)) {
-                    break;
-                }
+        resultSet = stmt.executeQuery(command);
+        while (resultSet.next()) {
+            each = resultSet.getString("PATH");
+            if (search.isUsable()) {
+                isResultsExcessive = checkIsMatchedAndAddToList(each, true);
             }
-        } catch (SQLException e) {
-            if (SettingsFrame.isDebug()) {
-                e.printStackTrace();
-            }
-        } finally {
-            if (resultSet != null) {
-                try {
-                    resultSet.close();
-                } catch (SQLException ignored) {
-
-                }
+            //用户重新输入了信息
+            if (isResultsExcessive || (startTime > time)) {
+                break;
             }
         }
     }
@@ -2902,7 +2909,7 @@ public class SearchBar {
 
     private void showResults(boolean isLabel1Chosen, boolean isLabel2Chosen, boolean isLabel3Chosen, boolean isLabel4Chosen,
                              boolean isLabel5Chosen, boolean isLabel6Chosen, boolean isLabel7Chosen, boolean isLabel8Chosen) {
-        if (!isCommandMode) {
+        if (runningMode.get() == NORMAL_MODE) {
             try {
                 String path = listResults.get(0);
                 showResultOnLabel(path, label1, isLabel1Chosen);
@@ -2930,7 +2937,7 @@ public class SearchBar {
             } catch (IndexOutOfBoundsException ignored) {
 
             }
-        } else {
+        } else if (runningMode.get() == COMMAND_MODE) {
             try {
                 String command = listResults.get(0);
                 showCommandOnLabel(command, label1, isLabel1Chosen);
@@ -3249,7 +3256,6 @@ public class SearchBar {
         tempResults.clear();
         textField.setText(null);
         isUserPressed = false;
-        isCommandMode = false;
         isLockMouseMotion = false;
         isOpenLastFolderPressed = false;
         isUsing = false;

@@ -30,6 +30,7 @@ int main(int argc, char* argv[])
         cout << "isIgnoreSearchDepth:" << isIgnoreSearchDepth << endl << endl;
 
         sqlite3_config(SQLITE_CONFIG_MULTITHREAD);
+        sqlite3_config(SQLITE_CONFIG_MEMSTATUS, 0);
 
         //打开数据库
         dbRes = sqlite3_open(output, &db);
@@ -44,7 +45,7 @@ int main(int argc, char* argv[])
         sqlite3_exec(db, "PRAGMA TEMP_STORE=MEMORY;", 0, 0, 0);
         sqlite3_exec(db, "PRAGMA journal_mode=OFF;", 0, 0, 0);
         sqlite3_exec(db, "PRAGMA cache_size=50000;", 0, 0, 0);
-        sqlite3_exec(db, "PRAGMA page_size=8192;", 0, 0, 0);
+        sqlite3_exec(db, "PRAGMA page_size=16384;", 0, 0, 0);
         sqlite3_exec(db, "PRAGMA auto_vacuum=0;", 0, 0, 0);
         sqlite3_exec(db, "PRAGMA mmap_size=4096;", 0, 0, 0);
         sqlite3_exec(db, "BEGIN;", NULL, NULL, NULL);
@@ -120,17 +121,7 @@ int main(int argc, char* argv[])
         executeAll(command38, "INSERT INTO list38(PATH) VALUES(?);");
         executeAll(command39, "INSERT INTO list39(PATH) VALUES(?);");
         executeAll(command40, "INSERT INTO list40(PATH) VALUES(?);");
-        //创建索引
-        sqlite3_exec(db, "BEGIN;", NULL, NULL, NULL);
-        char num[5];
-        string str;
-        for (int i = 0; i < 40; i++) {
-            _itoa_s(i, num, 10);
-            str.append("CREATE UNIQUE INDEX list").append(num).append("_index ON list").append(num).append("(PATH)").append(";");
-            sqlite3_exec(db, str.c_str(), NULL, NULL, NULL);
-            str.clear();
-        }
-        sqlite3_exec(db, "COMMIT;", NULL, NULL, NULL);
+
         sqlite3_close(db);
         return 0;
     }

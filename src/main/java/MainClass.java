@@ -22,22 +22,22 @@ import java.util.Objects;
 public class MainClass {
     //32bit
     private static final String fileMonitor86Md5 = "1005aa7fa75ae86d314afcfc5df0af6b";
-    private static final String fileSearcher86Md5 = "66fb7b94d4821244641ee51659415622";
+    private static final String fileSearcher86Md5 = "c79e7ed8c1a915bc4b79c9405d8a5828";
     private static final String getAscII86Md5 = "e370e53ce6c18758a5468fe11ccca652";
     private static final String hotkeyListener86Md5 = "15bd4db12a4939969c27c03ac9e57ddd";
     private static final String isLocalDisk86Md5 = "9b1c4c4fc44b52bff4f226b39c1ac46f";
     private static final String updater86Md5 = "b11a1307c497f00e570b238224173ba2";
-    private static final String fileSearcherUSN86Md5 = "f29d2daf8a49861f0277ca693c989264";
+    private static final String fileSearcherUSN86Md5 = "48153cfabd03e2ab907f8d361bce9130";
     private static final String isNTFS86Md5 = "2aff387756192c704c0c876f2ad12fa2";
     private static final String sqlite386Md5 = "82b03cdb95fb0ef88b876d141b478a6d";
     //64bit
     private static final String fileMonitor64Md5 = "db64b40ed1ccec6a7f2af1b40c1d22ab";
-    private static final String fileSearcher64Md5 = "6ec684fe6a74559fbc9716ff969242e2";
+    private static final String fileSearcher64Md5 = "beaf00c5652bcf74a6ecbb2ded170bb9";
     private static final String getAscII64Md5 = "eff607d2dd4a7e4c878948fe8f24b3ea";
     private static final String hotkeyListener64Md5 = "41388e31d6fc22fb430f636d402cf608";
     private static final String isLocalDisk64Md5 = "64f64bc828f477aa9ce6f5f8fd6010f3";
     private static final String updater64Md5 = "bf8482e14b1457395f2ef1ec200f95c0";
-    private static final String fileSearcherUSN64Md5 = "619393aa06324b5812bced43f076e2de";
+    private static final String fileSearcherUSN64Md5 = "c800f1dab50df73794df2a94a1c847a0";
     private static final String isNTFS64Md5 = "b5f7ea2923a42873883a3bcda2bafd2";
     private static final String sqlite364Md5 = "658c71b8b93ba4eb5b4936f46a112449";
 
@@ -69,6 +69,12 @@ public class MainClass {
         } catch (IOException ignored) {
 
         }
+    }
+
+    private static String getFileName() {
+        StackTraceElement[] stacktrace = Thread.currentThread().getStackTrace();
+        StackTraceElement e = stacktrace[stacktrace.length - 1];
+        return e.getFileName();
     }
 
     private static boolean isTableExist(ArrayList<String> tableNames) {
@@ -148,13 +154,10 @@ public class MainClass {
             e.printStackTrace();
             return;
         }
-        String osArch = System.getProperty("os.arch");
-        if (osArch.contains("64")) {
-            SettingsFrame.name = "File-Engine-x64.exe";
-        } else {
-            SettingsFrame.name = "File-Engine-x86.exe";
-        }
 
+        SettingsFrame.set64Bit(System.getProperty("os.arch").contains("64"));
+
+        SettingsFrame.name = getFileName();
 
         File database = new File("data.db");
         boolean isManualUpdate = false;
@@ -252,7 +255,7 @@ public class MainClass {
     private static void startOrIgnoreUpdateAndExit(boolean isUpdate) {
         //复制updater.exe
         if (isUpdate) {
-            if (SettingsFrame.name.contains("x64")) {
+            if (SettingsFrame.is64Bit()) {
                 copyOrIgnoreFile("updater.exe", "/win32-x86-64/updater.exe", updater64Md5);
             } else {
                 copyOrIgnoreFile("updater.exe", "/win32-x86/updater.exe", updater86Md5);
@@ -276,6 +279,8 @@ public class MainClass {
         boolean isFailed;
         //user
         isFailed = createFileOrFolder("user", false, false);
+        //plugins
+        isFailed = isFailed && createFileOrFolder("plugins", false, false);
         //tmp
         File tmp = new File("tmp");
         String tempPath = tmp.getAbsolutePath();
@@ -286,7 +291,7 @@ public class MainClass {
         isFailed = isFailed && createFileOrFolder("user/cache.dat", true, false);
         //cmd.txt
         isFailed = isFailed && createFileOrFolder("user/cmds.txt", true, false);
-        releaseAllDependence(SettingsFrame.name.contains("x64"));
+        releaseAllDependence(SettingsFrame.is64Bit());
         return isFailed;
     }
 

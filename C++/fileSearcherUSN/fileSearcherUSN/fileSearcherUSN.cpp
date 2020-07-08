@@ -74,6 +74,7 @@ int main() {
 	diskVec.reserve(26);
 	
 	sqlite3_config(SQLITE_CONFIG_MULTITHREAD);
+	sqlite3_config(SQLITE_CONFIG_MEMSTATUS, 0);
 
 	int ret = sqlite3_open(output, &db);
 	if (ret) {
@@ -87,7 +88,7 @@ int main() {
 	sqlite3_exec(db, "PRAGMA TEMP_STORE=MEMORY;", 0, 0, 0);
 	sqlite3_exec(db, "PRAGMA journal_mode=OFF;", 0, 0, 0);
 	sqlite3_exec(db, "PRAGMA cache_size=50000;", 0, 0, 0);
-	sqlite3_exec(db, "PRAGMA page_size=8192;", 0, 0, 0);
+	sqlite3_exec(db, "PRAGMA page_size=16384;", 0, 0, 0);
 	sqlite3_exec(db, "PRAGMA auto_vacuum=0;", 0, 0, 0);
 	sqlite3_exec(db, "PRAGMA mmap_size=4096;", 0, 0, 0);
 	sqlite3_exec(db, "BEGIN;", NULL, NULL, NULL);
@@ -111,18 +112,6 @@ int main() {
 	//等待线程
 	while (taskFinishedNum != diskCount) {
 		Sleep(1);
-	}
-	sqlite3_exec(db, "COMMIT;", NULL, NULL, NULL);
-
-	//创建索引
-	sqlite3_exec(db, "BEGIN;", NULL, NULL, NULL);
-	char num[5];
-	string str;
-	for (int i = 0; i <= 40; i++) {
-		_itoa_s(i, num, 10);
-		str.append("CREATE UNIQUE INDEX list").append(num).append("_index ON list").append(num).append("(PATH)").append(";");
-		sqlite3_exec(db, str.c_str(), NULL, NULL, NULL);
-		str.clear();
 	}
 	sqlite3_exec(db, "COMMIT;", NULL, NULL, NULL);
 	sqlite3_close(db);

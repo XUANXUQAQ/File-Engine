@@ -82,7 +82,6 @@ public class Search {
             case 13:
                 command = "DELETE from list13 where PATH=" + "\"" + path + "\";";
                 break;
-
             case 14:
                 command = "DELETE from list14 where PATH=" + "\"" + path + "\";";
                 break;
@@ -331,17 +330,18 @@ public class Search {
             if (!commandSet.isEmpty()) {
                 isUsable = false;
                 commandQueue.addAll(commandSet);
-                commandSet.clear();
                 stmt.execute("BEGIN;");
                 for (String each : commandQueue) {
                     stmt.execute(each);
                 }
                 stmt.execute("COMMIT;");
-                commandQueue.clear();
-                isUsable = true;
             }
         } catch (SQLException ignored) {
 
+        } finally {
+            commandSet.clear();
+            commandQueue.clear();
+            isUsable = true;
         }
     }
 
