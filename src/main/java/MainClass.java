@@ -71,12 +71,6 @@ public class MainClass {
         }
     }
 
-    private static String getFileName() {
-        StackTraceElement[] stacktrace = Thread.currentThread().getStackTrace();
-        StackTraceElement e = stacktrace[stacktrace.length - 1];
-        return e.getFileName();
-    }
-
     private static boolean isTableExist(ArrayList<String> tableNames) {
         try (Connection conn = DriverManager.getConnection("jdbc:sqlite:data.db"); Statement stmt = conn.createStatement()) {
             for (String tableName : tableNames) {
@@ -156,8 +150,6 @@ public class MainClass {
         }
 
         SettingsFrame.set64Bit(System.getProperty("os.arch").contains("64"));
-
-        SettingsFrame.name = getFileName();
 
         File database = new File("data.db");
         boolean isManualUpdate = false;
@@ -263,7 +255,7 @@ public class MainClass {
             File updaterExe = new File("updater.exe");
             String absPath = updaterExe.getAbsolutePath();
             String path = absPath.substring(0, 2) + "\"" + absPath.substring(2) + "\"";
-            String command = "cmd.exe /c " + path + " " + "\"" + SettingsFrame.name + "\"";
+            String command = "cmd.exe /c " + path + " " + "\"" + SettingsFrame.getName() + "\"";
             try {
                 Runtime.getRuntime().exec(command);
                 System.exit(0);
