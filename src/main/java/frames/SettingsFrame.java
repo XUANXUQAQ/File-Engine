@@ -117,13 +117,13 @@ public class SettingsFrame {
     private JPanel tab1;
     private JPanel tab2;
     private JPanel tab3;
+    private JPanel tab5;
     private JPanel tab6;
-    private JPanel tab7;
-    private JPanel tab9;
+    private JPanel tab8;
     private JTextField textFieldTransparency;
     private JLabel labelTransparency;
     private JLabel labelPlaceHolder5;
-    private JPanel tab8;
+    private JPanel tab7;
     private JLabel labelColorTip;
     private JTextField textFieldBackgroundDefault;
     private JTextField textFieldFontColorWithCoverage;
@@ -151,7 +151,7 @@ public class SettingsFrame {
     private JLabel labelBeautyEye;
     private JLabel labelFastJson;
     private JLabel labelJna;
-    private JPanel tab5;
+    private JPanel tab4;
     private JList<Object> listLanguage;
     private JLabel labelLanguage;
     private JLabel labelPlaceHolderL;
