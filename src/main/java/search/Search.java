@@ -330,16 +330,18 @@ public class Search {
             if (!commandSet.isEmpty()) {
                 isUsable = false;
                 commandQueue.addAll(commandSet);
+                commandSet.clear();
                 stmt.execute("BEGIN;");
                 for (String each : commandQueue) {
                     stmt.execute(each);
                 }
                 stmt.execute("COMMIT;");
             }
-        } catch (SQLException ignored) {
-
+        } catch (SQLException e) {
+            if (SettingsFrame.isDebug()) {
+                e.printStackTrace();
+            }
         } finally {
-            commandSet.clear();
             commandQueue.clear();
             isUsable = true;
         }
