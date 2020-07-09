@@ -271,14 +271,7 @@ public class SearchBar {
                     } else if (runningMode.get() == COMMAND_MODE) {
                         //直接打开
                         String command = listResults.get(labelCount.get());
-                        if (Desktop.isDesktopSupported()) {
-                            Desktop desktop = Desktop.getDesktop();
-                            try {
-                                desktop.open(new File(semicolon.split(command)[1]));
-                            } catch (Exception e1) {
-                                JOptionPane.showMessageDialog(null, SettingsFrame.getTranslation("Execute failed"));
-                            }
-                        }
+                        openWithAdmin(semicolon.split(command)[1]);
                     }
                     closedTodo();
                 }
@@ -2261,12 +2254,7 @@ public class SearchBar {
                             if (count >= updateTimeLimit && !isUsing && !search.isManualUpdate()) {
                                 count = 0;
                                 if (search.isUsable()) {
-                                    if (SettingsFrame.isDebug()) {
-                                        System.out.println("----------------------------------------------");
-                                        System.out.println("执行SQL命令");
-                                        System.out.println("----------------------------------------------");
-                                        search.executeAllCommands(stmt);
-                                    }
+                                    search.executeAllCommands(stmt);
                                 }
                             }
                             Thread.sleep(1000);
@@ -2546,6 +2534,7 @@ public class SearchBar {
                 try {
                     Runtime.getRuntime().exec("explorer.exe /select, \"" + name.getAbsolutePath() + "\"");
                 } catch (IOException e1) {
+                    JOptionPane.showMessageDialog(null, SettingsFrame.getTranslation("Execute failed"));
                     if (SettingsFrame.isDebug()) {
                         e.printStackTrace();
                     }
