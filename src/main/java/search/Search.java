@@ -326,6 +326,11 @@ public class Search {
     }
 
     public void executeAllCommands(Statement stmt) {
+        if (SettingsFrame.isDebug()) {
+            System.out.println("----------------------------------------------");
+            System.out.println("执行SQL命令");
+            System.out.println("----------------------------------------------");
+        }
         try {
             if (!commandSet.isEmpty()) {
                 isUsable = false;
