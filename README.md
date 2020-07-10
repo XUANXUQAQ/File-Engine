@@ -1,6 +1,10 @@
 # File-Engine
 A tool can make you work more efficiently.
 
+正在制作2.1版本，实测速度已经超越everything(其实也就1s)
+
+插件系统正在制作中，即将来临。敬请期待......
+
 >不必再在杂乱的文件夹中寻找文件。
 提高工作效率。
 这是一个绿色软件，不必安装，随时使用。
@@ -55,6 +59,4 @@ A tool can make you work more efficiently.
 ![8PCZp8.png](https://s1.ax1x.com/2020/06/26/NrTvX4.png)
 
 ![8PCe1S.png](https://s1.ax1x.com/2020/06/26/NrTjcF.png)
-
-### 更多功能敬请期待
    
