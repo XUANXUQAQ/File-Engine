@@ -1,6 +1,9 @@
 import DllInterface.FileMonitor;
+import PluginSystem.PluginUtil;
+import SQLiteConfig.SQLiteUtil;
 import br.com.margel.weblaf.WebLookAndFeel;
 import com.alibaba.fastjson.JSONObject;
+import frames.SearchBar;
 import frames.SettingsFrame;
 import frames.TaskBar;
 import hotkeyListener.CheckHotKey;
@@ -11,8 +14,6 @@ import java.io.*;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
@@ -72,13 +73,13 @@ public class MainClass {
     }
 
     private static boolean isTableExist(ArrayList<String> tableNames) {
-        try (Connection conn = DriverManager.getConnection("jdbc:sqlite:data.db"); Statement stmt = conn.createStatement()) {
+        try (Statement stmt = SQLiteUtil.getStatement()) {
             for (String tableName : tableNames) {
                 String sql = "SELECT * FROM " + tableName + ";";
                 stmt.execute(sql);
             }
             return true;
-        } catch (SQLException e) {
+        } catch (Exception e) {
             return false;
         }
     }
@@ -151,17 +152,30 @@ public class MainClass {
 
         SettingsFrame.set64Bit(System.getProperty("os.arch").contains("64"));
 
-        File database = new File("data.db");
+        try {
+            SQLiteUtil.initConnection("jdbc:sqlite:data.db");
+        } catch (SQLException e) {
+            System.err.println("initialize database connection failed");
+            e.printStackTrace();
+            System.exit(-1);
+        }
+
         boolean isManualUpdate = false;
-        if (!database.exists() || isDatabaseDamaged()) {
+        if (isDatabaseDamaged()) {
             System.out.println("无data文件，正在搜索并重建");
             //初始化数据库
-            Search.initDatabase();
+            try {
+                SQLiteUtil.createAllTables();
+            } catch (Exception e) {
+                System.err.println("initialize database connection failed");
+                e.printStackTrace();
+                System.exit(-1);
+            }
             isManualUpdate = true;
         }
 
         if (!initSettingsJson()) {
-            System.err.println("initialize failed");
+            System.err.println("initialize settings failed");
             System.exit(-1);
         }
 
@@ -171,11 +185,18 @@ public class MainClass {
         deleteDir(new File("tmp"));
 
         if (!initFoldersAndFiles()) {
-            System.err.println("initialize failed");
+            System.err.println("initialize dependencies failed");
             System.exit(-1);
         }
 
+
         initializeDllInterface();
+
+        try {
+            PluginUtil.loadAllPlugins("plugins");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         Search search = Search.getInstance();
         TaskBar taskBar = TaskBar.getInstance();
@@ -195,6 +216,8 @@ public class MainClass {
                 // 主循环开始
                 Thread.sleep(100);
             }
+            PluginUtil.unloadAllPlugins();
+            SearchBar.getInstance().releaseAllSqlCache();
             CheckHotKey.getInstance().stopListen();
             FileMonitor.INSTANCE.stop_monitor();
             Thread.sleep(8000);

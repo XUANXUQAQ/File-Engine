@@ -1,5 +1,7 @@
 package frames;
 
+import PluginSystem.Plugin;
+import PluginSystem.PluginUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.serializer.SerializerFeature;
@@ -61,6 +63,7 @@ public class SettingsFrame {
     private static SearchBar searchBar;
     private Thread updateThread = null;
     private JFrame frame;
+    private static ImageIcon frameIcon;
     private JTextField textFieldUpdateTime;
     private JTextField textFieldCacheNum;
     private JTextArea textAreaIgnorePath;
@@ -77,16 +80,13 @@ public class SettingsFrame {
     private JButton buttonSaveAndRemoveDesktop;
     private JButton Button3;
     private JScrollPane scrollpane;
-    private JLabel labelplaceholder2;
     private JTextField textFieldHotkey;
     private JLabel labeltip3;
     private JTextField textFieldPriorityFolder;
     private JButton ButtonPriorityFolder;
     private JTabbedPane tabbedPane1;
     private JCheckBox checkBoxAdmin;
-    private JLabel labelplaceholder1;
     private JCheckBox checkBoxLoseFocus;
-    private JLabel labelPlaceHolder3;
     private JLabel labelRunAsAdmin;
     private JTextField textFieldRunAsAdmin;
     private JLabel labelOpenFolder;
@@ -96,34 +96,23 @@ public class SettingsFrame {
     private JScrollPane scrollPaneCmd;
     private JList<Object> listCmds;
     private JButton buttonSave;
-    private JLabel labelPlaceHoder6;
-    private JLabel labelPlaceHolder7;
-    private JLabel labelPlaceHolder8;
     private JLabel labelAbout;
     private JLabel labelAboutGithub;
-    private JLabel labelPlaceHolder12;
-    private JLabel labelPlaceHolder13;
     private JLabel labelGitHubTip;
     private JLabel labelIcon;
-    private JLabel labelPlaceHolder15;
     private JLabel labelGithubIssue;
-    private JLabel labelPalceHolder5;
-    private JLabel labelPlaceHolder16;
-    private JLabel labelPlaceHolder17;
     private JButton buttonCheckUpdate;
     private JLabel labelCopyPath;
     private JTextField textFieldCopyPath;
     private JLabel labelVersion;
-    private JPanel tab1;
-    private JPanel tab2;
-    private JPanel tab3;
-    private JPanel tab5;
-    private JPanel tab6;
-    private JPanel tab8;
+    private JPanel tabGeneral;
+    private JPanel tabSearchSettings;
+    private JPanel tabSearchBarSettings;
+    private JPanel tabHotKey;
+    private JPanel tabCommands;
     private JTextField textFieldTransparency;
     private JLabel labelTransparency;
-    private JLabel labelPlaceHolder5;
-    private JPanel tab7;
+    private JPanel tabColorSettings;
     private JLabel labelColorTip;
     private JTextField textFieldBackgroundDefault;
     private JTextField textFieldFontColorWithCoverage;
@@ -151,18 +140,28 @@ public class SettingsFrame {
     private JLabel labelBeautyEye;
     private JLabel labelFastJson;
     private JLabel labelJna;
-    private JPanel tab4;
+    private JPanel tabLanguage;
     private JList<Object> listLanguage;
     private JLabel labelLanguage;
     private JLabel labelPlaceHolderL;
     private JLabel labelLanTip2;
-    private JLabel labelPlaceHolder0;
     private JLabel labelPlaceHolder1;
     private JLabel labelPlaceHolder;
-    private JLabel labelPlaceHolder14;
     private JLabel labelPlaceHolderWhatever;
-    private JLabel labelPlaceHolderWhatever2;
-    private JLabel labelPlaceHolderN;
+    private JPanel tabPlugin;
+    private JLabel labelInstalledPluginNum;
+    private JLabel labelPluginNum;
+    private JLabel labelPlaceHolderW;
+    private JLabel labelPlaceHolderW2;
+    private JPanel PluginPanel;
+    private JPanel PluginSettingsPanel;
+    private JList<Object> listPlugins;
+    private JLabel PluginIconLabel;
+    private JLabel PluginNamelabel;
+    private JTextArea textAreaDescription;
+    private JLabel labelOfficialSite;
+    private JButton buttonUpdatePlugin;
+    private JPanel tabAbout;
 
 
     private static class SettingsFrameBuilder {
@@ -729,12 +728,56 @@ public class SettingsFrame {
         });
     }
 
+    private void addListPluginMouseListener() {
+        listPlugins.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                String pluginName = (String) listPlugins.getSelectedValue();
+                if (pluginName != null) {
+                    String pluginIdentifier = PluginUtil.getIdentifierByName(pluginName);
+                    Plugin plugin = PluginUtil.getPluginByIdentifier(pluginIdentifier);
+                    ImageIcon icon = plugin.getPluginIcon();
+                    String description = plugin.getDescription();
+                    String officialSite = plugin.getOfficialSite();
+                    if (officialSite != null) {
+                        labelOfficialSite.setText("<html><a href='" + officialSite + "'><font size=\"4\">" + pluginName + "</font></a></html>");
+                    }
+                    PluginIconLabel.setIcon(icon);
+                    PluginNamelabel.setText("<html><body><font size=\"+1\">" + pluginName + "</body></html>");
+                    textAreaDescription.setText(description);
+                    buttonUpdatePlugin.setVisible(true);
+                }
+            }
+        });
+    }
+
+    private void addButtonPluginUpdateCheckListener() {
+        buttonUpdatePlugin.addActionListener(e -> {
+            String pluginName = (String) listPlugins.getSelectedValue();
+            String pluginIdentifier = PluginUtil.getIdentifierByName(pluginName);
+            Plugin plugin = PluginUtil.getPluginByIdentifier(pluginIdentifier);
+            if (plugin.isLatest()) {
+                JOptionPane.showMessageDialog(frame, getTranslation("The current Version is the latest."));
+            } else {
+                int ret = JOptionPane.showConfirmDialog(frame, getTranslation("New version available, do you want to update?"));
+                if (ret == 0) {
+                    try {
+                        DownloadUpdate.getInstance().downLoadFromUrl(plugin.getUpdateURL(), pluginName, "tmp/pluginsUpdate");
+                    } catch (Exception ex) {
+                        JOptionPane.showMessageDialog(frame, getTranslation("Download failed."));
+                    }
+                }
+            }
+        });
+    }
+
     private void initAll() {
         //设置窗口显示
         labelAboutGithub.setText("<html><a href='https://github.com/XUANXUQAQ/File-Engine'><font size=\"4\">File-Engine</font></a></html>");
         labelBeautyEye.setText("1.WebLookAndFeel");
         labelFastJson.setText("2.FastJson");
         labelJna.setText("3.Java-Native-Access");
+        labelPluginNum.setText(String.valueOf(PluginUtil.getInstalledPluginNum()));
         ImageIcon imageIcon = new ImageIcon(SettingsFrame.class.getResource("/icons/frame.png"));
         labelIcon.setIcon(imageIcon);
         labelVersion.setText(getTranslation("Current Version:") + version);
@@ -796,6 +839,9 @@ public class SettingsFrame {
         listCmds.setListData(cmdSet.toArray());
         listLanguage.setListData(languageSet.toArray());
         listLanguage.setSelectedValue(language, true);
+        Object[] plugins = PluginUtil.getPluginArray();
+        listPlugins.setListData(plugins);
+        buttonUpdatePlugin.setVisible(false);
     }
 
     private SettingsFrame() {
@@ -807,6 +853,7 @@ public class SettingsFrame {
         fileMap = new ConcurrentHashMap<>();
         translationMap = new ConcurrentHashMap<>();
         languageSet = new HashSet<>();
+        frameIcon = new ImageIcon(SettingsFrame.class.getResource("/icons/frame.png"));
         readAllSettings();
 
         HotKeyListener = CheckHotKey.getInstance();
@@ -849,6 +896,10 @@ public class SettingsFrame {
 
         addColorChooserLabelListener();
 
+        addListPluginMouseListener();
+
+        addButtonPluginUpdateCheckListener();
+
         initAll();
     }
 
@@ -857,11 +908,12 @@ public class SettingsFrame {
         tabbedPane1.setTitleAt(0, getTranslation("General"));
         tabbedPane1.setTitleAt(1, getTranslation("Search settings"));
         tabbedPane1.setTitleAt(2, getTranslation("Search bar settings"));
-        tabbedPane1.setTitleAt(3, getTranslation("Language settings"));
+        tabbedPane1.setTitleAt(3, getTranslation("Plugins"));
         tabbedPane1.setTitleAt(4, getTranslation("Hotkey settings"));
-        tabbedPane1.setTitleAt(5, getTranslation("My commands"));
-        tabbedPane1.setTitleAt(6, getTranslation("Color settings"));
-        tabbedPane1.setTitleAt(7, getTranslation("About"));
+        tabbedPane1.setTitleAt(5, getTranslation("Language settings"));
+        tabbedPane1.setTitleAt(6, getTranslation("My commands"));
+        tabbedPane1.setTitleAt(7, getTranslation("Color settings"));
+        tabbedPane1.setTitleAt(8, getTranslation("About"));
         checkBox1.setText(getTranslation("Add to startup"));
         buttonSaveAndRemoveDesktop.setText(getTranslation("Backup and remove all desktop files"));
         label4.setText(getTranslation("Set the maximum number of caches:"));
@@ -897,7 +949,9 @@ public class SettingsFrame {
         buttonSave.setText(getTranslation("Save"));
         labelLanTip2.setText(getTranslation("The translation might not be 100% accurate"));
         labelLanguage.setText(getTranslation("Choose a language"));
-        labelVersion.setText(getTranslation(getTranslation("Current Version:") + version));
+        labelVersion.setText(getTranslation("Current Version:") + version);
+        labelInstalledPluginNum.setText(getTranslation("Installed plugins num:"));
+        buttonUpdatePlugin.setText(getTranslation("Check for update"));
     }
 
     private static void initLanguageSet() {
@@ -911,7 +965,7 @@ public class SettingsFrame {
     private static void initTranslations(String language) {
         if (!language.equals("English(US)")) {
             String filePath = fileMap.get(language);
-            try (InputStream inputStream = SettingsFrame.class.getResourceAsStream(filePath); BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(SettingsFrame.class.getResourceAsStream(filePath), StandardCharsets.UTF_8))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
                     String[] record = equalSign.split(line);
@@ -921,7 +975,7 @@ public class SettingsFrame {
 
             }
         } else {
-            translationMap.put("#frame_width", String.valueOf(1100));
+            translationMap.put("#frame_width", String.valueOf(1000));
             translationMap.put("#frame_height", String.valueOf(600));
         }
     }
@@ -1274,15 +1328,19 @@ public class SettingsFrame {
     }
 
     public void showWindow() {
-        frame.setContentPane(SettingsFrameBuilder.instance.panel);
-        URL frameIcon = SettingsFrame.class.getResource("/icons/frame.png");
-        frame.setIconImage(new ImageIcon(frameIcon).getImage());
-        frame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
         frame.setResizable(true);
-        frame.setSize(Integer.parseInt(translationMap.get("#frame_width")), Integer.parseInt(translationMap.get("#frame_height")));
+        int width = Integer.parseInt(translationMap.get("#frame_width"));
+        int height = Integer.parseInt(translationMap.get("#frame_height"));
+
+        panel.setSize(width, height);
+        frame.setSize(width, height);
+        frame.setContentPane(SettingsFrameBuilder.instance.panel);
+        frame.setIconImage(frameIcon.getImage());
+        frame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
         frame.setResizable(false);
-        frame.setLocationRelativeTo(null);
+
         tabbedPane1.setSelectedIndex(0);
+        frame.setLocationRelativeTo(null);
         frame.setVisible(true);
     }
 

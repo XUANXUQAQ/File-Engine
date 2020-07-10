@@ -4,6 +4,8 @@ package frames;
 import DllInterface.FileMonitor;
 import DllInterface.GetAscII;
 import DllInterface.IsLocalDisk;
+import PluginSystem.Plugin;
+import PluginSystem.PluginUtil;
 import SQLiteConfig.SQLiteUtil;
 import getIcon.GetIcon;
 import search.Search;
@@ -20,15 +22,10 @@ import java.awt.event.*;
 import java.io.*;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.Queue;
 import java.util.*;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
@@ -36,9 +33,15 @@ import java.util.regex.Pattern;
 public class SearchBar {
     private static volatile boolean isCacheAndPrioritySearched = false;
     private static volatile boolean isStartSearchLocal = false;
+    private static volatile boolean isLockMouseMotion = false;
+    private static volatile boolean isOpenLastFolderPressed = false;
+    private static volatile boolean isUsing = false;
+    private static volatile boolean isRunAsAdminPressed = false;
+    private static volatile boolean isCopyPathPressed = false;
+    private static volatile boolean timer = false;
+    private static volatile boolean isUserPressed = false;
     private static Border border;
     private JFrame searchBar;
-    private CopyOnWriteArrayList<String> listResults;
     private volatile JLabel label1;
     private volatile JLabel label2;
     private volatile JLabel label3;
@@ -57,14 +60,7 @@ public class SearchBar {
     private Thread searchWaiter = null;
     private static Pattern semicolon;
     private static Pattern resultSplit;
-    private volatile boolean isUserPressed = false;
     private static AtomicInteger runningMode;
-    private volatile boolean isLockMouseMotion = false;
-    private volatile boolean isOpenLastFolderPressed = false;
-    private volatile boolean isUsing = false;
-    private volatile boolean isRunAsAdminPressed = false;
-    private volatile boolean isCopyPathPressed = false;
-    private volatile boolean timer = false;
     private JPanel panel;
     private long mouseWheelTime = 0;
     private int iconSideLength;
@@ -72,15 +68,20 @@ public class SearchBar {
     private ExecutorService cachedThreadPool;
     private ConcurrentLinkedQueue<String> tempResults;
     private ConcurrentLinkedQueue<String> commandQueue;
+    private CopyOnWriteArrayList<String> listResults;
+    private HashMap<String, PreparedStatement> sqlCache;
+    private Set<String> listResultsCopy;
     private volatile String[] searchCase;
     private volatile String searchText;
     private volatile String[] keywords;
     private static Search search;
     private static TaskBar taskBar;
     private static AtomicInteger resultCount;
+    private static volatile Plugin currentUsingPlugin;
 
     private static final int NORMAL_MODE = 0;
     private static final int COMMAND_MODE = 1;
+    private static final int PLUGIN_MODE = 2;
 
     private static class SearchBarBuilder {
         private static SearchBar instance = new SearchBar();
@@ -88,6 +89,10 @@ public class SearchBar {
 
     private SearchBar() {
         listResults = new CopyOnWriteArrayList<>();
+        listResultsCopy = ConcurrentHashMap.newKeySet();
+        tempResults = new ConcurrentLinkedQueue<>();
+        commandQueue = new ConcurrentLinkedQueue<>();
+        sqlCache = new HashMap<>();
         border = BorderFactory.createLineBorder(new Color(73, 162, 255, 255));
         searchBar = new JFrame();
         labelCount = new AtomicInteger(0);
@@ -97,11 +102,9 @@ public class SearchBar {
         resultSplit = Pattern.compile(":");
         panel = new JPanel();
         cachedThreadPool = Executors.newCachedThreadPool();
-        tempResults = new ConcurrentLinkedQueue<>();
-        commandQueue = new ConcurrentLinkedQueue<>();
+
         search = Search.getInstance();
         taskBar = TaskBar.getInstance();
-
 
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize(); // 获取屏幕大小
         int width = screenSize.width;
@@ -272,6 +275,10 @@ public class SearchBar {
                         //直接打开
                         String command = listResults.get(labelCount.get());
                         openWithAdmin(semicolon.split(command)[1]);
+                    } else if (runningMode.get() == PLUGIN_MODE) {
+                        if (currentUsingPlugin != null) {
+                            currentUsingPlugin.mousePressed(e);
+                        }
                     }
                     closedTodo();
                 }
@@ -279,6 +286,11 @@ public class SearchBar {
 
             @Override
             public void mouseReleased(MouseEvent e) {
+                if (runningMode.get() == PLUGIN_MODE) {
+                    if (currentUsingPlugin != null) {
+                        currentUsingPlugin.mouseReleased(e);
+                    }
+                }
             }
 
             @Override
@@ -320,19 +332,16 @@ public class SearchBar {
 
                             if (!getTextFieldText().isEmpty()) {
                                 labelCount.decrementAndGet();
-                                if (labelCount.get() < 0) {
-                                    labelCount.set(0);
-                                }
 
                                 //System.out.println(labelCount);
                                 if (labelCount.get() >= listResults.size()) {
                                     labelCount.set(listResults.size() - 1);
                                 }
+                                if (labelCount.get() <= 0) {
+                                    labelCount.set(0);
+                                }
 
                                 moveUpward(getCurrentPos());
-                            }
-                            if (labelCount.get() < 0) {
-                                labelCount.set(0);
                             }
                         }
                     } else if (40 == key) {
@@ -348,13 +357,13 @@ public class SearchBar {
                             if (isNextLabelValid) {
                                 if (!getTextFieldText().isEmpty()) {
                                     labelCount.incrementAndGet();
-                                    if (labelCount.get() < 0) {
-                                        labelCount.set(0);
-                                    }
 
                                     //System.out.println(labelCount);
                                     if (labelCount.get() >= listResults.size()) {
                                         labelCount.set(listResults.size() - 1);
+                                    }
+                                    if (labelCount.get() <= 0) {
+                                        labelCount.set(0);
                                     }
                                     moveDownward(getCurrentPos());
                                 }
@@ -410,6 +419,13 @@ public class SearchBar {
                         isCopyPathPressed = true;
                     }
                 }
+                if (runningMode.get() == PLUGIN_MODE) {
+                    if (key != 38 && key != 40) {
+                        if (currentUsingPlugin != null) {
+                            currentUsingPlugin.keyPressed(arg0);
+                        }
+                    }
+                }
             }
 
             @Override
@@ -424,11 +440,26 @@ public class SearchBar {
                 } else if (SettingsFrame.getCopyPathKeyCode() == key) {
                     isCopyPathPressed = false;
                 }
+
+                if (runningMode.get() == PLUGIN_MODE) {
+                    if (key != 38 && key != 40) {
+                        if (currentUsingPlugin != null) {
+                            currentUsingPlugin.keyReleased(arg0);
+                        }
+                    }
+                }
             }
 
             @Override
             public void keyTyped(KeyEvent arg0) {
-
+                if (runningMode.get() == PLUGIN_MODE) {
+                    int key = arg0.getKeyCode();
+                    if (key != 38 && key != 40) {
+                        if (currentUsingPlugin != null) {
+                            currentUsingPlugin.keyTyped(arg0);
+                        }
+                    }
+                }
             }
         });
     }
@@ -789,13 +820,13 @@ public class SearchBar {
                 if (isNextLabelValid) {
                     if (!getTextFieldText().isEmpty()) {
                         labelCount.incrementAndGet();
-                        if (labelCount.get() < 0) {
-                            labelCount.set(0);
-                        }
 
                         //System.out.println(labelCount);
                         if (labelCount.get() >= listResults.size()) {
                             labelCount.set(listResults.size() - 1);
+                        }
+                        if (labelCount.get() <= 0) {
+                            labelCount.set(0);
                         }
                         moveDownward(getCurrentPos());
                     }
@@ -808,19 +839,15 @@ public class SearchBar {
                 }
                 if (!getTextFieldText().isEmpty()) {
                     labelCount.getAndDecrement();
-                    if (labelCount.get() < 0) {
-                        labelCount.set(0);
-                    }
 
                     //System.out.println(labelCount);
                     if (labelCount.get() >= listResults.size()) {
                         labelCount.set(listResults.size() - 1);
                     }
-                    moveUpward(getCurrentPos());
-
-                    if (labelCount.get() < 0) {
+                    if (labelCount.get() <= 0) {
                         labelCount.set(0);
                     }
+                    moveUpward(getCurrentPos());
                 }
 
             }
@@ -1114,6 +1141,36 @@ public class SearchBar {
                                 e.printStackTrace();
                             }
                         }
+                    } else if (runningMode.get() == PLUGIN_MODE) {
+                        try {
+                            String command = listResults.get(labelCount.get() - 7);
+                            showPluginResultOnLabel(command, label1, false);
+
+                            command = listResults.get(labelCount.get() - 6);
+                            showPluginResultOnLabel(command, label2, false);
+
+                            command = listResults.get(labelCount.get() - 5);
+                            showPluginResultOnLabel(command, label3, false);
+
+                            command = listResults.get(labelCount.get() - 4);
+                            showPluginResultOnLabel(command, label4, false);
+
+                            command = listResults.get(labelCount.get() - 3);
+                            showPluginResultOnLabel(command, label5, false);
+
+                            command = listResults.get(labelCount.get() - 2);
+                            showPluginResultOnLabel(command, label6, false);
+
+                            command = listResults.get(labelCount.get() - 1);
+                            showPluginResultOnLabel(command, label7, false);
+
+                            command = listResults.get(labelCount.get());
+                            showPluginResultOnLabel(command, label8, true);
+                        } catch (ArrayIndexOutOfBoundsException e) {
+                            if (SettingsFrame.isDebug()) {
+                                e.printStackTrace();
+                            }
+                        }
                     }
                     break;
             }
@@ -1184,6 +1241,36 @@ public class SearchBar {
 
                             command = listResults.get(labelCount.get() + 7);
                             showCommandOnLabel(command, label8, false);
+                        } catch (ArrayIndexOutOfBoundsException e) {
+                            if (SettingsFrame.isDebug()) {
+                                e.printStackTrace();
+                            }
+                        }
+                    } else if (runningMode.get() == PLUGIN_MODE) {
+                        try {
+                            String command = listResults.get(labelCount.get());
+                            showPluginResultOnLabel(command, label1, true);
+
+                            command = listResults.get(labelCount.get() + 1);
+                            showPluginResultOnLabel(command, label2, false);
+
+                            command = listResults.get(labelCount.get() + 2);
+                            showPluginResultOnLabel(command, label3, false);
+
+                            command = listResults.get(labelCount.get() + 3);
+                            showPluginResultOnLabel(command, label4, false);
+
+                            command = listResults.get(labelCount.get() + 4);
+                            showPluginResultOnLabel(command, label5, false);
+
+                            command = listResults.get(labelCount.get() + 5);
+                            showPluginResultOnLabel(command, label6, false);
+
+                            command = listResults.get(labelCount.get() + 6);
+                            showPluginResultOnLabel(command, label7, false);
+
+                            command = listResults.get(labelCount.get() + 7);
+                            showPluginResultOnLabel(command, label8, false);
                         } catch (ArrayIndexOutOfBoundsException e) {
                             if (SettingsFrame.isDebug()) {
                                 e.printStackTrace();
@@ -1420,19 +1507,35 @@ public class SearchBar {
 
     private void addTextFieldDocumentListener() {
         textField.getDocument().addDocumentListener(new DocumentListener() {
+            StringBuilder strb = new StringBuilder();
             @Override
             public void insertUpdate(DocumentEvent e) {
                 clearLabel();
                 listResults.clear();
+                listResultsCopy.clear();
                 tempResults.clear();
                 resultCount.set(0);
                 labelCount.set(0);
                 isCacheAndPrioritySearched = false;
                 startTime = System.currentTimeMillis();
                 timer = true;
-                char first = getTextFieldText().charAt(0);
+                String text = getTextFieldText();
+                char first = text.charAt(0);
                 if (first == ':') {
                     runningMode.set(COMMAND_MODE);
+                } else if (first == '>') {
+                    runningMode.set(PLUGIN_MODE);
+                    String subText = text.substring(1);
+                    String[] s = subText.split(" ");
+                    currentUsingPlugin = PluginUtil.getPluginByIdentifier(s[0]);
+                    int length = s.length;
+                    if (currentUsingPlugin != null && length > 1) {
+                        for (int i = 1; i < length; ++i) {
+                            strb.append(s[i]).append(" ");
+                        }
+                        currentUsingPlugin.textChanged(strb.toString());
+                        strb.delete(0, strb.length());
+                    }
                 } else {
                     runningMode.set(NORMAL_MODE);
                 }
@@ -1442,22 +1545,36 @@ public class SearchBar {
             public void removeUpdate(DocumentEvent e) {
                 clearLabel();
                 listResults.clear();
+                listResultsCopy.clear();
                 tempResults.clear();
                 resultCount.set(0);
                 labelCount.set(0);
                 isCacheAndPrioritySearched = false;
-                String t = getTextFieldText();
+                String text = getTextFieldText();
                 try {
-                    char first = t.charAt(0);
+                    char first = text.charAt(0);
                     if (first == ':') {
                         runningMode.set(COMMAND_MODE);
+                    } else if (first == '>') {
+                        runningMode.set(PLUGIN_MODE);
+                        String subText = text.substring(1);
+                        String[] s = subText.split(" ");
+                        currentUsingPlugin = PluginUtil.getPluginByIdentifier(s[0]);
+                        int length = s.length;
+                        if (currentUsingPlugin != null && length > 1) {
+                            for (int i = 1; i < length; ++i) {
+                                strb.append(s[i]).append(" ");
+                            }
+                            currentUsingPlugin.textChanged(strb.toString());
+                            strb.delete(0, strb.length());
+                        }
                     } else {
                         runningMode.set(NORMAL_MODE);
                     }
                 } catch (StringIndexOutOfBoundsException e1) {
                     runningMode.set(NORMAL_MODE);
                 }
-                if (t.isEmpty()) {
+                if (text.isEmpty()) {
                     panel.repaint();
                     resultCount.set(0);
                     labelCount.set(0);
@@ -1472,8 +1589,7 @@ public class SearchBar {
             @Override
             public void changedUpdate(DocumentEvent e) {
                 startTime = System.currentTimeMillis();
-                listResults.clear();
-                tempResults.clear();
+                timer = false;
             }
         });
     }
@@ -1506,10 +1622,19 @@ public class SearchBar {
                 String record;
                 while (SettingsFrame.isNotMainExit()) {
                     if (isCacheAndPrioritySearched) {
-                        while ((record = tempResults.poll()) != null) {
-                            if (!listResults.contains(record)) {
+                        if (listResults.isEmpty()) {
+                            while ((record = tempResults.poll()) != null) {
                                 resultCount.incrementAndGet();
                                 listResults.add(record);
+                                listResultsCopy.add(record);
+                            }
+                        } else {
+                            while ((record = tempResults.poll()) != null) {
+                                if (!listResultsCopy.contains(record)) {
+                                    resultCount.incrementAndGet();
+                                    listResults.add(record);
+                                    listResultsCopy.add(record);
+                                }
                             }
                         }
                     }
@@ -1519,6 +1644,23 @@ public class SearchBar {
                 if (SettingsFrame.isDebug() && !(e instanceof InterruptedException)) {
                     e.printStackTrace();
                 }
+            }
+        });
+
+        cachedThreadPool.execute(() -> {
+            try {
+                Plugin.MessageStruct messageStruct;
+                while (SettingsFrame.isNotMainExit()) {
+                    if (currentUsingPlugin != null) {
+                        messageStruct = currentUsingPlugin.getMessage();
+                        if (messageStruct != null) {
+                            TaskBar.getInstance().showMessage(messageStruct.caption, messageStruct.message);
+                        }
+                    }
+                    Thread.sleep(50);
+                }
+            } catch (InterruptedException ignored) {
+
             }
         });
 
@@ -1777,269 +1919,269 @@ public class SearchBar {
                         switch (asciiGroup) {
                             case 0:
                                 for (int i = 0; i < 40; i++) {
-                                    command = "SELECT PATH FROM list" + i + ";";
+                                    command = "list" + i;
                                     commandQueue.add(command);
                                 }
                                 break;
                             case 1:
                                 for (int i = 1; i < 40; i++) {
-                                    command = "SELECT PATH FROM list" + i + ";";
+                                    command = "list" + i;
                                     commandQueue.add(command);
                                 }
                                 break;
 
                             case 2:
                                 for (int i = 2; i < 40; i++) {
-                                    command = "SELECT PATH FROM list" + i + ";";
+                                    command = "list" + i;
                                     commandQueue.add(command);
                                 }
                                 break;
 
                             case 3:
                                 for (int i = 3; i < 40; i++) {
-                                    command = "SELECT PATH FROM list" + i + ";";
+                                    command = "list" + i;
                                     commandQueue.add(command);
                                 }
                                 break;
 
                             case 4:
                                 for (int i = 4; i < 40; i++) {
-                                    command = "SELECT PATH FROM list" + i + ";";
+                                    command = "list" + i;
                                     commandQueue.add(command);
                                 }
                                 break;
 
                             case 5:
                                 for (int i = 5; i < 40; i++) {
-                                    command = "SELECT PATH FROM list" + i + ";";
+                                    command = "list" + i;
                                     commandQueue.add(command);
                                 }
                                 break;
                             case 6:
                                 for (int i = 6; i < 40; i++) {
-                                    command = "SELECT PATH FROM list" + i + ";";
+                                    command = "list" + i;
                                     commandQueue.add(command);
                                 }
                                 break;
 
                             case 7:
                                 for (int i = 7; i < 40; i++) {
-                                    command = "SELECT PATH FROM list" + i + ";";
+                                    command = "list" + i;
                                     commandQueue.add(command);
                                 }
                                 break;
 
                             case 8:
                                 for (int i = 8; i < 40; i++) {
-                                    command = "SELECT PATH FROM list" + i + ";";
+                                    command = "list" + i;
                                     commandQueue.add(command);
                                 }
                                 break;
 
                             case 9:
                                 for (int i = 9; i < 40; i++) {
-                                    command = "SELECT PATH FROM list" + i + ";";
+                                    command = "list" + i;
                                     commandQueue.add(command);
                                 }
                                 break;
 
                             case 10:
                                 for (int i = 10; i < 40; i++) {
-                                    command = "SELECT PATH FROM list" + i + ";";
+                                    command = "list" + i;
                                     commandQueue.add(command);
                                 }
                                 break;
 
                             case 11:
                                 for (int i = 11; i < 40; i++) {
-                                    command = "SELECT PATH FROM list" + i + ";";
+                                    command = "list" + i;
                                     commandQueue.add(command);
                                 }
                                 break;
 
                             case 12:
                                 for (int i = 12; i < 40; i++) {
-                                    command = "SELECT PATH FROM list" + i + ";";
+                                    command = "list" + i;
                                     commandQueue.add(command);
                                 }
                                 break;
 
                             case 13:
                                 for (int i = 13; i < 40; i++) {
-                                    command = "SELECT PATH FROM list" + i + ";";
+                                    command = "list" + i;
                                     commandQueue.add(command);
                                 }
                                 break;
 
                             case 14:
                                 for (int i = 14; i < 40; i++) {
-                                    command = "SELECT PATH FROM list" + i + ";";
+                                    command = "list" + i;
                                     commandQueue.add(command);
                                 }
                                 break;
 
                             case 15:
                                 for (int i = 15; i < 40; i++) {
-                                    command = "SELECT PATH FROM list" + i + ";";
+                                    command = "list" + i;
                                     commandQueue.add(command);
                                 }
                                 break;
 
                             case 16:
                                 for (int i = 16; i < 40; i++) {
-                                    command = "SELECT PATH FROM list" + i + ";";
+                                    command = "list" + i;
                                     commandQueue.add(command);
                                 }
                                 break;
 
                             case 17:
                                 for (int i = 17; i < 40; i++) {
-                                    command = "SELECT PATH FROM list" + i + ";";
+                                    command = "list" + i;
                                     commandQueue.add(command);
                                 }
                                 break;
 
                             case 18:
                                 for (int i = 18; i < 40; i++) {
-                                    command = "SELECT PATH FROM list" + i + ";";
+                                    command = "list" + i;
                                     commandQueue.add(command);
                                 }
                                 break;
 
                             case 19:
                                 for (int i = 19; i < 40; i++) {
-                                    command = "SELECT PATH FROM list" + i + ";";
+                                    command = "list" + i;
                                     commandQueue.add(command);
                                 }
                                 break;
 
                             case 20:
                                 for (int i = 20; i < 40; i++) {
-                                    command = "SELECT PATH FROM list" + i + ";";
+                                    command = "list" + i;
                                     commandQueue.add(command);
                                 }
                                 break;
 
                             case 21:
                                 for (int i = 21; i < 40; i++) {
-                                    command = "SELECT PATH FROM list" + i + ";";
+                                    command = "list" + i;
                                     commandQueue.add(command);
                                 }
                                 break;
 
                             case 22:
                                 for (int i = 22; i < 40; i++) {
-                                    command = "SELECT PATH FROM list" + i + ";";
+                                    command = "list" + i;
                                     commandQueue.add(command);
                                 }
                                 break;
 
                             case 23:
                                 for (int i = 23; i < 40; i++) {
-                                    command = "SELECT PATH FROM list" + i + ";";
+                                    command = "list" + i;
                                     commandQueue.add(command);
                                 }
                                 break;
 
                             case 24:
                                 for (int i = 24; i < 40; i++) {
-                                    command = "SELECT PATH FROM list" + i + ";";
+                                    command = "list" + i;
                                     commandQueue.add(command);
                                 }
                                 break;
 
                             case 25:
                                 for (int i = 25; i < 40; i++) {
-                                    command = "SELECT PATH FROM list" + i + ";";
+                                    command = "list" + i;
                                     commandQueue.add(command);
                                 }
                                 break;
                             case 26:
                                 for (int i = 26; i < 40; i++) {
-                                    command = "SELECT PATH FROM list" + i + ";";
+                                    command = "list" + i;
                                     commandQueue.add(command);
                                 }
                                 break;
                             case 27:
                                 for (int i = 27; i < 40; i++) {
-                                    command = "SELECT PATH FROM list" + i + ";";
+                                    command = "list" + i;
                                     commandQueue.add(command);
                                 }
                                 break;
                             case 28:
                                 for (int i = 28; i < 40; i++) {
-                                    command = "SELECT PATH FROM list" + i + ";";
+                                    command = "list" + i;
                                     commandQueue.add(command);
                                 }
                                 break;
                             case 29:
                                 for (int i = 29; i < 40; i++) {
-                                    command = "SELECT PATH FROM list" + i + ";";
+                                    command = "list" + i;
                                     commandQueue.add(command);
                                 }
                                 break;
                             case 30:
                                 for (int i = 30; i < 40; i++) {
-                                    command = "SELECT PATH FROM list" + i + ";";
+                                    command = "list" + i;
                                     commandQueue.add(command);
                                 }
                                 break;
                             case 31:
                                 for (int i = 31; i < 40; i++) {
-                                    command = "SELECT PATH FROM list" + i + ";";
+                                    command = "list" + i;
                                     commandQueue.add(command);
                                 }
                                 break;
                             case 32:
                                 for (int i = 32; i < 40; i++) {
-                                    command = "SELECT PATH FROM list" + i + ";";
+                                    command = "list" + i;
                                     commandQueue.add(command);
                                 }
                                 break;
                             case 33:
                                 for (int i = 33; i < 40; i++) {
-                                    command = "SELECT PATH FROM list" + i + ";";
+                                    command = "list" + i;
                                     commandQueue.add(command);
                                 }
                                 break;
                             case 34:
                                 for (int i = 34; i < 40; i++) {
-                                    command = "SELECT PATH FROM list" + i + ";";
+                                    command = "list" + i;
                                     commandQueue.add(command);
                                 }
                                 break;
                             case 35:
                                 for (int i = 35; i < 40; i++) {
-                                    command = "SELECT PATH FROM list" + i + ";";
+                                    command = "list" + i;
                                     commandQueue.add(command);
                                 }
                                 break;
                             case 36:
                                 for (int i = 36; i < 40; i++) {
-                                    command = "SELECT PATH FROM list" + i + ";";
+                                    command = "list" + i;
                                     commandQueue.add(command);
                                 }
                                 break;
                             case 37:
                                 for (int i = 37; i < 40; i++) {
-                                    command = "SELECT PATH FROM list" + i + ";";
+                                    command = "list" + i;
                                     commandQueue.add(command);
                                 }
                                 break;
                             case 38:
                                 for (int i = 38; i < 40; i++) {
-                                    command = "SELECT PATH FROM list" + i + ";";
+                                    command = "list" + i;
                                     commandQueue.add(command);
                                 }
                                 break;
                             case 39:
                                 for (int i = 39; i < 40; i++) {
-                                    command = "SELECT PATH FROM list" + i + ";";
+                                    command = "list" + i;
                                     commandQueue.add(command);
                                 }
                                 break;
                             case 40:
-                                command = "SELECT PATH FROM list40;";
+                                command = "list40";
                                 commandQueue.add(command);
                                 break;
                         }
@@ -2053,23 +2195,20 @@ public class SearchBar {
 
         cachedThreadPool.execute(() -> {
             try {
+                String column;
                 while (SettingsFrame.isNotMainExit()) {
-                    String command;
-                    try (Statement stmt = SQLiteUtil.getStatement("jdbc:sqlite:data.db")) {
-                        while (SettingsFrame.isNotMainExit()) {
-                            if (runningMode.get() == NORMAL_MODE) {
-                                while ((command = commandQueue.poll()) != null) {
-                                    searchAndAddToTempResults(System.currentTimeMillis(), command, stmt);
-                                }
+                    if (runningMode.get() == NORMAL_MODE) {
+                        try {
+                            while ((column = commandQueue.poll()) != null) {
+                                searchAndAddToTempResults(System.currentTimeMillis(), column);
                             }
-                            Thread.sleep(10);
-                        }
-                    } catch (SQLException e) {
-                        if (SettingsFrame.isDebug()) {
-                            e.printStackTrace();
+                        } catch (SQLException e) {
+                            if (SettingsFrame.isDebug()) {
+                                e.printStackTrace();
+                            }
                         }
                     }
-                    Thread.sleep(500);
+                    Thread.sleep(10);
                 }
             } catch (InterruptedException e) {
                 SettingsFrame.isDebug();
@@ -2093,6 +2232,7 @@ public class SearchBar {
                             clearLabel();
                         }
                         listResults.clear();
+                        listResultsCopy.clear();
                         tempResults.clear();
                         String text = getTextFieldText();
                         if (search.isUsable()) {
@@ -2126,6 +2266,7 @@ public class SearchBar {
                                     if (i.startsWith(text)) {
                                         resultCount.incrementAndGet();
                                         listResults.add(SettingsFrame.getTranslation("Run command") + i);
+                                        listResultsCopy.add(SettingsFrame.getTranslation("Run command") + i);
                                     }
                                     String[] cmdInfo = semicolon.split(i);
                                     if (cmdInfo[0].equals(text)) {
@@ -2154,7 +2295,17 @@ public class SearchBar {
                                 searchPriorityFolder();
                                 searchCache();
                                 isCacheAndPrioritySearched = true;
+                            } else if (runningMode.get() == PLUGIN_MODE) {
+                                String result;
+                                if (currentUsingPlugin != null) {
+                                    while (runningMode.get() == PLUGIN_MODE && (result = currentUsingPlugin.pollFromResultQueue()) != null) {
+                                        listResults.add(result);
+                                        listResultsCopy.add(result);
+                                        Thread.sleep(10);
+                                    }
+                                }
                             }
+
                             showResults(true, false, false, false,
                                     false, false, false, false);
 
@@ -2248,7 +2399,7 @@ public class SearchBar {
             long updateTimeLimit = SettingsFrame.getUpdateTimeLimit() * 1000;
             try {
                 while (SettingsFrame.isNotMainExit()) {
-                    try (Statement stmt = SQLiteUtil.getStatement("jdbc:sqlite:data.db")) {
+                    try (Statement stmt = SQLiteUtil.getStatement()) {
                         while (SettingsFrame.isNotMainExit()) {
                             count += 1000;
                             if (count >= updateTimeLimit && !isUsing && !search.isManualUpdate()) {
@@ -2259,7 +2410,7 @@ public class SearchBar {
                             }
                             Thread.sleep(1000);
                         }
-                    } catch (SQLException | InterruptedException e) {
+                    } catch (Exception e) {
                         if (SettingsFrame.isDebug()) {
                             e.printStackTrace();
                         }
@@ -2278,13 +2429,13 @@ public class SearchBar {
                 while (SettingsFrame.isNotMainExit()) {
                     if (search.isManualUpdate()) {
                         search.setUsable(false);
-                        try (Statement stmt = SQLiteUtil.getStatement("jdbc:sqlite:data.db")) {
+                        try (Statement stmt = SQLiteUtil.getStatement()) {
                             search.updateLists(SettingsFrame.getIgnorePath(), SettingsFrame.getSearchDepth(), stmt);
                         }
                     }
                     Thread.sleep(10);
                 }
-            } catch (InterruptedException | SQLException e) {
+            } catch (Exception e) {
                 if (SettingsFrame.isDebug() && !(e instanceof InterruptedException)) {
                     e.printStackTrace();
                 }
@@ -2366,9 +2517,10 @@ public class SearchBar {
                 }
             } else {
                 if (isExist(path)) {
-                    if (!listResults.contains(path)) {
+                    if (!listResultsCopy.contains(path)) {
                         resultCount.incrementAndGet();
                         listResults.add(path);
+                        listResultsCopy.add(path);
                     }
                     if (SettingsFrame.isDebug()) {
                         System.out.println("Adding record to listResults:" + path);
@@ -2381,13 +2533,29 @@ public class SearchBar {
         return resultCount.get() >= 100;
     }
 
-    private void searchAndAddToTempResults(long time, String command, Statement stmt) throws SQLException {
+    public void releaseAllSqlCache() {
+        for (String each : sqlCache.keySet()) {
+            try {
+                sqlCache.get(each).close();
+            } catch (SQLException ignored) {
+
+            }
+        }
+    }
+
+    private void searchAndAddToTempResults(long time, String column) throws SQLException {
         //为label添加结果
         ResultSet resultSet;
         String each;
         boolean isResultsExcessive = false;
+        String pSql = "SELECT PATH FROM " + column + ";";
+        PreparedStatement pStmt;
+        if ((pStmt = sqlCache.get(pSql)) == null) {
+            pStmt = SQLiteUtil.getConnection().prepareStatement(pSql);
+            sqlCache.put(pSql, pStmt);
+        }
 
-        resultSet = stmt.executeQuery(command);
+        resultSet = pStmt.executeQuery();
         while (resultSet.next()) {
             each = resultSet.getString("PATH");
             if (search.isUsable()) {
@@ -2398,6 +2566,7 @@ public class SearchBar {
                 break;
             }
         }
+        resultSet.close();
     }
 
     public void showSearchbar() {
@@ -2418,6 +2587,18 @@ public class SearchBar {
         label.setIcon(icon);
         label.setBorder(border);
         label.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>" + getParentPath(path) + "</body></html>");
+        if (isChosen) {
+            label.setBackground(labelColor);
+        } else {
+            label.setBackground(backgroundColor);
+        }
+    }
+
+    private void showPluginResultOnLabel(String result, JLabel label, boolean isChosen) {
+        ImageIcon icon = GetIcon.getBigIcon(result, iconSideLength, iconSideLength);
+        label.setIcon(icon);
+        label.setBorder(border);
+        label.setText(result);
         if (isChosen) {
             label.setBackground(labelColor);
         } else {
@@ -2495,6 +2676,34 @@ public class SearchBar {
 
                 command = listResults.get(7);
                 showCommandOnLabel(command, label8, isLabel8Chosen);
+            } catch (IndexOutOfBoundsException ignored) {
+
+            }
+        } else if (runningMode.get() == PLUGIN_MODE) {
+            try {
+                String command = listResults.get(0);
+                showPluginResultOnLabel(command, label1, isLabel1Chosen);
+
+                command = listResults.get(1);
+                showPluginResultOnLabel(command, label2, isLabel2Chosen);
+
+                command = listResults.get(2);
+                showPluginResultOnLabel(command, label3, isLabel3Chosen);
+
+                command = listResults.get(3);
+                showPluginResultOnLabel(command, label4, isLabel4Chosen);
+
+                command = listResults.get(4);
+                showPluginResultOnLabel(command, label5, isLabel5Chosen);
+
+                command = listResults.get(5);
+                showPluginResultOnLabel(command, label6, isLabel6Chosen);
+
+                command = listResults.get(6);
+                showPluginResultOnLabel(command, label7, isLabel7Chosen);
+
+                command = listResults.get(7);
+                showPluginResultOnLabel(command, label8, isLabel8Chosen);
             } catch (IndexOutOfBoundsException ignored) {
 
             }
@@ -2703,9 +2912,10 @@ public class SearchBar {
                         } else {
                             if (check(eachCache)) {
                                 isCacheRepeated = true;
-                                if (!listResults.contains(eachCache)) {
+                                if (!listResultsCopy.contains(eachCache)) {
                                     resultCount.incrementAndGet();
                                     listResults.add(eachCache);
+                                    listResultsCopy.add(eachCache);
                                 }
                             }
                         }
@@ -2787,6 +2997,7 @@ public class SearchBar {
         labelCount.set(0);
         resultCount.set(0);
         listResults.clear();
+        listResultsCopy.clear();
         tempResults.clear();
         textField.setText(null);
         isUserPressed = false;
