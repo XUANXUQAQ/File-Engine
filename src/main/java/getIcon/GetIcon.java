@@ -37,6 +37,9 @@ public class GetIcon {
             initIconCache(width, height);
             isInitialized = true;
         }
+        if (path == null) {
+            return null;
+        }
         File f = new File(path);
         String lowerCase = path.toLowerCase();
         if (f.exists()) {

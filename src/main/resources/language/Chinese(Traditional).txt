@@ -1,4 +1,4 @@
-#frame_width=942
+#frame_width=1000
 #frame_height=600
 General=常規
 Search settings=搜索設置
@@ -89,3 +89,8 @@ Files with the same name are detected, please move them by yourself=檢測到同
 Choose a language=選擇一種語言
 cancel=取消
 Save successfully=保存成功
+Installed plugins num:=已安裝的插件數量：
+The current Version is the latest.=當前版本是最新的。
+New version available, do you want to update?=有可用的新版本，您要更新嗎？
+Download failed.=下載失敗。
+Plugins=插件

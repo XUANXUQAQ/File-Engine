@@ -2,14 +2,13 @@ package search;
 
 import DllInterface.IsLocalDisk;
 import DllInterface.isNTFS;
+import SQLiteConfig.SQLiteUtil;
 import frames.SearchBar;
 import frames.SettingsFrame;
 import frames.TaskBar;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Set;
@@ -352,23 +351,6 @@ public class Search {
         }
     }
 
-    public static void initDatabase() {
-        String sql = "CREATE TABLE list";
-        try (Connection conn = DriverManager.getConnection("jdbc:sqlite:data.db"); Statement stmt = conn.createStatement()) {
-            getInstance().executeAllCommands(stmt);
-            stmt.execute("BEGIN;");
-            for (int i = 0; i <= 40; i++) {
-                String command = sql + i + " " + "(PATH text unique)" + ";";
-                stmt.executeUpdate(command);
-            }
-            stmt.execute("COMMIT;");
-        } catch (Exception e) {
-            if (SettingsFrame.isDebug()) {
-                e.printStackTrace();
-            }
-        }
-    }
-
     public boolean isManualUpdate() {
         return isManualUpdate;
     }
@@ -502,6 +484,10 @@ public class Search {
             commandSet.add("DROP INDEX IF EXISTS list" + i + "_index;");
         }
         executeAllCommands(stmt);
-        initDatabase();
+        try {
+            SQLiteUtil.createAllTables();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
