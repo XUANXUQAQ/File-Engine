@@ -16,6 +16,7 @@ tmp/
 .settings/
 out/
 user/
+plugins/
 cmds.txt
 gc.log
 TEST
