@@ -1,10 +1,8 @@
-package PluginSystem;
+package FileEngine.PluginSystem;
 
 import com.alibaba.fastjson.JSONObject;
 
 import java.io.*;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -13,8 +11,8 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
 public class PluginUtil {
-    private static ConcurrentHashMap<String, Plugin> pluginMap = new ConcurrentHashMap<>();
-    private static ConcurrentHashMap<String, String> nameIdentifierMap = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, Plugin> pluginMap = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, String> nameIdentifierMap = new ConcurrentHashMap<>();
 
     public static Plugin getPluginByIdentifier(String identifier) {
         return pluginMap.get(identifier);
@@ -43,12 +41,11 @@ public class PluginUtil {
         }
     }
 
-    private static void loadPlugin(File jar, String className, String identifier) throws Exception {
-        ClassLoader cl = new URLClassLoader(new URL[]{jar.toURI().toURL()});
-        Class<?> cls = cl.loadClass(className);
-        Plugin plugin = (Plugin) cls.getDeclaredConstructor().newInstance();
+    private static void loadPlugin(File pluginFile, String className, String identifier) throws Exception {
+        //TODO 实例化插件
+        /*Plugin plugin = (Plugin) ;
         plugin.loadPlugin();
-        pluginMap.put(identifier, plugin);
+        pluginMap.put(identifier, plugin);*/
     }
 
     public static void unloadAllPlugins() {

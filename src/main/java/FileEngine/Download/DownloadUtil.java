@@ -1,6 +1,6 @@
-package download;
+package FileEngine.Download;
 
-import frames.SettingsFrame;
+import FileEngine.Frames.SettingsFrame;
 
 import javax.swing.*;
 import java.awt.*;
@@ -10,19 +10,19 @@ import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
 
-public class DownloadUpdate {
-    private JFrame frame;
-    private JProgressBar progressBar;
+public class DownloadUtil {
+    private final JFrame frame;
+    private final JProgressBar progressBar;
 
     private static class DownloadUpdateBuilder {
-        private static DownloadUpdate instance = new DownloadUpdate();
+        private static final DownloadUtil instance = new DownloadUtil();
     }
 
-    public static DownloadUpdate getInstance() {
+    public static DownloadUtil getInstance() {
         return DownloadUpdateBuilder.instance;
     }
 
-    private DownloadUpdate() {
+    private DownloadUtil() {
         frame = new JFrame();
         progressBar = new JProgressBar();
         JPanel panel = new JPanel();

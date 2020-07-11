@@ -80,6 +80,8 @@ int main(int argc, char* argv[])
             searchFiles(searchPath, "*");
         }
 
+        sqlite3_exec(db, "BEGIN;", 0, 0, 0);
+
         executeAll(command0, "INSERT INTO list0(PATH) VALUES(?);");
         executeAll(command1, "INSERT INTO list1(PATH) VALUES(?);");
         executeAll(command2, "INSERT INTO list2(PATH) VALUES(?);");
@@ -122,6 +124,7 @@ int main(int argc, char* argv[])
         executeAll(command39, "INSERT INTO list39(PATH) VALUES(?);");
         executeAll(command40, "INSERT INTO list40(PATH) VALUES(?);");
 
+        sqlite3_exec(db, "COMMIT;", 0, 0, 0);
         sqlite3_close(db);
         return 0;
     }

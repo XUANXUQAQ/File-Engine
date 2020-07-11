@@ -1,8 +1,8 @@
-package hotkeyListener;
+package FileEngine.HotkeyListener;
 
-import DllInterface.HotkeyListener;
-import frames.SearchBar;
-import frames.SettingsFrame;
+import FileEngine.DllInterface.HotkeyListener;
+import FileEngine.Frames.SearchBar;
+import FileEngine.Frames.SettingsFrame;
 
 import java.awt.event.KeyEvent;
 import java.util.HashMap;
@@ -12,12 +12,12 @@ import java.util.regex.Pattern;
 
 public class CheckHotKey {
 
-    private HashMap<String, Integer> map;
-    private ExecutorService threadPool;
-    private Pattern plus;
+    private final HashMap<String, Integer> map;
+    private final ExecutorService threadPool;
+    private final Pattern plus;
 
     private static class CheckHotKeyBuilder {
-        private static CheckHotKey instance = new CheckHotKey();
+        private static final CheckHotKey instance = new CheckHotKey();
     }
 
     public static CheckHotKey getInstance() {

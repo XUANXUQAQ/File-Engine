@@ -1,10 +1,10 @@
-package DllInterface;
+package FileEngine.DllInterface;
 
 import com.sun.jna.Library;
 import com.sun.jna.Native;
 
 public interface HotkeyListener extends Library {
-    HotkeyListener INSTANCE = Native.load("hotkeyListener", HotkeyListener.class);
+    HotkeyListener INSTANCE = Native.load("HotkeyListener", HotkeyListener.class);
 
     void registerHotKey(int key1, int key2, int key3, int key4, int key5);
 

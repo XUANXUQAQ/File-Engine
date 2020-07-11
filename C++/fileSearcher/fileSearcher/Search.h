@@ -15,47 +15,47 @@
 
 using namespace std;
 
-vector<string> command0;
-vector<string> command1;
-vector<string> command2;
-vector<string> command3;
-vector<string> command4;
-vector<string> command5;
-vector<string> command6;
-vector<string> command7;
-vector<string> command8;
-vector<string> command9;
-vector<string> command10;
-vector<string> command11;
-vector<string> command12;
-vector<string> command13;
-vector<string> command14;
-vector<string> command15;
-vector<string> command16;
-vector<string> command17;
-vector<string> command18;
-vector<string> command19;
-vector<string> command20;
-vector<string> command21;
-vector<string> command22;
-vector<string> command23;
-vector<string> command24;
-vector<string> command25;
-vector<string> command26;
-vector<string> command27;
-vector<string> command28;
-vector<string> command29;
-vector<string> command30;
-vector<string> command31;
-vector<string> command32;
-vector<string> command33;
-vector<string> command34;
-vector<string> command35;
-vector<string> command36;
-vector<string> command37;
-vector<string> command38;
-vector<string> command39;
-vector<string> command40;
+vector<string*> command0;
+vector<string*> command1;
+vector<string*> command2;
+vector<string*> command3;
+vector<string*> command4;
+vector<string*> command5;
+vector<string*> command6;
+vector<string*> command7;
+vector<string*> command8;
+vector<string*> command9;
+vector<string*> command10;
+vector<string*> command11;
+vector<string*> command12;
+vector<string*> command13;
+vector<string*> command14;
+vector<string*> command15;
+vector<string*> command16;
+vector<string*> command17;
+vector<string*> command18;
+vector<string*> command19;
+vector<string*> command20;
+vector<string*> command21;
+vector<string*> command22;
+vector<string*> command23;
+vector<string*> command24;
+vector<string*> command25;
+vector<string*> command26;
+vector<string*> command27;
+vector<string*> command28;
+vector<string*> command29;
+vector<string*> command30;
+vector<string*> command31;
+vector<string*> command32;
+vector<string*> command33;
+vector<string*> command34;
+vector<string*> command35;
+vector<string*> command36;
+vector<string*> command37;
+vector<string*> command38;
+vector<string*> command39;
+vector<string*> command40;
 vector<string> ignorePathVector;
 
 int searchDepth;
@@ -72,8 +72,10 @@ bool isIgnore(string path);
 void search(string path, string exd);
 void searchIgnoreSearchDepth(string path, string exd);
 std::wstring StringToWString(const std::string& str);
-void executeAll(vector<string>& vec, const char* init);
+void executeAll(vector<string*>& vec, const char* init);
 void initAllVector();
+std::string to_utf8(const std::wstring& str);
+std::string to_utf8(const wchar_t* buffer, int len);
 int getAscIISum(string name);
 
 
@@ -123,156 +125,157 @@ void initAllVector() {
 
 void saveResult(string path, int ascII)
 {
+    string* _path = new string(to_utf8(StringToWString(path)));
     int asciiGroup = ascII / 100;
     switch (asciiGroup)
     {
     case 0:
-        command0.emplace_back(path);
+        command0.emplace_back(_path);
         break;
 
     case 1:
-        command1.emplace_back(path);
+        command1.emplace_back(_path);
         break;
 
     case 2:
-        command2.emplace_back(path);
+        command2.emplace_back(_path);
         break;
 
     case 3:
-        command3.emplace_back(path);
+        command3.emplace_back(_path);
         break;
 
     case 4:
-        command4.emplace_back(path);
+        command4.emplace_back(_path);
         break;
 
     case 5:
-        command5.emplace_back(path);
+        command5.emplace_back(_path);
         break;
     case 6:
-        command6.emplace_back(path);
+        command6.emplace_back(_path);
         break;
 
     case 7:
-        command7.emplace_back(path);
+        command7.emplace_back(_path);
         break;
 
     case 8:
-        command8.emplace_back(path);
+        command8.emplace_back(_path);
         break;
 
     case 9:
-        command9.emplace_back(path);
+        command9.emplace_back(_path);
         break;
 
     case 10:
-        command10.emplace_back(path);
+        command10.emplace_back(_path);
         break;
 
     case 11:
-        command11.emplace_back(path);
+        command11.emplace_back(_path);
         break;
 
     case 12:
-        command12.emplace_back(path);
+        command12.emplace_back(_path);
         break;
 
     case 13:
-        command13.emplace_back(path);
+        command13.emplace_back(_path);
         break;
 
     case 14:
-        command14.emplace_back(path);
+        command14.emplace_back(_path);
         break;
 
     case 15:
-        command15.emplace_back(path);
+        command15.emplace_back(_path);
         break;
 
     case 16:
-        command16.emplace_back(path);
+        command16.emplace_back(_path);
         break;
 
     case 17:
-        command17.emplace_back(path);
+        command17.emplace_back(_path);
         break;
 
     case 18:
-        command18.emplace_back(path);
+        command18.emplace_back(_path);
         break;
 
     case 19:
-        command19.emplace_back(path);
+        command19.emplace_back(_path);
         break;
 
     case 20:
-        command20.emplace_back(path);
+        command20.emplace_back(_path);
         break;
 
     case 21:
-        command21.emplace_back(path);
+        command21.emplace_back(_path);
         break;
 
     case 22:
-        command22.emplace_back(path);
+        command22.emplace_back(_path);
         break;
 
     case 23:
-        command23.emplace_back(path);
+        command23.emplace_back(_path);
         break;
 
     case 24:
-        command24.emplace_back(path);
+        command24.emplace_back(_path);
         break;
 
     case 25:
-        command25.emplace_back(path);
+        command25.emplace_back(_path);
         break;
 
     case 26:
-        command26.emplace_back(path);
+        command26.emplace_back(_path);
         break;
     case 27:
-        command27.emplace_back(path);
+        command27.emplace_back(_path);
         break;
     case 28:
-        command28.emplace_back(path);
+        command28.emplace_back(_path);
         break;
     case 29:
-        command29.emplace_back(path);
+        command29.emplace_back(_path);
         break;
     case 30:
-        command30.emplace_back(path);
+        command30.emplace_back(_path);
         break;
     case 31:
-        command31.emplace_back(path);
+        command31.emplace_back(_path);
         break;
     case 32:
-        command32.emplace_back(path);
+        command32.emplace_back(_path);
         break;
     case 33:
-        command33.emplace_back(path);
+        command33.emplace_back(_path);
         break;
     case 34:
-        command34.emplace_back(path);
+        command34.emplace_back(_path);
         break;
     case 35:
-        command35.emplace_back(path);
+        command35.emplace_back(_path);
         break;
     case 36:
-        command36.emplace_back(path);
+        command36.emplace_back(_path);
         break;
     case 37:
-        command37.emplace_back(path);
+        command37.emplace_back(_path);
         break;
     case 38:
-        command38.emplace_back(path);
+        command38.emplace_back(_path);
         break;
     case 39:
-        command39.emplace_back(path);
+        command39.emplace_back(_path);
         break;
     case 40:
-        command40.emplace_back(path);
+        command40.emplace_back(_path);
         break;
 
     default:
@@ -324,7 +327,7 @@ bool isIgnore(string path)
     }
     transform(path.begin(), path.end(), path.begin(), ::tolower);
     size_t size = ignorePathVector.size();
-    for (int i = 0; i < size; i++)
+    for (size_t i = 0; i < size; i++)
     {
         if (path.find(ignorePathVector[i]) != string::npos)
         {
@@ -399,8 +402,7 @@ void search(string path, string exd)
     }
 }
 
-void executeAll(vector<string>& vec, const char* init) {
-    sqlite3_exec(db, "BEGIN;", NULL, NULL, NULL);
+void executeAll(vector<string*>& vec, const char* init) {
     sqlite3_stmt* stmt = NULL;
     string str;
     size_t rc = sqlite3_prepare_v2(db, init, strlen(init), &stmt, NULL);
@@ -408,14 +410,13 @@ void executeAll(vector<string>& vec, const char* init) {
         cout << "error preparing statement" << endl;
         exit(-1);
     }
-    for (vector<string>::iterator iter = vec.begin(); iter != vec.end(); ++iter) {
-        str = *iter;
+    for (vector<string*>::iterator iter = vec.begin(); iter != vec.end(); ++iter) {
+        str = *(*iter);
         sqlite3_reset(stmt);
         sqlite3_bind_text(stmt, 1, str.c_str(), -1, SQLITE_STATIC);
         sqlite3_step(stmt);
     }
     sqlite3_finalize(stmt);
-    sqlite3_exec(db, "COMMIT;", NULL, NULL, NULL);
 }
 
 void searchFiles(const char* path, const char* exd)
@@ -506,7 +507,7 @@ int getAscIISum(string name)
 {
     int sum = 0;
     size_t length = name.length();
-    for (int i = 0; i < length; i++)
+    for (size_t i = 0; i < length; i++)
     {
         if (name[i] > 0)
         {

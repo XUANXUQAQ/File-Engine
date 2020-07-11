@@ -1,13 +1,13 @@
-package frames;
+package FileEngine.Frames;
 
-import PluginSystem.Plugin;
-import PluginSystem.PluginUtil;
+import FileEngine.PluginSystem.Plugin;
+import FileEngine.PluginSystem.PluginUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.serializer.SerializerFeature;
-import download.DownloadUpdate;
-import hotkeyListener.CheckHotKey;
-import moveFiles.moveFiles;
+import FileEngine.Download.DownloadUtil;
+import FileEngine.HotkeyListener.CheckHotKey;
+import FileEngine.MoveFiles.MoveFilesUtil;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileSystemView;
@@ -165,7 +165,7 @@ public class SettingsFrame {
 
 
     private static class SettingsFrameBuilder {
-        private static SettingsFrame instance = new SettingsFrame();
+        private static final SettingsFrame instance = new SettingsFrame();
     }
 
     public static void set64Bit(boolean b) {
@@ -762,7 +762,7 @@ public class SettingsFrame {
                 int ret = JOptionPane.showConfirmDialog(frame, getTranslation("New version available, do you want to update?"));
                 if (ret == 0) {
                     try {
-                        DownloadUpdate.getInstance().downLoadFromUrl(plugin.getUpdateURL(), pluginName, "tmp/pluginsUpdate");
+                        DownloadUtil.getInstance().downLoadFromUrl(plugin.getUpdateURL(), pluginName, "tmp/pluginsUpdate");
                     } catch (Exception ex) {
                         JOptionPane.showMessageDialog(frame, getTranslation("Download failed."));
                     }
@@ -781,11 +781,7 @@ public class SettingsFrame {
         ImageIcon imageIcon = new ImageIcon(SettingsFrame.class.getResource("/icons/frame.png"));
         labelIcon.setIcon(imageIcon);
         labelVersion.setText(getTranslation("Current Version:") + version);
-        if (isStartup) {
-            checkBox1.setSelected(true);
-        } else {
-            checkBox1.setSelected(false);
-        }
+        checkBox1.setSelected(isStartup);
         textFieldUpdateTime.setText(String.valueOf(updateTimeLimit));
         textAreaIgnorePath.setText(ignorePath.replaceAll(",", ",\n"));
         textFieldCacheNum.setText(String.valueOf(cacheNumLimit));
@@ -1295,7 +1291,7 @@ public class SettingsFrame {
                     urlChoose = "url86";
                     fileName = "File-Engine-x86.exe";
                 }
-                DownloadUpdate download = DownloadUpdate.getInstance();
+                DownloadUtil download = DownloadUtil.getInstance();
                 try {
                     download.downLoadFromUrl(updateInfo.getString(urlChoose), fileName, tmp.getAbsolutePath());
                 } catch (Exception e) {
@@ -1532,7 +1528,7 @@ public class SettingsFrame {
         allSettings.put("fontColorWithCoverage", fontColorWithCoverage);
         allSettings.put("fontColor", fontColor);
         allSettings.put("language", language);
-        try (BufferedWriter buffW = new BufferedWriter(new FileWriter(settings))) {
+        try (BufferedWriter buffW = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(settings), StandardCharsets.UTF_8))) {
             String format = JSON.toJSONString(allSettings, SerializerFeature.PrettyFormat, SerializerFeature.WriteMapNullValue, SerializerFeature.WriteDateUseDateFormat);
             buffW.write(format);
         } catch (IOException ignored) {
@@ -1643,7 +1639,7 @@ class moveDesktopFiles implements Runnable {
         ArrayList<String> preserveFiles = new ArrayList<>();
         preserveFiles.add(fileDesktop.getAbsolutePath());
         preserveFiles.add("C:\\Users\\Public\\Desktop");
-        moveFiles moveFiles = new moveFiles(preserveFiles);
+        MoveFilesUtil moveFiles = new MoveFilesUtil(preserveFiles);
         desktop1 = moveFiles.moveFolder(fileDesktop.getAbsolutePath(), fileBackUp.getAbsolutePath());
         desktop2 = moveFiles.moveFolder("C:\\Users\\Public\\Desktop", fileBackUp.getAbsolutePath());
         if (desktop1 || desktop2) {

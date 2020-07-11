@@ -1,4 +1,4 @@
-package PluginSystem;
+package FileEngine.PluginSystem;
 
 import javax.swing.*;
 import java.awt.event.KeyEvent;
@@ -16,12 +16,12 @@ public abstract class Plugin {
         }
     }
 
-    private ConcurrentLinkedQueue<String> resultQueue = new ConcurrentLinkedQueue<>();
-    private ConcurrentLinkedQueue<MessageStruct> messageQueue = new ConcurrentLinkedQueue<>();
+    private static ConcurrentLinkedQueue<String> resultQueue = new ConcurrentLinkedQueue<>();
+    private static ConcurrentLinkedQueue<MessageStruct> messageQueue = new ConcurrentLinkedQueue<>();
 
     public abstract void textChanged(String text);
 
-    protected void addToResultQueue(String result) {
+    public static void addToResultQueue(String result) {
         resultQueue.add(result);
     }
 
@@ -33,15 +33,15 @@ public abstract class Plugin {
         return resultQueue.poll();
     }
 
-    public abstract void keyReleased(KeyEvent e);
+    public abstract void keyReleased(KeyEvent e, String result);
 
-    public abstract void keyPressed(KeyEvent e);
+    public abstract void keyPressed(KeyEvent e, String result);
 
-    public abstract void keyTyped(KeyEvent e);
+    public abstract void keyTyped(KeyEvent e, String result);
 
-    public abstract void mousePressed(MouseEvent e);
+    public abstract void mousePressed(MouseEvent e, String result);
 
-    public abstract void mouseReleased(MouseEvent e);
+    public abstract void mouseReleased(MouseEvent e, String result);
 
     public abstract ImageIcon getPluginIcon();
 
@@ -51,7 +51,7 @@ public abstract class Plugin {
 
     public abstract String getDescription();
 
-    protected void displayMessage(String message, String caption) {
+    public static void displayMessage(String message, String caption) {
         MessageStruct messages = new MessageStruct(message, caption);
         messageQueue.add(messages);
     }
@@ -63,4 +63,6 @@ public abstract class Plugin {
     public abstract boolean isLatest();
 
     public abstract String getUpdateURL();
+
+    public abstract void showResultOnLabel(String result, JLabel label, boolean isChosen);
 }

@@ -1,4 +1,4 @@
-package getIcon;
+package FileEngine.GetIcon;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileSystemView;
@@ -7,10 +7,10 @@ import java.io.File;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class GetIcon {
-    private static ConcurrentHashMap<String, ImageIcon> iconCache = new ConcurrentHashMap<>(1000);
-    private static FileSystemView fsv = FileSystemView.getFileSystemView();
-    private static AtomicInteger cacheNum = new AtomicInteger(0);
+public class GetIconUtil {
+    private static final ConcurrentHashMap<String, ImageIcon> iconCache = new ConcurrentHashMap<>(1000);
+    private static final FileSystemView fsv = FileSystemView.getFileSystemView();
+    private static final AtomicInteger cacheNum = new AtomicInteger(0);
     private static ImageIcon dllImageIcon;
     private static ImageIcon folderImageIcon;
     private static ImageIcon txtImageIcon;

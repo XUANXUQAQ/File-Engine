@@ -1,13 +1,15 @@
-import DllInterface.FileMonitor;
-import PluginSystem.PluginUtil;
-import SQLiteConfig.SQLiteUtil;
+package FileEngine;
+
+import FileEngine.DllInterface.FileMonitor;
+import FileEngine.PluginSystem.PluginUtil;
+import FileEngine.SQLiteConfig.SQLiteUtil;
 import br.com.margel.weblaf.WebLookAndFeel;
 import com.alibaba.fastjson.JSONObject;
-import frames.SearchBar;
-import frames.SettingsFrame;
-import frames.TaskBar;
-import hotkeyListener.CheckHotKey;
-import search.Search;
+import FileEngine.Frames.SearchBar;
+import FileEngine.Frames.SettingsFrame;
+import FileEngine.Frames.TaskBar;
+import FileEngine.HotkeyListener.CheckHotKey;
+import FileEngine.Search.SearchUtil;
 
 import javax.swing.*;
 import java.io.*;
@@ -23,7 +25,7 @@ import java.util.Objects;
 public class MainClass {
     //32bit
     private static final String fileMonitor86Md5 = "1005aa7fa75ae86d314afcfc5df0af6b";
-    private static final String fileSearcher86Md5 = "c79e7ed8c1a915bc4b79c9405d8a5828";
+    private static final String fileSearcher86Md5 = "9f9091ef0d87dc920a872d86e3438fea";
     private static final String getAscII86Md5 = "e370e53ce6c18758a5468fe11ccca652";
     private static final String hotkeyListener86Md5 = "15bd4db12a4939969c27c03ac9e57ddd";
     private static final String isLocalDisk86Md5 = "9b1c4c4fc44b52bff4f226b39c1ac46f";
@@ -33,7 +35,7 @@ public class MainClass {
     private static final String sqlite386Md5 = "82b03cdb95fb0ef88b876d141b478a6d";
     //64bit
     private static final String fileMonitor64Md5 = "db64b40ed1ccec6a7f2af1b40c1d22ab";
-    private static final String fileSearcher64Md5 = "beaf00c5652bcf74a6ecbb2ded170bb9";
+    private static final String fileSearcher64Md5 = "fdf615bbb902246873839062bd605f26";
     private static final String getAscII64Md5 = "eff607d2dd4a7e4c878948fe8f24b3ea";
     private static final String hotkeyListener64Md5 = "41388e31d6fc22fb430f636d402cf608";
     private static final String isLocalDisk64Md5 = "64f64bc828f477aa9ce6f5f8fd6010f3";
@@ -46,11 +48,11 @@ public class MainClass {
 
     private static void initializeDllInterface() {
         try {
-            Class.forName("DllInterface.FileMonitor");
-            Class.forName("DllInterface.IsLocalDisk");
-            Class.forName("DllInterface.HotkeyListener");
-            Class.forName("DllInterface.GetAscII");
-            Class.forName("DllInterface.isNTFS");
+            Class.forName("FileEngine.DllInterface.FileMonitor");
+            Class.forName("FileEngine.DllInterface.IsLocalDisk");
+            Class.forName("FileEngine.DllInterface.HotkeyListener");
+            Class.forName("FileEngine.DllInterface.GetAscII");
+            Class.forName("FileEngine.DllInterface.isNTFS");
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
@@ -198,7 +200,7 @@ public class MainClass {
             e.printStackTrace();
         }
 
-        Search search = Search.getInstance();
+        SearchUtil search = SearchUtil.getInstance();
         TaskBar taskBar = TaskBar.getInstance();
         taskBar.showTaskBar();
 

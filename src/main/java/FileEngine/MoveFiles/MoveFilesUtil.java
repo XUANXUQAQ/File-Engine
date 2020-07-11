@@ -1,4 +1,4 @@
-package moveFiles;
+package FileEngine.MoveFiles;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -6,10 +6,10 @@ import java.io.FileOutputStream;
 import java.util.ArrayList;
 
 
-public class moveFiles {
-    private ArrayList<String> preserveFiles;
+public class MoveFilesUtil {
+    private final ArrayList<String> preserveFiles;
 
-    public moveFiles(ArrayList<String> _preserveFiles) {
+    public MoveFilesUtil(ArrayList<String> _preserveFiles) {
         this.preserveFiles = _preserveFiles;
     }
 

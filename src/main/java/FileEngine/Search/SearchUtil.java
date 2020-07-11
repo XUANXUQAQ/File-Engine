@@ -1,11 +1,11 @@
-package search;
+package FileEngine.Search;
 
-import DllInterface.IsLocalDisk;
-import DllInterface.isNTFS;
-import SQLiteConfig.SQLiteUtil;
-import frames.SearchBar;
-import frames.SettingsFrame;
-import frames.TaskBar;
+import FileEngine.DllInterface.IsLocalDisk;
+import FileEngine.DllInterface.isNTFS;
+import FileEngine.SQLiteConfig.SQLiteUtil;
+import FileEngine.Frames.SearchBar;
+import FileEngine.Frames.SettingsFrame;
+import FileEngine.Frames.TaskBar;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -16,20 +16,20 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 
-public class Search {
+public class SearchUtil {
     private volatile static boolean isUsable = true;
     private static volatile boolean isManualUpdate = false;
-    private Set<String> commandSet = ConcurrentHashMap.newKeySet();
-    private ConcurrentLinkedQueue<String> commandQueue = new ConcurrentLinkedQueue<>();
+    private final Set<String> commandSet = ConcurrentHashMap.newKeySet();
+    private final ConcurrentLinkedQueue<String> commandQueue = new ConcurrentLinkedQueue<>();
 
     private static class SearchBuilder {
-        private static Search instance = new Search();
+        private static final SearchUtil instance = new SearchUtil();
     }
 
-    private Search() {
+    private SearchUtil() {
     }
 
-    public static Search getInstance() {
+    public static SearchUtil getInstance() {
         return SearchBuilder.instance;
     }
 
@@ -446,7 +446,7 @@ public class Search {
         File database = new File("data.db");
         String command = "cmd.exe /c " + start + end + " \"" + path + "\"" + " \"1\" " + "\"" + ignorePath + "\" " + "\"" + database.getAbsolutePath() + "\" " + "\"" + "1" + "\"";
         try {
-            Process p = Runtime.getRuntime().exec(command);
+            Process p = Runtime.getRuntime().exec(command, null, new File("user"));
             p.waitFor();
         } catch (IOException | InterruptedException ignored) {
 
@@ -460,7 +460,7 @@ public class Search {
         String end = "\"" + absPath.substring(2) + "\"";
         File database = new File("data.db");
         String command = "cmd.exe /c " + start + end + " \"" + path + "\"" + " \"" + searchDepth + "\" " + "\"" + ignorePath + "\" " + "\"" + database.getAbsolutePath() + "\" " + "\"" + "0" + "\"";
-        Process p = Runtime.getRuntime().exec(command);
+        Process p = Runtime.getRuntime().exec(command, null, new File("user"));
         p.waitFor();
     }
 
