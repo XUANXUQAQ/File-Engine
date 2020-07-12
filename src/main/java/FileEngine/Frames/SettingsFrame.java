@@ -157,7 +157,7 @@ public class SettingsFrame {
     private JLabel PluginIconLabel;
     private JLabel PluginNamelabel;
     private JTextArea textAreaDescription;
-    private JLabel labelOfficialSite;
+    private JLabel labelPluginVersion;
     private JButton buttonUpdatePlugin;
     private JPanel tabAbout;
     private JScrollPane scrollPane;
@@ -738,16 +738,18 @@ public class SettingsFrame {
                     ImageIcon icon;
                     String description;
                     String officialSite;
+                    String version;
                     icon = plugin.getPluginIcon();
                     description = plugin.getDescription();
                     officialSite = plugin.getOfficialSite();
+                    version = plugin.getVersion();
 
                     if (officialSite != null) {
-                        labelOfficialSite.setText("<html><a href='" + officialSite + "'><font size=\"4\">" + pluginName + "</font></a></html>");
+                        labelPluginVersion.setText("Version:" + version);
                     }
                     PluginIconLabel.setIcon(icon);
                     PluginNamelabel.setText("<html><body><font size=\"+1\">" + pluginName + "</body></html>");
-                    textAreaDescription.setText(description);
+                    textAreaDescription.setText("Official site : " + officialSite + "\n\n" + description);
                     buttonUpdatePlugin.setVisible(true);
                 }
             }
