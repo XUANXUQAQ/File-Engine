@@ -1,5 +1,6 @@
 package FileEngine.PluginSystem;
 
+import FileEngine.Frames.TaskBar;
 import com.alibaba.fastjson.JSONObject;
 
 import java.io.*;
@@ -58,7 +59,8 @@ public class PluginUtil {
         }
     }
 
-    private static void loadPlugin(File pluginFile, String className, String identifier) throws Exception {
+    private static boolean loadPlugin(File pluginFile, String className, String identifier) throws Exception {
+        boolean isTooOld = false;
         URLClassLoader classLoader = new URLClassLoader(
                 new URL[]{pluginFile.toURI().toURL()},
                 PluginUtil.class.getClassLoader()
@@ -68,7 +70,11 @@ public class PluginUtil {
         PluginInfo pluginInfo = new PluginInfo(c, instance);
         Plugin plugin = new Plugin(pluginInfo);
         plugin.loadPlugin();
+        if (plugin.getApiVersion() != Plugin.getLatestApiVersion()) {
+            isTooOld = true;
+        }
         pluginMap.put(identifier, plugin);
+        return isTooOld;
     }
 
     public static void unloadAllPlugins() {
@@ -92,6 +98,8 @@ public class PluginUtil {
         if (files == null || files.length == 0) {
             return;
         }
+        StringBuilder oldPlugins = new StringBuilder();
+        boolean isTooOld;
         for (File jar : files) {
             JarFile jarFile = new JarFile(jar);
             Enumeration<?> enu = jarFile.entries();
@@ -104,10 +112,14 @@ public class PluginUtil {
                     String className = json.getString("className");
                     String identifier = json.getString("identifier");
                     String pluginName = json.getString("name");
-                    loadPlugin(jar, className, identifier);
+                    isTooOld = loadPlugin(jar, className, identifier);
                     nameIdentifierMap.put(pluginName, identifier);
+                    if (isTooOld) {
+                        oldPlugins.append(pluginName).append(",");
+                    }
                 }
             }
         }
+        TaskBar.getInstance().showMessage("Warning", oldPlugins.toString() + "\nPlugin Api is too old");
     }
 }
