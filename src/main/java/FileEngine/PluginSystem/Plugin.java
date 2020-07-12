@@ -6,6 +6,7 @@ import java.awt.event.MouseEvent;
 import java.lang.reflect.Method;
 
 public class Plugin {
+    private static final int API_VERSION = 1;
     private final Object instance;
     private Method _textChanged;
     private Method _loadPlugin;
@@ -24,6 +25,7 @@ public class Plugin {
     private Method _showResultOnLabel;
     private Method _getMessage;
     private Method _pollFromResultQueue;
+    private Method _getApiVersion;
 
     public Plugin(PluginUtil.PluginInfo pluginInfo) {
         Class<?> aClass = pluginInfo.cls;
@@ -46,8 +48,21 @@ public class Plugin {
             _showResultOnLabel = aClass.getDeclaredMethod("showResultOnLabel", String.class, JLabel.class, boolean.class);
             _getMessage = aClass.getDeclaredMethod("getMessage");
             _pollFromResultQueue = aClass.getDeclaredMethod("pollFromResultQueue");
+            _getApiVersion = aClass.getDeclaredMethod("getApiVersion");
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    public static int getLatestApiVersion() {
+        return API_VERSION;
+    }
+
+    public int getApiVersion() {
+        try {
+            return (Integer) _getApiVersion.invoke(instance);
+        }catch (Exception e) {
+            return 1;
         }
     }
 
