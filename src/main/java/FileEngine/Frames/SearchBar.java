@@ -254,34 +254,58 @@ public class SearchBar {
                 int count = e.getClickCount();
                 if (count == 2) {
                     searchBar.setVisible(false);
-                    if (runningMode.get() == NORMAL_MODE) {
+                    if (runningMode.get() != PLUGIN_MODE) {
+                        //enter被点击
+                        searchBar.setVisible(false);
                         String res = listResults.get(labelCount.get());
-                        if (isOpenLastFolderPressed) {
-                            //打开上级文件夹
-                            File open = new File(res);
-                            try {
-                                Runtime.getRuntime().exec("explorer.exe /select, \"" + open.getAbsolutePath() + "\"");
-                            } catch (IOException e1) {
-                                e1.printStackTrace();
-                            }
-                        } else if (SettingsFrame.isDefaultAdmin() || isRunAsAdminPressed) {
-                            openWithAdmin(res);
-                        } else if (isCopyPathPressed) {
-                            Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-                            Transferable trans = new StringSelection(res);
-                            clipboard.setContents(trans, null);
-                        } else {
-                            if (res.endsWith(".bat") || res.endsWith(".cmd")) {
+                        if (runningMode.get() == NORMAL_MODE) {
+                            if (isOpenLastFolderPressed) {
+                                //打开上级文件夹
+                                File open = new File(res);
+                                try {
+                                    Runtime.getRuntime().exec("explorer.exe /select, \"" + open.getAbsolutePath() + "\"");
+                                } catch (IOException e1) {
+                                    e1.printStackTrace();
+                                }
+                            } else if (SettingsFrame.isDefaultAdmin() || isRunAsAdminPressed) {
                                 openWithAdmin(res);
+                            } else if (isCopyPathPressed) {
+                                Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+                                Transferable trans = new StringSelection(res);
+                                clipboard.setContents(trans, null);
                             } else {
-                                openWithoutAdmin(res);
+                                if (res.endsWith(".bat") || res.endsWith(".cmd")) {
+                                    openWithAdmin(res);
+                                } else {
+                                    openWithoutAdmin(res);
+                                }
+                            }
+                            saveCache(res + ';');
+                        } else if (runningMode.get() == COMMAND_MODE) {
+                            //直接打开
+                            if (isOpenLastFolderPressed) {
+                                //打开上级文件夹
+                                File open = new File(semicolon.split(res)[1]);
+                                try {
+                                    Runtime.getRuntime().exec("explorer.exe /select, \"" + open.getAbsolutePath() + "\"");
+                                } catch (IOException e1) {
+                                    JOptionPane.showMessageDialog(null, SettingsFrame.getTranslation("Execute failed"));
+                                }
+                            } else if (SettingsFrame.isDefaultAdmin() || isRunAsAdminPressed) {
+                                openWithAdmin(res);
+                            } else if (isCopyPathPressed) {
+                                Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+                                Transferable trans = new StringSelection(res);
+                                clipboard.setContents(trans, null);
+                            } else {
+                                if (res.endsWith(".bat") || res.endsWith(".cmd")) {
+                                    openWithAdmin(res);
+                                } else {
+                                    openWithoutAdmin(res);
+                                }
                             }
                         }
-                        saveCache(res + ';');
-                    } else if (runningMode.get() == COMMAND_MODE) {
-                        //直接打开
-                        String command = listResults.get(labelCount.get());
-                        openWithAdmin(semicolon.split(command)[1]);
+                        closedTodo();
                     } else if (runningMode.get() == PLUGIN_MODE) {
                         if (currentUsingPlugin != null) {
                             if (!listResults.isEmpty()) {
