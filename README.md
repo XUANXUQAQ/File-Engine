@@ -8,13 +8,10 @@ A tool can make you work more efficiently.
 
 感谢以下项目：
 
-1.fastjson (https://github.com/alibaba/fastjson)
-
-2.WebLookAndFeel (https://github.com/XUANXUQAQ/WebLookAndFeel)
-
-3.jna (https://github.com/java-native-access/jna)
-
-4.sqlite_jdbc (https://github.com/xerial/sqlite-jdbc)
+1.fastjson (https://github.com/alibaba/fastjson)   
+2.WebLookAndFeel (https://github.com/XUANXUQAQ/WebLookAndFeel)   
+3.jna (https://github.com/java-native-access/jna)   
+4.sqlite_jdbc (https://github.com/xerial/sqlite-jdbc)   
 
 ## 特性
 * 绿色便携软件，所有配置文件均在自身目录。
