@@ -4,10 +4,10 @@ package FileEngine.Frames;
 import FileEngine.DllInterface.FileMonitor;
 import FileEngine.DllInterface.GetAscII;
 import FileEngine.DllInterface.IsLocalDisk;
+import FileEngine.GetIcon.GetIconUtil;
 import FileEngine.PluginSystem.Plugin;
 import FileEngine.PluginSystem.PluginUtil;
 import FileEngine.SQLiteConfig.SQLiteUtil;
-import FileEngine.GetIcon.GetIconUtil;
 import FileEngine.Search.SearchUtil;
 
 import javax.swing.*;
@@ -22,7 +22,10 @@ import java.awt.event.*;
 import java.io.*;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.sql.*;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Queue;
 import java.util.*;
 import java.util.concurrent.*;
@@ -42,16 +45,16 @@ public class SearchBar {
     private static volatile boolean isUserPressed = false;
     private static Border border;
     private final JFrame searchBar;
-    private volatile JLabel label1;
-    private volatile JLabel label2;
-    private volatile JLabel label3;
-    private volatile JLabel label4;
-    private volatile JLabel label5;
-    private volatile JLabel label6;
-    private volatile JLabel label7;
-    private volatile JLabel label8;
+    private final JLabel label1;
+    private final JLabel label2;
+    private final JLabel label3;
+    private final JLabel label4;
+    private final JLabel label5;
+    private final JLabel label6;
+    private final JLabel label7;
+    private final JLabel label8;
     private static AtomicInteger labelCount;
-    private volatile JTextField textField;
+    private final JTextField textField;
     private Color labelColor;
     private Color backgroundColor;
     private Color fontColorWithCoverage;
@@ -60,6 +63,7 @@ public class SearchBar {
     private Thread searchWaiter = null;
     private static Pattern semicolon;
     private static Pattern resultSplit;
+    private static Pattern blank;
     private static AtomicInteger runningMode;
     private final JPanel panel;
     private long mouseWheelTime = 0;
@@ -100,6 +104,7 @@ public class SearchBar {
         runningMode = new AtomicInteger(0);
         semicolon = Pattern.compile(";");
         resultSplit = Pattern.compile(":");
+        blank = Pattern.compile(" ");
         panel = new JPanel();
         cachedThreadPool = Executors.newCachedThreadPool();
 
@@ -276,7 +281,9 @@ public class SearchBar {
                         openWithAdmin(semicolon.split(command)[1]);
                     } else if (runningMode.get() == PLUGIN_MODE) {
                         if (currentUsingPlugin != null) {
-                            currentUsingPlugin.mousePressed(e, listResults.get(labelCount.get()));
+                            if (!listResults.isEmpty()) {
+                                currentUsingPlugin.mousePressed(e, listResults.get(labelCount.get()));
+                            }
                         }
                     }
                     closedTodo();
@@ -287,7 +294,9 @@ public class SearchBar {
             public void mouseReleased(MouseEvent e) {
                 if (runningMode.get() == PLUGIN_MODE) {
                     if (currentUsingPlugin != null) {
-                        currentUsingPlugin.mouseReleased(e, listResults.get(labelCount.get()));
+                        if (!listResults.isEmpty()) {
+                            currentUsingPlugin.mouseReleased(e, listResults.get(labelCount.get()));
+                        }
                     }
                 }
             }
@@ -421,7 +430,9 @@ public class SearchBar {
                 } else if (runningMode.get() == PLUGIN_MODE) {
                     if (key != 38 && key != 40) {
                         if (currentUsingPlugin != null) {
-                            currentUsingPlugin.keyPressed(arg0, listResults.get(labelCount.get()));
+                            if (!listResults.isEmpty()) {
+                                currentUsingPlugin.keyPressed(arg0, listResults.get(labelCount.get()));
+                            }
                         }
                     }
                 }
@@ -443,7 +454,9 @@ public class SearchBar {
                 if (runningMode.get() == PLUGIN_MODE) {
                     if (key != 38 && key != 40) {
                         if (currentUsingPlugin != null) {
-                            currentUsingPlugin.keyReleased(arg0, listResults.get(labelCount.get()));
+                            if (!listResults.isEmpty()) {
+                                currentUsingPlugin.keyReleased(arg0, listResults.get(labelCount.get()));
+                            }
                         }
                     }
                 }
@@ -455,7 +468,9 @@ public class SearchBar {
                     int key = arg0.getKeyCode();
                     if (key != 38 && key != 40) {
                         if (currentUsingPlugin != null) {
-                            currentUsingPlugin.keyTyped(arg0, listResults.get(labelCount.get()));
+                            if (!listResults.isEmpty()) {
+                                currentUsingPlugin.keyTyped(arg0, listResults.get(labelCount.get()));
+                            }
                         }
                     }
                 }
@@ -1525,13 +1540,14 @@ public class SearchBar {
                 } else if (first == '>') {
                     runningMode.set(PLUGIN_MODE);
                     String subText = text.substring(1);
-                    String[] s = subText.split(" ");
+                    String[] s = blank.split(subText);
                     currentUsingPlugin = PluginUtil.getPluginByIdentifier(s[0]);
                     int length = s.length;
                     if (currentUsingPlugin != null && length > 1) {
-                        for (int i = 1; i < length; ++i) {
+                        for (int i = 1; i < length - 1; ++i) {
                             strb.append(s[i]).append(" ");
                         }
+                        strb.append(s[length - 1]);
                         currentUsingPlugin.textChanged(strb.toString());
                         strb.delete(0, strb.length());
                     }
@@ -1557,13 +1573,14 @@ public class SearchBar {
                     } else if (first == '>') {
                         runningMode.set(PLUGIN_MODE);
                         String subText = text.substring(1);
-                        String[] s = subText.split(" ");
+                        String[] s = blank.split(subText);
                         currentUsingPlugin = PluginUtil.getPluginByIdentifier(s[0]);
                         int length = s.length;
                         if (currentUsingPlugin != null && length > 1) {
-                            for (int i = 1; i < length; ++i) {
+                            for (int i = 1; i < length - 1; ++i) {
                                 strb.append(s[i]).append(" ");
                             }
+                            strb.append(s[length - 1]);
                             currentUsingPlugin.textChanged(strb.toString());
                             strb.delete(0, strb.length());
                         }
@@ -1648,18 +1665,21 @@ public class SearchBar {
 
         cachedThreadPool.execute(() -> {
             try {
-                Plugin.MessageStruct messageStruct;
+                String[] message;
+                Plugin plugin;
                 while (SettingsFrame.isNotMainExit()) {
-                    if (currentUsingPlugin != null) {
-                        messageStruct = currentUsingPlugin.getMessage();
-                        if (messageStruct != null) {
-                            TaskBar.getInstance().showMessage(messageStruct.caption, messageStruct.message);
+                    Iterator<Plugin> iter = PluginUtil.getPluginMapIter();
+                    while (iter.hasNext()) {
+                        plugin = iter.next();
+                        message = plugin.getMessage();
+                        if (message != null) {
+                            TaskBar.getInstance().showMessage(message[0], message[1]);
                         }
                     }
                     Thread.sleep(50);
                 }
-            } catch (InterruptedException ignored) {
-
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
         });
 
@@ -2299,9 +2319,14 @@ public class SearchBar {
                             } else if (runningMode.get() == PLUGIN_MODE) {
                                 String result;
                                 if (currentUsingPlugin != null) {
-                                    while (runningMode.get() == PLUGIN_MODE && (result = currentUsingPlugin.pollFromResultQueue()) != null) {
-                                        listResults.add(result);
-                                        listResultsCopy.add(result);
+                                    while (runningMode.get() == PLUGIN_MODE) {
+                                        try {
+                                            if ((result = currentUsingPlugin.pollFromResultQueue()) != null) {
+                                                listResults.add(result);
+                                            }
+                                        } catch (NullPointerException ignored) {
+
+                                        }
                                         Thread.sleep(10);
                                     }
                                 }
@@ -2724,7 +2749,6 @@ public class SearchBar {
     }
 
     private void openWithAdmin(String path) {
-        searchBar.setVisible(false);
         File name = new File(path);
         if (name.exists()) {
             try {
@@ -2747,7 +2771,6 @@ public class SearchBar {
     }
 
     private void openWithoutAdmin(String path) {
-        searchBar.setVisible(false);
         if (isExist(path)) {
             try {
                 if (path.toLowerCase().endsWith(".lnk")) {

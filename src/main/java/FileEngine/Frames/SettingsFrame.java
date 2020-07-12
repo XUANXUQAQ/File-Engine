@@ -1,13 +1,12 @@
 package FileEngine.Frames;
 
+import FileEngine.Download.DownloadUtil;
+import FileEngine.HotkeyListener.CheckHotKey;
 import FileEngine.PluginSystem.Plugin;
 import FileEngine.PluginSystem.PluginUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.serializer.SerializerFeature;
-import FileEngine.Download.DownloadUtil;
-import FileEngine.HotkeyListener.CheckHotKey;
-import FileEngine.MoveFiles.MoveFilesUtil;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileSystemView;
@@ -18,7 +17,6 @@ import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Scanner;
@@ -162,6 +160,7 @@ public class SettingsFrame {
     private JLabel labelOfficialSite;
     private JButton buttonUpdatePlugin;
     private JPanel tabAbout;
+    private JScrollPane scrollPane;
 
 
     private static class SettingsFrameBuilder {
@@ -276,7 +275,7 @@ public class SettingsFrame {
             int isConfirmed = JOptionPane.showConfirmDialog(frame, SettingsFrame.getTranslation("Whether to remove and backup all files on the desktop," +
                     "they will be in the program's Files folder, which may take a few minutes"));
             if (isConfirmed == 0) {
-                Thread fileMover = new Thread(new moveDesktopFiles());
+                Thread fileMover = new Thread(new MoveDesktopFiles());
                 fileMover.start();
             }
         });
@@ -736,9 +735,13 @@ public class SettingsFrame {
                 if (pluginName != null) {
                     String pluginIdentifier = PluginUtil.getIdentifierByName(pluginName);
                     Plugin plugin = PluginUtil.getPluginByIdentifier(pluginIdentifier);
-                    ImageIcon icon = plugin.getPluginIcon();
-                    String description = plugin.getDescription();
-                    String officialSite = plugin.getOfficialSite();
+                    ImageIcon icon;
+                    String description;
+                    String officialSite;
+                    icon = plugin.getPluginIcon();
+                    description = plugin.getDescription();
+                    officialSite = plugin.getOfficialSite();
+
                     if (officialSite != null) {
                         labelOfficialSite.setText("<html><a href='" + officialSite + "'><font size=\"4\">" + pluginName + "</font></a></html>");
                     }
@@ -753,16 +756,19 @@ public class SettingsFrame {
 
     private void addButtonPluginUpdateCheckListener() {
         buttonUpdatePlugin.addActionListener(e -> {
+            boolean _isLatest;
             String pluginName = (String) listPlugins.getSelectedValue();
             String pluginIdentifier = PluginUtil.getIdentifierByName(pluginName);
             Plugin plugin = PluginUtil.getPluginByIdentifier(pluginIdentifier);
-            if (plugin.isLatest()) {
+            _isLatest = plugin.isLatest();
+            if (_isLatest) {
                 JOptionPane.showMessageDialog(frame, getTranslation("The current Version is the latest."));
             } else {
                 int ret = JOptionPane.showConfirmDialog(frame, getTranslation("New version available, do you want to update?"));
                 if (ret == 0) {
                     try {
-                        DownloadUtil.getInstance().downLoadFromUrl(plugin.getUpdateURL(), pluginName, "tmp/pluginsUpdate");
+                        String url = plugin.getUpdateURL();
+                        DownloadUtil.getInstance().downLoadFromUrl(url, pluginName, "tmp/pluginsUpdate");
                     } catch (Exception ex) {
                         JOptionPane.showMessageDialog(frame, getTranslation("Download failed."));
                     }
@@ -1622,28 +1628,6 @@ public class SettingsFrame {
             buffW.write(format);
         } catch (IOException ignored) {
 
-        }
-    }
-}
-
-class moveDesktopFiles implements Runnable {
-    @Override
-    public void run() {
-        boolean desktop1;
-        boolean desktop2;
-        File fileDesktop = FileSystemView.getFileSystemView().getHomeDirectory();
-        File fileBackUp = new File("Files");
-        if (!fileBackUp.exists()) {
-            fileBackUp.mkdir();
-        }
-        ArrayList<String> preserveFiles = new ArrayList<>();
-        preserveFiles.add(fileDesktop.getAbsolutePath());
-        preserveFiles.add("C:\\Users\\Public\\Desktop");
-        MoveFilesUtil moveFiles = new MoveFilesUtil(preserveFiles);
-        desktop1 = moveFiles.moveFolder(fileDesktop.getAbsolutePath(), fileBackUp.getAbsolutePath());
-        desktop2 = moveFiles.moveFolder("C:\\Users\\Public\\Desktop", fileBackUp.getAbsolutePath());
-        if (desktop1 || desktop2) {
-            JOptionPane.showMessageDialog(null, SettingsFrame.getTranslation("Files with the same name are detected, please move them by yourself"));
         }
     }
 }
