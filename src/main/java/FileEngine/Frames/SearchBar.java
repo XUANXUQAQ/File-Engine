@@ -81,6 +81,7 @@ public class SearchBar {
     private static SearchUtil search;
     private static TaskBar taskBar;
     private static AtomicInteger resultCount;
+    private static AtomicInteger currentLabelSelectedPosition;
     private static volatile Plugin currentUsingPlugin;
 
     private static final int NORMAL_MODE = 0;
@@ -102,6 +103,7 @@ public class SearchBar {
         labelCount = new AtomicInteger(0);
         resultCount = new AtomicInteger(0);
         runningMode = new AtomicInteger(0);
+        currentLabelSelectedPosition = new AtomicInteger(0);
         semicolon = Pattern.compile(";");
         resultSplit = Pattern.compile(":");
         blank = Pattern.compile(" ");
@@ -348,8 +350,7 @@ public class SearchBar {
                                 if (labelCount.get() <= 0) {
                                     labelCount.set(0);
                                 }
-
-                                moveUpward(getCurrentPos());
+                                moveUpward(getCurrentLabelPos());
                             }
                         }
                     } else if (40 == key) {
@@ -373,7 +374,7 @@ public class SearchBar {
                                     if (labelCount.get() <= 0) {
                                         labelCount.set(0);
                                     }
-                                    moveDownward(getCurrentPos());
+                                    moveDownward(getCurrentLabelPos());
                                 }
                             }
                         }
@@ -495,7 +496,7 @@ public class SearchBar {
             public void mouseMoved(MouseEvent e) {
                 //判定当前位置
                 if (!isLockMouseMotion) {
-                    int position = getCurrentPos();
+                    int position = getCurrentLabelPos();
                     int mousePosition = 0;
                     if (labelPosition2 <= e.getY() && e.getY() < labelPosition3) {
                         mousePosition = 1;
@@ -514,9 +515,13 @@ public class SearchBar {
                     }
                     if (mousePosition < listResults.size()) {
                         if (position < mousePosition) {
-                            labelCount.getAndAdd(mousePosition - position);
+                            int ret = mousePosition - position;
+                            labelCount.getAndAdd(ret);
+                            currentLabelSelectedPosition.getAndAdd(ret);
                         } else {
-                            labelCount.getAndAdd(-(position - mousePosition));
+                            int ret = -(position - mousePosition);
+                            labelCount.getAndAdd(ret);
+                            currentLabelSelectedPosition.getAndAdd(ret);
                         }
                         switch (mousePosition) {
                             case 0:
@@ -790,33 +795,12 @@ public class SearchBar {
         return !isEmpty;
     }
 
-    private int getCurrentPos() {
-        //判定当前选定位置
-        int position = 0;
-        try {
-            if (label1.getBackground() == labelColor) {
-                return position;
-            } else if (label2.getBackground() == labelColor) {
-                position = 1;
-            } else if (label3.getBackground() == labelColor) {
-                position = 2;
-            } else if (label4.getBackground() == labelColor) {
-                position = 3;
-            } else if (label5.getBackground() == labelColor) {
-                position = 4;
-            } else if (label6.getBackground() == labelColor) {
-                position = 5;
-            } else if (label7.getBackground() == labelColor) {
-                position = 6;
-            } else if (label8.getBackground() == labelColor) {
-                position = 7;
-            }
-        } catch (NullPointerException e) {
-            if (SettingsFrame.isDebug()) {
-                e.printStackTrace();
-            }
-        }
-        return position;
+    private void setCurrentLabelPos(int num) {
+        currentLabelSelectedPosition.set(num);
+    }
+
+    private int getCurrentLabelPos() {
+        return currentLabelSelectedPosition.get();
     }
 
     private void addSearchBarMouseWheelListener() {
@@ -842,7 +826,7 @@ public class SearchBar {
                         if (labelCount.get() <= 0) {
                             labelCount.set(0);
                         }
-                        moveDownward(getCurrentPos());
+                        moveDownward(getCurrentLabelPos());
                     }
                 }
             } else if (e.getPreciseWheelRotation() < 0) {
@@ -861,7 +845,7 @@ public class SearchBar {
                     if (labelCount.get() <= 0) {
                         labelCount.set(0);
                     }
-                    moveUpward(getCurrentPos());
+                    moveUpward(getCurrentLabelPos());
                 }
 
             }
@@ -870,6 +854,10 @@ public class SearchBar {
 
     private void moveDownward(int position) {
         try {
+            currentLabelSelectedPosition.incrementAndGet();
+            if (currentLabelSelectedPosition.get() > 7) {
+                currentLabelSelectedPosition.set(7);
+            }
             switch (position) {
                 case 0:
                     int size = listResults.size();
@@ -1195,6 +1183,10 @@ public class SearchBar {
 
     private void moveUpward(int position) {
         try {
+            currentLabelSelectedPosition.decrementAndGet();
+            if (currentLabelSelectedPosition.get() < 0) {
+                currentLabelSelectedPosition.set(0);
+            }
             int size;
             switch (position) {
                 case 0:
@@ -1530,6 +1522,7 @@ public class SearchBar {
                 tempResults.clear();
                 resultCount.set(0);
                 labelCount.set(0);
+                currentLabelSelectedPosition.set(0);
                 isCacheAndPrioritySearched = false;
                 startTime = System.currentTimeMillis();
                 timer = true;
@@ -1564,6 +1557,7 @@ public class SearchBar {
                 tempResults.clear();
                 resultCount.set(0);
                 labelCount.set(0);
+                currentLabelSelectedPosition.set(0);
                 isCacheAndPrioritySearched = false;
                 String text = getTextFieldText();
                 try {
@@ -1594,6 +1588,7 @@ public class SearchBar {
                     panel.repaint();
                     resultCount.set(0);
                     labelCount.set(0);
+                    currentLabelSelectedPosition.set(0);
                     startTime = System.currentTimeMillis();
                     timer = false;
                 } else {
@@ -1704,7 +1699,7 @@ public class SearchBar {
                 while (SettingsFrame.isNotMainExit()) {
                     //字体染色线程
                     //判定当前选定位置
-                    int position = getCurrentPos();
+                    int position = getCurrentLabelPos();
                     if (position == 0) {
                         label1.setForeground(fontColorWithCoverage);
                         label2.setForeground(fontColor);
@@ -1802,7 +1797,7 @@ public class SearchBar {
                     isLabel7Chosen = false;
                     isLabel8Chosen = false;
                     if (labelCount.get() < listResults.size()) {//有结果可以显示
-                        int pos = getCurrentPos();
+                        int pos = getCurrentLabelPos();
                         switch (pos) {
                             case 0:
                                 isLabel1Chosen = true;
@@ -2246,6 +2241,7 @@ public class SearchBar {
                         timer = false; //开始搜索 计时停止
                         resultCount.set(0);
                         labelCount.set(0);
+                        currentLabelSelectedPosition.set(0);
                         clearLabel();
                         if (!getTextFieldText().isEmpty()) {
                             label1.setBackground(labelColor);
@@ -2322,7 +2318,11 @@ public class SearchBar {
                                     while (runningMode.get() == PLUGIN_MODE) {
                                         try {
                                             if ((result = currentUsingPlugin.pollFromResultQueue()) != null) {
-                                                listResults.add(result);
+                                                if (!listResultsCopy.contains(result)) {
+                                                    listResults.add(result);
+                                                    listResultsCopy.add(result);
+                                                    resultCount.incrementAndGet();
+                                                }
                                             }
                                         } catch (NullPointerException ignored) {
 
@@ -3011,6 +3011,7 @@ public class SearchBar {
         isUsing = false;
         labelCount.set(0);
         resultCount.set(0);
+        currentLabelSelectedPosition.set(0);
         listResults.clear();
         listResultsCopy.clear();
         tempResults.clear();
