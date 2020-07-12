@@ -1,7 +1,6 @@
 # File-Engine
 A tool can make you work more efficiently.
 
-当前进度：插件系统已经制作完成，正在测试中
 >不必再在杂乱的文件夹中寻找文件。
 提高工作效率。
 这是一个绿色软件，不必安装，随时使用。
