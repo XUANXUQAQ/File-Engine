@@ -3,16 +3,33 @@ package FileEngine.PluginSystem;
 import com.alibaba.fastjson.JSONObject;
 
 import java.io.*;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.Iterator;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
 public class PluginUtil {
+    protected static class PluginInfo {
+        public PluginInfo(Class<?> _cls, Object _instance) {
+            this.cls = _cls;
+            this.clsInstance = _instance;
+        }
+
+        public Class<?> cls;
+        public Object clsInstance;
+    }
+
     private static final ConcurrentHashMap<String, Plugin> pluginMap = new ConcurrentHashMap<>();
     private static final ConcurrentHashMap<String, String> nameIdentifierMap = new ConcurrentHashMap<>();
+
+    public static Iterator<Plugin> getPluginMapIter() {
+        return pluginMap.values().iterator();
+    }
 
     public static Plugin getPluginByIdentifier(String identifier) {
         return pluginMap.get(identifier);
@@ -42,10 +59,16 @@ public class PluginUtil {
     }
 
     private static void loadPlugin(File pluginFile, String className, String identifier) throws Exception {
-        //TODO 实例化插件
-        /*Plugin plugin = (Plugin) ;
+        URLClassLoader classLoader = new URLClassLoader(
+                new URL[]{pluginFile.toURI().toURL()},
+                PluginUtil.class.getClassLoader()
+        );
+        Class<?> c = Class.forName(className, true, classLoader);
+        Object instance = c.getDeclaredConstructor().newInstance();
+        PluginInfo pluginInfo = new PluginInfo(c, instance);
+        Plugin plugin = new Plugin(pluginInfo);
         plugin.loadPlugin();
-        pluginMap.put(identifier, plugin);*/
+        pluginMap.put(identifier, plugin);
     }
 
     public static void unloadAllPlugins() {
