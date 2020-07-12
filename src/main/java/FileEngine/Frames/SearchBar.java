@@ -20,6 +20,8 @@ import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
 import java.awt.event.*;
 import java.io.*;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.sql.PreparedStatement;
@@ -2303,6 +2305,14 @@ public class SearchBar {
                                     closedTodo();
                                     JOptionPane.showMessageDialog(null, SettingsFrame.getTranslation("Current Version:") + SettingsFrame.version);
                                 }
+                                if (text.equals(":help")) {
+                                    closedTodo();
+                                    Desktop desktop;
+                                    if (Desktop.isDesktopSupported()) {
+                                        desktop = Desktop.getDesktop();
+                                        desktop.browse(new URI("https://github.com/XUANXUQAQ/File-Engine/wiki/Usage"));
+                                    }
+                                }
                                 if (text.equals(":clearbin")) {
                                     closedTodo();
                                     int r = JOptionPane.showConfirmDialog(null, SettingsFrame.getTranslation("Are you sure you want to empty the recycle bin"));
@@ -2409,6 +2419,8 @@ public class SearchBar {
                 }
             } catch (InterruptedException ignored) {
 
+            } catch (URISyntaxException | IOException e) {
+                e.printStackTrace();
             }
         });
 
