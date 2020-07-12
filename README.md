@@ -17,6 +17,8 @@ A tool can make you work more efficiently.
 
 3.jna (https://github.com/java-native-access/jna)
 
+4.sqlite_jdbc (https://github.com/xerial/sqlite-jdbc)
+
 ## 特性
 * 绿色便携软件，所有配置文件均在自身目录。
 * 快速搜索，打开文件。
