@@ -240,6 +240,7 @@ public class SearchBar {
         label.setForeground(fontColor);
         label.setOpaque(true);
         label.setBackground(null);
+        label.setFocusable(false);
     }
 
     private void addSearchBarMouseListener() {
@@ -381,8 +382,8 @@ public class SearchBar {
                     } else if (10 == key) {
                         if (runningMode.get() != PLUGIN_MODE) {
                             //enter被点击
-                            String res = listResults.get(labelCount.get());
                             searchBar.setVisible(false);
+                            String res = listResults.get(labelCount.get());
                             if (runningMode.get() == NORMAL_MODE) {
                                 if (isOpenLastFolderPressed) {
                                     //打开上级文件夹
@@ -408,27 +409,41 @@ public class SearchBar {
                                 saveCache(res + ';');
                             } else if (runningMode.get() == COMMAND_MODE) {
                                 //直接打开
-                                if (Desktop.isDesktopSupported()) {
-                                    Desktop desktop = Desktop.getDesktop();
+                                if (isOpenLastFolderPressed) {
+                                    //打开上级文件夹
+                                    File open = new File(semicolon.split(res)[1]);
                                     try {
-                                        desktop.open(new File(semicolon.split(res)[1]));
-                                    } catch (Exception e) {
+                                        Runtime.getRuntime().exec("explorer.exe /select, \"" + open.getAbsolutePath() + "\"");
+                                    } catch (IOException e) {
                                         JOptionPane.showMessageDialog(null, SettingsFrame.getTranslation("Execute failed"));
+                                    }
+                                } else if (SettingsFrame.isDefaultAdmin() || isRunAsAdminPressed) {
+                                    openWithAdmin(res);
+                                } else if (isCopyPathPressed) {
+                                    Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+                                    Transferable trans = new StringSelection(res);
+                                    clipboard.setContents(trans, null);
+                                } else {
+                                    if (res.endsWith(".bat") || res.endsWith(".cmd")) {
+                                        openWithAdmin(res);
+                                    } else {
+                                        openWithoutAdmin(res);
                                     }
                                 }
                             }
                             closedTodo();
-                        } else if (SettingsFrame.getOpenLastFolderKeyCode() == key) {
-                            //打开上级文件夹热键被点击
-                            isOpenLastFolderPressed = true;
-                        } else if (SettingsFrame.getRunAsAdminKeyCode() == key) {
-                            //以管理员方式运行热键被点击
-                            isRunAsAdminPressed = true;
-                        } else if (SettingsFrame.getCopyPathKeyCode() == key) {
-                            isCopyPathPressed = true;
                         }
+                    } else if (SettingsFrame.getOpenLastFolderKeyCode() == key) {
+                        //打开上级文件夹热键被点击
+                        isOpenLastFolderPressed = true;
+                    } else if (SettingsFrame.getRunAsAdminKeyCode() == key) {
+                        //以管理员方式运行热键被点击
+                        isRunAsAdminPressed = true;
+                    } else if (SettingsFrame.getCopyPathKeyCode() == key) {
+                        isCopyPathPressed = true;
                     }
-                } else if (runningMode.get() == PLUGIN_MODE) {
+                }
+                if (runningMode.get() == PLUGIN_MODE) {
                     if (key != 38 && key != 40) {
                         if (currentUsingPlugin != null) {
                             if (!listResults.isEmpty()) {
