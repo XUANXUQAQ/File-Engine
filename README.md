@@ -1,27 +1,27 @@
 # File-Engine
 A tool can make you work more efficiently.
 
->不必再在杂乱的文件夹中寻找文件。
-提高工作效率。
-这是一个绿色软件，不必安装，随时使用。
-### 推荐使用插件[File-Engine-UDisk-Plugin](https://github.com/XUANXUQAQ/File-Engine-UDisk-Plugin) 使File-Engine支持U盘。
-### 制作自己的插件[File-Engine-Plugin-Template](https://github.com/XUANXUQAQ/File-Engine-Plugin-Template)
-## 使用
-### [查看帮助](https://github.com/XUANXUQAQ/File-Engine/wiki/Usage)   
-或者在搜索框中输入 :help    默认Ctrl + Alt + K呼出搜索框
-## 特性
- * 快速搜索，***实测80W文件索引需要15-20秒。***
- * 绿色便携软件，所有配置文件均在自身目录。
- * 自定义命令，快速进行所选操作。
- * 实时更新文件，自动检测已删除和新增文件。
- * 支持指定优先搜索文件夹，常用文件无需等待，立即打开。
- * 简洁UI，设置方便。
- * 自适应分辨率显示。    
-### 请下载系统对应位数的程序，否则可能会出现错误。未来可能会删除32位版本
-[下载最新稳定版64位](https://github.com/XUANXUQAQ/File-Engine/releases/download/2.1/File-Engine-x64.V2.1.7z)   
-[下载最新稳定版32位](https://github.com/XUANXUQAQ/File-Engine/releases/download/2.1/File-Engine-x86.V2.1.7z)
+>No more searching for files in cluttered folders.
+ Improve work efficiency.
+ This is a green software that does not have to be installed and can be used at any time.
+### It is recommended to use [File-Engine-UDisk-Plugin](https://github.com/XUANXUQAQ/File-Engine-UDisk-Plugin) to enable File-Engine to support U disk。
+### Make your own plugin[File-Engine-Plugin-Template](https://github.com/XUANXUQAQ/File-Engine-Plugin-Template)
+## Usage
+### [View help](https://github.com/XUANXUQAQ/File-Engine/wiki/Usage)   
+Or enter :help in the search bar. by default Ctrl + Alt + K to call out the search bar.
+## feature
+  * Quick search, ***measured 80W file index takes 15-20 seconds.***
+  * Green portable software, all configuration files are in its own directory.
+  * Custom commands to quickly perform selected operations.
+  * Update files in real time, automatically detect deleted and new files.
+  * Support to specify the priority search folder, frequently used files can be opened immediately without waiting.
+  * Simple UI, easy to set up.
+  * Adaptive resolution display.   
+### Please download the program corresponding to the number of digits in the system, otherwise an error may occur. 32-bit version may be deleted in the future
+[Download the latest stable 64-bit](https://github.com/XUANXUQAQ/File-Engine/releases/download/2.1/File-Engine-x64.V2.1.7z)   
+[Download the latest stable 32-bit](https://github.com/XUANXUQAQ/File-Engine/releases/download/2.1/File-Engine-x86.V2.1.7z)
 
-感谢以下项目：   
+Thanks for the following project:   
 1.fastjson (https://github.com/alibaba/fastjson)   
 2.WebLookAndFeel (https://github.com/XUANXUQAQ/WebLookAndFeel)   
 3.jna (https://github.com/java-native-access/jna)   
@@ -31,4 +31,3 @@ A tool can make you work more efficiently.
 ![8PPdxS.gif](https://github.com/XUANXUQAQ/File-Engine/raw/master/%E6%BC%94%E7%A4%BA.gif)
 
 ![U8CIaQ.png](https://s1.ax1x.com/2020/07/12/U8CIaQ.png)
-   
