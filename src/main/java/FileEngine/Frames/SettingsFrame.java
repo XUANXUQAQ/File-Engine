@@ -161,6 +161,7 @@ public class SettingsFrame {
     private JButton buttonUpdatePlugin;
     private JPanel tabAbout;
     private JScrollPane scrollPane;
+    private JLabel labelSQLite;
 
 
     private static class SettingsFrameBuilder {
@@ -785,6 +786,7 @@ public class SettingsFrame {
         labelBeautyEye.setText("1.WebLookAndFeel");
         labelFastJson.setText("2.FastJson");
         labelJna.setText("3.Java-Native-Access");
+        labelSQLite.setText("4.SQLite-JDBC");
         labelPluginNum.setText(String.valueOf(PluginUtil.getInstalledPluginNum()));
         ImageIcon imageIcon = new ImageIcon(SettingsFrame.class.getResource("/icons/frame.png"));
         labelIcon.setIcon(imageIcon);
