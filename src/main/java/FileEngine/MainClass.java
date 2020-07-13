@@ -1,17 +1,18 @@
 package FileEngine;
 
 import FileEngine.DllInterface.FileMonitor;
-import FileEngine.PluginSystem.PluginUtil;
-import FileEngine.SQLiteConfig.SQLiteUtil;
-import br.com.margel.weblaf.WebLookAndFeel;
-import com.alibaba.fastjson.JSONObject;
 import FileEngine.Frames.SearchBar;
 import FileEngine.Frames.SettingsFrame;
 import FileEngine.Frames.TaskBar;
 import FileEngine.HotkeyListener.CheckHotKey;
+import FileEngine.PluginSystem.PluginUtil;
+import FileEngine.SQLiteConfig.SQLiteUtil;
 import FileEngine.Search.SearchUtil;
+import br.com.margel.weblaf.WebLookAndFeel;
+import com.alibaba.fastjson.JSONObject;
 
 import javax.swing.*;
+import java.awt.*;
 import java.io.*;
 import java.math.BigInteger;
 import java.security.MessageDigest;
@@ -29,20 +30,20 @@ public class MainClass {
     private static final String getAscII86Md5 = "e370e53ce6c18758a5468fe11ccca652";
     private static final String hotkeyListener86Md5 = "15bd4db12a4939969c27c03ac9e57ddd";
     private static final String isLocalDisk86Md5 = "9b1c4c4fc44b52bff4f226b39c1ac46f";
-    private static final String updater86Md5 = "b11a1307c497f00e570b238224173ba2";
     private static final String fileSearcherUSN86Md5 = "48153cfabd03e2ab907f8d361bce9130";
     private static final String isNTFS86Md5 = "2aff387756192c704c0c876f2ad12fa2";
     private static final String sqlite386Md5 = "82b03cdb95fb0ef88b876d141b478a6d";
+    private static final String updaterBat86Md5 = "005b57b56c3402b2038f90abc6e141e7";
     //64bit
     private static final String fileMonitor64Md5 = "db64b40ed1ccec6a7f2af1b40c1d22ab";
     private static final String fileSearcher64Md5 = "41645c85b1b14823cd1fcf9cce069477";
     private static final String getAscII64Md5 = "eff607d2dd4a7e4c878948fe8f24b3ea";
     private static final String hotkeyListener64Md5 = "41388e31d6fc22fb430f636d402cf608";
     private static final String isLocalDisk64Md5 = "64f64bc828f477aa9ce6f5f8fd6010f3";
-    private static final String updater64Md5 = "bf8482e14b1457395f2ef1ec200f95c0";
     private static final String fileSearcherUSN64Md5 = "c800f1dab50df73794df2a94a1c847a0";
     private static final String isNTFS64Md5 = "b5f7ea2923a42873883a3bcda2bafd2";
     private static final String sqlite364Md5 = "658c71b8b93ba4eb5b4936f46a112449";
+    private static final String updaterBat64Md5 = "357d7cc1cf023cb6c90f73926c6f2f55";
 
     private static final String shortcutGeneratorMd5 = "fa4e26f99f3dcd58d827828c411ea5d7";
 
@@ -121,8 +122,21 @@ public class MainClass {
     }
 
     private static void deleteUpdater() {
-        File file = new File("updater.exe");
-        file.delete();
+        boolean ret = false;
+        int count = 0;
+        File updater = new File("updater.bat");
+        try {
+            while (!ret) {
+                ret = updater.delete();
+                Thread.sleep(1000);
+                count++;
+                if (count > 3) {
+                    break;
+                }
+            }
+        } catch (InterruptedException ignored) {
+
+        }
     }
 
     private static String getMD5(String filePath) {
@@ -273,20 +287,24 @@ public class MainClass {
     private static void startOrIgnoreUpdateAndExit(boolean isUpdate) {
         //复制updater.exe
         if (isUpdate) {
+            File update = new File("user/update");
+            update.delete();
+            File updaterBat = new File("updater.bat");
             if (SettingsFrame.is64Bit()) {
-                copyOrIgnoreFile("updater.exe", "/win32-x86-64/updater.exe", updater64Md5);
+                copyOrIgnoreFile("updater.bat", "/win32-x86-64/updater.bat", updaterBat64Md5);
             } else {
-                copyOrIgnoreFile("updater.exe", "/win32-x86/updater.exe", updater86Md5);
+                copyOrIgnoreFile("updater.bat", "/win32-x86/updater.bat", updaterBat86Md5);
             }
-            File updaterExe = new File("updater.exe");
-            String absPath = updaterExe.getAbsolutePath();
-            String path = absPath.substring(0, 2) + "\"" + absPath.substring(2) + "\"";
-            String command = "cmd.exe /c " + path + " " + "\"" + SettingsFrame.getName() + "\"";
-            try {
-                Runtime.getRuntime().exec(command);
-                System.exit(0);
-            } catch (Exception ignored) {
-
+            Desktop desktop;
+            if (Desktop.isDesktopSupported()) {
+                desktop = Desktop.getDesktop();
+                try {
+                    desktop.open(updaterBat);
+                    Thread.sleep(100);
+                    System.exit(0);
+                } catch (IOException | InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
         } else {
             deleteUpdater();
@@ -358,18 +376,7 @@ public class MainClass {
     }
 
     private static boolean isUpdateSignExist() {
-        File user = new File("user");
-        File[] userFiles = user.listFiles();
-        boolean isUpdate = false;
-        if (userFiles != null) {
-            for (File each : userFiles) {
-                if (each.getName().equals("update")) {
-                    isUpdate = true;
-                    each.delete();
-                    break;
-                }
-            }
-        }
-        return isUpdate;
+        File user = new File("user/update");
+        return user.exists();
     }
 }
