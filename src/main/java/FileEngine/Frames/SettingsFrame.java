@@ -849,7 +849,7 @@ public class SettingsFrame {
     }
 
     private SettingsFrame() {
-        frame = new JFrame("设置");
+        frame = new JFrame("Settings");
         tmp = new File("tmp");
         settings = new File("user/settings.json");
         cmdSet = new HashSet<>();
