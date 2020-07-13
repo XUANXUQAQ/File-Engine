@@ -4,6 +4,8 @@ A tool can make you work more efficiently.
 >No more searching for files in cluttered folders.
  Improve work efficiency.
  This is a green software that does not have to be installed and can be used at any time.
+
+[阅读中文版](https://github.com/XUANXUQAQ/File-Engine/blob/master/README-cn.md)
 ### It is recommended to use [File-Engine-UDisk-Plugin](https://github.com/XUANXUQAQ/File-Engine-UDisk-Plugin) to enable File-Engine to support U disk。
 ### Make your own plugin[File-Engine-Plugin-Template](https://github.com/XUANXUQAQ/File-Engine-Plugin-Template)
 ## Usage
