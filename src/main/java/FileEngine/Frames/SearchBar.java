@@ -434,26 +434,25 @@ public class SearchBar {
                                 }
                                 saveCache(res + ';');
                             } else if (runningMode.get() == COMMAND_MODE) {
-                                //直接打开
+                                File open = new File(semicolon.split(res)[1]);
                                 if (isOpenLastFolderPressed) {
                                     //打开上级文件夹
-                                    File open = new File(semicolon.split(res)[1]);
                                     try {
                                         Runtime.getRuntime().exec("explorer.exe /select, \"" + open.getAbsolutePath() + "\"");
                                     } catch (IOException e) {
                                         JOptionPane.showMessageDialog(null, SettingsFrame.getTranslation("Execute failed"));
                                     }
                                 } else if (SettingsFrame.isDefaultAdmin() || isRunAsAdminPressed) {
-                                    openWithAdmin(res);
+                                    openWithAdmin(open.getAbsolutePath());
                                 } else if (isCopyPathPressed) {
                                     Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
                                     Transferable trans = new StringSelection(res);
                                     clipboard.setContents(trans, null);
                                 } else {
                                     if (res.endsWith(".bat") || res.endsWith(".cmd")) {
-                                        openWithAdmin(res);
+                                        openWithAdmin(open.getAbsolutePath());
                                     } else {
-                                        openWithoutAdmin(res);
+                                        openWithoutAdmin(open.getAbsolutePath());
                                     }
                                 }
                             }
@@ -471,6 +470,9 @@ public class SearchBar {
                 }
                 if (runningMode.get() == PLUGIN_MODE) {
                     if (key != 38 && key != 40) {
+                        if (key == 10) {
+                            closedTodo();
+                        }
                         if (currentUsingPlugin != null) {
                             if (!listResults.isEmpty()) {
                                 currentUsingPlugin.keyPressed(arg0, listResults.get(labelCount.get()));
