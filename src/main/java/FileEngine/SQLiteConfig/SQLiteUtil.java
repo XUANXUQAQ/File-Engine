@@ -42,7 +42,7 @@ public class SQLiteUtil {
     }
 
     public static void createAllTables() throws Exception {
-        String sql = "CREATE TABLE list";
+        String sql = "CREATE TABLE IF NOT EXISTS list";
         try (Statement stmt = getStatement()) {
             stmt.execute("BEGIN;");
             for (int i = 0; i <= 40; i++) {
