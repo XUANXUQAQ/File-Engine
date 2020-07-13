@@ -178,8 +178,7 @@ public class SearchUtil {
     }
 
     public void addFileToDatabase(String path) {
-        File file = new File(path);
-        int ascII = SearchBar.getInstance().getAscIISum(file.getName());
+        int ascII = SearchBar.getInstance().getAscIISum(SearchBar.getInstance().getFileName(path));
         int asciiGroup = ascII / 100;
         String command;
         switch (asciiGroup) {
@@ -330,24 +329,26 @@ public class SearchUtil {
             System.out.println("执行SQL命令");
             System.out.println("----------------------------------------------");
         }
-        try {
-            if (!commandSet.isEmpty()) {
-                isUsable = false;
-                commandQueue.addAll(commandSet);
-                commandSet.clear();
+        if (!commandSet.isEmpty()) {
+            isUsable = false;
+            commandQueue.addAll(commandSet);
+            commandSet.clear();
+            try {
                 stmt.execute("BEGIN;");
                 for (String each : commandQueue) {
                     stmt.execute(each);
                 }
                 stmt.execute("COMMIT;");
+            } catch (SQLException e) {
+                if (SettingsFrame.isDebug()) {
+                    e.printStackTrace();
+                }
+                //不删除执行失败的记录
+                commandSet.addAll(commandQueue);
+            } finally {
+                commandQueue.clear();
+                isUsable = true;
             }
-        } catch (SQLException e) {
-            if (SettingsFrame.isDebug()) {
-                e.printStackTrace();
-            }
-        } finally {
-            commandQueue.clear();
-            isUsable = true;
         }
     }
 
