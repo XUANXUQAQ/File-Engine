@@ -6,6 +6,8 @@ A tool can make you work more efficiently.
 这是一个绿色软件，不必安装，随时使用。
 ### 推荐使用插件[File-Engine-UDisk-Plugin](https://github.com/XUANXUQAQ/File-Engine-UDisk-Plugin) 使File-Engine支持U盘。
 ### 制作自己的插件[File-Engine-Plugin-Template](https://github.com/XUANXUQAQ/File-Engine-Plugin-Template)
+## 使用
+### [查看帮助](https://github.com/XUANXUQAQ/File-Engine/wiki/Usage)   
 ## 特性
  * 快速搜索，***实测80W文件索引需要15-20秒。***
  * 绿色便携软件，所有配置文件均在自身目录。
@@ -13,9 +15,7 @@ A tool can make you work more efficiently.
  * 实时更新文件，自动检测已删除和新增文件。
  * 支持指定优先搜索文件夹，常用文件无需等待，立即打开。
  * 简洁UI，设置方便。
- * 自适应分辨率显示。   
-## 使用
-[查看帮助](https://github.com/XUANXUQAQ/File-Engine/wiki/Usage)   
+ * 自适应分辨率显示。    
 或者在搜索框中输入 :help    
 ### 请下载系统对应位数的程序，否则可能会出现错误。未来可能会删除32位版本
 [下载最新稳定版64位](https://github.com/XUANXUQAQ/File-Engine/releases/download/2.0/File-Engine-x64.V2.0.7z)   
