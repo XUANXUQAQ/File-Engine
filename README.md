@@ -18,8 +18,8 @@ A tool can make you work more efficiently.
  * 简洁UI，设置方便。
  * 自适应分辨率显示。    
 ### 请下载系统对应位数的程序，否则可能会出现错误。未来可能会删除32位版本
-[下载最新稳定版64位](https://github.com/XUANXUQAQ/File-Engine/releases/download/2.0/File-Engine-x64.V2.0.7z)   
-[下载最新稳定版32位](https://github.com/XUANXUQAQ/File-Engine/releases/download/2.0/File-Engine-x86.V2.0.7z)
+[下载最新稳定版64位](https://github.com/XUANXUQAQ/File-Engine/releases/download/2.1/File-Engine-x64.V2.0.7z)   
+[下载最新稳定版32位](https://github.com/XUANXUQAQ/File-Engine/releases/download/2.1/File-Engine-x86.V2.0.7z)
 
 感谢以下项目：   
 1.fastjson (https://github.com/alibaba/fastjson)   
