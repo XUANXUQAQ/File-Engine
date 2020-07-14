@@ -17,7 +17,7 @@
     </properties>
     <border type="none"/>
     <children>
-      <tabbedpane id="ba668" binding="tabbedPane1" default-binding="true">
+      <tabbedpane id="ba668" binding="tabbedPane">
         <constraints>
           <grid row="0" column="0" row-span="1" col-span="3" vsize-policy="3" hsize-policy="3" anchor="8" fill="2" indent="0" use-parent-layout="false">
             <preferred-size width="200" height="200"/>
@@ -45,7 +45,7 @@
             </properties>
             <border type="none"/>
             <children>
-              <component id="f56d" class="javax.swing.JLabel" binding="label4">
+              <component id="f56d" class="javax.swing.JLabel" binding="labelMaxCacheNum">
                 <constraints>
                   <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                   <gridbag weightx="1.0" weighty="1.0"/>
@@ -65,7 +65,7 @@
                   <opaque value="false"/>
                 </properties>
               </component>
-              <component id="919a9" class="javax.swing.JLabel" binding="label1">
+              <component id="919a9" class="javax.swing.JLabel" binding="labelUpdateInterval">
                 <constraints>
                   <grid row="2" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false">
                     <preferred-size width="114" height="17"/>
@@ -76,7 +76,7 @@
                   <text value="File update detection interval:"/>
                 </properties>
               </component>
-              <component id="7d342" class="javax.swing.JTextField" binding="textFieldUpdateTime">
+              <component id="7d342" class="javax.swing.JTextField" binding="textFieldUpdateInterval">
                 <constraints>
                   <grid row="2" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
                     <preferred-size width="150" height="-1"/>
@@ -87,7 +87,7 @@
                   <opaque value="false"/>
                 </properties>
               </component>
-              <component id="5bad1" class="javax.swing.JLabel" binding="label5">
+              <component id="5bad1" class="javax.swing.JLabel" binding="labelSecond">
                 <constraints>
                   <grid row="2" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                   <gridbag weightx="1.0" weighty="1.0"/>
@@ -105,7 +105,7 @@
                   <text value="Backup and remove all desktop files"/>
                 </properties>
               </component>
-              <component id="e1029" class="javax.swing.JCheckBox" binding="checkBox1" default-binding="true">
+              <component id="e1029" class="javax.swing.JCheckBox" binding="checkBoxAddToStartup">
                 <constraints>
                   <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                   <gridbag weightx="1.0" weighty="1.0"/>
@@ -129,7 +129,7 @@
             </properties>
             <border type="none"/>
             <children>
-              <scrollpane id="f84cd" binding="scrollpane">
+              <scrollpane id="f84cd" binding="scrollpaneIgnorePath">
                 <constraints>
                   <grid row="4" column="1" row-span="1" col-span="2" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
                   <gridbag weightx="1.0" weighty="1.0"/>
@@ -147,7 +147,7 @@
                   </component>
                 </children>
               </scrollpane>
-              <component id="78f12" class="javax.swing.JLabel" binding="label7">
+              <component id="78f12" class="javax.swing.JLabel" binding="labelConstIgnorePathTip">
                 <constraints>
                   <grid row="2" column="1" row-span="1" col-span="2" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                   <gridbag weightx="1.0" weighty="1.0"/>
@@ -156,7 +156,7 @@
                   <text value="Separate different paths with commas, and ignore C:\Windows by default"/>
                 </properties>
               </component>
-              <component id="11d25" class="javax.swing.JLabel" binding="label3">
+              <component id="11d25" class="javax.swing.JLabel" binding="labelSetIgnorePathTip">
                 <constraints>
                   <grid row="3" column="1" row-span="1" col-span="2" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                   <gridbag weightx="1.0" weighty="1.0"/>
@@ -165,7 +165,7 @@
                   <text value="Set ignore folder:"/>
                 </properties>
               </component>
-              <component id="7410f" class="javax.swing.JButton" binding="Button3">
+              <component id="7410f" class="javax.swing.JButton" binding="buttonChooseFile">
                 <constraints>
                   <grid row="4" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
                   <gridbag weightx="1.0" weighty="1.0"/>
@@ -174,7 +174,7 @@
                   <text value="Choose"/>
                 </properties>
               </component>
-              <component id="9c5a3" class="javax.swing.JLabel" binding="label6">
+              <component id="9c5a3" class="javax.swing.JLabel" binding="labelSearchDepth">
                 <constraints>
                   <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                   <gridbag weightx="1.0" weighty="1.0"/>
@@ -194,7 +194,7 @@
                   <opaque value="false"/>
                 </properties>
               </component>
-              <component id="6522f" class="javax.swing.JLabel" binding="labeltip3">
+              <component id="6522f" class="javax.swing.JLabel" binding="labeltipPriorityFolder">
                 <constraints>
                   <grid row="1" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                   <gridbag weightx="1.0" weighty="1.0"/>
@@ -503,7 +503,7 @@
                   <text value=""/>
                 </properties>
               </component>
-              <component id="694ef" class="javax.swing.JLabel" binding="labelPlaceHolderW">
+              <component id="694ef" class="javax.swing.JLabel" binding="labelPlaceHolder2">
                 <constraints>
                   <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                   <gridbag weightx="0.0" weighty="0.0"/>
@@ -512,7 +512,7 @@
                   <text value=""/>
                 </properties>
               </component>
-              <component id="b13c9" class="javax.swing.JLabel" binding="labelPlaceHolderW2">
+              <component id="b13c9" class="javax.swing.JLabel" binding="labelPlaceHolder3">
                 <constraints>
                   <grid row="3" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                   <gridbag weightx="0.0" weighty="0.0"/>
@@ -641,7 +641,7 @@
                   <opaque value="false"/>
                 </properties>
               </component>
-              <component id="f9ebf" class="javax.swing.JLabel" binding="label2">
+              <component id="f9ebf" class="javax.swing.JLabel" binding="labelOpenSearchBarHotKey">
                 <constraints>
                   <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                   <gridbag weightx="1.0" weighty="1.0"/>
@@ -650,7 +650,7 @@
                   <text value="Open search bar:"/>
                 </properties>
               </component>
-              <component id="3315f" class="javax.swing.JLabel" binding="labelRunAsAdmin">
+              <component id="3315f" class="javax.swing.JLabel" binding="labelRunAsAdminHotKey">
                 <constraints>
                   <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                   <gridbag weightx="1.0" weighty="1.0"/>
@@ -659,7 +659,7 @@
                   <text value="Run as administrator:"/>
                 </properties>
               </component>
-              <component id="341ae" class="javax.swing.JTextField" binding="textFieldRunAsAdmin">
+              <component id="341ae" class="javax.swing.JTextField" binding="textFieldRunAsAdminHotKey">
                 <constraints>
                   <grid row="1" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
                     <preferred-size width="150" height="-1"/>
@@ -671,7 +671,7 @@
                   <opaque value="false"/>
                 </properties>
               </component>
-              <component id="fba2f" class="javax.swing.JLabel" binding="labelCopyPath">
+              <component id="fba2f" class="javax.swing.JLabel" binding="labelCopyPathHotKey">
                 <constraints>
                   <grid row="3" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                   <gridbag weightx="1.0" weighty="1.0"/>
@@ -692,7 +692,7 @@
                   <opaque value="false"/>
                 </properties>
               </component>
-              <component id="a65dc" class="javax.swing.JLabel" binding="labelOpenFolder">
+              <component id="a65dc" class="javax.swing.JLabel" binding="labelOpenFolderHotKey">
                 <constraints>
                   <grid row="2" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                   <gridbag weightx="1.0" weighty="1.0"/>
@@ -726,7 +726,7 @@
             </properties>
             <border type="none"/>
             <children>
-              <component id="419c5" class="javax.swing.JLabel" binding="labelLanguage">
+              <component id="419c5" class="javax.swing.JLabel" binding="labelLanguageChooseTip">
                 <constraints>
                   <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                   <gridbag weightx="1.0" weighty="0.0"/>
@@ -735,7 +735,7 @@
                   <text value="Choose a language"/>
                 </properties>
               </component>
-              <component id="509bf" class="javax.swing.JLabel" binding="labelPlaceHolderL">
+              <component id="509bf" class="javax.swing.JLabel" binding="labelPlaceHolder4">
                 <constraints>
                   <grid row="2" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                   <gridbag weightx="1.0" weighty="0.0"/>
@@ -744,7 +744,7 @@
                   <text value=""/>
                 </properties>
               </component>
-              <component id="231aa" class="javax.swing.JLabel" binding="labelLanTip2">
+              <component id="231aa" class="javax.swing.JLabel" binding="labelTranslationTip">
                 <constraints>
                   <grid row="1" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                   <gridbag weightx="1.0" weighty="0.0"/>
@@ -762,7 +762,7 @@
                 </constraints>
                 <properties/>
               </component>
-              <component id="13cbd" class="javax.swing.JLabel" binding="labelPlaceHolder">
+              <component id="13cbd" class="javax.swing.JLabel" binding="labelPlaceHolder5">
                 <constraints>
                   <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                   <gridbag weightx="0.0" weighty="0.0"/>
@@ -901,7 +901,7 @@
                   <text value="Chosen label font Color:"/>
                 </properties>
               </component>
-              <component id="ba7bc" class="javax.swing.JLabel" binding="labelSharp1">
+              <component id="ba7bc" class="javax.swing.JLabel" binding="labelSharpSign1">
                 <constraints>
                   <grid row="2" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="4" fill="0" indent="0" use-parent-layout="false"/>
                   <gridbag weightx="1.0" weighty="1.0"/>
@@ -912,7 +912,7 @@
                   <verticalTextPosition value="0"/>
                 </properties>
               </component>
-              <component id="f7872" class="javax.swing.JLabel" binding="labelSharp2">
+              <component id="f7872" class="javax.swing.JLabel" binding="labelSharpSign2">
                 <constraints>
                   <grid row="3" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="4" fill="0" indent="0" use-parent-layout="false"/>
                   <gridbag weightx="1.0" weighty="1.0"/>
@@ -941,7 +941,7 @@
                   <opaque value="false"/>
                 </properties>
               </component>
-              <component id="5d2c9" class="javax.swing.JLabel" binding="labelSharp5">
+              <component id="5d2c9" class="javax.swing.JLabel" binding="labelSharpSign5">
                 <constraints>
                   <grid row="5" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="4" fill="0" indent="0" use-parent-layout="false"/>
                   <gridbag weightx="1.0" weighty="1.0"/>
@@ -980,7 +980,7 @@
                   <text value="预览"/>
                 </properties>
               </component>
-              <component id="12259" class="javax.swing.JLabel" binding="label_default_Color">
+              <component id="12259" class="javax.swing.JLabel" binding="labelDefaultColor">
                 <constraints>
                   <grid row="4" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                   <gridbag weightx="1.0" weighty="1.0"/>

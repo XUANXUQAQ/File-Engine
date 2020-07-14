@@ -40,7 +40,7 @@ public class SettingsFrame {
     private static volatile int runAsAdminKeyCode;
     private static volatile int copyPathKeyCode;
     private static volatile float transparency;
-    private static volatile int _copyPathKeyCode;
+    private static volatile int tmp_copyPathKeyCode;
     private static File tmp;
     private static File settings;
     private static HashSet<String> cmdSet;
@@ -48,8 +48,8 @@ public class SettingsFrame {
     private static ConcurrentHashMap<String, String> translationMap;
     private static ConcurrentHashMap<String, String> fileMap;
     private static Pattern equalSign;
-    private static volatile int _openLastFolderKeyCode;
-    private static volatile int _runAsAdminKeyCode;
+    private static volatile int tmp_openLastFolderKeyCode;
+    private static volatile int tmp_runAsAdminKeyCode;
     private static CheckHotKey HotKeyListener;
     private static volatile int labelColor;
     private static volatile int defaultBackgroundColor;
@@ -62,32 +62,32 @@ public class SettingsFrame {
     private Thread updateThread = null;
     private final JFrame frame;
     private static ImageIcon frameIcon;
-    private JTextField textFieldUpdateTime;
+    private JTextField textFieldUpdateInterval;
     private JTextField textFieldCacheNum;
     private JTextArea textAreaIgnorePath;
     private JTextField textFieldSearchDepth;
-    private JCheckBox checkBox1;
-    private JLabel label3;
-    private JLabel label1;
-    private JLabel label2;
-    private JLabel label4;
-    private JLabel label5;
-    private JLabel label6;
+    private JCheckBox checkBoxAddToStartup;
+    private JLabel labelSetIgnorePathTip;
+    private JLabel labelUpdateInterval;
+    private JLabel labelOpenSearchBarHotKey;
+    private JLabel labelMaxCacheNum;
+    private JLabel labelSecond;
+    private JLabel labelSearchDepth;
     private JPanel panel;
-    private JLabel label7;
+    private JLabel labelConstIgnorePathTip;
     private JButton buttonSaveAndRemoveDesktop;
-    private JButton Button3;
-    private JScrollPane scrollpane;
+    private JButton buttonChooseFile;
+    private JScrollPane scrollpaneIgnorePath;
     private JTextField textFieldHotkey;
-    private JLabel labeltip3;
+    private JLabel labeltipPriorityFolder;
     private JTextField textFieldPriorityFolder;
     private JButton ButtonPriorityFolder;
-    private JTabbedPane tabbedPane1;
+    private JTabbedPane tabbedPane;
     private JCheckBox checkBoxAdmin;
     private JCheckBox checkBoxLoseFocus;
-    private JLabel labelRunAsAdmin;
-    private JTextField textFieldRunAsAdmin;
-    private JLabel labelOpenFolder;
+    private JLabel labelRunAsAdminHotKey;
+    private JTextField textFieldRunAsAdminHotKey;
+    private JLabel labelOpenFolderHotKey;
     private JTextField textFieldOpenLastFolder;
     private JButton buttonAddCMD;
     private JButton buttonDelCmd;
@@ -100,7 +100,7 @@ public class SettingsFrame {
     private JLabel labelIcon;
     private JLabel labelGithubIssue;
     private JButton buttonCheckUpdate;
-    private JLabel labelCopyPath;
+    private JLabel labelCopyPathHotKey;
     private JTextField textFieldCopyPath;
     private JLabel labelVersion;
     private JPanel tabGeneral;
@@ -117,13 +117,13 @@ public class SettingsFrame {
     private JTextField textFieldLabelColor;
     private JLabel labelLabelColor;
     private JLabel labelFontColor;
-    private JLabel label_default_Color;
-    private JLabel labelSharp1;
-    private JLabel labelSharp2;
+    private JLabel labelDefaultColor;
+    private JLabel labelSharpSign1;
+    private JLabel labelSharpSign2;
     private JLabel labelSharp4;
     private JButton buttonResetColor;
     private JTextField textFieldFontColor;
-    private JLabel labelSharp5;
+    private JLabel labelSharpSign5;
     private JLabel labelNotChosenFontColor;
     private JLabel labelColorChooser;
     private JLabel FontColorWithCoverageChooser;
@@ -140,17 +140,17 @@ public class SettingsFrame {
     private JLabel labelJna;
     private JPanel tabLanguage;
     private JList<Object> listLanguage;
-    private JLabel labelLanguage;
-    private JLabel labelPlaceHolderL;
-    private JLabel labelLanTip2;
+    private JLabel labelLanguageChooseTip;
+    private JLabel labelPlaceHolder4;
+    private JLabel labelTranslationTip;
     private JLabel labelPlaceHolder1;
-    private JLabel labelPlaceHolder;
+    private JLabel labelPlaceHolder5;
     private JLabel labelPlaceHolderWhatever;
     private JPanel tabPlugin;
     private JLabel labelInstalledPluginNum;
     private JLabel labelPluginNum;
-    private JLabel labelPlaceHolderW;
-    private JLabel labelPlaceHolderW2;
+    private JLabel labelPlaceHolder2;
+    private JLabel labelPlaceHolder3;
     private JPanel PluginPanel;
     private JPanel PluginSettingsPanel;
     private JList<Object> listPlugins;
@@ -261,7 +261,7 @@ public class SettingsFrame {
     }
 
     private void addCheckboxListener() {
-        checkBox1.addActionListener(e -> setStartup(checkBox1.isSelected()));
+        checkBoxAddToStartup.addActionListener(e -> setStartup(checkBoxAddToStartup.isSelected()));
         checkBoxAdmin.addActionListener(e -> isDefaultAdmin = checkBoxAdmin.isSelected());
         checkBoxLoseFocus.addActionListener(e -> isLoseFocusClose = checkBoxLoseFocus.isSelected());
     }
@@ -269,7 +269,7 @@ public class SettingsFrame {
     private void addButtonRemoveDesktopListener() {
         buttonSaveAndRemoveDesktop.addActionListener(e -> {
             String currentFolder = new File("").getAbsolutePath();
-            if (currentFolder.equals(FileSystemView.getFileSystemView().getHomeDirectory().getAbsolutePath()) || currentFolder.equals("C:\\Users\\Public\\Desktop")) {
+            if (currentFolder.equals(FileSystemView.getFileSystemView().getHomeDirectory().getAbsolutePath()) || "C:\\Users\\Public\\Desktop".equals(currentFolder)) {
                 JOptionPane.showMessageDialog(frame, SettingsFrame.getTranslation("The program is detected on the desktop and cannot be moved"));
                 return;
             }
@@ -283,7 +283,7 @@ public class SettingsFrame {
     }
 
     private void addFileChooserButtonListener() {
-        Button3.addActionListener(e -> {
+        buttonChooseFile.addActionListener(e -> {
             JFileChooser fileChooser = new JFileChooser();
             fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
             int returnValue = fileChooser.showDialog(new JLabel(), SettingsFrame.getTranslation("Choose"));
@@ -408,19 +408,19 @@ public class SettingsFrame {
     }
 
     private void addTextFieldRunAsAdminListener() {
-        textFieldRunAsAdmin.addKeyListener(new KeyAdapter() {
+        textFieldRunAsAdminHotKey.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
                 int code = e.getKeyCode();
                 if (code == 17) {
-                    textFieldRunAsAdmin.setText("Ctrl + Enter");
-                    _runAsAdminKeyCode = 17;
+                    textFieldRunAsAdminHotKey.setText("Ctrl + Enter");
+                    tmp_runAsAdminKeyCode = 17;
                 } else if (code == 16) {
-                    textFieldRunAsAdmin.setText("Shift + Enter");
-                    _runAsAdminKeyCode = 16;
+                    textFieldRunAsAdminHotKey.setText("Shift + Enter");
+                    tmp_runAsAdminKeyCode = 16;
                 } else if (code == 18) {
-                    textFieldRunAsAdmin.setText("Alt + Enter");
-                    _runAsAdminKeyCode = 18;
+                    textFieldRunAsAdminHotKey.setText("Alt + Enter");
+                    tmp_runAsAdminKeyCode = 18;
                 }
             }
         });
@@ -458,13 +458,13 @@ public class SettingsFrame {
                 int code = e.getKeyCode();
                 if (code == 17) {
                     textFieldOpenLastFolder.setText("Ctrl + Enter");
-                    _openLastFolderKeyCode = 17;
+                    tmp_openLastFolderKeyCode = 17;
                 } else if (code == 16) {
                     textFieldOpenLastFolder.setText("Shift + Enter");
-                    _openLastFolderKeyCode = 16;
+                    tmp_openLastFolderKeyCode = 16;
                 } else if (code == 18) {
                     textFieldOpenLastFolder.setText("Alt + Enter");
-                    _openLastFolderKeyCode = 18;
+                    tmp_openLastFolderKeyCode = 18;
                 }
             }
         });
@@ -477,7 +477,7 @@ public class SettingsFrame {
                 //未输入
                 return;
             }
-            if (name.equals("update") || name.equals("clearbin") || name.equals("help") || name.equals("version") || isRepeatCommand(name)) {
+            if ("update".equals(name) || "clearbin".equals(name) || "help".equals(name) || "version".equals(name) || isRepeatCommand(name)) {
                 JOptionPane.showMessageDialog(frame, SettingsFrame.getTranslation("Conflict with existing commands"));
                 return;
             }
@@ -547,13 +547,13 @@ public class SettingsFrame {
                 int code = e.getKeyCode();
                 if (code == 17) {
                     textFieldCopyPath.setText("Ctrl + Enter");
-                    _copyPathKeyCode = 17;
+                    tmp_copyPathKeyCode = 17;
                 } else if (code == 16) {
                     textFieldCopyPath.setText("Shift + Enter");
-                    _copyPathKeyCode = 16;
+                    tmp_copyPathKeyCode = 16;
                 } else if (code == 18) {
                     textFieldCopyPath.setText("Alt + Enter");
-                    _copyPathKeyCode = 18;
+                    tmp_copyPathKeyCode = 18;
                 }
             }
         });
@@ -759,12 +759,12 @@ public class SettingsFrame {
 
     private void addButtonPluginUpdateCheckListener() {
         buttonUpdatePlugin.addActionListener(e -> {
-            boolean _isLatest;
+            boolean isVersionLatest;
             String pluginName = (String) listPlugins.getSelectedValue();
             String pluginIdentifier = PluginUtil.getIdentifierByName(pluginName);
             Plugin plugin = PluginUtil.getPluginByIdentifier(pluginIdentifier);
-            _isLatest = plugin.isLatest();
-            if (_isLatest) {
+            isVersionLatest = plugin.isLatest();
+            if (isVersionLatest) {
                 JOptionPane.showMessageDialog(frame, getTranslation("The current Version is the latest."));
             } else {
                 int ret = JOptionPane.showConfirmDialog(frame, getTranslation("New version available, do you want to update?"));
@@ -791,8 +791,8 @@ public class SettingsFrame {
         ImageIcon imageIcon = new ImageIcon(SettingsFrame.class.getResource("/icons/frame.png"));
         labelIcon.setIcon(imageIcon);
         labelVersion.setText(getTranslation("Current Version:") + version);
-        checkBox1.setSelected(isStartup);
-        textFieldUpdateTime.setText(String.valueOf(updateTimeLimit));
+        checkBoxAddToStartup.setSelected(isStartup);
+        textFieldUpdateInterval.setText(String.valueOf(updateTimeLimit));
         textAreaIgnorePath.setText(ignorePath.replaceAll(",", ",\n"));
         textFieldCacheNum.setText(String.valueOf(cacheNumLimit));
         textFieldSearchDepth.setText(String.valueOf(searchDepth));
@@ -800,33 +800,33 @@ public class SettingsFrame {
         textFieldPriorityFolder.setText(priorityFolder);
         checkBoxAdmin.setSelected(isDefaultAdmin);
         textFieldSearchBarColor.setText(Integer.toHexString(searchBarColor));
-        Color _searchBarColor = new Color(searchBarColor);
-        searchBarColorChooser.setBackground(_searchBarColor);
-        searchBarColorChooser.setForeground(_searchBarColor);
+        Color tmp_searchBarColor = new Color(searchBarColor);
+        searchBarColorChooser.setBackground(tmp_searchBarColor);
+        searchBarColorChooser.setForeground(tmp_searchBarColor);
         textFieldBackgroundDefault.setText(Integer.toHexString(defaultBackgroundColor));
-        Color _defaultBackgroundColor = new Color(defaultBackgroundColor);
-        defaultBackgroundChooser.setBackground(_defaultBackgroundColor);
-        defaultBackgroundChooser.setForeground(_defaultBackgroundColor);
+        Color tmp_defaultBackgroundColor = new Color(defaultBackgroundColor);
+        defaultBackgroundChooser.setBackground(tmp_defaultBackgroundColor);
+        defaultBackgroundChooser.setForeground(tmp_defaultBackgroundColor);
         textFieldLabelColor.setText(Integer.toHexString(labelColor));
-        Color _labelColor = new Color(labelColor);
-        labelColorChooser.setBackground(_labelColor);
-        labelColorChooser.setForeground(_labelColor);
+        Color tmp_labelColor = new Color(labelColor);
+        labelColorChooser.setBackground(tmp_labelColor);
+        labelColorChooser.setForeground(tmp_labelColor);
         textFieldFontColorWithCoverage.setText(Integer.toHexString(fontColorWithCoverage));
-        Color _fontColorWithCoverage = new Color(fontColorWithCoverage);
-        FontColorWithCoverageChooser.setBackground(_fontColorWithCoverage);
-        FontColorWithCoverageChooser.setForeground(_fontColorWithCoverage);
+        Color tmp_fontColorWithCoverage = new Color(fontColorWithCoverage);
+        FontColorWithCoverageChooser.setBackground(tmp_fontColorWithCoverage);
+        FontColorWithCoverageChooser.setForeground(tmp_fontColorWithCoverage);
         checkBoxLoseFocus.setSelected(isLoseFocusClose);
         textFieldTransparency.setText(String.valueOf(transparency));
         textFieldFontColor.setText(Integer.toHexString(fontColor));
-        Color _fontColor = new Color(fontColor);
-        FontColorChooser.setBackground(_fontColor);
-        FontColorChooser.setForeground(_fontColor);
+        Color tmp_fontColor = new Color(fontColor);
+        FontColorChooser.setBackground(tmp_fontColor);
+        FontColorChooser.setForeground(tmp_fontColor);
         if (runAsAdminKeyCode == 17) {
-            textFieldRunAsAdmin.setText("Ctrl + Enter");
+            textFieldRunAsAdminHotKey.setText("Ctrl + Enter");
         } else if (runAsAdminKeyCode == 16) {
-            textFieldRunAsAdmin.setText("Shift + Enter");
+            textFieldRunAsAdminHotKey.setText("Shift + Enter");
         } else if (runAsAdminKeyCode == 18) {
-            textFieldRunAsAdmin.setText("Alt + Enter");
+            textFieldRunAsAdminHotKey.setText("Alt + Enter");
         }
         if (openLastFolderKeyCode == 17) {
             textFieldOpenLastFolder.setText("Ctrl + Enter");
@@ -911,33 +911,33 @@ public class SettingsFrame {
 
     private void translate(String language) {
         initTranslations(language);
-        tabbedPane1.setTitleAt(0, getTranslation("General"));
-        tabbedPane1.setTitleAt(1, getTranslation("Search settings"));
-        tabbedPane1.setTitleAt(2, getTranslation("Search bar settings"));
-        tabbedPane1.setTitleAt(3, getTranslation("Plugins"));
-        tabbedPane1.setTitleAt(4, getTranslation("Hotkey settings"));
-        tabbedPane1.setTitleAt(5, getTranslation("Language settings"));
-        tabbedPane1.setTitleAt(6, getTranslation("My commands"));
-        tabbedPane1.setTitleAt(7, getTranslation("Color settings"));
-        tabbedPane1.setTitleAt(8, getTranslation("About"));
-        checkBox1.setText(getTranslation("Add to startup"));
+        tabbedPane.setTitleAt(0, getTranslation("General"));
+        tabbedPane.setTitleAt(1, getTranslation("Search settings"));
+        tabbedPane.setTitleAt(2, getTranslation("Search bar settings"));
+        tabbedPane.setTitleAt(3, getTranslation("Plugins"));
+        tabbedPane.setTitleAt(4, getTranslation("Hotkey settings"));
+        tabbedPane.setTitleAt(5, getTranslation("Language settings"));
+        tabbedPane.setTitleAt(6, getTranslation("My commands"));
+        tabbedPane.setTitleAt(7, getTranslation("Color settings"));
+        tabbedPane.setTitleAt(8, getTranslation("About"));
+        checkBoxAddToStartup.setText(getTranslation("Add to startup"));
         buttonSaveAndRemoveDesktop.setText(getTranslation("Backup and remove all desktop files"));
-        label4.setText(getTranslation("Set the maximum number of caches:"));
+        labelMaxCacheNum.setText(getTranslation("Set the maximum number of caches:"));
         ButtonPriorityFolder.setText(getTranslation("Choose"));
-        Button3.setText(getTranslation("Choose"));
-        label1.setText(getTranslation("File update detection interval:"));
-        label5.setText(getTranslation("Seconds"));
-        label6.setText(getTranslation("Search depth (too large may affect performance):"));
-        labeltip3.setText(getTranslation("Priority search folder location (double-click to clear):"));
-        label7.setText(getTranslation("Separate different paths with commas, and ignore C:\\Windows by default"));
-        label3.setText(getTranslation("Set ignore folder:"));
+        buttonChooseFile.setText(getTranslation("Choose"));
+        labelUpdateInterval.setText(getTranslation("File update detection interval:"));
+        labelSecond.setText(getTranslation("Seconds"));
+        labelSearchDepth.setText(getTranslation("Search depth (too large may affect performance):"));
+        labeltipPriorityFolder.setText(getTranslation("Priority search folder location (double-click to clear):"));
+        labelConstIgnorePathTip.setText(getTranslation("Separate different paths with commas, and ignore C:\\Windows by default"));
+        labelSetIgnorePathTip.setText(getTranslation("Set ignore folder:"));
         checkBoxLoseFocus.setText(getTranslation("Close search bar when focus lost"));
         checkBoxAdmin.setText(getTranslation("Open other programs as an administrator (provided that the software has privileges)"));
         labelTransparency.setText(getTranslation("Search bar transparency:"));
-        label2.setText(getTranslation("Open search bar:"));
-        labelRunAsAdmin.setText(getTranslation("Run as administrator:"));
-        labelOpenFolder.setText(getTranslation("Open the parent folder:"));
-        labelCopyPath.setText(getTranslation("Copy path:"));
+        labelOpenSearchBarHotKey.setText(getTranslation("Open search bar:"));
+        labelRunAsAdminHotKey.setText(getTranslation("Run as administrator:"));
+        labelOpenFolderHotKey.setText(getTranslation("Open the parent folder:"));
+        labelCopyPathHotKey.setText(getTranslation("Copy path:"));
         labelCmdTip2.setText(getTranslation("You can add custom commands here. After adding, you can enter \": + your set identifier\" in the search box to quickly open"));
         buttonAddCMD.setText(getTranslation("Add"));
         buttonDelCmd.setText(getTranslation("Delete"));
@@ -945,7 +945,7 @@ public class SettingsFrame {
         labelSearchBarColor.setText(getTranslation("Search bar Color:"));
         labelLabelColor.setText(getTranslation("Chosen label color:"));
         labelFontColor.setText(getTranslation("Chosen label font Color:"));
-        label_default_Color.setText(getTranslation("Default background Color:"));
+        labelDefaultColor.setText(getTranslation("Default background Color:"));
         labelNotChosenFontColor.setText(getTranslation("Unchosen label Color:"));
         buttonResetColor.setText(getTranslation("Reset to default"));
         labelGitHubTip.setText(getTranslation("This is an open source software,GitHub:"));
@@ -953,8 +953,8 @@ public class SettingsFrame {
         buttonCheckUpdate.setText(getTranslation("Check for update"));
         labelDescription.setText(getTranslation("Thanks for the following project"));
         buttonSave.setText(getTranslation("Save"));
-        labelLanTip2.setText(getTranslation("The translation might not be 100% accurate"));
-        labelLanguage.setText(getTranslation("Choose a language"));
+        labelTranslationTip.setText(getTranslation("The translation might not be 100% accurate"));
+        labelLanguageChooseTip.setText(getTranslation("Choose a language"));
         labelVersion.setText(getTranslation("Current Version:") + version);
         labelInstalledPluginNum.setText(getTranslation("Installed plugins num:"));
         buttonUpdatePlugin.setText(getTranslation("Check for update"));
@@ -969,7 +969,7 @@ public class SettingsFrame {
     }
 
     private static void initTranslations(String language) {
-        if (!language.equals("English(US)")) {
+        if (!"English(US)".equals(language)) {
             String filePath = fileMap.get(language);
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(SettingsFrame.class.getResourceAsStream(filePath), StandardCharsets.UTF_8))) {
                 String line;
@@ -1014,7 +1014,7 @@ public class SettingsFrame {
 
     public static String getTranslation(String text) {
         String translated;
-        if (language.equals("English(US)")) {
+        if ("English(US)".equals(language)) {
             translated = text;
         } else {
             translated = translationMap.get(text);
@@ -1043,7 +1043,7 @@ public class SettingsFrame {
                     int errorlevel = Integer.parseInt(nextLine);
                     scanner.close();
                     return errorlevel == 0;
-                } else if (nextLine.equals("echo %errorlevel%")) {
+                } else if ("echo %errorlevel%".equals(nextLine)) {
                     printedErrorlevel = true;
                 }
             }
@@ -1145,19 +1145,19 @@ public class SettingsFrame {
             } else {
                 openLastFolderKeyCode = 17;
             }
-            _openLastFolderKeyCode = openLastFolderKeyCode;
+            tmp_openLastFolderKeyCode = openLastFolderKeyCode;
             if (settingsInJson.containsKey("runAsAdminKeyCode")) {
                 runAsAdminKeyCode = settingsInJson.getInteger("runAsAdminKeyCode");
             } else {
                 runAsAdminKeyCode = 16;
             }
-            _runAsAdminKeyCode = runAsAdminKeyCode;
+            tmp_runAsAdminKeyCode = runAsAdminKeyCode;
             if (settingsInJson.containsKey("copyPathKeyCode")) {
                 copyPathKeyCode = settingsInJson.getInteger("copyPathKeyCode");
             } else {
                 copyPathKeyCode = 18;
             }
-            _copyPathKeyCode = copyPathKeyCode;
+            tmp_copyPathKeyCode = copyPathKeyCode;
             if (settingsInJson.containsKey("transparency")) {
                 transparency = settingsInJson.getFloat("transparency");
             } else {
@@ -1216,9 +1216,9 @@ public class SettingsFrame {
             labelColor = 0xFF9868;
             fontColor = 0x333333;
             language = getDefaultLang();
-            _openLastFolderKeyCode = openLastFolderKeyCode;
-            _runAsAdminKeyCode = runAsAdminKeyCode;
-            _copyPathKeyCode = copyPathKeyCode;
+            tmp_openLastFolderKeyCode = openLastFolderKeyCode;
+            tmp_runAsAdminKeyCode = runAsAdminKeyCode;
+            tmp_copyPathKeyCode = copyPathKeyCode;
         }
     }
 
@@ -1305,7 +1305,7 @@ public class SettingsFrame {
                 try {
                     download.downLoadFromUrl(updateInfo.getString(urlChoose), fileName, tmp.getAbsolutePath());
                 } catch (Exception e) {
-                    if (!e.getMessage().equals("User Interrupted")) {
+                    if (!"User Interrupted".equals(e.getMessage())) {
                         JOptionPane.showMessageDialog(frame, getTranslation("Download failed"));
                     }
                     download.hideFrame();
@@ -1345,7 +1345,7 @@ public class SettingsFrame {
         frame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
         frame.setResizable(false);
 
-        tabbedPane1.setSelectedIndex(0);
+        tabbedPane.setSelectedIndex(0);
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
     }
@@ -1360,7 +1360,7 @@ public class SettingsFrame {
         float transparencyTemp;
 
         try {
-            updateTimeLimitTemp = Integer.parseInt(textFieldUpdateTime.getText());
+            updateTimeLimitTemp = Integer.parseInt(textFieldUpdateInterval.getText());
         } catch (Exception e1) {
             updateTimeLimitTemp = -1; // 输入不正确
         }
@@ -1368,7 +1368,7 @@ public class SettingsFrame {
             JOptionPane.showMessageDialog(frame, getTranslation("The file index update setting is wrong, please change"));
             return;
         }
-        isStartup = checkBox1.isSelected();
+        isStartup = checkBoxAddToStartup.isSelected();
         try {
             cacheNumLimitTemp = Integer.parseInt(textFieldCacheNum.getText());
         } catch (Exception e1) {
@@ -1392,12 +1392,12 @@ public class SettingsFrame {
             return;
         }
 
-        String _hotkey = textFieldHotkey.getText();
-        if (_hotkey.length() == 1) {
+        String tmp_hotkey = textFieldHotkey.getText();
+        if (tmp_hotkey.length() == 1) {
             JOptionPane.showMessageDialog(frame, getTranslation("Hotkey setting is wrong, please change"));
             return;
         } else {
-            if (!CheckHotKey.getInstance().isHotkeyAvailable(_hotkey)) {
+            if (!CheckHotKey.getInstance().isHotkeyAvailable(tmp_hotkey)) {
                 JOptionPane.showMessageDialog(frame, getTranslation("Hotkey setting is wrong, please change"));
                 return;
             }
@@ -1412,70 +1412,70 @@ public class SettingsFrame {
             return;
         }
 
-        if (_openLastFolderKeyCode == _runAsAdminKeyCode || _openLastFolderKeyCode == _copyPathKeyCode || _runAsAdminKeyCode == _copyPathKeyCode) {
+        if (tmp_openLastFolderKeyCode == tmp_runAsAdminKeyCode || tmp_openLastFolderKeyCode == tmp_copyPathKeyCode || tmp_runAsAdminKeyCode == tmp_copyPathKeyCode) {
             JOptionPane.showMessageDialog(frame, getTranslation("HotKey conflict"));
             return;
         } else {
-            openLastFolderKeyCode = _openLastFolderKeyCode;
-            runAsAdminKeyCode = _runAsAdminKeyCode;
-            copyPathKeyCode = _copyPathKeyCode;
+            openLastFolderKeyCode = tmp_openLastFolderKeyCode;
+            runAsAdminKeyCode = tmp_runAsAdminKeyCode;
+            copyPathKeyCode = tmp_copyPathKeyCode;
         }
 
-        int _labelColor;
+        int tmp_labelColor;
         try {
-            _labelColor = Integer.parseInt(textFieldLabelColor.getText(), 16);
+            tmp_labelColor = Integer.parseInt(textFieldLabelColor.getText(), 16);
         } catch (Exception e) {
-            _labelColor = -1;
+            tmp_labelColor = -1;
         }
-        if (_labelColor < 0) {
+        if (tmp_labelColor < 0) {
             JOptionPane.showMessageDialog(frame, getTranslation("Chosen label color is set incorrectly"));
             return;
         }
 
 
-        int _fontColorWithCoverage;
+        int tmp_fontColorWithCoverage;
         try {
-            _fontColorWithCoverage = Integer.parseInt(textFieldFontColorWithCoverage.getText(), 16);
+            tmp_fontColorWithCoverage = Integer.parseInt(textFieldFontColorWithCoverage.getText(), 16);
         } catch (Exception e) {
-            _fontColorWithCoverage = -1;
+            tmp_fontColorWithCoverage = -1;
         }
-        if (_fontColorWithCoverage < 0) {
+        if (tmp_fontColorWithCoverage < 0) {
             JOptionPane.showMessageDialog(frame, getTranslation("Chosen label font color is set incorrectly"));
             return;
         }
 
 
-        int _defaultBackgroundColor;
+        int tmp_defaultBackgroundColor;
         try {
-            _defaultBackgroundColor = Integer.parseInt(textFieldBackgroundDefault.getText(), 16);
+            tmp_defaultBackgroundColor = Integer.parseInt(textFieldBackgroundDefault.getText(), 16);
         } catch (Exception e) {
-            _defaultBackgroundColor = -1;
+            tmp_defaultBackgroundColor = -1;
         }
-        if (_defaultBackgroundColor < 0) {
+        if (tmp_defaultBackgroundColor < 0) {
             JOptionPane.showMessageDialog(frame, getTranslation("Incorrect default background color setting"));
             return;
         }
 
 
-        int _fontColor;
+        int tmp_fontColor;
         try {
-            _fontColor = Integer.parseInt(textFieldFontColor.getText(), 16);
+            tmp_fontColor = Integer.parseInt(textFieldFontColor.getText(), 16);
         } catch (Exception e) {
-            _fontColor = -1;
+            tmp_fontColor = -1;
         }
-        if (_fontColor < 0) {
+        if (tmp_fontColor < 0) {
             JOptionPane.showMessageDialog(frame, "Unchosen label font color is set incorrectly");
             return;
         }
 
 
-        int _searchBarColor;
+        int tmp_searchBarColor;
         try {
-            _searchBarColor = Integer.parseInt(textFieldSearchBarColor.getText(), 16);
+            tmp_searchBarColor = Integer.parseInt(textFieldSearchBarColor.getText(), 16);
         } catch (Exception e) {
-            _searchBarColor = -1;
+            tmp_searchBarColor = -1;
         }
-        if (_searchBarColor < 0) {
+        if (tmp_searchBarColor < 0) {
             JOptionPane.showMessageDialog(frame, getTranslation("The color of the search bar is set incorrectly"));
             return;
         }
@@ -1492,11 +1492,11 @@ public class SettingsFrame {
         ignorePath = ignorePathTemp;
         searchDepth = searchDepthTemp;
         transparency = transparencyTemp;
-        labelColor = _labelColor;
-        defaultBackgroundColor = _defaultBackgroundColor;
-        searchBarColor = _searchBarColor;
-        fontColorWithCoverage = _fontColorWithCoverage;
-        fontColor = _fontColor;
+        labelColor = tmp_labelColor;
+        defaultBackgroundColor = tmp_defaultBackgroundColor;
+        searchBarColor = tmp_searchBarColor;
+        fontColorWithCoverage = tmp_fontColorWithCoverage;
+        fontColor = tmp_fontColor;
         SearchBar instance = SearchBar.getInstance();
         instance.setTransparency(transparency);
         instance.setDefaultBackgroundColor(defaultBackgroundColor);
@@ -1504,18 +1504,18 @@ public class SettingsFrame {
         instance.setFontColorWithCoverage(fontColorWithCoverage);
         instance.setFontColor(fontColor);
         instance.setSearchBarColor(searchBarColor);
-        Color _tmp = new Color(labelColor);
-        labelColorChooser.setBackground(_tmp);
-        labelColorChooser.setForeground(_tmp);
-        _tmp = new Color(defaultBackgroundColor);
-        defaultBackgroundChooser.setBackground(_tmp);
-        defaultBackgroundChooser.setForeground(_tmp);
-        _tmp = new Color(fontColorWithCoverage);
-        FontColorWithCoverageChooser.setBackground(_tmp);
-        FontColorWithCoverageChooser.setForeground(_tmp);
-        _tmp = new Color(fontColor);
-        FontColorChooser.setBackground(_tmp);
-        FontColorChooser.setForeground(_tmp);
+        Color tmp_color = new Color(labelColor);
+        labelColorChooser.setBackground(tmp_color);
+        labelColorChooser.setForeground(tmp_color);
+        tmp_color = new Color(defaultBackgroundColor);
+        defaultBackgroundChooser.setBackground(tmp_color);
+        defaultBackgroundChooser.setForeground(tmp_color);
+        tmp_color = new Color(fontColorWithCoverage);
+        FontColorWithCoverageChooser.setBackground(tmp_color);
+        FontColorWithCoverageChooser.setForeground(tmp_color);
+        tmp_color = new Color(fontColor);
+        FontColorChooser.setBackground(tmp_color);
+        FontColorChooser.setForeground(tmp_color);
 
 
         //保存设置
@@ -1561,7 +1561,7 @@ public class SettingsFrame {
     public static boolean isDebug() {
         try {
             String res = System.getProperty("File_Engine_Debug");
-            return res.equalsIgnoreCase("true");
+            return "true".equalsIgnoreCase(res);
         } catch (NullPointerException e) {
             return false;
         }
@@ -1585,7 +1585,7 @@ public class SettingsFrame {
                 }
                 outPut.close();
                 if (!result.toString().isEmpty()) {
-                    checkBox1.setSelected(false);
+                    checkBoxAddToStartup.setSelected(false);
                     JOptionPane.showMessageDialog(frame, getTranslation("Add to startup failed, please try to run as administrator"));
                 }
             } catch (IOException | InterruptedException ignored) {
@@ -1605,7 +1605,7 @@ public class SettingsFrame {
                 }
                 outPut.close();
                 if (!result.toString().isEmpty()) {
-                    checkBox1.setSelected(true);
+                    checkBoxAddToStartup.setSelected(true);
                     JOptionPane.showMessageDialog(frame, getTranslation("Delete startup failed, please try to run as administrator"));
                 }
             } catch (IOException | InterruptedException ignored) {
@@ -1613,7 +1613,7 @@ public class SettingsFrame {
             }
         }
 
-        boolean isSelected = checkBox1.isSelected();
+        boolean isSelected = checkBoxAddToStartup.isSelected();
         JSONObject allSettings = null;
         try (BufferedReader buffR1 = new BufferedReader(new InputStreamReader(new FileInputStream(settings), StandardCharsets.UTF_8))) {
             String line;

@@ -214,7 +214,7 @@ public class SearchBar {
         //开启所有线程
         initThreadPool();
 
-        //添加textfield搜索变更检测
+        //添加textField搜索变更检测
         addTextFieldDocumentListener();
 
         //添加结果的鼠标双击事件响应
@@ -2297,17 +2297,17 @@ public class SearchBar {
                         String text = getTextFieldText();
                         if (search.isUsable()) {
                             if (runningMode.get() == COMMAND_MODE) {
-                                if (text.equals(":update")) {
+                                if (":update".equals(text)) {
                                     closedTodo();
                                     search.setManualUpdate(true);
                                     timer = false;
                                     continue;
                                 }
-                                if (text.equals(":version")) {
+                                if (":version".equals(text)) {
                                     closedTodo();
                                     JOptionPane.showMessageDialog(null, SettingsFrame.getTranslation("Current Version:") + SettingsFrame.version);
                                 }
-                                if (text.equals(":help")) {
+                                if (":help".equals(text)) {
                                     closedTodo();
                                     Desktop desktop;
                                     if (Desktop.isDesktopSupported()) {
@@ -2315,7 +2315,7 @@ public class SearchBar {
                                         desktop.browse(new URI("https://github.com/XUANXUQAQ/File-Engine/wiki/Usage"));
                                     }
                                 }
-                                if (text.equals(":clearbin")) {
+                                if (":clearbin".equals(text)) {
                                     closedTodo();
                                     int r = JOptionPane.showConfirmDialog(null, SettingsFrame.getTranslation("Are you sure you want to empty the recycle bin"));
                                     if (r == 0) {

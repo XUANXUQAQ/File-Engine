@@ -94,3 +94,4 @@ The current Version is the latest.=当前版本已是最新。
 New version available, do you want to update?=有新版本可更新，是否更新？
 Download failed.=下载失败。
 Plugins=插件
+Plugin Market=插件市场

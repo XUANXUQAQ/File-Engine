@@ -7,6 +7,9 @@ import javax.swing.filechooser.FileSystemView;
 import java.io.File;
 import java.util.ArrayList;
 
+/**
+ * @author XUANXU
+ */
 public class MoveDesktopFiles implements Runnable {
     @Override
     public void run() {
