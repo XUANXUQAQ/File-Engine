@@ -7,6 +7,9 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+/**
+ * @author XUANXU
+ */
 public class SQLiteUtil {
     private static SQLiteConfig sqLiteConfig;
     private static volatile boolean isInitialized = false;

@@ -17,11 +17,11 @@ public class CheckHotKey {
     private final Pattern plus;
 
     private static class CheckHotKeyBuilder {
-        private static final CheckHotKey instance = new CheckHotKey();
+        private static final CheckHotKey INSTANCE = new CheckHotKey();
     }
 
     public static CheckHotKey getInstance() {
-        return CheckHotKeyBuilder.instance;
+        return CheckHotKeyBuilder.INSTANCE;
     }
 
 
@@ -90,8 +90,7 @@ public class CheckHotKey {
     private CheckHotKey() {
         plus = Pattern.compile(" \\+ ");
         map = new HashMap<>();
-
-        threadPool = Executors.newFixedThreadPool(2);
+        threadPool = Executors.newCachedThreadPool();
         map.put("Ctrl", KeyEvent.VK_CONTROL);
         map.put("Alt", KeyEvent.VK_ALT);
         map.put("Shift", KeyEvent.VK_SHIFT);

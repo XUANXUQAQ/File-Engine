@@ -23,6 +23,9 @@ import java.util.ArrayList;
 import java.util.Objects;
 
 
+/**
+ * @author XUANXU
+ */
 public class MainClass {
     //32bit
     private static final String fileMonitor86Md5 = "1005aa7fa75ae86d314afcfc5df0af6b";
@@ -77,12 +80,10 @@ public class MainClass {
 
     private static boolean isTableExist(ArrayList<String> tableNames) {
         try (Statement stmt = SQLiteUtil.getStatement()) {
-            stmt.execute("BEGIN;");
             for (String tableName : tableNames) {
                 String sql = "SELECT * FROM " + tableName + ";";
                 stmt.execute(sql);
             }
-            stmt.execute("COMMIT;");
             return true;
         } catch (Exception e) {
             return false;

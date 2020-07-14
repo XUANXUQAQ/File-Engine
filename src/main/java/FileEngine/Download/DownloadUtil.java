@@ -15,11 +15,11 @@ public class DownloadUtil {
     private final JProgressBar progressBar;
 
     private static class DownloadUpdateBuilder {
-        private static final DownloadUtil instance = new DownloadUtil();
+        private static final DownloadUtil INSTANCE = new DownloadUtil();
     }
 
     public static DownloadUtil getInstance() {
-        return DownloadUpdateBuilder.instance;
+        return DownloadUpdateBuilder.INSTANCE;
     }
 
     private DownloadUtil() {

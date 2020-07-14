@@ -23,20 +23,17 @@ public class SearchUtil {
     private final ConcurrentLinkedQueue<String> commandQueue = new ConcurrentLinkedQueue<>();
 
     private static class SearchBuilder {
-        private static final SearchUtil instance = new SearchUtil();
+        private static final SearchUtil INSTANCE = new SearchUtil();
     }
 
     private SearchUtil() {
     }
 
     public static SearchUtil getInstance() {
-        return SearchBuilder.instance;
+        return SearchBuilder.INSTANCE;
     }
 
-    public void removeFileFromDatabase(String path) {
-        SearchBar searchBar = SearchBar.getInstance();
-        int ascII = searchBar.getAscIISum(searchBar.getFileName(path));
-        int asciiGroup = ascII / 100;
+    private void addDeleteSqlCommandByAscii(int asciiGroup, String path) {
         String command;
         switch (asciiGroup) {
             case 0:
@@ -177,9 +174,7 @@ public class SearchUtil {
         }
     }
 
-    public void addFileToDatabase(String path) {
-        int ascII = SearchBar.getInstance().getAscIISum(SearchBar.getInstance().getFileName(path));
-        int asciiGroup = ascII / 100;
+    private void addAddSqlCommandByAscii(int asciiGroup, String path) {
         String command;
         switch (asciiGroup) {
             case 0:
@@ -323,6 +318,19 @@ public class SearchUtil {
         }
     }
 
+    public void removeFileFromDatabase(String path) {
+        SearchBar searchBar = SearchBar.getInstance();
+        int asciiSum = searchBar.getAscIISum(searchBar.getFileName(path));
+        int asciiGroup = asciiSum / 100;
+        addDeleteSqlCommandByAscii(asciiGroup, path);
+    }
+
+    public void addFileToDatabase(String path) {
+        int asciiSum = SearchBar.getInstance().getAscIISum(SearchBar.getInstance().getFileName(path));
+        int asciiGroup = asciiSum / 100;
+        addAddSqlCommandByAscii(asciiGroup, path);
+    }
+
     public void executeAllCommands(Statement stmt) {
         if (SettingsFrame.isDebug()) {
             System.out.println("----------------------------------------------");
@@ -385,13 +393,13 @@ public class SearchUtil {
                 } else {
                     String path = root.getAbsolutePath();
                     path = path.substring(0, 2);
-                    __searchFile(path, searchDepth, ignorePath);
+                    innerSearchFile(path, searchDepth, ignorePath);
                 }
             }
         }
         if (needSearchIgnoreSearchDepth) {
-            __searchFileIgnoreSearchDepth(getStartMenu(), ignorePath);
-            __searchFileIgnoreSearchDepth("C:\\ProgramData\\Microsoft\\Windows\\Start Menu", ignorePath);
+            innerSearchFileIgnoreSearchDepth(getStartMenu(), ignorePath);
+            innerSearchFileIgnoreSearchDepth("C:\\ProgramData\\Microsoft\\Windows\\Start Menu", ignorePath);
         } else {
             searchByUSN(strb.toString(), ignorePath.toLowerCase());
         }
@@ -401,8 +409,8 @@ public class SearchUtil {
     }
 
     private void searchByUSN(String paths, String ignorePath) throws IOException, InterruptedException {
-        File fileSearcherUSN = new File("user/fileSearcherUSN.exe");
-        String absPath = fileSearcherUSN.getAbsolutePath();
+        File usnSearcher = new File("user/fileSearcherUSN.exe");
+        String absPath = usnSearcher.getAbsolutePath();
         String start = absPath.substring(0, 2);
         String end = "\"" + absPath.substring(2) + "\"";
         File database = new File("data.db");
@@ -439,7 +447,7 @@ public class SearchUtil {
         return null;
     }
 
-    private void __searchFileIgnoreSearchDepth(String path, String ignorePath) {
+    private void innerSearchFileIgnoreSearchDepth(String path, String ignorePath) {
         File fileSearcher = new File("user/fileSearcher.exe");
         String absPath = fileSearcher.getAbsolutePath();
         String start = absPath.substring(0, 2);
@@ -454,7 +462,7 @@ public class SearchUtil {
         }
     }
 
-    private void __searchFile(String path, int searchDepth, String ignorePath) throws InterruptedException, IOException {
+    private void innerSearchFile(String path, int searchDepth, String ignorePath) throws InterruptedException, IOException {
         File fileSearcher = new File("user/fileSearcher.exe");
         String absPath = fileSearcher.getAbsolutePath();
         String start = absPath.substring(0, 2);

@@ -94,3 +94,4 @@ The current Version is the latest.=
 New version available, do you want to update?=
 Download failed.=
 Plugins=
+Plugin Market=

@@ -16,28 +16,28 @@ import java.util.jar.JarFile;
 
 public class PluginUtil {
     protected static class PluginInfo {
-        public PluginInfo(Class<?> _cls, Object _instance) {
-            this.cls = _cls;
-            this.clsInstance = _instance;
+        public PluginInfo(Class<?> cls, Object instance) {
+            this.cls = cls;
+            this.clsInstance = instance;
         }
 
         public Class<?> cls;
         public Object clsInstance;
     }
 
-    private static final ConcurrentHashMap<String, Plugin> pluginMap = new ConcurrentHashMap<>();
-    private static final ConcurrentHashMap<String, String> nameIdentifierMap = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, Plugin> PLUGIN_MAP = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, String> NAME_IDENTIFIER_MAP = new ConcurrentHashMap<>();
 
     public static Iterator<Plugin> getPluginMapIter() {
-        return pluginMap.values().iterator();
+        return PLUGIN_MAP.values().iterator();
     }
 
     public static Plugin getPluginByIdentifier(String identifier) {
-        return pluginMap.get(identifier);
+        return PLUGIN_MAP.get(identifier);
     }
 
     public static int getInstalledPluginNum() {
-        return pluginMap.size();
+        return PLUGIN_MAP.size();
     }
 
     private static String readAll(InputStream inputStream) {
@@ -73,22 +73,22 @@ public class PluginUtil {
         if (plugin.getApiVersion() != Plugin.getLatestApiVersion()) {
             isTooOld = true;
         }
-        pluginMap.put(identifier, plugin);
+        PLUGIN_MAP.put(identifier, plugin);
         return isTooOld;
     }
 
     public static void unloadAllPlugins() {
-        for (String each : pluginMap.keySet()) {
-            unloadPlugin(pluginMap.get(each));
+        for (String each : PLUGIN_MAP.keySet()) {
+            unloadPlugin(PLUGIN_MAP.get(each));
         }
     }
 
     public static String getIdentifierByName(String name) {
-        return nameIdentifierMap.get(name);
+        return NAME_IDENTIFIER_MAP.get(name);
     }
 
     public static Object[] getPluginArray() {
-        ArrayList<String> list = new ArrayList<>(nameIdentifierMap.keySet());
+        ArrayList<String> list = new ArrayList<>(NAME_IDENTIFIER_MAP.keySet());
         return list.toArray();
     }
 
@@ -106,14 +106,14 @@ public class PluginUtil {
             while (enu.hasMoreElements()) {
                 JarEntry element = (JarEntry) enu.nextElement();
                 String name = element.getName();
-                if (name.equals("PluginInfo.json")) {
+                if ("PluginInfo.json".equals(name)) {
                     String pluginInfo = readAll(jarFile.getInputStream(element));
                     JSONObject json = JSONObject.parseObject(pluginInfo);
                     String className = json.getString("className");
                     String identifier = json.getString("identifier");
                     String pluginName = json.getString("name");
                     isTooOld = loadPlugin(jar, className, identifier);
-                    nameIdentifierMap.put(pluginName, identifier);
+                    NAME_IDENTIFIER_MAP.put(pluginName, identifier);
                     if (isTooOld) {
                         oldPlugins.append(pluginName).append(",");
                     }
