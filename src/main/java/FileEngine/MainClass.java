@@ -77,10 +77,12 @@ public class MainClass {
 
     private static boolean isTableExist(ArrayList<String> tableNames) {
         try (Statement stmt = SQLiteUtil.getStatement()) {
+            stmt.execute("BEGIN;");
             for (String tableName : tableNames) {
                 String sql = "SELECT * FROM " + tableName + ";";
                 stmt.execute(sql);
             }
+            stmt.execute("COMMIT;");
             return true;
         } catch (Exception e) {
             return false;
@@ -215,9 +217,9 @@ public class MainClass {
             e.printStackTrace();
         }
 
-        SearchUtil search = SearchUtil.getInstance();
         TaskBar taskBar = TaskBar.getInstance();
         taskBar.showTaskBar();
+        SearchUtil search = SearchUtil.getInstance();
 
         if (isManualUpdate) {
             search.setManualUpdate(true);

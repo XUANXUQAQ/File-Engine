@@ -60,7 +60,7 @@ public class SettingsFrame {
     private static volatile boolean isStartup;
     private static SearchBar searchBar;
     private Thread updateThread = null;
-    private JFrame frame;
+    private final JFrame frame;
     private static ImageIcon frameIcon;
     private JTextField textFieldUpdateTime;
     private JTextField textFieldCacheNum;
@@ -135,7 +135,7 @@ public class SettingsFrame {
     private JLabel searchBarColorChooser;
     private JLabel labelCmdTip2;
     private JLabel labelDescription;
-    private JLabel labelBeautyEye;
+    private JLabel labelWebLookAndFeel;
     private JLabel labelFastJson;
     private JLabel labelJna;
     private JPanel tabLanguage;
@@ -783,7 +783,7 @@ public class SettingsFrame {
     private void initAll() {
         //设置窗口显示
         labelAboutGithub.setText("<html><a href='https://github.com/XUANXUQAQ/File-Engine'><font size=\"4\">File-Engine</font></a></html>");
-        labelBeautyEye.setText("1.WebLookAndFeel");
+        labelWebLookAndFeel.setText("1.WebLookAndFeel");
         labelFastJson.setText("2.FastJson");
         labelJna.setText("3.Java-Native-Access");
         labelSQLite.setText("4.SQLite-JDBC");
