@@ -1,10 +1,10 @@
-package FileEngine.Frames;
+package FileEngine.frames;
 
-import FileEngine.Download.DownloadManager;
-import FileEngine.Download.DownloadUtil;
-import FileEngine.HotkeyListener.CheckHotKey;
-import FileEngine.PluginSystem.Plugin;
-import FileEngine.PluginSystem.PluginUtil;
+import FileEngine.download.DownloadManager;
+import FileEngine.download.DownloadUtil;
+import FileEngine.hotkeyListener.CheckHotKey;
+import FileEngine.pluginSystem.Plugin;
+import FileEngine.pluginSystem.PluginUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.serializer.SerializerFeature;

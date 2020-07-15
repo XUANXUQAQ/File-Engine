@@ -1,4 +1,4 @@
-package FileEngine.GetIcon;
+package FileEngine.getIcon;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileSystemView;
@@ -29,7 +29,7 @@ public class GetIconUtil {
     }
 
     public static void initIconCache(int width, int height) {
-        //TODO 添加其他常量图标  changeIcon((ImageIcon) fsv.getSystemIcon(new File("")), width, height);
+        //添加其他常量图标  changeIcon((ImageIcon) fsv.getSystemIcon(new File("")), width, height);
         dllImageIcon = changeIcon((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(new File("C:\\Windows\\System32\\sysmain.dll")), width, height);
         folderImageIcon = changeIcon((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(new File("C:\\Windows")), width, height);
         txtImageIcon = changeIcon((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(new File("user\\cmds.txt")), width, height);

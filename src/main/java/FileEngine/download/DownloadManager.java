@@ -1,6 +1,6 @@
-package FileEngine.Download;
+package FileEngine.download;
 
-import FileEngine.Frames.SettingsFrame;
+import FileEngine.frames.SettingsFrame;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -16,7 +16,7 @@ public class DownloadManager {
     private final String fileName;
     private volatile double progress = 0.0;
     private volatile boolean isUserInterrupted = false;
-    private volatile int DOWNLOAD_STATUS;
+    private volatile int downloadStatus;
 
     public static final int DOWNLOAD_DONE = 0;
     public static final int DOWNLOAD_ERROR = 1;
@@ -27,7 +27,7 @@ public class DownloadManager {
         this.url = _url;
         this.fileName = _fileName;
         this.localPath = _savePath;
-        DOWNLOAD_STATUS = DOWNLOAD_DOWNLOADING;
+        downloadStatus = DOWNLOAD_DOWNLOADING;
     }
 
     public String getFileName() {
@@ -36,7 +36,7 @@ public class DownloadManager {
 
     public void download() {
         try {
-            System.setProperty("http.keepAlive", "false"); // must be set
+            System.setProperty("http.keepAlive", "false");
             URL urlAddress = new URL(url);
             HttpURLConnection con = (HttpURLConnection) urlAddress.openConnection();
             //设置超时为3秒
@@ -70,15 +70,15 @@ public class DownloadManager {
             if (isUserInterrupted) {
                 throw new IOException("User Interrupted");
             }
-            DOWNLOAD_STATUS = DOWNLOAD_DONE;
+            downloadStatus = DOWNLOAD_DONE;
         } catch (IOException e) {
             if (SettingsFrame.isDebug()) {
                 e.printStackTrace();
             }
             if ("User Interrupted".equals(e.getMessage())) {
-                DOWNLOAD_STATUS = DOWNLOAD_INTERRUPTED;
+                downloadStatus = DOWNLOAD_INTERRUPTED;
             } else {
-                DOWNLOAD_STATUS = DOWNLOAD_ERROR;
+                downloadStatus = DOWNLOAD_ERROR;
             }
         }
     }
@@ -102,6 +102,6 @@ public class DownloadManager {
     }
 
     public int getDownloadStatus() {
-        return DOWNLOAD_STATUS;
+        return downloadStatus;
     }
 }

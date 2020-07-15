@@ -1,13 +1,13 @@
 package FileEngine;
 
-import FileEngine.DllInterface.FileMonitor;
-import FileEngine.Frames.SearchBar;
-import FileEngine.Frames.SettingsFrame;
-import FileEngine.Frames.TaskBar;
-import FileEngine.HotkeyListener.CheckHotKey;
-import FileEngine.PluginSystem.PluginUtil;
-import FileEngine.SQLiteConfig.SQLiteUtil;
-import FileEngine.Search.SearchUtil;
+import FileEngine.dllInterface.FileMonitor;
+import FileEngine.frames.SearchBar;
+import FileEngine.frames.SettingsFrame;
+import FileEngine.frames.TaskBar;
+import FileEngine.hotkeyListener.CheckHotKey;
+import FileEngine.pluginSystem.PluginUtil;
+import FileEngine.sqliteConfig.SQLiteUtil;
+import FileEngine.search.SearchUtil;
 import FileEngine.md5.Md5Util;
 import br.com.margel.weblaf.WebLookAndFeel;
 import com.alibaba.fastjson.JSONObject;
@@ -26,35 +26,35 @@ import java.util.Objects;
  */
 public class MainClass {
     //32bit
-    private static final String fileMonitor86Md5 = "1005aa7fa75ae86d314afcfc5df0af6b";
-    private static final String fileSearcher86Md5 = "8ff53f2f2a0d2ec0d7a89d3f4f1bb491";
-    private static final String getAscII86Md5 = "e370e53ce6c18758a5468fe11ccca652";
-    private static final String hotkeyListener86Md5 = "15bd4db12a4939969c27c03ac9e57ddd";
-    private static final String isLocalDisk86Md5 = "9b1c4c4fc44b52bff4f226b39c1ac46f";
-    private static final String fileSearcherUSN86Md5 = "48153cfabd03e2ab907f8d361bce9130";
-    private static final String isNTFS86Md5 = "2aff387756192c704c0c876f2ad12fa2";
-    private static final String sqlite386Md5 = "82b03cdb95fb0ef88b876d141b478a6d";
-    private static final String updaterBat86Md5 = "005b57b56c3402b2038f90abc6e141e7";
+    private static final String FILE_MONITOR_86_MD_5 = "1005aa7fa75ae86d314afcfc5df0af6b";
+    private static final String FILE_SEARCHER_86_MD_5 = "8ff53f2f2a0d2ec0d7a89d3f4f1bb491";
+    private static final String GET_ASC_II_86_MD_5 = "e370e53ce6c18758a5468fe11ccca652";
+    private static final String HOTKEY_LISTENER_86_MD_5 = "15bd4db12a4939969c27c03ac9e57ddd";
+    private static final String IS_LOCAL_DISK_86_MD_5 = "9b1c4c4fc44b52bff4f226b39c1ac46f";
+    private static final String FILE_SEARCHER_USN_86_MD_5 = "48153cfabd03e2ab907f8d361bce9130";
+    private static final String IS_NTFS_86_MD_5 = "2aff387756192c704c0c876f2ad12fa2";
+    private static final String SQLITE3_86_MD_5 = "82b03cdb95fb0ef88b876d141b478a6d";
+    private static final String UPDATER_BAT_86_MD_5 = "005b57b56c3402b2038f90abc6e141e7";
     //64bit
-    private static final String fileMonitor64Md5 = "db64b40ed1ccec6a7f2af1b40c1d22ab";
-    private static final String fileSearcher64Md5 = "41645c85b1b14823cd1fcf9cce069477";
-    private static final String getAscII64Md5 = "eff607d2dd4a7e4c878948fe8f24b3ea";
-    private static final String hotkeyListener64Md5 = "41388e31d6fc22fb430f636d402cf608";
-    private static final String isLocalDisk64Md5 = "64f64bc828f477aa9ce6f5f8fd6010f3";
-    private static final String fileSearcherUSN64Md5 = "c800f1dab50df73794df2a94a1c847a0";
-    private static final String isNTFS64Md5 = "b5f7ea2923a42873883a3bcda2bafd2";
-    private static final String sqlite364Md5 = "658c71b8b93ba4eb5b4936f46a112449";
-    private static final String updaterBat64Md5 = "357d7cc1cf023cb6c90f73926c6f2f55";
+    private static final String FILE_MONITOR_64_MD_5 = "db64b40ed1ccec6a7f2af1b40c1d22ab";
+    private static final String FILE_SEARCHER_64_MD_5 = "41645c85b1b14823cd1fcf9cce069477";
+    private static final String GET_ASC_II_64_MD_5 = "eff607d2dd4a7e4c878948fe8f24b3ea";
+    private static final String HOTKEY_LISTENER_64_MD_5 = "41388e31d6fc22fb430f636d402cf608";
+    private static final String IS_LOCAL_DISK_64_MD_5 = "64f64bc828f477aa9ce6f5f8fd6010f3";
+    private static final String FILE_SEARCHER_USN_64_MD_5 = "c800f1dab50df73794df2a94a1c847a0";
+    private static final String IS_NTFS_64_MD_5 = "b5f7ea2923a42873883a3bcda2bafd2";
+    private static final String SQLITE3_64_MD_5 = "658c71b8b93ba4eb5b4936f46a112449";
+    private static final String UPDATER_BAT_64_MD_5 = "357d7cc1cf023cb6c90f73926c6f2f55";
 
-    private static final String shortcutGeneratorMd5 = "fa4e26f99f3dcd58d827828c411ea5d7";
+    private static final String SHORTCUT_GENERATOR_MD_5 = "fa4e26f99f3dcd58d827828c411ea5d7";
 
     private static void initializeDllInterface() {
         try {
-            Class.forName("FileEngine.DllInterface.FileMonitor");
-            Class.forName("FileEngine.DllInterface.IsLocalDisk");
-            Class.forName("FileEngine.DllInterface.HotkeyListener");
-            Class.forName("FileEngine.DllInterface.GetAscII");
-            Class.forName("FileEngine.DllInterface.isNTFS");
+            Class.forName("FileEngine.dllInterface.FileMonitor");
+            Class.forName("FileEngine.dllInterface.IsLocalDisk");
+            Class.forName("FileEngine.dllInterface.HotkeyListener");
+            Class.forName("FileEngine.dllInterface.GetAscII");
+            Class.forName("FileEngine.dllInterface.isNTFS");
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
@@ -259,25 +259,25 @@ public class MainClass {
 
     private static void releaseAllDependence(boolean is64Bit) {
         if (is64Bit) {
-            copyOrIgnoreFile("user/fileMonitor.dll", "/win32-x86-64/fileMonitor.dll", fileMonitor64Md5);
-            copyOrIgnoreFile("user/getAscII.dll", "/win32-x86-64/getAscII.dll", getAscII64Md5);
-            copyOrIgnoreFile("user/hotkeyListener.dll", "/win32-x86-64/hotkeyListener.dll", hotkeyListener64Md5);
-            copyOrIgnoreFile("user/isLocalDisk.dll", "/win32-x86-64/isLocalDisk.dll", isLocalDisk64Md5);
-            copyOrIgnoreFile("user/fileSearcher.exe", "/win32-x86-64/fileSearcher.exe", fileSearcher64Md5);
-            copyOrIgnoreFile("user/fileSearcherUSN.exe", "/win32-x86-64/fileSearcherUSN.exe", fileSearcherUSN64Md5);
-            copyOrIgnoreFile("user/isNTFS.dll", "/win32-x86-64/isNTFS.dll", isNTFS64Md5);
-            copyOrIgnoreFile("user/sqlite3.dll", "/win32-x86-64/sqlite3.dll", sqlite364Md5);
+            copyOrIgnoreFile("user/fileMonitor.dll", "/win32-x86-64/fileMonitor.dll", FILE_MONITOR_64_MD_5);
+            copyOrIgnoreFile("user/getAscII.dll", "/win32-x86-64/getAscII.dll", GET_ASC_II_64_MD_5);
+            copyOrIgnoreFile("user/hotkeyListener.dll", "/win32-x86-64/hotkeyListener.dll", HOTKEY_LISTENER_64_MD_5);
+            copyOrIgnoreFile("user/isLocalDisk.dll", "/win32-x86-64/isLocalDisk.dll", IS_LOCAL_DISK_64_MD_5);
+            copyOrIgnoreFile("user/fileSearcher.exe", "/win32-x86-64/fileSearcher.exe", FILE_SEARCHER_64_MD_5);
+            copyOrIgnoreFile("user/fileSearcherUSN.exe", "/win32-x86-64/fileSearcherUSN.exe", FILE_SEARCHER_USN_64_MD_5);
+            copyOrIgnoreFile("user/isNTFS.dll", "/win32-x86-64/isNTFS.dll", IS_NTFS_64_MD_5);
+            copyOrIgnoreFile("user/sqlite3.dll", "/win32-x86-64/sqlite3.dll", SQLITE3_64_MD_5);
         } else {
-            copyOrIgnoreFile("user/fileMonitor.dll", "/win32-x86/fileMonitor.dll", fileMonitor86Md5);
-            copyOrIgnoreFile("user/getAscII.dll", "/win32-x86/getAscII.dll", getAscII86Md5);
-            copyOrIgnoreFile("user/hotkeyListener.dll", "/win32-x86/hotkeyListener.dll", hotkeyListener86Md5);
-            copyOrIgnoreFile("user/isLocalDisk.dll", "/win32-x86/isLocalDisk.dll", isLocalDisk86Md5);
-            copyOrIgnoreFile("user/fileSearcher.exe", "/win32-x86/fileSearcher.exe", fileSearcher86Md5);
-            copyOrIgnoreFile("user/fileSearcherUSN.exe", "/win32-x86/fileSearcherUSN.exe", fileSearcherUSN86Md5);
-            copyOrIgnoreFile("user/isNTFS.dll", "/win32-x86/isNTFS.dll", isNTFS86Md5);
-            copyOrIgnoreFile("user/sqlite3.dll", "/win32-x86/sqlite3.dll", sqlite386Md5);
+            copyOrIgnoreFile("user/fileMonitor.dll", "/win32-x86/fileMonitor.dll", FILE_MONITOR_86_MD_5);
+            copyOrIgnoreFile("user/getAscII.dll", "/win32-x86/getAscII.dll", GET_ASC_II_86_MD_5);
+            copyOrIgnoreFile("user/hotkeyListener.dll", "/win32-x86/hotkeyListener.dll", HOTKEY_LISTENER_86_MD_5);
+            copyOrIgnoreFile("user/isLocalDisk.dll", "/win32-x86/isLocalDisk.dll", IS_LOCAL_DISK_86_MD_5);
+            copyOrIgnoreFile("user/fileSearcher.exe", "/win32-x86/fileSearcher.exe", FILE_SEARCHER_86_MD_5);
+            copyOrIgnoreFile("user/fileSearcherUSN.exe", "/win32-x86/fileSearcherUSN.exe", FILE_SEARCHER_USN_86_MD_5);
+            copyOrIgnoreFile("user/isNTFS.dll", "/win32-x86/isNTFS.dll", IS_NTFS_86_MD_5);
+            copyOrIgnoreFile("user/sqlite3.dll", "/win32-x86/sqlite3.dll", SQLITE3_86_MD_5);
         }
-        copyOrIgnoreFile("user/shortcutGenerator.vbs", "/shortcutGenerator.vbs", shortcutGeneratorMd5);
+        copyOrIgnoreFile("user/shortcutGenerator.vbs", "/shortcutGenerator.vbs", SHORTCUT_GENERATOR_MD_5);
     }
 
     private static void copyOrIgnoreFile(String path, String rootPath, String md5) {
@@ -304,9 +304,9 @@ public class MainClass {
             update.delete();
             File updaterBat = new File("updater.bat");
             if (SettingsFrame.is64Bit()) {
-                copyOrIgnoreFile("updater.bat", "/win32-x86-64/updater.bat", updaterBat64Md5);
+                copyOrIgnoreFile("updater.bat", "/win32-x86-64/updater.bat", UPDATER_BAT_64_MD_5);
             } else {
-                copyOrIgnoreFile("updater.bat", "/win32-x86/updater.bat", updaterBat86Md5);
+                copyOrIgnoreFile("updater.bat", "/win32-x86/updater.bat", UPDATER_BAT_86_MD_5);
             }
             Desktop desktop;
             if (Desktop.isDesktopSupported()) {

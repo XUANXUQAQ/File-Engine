@@ -1,4 +1,4 @@
-package FileEngine.MoveFiles;
+package FileEngine.moveFiles;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -27,7 +27,7 @@ public class MoveFilesUtil {
                 }
             }
         }
-        if (preserveFiles.contains(dir.getAbsolutePath()) || dir.getName().equals("desktop.ini")) {
+        if (preserveFiles.contains(dir.getAbsolutePath()) || "desktop.ini".equals(dir.getName())) {
             return true;
         } else {
             return dir.delete();

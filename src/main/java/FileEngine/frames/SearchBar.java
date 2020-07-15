@@ -1,14 +1,14 @@
-package FileEngine.Frames;
+package FileEngine.frames;
 
 
-import FileEngine.DllInterface.FileMonitor;
-import FileEngine.DllInterface.GetAscII;
-import FileEngine.DllInterface.IsLocalDisk;
-import FileEngine.GetIcon.GetIconUtil;
-import FileEngine.PluginSystem.Plugin;
-import FileEngine.PluginSystem.PluginUtil;
-import FileEngine.SQLiteConfig.SQLiteUtil;
-import FileEngine.Search.SearchUtil;
+import FileEngine.dllInterface.FileMonitor;
+import FileEngine.dllInterface.GetAscII;
+import FileEngine.dllInterface.IsLocalDisk;
+import FileEngine.getIcon.GetIconUtil;
+import FileEngine.pluginSystem.Plugin;
+import FileEngine.pluginSystem.PluginUtil;
+import FileEngine.sqliteConfig.SQLiteUtil;
+import FileEngine.search.SearchUtil;
 
 import javax.swing.*;
 import javax.swing.border.Border;

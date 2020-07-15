@@ -1,4 +1,4 @@
-package FileEngine.Frames;
+package FileEngine.frames;
 
 import javax.swing.*;
 import java.awt.*;
@@ -12,7 +12,7 @@ public class TaskBar {
     private SystemTray systemTray;
 
     private static class TaskBarBuilder {
-        private static final TaskBar instance = new TaskBar();
+        private static final TaskBar INSTANCE = new TaskBar();
     }
 
     private TaskBar() {
@@ -20,7 +20,7 @@ public class TaskBar {
 
 
     public static TaskBar getInstance() {
-        return TaskBarBuilder.instance;
+        return TaskBarBuilder.INSTANCE;
     }
 
     public void showTaskBar() {

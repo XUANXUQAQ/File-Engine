@@ -1,11 +1,11 @@
-package FileEngine.Search;
+package FileEngine.search;
 
-import FileEngine.DllInterface.IsLocalDisk;
-import FileEngine.DllInterface.isNTFS;
-import FileEngine.SQLiteConfig.SQLiteUtil;
-import FileEngine.Frames.SearchBar;
-import FileEngine.Frames.SettingsFrame;
-import FileEngine.Frames.TaskBar;
+import FileEngine.dllInterface.IsLocalDisk;
+import FileEngine.dllInterface.isNTFS;
+import FileEngine.sqliteConfig.SQLiteUtil;
+import FileEngine.frames.SearchBar;
+import FileEngine.frames.SettingsFrame;
+import FileEngine.frames.TaskBar;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;

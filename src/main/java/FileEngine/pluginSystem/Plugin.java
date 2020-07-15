@@ -1,4 +1,4 @@
-package FileEngine.PluginSystem;
+package FileEngine.pluginSystem;
 
 import javax.swing.*;
 import java.awt.event.KeyEvent;
@@ -123,6 +123,8 @@ public class Plugin {
                 break;
             case "getAuthor":
                 _getAuthor = aClass.getDeclaredMethod("getAuthor");
+                break;
+            default:
                 break;
         }
     }

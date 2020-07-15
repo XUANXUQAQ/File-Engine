@@ -1,8 +1,8 @@
-package FileEngine.Frames;
+package FileEngine.frames;
 
-import FileEngine.Download.DownloadManager;
-import FileEngine.Download.DownloadUtil;
-import FileEngine.PluginSystem.PluginUtil;
+import FileEngine.download.DownloadManager;
+import FileEngine.download.DownloadUtil;
+import FileEngine.pluginSystem.PluginUtil;
 import com.alibaba.fastjson.JSONObject;
 
 import javax.imageio.ImageIO;
@@ -24,7 +24,7 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import static FileEngine.Frames.SettingsFrame.getTranslation;
+import static FileEngine.frames.SettingsFrame.getTranslation;
 
 public class PluginMarket {
     private static class PluginMarketBuilder {
