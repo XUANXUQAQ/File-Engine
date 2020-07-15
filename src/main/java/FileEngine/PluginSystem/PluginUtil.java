@@ -1,6 +1,5 @@
 package FileEngine.PluginSystem;
 
-import FileEngine.Frames.TaskBar;
 import com.alibaba.fastjson.JSONObject;
 
 import java.io.*;
@@ -9,6 +8,7 @@ import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.jar.JarEntry;
@@ -27,6 +27,26 @@ public class PluginUtil {
 
     private static final ConcurrentHashMap<String, Plugin> PLUGIN_MAP = new ConcurrentHashMap<>();
     private static final ConcurrentHashMap<String, String> NAME_IDENTIFIER_MAP = new ConcurrentHashMap<>();
+    private static final HashSet<String> old_plugins = new HashSet<>();
+    private static final HashSet<String> repeat_plugins = new HashSet<>();
+    private static boolean isTooOld = false;
+    private static boolean isRepeat = false;
+
+    public static boolean isPluginTooOld() {
+        return isTooOld;
+    }
+
+    public static boolean isPluginRepeat() {
+        return isRepeat;
+    }
+
+    public static String getRepeatPlugins() {
+        StringBuilder strb = new StringBuilder();
+        for (String repeatPlugins : repeat_plugins) {
+            strb.append(repeatPlugins).append(",");
+        }
+        return strb.toString().substring(0, strb.length() - 1);
+    }
 
     public static Iterator<Plugin> getPluginMapIter() {
         return PLUGIN_MAP.values().iterator();
@@ -38,6 +58,14 @@ public class PluginUtil {
 
     public static int getInstalledPluginNum() {
         return PLUGIN_MAP.size();
+    }
+
+    public static String getAllOldPluginsName() {
+        StringBuilder strb = new StringBuilder();
+        for (String old_plugin : old_plugins) {
+            strb.append(old_plugin).append(",");
+        }
+        return strb.toString().substring(0, strb.length() - 1);
     }
 
     private static String readAll(InputStream inputStream) {
@@ -98,8 +126,6 @@ public class PluginUtil {
         if (files == null || files.length == 0) {
             return;
         }
-        StringBuilder oldPlugins = new StringBuilder();
-        boolean isTooOld;
         for (File jar : files) {
             JarFile jarFile = new JarFile(jar);
             Enumeration<?> enu = jarFile.entries();
@@ -112,14 +138,18 @@ public class PluginUtil {
                     String className = json.getString("className");
                     String identifier = json.getString("identifier");
                     String pluginName = json.getString("name");
-                    isTooOld = loadPlugin(jar, className, identifier);
-                    NAME_IDENTIFIER_MAP.put(pluginName, identifier);
-                    if (isTooOld) {
-                        oldPlugins.append(pluginName).append(",");
+                    if (getIdentifierByName(pluginName) == null) {
+                        isTooOld |= loadPlugin(jar, className, identifier);
+                        NAME_IDENTIFIER_MAP.put(pluginName, identifier);
+                        if (isTooOld) {
+                            old_plugins.add(pluginName);
+                        }
+                    } else {
+                        repeat_plugins.add(jar.getName());
+                        isRepeat = true;
                     }
                 }
             }
         }
-        TaskBar.getInstance().showMessage("Warning", oldPlugins.toString() + "\nPlugin Api is too old");
     }
 }

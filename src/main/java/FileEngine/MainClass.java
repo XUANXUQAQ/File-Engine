@@ -8,15 +8,13 @@ import FileEngine.HotkeyListener.CheckHotKey;
 import FileEngine.PluginSystem.PluginUtil;
 import FileEngine.SQLiteConfig.SQLiteUtil;
 import FileEngine.Search.SearchUtil;
+import FileEngine.md5.Md5Util;
 import br.com.margel.weblaf.WebLookAndFeel;
 import com.alibaba.fastjson.JSONObject;
 
 import javax.swing.*;
 import java.awt.*;
 import java.io.*;
-import java.math.BigInteger;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
@@ -59,6 +57,27 @@ public class MainClass {
             Class.forName("FileEngine.DllInterface.isNTFS");
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
+        }
+    }
+
+    private static void updatePlugins() {
+        File sign = new File("user/updatePlugin");
+        File tmpPlugins = new File("tmp/pluginsUpdate");
+        if (sign.exists()) {
+            sign.delete();
+            File[] files = tmpPlugins.listFiles();
+            if (files == null || files.length == 0) {
+                return;
+            }
+            for (File eachPlugin : files) {
+                String pluginName = eachPlugin.getName();
+                File targetPlugin = new File("plugins" + File.separator + pluginName);
+                try {
+                    copyFile(new FileInputStream(eachPlugin), targetPlugin);
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                }
+            }
         }
     }
 
@@ -138,27 +157,8 @@ public class MainClass {
                 }
             }
         } catch (InterruptedException ignored) {
-
         }
     }
-
-    private static String getMD5(String filePath) {
-        byte[] buffer = new byte[8192];
-        BigInteger bigInteger;
-        int len;
-        try (FileInputStream fis = new FileInputStream(filePath)) {
-            MessageDigest md = MessageDigest.getInstance("MD5");
-            while ((len = fis.read(buffer)) != -1) {
-                md.update(buffer, 0, len);
-            }
-            byte[] b = md.digest();
-            bigInteger = new BigInteger(1, b);
-            return bigInteger.toString(16);
-        } catch (NoSuchAlgorithmException | IOException e) {
-            return null;
-        }
-    }
-
 
     public static void main(String[] args) {
         try {
@@ -200,6 +200,7 @@ public class MainClass {
         }
 
         startOrIgnoreUpdateAndExit(isUpdateSignExist());
+        updatePlugins();
 
         //清空tmp
         deleteDir(new File("tmp"));
@@ -230,6 +231,15 @@ public class MainClass {
             taskBar.showMessage(SettingsFrame.getTranslation("Info"), SettingsFrame.getTranslation("New version can be updated"));
         }
 
+        if (PluginUtil.isPluginTooOld()) {
+            String oldPlugins = PluginUtil.getAllOldPluginsName();
+            taskBar.showMessage(SettingsFrame.getTranslation("Warning"), oldPlugins + "\n" + SettingsFrame.getTranslation("Plugin Api is too old"));
+        }
+
+        if (PluginUtil.isPluginRepeat()) {
+            String repeatPlugins = PluginUtil.getRepeatPlugins();
+            taskBar.showMessage(SettingsFrame.getTranslation("Warning"), repeatPlugins + "\n" + SettingsFrame.getTranslation("Duplicate plugin, please delete it in plugins folder"));
+        }
 
         try {
             while (SettingsFrame.isNotMainExit()) {
@@ -272,7 +282,7 @@ public class MainClass {
 
     private static void copyOrIgnoreFile(String path, String rootPath, String md5) {
         File target = new File(path);
-        String fileMd5 = getMD5(target.getAbsolutePath());
+        String fileMd5 = Md5Util.getMD5(target.getAbsolutePath());
         if (!target.exists() || !Objects.equals(fileMd5, md5)) {
             if (SettingsFrame.isDebug()) {
                 System.out.println("正在重新释放文件：" + path);

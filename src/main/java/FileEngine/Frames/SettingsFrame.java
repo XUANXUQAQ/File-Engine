@@ -1,5 +1,6 @@
 package FileEngine.Frames;
 
+import FileEngine.Download.DownloadManager;
 import FileEngine.Download.DownloadUtil;
 import FileEngine.HotkeyListener.CheckHotKey;
 import FileEngine.PluginSystem.Plugin;
@@ -21,11 +22,13 @@ import java.util.HashSet;
 import java.util.Locale;
 import java.util.Scanner;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.regex.Pattern;
 
 
 public class SettingsFrame {
-    public static final String version = "2.1"; //TODO 更改版本号
+    public static final String version = "2.2"; //TODO 更改版本号
     private static volatile boolean mainExit = false;
     private static boolean is64Bit;
     private static volatile int cacheNumLimit;
@@ -59,7 +62,7 @@ public class SettingsFrame {
     private volatile static String language;
     private static volatile boolean isStartup;
     private static SearchBar searchBar;
-    private Thread updateThread = null;
+    private final ExecutorService threadPool;
     private final JFrame frame;
     private static ImageIcon frameIcon;
     private JTextField textFieldUpdateInterval;
@@ -162,6 +165,11 @@ public class SettingsFrame {
     private JPanel tabAbout;
     private JScrollPane scrollPane;
     private JLabel labelSQLite;
+    private JButton buttonPluginMarket;
+    private JLabel labelAuthor;
+    private JLabel labelOfficialSite;
+    private JLabel labelDownloadProgress;
+    private JLabel labelProgress;
 
 
     private static class SettingsFrameBuilder {
@@ -426,7 +434,7 @@ public class SettingsFrame {
         });
     }
 
-    private void addPrioriyFileChooserListener() {
+    private void addPriorityFileChooserListener() {
         ButtonPriorityFolder.addActionListener(e -> {
             JFileChooser fileChooser = new JFileChooser();
             fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
@@ -528,14 +536,70 @@ public class SettingsFrame {
 
     private void addCheckForUpdateButtonListener() {
         buttonCheckUpdate.addActionListener(e -> {
+            boolean isDownloading = false;
             try {
-                if (!updateThread.isAlive()) {
-                    updateThread = new Thread(this::update);
-                    updateThread.start();
+                isDownloading = DownloadUtil.getInstance().hasTask(getName());
+            } catch (Exception ignored) {
+            }
+            //检查是否已开始下载
+            if (!isDownloading) {
+                JSONObject updateInfo;
+                String latestVersion;
+                try {
+                    updateInfo = getInfo();
+                    latestVersion = updateInfo.getString("version");
+                } catch (IOException e1) {
+                    JOptionPane.showMessageDialog(frame, getTranslation("Check update failed"));
+                    return;
                 }
-            } catch (NullPointerException e1) {
-                updateThread = new Thread(this::update);
-                updateThread.start();
+
+                if (Double.parseDouble(latestVersion) > Double.parseDouble(version) || isDebug()) {
+                    String description = updateInfo.getString("description");
+                    int result = JOptionPane.showConfirmDialog(frame,
+                            getTranslation("New Version available") + latestVersion + "," + getTranslation("Whether to update") + "\n" + getTranslation("update content") + "\n" + description);
+                    if (result == 0) {
+                        //开始更新,下载更新文件到tmp
+                        String urlChoose;
+                        String fileName;
+                        if (is64Bit) {
+                            urlChoose = "url64";
+                        } else {
+                            urlChoose = "url86";
+                        }
+                        fileName = getName();
+                        DownloadUtil download = DownloadUtil.getInstance();
+                        download.downLoadFromUrl(updateInfo.getString(urlChoose), fileName, tmp.getAbsolutePath());
+                        //更新button为取消
+                        buttonCheckUpdate.setText(getTranslation("Cancel"));
+                    }
+                } else {
+                    JOptionPane.showMessageDialog(frame,
+                            getTranslation("Latest version:") + latestVersion + "\n" +
+                                    getTranslation("The current version is the latest"));
+                }
+            } else {
+                //取消下载
+                String fileName = getName();
+                DownloadUtil instance = DownloadUtil.getInstance();
+                instance.cancelDownload(fileName);
+                threadPool.execute(() -> {
+                    //等待下载取消
+                    try {
+                        while (instance.getDownloadStatus(fileName) != DownloadManager.DOWNLOAD_INTERRUPTED) {
+                            if (instance.getDownloadStatus(fileName) == DownloadManager.DOWNLOAD_ERROR) {
+                                break;
+                            }
+                            if (buttonCheckUpdate.isEnabled()) {
+                                buttonCheckUpdate.setEnabled(false);
+                            }
+                            Thread.sleep(50);
+                        }
+                    } catch (InterruptedException ignored) {
+                    }
+                    //复位button
+                    buttonCheckUpdate.setText(getTranslation("Check for update"));
+                    buttonCheckUpdate.setEnabled(true);
+                });
             }
         });
     }
@@ -740,20 +804,54 @@ public class SettingsFrame {
                     String description;
                     String officialSite;
                     String version;
+                    String author;
                     icon = plugin.getPluginIcon();
                     description = plugin.getDescription();
                     officialSite = plugin.getOfficialSite();
                     version = plugin.getVersion();
+                    author = plugin.getAuthor();
 
-                    if (officialSite != null) {
-                        labelPluginVersion.setText("Version:" + version);
-                    }
+                    labelPluginVersion.setText(getTranslation("Version:") + version);
                     PluginIconLabel.setIcon(icon);
                     PluginNamelabel.setText("<html><body><font size=\"+1\">" + pluginName + "</body></html>");
-                    textAreaDescription.setText("Official site : " + officialSite + "\n\n" + description);
+                    textAreaDescription.setText(description);
+                    labelAuthor.setText(getTranslation("Author : ") + author);
+                    labelOfficialSite.setText("<html><a href='" + officialSite + "'><font size=\"4\">" + pluginName + "</font></a></html>");
                     buttonUpdatePlugin.setVisible(true);
                 }
             }
+        });
+    }
+
+    private void addPluginOfficialSiteListener() {
+        labelOfficialSite.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                Desktop desktop;
+                String url;
+                int firstIndex;
+                int lastIndex;
+                if (Desktop.isDesktopSupported()) {
+                    desktop = Desktop.getDesktop();
+                    try {
+                        String text = labelOfficialSite.getText();
+                        firstIndex = text.indexOf("'");
+                        lastIndex = text.lastIndexOf("'");
+                        url = text.substring(firstIndex + 1, lastIndex);
+                        URI uri = new URI(url);
+                        desktop.browse(uri);
+                    } catch (Exception ignored) {
+
+                    }
+                }
+            }
+        });
+    }
+
+    private void addButtonViewPluginMarketListener() {
+        buttonPluginMarket.addActionListener(e -> {
+            PluginMarket pluginMarket = PluginMarket.getInstance();
+            pluginMarket.showWindow();
         });
     }
 
@@ -763,18 +861,47 @@ public class SettingsFrame {
             String pluginName = (String) listPlugins.getSelectedValue();
             String pluginIdentifier = PluginUtil.getIdentifierByName(pluginName);
             Plugin plugin = PluginUtil.getPluginByIdentifier(pluginIdentifier);
+            String pluginFullName = pluginName + ".jar";
             isVersionLatest = plugin.isLatest();
             if (isVersionLatest) {
                 JOptionPane.showMessageDialog(frame, getTranslation("The current Version is the latest."));
             } else {
-                int ret = JOptionPane.showConfirmDialog(frame, getTranslation("New version available, do you want to update?"));
-                if (ret == 0) {
-                    try {
+                //检查是否已经开始下载
+                boolean isPluginUpdating = false;
+                try {
+                    isPluginUpdating = DownloadUtil.getInstance().hasTask(pluginFullName);
+                } catch (Exception ignored) {
+                }
+                if (!isPluginUpdating) {
+                    int ret = JOptionPane.showConfirmDialog(frame, getTranslation("New version available, do you want to update?"));
+                    if (ret == 0) {
+                        //开始下载
                         String url = plugin.getUpdateURL();
-                        DownloadUtil.getInstance().downLoadFromUrl(url, pluginName, "tmp/pluginsUpdate");
-                    } catch (Exception ex) {
-                        JOptionPane.showMessageDialog(frame, getTranslation("Download failed."));
+                        DownloadUtil.getInstance().downLoadFromUrl(url, pluginFullName, "tmp/pluginsUpdate");
+                        buttonUpdatePlugin.setText(getTranslation("Cancel"));
                     }
+                } else {
+                    //取消下载
+                    DownloadUtil instance = DownloadUtil.getInstance();
+                    instance.cancelDownload(pluginFullName);
+                    threadPool.execute(() -> {
+                        try {
+                            //等待下载取消
+                            while (instance.getDownloadStatus(pluginFullName) != DownloadManager.DOWNLOAD_INTERRUPTED) {
+                                if (instance.getDownloadStatus(pluginFullName) == DownloadManager.DOWNLOAD_ERROR) {
+                                    break;
+                                }
+                                if (buttonUpdatePlugin.isEnabled()) {
+                                    buttonUpdatePlugin.setEnabled(false);
+                                }
+                                Thread.sleep(50);
+                            }
+                            //复位button
+                            buttonUpdatePlugin.setText(getTranslation("Install"));
+                            buttonUpdatePlugin.setEnabled(true);
+                        } catch (InterruptedException ignored) {
+                        }
+                    });
                 }
             }
         });
@@ -848,6 +975,9 @@ public class SettingsFrame {
         Object[] plugins = PluginUtil.getPluginArray();
         listPlugins.setListData(plugins);
         buttonUpdatePlugin.setVisible(false);
+        if (plugins.length == 0) {
+            PluginSettingsPanel.setVisible(false);
+        }
     }
 
     private SettingsFrame() {
@@ -860,6 +990,7 @@ public class SettingsFrame {
         translationMap = new ConcurrentHashMap<>();
         languageSet = new HashSet<>();
         frameIcon = new ImageIcon(SettingsFrame.class.getResource("/icons/frame.png"));
+        threadPool = Executors.newCachedThreadPool();
         readAllSettings();
 
         HotKeyListener = CheckHotKey.getInstance();
@@ -878,7 +1009,7 @@ public class SettingsFrame {
 
         addTextFieldListener();
 
-        addPrioriyFileChooserListener();
+        addPriorityFileChooserListener();
 
         addPriorityTextFieldListener();
 
@@ -906,7 +1037,82 @@ public class SettingsFrame {
 
         addButtonPluginUpdateCheckListener();
 
+        addButtonViewPluginMarketListener();
+
+        addPluginOfficialSiteListener();
+
         initAll();
+
+        initThreadPool();
+    }
+
+    private void checkDownloadTask(JLabel label, JButton button, String fileName, String originButtonString) throws InterruptedException {
+        //设置进度显示线程
+        double progress;
+        if (DownloadUtil.getInstance().hasTask(fileName)) {
+            progress = DownloadUtil.getInstance().getDownloadProgress(fileName);
+            label.setText(getTranslation("Downloading:") + progress * 100 + "%");
+
+            int downloadingStatus = DownloadUtil.getInstance().getDownloadStatus(fileName);
+            if (downloadingStatus == DownloadManager.DOWNLOAD_DONE) {
+                //下载完成，禁用按钮
+                label.setText(getTranslation("Download Done"));
+                label.setText(getTranslation("Downloaded"));
+                label.setEnabled(false);
+                File updatePluginSign = new File("user/update");
+                if (!updatePluginSign.exists()) {
+                    try {
+                        updatePluginSign.createNewFile();
+                    } catch (IOException ignored) {
+                    }
+                }
+            } else if (downloadingStatus == DownloadManager.DOWNLOAD_ERROR) {
+                //下载错误，重置button
+                label.setText(getTranslation("Download failed"));
+                button.setText(getTranslation(originButtonString));
+                button.setEnabled(true);
+            } else if (downloadingStatus == DownloadManager.DOWNLOAD_DOWNLOADING) {
+                //正在下载
+                button.setText(SettingsFrame.getTranslation("Cancel"));
+            } else if (downloadingStatus == DownloadManager.DOWNLOAD_INTERRUPTED) {
+                //用户自行中断
+                label.setText("");
+                button.setText(getTranslation(originButtonString));
+                button.setEnabled(true);
+            }
+        } else {
+            label.setText("");
+            button.setText(getTranslation(originButtonString));
+            button.setEnabled(true);
+        }
+        Thread.sleep(100);
+    }
+
+    private void addShowDownloadProgressTask(JLabel label, JButton button, String fileName) {
+        try {
+            String originString = button.getText();
+            while (SettingsFrame.isNotMainExit()) {
+                checkDownloadTask(label, button, fileName, originString);
+            }
+        } catch (InterruptedException ignored) {
+        }
+    }
+
+    private void initThreadPool() {
+        threadPool.execute(() -> addShowDownloadProgressTask(labelDownloadProgress, buttonCheckUpdate, getName()));
+
+        threadPool.execute(() -> {
+            try {
+                String fileName;
+                String originString = buttonUpdatePlugin.getText();
+                while (isNotMainExit()) {
+                    fileName = (String) listPlugins.getSelectedValue();
+                    checkDownloadTask(labelProgress, buttonUpdatePlugin, fileName + ".jar", originString);
+                }
+            } catch (InterruptedException ignored) {
+
+            }
+        });
     }
 
     private void translate(String language) {
@@ -958,6 +1164,7 @@ public class SettingsFrame {
         labelVersion.setText(getTranslation("Current Version:") + version);
         labelInstalledPluginNum.setText(getTranslation("Installed plugins num:"));
         buttonUpdatePlugin.setText(getTranslation("Check for update"));
+        buttonPluginMarket.setText(getTranslation("Plugin Market"));
     }
 
     private static void initLanguageSet() {
@@ -1019,7 +1226,11 @@ public class SettingsFrame {
         } else {
             translated = translationMap.get(text);
         }
-        return translated;
+        if (translated != null) {
+            return translated;
+        } else {
+            return text;
+        }
     }
 
     public static void setMainExit(boolean b) {
@@ -1272,55 +1483,6 @@ public class SettingsFrame {
             }
         } catch (IOException ignored) {
 
-        }
-    }
-
-    private void update() {
-        JSONObject updateInfo;
-        String latestVersion;
-        try {
-            updateInfo = getInfo();
-            latestVersion = updateInfo.getString("version");
-        } catch (IOException e1) {
-            JOptionPane.showMessageDialog(frame, getTranslation("Check update failed"));
-            return;
-        }
-
-        if (Double.parseDouble(latestVersion) > Double.parseDouble(version) || isDebug()) {
-            String description = updateInfo.getString("description");
-            int result = JOptionPane.showConfirmDialog(frame,
-                    getTranslation("New Version available") + latestVersion + "," + getTranslation("Whether to update") + "\n" + getTranslation("update content") + "\n" + description);
-            if (result == 0) {
-                //开始更新,下载更新文件到tmp
-                String urlChoose;
-                String fileName;
-                if (is64Bit) {
-                    urlChoose = "url64";
-                    fileName = "File-Engine-x64.exe";
-                } else {
-                    urlChoose = "url86";
-                    fileName = "File-Engine-x86.exe";
-                }
-                DownloadUtil download = DownloadUtil.getInstance();
-                try {
-                    download.downLoadFromUrl(updateInfo.getString(urlChoose), fileName, tmp.getAbsolutePath());
-                } catch (Exception e) {
-                    if (!"User Interrupted".equals(e.getMessage())) {
-                        JOptionPane.showMessageDialog(frame, getTranslation("Download failed"));
-                    }
-                    download.hideFrame();
-                    return;
-                }
-                TaskBar.getInstance().showMessage(getTranslation("Info"), getTranslation("The download is complete and the update will start at the next boot"));
-                try {
-                    File updateSignal = new File("user/update");
-                    updateSignal.createNewFile();
-                } catch (Exception ignored) {
-
-                }
-            }
-        } else {
-            JOptionPane.showMessageDialog(frame, getTranslation("Latest version:") + latestVersion + "\n" + getTranslation("The current version is the latest"));
         }
     }
 
