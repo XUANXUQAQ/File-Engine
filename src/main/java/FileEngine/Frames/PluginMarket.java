@@ -91,6 +91,7 @@ public class PluginMarket {
     private void checkDownloadTask(JLabel label, JButton button, String fileName, String originButtonString) throws InterruptedException {
         //设置进度显示线程
         double progress;
+        String pluginName;
         if (DownloadUtil.getInstance().hasTask(fileName)) {
             progress = DownloadUtil.getInstance().getDownloadProgress(fileName);
             label.setText(getTranslation("Downloading:") + progress * 100 + "%");
@@ -123,9 +124,17 @@ public class PluginMarket {
                 button.setEnabled(true);
             }
         } else {
-            label.setText("");
-            button.setText(getTranslation(originButtonString));
-            button.setEnabled(true);
+            int index = fileName.indexOf(".");
+            pluginName = fileName.substring(0, index);
+            if (PluginUtil.getIdentifierByName(pluginName) != null) {
+                label.setText("");
+                button.setText(getTranslation("Installed"));
+                button.setEnabled(false);
+            } else {
+                label.setText("");
+                button.setText(getTranslation(originButtonString));
+                button.setEnabled(true);
+            }
         }
         Thread.sleep(100);
     }
@@ -229,7 +238,6 @@ public class PluginMarket {
                         URI uri = new URI(url);
                         desktop.browse(uri);
                     } catch (Exception ignored) {
-
                     }
                 }
             }
@@ -265,10 +273,6 @@ public class PluginMarket {
                     textAreaPluginDescription.setText(description);
                     labelAuthor.setText(author);
                     buttonInstall.setVisible(true);
-                    if (PluginUtil.getIdentifierByName(pluginName) != null) {
-                        buttonInstall.setText(getTranslation("Installed"));
-                        buttonInstall.setEnabled(false);
-                    }
                 }
             }
         });
