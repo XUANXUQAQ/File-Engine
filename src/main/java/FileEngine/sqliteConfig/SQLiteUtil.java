@@ -1,4 +1,4 @@
-package FileEngine.SQLiteConfig;
+package FileEngine.sqliteConfig;
 
 import org.sqlite.SQLiteConfig;
 

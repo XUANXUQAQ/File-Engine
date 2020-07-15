@@ -1,6 +1,6 @@
-package FileEngine.Frames;
+package FileEngine.frames;
 
-import FileEngine.MoveFiles.MoveFilesUtil;
+import FileEngine.moveFiles.MoveFilesUtil;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileSystemView;

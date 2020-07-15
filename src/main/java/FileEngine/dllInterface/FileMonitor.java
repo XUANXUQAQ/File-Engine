@@ -1,4 +1,4 @@
-package FileEngine.DllInterface;
+package FileEngine.dllInterface;
 
 import com.sun.jna.Library;
 import com.sun.jna.Native;

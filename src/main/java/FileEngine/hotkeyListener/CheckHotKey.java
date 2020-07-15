@@ -1,8 +1,8 @@
-package FileEngine.HotkeyListener;
+package FileEngine.hotkeyListener;
 
-import FileEngine.DllInterface.HotkeyListener;
-import FileEngine.Frames.SearchBar;
-import FileEngine.Frames.SettingsFrame;
+import FileEngine.dllInterface.HotkeyListener;
+import FileEngine.frames.SearchBar;
+import FileEngine.frames.SettingsFrame;
 
 import java.awt.event.KeyEvent;
 import java.util.HashMap;

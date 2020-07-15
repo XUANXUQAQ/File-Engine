@@ -1,4 +1,4 @@
-package FileEngine.PluginSystem;
+package FileEngine.pluginSystem;
 
 import com.alibaba.fastjson.JSONObject;
 
@@ -27,8 +27,8 @@ public class PluginUtil {
 
     private static final ConcurrentHashMap<String, Plugin> PLUGIN_MAP = new ConcurrentHashMap<>();
     private static final ConcurrentHashMap<String, String> NAME_IDENTIFIER_MAP = new ConcurrentHashMap<>();
-    private static final HashSet<String> old_plugins = new HashSet<>();
-    private static final HashSet<String> repeat_plugins = new HashSet<>();
+    private static final HashSet<String> OLD_PLUGINS = new HashSet<>();
+    private static final HashSet<String> REPEAT_PLUGINS = new HashSet<>();
     private static boolean isTooOld = false;
     private static boolean isRepeat = false;
 
@@ -42,7 +42,7 @@ public class PluginUtil {
 
     public static String getRepeatPlugins() {
         StringBuilder strb = new StringBuilder();
-        for (String repeatPlugins : repeat_plugins) {
+        for (String repeatPlugins : REPEAT_PLUGINS) {
             strb.append(repeatPlugins).append(",");
         }
         return strb.toString().substring(0, strb.length() - 1);
@@ -62,8 +62,8 @@ public class PluginUtil {
 
     public static String getAllOldPluginsName() {
         StringBuilder strb = new StringBuilder();
-        for (String old_plugin : old_plugins) {
-            strb.append(old_plugin).append(",");
+        for (String oldPlugin : OLD_PLUGINS) {
+            strb.append(oldPlugin).append(",");
         }
         return strb.toString().substring(0, strb.length() - 1);
     }
@@ -142,10 +142,10 @@ public class PluginUtil {
                         isTooOld |= loadPlugin(jar, className, identifier);
                         NAME_IDENTIFIER_MAP.put(pluginName, identifier);
                         if (isTooOld) {
-                            old_plugins.add(pluginName);
+                            OLD_PLUGINS.add(pluginName);
                         }
                     } else {
-                        repeat_plugins.add(jar.getName());
+                        REPEAT_PLUGINS.add(jar.getName());
                         isRepeat = true;
                     }
                 }
