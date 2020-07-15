@@ -280,7 +280,7 @@ public class PluginMarket {
 
     private ImageIcon getImageByUrl(String url, String pluginName) throws InterruptedException, IOException {
         File icon = new File("tmp/$$" + pluginName);
-
+        int count = 0;
         if (!icon.exists()) {
             DownloadUtil.getInstance().downLoadFromUrl(url, icon.getName(), "tmp");
 
@@ -288,6 +288,10 @@ public class PluginMarket {
                 if (DownloadUtil.getInstance().getDownloadStatus(icon.getName()) == DownloadManager.DOWNLOAD_ERROR) {
                     return null;
                 }
+                if (count > 30) {
+                    break;
+                }
+                count++;
                 Thread.sleep(50);
             }
         }
