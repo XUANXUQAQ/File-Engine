@@ -266,7 +266,7 @@ public class PluginMarket {
                     }
                     description = info.getString("description");
                     author = info.getString("author");
-                    labelVersion.setText("Version:" + version);
+                    labelVersion.setText(getTranslation("Version") + ":" + version);
                     labelIcon.setIcon(icon);
                     labelOfficialSite.setText("<html><a href='" + officialSite + "'><font size=\"4\">" + pluginName + "</font></a></html>");
                     labelPluginName.setText("<html><body><font size=\"+1\">" + pluginName + "</body></html>");

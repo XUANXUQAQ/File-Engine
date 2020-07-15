@@ -811,11 +811,11 @@ public class SettingsFrame {
                     version = plugin.getVersion();
                     author = plugin.getAuthor();
 
-                    labelPluginVersion.setText(getTranslation("Version:") + version);
+                    labelPluginVersion.setText(getTranslation("Version") + ":" + version);
                     PluginIconLabel.setIcon(icon);
                     PluginNamelabel.setText("<html><body><font size=\"+1\">" + pluginName + "</body></html>");
                     textAreaDescription.setText(description);
-                    labelAuthor.setText(getTranslation("Author : ") + author);
+                    labelAuthor.setText(getTranslation("Author") + ":" + author);
                     labelOfficialSite.setText("<html><a href='" + officialSite + "'><font size=\"4\">" + pluginName + "</font></a></html>");
                     buttonUpdatePlugin.setVisible(true);
                 }
