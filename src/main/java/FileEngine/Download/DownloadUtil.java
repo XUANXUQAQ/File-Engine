@@ -2,17 +2,13 @@ package FileEngine.Download;
 
 import FileEngine.Frames.SettingsFrame;
 
-import javax.swing.*;
-import java.awt.*;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.net.URL;
-import java.net.URLConnection;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class DownloadUtil {
-    private final JFrame frame;
-    private final JProgressBar progressBar;
+    private static final ExecutorService downloadThreadPool = Executors.newCachedThreadPool();
+    private static final ConcurrentHashMap<String, DownloadManager> DOWNLOAD_MAP = new ConcurrentHashMap<>();
 
     private static class DownloadUpdateBuilder {
         private static final DownloadUtil INSTANCE = new DownloadUtil();
@@ -23,30 +19,21 @@ public class DownloadUtil {
     }
 
     private DownloadUtil() {
-        frame = new JFrame();
-        progressBar = new JProgressBar();
-        JPanel panel = new JPanel();
-        JButton buttonCancel = new JButton();
-        buttonCancel.addActionListener(e -> {
-            frame.setVisible(false);
+        downloadThreadPool.execute(() -> {
+            try {
+                while (SettingsFrame.isNotMainExit()) {
+                    for (DownloadManager each : DOWNLOAD_MAP.values()) {
+                        int status = each.getDownloadStatus();
+                        if (status == DownloadManager.DOWNLOAD_INTERRUPTED || status == DownloadManager.DOWNLOAD_ERROR) {
+                            deleteTask(each.getFileName());
+                        }
+                    }
+                    Thread.sleep(5000);
+                }
+            } catch (InterruptedException ignored) {
+            }
         });
-        buttonCancel.setText(SettingsFrame.getTranslation("cancel"));
-        panel.setLayout(new BorderLayout());
-        panel.add(progressBar, BorderLayout.CENTER);
-        panel.add(buttonCancel, BorderLayout.SOUTH);
-        panel.setOpaque(true);
-        frame.add(panel);
-
-        URL frameIcon = SettingsFrame.class.getResource("/icons/frame.png");
-        frame.setIconImage(new ImageIcon(frameIcon).getImage());
-        frame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
-        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize(); // 获取当前分辨率
-        int width = screenSize.width;
-        int height = screenSize.height;
-        frame.setSize(width / 3, height / 4);
-        frame.setLocation(width / 2 - width / 4, height / 2 - height / 4);
     }
-
 
     /**
      * 从网络Url中下载文件
@@ -54,46 +41,63 @@ public class DownloadUtil {
      * @param urlStr   地址
      * @param savePath 保存位置
      */
-    public void downLoadFromUrl(String urlStr, String fileName, String savePath) throws Exception {
-        System.setProperty("http.keepAlive", "false"); // must be set
-        frame.setVisible(true);
-        URL url = new URL(urlStr);
-        URLConnection con = url.openConnection();
-        //设置超时为3秒
-        con.setConnectTimeout(3 * 1000);
-        //防止屏蔽程序抓取而返回403错误
-        con.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.116 Safari/537.36 Edg/80.0.361.57");
-        InputStream in = con.getInputStream();
-        byte[] buffer = new byte[1024];
-        int progress = 0;
-        int len;
-        //文件保存位置
-        File saveDir = new File(savePath);
-        if (!saveDir.exists()) {
-            saveDir.mkdir();
-        }
-        File file = new File(saveDir + File.separator + fileName);
-        FileOutputStream fos = new FileOutputStream(file);
-        progressBar.setMinimum(0);
-        progressBar.setMaximum(con.getContentLength());
-        progressBar.setValue(0);
-        progressBar.setStringPainted(true);
-        progressBar.setBackground(Color.pink);
-        while ((len = in.read(buffer)) != -1) {
-            fos.write(buffer, 0, len);
-            progress += len;
-            progressBar.setValue(progress);
-            progressBar.setString(SettingsFrame.getTranslation("Downloaded:") + (int) (progressBar.getPercentComplete() * 100) + "%");
-            if (!frame.isVisible()) {
-                fos.close();
-                throw new Exception("User Interrupted");
-            }
-        }
-        fos.close();
-        frame.setVisible(false);
+    public void downLoadFromUrl(String urlStr, String fileName, String savePath) {
+        DownloadManager downloadManager = new DownloadManager(urlStr, fileName, savePath);
+        downloadThreadPool.execute(downloadManager::download);
+        DOWNLOAD_MAP.put(fileName, downloadManager);
     }
 
-    public void hideFrame() {
-        frame.setVisible(false);
+    public double getDownloadProgress(String fileName) {
+        if (isFileNameNotContainsSuffix(fileName)) {
+            System.err.println("Warning:" + fileName + " doesn't have suffix");
+        }
+        if (hasTask(fileName)) {
+            return DOWNLOAD_MAP.get(fileName).getDownloadProgress();
+        }
+        return 0.0;
+    }
+
+    public void cancelDownload(String fileName) {
+        if (isFileNameNotContainsSuffix(fileName)) {
+            System.err.println("Warning:" + fileName + " doesn't have suffix");
+        }
+        if (SettingsFrame.isDebug()) {
+            System.out.println("cancel downloading " + fileName);
+        }
+        if (hasTask(fileName)) {
+            DOWNLOAD_MAP.get(fileName).setInterrupt();
+        }
+    }
+
+    public boolean hasTask(String fileName) {
+        if (isFileNameNotContainsSuffix(fileName)) {
+            System.err.println("Warning:" + fileName + " doesn't have suffix");
+        }
+        return DOWNLOAD_MAP.containsKey(fileName);
+    }
+
+    public int getDownloadStatus(String fileName) {
+        if (isFileNameNotContainsSuffix(fileName)) {
+            System.err.println("Warning:" + fileName + " doesn't have suffix");
+        }
+        if (hasTask(fileName)) {
+            return DOWNLOAD_MAP.get(fileName).getDownloadStatus();
+        }
+        return DownloadManager.DOWNLOAD_ERROR;
+    }
+
+    private void deleteTask(String fileName) {
+        DOWNLOAD_MAP.remove(fileName);
+    }
+
+    private boolean isFileNameNotContainsSuffix(String fileName) {
+        if (fileName == null) {
+            return false;
+        }
+        if (SettingsFrame.isDebug()) {
+            return fileName.lastIndexOf(".") == -1;
+        } else {
+            return false;
+        }
     }
 }

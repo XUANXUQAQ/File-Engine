@@ -71,6 +71,7 @@ public class TaskBar {
         SettingsFrame.setMainExit(true);
         systemTray.remove(trayIcon);
         SettingsFrame.getInstance().hideFrame();
+        PluginMarket.getInstance().hideWindow();
     }
 
     public void showMessage(String caption, String message) {
