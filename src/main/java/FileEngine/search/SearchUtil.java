@@ -2,11 +2,12 @@ package FileEngine.search;
 
 import FileEngine.dllInterface.IsLocalDisk;
 import FileEngine.dllInterface.isNTFS;
-import FileEngine.sqliteConfig.SQLiteUtil;
 import FileEngine.frames.SearchBar;
 import FileEngine.frames.SettingsFrame;
 import FileEngine.frames.TaskBar;
+import FileEngine.sqliteConfig.SQLiteUtil;
 
+import javax.swing.filechooser.FileSystemView;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
@@ -382,13 +383,13 @@ public class SearchUtil {
 
 
     private void searchFile(String ignorePath, int searchDepth) throws IOException, InterruptedException {
-        boolean needSearchIgnoreSearchDepth = true;
+        boolean canSearchByUsn = false;
         File[] roots = File.listRoots();
         StringBuilder strb = new StringBuilder(26);
         for (File root : roots) {
             if (IsLocalDisk.INSTANCE.isLocalDisk(root.getAbsolutePath())) {
                 if (isNTFS.INSTANCE.isDiskNTFS(root.getAbsolutePath())) {
-                    needSearchIgnoreSearchDepth = false;
+                    canSearchByUsn = true;
                     strb.append(root.getAbsolutePath()).append(",");
                 } else {
                     String path = root.getAbsolutePath();
@@ -397,12 +398,12 @@ public class SearchUtil {
                 }
             }
         }
-        if (needSearchIgnoreSearchDepth) {
-            innerSearchFileIgnoreSearchDepth(getStartMenu(), ignorePath);
-            innerSearchFileIgnoreSearchDepth("C:\\ProgramData\\Microsoft\\Windows\\Start Menu", ignorePath);
-        } else {
+        if (canSearchByUsn) {
             searchByUSN(strb.toString(), ignorePath.toLowerCase());
         }
+        innerSearchFileIgnoreSearchDepth(getDesktop(), ignorePath);
+        innerSearchFileIgnoreSearchDepth("C:\\Users\\Public\\Desktop", ignorePath);
+
         TaskBar.getInstance().showMessage(SettingsFrame.getTranslation("Info"), SettingsFrame.getTranslation("Search Done"));
         isManualUpdate = false;
         isUsable = true;
@@ -427,6 +428,11 @@ public class SearchUtil {
         try (BufferedWriter buffW = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("user/MFTSearchInfo.dat"), StandardCharsets.UTF_8))) {
             buffW.write("");
         }
+    }
+
+    private String getDesktop() {
+        FileSystemView fsv = FileSystemView.getFileSystemView();
+        return fsv.getHomeDirectory().getAbsolutePath();
     }
 
     private String getStartMenu() {
