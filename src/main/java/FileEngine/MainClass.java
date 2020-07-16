@@ -208,6 +208,7 @@ public class MainClass {
             SearchBar.getInstance().releaseAllSqlCache();
             CheckHotKey.getInstance().stopListen();
             FileMonitor.INSTANCE.stop_monitor();
+            SQLiteUtil.closeConnection();
             Thread.sleep(8000);
             System.exit(0);
         } catch (InterruptedException ignored) {
