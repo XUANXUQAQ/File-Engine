@@ -55,4 +55,12 @@ public class SQLiteUtil {
             stmt.execute("COMMIT;");
         }
     }
+
+    public static void closeConnection() {
+        try {
+            conn.close();
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+    }
 }
