@@ -2242,33 +2242,34 @@ public class SearchBar {
                     Thread.sleep(10);
                 }
             } catch (InterruptedException ignored) {
-
             }
         });
 
-        cachedThreadPool.execute(() -> {
-            try {
-                String column;
-                while (SettingsFrame.isNotMainExit()) {
-                    if (runningMode.get() == NORMAL_MODE) {
-                        try {
-                            while ((column = commandQueue.poll()) != null) {
-                                searchAndAddToTempResults(System.currentTimeMillis(), column);
-                            }
-                        } catch (SQLException e) {
-                            if (SettingsFrame.isDebug()) {
-                                e.printStackTrace();
+        for (int i = 0; i < 8; ++i) {
+            cachedThreadPool.execute(() -> {
+                try {
+                    String column;
+                    while (SettingsFrame.isNotMainExit()) {
+                        if (runningMode.get() == NORMAL_MODE) {
+                            try {
+                                while ((column = commandQueue.poll()) != null) {
+                                    searchAndAddToTempResults(System.currentTimeMillis(), column);
+                                }
+                            } catch (SQLException e) {
+                                if (SettingsFrame.isDebug()) {
+                                    e.printStackTrace();
+                                }
                             }
                         }
+                        Thread.sleep(10);
                     }
-                    Thread.sleep(10);
+                } catch (InterruptedException e) {
+                    if (SettingsFrame.isDebug()) {
+                        e.printStackTrace();
+                    }
                 }
-            } catch (InterruptedException e) {
-                if (SettingsFrame.isDebug()) {
-                    e.printStackTrace();
-                }
-            }
-        });
+            });
+        }
 
         cachedThreadPool.execute(() -> {
             //缓存和常用文件夹搜索线程
