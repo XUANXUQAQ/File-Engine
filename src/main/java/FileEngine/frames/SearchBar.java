@@ -2272,6 +2272,24 @@ public class SearchBar {
         }
 
         cachedThreadPool.execute(() -> {
+            //后台自动创建数据库索引
+            try (Statement stmt = SQLiteUtil.getStatement()) {
+                while (SettingsFrame.isNotMainExit()) {
+                    if (!isUsing && SearchUtil.getInstance().isUsable()) {
+                        for (int i = 0; i <= 40; ++i) {
+                            String createIndex = "CREATE UNIQUE INDEX IF NOT EXISTS list" + i + "_index on list" + i + "(PATH);";
+                            stmt.execute(createIndex);
+                            Thread.sleep(5000);
+                        }
+                    }
+                    Thread.sleep(50);
+                }
+            } catch (Exception ignored) {
+
+            }
+        });
+
+        cachedThreadPool.execute(() -> {
             //缓存和常用文件夹搜索线程
             //停顿时间0.5s，每一次输入会更新一次startTime，该线程记录endTime
             try {
@@ -2860,8 +2878,11 @@ public class SearchBar {
     }
 
     public String getFileName(String path) {
-        int index = path.lastIndexOf(File.separator);
-        return path.substring(index + 1);
+        if (path != null) {
+            int index = path.lastIndexOf(File.separator);
+            return path.substring(index + 1);
+        }
+        return "";
     }
 
     public int getAscIISum(String path) {
