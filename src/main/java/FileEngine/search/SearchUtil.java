@@ -5,7 +5,7 @@ import FileEngine.dllInterface.isNTFS;
 import FileEngine.frames.SearchBar;
 import FileEngine.frames.SettingsFrame;
 import FileEngine.frames.TaskBar;
-import FileEngine.sqliteConfig.SQLiteUtil;
+import FileEngine.SQLiteConfig.SQLiteUtil;
 
 import javax.swing.filechooser.FileSystemView;
 import java.io.*;
@@ -401,8 +401,21 @@ public class SearchUtil {
         if (canSearchByUsn) {
             searchByUSN(strb.toString(), ignorePath.toLowerCase());
         }
-        innerSearchFileIgnoreSearchDepth(getDesktop(), ignorePath);
-        innerSearchFileIgnoreSearchDepth("C:\\Users\\Public\\Desktop", ignorePath);
+        String desktop = getDesktop();
+        File[] desktopFiles = new File(desktop).listFiles();
+        if (desktopFiles != null) {
+            if (desktopFiles.length != 0) {
+                innerSearchFileIgnoreSearchDepth(desktop, ignorePath);
+            }
+        }
+
+        String publicDesktop = "C:\\Users\\Public\\Desktop";
+        File[] publicDesktopFiles = new File(publicDesktop).listFiles();
+        if (publicDesktopFiles != null) {
+            if (publicDesktopFiles.length != 0) {
+                innerSearchFileIgnoreSearchDepth(publicDesktop, ignorePath);
+            }
+        }
 
         TaskBar.getInstance().showMessage(SettingsFrame.getTranslation("Info"), SettingsFrame.getTranslation("Search Done"));
         isManualUpdate = false;
@@ -424,7 +437,9 @@ public class SearchUtil {
         }
         String command = "cmd.exe /c " + start + end;
         Process p = Runtime.getRuntime().exec(command, null, new File("user"));
-        p.waitFor();
+        while (p.isAlive()) {
+            Thread.sleep(10);
+        }
         try (BufferedWriter buffW = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("user/MFTSearchInfo.dat"), StandardCharsets.UTF_8))) {
             buffW.write("");
         }
@@ -462,7 +477,9 @@ public class SearchUtil {
         String command = "cmd.exe /c " + start + end + " \"" + path + "\"" + " \"1\" " + "\"" + ignorePath + "\" " + "\"" + database.getAbsolutePath() + "\" " + "\"" + "1" + "\"";
         try {
             Process p = Runtime.getRuntime().exec(command, null, new File("user"));
-            p.waitFor();
+            while (p.isAlive()) {
+                Thread.sleep(10);
+            }
         } catch (IOException | InterruptedException ignored) {
 
         }
@@ -476,7 +493,9 @@ public class SearchUtil {
         File database = new File("data.db");
         String command = "cmd.exe /c " + start + end + " \"" + path + "\"" + " \"" + searchDepth + "\" " + "\"" + ignorePath + "\" " + "\"" + database.getAbsolutePath() + "\" " + "\"" + "0" + "\"";
         Process p = Runtime.getRuntime().exec(command, null, new File("user"));
-        p.waitFor();
+        while (p.isAlive()) {
+            Thread.sleep(10);
+        }
     }
 
     public void updateLists(String ignorePath, int searchDepth, Statement stmt) {

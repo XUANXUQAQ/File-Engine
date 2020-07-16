@@ -30,7 +30,6 @@ import java.util.regex.Pattern;
 public class SettingsFrame {
     public static final String version = "2.2"; //TODO 更改版本号
     private static volatile boolean mainExit = false;
-    private static boolean is64Bit;
     private static volatile int cacheNumLimit;
     private static volatile String hotkey;
     private static volatile int updateTimeLimit;
@@ -176,14 +175,6 @@ public class SettingsFrame {
         private static final SettingsFrame instance = new SettingsFrame();
     }
 
-    public static void set64Bit(boolean b) {
-        is64Bit = b;
-    }
-
-    public static boolean is64Bit() {
-        return is64Bit;
-    }
-
     public static SettingsFrame getInstance() {
         return SettingsFrameBuilder.instance;
     }
@@ -261,11 +252,7 @@ public class SettingsFrame {
     }
 
     public static String getName() {
-        if (is64Bit) {
-            return "File-Engine-x64.exe";
-        } else {
-            return "File-Engine-x86.exe";
-        }
+        return "File-Engine-x64.exe";
     }
 
     private void addCheckboxListener() {
@@ -443,7 +430,6 @@ public class SettingsFrame {
             if (returnValue == JFileChooser.APPROVE_OPTION) {
                 textFieldPriorityFolder.setText(file.getAbsolutePath());
             }
-
         });
     }
 
@@ -454,7 +440,6 @@ public class SettingsFrame {
                 if (e.getClickCount() == 2) {
                     textFieldPriorityFolder.setText(null);
                 }
-
             }
         });
     }
@@ -561,11 +546,7 @@ public class SettingsFrame {
                         //开始更新,下载更新文件到tmp
                         String urlChoose;
                         String fileName;
-                        if (is64Bit) {
-                            urlChoose = "url64";
-                        } else {
-                            urlChoose = "url86";
-                        }
+                        urlChoose = "url64";
                         fileName = getName();
                         DownloadUtil download = DownloadUtil.getInstance();
                         download.downLoadFromUrl(updateInfo.getString(urlChoose), fileName, tmp.getAbsolutePath());
@@ -1738,7 +1719,9 @@ public class SettingsFrame {
             Process p;
             try {
                 p = Runtime.getRuntime().exec(command);
-                p.waitFor();
+                while (p.isAlive()) {
+                    Thread.sleep(10);
+                }
                 BufferedReader outPut = new BufferedReader(new InputStreamReader(p.getErrorStream()));
                 String line;
                 StringBuilder result = new StringBuilder();
@@ -1758,7 +1741,9 @@ public class SettingsFrame {
             Process p;
             try {
                 p = Runtime.getRuntime().exec(command);
-                p.waitFor();
+                while (p.isAlive()) {
+                    Thread.sleep(10);
+                }
                 BufferedReader outPut = new BufferedReader(new InputStreamReader(p.getErrorStream()));
                 String line;
                 StringBuilder result = new StringBuilder();
