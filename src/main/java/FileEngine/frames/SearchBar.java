@@ -838,10 +838,6 @@ public class SearchBar {
         return !isEmpty;
     }
 
-    private void setCurrentLabelPos(int num) {
-        currentLabelSelectedPosition.set(num);
-    }
-
     private int getCurrentLabelPos() {
         return currentLabelSelectedPosition.get();
     }
