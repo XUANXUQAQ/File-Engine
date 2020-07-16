@@ -1,21 +1,19 @@
 package FileEngine;
 
+import FileEngine.SQLiteConfig.SQLiteUtil;
 import FileEngine.dllInterface.FileMonitor;
 import FileEngine.frames.SearchBar;
 import FileEngine.frames.SettingsFrame;
 import FileEngine.frames.TaskBar;
 import FileEngine.hotkeyListener.CheckHotKey;
-import FileEngine.pluginSystem.PluginUtil;
-import FileEngine.sqliteConfig.SQLiteUtil;
-import FileEngine.search.SearchUtil;
 import FileEngine.md5.Md5Util;
+import FileEngine.pluginSystem.PluginUtil;
+import FileEngine.search.SearchUtil;
 import br.com.margel.weblaf.WebLookAndFeel;
 import com.alibaba.fastjson.JSONObject;
-
 import javax.swing.*;
 import java.awt.*;
 import java.io.*;
-import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Objects;
@@ -25,42 +23,28 @@ import java.util.Objects;
  * @author XUANXU
  */
 public class MainClass {
-    //32bit
-    private static final String FILE_MONITOR_86_MD_5 = "1005aa7fa75ae86d314afcfc5df0af6b";
-    private static final String FILE_SEARCHER_86_MD_5 = "8ff53f2f2a0d2ec0d7a89d3f4f1bb491";
-    private static final String GET_ASC_II_86_MD_5 = "e370e53ce6c18758a5468fe11ccca652";
-    private static final String HOTKEY_LISTENER_86_MD_5 = "15bd4db12a4939969c27c03ac9e57ddd";
-    private static final String IS_LOCAL_DISK_86_MD_5 = "9b1c4c4fc44b52bff4f226b39c1ac46f";
-    private static final String FILE_SEARCHER_USN_86_MD_5 = "48153cfabd03e2ab907f8d361bce9130";
-    private static final String IS_NTFS_86_MD_5 = "2aff387756192c704c0c876f2ad12fa2";
-    private static final String SQLITE3_86_MD_5 = "82b03cdb95fb0ef88b876d141b478a6d";
-    private static final String UPDATER_BAT_86_MD_5 = "005b57b56c3402b2038f90abc6e141e7";
     //64bit
     private static final String FILE_MONITOR_64_MD_5 = "db64b40ed1ccec6a7f2af1b40c1d22ab";
     private static final String FILE_SEARCHER_64_MD_5 = "41645c85b1b14823cd1fcf9cce069477";
     private static final String GET_ASC_II_64_MD_5 = "eff607d2dd4a7e4c878948fe8f24b3ea";
     private static final String HOTKEY_LISTENER_64_MD_5 = "41388e31d6fc22fb430f636d402cf608";
     private static final String IS_LOCAL_DISK_64_MD_5 = "64f64bc828f477aa9ce6f5f8fd6010f3";
-    private static final String FILE_SEARCHER_USN_64_MD_5 = "c800f1dab50df73794df2a94a1c847a0";
+    private static final String FILE_SEARCHER_USN_64_MD_5 = "f9bb252301900a7868163419a376a8f6";
     private static final String IS_NTFS_64_MD_5 = "b5f7ea2923a42873883a3bcda2bafd2";
     private static final String SQLITE3_64_MD_5 = "658c71b8b93ba4eb5b4936f46a112449";
     private static final String UPDATER_BAT_64_MD_5 = "357d7cc1cf023cb6c90f73926c6f2f55";
 
     private static final String SHORTCUT_GENERATOR_MD_5 = "fa4e26f99f3dcd58d827828c411ea5d7";
 
-    private static void initializeDllInterface() {
-        try {
-            Class.forName("FileEngine.dllInterface.FileMonitor");
-            Class.forName("FileEngine.dllInterface.IsLocalDisk");
-            Class.forName("FileEngine.dllInterface.HotkeyListener");
-            Class.forName("FileEngine.dllInterface.GetAscII");
-            Class.forName("FileEngine.dllInterface.isNTFS");
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        }
+    private static void initializeDllInterface() throws ClassNotFoundException {
+        Class.forName("FileEngine.dllInterface.FileMonitor");
+        Class.forName("FileEngine.dllInterface.IsLocalDisk");
+        Class.forName("FileEngine.dllInterface.HotkeyListener");
+        Class.forName("FileEngine.dllInterface.GetAscII");
+        Class.forName("FileEngine.dllInterface.isNTFS");
     }
 
-    private static void updatePlugins() {
+    private static void updatePlugins() throws FileNotFoundException {
         File sign = new File("user/updatePlugin");
         File tmpPlugins = new File("tmp/pluginsUpdate");
         if (sign.exists()) {
@@ -72,11 +56,7 @@ public class MainClass {
             for (File eachPlugin : files) {
                 String pluginName = eachPlugin.getName();
                 File targetPlugin = new File("plugins" + File.separator + pluginName);
-                try {
-                    copyFile(new FileInputStream(eachPlugin), targetPlugin);
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
-                }
+                copyFile(new FileInputStream(eachPlugin), targetPlugin);
             }
         }
     }
@@ -92,8 +72,8 @@ public class MainClass {
                 bos.flush();
                 count = bis.read(buffer);
             }
-        } catch (IOException ignored) {
-
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
@@ -118,7 +98,7 @@ public class MainClass {
     }
 
     private static void deleteDir(File file) {
-        if (!file.exists()) {//判断是否待删除目录是否存在
+        if (!file.exists()) {
             return;
         }
 
@@ -143,60 +123,39 @@ public class MainClass {
         deleteDir(file);
     }
 
-    private static void deleteUpdater() {
+    private static void deleteUpdater() throws InterruptedException {
         boolean ret = false;
         int count = 0;
         File updater = new File("updater.bat");
-        try {
-            while (!ret) {
-                ret = updater.delete();
-                Thread.sleep(1000);
-                count++;
-                if (count > 3) {
-                    break;
-                }
+
+        while (!ret) {
+            ret = updater.delete();
+            Thread.sleep(1000);
+            count++;
+            if (count > 3) {
+                break;
             }
-        } catch (InterruptedException ignored) {
         }
+
     }
 
-    public static void main(String[] args) {
-        try {
-            Class.forName("org.sqlite.JDBC");
-            UIManager.setLookAndFeel(new WebLookAndFeel());
-        } catch (Exception e) {
-            e.printStackTrace();
+    public static void main(String[] args) throws Exception {
+        Class.forName("org.sqlite.JDBC");
+        UIManager.setLookAndFeel(new WebLookAndFeel());
+
+        if (!System.getProperty("os.arch").contains("64")) {
+            System.err.println("NOT 64 BIT");
             return;
         }
 
-        SettingsFrame.set64Bit(System.getProperty("os.arch").contains("64"));
-        //SettingsFrame.set64Bit(false);
-
-        try {
-            SQLiteUtil.initConnection("jdbc:sqlite:data.db");
-        } catch (SQLException e) {
-            System.err.println("initialize database connection failed");
-            e.printStackTrace();
-            System.exit(-1);
-        }
+        SQLiteUtil.initConnection("jdbc:sqlite:data.db");
 
         boolean isManualUpdate = false;
         if (isDatabaseDamaged()) {
             System.out.println("无data文件，正在搜索并重建");
             //初始化数据库
-            try {
-                SQLiteUtil.createAllTables();
-            } catch (Exception e) {
-                System.err.println("initialize database connection failed");
-                e.printStackTrace();
-                System.exit(-1);
-            }
+            SQLiteUtil.createAllTables();
             isManualUpdate = true;
-        }
-
-        if (!initSettingsJson()) {
-            System.err.println("initialize settings failed");
-            System.exit(-1);
         }
 
         startOrIgnoreUpdateAndExit(isUpdateSignExist());
@@ -207,9 +166,8 @@ public class MainClass {
 
         if (!initFoldersAndFiles()) {
             System.err.println("initialize dependencies failed");
-            System.exit(-1);
+            return;
         }
-
 
         initializeDllInterface();
 
@@ -257,26 +215,15 @@ public class MainClass {
         }
     }
 
-    private static void releaseAllDependence(boolean is64Bit) {
-        if (is64Bit) {
-            copyOrIgnoreFile("user/fileMonitor.dll", "/win32-x86-64/fileMonitor.dll", FILE_MONITOR_64_MD_5);
-            copyOrIgnoreFile("user/getAscII.dll", "/win32-x86-64/getAscII.dll", GET_ASC_II_64_MD_5);
-            copyOrIgnoreFile("user/hotkeyListener.dll", "/win32-x86-64/hotkeyListener.dll", HOTKEY_LISTENER_64_MD_5);
-            copyOrIgnoreFile("user/isLocalDisk.dll", "/win32-x86-64/isLocalDisk.dll", IS_LOCAL_DISK_64_MD_5);
-            copyOrIgnoreFile("user/fileSearcher.exe", "/win32-x86-64/fileSearcher.exe", FILE_SEARCHER_64_MD_5);
-            copyOrIgnoreFile("user/fileSearcherUSN.exe", "/win32-x86-64/fileSearcherUSN.exe", FILE_SEARCHER_USN_64_MD_5);
-            copyOrIgnoreFile("user/isNTFS.dll", "/win32-x86-64/isNTFS.dll", IS_NTFS_64_MD_5);
-            copyOrIgnoreFile("user/sqlite3.dll", "/win32-x86-64/sqlite3.dll", SQLITE3_64_MD_5);
-        } else {
-            copyOrIgnoreFile("user/fileMonitor.dll", "/win32-x86/fileMonitor.dll", FILE_MONITOR_86_MD_5);
-            copyOrIgnoreFile("user/getAscII.dll", "/win32-x86/getAscII.dll", GET_ASC_II_86_MD_5);
-            copyOrIgnoreFile("user/hotkeyListener.dll", "/win32-x86/hotkeyListener.dll", HOTKEY_LISTENER_86_MD_5);
-            copyOrIgnoreFile("user/isLocalDisk.dll", "/win32-x86/isLocalDisk.dll", IS_LOCAL_DISK_86_MD_5);
-            copyOrIgnoreFile("user/fileSearcher.exe", "/win32-x86/fileSearcher.exe", FILE_SEARCHER_86_MD_5);
-            copyOrIgnoreFile("user/fileSearcherUSN.exe", "/win32-x86/fileSearcherUSN.exe", FILE_SEARCHER_USN_86_MD_5);
-            copyOrIgnoreFile("user/isNTFS.dll", "/win32-x86/isNTFS.dll", IS_NTFS_86_MD_5);
-            copyOrIgnoreFile("user/sqlite3.dll", "/win32-x86/sqlite3.dll", SQLITE3_86_MD_5);
-        }
+    private static void releaseAllDependence() {
+        copyOrIgnoreFile("user/fileMonitor.dll", "/win32-x86-64/fileMonitor.dll", FILE_MONITOR_64_MD_5);
+        copyOrIgnoreFile("user/getAscII.dll", "/win32-x86-64/getAscII.dll", GET_ASC_II_64_MD_5);
+        copyOrIgnoreFile("user/hotkeyListener.dll", "/win32-x86-64/hotkeyListener.dll", HOTKEY_LISTENER_64_MD_5);
+        copyOrIgnoreFile("user/isLocalDisk.dll", "/win32-x86-64/isLocalDisk.dll", IS_LOCAL_DISK_64_MD_5);
+        copyOrIgnoreFile("user/fileSearcher.exe", "/win32-x86-64/fileSearcher.exe", FILE_SEARCHER_64_MD_5);
+        copyOrIgnoreFile("user/fileSearcherUSN.exe", "/win32-x86-64/fileSearcherUSN.exe", FILE_SEARCHER_USN_64_MD_5);
+        copyOrIgnoreFile("user/isNTFS.dll", "/win32-x86-64/isNTFS.dll", IS_NTFS_64_MD_5);
+        copyOrIgnoreFile("user/sqlite3.dll", "/win32-x86-64/sqlite3.dll", SQLITE3_64_MD_5);
         copyOrIgnoreFile("user/shortcutGenerator.vbs", "/shortcutGenerator.vbs", SHORTCUT_GENERATOR_MD_5);
     }
 
@@ -297,27 +244,19 @@ public class MainClass {
         }
     }
 
-    private static void startOrIgnoreUpdateAndExit(boolean isUpdate) {
+    private static void startOrIgnoreUpdateAndExit(boolean isUpdate) throws InterruptedException, IOException {
         //复制updater.exe
         if (isUpdate) {
             File update = new File("user/update");
             update.delete();
             File updaterBat = new File("updater.bat");
-            if (SettingsFrame.is64Bit()) {
-                copyOrIgnoreFile("updater.bat", "/win32-x86-64/updater.bat", UPDATER_BAT_64_MD_5);
-            } else {
-                copyOrIgnoreFile("updater.bat", "/win32-x86/updater.bat", UPDATER_BAT_86_MD_5);
-            }
+            copyOrIgnoreFile("updater.bat", "/win32-x86-64/updater.bat", UPDATER_BAT_64_MD_5);
             Desktop desktop;
             if (Desktop.isDesktopSupported()) {
                 desktop = Desktop.getDesktop();
-                try {
-                    desktop.open(updaterBat);
-                    Thread.sleep(100);
-                    System.exit(0);
-                } catch (IOException | InterruptedException e) {
-                    e.printStackTrace();
-                }
+                desktop.open(updaterBat);
+                Thread.sleep(100);
+                System.exit(0);
             }
         } else {
             deleteUpdater();
@@ -326,26 +265,24 @@ public class MainClass {
 
     private static boolean initFoldersAndFiles() {
         boolean isFailed;
+        //settings.json
+        isFailed = createFileOrFolder("user/settings.json", true, false);
         //user
-        isFailed = createFileOrFolder("user", false, false);
+        isFailed &= createFileOrFolder("user", false, false);
         //plugins
-        isFailed = isFailed && createFileOrFolder("plugins", false, false);
+        isFailed &= createFileOrFolder("plugins", false, false);
         //tmp
         File tmp = new File("tmp");
         String tempPath = tmp.getAbsolutePath();
-        isFailed = isFailed && createFileOrFolder(tmp, false, false);
-        isFailed = isFailed && createFileOrFolder(tempPath + File.separator + "fileAdded.txt", true, true);
-        isFailed = isFailed && createFileOrFolder(tempPath + File.separator + "fileRemoved.txt", true, true);
+        isFailed &= createFileOrFolder(tmp, false, false);
+        isFailed &= createFileOrFolder(tempPath + File.separator + "fileAdded.txt", true, true);
+        isFailed &= createFileOrFolder(tempPath + File.separator + "fileRemoved.txt", true, true);
         //cache.dat
-        isFailed = isFailed && createFileOrFolder("user/cache.dat", true, false);
+        isFailed &= createFileOrFolder("user/cache.dat", true, false);
         //cmd.txt
-        isFailed = isFailed && createFileOrFolder("user/cmds.txt", true, false);
-        releaseAllDependence(SettingsFrame.is64Bit());
+        isFailed &= createFileOrFolder("user/cmds.txt", true, false);
+        releaseAllDependence();
         return isFailed;
-    }
-
-    private static boolean initSettingsJson() {
-        return createFileOrFolder("user/settings.json", true, false);
     }
 
     private static boolean createFileOrFolder(File file, boolean isFile, boolean isDeleteOnExit) {

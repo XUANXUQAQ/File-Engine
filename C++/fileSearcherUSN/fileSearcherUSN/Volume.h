@@ -7,12 +7,13 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <mutex>
 #include "sqlite3.h"
 
-//#define TEST
-constexpr auto MAXVOL = 3;
-
 using namespace std;
+
+constexpr auto MAXVOL = 3;
+static mutex mutex_lock;
 
 std::string to_utf8(const std::wstring& str);
 std::string to_utf8(const wchar_t* buffer, int len);
@@ -89,11 +90,11 @@ public:
 			getUSNJournal() &&
 			// 06. 删除 USN 日志文件 ( 也可以不删除 ) 
 			deleteUSN()) {
-			initAllVector();
+			mutex_lock.lock();
+			initAllPrepareStatement();
 			int ascii = 0;
 			wstring name;
 			CString path;
-			string* _utf8;
 			wstring record;
 			Frn_Pfrn_Name_Map::iterator endIter = frnPfrnNameMap.end();
 			for (Frn_Pfrn_Name_Map::iterator iter = frnPfrnNameMap.begin(); iter != endIter; ++iter) {
@@ -104,18 +105,17 @@ public:
 				record = vol + path;
 				string fullPath = to_utf8(record);
 				if (!(isIgnore(fullPath))) {
-					_utf8 = new string(fullPath);
-					saveResult(_utf8, ascii);
+					saveResult(fullPath, ascii);
 				}
 			}
+			finalizeAllStatement();
+			mutex_lock.unlock();
 			return true;
 		}
 		else {
 			return false;
 		}
 	}
-
-	void saveToDatabase();
 
 private:
 	char vol;
@@ -124,112 +124,171 @@ private:
 	Frn_Pfrn_Name_Map frnPfrnNameMap;
 	sqlite3* db;
 	CString path;
+	sqlite3_stmt* stmt0 = NULL;
+	sqlite3_stmt* stmt1 = NULL;
+	sqlite3_stmt* stmt2 = NULL;
+	sqlite3_stmt* stmt3 = NULL;
+	sqlite3_stmt* stmt4 = NULL;
+	sqlite3_stmt* stmt5 = NULL;
+	sqlite3_stmt* stmt6 = NULL;
+	sqlite3_stmt* stmt7 = NULL;
+	sqlite3_stmt* stmt8 = NULL;
+	sqlite3_stmt* stmt9 = NULL;
+	sqlite3_stmt* stmt10 = NULL;
+	sqlite3_stmt* stmt11 = NULL;
+	sqlite3_stmt* stmt12 = NULL;
+	sqlite3_stmt* stmt13 = NULL;
+	sqlite3_stmt* stmt14 = NULL;
+	sqlite3_stmt* stmt15 = NULL;
+	sqlite3_stmt* stmt16 = NULL;
+	sqlite3_stmt* stmt17 = NULL;
+	sqlite3_stmt* stmt18 = NULL;
+	sqlite3_stmt* stmt19 = NULL;
+	sqlite3_stmt* stmt20 = NULL;
+	sqlite3_stmt* stmt21 = NULL;
+	sqlite3_stmt* stmt22 = NULL;
+	sqlite3_stmt* stmt23 = NULL;
+	sqlite3_stmt* stmt24 = NULL;
+	sqlite3_stmt* stmt25 = NULL;
+	sqlite3_stmt* stmt26 = NULL;
+	sqlite3_stmt* stmt27 = NULL;
+	sqlite3_stmt* stmt28 = NULL;
+	sqlite3_stmt* stmt29 = NULL;
+	sqlite3_stmt* stmt30 = NULL;
+	sqlite3_stmt* stmt31 = NULL;
+	sqlite3_stmt* stmt32 = NULL;
+	sqlite3_stmt* stmt33 = NULL;
+	sqlite3_stmt* stmt34 = NULL;
+	sqlite3_stmt* stmt35 = NULL;
+	sqlite3_stmt* stmt36 = NULL;
+	sqlite3_stmt* stmt37 = NULL;
+	sqlite3_stmt* stmt38 = NULL;
+	sqlite3_stmt* stmt39 = NULL;
+	sqlite3_stmt* stmt40 = NULL;
 
 	USN_JOURNAL_DATA ujd;
 	CREATE_USN_JOURNAL_DATA cujd;
 
 	vector<string> ignorePathVector;
 
-	vector<string*> command0;
-	vector<string*> command1;
-	vector<string*> command2;
-	vector<string*> command3;
-	vector<string*> command4;
-	vector<string*> command5;
-	vector<string*> command6;
-	vector<string*> command7;
-	vector<string*> command8;
-	vector<string*> command9;
-	vector<string*> command10;
-	vector<string*> command11;
-	vector<string*> command12;
-	vector<string*> command13;
-	vector<string*> command14;
-	vector<string*> command15;
-	vector<string*> command16;
-	vector<string*> command17;
-	vector<string*> command18;
-	vector<string*> command19;
-	vector<string*> command20;
-	vector<string*> command21;
-	vector<string*> command22;
-	vector<string*> command23;
-	vector<string*> command24;
-	vector<string*> command25;
-	vector<string*> command26;
-	vector<string*> command27;
-	vector<string*> command28;
-	vector<string*> command29;
-	vector<string*> command30;
-	vector<string*> command31;
-	vector<string*> command32;
-	vector<string*> command33;
-	vector<string*> command34;
-	vector<string*> command35;
-	vector<string*> command36;
-	vector<string*> command37;
-	vector<string*> command38;
-	vector<string*> command39;
-	vector<string*> command40;
-
 	bool getHandle();
 	bool createUSN();
 	bool getUSNInfo();
 	bool getUSNJournal();
 	bool deleteUSN();
-	void executeAll(vector<string*>& vec, const char* init);
-	void saveResult(string* path, int ascII);
+	void saveResult(string path, int ascII);
 	void getPath(DWORDLONG frn, CString& path);
 	int getAscIISum(string name);
 	bool isIgnore(string path);
+	void finalizeAllStatement();
+	void saveSingleRecordToDB(sqlite3_stmt* stmt, string record);
 	void addIgnorePath(vector<string> vec) {
 		ignorePathVector = vec;
 	}
-	void initAllVector() {
-		command0.reserve(3000);
-		command1.reserve(50000);
-		command2.reserve(50000);
-		command3.reserve(50000);
-		command4.reserve(50000);
-		command5.reserve(50000);
-		command6.reserve(50000);
-		command7.reserve(50000);
-		command8.reserve(50000);
-		command9.reserve(50000);
-		command10.reserve(50000);
-		command11.reserve(50000);
-		command12.reserve(50000);
-		command13.reserve(50000);
-		command14.reserve(50000);
-		command15.reserve(50000);
-		command16.reserve(50000);
-		command17.reserve(50000);
-		command18.reserve(50000);
-		command19.reserve(50000);
-		command20.reserve(50000);
-		command21.reserve(50000);
-		command22.reserve(50000);
-		command23.reserve(50000);
-		command24.reserve(50000);
-		command25.reserve(50000);
-		command26.reserve(50000);
-		command27.reserve(50000);
-		command28.reserve(20000);
-		command29.reserve(10000);
-		command30.reserve(10000);
-		command31.reserve(10000);
-		command32.reserve(10000);
-		command33.reserve(10000);
-		command34.reserve(10000);
-		command35.reserve(10000);
-		command36.reserve(10000);
-		command37.reserve(10000);
-		command38.reserve(10000);
-		command39.reserve(5000);
-		command40.reserve(5000);
-		ignorePathVector.reserve(50);
-	}
+	void initAllPrepareStatement();
+	void initSinglePrepareStatement(sqlite3_stmt** statement, const char* init);
 };
+
+void Volume::initSinglePrepareStatement(sqlite3_stmt** statement, const char* init) {
+	size_t ret = sqlite3_prepare_v2(db, init, strlen(init), statement, 0);
+	if (SQLITE_OK != ret) {
+		cout << "error preparing stmt \"" << init << "\"" << endl;
+	}
+}
+
+void Volume::finalizeAllStatement() {
+	sqlite3_finalize(stmt0);
+	sqlite3_finalize(stmt1);
+	sqlite3_finalize(stmt2);
+	sqlite3_finalize(stmt3);
+	sqlite3_finalize(stmt4);
+	sqlite3_finalize(stmt5);
+	sqlite3_finalize(stmt6);
+	sqlite3_finalize(stmt7);
+	sqlite3_finalize(stmt8);
+	sqlite3_finalize(stmt9);
+	sqlite3_finalize(stmt10);
+	sqlite3_finalize(stmt11);
+	sqlite3_finalize(stmt12);
+	sqlite3_finalize(stmt13);
+	sqlite3_finalize(stmt14);
+	sqlite3_finalize(stmt15);
+	sqlite3_finalize(stmt16);
+	sqlite3_finalize(stmt17);
+	sqlite3_finalize(stmt18);
+	sqlite3_finalize(stmt19);
+	sqlite3_finalize(stmt20);
+	sqlite3_finalize(stmt21);
+	sqlite3_finalize(stmt22);
+	sqlite3_finalize(stmt23);
+	sqlite3_finalize(stmt24);
+	sqlite3_finalize(stmt25);
+	sqlite3_finalize(stmt26);
+	sqlite3_finalize(stmt27);
+	sqlite3_finalize(stmt28);
+	sqlite3_finalize(stmt29);
+	sqlite3_finalize(stmt30);
+	sqlite3_finalize(stmt31);
+	sqlite3_finalize(stmt32);
+	sqlite3_finalize(stmt33);
+	sqlite3_finalize(stmt34);
+	sqlite3_finalize(stmt35);
+	sqlite3_finalize(stmt36);
+	sqlite3_finalize(stmt37);
+	sqlite3_finalize(stmt38);
+	sqlite3_finalize(stmt39);
+	sqlite3_finalize(stmt40);
+}
+
+void Volume::saveSingleRecordToDB(sqlite3_stmt* stmt, string record) {
+	sqlite3_reset(stmt);
+	sqlite3_bind_text(stmt, 1, record.c_str(), -1, SQLITE_STATIC);
+	sqlite3_step(stmt);
+}
+
+void Volume::initAllPrepareStatement() {
+	initSinglePrepareStatement(&stmt0, "INSERT INTO list0(PATH) VALUES(?);");
+	initSinglePrepareStatement(&stmt1, "INSERT INTO list1(PATH) VALUES(?);");
+	initSinglePrepareStatement(&stmt2, "INSERT INTO list2(PATH) VALUES(?);");
+	initSinglePrepareStatement(&stmt3, "INSERT INTO list3(PATH) VALUES(?);");
+	initSinglePrepareStatement(&stmt4, "INSERT INTO list4(PATH) VALUES(?);");
+	initSinglePrepareStatement(&stmt5, "INSERT INTO list5(PATH) VALUES(?);");
+	initSinglePrepareStatement(&stmt6, "INSERT INTO list6(PATH) VALUES(?);");
+	initSinglePrepareStatement(&stmt7, "INSERT INTO list7(PATH) VALUES(?);");
+	initSinglePrepareStatement(&stmt8, "INSERT INTO list8(PATH) VALUES(?);");
+	initSinglePrepareStatement(&stmt9, "INSERT INTO list9(PATH) VALUES(?);");
+	initSinglePrepareStatement(&stmt10, "INSERT INTO list10(PATH) VALUES(?);");
+	initSinglePrepareStatement(&stmt11, "INSERT INTO list11(PATH) VALUES(?);");
+	initSinglePrepareStatement(&stmt12, "INSERT INTO list12(PATH) VALUES(?);");
+	initSinglePrepareStatement(&stmt13, "INSERT INTO list13(PATH) VALUES(?);");
+	initSinglePrepareStatement(&stmt14, "INSERT INTO list14(PATH) VALUES(?);");
+	initSinglePrepareStatement(&stmt15, "INSERT INTO list15(PATH) VALUES(?);");
+	initSinglePrepareStatement(&stmt16, "INSERT INTO list16(PATH) VALUES(?);");
+	initSinglePrepareStatement(&stmt17, "INSERT INTO list17(PATH) VALUES(?);");
+	initSinglePrepareStatement(&stmt18, "INSERT INTO list18(PATH) VALUES(?);");
+	initSinglePrepareStatement(&stmt19, "INSERT INTO list19(PATH) VALUES(?);");
+	initSinglePrepareStatement(&stmt20, "INSERT INTO list20(PATH) VALUES(?);");
+	initSinglePrepareStatement(&stmt21, "INSERT INTO list21(PATH) VALUES(?);");
+	initSinglePrepareStatement(&stmt22, "INSERT INTO list22(PATH) VALUES(?);");
+	initSinglePrepareStatement(&stmt23, "INSERT INTO list23(PATH) VALUES(?);");
+	initSinglePrepareStatement(&stmt24, "INSERT INTO list24(PATH) VALUES(?);");
+	initSinglePrepareStatement(&stmt25, "INSERT INTO list25(PATH) VALUES(?);");
+	initSinglePrepareStatement(&stmt26, "INSERT INTO list26(PATH) VALUES(?);");
+	initSinglePrepareStatement(&stmt27, "INSERT INTO list27(PATH) VALUES(?);");
+	initSinglePrepareStatement(&stmt28, "INSERT INTO list28(PATH) VALUES(?);");
+	initSinglePrepareStatement(&stmt29, "INSERT INTO list29(PATH) VALUES(?);");
+	initSinglePrepareStatement(&stmt30, "INSERT INTO list30(PATH) VALUES(?);");
+	initSinglePrepareStatement(&stmt31, "INSERT INTO list31(PATH) VALUES(?);");
+	initSinglePrepareStatement(&stmt32, "INSERT INTO list32(PATH) VALUES(?);");
+	initSinglePrepareStatement(&stmt33, "INSERT INTO list33(PATH) VALUES(?);");
+	initSinglePrepareStatement(&stmt34, "INSERT INTO list34(PATH) VALUES(?);");
+	initSinglePrepareStatement(&stmt35, "INSERT INTO list35(PATH) VALUES(?);");
+	initSinglePrepareStatement(&stmt36, "INSERT INTO list36(PATH) VALUES(?);");
+	initSinglePrepareStatement(&stmt37, "INSERT INTO list37(PATH) VALUES(?);");
+	initSinglePrepareStatement(&stmt38, "INSERT INTO list38(PATH) VALUES(?);");
+	initSinglePrepareStatement(&stmt39, "INSERT INTO list39(PATH) VALUES(?);");
+	initSinglePrepareStatement(&stmt40, "INSERT INTO list40(PATH) VALUES(?);");
+}
 
 bool Volume::isIgnore(string path) {
 	if (path.find("$") != string::npos)
@@ -248,223 +307,136 @@ bool Volume::isIgnore(string path) {
 	return false;
 }
 
-void Volume::executeAll(vector<string*>& vec, const char* init) {
-	sqlite3_stmt* stmt = NULL;
-	string str;
-	size_t rc = sqlite3_prepare_v2(db, init, strlen(init), &stmt, 0);
-	if (rc != SQLITE_OK) {
-		cout << "error preparing statement" << endl;
-		exit(-1);
-	}
-	for (vector<string*>::iterator iter = vec.begin(); iter != vec.end(); ++iter) {
-		str = **iter;
-		sqlite3_reset(stmt);
-		sqlite3_bind_text(stmt, 1, str.c_str(), -1, SQLITE_STATIC);
-		sqlite3_step(stmt);
-	}
-	sqlite3_finalize(stmt);
-}
-
-void Volume::saveResult(string* path, int ascII) {
+void Volume::saveResult(string path, int ascII) {
 	int asciiGroup = ascII / 100;
 	switch (asciiGroup)
 	{
 	case 0:
-		command0.emplace_back(path);
+		saveSingleRecordToDB(stmt0, path);
 		break;
-
 	case 1:
-		command1.emplace_back(path);
+		saveSingleRecordToDB(stmt1, path);
 		break;
-
 	case 2:
-		command2.emplace_back(path);
+		saveSingleRecordToDB(stmt2, path);
 		break;
-
 	case 3:
-		command3.emplace_back(path);
+		saveSingleRecordToDB(stmt3, path);
 		break;
-
 	case 4:
-		command4.emplace_back(path);
+		saveSingleRecordToDB(stmt4, path);
 		break;
-
 	case 5:
-		command5.emplace_back(path);
+		saveSingleRecordToDB(stmt5, path);
 		break;
 	case 6:
-		command6.emplace_back(path);
+		saveSingleRecordToDB(stmt6, path);
 		break;
-
 	case 7:
-		command7.emplace_back(path);
+		saveSingleRecordToDB(stmt7, path);
 		break;
-
 	case 8:
-		command8.emplace_back(path);
+		saveSingleRecordToDB(stmt8, path);
 		break;
-
 	case 9:
-		command9.emplace_back(path);
+		saveSingleRecordToDB(stmt9, path);
 		break;
-
 	case 10:
-		command10.emplace_back(path);
+		saveSingleRecordToDB(stmt10, path);
 		break;
-
 	case 11:
-		command11.emplace_back(path);
+		saveSingleRecordToDB(stmt11, path);
 		break;
-
 	case 12:
-		command12.emplace_back(path);
+		saveSingleRecordToDB(stmt12, path);
 		break;
-
 	case 13:
-		command13.emplace_back(path);
+		saveSingleRecordToDB(stmt13, path);
 		break;
-
 	case 14:
-		command14.emplace_back(path);
+		saveSingleRecordToDB(stmt14, path);
 		break;
-
 	case 15:
-		command15.emplace_back(path);
+		saveSingleRecordToDB(stmt15, path);
 		break;
-
 	case 16:
-		command16.emplace_back(path);
+		saveSingleRecordToDB(stmt16, path);
 		break;
-
 	case 17:
-		command17.emplace_back(path);
+		saveSingleRecordToDB(stmt17, path);
 		break;
-
 	case 18:
-		command18.emplace_back(path);
+		saveSingleRecordToDB(stmt18, path);
 		break;
-
 	case 19:
-		command19.emplace_back(path);
+		saveSingleRecordToDB(stmt19, path);
 		break;
-
 	case 20:
-		command20.emplace_back(path);
+		saveSingleRecordToDB(stmt20, path);
 		break;
-
 	case 21:
-		command21.emplace_back(path);
+		saveSingleRecordToDB(stmt21, path);
 		break;
-
 	case 22:
-		command22.emplace_back(path);
+		saveSingleRecordToDB(stmt22, path);
 		break;
-
 	case 23:
-		command23.emplace_back(path);
+		saveSingleRecordToDB(stmt23, path);
 		break;
-
 	case 24:
-		command24.emplace_back(path);
+		saveSingleRecordToDB(stmt24, path);
 		break;
-
 	case 25:
-		command25.emplace_back(path);
+		saveSingleRecordToDB(stmt25, path);
 		break;
-
 	case 26:
-		command26.emplace_back(path);
+		saveSingleRecordToDB(stmt26, path);
 		break;
 	case 27:
-		command27.emplace_back(path);
+		saveSingleRecordToDB(stmt27, path);
 		break;
 	case 28:
-		command28.emplace_back(path);
+		saveSingleRecordToDB(stmt28, path);
 		break;
 	case 29:
-		command29.emplace_back(path);
+		saveSingleRecordToDB(stmt29, path);
 		break;
 	case 30:
-		command30.emplace_back(path);
+		saveSingleRecordToDB(stmt30, path);
 		break;
 	case 31:
-		command31.emplace_back(path);
+		saveSingleRecordToDB(stmt31, path);
 		break;
 	case 32:
-		command32.emplace_back(path);
+		saveSingleRecordToDB(stmt32, path);
 		break;
 	case 33:
-		command33.emplace_back(path);
+		saveSingleRecordToDB(stmt33, path);
 		break;
 	case 34:
-		command34.emplace_back(path);
+		saveSingleRecordToDB(stmt34, path);
 		break;
 	case 35:
-		command35.emplace_back(path);
+		saveSingleRecordToDB(stmt35, path);
 		break;
 	case 36:
-		command36.emplace_back(path);
+		saveSingleRecordToDB(stmt36, path);
 		break;
 	case 37:
-		command37.emplace_back(path);
+		saveSingleRecordToDB(stmt37, path);
 		break;
 	case 38:
-		command38.emplace_back(path);
+		saveSingleRecordToDB(stmt38, path);
 		break;
 	case 39:
-		command39.emplace_back(path);
+		saveSingleRecordToDB(stmt39, path);
 		break;
 	case 40:
-		command40.emplace_back(path);
+		saveSingleRecordToDB(stmt40, path);
 		break;
-
 	default:
 		break;
 	}
-}
-
-void Volume::saveToDatabase() {
-	executeAll(command0, "INSERT INTO list0(PATH) VALUES(?);");
-	executeAll(command1, "INSERT INTO list1(PATH) VALUES(?);");
-	executeAll(command2, "INSERT INTO list2(PATH) VALUES(?);");
-	executeAll(command3, "INSERT INTO list3(PATH) VALUES(?);");
-	executeAll(command4, "INSERT INTO list4(PATH) VALUES(?);");
-	executeAll(command5, "INSERT INTO list5(PATH) VALUES(?);");
-	executeAll(command6, "INSERT INTO list6(PATH) VALUES(?);");
-	executeAll(command7, "INSERT INTO list7(PATH) VALUES(?);");
-	executeAll(command8, "INSERT INTO list8(PATH) VALUES(?);");
-	executeAll(command9, "INSERT INTO list9(PATH) VALUES(?);");
-	executeAll(command10, "INSERT INTO list10(PATH) VALUES(?);");
-	executeAll(command11, "INSERT INTO list11(PATH) VALUES(?);");
-	executeAll(command12, "INSERT INTO list12(PATH) VALUES(?);");
-	executeAll(command13, "INSERT INTO list13(PATH) VALUES(?);");
-	executeAll(command14, "INSERT INTO list14(PATH) VALUES(?);");
-	executeAll(command15, "INSERT INTO list15(PATH) VALUES(?);");
-	executeAll(command16, "INSERT INTO list16(PATH) VALUES(?);");
-	executeAll(command17, "INSERT INTO list17(PATH) VALUES(?);");
-	executeAll(command18, "INSERT INTO list18(PATH) VALUES(?);");
-	executeAll(command19, "INSERT INTO list19(PATH) VALUES(?);");
-	executeAll(command20, "INSERT INTO list20(PATH) VALUES(?);");
-	executeAll(command21, "INSERT INTO list21(PATH) VALUES(?);");
-	executeAll(command22, "INSERT INTO list22(PATH) VALUES(?);");
-	executeAll(command23, "INSERT INTO list23(PATH) VALUES(?);");
-	executeAll(command24, "INSERT INTO list24(PATH) VALUES(?);");
-	executeAll(command25, "INSERT INTO list25(PATH) VALUES(?);");
-	executeAll(command26, "INSERT INTO list26(PATH) VALUES(?);");
-	executeAll(command27, "INSERT INTO list27(PATH) VALUES(?);");
-	executeAll(command28, "INSERT INTO list28(PATH) VALUES(?);");
-	executeAll(command29, "INSERT INTO list29(PATH) VALUES(?);");
-	executeAll(command30, "INSERT INTO list30(PATH) VALUES(?);");
-	executeAll(command31, "INSERT INTO list31(PATH) VALUES(?);");
-	executeAll(command32, "INSERT INTO list32(PATH) VALUES(?);");
-	executeAll(command33, "INSERT INTO list33(PATH) VALUES(?);");
-	executeAll(command34, "INSERT INTO list34(PATH) VALUES(?);");
-	executeAll(command35, "INSERT INTO list35(PATH) VALUES(?);");
-	executeAll(command36, "INSERT INTO list36(PATH) VALUES(?);");
-	executeAll(command37, "INSERT INTO list37(PATH) VALUES(?);");
-	executeAll(command38, "INSERT INTO list38(PATH) VALUES(?);");
-	executeAll(command39, "INSERT INTO list39(PATH) VALUES(?);");
-	executeAll(command40, "INSERT INTO list40(PATH) VALUES(?);");
 }
 
 int Volume::getAscIISum(string name) {

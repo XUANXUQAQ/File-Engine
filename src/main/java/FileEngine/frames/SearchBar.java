@@ -7,7 +7,7 @@ import FileEngine.dllInterface.IsLocalDisk;
 import FileEngine.getIcon.GetIconUtil;
 import FileEngine.pluginSystem.Plugin;
 import FileEngine.pluginSystem.PluginUtil;
-import FileEngine.sqliteConfig.SQLiteUtil;
+import FileEngine.SQLiteConfig.SQLiteUtil;
 import FileEngine.search.SearchUtil;
 
 import javax.swing.*;
@@ -2857,7 +2857,9 @@ public class SearchBar {
         String end = "\"" + shortcutGenPath.substring(2) + "\"";
         String commandToGenLnk = start + end + " /target:" + "\"" + fileOrFolderPath + "\"" + " " + "/shortcut:" + "\"" + writeShortCutPath + "\"" + " /workingdir:" + "\"" + fileOrFolderPath.substring(0, fileOrFolderPath.lastIndexOf(File.separator)) + "\"";
         Process p = Runtime.getRuntime().exec("cmd.exe /c " + commandToGenLnk);
-        p.waitFor();
+        while (p.isAlive()) {
+            Thread.sleep(10);
+        }
     }
 
     public String getFileName(String path) {
