@@ -75,7 +75,6 @@ public class SearchBar {
     private final ConcurrentLinkedQueue<String> tempResults;
     private final ConcurrentLinkedQueue<String> commandQueue;
     private final CopyOnWriteArrayList<String> listResults;
-    private final ConcurrentHashMap<String, PreparedStatement> sqlCache;
     private volatile String[] searchCase;
     private volatile String searchText;
     private volatile String[] keywords;
@@ -97,7 +96,6 @@ public class SearchBar {
         listResults = new CopyOnWriteArrayList<>();
         tempResults = new ConcurrentLinkedQueue<>();
         commandQueue = new ConcurrentLinkedQueue<>();
-        sqlCache = new ConcurrentHashMap<>();
         border = BorderFactory.createLineBorder(new Color(73, 162, 255, 255));
         searchBar = new JFrame();
         labelCount = new AtomicInteger(0);
@@ -2607,16 +2605,6 @@ public class SearchBar {
         return resultCount.get() >= 100;
     }
 
-    public void releaseAllSqlCache() {
-        for (String each : sqlCache.keySet()) {
-            try {
-                sqlCache.get(each).close();
-            } catch (SQLException ignored) {
-
-            }
-        }
-    }
-
     private void searchAndAddToTempResults(long time, String column) throws SQLException {
         //为label添加结果
         ResultSet resultSet;
@@ -2624,10 +2612,8 @@ public class SearchBar {
         boolean isResultsExcessive = false;
         String pSql = "SELECT PATH FROM " + column + ";";
         PreparedStatement pStmt;
-        if ((pStmt = sqlCache.get(pSql)) == null) {
-            pStmt = SQLiteUtil.getConnection().prepareStatement(pSql);
-            sqlCache.put(pSql, pStmt);
-        }
+
+        pStmt = SQLiteUtil.getConnection().prepareStatement(pSql);
 
         resultSet = pStmt.executeQuery();
         while (resultSet.next()) {

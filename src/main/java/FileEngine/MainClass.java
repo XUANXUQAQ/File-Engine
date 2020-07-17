@@ -204,7 +204,6 @@ public class MainClass {
                 Thread.sleep(100);
             }
             PluginUtil.unloadAllPlugins();
-            SearchBar.getInstance().releaseAllSqlCache();
             CheckHotKey.getInstance().stopListen();
             FileMonitor.INSTANCE.stop_monitor();
             SQLiteUtil.closeConnection();
