@@ -76,7 +76,6 @@ public class SearchBar {
     private final ConcurrentLinkedQueue<String> commandQueue;
     private final CopyOnWriteArrayList<String> listResults;
     private final ConcurrentHashMap<String, PreparedStatement> sqlCache;
-    private final Set<String> listResultsCopy;
     private volatile String[] searchCase;
     private volatile String searchText;
     private volatile String[] keywords;
@@ -96,7 +95,6 @@ public class SearchBar {
 
     private SearchBar() {
         listResults = new CopyOnWriteArrayList<>();
-        listResultsCopy = ConcurrentHashMap.newKeySet();
         tempResults = new ConcurrentLinkedQueue<>();
         commandQueue = new ConcurrentLinkedQueue<>();
         sqlCache = new ConcurrentHashMap<>();
@@ -1557,7 +1555,6 @@ public class SearchBar {
             public void insertUpdate(DocumentEvent e) {
                 clearLabel();
                 listResults.clear();
-                listResultsCopy.clear();
                 tempResults.clear();
                 resultCount.set(0);
                 labelCount.set(0);
@@ -1592,7 +1589,6 @@ public class SearchBar {
             public void removeUpdate(DocumentEvent e) {
                 clearLabel();
                 listResults.clear();
-                listResultsCopy.clear();
                 tempResults.clear();
                 resultCount.set(0);
                 labelCount.set(0);
@@ -1676,14 +1672,12 @@ public class SearchBar {
                             while ((record = tempResults.poll()) != null) {
                                 resultCount.incrementAndGet();
                                 listResults.add(record);
-                                listResultsCopy.add(record);
                             }
                         } else {
                             while ((record = tempResults.poll()) != null) {
-                                if (!listResultsCopy.contains(record)) {
+                                if (!listResults.contains(record)) {
                                     resultCount.incrementAndGet();
                                     listResults.add(record);
-                                    listResultsCopy.add(record);
                                 }
                             }
                         }
@@ -1966,7 +1960,7 @@ public class SearchBar {
                 while (SettingsFrame.isNotMainExit()) {
                     if (isStartSearchLocal) {
                         isStartSearchLocal = false;
-                        ascII = getAscIISum(searchText.toUpperCase());
+                        ascII = getAscIISum(searchText);
                         int asciiGroup = ascII / 100;
 
                         switch (asciiGroup) {
@@ -2304,7 +2298,6 @@ public class SearchBar {
                             clearLabel();
                         }
                         listResults.clear();
-                        listResultsCopy.clear();
                         tempResults.clear();
                         String text = getTextFieldText();
                         if (search.isUsable()) {
@@ -2346,7 +2339,6 @@ public class SearchBar {
                                     if (i.startsWith(text)) {
                                         resultCount.incrementAndGet();
                                         listResults.add(SettingsFrame.getTranslation("Run command") + i);
-                                        listResultsCopy.add(SettingsFrame.getTranslation("Run command") + i);
                                     }
                                     String[] cmdInfo = semicolon.split(i);
                                     if (cmdInfo[0].equals(text)) {
@@ -2381,9 +2373,8 @@ public class SearchBar {
                                     while (runningMode.get() == PLUGIN_MODE) {
                                         try {
                                             if ((result = currentUsingPlugin.pollFromResultQueue()) != null) {
-                                                if (!listResultsCopy.contains(result)) {
+                                                if (!listResults.contains(result)) {
                                                     listResults.add(result);
-                                                    listResultsCopy.add(result);
                                                     resultCount.incrementAndGet();
                                                 }
                                             }
@@ -2608,10 +2599,9 @@ public class SearchBar {
                 }
             } else {
                 if (isExist(path)) {
-                    if (!listResultsCopy.contains(path)) {
+                    if (!listResults.contains(path)) {
                         resultCount.incrementAndGet();
                         listResults.add(path);
-                        listResultsCopy.add(path);
                     }
                 } else {
                     search.removeFileFromDatabase(path);
@@ -2994,10 +2984,9 @@ public class SearchBar {
                         } else {
                             if (check(eachCache)) {
                                 isCacheRepeated = true;
-                                if (!listResultsCopy.contains(eachCache)) {
+                                if (!listResults.contains(eachCache)) {
                                     resultCount.incrementAndGet();
                                     listResults.add(eachCache);
-                                    listResultsCopy.add(eachCache);
                                 }
                             }
                         }
@@ -3080,7 +3069,6 @@ public class SearchBar {
         resultCount.set(0);
         currentLabelSelectedPosition.set(0);
         listResults.clear();
-        listResultsCopy.clear();
         tempResults.clear();
         textField.setText(null);
         isUserPressed = false;
