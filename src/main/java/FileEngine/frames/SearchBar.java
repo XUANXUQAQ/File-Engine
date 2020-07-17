@@ -282,26 +282,25 @@ public class SearchBar {
                             }
                             saveCache(res + ';');
                         } else if (runningMode.get() == COMMAND_MODE) {
-                            //直接打开
+                            File open = new File(semicolon.split(res)[1]);
                             if (isOpenLastFolderPressed) {
                                 //打开上级文件夹
-                                File open = new File(semicolon.split(res)[1]);
                                 try {
                                     Runtime.getRuntime().exec("explorer.exe /select, \"" + open.getAbsolutePath() + "\"");
                                 } catch (IOException e1) {
                                     JOptionPane.showMessageDialog(null, SettingsFrame.getTranslation("Execute failed"));
                                 }
                             } else if (SettingsFrame.isDefaultAdmin() || isRunAsAdminPressed) {
-                                openWithAdmin(res);
+                                openWithAdmin(open.getAbsolutePath());
                             } else if (isCopyPathPressed) {
                                 Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
                                 Transferable trans = new StringSelection(res);
                                 clipboard.setContents(trans, null);
                             } else {
                                 if (res.endsWith(".bat") || res.endsWith(".cmd")) {
-                                    openWithAdmin(res);
+                                    openWithAdmin(open.getAbsolutePath());
                                 } else {
-                                    openWithoutAdmin(res);
+                                    openWithoutAdmin(open.getAbsolutePath());
                                 }
                             }
                         }
@@ -392,7 +391,6 @@ public class SearchBar {
                                 if (!getTextFieldText().isEmpty()) {
                                     labelCount.incrementAndGet();
 
-                                    //System.out.println(labelCount);
                                     if (labelCount.get() >= listResults.size()) {
                                         labelCount.set(listResults.size() - 1);
                                     }
@@ -555,15 +553,14 @@ public class SearchBar {
                         mousePosition = 7;
                     }
                     if (mousePosition < listResults.size()) {
+                        int ret;
                         if (position < mousePosition) {
-                            int ret = mousePosition - position;
-                            labelCount.getAndAdd(ret);
-                            currentLabelSelectedPosition.getAndAdd(ret);
+                            ret = mousePosition - position;
                         } else {
-                            int ret = -(position - mousePosition);
-                            labelCount.getAndAdd(ret);
-                            currentLabelSelectedPosition.getAndAdd(ret);
+                            ret = -(position - mousePosition);
                         }
+                        labelCount.getAndAdd(ret);
+                        currentLabelSelectedPosition.getAndAdd(ret);
                         switch (mousePosition) {
                             case 0:
                                 if (isLabelNotEmpty(label1)) {
