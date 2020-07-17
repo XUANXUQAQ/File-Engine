@@ -75,7 +75,7 @@ public class SearchBar {
     private final ConcurrentLinkedQueue<String> tempResults;
     private final ConcurrentLinkedQueue<String> commandQueue;
     private final CopyOnWriteArrayList<String> listResults;
-    private final HashMap<String, PreparedStatement> sqlCache;
+    private final ConcurrentHashMap<String, PreparedStatement> sqlCache;
     private final Set<String> listResultsCopy;
     private volatile String[] searchCase;
     private volatile String searchText;
@@ -99,7 +99,7 @@ public class SearchBar {
         listResultsCopy = ConcurrentHashMap.newKeySet();
         tempResults = new ConcurrentLinkedQueue<>();
         commandQueue = new ConcurrentLinkedQueue<>();
-        sqlCache = new HashMap<>();
+        sqlCache = new ConcurrentHashMap<>();
         border = BorderFactory.createLineBorder(new Color(73, 162, 255, 255));
         searchBar = new JFrame();
         labelCount = new AtomicInteger(0);
@@ -2245,26 +2245,28 @@ public class SearchBar {
             }
         });
 
-        cachedThreadPool.execute(() -> {
-            try {
-                String column;
-                while (SettingsFrame.isNotMainExit()) {
-                    if (runningMode.get() == NORMAL_MODE) {
-                        try {
-                            while ((column = commandQueue.poll()) != null) {
-                                searchAndAddToTempResults(System.currentTimeMillis(), column);
-                            }
-                        } catch (SQLException e) {
-                            if (SettingsFrame.isDebug()) {
-                                e.printStackTrace();
+        for (int i = 0; i < 4; ++i) {
+            cachedThreadPool.execute(() -> {
+                try {
+                    String column;
+                    while (SettingsFrame.isNotMainExit()) {
+                        if (runningMode.get() == NORMAL_MODE) {
+                            try {
+                                while ((column = commandQueue.poll()) != null) {
+                                    searchAndAddToTempResults(System.currentTimeMillis(), column);
+                                }
+                            } catch (SQLException e) {
+                                if (SettingsFrame.isDebug()) {
+                                    e.printStackTrace();
+                                }
                             }
                         }
+                        Thread.sleep(10);
                     }
-                    Thread.sleep(10);
+                } catch (InterruptedException ignored) {
                 }
-            } catch (InterruptedException ignored) {
-            }
-        });
+            });
+        }
 
         cachedThreadPool.execute(() -> {
             //后台自动创建数据库索引
