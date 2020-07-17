@@ -2,7 +2,6 @@ package FileEngine;
 
 import FileEngine.SQLiteConfig.SQLiteUtil;
 import FileEngine.dllInterface.FileMonitor;
-import FileEngine.frames.SearchBar;
 import FileEngine.frames.SettingsFrame;
 import FileEngine.frames.TaskBar;
 import FileEngine.hotkeyListener.CheckHotKey;
@@ -11,6 +10,7 @@ import FileEngine.pluginSystem.PluginUtil;
 import FileEngine.search.SearchUtil;
 import br.com.margel.weblaf.WebLookAndFeel;
 import com.alibaba.fastjson.JSONObject;
+
 import javax.swing.*;
 import java.awt.*;
 import java.io.*;
@@ -135,7 +135,6 @@ public class MainClass {
                 break;
             }
         }
-
     }
 
     public static void main(String[] args) throws Exception {
@@ -155,6 +154,10 @@ public class MainClass {
             //初始化数据库
             SQLiteUtil.createAllTables();
             isManualUpdate = true;
+        }
+
+        try (Statement stmt = SQLiteUtil.getStatement()) {
+            stmt.executeUpdate("CREATE TABLE IF NOT EXISTS cache(PATH text unique);");
         }
 
         startOrIgnoreUpdateAndExit(isUpdateSignExist());
@@ -276,8 +279,6 @@ public class MainClass {
         isFailed &= createFileOrFolder(tmp, false, false);
         isFailed &= createFileOrFolder(tempPath + File.separator + "fileAdded.txt", true, true);
         isFailed &= createFileOrFolder(tempPath + File.separator + "fileRemoved.txt", true, true);
-        //cache.dat
-        isFailed &= createFileOrFolder("user/cache.dat", true, false);
         //cmd.txt
         isFailed &= createFileOrFolder("user/cmds.txt", true, false);
         releaseAllDependence();
