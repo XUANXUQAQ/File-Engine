@@ -28,7 +28,7 @@ import java.util.regex.Pattern;
 
 
 public class SettingsFrame {
-    public static final String version = "2.2"; //TODO 更改版本号
+    public static final String version = "2.3"; //TODO 更改版本号
     private static volatile boolean mainExit = false;
     private static volatile int cacheNumLimit;
     private static volatile String hotkey;
