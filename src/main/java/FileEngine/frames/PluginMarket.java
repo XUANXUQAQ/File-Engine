@@ -3,6 +3,7 @@ package FileEngine.frames;
 import FileEngine.download.DownloadManager;
 import FileEngine.download.DownloadUtil;
 import FileEngine.pluginSystem.PluginUtil;
+import FileEngine.threadPool.CachedThreadPool;
 import com.alibaba.fastjson.JSONObject;
 
 import javax.imageio.ImageIO;
@@ -21,8 +22,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import static FileEngine.frames.SettingsFrame.getTranslation;
 
@@ -47,14 +46,13 @@ public class PluginMarket {
     private volatile String searchKeywords;
     private final HashMap<String, String> NAME_PLUGIN_INFO_URL_MAP = new HashMap<>();
     private volatile boolean isStartSearch = false;
-    private final ExecutorService threadPool = Executors.newCachedThreadPool();
 
     private PluginMarket() {
         addSelectPluginOnListListener();
         addSearchPluginListener();
         addButtonInstallListener();
         addOpenPluginOfficialSiteListener();
-        threadPool.execute(() -> {
+        CachedThreadPool.getInstance().executeTask(() -> {
             try {
                 String fileName;
                 String originString = buttonInstall.getText();
@@ -66,7 +64,7 @@ public class PluginMarket {
             }
         });
 
-        threadPool.execute(() -> {
+        CachedThreadPool.getInstance().executeTask(() -> {
             HashSet<String> pluginSet = new HashSet<>();
             try {
                 while (SettingsFrame.isNotMainExit()) {
@@ -179,7 +177,7 @@ public class PluginMarket {
                 //取消下载
                 DownloadUtil instance = DownloadUtil.getInstance();
                 instance.cancelDownload(pluginFullName);
-                threadPool.execute(() -> {
+                CachedThreadPool.getInstance().executeTask(() -> {
                     try {
                         while (instance.getDownloadStatus(pluginFullName) != DownloadManager.DOWNLOAD_INTERRUPTED) {
                             if (instance.getDownloadStatus(pluginFullName) == DownloadManager.DOWNLOAD_ERROR) {

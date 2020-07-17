@@ -5,6 +5,7 @@ import FileEngine.download.DownloadUtil;
 import FileEngine.hotkeyListener.CheckHotKey;
 import FileEngine.pluginSystem.Plugin;
 import FileEngine.pluginSystem.PluginUtil;
+import FileEngine.threadPool.CachedThreadPool;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.serializer.SerializerFeature;
@@ -22,8 +23,6 @@ import java.util.HashSet;
 import java.util.Locale;
 import java.util.Scanner;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.regex.Pattern;
 
 
@@ -61,7 +60,6 @@ public class SettingsFrame {
     private volatile static String language;
     private static volatile boolean isStartup;
     private static SearchBar searchBar;
-    private final ExecutorService threadPool;
     private final JFrame frame;
     private static ImageIcon frameIcon;
     private JTextField textFieldUpdateInterval;
@@ -563,7 +561,7 @@ public class SettingsFrame {
                 String fileName = getName();
                 DownloadUtil instance = DownloadUtil.getInstance();
                 instance.cancelDownload(fileName);
-                threadPool.execute(() -> {
+                CachedThreadPool.getInstance().executeTask(() -> {
                     //等待下载取消
                     try {
                         while (instance.getDownloadStatus(fileName) != DownloadManager.DOWNLOAD_INTERRUPTED) {
@@ -865,7 +863,7 @@ public class SettingsFrame {
                     //取消下载
                     DownloadUtil instance = DownloadUtil.getInstance();
                     instance.cancelDownload(pluginFullName);
-                    threadPool.execute(() -> {
+                    CachedThreadPool.getInstance().executeTask(() -> {
                         try {
                             //等待下载取消
                             while (instance.getDownloadStatus(pluginFullName) != DownloadManager.DOWNLOAD_INTERRUPTED) {
@@ -971,7 +969,6 @@ public class SettingsFrame {
         translationMap = new ConcurrentHashMap<>();
         languageSet = new HashSet<>();
         frameIcon = new ImageIcon(SettingsFrame.class.getResource("/icons/frame.png"));
-        threadPool = Executors.newCachedThreadPool();
         readAllSettings();
 
         HotKeyListener = CheckHotKey.getInstance();
@@ -1080,9 +1077,9 @@ public class SettingsFrame {
     }
 
     private void initThreadPool() {
-        threadPool.execute(() -> addShowDownloadProgressTask(labelDownloadProgress, buttonCheckUpdate, getName()));
+        CachedThreadPool.getInstance().executeTask(() -> addShowDownloadProgressTask(labelDownloadProgress, buttonCheckUpdate, getName()));
 
-        threadPool.execute(() -> {
+        CachedThreadPool.getInstance().executeTask(() -> {
             try {
                 String fileName;
                 String originString = buttonUpdatePlugin.getText();

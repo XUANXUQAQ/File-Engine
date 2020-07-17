@@ -23,7 +23,6 @@ import java.util.Objects;
  * @author XUANXU
  */
 public class MainClass {
-    //64bit
     private static final String FILE_MONITOR_64_MD_5 = "db64b40ed1ccec6a7f2af1b40c1d22ab";
     private static final String FILE_SEARCHER_64_MD_5 = "41645c85b1b14823cd1fcf9cce069477";
     private static final String GET_ASC_II_64_MD_5 = "eff607d2dd4a7e4c878948fe8f24b3ea";

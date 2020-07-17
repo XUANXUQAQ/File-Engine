@@ -1,13 +1,11 @@
 package FileEngine.download;
 
 import FileEngine.frames.SettingsFrame;
+import FileEngine.threadPool.CachedThreadPool;
 
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public class DownloadUtil {
-    private static final ExecutorService DOWNLOAD_THREAD_POOL = Executors.newCachedThreadPool();
     private static final ConcurrentHashMap<String, DownloadManager> DOWNLOAD_MAP = new ConcurrentHashMap<>();
 
     private static class DownloadUpdateBuilder {
@@ -19,7 +17,7 @@ public class DownloadUtil {
     }
 
     private DownloadUtil() {
-        DOWNLOAD_THREAD_POOL.execute(() -> {
+        CachedThreadPool.getInstance().executeTask(() -> {
             try {
                 while (SettingsFrame.isNotMainExit()) {
                     for (DownloadManager each : DOWNLOAD_MAP.values()) {
@@ -43,7 +41,7 @@ public class DownloadUtil {
      */
     public void downLoadFromUrl(String urlStr, String fileName, String savePath) {
         DownloadManager downloadManager = new DownloadManager(urlStr, fileName, savePath);
-        DOWNLOAD_THREAD_POOL.execute(downloadManager::download);
+        CachedThreadPool.getInstance().executeTask(downloadManager::download);
         DOWNLOAD_MAP.put(fileName, downloadManager);
     }
 
