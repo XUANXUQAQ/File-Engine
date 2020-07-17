@@ -332,6 +332,16 @@ public class SearchUtil {
         addAddSqlCommandByAscii(asciiGroup, path);
     }
 
+    public void removeFileToCache(String path) {
+        String command = "DELETE from cache where PATH=" + "\"" + path + "\";";
+        commandSet.add(command);
+    }
+
+    public void addFileToCache(String path) {
+        String command = "INSERT OR IGNORE INTO cache(PATH) VALUES(\"" + path + "\");";
+        commandSet.add(command);
+    }
+
     public void executeAllCommands(Statement stmt) {
         if (SettingsFrame.isDebug()) {
             System.out.println("----------------------------------------------");

@@ -68,6 +68,7 @@ public class SearchBar {
     private static Pattern resultSplit;
     private static Pattern blank;
     private static AtomicInteger runningMode;
+    private static AtomicInteger cacheNum;
     private final JPanel panel;
     private long mouseWheelTime = 0;
     private final int iconSideLength;
@@ -101,6 +102,7 @@ public class SearchBar {
         labelCount = new AtomicInteger(0);
         resultCount = new AtomicInteger(0);
         runningMode = new AtomicInteger(0);
+        cacheNum = new AtomicInteger(0);
         currentLabelSelectedPosition = new AtomicInteger(0);
         semicolon = Pattern.compile(";");
         resultSplit = Pattern.compile(":");
@@ -205,6 +207,7 @@ public class SearchBar {
         panel.add(label7);
         panel.add(label8);
 
+        initCacheNum();
 
         //开启所有线程
         initThreadPool();
@@ -277,7 +280,7 @@ public class SearchBar {
                                     openWithoutAdmin(res);
                                 }
                             }
-                            saveCache(res + ';');
+                            saveCache(res);
                         } else if (runningMode.get() == COMMAND_MODE) {
                             File open = new File(semicolon.split(res)[1]);
                             if (isOpenLastFolderPressed) {
@@ -425,7 +428,7 @@ public class SearchBar {
                                         openWithoutAdmin(res);
                                     }
                                 }
-                                saveCache(res + ';');
+                                saveCache(res);
                             } else if (runningMode.get() == COMMAND_MODE) {
                                 File open = new File(semicolon.split(res)[1]);
                                 if (isOpenLastFolderPressed) {
@@ -2263,8 +2266,14 @@ public class SearchBar {
                 while (SettingsFrame.isNotMainExit()) {
                     if (!isUsing && SearchUtil.getInstance().isUsable()) {
                         for (int i = 0; i <= 40; ++i) {
-                            String createIndex = "CREATE UNIQUE INDEX IF NOT EXISTS list" + i + "_index on list" + i + "(PATH);";
-                            stmt.execute(createIndex);
+                            String createIndex = "CREATE INDEX IF NOT EXISTS list" + i + "_index on list" + i + "(PATH);";
+                            try {
+                                stmt.execute(createIndex);
+                            } catch (Exception e) {
+                                if (SettingsFrame.isDebug()) {
+                                    e.printStackTrace();
+                                }
+                            }
                             Thread.sleep(5000);
                         }
                     }
@@ -2608,27 +2617,21 @@ public class SearchBar {
 
     private void searchAndAddToTempResults(long time, String column) throws SQLException {
         //为label添加结果
-        ResultSet resultSet;
         String each;
         boolean isResultsExcessive = false;
         String pSql = "SELECT PATH FROM " + column + ";";
-        PreparedStatement pStmt;
-
-        pStmt = SQLiteUtil.getConnection().prepareStatement(pSql);
-
-        resultSet = pStmt.executeQuery();
-        while (resultSet.next()) {
-            each = resultSet.getString("PATH");
-            if (search.isUsable()) {
-                isResultsExcessive = checkIsMatchedAndAddToList(each, true);
-            }
-            //用户重新输入了信息
-            if (isResultsExcessive || (startTime > time) && !searchBar.isVisible()) {
-                break;
+        try (PreparedStatement pStmt = SQLiteUtil.getConnection().prepareStatement(pSql); ResultSet resultSet = pStmt.executeQuery()) {
+            while (resultSet.next()) {
+                each = resultSet.getString("PATH");
+                if (search.isUsable()) {
+                    isResultsExcessive = checkIsMatchedAndAddToList(each, true);
+                }
+                //用户重新输入了信息
+                if (isResultsExcessive || (startTime > time) && !searchBar.isVisible()) {
+                    break;
+                }
             }
         }
-        resultSet.close();
-        pStmt.close();
     }
 
     public void showSearchbar() {
@@ -2865,126 +2868,37 @@ public class SearchBar {
     }
 
     private void saveCache(String content) {
-        int cacheNum = 0;
-        File cache = new File("user/cache.dat");
-        StringBuilder oldCaches = new StringBuilder();
-        boolean isRepeated;
-        if (cache.exists()) {
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(cache), StandardCharsets.UTF_8))) {
-                String eachLine;
-                while ((eachLine = reader.readLine()) != null) {
-                    oldCaches.append(eachLine);
-                    cacheNum++;
-                }
-            } catch (IOException e) {
-                if (SettingsFrame.isDebug()) {
-                    e.printStackTrace();
-                }
-            }
-        }
-        if (cacheNum < SettingsFrame.getCacheNumLimit()) {
-            String _temp = oldCaches.append(";").toString();
-            isRepeated = _temp.contains(content);
-            if (!isRepeated) {
-                try (BufferedWriter out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(new File("user/cache.dat"), true), StandardCharsets.UTF_8))) {
-                    out.write(content + "\r\n");
-                } catch (Exception ignored) {
-
-                }
-            }
+        if (cacheNum.get() < 1000) {
+            search.addFileToCache(content);
         }
     }
 
-    private void delCacheRepeated() {
-        File cacheFile = new File("user/cache.dat");
-        HashSet<String> set = new HashSet<>();
-        StringBuilder allCaches = new StringBuilder();
-        String eachLine;
-        if (cacheFile.exists()) {
-            try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(cacheFile), StandardCharsets.UTF_8))) {
-                while ((eachLine = br.readLine()) != null) {
-                    String[] each = semicolon.split(eachLine);
-                    Collections.addAll(set, each);
-                }
-            } catch (IOException e) {
-                if (SettingsFrame.isDebug()) {
-                    e.printStackTrace();
-                }
+    private void initCacheNum() {
+        try (PreparedStatement pStmt = SQLiteUtil.getConnection().prepareStatement("SELECT PATH FROM cache"); ResultSet resultSet = pStmt.getResultSet()) {
+            while (resultSet.next()) {
+                cacheNum.incrementAndGet();
             }
-            try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(cacheFile), StandardCharsets.UTF_8))) {
-                for (String cache : set) {
-                    allCaches.append(cache).append(";\n");
-                }
-                bw.write(allCaches.toString());
-            } catch (IOException e) {
-                if (SettingsFrame.isDebug()) {
-                    e.printStackTrace();
-                }
-            }
-        }
-    }
-
-    private void delCache(ArrayList<String> cache) {
-        File cacheFile = new File("user/cache.dat");
-        StringBuilder allCaches = new StringBuilder();
-        String eachLine;
-        if (cacheFile.exists()) {
-            try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(cacheFile), StandardCharsets.UTF_8))) {
-                while ((eachLine = br.readLine()) != null) {
-                    String[] each = semicolon.split(eachLine);
-                    for (String eachCache : each) {
-                        if (!(cache.contains(eachCache))) {
-                            allCaches.append(eachCache).append(";\n");
-                        }
-                    }
-                }
-            } catch (IOException e) {
-                if (SettingsFrame.isDebug()) {
-                    e.printStackTrace();
-                }
-            }
-            try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(cacheFile), StandardCharsets.UTF_8))) {
-                bw.write(allCaches.toString());
-            } catch (IOException e) {
-                if (SettingsFrame.isDebug()) {
-                    e.printStackTrace();
-                }
+        } catch (SQLException throwables) {
+            if (SettingsFrame.isDebug()) {
+                throwables.printStackTrace();
             }
         }
     }
 
     private void searchCache() {
-        String cacheResult;
-        boolean isCacheRepeated = false;
-        ArrayList<String> cachesToDel = new ArrayList<>();
-        File cache = new File("user/cache.dat");
-        if (cache.exists()) {
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(cache), StandardCharsets.UTF_8))) {
-                while ((cacheResult = reader.readLine()) != null) {
-                    String[] caches = semicolon.split(cacheResult);
-                    for (String eachCache : caches) {
-                        if (!(isExist(eachCache))) {
-                            cachesToDel.add(eachCache);
-                        } else {
-                            if (check(eachCache)) {
-                                isCacheRepeated = true;
-                                if (!listResults.contains(eachCache)) {
-                                    resultCount.incrementAndGet();
-                                    listResults.add(eachCache);
-                                }
-                            }
-                        }
-                    }
-                }
-            } catch (IOException e) {
-                if (SettingsFrame.isDebug()) {
-                    e.printStackTrace();
+        try (PreparedStatement pStmt = SQLiteUtil.getConnection().prepareStatement("SELECT PATH FROM cache"); ResultSet resultSet = pStmt.getResultSet()) {
+            while (resultSet.next()) {
+                String eachCache = resultSet.getString("PATH");
+                if (!(isExist(eachCache))) {
+                    search.removeFileToCache(eachCache);
+                } else {
+                    checkIsMatchedAndAddToList(eachCache, false);
                 }
             }
-        }
-        delCache(cachesToDel);
-        if (isCacheRepeated) {
-            delCacheRepeated();
+        } catch (SQLException throwables) {
+            if (SettingsFrame.isDebug()) {
+                throwables.printStackTrace();
+            }
         }
     }
 
@@ -3006,8 +2920,8 @@ public class SearchBar {
     private void searchPriorityFolder() {
         File path = new File(SettingsFrame.getPriorityFolder());
         boolean exist = path.exists();
-        Queue<String> listRemain = new LinkedList<>();
         if (exist) {
+            Queue<String> listRemain = new LinkedList<>();
             File[] files = path.listFiles();
             if (!(null == files || files.length == 0)) {
                 for (File each : files) {
@@ -3019,11 +2933,12 @@ public class SearchBar {
                 while (!listRemain.isEmpty()) {
                     String remain = listRemain.poll();
                     File[] allFiles = new File(remain).listFiles();
-                    assert allFiles != null;
-                    for (File each : allFiles) {
-                        checkIsMatchedAndAddToList(each.getAbsolutePath(), false);
-                        if (each.isDirectory()) {
-                            listRemain.add(each.getAbsolutePath());
+                    if (!(allFiles == null || allFiles.length == 0)) {
+                        for (File each : allFiles) {
+                            checkIsMatchedAndAddToList(each.getAbsolutePath(), false);
+                            if (each.isDirectory()) {
+                                listRemain.add(each.getAbsolutePath());
+                            }
                         }
                     }
                 }

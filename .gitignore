@@ -10,7 +10,6 @@ target/
 
 *.json
 Files/
-cache.dat
 data/
 tmp/
 .settings/
