@@ -2233,28 +2233,29 @@ public class SearchBar {
             }
         });
 
-        for (int i = 0; i < 4; ++i) {
-            CachedThreadPool.getInstance().executeTask(() -> {
-                try {
-                    String column;
-                    while (SettingsFrame.isNotMainExit()) {
-                        if (runningMode.get() == NORMAL_MODE) {
-                            try {
-                                while ((column = commandQueue.poll()) != null) {
-                                    searchAndAddToTempResults(System.currentTimeMillis(), column);
-                                }
-                            } catch (SQLException e) {
-                                if (SettingsFrame.isDebug()) {
-                                    e.printStackTrace();
+        CachedThreadPool.getInstance().executeTask(() -> {
+            try {
+                String column;
+                while (SettingsFrame.isNotMainExit()) {
+                    if (runningMode.get() == NORMAL_MODE) {
+                        try {
+                            while ((column = commandQueue.poll()) != null) {
+                                searchAndAddToTempResults(System.currentTimeMillis(), column);
+                                if (!searchBar.isVisible()) {
+                                    commandQueue.clear();
                                 }
                             }
+                        } catch (SQLException e) {
+                            if (SettingsFrame.isDebug()) {
+                                e.printStackTrace();
+                            }
                         }
-                        Thread.sleep(10);
                     }
-                } catch (InterruptedException ignored) {
+                    Thread.sleep(10);
                 }
-            });
-        }
+            } catch (InterruptedException ignored) {
+            }
+        });
 
         CachedThreadPool.getInstance().executeTask(() -> {
             //后台自动创建数据库索引
@@ -2622,11 +2623,12 @@ public class SearchBar {
                 isResultsExcessive = checkIsMatchedAndAddToList(each, true);
             }
             //用户重新输入了信息
-            if (isResultsExcessive || (startTime > time) || !searchBar.isVisible()) {
+            if (isResultsExcessive || (startTime > time) && !searchBar.isVisible()) {
                 break;
             }
         }
         resultSet.close();
+        pStmt.close();
     }
 
     public void showSearchbar() {
