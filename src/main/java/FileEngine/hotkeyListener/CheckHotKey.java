@@ -3,17 +3,15 @@ package FileEngine.hotkeyListener;
 import FileEngine.dllInterface.HotkeyListener;
 import FileEngine.frames.SearchBar;
 import FileEngine.frames.SettingsFrame;
+import FileEngine.threadPool.CachedThreadPool;
 
 import java.awt.event.KeyEvent;
 import java.util.HashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.regex.Pattern;
 
 public class CheckHotKey {
 
     private final HashMap<String, Integer> map;
-    private final ExecutorService threadPool;
     private final Pattern plus;
 
     private static class CheckHotKeyBuilder {
@@ -50,7 +48,7 @@ public class CheckHotKey {
         int finalHotkey2 = hotkey3;
         int finalHotkey3 = hotkey4;
         int finalHotkey4 = hotkey5;
-        threadPool.execute(() -> {
+        CachedThreadPool.getInstance().executeTask(() -> {
             HotkeyListener.INSTANCE.registerHotKey(finalHotkey, finalHotkey1, finalHotkey2, finalHotkey3, finalHotkey4);
             HotkeyListener.INSTANCE.startListen();
         });
@@ -90,13 +88,12 @@ public class CheckHotKey {
     private CheckHotKey() {
         plus = Pattern.compile(" \\+ ");
         map = new HashMap<>();
-        threadPool = Executors.newCachedThreadPool();
         map.put("Ctrl", KeyEvent.VK_CONTROL);
         map.put("Alt", KeyEvent.VK_ALT);
         map.put("Shift", KeyEvent.VK_SHIFT);
         map.put("Win", 0x5B);
 
-        threadPool.execute(() -> {
+        CachedThreadPool.getInstance().executeTask(() -> {
             boolean isExecuted = false;
             SearchBar searchBar = SearchBar.getInstance();
             HotkeyListener instance = HotkeyListener.INSTANCE;

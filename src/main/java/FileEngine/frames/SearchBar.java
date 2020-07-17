@@ -9,6 +9,7 @@ import FileEngine.pluginSystem.Plugin;
 import FileEngine.pluginSystem.PluginUtil;
 import FileEngine.SQLiteConfig.SQLiteUtil;
 import FileEngine.search.SearchUtil;
+import FileEngine.threadPool.CachedThreadPool;
 
 import javax.swing.*;
 import javax.swing.border.Border;
@@ -71,7 +72,6 @@ public class SearchBar {
     private long mouseWheelTime = 0;
     private final int iconSideLength;
     private long visibleStartTime = 0;
-    private final ExecutorService cachedThreadPool;
     private final ConcurrentLinkedQueue<String> tempResults;
     private final ConcurrentLinkedQueue<String> commandQueue;
     private final CopyOnWriteArrayList<String> listResults;
@@ -108,7 +108,6 @@ public class SearchBar {
         resultSplit = Pattern.compile(":");
         blank = Pattern.compile(" ");
         panel = new JPanel();
-        cachedThreadPool = Executors.newCachedThreadPool();
 
         search = SearchUtil.getInstance();
         taskBar = TaskBar.getInstance();
@@ -1638,7 +1637,7 @@ public class SearchBar {
     }
 
     public void startMonitorDisk() {
-        cachedThreadPool.execute(() -> {
+        CachedThreadPool.getInstance().executeTask(() -> {
             File[] roots = File.listRoots();
             if (SettingsFrame.isAdmin()) {
                 FileMonitor.INSTANCE.set_output(SettingsFrame.getTmp().getAbsolutePath());
@@ -1659,7 +1658,7 @@ public class SearchBar {
         //监控磁盘变化
         startMonitorDisk();
 
-        cachedThreadPool.execute(() -> {
+        CachedThreadPool.getInstance().executeTask(() -> {
             //合并搜索结果线程
             try {
                 String record;
@@ -1688,7 +1687,7 @@ public class SearchBar {
             }
         });
 
-        cachedThreadPool.execute(() -> {
+        CachedThreadPool.getInstance().executeTask(() -> {
             try {
                 String[] message;
                 Plugin plugin;
@@ -1708,7 +1707,7 @@ public class SearchBar {
             }
         });
 
-        cachedThreadPool.execute(() -> {
+        CachedThreadPool.getInstance().executeTask(() -> {
             //锁住MouseMotion检测，阻止同时发出两个动作
             try {
                 while (SettingsFrame.isNotMainExit()) {
@@ -1724,7 +1723,7 @@ public class SearchBar {
             }
         });
 
-        cachedThreadPool.execute(() -> {
+        CachedThreadPool.getInstance().executeTask(() -> {
             try {
                 while (SettingsFrame.isNotMainExit()) {
                     //字体染色线程
@@ -1812,7 +1811,7 @@ public class SearchBar {
             }
         });
 
-        cachedThreadPool.execute(() -> {
+        CachedThreadPool.getInstance().executeTask(() -> {
             //显示结果线程
             try {
                 boolean isLabel1Chosen, isLabel2Chosen, isLabel3Chosen, isLabel4Chosen,
@@ -1936,7 +1935,7 @@ public class SearchBar {
             }
         });
 
-        cachedThreadPool.execute(() -> {
+        CachedThreadPool.getInstance().executeTask(() -> {
             try {
                 while (SettingsFrame.isNotMainExit()) {
                     if (isUsing) {
@@ -1949,7 +1948,7 @@ public class SearchBar {
             }
         });
 
-        cachedThreadPool.execute(() -> {
+        CachedThreadPool.getInstance().executeTask(() -> {
             //添加搜索路径线程
             String command;
             int ascII;
@@ -2237,7 +2236,7 @@ public class SearchBar {
         });
 
         for (int i = 0; i < 4; ++i) {
-            cachedThreadPool.execute(() -> {
+            CachedThreadPool.getInstance().executeTask(() -> {
                 try {
                     String column;
                     while (SettingsFrame.isNotMainExit()) {
@@ -2259,7 +2258,7 @@ public class SearchBar {
             });
         }
 
-        cachedThreadPool.execute(() -> {
+        CachedThreadPool.getInstance().executeTask(() -> {
             //后台自动创建数据库索引
             try (Statement stmt = SQLiteUtil.getStatement()) {
                 while (SettingsFrame.isNotMainExit()) {
@@ -2277,7 +2276,7 @@ public class SearchBar {
             }
         });
 
-        cachedThreadPool.execute(() -> {
+        CachedThreadPool.getInstance().executeTask(() -> {
             //缓存和常用文件夹搜索线程
             //停顿时间0.5s，每一次输入会更新一次startTime，该线程记录endTime
             try {
@@ -2426,7 +2425,7 @@ public class SearchBar {
             }
         });
 
-        cachedThreadPool.execute(() -> {
+        CachedThreadPool.getInstance().executeTask(() -> {
             //检测文件添加线程
             String filesToAdd;
             try (BufferedReader readerAdd = new BufferedReader(new InputStreamReader(
@@ -2449,7 +2448,7 @@ public class SearchBar {
             }
         });
 
-        cachedThreadPool.execute(() -> {
+        CachedThreadPool.getInstance().executeTask(() -> {
             String filesToRemove;
             try (BufferedReader readerRemove = new BufferedReader(new InputStreamReader(
                     new FileInputStream(SettingsFrame.getTmp().getAbsolutePath() + File.separator + "fileRemoved.txt"), StandardCharsets.UTF_8))) {
@@ -2472,7 +2471,7 @@ public class SearchBar {
         });
 
 
-        cachedThreadPool.execute(() -> {
+        CachedThreadPool.getInstance().executeTask(() -> {
             // 时间检测线程
             long count = 0;
             long updateTimeLimit = SettingsFrame.getUpdateTimeLimit() * 1000;
@@ -2503,7 +2502,7 @@ public class SearchBar {
 
 
         //搜索本地数据线程
-        cachedThreadPool.execute(() -> {
+        CachedThreadPool.getInstance().executeTask(() -> {
             try {
                 while (SettingsFrame.isNotMainExit()) {
                     if (search.isManualUpdate()) {
