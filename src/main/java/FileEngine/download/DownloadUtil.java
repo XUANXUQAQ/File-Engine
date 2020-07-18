@@ -6,7 +6,7 @@ import FileEngine.threadPool.CachedThreadPool;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class DownloadUtil {
-    private static final ConcurrentHashMap<String, DownloadManager> DOWNLOAD_MAP = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, DownloadManager> DOWNLOAD_MAP = new ConcurrentHashMap<>();
 
     private static class DownloadUpdateBuilder {
         private static final DownloadUtil INSTANCE = new DownloadUtil();

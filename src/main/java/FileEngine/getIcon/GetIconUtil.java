@@ -11,16 +11,24 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author XUANXU
  */
 public class GetIconUtil {
-    private static final ConcurrentHashMap<String, ImageIcon> ICON_CACHE_MAP = new ConcurrentHashMap<>(1000);
-    private static final FileSystemView FILE_SYSTEM_VIEW = FileSystemView.getFileSystemView();
-    private static final AtomicInteger CACHE_NUM = new AtomicInteger(0);
-    private static ImageIcon dllImageIcon;
-    private static ImageIcon folderImageIcon;
-    private static ImageIcon txtImageIcon;
-    private static ImageIcon vbsImageIcon;
-    private static volatile boolean isInitialized = false;
+    private final ConcurrentHashMap<String, ImageIcon> ICON_CACHE_MAP = new ConcurrentHashMap<>(1000);
+    private final FileSystemView FILE_SYSTEM_VIEW = FileSystemView.getFileSystemView();
+    private final AtomicInteger CACHE_NUM = new AtomicInteger(0);
+    private ImageIcon dllImageIcon;
+    private ImageIcon folderImageIcon;
+    private ImageIcon txtImageIcon;
+    private ImageIcon vbsImageIcon;
+    private volatile boolean isInitialized = false;
 
-    private static ImageIcon changeIcon(ImageIcon icon, int width, int height) {
+    private static class GetIconUtilBuilder {
+        private static GetIconUtil INSTANCE = new GetIconUtil();
+    }
+
+    public static GetIconUtil getInstance() {
+        return GetIconUtilBuilder.INSTANCE;
+    }
+
+    private ImageIcon changeIcon(ImageIcon icon, int width, int height) {
         try {
             Image image = icon.getImage().getScaledInstance(width, height, Image.SCALE_DEFAULT);
             return new ImageIcon(image);
@@ -29,7 +37,7 @@ public class GetIconUtil {
         }
     }
 
-    private static void initIconCache(int width, int height) {
+    private void initIconCache(int width, int height) {
         //添加其他常量图标  changeIcon((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(new File("")), width, height);
         dllImageIcon = changeIcon((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(new File("C:\\Windows\\System32\\sysmain.dll")), width, height);
         folderImageIcon = changeIcon((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(new File("C:\\Windows")), width, height);
@@ -37,7 +45,7 @@ public class GetIconUtil {
         vbsImageIcon = changeIcon((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(new File("user\\shortcutGenerator.vbs")), width, height);
     }
 
-    public static ImageIcon getBigIcon(String path, int width, int height) {
+    public ImageIcon getBigIcon(String path, int width, int height) {
         if (!isInitialized) {
             initIconCache(width, height);
             isInitialized = true;
