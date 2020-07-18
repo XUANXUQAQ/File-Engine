@@ -1145,7 +1145,7 @@ public class SettingsFrame {
         buttonPluginMarket.setText(getTranslation("Plugin Market"));
     }
 
-    private static void initLanguageSet() {
+    private void initLanguageSet() {
         //TODO 添加语言
         languageSet.add("简体中文");
         languageSet.add("English(US)");
@@ -1153,7 +1153,7 @@ public class SettingsFrame {
         languageSet.add("繁體中文");
     }
 
-    private static void initTranslations(String language) {
+    private void initTranslations(String language) {
         if (!"English(US)".equals(language)) {
             String filePath = fileMap.get(language);
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(SettingsFrame.class.getResourceAsStream(filePath), StandardCharsets.UTF_8))) {
@@ -1171,14 +1171,14 @@ public class SettingsFrame {
         }
     }
 
-    private static void initLanguageFileMap() {
+    private void initLanguageFileMap() {
         //TODO 添加语言
         fileMap.put("简体中文", "/language/Chinese(Simplified).txt");
         fileMap.put("日本語", "/language/Japanese.txt");
         fileMap.put("繁體中文", "/language/Chinese(Traditional).txt");
     }
 
-    private static String getDefaultLang() {
+    private String getDefaultLang() {
         //TODO 添加语言
         Locale l = Locale.getDefault();
         String lang = l.toLanguageTag();
@@ -1267,7 +1267,7 @@ public class SettingsFrame {
         return JSONObject.parseObject(jsonUpdate.toString());
     }
 
-    private static void readAllSettings() {
+    private void readAllSettings() {
         try (BufferedReader buffR = new BufferedReader(new InputStreamReader(new FileInputStream("user/settings.json"), StandardCharsets.UTF_8))) {
             String line;
             StringBuilder result = new StringBuilder();
@@ -1411,7 +1411,7 @@ public class SettingsFrame {
         }
     }
 
-    private static void setAllSettings() {
+    private void setAllSettings() {
         HotKeyListener.registerHotkey(hotkey);
         searchBar.setTransparency(transparency);
         searchBar.setDefaultBackgroundColor(defaultBackgroundColor);
@@ -1452,7 +1452,7 @@ public class SettingsFrame {
         }
     }
 
-    private static void initCmdSetSettings() {
+    private void initCmdSetSettings() {
         //获取所有自定义命令
         try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream("user/cmds.txt"), StandardCharsets.UTF_8))) {
             String each;

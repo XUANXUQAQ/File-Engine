@@ -56,7 +56,7 @@ public class SearchBar {
     private final JLabel label6;
     private final JLabel label7;
     private final JLabel label8;
-    private static AtomicInteger labelCount;
+    private final AtomicInteger labelCount;
     private final JTextField textField;
     private Color labelColor;
     private Color backgroundColor;
@@ -64,11 +64,11 @@ public class SearchBar {
     private Color fontColor;
     private volatile long startTime = 0;
     private Thread searchWaiter = null;
-    private static Pattern semicolon;
-    private static Pattern resultSplit;
-    private static Pattern blank;
-    private static AtomicInteger runningMode;
-    private static AtomicInteger cacheNum;
+    private final Pattern semicolon;
+    private final Pattern resultSplit;
+    private final Pattern blank;
+    private final AtomicInteger runningMode;
+    private final AtomicInteger cacheNum;
     private final JPanel panel;
     private long mouseWheelTime = 0;
     private final int iconSideLength;
@@ -79,11 +79,11 @@ public class SearchBar {
     private volatile String[] searchCase;
     private volatile String searchText;
     private volatile String[] keywords;
-    private static SearchUtil search;
-    private static TaskBar taskBar;
-    private static AtomicInteger resultCount;
-    private static AtomicInteger currentLabelSelectedPosition;
-    private static volatile Plugin currentUsingPlugin;
+    private SearchUtil search;
+    private TaskBar taskBar;
+    private AtomicInteger resultCount;
+    private AtomicInteger currentLabelSelectedPosition;
+    private volatile Plugin currentUsingPlugin;
 
     private static final int NORMAL_MODE = 0;
     private static final int COMMAND_MODE = 1;
@@ -2654,7 +2654,7 @@ public class SearchBar {
 
     private void showResultOnLabel(String path, JLabel label, boolean isChosen) {
         String name = getFileName(path);
-        ImageIcon icon = GetIconUtil.getBigIcon(path, iconSideLength, iconSideLength);
+        ImageIcon icon = GetIconUtil.getInstance().getBigIcon(path, iconSideLength, iconSideLength);
         label.setIcon(icon);
         label.setBorder(border);
         label.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>" + getParentPath(path) + "</body></html>");
@@ -2673,7 +2673,7 @@ public class SearchBar {
         String[] info = semicolon.split(command);
         String path = info[1];
         String name = info[0];
-        ImageIcon imageIcon = GetIconUtil.getBigIcon(path, iconSideLength, iconSideLength);
+        ImageIcon imageIcon = GetIconUtil.getInstance().getBigIcon(path, iconSideLength, iconSideLength);
         label.setIcon(imageIcon);
         label.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>" + path + "</font></body></html>");
         if (isChosen) {
@@ -2871,7 +2871,7 @@ public class SearchBar {
     }
 
     private void saveCache(String content) {
-        if (cacheNum.get() < 1000) {
+        if (cacheNum.get() < SettingsFrame.getCacheNumLimit()) {
             search.addFileToCache(content);
         }
     }
