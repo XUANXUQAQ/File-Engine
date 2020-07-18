@@ -17,6 +17,7 @@ public class GetIconUtil {
     private static ImageIcon dllImageIcon;
     private static ImageIcon folderImageIcon;
     private static ImageIcon txtImageIcon;
+    private static ImageIcon vbsImageIcon;
     private static volatile boolean isInitialized = false;
 
     private static ImageIcon changeIcon(ImageIcon icon, int width, int height) {
@@ -28,11 +29,12 @@ public class GetIconUtil {
         }
     }
 
-    public static void initIconCache(int width, int height) {
-        //添加其他常量图标  changeIcon((ImageIcon) fsv.getSystemIcon(new File("")), width, height);
+    private static void initIconCache(int width, int height) {
+        //添加其他常量图标  changeIcon((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(new File("")), width, height);
         dllImageIcon = changeIcon((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(new File("C:\\Windows\\System32\\sysmain.dll")), width, height);
         folderImageIcon = changeIcon((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(new File("C:\\Windows")), width, height);
         txtImageIcon = changeIcon((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(new File("user\\cmds.txt")), width, height);
+        vbsImageIcon = changeIcon((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(new File("user\\shortcutGenerator.vbs")), width, height);
     }
 
     public static ImageIcon getBigIcon(String path, int width, int height) {
@@ -44,13 +46,16 @@ public class GetIconUtil {
             return null;
         }
         File f = new File(path);
-        String lowerCase = path.toLowerCase();
+        String fName = f.getName();
         if (f.exists()) {
-            if (lowerCase.endsWith(".dll")) {
+            if (fName.endsWith(".dll")) {
                 return dllImageIcon;
             }
-            if (lowerCase.endsWith(".txt")) {
+            if (fName.endsWith(".txt")) {
                 return txtImageIcon;
+            }
+            if (fName.endsWith(".vbs")) {
+                return vbsImageIcon;
             }
             if (f.isDirectory()) {
                 return folderImageIcon;
@@ -61,10 +66,8 @@ public class GetIconUtil {
                 }
                 if (imageIcon != null) {
                     if (CACHE_NUM.get() < 1000) {
-                        if (!ICON_CACHE_MAP.containsKey(path)) {
-                            ICON_CACHE_MAP.put(path, imageIcon);
-                            CACHE_NUM.incrementAndGet();
-                        }
+                        ICON_CACHE_MAP.put(path, imageIcon);
+                        CACHE_NUM.incrementAndGet();
                     }
                 }
                 return imageIcon;

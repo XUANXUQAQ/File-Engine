@@ -4,6 +4,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class CachedThreadPool {
+    private final ExecutorService cachedThreadPool = Executors.newCachedThreadPool();
+
     private static class CachedThreadPoolBuilder {
         private static final CachedThreadPool INSTANCE = new CachedThreadPool();
     }
@@ -14,8 +16,6 @@ public class CachedThreadPool {
     public static CachedThreadPool getInstance() {
         return CachedThreadPoolBuilder.INSTANCE;
     }
-
-    private final ExecutorService cachedThreadPool = Executors.newCachedThreadPool();
 
     public void executeTask(Runnable todo) {
         cachedThreadPool.execute(todo);
