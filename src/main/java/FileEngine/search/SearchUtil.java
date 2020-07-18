@@ -1,11 +1,11 @@
 package FileEngine.search;
 
+import FileEngine.SQLiteConfig.SQLiteUtil;
 import FileEngine.dllInterface.IsLocalDisk;
 import FileEngine.dllInterface.isNTFS;
 import FileEngine.frames.SearchBar;
 import FileEngine.frames.SettingsFrame;
 import FileEngine.frames.TaskBar;
-import FileEngine.SQLiteConfig.SQLiteUtil;
 
 import javax.swing.filechooser.FileSystemView;
 import java.io.*;
@@ -357,7 +357,6 @@ public class SearchUtil {
                 for (String each : commandQueue) {
                     stmt.execute(each);
                 }
-                stmt.execute("COMMIT;");
             } catch (SQLException e) {
                 if (SettingsFrame.isDebug()) {
                     e.printStackTrace();
@@ -365,6 +364,11 @@ public class SearchUtil {
                 //不删除执行失败的记录
                 commandSet.addAll(commandQueue);
             } finally {
+                try {
+                    stmt.execute("COMMIT;");
+                } catch (SQLException throwables) {
+                    throwables.printStackTrace();
+                }
                 commandQueue.clear();
                 isUsable = true;
             }
@@ -375,8 +379,8 @@ public class SearchUtil {
         return isManualUpdate;
     }
 
-    public void setManualUpdate(boolean b) {
-        isManualUpdate = b;
+    public void setManualUpdate() {
+        isManualUpdate = true;
     }
 
     public boolean isUsable() {
@@ -446,10 +450,8 @@ public class SearchUtil {
             buffW.write(ignorePath);
         }
         String command = "cmd.exe /c " + start + end;
-        Process p = Runtime.getRuntime().exec(command, null, new File("user"));
-        while (p.isAlive()) {
-            Thread.sleep(10);
-        }
+        Runtime.getRuntime().exec(command, null, new File("user"));
+        waitForTask("fileSearcherUSN.exe");
         try (BufferedWriter buffW = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("user/MFTSearchInfo.dat"), StandardCharsets.UTF_8))) {
             buffW.write("");
         }
@@ -460,22 +462,26 @@ public class SearchUtil {
         return fsv.getHomeDirectory().getAbsolutePath();
     }
 
-    private String getStartMenu() {
-        try {
-            String startMenu;
-            BufferedReader bufrIn;
-            Process getStartMenu = Runtime.getRuntime().exec("reg query \"HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders\" " + "/v " + "\"Start Menu\"");
-            bufrIn = new BufferedReader(new InputStreamReader(getStartMenu.getInputStream(), StandardCharsets.UTF_8));
-            while ((startMenu = bufrIn.readLine()) != null) {
-                if (startMenu.contains("REG_SZ")) {
-                    startMenu = startMenu.substring(startMenu.indexOf("REG_SZ") + 10);
-                    return startMenu;
+    private boolean isTaskExist(String procName) throws IOException, InterruptedException {
+        if (!procName.isEmpty()) {
+            Process p = Runtime.getRuntime().exec("tasklist /FI \"IMAGENAME eq " + procName + "\"");
+            p.waitFor();
+            StringBuilder strBuilder = new StringBuilder();
+            String eachLine;
+            try (BufferedReader buffr = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
+                while ((eachLine = buffr.readLine()) != null) {
+                    strBuilder.append(eachLine);
                 }
             }
-        } catch (IOException ignored) {
-
+            return strBuilder.toString().contains(procName);
         }
-        return null;
+        return false;
+    }
+
+    private void waitForTask(String procName) throws IOException, InterruptedException {
+        while (isTaskExist(procName)) {
+            Thread.sleep(100);
+        }
     }
 
     private void innerSearchFileIgnoreSearchDepth(String path, String ignorePath) {
@@ -486,12 +492,12 @@ public class SearchUtil {
         File database = new File("data.db");
         String command = "cmd.exe /c " + start + end + " \"" + path + "\"" + " \"1\" " + "\"" + ignorePath + "\" " + "\"" + database.getAbsolutePath() + "\" " + "\"" + "1" + "\"";
         try {
-            Process p = Runtime.getRuntime().exec(command, null, new File("user"));
-            while (p.isAlive()) {
-                Thread.sleep(10);
+            Runtime.getRuntime().exec(command, null, new File("user"));
+            waitForTask("fileSearcher.exe");
+        } catch (IOException | InterruptedException e) {
+            if (!(e instanceof InterruptedException) && SettingsFrame.isDebug()) {
+                e.printStackTrace();
             }
-        } catch (IOException | InterruptedException ignored) {
-
         }
     }
 
@@ -502,10 +508,8 @@ public class SearchUtil {
         String end = "\"" + absPath.substring(2) + "\"";
         File database = new File("data.db");
         String command = "cmd.exe /c " + start + end + " \"" + path + "\"" + " \"" + searchDepth + "\" " + "\"" + ignorePath + "\" " + "\"" + database.getAbsolutePath() + "\" " + "\"" + "0" + "\"";
-        Process p = Runtime.getRuntime().exec(command, null, new File("user"));
-        while (p.isAlive()) {
-            Thread.sleep(10);
-        }
+        Runtime.getRuntime().exec(command, null, new File("user"));
+        waitForTask("fileSearcher.exe");
     }
 
     public void updateLists(String ignorePath, int searchDepth, Statement stmt) {

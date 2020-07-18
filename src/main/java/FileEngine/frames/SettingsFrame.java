@@ -1716,9 +1716,7 @@ public class SettingsFrame {
             Process p;
             try {
                 p = Runtime.getRuntime().exec(command);
-                while (p.isAlive()) {
-                    Thread.sleep(10);
-                }
+                p.waitFor();
                 BufferedReader outPut = new BufferedReader(new InputStreamReader(p.getErrorStream()));
                 String line;
                 StringBuilder result = new StringBuilder();
@@ -1738,9 +1736,7 @@ public class SettingsFrame {
             Process p;
             try {
                 p = Runtime.getRuntime().exec(command);
-                while (p.isAlive()) {
-                    Thread.sleep(10);
-                }
+                p.waitFor();
                 BufferedReader outPut = new BufferedReader(new InputStreamReader(p.getErrorStream()));
                 String line;
                 StringBuilder result = new StringBuilder();
