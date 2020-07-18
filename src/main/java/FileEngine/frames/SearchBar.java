@@ -2263,24 +2263,29 @@ public class SearchBar {
         CachedThreadPool.getInstance().executeTask(() -> {
             //后台自动创建数据库索引
             try (Statement stmt = SQLiteUtil.getStatement()) {
+                OutLoop:
                 while (SettingsFrame.isNotMainExit()) {
-                    if (!isUsing && SearchUtil.getInstance().isUsable()) {
-                        for (int i = 0; i <= 40; ++i) {
-                            String createIndex = "CREATE INDEX IF NOT EXISTS list" + i + "_index on list" + i + "(PATH);";
-                            try {
-                                stmt.execute(createIndex);
-                            } catch (Exception e) {
-                                if (SettingsFrame.isDebug()) {
-                                    e.printStackTrace();
-                                }
-                            }
-                            Thread.sleep(5000);
+                    for (int i = 0; i <= 40; ++i) {
+                        String createIndex = "CREATE INDEX IF NOT EXISTS list" + i + "_index on list" + i + "(PATH);";
+                        if (!SettingsFrame.isNotMainExit()) {
+                            break OutLoop;
                         }
+                        try {
+                            if (!isUsing && SearchUtil.getInstance().isUsable() && !SearchUtil.getInstance().isManualUpdate()) {
+                                stmt.execute(createIndex);
+                            }
+                        } catch (Exception e) {
+                            if (SettingsFrame.isDebug()) {
+                                System.err.println("error sql " + createIndex);
+                                e.printStackTrace();
+                            }
+                        }
+
+                        Thread.sleep(5000);
                     }
                     Thread.sleep(50);
                 }
             } catch (Exception ignored) {
-
             }
         });
 
@@ -2308,7 +2313,7 @@ public class SearchBar {
                             if (runningMode.get() == COMMAND_MODE) {
                                 if (":update".equals(text)) {
                                     closedTodo();
-                                    search.setManualUpdate(true);
+                                    search.setManualUpdate();
                                     timer = false;
                                     continue;
                                 }
@@ -2845,10 +2850,8 @@ public class SearchBar {
         String start = "cmd.exe /c start " + shortcutGenPath.substring(0, 2);
         String end = "\"" + shortcutGenPath.substring(2) + "\"";
         String commandToGenLnk = start + end + " /target:" + "\"" + fileOrFolderPath + "\"" + " " + "/shortcut:" + "\"" + writeShortCutPath + "\"" + " /workingdir:" + "\"" + fileOrFolderPath.substring(0, fileOrFolderPath.lastIndexOf(File.separator)) + "\"";
-        Process p = Runtime.getRuntime().exec("cmd.exe /c " + commandToGenLnk);
-        while (p.isAlive()) {
-            Thread.sleep(10);
-        }
+        Process p = Runtime.getRuntime().exec("cmd.exe " + commandToGenLnk);
+        p.waitFor();
     }
 
     public String getFileName(String path) {
