@@ -1665,17 +1665,10 @@ public class SearchBar {
                 String record;
                 while (SettingsFrame.isNotMainExit()) {
                     if (isCacheAndPrioritySearched) {
-                        if (listResults.isEmpty()) {
-                            while ((record = tempResults.poll()) != null) {
+                        while ((record = tempResults.poll()) != null) {
+                            if (!listResults.contains(record)) {
                                 resultCount.incrementAndGet();
                                 listResults.add(record);
-                            }
-                        } else {
-                            while ((record = tempResults.poll()) != null) {
-                                if (!listResults.contains(record)) {
-                                    resultCount.incrementAndGet();
-                                    listResults.add(record);
-                                }
                             }
                         }
                     }
@@ -2382,7 +2375,7 @@ public class SearchBar {
                                     while (runningMode.get() == PLUGIN_MODE) {
                                         try {
                                             if ((result = currentUsingPlugin.pollFromResultQueue()) != null) {
-                                                if (!listResults.contains(result)) {
+                                                if (isResultNotRepeat(result)) {
                                                     listResults.add(result);
                                                     resultCount.incrementAndGet();
                                                 }
@@ -2597,6 +2590,10 @@ public class SearchBar {
         return false;
     }
 
+    private boolean isResultNotRepeat(String result) {
+        return !(tempResults.contains(result) || listResults.contains(result));
+    }
+
     private boolean checkIsMatchedAndAddToList(String path, boolean isPutToTemp) {
         if (check(path)) {
             if (isPutToTemp) {
@@ -2608,7 +2605,7 @@ public class SearchBar {
                 }
             } else {
                 if (isExist(path)) {
-                    if (!listResults.contains(path)) {
+                    if (isResultNotRepeat(path)) {
                         resultCount.incrementAndGet();
                         listResults.add(path);
                     }
