@@ -2245,7 +2245,7 @@ public class SearchBar {
                             while ((column = commandQueue.poll()) != null) {
                                 searchAndAddToTempResults(System.currentTimeMillis(), column);
                                 if (!searchBar.isVisible()) {
-                                    commandQueue.clear();
+                                    closedTodo();
                                 }
                             }
                         } catch (SQLException e) {
@@ -2863,11 +2863,14 @@ public class SearchBar {
     }
 
     public int getAscIISum(String path) {
-        path = path.toUpperCase();
-        if (path.contains(";")) {
-            path = path.replace(";", "");
+        if (path != null) {
+            path = path.toUpperCase();
+            if (path.contains(";")) {
+                path = path.replace(";", "");
+            }
+            return GetAscII.INSTANCE.getAscII(path);
         }
-        return GetAscII.INSTANCE.getAscII(path);
+        return 0;
     }
 
     private void saveCache(String content) {
