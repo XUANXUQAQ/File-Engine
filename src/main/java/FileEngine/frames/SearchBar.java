@@ -255,7 +255,6 @@ public class SearchBar {
                 if (count == 2) {
                     searchBar.setVisible(false);
                     if (runningMode.get() != PLUGIN_MODE) {
-                        //enter被点击
                         searchBar.setVisible(false);
                         String res = listResults.get(labelCount.get());
                         if (runningMode.get() == NORMAL_MODE) {
@@ -466,13 +465,13 @@ public class SearchBar {
                 }
                 if (runningMode.get() == PLUGIN_MODE) {
                     if (key != 38 && key != 40) {
-                        if (key == 10) {
-                            closedTodo();
-                        }
                         if (currentUsingPlugin != null) {
                             if (!listResults.isEmpty()) {
                                 currentUsingPlugin.keyPressed(arg0, listResults.get(labelCount.get()));
                             }
+                        }
+                        if (key == 10) {
+                            closedTodo();
                         }
                     }
                 }
