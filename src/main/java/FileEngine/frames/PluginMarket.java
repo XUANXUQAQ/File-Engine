@@ -330,7 +330,7 @@ public class PluginMarket {
 
     private void initPluginList() {
         try {
-            JSONObject allPlugins = getPluginInfo("https://gitee.com/xuanxuF/File-Engine/raw/master/plugins.json");
+            JSONObject allPlugins = getPluginInfo("https://raw.githubusercontent.com/XUANXUQAQ/File-Engine-Version/master/plugins.json");
             Set<String> pluginSet = allPlugins.keySet();
             for (String each : pluginSet) {
                 NAME_PLUGIN_INFO_URL_MAP.put(each, allPlugins.getString(each));
