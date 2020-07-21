@@ -253,61 +253,61 @@ public class SearchBar {
             public void mousePressed(MouseEvent e) {
                 int count = e.getClickCount();
                 if (count == 2) {
-                    searchBar.setVisible(false);
-                    if (runningMode.get() != PLUGIN_MODE) {
-                        searchBar.setVisible(false);
-                        String res = listResults.get(labelCount.get());
-                        if (runningMode.get() == NORMAL_MODE) {
-                            if (isOpenLastFolderPressed) {
-                                //打开上级文件夹
-                                File open = new File(res);
-                                try {
-                                    Runtime.getRuntime().exec("explorer.exe /select, \"" + open.getAbsolutePath() + "\"");
-                                } catch (IOException e1) {
-                                    e1.printStackTrace();
-                                }
-                            } else if (SettingsFrame.isDefaultAdmin() || isRunAsAdminPressed) {
-                                openWithAdmin(res);
-                            } else if (isCopyPathPressed) {
-                                Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-                                Transferable trans = new StringSelection(res);
-                                clipboard.setContents(trans, null);
-                            } else {
-                                if (res.endsWith(".bat") || res.endsWith(".cmd")) {
+                    if (!listResults.isEmpty()) {
+                        if (runningMode.get() != PLUGIN_MODE) {
+                            searchBar.setVisible(false);
+                            String res = listResults.get(labelCount.get());
+                            if (runningMode.get() == NORMAL_MODE) {
+                                if (isOpenLastFolderPressed) {
+                                    //打开上级文件夹
+                                    File open = new File(res);
+                                    try {
+                                        Runtime.getRuntime().exec("explorer.exe /select, \"" + open.getAbsolutePath() + "\"");
+                                    } catch (IOException e1) {
+                                        e1.printStackTrace();
+                                    }
+                                } else if (SettingsFrame.isDefaultAdmin() || isRunAsAdminPressed) {
                                     openWithAdmin(res);
+                                } else if (isCopyPathPressed) {
+                                    Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+                                    Transferable trans = new StringSelection(res);
+                                    clipboard.setContents(trans, null);
                                 } else {
-                                    openWithoutAdmin(res);
+                                    if (res.endsWith(".bat") || res.endsWith(".cmd")) {
+                                        openWithAdmin(res);
+                                    } else {
+                                        openWithoutAdmin(res);
+                                    }
                                 }
-                            }
-                            saveCache(res);
-                        } else if (runningMode.get() == COMMAND_MODE) {
-                            File open = new File(semicolon.split(res)[1]);
-                            if (isOpenLastFolderPressed) {
-                                //打开上级文件夹
-                                try {
-                                    Runtime.getRuntime().exec("explorer.exe /select, \"" + open.getAbsolutePath() + "\"");
-                                } catch (IOException e1) {
-                                    JOptionPane.showMessageDialog(null, SettingsFrame.getTranslation("Execute failed"));
-                                }
-                            } else if (SettingsFrame.isDefaultAdmin() || isRunAsAdminPressed) {
-                                openWithAdmin(open.getAbsolutePath());
-                            } else if (isCopyPathPressed) {
-                                Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-                                Transferable trans = new StringSelection(res);
-                                clipboard.setContents(trans, null);
-                            } else {
-                                if (res.endsWith(".bat") || res.endsWith(".cmd")) {
+                                saveCache(res);
+                            } else if (runningMode.get() == COMMAND_MODE) {
+                                File open = new File(semicolon.split(res)[1]);
+                                if (isOpenLastFolderPressed) {
+                                    //打开上级文件夹
+                                    try {
+                                        Runtime.getRuntime().exec("explorer.exe /select, \"" + open.getAbsolutePath() + "\"");
+                                    } catch (IOException e1) {
+                                        JOptionPane.showMessageDialog(null, SettingsFrame.getTranslation("Execute failed"));
+                                    }
+                                } else if (SettingsFrame.isDefaultAdmin() || isRunAsAdminPressed) {
                                     openWithAdmin(open.getAbsolutePath());
+                                } else if (isCopyPathPressed) {
+                                    Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+                                    Transferable trans = new StringSelection(res);
+                                    clipboard.setContents(trans, null);
                                 } else {
-                                    openWithoutAdmin(open.getAbsolutePath());
+                                    if (res.endsWith(".bat") || res.endsWith(".cmd")) {
+                                        openWithAdmin(open.getAbsolutePath());
+                                    } else {
+                                        openWithoutAdmin(open.getAbsolutePath());
+                                    }
                                 }
                             }
-                        }
-                        closedTodo();
-                    } else if (runningMode.get() == PLUGIN_MODE) {
-                        if (currentUsingPlugin != null) {
-                            if (!listResults.isEmpty()) {
-                                currentUsingPlugin.mousePressed(e, listResults.get(labelCount.get()));
+                        } else if (runningMode.get() == PLUGIN_MODE) {
+                            if (currentUsingPlugin != null) {
+                                if (!listResults.isEmpty()) {
+                                    currentUsingPlugin.mousePressed(e, listResults.get(labelCount.get()));
+                                }
                             }
                         }
                     }
@@ -404,50 +404,52 @@ public class SearchBar {
                         if (runningMode.get() != PLUGIN_MODE) {
                             //enter被点击
                             searchBar.setVisible(false);
-                            String res = listResults.get(labelCount.get());
-                            if (runningMode.get() == NORMAL_MODE) {
-                                if (isOpenLastFolderPressed) {
-                                    //打开上级文件夹
-                                    File open = new File(res);
-                                    try {
-                                        Runtime.getRuntime().exec("explorer.exe /select, \"" + open.getAbsolutePath() + "\"");
-                                    } catch (IOException e) {
-                                        e.printStackTrace();
-                                    }
-                                } else if (SettingsFrame.isDefaultAdmin() || isRunAsAdminPressed) {
-                                    openWithAdmin(res);
-                                } else if (isCopyPathPressed) {
-                                    Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-                                    Transferable trans = new StringSelection(res);
-                                    clipboard.setContents(trans, null);
-                                } else {
-                                    if (res.endsWith(".bat") || res.endsWith(".cmd")) {
+                            if (!listResults.isEmpty()) {
+                                String res = listResults.get(labelCount.get());
+                                if (runningMode.get() == NORMAL_MODE) {
+                                    if (isOpenLastFolderPressed) {
+                                        //打开上级文件夹
+                                        File open = new File(res);
+                                        try {
+                                            Runtime.getRuntime().exec("explorer.exe /select, \"" + open.getAbsolutePath() + "\"");
+                                        } catch (IOException e) {
+                                            e.printStackTrace();
+                                        }
+                                    } else if (SettingsFrame.isDefaultAdmin() || isRunAsAdminPressed) {
                                         openWithAdmin(res);
+                                    } else if (isCopyPathPressed) {
+                                        Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+                                        Transferable trans = new StringSelection(res);
+                                        clipboard.setContents(trans, null);
                                     } else {
-                                        openWithoutAdmin(res);
+                                        if (res.endsWith(".bat") || res.endsWith(".cmd")) {
+                                            openWithAdmin(res);
+                                        } else {
+                                            openWithoutAdmin(res);
+                                        }
                                     }
-                                }
-                                saveCache(res);
-                            } else if (runningMode.get() == COMMAND_MODE) {
-                                File open = new File(semicolon.split(res)[1]);
-                                if (isOpenLastFolderPressed) {
-                                    //打开上级文件夹
-                                    try {
-                                        Runtime.getRuntime().exec("explorer.exe /select, \"" + open.getAbsolutePath() + "\"");
-                                    } catch (IOException e) {
-                                        JOptionPane.showMessageDialog(null, SettingsFrame.getTranslation("Execute failed"));
-                                    }
-                                } else if (SettingsFrame.isDefaultAdmin() || isRunAsAdminPressed) {
-                                    openWithAdmin(open.getAbsolutePath());
-                                } else if (isCopyPathPressed) {
-                                    Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-                                    Transferable trans = new StringSelection(res);
-                                    clipboard.setContents(trans, null);
-                                } else {
-                                    if (res.endsWith(".bat") || res.endsWith(".cmd")) {
+                                    saveCache(res);
+                                } else if (runningMode.get() == COMMAND_MODE) {
+                                    File open = new File(semicolon.split(res)[1]);
+                                    if (isOpenLastFolderPressed) {
+                                        //打开上级文件夹
+                                        try {
+                                            Runtime.getRuntime().exec("explorer.exe /select, \"" + open.getAbsolutePath() + "\"");
+                                        } catch (IOException e) {
+                                            JOptionPane.showMessageDialog(null, SettingsFrame.getTranslation("Execute failed"));
+                                        }
+                                    } else if (SettingsFrame.isDefaultAdmin() || isRunAsAdminPressed) {
                                         openWithAdmin(open.getAbsolutePath());
+                                    } else if (isCopyPathPressed) {
+                                        Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+                                        Transferable trans = new StringSelection(res);
+                                        clipboard.setContents(trans, null);
                                     } else {
-                                        openWithoutAdmin(open.getAbsolutePath());
+                                        if (res.endsWith(".bat") || res.endsWith(".cmd")) {
+                                            openWithAdmin(open.getAbsolutePath());
+                                        } else {
+                                            openWithoutAdmin(open.getAbsolutePath());
+                                        }
                                     }
                                 }
                             }
