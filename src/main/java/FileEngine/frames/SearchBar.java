@@ -44,7 +44,7 @@ public class SearchBar {
     private static volatile boolean isUsing = false;
     private static volatile boolean isRunAsAdminPressed = false;
     private static volatile boolean isCopyPathPressed = false;
-    private static volatile boolean timer = false;
+    private static volatile boolean startSignal = false;
     private static volatile boolean isUserPressed = false;
     private static Border border;
     private final JFrame searchBar;
@@ -1561,7 +1561,7 @@ public class SearchBar {
                 currentLabelSelectedPosition.set(0);
                 isCacheAndPrioritySearched = false;
                 startTime = System.currentTimeMillis();
-                timer = true;
+                startSignal = true;
                 String text = getTextFieldText();
                 char first = text.charAt(0);
                 if (first == ':') {
@@ -1626,17 +1626,17 @@ public class SearchBar {
                     labelCount.set(0);
                     currentLabelSelectedPosition.set(0);
                     startTime = System.currentTimeMillis();
-                    timer = false;
+                    startSignal = false;
                 } else {
                     startTime = System.currentTimeMillis();
-                    timer = true;
+                    startSignal = true;
                 }
             }
 
             @Override
             public void changedUpdate(DocumentEvent e) {
                 startTime = System.currentTimeMillis();
-                timer = false;
+                startSignal = false;
             }
         });
     }
@@ -1657,6 +1657,31 @@ public class SearchBar {
                 taskBar.showMessage(SettingsFrame.getTranslation("Warning"), SettingsFrame.getTranslation("Not administrator, file monitoring function is turned off"));
             }
         });
+    }
+
+    private void addSearchWaiter() {
+        if (search.getStatus() != SearchUtil.NORMAL) {
+            if (searchWaiter == null || !searchWaiter.isAlive()) {
+                searchWaiter = new Thread(() -> {
+                    try {
+                        while (SettingsFrame.isNotMainExit()) {
+                            if (Thread.currentThread().isInterrupted()) {
+                                break;
+                            }
+                            if (search.getStatus() == SearchUtil.NORMAL) {
+                                startTime = System.currentTimeMillis() - 500;
+                                startSignal = true;
+                                break;
+                            }
+                            Thread.sleep(20);
+                        }
+                    } catch (InterruptedException ignored) {
+
+                    }
+                });
+                searchWaiter.start();
+            }
+        }
     }
 
     private void initThreadPool() {
@@ -2245,7 +2270,7 @@ public class SearchBar {
                         try {
                             while ((column = commandQueue.poll()) != null) {
                                 searchAndAddToTempResults(System.currentTimeMillis(), column);
-                                if (!searchBar.isVisible()) {
+                                if (!isUsing) {
                                     closedTodo();
                                 }
                             }
@@ -2296,8 +2321,8 @@ public class SearchBar {
             try {
                 while (SettingsFrame.isNotMainExit()) {
                     long endTime = System.currentTimeMillis();
-                    if ((endTime - startTime > 500) && timer) {
-                        timer = false; //开始搜索 计时停止
+                    if ((endTime - startTime > 500) && startSignal) {
+                        startSignal = false; //开始搜索 计时停止
                         resultCount.set(0);
                         labelCount.set(0);
                         currentLabelSelectedPosition.set(0);
@@ -2316,7 +2341,7 @@ public class SearchBar {
                                 if (":update".equals(text)) {
                                     closedTodo();
                                     search.setStatus(SearchUtil.MANUAL_UPDATE);
-                                    timer = false;
+                                    startSignal = false;
                                     continue;
                                 }
                                 if (":version".equals(text)) {
@@ -2411,30 +2436,9 @@ public class SearchBar {
                             label1.setText(SettingsFrame.getTranslation("Updating file index") + "...");
                         }
 
-                        if (!(search.getStatus() == SearchUtil.NORMAL)) {
+                        if (search.getStatus() != SearchUtil.NORMAL) {
                             //开启线程等待搜索完成
-                            if (search.getStatus() == SearchUtil.MANUAL_UPDATE) {
-                                if (searchWaiter == null || !searchWaiter.isAlive()) {
-                                    searchWaiter = new Thread(() -> {
-                                        try {
-                                            while (SettingsFrame.isNotMainExit()) {
-                                                if (Thread.currentThread().isInterrupted()) {
-                                                    break;
-                                                }
-                                                if (search.getStatus() == SearchUtil.NORMAL) {
-                                                    startTime = System.currentTimeMillis() - 500;
-                                                    timer = true;
-                                                    break;
-                                                }
-                                                Thread.sleep(20);
-                                            }
-                                        } catch (InterruptedException ignored) {
-
-                                        }
-                                    });
-                                    searchWaiter.start();
-                                }
-                            }
+                            addSearchWaiter();
                             clearLabel();
                         }
                     }
@@ -2977,7 +2981,6 @@ public class SearchBar {
         }
         clearLabel();
         clearTextFieldText();
-        commandQueue.clear();
         startTime = System.currentTimeMillis();//结束搜索
         isUsing = false;
         labelCount.set(0);
@@ -2986,14 +2989,14 @@ public class SearchBar {
         listResults.clear();
         listResultsCopy.clear();
         tempResults.clear();
-        textField.setText(null);
+        commandQueue.clear();
+        textField.setText("");
         isUserPressed = false;
         isLockMouseMotion = false;
         isOpenLastFolderPressed = false;
-        isUsing = false;
         isRunAsAdminPressed = false;
         isCopyPathPressed = false;
-        timer = false;
+        startSignal = false;
         isCacheAndPrioritySearched = false;
         isStartSearchLocal = false;
         try {
