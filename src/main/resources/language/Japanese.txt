@@ -102,3 +102,6 @@ Author=著者
 Install=インストール
 Duplicate plugin, please delete it in plugins folder=プラグインが重複しています。プラグインフォルダから削除してください
 Downloading:=ダウンロード中:
+Click to organize the database and reduce the size of the database, but it will consume a lot of time.=クリックしてデータベースを整理し、データベースのサイズを縮小しますが、多くの時間を消費します。
+Database is not usable yet, please wait...=データベースはまだ利用できません。お待ちください...
+Task is still running.=タスクはまだ実行中です。

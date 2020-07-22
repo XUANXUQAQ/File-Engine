@@ -184,7 +184,7 @@ public class MainClass {
         SearchUtil search = SearchUtil.getInstance();
 
         if (isManualUpdate) {
-            search.setManualUpdate();
+            search.setStatus(SearchUtil.MANUAL_UPDATE);
         }
 
         if (!isLatest()) {

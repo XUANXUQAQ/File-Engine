@@ -1,10 +1,12 @@
 package FileEngine.frames;
 
+import FileEngine.SQLiteConfig.SQLiteUtil;
 import FileEngine.download.DownloadManager;
 import FileEngine.download.DownloadUtil;
 import FileEngine.hotkeyListener.CheckHotKey;
 import FileEngine.pluginSystem.Plugin;
 import FileEngine.pluginSystem.PluginUtil;
+import FileEngine.search.SearchUtil;
 import FileEngine.threadPool.CachedThreadPool;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
@@ -19,6 +21,7 @@ import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
+import java.sql.Statement;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Scanner;
@@ -167,6 +170,8 @@ public class SettingsFrame {
     private JLabel labelOfficialSite;
     private JLabel labelDownloadProgress;
     private JLabel labelProgress;
+    private JButton buttonVacuum;
+    private JLabel labelVacuumTip;
 
 
     private static class SettingsFrameBuilder {
@@ -827,6 +832,36 @@ public class SettingsFrame {
         });
     }
 
+    private void addButtonVacuumListener() {
+        buttonVacuum.addActionListener(e -> {
+            int status = SearchUtil.getInstance().getStatus();
+            if (status == SearchUtil.NORMAL) {
+                if (isDebug()) {
+                    System.out.println("开始VACUUM");
+                }
+                SearchUtil.getInstance().setStatus(SearchUtil.VACUUM);
+                CachedThreadPool.getInstance().executeTask(() -> {
+                    try (Statement stmt = SQLiteUtil.getStatement()) {
+                        stmt.execute("VACUUM;");
+                    } catch (Exception throwables) {
+                        if (isDebug()) {
+                            throwables.printStackTrace();
+                        }
+                    } finally {
+                        if (isDebug()) {
+                            System.out.println("结束VACUUM");
+                        }
+                        SearchUtil.getInstance().setStatus(SearchUtil.NORMAL);
+                    }
+                });
+            } else if (status == SearchUtil.MANUAL_UPDATE) {
+                JOptionPane.showMessageDialog(frame, getTranslation("Database is not usable yet, please wait..."));
+            } else if (status == SearchUtil.VACUUM) {
+                JOptionPane.showMessageDialog(frame, getTranslation("Task is still running."));
+            }
+        });
+    }
+
     private void addButtonViewPluginMarketListener() {
         buttonPluginMarket.addActionListener(e -> {
             PluginMarket pluginMarket = PluginMarket.getInstance();
@@ -1019,6 +1054,8 @@ public class SettingsFrame {
 
         addPluginOfficialSiteListener();
 
+        addButtonVacuumListener();
+
         initAll();
 
         initThreadPool();
@@ -1143,6 +1180,7 @@ public class SettingsFrame {
         labelInstalledPluginNum.setText(getTranslation("Installed plugins num:"));
         buttonUpdatePlugin.setText(getTranslation("Check for update"));
         buttonPluginMarket.setText(getTranslation("Plugin Market"));
+        labelVacuumTip.setText(getTranslation("Click to organize the database and reduce the size of the database, but it will consume a lot of time."));
     }
 
     private void initLanguageSet() {

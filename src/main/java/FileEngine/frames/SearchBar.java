@@ -2272,7 +2272,7 @@ public class SearchBar {
                             break OutLoop;
                         }
                         try {
-                            if (!isUsing && SearchUtil.getInstance().isUsable() && !SearchUtil.getInstance().isManualUpdate()) {
+                            if (!isUsing && SearchUtil.getInstance().getStatus() == SearchUtil.NORMAL) {
                                 stmt.execute(createIndex);
                             }
                         } catch (Exception e) {
@@ -2311,11 +2311,11 @@ public class SearchBar {
                         listResultsCopy.clear();
                         tempResults.clear();
                         String text = getTextFieldText();
-                        if (search.isUsable()) {
+                        if (search.getStatus() == SearchUtil.NORMAL) {
                             if (runningMode.get() == COMMAND_MODE) {
                                 if (":update".equals(text)) {
                                     closedTodo();
-                                    search.setManualUpdate();
+                                    search.setStatus(SearchUtil.MANUAL_UPDATE);
                                     timer = false;
                                     continue;
                                 }
@@ -2403,9 +2403,17 @@ public class SearchBar {
                             showResults(true, false, false, false,
                                     false, false, false, false);
 
-                        } else {
+                        } else if (search.getStatus() == SearchUtil.VACUUM) {
+                            label1.setBackground(labelColor);
+                            label1.setText(SettingsFrame.getTranslation("Organizing database"));
+                        } else if (search.getStatus() == SearchUtil.MANUAL_UPDATE) {
+                            label1.setBackground(labelColor);
+                            label1.setText(SettingsFrame.getTranslation("Updating file index") + "...");
+                        }
+
+                        if (!(search.getStatus() == SearchUtil.NORMAL)) {
                             //开启线程等待搜索完成
-                            if (search.isManualUpdate()) {
+                            if (search.getStatus() == SearchUtil.MANUAL_UPDATE) {
                                 if (searchWaiter == null || !searchWaiter.isAlive()) {
                                     searchWaiter = new Thread(() -> {
                                         try {
@@ -2413,7 +2421,7 @@ public class SearchBar {
                                                 if (Thread.currentThread().isInterrupted()) {
                                                     break;
                                                 }
-                                                if (search.isUsable()) {
+                                                if (search.getStatus() == SearchUtil.NORMAL) {
                                                     startTime = System.currentTimeMillis() - 500;
                                                     timer = true;
                                                     break;
@@ -2427,12 +2435,8 @@ public class SearchBar {
                                     searchWaiter.start();
                                 }
                             }
-                            clearLabel();
-                            if (!search.isUsable()) {
-                                label1.setBackground(labelColor);
-                                label1.setText(SettingsFrame.getTranslation("Updating file index") + "...");
-                            }
                         }
+                        clearLabel();
                     }
                     Thread.sleep(20);
                 }
@@ -2449,7 +2453,7 @@ public class SearchBar {
             try (BufferedReader readerAdd = new BufferedReader(new InputStreamReader(
                     new FileInputStream(SettingsFrame.getTmp().getAbsolutePath() + File.separator + "fileAdded.txt"), StandardCharsets.UTF_8))) {
                 while (SettingsFrame.isNotMainExit()) {
-                    if (!search.isManualUpdate()) {
+                    if (search.getStatus() == SearchUtil.NORMAL) {
                         if ((filesToAdd = readerAdd.readLine()) != null) {
                             search.addFileToDatabase(filesToAdd);
                             if (SettingsFrame.isDebug()) {
@@ -2471,7 +2475,7 @@ public class SearchBar {
             try (BufferedReader readerRemove = new BufferedReader(new InputStreamReader(
                     new FileInputStream(SettingsFrame.getTmp().getAbsolutePath() + File.separator + "fileRemoved.txt"), StandardCharsets.UTF_8))) {
                 while (SettingsFrame.isNotMainExit()) {
-                    if (!search.isManualUpdate()) {
+                    if (search.getStatus() == SearchUtil.NORMAL) {
                         if ((filesToRemove = readerRemove.readLine()) != null) {
                             search.removeFileFromDatabase(filesToRemove);
                             if (SettingsFrame.isDebug()) {
@@ -2498,9 +2502,9 @@ public class SearchBar {
                     try (Statement stmt = SQLiteUtil.getStatement()) {
                         while (SettingsFrame.isNotMainExit()) {
                             count += 1000;
-                            if (count >= updateTimeLimit && !isUsing && !search.isManualUpdate()) {
+                            if (count >= updateTimeLimit && search.getStatus() == SearchUtil.NORMAL) {
                                 count = 0;
-                                if (search.isUsable()) {
+                                if (search.getStatus() == SearchUtil.NORMAL) {
                                     search.executeAllCommands(stmt);
                                 }
                             }
@@ -2523,8 +2527,7 @@ public class SearchBar {
         CachedThreadPool.getInstance().executeTask(() -> {
             try {
                 while (SettingsFrame.isNotMainExit()) {
-                    if (search.isManualUpdate()) {
-                        search.setUsable(false);
+                    if (search.getStatus() == SearchUtil.MANUAL_UPDATE) {
                         try (Statement stmt = SQLiteUtil.getStatement()) {
                             search.updateLists(SettingsFrame.getIgnorePath(), SettingsFrame.getSearchDepth(), stmt);
                         }
@@ -2637,7 +2640,7 @@ public class SearchBar {
         try (PreparedStatement pStmt = SQLiteUtil.getConnection().prepareStatement(pSql); ResultSet resultSet = pStmt.executeQuery()) {
             while (resultSet.next()) {
                 each = resultSet.getString("PATH");
-                if (search.isUsable()) {
+                if (search.getStatus() == SearchUtil.NORMAL) {
                     isResultsExcessive = checkIsMatchedAndAddToList(each, true);
                 }
                 //用户重新输入了信息

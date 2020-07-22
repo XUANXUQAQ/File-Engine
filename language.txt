@@ -102,3 +102,6 @@ Author=
 Install=
 Duplicate plugin, please delete it in plugins folder=
 Downloading:=
+Click to organize the database and reduce the size of the database, but it will consume a lot of time.=
+Database is not usable yet, please wait...=
+Task is still running.=
