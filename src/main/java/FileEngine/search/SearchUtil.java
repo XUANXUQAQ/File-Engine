@@ -18,10 +18,13 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 
 public class SearchUtil {
-    private volatile static boolean isUsable = true;
-    private static volatile boolean isManualUpdate = false;
     private final Set<String> commandSet = ConcurrentHashMap.newKeySet();
     private final ConcurrentLinkedQueue<String> commandQueue = new ConcurrentLinkedQueue<>();
+    private volatile int status;
+
+    public static final int NORMAL = 0;
+    public static final int VACUUM = 1;
+    public static final int MANUAL_UPDATE = 2;
 
     private static class SearchBuilder {
         private static final SearchUtil INSTANCE = new SearchUtil();
@@ -82,11 +85,9 @@ public class SearchUtil {
             case 14:
                 command = "DELETE from list14 where PATH=" + "\"" + path + "\";";
                 break;
-
             case 15:
                 command = "DELETE from list15 where PATH=" + "\"" + path + "\";";
                 break;
-
             case 16:
                 command = "DELETE from list16 where PATH=" + "\"" + path + "\";";
                 break;
@@ -105,19 +106,15 @@ public class SearchUtil {
             case 21:
                 command = "DELETE from list21 where PATH=" + "\"" + path + "\";";
                 break;
-
             case 22:
                 command = "DELETE from list22 where PATH=" + "\"" + path + "\";";
                 break;
-
             case 23:
                 command = "DELETE from list23 where PATH=" + "\"" + path + "\";";
                 break;
-
             case 24:
                 command = "DELETE from list24 where PATH=" + "\"" + path + "\";";
                 break;
-
             case 25:
                 command = "DELETE from list25 where PATH=" + "\"" + path + "\";";
                 break;
@@ -224,23 +221,18 @@ public class SearchUtil {
             case 14:
                 command = "INSERT OR IGNORE INTO list14(PATH) VALUES(\"" + path + "\");";
                 break;
-
             case 15:
                 command = "INSERT OR IGNORE INTO list15(PATH) VALUES(\"" + path + "\");";
                 break;
-
             case 16:
                 command = "INSERT OR IGNORE INTO list16(PATH) VALUES(\"" + path + "\");";
                 break;
-
             case 17:
                 command = "INSERT OR IGNORE INTO list17(PATH) VALUES(\"" + path + "\");";
                 break;
-
             case 18:
                 command = "INSERT OR IGNORE INTO list18(PATH) VALUES(\"" + path + "\");";
                 break;
-
             case 19:
                 command = "INSERT OR IGNORE INTO list19(PATH) VALUES(\"" + path + "\");";
                 break;
@@ -253,15 +245,12 @@ public class SearchUtil {
             case 22:
                 command = "INSERT OR IGNORE INTO list22(PATH) VALUES(\"" + path + "\");";
                 break;
-
             case 23:
                 command = "INSERT OR IGNORE INTO list23(PATH) VALUES(\"" + path + "\");";
                 break;
-
             case 24:
                 command = "INSERT OR IGNORE INTO list24(PATH) VALUES(\"" + path + "\");";
                 break;
-
             case 25:
                 command = "INSERT OR IGNORE INTO list25(PATH) VALUES(\"" + path + "\");";
                 break;
@@ -349,7 +338,6 @@ public class SearchUtil {
             System.out.println("----------------------------------------------");
         }
         if (!commandSet.isEmpty()) {
-            isUsable = false;
             commandQueue.addAll(commandSet);
             commandSet.clear();
             try {
@@ -370,33 +358,19 @@ public class SearchUtil {
                     throwables.printStackTrace();
                 }
                 commandQueue.clear();
-                isUsable = true;
             }
         }
     }
 
-    public boolean isManualUpdate() {
-        return isManualUpdate;
+    public int getStatus() {
+        return status;
     }
 
-    public void setManualUpdate() {
-        isManualUpdate = true;
+    public void setStatus(int _status) {
+        status = _status;
     }
 
-    public boolean isUsable() {
-        return isUsable;
-    }
-
-    public void setUsable(boolean b) {
-        if (!isManualUpdate) {
-            isUsable = b;
-        } else {
-            isUsable = false;
-        }
-    }
-
-
-    private void searchFile(String ignorePath, int searchDepth) throws IOException, InterruptedException {
+    private void searchFile(String ignorePath, int searchDepth) {
         boolean canSearchByUsn = false;
         File[] roots = File.listRoots();
         StringBuilder strb = new StringBuilder(26);
@@ -408,32 +382,32 @@ public class SearchUtil {
                 } else {
                     String path = root.getAbsolutePath();
                     path = path.substring(0, 2);
-                    innerSearchFile(path, searchDepth, ignorePath);
+                    try {
+                        SearchFile(path, searchDepth, ignorePath);
+                    } catch (InterruptedException | IOException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         }
         if (canSearchByUsn) {
-            searchByUSN(strb.toString(), ignorePath.toLowerCase());
-        }
-        String desktop = getDesktop();
-        File[] desktopFiles = new File(desktop).listFiles();
-        if (desktopFiles != null) {
-            if (desktopFiles.length != 0) {
-                innerSearchFileIgnoreSearchDepth(desktop, ignorePath);
+            try {
+                searchByUSN(strb.toString(), ignorePath.toLowerCase());
+            } catch (IOException | InterruptedException e) {
+                e.printStackTrace();
             }
         }
-
-        String publicDesktop = "C:\\Users\\Public\\Desktop";
-        File[] publicDesktopFiles = new File(publicDesktop).listFiles();
-        if (publicDesktopFiles != null) {
-            if (publicDesktopFiles.length != 0) {
-                innerSearchFileIgnoreSearchDepth(publicDesktop, ignorePath);
+        String[] desktops = new String[]{getDesktop(), "C:\\Users\\Public\\Desktop"};
+        for (String eachDesktop : desktops) {
+            File[] desktopFiles = new File(eachDesktop).listFiles();
+            if (desktopFiles != null) {
+                if (desktopFiles.length != 0) {
+                    SearchFileIgnoreSearchDepth(eachDesktop, ignorePath);
+                }
             }
         }
-
+        status = NORMAL;
         TaskBar.getInstance().showMessage(SettingsFrame.getTranslation("Info"), SettingsFrame.getTranslation("Search Done"));
-        isManualUpdate = false;
-        isUsable = true;
     }
 
     private void searchByUSN(String paths, String ignorePath) throws IOException, InterruptedException {
@@ -484,7 +458,7 @@ public class SearchUtil {
         }
     }
 
-    private void innerSearchFileIgnoreSearchDepth(String path, String ignorePath) {
+    private void SearchFileIgnoreSearchDepth(String path, String ignorePath) {
         File fileSearcher = new File("user/fileSearcher.exe");
         String absPath = fileSearcher.getAbsolutePath();
         String start = absPath.substring(0, 2);
@@ -501,7 +475,7 @@ public class SearchUtil {
         }
     }
 
-    private void innerSearchFile(String path, int searchDepth, String ignorePath) throws InterruptedException, IOException {
+    private void SearchFile(String path, int searchDepth, String ignorePath) throws InterruptedException, IOException {
         File fileSearcher = new File("user/fileSearcher.exe");
         String absPath = fileSearcher.getAbsolutePath();
         String start = absPath.substring(0, 2);
@@ -513,15 +487,9 @@ public class SearchUtil {
     }
 
     public void updateLists(String ignorePath, int searchDepth, Statement stmt) {
-        try {
-            TaskBar.getInstance().showMessage(SettingsFrame.getTranslation("Info"), SettingsFrame.getTranslation("Updating file index"));
-            clearAllTablesAndIndex(stmt);
-            searchFile(ignorePath, searchDepth);
-        } catch (IOException | InterruptedException e) {
-            if (SettingsFrame.isDebug()) {
-                e.printStackTrace();
-            }
-        }
+        TaskBar.getInstance().showMessage(SettingsFrame.getTranslation("Info"), SettingsFrame.getTranslation("Updating file index"));
+        clearAllTablesAndIndex(stmt);
+        searchFile(ignorePath, searchDepth);
     }
 
     private void clearAllTablesAndIndex(Statement stmt) {
