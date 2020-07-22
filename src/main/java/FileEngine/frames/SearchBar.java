@@ -2435,8 +2435,8 @@ public class SearchBar {
                                     searchWaiter.start();
                                 }
                             }
+                            clearLabel();
                         }
-                        clearLabel();
                     }
                     Thread.sleep(20);
                 }
