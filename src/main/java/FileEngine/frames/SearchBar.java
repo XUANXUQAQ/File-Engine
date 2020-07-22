@@ -76,13 +76,14 @@ public class SearchBar {
     private final ConcurrentLinkedQueue<String> tempResults;
     private final ConcurrentLinkedQueue<String> commandQueue;
     private final CopyOnWriteArrayList<String> listResults;
+    private final Set<String> listResultsCopy;
     private volatile String[] searchCase;
     private volatile String searchText;
     private volatile String[] keywords;
-    private SearchUtil search;
-    private TaskBar taskBar;
-    private AtomicInteger resultCount;
-    private AtomicInteger currentLabelSelectedPosition;
+    private final SearchUtil search;
+    private final TaskBar taskBar;
+    private final AtomicInteger resultCount;
+    private final AtomicInteger currentLabelSelectedPosition;
     private volatile Plugin currentUsingPlugin;
 
     private static final int NORMAL_MODE = 0;
@@ -97,6 +98,7 @@ public class SearchBar {
         listResults = new CopyOnWriteArrayList<>();
         tempResults = new ConcurrentLinkedQueue<>();
         commandQueue = new ConcurrentLinkedQueue<>();
+        listResultsCopy = ConcurrentHashMap.newKeySet();
         border = BorderFactory.createLineBorder(new Color(73, 162, 255, 255));
         searchBar = new JFrame();
         labelCount = new AtomicInteger(0);
@@ -253,7 +255,7 @@ public class SearchBar {
             public void mousePressed(MouseEvent e) {
                 int count = e.getClickCount();
                 if (count == 2) {
-                    if (!listResults.isEmpty()) {
+                    if (!(resultCount.get() == 0)) {
                         if (runningMode.get() != PLUGIN_MODE) {
                             searchBar.setVisible(false);
                             String res = listResults.get(labelCount.get());
@@ -305,7 +307,7 @@ public class SearchBar {
                             }
                         } else if (runningMode.get() == PLUGIN_MODE) {
                             if (currentUsingPlugin != null) {
-                                if (!listResults.isEmpty()) {
+                                if (!(resultCount.get() == 0)) {
                                     currentUsingPlugin.mousePressed(e, listResults.get(labelCount.get()));
                                 }
                             }
@@ -319,7 +321,7 @@ public class SearchBar {
             public void mouseReleased(MouseEvent e) {
                 if (runningMode.get() == PLUGIN_MODE) {
                     if (currentUsingPlugin != null) {
-                        if (!listResults.isEmpty()) {
+                        if (!(resultCount.get() == 0)) {
                             currentUsingPlugin.mouseReleased(e, listResults.get(labelCount.get()));
                         }
                     }
@@ -352,7 +354,7 @@ public class SearchBar {
                 if (key == 8 && getTextFieldText().isEmpty()) {
                     arg0.consume();
                 }
-                if (!listResults.isEmpty()) {
+                if (!(resultCount.get() == 0)) {
                     if (38 == key) {
                         //上键被点击
                         if (isFirstPress || System.currentTimeMillis() - pressTime > timeLimit) {
@@ -367,8 +369,8 @@ public class SearchBar {
                                 labelCount.decrementAndGet();
 
                                 //System.out.println(labelCount);
-                                if (labelCount.get() >= listResults.size()) {
-                                    labelCount.set(listResults.size() - 1);
+                                if (labelCount.get() >= resultCount.get()) {
+                                    labelCount.set(resultCount.get() - 1);
                                 }
                                 if (labelCount.get() <= 0) {
                                     labelCount.set(0);
@@ -390,8 +392,8 @@ public class SearchBar {
                                 if (!getTextFieldText().isEmpty()) {
                                     labelCount.incrementAndGet();
 
-                                    if (labelCount.get() >= listResults.size()) {
-                                        labelCount.set(listResults.size() - 1);
+                                    if (labelCount.get() >= resultCount.get()) {
+                                        labelCount.set(resultCount.get() - 1);
                                     }
                                     if (labelCount.get() <= 0) {
                                         labelCount.set(0);
@@ -404,7 +406,7 @@ public class SearchBar {
                         if (runningMode.get() != PLUGIN_MODE) {
                             //enter被点击
                             searchBar.setVisible(false);
-                            if (!listResults.isEmpty()) {
+                            if (!(resultCount.get() == 0)) {
                                 String res = listResults.get(labelCount.get());
                                 if (runningMode.get() == NORMAL_MODE) {
                                     if (isOpenLastFolderPressed) {
@@ -468,7 +470,7 @@ public class SearchBar {
                 if (runningMode.get() == PLUGIN_MODE) {
                     if (key != 38 && key != 40) {
                         if (currentUsingPlugin != null) {
-                            if (!listResults.isEmpty()) {
+                            if (!(resultCount.get() == 0)) {
                                 currentUsingPlugin.keyPressed(arg0, listResults.get(labelCount.get()));
                             }
                         }
@@ -495,7 +497,7 @@ public class SearchBar {
                 if (runningMode.get() == PLUGIN_MODE) {
                     if (key != 38 && key != 40) {
                         if (currentUsingPlugin != null) {
-                            if (!listResults.isEmpty()) {
+                            if (!(resultCount.get() == 0)) {
                                 currentUsingPlugin.keyReleased(arg0, listResults.get(labelCount.get()));
                             }
                         }
@@ -509,7 +511,7 @@ public class SearchBar {
                     int key = arg0.getKeyCode();
                     if (key != 38 && key != 40) {
                         if (currentUsingPlugin != null) {
-                            if (!listResults.isEmpty()) {
+                            if (!(resultCount.get() == 0)) {
                                 currentUsingPlugin.keyTyped(arg0, listResults.get(labelCount.get()));
                             }
                         }
@@ -553,7 +555,7 @@ public class SearchBar {
                     } else if (labelPosition8 <= e.getY() && e.getY() < labelPosition9) {
                         mousePosition = 7;
                     }
-                    if (mousePosition < listResults.size()) {
+                    if (mousePosition < resultCount.get()) {
                         int ret;
                         if (position < mousePosition) {
                             ret = mousePosition - position;
@@ -817,7 +819,7 @@ public class SearchBar {
                 }
                 break;
             default:
-                if (listResults.size() > 8) {
+                if (resultCount.get() > 8) {
                     return true;
                 }
         }
@@ -855,8 +857,8 @@ public class SearchBar {
                         labelCount.incrementAndGet();
 
                         //System.out.println(labelCount);
-                        if (labelCount.get() >= listResults.size()) {
-                            labelCount.set(listResults.size() - 1);
+                        if (labelCount.get() >= resultCount.get()) {
+                            labelCount.set(resultCount.get() - 1);
                         }
                         if (labelCount.get() <= 0) {
                             labelCount.set(0);
@@ -873,9 +875,8 @@ public class SearchBar {
                 if (!getTextFieldText().isEmpty()) {
                     labelCount.getAndDecrement();
 
-                    //System.out.println(labelCount);
-                    if (labelCount.get() >= listResults.size()) {
-                        labelCount.set(listResults.size() - 1);
+                    if (labelCount.get() >= resultCount.get()) {
+                        labelCount.set(resultCount.get() - 1);
                     }
                     if (labelCount.get() <= 0) {
                         labelCount.set(0);
@@ -895,7 +896,7 @@ public class SearchBar {
             }
             switch (position) {
                 case 0:
-                    int size = listResults.size();
+                    int size = resultCount.get();
                     if (size == 2) {
                         label1.setBackground(backgroundColor);
                         label2.setBackground(labelColor);
@@ -941,7 +942,7 @@ public class SearchBar {
                     }
                     break;
                 case 1:
-                    size = listResults.size();
+                    size = resultCount.get();
                     if (size == 3) {
                         label1.setBackground(backgroundColor);
                         label2.setBackground(backgroundColor);
@@ -984,7 +985,7 @@ public class SearchBar {
                     }
                     break;
                 case 2:
-                    size = listResults.size();
+                    size = resultCount.get();
                     if (size == 4) {
                         label1.setBackground(backgroundColor);
                         label2.setBackground(backgroundColor);
@@ -1023,7 +1024,7 @@ public class SearchBar {
                     }
                     break;
                 case 3:
-                    size = listResults.size();
+                    size = resultCount.get();
                     if (size == 5) {
                         label1.setBackground(backgroundColor);
                         label2.setBackground(backgroundColor);
@@ -1057,7 +1058,7 @@ public class SearchBar {
                     }
                     break;
                 case 4:
-                    size = listResults.size();
+                    size = resultCount.get();
                     if (size == 6) {
                         label1.setBackground(backgroundColor);
                         label2.setBackground(backgroundColor);
@@ -1085,7 +1086,7 @@ public class SearchBar {
                     }
                     break;
                 case 5:
-                    size = listResults.size();
+                    size = resultCount.get();
                     if (size == 7) {
                         label1.setBackground(backgroundColor);
                         label2.setBackground(backgroundColor);
@@ -1320,7 +1321,7 @@ public class SearchBar {
                     }
                     break;
                 case 1:
-                    size = listResults.size();
+                    size = resultCount.get();
                     if (size == 2) {
                         label1.setBackground(labelColor);
                         label2.setBackground(backgroundColor);
@@ -1366,7 +1367,7 @@ public class SearchBar {
                     }
                     break;
                 case 2:
-                    size = listResults.size();
+                    size = resultCount.get();
                     if (size == 3) {
                         label1.setBackground(backgroundColor);
                         label2.setBackground(labelColor);
@@ -1409,7 +1410,7 @@ public class SearchBar {
                     }
                     break;
                 case 3:
-                    size = listResults.size();
+                    size = resultCount.get();
                     if (size == 4) {
                         label1.setBackground(backgroundColor);
                         label2.setBackground(backgroundColor);
@@ -1448,7 +1449,7 @@ public class SearchBar {
                     }
                     break;
                 case 4:
-                    size = listResults.size();
+                    size = resultCount.get();
                     if (size == 5) {
                         label1.setBackground(backgroundColor);
                         label2.setBackground(backgroundColor);
@@ -1482,7 +1483,7 @@ public class SearchBar {
                     }
                     break;
                 case 5:
-                    size = listResults.size();
+                    size = resultCount.get();
                     if (size == 6) {
                         label1.setBackground(backgroundColor);
                         label2.setBackground(backgroundColor);
@@ -1510,7 +1511,7 @@ public class SearchBar {
                     }
                     break;
                 case 6:
-                    size = listResults.size();
+                    size = resultCount.get();
                     if (size == 7) {
                         label1.setBackground(backgroundColor);
                         label2.setBackground(backgroundColor);
@@ -1553,6 +1554,7 @@ public class SearchBar {
             public void insertUpdate(DocumentEvent e) {
                 clearLabel();
                 listResults.clear();
+                listResultsCopy.clear();
                 tempResults.clear();
                 resultCount.set(0);
                 labelCount.set(0);
@@ -1587,6 +1589,7 @@ public class SearchBar {
             public void removeUpdate(DocumentEvent e) {
                 clearLabel();
                 listResults.clear();
+                listResultsCopy.clear();
                 tempResults.clear();
                 resultCount.set(0);
                 labelCount.set(0);
@@ -1667,9 +1670,10 @@ public class SearchBar {
                 while (SettingsFrame.isNotMainExit()) {
                     if (isCacheAndPrioritySearched) {
                         while ((record = tempResults.poll()) != null) {
-                            if (!listResults.contains(record)) {
+                            if (!listResultsCopy.contains(record)) {
                                 resultCount.incrementAndGet();
                                 listResults.add(record);
+                                listResultsCopy.add(record);
                             }
                         }
                     }
@@ -1820,7 +1824,7 @@ public class SearchBar {
                     isLabel6Chosen = false;
                     isLabel7Chosen = false;
                     isLabel8Chosen = false;
-                    if (labelCount.get() < listResults.size()) {//有结果可以显示
+                    if (labelCount.get() < resultCount.get()) {//有结果可以显示
                         int pos = getCurrentLabelPos();
                         switch (pos) {
                             case 0:
@@ -1858,6 +1862,8 @@ public class SearchBar {
                     if (text.isEmpty()) {
                         clearLabel();
                         listResults.clear();
+                        listResultsCopy.clear();
+                        resultCount.set(0);
                     }
 
                     if (!isUserPressed && isLabelNotEmpty(label1)) {
@@ -2302,6 +2308,7 @@ public class SearchBar {
                             clearLabel();
                         }
                         listResults.clear();
+                        listResultsCopy.clear();
                         tempResults.clear();
                         String text = getTextFieldText();
                         if (search.isUsable()) {
@@ -2342,7 +2349,9 @@ public class SearchBar {
                                 for (String i : SettingsFrame.getCmdSet()) {
                                     if (i.startsWith(text)) {
                                         resultCount.incrementAndGet();
-                                        listResults.add(SettingsFrame.getTranslation("Run command") + i);
+                                        String result = SettingsFrame.getTranslation("Run command") + i;
+                                        listResults.add(result);
+                                        listResultsCopy.add(result);
                                     }
                                     String[] cmdInfo = semicolon.split(i);
                                     if (cmdInfo[0].equals(text)) {
@@ -2379,6 +2388,7 @@ public class SearchBar {
                                             if ((result = currentUsingPlugin.pollFromResultQueue()) != null) {
                                                 if (isResultNotRepeat(result)) {
                                                     listResults.add(result);
+                                                    listResultsCopy.add(result);
                                                     resultCount.incrementAndGet();
                                                 }
                                             }
@@ -2593,14 +2603,13 @@ public class SearchBar {
     }
 
     private boolean isResultNotRepeat(String result) {
-        return !(tempResults.contains(result) || listResults.contains(result));
+        return !(tempResults.contains(result) || listResultsCopy.contains(result));
     }
 
     private boolean checkIsMatchedAndAddToList(String path, boolean isPutToTemp) {
         if (check(path)) {
             if (isPutToTemp) {
                 if (isExist(path)) {
-                    resultCount.incrementAndGet();
                     tempResults.add(path);
                 } else {
                     search.removeFileFromDatabase(path);
@@ -2610,6 +2619,7 @@ public class SearchBar {
                     if (isResultNotRepeat(path)) {
                         resultCount.incrementAndGet();
                         listResults.add(path);
+                        listResultsCopy.add(path);
                     }
                 } else {
                     search.removeFileFromDatabase(path);
@@ -2971,6 +2981,7 @@ public class SearchBar {
         resultCount.set(0);
         currentLabelSelectedPosition.set(0);
         listResults.clear();
+        listResultsCopy.clear();
         tempResults.clear();
         textField.setText(null);
         isUserPressed = false;
