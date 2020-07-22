@@ -1857,6 +1857,7 @@ public class SearchBar {
                     String text = getTextFieldText();
                     if (text.isEmpty()) {
                         clearLabel();
+                        listResults.clear();
                     }
 
                     if (!isUserPressed && isLabelNotEmpty(label1)) {
@@ -2630,7 +2631,7 @@ public class SearchBar {
                     isResultsExcessive = checkIsMatchedAndAddToList(each, true);
                 }
                 //用户重新输入了信息
-                if (isResultsExcessive || (startTime > time) && !searchBar.isVisible()) {
+                if (isResultsExcessive || (startTime > time)) {
                     break;
                 }
             }
@@ -2638,16 +2639,14 @@ public class SearchBar {
     }
 
     public void showSearchbar() {
-        if (!searchBar.isVisible()) {
-            searchBar.setVisible(true);
-            searchBar.requestFocusInWindow();
-            searchBar.setAlwaysOnTop(true);
-            textField.setCaretPosition(0);
-            textField.requestFocusInWindow();
-            isUsing = true;
-            startTime = System.currentTimeMillis();
-            visibleStartTime = System.currentTimeMillis();
-        }
+        searchBar.setVisible(true);
+        searchBar.requestFocusInWindow();
+        searchBar.setAlwaysOnTop(true);
+        textField.setCaretPosition(0);
+        textField.requestFocusInWindow();
+        isUsing = true;
+        startTime = System.currentTimeMillis();
+        visibleStartTime = System.currentTimeMillis();
     }
 
     private void showResultOnLabel(String path, JLabel label, boolean isChosen) {
