@@ -4,6 +4,7 @@ import FileEngine.download.DownloadManager;
 import FileEngine.download.DownloadUtil;
 import FileEngine.pluginSystem.PluginUtil;
 import FileEngine.threadPool.CachedThreadPool;
+import FileEngine.translate.TranslateUtil;
 import com.alibaba.fastjson.JSONObject;
 
 import javax.imageio.ImageIO;
@@ -16,14 +17,10 @@ import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.URI;
-import java.net.URL;
-import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
-
-import static FileEngine.frames.SettingsFrame.getTranslation;
 
 public class PluginMarket {
     private static class PluginMarketBuilder {
@@ -90,15 +87,16 @@ public class PluginMarket {
         //设置进度显示线程
         double progress;
         String pluginName;
+        TranslateUtil translateUtil = TranslateUtil.getInstance();
         if (DownloadUtil.getInstance().hasTask(fileName)) {
             progress = DownloadUtil.getInstance().getDownloadProgress(fileName);
-            label.setText(getTranslation("Downloading:") + progress * 100 + "%");
+            label.setText(translateUtil.getTranslation("Downloading:") + progress * 100 + "%");
 
             int downloadingStatus = DownloadUtil.getInstance().getDownloadStatus(fileName);
             if (downloadingStatus == DownloadManager.DOWNLOAD_DONE) {
                 //下载完成，禁用按钮
-                label.setText(getTranslation("Download Done"));
-                label.setText(getTranslation("Downloaded"));
+                label.setText(translateUtil.getTranslation("Download Done"));
+                label.setText(translateUtil.getTranslation("Downloaded"));
                 label.setEnabled(false);
                 File updatePluginSign = new File("user/update");
                 if (!updatePluginSign.exists()) {
@@ -109,16 +107,16 @@ public class PluginMarket {
                 }
             } else if (downloadingStatus == DownloadManager.DOWNLOAD_ERROR) {
                 //下载错误，重置button
-                label.setText(getTranslation("Download failed"));
-                button.setText(getTranslation(originButtonString));
+                label.setText(translateUtil.getTranslation("Download failed"));
+                button.setText(translateUtil.getTranslation(originButtonString));
                 button.setEnabled(true);
             } else if (downloadingStatus == DownloadManager.DOWNLOAD_DOWNLOADING) {
                 //正在下载
-                button.setText(getTranslation("Cancel"));
+                button.setText(translateUtil.getTranslation("Cancel"));
             } else if (downloadingStatus == DownloadManager.DOWNLOAD_INTERRUPTED) {
                 //用户自行中断
                 label.setText("");
-                button.setText(getTranslation(originButtonString));
+                button.setText(translateUtil.getTranslation(originButtonString));
                 button.setEnabled(true);
             }
         } else {
@@ -126,11 +124,11 @@ public class PluginMarket {
             pluginName = fileName.substring(0, index);
             if (PluginUtil.getIdentifierByName(pluginName) != null) {
                 label.setText("");
-                button.setText(getTranslation("Installed"));
+                button.setText(translateUtil.getTranslation("Installed"));
                 button.setEnabled(false);
             } else {
                 label.setText("");
-                button.setText(getTranslation(originButtonString));
+                button.setText(translateUtil.getTranslation(originButtonString));
                 button.setEnabled(true);
             }
         }
@@ -146,7 +144,7 @@ public class PluginMarket {
         labelPluginName.setText("");
         labelVersion.setText("");
         textAreaPluginDescription.setText("");
-        buttonInstall.setText(getTranslation("Install"));
+        buttonInstall.setText(TranslateUtil.getInstance().getTranslation("Install"));
         panel.setSize(800, 600);
         frame.setSize(800, 600);
         frame.setContentPane(PluginMarketBuilder.INSTANCE.panel);
@@ -171,7 +169,7 @@ public class PluginMarket {
                 if (info != null) {
                     String downloadUrl = info.getString("url");
                     DownloadUtil.getInstance().downLoadFromUrl(downloadUrl, pluginFullName, "tmp/pluginsUpdate");
-                    buttonInstall.setText(getTranslation("Cancel"));
+                    buttonInstall.setText(TranslateUtil.getInstance().getTranslation("Cancel"));
                 }
             } else {
                 //取消下载
@@ -192,7 +190,7 @@ public class PluginMarket {
                     }
                     //复位button
                     buttonInstall.setEnabled(true);
-                    buttonInstall.setText(getTranslation("Install"));
+                    buttonInstall.setText(TranslateUtil.getInstance().getTranslation("Install"));
                 });
             }
         });
@@ -264,7 +262,7 @@ public class PluginMarket {
                     }
                     description = info.getString("description");
                     author = info.getString("author");
-                    labelVersion.setText(getTranslation("Version") + ":" + version);
+                    labelVersion.setText(TranslateUtil.getInstance().getTranslation("Version") + ":" + version);
                     labelIcon.setIcon(icon);
                     labelOfficialSite.setText("<html><a href='" + officialSite + "'><font size=\"4\">" + pluginName + "</font></a></html>");
                     labelPluginName.setText("<html><body><font size=\"+1\">" + pluginName + "</body></html>");
@@ -304,43 +302,65 @@ public class PluginMarket {
         String infoUrl = NAME_PLUGIN_INFO_URL_MAP.get(pluginName);
         if (infoUrl != null) {
             try {
-                return getPluginInfo(infoUrl);
-            } catch (IOException e) {
+                return getPluginInfo(infoUrl, pluginName + ".json");
+            } catch (IOException | InterruptedException e) {
                 e.printStackTrace();
             }
         }
         return null;
     }
 
-    private static JSONObject getPluginInfo(String url) throws IOException {
-        StringBuilder jsonUpdate = new StringBuilder();
-        URL updateServer = new URL(url);
-        URLConnection uc = updateServer.openConnection();
-        uc.setConnectTimeout(3 * 1000);
-        //防止屏蔽程序抓取而返回403错误
-        uc.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.116 Safari/537.36 Edg/80.0.361.57");
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(uc.getInputStream(), StandardCharsets.UTF_8))) {
-            String eachLine;
-            while ((eachLine = br.readLine()) != null) {
-                jsonUpdate.append(eachLine);
+    private static JSONObject getPluginInfo(String url, String saveFileName) throws IOException, InterruptedException {
+        DownloadUtil downloadUtil = DownloadUtil.getInstance();
+        int downloadStatus = downloadUtil.getDownloadStatus(saveFileName);
+        if (downloadStatus != DownloadManager.DOWNLOAD_DOWNLOADING) {
+            downloadUtil.downLoadFromUrl(url,
+                    saveFileName, "tmp");
+            int count = 0;
+            boolean isError = false;
+            //wait for task
+            while (downloadUtil.getDownloadStatus(saveFileName) != DownloadManager.DOWNLOAD_DONE) {
+                count++;
+                if (count >= 3) {
+                    isError = true;
+                    break;
+                }
+                Thread.sleep(1000);
             }
+            if (isError) {
+                return null;
+            }
+            String eachLine;
+            StringBuilder strBuilder = new StringBuilder();
+            try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream("tmp/" + saveFileName), StandardCharsets.UTF_8))) {
+                while ((eachLine = br.readLine()) != null) {
+                    strBuilder.append(eachLine);
+                }
+            }
+            return JSONObject.parseObject(strBuilder.toString());
         }
-        return JSONObject.parseObject(jsonUpdate.toString());
+        return null;
     }
 
     private void initPluginList() {
         try {
-            JSONObject allPlugins = getPluginInfo("https://raw.githubusercontent.com/XUANXUQAQ/File-Engine-Version/master/plugins.json");
-            Set<String> pluginSet = allPlugins.keySet();
-            for (String each : pluginSet) {
-                NAME_PLUGIN_INFO_URL_MAP.put(each, allPlugins.getString(each));
-            }
-            if (NAME_PLUGIN_INFO_URL_MAP.isEmpty()) {
+            JSONObject allPlugins = getPluginInfo(
+                    "https://raw.githubusercontent.com/XUANXUQAQ/File-Engine-Version/master/plugins.json",
+                    "allPluginsList.json");
+            if (allPlugins != null) {
+                Set<String> pluginSet = allPlugins.keySet();
+                for (String each : pluginSet) {
+                    NAME_PLUGIN_INFO_URL_MAP.put(each, allPlugins.getString(each));
+                }
+                if (NAME_PLUGIN_INFO_URL_MAP.isEmpty()) {
+                    buttonInstall.setEnabled(false);
+                }
+                listPlugins.setListData(pluginSet.toArray());
+            } else {
+                buttonInstall.setVisible(false);
                 buttonInstall.setEnabled(false);
             }
-            buttonInstall.setVisible(false);
-            listPlugins.setListData(pluginSet.toArray());
-        } catch (IOException e) {
+        } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
     }
