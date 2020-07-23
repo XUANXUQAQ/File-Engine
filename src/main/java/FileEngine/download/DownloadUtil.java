@@ -40,7 +40,7 @@ public class DownloadUtil {
      * @param savePath 保存位置
      */
     public void downLoadFromUrl(String urlStr, String fileName, String savePath) {
-        DownloadManager downloadManager = new DownloadManager(urlStr, fileName, savePath);
+        DownloadManager downloadManager = new DownloadManager(urlStr, fileName, savePath, SettingsFrame.getProxy());
         CachedThreadPool.getInstance().executeTask(downloadManager::download);
         DOWNLOAD_MAP.put(fileName, downloadManager);
     }
@@ -67,7 +67,7 @@ public class DownloadUtil {
         }
     }
 
-    public boolean hasTask(String fileName) {
+    private boolean hasTask(String fileName) {
         if (isFileNameNotContainsSuffix(fileName)) {
             System.err.println("Warning:" + fileName + " doesn't have suffix");
         }
@@ -75,13 +75,10 @@ public class DownloadUtil {
     }
 
     public int getDownloadStatus(String fileName) {
-        if (isFileNameNotContainsSuffix(fileName)) {
-            System.err.println("Warning:" + fileName + " doesn't have suffix");
-        }
         if (hasTask(fileName)) {
             return DOWNLOAD_MAP.get(fileName).getDownloadStatus();
         }
-        return DownloadManager.DOWNLOAD_ERROR;
+        return DownloadManager.DOWNLOAD_NO_TASK;
     }
 
     private void deleteTask(String fileName) {

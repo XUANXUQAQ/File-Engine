@@ -7,8 +7,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
-import java.net.HttpURLConnection;
-import java.net.URL;
+import java.net.*;
 
 public class DownloadManager {
     private final String url;
@@ -17,17 +16,21 @@ public class DownloadManager {
     private volatile double progress = 0.0;
     private volatile boolean isUserInterrupted = false;
     private volatile int downloadStatus;
+    private Proxy proxy = null;
+    private Authenticator authenticator = null;
 
     public static final int DOWNLOAD_DONE = 0;
     public static final int DOWNLOAD_ERROR = 1;
     public static final int DOWNLOAD_DOWNLOADING = 2;
     public static final int DOWNLOAD_INTERRUPTED = 3;
+    public static final int DOWNLOAD_NO_TASK = 4;
 
-    public DownloadManager(String _url, String _fileName, String _savePath) {
+    public DownloadManager(String _url, String _fileName, String _savePath, SettingsFrame.ProxyInfo proxyInfo) {
         this.url = _url;
         this.fileName = _fileName;
         this.localPath = _savePath;
-        downloadStatus = DOWNLOAD_DOWNLOADING;
+        this.downloadStatus = DOWNLOAD_DOWNLOADING;
+        setProxy(proxyInfo.type, proxyInfo.address, proxyInfo.port, proxyInfo.userName, proxyInfo.password);
     }
 
     public String getFileName() {
@@ -38,7 +41,14 @@ public class DownloadManager {
         try {
             System.setProperty("http.keepAlive", "false");
             URL urlAddress = new URL(url);
-            HttpURLConnection con = (HttpURLConnection) urlAddress.openConnection();
+            HttpURLConnection con;
+            if (proxy.equals(Proxy.NO_PROXY)) {
+                con = (HttpURLConnection) urlAddress.openConnection();
+                Authenticator.setDefault(null);
+            } else {
+                con = (HttpURLConnection) urlAddress.openConnection(proxy);
+                Authenticator.setDefault(authenticator);
+            }
             //设置超时为3秒
             con.setConnectTimeout(3000);
             //防止屏蔽程序抓取而返回403错误
@@ -62,7 +72,7 @@ public class DownloadManager {
                 }
                 fos.write(buffer, 0, len);
                 currentProgress += len;
-                progress = div(currentProgress, fileLength, 2);
+                progress = div(currentProgress, fileLength);
             }
             fos.close();
             in.close();
@@ -83,14 +93,10 @@ public class DownloadManager {
         }
     }
 
-    private double div(double v1, double v2, int scale) {
-        if (scale < 0) {
-            throw new IllegalArgumentException(
-                    "The scale must be a positive integer or zero");
-        }
+    private double div(double v1, double v2) {
         BigDecimal b1 = new BigDecimal(Double.toString(v1));
         BigDecimal b2 = new BigDecimal(Double.toString(v2));
-        return b1.divide(b2, scale, BigDecimal.ROUND_HALF_UP).doubleValue();
+        return b1.divide(b2, 2, BigDecimal.ROUND_HALF_UP).doubleValue();
     }
 
     public void setInterrupt() {
@@ -104,4 +110,15 @@ public class DownloadManager {
     public int getDownloadStatus() {
         return downloadStatus;
     }
+
+    private void setProxy(Proxy.Type proxyType, String address, int port, String userName, String password) {
+        SocketAddress sa = new InetSocketAddress(address, port);
+        authenticator = new BasicAuthenticator(userName, password);
+        if (proxyType == Proxy.Type.DIRECT) {
+            proxy = Proxy.NO_PROXY;
+        } else {
+            proxy = new Proxy(proxyType, sa);
+        }
+    }
+
 }

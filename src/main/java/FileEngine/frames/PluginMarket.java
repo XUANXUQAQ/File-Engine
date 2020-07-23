@@ -78,7 +78,6 @@ public class PluginMarket {
                     Thread.sleep(500);
                 }
             } catch (InterruptedException ignored) {
-
             }
         });
     }
@@ -88,17 +87,17 @@ public class PluginMarket {
         double progress;
         String pluginName;
         TranslateUtil translateUtil = TranslateUtil.getInstance();
-        if (DownloadUtil.getInstance().hasTask(fileName)) {
+        int downloadingStatus = DownloadUtil.getInstance().getDownloadStatus(fileName);
+        if (downloadingStatus != DownloadManager.DOWNLOAD_NO_TASK) {
             progress = DownloadUtil.getInstance().getDownloadProgress(fileName);
-            label.setText(translateUtil.getTranslation("Downloading:") + progress * 100 + "%");
+            label.setText(translateUtil.getTranslation("Downloading:") + (int) (progress * 100) + "%");
 
-            int downloadingStatus = DownloadUtil.getInstance().getDownloadStatus(fileName);
             if (downloadingStatus == DownloadManager.DOWNLOAD_DONE) {
                 //下载完成，禁用按钮
                 label.setText(translateUtil.getTranslation("Download Done"));
                 label.setText(translateUtil.getTranslation("Downloaded"));
-                label.setEnabled(false);
-                File updatePluginSign = new File("user/update");
+                button.setEnabled(false);
+                File updatePluginSign = new File("user/updatePlugin");
                 if (!updatePluginSign.exists()) {
                     try {
                         updatePluginSign.createNewFile();
@@ -163,7 +162,7 @@ public class PluginMarket {
         buttonInstall.addActionListener(e -> {
             String pluginName = (String) listPlugins.getSelectedValue();
             String pluginFullName = pluginName + ".jar";
-            if (!DownloadUtil.getInstance().hasTask(pluginFullName)) {
+            if (DownloadUtil.getInstance().getDownloadStatus(pluginFullName) == DownloadManager.DOWNLOAD_NO_TASK) {
                 //没有下载过，开始下载
                 JSONObject info = getPluginDetailInfo(pluginName);
                 if (info != null) {
@@ -269,6 +268,7 @@ public class PluginMarket {
                     textAreaPluginDescription.setText(description);
                     labelAuthor.setText(author);
                     buttonInstall.setVisible(true);
+                    buttonInstall.setEnabled(true);
                 }
             }
         });
@@ -314,22 +314,26 @@ public class PluginMarket {
         DownloadUtil downloadUtil = DownloadUtil.getInstance();
         int downloadStatus = downloadUtil.getDownloadStatus(saveFileName);
         if (downloadStatus != DownloadManager.DOWNLOAD_DOWNLOADING) {
-            downloadUtil.downLoadFromUrl(url,
-                    saveFileName, "tmp");
-            int count = 0;
-            boolean isError = false;
-            //wait for task
-            while (downloadUtil.getDownloadStatus(saveFileName) != DownloadManager.DOWNLOAD_DONE) {
-                count++;
-                if (count >= 3) {
-                    isError = true;
-                    break;
+            //判断是否已下载完成
+            if (downloadStatus != DownloadManager.DOWNLOAD_DONE) {
+                downloadUtil.downLoadFromUrl(url,
+                        saveFileName, "tmp");
+                int count = 0;
+                boolean isError = false;
+                //wait for task
+                while (downloadUtil.getDownloadStatus(saveFileName) != DownloadManager.DOWNLOAD_DONE) {
+                    count++;
+                    if (count >= 3) {
+                        isError = true;
+                        break;
+                    }
+                    Thread.sleep(1000);
                 }
-                Thread.sleep(1000);
+                if (isError) {
+                    return null;
+                }
             }
-            if (isError) {
-                return null;
-            }
+            //已下载完，返回json
             String eachLine;
             StringBuilder strBuilder = new StringBuilder();
             try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream("tmp/" + saveFileName), StandardCharsets.UTF_8))) {
@@ -352,14 +356,10 @@ public class PluginMarket {
                 for (String each : pluginSet) {
                     NAME_PLUGIN_INFO_URL_MAP.put(each, allPlugins.getString(each));
                 }
-                if (NAME_PLUGIN_INFO_URL_MAP.isEmpty()) {
-                    buttonInstall.setEnabled(false);
-                }
                 listPlugins.setListData(pluginSet.toArray());
-            } else {
-                buttonInstall.setVisible(false);
-                buttonInstall.setEnabled(false);
             }
+            buttonInstall.setEnabled(false);
+            buttonInstall.setVisible(false);
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
