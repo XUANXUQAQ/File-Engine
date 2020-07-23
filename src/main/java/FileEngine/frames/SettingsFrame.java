@@ -18,6 +18,7 @@ import javax.swing.filechooser.FileSystemView;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
+import java.net.Proxy;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.sql.Statement;
@@ -41,12 +42,17 @@ public class SettingsFrame {
     private static volatile int copyPathKeyCode;
     private static volatile float transparency;
     private static volatile int tmp_copyPathKeyCode;
+    private static volatile String proxyAddress;
+    private static volatile int proxyPort;
+    private static volatile String proxyUserName;
+    private static volatile String proxyPassword;
+    private static volatile int proxyType;
     private static File tmp;
     private static File settings;
     private static HashSet<String> cmdSet;
     private static volatile int tmp_openLastFolderKeyCode;
     private static volatile int tmp_runAsAdminKeyCode;
-    private static CheckHotKey HotKeyListener;
+    private static CheckHotKey hotKeyListener;
     private static volatile int labelColor;
     private static volatile int defaultBackgroundColor;
     private static volatile int fontColorWithCoverage;
@@ -163,9 +169,53 @@ public class SettingsFrame {
     private JLabel labelProgress;
     private JButton buttonVacuum;
     private JLabel labelVacuumTip;
+    private JPanel tabProxy;
+    private JRadioButton radioButtonNoProxy;
+    private JRadioButton radioButtonUseProxy;
+    private JTextField textFieldAddress;
+    private JTextField textFieldPort;
+    private JTextField textFieldUserName;
+    private JTextField textFieldPassword;
+    private JLabel labelAddress;
+    private JLabel labelPort;
+    private JLabel labelUserName;
+    private JLabel labelPassword;
+    private JLabel labelPlaceHolder7;
+    private JRadioButton radioButtonProxyTypeHttp;
+    private JRadioButton radioButtonProxyTypeSocks5;
+    private JLabel labelProxyTip;
+    private JLabel labelPlaceHolder6;
+    private JLabel labelPlaceHolder8;
+    private JSeparator proxySeperater;
 
     private static class SettingsFrameBuilder {
         private static final SettingsFrame instance = new SettingsFrame();
+    }
+
+    private static final int PROXY_HTTP = 0;
+    private static final int PROXY_SOCKS = 1;
+    private static final int PROXY_DIRECT = 2;
+
+    public static class ProxyInfo {
+        public final String address;
+        public final int port;
+        public final String userName;
+        public final String password;
+        public final Proxy.Type type;
+
+        protected ProxyInfo(String proxyAddress, int proxyPort, String proxyUserName, String proxyPassword, int proxyType) {
+            this.address = proxyAddress;
+            this.port = proxyPort;
+            this.userName = proxyUserName;
+            this.password = proxyPassword;
+            if (PROXY_HTTP == proxyType) {
+                this.type = Proxy.Type.HTTP;
+            } else if (PROXY_SOCKS == proxyType) {
+                this.type = Proxy.Type.SOCKS;
+            } else {
+                this.type = Proxy.Type.DIRECT;
+            }
+        }
     }
 
     public static SettingsFrame getInstance() {
@@ -246,6 +296,10 @@ public class SettingsFrame {
 
     public static String getName() {
         return "File-Engine-x64.exe";
+    }
+
+    public static ProxyInfo getProxy() {
+        return new ProxyInfo(proxyAddress, proxyPort, proxyUserName, proxyPassword, proxyType);
     }
 
     private void addCheckboxListener() {
@@ -514,11 +568,8 @@ public class SettingsFrame {
 
     private void addCheckForUpdateButtonListener() {
         buttonCheckUpdate.addActionListener(e -> {
-            boolean isDownloading = false;
-            try {
-                isDownloading = DownloadUtil.getInstance().hasTask(getName());
-            } catch (Exception ignored) {
-            }
+            boolean isDownloading = DownloadUtil.getInstance().getDownloadStatus(getName()) != DownloadManager.DOWNLOAD_NO_TASK;
+
             //检查是否已开始下载
             if (!isDownloading) {
                 JSONObject updateInfo;
@@ -538,7 +589,10 @@ public class SettingsFrame {
                 if (Double.parseDouble(latestVersion) > Double.parseDouble(version) || isDebug()) {
                     String description = updateInfo.getString("description");
                     int result = JOptionPane.showConfirmDialog(frame,
-                            TranslateUtil.getInstance().getTranslation("New Version available") + latestVersion + "," + TranslateUtil.getInstance().getTranslation("Whether to update") + "\n" + TranslateUtil.getInstance().getTranslation("update content") + "\n" + description);
+                            TranslateUtil.getInstance().getTranslation(
+                                    "New Version available") + latestVersion + "," +
+                                    TranslateUtil.getInstance().getTranslation("Whether to update") + "\n" +
+                                    TranslateUtil.getInstance().getTranslation("update content") + "\n" + description);
                     if (result == 0) {
                         //开始更新,下载更新文件到tmp
                         String urlChoose;
@@ -819,10 +873,30 @@ public class SettingsFrame {
                         URI uri = new URI(url);
                         desktop.browse(uri);
                     } catch (Exception ignored) {
-
                     }
                 }
             }
+        });
+    }
+
+    private void addButtonProxyListener() {
+        radioButtonNoProxy.addActionListener(e -> {
+            radioButtonProxyTypeHttp.setEnabled(false);
+            radioButtonProxyTypeSocks5.setEnabled(false);
+            textFieldAddress.setEnabled(false);
+            textFieldPort.setEnabled(false);
+            textFieldUserName.setEnabled(false);
+            textFieldPassword.setEnabled(false);
+        });
+
+        radioButtonUseProxy.addActionListener(e -> {
+            radioButtonProxyTypeHttp.setEnabled(true);
+            radioButtonProxyTypeSocks5.setEnabled(true);
+            textFieldAddress.setEnabled(true);
+            textFieldPort.setEnabled(true);
+            textFieldUserName.setEnabled(true);
+            textFieldPassword.setEnabled(true);
+            radioButtonProxyTypeHttp.setSelected(true);
         });
     }
 
@@ -875,11 +949,8 @@ public class SettingsFrame {
                 JOptionPane.showMessageDialog(frame, TranslateUtil.getInstance().getTranslation("The current Version is the latest."));
             } else {
                 //检查是否已经开始下载
-                boolean isPluginUpdating = false;
-                try {
-                    isPluginUpdating = DownloadUtil.getInstance().hasTask(pluginFullName);
-                } catch (Exception ignored) {
-                }
+                boolean isPluginUpdating = DownloadUtil.getInstance().getDownloadStatus(pluginFullName) != DownloadManager.DOWNLOAD_NO_TASK;
+
                 if (!isPluginUpdating) {
                     int ret = JOptionPane.showConfirmDialog(frame, TranslateUtil.getInstance().getTranslation("New version available, do you want to update?"));
                     if (ret == 0) {
@@ -915,7 +986,7 @@ public class SettingsFrame {
         });
     }
 
-    private void initAll() {
+    private void initGUI() {
         //设置窗口显示
         labelAboutGithub.setText("<html><a href='https://github.com/XUANXUQAQ/File-Engine'><font size=\"4\">File-Engine</font></a></html>");
         labelWebLookAndFeel.setText("1.WebLookAndFeel");
@@ -986,6 +1057,38 @@ public class SettingsFrame {
         if (plugins.length == 0) {
             PluginSettingsPanel.setVisible(false);
         }
+        if (proxyType == PROXY_DIRECT) {
+            radioButtonNoProxy.setSelected(true);
+            radioButtonUseProxy.setSelected(false);
+            radioButtonProxyTypeHttp.setEnabled(false);
+            radioButtonProxyTypeSocks5.setEnabled(false);
+            textFieldAddress.setEnabled(false);
+            textFieldPort.setEnabled(false);
+            textFieldUserName.setEnabled(false);
+            textFieldPassword.setEnabled(false);
+        } else {
+            radioButtonUseProxy.setSelected(true);
+            radioButtonNoProxy.setSelected(false);
+            radioButtonProxyTypeHttp.setEnabled(true);
+            radioButtonProxyTypeSocks5.setEnabled(true);
+            textFieldAddress.setEnabled(true);
+            textFieldPort.setEnabled(true);
+            textFieldUserName.setEnabled(true);
+            textFieldPassword.setEnabled(true);
+            selectProxyType();
+        }
+        textFieldAddress.setText(proxyAddress);
+        textFieldPort.setText(String.valueOf(proxyPort));
+        textFieldUserName.setText(proxyUserName);
+        textFieldPassword.setText(proxyPassword);
+    }
+
+    private void selectProxyType() {
+        if (proxyType == PROXY_HTTP) {
+            radioButtonProxyTypeHttp.setSelected(true);
+        } else if (proxyType == PROXY_SOCKS) {
+            radioButtonProxyTypeSocks5.setSelected(true);
+        }
     }
 
     private SettingsFrame() {
@@ -994,9 +1097,17 @@ public class SettingsFrame {
         settings = new File("user/settings.json");
         cmdSet = new HashSet<>();
         frameIcon = new ImageIcon(SettingsFrame.class.getResource("/icons/frame.png"));
+        ButtonGroup proxyButtonGroup = new ButtonGroup();
+        proxyButtonGroup.add(radioButtonNoProxy);
+        proxyButtonGroup.add(radioButtonUseProxy);
+
+        ButtonGroup proxyTypeButtonGroup = new ButtonGroup();
+        proxyTypeButtonGroup.add(radioButtonProxyTypeHttp);
+        proxyTypeButtonGroup.add(radioButtonProxyTypeSocks5);
+
         readAllSettings();
 
-        HotKeyListener = CheckHotKey.getInstance();
+        hotKeyListener = CheckHotKey.getInstance();
         searchBar = SearchBar.getInstance();
 
         setAllSettings();
@@ -1045,7 +1156,9 @@ public class SettingsFrame {
 
         addButtonVacuumListener();
 
-        initAll();
+        addButtonProxyListener();
+
+        initGUI();
 
         initThreadPool();
     }
@@ -1053,9 +1166,9 @@ public class SettingsFrame {
     private void checkDownloadTask(JLabel label, JButton button, String fileName, String originButtonString) throws InterruptedException {
         //设置进度显示线程
         double progress;
-        if (DownloadUtil.getInstance().hasTask(fileName)) {
+        if (DownloadUtil.getInstance().getDownloadStatus(fileName) != DownloadManager.DOWNLOAD_NO_TASK) {
             progress = DownloadUtil.getInstance().getDownloadProgress(fileName);
-            label.setText(TranslateUtil.getInstance().getTranslation("Downloading:") + progress * 100 + "%");
+            label.setText(TranslateUtil.getInstance().getTranslation("Downloading:") + (int) (progress * 100) + "%");
 
             int downloadingStatus = DownloadUtil.getInstance().getDownloadStatus(fileName);
             if (downloadingStatus == DownloadManager.DOWNLOAD_DONE) {
@@ -1114,7 +1227,6 @@ public class SettingsFrame {
                     checkDownloadTask(labelProgress, buttonUpdatePlugin, fileName + ".jar", originString);
                 }
             } catch (InterruptedException ignored) {
-
             }
         });
     }
@@ -1123,12 +1235,13 @@ public class SettingsFrame {
         tabbedPane.setTitleAt(0, TranslateUtil.getInstance().getTranslation("General"));
         tabbedPane.setTitleAt(1, TranslateUtil.getInstance().getTranslation("Search settings"));
         tabbedPane.setTitleAt(2, TranslateUtil.getInstance().getTranslation("Search bar settings"));
-        tabbedPane.setTitleAt(3, TranslateUtil.getInstance().getTranslation("Plugins"));
-        tabbedPane.setTitleAt(4, TranslateUtil.getInstance().getTranslation("Hotkey settings"));
-        tabbedPane.setTitleAt(5, TranslateUtil.getInstance().getTranslation("Language settings"));
-        tabbedPane.setTitleAt(6, TranslateUtil.getInstance().getTranslation("My commands"));
-        tabbedPane.setTitleAt(7, TranslateUtil.getInstance().getTranslation("Color settings"));
-        tabbedPane.setTitleAt(8, TranslateUtil.getInstance().getTranslation("About"));
+        tabbedPane.setTitleAt(3, TranslateUtil.getInstance().getTranslation("Proxy settings"));
+        tabbedPane.setTitleAt(4, TranslateUtil.getInstance().getTranslation("Plugins"));
+        tabbedPane.setTitleAt(5, TranslateUtil.getInstance().getTranslation("Hotkey settings"));
+        tabbedPane.setTitleAt(6, TranslateUtil.getInstance().getTranslation("Language settings"));
+        tabbedPane.setTitleAt(7, TranslateUtil.getInstance().getTranslation("My commands"));
+        tabbedPane.setTitleAt(8, TranslateUtil.getInstance().getTranslation("Color settings"));
+        tabbedPane.setTitleAt(9, TranslateUtil.getInstance().getTranslation("About"));
         checkBoxAddToStartup.setText(TranslateUtil.getInstance().getTranslation("Add to startup"));
         buttonSaveAndRemoveDesktop.setText(TranslateUtil.getInstance().getTranslation("Backup and remove all desktop files"));
         labelMaxCacheNum.setText(TranslateUtil.getInstance().getTranslation("Set the maximum number of caches:"));
@@ -1169,6 +1282,13 @@ public class SettingsFrame {
         buttonUpdatePlugin.setText(TranslateUtil.getInstance().getTranslation("Check for update"));
         buttonPluginMarket.setText(TranslateUtil.getInstance().getTranslation("Plugin Market"));
         labelVacuumTip.setText(TranslateUtil.getInstance().getTranslation("Click to organize the database and reduce the size of the database, but it will consume a lot of time."));
+        radioButtonNoProxy.setText(TranslateUtil.getInstance().getTranslation("No proxy"));
+        radioButtonUseProxy.setText(TranslateUtil.getInstance().getTranslation("Configure proxy"));
+        labelAddress.setText(TranslateUtil.getInstance().getTranslation("Address"));
+        labelPort.setText(TranslateUtil.getInstance().getTranslation("Port"));
+        labelUserName.setText(TranslateUtil.getInstance().getTranslation("User name"));
+        labelPassword.setText(TranslateUtil.getInstance().getTranslation("Password"));
+        labelProxyTip.setText(TranslateUtil.getInstance().getTranslation("If you need a proxy to access the Internet, You can add a proxy here."));
     }
 
     public static void setMainExit(boolean b) {
@@ -1362,6 +1482,31 @@ public class SettingsFrame {
             } else {
                 TranslateUtil.getInstance().setLanguage(TranslateUtil.getInstance().getDefaultLang());
             }
+            if (settingsInJson.containsKey("proxyAddress")) {
+                proxyAddress = settingsInJson.getString("proxyAddress");
+            } else {
+                proxyAddress = "";
+            }
+            if (settingsInJson.containsKey("proxyPort")) {
+                proxyPort = settingsInJson.getInteger("proxyPort");
+            } else {
+                proxyPort = 0;
+            }
+            if (settingsInJson.containsKey("proxyUserName")) {
+                proxyUserName = settingsInJson.getString("proxyUserName");
+            } else {
+                proxyUserName = "";
+            }
+            if (settingsInJson.containsKey("proxyPassword")) {
+                proxyPassword = settingsInJson.getString("proxyPassword");
+            } else {
+                proxyPassword = "";
+            }
+            if (settingsInJson.containsKey("proxyType")) {
+                proxyType = settingsInJson.getInteger("proxyType");
+            } else {
+                proxyType = PROXY_DIRECT;
+            }
         } catch (NullPointerException | IOException e) {
             isStartup = false;
             cacheNumLimit = 1000;
@@ -1385,11 +1530,16 @@ public class SettingsFrame {
             tmp_openLastFolderKeyCode = openLastFolderKeyCode;
             tmp_runAsAdminKeyCode = runAsAdminKeyCode;
             tmp_copyPathKeyCode = copyPathKeyCode;
+            proxyAddress = "";
+            proxyPort = 0;
+            proxyUserName = "";
+            proxyPassword = "";
+            proxyType = PROXY_DIRECT;
         }
     }
 
     private void setAllSettings() {
-        HotKeyListener.registerHotkey(hotkey);
+        hotKeyListener.registerHotkey(hotkey);
         searchBar.setTransparency(transparency);
         searchBar.setDefaultBackgroundColor(defaultBackgroundColor);
         searchBar.setLabelColor(labelColor);
@@ -1420,6 +1570,11 @@ public class SettingsFrame {
         allSettings.put("fontColorWithCoverage", fontColorWithCoverage);
         allSettings.put("fontColor", fontColor);
         allSettings.put("language", TranslateUtil.getInstance().getLanguage());
+        allSettings.put("proxyAddress", proxyAddress);
+        allSettings.put("proxyPort", proxyPort);
+        allSettings.put("proxyUserName", proxyUserName);
+        allSettings.put("proxyPassword", proxyPassword);
+        allSettings.put("proxyType", proxyType);
         try (BufferedWriter buffW = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(settings), StandardCharsets.UTF_8))) {
             String format = JSON.toJSONString(allSettings, SerializerFeature.PrettyFormat, SerializerFeature.WriteMapNullValue, SerializerFeature.WriteDateUseDateFormat);
             buffW.write(format);
@@ -1436,7 +1591,6 @@ public class SettingsFrame {
                 cmdSet.add(each);
             }
         } catch (IOException ignored) {
-
         }
     }
 
@@ -1450,6 +1604,7 @@ public class SettingsFrame {
     }
 
     public void showWindow() {
+        initGUI();
         frame.setResizable(true);
         int width = Integer.parseInt(TranslateUtil.getInstance().getFrameWidth());
         int height = Integer.parseInt(TranslateUtil.getInstance().getFrameHeight());
@@ -1468,6 +1623,7 @@ public class SettingsFrame {
 
 
     private void saveChanges() {
+        StringBuilder strBuilder = new StringBuilder();
         JSONObject allSettings = new JSONObject();
         int updateTimeLimitTemp;
         int cacheNumLimitTemp;
@@ -1481,18 +1637,16 @@ public class SettingsFrame {
             updateTimeLimitTemp = -1; // 输入不正确
         }
         if (updateTimeLimitTemp > 3600 || updateTimeLimitTemp <= 0) {
-            JOptionPane.showMessageDialog(frame, TranslateUtil.getInstance().getTranslation("The file index update setting is wrong, please change"));
-            return;
+            strBuilder.append(TranslateUtil.getInstance().getTranslation("The file index update setting is wrong, please change")).append("\n");
         }
-        isStartup = checkBoxAddToStartup.isSelected();
+        boolean tmp_isStartup = checkBoxAddToStartup.isSelected();
         try {
             cacheNumLimitTemp = Integer.parseInt(textFieldCacheNum.getText());
         } catch (Exception e1) {
             cacheNumLimitTemp = -1;
         }
         if (cacheNumLimitTemp > 10000 || cacheNumLimitTemp <= 0) {
-            JOptionPane.showMessageDialog(frame, TranslateUtil.getInstance().getTranslation("The cache capacity is set incorrectly, please change"));
-            return;
+            strBuilder.append(TranslateUtil.getInstance().getTranslation("The cache capacity is set incorrectly, please change")).append("\n");
         }
         ignorePathTemp = textAreaIgnorePath.getText();
         ignorePathTemp = ignorePathTemp.replaceAll("\n", "");
@@ -1504,18 +1658,15 @@ public class SettingsFrame {
         }
 
         if (searchDepthTemp > 10 || searchDepthTemp <= 0) {
-            JOptionPane.showMessageDialog(frame, TranslateUtil.getInstance().getTranslation("Search depth setting is wrong, please change"));
-            return;
+            strBuilder.append(TranslateUtil.getInstance().getTranslation("Search depth setting is wrong, please change")).append("\n");
         }
 
         String tmp_hotkey = textFieldHotkey.getText();
         if (tmp_hotkey.length() == 1) {
-            JOptionPane.showMessageDialog(frame, TranslateUtil.getInstance().getTranslation("Hotkey setting is wrong, please change"));
-            return;
+            strBuilder.append(TranslateUtil.getInstance().getTranslation("Hotkey setting is wrong, please change")).append("\n");
         } else {
             if (!CheckHotKey.getInstance().isHotkeyAvailable(tmp_hotkey)) {
-                JOptionPane.showMessageDialog(frame, TranslateUtil.getInstance().getTranslation("Hotkey setting is wrong, please change"));
-                return;
+                strBuilder.append(TranslateUtil.getInstance().getTranslation("Hotkey setting is wrong, please change")).append("\n");
             }
         }
         try {
@@ -1524,17 +1675,11 @@ public class SettingsFrame {
             transparencyTemp = -1f;
         }
         if (transparencyTemp > 1 || transparencyTemp <= 0) {
-            JOptionPane.showMessageDialog(frame, TranslateUtil.getInstance().getTranslation("Transparency setting error"));
-            return;
+            strBuilder.append(TranslateUtil.getInstance().getTranslation("Transparency setting error")).append("\n");
         }
 
         if (tmp_openLastFolderKeyCode == tmp_runAsAdminKeyCode || tmp_openLastFolderKeyCode == tmp_copyPathKeyCode || tmp_runAsAdminKeyCode == tmp_copyPathKeyCode) {
-            JOptionPane.showMessageDialog(frame, TranslateUtil.getInstance().getTranslation("HotKey conflict"));
-            return;
-        } else {
-            openLastFolderKeyCode = tmp_openLastFolderKeyCode;
-            runAsAdminKeyCode = tmp_runAsAdminKeyCode;
-            copyPathKeyCode = tmp_copyPathKeyCode;
+            strBuilder.append(TranslateUtil.getInstance().getTranslation("HotKey conflict")).append("\n");
         }
 
         int tmp_labelColor;
@@ -1544,10 +1689,8 @@ public class SettingsFrame {
             tmp_labelColor = -1;
         }
         if (tmp_labelColor < 0) {
-            JOptionPane.showMessageDialog(frame, TranslateUtil.getInstance().getTranslation("Chosen label color is set incorrectly"));
-            return;
+            strBuilder.append(TranslateUtil.getInstance().getTranslation("Chosen label color is set incorrectly")).append("\n");
         }
-
 
         int tmp_fontColorWithCoverage;
         try {
@@ -1556,10 +1699,8 @@ public class SettingsFrame {
             tmp_fontColorWithCoverage = -1;
         }
         if (tmp_fontColorWithCoverage < 0) {
-            JOptionPane.showMessageDialog(frame, TranslateUtil.getInstance().getTranslation("Chosen label font color is set incorrectly"));
-            return;
+            strBuilder.append(TranslateUtil.getInstance().getTranslation("Chosen label font color is set incorrectly")).append("\n");
         }
-
 
         int tmp_defaultBackgroundColor;
         try {
@@ -1568,10 +1709,8 @@ public class SettingsFrame {
             tmp_defaultBackgroundColor = -1;
         }
         if (tmp_defaultBackgroundColor < 0) {
-            JOptionPane.showMessageDialog(frame, TranslateUtil.getInstance().getTranslation("Incorrect default background color setting"));
-            return;
+            strBuilder.append(TranslateUtil.getInstance().getTranslation("Incorrect default background color setting")).append("\n");
         }
-
 
         int tmp_fontColor;
         try {
@@ -1580,10 +1719,8 @@ public class SettingsFrame {
             tmp_fontColor = -1;
         }
         if (tmp_fontColor < 0) {
-            JOptionPane.showMessageDialog(frame, "Unchosen label font color is set incorrectly");
-            return;
+            strBuilder.append(TranslateUtil.getInstance().getTranslation("Unchosen label font color is set incorrectly")).append("\n");
         }
-
 
         int tmp_searchBarColor;
         try {
@@ -1592,17 +1729,42 @@ public class SettingsFrame {
             tmp_searchBarColor = -1;
         }
         if (tmp_searchBarColor < 0) {
-            JOptionPane.showMessageDialog(frame, TranslateUtil.getInstance().getTranslation("The color of the search bar is set incorrectly"));
-            return;
+            strBuilder.append(TranslateUtil.getInstance().getTranslation("The color of the search bar is set incorrectly")).append("\n");
         }
         if (!listLanguage.getSelectedValue().equals(TranslateUtil.getInstance().getLanguage())) {
             TranslateUtil.getInstance().setLanguage((String) listLanguage.getSelectedValue());
             translate();
         }
 
+        String tmp_proxyAddress = textFieldAddress.getText();
+        String tmp_proxyUserName = textFieldUserName.getText();
+        String tmp_proxyPassword = textFieldPassword.getText();
+
+        int tmp_proxyPort = 0;
+        try {
+            tmp_proxyPort = Integer.parseInt(textFieldPort.getText());
+        } catch (Exception e) {
+            strBuilder.append(TranslateUtil.getInstance().getTranslation("Proxy port is set incorrectly.")).append("\n");
+        }
+
+        String errors = strBuilder.toString();
+        if (!errors.isEmpty()) {
+            JOptionPane.showMessageDialog(frame, errors);
+            return;
+        }
+
+        if (radioButtonProxyTypeSocks5.isSelected()) {
+            proxyType = PROXY_SOCKS;
+        } else if (radioButtonProxyTypeHttp.isSelected()) {
+            proxyType = PROXY_HTTP;
+        }
+        if (radioButtonNoProxy.isSelected()) {
+            proxyType = PROXY_DIRECT;
+        }
+
         priorityFolder = textFieldPriorityFolder.getText();
         hotkey = textFieldHotkey.getText();
-        HotKeyListener.changeHotKey(hotkey);
+        hotKeyListener.changeHotKey(hotkey);
         cacheNumLimit = cacheNumLimitTemp;
         updateTimeLimit = updateTimeLimitTemp;
         ignorePath = ignorePathTemp;
@@ -1632,7 +1794,14 @@ public class SettingsFrame {
         tmp_color = new Color(fontColor);
         FontColorChooser.setBackground(tmp_color);
         FontColorChooser.setForeground(tmp_color);
-
+        proxyAddress = tmp_proxyAddress;
+        proxyPort = tmp_proxyPort;
+        proxyUserName = tmp_proxyUserName;
+        proxyPassword = tmp_proxyPassword;
+        isStartup = tmp_isStartup;
+        openLastFolderKeyCode = tmp_openLastFolderKeyCode;
+        runAsAdminKeyCode = tmp_runAsAdminKeyCode;
+        copyPathKeyCode = tmp_copyPathKeyCode;
 
         //保存设置
         allSettings.put("hotkey", hotkey);
@@ -1654,11 +1823,15 @@ public class SettingsFrame {
         allSettings.put("fontColorWithCoverage", fontColorWithCoverage);
         allSettings.put("fontColor", fontColor);
         allSettings.put("language", TranslateUtil.getInstance().getLanguage());
+        allSettings.put("proxyAddress", proxyAddress);
+        allSettings.put("proxyPort", proxyPort);
+        allSettings.put("proxyUserName", proxyUserName);
+        allSettings.put("proxyPassword", proxyPassword);
+        allSettings.put("proxyType", proxyType);
         try (BufferedWriter buffW = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(settings), StandardCharsets.UTF_8))) {
             String format = JSON.toJSONString(allSettings, SerializerFeature.PrettyFormat, SerializerFeature.WriteMapNullValue, SerializerFeature.WriteDateUseDateFormat);
             buffW.write(format);
         } catch (IOException ignored) {
-
         }
         //保存自定义命令
         StringBuilder strb = new StringBuilder();
@@ -1669,7 +1842,6 @@ public class SettingsFrame {
         try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("user/cmds.txt"), StandardCharsets.UTF_8))) {
             bw.write(strb.toString());
         } catch (IOException ignored) {
-
         }
         hideFrame();
     }
@@ -1740,7 +1912,6 @@ public class SettingsFrame {
             allSettings = JSON.parseObject(result.toString());
             allSettings.put("isStartup", isSelected);
         } catch (IOException ignored) {
-
         }
         //保存设置
         try (BufferedWriter buffW = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(settings), StandardCharsets.UTF_8))) {
