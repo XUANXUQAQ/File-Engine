@@ -10,6 +10,7 @@ import FileEngine.pluginSystem.PluginUtil;
 import FileEngine.SQLiteConfig.SQLiteUtil;
 import FileEngine.search.SearchUtil;
 import FileEngine.threadPool.CachedThreadPool;
+import FileEngine.translate.TranslateUtil;
 
 import javax.swing.*;
 import javax.swing.border.Border;
@@ -289,7 +290,7 @@ public class SearchBar {
                                     try {
                                         Runtime.getRuntime().exec("explorer.exe /select, \"" + open.getAbsolutePath() + "\"");
                                     } catch (IOException e1) {
-                                        JOptionPane.showMessageDialog(null, SettingsFrame.getTranslation("Execute failed"));
+                                        JOptionPane.showMessageDialog(null, TranslateUtil.getInstance().getTranslation("Execute failed"));
                                     }
                                 } else if (SettingsFrame.isDefaultAdmin() || isRunAsAdminPressed) {
                                     openWithAdmin(open.getAbsolutePath());
@@ -438,7 +439,7 @@ public class SearchBar {
                                         try {
                                             Runtime.getRuntime().exec("explorer.exe /select, \"" + open.getAbsolutePath() + "\"");
                                         } catch (IOException e) {
-                                            JOptionPane.showMessageDialog(null, SettingsFrame.getTranslation("Execute failed"));
+                                            JOptionPane.showMessageDialog(null, TranslateUtil.getInstance().getTranslation("Execute failed"));
                                         }
                                     } else if (SettingsFrame.isDefaultAdmin() || isRunAsAdminPressed) {
                                         openWithAdmin(open.getAbsolutePath());
@@ -1654,7 +1655,7 @@ public class SearchBar {
                 }
             } else {
                 System.out.println("Not administrator, file monitoring function is turned off");
-                taskBar.showMessage(SettingsFrame.getTranslation("Warning"), SettingsFrame.getTranslation("Not administrator, file monitoring function is turned off"));
+                taskBar.showMessage(TranslateUtil.getInstance().getTranslation("Warning"), TranslateUtil.getInstance().getTranslation("Not administrator, file monitoring function is turned off"));
             }
         });
     }
@@ -2346,7 +2347,8 @@ public class SearchBar {
                                 }
                                 if (":version".equals(text)) {
                                     closedTodo();
-                                    JOptionPane.showMessageDialog(null, SettingsFrame.getTranslation("Current Version:") + SettingsFrame.version);
+                                    JOptionPane.showMessageDialog(null, TranslateUtil.getInstance().getTranslation(
+                                            "Current Version:") + SettingsFrame.version);
                                 }
                                 if (":help".equals(text)) {
                                     closedTodo();
@@ -2358,23 +2360,26 @@ public class SearchBar {
                                 }
                                 if (":clearbin".equals(text)) {
                                     closedTodo();
-                                    int r = JOptionPane.showConfirmDialog(null, SettingsFrame.getTranslation("Are you sure you want to empty the recycle bin"));
+                                    int r = JOptionPane.showConfirmDialog(null, TranslateUtil.getInstance().getTranslation(
+                                            "Are you sure you want to empty the recycle bin"));
                                     if (r == 0) {
                                         try {
                                             File[] roots = File.listRoots();
                                             for (File root : roots) {
                                                 Runtime.getRuntime().exec("cmd.exe /c rd /s /q " + root.getAbsolutePath() + "$Recycle.Bin");
                                             }
-                                            JOptionPane.showMessageDialog(null, SettingsFrame.getTranslation("Successfully empty the recycle bin"));
+                                            JOptionPane.showMessageDialog(null, TranslateUtil.getInstance().getTranslation(
+                                                    "Successfully empty the recycle bin"));
                                         } catch (IOException e) {
-                                            JOptionPane.showMessageDialog(null, SettingsFrame.getTranslation("Failed to empty the recycle bin"));
+                                            JOptionPane.showMessageDialog(null, TranslateUtil.getInstance().getTranslation(
+                                                    "Failed to empty the recycle bin"));
                                         }
                                     }
                                 }
                                 for (String i : SettingsFrame.getCmdSet()) {
                                     if (i.startsWith(text)) {
                                         resultCount.incrementAndGet();
-                                        String result = SettingsFrame.getTranslation("Run command") + i;
+                                        String result = TranslateUtil.getInstance().getTranslation("Run command") + i;
                                         listResults.add(result);
                                         listResultsCopy.add(result);
                                     }
@@ -2430,10 +2435,10 @@ public class SearchBar {
 
                         } else if (search.getStatus() == SearchUtil.VACUUM) {
                             label1.setBackground(labelColor);
-                            label1.setText(SettingsFrame.getTranslation("Organizing database"));
+                            label1.setText(TranslateUtil.getInstance().getTranslation("Organizing database"));
                         } else if (search.getStatus() == SearchUtil.MANUAL_UPDATE) {
                             label1.setBackground(labelColor);
-                            label1.setText(SettingsFrame.getTranslation("Updating file index") + "...");
+                            label1.setText(TranslateUtil.getInstance().getTranslation("Updating file index") + "...");
                         }
 
                         if (search.getStatus() != SearchUtil.NORMAL) {
@@ -2819,7 +2824,7 @@ public class SearchBar {
                 try {
                     Runtime.getRuntime().exec("explorer.exe /select, \"" + name.getAbsolutePath() + "\"");
                 } catch (IOException e1) {
-                    JOptionPane.showMessageDialog(null, SettingsFrame.getTranslation("Execute failed"));
+                    JOptionPane.showMessageDialog(null, TranslateUtil.getInstance().getTranslation("Execute failed"));
                     if (SettingsFrame.isDebug()) {
                         e.printStackTrace();
                     }

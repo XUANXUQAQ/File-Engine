@@ -8,6 +8,7 @@ import FileEngine.hotkeyListener.CheckHotKey;
 import FileEngine.md5.Md5Util;
 import FileEngine.pluginSystem.PluginUtil;
 import FileEngine.search.SearchUtil;
+import FileEngine.translate.TranslateUtil;
 import br.com.margel.weblaf.WebLookAndFeel;
 import com.alibaba.fastjson.JSONObject;
 
@@ -187,18 +188,19 @@ public class MainClass {
             search.setStatus(SearchUtil.MANUAL_UPDATE);
         }
 
+        TranslateUtil translateUtil = TranslateUtil.getInstance();
         if (!isLatest()) {
-            taskBar.showMessage(SettingsFrame.getTranslation("Info"), SettingsFrame.getTranslation("New version can be updated"));
+            taskBar.showMessage(translateUtil.getTranslation("Info"), translateUtil.getTranslation("New version can be updated"));
         }
 
         if (PluginUtil.isPluginTooOld()) {
             String oldPlugins = PluginUtil.getAllOldPluginsName();
-            taskBar.showMessage(SettingsFrame.getTranslation("Warning"), oldPlugins + "\n" + SettingsFrame.getTranslation("Plugin Api is too old"));
+            taskBar.showMessage(translateUtil.getTranslation("Warning"), oldPlugins + "\n" + translateUtil.getTranslation("Plugin Api is too old"));
         }
 
         if (PluginUtil.isPluginRepeat()) {
             String repeatPlugins = PluginUtil.getRepeatPlugins();
-            taskBar.showMessage(SettingsFrame.getTranslation("Warning"), repeatPlugins + "\n" + SettingsFrame.getTranslation("Duplicate plugin, please delete it in plugins folder"));
+            taskBar.showMessage(translateUtil.getTranslation("Warning"), repeatPlugins + "\n" + translateUtil.getTranslation("Duplicate plugin, please delete it in plugins folder"));
         }
 
         try {
@@ -314,13 +316,14 @@ public class MainClass {
     private static boolean isLatest() {
         //检测是否为最新版本
         try {
-            JSONObject info = SettingsFrame.getInfo();
-            String latestVersion = info.getString("version");
-            if (Double.parseDouble(latestVersion) > Double.parseDouble(SettingsFrame.version)) {
-                return false;
+            JSONObject info = SettingsFrame.getUpdateInfo();
+            if (info != null) {
+                String latestVersion = info.getString("version");
+                if (Double.parseDouble(latestVersion) > Double.parseDouble(SettingsFrame.version)) {
+                    return false;
+                }
             }
-        } catch (IOException ignored) {
-
+        } catch (IOException | InterruptedException ignored) {
         }
         return true;
     }

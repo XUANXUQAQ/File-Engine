@@ -6,6 +6,7 @@ import FileEngine.dllInterface.isNTFS;
 import FileEngine.frames.SearchBar;
 import FileEngine.frames.SettingsFrame;
 import FileEngine.frames.TaskBar;
+import FileEngine.translate.TranslateUtil;
 
 import javax.swing.filechooser.FileSystemView;
 import java.io.*;
@@ -407,7 +408,7 @@ public class SearchUtil {
             }
         }
         status = NORMAL;
-        TaskBar.getInstance().showMessage(SettingsFrame.getTranslation("Info"), SettingsFrame.getTranslation("Search Done"));
+        TaskBar.getInstance().showMessage(TranslateUtil.getInstance().getTranslation("Info"), TranslateUtil.getInstance().getTranslation("Search Done"));
     }
 
     private void searchByUSN(String paths, String ignorePath) throws IOException, InterruptedException {
@@ -487,7 +488,7 @@ public class SearchUtil {
     }
 
     public void updateLists(String ignorePath, int searchDepth, Statement stmt) {
-        TaskBar.getInstance().showMessage(SettingsFrame.getTranslation("Info"), SettingsFrame.getTranslation("Updating file index"));
+        TaskBar.getInstance().showMessage(TranslateUtil.getInstance().getTranslation("Info"), TranslateUtil.getInstance().getTranslation("Updating file index"));
         clearAllTablesAndIndex(stmt);
         searchFile(ignorePath, searchDepth);
     }
