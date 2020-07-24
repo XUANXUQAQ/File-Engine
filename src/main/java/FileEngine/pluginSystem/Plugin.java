@@ -10,25 +10,25 @@ public class Plugin {
     private static final int API_VERSION = 2;
     private final Object instance;
     private final ArrayList<String> methodList = new ArrayList<>();
-    private Method _textChanged;
-    private Method _loadPlugin;
-    private Method _unloadPlugin;
-    private Method _keyReleased;
-    private Method _keyPressed;
-    private Method _keyTyped;
-    private Method _mousePressed;
-    private Method _mouseReleased;
-    private Method _getPluginIcon;
-    private Method _getOfficialSite;
-    private Method _getVersion;
-    private Method _getDescription;
-    private Method _isLatest;
-    private Method _getUpdateURL;
-    private Method _showResultOnLabel;
-    private Method _getMessage;
-    private Method _pollFromResultQueue;
-    private Method _getApiVersion;
-    private Method _getAuthor;
+    private Method pluginTextChanged;
+    private Method pluginLoadPlugin;
+    private Method pluginUnloadPlugin;
+    private Method pluginKeyReleased;
+    private Method pluginKeyPressed;
+    private Method pluginKeyTyped;
+    private Method pluginMousePressed;
+    private Method pluginMouseReleased;
+    private Method pluginGetPluginIcon;
+    private Method pluginGetOfficialSite;
+    private Method pluginGetVersion;
+    private Method pluginGetDescription;
+    private Method pluginIsLatest;
+    private Method pluginGetUpdateURL;
+    private Method pluginShowResultOnLabel;
+    private Method pluginGetMessage;
+    private Method pluginPollFromResultQueue;
+    private Method pluginGetApiVersion;
+    private Method pluginGetAuthor;
 
     public Plugin(PluginUtil.PluginInfo pluginInfo) {
         Class<?> aClass = pluginInfo.cls;
@@ -68,61 +68,61 @@ public class Plugin {
     private void loadMethod(String methodName, Class<?> aClass) throws Exception {
         switch (methodName) {
             case "textChanged":
-                _textChanged = aClass.getDeclaredMethod("textChanged", String.class);
+                pluginTextChanged = aClass.getDeclaredMethod("textChanged", String.class);
                 break;
             case "loadPlugin":
-                _loadPlugin = aClass.getDeclaredMethod("loadPlugin");
+                pluginLoadPlugin = aClass.getDeclaredMethod("loadPlugin");
                 break;
             case "unloadPlugin":
-                _unloadPlugin = aClass.getDeclaredMethod("unloadPlugin");
+                pluginUnloadPlugin = aClass.getDeclaredMethod("unloadPlugin");
                 break;
             case "keyPressed":
-                _keyPressed = aClass.getDeclaredMethod("keyPressed", KeyEvent.class, String.class);
+                pluginKeyPressed = aClass.getDeclaredMethod("keyPressed", KeyEvent.class, String.class);
                 break;
             case "keyReleased":
-                _keyReleased = aClass.getDeclaredMethod("keyReleased", KeyEvent.class, String.class);
+                pluginKeyReleased = aClass.getDeclaredMethod("keyReleased", KeyEvent.class, String.class);
                 break;
             case "keyTyped":
-                _keyTyped = aClass.getDeclaredMethod("keyTyped", KeyEvent.class, String.class);
+                pluginKeyTyped = aClass.getDeclaredMethod("keyTyped", KeyEvent.class, String.class);
                 break;
             case "mousePressed":
-                _mousePressed = aClass.getDeclaredMethod("mousePressed", MouseEvent.class, String.class);
+                pluginMousePressed = aClass.getDeclaredMethod("mousePressed", MouseEvent.class, String.class);
                 break;
             case "mouseReleased":
-                _mouseReleased = aClass.getDeclaredMethod("mouseReleased", MouseEvent.class, String.class);
+                pluginMouseReleased = aClass.getDeclaredMethod("mouseReleased", MouseEvent.class, String.class);
                 break;
             case "getPluginIcon":
-                _getPluginIcon = aClass.getDeclaredMethod("getPluginIcon");
+                pluginGetPluginIcon = aClass.getDeclaredMethod("getPluginIcon");
                 break;
             case "getOfficialSite":
-                _getOfficialSite = aClass.getDeclaredMethod("getOfficialSite");
+                pluginGetOfficialSite = aClass.getDeclaredMethod("getOfficialSite");
                 break;
             case "getVersion":
-                _getVersion = aClass.getDeclaredMethod("getVersion");
+                pluginGetVersion = aClass.getDeclaredMethod("getVersion");
                 break;
             case "getDescription":
-                _getDescription = aClass.getDeclaredMethod("getDescription");
+                pluginGetDescription = aClass.getDeclaredMethod("getDescription");
                 break;
             case "isLatest":
-                _isLatest = aClass.getDeclaredMethod("isLatest");
+                pluginIsLatest = aClass.getDeclaredMethod("isLatest");
                 break;
             case "getUpdateURL":
-                _getUpdateURL = aClass.getDeclaredMethod("getUpdateURL");
+                pluginGetUpdateURL = aClass.getDeclaredMethod("getUpdateURL");
                 break;
             case "showResultOnLabel":
-                _showResultOnLabel = aClass.getDeclaredMethod("showResultOnLabel", String.class, JLabel.class, boolean.class);
+                pluginShowResultOnLabel = aClass.getDeclaredMethod("showResultOnLabel", String.class, JLabel.class, boolean.class);
                 break;
             case "getMessage":
-                _getMessage = aClass.getDeclaredMethod("getMessage");
+                pluginGetMessage = aClass.getDeclaredMethod("getMessage");
                 break;
             case "pollFromResultQueue":
-                _pollFromResultQueue = aClass.getDeclaredMethod("pollFromResultQueue");
+                pluginPollFromResultQueue = aClass.getDeclaredMethod("pollFromResultQueue");
                 break;
             case "getApiVersion":
-                _getApiVersion = aClass.getDeclaredMethod("getApiVersion");
+                pluginGetApiVersion = aClass.getDeclaredMethod("getApiVersion");
                 break;
             case "getAuthor":
-                _getAuthor = aClass.getDeclaredMethod("getAuthor");
+                pluginGetAuthor = aClass.getDeclaredMethod("getAuthor");
                 break;
             default:
                 break;
@@ -135,7 +135,7 @@ public class Plugin {
 
     public int getApiVersion() {
         try {
-            return (Integer) _getApiVersion.invoke(instance);
+            return (Integer) pluginGetApiVersion.invoke(instance);
         }catch (Exception e) {
             return 1;
         }
@@ -143,7 +143,7 @@ public class Plugin {
 
     public String[] getMessage() {
         try {
-            return (String[]) _getMessage.invoke(instance);
+            return (String[]) pluginGetMessage.invoke(instance);
         } catch (Exception e) {
             return null;
         }
@@ -151,7 +151,7 @@ public class Plugin {
 
     public String pollFromResultQueue() {
         try {
-            return (String) _pollFromResultQueue.invoke(instance);
+            return (String) pluginPollFromResultQueue.invoke(instance);
         } catch (Exception e) {
             return null;
         }
@@ -160,7 +160,7 @@ public class Plugin {
     public void textChanged(String text) {
         try {
             if (text != null) {
-                _textChanged.invoke(instance, text);
+                pluginTextChanged.invoke(instance, text);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -169,7 +169,7 @@ public class Plugin {
 
     public void loadPlugin() {
         try {
-            _loadPlugin.invoke(instance);
+            pluginLoadPlugin.invoke(instance);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -177,7 +177,7 @@ public class Plugin {
 
     public void unloadPlugin() {
         try {
-            _unloadPlugin.invoke(instance);
+            pluginUnloadPlugin.invoke(instance);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -185,7 +185,7 @@ public class Plugin {
 
     public void keyPressed(KeyEvent e, String result) {
         try {
-            _keyPressed.invoke(instance, e, result);
+            pluginKeyPressed.invoke(instance, e, result);
         } catch (Exception e1) {
             e1.printStackTrace();
         }
@@ -193,7 +193,7 @@ public class Plugin {
 
     public void keyReleased(KeyEvent e, String result) {
         try {
-            _keyReleased.invoke(instance, e, result);
+            pluginKeyReleased.invoke(instance, e, result);
         } catch (Exception e1) {
             e1.printStackTrace();
         }
@@ -201,7 +201,7 @@ public class Plugin {
 
     public void keyTyped(KeyEvent e, String result) {
         try {
-            _keyTyped.invoke(instance, e, result);
+            pluginKeyTyped.invoke(instance, e, result);
         } catch (Exception e1) {
             e1.printStackTrace();
         }
@@ -209,7 +209,7 @@ public class Plugin {
 
     public void mousePressed(MouseEvent e, String result) {
         try {
-            _mousePressed.invoke(instance, e, result);
+            pluginMousePressed.invoke(instance, e, result);
         } catch (Exception e1) {
             e1.printStackTrace();
         }
@@ -217,7 +217,7 @@ public class Plugin {
 
     public void mouseReleased(MouseEvent e, String result) {
         try {
-            _mouseReleased.invoke(instance, e, result);
+            pluginMouseReleased.invoke(instance, e, result);
         } catch (Exception e1) {
             e1.printStackTrace();
         }
@@ -225,7 +225,7 @@ public class Plugin {
 
     public String getAuthor() {
         try {
-            return (String) _getAuthor.invoke(instance);
+            return (String) pluginGetAuthor.invoke(instance);
         } catch (Exception e) {
             return null;
         }
@@ -233,7 +233,7 @@ public class Plugin {
 
     public ImageIcon getPluginIcon() {
         try {
-            return (ImageIcon) _getPluginIcon.invoke(instance);
+            return (ImageIcon) pluginGetPluginIcon.invoke(instance);
         } catch (Exception e) {
             return null;
         }
@@ -241,7 +241,7 @@ public class Plugin {
 
     public String getOfficialSite() {
         try {
-            return (String) _getOfficialSite.invoke(instance);
+            return (String) pluginGetOfficialSite.invoke(instance);
         } catch (Exception e) {
             return null;
         }
@@ -249,7 +249,7 @@ public class Plugin {
 
     public String getVersion() {
         try {
-            return (String) _getVersion.invoke(instance);
+            return (String) pluginGetVersion.invoke(instance);
         } catch (Exception e) {
             return null;
         }
@@ -257,7 +257,7 @@ public class Plugin {
 
     public String getDescription() {
         try {
-            return (String) _getDescription.invoke(instance);
+            return (String) pluginGetDescription.invoke(instance);
         } catch (Exception e) {
             return null;
         }
@@ -265,7 +265,7 @@ public class Plugin {
 
     public boolean isLatest() {
         try {
-            return (boolean) _isLatest.invoke(instance);
+            return (boolean) pluginIsLatest.invoke(instance);
         } catch (Exception e) {
             return true;
         }
@@ -273,7 +273,7 @@ public class Plugin {
 
     public String getUpdateURL() {
         try {
-            return (String) _getUpdateURL.invoke(instance);
+            return (String) pluginGetUpdateURL.invoke(instance);
         } catch (Exception e) {
             return null;
         }
@@ -281,7 +281,7 @@ public class Plugin {
 
     public void showResultOnLabel(String result, JLabel label, boolean isChosen) {
         try {
-            _showResultOnLabel.invoke(instance, result, label, isChosen);
+            pluginShowResultOnLabel.invoke(instance, result, label, isChosen);
         } catch (Exception e) {
             e.printStackTrace();
         }

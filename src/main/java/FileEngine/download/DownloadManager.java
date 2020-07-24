@@ -25,10 +25,10 @@ public class DownloadManager {
     public static final int DOWNLOAD_INTERRUPTED = 3;
     public static final int DOWNLOAD_NO_TASK = 4;
 
-    public DownloadManager(String _url, String _fileName, String _savePath, SettingsFrame.ProxyInfo proxyInfo) {
-        this.url = _url;
-        this.fileName = _fileName;
-        this.localPath = _savePath;
+    public DownloadManager(String url, String fileName, String savePath, SettingsFrame.ProxyInfo proxyInfo) {
+        this.url = url;
+        this.fileName = fileName;
+        this.localPath = savePath;
         this.downloadStatus = DOWNLOAD_DOWNLOADING;
         setProxy(proxyInfo.type, proxyInfo.address, proxyInfo.port, proxyInfo.userName, proxyInfo.password);
     }

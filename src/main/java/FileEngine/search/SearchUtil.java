@@ -367,8 +367,8 @@ public class SearchUtil {
         return status;
     }
 
-    public void setStatus(int _status) {
-        status = _status;
+    public void setStatus(int status) {
+        this.status = status;
     }
 
     private void searchFile(String ignorePath, int searchDepth) {
