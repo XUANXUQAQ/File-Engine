@@ -18,7 +18,7 @@ public class TranslateUtil {
     private final HashSet<String> languageSet = new HashSet<>();
     private final ConcurrentHashMap<String, String> translationMap = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, String> fileMap = new ConcurrentHashMap<>();
-    private static final Pattern equalSign = Pattern.compile("=");
+    private static final Pattern EQUAL_SIGN = Pattern.compile("=");
 
     private TranslateUtil() {
         initAll();
@@ -82,7 +82,7 @@ public class TranslateUtil {
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(TranslateUtil.class.getResourceAsStream(filePath), StandardCharsets.UTF_8))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
-                    String[] record = TranslateUtil.equalSign.split(line);
+                    String[] record = TranslateUtil.EQUAL_SIGN.split(line);
                     translationMap.put(record[0].trim(), record[1].trim());
                 }
             } catch (IOException ignored) {
@@ -100,8 +100,8 @@ public class TranslateUtil {
         initTranslations();
     }
 
-    public void setLanguage(String _language) {
-        language = _language;
+    public void setLanguage(String language) {
+        TranslateUtil.language = language;
         initTranslations();
     }
 

@@ -9,8 +9,8 @@ import java.util.ArrayList;
 public class MoveFilesUtil {
     private final ArrayList<String> preserveFiles;
 
-    public MoveFilesUtil(ArrayList<String> _preserveFiles) {
-        this.preserveFiles = _preserveFiles;
+    public MoveFilesUtil(ArrayList<String> preserveFiles) {
+        this.preserveFiles = preserveFiles;
     }
 
     private boolean deleteDir(File dir) {

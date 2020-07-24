@@ -11,7 +11,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author XUANXU
  */
 public class GetIconUtil {
-    private final ConcurrentHashMap<String, ImageIcon> ICON_CACHE_MAP = new ConcurrentHashMap<>(1000);
+    private final ConcurrentHashMap<String, ImageIcon> ICON_CACHE_MAP = new ConcurrentHashMap<>(500);
     private final FileSystemView FILE_SYSTEM_VIEW = FileSystemView.getFileSystemView();
     private final AtomicInteger CACHE_NUM = new AtomicInteger(0);
     private ImageIcon dllImageIcon;
@@ -50,7 +50,7 @@ public class GetIconUtil {
             initIconCache(width, height);
             isInitialized = true;
         }
-        if (path == null) {
+        if (path == null || path.isEmpty()) {
             return null;
         }
         File f = new File(path);
@@ -73,7 +73,7 @@ public class GetIconUtil {
                     imageIcon = changeIcon((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(f), width, height);
                 }
                 if (imageIcon != null) {
-                    if (CACHE_NUM.get() < 1000) {
+                    if (CACHE_NUM.get() < 500) {
                         ICON_CACHE_MAP.put(path, imageIcon);
                         CACHE_NUM.incrementAndGet();
                     }
