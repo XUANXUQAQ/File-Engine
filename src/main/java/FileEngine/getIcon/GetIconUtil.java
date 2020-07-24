@@ -21,7 +21,7 @@ public class GetIconUtil {
     private volatile boolean isInitialized = false;
 
     private static class GetIconUtilBuilder {
-        private static GetIconUtil INSTANCE = new GetIconUtil();
+        private static final GetIconUtil INSTANCE = new GetIconUtil();
     }
 
     public static GetIconUtil getInstance() {
