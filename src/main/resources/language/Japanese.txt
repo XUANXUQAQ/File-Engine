@@ -114,3 +114,6 @@ User name=ユーザー名
 Password=パスワード
 If you need a proxy to access the Internet, You can add a proxy here.=インターネットにアクセスするためにプロキシが必要な場合は、ここにプロキシを追加できます。
 Proxy port is set incorrectly.=プロキシポートが正しく設定されていません。
+Confirm whether to start optimizing the database?=データベースの最適化を開始するかどうか?
+Optimizing...=最適化...
+Optimized=最適化が完了しました
