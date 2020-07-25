@@ -2,10 +2,7 @@ package FileEngine.download;
 
 import FileEngine.frames.SettingsFrame;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.math.BigDecimal;
 import java.net.*;
 
@@ -60,21 +57,20 @@ public class DownloadManager {
             //文件保存位置
             File saveDir = new File(localPath);
             if (!saveDir.exists()) {
-                saveDir.mkdir();
+                saveDir.mkdirs();
             }
-            File file = new File(saveDir + File.separator + fileName);
-            FileOutputStream fos = new FileOutputStream(file);
+            BufferedOutputStream bfos = new BufferedOutputStream(new FileOutputStream(new File(saveDir + File.separator + fileName)));
 
             int fileLength = con.getContentLength();
             while ((len = in.read(buffer)) != -1) {
                 if (isUserInterrupted) {
                     break;
                 }
-                fos.write(buffer, 0, len);
+                bfos.write(buffer, 0, len);
                 currentProgress += len;
                 progress = div(currentProgress, fileLength);
             }
-            fos.close();
+            bfos.close();
             in.close();
             con.disconnect();
             if (isUserInterrupted) {
