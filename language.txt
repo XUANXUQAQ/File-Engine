@@ -114,3 +114,6 @@ User name=
 Password=
 If you need a proxy to access the Internet, You can add a proxy here.=
 Proxy port is set incorrectly.=
+Confirm whether to start optimizing the database?=
+Optimizing...=
+Optimized=

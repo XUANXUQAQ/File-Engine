@@ -251,6 +251,15 @@
                   <text value="Click to organize the database and reduce the size of the database, but it will consume a lot of time."/>
                 </properties>
               </component>
+              <component id="33f4a" class="javax.swing.JLabel" binding="labelVacuumStatus">
+                <constraints>
+                  <grid row="2" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                  <gridbag weightx="0.0" weighty="0.0"/>
+                </constraints>
+                <properties>
+                  <text value=""/>
+                </properties>
+              </component>
             </children>
           </grid>
           <grid id="dcaba" binding="tabSearchBarSettings" layout-manager="GridBagLayout">

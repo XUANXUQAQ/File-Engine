@@ -187,6 +187,7 @@ public class SettingsFrame {
     private JLabel labelPlaceHolder6;
     private JLabel labelPlaceHolder8;
     private JSeparator proxySeperater;
+    private JLabel labelVacuumStatus;
 
     private static class SettingsFrameBuilder {
         private static final SettingsFrame instance = new SettingsFrame();
@@ -902,30 +903,46 @@ public class SettingsFrame {
 
     private void addButtonVacuumListener() {
         buttonVacuum.addActionListener(e -> {
-            int status = SearchUtil.getInstance().getStatus();
-            if (status == SearchUtil.NORMAL) {
-                if (isDebug()) {
-                    System.out.println("开始VACUUM");
-                }
-                SearchUtil.getInstance().setStatus(SearchUtil.VACUUM);
-                CachedThreadPool.getInstance().executeTask(() -> {
-                    try (Statement stmt = SQLiteUtil.getStatement()) {
-                        stmt.execute("VACUUM;");
-                    } catch (Exception throwables) {
-                        if (isDebug()) {
-                            throwables.printStackTrace();
-                        }
-                    } finally {
-                        if (isDebug()) {
-                            System.out.println("结束VACUUM");
-                        }
-                        SearchUtil.getInstance().setStatus(SearchUtil.NORMAL);
+            int ret = JOptionPane.showConfirmDialog(frame, TranslateUtil.getInstance().getTranslation("Confirm whether to start optimizing the database?"));
+            if (0 == ret) {
+                int status = SearchUtil.getInstance().getStatus();
+                if (status == SearchUtil.NORMAL) {
+                    if (isDebug()) {
+                        System.out.println("开始VACUUM");
                     }
-                });
-            } else if (status == SearchUtil.MANUAL_UPDATE) {
-                JOptionPane.showMessageDialog(frame, TranslateUtil.getInstance().getTranslation("Database is not usable yet, please wait..."));
-            } else if (status == SearchUtil.VACUUM) {
-                JOptionPane.showMessageDialog(frame, TranslateUtil.getInstance().getTranslation("Task is still running."));
+                    SearchUtil.getInstance().setStatus(SearchUtil.VACUUM);
+                    CachedThreadPool.getInstance().executeTask(() -> {
+                        try (Statement stmt = SQLiteUtil.getStatement()) {
+                            stmt.execute("VACUUM;");
+                        } catch (Exception throwables) {
+                            if (isDebug()) {
+                                throwables.printStackTrace();
+                            }
+                        } finally {
+                            if (isDebug()) {
+                                System.out.println("结束VACUUM");
+                            }
+                            SearchUtil.getInstance().setStatus(SearchUtil.NORMAL);
+                        }
+                    });
+                    CachedThreadPool.getInstance().executeTask(() -> {
+                        try {
+                            SearchUtil instance = SearchUtil.getInstance();
+                            while (instance.getStatus() == SearchUtil.VACUUM) {
+                                labelVacuumStatus.setText(TranslateUtil.getInstance().getTranslation("Optimizing..."));
+                                Thread.sleep(50);
+                            }
+                            labelVacuumStatus.setText(TranslateUtil.getInstance().getTranslation("Optimized"));
+                            Thread.sleep(3000);
+                            labelVacuumStatus.setText("");
+                        } catch (InterruptedException ignored) {
+                        }
+                    });
+                } else if (status == SearchUtil.MANUAL_UPDATE) {
+                    JOptionPane.showMessageDialog(frame, TranslateUtil.getInstance().getTranslation("Database is not usable yet, please wait..."));
+                } else if (status == SearchUtil.VACUUM) {
+                    JOptionPane.showMessageDialog(frame, TranslateUtil.getInstance().getTranslation("Task is still running."));
+                }
             }
         });
     }

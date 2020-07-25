@@ -114,3 +114,6 @@ User name=用户名
 Password=密码
 If you need a proxy to access the Internet, You can add a proxy here.=如果你需要代理以访问互联网，你可以在此处添加。
 Proxy port is set incorrectly.=代理端口设置不正确。
+Confirm whether to start optimizing the database?=确认是否开始优化数据库？
+Optimizing...=优化中...
+Optimized=优化完成
