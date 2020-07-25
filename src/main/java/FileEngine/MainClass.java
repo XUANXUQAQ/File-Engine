@@ -4,7 +4,7 @@ import FileEngine.SQLiteConfig.SQLiteUtil;
 import FileEngine.dllInterface.FileMonitor;
 import FileEngine.frames.SettingsFrame;
 import FileEngine.frames.TaskBar;
-import FileEngine.hotkeyListener.CheckHotKey;
+import FileEngine.checkHotkey.CheckHotKeyUtil;
 import FileEngine.md5.Md5Util;
 import FileEngine.pluginSystem.PluginUtil;
 import FileEngine.search.SearchUtil;
@@ -209,7 +209,7 @@ public class MainClass {
                 Thread.sleep(100);
             }
             PluginUtil.unloadAllPlugins();
-            CheckHotKey.getInstance().stopListen();
+            CheckHotKeyUtil.getInstance().stopListen();
             FileMonitor.INSTANCE.stop_monitor();
             SQLiteUtil.closeConnection();
             Thread.sleep(8000);

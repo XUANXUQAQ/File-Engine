@@ -3,7 +3,7 @@ package FileEngine.frames;
 import FileEngine.SQLiteConfig.SQLiteUtil;
 import FileEngine.download.DownloadManager;
 import FileEngine.download.DownloadUtil;
-import FileEngine.hotkeyListener.CheckHotKey;
+import FileEngine.checkHotkey.CheckHotKeyUtil;
 import FileEngine.pluginSystem.Plugin;
 import FileEngine.pluginSystem.PluginUtil;
 import FileEngine.search.SearchUtil;
@@ -52,7 +52,7 @@ public class SettingsFrame {
     private static HashSet<String> cmdSet;
     private static volatile int tmp_openLastFolderKeyCode;
     private static volatile int tmp_runAsAdminKeyCode;
-    private static CheckHotKey hotKeyListener;
+    private static CheckHotKeyUtil hotKeyListener;
     private static volatile int labelColor;
     private static volatile int defaultBackgroundColor;
     private static volatile int fontColorWithCoverage;
@@ -1124,7 +1124,7 @@ public class SettingsFrame {
 
         readAllSettings();
 
-        hotKeyListener = CheckHotKey.getInstance();
+        hotKeyListener = CheckHotKeyUtil.getInstance();
         searchBar = SearchBar.getInstance();
 
         setAllSettings();
@@ -1682,7 +1682,7 @@ public class SettingsFrame {
         if (tmp_hotkey.length() == 1) {
             strBuilder.append(TranslateUtil.getInstance().getTranslation("Hotkey setting is wrong, please change")).append("\n");
         } else {
-            if (!CheckHotKey.getInstance().isHotkeyAvailable(tmp_hotkey)) {
+            if (!CheckHotKeyUtil.getInstance().isHotkeyAvailable(tmp_hotkey)) {
                 strBuilder.append(TranslateUtil.getInstance().getTranslation("Hotkey setting is wrong, please change")).append("\n");
             }
         }
