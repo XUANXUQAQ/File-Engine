@@ -4,20 +4,16 @@ import javax.swing.*;
 import javax.swing.filechooser.FileSystemView;
 import java.awt.*;
 import java.io.File;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author XUANXU
  */
 public class GetIconUtil {
-    private final ConcurrentHashMap<String, ImageIcon> ICON_CACHE_MAP = new ConcurrentHashMap<>(500);
     private final FileSystemView FILE_SYSTEM_VIEW = FileSystemView.getFileSystemView();
-    private final AtomicInteger CACHE_NUM = new AtomicInteger(0);
-    private ImageIcon dllImageIcon;
-    private ImageIcon folderImageIcon;
-    private ImageIcon txtImageIcon;
-    private ImageIcon vbsImageIcon;
+    private static ImageIcon dllImageIcon;
+    private static ImageIcon folderImageIcon;
+    private static ImageIcon txtImageIcon;
+    private static ImageIcon vbsImageIcon;
     private volatile boolean isInitialized = false;
 
     private static class GetIconUtilBuilder {
@@ -54,33 +50,25 @@ public class GetIconUtil {
             return null;
         }
         File f = new File(path);
-        String fName = f.getName();
         if (f.exists()) {
-            if (fName.endsWith(".dll")) {
+            //已保存的常量图标
+            if (path.endsWith(".dll")) {
                 return dllImageIcon;
             }
-            if (fName.endsWith(".txt")) {
+            if (path.endsWith(".txt")) {
                 return txtImageIcon;
             }
-            if (fName.endsWith(".vbs")) {
+            if (path.endsWith(".vbs")) {
                 return vbsImageIcon;
             }
+            //检测是否为文件夹
             if (f.isDirectory()) {
                 return folderImageIcon;
             } else {
-                ImageIcon imageIcon = ICON_CACHE_MAP.get(path);
-                if (imageIcon == null) {
-                    imageIcon = changeIcon((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(f), width, height);
-                }
-                if (imageIcon != null) {
-                    if (CACHE_NUM.get() < 500) {
-                        ICON_CACHE_MAP.put(path, imageIcon);
-                        CACHE_NUM.incrementAndGet();
-                    }
-                }
-                return imageIcon;
+                return changeIcon((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(f), width, height);
             }
+        } else {
+            return null;
         }
-        return null;
     }
 }
