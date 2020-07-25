@@ -1,4 +1,4 @@
-package FileEngine.hotkeyListener;
+package FileEngine.checkHotkey;
 
 import FileEngine.dllInterface.HotkeyListener;
 import FileEngine.frames.SearchBar;
@@ -9,19 +9,18 @@ import java.awt.event.KeyEvent;
 import java.util.HashMap;
 import java.util.regex.Pattern;
 
-public class CheckHotKey {
+public class CheckHotKeyUtil {
 
     private final HashMap<String, Integer> map;
     private final Pattern plus;
 
     private static class CheckHotKeyBuilder {
-        private static final CheckHotKey INSTANCE = new CheckHotKey();
+        private static final CheckHotKeyUtil INSTANCE = new CheckHotKeyUtil();
     }
 
-    public static CheckHotKey getInstance() {
+    public static CheckHotKeyUtil getInstance() {
         return CheckHotKeyBuilder.INSTANCE;
     }
-
 
     public void stopListen() {
         HotkeyListener.INSTANCE.stopListen();
@@ -85,7 +84,7 @@ public class CheckHotKey {
         HotkeyListener.INSTANCE.registerHotKey(hotkey1, hotkey2, hotkey3, hotkey4, hotkey5);
     }
 
-    private CheckHotKey() {
+    private CheckHotKeyUtil() {
         plus = Pattern.compile(" \\+ ");
         map = new HashMap<>();
         map.put("Ctrl", KeyEvent.VK_CONTROL);
@@ -95,6 +94,7 @@ public class CheckHotKey {
 
         CachedThreadPool.getInstance().executeTask(() -> {
             boolean isExecuted = false;
+            long startVisibleTime = 0;
             SearchBar searchBar = SearchBar.getInstance();
             HotkeyListener instance = HotkeyListener.INSTANCE;
             try {
@@ -103,8 +103,11 @@ public class CheckHotKey {
                         isExecuted = true;
                         if (!searchBar.isVisible()) {
                             searchBar.showSearchbar();
+                            startVisibleTime = System.currentTimeMillis();
                         } else {
-                            searchBar.closedTodo();
+                            if (System.currentTimeMillis() - startVisibleTime > 500) {
+                                searchBar.closedTodo();
+                            }
                         }
                     }
                     if (!instance.getKeyStatus()) {
@@ -113,7 +116,6 @@ public class CheckHotKey {
                     Thread.sleep(10);
                 }
             } catch (InterruptedException ignored) {
-
             }
         });
     }
