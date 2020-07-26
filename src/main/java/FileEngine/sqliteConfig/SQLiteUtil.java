@@ -13,7 +13,7 @@ import java.sql.Statement;
 public class SQLiteUtil {
     private static SQLiteConfig sqLiteConfig;
     private static volatile boolean isInitialized = false;
-    private static volatile Connection conn;
+    private static Connection conn;
 
     private static void init() {
         sqLiteConfig = new SQLiteConfig();

@@ -1642,7 +1642,7 @@ public class SearchBar {
         });
     }
 
-    public void startMonitorDisk() {
+    private void startMonitorDisk() {
         CachedThreadPool.getInstance().executeTask(() -> {
             File[] roots = File.listRoots();
             if (SettingsFrame.isAdmin()) {
@@ -2873,7 +2873,7 @@ public class SearchBar {
         p.waitFor();
     }
 
-    public String getFileName(String path) {
+    private String getFileName(String path) {
         if (path != null) {
             int index = path.lastIndexOf(File.separator);
             return path.substring(index + 1);
@@ -2881,7 +2881,7 @@ public class SearchBar {
         return "";
     }
 
-    public int getAscIISum(String path) {
+    private int getAscIISum(String path) {
         if (path != null) {
             path = path.toUpperCase();
             if (path.contains(";")) {
@@ -2971,7 +2971,7 @@ public class SearchBar {
         }
     }
 
-    public void setTransparency(float trans) {
+    protected void setTransparency(float trans) {
         searchBar.setOpacity(trans);
     }
 
@@ -3030,23 +3030,23 @@ public class SearchBar {
         return file.isDirectory();
     }
 
-    public void setFontColorWithCoverage(int colorNum) {
+    protected void setFontColorWithCoverage(int colorNum) {
         fontColorWithCoverage = new Color(colorNum);
     }
 
-    public void setDefaultBackgroundColor(int colorNum) {
+    protected void setDefaultBackgroundColor(int colorNum) {
         backgroundColor = new Color(colorNum);
     }
 
-    public void setLabelColor(int colorNum) {
+    protected void setLabelColor(int colorNum) {
         labelColor = new Color(colorNum);
     }
 
-    public void setFontColor(int colorNum) {
+    protected void setFontColor(int colorNum) {
         fontColor = new Color(colorNum);
     }
 
-    public void setSearchBarColor(int colorNum) {
+    protected void setSearchBarColor(int colorNum) {
         textField.setBackground(new Color(colorNum));
     }
 
