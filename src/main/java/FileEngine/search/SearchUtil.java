@@ -1,9 +1,9 @@
 package FileEngine.search;
 
 import FileEngine.SQLiteConfig.SQLiteUtil;
+import FileEngine.dllInterface.GetAscII;
 import FileEngine.dllInterface.IsLocalDisk;
 import FileEngine.dllInterface.isNTFS;
-import FileEngine.frames.SearchBar;
 import FileEngine.frames.SettingsFrame;
 import FileEngine.frames.TaskBar;
 import FileEngine.translate.TranslateUtil;
@@ -309,15 +309,33 @@ public class SearchUtil {
         }
     }
 
+    private String getFileName(String path) {
+        if (path != null) {
+            int index = path.lastIndexOf(File.separator);
+            return path.substring(index + 1);
+        }
+        return "";
+    }
+
+    private int getAscIISum(String path) {
+        if (path != null) {
+            path = path.toUpperCase();
+            if (path.contains(";")) {
+                path = path.replace(";", "");
+            }
+            return GetAscII.INSTANCE.getAscII(path);
+        }
+        return 0;
+    }
+
     public void removeFileFromDatabase(String path) {
-        SearchBar searchBar = SearchBar.getInstance();
-        int asciiSum = searchBar.getAscIISum(searchBar.getFileName(path));
+        int asciiSum = getAscIISum(getFileName(path));
         int asciiGroup = asciiSum / 100;
         addDeleteSqlCommandByAscii(asciiGroup, path);
     }
 
     public void addFileToDatabase(String path) {
-        int asciiSum = SearchBar.getInstance().getAscIISum(SearchBar.getInstance().getFileName(path));
+        int asciiSum = getAscIISum(getFileName(path));
         int asciiGroup = asciiSum / 100;
         addAddSqlCommandByAscii(asciiGroup, path);
     }

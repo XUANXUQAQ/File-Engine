@@ -117,3 +117,5 @@ Proxy port is set incorrectly.=代理端口設置不正確。
 Confirm whether to start optimizing the database?=確認是否開始優化數據庫？
 Optimizing...=優化中
 Optimized=優化完成
+Settings=設置
+Exit=退出

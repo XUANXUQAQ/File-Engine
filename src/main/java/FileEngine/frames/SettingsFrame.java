@@ -1611,16 +1611,16 @@ public class SettingsFrame {
         }
     }
 
-    public void hideFrame() {
+    protected void hideFrame() {
         frame.setVisible(false);
     }
 
 
-    public boolean isSettingsVisible() {
+    protected boolean isSettingsVisible() {
         return frame.isVisible();
     }
 
-    public void showWindow() {
+    protected void showWindow() {
         initGUI();
         frame.setResizable(true);
         int width = Integer.parseInt(TranslateUtil.getInstance().getFrameWidth());

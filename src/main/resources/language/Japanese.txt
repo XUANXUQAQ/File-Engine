@@ -117,3 +117,5 @@ Proxy port is set incorrectly.=プロキシポートが正しく設定されて�
 Confirm whether to start optimizing the database?=データベースの最適化を開始するかどうか?
 Optimizing...=最適化...
 Optimized=最適化が完了しました
+Settings=セットアップ
+Exit=脱落

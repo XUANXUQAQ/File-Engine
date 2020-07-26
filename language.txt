@@ -117,3 +117,5 @@ Proxy port is set incorrectly.=
 Confirm whether to start optimizing the database?=
 Optimizing...=
 Optimized=
+Settings=
+Exit=
