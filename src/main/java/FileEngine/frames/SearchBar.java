@@ -523,7 +523,6 @@ public class SearchBar {
     }
 
     private void setLabelChosen(JLabel label) {
-        //todo 美化
         label.setBackground(labelColor);
     }
 
