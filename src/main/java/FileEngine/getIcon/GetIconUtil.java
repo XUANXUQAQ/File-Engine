@@ -14,6 +14,7 @@ public class GetIconUtil {
     private static ImageIcon folderImageIcon;
     private static ImageIcon txtImageIcon;
     private static ImageIcon vbsImageIcon;
+    private static ImageIcon nullImageIcon;
     private volatile boolean isInitialized = false;
 
     private static class GetIconUtilBuilder {
@@ -39,6 +40,7 @@ public class GetIconUtil {
         folderImageIcon = changeIcon((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(new File("C:\\Windows")), width, height);
         txtImageIcon = changeIcon((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(new File("user\\cmds.txt")), width, height);
         vbsImageIcon = changeIcon((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(new File("user\\shortcutGenerator.vbs")), width, height);
+        nullImageIcon = changeIcon(new ImageIcon("/icons/NA.png"), width, height);
     }
 
     public ImageIcon getBigIcon(String path, int width, int height) {
@@ -47,7 +49,7 @@ public class GetIconUtil {
             isInitialized = true;
         }
         if (path == null || path.isEmpty()) {
-            return null;
+            return nullImageIcon;
         }
         File f = new File(path);
         if (f.exists()) {
@@ -68,7 +70,7 @@ public class GetIconUtil {
                 return changeIcon((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(f), width, height);
             }
         } else {
-            return null;
+            return nullImageIcon;
         }
     }
 }

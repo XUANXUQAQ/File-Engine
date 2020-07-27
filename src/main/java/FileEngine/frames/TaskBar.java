@@ -62,7 +62,6 @@ public class TaskBar {
                 // 为系统托盘加托盘图标
                 systemTray.add(trayIcon);
             } catch (Exception ignored) {
-
             }
         }
     }
