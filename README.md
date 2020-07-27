@@ -20,8 +20,8 @@ Or enter :help in the search bar. by default Ctrl + Alt + K to call out the sear
   * Simple UI, easy to set up.
   * Adaptive resolution display.   
 ### Please download the program corresponding to the number of digits in the system, otherwise an error may occur. 32-bit version may be deleted in the future
-[Download the latest stable 64-bit](https://github.com/XUANXUQAQ/File-Engine/releases/download/2.1/File-Engine-x64.V2.1.7z)   
-[Download the latest stable 32-bit](https://github.com/XUANXUQAQ/File-Engine/releases/download/2.1/File-Engine-x86.V2.1.7z)
+[Download the latest stable 64-bit](https://github.com/XUANXUQAQ/File-Engine/releases/download/2.3/File-Engine-x64.V2.3.7z)   
+[Download the latest stable 32-bit](https://github.com/XUANXUQAQ/File-Engine/releases/download/2.3/File-Engine-x86.V2.3.7z)
 
 Thanks for the following project:   
 1.fastjson (https://github.com/alibaba/fastjson)   
