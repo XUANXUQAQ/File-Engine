@@ -522,6 +522,15 @@ public class SearchBar {
         });
     }
 
+    private void setLabelChosen(JLabel label) {
+        //todo 美化
+        label.setBackground(labelColor);
+    }
+
+    private void setLabelNotChosen(JLabel label) {
+        label.setBackground(backgroundColor);
+    }
+
     private void addSearchBarMouseMotionListener() {
         //判断鼠标位置
         int labelPosition = label1.getY();
@@ -568,210 +577,210 @@ public class SearchBar {
                         switch (mousePosition) {
                             case 0:
                                 if (isLabelNotEmpty(label1)) {
-                                    label1.setBackground(labelColor);
+                                    setLabelChosen(label1);
                                 }
                                 if (isLabelNotEmpty(label2)) {
-                                    label2.setBackground(backgroundColor);
+                                    setLabelNotChosen(label2);
                                 }
                                 if (isLabelNotEmpty(label3)) {
-                                    label3.setBackground(backgroundColor);
+                                    setLabelNotChosen(label3);
                                 }
                                 if (isLabelNotEmpty(label4)) {
-                                    label4.setBackground(backgroundColor);
+                                    setLabelNotChosen(label4);
                                 }
                                 if (isLabelNotEmpty(label5)) {
-                                    label5.setBackground(backgroundColor);
+                                    setLabelNotChosen(label5);
                                 }
                                 if (isLabelNotEmpty(label6)) {
-                                    label6.setBackground(backgroundColor);
+                                    setLabelNotChosen(label6);
                                 }
                                 if (isLabelNotEmpty(label7)) {
-                                    label7.setBackground(backgroundColor);
+                                    setLabelNotChosen(label7);
                                 }
                                 if (isLabelNotEmpty(label8)) {
-                                    label8.setBackground(backgroundColor);
+                                    setLabelNotChosen(label8);
                                 }
                                 break;
                             case 1:
                                 if (isLabelNotEmpty(label1)) {
-                                    label1.setBackground(backgroundColor);
+                                    setLabelNotChosen(label1);
                                 }
                                 if (isLabelNotEmpty(label2)) {
-                                    label2.setBackground(labelColor);
+                                    setLabelChosen(label2);
                                 }
                                 if (isLabelNotEmpty(label3)) {
-                                    label3.setBackground(backgroundColor);
+                                    setLabelNotChosen(label3);
                                 }
                                 if (isLabelNotEmpty(label4)) {
-                                    label4.setBackground(backgroundColor);
+                                    setLabelNotChosen(label4);
                                 }
                                 if (isLabelNotEmpty(label5)) {
-                                    label5.setBackground(backgroundColor);
+                                    setLabelNotChosen(label5);
                                 }
                                 if (isLabelNotEmpty(label6)) {
-                                    label6.setBackground(backgroundColor);
+                                    setLabelNotChosen(label6);
                                 }
                                 if (isLabelNotEmpty(label7)) {
-                                    label7.setBackground(backgroundColor);
+                                    setLabelNotChosen(label7);
                                 }
                                 if (isLabelNotEmpty(label8)) {
-                                    label8.setBackground(backgroundColor);
+                                    setLabelNotChosen(label8);
                                 }
                                 break;
                             case 2:
                                 if (isLabelNotEmpty(label1)) {
-                                    label1.setBackground(backgroundColor);
+                                    setLabelNotChosen(label1);
                                 }
                                 if (isLabelNotEmpty(label2)) {
-                                    label2.setBackground(backgroundColor);
+                                    setLabelNotChosen(label2);
                                 }
                                 if (isLabelNotEmpty(label3)) {
-                                    label3.setBackground(labelColor);
+                                    setLabelChosen(label3);
                                 }
                                 if (isLabelNotEmpty(label4)) {
-                                    label4.setBackground(backgroundColor);
+                                    setLabelNotChosen(label4);
                                 }
                                 if (isLabelNotEmpty(label5)) {
-                                    label5.setBackground(backgroundColor);
+                                    setLabelNotChosen(label5);
                                 }
                                 if (isLabelNotEmpty(label6)) {
-                                    label6.setBackground(backgroundColor);
+                                    setLabelNotChosen(label6);
                                 }
                                 if (isLabelNotEmpty(label7)) {
-                                    label7.setBackground(backgroundColor);
+                                    setLabelNotChosen(label7);
                                 }
                                 if (isLabelNotEmpty(label8)) {
-                                    label8.setBackground(backgroundColor);
+                                    setLabelNotChosen(label8);
                                 }
                                 break;
                             case 3:
                                 if (isLabelNotEmpty(label1)) {
-                                    label1.setBackground(backgroundColor);
+                                    setLabelNotChosen(label1);
                                 }
                                 if (isLabelNotEmpty(label2)) {
-                                    label2.setBackground(backgroundColor);
+                                    setLabelNotChosen(label2);
                                 }
                                 if (isLabelNotEmpty(label3)) {
-                                    label3.setBackground(backgroundColor);
+                                    setLabelNotChosen(label3);
                                 }
                                 if (isLabelNotEmpty(label4)) {
-                                    label4.setBackground(labelColor);
+                                    setLabelChosen(label4);
                                 }
                                 if (isLabelNotEmpty(label5)) {
-                                    label5.setBackground(backgroundColor);
+                                    setLabelNotChosen(label5);
                                 }
                                 if (isLabelNotEmpty(label6)) {
-                                    label6.setBackground(backgroundColor);
+                                    setLabelNotChosen(label6);
                                 }
                                 if (isLabelNotEmpty(label7)) {
-                                    label7.setBackground(backgroundColor);
+                                    setLabelNotChosen(label7);
                                 }
                                 if (isLabelNotEmpty(label8)) {
-                                    label8.setBackground(backgroundColor);
+                                    setLabelNotChosen(label8);
                                 }
                                 break;
                             case 4:
                                 if (isLabelNotEmpty(label1)) {
-                                    label1.setBackground(backgroundColor);
+                                    setLabelNotChosen(label1);
                                 }
                                 if (isLabelNotEmpty(label2)) {
-                                    label2.setBackground(backgroundColor);
+                                    setLabelNotChosen(label2);
                                 }
                                 if (isLabelNotEmpty(label3)) {
-                                    label3.setBackground(backgroundColor);
+                                    setLabelNotChosen(label3);
                                 }
                                 if (isLabelNotEmpty(label4)) {
-                                    label4.setBackground(backgroundColor);
+                                    setLabelNotChosen(label4);
                                 }
                                 if (isLabelNotEmpty(label5)) {
-                                    label5.setBackground(labelColor);
+                                    setLabelChosen(label5);
                                 }
                                 if (isLabelNotEmpty(label6)) {
-                                    label6.setBackground(backgroundColor);
+                                    setLabelNotChosen(label6);
                                 }
                                 if (isLabelNotEmpty(label7)) {
-                                    label7.setBackground(backgroundColor);
+                                    setLabelNotChosen(label7);
                                 }
                                 if (isLabelNotEmpty(label8)) {
-                                    label8.setBackground(backgroundColor);
+                                    setLabelNotChosen(label8);
                                 }
                                 break;
                             case 5:
                                 if (isLabelNotEmpty(label1)) {
-                                    label1.setBackground(backgroundColor);
+                                    setLabelNotChosen(label1);
                                 }
                                 if (isLabelNotEmpty(label2)) {
-                                    label2.setBackground(backgroundColor);
+                                    setLabelNotChosen(label2);
                                 }
                                 if (isLabelNotEmpty(label3)) {
-                                    label3.setBackground(backgroundColor);
+                                    setLabelNotChosen(label3);
                                 }
                                 if (isLabelNotEmpty(label4)) {
-                                    label4.setBackground(backgroundColor);
+                                    setLabelNotChosen(label4);
                                 }
                                 if (isLabelNotEmpty(label5)) {
-                                    label5.setBackground(backgroundColor);
+                                    setLabelNotChosen(label5);
                                 }
                                 if (isLabelNotEmpty(label6)) {
-                                    label6.setBackground(labelColor);
+                                    setLabelChosen(label6);
                                 }
                                 if (isLabelNotEmpty(label7)) {
-                                    label7.setBackground(backgroundColor);
+                                    setLabelNotChosen(label7);
                                 }
                                 if (isLabelNotEmpty(label8)) {
-                                    label8.setBackground(backgroundColor);
+                                    setLabelNotChosen(label8);
                                 }
                                 break;
                             case 6:
                                 if (isLabelNotEmpty(label1)) {
-                                    label1.setBackground(backgroundColor);
+                                    setLabelNotChosen(label1);
                                 }
                                 if (isLabelNotEmpty(label2)) {
-                                    label2.setBackground(backgroundColor);
+                                    setLabelNotChosen(label2);
                                 }
                                 if (isLabelNotEmpty(label3)) {
-                                    label3.setBackground(backgroundColor);
+                                    setLabelNotChosen(label3);
                                 }
                                 if (isLabelNotEmpty(label4)) {
-                                    label4.setBackground(backgroundColor);
+                                    setLabelNotChosen(label4);
                                 }
                                 if (isLabelNotEmpty(label5)) {
-                                    label5.setBackground(backgroundColor);
+                                    setLabelNotChosen(label5);
                                 }
                                 if (isLabelNotEmpty(label6)) {
-                                    label6.setBackground(backgroundColor);
+                                    setLabelNotChosen(label6);
                                 }
                                 if (isLabelNotEmpty(label7)) {
-                                    label7.setBackground(labelColor);
+                                    setLabelChosen(label7);
                                 }
                                 if (isLabelNotEmpty(label8)) {
-                                    label8.setBackground(backgroundColor);
+                                    setLabelNotChosen(label8);
                                 }
                                 break;
                             case 7:
                                 if (isLabelNotEmpty(label1)) {
-                                    label1.setBackground(backgroundColor);
+                                    setLabelNotChosen(label1);
                                 }
                                 if (isLabelNotEmpty(label2)) {
-                                    label2.setBackground(backgroundColor);
+                                    setLabelNotChosen(label2);
                                 }
                                 if (isLabelNotEmpty(label3)) {
-                                    label3.setBackground(backgroundColor);
+                                    setLabelNotChosen(label3);
                                 }
                                 if (isLabelNotEmpty(label4)) {
-                                    label4.setBackground(backgroundColor);
+                                    setLabelNotChosen(label4);
                                 }
                                 if (isLabelNotEmpty(label5)) {
-                                    label5.setBackground(backgroundColor);
+                                    setLabelNotChosen(label5);
                                 }
                                 if (isLabelNotEmpty(label6)) {
-                                    label6.setBackground(backgroundColor);
+                                    setLabelNotChosen(label6);
                                 }
                                 if (isLabelNotEmpty(label7)) {
-                                    label7.setBackground(backgroundColor);
+                                    setLabelNotChosen(label7);
                                 }
                                 if (isLabelNotEmpty(label8)) {
-                                    label8.setBackground(labelColor);
+                                    setLabelChosen(label8);
                                 }
                                 break;
                         }
@@ -899,223 +908,223 @@ public class SearchBar {
                 case 0:
                     int size = resultCount.get();
                     if (size == 2) {
-                        label1.setBackground(backgroundColor);
-                        label2.setBackground(labelColor);
+                        setLabelNotChosen(label1);
+                        setLabelChosen(label2);
                     } else if (size == 3) {
-                        label1.setBackground(backgroundColor);
-                        label2.setBackground(labelColor);
-                        label3.setBackground(backgroundColor);
+                        setLabelNotChosen(label1);
+                        setLabelChosen(label2);
+                        setLabelNotChosen(label3);
                     } else if (size == 4) {
-                        label1.setBackground(backgroundColor);
-                        label2.setBackground(labelColor);
-                        label3.setBackground(backgroundColor);
-                        label4.setBackground(backgroundColor);
+                        setLabelNotChosen(label1);
+                        setLabelChosen(label2);
+                        setLabelNotChosen(label3);
+                        setLabelNotChosen(label4);
                     } else if (size == 5) {
-                        label1.setBackground(backgroundColor);
-                        label2.setBackground(labelColor);
-                        label3.setBackground(backgroundColor);
-                        label4.setBackground(backgroundColor);
-                        label5.setBackground(backgroundColor);
+                        setLabelNotChosen(label1);
+                        setLabelChosen(label2);
+                        setLabelNotChosen(label3);
+                        setLabelNotChosen(label4);
+                        setLabelNotChosen(label5);
                     } else if (size == 6) {
-                        label1.setBackground(backgroundColor);
-                        label2.setBackground(labelColor);
-                        label3.setBackground(backgroundColor);
-                        label4.setBackground(backgroundColor);
-                        label5.setBackground(backgroundColor);
-                        label6.setBackground(backgroundColor);
+                        setLabelNotChosen(label1);
+                        setLabelChosen(label2);
+                        setLabelNotChosen(label3);
+                        setLabelNotChosen(label4);
+                        setLabelNotChosen(label5);
+                        setLabelNotChosen(label6);
                     } else if (size == 7) {
-                        label1.setBackground(backgroundColor);
-                        label2.setBackground(labelColor);
-                        label3.setBackground(backgroundColor);
-                        label4.setBackground(backgroundColor);
-                        label5.setBackground(backgroundColor);
-                        label6.setBackground(backgroundColor);
-                        label7.setBackground(backgroundColor);
+                        setLabelNotChosen(label1);
+                        setLabelChosen(label2);
+                        setLabelNotChosen(label3);
+                        setLabelNotChosen(label4);
+                        setLabelNotChosen(label5);
+                        setLabelNotChosen(label6);
+                        setLabelNotChosen(label7);
                     } else if (size > 7) {
-                        label1.setBackground(backgroundColor);
-                        label2.setBackground(labelColor);
-                        label3.setBackground(backgroundColor);
-                        label4.setBackground(backgroundColor);
-                        label5.setBackground(backgroundColor);
-                        label6.setBackground(backgroundColor);
-                        label7.setBackground(backgroundColor);
-                        label8.setBackground(backgroundColor);
+                        setLabelNotChosen(label1);
+                        setLabelChosen(label2);
+                        setLabelNotChosen(label3);
+                        setLabelNotChosen(label4);
+                        setLabelNotChosen(label5);
+                        setLabelNotChosen(label6);
+                        setLabelNotChosen(label7);
+                        setLabelNotChosen(label8);
                     }
                     break;
                 case 1:
                     size = resultCount.get();
                     if (size == 3) {
-                        label1.setBackground(backgroundColor);
-                        label2.setBackground(backgroundColor);
-                        label3.setBackground(labelColor);
+                        setLabelNotChosen(label1);
+                        setLabelNotChosen(label2);
+                        setLabelChosen(label3);
                     } else if (size == 4) {
-                        label1.setBackground(backgroundColor);
-                        label2.setBackground(backgroundColor);
-                        label3.setBackground(labelColor);
-                        label4.setBackground(backgroundColor);
+                        setLabelNotChosen(label1);
+                        setLabelNotChosen(label2);
+                        setLabelChosen(label3);
+                        setLabelNotChosen(label4);
                     } else if (size == 5) {
-                        label1.setBackground(backgroundColor);
-                        label2.setBackground(backgroundColor);
-                        label3.setBackground(labelColor);
-                        label4.setBackground(backgroundColor);
-                        label5.setBackground(backgroundColor);
+                        setLabelNotChosen(label1);
+                        setLabelNotChosen(label2);
+                        setLabelChosen(label3);
+                        setLabelNotChosen(label4);
+                        setLabelNotChosen(label5);
                     } else if (size == 6) {
-                        label1.setBackground(backgroundColor);
-                        label2.setBackground(backgroundColor);
-                        label3.setBackground(labelColor);
-                        label4.setBackground(backgroundColor);
-                        label5.setBackground(backgroundColor);
-                        label6.setBackground(backgroundColor);
+                        setLabelNotChosen(label1);
+                        setLabelNotChosen(label2);
+                        setLabelChosen(label3);
+                        setLabelNotChosen(label4);
+                        setLabelNotChosen(label5);
+                        setLabelNotChosen(label6);
                     } else if (size == 7) {
-                        label1.setBackground(backgroundColor);
-                        label2.setBackground(backgroundColor);
-                        label3.setBackground(labelColor);
-                        label4.setBackground(backgroundColor);
-                        label5.setBackground(backgroundColor);
-                        label6.setBackground(backgroundColor);
-                        label7.setBackground(backgroundColor);
+                        setLabelNotChosen(label1);
+                        setLabelNotChosen(label2);
+                        setLabelChosen(label3);
+                        setLabelNotChosen(label4);
+                        setLabelNotChosen(label5);
+                        setLabelNotChosen(label6);
+                        setLabelNotChosen(label7);
                     } else if (size > 7) {
-                        label1.setBackground(backgroundColor);
-                        label2.setBackground(backgroundColor);
-                        label3.setBackground(labelColor);
-                        label4.setBackground(backgroundColor);
-                        label5.setBackground(backgroundColor);
-                        label6.setBackground(backgroundColor);
-                        label7.setBackground(backgroundColor);
-                        label8.setBackground(backgroundColor);
+                        setLabelNotChosen(label1);
+                        setLabelNotChosen(label2);
+                        setLabelChosen(label3);
+                        setLabelNotChosen(label4);
+                        setLabelNotChosen(label5);
+                        setLabelNotChosen(label6);
+                        setLabelNotChosen(label7);
+                        setLabelNotChosen(label8);
                     }
                     break;
                 case 2:
                     size = resultCount.get();
                     if (size == 4) {
-                        label1.setBackground(backgroundColor);
-                        label2.setBackground(backgroundColor);
-                        label3.setBackground(backgroundColor);
-                        label4.setBackground(labelColor);
+                        setLabelNotChosen(label1);
+                        setLabelNotChosen(label2);
+                        setLabelNotChosen(label3);
+                        setLabelChosen(label4);
                     } else if (size == 5) {
-                        label1.setBackground(backgroundColor);
-                        label2.setBackground(backgroundColor);
-                        label3.setBackground(backgroundColor);
-                        label4.setBackground(labelColor);
-                        label5.setBackground(backgroundColor);
+                        setLabelNotChosen(label1);
+                        setLabelNotChosen(label2);
+                        setLabelNotChosen(label3);
+                        setLabelChosen(label4);
+                        setLabelNotChosen(label5);
                     } else if (size == 6) {
-                        label1.setBackground(backgroundColor);
-                        label2.setBackground(backgroundColor);
-                        label3.setBackground(backgroundColor);
-                        label4.setBackground(labelColor);
-                        label5.setBackground(backgroundColor);
-                        label6.setBackground(backgroundColor);
+                        setLabelNotChosen(label1);
+                        setLabelNotChosen(label2);
+                        setLabelNotChosen(label3);
+                        setLabelChosen(label4);
+                        setLabelNotChosen(label5);
+                        setLabelNotChosen(label6);
                     } else if (size == 7) {
-                        label1.setBackground(backgroundColor);
-                        label2.setBackground(backgroundColor);
-                        label3.setBackground(backgroundColor);
-                        label4.setBackground(labelColor);
-                        label5.setBackground(backgroundColor);
-                        label6.setBackground(backgroundColor);
-                        label7.setBackground(backgroundColor);
+                        setLabelNotChosen(label1);
+                        setLabelNotChosen(label2);
+                        setLabelNotChosen(label3);
+                        setLabelChosen(label4);
+                        setLabelNotChosen(label5);
+                        setLabelNotChosen(label6);
+                        setLabelNotChosen(label7);
                     } else if (size > 7) {
-                        label1.setBackground(backgroundColor);
-                        label2.setBackground(backgroundColor);
-                        label3.setBackground(backgroundColor);
-                        label4.setBackground(labelColor);
-                        label5.setBackground(backgroundColor);
-                        label6.setBackground(backgroundColor);
-                        label7.setBackground(backgroundColor);
-                        label8.setBackground(backgroundColor);
+                        setLabelNotChosen(label1);
+                        setLabelNotChosen(label2);
+                        setLabelNotChosen(label3);
+                        setLabelChosen(label4);
+                        setLabelNotChosen(label5);
+                        setLabelNotChosen(label6);
+                        setLabelNotChosen(label7);
+                        setLabelNotChosen(label8);
                     }
                     break;
                 case 3:
                     size = resultCount.get();
                     if (size == 5) {
-                        label1.setBackground(backgroundColor);
-                        label2.setBackground(backgroundColor);
-                        label3.setBackground(backgroundColor);
-                        label4.setBackground(backgroundColor);
-                        label5.setBackground(labelColor);
+                        setLabelNotChosen(label1);
+                        setLabelNotChosen(label2);
+                        setLabelNotChosen(label3);
+                        setLabelNotChosen(label4);
+                        setLabelChosen(label5);
                     } else if (size == 6) {
-                        label1.setBackground(backgroundColor);
-                        label2.setBackground(backgroundColor);
-                        label3.setBackground(backgroundColor);
-                        label4.setBackground(backgroundColor);
-                        label5.setBackground(labelColor);
-                        label6.setBackground(backgroundColor);
+                        setLabelNotChosen(label1);
+                        setLabelNotChosen(label2);
+                        setLabelNotChosen(label3);
+                        setLabelNotChosen(label4);
+                        setLabelChosen(label5);
+                        setLabelNotChosen(label6);
                     } else if (size == 7) {
-                        label1.setBackground(backgroundColor);
-                        label2.setBackground(backgroundColor);
-                        label3.setBackground(backgroundColor);
-                        label4.setBackground(backgroundColor);
-                        label5.setBackground(labelColor);
-                        label6.setBackground(backgroundColor);
-                        label7.setBackground(backgroundColor);
+                        setLabelNotChosen(label1);
+                        setLabelNotChosen(label2);
+                        setLabelNotChosen(label3);
+                        setLabelNotChosen(label4);
+                        setLabelChosen(label5);
+                        setLabelNotChosen(label6);
+                        setLabelNotChosen(label7);
                     } else if (size > 7) {
-                        label1.setBackground(backgroundColor);
-                        label2.setBackground(backgroundColor);
-                        label3.setBackground(backgroundColor);
-                        label4.setBackground(backgroundColor);
-                        label5.setBackground(labelColor);
-                        label6.setBackground(backgroundColor);
-                        label7.setBackground(backgroundColor);
-                        label8.setBackground(backgroundColor);
+                        setLabelNotChosen(label1);
+                        setLabelNotChosen(label2);
+                        setLabelNotChosen(label3);
+                        setLabelNotChosen(label4);
+                        setLabelChosen(label5);
+                        setLabelNotChosen(label6);
+                        setLabelNotChosen(label7);
+                        setLabelNotChosen(label8);
                     }
                     break;
                 case 4:
                     size = resultCount.get();
                     if (size == 6) {
-                        label1.setBackground(backgroundColor);
-                        label2.setBackground(backgroundColor);
-                        label3.setBackground(backgroundColor);
-                        label4.setBackground(backgroundColor);
-                        label5.setBackground(backgroundColor);
-                        label6.setBackground(labelColor);
+                        setLabelNotChosen(label1);
+                        setLabelNotChosen(label2);
+                        setLabelNotChosen(label3);
+                        setLabelNotChosen(label4);
+                        setLabelNotChosen(label5);
+                        setLabelChosen(label6);
                     } else if (size == 7) {
-                        label1.setBackground(backgroundColor);
-                        label2.setBackground(backgroundColor);
-                        label3.setBackground(backgroundColor);
-                        label4.setBackground(backgroundColor);
-                        label5.setBackground(backgroundColor);
-                        label6.setBackground(labelColor);
-                        label7.setBackground(backgroundColor);
+                        setLabelNotChosen(label1);
+                        setLabelNotChosen(label2);
+                        setLabelNotChosen(label3);
+                        setLabelNotChosen(label4);
+                        setLabelNotChosen(label5);
+                        setLabelChosen(label6);
+                        setLabelNotChosen(label7);
                     } else if (size > 7) {
-                        label1.setBackground(backgroundColor);
-                        label2.setBackground(backgroundColor);
-                        label3.setBackground(backgroundColor);
-                        label4.setBackground(backgroundColor);
-                        label5.setBackground(backgroundColor);
-                        label6.setBackground(labelColor);
-                        label7.setBackground(backgroundColor);
-                        label8.setBackground(backgroundColor);
+                        setLabelNotChosen(label1);
+                        setLabelNotChosen(label2);
+                        setLabelNotChosen(label3);
+                        setLabelNotChosen(label4);
+                        setLabelNotChosen(label5);
+                        setLabelChosen(label6);
+                        setLabelNotChosen(label7);
+                        setLabelNotChosen(label8);
                     }
                     break;
                 case 5:
                     size = resultCount.get();
                     if (size == 7) {
-                        label1.setBackground(backgroundColor);
-                        label2.setBackground(backgroundColor);
-                        label3.setBackground(backgroundColor);
-                        label4.setBackground(backgroundColor);
-                        label5.setBackground(backgroundColor);
-                        label6.setBackground(backgroundColor);
-                        label7.setBackground(labelColor);
+                        setLabelNotChosen(label1);
+                        setLabelNotChosen(label2);
+                        setLabelNotChosen(label3);
+                        setLabelNotChosen(label4);
+                        setLabelNotChosen(label5);
+                        setLabelNotChosen(label6);
+                        setLabelChosen(label7);
                     } else if (size > 7) {
-                        label1.setBackground(backgroundColor);
-                        label2.setBackground(backgroundColor);
-                        label3.setBackground(backgroundColor);
-                        label4.setBackground(backgroundColor);
-                        label5.setBackground(backgroundColor);
-                        label6.setBackground(backgroundColor);
-                        label7.setBackground(labelColor);
-                        label8.setBackground(backgroundColor);
+                        setLabelNotChosen(label1);
+                        setLabelNotChosen(label2);
+                        setLabelNotChosen(label3);
+                        setLabelNotChosen(label4);
+                        setLabelNotChosen(label5);
+                        setLabelNotChosen(label6);
+                        setLabelChosen(label7);
+                        setLabelNotChosen(label8);
                     }
                     break;
                 case 6:
-                    label1.setBackground(backgroundColor);
-                    label2.setBackground(backgroundColor);
-                    label3.setBackground(backgroundColor);
-                    label4.setBackground(backgroundColor);
-                    label5.setBackground(backgroundColor);
-                    label6.setBackground(backgroundColor);
-                    label7.setBackground(backgroundColor);
-                    label8.setBackground(labelColor);
+                    setLabelNotChosen(label1);
+                    setLabelNotChosen(label2);
+                    setLabelNotChosen(label3);
+                    setLabelNotChosen(label4);
+                    setLabelNotChosen(label5);
+                    setLabelNotChosen(label6);
+                    setLabelNotChosen(label7);
+                    setLabelChosen(label8);
                     break;
                 case 7:
                     if (runningMode.get() == NORMAL_MODE) {
@@ -1324,227 +1333,226 @@ public class SearchBar {
                 case 1:
                     size = resultCount.get();
                     if (size == 2) {
-                        label1.setBackground(labelColor);
-                        label2.setBackground(backgroundColor);
+                        setLabelChosen(label1);
+                        setLabelNotChosen(label2);
                     } else if (size == 3) {
-                        label1.setBackground(labelColor);
-                        label2.setBackground(backgroundColor);
-                        label3.setBackground(backgroundColor);
+                        setLabelChosen(label1);
+                        setLabelNotChosen(label2);
+                        setLabelNotChosen(label3);
                     } else if (size == 4) {
-                        label1.setBackground(labelColor);
-                        label2.setBackground(backgroundColor);
-                        label3.setBackground(backgroundColor);
-                        label4.setBackground(backgroundColor);
+                        setLabelChosen(label1);
+                        setLabelNotChosen(label2);
+                        setLabelNotChosen(label3);
+                        setLabelNotChosen(label4);
                     } else if (size == 5) {
-                        label1.setBackground(labelColor);
-                        label2.setBackground(backgroundColor);
-                        label3.setBackground(backgroundColor);
-                        label4.setBackground(backgroundColor);
-                        label5.setBackground(backgroundColor);
+                        setLabelChosen(label1);
+                        setLabelNotChosen(label2);
+                        setLabelNotChosen(label3);
+                        setLabelNotChosen(label4);
+                        setLabelNotChosen(label5);
                     } else if (size == 6) {
-                        label1.setBackground(labelColor);
-                        label2.setBackground(backgroundColor);
-                        label3.setBackground(backgroundColor);
-                        label4.setBackground(backgroundColor);
-                        label5.setBackground(backgroundColor);
-                        label6.setBackground(backgroundColor);
+                        setLabelChosen(label1);
+                        setLabelNotChosen(label2);
+                        setLabelNotChosen(label3);
+                        setLabelNotChosen(label4);
+                        setLabelNotChosen(label5);
+                        setLabelNotChosen(label6);
                     } else if (size == 7) {
-                        label1.setBackground(labelColor);
-                        label2.setBackground(backgroundColor);
-                        label3.setBackground(backgroundColor);
-                        label4.setBackground(backgroundColor);
-                        label5.setBackground(backgroundColor);
-                        label6.setBackground(backgroundColor);
-                        label7.setBackground(backgroundColor);
+                        setLabelChosen(label1);
+                        setLabelNotChosen(label2);
+                        setLabelNotChosen(label3);
+                        setLabelNotChosen(label4);
+                        setLabelNotChosen(label5);
+                        setLabelNotChosen(label6);
+                        setLabelNotChosen(label7);
                     } else if (size > 7) {
-                        label1.setBackground(labelColor);
-                        label2.setBackground(backgroundColor);
-                        label3.setBackground(backgroundColor);
-                        label4.setBackground(backgroundColor);
-                        label5.setBackground(backgroundColor);
-                        label6.setBackground(backgroundColor);
-                        label7.setBackground(backgroundColor);
-                        label8.setBackground(backgroundColor);
+                        setLabelChosen(label1);
+                        setLabelNotChosen(label2);
+                        setLabelNotChosen(label3);
+                        setLabelNotChosen(label4);
+                        setLabelNotChosen(label5);
+                        setLabelNotChosen(label6);
+                        setLabelNotChosen(label7);
+                        setLabelNotChosen(label8);
                     }
                     break;
                 case 2:
                     size = resultCount.get();
                     if (size == 3) {
-                        label1.setBackground(backgroundColor);
-                        label2.setBackground(labelColor);
-                        label3.setBackground(backgroundColor);
+                        setLabelNotChosen(label1);
+                        setLabelChosen(label2);
+                        setLabelNotChosen(label3);
                     } else if (size == 4) {
-                        label1.setBackground(backgroundColor);
-                        label2.setBackground(labelColor);
-                        label3.setBackground(backgroundColor);
-                        label4.setBackground(backgroundColor);
+                        setLabelNotChosen(label1);
+                        setLabelChosen(label2);
+                        setLabelNotChosen(label3);
+                        setLabelNotChosen(label4);
                     } else if (size == 5) {
-                        label1.setBackground(backgroundColor);
-                        label2.setBackground(labelColor);
-                        label3.setBackground(backgroundColor);
-                        label4.setBackground(backgroundColor);
-                        label5.setBackground(backgroundColor);
+                        setLabelNotChosen(label1);
+                        setLabelChosen(label2);
+                        setLabelNotChosen(label3);
+                        setLabelNotChosen(label4);
+                        setLabelNotChosen(label5);
                     } else if (size == 6) {
-                        label1.setBackground(backgroundColor);
-                        label2.setBackground(labelColor);
-                        label3.setBackground(backgroundColor);
-                        label4.setBackground(backgroundColor);
-                        label5.setBackground(backgroundColor);
-                        label6.setBackground(backgroundColor);
+                        setLabelNotChosen(label1);
+                        setLabelChosen(label2);
+                        setLabelNotChosen(label3);
+                        setLabelNotChosen(label4);
+                        setLabelNotChosen(label5);
+                        setLabelNotChosen(label6);
                     } else if (size == 7) {
-                        label1.setBackground(backgroundColor);
-                        label2.setBackground(labelColor);
-                        label3.setBackground(backgroundColor);
-                        label4.setBackground(backgroundColor);
-                        label5.setBackground(backgroundColor);
-                        label6.setBackground(backgroundColor);
-                        label7.setBackground(backgroundColor);
+                        setLabelNotChosen(label1);
+                        setLabelChosen(label2);
+                        setLabelNotChosen(label3);
+                        setLabelNotChosen(label4);
+                        setLabelNotChosen(label5);
+                        setLabelNotChosen(label6);
+                        setLabelNotChosen(label7);
                     } else if (size > 7) {
-                        label1.setBackground(backgroundColor);
-                        label2.setBackground(labelColor);
-                        label3.setBackground(backgroundColor);
-                        label4.setBackground(backgroundColor);
-                        label5.setBackground(backgroundColor);
-                        label6.setBackground(backgroundColor);
-                        label7.setBackground(backgroundColor);
-                        label8.setBackground(backgroundColor);
+                        setLabelNotChosen(label1);
+                        setLabelChosen(label2);
+                        setLabelNotChosen(label3);
+                        setLabelNotChosen(label4);
+                        setLabelNotChosen(label5);
+                        setLabelNotChosen(label6);
+                        setLabelNotChosen(label7);
+                        setLabelNotChosen(label8);
                     }
                     break;
                 case 3:
                     size = resultCount.get();
                     if (size == 4) {
-                        label1.setBackground(backgroundColor);
-                        label2.setBackground(backgroundColor);
-                        label3.setBackground(labelColor);
-                        label4.setBackground(backgroundColor);
+                        setLabelNotChosen(label1);
+                        setLabelNotChosen(label2);
+                        setLabelChosen(label3);
+                        setLabelNotChosen(label4);
                     } else if (size == 5) {
-                        label1.setBackground(backgroundColor);
-                        label2.setBackground(backgroundColor);
-                        label3.setBackground(labelColor);
-                        label4.setBackground(backgroundColor);
-                        label5.setBackground(backgroundColor);
+                        setLabelNotChosen(label1);
+                        setLabelNotChosen(label2);
+                        setLabelChosen(label3);
+                        setLabelNotChosen(label4);
+                        setLabelNotChosen(label5);
                     } else if (size == 6) {
-                        label1.setBackground(backgroundColor);
-                        label2.setBackground(backgroundColor);
-                        label3.setBackground(labelColor);
-                        label4.setBackground(backgroundColor);
-                        label5.setBackground(backgroundColor);
-                        label6.setBackground(backgroundColor);
+                        setLabelNotChosen(label1);
+                        setLabelNotChosen(label2);
+                        setLabelChosen(label3);
+                        setLabelNotChosen(label4);
+                        setLabelNotChosen(label5);
+                        setLabelNotChosen(label6);
                     } else if (size == 7) {
-                        label1.setBackground(backgroundColor);
-                        label2.setBackground(backgroundColor);
-                        label3.setBackground(labelColor);
-                        label4.setBackground(backgroundColor);
-                        label5.setBackground(backgroundColor);
-                        label6.setBackground(backgroundColor);
-                        label7.setBackground(backgroundColor);
+                        setLabelNotChosen(label1);
+                        setLabelNotChosen(label2);
+                        setLabelChosen(label3);
+                        setLabelNotChosen(label4);
+                        setLabelNotChosen(label5);
+                        setLabelNotChosen(label6);
+                        setLabelNotChosen(label7);
                     } else if (size > 7) {
-                        label1.setBackground(backgroundColor);
-                        label2.setBackground(backgroundColor);
-                        label3.setBackground(labelColor);
-                        label4.setBackground(backgroundColor);
-                        label5.setBackground(backgroundColor);
-                        label6.setBackground(backgroundColor);
-                        label7.setBackground(backgroundColor);
-                        label8.setBackground(backgroundColor);
+                        setLabelNotChosen(label1);
+                        setLabelNotChosen(label2);
+                        setLabelChosen(label3);
+                        setLabelNotChosen(label4);
+                        setLabelNotChosen(label5);
+                        setLabelNotChosen(label6);
+                        setLabelNotChosen(label7);
+                        setLabelNotChosen(label8);
                     }
                     break;
                 case 4:
                     size = resultCount.get();
                     if (size == 5) {
-                        label1.setBackground(backgroundColor);
-                        label2.setBackground(backgroundColor);
-                        label3.setBackground(backgroundColor);
-                        label4.setBackground(labelColor);
-                        label5.setBackground(backgroundColor);
+                        setLabelNotChosen(label1);
+                        setLabelNotChosen(label2);
+                        setLabelNotChosen(label3);
+                        setLabelChosen(label4);
+                        setLabelNotChosen(label5);
                     } else if (size == 6) {
-                        label1.setBackground(backgroundColor);
-                        label2.setBackground(backgroundColor);
-                        label3.setBackground(backgroundColor);
-                        label4.setBackground(labelColor);
-                        label5.setBackground(backgroundColor);
-                        label6.setBackground(backgroundColor);
+                        setLabelNotChosen(label1);
+                        setLabelNotChosen(label2);
+                        setLabelNotChosen(label3);
+                        setLabelChosen(label4);
+                        setLabelNotChosen(label5);
+                        setLabelNotChosen(label6);
                     } else if (size == 7) {
-                        label1.setBackground(backgroundColor);
-                        label2.setBackground(backgroundColor);
-                        label3.setBackground(backgroundColor);
-                        label4.setBackground(labelColor);
-                        label5.setBackground(backgroundColor);
-                        label6.setBackground(backgroundColor);
-                        label7.setBackground(backgroundColor);
+                        setLabelNotChosen(label1);
+                        setLabelNotChosen(label2);
+                        setLabelNotChosen(label3);
+                        setLabelChosen(label4);
+                        setLabelNotChosen(label5);
+                        setLabelNotChosen(label6);
+                        setLabelNotChosen(label7);
                     } else if (size > 7) {
-                        label1.setBackground(backgroundColor);
-                        label2.setBackground(backgroundColor);
-                        label3.setBackground(backgroundColor);
-                        label4.setBackground(labelColor);
-                        label5.setBackground(backgroundColor);
-                        label6.setBackground(backgroundColor);
-                        label7.setBackground(backgroundColor);
-                        label8.setBackground(backgroundColor);
+                        setLabelNotChosen(label1);
+                        setLabelNotChosen(label2);
+                        setLabelNotChosen(label3);
+                        setLabelChosen(label4);
+                        setLabelNotChosen(label5);
+                        setLabelNotChosen(label6);
+                        setLabelNotChosen(label7);
+                        setLabelNotChosen(label8);
                     }
                     break;
                 case 5:
                     size = resultCount.get();
                     if (size == 6) {
-                        label1.setBackground(backgroundColor);
-                        label2.setBackground(backgroundColor);
-                        label3.setBackground(backgroundColor);
-                        label4.setBackground(backgroundColor);
-                        label5.setBackground(labelColor);
-                        label6.setBackground(backgroundColor);
+                        setLabelNotChosen(label1);
+                        setLabelNotChosen(label2);
+                        setLabelNotChosen(label3);
+                        setLabelNotChosen(label4);
+                        setLabelChosen(label5);
+                        setLabelNotChosen(label6);
                     } else if (size == 7) {
-                        label1.setBackground(backgroundColor);
-                        label2.setBackground(backgroundColor);
-                        label3.setBackground(backgroundColor);
-                        label4.setBackground(backgroundColor);
-                        label5.setBackground(labelColor);
-                        label6.setBackground(backgroundColor);
-                        label7.setBackground(backgroundColor);
+                        setLabelNotChosen(label1);
+                        setLabelNotChosen(label2);
+                        setLabelNotChosen(label3);
+                        setLabelNotChosen(label4);
+                        setLabelChosen(label5);
+                        setLabelNotChosen(label6);
+                        setLabelNotChosen(label7);
                     } else if (size > 7) {
-                        label1.setBackground(backgroundColor);
-                        label2.setBackground(backgroundColor);
-                        label3.setBackground(backgroundColor);
-                        label4.setBackground(backgroundColor);
-                        label5.setBackground(labelColor);
-                        label6.setBackground(backgroundColor);
-                        label7.setBackground(backgroundColor);
-                        label8.setBackground(backgroundColor);
+                        setLabelNotChosen(label1);
+                        setLabelNotChosen(label2);
+                        setLabelNotChosen(label3);
+                        setLabelNotChosen(label4);
+                        setLabelChosen(label5);
+                        setLabelNotChosen(label6);
+                        setLabelNotChosen(label7);
+                        setLabelNotChosen(label8);
                     }
                     break;
                 case 6:
                     size = resultCount.get();
                     if (size == 7) {
-                        label1.setBackground(backgroundColor);
-                        label2.setBackground(backgroundColor);
-                        label3.setBackground(backgroundColor);
-                        label4.setBackground(backgroundColor);
-                        label5.setBackground(backgroundColor);
-                        label6.setBackground(labelColor);
-                        label7.setBackground(backgroundColor);
+                        setLabelNotChosen(label1);
+                        setLabelNotChosen(label2);
+                        setLabelNotChosen(label3);
+                        setLabelNotChosen(label4);
+                        setLabelNotChosen(label5);
+                        setLabelChosen(label6);
+                        setLabelNotChosen(label7);
                     } else if (size > 7) {
-                        label1.setBackground(backgroundColor);
-                        label2.setBackground(backgroundColor);
-                        label3.setBackground(backgroundColor);
-                        label4.setBackground(backgroundColor);
-                        label5.setBackground(backgroundColor);
-                        label6.setBackground(labelColor);
-                        label7.setBackground(backgroundColor);
-                        label8.setBackground(backgroundColor);
+                        setLabelNotChosen(label1);
+                        setLabelNotChosen(label2);
+                        setLabelNotChosen(label3);
+                        setLabelNotChosen(label4);
+                        setLabelNotChosen(label5);
+                        setLabelChosen(label6);
+                        setLabelNotChosen(label7);
+                        setLabelNotChosen(label8);
                     }
                     break;
                 case 7:
-                    label1.setBackground(backgroundColor);
-                    label2.setBackground(backgroundColor);
-                    label3.setBackground(backgroundColor);
-                    label4.setBackground(backgroundColor);
-                    label5.setBackground(backgroundColor);
-                    label6.setBackground(backgroundColor);
-                    label7.setBackground(labelColor);
-                    label8.setBackground(backgroundColor);
+                    setLabelNotChosen(label1);
+                    setLabelNotChosen(label2);
+                    setLabelNotChosen(label3);
+                    setLabelNotChosen(label4);
+                    setLabelNotChosen(label5);
+                    setLabelNotChosen(label6);
+                    setLabelChosen(label7);
+                    setLabelNotChosen(label8);
                     break;
             }
         } catch (NullPointerException ignored) {
-
         }
     }
 
@@ -1894,72 +1902,71 @@ public class SearchBar {
 
                     if (!isUserPressed && isLabelNotEmpty(label1)) {
                         if (labelCount.get() == 0) {
-                            label1.setBackground(labelColor);
+                            setLabelChosen(label1);
                         } else {
-                            label1.setBackground(backgroundColor);
+                            setLabelNotChosen(label1);
                         }
                         label1.setBorder(border);
                     }
                     if (!isUserPressed && isLabelNotEmpty(label2)) {
                         if (labelCount.get() == 1) {
-                            label2.setBackground(labelColor);
+                            setLabelChosen(label2);
                         } else {
-                            label2.setBackground(backgroundColor);
+                            setLabelNotChosen(label2);
                         }
                         label2.setBorder(border);
                     }
                     if (!isUserPressed && isLabelNotEmpty(label3)) {
                         if (labelCount.get() == 2) {
-                            label3.setBackground(labelColor);
+                            setLabelChosen(label3);
                         } else {
-                            label3.setBackground(backgroundColor);
+                            setLabelNotChosen(label3);
                         }
                         label3.setBorder(border);
                     }
                     if (!isUserPressed && isLabelNotEmpty(label4)) {
                         if (labelCount.get() == 3) {
-                            label4.setBackground(labelColor);
+                            setLabelChosen(label4);
                         } else {
-                            label4.setBackground(backgroundColor);
+                            setLabelNotChosen(label4);
                         }
                         label4.setBorder(border);
                     }
                     if (!isUserPressed && isLabelNotEmpty(label5)) {
                         if (labelCount.get() == 4) {
-                            label5.setBackground(labelColor);
+                            setLabelChosen(label5);
                         } else {
-                            label5.setBackground(backgroundColor);
+                            setLabelNotChosen(label5);
                         }
                         label5.setBorder(border);
                     }
                     if (!isUserPressed && isLabelNotEmpty(label6)) {
                         if (labelCount.get() == 5) {
-                            label6.setBackground(labelColor);
+                            setLabelChosen(label6);
                         } else {
-                            label6.setBackground(backgroundColor);
+                            setLabelNotChosen(label6);
                         }
                         label6.setBorder(border);
                     }
                     if (!isUserPressed && isLabelNotEmpty(label7)) {
                         if (labelCount.get() == 6) {
-                            label7.setBackground(labelColor);
+                            setLabelChosen(label7);
                         } else {
-                            label7.setBackground(backgroundColor);
+                            setLabelNotChosen(label7);
                         }
                         label7.setBorder(border);
                     }
                     if (!isUserPressed && isLabelNotEmpty(label8)) {
                         if (labelCount.get() == 7) {
-                            label8.setBackground(labelColor);
+                            setLabelChosen(label8);
                         } else {
-                            label8.setBackground(backgroundColor);
+                            setLabelNotChosen(label8);
                         }
                         label8.setBorder(border);
                     }
                     Thread.sleep(50);
                 }
             } catch (InterruptedException ignored) {
-
             }
         });
 
@@ -2329,7 +2336,7 @@ public class SearchBar {
                         currentLabelSelectedPosition.set(0);
                         clearLabel();
                         if (!getTextFieldText().isEmpty()) {
-                            label1.setBackground(labelColor);
+                            setLabelChosen(label1);
                         } else {
                             clearLabel();
                         }
@@ -2423,7 +2430,6 @@ public class SearchBar {
                                                 }
                                             }
                                         } catch (NullPointerException ignored) {
-
                                         }
                                         Thread.sleep(10);
                                     }
@@ -2434,10 +2440,10 @@ public class SearchBar {
                                     false, false, false, false);
 
                         } else if (search.getStatus() == SearchUtil.VACUUM) {
-                            label1.setBackground(labelColor);
+                            setLabelChosen(label1);
                             label1.setText(TranslateUtil.getInstance().getTranslation("Organizing database"));
                         } else if (search.getStatus() == SearchUtil.MANUAL_UPDATE) {
-                            label1.setBackground(labelColor);
+                            setLabelChosen(label1);
                             label1.setText(TranslateUtil.getInstance().getTranslation("Updating file index") + "...");
                         }
 
@@ -2460,7 +2466,8 @@ public class SearchBar {
             //检测文件添加线程
             String filesToAdd;
             try (BufferedReader readerAdd = new BufferedReader(new InputStreamReader(
-                    new FileInputStream(SettingsFrame.getTmp().getAbsolutePath() + File.separator + "fileAdded.txt"), StandardCharsets.UTF_8))) {
+                    new FileInputStream(SettingsFrame.getTmp().getAbsolutePath() + File.separator + "fileAdded.txt"),
+                    StandardCharsets.UTF_8))) {
                 while (SettingsFrame.isNotMainExit()) {
                     if (search.getStatus() == SearchUtil.NORMAL) {
                         if ((filesToAdd = readerAdd.readLine()) != null) {
@@ -2482,7 +2489,8 @@ public class SearchBar {
         CachedThreadPool.getInstance().executeTask(() -> {
             String filesToRemove;
             try (BufferedReader readerRemove = new BufferedReader(new InputStreamReader(
-                    new FileInputStream(SettingsFrame.getTmp().getAbsolutePath() + File.separator + "fileRemoved.txt"), StandardCharsets.UTF_8))) {
+                    new FileInputStream(SettingsFrame.getTmp().getAbsolutePath() + File.separator + "fileRemoved.txt"),
+                    StandardCharsets.UTF_8))) {
                 while (SettingsFrame.isNotMainExit()) {
                     if (search.getStatus() == SearchUtil.NORMAL) {
                         if ((filesToRemove = readerRemove.readLine()) != null) {
@@ -2504,20 +2512,17 @@ public class SearchBar {
 
         CachedThreadPool.getInstance().executeTask(() -> {
             // 时间检测线程
-            long count = 0;
             long updateTimeLimit = SettingsFrame.getUpdateTimeLimit() * 1000;
             try {
                 while (SettingsFrame.isNotMainExit()) {
                     try (Statement stmt = SQLiteUtil.getStatement()) {
                         while (SettingsFrame.isNotMainExit()) {
-                            count += 1000;
-                            if (count >= updateTimeLimit && search.getStatus() == SearchUtil.NORMAL) {
-                                count = 0;
+                            if (search.getStatus() == SearchUtil.NORMAL) {
                                 if (search.getStatus() == SearchUtil.NORMAL) {
                                     search.executeAllCommands(stmt);
                                 }
                             }
-                            Thread.sleep(1000);
+                            Thread.sleep(updateTimeLimit);
                         }
                     } catch (Exception e) {
                         if (SettingsFrame.isDebug()) {
@@ -2527,7 +2532,6 @@ public class SearchBar {
                     Thread.sleep(500);
                 }
             } catch (Exception ignored) {
-
             }
         });
 
@@ -2678,9 +2682,9 @@ public class SearchBar {
         label.setBorder(border);
         label.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>" + getParentPath(path) + "</body></html>");
         if (isChosen) {
-            label.setBackground(labelColor);
+            setLabelChosen(label);
         } else {
-            label.setBackground(backgroundColor);
+            setLabelNotChosen(label);
         }
     }
 
@@ -2696,9 +2700,9 @@ public class SearchBar {
         label.setIcon(imageIcon);
         label.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>" + path + "</font></body></html>");
         if (isChosen) {
-            label.setBackground(labelColor);
+            setLabelChosen(label);
         } else {
-            label.setBackground(backgroundColor);
+            setLabelNotChosen(label);
         }
         label.setBorder(border);
     }
