@@ -658,11 +658,11 @@ public class SettingsFrame {
 
     private void addResetColorButtonListener() {
         buttonResetColor.addActionListener(e -> {
-            textFieldFontColorWithCoverage.setText(Integer.toHexString(0x1C0EFF));
+            textFieldFontColorWithCoverage.setText(Integer.toHexString(0x6666ff));
             textFieldSearchBarColor.setText(Integer.toHexString(0xffffff));
-            textFieldLabelColor.setText(Integer.toHexString(0xFF9868));
+            textFieldLabelColor.setText(Integer.toHexString(0xcccccc));
             textFieldBackgroundDefault.setText(Integer.toHexString(0xffffff));
-            textFieldFontColor.setText(Integer.toHexString(0x333333));
+            textFieldFontColor.setText(Integer.toHexString(0));
         });
     }
 
@@ -1478,17 +1478,17 @@ public class SettingsFrame {
             if (settingsInJson.containsKey("fontColorWithCoverage")) {
                 fontColorWithCoverage = settingsInJson.getInteger("fontColorWithCoverage");
             } else {
-                fontColorWithCoverage = 0x1C0EFF;
+                fontColorWithCoverage = 0x6666ff;
             }
             if (settingsInJson.containsKey("labelColor")) {
                 labelColor = settingsInJson.getInteger("labelColor");
             } else {
-                labelColor = 0xFF9868;
+                labelColor = 0xcccccc;
             }
             if (settingsInJson.containsKey("fontColor")) {
                 fontColor = settingsInJson.getInteger("fontColor");
             } else {
-                fontColor = 0x333333;
+                fontColor = 0;
             }
             if (settingsInJson.containsKey("language")) {
                 String language = settingsInJson.getString("language");
@@ -1540,9 +1540,9 @@ public class SettingsFrame {
             transparency = 0.8f;
             searchBarColor = 0xffffff;
             defaultBackgroundColor = 0xffffff;
-            fontColorWithCoverage = 0x1C0EFF;
-            labelColor = 0xFF9868;
-            fontColor = 0x333333;
+            fontColorWithCoverage = 0x6666ff;
+            labelColor = 0xcccccc;
+            fontColor = 0;
             TranslateUtil.getInstance().setLanguage(TranslateUtil.getInstance().getDefaultLang());
             tmp_openLastFolderKeyCode = openLastFolderKeyCode;
             tmp_runAsAdminKeyCode = runAsAdminKeyCode;
