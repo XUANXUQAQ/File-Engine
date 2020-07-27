@@ -171,7 +171,7 @@ public class SearchBar {
 
 
         //TextField
-        textField = new JTextField(300);
+        textField = new JTextField(1000);
         textField.setSize(searchBarWidth - 6, labelHeight - 5);
         Font textFieldFont = new Font("Microsoft JhengHei", Font.PLAIN, (int) ((height * 0.2) / 96 * 72) / 4);
         textField.setFont(textFieldFont);
@@ -184,7 +184,6 @@ public class SearchBar {
         textField.addFocusListener(new FocusListener() {
             @Override
             public void focusGained(FocusEvent e) {
-
             }
 
             @Override
@@ -232,7 +231,6 @@ public class SearchBar {
     }
 
     public static SearchBar getInstance() {
-
         return SearchBarBuilder.instance;
     }
 
@@ -369,7 +367,6 @@ public class SearchBar {
                             if (!getTextFieldText().isEmpty()) {
                                 labelCount.decrementAndGet();
 
-                                //System.out.println(labelCount);
                                 if (labelCount.get() >= resultCount.get()) {
                                     labelCount.set(resultCount.get() - 1);
                                 }
@@ -2512,25 +2509,21 @@ public class SearchBar {
         CachedThreadPool.getInstance().executeTask(() -> {
             // 时间检测线程
             long updateTimeLimit = SettingsFrame.getUpdateTimeLimit() * 1000;
-            try {
-                while (SettingsFrame.isNotMainExit()) {
-                    try (Statement stmt = SQLiteUtil.getStatement()) {
-                        while (SettingsFrame.isNotMainExit()) {
+            while (SettingsFrame.isNotMainExit()) {
+                try (Statement stmt = SQLiteUtil.getStatement()) {
+                    while (SettingsFrame.isNotMainExit()) {
+                        if (search.getStatus() == SearchUtil.NORMAL) {
                             if (search.getStatus() == SearchUtil.NORMAL) {
-                                if (search.getStatus() == SearchUtil.NORMAL) {
-                                    search.executeAllCommands(stmt);
-                                }
+                                search.executeAllCommands(stmt);
                             }
-                            Thread.sleep(updateTimeLimit);
                         }
-                    } catch (Exception e) {
-                        if (SettingsFrame.isDebug()) {
-                            e.printStackTrace();
-                        }
+                        Thread.sleep(updateTimeLimit);
                     }
-                    Thread.sleep(500);
+                } catch (Exception e) {
+                    if (SettingsFrame.isDebug()) {
+                        e.printStackTrace();
+                    }
                 }
-            } catch (Exception ignored) {
             }
         });
 
@@ -2998,7 +2991,6 @@ public class SearchBar {
         listResultsCopy.clear();
         tempResults.clear();
         commandQueue.clear();
-        textField.setText("");
         isUserPressed = false;
         isLockMouseMotion = false;
         isOpenLastFolderPressed = false;
