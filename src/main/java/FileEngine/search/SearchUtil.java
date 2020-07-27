@@ -351,15 +351,15 @@ public class SearchUtil {
     }
 
     public void executeAllCommands(Statement stmt) {
-        if (SettingsFrame.isDebug()) {
-            System.out.println("----------------------------------------------");
-            System.out.println("执行SQL命令");
-            System.out.println("----------------------------------------------");
-        }
         if (!commandSet.isEmpty()) {
             commandQueue.addAll(commandSet);
             commandSet.clear();
             try {
+                if (SettingsFrame.isDebug()) {
+                    System.out.println("----------------------------------------------");
+                    System.out.println("执行SQL命令");
+                    System.out.println("----------------------------------------------");
+                }
                 stmt.execute("BEGIN;");
                 for (String each : commandQueue) {
                     stmt.execute(each);

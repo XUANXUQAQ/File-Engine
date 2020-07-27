@@ -51,11 +51,23 @@ public class PluginMarket {
         addOpenPluginOfficialSiteListener();
         CachedThreadPool.getInstance().executeTask(() -> {
             try {
-                String fileName;
+                String pluginName;
                 String originString = buttonInstall.getText();
                 while (SettingsFrame.isNotMainExit()) {
-                    fileName = (String) listPlugins.getSelectedValue();
-                    checkDownloadTask(labelProgress, buttonInstall, fileName + ".jar", originString);
+                    pluginName = (String) listPlugins.getSelectedValue();
+                    if (pluginName != null) {
+                        checkDownloadTask(labelProgress, buttonInstall, pluginName + ".jar", originString);
+                    } else {
+                        buttonInstall.setEnabled(false);
+                        buttonInstall.setVisible(false);
+                        labelAuthor.setText("");
+                        labelIcon.setIcon(null);
+                        labelOfficialSite.setText("");
+                        labelPluginName.setText("");
+                        labelProgress.setText("");
+                        labelVersion.setText("");
+                        textAreaPluginDescription.setText("");
+                    }
                 }
             } catch (InterruptedException ignored) {
             }
@@ -67,13 +79,17 @@ public class PluginMarket {
                 while (SettingsFrame.isNotMainExit()) {
                     if (isStartSearch) {
                         isStartSearch = false;
-                        pluginSet.clear();
-                        for (String each : NAME_PLUGIN_INFO_URL_MAP.keySet()) {
-                            if (each.contains(searchKeywords)) {
-                                pluginSet.add(each);
+                        if (searchKeywords == null || searchKeywords.isEmpty()) {
+                            listPlugins.setListData(NAME_PLUGIN_INFO_URL_MAP.keySet().toArray());
+                        } else {
+                            pluginSet.clear();
+                            for (String each : NAME_PLUGIN_INFO_URL_MAP.keySet()) {
+                                if (each.toLowerCase().contains(searchKeywords.toLowerCase())) {
+                                    pluginSet.add(each);
+                                }
                             }
+                            listPlugins.setListData(pluginSet.toArray());
                         }
-                        listPlugins.setListData(pluginSet.toArray());
                     }
                     Thread.sleep(500);
                 }
@@ -97,6 +113,7 @@ public class PluginMarket {
                 label.setText(translateUtil.getTranslation("Download Done"));
                 label.setText(translateUtil.getTranslation("Downloaded"));
                 button.setEnabled(false);
+                button.setVisible(true);
                 File updatePluginSign = new File("user/updatePlugin");
                 if (!updatePluginSign.exists()) {
                     try {
@@ -109,14 +126,17 @@ public class PluginMarket {
                 label.setText(translateUtil.getTranslation("Download failed"));
                 button.setText(translateUtil.getTranslation(originButtonString));
                 button.setEnabled(true);
+                button.setVisible(true);
             } else if (downloadingStatus == DownloadManager.DOWNLOAD_DOWNLOADING) {
                 //正在下载
                 button.setText(translateUtil.getTranslation("Cancel"));
+                button.setVisible(true);
             } else if (downloadingStatus == DownloadManager.DOWNLOAD_INTERRUPTED) {
                 //用户自行中断
                 label.setText("");
                 button.setText(translateUtil.getTranslation(originButtonString));
                 button.setEnabled(true);
+                button.setVisible(true);
             }
         } else {
             int index = fileName.indexOf(".");
@@ -143,6 +163,7 @@ public class PluginMarket {
         labelPluginName.setText("");
         labelVersion.setText("");
         textAreaPluginDescription.setText("");
+        textFieldSearchPlugin.setText("");
         buttonInstall.setText(TranslateUtil.getInstance().getTranslation("Install"));
         panel.setSize(800, 600);
         frame.setSize(800, 600);
