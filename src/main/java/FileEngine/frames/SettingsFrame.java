@@ -188,6 +188,7 @@ public class SettingsFrame {
     private JLabel labelPlaceHolder8;
     private JSeparator proxySeperater;
     private JLabel labelVacuumStatus;
+    private JLabel labelApiVersion;
 
     private static class SettingsFrameBuilder {
         private static final SettingsFrame instance = new SettingsFrame();
@@ -838,13 +839,16 @@ public class SettingsFrame {
                     String officialSite;
                     String version;
                     String author;
+                    int apiVersion;
                     icon = plugin.getPluginIcon();
                     description = plugin.getDescription();
                     officialSite = plugin.getOfficialSite();
                     version = plugin.getVersion();
                     author = plugin.getAuthor();
+                    apiVersion = plugin.getApiVersion();
 
                     labelPluginVersion.setText(TranslateUtil.getInstance().getTranslation("Version") + ":" + version);
+                    labelApiVersion.setText("API " + TranslateUtil.getInstance().getTranslation("Version") + ":" + apiVersion);
                     PluginIconLabel.setIcon(icon);
                     PluginNamelabel.setText("<html><body><font size=\"+1\">" + pluginName + "</body></html>");
                     textAreaDescription.setText(description);

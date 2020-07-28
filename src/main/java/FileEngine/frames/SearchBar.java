@@ -1583,6 +1583,7 @@ public class SearchBar {
                         }
                         strb.append(s[length - 1]);
                         currentUsingPlugin.textChanged(strb.toString());
+                        currentUsingPlugin.clearResultQueue();
                         strb.delete(0, strb.length());
                     }
                 } else {
@@ -1617,6 +1618,7 @@ public class SearchBar {
                             }
                             strb.append(s[length - 1]);
                             currentUsingPlugin.textChanged(strb.toString());
+                            currentUsingPlugin.clearResultQueue();
                             strb.delete(0, strb.length());
                         }
                     } else {

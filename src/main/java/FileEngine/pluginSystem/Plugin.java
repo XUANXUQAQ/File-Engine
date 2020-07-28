@@ -7,7 +7,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 
 public class Plugin {
-    private static final int API_VERSION = 2;
+    private static final int API_VERSION = 3;
     private final Object instance;
     private final ArrayList<String> methodList = new ArrayList<>();
     private Method pluginTextChanged;
@@ -29,6 +29,7 @@ public class Plugin {
     private Method pluginPollFromResultQueue;
     private Method pluginGetApiVersion;
     private Method pluginGetAuthor;
+    private Method pluginClearResultQueue;
 
     public Plugin(PluginUtil.PluginInfo pluginInfo) {
         Class<?> aClass = pluginInfo.cls;
@@ -63,6 +64,7 @@ public class Plugin {
         methodList.add("pollFromResultQueue");
         methodList.add("getApiVersion");
         methodList.add("getAuthor");
+        methodList.add("clearResultQueue");
     }
 
     private void loadMethod(String methodName, Class<?> aClass) throws Exception {
@@ -124,8 +126,19 @@ public class Plugin {
             case "getAuthor":
                 pluginGetAuthor = aClass.getDeclaredMethod("getAuthor");
                 break;
+            case "clearResultQueue":
+                pluginClearResultQueue = aClass.getDeclaredMethod("clearResultQueue");
+                break;
             default:
                 break;
+        }
+    }
+
+    public void clearResultQueue() {
+        try {
+            pluginClearResultQueue.invoke(instance);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -136,7 +149,7 @@ public class Plugin {
     public int getApiVersion() {
         try {
             return (Integer) pluginGetApiVersion.invoke(instance);
-        }catch (Exception e) {
+        } catch (Exception e) {
             return 1;
         }
     }
