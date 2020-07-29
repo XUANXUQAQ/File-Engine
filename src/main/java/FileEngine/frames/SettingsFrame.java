@@ -27,7 +27,7 @@ import java.util.Scanner;
 
 
 public class SettingsFrame {
-    public static final String version = "2.4"; //TODO 更改版本号
+    public static final String version = "2.5"; //TODO 更改版本号
     private static volatile boolean mainExit = false;
     private static volatile int cacheNumLimit;
     private static volatile String hotkey;
