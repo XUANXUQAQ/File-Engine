@@ -2312,10 +2312,19 @@ public class SearchBar {
                                 e.printStackTrace();
                             }
                         }
-
                         Thread.sleep(5000);
                     }
-                    Thread.sleep(50);
+                    try {
+                        if (!isUsing && SearchUtil.getInstance().getStatus() == SearchUtil.NORMAL) {
+                            stmt.execute("CREATE INDEX IF NOT EXISTS cache_index on cache(PATH);");
+                        }
+                    } catch (Exception e) {
+                        if (SettingsFrame.isDebug()) {
+                            System.err.println("error create cache index");
+                            e.printStackTrace();
+                        }
+                    }
+                    Thread.sleep(5000);
                 }
             } catch (Exception ignored) {
             }
@@ -2897,7 +2906,7 @@ public class SearchBar {
     }
 
     private void initCacheNum() {
-        try (PreparedStatement pStmt = SQLiteUtil.getConnection().prepareStatement("SELECT PATH FROM cache"); ResultSet resultSet = pStmt.getResultSet()) {
+        try (PreparedStatement pStmt = SQLiteUtil.getConnection().prepareStatement("SELECT PATH FROM cache;"); ResultSet resultSet = pStmt.getResultSet()) {
             while (resultSet.next()) {
                 cacheNum.incrementAndGet();
             }
@@ -2909,7 +2918,7 @@ public class SearchBar {
     }
 
     private void searchCache() {
-        try (PreparedStatement pStmt = SQLiteUtil.getConnection().prepareStatement("SELECT PATH FROM cache"); ResultSet resultSet = pStmt.getResultSet()) {
+        try (Statement stmt = SQLiteUtil.getStatement(); ResultSet resultSet = stmt.executeQuery("SELECT PATH FROM cache;")) {
             while (resultSet.next()) {
                 String eachCache = resultSet.getString("PATH");
                 if (!(isExist(eachCache))) {
@@ -2918,7 +2927,7 @@ public class SearchBar {
                     checkIsMatchedAndAddToList(eachCache, false);
                 }
             }
-        } catch (SQLException throwables) {
+        } catch (Exception throwables) {
             if (SettingsFrame.isDebug()) {
                 throwables.printStackTrace();
             }
