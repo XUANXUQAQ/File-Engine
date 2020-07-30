@@ -1393,7 +1393,7 @@ public class SettingsFrame {
             }
             JSONObject settingsInJson = JSON.parseObject(result.toString());
             if (settingsInJson.containsKey("isStartup")) {
-                isStartup = settingsInJson.getBoolean("isStartup");
+                isStartup = hasStartup();
             } else {
                 isStartup = false;
             }
@@ -1872,6 +1872,23 @@ public class SettingsFrame {
             String res = System.getProperty("File_Engine_Debug");
             return "true".equalsIgnoreCase(res);
         } catch (NullPointerException e) {
+            return false;
+        }
+    }
+
+    private static boolean hasStartup() {
+        try {
+            String command = "cmd.exe /c schtasks /query /tn \"File-Engine\"";
+            Process p = Runtime.getRuntime().exec(command);
+            StringBuilder strBuilder = new StringBuilder();
+            String line;
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
+                while ((line = reader.readLine()) != null) {
+                    strBuilder.append(line);
+                }
+            }
+            return strBuilder.toString().contains("File-Engine");
+        } catch (IOException e) {
             return false;
         }
     }
