@@ -18,6 +18,7 @@ import java.io.*;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 
 /**
@@ -206,7 +207,7 @@ public class MainClass {
         try {
             while (SettingsFrame.isNotMainExit()) {
                 // 主循环开始
-                Thread.sleep(100);
+                TimeUnit.MILLISECONDS.sleep(100);
             }
             PluginUtil.unloadAllPlugins();
             CheckHotKeyUtil.getInstance().stopListen();

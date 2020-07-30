@@ -7,6 +7,7 @@ import FileEngine.threadPool.CachedThreadPool;
 
 import java.awt.event.KeyEvent;
 import java.util.HashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 public class CheckHotKeyUtil {
@@ -27,7 +28,7 @@ public class CheckHotKeyUtil {
     }
 
     public void registerHotkey(String hotkey) {
-        int hotkey1 = -1, hotkey2 = -1, hotkey3 = -1, hotkey4 = -1, hotkey5 = -1;
+        int hotkey1 = -1, hotkey2 = -1, hotkey3 = -1, hotkey4 = -1, hotkey5;
         String[] hotkeys = plus.split(hotkey);
         int length = hotkeys.length;
         for (int i = 0; i < length - 1; i++) {
@@ -66,7 +67,7 @@ public class CheckHotKeyUtil {
     }
 
     public void changeHotKey(String hotkey) {
-        int hotkey1 = -1, hotkey2 = -1, hotkey3 = -1, hotkey4 = -1, hotkey5 = -1;
+        int hotkey1 = -1, hotkey2 = -1, hotkey3 = -1, hotkey4 = -1, hotkey5;
         String[] hotkeys = plus.split(hotkey);
         int length = hotkeys.length;
         for (int i = 0; i < length - 1; i++) {
@@ -113,7 +114,7 @@ public class CheckHotKeyUtil {
                     if (!instance.getKeyStatus()) {
                         isExecuted = false;
                     }
-                    Thread.sleep(10);
+                    TimeUnit.MILLISECONDS.sleep(10);
                 }
             } catch (InterruptedException ignored) {
             }

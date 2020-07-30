@@ -1,13 +1,13 @@
 package FileEngine.frames;
 
 
+import FileEngine.SQLiteConfig.SQLiteUtil;
 import FileEngine.dllInterface.FileMonitor;
 import FileEngine.dllInterface.GetAscII;
 import FileEngine.dllInterface.IsLocalDisk;
 import FileEngine.getIcon.GetIconUtil;
 import FileEngine.pluginSystem.Plugin;
 import FileEngine.pluginSystem.PluginUtil;
-import FileEngine.SQLiteConfig.SQLiteUtil;
 import FileEngine.search.SearchUtil;
 import FileEngine.threadPool.CachedThreadPool;
 import FileEngine.translate.TranslateUtil;
@@ -30,9 +30,13 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.Queue;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
@@ -1680,7 +1684,7 @@ public class SearchBar {
                                 startSignal = true;
                                 break;
                             }
-                            Thread.sleep(20);
+                            TimeUnit.MILLISECONDS.sleep(20);
                         }
                     } catch (InterruptedException ignored) {
 
@@ -1709,7 +1713,7 @@ public class SearchBar {
                             }
                         }
                     }
-                    Thread.sleep(20);
+                    TimeUnit.MILLISECONDS.sleep(20);
                 }
             } catch (Exception e) {
                 if (SettingsFrame.isDebug() && !(e instanceof InterruptedException)) {
@@ -1731,7 +1735,7 @@ public class SearchBar {
                             TaskBar.getInstance().showMessage(message[0], message[1]);
                         }
                     }
-                    Thread.sleep(50);
+                    TimeUnit.MILLISECONDS.sleep(50);
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -1745,7 +1749,7 @@ public class SearchBar {
                     if (System.currentTimeMillis() - mouseWheelTime > 500) {
                         isLockMouseMotion = false;
                     }
-                    Thread.sleep(20);
+                    TimeUnit.MILLISECONDS.sleep(20);
                 }
             } catch (Exception e) {
                 if (SettingsFrame.isDebug() && !(e instanceof InterruptedException)) {
@@ -1833,7 +1837,7 @@ public class SearchBar {
                         label7.setForeground(fontColor);
                         label8.setForeground(fontColorWithCoverage);
                     }
-                    Thread.sleep(20);
+                    TimeUnit.MILLISECONDS.sleep(20);
                 }
             } catch (Exception e) {
                 if (SettingsFrame.isDebug() && !(e instanceof InterruptedException)) {
@@ -1962,7 +1966,7 @@ public class SearchBar {
                         }
                         label8.setBorder(border);
                     }
-                    Thread.sleep(50);
+                    TimeUnit.MILLISECONDS.sleep(50);
                 }
             } catch (InterruptedException ignored) {
             }
@@ -1974,7 +1978,7 @@ public class SearchBar {
                     if (isUsing) {
                         panel.repaint();
                     }
-                    Thread.sleep(250);
+                    TimeUnit.MILLISECONDS.sleep(250);
                 }
             } catch (InterruptedException ignored) {
 
@@ -2262,7 +2266,7 @@ public class SearchBar {
                                 break;
                         }
                     }
-                    Thread.sleep(10);
+                    TimeUnit.MILLISECONDS.sleep(10);
                 }
             } catch (InterruptedException ignored) {
             }
@@ -2286,7 +2290,7 @@ public class SearchBar {
                             }
                         }
                     }
-                    Thread.sleep(10);
+                    TimeUnit.MILLISECONDS.sleep(10);
                 }
             } catch (InterruptedException ignored) {
             }
@@ -2312,7 +2316,7 @@ public class SearchBar {
                                 e.printStackTrace();
                             }
                         }
-                        Thread.sleep(5000);
+                        TimeUnit.SECONDS.sleep(1);
                     }
                     try {
                         if (!isUsing && SearchUtil.getInstance().getStatus() == SearchUtil.NORMAL) {
@@ -2324,7 +2328,7 @@ public class SearchBar {
                             e.printStackTrace();
                         }
                     }
-                    Thread.sleep(5000);
+                    TimeUnit.SECONDS.sleep(5);
                 }
             } catch (Exception ignored) {
             }
@@ -2438,7 +2442,7 @@ public class SearchBar {
                                             }
                                         } catch (NullPointerException ignored) {
                                         }
-                                        Thread.sleep(10);
+                                        TimeUnit.MILLISECONDS.sleep(10);
                                     }
                                 }
                             }
@@ -2460,7 +2464,7 @@ public class SearchBar {
                             clearLabel();
                         }
                     }
-                    Thread.sleep(20);
+                    TimeUnit.MILLISECONDS.sleep(20);
                 }
             } catch (InterruptedException ignored) {
 
@@ -2484,7 +2488,7 @@ public class SearchBar {
                             }
                         }
                     }
-                    Thread.sleep(100);
+                    TimeUnit.MILLISECONDS.sleep(100);
                 }
             } catch (IOException | InterruptedException e) {
                 if (SettingsFrame.isDebug() && !(e instanceof InterruptedException)) {
@@ -2507,7 +2511,7 @@ public class SearchBar {
                             }
                         }
                     }
-                    Thread.sleep(100);
+                    TimeUnit.MILLISECONDS.sleep(100);
                 }
             } catch (InterruptedException | IOException e) {
                 if (SettingsFrame.isDebug() && !(e instanceof InterruptedException)) {
@@ -2519,7 +2523,7 @@ public class SearchBar {
 
         CachedThreadPool.getInstance().executeTask(() -> {
             // 时间检测线程
-            long updateTimeLimit = SettingsFrame.getUpdateTimeLimit() * 1000;
+            final long updateTimeLimit = SettingsFrame.getUpdateTimeLimit();
             while (SettingsFrame.isNotMainExit()) {
                 try (Statement stmt = SQLiteUtil.getStatement()) {
                     while (SettingsFrame.isNotMainExit()) {
@@ -2528,7 +2532,7 @@ public class SearchBar {
                                 search.executeAllCommands(stmt);
                             }
                         }
-                        Thread.sleep(updateTimeLimit);
+                        TimeUnit.SECONDS.sleep(updateTimeLimit);
                     }
                 } catch (Exception e) {
                     if (SettingsFrame.isDebug()) {
@@ -2548,7 +2552,7 @@ public class SearchBar {
                             search.updateLists(SettingsFrame.getIgnorePath(), SettingsFrame.getSearchDepth(), stmt);
                         }
                     }
-                    Thread.sleep(10);
+                    TimeUnit.MILLISECONDS.sleep(10);
                 }
             } catch (Exception e) {
                 if (SettingsFrame.isDebug() && !(e instanceof InterruptedException)) {
@@ -2952,8 +2956,9 @@ public class SearchBar {
     private void searchPriorityFolder() {
         File path = new File(SettingsFrame.getPriorityFolder());
         boolean exist = path.exists();
+        AtomicInteger taskNum = new AtomicInteger(0);
         if (exist) {
-            Queue<String> listRemain = new LinkedList<>();
+            ConcurrentLinkedQueue<String> listRemain = new ConcurrentLinkedQueue<>();
             File[] files = path.listFiles();
             if (!(null == files || files.length == 0)) {
                 for (File each : files) {
@@ -2962,17 +2967,42 @@ public class SearchBar {
                         listRemain.add(each.getAbsolutePath());
                     }
                 }
-                while (!listRemain.isEmpty()) {
-                    String remain = listRemain.poll();
-                    File[] allFiles = new File(remain).listFiles();
-                    if (!(allFiles == null || allFiles.length == 0)) {
-                        for (File each : allFiles) {
-                            checkIsMatchedAndAddToList(each.getAbsolutePath(), false);
-                            if (each.isDirectory()) {
-                                listRemain.add(each.getAbsolutePath());
+                int threadCount = 8;
+                for (int i = 0; i < threadCount; ++i) {
+                    CachedThreadPool.getInstance().executeTask(() -> {
+                        long startSearchTime = System.currentTimeMillis();
+                        while (!listRemain.isEmpty()) {
+                            String remain = listRemain.poll();
+                            if (remain != null) {
+                                File[] allFiles = new File(remain).listFiles();
+                                if (!(allFiles == null || allFiles.length == 0)) {
+                                    for (File each : allFiles) {
+                                        checkIsMatchedAndAddToList(each.getAbsolutePath(), false);
+                                        if (startTime > startSearchTime) {
+                                            listRemain.clear();
+                                            break;
+                                        }
+                                        if (each.isDirectory()) {
+                                            listRemain.add(each.getAbsolutePath());
+                                        }
+                                    }
+                                }
                             }
                         }
+                        taskNum.incrementAndGet();
+                    });
+                }
+                //等待所有线程完成
+                try {
+                    int count = 0;
+                    while (taskNum.get() != threadCount) {
+                        TimeUnit.MILLISECONDS.sleep(10);
+                        count++;
+                        if (count >= 10 || (!SettingsFrame.isNotMainExit())) {
+                            break;
+                        }
                     }
+                } catch (InterruptedException ignored) {
                 }
             }
         }

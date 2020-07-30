@@ -21,8 +21,8 @@ public class PluginUtil {
             this.clsInstance = instance;
         }
 
-        public Class<?> cls;
-        public Object clsInstance;
+        public final Class<?> cls;
+        public final Object clsInstance;
     }
 
     private static final ConcurrentHashMap<String, Plugin> PLUGIN_MAP = new ConcurrentHashMap<>();
@@ -45,7 +45,7 @@ public class PluginUtil {
         for (String repeatPlugins : REPEAT_PLUGINS) {
             strb.append(repeatPlugins).append(",");
         }
-        return strb.toString().substring(0, strb.length() - 1);
+        return strb.substring(0, strb.length() - 1);
     }
 
     public static Iterator<Plugin> getPluginMapIter() {
@@ -65,7 +65,7 @@ public class PluginUtil {
         for (String oldPlugin : OLD_PLUGINS) {
             strb.append(oldPlugin).append(",");
         }
-        return strb.toString().substring(0, strb.length() - 1);
+        return strb.substring(0, strb.length() - 1);
     }
 
     private static String readAll(InputStream inputStream) {

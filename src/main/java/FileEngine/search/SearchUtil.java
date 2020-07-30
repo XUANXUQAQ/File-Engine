@@ -16,6 +16,7 @@ import java.sql.Statement;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.TimeUnit;
 
 
 public class SearchUtil {
@@ -473,7 +474,7 @@ public class SearchUtil {
 
     private void waitForTask(String procName) throws IOException, InterruptedException {
         while (isTaskExist(procName)) {
-            Thread.sleep(100);
+            TimeUnit.MILLISECONDS.sleep(10);
         }
     }
 
