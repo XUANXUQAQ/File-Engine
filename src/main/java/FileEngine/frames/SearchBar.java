@@ -2316,7 +2316,7 @@ public class SearchBar {
                                 e.printStackTrace();
                             }
                         }
-                        TimeUnit.SECONDS.sleep(1);
+                        TimeUnit.SECONDS.sleep(5);
                     }
                     try {
                         if (!isUsing && SearchUtil.getInstance().getStatus() == SearchUtil.NORMAL) {
@@ -2481,7 +2481,7 @@ public class SearchBar {
                     StandardCharsets.UTF_8))) {
                 while (SettingsFrame.isNotMainExit()) {
                     if (search.getStatus() == SearchUtil.NORMAL) {
-                        if ((filesToAdd = readerAdd.readLine()) != null) {
+                        while ((filesToAdd = readerAdd.readLine()) != null) {
                             search.addFileToDatabase(filesToAdd);
                             if (SettingsFrame.isDebug()) {
                                 System.out.println("添加" + filesToAdd);
@@ -2504,7 +2504,7 @@ public class SearchBar {
                     StandardCharsets.UTF_8))) {
                 while (SettingsFrame.isNotMainExit()) {
                     if (search.getStatus() == SearchUtil.NORMAL) {
-                        if ((filesToRemove = readerRemove.readLine()) != null) {
+                        while ((filesToRemove = readerRemove.readLine()) != null) {
                             search.removeFileFromDatabase(filesToRemove);
                             if (SettingsFrame.isDebug()) {
                                 System.out.println("删除" + filesToRemove);
