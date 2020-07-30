@@ -4,6 +4,7 @@ import FileEngine.frames.SettingsFrame;
 import FileEngine.threadPool.CachedThreadPool;
 
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 public class DownloadUtil {
     private final ConcurrentHashMap<String, DownloadManager> DOWNLOAD_MAP = new ConcurrentHashMap<>();
@@ -26,7 +27,7 @@ public class DownloadUtil {
                             deleteTask(each.getFileName());
                         }
                     }
-                    Thread.sleep(5000);
+                    TimeUnit.SECONDS.sleep(5);
                 }
             } catch (InterruptedException ignored) {
             }

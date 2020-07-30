@@ -21,6 +21,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 public class PluginMarket {
     private static class PluginMarketBuilder {
@@ -91,7 +92,7 @@ public class PluginMarket {
                             listPlugins.setListData(pluginSet.toArray());
                         }
                     }
-                    Thread.sleep(500);
+                    TimeUnit.MILLISECONDS.sleep(100);
                 }
             } catch (InterruptedException ignored) {
             }
@@ -204,7 +205,7 @@ public class PluginMarket {
                             if (buttonInstall.isEnabled()) {
                                 buttonInstall.setEnabled(false);
                             }
-                            Thread.sleep(50);
+                            TimeUnit.MILLISECONDS.sleep(50);
                         }
                     } catch (InterruptedException ignored) {
                     }
@@ -309,7 +310,7 @@ public class PluginMarket {
                     break;
                 }
                 count++;
-                Thread.sleep(50);
+                TimeUnit.MILLISECONDS.sleep(50);
             }
         }
 
@@ -348,7 +349,7 @@ public class PluginMarket {
                         isError = true;
                         break;
                     }
-                    Thread.sleep(1000);
+                    TimeUnit.SECONDS.sleep(1);
                 }
                 if (isError) {
                     return null;

@@ -1,9 +1,9 @@
 package FileEngine.frames;
 
 import FileEngine.SQLiteConfig.SQLiteUtil;
+import FileEngine.checkHotkey.CheckHotKeyUtil;
 import FileEngine.download.DownloadManager;
 import FileEngine.download.DownloadUtil;
-import FileEngine.checkHotkey.CheckHotKeyUtil;
 import FileEngine.pluginSystem.Plugin;
 import FileEngine.pluginSystem.PluginUtil;
 import FileEngine.search.SearchUtil;
@@ -24,6 +24,7 @@ import java.nio.charset.StandardCharsets;
 import java.sql.Statement;
 import java.util.HashSet;
 import java.util.Scanner;
+import java.util.concurrent.TimeUnit;
 
 
 public class SettingsFrame {
@@ -626,7 +627,7 @@ public class SettingsFrame {
                             if (buttonCheckUpdate.isEnabled()) {
                                 buttonCheckUpdate.setEnabled(false);
                             }
-                            Thread.sleep(50);
+                            TimeUnit.MILLISECONDS.sleep(50);
                         }
                     } catch (InterruptedException ignored) {
                     }
@@ -934,10 +935,10 @@ public class SettingsFrame {
                             SearchUtil instance = SearchUtil.getInstance();
                             while (instance.getStatus() == SearchUtil.VACUUM) {
                                 labelVacuumStatus.setText(TranslateUtil.getInstance().getTranslation("Optimizing..."));
-                                Thread.sleep(50);
+                                TimeUnit.MILLISECONDS.sleep(50);
                             }
                             labelVacuumStatus.setText(TranslateUtil.getInstance().getTranslation("Optimized"));
-                            Thread.sleep(3000);
+                            TimeUnit.SECONDS.sleep(3);
                             labelVacuumStatus.setText("");
                         } catch (InterruptedException ignored) {
                         }
@@ -994,7 +995,7 @@ public class SettingsFrame {
                                 if (buttonUpdatePlugin.isEnabled()) {
                                     buttonUpdatePlugin.setEnabled(false);
                                 }
-                                Thread.sleep(50);
+                                TimeUnit.MILLISECONDS.sleep(50);
                             }
                             //复位button
                             buttonUpdatePlugin.setText(TranslateUtil.getInstance().getTranslation("Install"));
@@ -1367,7 +1368,7 @@ public class SettingsFrame {
                     isError = true;
                     break;
                 }
-                Thread.sleep(1000);
+                TimeUnit.MILLISECONDS.sleep(100);
             }
             if (isError) {
                 return null;
