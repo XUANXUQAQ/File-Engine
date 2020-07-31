@@ -96,6 +96,7 @@ public class CheckHotKeyUtil {
         CachedThreadPool.getInstance().executeTask(() -> {
             boolean isExecuted = false;
             long startVisibleTime = 0;
+            long endVisibleTime = 0;
             SearchBar searchBar = SearchBar.getInstance();
             HotkeyListener instance = HotkeyListener.INSTANCE;
             try {
@@ -103,11 +104,14 @@ public class CheckHotKeyUtil {
                     if (!isExecuted && instance.getKeyStatus()) {
                         isExecuted = true;
                         if (!searchBar.isVisible()) {
-                            searchBar.showSearchbar();
-                            startVisibleTime = System.currentTimeMillis();
+                            if (System.currentTimeMillis() - endVisibleTime > 500) {
+                                searchBar.showSearchbar();
+                                startVisibleTime = System.currentTimeMillis();
+                            }
                         } else {
                             if (System.currentTimeMillis() - startVisibleTime > 500) {
                                 searchBar.closedTodo();
+                                endVisibleTime = System.currentTimeMillis();
                             }
                         }
                     }
