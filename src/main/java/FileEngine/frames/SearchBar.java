@@ -2673,6 +2673,7 @@ public class SearchBar {
 
     public void showSearchbar() {
         searchBar.setVisible(true);
+        searchBar.toFront();
         searchBar.requestFocusInWindow();
         searchBar.setAlwaysOnTop(true);
         textField.setCaretPosition(0);
