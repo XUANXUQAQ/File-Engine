@@ -835,17 +835,12 @@ public class SettingsFrame {
                 if (pluginName != null) {
                     String pluginIdentifier = PluginUtil.getIdentifierByName(pluginName);
                     Plugin plugin = PluginUtil.getPluginByIdentifier(pluginIdentifier);
-                    ImageIcon icon;
-                    String description;
-                    String officialSite;
-                    String version;
-                    String author;
                     int apiVersion;
-                    icon = plugin.getPluginIcon();
-                    description = plugin.getDescription();
-                    officialSite = plugin.getOfficialSite();
-                    version = plugin.getVersion();
-                    author = plugin.getAuthor();
+                    ImageIcon icon = plugin.getPluginIcon();
+                    String description = plugin.getDescription();
+                    String officialSite = plugin.getOfficialSite();
+                    String version = plugin.getVersion();
+                    String author = plugin.getAuthor();
                     apiVersion = plugin.getApiVersion();
 
                     labelPluginVersion.setText(TranslateUtil.getInstance().getTranslation("Version") + ":" + version);
@@ -1317,7 +1312,7 @@ public class SettingsFrame {
         mainExit = b;
     }
 
-    public static boolean isAdmin() {
+    protected static boolean isAdmin() {
         try {
             ProcessBuilder processBuilder = new ProcessBuilder("cmd.exe");
             Process process = processBuilder.start();
@@ -1393,11 +1388,7 @@ public class SettingsFrame {
                 result.append(line);
             }
             JSONObject settingsInJson = JSON.parseObject(result.toString());
-            if (settingsInJson.containsKey("isStartup")) {
-                isStartup = hasStartup();
-            } else {
-                isStartup = false;
-            }
+            isStartup = hasStartup();
             if (settingsInJson.containsKey("cacheNumLimit")) {
                 cacheNumLimit = settingsInJson.getInteger("cacheNumLimit");
             } else {
@@ -1406,10 +1397,10 @@ public class SettingsFrame {
             if (settingsInJson.containsKey("hotkey")) {
                 hotkey = settingsInJson.getString("hotkey");
                 if (hotkey == null) {
-                    hotkey = "Ctrl + Alt + K";
+                    hotkey = "Ctrl + Win + K";
                 }
             } else {
-                hotkey = "Ctrl + Alt + K";
+                hotkey = "Ctrl + Win + K";
             }
             if (settingsInJson.containsKey("priorityFolder")) {
                 priorityFolder = settingsInJson.getString("priorityFolder");
@@ -1532,7 +1523,7 @@ public class SettingsFrame {
         } catch (NullPointerException | IOException e) {
             isStartup = false;
             cacheNumLimit = 1000;
-            hotkey = "Ctrl + Alt + K";
+            hotkey = "Ctrl + Win + K";
             priorityFolder = "";
             searchDepth = 8;
             ignorePath = "C:\\Windows,";
@@ -1571,38 +1562,7 @@ public class SettingsFrame {
 
         initCmdSetSettings();
 
-        //保存设置
-        JSONObject allSettings = new JSONObject();
-        allSettings.put("hotkey", hotkey);
-        allSettings.put("isStartup", isStartup);
-        allSettings.put("cacheNumLimit", cacheNumLimit);
-        allSettings.put("updateTimeLimit", updateTimeLimit);
-        allSettings.put("ignorePath", ignorePath);
-        allSettings.put("searchDepth", searchDepth);
-        allSettings.put("priorityFolder", priorityFolder);
-        allSettings.put("isDefaultAdmin", isDefaultAdmin);
-        allSettings.put("isLoseFocusClose", isLoseFocusClose);
-        allSettings.put("runAsAdminKeyCode", runAsAdminKeyCode);
-        allSettings.put("openLastFolderKeyCode", openLastFolderKeyCode);
-        allSettings.put("copyPathKeyCode", copyPathKeyCode);
-        allSettings.put("transparency", transparency);
-        allSettings.put("labelColor", labelColor);
-        allSettings.put("defaultBackground", defaultBackgroundColor);
-        allSettings.put("searchBarColor", searchBarColor);
-        allSettings.put("fontColorWithCoverage", fontColorWithCoverage);
-        allSettings.put("fontColor", fontColor);
-        allSettings.put("language", TranslateUtil.getInstance().getLanguage());
-        allSettings.put("proxyAddress", proxyAddress);
-        allSettings.put("proxyPort", proxyPort);
-        allSettings.put("proxyUserName", proxyUserName);
-        allSettings.put("proxyPassword", proxyPassword);
-        allSettings.put("proxyType", proxyType);
-        try (BufferedWriter buffW = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(settings), StandardCharsets.UTF_8))) {
-            String format = JSON.toJSONString(allSettings, SerializerFeature.PrettyFormat, SerializerFeature.WriteMapNullValue, SerializerFeature.WriteDateUseDateFormat);
-            buffW.write(format);
-        } catch (IOException ignored) {
-
-        }
+        saveAllSettings();
     }
 
     private void initCmdSetSettings() {
@@ -1646,7 +1606,6 @@ public class SettingsFrame {
 
     private void saveChanges() {
         StringBuilder strBuilder = new StringBuilder();
-        JSONObject allSettings = new JSONObject();
         int updateTimeLimitTemp;
         int cacheNumLimitTemp;
         String ignorePathTemp;
@@ -1825,6 +1784,23 @@ public class SettingsFrame {
         runAsAdminKeyCode = tmp_runAsAdminKeyCode;
         copyPathKeyCode = tmp_copyPathKeyCode;
 
+        saveAllSettings();
+
+        //保存自定义命令
+        StringBuilder strb = new StringBuilder();
+        for (String each : cmdSet) {
+            strb.append(each);
+            strb.append("\n");
+        }
+        try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("user/cmds.txt"), StandardCharsets.UTF_8))) {
+            bw.write(strb.toString());
+        } catch (IOException ignored) {
+        }
+        hideFrame();
+    }
+
+    private static void saveAllSettings() {
+        JSONObject allSettings = new JSONObject();
         //保存设置
         allSettings.put("hotkey", hotkey);
         allSettings.put("isStartup", isStartup);
@@ -1855,17 +1831,6 @@ public class SettingsFrame {
             buffW.write(format);
         } catch (IOException ignored) {
         }
-        //保存自定义命令
-        StringBuilder strb = new StringBuilder();
-        for (String each : cmdSet) {
-            strb.append(each);
-            strb.append("\n");
-        }
-        try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("user/cmds.txt"), StandardCharsets.UTF_8))) {
-            bw.write(strb.toString());
-        } catch (IOException ignored) {
-        }
-        hideFrame();
     }
 
     public static boolean isDebug() {
@@ -1916,7 +1881,6 @@ public class SettingsFrame {
                     JOptionPane.showMessageDialog(frame, TranslateUtil.getInstance().getTranslation("Add to startup failed, please try to run as administrator"));
                 }
             } catch (IOException | InterruptedException ignored) {
-
             }
         } else {
             String command = "cmd.exe /c schtasks /delete /tn \"File-Engine\" /f";
@@ -1936,7 +1900,6 @@ public class SettingsFrame {
                     JOptionPane.showMessageDialog(frame, TranslateUtil.getInstance().getTranslation("Delete startup failed, please try to run as administrator"));
                 }
             } catch (IOException | InterruptedException ignored) {
-
             }
         }
 
@@ -1957,7 +1920,6 @@ public class SettingsFrame {
             String format = JSON.toJSONString(allSettings, SerializerFeature.PrettyFormat, SerializerFeature.WriteMapNullValue, SerializerFeature.WriteDateUseDateFormat);
             buffW.write(format);
         } catch (IOException ignored) {
-
         }
     }
 }
