@@ -142,6 +142,7 @@ public class SearchBar {
         searchBar.setOpacity(SettingsFrame.getTransparency());
         searchBar.setContentPane(panel);
         searchBar.setType(JFrame.Type.UTILITY);
+        searchBar.setAlwaysOnTop(true);
 
 
         //labels
@@ -245,6 +246,7 @@ public class SearchBar {
         label.setForeground(fontColor);
         label.setOpaque(true);
         label.setBackground(null);
+        label.setFocusable(false);
         label.setFocusable(false);
     }
 
@@ -2675,12 +2677,11 @@ public class SearchBar {
         searchBar.setVisible(true);
         searchBar.toFront();
         searchBar.requestFocusInWindow();
-        searchBar.setAlwaysOnTop(true);
         textField.setCaretPosition(0);
         textField.requestFocusInWindow();
         isUsing = true;
         startTime = System.currentTimeMillis();
-        visibleStartTime = System.currentTimeMillis();
+        visibleStartTime = startTime;
     }
 
     private void showResultOnLabel(String path, JLabel label, boolean isChosen) {
@@ -2743,7 +2744,6 @@ public class SearchBar {
                 path = listResults.get(7);
                 showResultOnLabel(path, label8, isLabel8Chosen);
             } catch (IndexOutOfBoundsException ignored) {
-
             }
         } else if (runningMode.get() == COMMAND_MODE) {
             try {
@@ -2771,7 +2771,6 @@ public class SearchBar {
                 command = listResults.get(7);
                 showCommandOnLabel(command, label8, isLabel8Chosen);
             } catch (IndexOutOfBoundsException ignored) {
-
             }
         } else if (runningMode.get() == PLUGIN_MODE) {
             try {
@@ -2799,7 +2798,6 @@ public class SearchBar {
                 command = listResults.get(7);
                 showPluginResultOnLabel(command, label8, isLabel8Chosen);
             } catch (IndexOutOfBoundsException ignored) {
-
             }
         }
 
