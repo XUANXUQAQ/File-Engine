@@ -1672,6 +1672,17 @@ public class SearchBar {
         });
     }
 
+    private void setLabelChosenOrNotChosenMouseMode(int labelNum, JLabel label) {
+        if (!isUserPressed && isLabelNotEmpty(label)) {
+            if (labelCount.get() == labelNum) {
+                setLabelChosen(label);
+            } else {
+                setLabelNotChosen(label);
+            }
+            label.setBorder(border);
+        }
+    }
+
     private void addSearchWaiter() {
         if (search.getStatus() != SearchUtil.NORMAL) {
             if (searchWaiter == null || !searchWaiter.isAlive()) {
@@ -1698,9 +1709,86 @@ public class SearchBar {
     }
 
     private void initThreadPool() {
-        //监控磁盘变化
+        checkStartTimeAndOptimizeDatabase();
+
         startMonitorDisk();
 
+        mergeTempQueueAndListResultsThread();
+
+        checkPluginMessageThread();
+
+        lockMouseMotionThread();
+
+        setForegroundOnLabelThread();
+
+        tryToShowRecordsThread();
+
+        repaintFrameThread();
+
+        addSqlCommandThread();
+
+        pollCommandsAndsearchDatabaseThread();
+
+        createSqlIndexThread();
+
+        sendSignalAndShowCommandThread();
+
+        addRecordsToDatabaseThread();
+
+        deleteRecordsToDatabaseThread();
+
+        checkTimeAndExecuteSqlCommandsThread();
+
+        recreateIndexThread();
+    }
+
+    private void checkStartTimeAndOptimizeDatabase() {
+        CachedThreadPool.getInstance().executeTask(() -> {
+            int startTimes = 0;
+            File startTimeCount = new File("user/startTimeCount.dat");
+            try {
+                if (!startTimeCount.exists()) {
+                    startTimeCount.createNewFile();
+                }
+
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(startTimeCount), StandardCharsets.UTF_8));
+                     Statement stmt = SQLiteUtil.getStatement()) {
+                    //读取启动次数
+                    String times = reader.readLine();
+                    if (!(times == null || times.isEmpty())) {
+                        startTimes = Integer.parseInt(times);
+                        //使用次数大于10次，优化数据库
+                        if (startTimes >= 10) {
+                            startTimes = 0;
+                            if (SearchUtil.getInstance().getStatus() == SearchUtil.NORMAL) {
+                                //开始优化数据库
+                                SearchUtil.getInstance().setStatus(SearchUtil.VACUUM);
+                                try {
+                                    if (SettingsFrame.isDebug()) {
+                                        System.out.println("开启次数超过10次，优化数据库");
+                                    }
+                                    stmt.execute("VACUUM;");
+                                } catch (Exception ignored) {
+                                }
+                                SearchUtil.getInstance().setStatus(SearchUtil.NORMAL);
+                            }
+                        }
+                    }
+                    //自增后写入
+                    startTimes++;
+                    try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(startTimeCount), StandardCharsets.UTF_8))) {
+                        writer.write(String.valueOf(startTimes));
+                    }
+                } catch (Exception throwables) {
+                    throwables.printStackTrace();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
+    private void mergeTempQueueAndListResultsThread() {
         CachedThreadPool.getInstance().executeTask(() -> {
             //合并搜索结果线程
             try {
@@ -1723,7 +1811,9 @@ public class SearchBar {
                 }
             }
         });
+    }
 
+    private void checkPluginMessageThread() {
         CachedThreadPool.getInstance().executeTask(() -> {
             try {
                 String[] message;
@@ -1743,7 +1833,9 @@ public class SearchBar {
                 e.printStackTrace();
             }
         });
+    }
 
+    private void lockMouseMotionThread() {
         CachedThreadPool.getInstance().executeTask(() -> {
             //锁住MouseMotion检测，阻止同时发出两个动作
             try {
@@ -1759,7 +1851,9 @@ public class SearchBar {
                 }
             }
         });
+    }
 
+    private void setForegroundOnLabelThread() {
         CachedThreadPool.getInstance().executeTask(() -> {
             try {
                 while (SettingsFrame.isNotMainExit()) {
@@ -1847,7 +1941,9 @@ public class SearchBar {
                 }
             }
         });
+    }
 
+    private void tryToShowRecordsThread() {
         CachedThreadPool.getInstance().executeTask(() -> {
             //显示结果线程
             try {
@@ -1862,7 +1958,7 @@ public class SearchBar {
                     isLabel6Chosen = false;
                     isLabel7Chosen = false;
                     isLabel8Chosen = false;
-                    if (labelCount.get() < resultCount.get()) {//有结果可以显示
+                    if (labelCount.get() < resultCount.get()) {
                         int pos = getCurrentLabelPos();
                         switch (pos) {
                             case 0:
@@ -1904,76 +2000,22 @@ public class SearchBar {
                         resultCount.set(0);
                     }
 
-                    if (!isUserPressed && isLabelNotEmpty(label1)) {
-                        if (labelCount.get() == 0) {
-                            setLabelChosen(label1);
-                        } else {
-                            setLabelNotChosen(label1);
-                        }
-                        label1.setBorder(border);
-                    }
-                    if (!isUserPressed && isLabelNotEmpty(label2)) {
-                        if (labelCount.get() == 1) {
-                            setLabelChosen(label2);
-                        } else {
-                            setLabelNotChosen(label2);
-                        }
-                        label2.setBorder(border);
-                    }
-                    if (!isUserPressed && isLabelNotEmpty(label3)) {
-                        if (labelCount.get() == 2) {
-                            setLabelChosen(label3);
-                        } else {
-                            setLabelNotChosen(label3);
-                        }
-                        label3.setBorder(border);
-                    }
-                    if (!isUserPressed && isLabelNotEmpty(label4)) {
-                        if (labelCount.get() == 3) {
-                            setLabelChosen(label4);
-                        } else {
-                            setLabelNotChosen(label4);
-                        }
-                        label4.setBorder(border);
-                    }
-                    if (!isUserPressed && isLabelNotEmpty(label5)) {
-                        if (labelCount.get() == 4) {
-                            setLabelChosen(label5);
-                        } else {
-                            setLabelNotChosen(label5);
-                        }
-                        label5.setBorder(border);
-                    }
-                    if (!isUserPressed && isLabelNotEmpty(label6)) {
-                        if (labelCount.get() == 5) {
-                            setLabelChosen(label6);
-                        } else {
-                            setLabelNotChosen(label6);
-                        }
-                        label6.setBorder(border);
-                    }
-                    if (!isUserPressed && isLabelNotEmpty(label7)) {
-                        if (labelCount.get() == 6) {
-                            setLabelChosen(label7);
-                        } else {
-                            setLabelNotChosen(label7);
-                        }
-                        label7.setBorder(border);
-                    }
-                    if (!isUserPressed && isLabelNotEmpty(label8)) {
-                        if (labelCount.get() == 7) {
-                            setLabelChosen(label8);
-                        } else {
-                            setLabelNotChosen(label8);
-                        }
-                        label8.setBorder(border);
-                    }
+                    setLabelChosenOrNotChosenMouseMode(0, label1);
+                    setLabelChosenOrNotChosenMouseMode(1, label2);
+                    setLabelChosenOrNotChosenMouseMode(2, label3);
+                    setLabelChosenOrNotChosenMouseMode(3, label4);
+                    setLabelChosenOrNotChosenMouseMode(4, label5);
+                    setLabelChosenOrNotChosenMouseMode(5, label6);
+                    setLabelChosenOrNotChosenMouseMode(6, label7);
+                    setLabelChosenOrNotChosenMouseMode(7, label8);
                     TimeUnit.MILLISECONDS.sleep(50);
                 }
             } catch (InterruptedException ignored) {
             }
         });
+    }
 
+    private void repaintFrameThread() {
         CachedThreadPool.getInstance().executeTask(() -> {
             try {
                 while (SettingsFrame.isNotMainExit()) {
@@ -1983,10 +2025,11 @@ public class SearchBar {
                     TimeUnit.MILLISECONDS.sleep(250);
                 }
             } catch (InterruptedException ignored) {
-
             }
         });
+    }
 
+    private void addSqlCommandThread() {
         CachedThreadPool.getInstance().executeTask(() -> {
             //添加搜索路径线程
             String command;
@@ -2273,7 +2316,9 @@ public class SearchBar {
             } catch (InterruptedException ignored) {
             }
         });
+    }
 
+    private void pollCommandsAndsearchDatabaseThread() {
         CachedThreadPool.getInstance().executeTask(() -> {
             try {
                 String column;
@@ -2297,7 +2342,9 @@ public class SearchBar {
             } catch (InterruptedException ignored) {
             }
         });
+    }
 
+    private void createSqlIndexThread() {
         CachedThreadPool.getInstance().executeTask(() -> {
             //后台自动创建数据库索引
             try (Statement stmt = SQLiteUtil.getStatement()) {
@@ -2335,7 +2382,9 @@ public class SearchBar {
             } catch (Exception ignored) {
             }
         });
+    }
 
+    private void sendSignalAndShowCommandThread() {
         CachedThreadPool.getInstance().executeTask(() -> {
             //缓存和常用文件夹搜索线程
             //停顿时间0.5s，每一次输入会更新一次startTime，该线程记录endTime
@@ -2474,7 +2523,9 @@ public class SearchBar {
                 e.printStackTrace();
             }
         });
+    }
 
+    private void addRecordsToDatabaseThread() {
         CachedThreadPool.getInstance().executeTask(() -> {
             //检测文件添加线程
             String filesToAdd;
@@ -2498,7 +2549,9 @@ public class SearchBar {
                 }
             }
         });
+    }
 
+    private void deleteRecordsToDatabaseThread() {
         CachedThreadPool.getInstance().executeTask(() -> {
             String filesToRemove;
             try (BufferedReader readerRemove = new BufferedReader(new InputStreamReader(
@@ -2521,8 +2574,9 @@ public class SearchBar {
                 }
             }
         });
+    }
 
-
+    private void checkTimeAndExecuteSqlCommandsThread() {
         CachedThreadPool.getInstance().executeTask(() -> {
             // 时间检测线程
             final long updateTimeLimit = SettingsFrame.getUpdateTimeLimit();
@@ -2543,8 +2597,9 @@ public class SearchBar {
                 }
             }
         });
+    }
 
-
+    private void recreateIndexThread() {
         //搜索本地数据线程
         CachedThreadPool.getInstance().executeTask(() -> {
             try {

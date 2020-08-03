@@ -912,6 +912,7 @@ public class SettingsFrame {
                     }
                     SearchUtil.getInstance().setStatus(SearchUtil.VACUUM);
                     CachedThreadPool.getInstance().executeTask(() -> {
+                        //执行VACUUM命令
                         try (Statement stmt = SQLiteUtil.getStatement()) {
                             stmt.execute("VACUUM;");
                         } catch (Exception throwables) {
@@ -926,6 +927,7 @@ public class SettingsFrame {
                         }
                     });
                     CachedThreadPool.getInstance().executeTask(() -> {
+                        //实时显示VACUUM状态
                         try {
                             SearchUtil instance = SearchUtil.getInstance();
                             while (instance.getStatus() == SearchUtil.VACUUM) {
