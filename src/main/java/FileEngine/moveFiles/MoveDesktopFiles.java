@@ -10,12 +10,11 @@ import java.util.ArrayList;
 /**
  * @author XUANXU
  */
-public class MoveDesktopFiles implements Runnable {
-    @Override
-    public void run() {
+public class MoveDesktopFiles {
+    public void start() {
         boolean desktop1;
         boolean desktop2;
-        boolean mkdirRet = false;
+        boolean mkdirRet = true;
         File fileDesktop = FileSystemView.getFileSystemView().getHomeDirectory();
         File fileBackUp = new File("Files");
         if (!fileBackUp.exists()) {
@@ -29,7 +28,8 @@ public class MoveDesktopFiles implements Runnable {
             desktop1 = moveFiles.moveFolder(fileDesktop.getAbsolutePath(), fileBackUp.getAbsolutePath());
             desktop2 = moveFiles.moveFolder("C:\\Users\\Public\\Desktop", fileBackUp.getAbsolutePath());
             if (desktop1 || desktop2) {
-                JOptionPane.showMessageDialog(null, TranslateUtil.getInstance().getTranslation("Files with the same name are detected, please move them by yourself"));
+                JOptionPane.showMessageDialog(null,
+                        TranslateUtil.getInstance().getTranslation("Files with the same name are detected, please move them by yourself"));
             }
         } else {
             System.err.println("Error mkdir \"Files\"");
