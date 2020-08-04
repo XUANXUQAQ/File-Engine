@@ -1,10 +1,10 @@
 package FileEngine;
 
 import FileEngine.SQLiteConfig.SQLiteUtil;
+import FileEngine.checkHotkey.CheckHotKeyUtil;
 import FileEngine.dllInterface.FileMonitor;
 import FileEngine.frames.SettingsFrame;
 import FileEngine.frames.TaskBar;
-import FileEngine.checkHotkey.CheckHotKeyUtil;
 import FileEngine.md5.Md5Util;
 import FileEngine.pluginSystem.PluginUtil;
 import FileEngine.search.SearchUtil;
@@ -17,7 +17,6 @@ import java.awt.*;
 import java.io.*;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 
@@ -63,7 +62,8 @@ public class MainClass {
     }
 
     private static void copyFile(InputStream source, File dest) {
-        try (OutputStream os = new FileOutputStream(dest); BufferedInputStream bis = new BufferedInputStream(source); BufferedOutputStream bos = new BufferedOutputStream(os)) {
+        try (BufferedInputStream bis = new BufferedInputStream(source);
+             BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(dest))) {
             byte[] buffer = new byte[8192];
             int count = bis.read(buffer);
             while (count != -1) {
@@ -102,7 +102,6 @@ public class MainClass {
         if (!file.exists()) {
             return;
         }
-
         String[] content = file.list();//取得当前目录下所有文件和文件夹
         if (content != null) {
             for (String name : content) {
@@ -207,7 +206,7 @@ public class MainClass {
         try {
             while (SettingsFrame.isNotMainExit()) {
                 // 主循环开始
-                TimeUnit.MILLISECONDS.sleep(100);
+                TimeUnit.MILLISECONDS.sleep(200);
             }
             PluginUtil.unloadAllPlugins();
             CheckHotKeyUtil.getInstance().stopListen();
@@ -216,7 +215,6 @@ public class MainClass {
             Thread.sleep(8000);
             System.exit(0);
         } catch (InterruptedException ignored) {
-
         }
     }
 
@@ -235,7 +233,7 @@ public class MainClass {
     private static void copyOrIgnoreFile(String path, String rootPath, String md5) {
         File target = new File(path);
         String fileMd5 = Md5Util.getMD5(target.getAbsolutePath());
-        if (!target.exists() || !Objects.equals(fileMd5, md5)) {
+        if (!target.exists() || !md5.equals(fileMd5)) {
             if (SettingsFrame.isDebug()) {
                 System.out.println("正在重新释放文件：" + path);
             }
@@ -250,7 +248,6 @@ public class MainClass {
     }
 
     private static void startOrIgnoreUpdateAndExit(boolean isUpdate) throws InterruptedException, IOException {
-        //复制updater.exe
         if (isUpdate) {
             File update = new File("user/update");
             update.delete();

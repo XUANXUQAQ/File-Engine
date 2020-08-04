@@ -1,8 +1,6 @@
 package FileEngine.moveFiles;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
+import java.io.*;
 import java.util.ArrayList;
 
 
@@ -19,11 +17,12 @@ public class MoveFilesUtil {
             // 则读出该文件夹下的的所有文件
             String[] children = dir.list();
             // 递归删除目录中的子目录下
-            assert children != null;
-            for (String child : children) {
-                boolean isDelete = deleteDir(new File(dir, child));
-                if (!isDelete) {
-                    return false;
+            if (!(children == null || children.length == 0)) {
+                for (String child : children) {
+                    boolean isDelete = deleteDir(new File(dir, child));
+                    if (!isDelete) {
+                        return false;
+                    }
                 }
             }
         }
@@ -55,9 +54,9 @@ public class MoveFilesUtil {
 
                     if (temp.isFile()) {
                         if (!isFileExist(newPath + "/" + (temp.getName()))) {
-                            FileInputStream input = new FileInputStream(temp);
-                            FileOutputStream output = new FileOutputStream(newPath
-                                    + "/" + (temp.getName()));
+                            BufferedInputStream input = new BufferedInputStream(new FileInputStream(temp));
+                            BufferedOutputStream output = new BufferedOutputStream(new FileOutputStream(newPath
+                                    + "/" + (temp.getName())));
                             byte[] bufferarray = new byte[1024 * 64];
                             int prereadlength;
                             while ((prereadlength = input.read(bufferarray)) != -1) {
@@ -77,7 +76,6 @@ public class MoveFilesUtil {
                 }
             }
         } catch (Exception ignored) {
-
         }
         return isHasRepeatFiles;
     }
