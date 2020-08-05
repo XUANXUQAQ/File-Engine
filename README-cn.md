@@ -17,7 +17,7 @@ A tool can make you work more efficiently.
  * 支持指定优先搜索文件夹，常用文件无需等待，立即打开。
  * 简洁UI，设置方便。
  * 自适应分辨率显示。    
-### 请下载系统对应位数的程序，否则可能会出现错误。未来可能会删除32位版本
+### 该软件仅支持64位系统
 [下载最新稳定版64位](https://github.com/XUANXUQAQ/File-Engine/releases/download/2.4/File-Engine-x64.V2.4.7z)   
 
 感谢以下项目：   

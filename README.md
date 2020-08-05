@@ -19,7 +19,7 @@ Or enter :help in the search bar. by default Ctrl + Alt + K to call out the sear
   * Support to specify the priority search folder, frequently used files can be opened immediately without waiting.
   * Simple UI, easy to set up.
   * Adaptive resolution display.   
-### Please download the program corresponding to the number of digits in the system, otherwise an error may occur. 32-bit version may be deleted in the future
+### The software only support 64-bit operating system.
 [Download the latest stable 64-bit](https://github.com/XUANXUQAQ/File-Engine/releases/download/2.4/File-Engine-x64.V2.4.7z)   
 
 Thanks for the following project:   
