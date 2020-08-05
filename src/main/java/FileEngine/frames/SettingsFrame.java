@@ -322,9 +322,7 @@ public class SettingsFrame {
             int isConfirmed = JOptionPane.showConfirmDialog(frame, TranslateUtil.getInstance().getTranslation("Whether to remove and backup all files on the desktop," +
                     "they will be in the program's Files folder, which may take a few minutes"));
             if (isConfirmed == 0) {
-                CachedThreadPool.getInstance().executeTask(() -> {
-                    new MoveDesktopFiles().start();
-                });
+                CachedThreadPool.getInstance().executeTask(() -> new MoveDesktopFiles().start());
             }
         });
     }
@@ -1309,6 +1307,7 @@ public class SettingsFrame {
         labelUserName.setText(TranslateUtil.getInstance().getTranslation("User name"));
         labelPassword.setText(TranslateUtil.getInstance().getTranslation("Password"));
         labelProxyTip.setText(TranslateUtil.getInstance().getTranslation("If you need a proxy to access the Internet, You can add a proxy here."));
+        frame.setTitle(TranslateUtil.getInstance().getTranslation("Settings"));
     }
 
     public static void setMainExit(boolean b) {
