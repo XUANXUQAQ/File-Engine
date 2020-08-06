@@ -21,7 +21,6 @@ import java.util.concurrent.TimeUnit;
 
 public class SearchUtil {
     private final Set<String> commandSet = ConcurrentHashMap.newKeySet();
-    private final ConcurrentLinkedQueue<String> commandQueue = new ConcurrentLinkedQueue<>();
     private volatile int status;
 
     public static final int NORMAL = 0;
@@ -353,7 +352,7 @@ public class SearchUtil {
 
     public void executeAllCommands(Statement stmt) {
         if (!commandSet.isEmpty()) {
-            commandQueue.addAll(commandSet);
+            ConcurrentLinkedQueue<String> commandQueue = new ConcurrentLinkedQueue<>(commandSet);
             commandSet.clear();
             try {
                 if (SettingsFrame.isDebug()) {
@@ -377,7 +376,6 @@ public class SearchUtil {
                 } catch (SQLException throwables) {
                     throwables.printStackTrace();
                 }
-                commandQueue.clear();
             }
         }
     }
@@ -403,7 +401,7 @@ public class SearchUtil {
                     String path = root.getAbsolutePath();
                     path = path.substring(0, 2);
                     try {
-                        SearchFile(path, searchDepth, ignorePath);
+                        searchFile(path, searchDepth, ignorePath);
                     } catch (InterruptedException | IOException e) {
                         e.printStackTrace();
                     }
@@ -422,7 +420,7 @@ public class SearchUtil {
             File[] desktopFiles = new File(eachDesktop).listFiles();
             if (desktopFiles != null) {
                 if (desktopFiles.length != 0) {
-                    SearchFileIgnoreSearchDepth(eachDesktop, ignorePath);
+                    searchFileIgnoreSearchDepth(eachDesktop, ignorePath);
                 }
             }
         }
@@ -456,11 +454,10 @@ public class SearchUtil {
         return fsv.getHomeDirectory().getAbsolutePath();
     }
 
-    private boolean isTaskExist(String procName) throws IOException, InterruptedException {
+    private boolean isTaskExist(String procName, StringBuilder strBuilder) throws IOException, InterruptedException {
         if (!procName.isEmpty()) {
             Process p = Runtime.getRuntime().exec("tasklist /FI \"IMAGENAME eq " + procName + "\"");
             p.waitFor();
-            StringBuilder strBuilder = new StringBuilder();
             String eachLine;
             try (BufferedReader buffr = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
                 while ((eachLine = buffr.readLine()) != null) {
@@ -473,12 +470,14 @@ public class SearchUtil {
     }
 
     private void waitForTask(String procName) throws IOException, InterruptedException {
-        while (isTaskExist(procName)) {
+        StringBuilder strBuilder = new StringBuilder();
+        while (isTaskExist(procName, strBuilder)) {
             TimeUnit.MILLISECONDS.sleep(10);
+            strBuilder.delete(0, strBuilder.length());
         }
     }
 
-    private void SearchFileIgnoreSearchDepth(String path, String ignorePath) {
+    private void searchFileIgnoreSearchDepth(String path, String ignorePath) {
         File fileSearcher = new File("user/fileSearcher.exe");
         String absPath = fileSearcher.getAbsolutePath();
         String start = absPath.substring(0, 2);
@@ -495,7 +494,7 @@ public class SearchUtil {
         }
     }
 
-    private void SearchFile(String path, int searchDepth, String ignorePath) throws InterruptedException, IOException {
+    private void searchFile(String path, int searchDepth, String ignorePath) throws InterruptedException, IOException {
         File fileSearcher = new File("user/fileSearcher.exe");
         String absPath = fileSearcher.getAbsolutePath();
         String start = absPath.substring(0, 2);
