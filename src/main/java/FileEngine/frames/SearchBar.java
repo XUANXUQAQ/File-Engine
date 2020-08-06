@@ -68,7 +68,7 @@ public class SearchBar {
     private Color fontColorWithCoverage;
     private Color fontColor;
     private volatile long startTime = 0;
-    private Thread searchWaiter = null;
+    private volatile boolean isWaiting = false;
     private final Pattern semicolon;
     private final Pattern resultSplit;
     private final Pattern blank;
@@ -1225,7 +1225,6 @@ public class SearchBar {
                     break;
             }
         } catch (NullPointerException ignored) {
-
         }
     }
 
@@ -1684,27 +1683,22 @@ public class SearchBar {
     }
 
     private void addSearchWaiter() {
-        if (search.getStatus() != SearchUtil.NORMAL) {
-            if (searchWaiter == null || !searchWaiter.isAlive()) {
-                searchWaiter = new Thread(() -> {
-                    try {
-                        while (SettingsFrame.isNotMainExit()) {
-                            if (Thread.currentThread().isInterrupted()) {
-                                break;
-                            }
-                            if (search.getStatus() == SearchUtil.NORMAL) {
-                                startTime = System.currentTimeMillis() - 500;
-                                startSignal = true;
-                                break;
-                            }
-                            TimeUnit.MILLISECONDS.sleep(20);
+        if (!isWaiting) {
+            isWaiting = true;
+            CachedThreadPool.getInstance().executeTask(() -> {
+                try {
+                    while (isWaiting) {
+                        if (search.getStatus() == SearchUtil.NORMAL) {
+                            startTime = System.currentTimeMillis() - 500;
+                            startSignal = true;
+                            isWaiting = false;
+                            break;
                         }
-                    } catch (InterruptedException ignored) {
-
+                        TimeUnit.MILLISECONDS.sleep(20);
                     }
-                });
-                searchWaiter.start();
-            }
+                } catch (InterruptedException ignored) {
+                }
+            });
         }
     }
 
@@ -1746,41 +1740,45 @@ public class SearchBar {
         CachedThreadPool.getInstance().executeTask(() -> {
             int startTimes = 0;
             File startTimeCount = new File("user/startTimeCount.dat");
+            boolean isFileCreated;
             try {
                 if (!startTimeCount.exists()) {
-                    startTimeCount.createNewFile();
+                    isFileCreated = startTimeCount.createNewFile();
+                } else {
+                    isFileCreated = true;
                 }
-
-                try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(startTimeCount), StandardCharsets.UTF_8));
-                     Statement stmt = SQLiteUtil.getStatement()) {
-                    //读取启动次数
-                    String times = reader.readLine();
-                    if (!(times == null || times.isEmpty())) {
-                        startTimes = Integer.parseInt(times);
-                        //使用次数大于10次，优化数据库
-                        if (startTimes >= 10) {
-                            startTimes = 0;
-                            if (SearchUtil.getInstance().getStatus() == SearchUtil.NORMAL) {
-                                //开始优化数据库
-                                SearchUtil.getInstance().setStatus(SearchUtil.VACUUM);
-                                try {
-                                    if (SettingsFrame.isDebug()) {
-                                        System.out.println("开启次数超过10次，优化数据库");
+                if (isFileCreated) {
+                    try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(startTimeCount), StandardCharsets.UTF_8));
+                         Statement stmt = SQLiteUtil.getStatement()) {
+                        //读取启动次数
+                        String times = reader.readLine();
+                        if (!(times == null || times.isEmpty())) {
+                            startTimes = Integer.parseInt(times);
+                            //使用次数大于10次，优化数据库
+                            if (startTimes >= 10) {
+                                startTimes = 0;
+                                if (SearchUtil.getInstance().getStatus() == SearchUtil.NORMAL) {
+                                    //开始优化数据库
+                                    SearchUtil.getInstance().setStatus(SearchUtil.VACUUM);
+                                    try {
+                                        if (SettingsFrame.isDebug()) {
+                                            System.out.println("开启次数超过10次，优化数据库");
+                                        }
+                                        stmt.execute("VACUUM;");
+                                    } catch (Exception ignored) {
                                     }
-                                    stmt.execute("VACUUM;");
-                                } catch (Exception ignored) {
+                                    SearchUtil.getInstance().setStatus(SearchUtil.NORMAL);
                                 }
-                                SearchUtil.getInstance().setStatus(SearchUtil.NORMAL);
                             }
                         }
+                        //自增后写入
+                        startTimes++;
+                        try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(startTimeCount), StandardCharsets.UTF_8))) {
+                            writer.write(String.valueOf(startTimes));
+                        }
+                    } catch (Exception throwables) {
+                        throwables.printStackTrace();
                     }
-                    //自增后写入
-                    startTimes++;
-                    try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(startTimeCount), StandardCharsets.UTF_8))) {
-                        writer.write(String.valueOf(startTimes));
-                    }
-                } catch (Exception throwables) {
-                    throwables.printStackTrace();
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -3094,11 +3092,7 @@ public class SearchBar {
         startSignal = false;
         isCacheAndPrioritySearched = false;
         isStartSearchLocal = false;
-        try {
-            searchWaiter.interrupt();
-        } catch (NullPointerException ignored) {
-
-        }
+        isWaiting = false;
     }
 
     public boolean isVisible() {
