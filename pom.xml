@@ -6,7 +6,7 @@
 
     <groupId>org.example</groupId>
     <artifactId>File-Engine</artifactId>
-    <version>2.1</version>
+    <version>2.6</version>
     <build>
         <plugins>
             <plugin>
@@ -33,22 +33,22 @@
         <dependency>
             <groupId>com.alibaba</groupId>
             <artifactId>fastjson</artifactId>
-            <version>1.2.72</version>
+            <version>1.2.73</version>
         </dependency>
         <dependency>
             <groupId>net.java.dev.jna</groupId>
             <artifactId>jna</artifactId>
-            <version>5.5.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.xerial</groupId>
-            <artifactId>sqlite-jdbc</artifactId>
-            <version>3.32.3</version>
+            <version>5.6.0</version>
         </dependency>
         <dependency>
             <groupId>in.weblaf</groupId>
             <artifactId>webLaf</artifactId>
             <version>1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.xerial</groupId>
+            <artifactId>sqlite-jdbc</artifactId>
+            <version>3.32.3.2</version>
         </dependency>
     </dependencies>
 </project>
