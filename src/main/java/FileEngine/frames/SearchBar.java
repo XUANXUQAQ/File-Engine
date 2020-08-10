@@ -2532,14 +2532,14 @@ public class SearchBar {
                     StandardCharsets.UTF_8))) {
                 while (SettingsFrame.isNotMainExit()) {
                     if (search.getStatus() == SearchUtil.NORMAL) {
-                        while ((filesToAdd = readerAdd.readLine()) != null) {
+                        if ((filesToAdd = readerAdd.readLine()) != null) {
                             search.addFileToDatabase(filesToAdd);
                             if (SettingsFrame.isDebug()) {
                                 System.out.println("添加" + filesToAdd);
                             }
                         }
                     }
-                    TimeUnit.MILLISECONDS.sleep(100);
+                    TimeUnit.MILLISECONDS.sleep(1);
                 }
             } catch (IOException | InterruptedException e) {
                 if (SettingsFrame.isDebug() && !(e instanceof InterruptedException)) {
@@ -2557,14 +2557,14 @@ public class SearchBar {
                     StandardCharsets.UTF_8))) {
                 while (SettingsFrame.isNotMainExit()) {
                     if (search.getStatus() == SearchUtil.NORMAL) {
-                        while ((filesToRemove = readerRemove.readLine()) != null) {
+                        if ((filesToRemove = readerRemove.readLine()) != null) {
                             search.removeFileFromDatabase(filesToRemove);
                             if (SettingsFrame.isDebug()) {
                                 System.out.println("删除" + filesToRemove);
                             }
                         }
                     }
-                    TimeUnit.MILLISECONDS.sleep(100);
+                    TimeUnit.MILLISECONDS.sleep(1);
                 }
             } catch (InterruptedException | IOException e) {
                 if (SettingsFrame.isDebug() && !(e instanceof InterruptedException)) {
