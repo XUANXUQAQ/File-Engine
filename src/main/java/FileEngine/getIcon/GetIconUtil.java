@@ -30,7 +30,11 @@ public class GetIconUtil {
             Image image = icon.getImage().getScaledInstance(width, height, Image.SCALE_DEFAULT);
             return new ImageIcon(image);
         } catch (NullPointerException e) {
-            return null;
+            if (isInitialized) {
+                return nullImageIcon;
+            } else {
+                return null;
+            }
         }
     }
 
