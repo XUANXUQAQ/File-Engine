@@ -144,7 +144,6 @@ public class SearchBar {
         searchBar.setType(JFrame.Type.UTILITY);
         searchBar.setAlwaysOnTop(true);
 
-
         //labels
         Font font = new Font("Microsoft JhengHei", Font.BOLD, (int) ((height * 0.1) / 96 * 72) / 4);
         label1 = new JLabel();
@@ -246,7 +245,6 @@ public class SearchBar {
         label.setForeground(fontColor);
         label.setOpaque(true);
         label.setBackground(null);
-        label.setFocusable(false);
         label.setFocusable(false);
     }
 
@@ -2406,18 +2404,18 @@ public class SearchBar {
                         String text = getTextFieldText();
                         if (search.getStatus() == SearchUtil.NORMAL) {
                             if (runningMode.get() == COMMAND_MODE) {
-                                if (":update".equals(text)) {
+                                if (":update".equalsIgnoreCase(text)) {
                                     closedTodo();
                                     search.setStatus(SearchUtil.MANUAL_UPDATE);
                                     startSignal = false;
                                     continue;
                                 }
-                                if (":version".equals(text)) {
+                                if (":version".equalsIgnoreCase(text)) {
                                     closedTodo();
                                     JOptionPane.showMessageDialog(null, TranslateUtil.getInstance().getTranslation(
                                             "Current Version:") + SettingsFrame.version);
                                 }
-                                if (":help".equals(text)) {
+                                if (":help".equalsIgnoreCase(text)) {
                                     closedTodo();
                                     Desktop desktop;
                                     if (Desktop.isDesktopSupported()) {
@@ -2425,7 +2423,7 @@ public class SearchBar {
                                         desktop.browse(new URI("https://github.com/XUANXUQAQ/File-Engine/wiki/Usage"));
                                     }
                                 }
-                                if (":clearbin".equals(text)) {
+                                if (":clearbin".equalsIgnoreCase(text)) {
                                     closedTodo();
                                     int r = JOptionPane.showConfirmDialog(null, TranslateUtil.getInstance().getTranslation(
                                             "Are you sure you want to empty the recycle bin"));
