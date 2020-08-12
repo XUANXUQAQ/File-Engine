@@ -345,7 +345,6 @@ public class SettingsFrame {
 
             @Override
             public void keyTyped(KeyEvent e) {
-
             }
 
             @Override
@@ -400,7 +399,6 @@ public class SettingsFrame {
 
             @Override
             public void keyTyped(KeyEvent e) {
-
             }
 
             @Override
@@ -520,7 +518,8 @@ public class SettingsFrame {
                 //未输入
                 return;
             }
-            if ("update".equals(name) || "clearbin".equals(name) || "help".equals(name) || "version".equals(name) || isRepeatCommand(name)) {
+            if ("update".equalsIgnoreCase(name) || "clearbin".equalsIgnoreCase(name) ||
+                    "help".equalsIgnoreCase(name) || "version".equalsIgnoreCase(name) || isRepeatCommand(name)) {
                 JOptionPane.showMessageDialog(frame, TranslateUtil.getInstance().getTranslation("Conflict with existing commands"));
                 return;
             }
