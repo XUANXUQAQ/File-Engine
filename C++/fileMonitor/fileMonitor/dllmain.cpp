@@ -8,7 +8,7 @@
 #include <fstream>
 #include <ctype.h>
 #include <thread>
-#include <mutex>
+#include <concurrent_queue.h>
 //#define TEST
 
 
@@ -21,16 +21,23 @@ std::string to_utf8(const std::wstring& str);
 std::string to_utf8(const wchar_t* buffer, int len);
 std::wstring StringToWString(const std::string& str);
 void write_to_file(std::string record, const char* file_path);
+void add_record(std::string record);
+void delete_record(std::string record);
+void write_add_records_to_file();
+void write_del_records_to_file();
 
 
 using namespace std;
+using namespace concurrency;
 
 wchar_t fileName[1000];
 wchar_t fileRename[1000];
 static volatile bool isRunning = true;
 char* output = new char[1000];
-mutex m;
-
+concurrent_queue<string> add_queue;
+concurrent_queue<string> del_queue;
+char fileRemoved[1000];
+char fileAdded[1000];
 
 BOOL APIENTRY DllMain( HMODULE hModule,
                        DWORD  ul_reason_for_call,
@@ -48,13 +55,49 @@ BOOL APIENTRY DllMain( HMODULE hModule,
     return TRUE;
 }
 
+void add_record(string record)
+{
+    add_queue.push(record);
+}
+
+void delete_record(string record)
+{
+    del_queue.push(record);
+}
+
 void write_to_file(string record, const char* file_path) 
 {
-    m.lock();
     ofstream file(file_path, ios::app | ios::binary);
     file << record << endl;
     file.close();
-    m.unlock();
+}
+
+void write_add_records_to_file()
+{
+    while (isRunning)
+    {
+        string record;
+        add_queue.try_pop(record);
+        if (!record.empty())
+        {
+            write_to_file(record, fileAdded);
+        }
+        Sleep(20);
+    }
+}
+
+void write_del_records_to_file()
+{
+    while (isRunning)
+    {
+        string record;
+        del_queue.try_pop(record);
+        if (!record.empty())
+        {
+            write_to_file(record, fileRemoved);
+        }
+        Sleep(20);
+    }
 }
 
 std::string to_utf8(const wchar_t* buffer, int len)
@@ -110,6 +153,18 @@ __declspec(dllexport) void set_output(const char* path)
 {
     memset(output, 0, 1000);
     strcpy_s(output, 1000,  path);
+
+    memset(fileRemoved, 0, 1000);
+    memset(fileAdded, 0, 1000);
+
+    strcpy_s(fileRemoved, 1000, output);
+    strcat_s(fileRemoved, "\\fileRemoved.txt");
+    strcpy_s(fileAdded, 1000, output);
+    strcat_s(fileAdded, "\\fileAdded.txt");
+    thread write_add_file_thread(write_add_records_to_file);
+    thread write_del_file_thread(write_del_records_to_file);
+    write_add_file_thread.detach();
+    write_del_file_thread.detach();
 }
 
 __declspec(dllexport) void monitor(const char* path)
@@ -132,9 +187,6 @@ void monitor_path(const char* path)
     DWORD cbBytes;
     char file_name[1000];   //设置文件名
     char file_rename[1000]; //设置文件重命名后的名字;
-    char OUTPUT[1000];
-    char fileRemoved[1000];
-    char fileAdded[1000];
     char _path[1000];
     char notify[1024];
 
@@ -162,15 +214,6 @@ void monitor_path(const char* path)
 
     FILE_NOTIFY_INFORMATION* pnotify = (FILE_NOTIFY_INFORMATION*)notify;
 
-    strcpy_s(OUTPUT, 1000, output);
-
-    memset(fileRemoved, 0, 1000);
-    memset(fileAdded, 0, 1000);
-
-    strcpy_s(fileRemoved, 1000, OUTPUT);
-    strcat_s(fileRemoved, "\\fileRemoved.txt");
-    strcpy_s(fileAdded, 1000, OUTPUT);
-    strcat_s(fileAdded, "\\fileAdded.txt");
     while (isRunning)
     {
         if (ReadDirectoryChangesW(dirHandle, &notify, 1024, true,
@@ -190,8 +233,8 @@ void monitor_path(const char* path)
             if (pnotify->NextEntryOffset != 0 && (pnotify->FileNameLength > 0 && pnotify->FileNameLength < 1000))
             {
                 PFILE_NOTIFY_INFORMATION p = (PFILE_NOTIFY_INFORMATION)((char*)pnotify + pnotify->NextEntryOffset);
-                memset(file_rename, 0, sizeof(file_rename));
-                memset(fileRename, 0, sizeof(fileRename));
+                memset(file_rename, 0, 1000);
+                memset(fileRename, 0, 1000);
                 wcscpy_s(fileRename, pnotify->FileName);
                 WideCharToMultiByte(CP_ACP, 0, p->FileName, p->FileNameLength / 2, file_rename, 250, NULL, NULL);
             }
@@ -200,6 +243,10 @@ void monitor_path(const char* path)
             {
                 file_name[strlen(file_name) - 1] = '\0';
             }
+            if (file_rename[strlen(file_rename) - 1] == '~')
+            {
+                file_rename[strlen(file_rename) - 1] = '\0';
+            }
 
             //设置类型过滤器,监听文件创建、更改、删除、重命名等;
             switch (pnotify->Action)
@@ -207,72 +254,58 @@ void monitor_path(const char* path)
             case FILE_ACTION_ADDED:
                 if (strstr(file_name, "$RECYCLE.BIN") == NULL)
                 {
-#ifdef TEST
-                    cout << "file add : ";
-#endif
                     string data;
                     data.append(_path);
                     data.append(file_name);
 #ifdef TEST
-                    cout << data << endl;
+                    cout << "file add : " << data << endl;
 #endif
-                    write_to_file(to_utf8(StringToWString(data)), fileAdded);
+                    add_record(to_utf8(StringToWString(data)));
                 }
                 break;
 
             case FILE_ACTION_MODIFIED:
                 if (strstr(file_name, "$RECYCLE.BIN") == NULL && strstr(file_name, "fileAdded.txt") == NULL && strstr(file_name, "fileRemoved.txt") == NULL)
                 {
-#ifdef TEST
-                    cout << "file add : ";
-#endif
                     string data;
                     data.append(_path);
                     data.append(file_name);
 #ifdef TEST
-                    cout << data << endl;
+                    cout << "file add : " << data << endl;
 #endif
-                    write_to_file(to_utf8(StringToWString(data)), fileAdded);
+                    add_record(to_utf8(StringToWString(data)));
                 }
                 break;
 
             case FILE_ACTION_REMOVED:
                 if (strstr(file_name, "$RECYCLE.BIN") == NULL)
                 {
-#ifdef TEST
-                    cout << "file removed : ";
-#endif
                     string data;
                     data.append(_path);
                     data.append(file_name);
 #ifdef TEST
-                    cout << data << endl;
+                    cout << "file removed : " << data << endl;
 #endif
-                    write_to_file(to_utf8(StringToWString(data)), fileRemoved);
+                    delete_record(to_utf8(StringToWString(data)));
                 }
                 break;
 
             case FILE_ACTION_RENAMED_OLD_NAME:
                 if (strstr(file_name, "$RECYCLE.BIN") == NULL)
                 {
-#ifdef TEST
-                    cout << "file renamed : ";
-#endif
                     string data;
                     data.append(_path);
                     data.append(file_name);
-#ifdef TEST
-                    cout << data << "->";
-#endif
-                    write_to_file(to_utf8(StringToWString(data)), fileRemoved);
+
+                    delete_record(to_utf8(StringToWString(data)));
 
                     data.clear();
                     data.append(_path);
                     data.append(file_rename);
 #ifdef TEST
-                    cout << data << endl;
+                    cout << "file renamed : " << data << "->" << data << endl;
 #endif
-                    write_to_file(to_utf8(StringToWString(data)), fileAdded);
+                    add_record(to_utf8(StringToWString(data)));
                 }
                 break;
 
@@ -286,3 +319,17 @@ void monitor_path(const char* path)
     return;
 }
 
+#ifdef TEST
+int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
+    _In_opt_ HINSTANCE hPrevInstance,
+    _In_ LPWSTR    lpCmdLine,
+    _In_ int       nCmdShow)
+{
+    set_output("D:\\Code\\File-Engine\\C++\\fileMonitor\\test");
+    monitor("C:\\");
+    while (true)
+    {
+        Sleep(200);
+    }
+}
+#endif
