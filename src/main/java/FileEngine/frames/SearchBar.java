@@ -201,14 +201,6 @@ public class SearchBar {
             @Override
             public void focusLost(FocusEvent e) {
                 if (System.currentTimeMillis() - visibleStartTime > 500) {
-                    try {
-                        //等待explorer.exe获取焦点
-                        TimeUnit.MILLISECONDS.sleep(200);
-                    } catch (InterruptedException ignored) {
-                    }
-                    if (!GetHandle.INSTANCE.is_explorer_at_top()) {
-                        switchToNormalMode();
-                    }
                     if (showingMode.get() != EXPLORER_ATTACH && SettingsFrame.isLoseFocusClose()) {
                         closedTodo();
                     }
@@ -1903,9 +1895,6 @@ public class SearchBar {
             switchModeStartTime = System.currentTimeMillis();
             if (showingMode.get() != NORMAL_SHOWING) {
                 showingMode.set(NORMAL_SHOWING);
-                if (SettingsFrame.isLoseFocusClose()) {
-                    closedTodo();
-                }
                 Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize(); // 获取屏幕大小
                 int searchBarWidth = (int) (screenSize.width * 0.4);
                 int searchBarHeight = (int) (screenSize.height * 0.5);
@@ -1938,6 +1927,9 @@ public class SearchBar {
                 label6.setFont(labelFont);
                 label7.setFont(labelFont);
                 label8.setFont(labelFont);
+                if (SettingsFrame.isLoseFocusClose()) {
+                    closedTodo();
+                }
             }
         }
     }
