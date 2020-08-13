@@ -3307,7 +3307,7 @@ public class SearchBar {
         clearLabel();
         clearTextFieldText();
         startTime = System.currentTimeMillis();//结束搜索
-        isUsing = false;
+        isUsing = true;
         labelCount.set(0);
         resultCount.set(0);
         currentLabelSelectedPosition.set(0);
