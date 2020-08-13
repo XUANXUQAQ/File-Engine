@@ -1857,7 +1857,7 @@ public class SearchBar {
                             }
                         }
                     }
-                    TimeUnit.MILLISECONDS.sleep(100);
+                    TimeUnit.MILLISECONDS.sleep(20);
                 }
             } catch (InterruptedException ignored) {
             }

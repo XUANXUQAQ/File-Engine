@@ -152,7 +152,15 @@ void _start()
         {
             isStart = false;
         }
-        Sleep(100);
+        if (isStart)
+        {
+            Sleep(10);
+        } 
+        else
+        {
+
+            Sleep(300);
+        }
     }
 }
 
