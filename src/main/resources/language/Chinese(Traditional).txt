@@ -119,3 +119,4 @@ Optimizing...=優化中
 Optimized=優化完成
 Settings=設置
 Exit=退出
+Text copied to clipboard=文本已復製到剪貼板

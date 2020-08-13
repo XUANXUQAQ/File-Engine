@@ -341,7 +341,7 @@ void search(string path, string exd)
 {
     //cout << "getFiles()" << path<< endl;
     //文件句柄
-    long long hFile = 0;
+    intptr_t hFile = 0;
     //文件信息
     struct _finddata_t fileinfo;
     string pathName, exdName;
@@ -432,7 +432,7 @@ void searchIgnoreSearchDepth(string path, string exd)
 {
     //cout << "getFiles()" << path<< endl;
     //文件句柄
-    long hFile = 0;
+    intptr_t hFile = 0;
     //文件信息
     struct _finddata_t fileinfo;
     string pathName, exdName;

@@ -1,8 +1,8 @@
-﻿  pch.cpp
-  dllmain.cpp
+﻿  dllmain.cpp
     正在创建库 D:\Code\File-Engine\C++\fileMonitor\x64\Release\fileMonitor.lib 和对象 D:\Code\File-Engine\C++\fileMonitor\x64\Release\fileMonitor.exp
   正在生成代码
-  Compiler version has changed, fall back to full compilation.
-  All 591 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  2 of 600 functions ( 0.3%) were compiled, the rest were copied from previous compilation.
+    0 functions were new in current compilation
+    1 functions had inline decision re-evaluated but remain unchanged
   已完成代码的生成
   fileMonitor.vcxproj -> D:\Code\File-Engine\C++\fileMonitor\x64\Release\fileMonitor.dll

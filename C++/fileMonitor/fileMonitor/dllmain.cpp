@@ -9,8 +9,11 @@
 #include <ctype.h>
 #include <thread>
 #include <concurrent_queue.h>
+#include <io.h>
 //#define TEST
 
+using namespace std;
+using namespace concurrency;
 
 extern "C" __declspec(dllexport) void monitor(const char* path);
 extern "C" __declspec(dllexport) void stop_monitor();
@@ -24,11 +27,10 @@ void write_to_file(std::string record, const char* file_path);
 void add_record(std::string record);
 void delete_record(std::string record);
 void write_add_records_to_file();
-void write_del_records_to_file();
+void write_del_records_to_file(); 
+void searchDir(std::string path, std::string output);
+bool isDir(const char* path);
 
-
-using namespace std;
-using namespace concurrency;
 
 wchar_t fileName[1000];
 wchar_t fileRename[1000];
@@ -53,6 +55,60 @@ BOOL APIENTRY DllMain( HMODULE hModule,
         break;
     }
     return TRUE;
+}
+
+bool isDir(const char* path)
+{
+    struct stat s;
+    if (stat(path, &s) == 0) {
+        if (s.st_mode & S_IFDIR) {
+            return true;
+        }
+    }
+    return false;
+}
+
+void searchDir(string path, string output_path)
+{
+    //cout << "getFiles()" << path<< endl;
+    //文件句柄
+    intptr_t hFile = 0;
+    //文件信息
+    struct _finddata_t fileinfo;
+    string pathName, exdName;
+    exdName = "\\*";
+
+    if ((hFile = _findfirst(pathName.assign(path).append(exdName).c_str(), &fileinfo)) != -1)
+    {
+        do
+        {
+            //cout << fileinfo.name << endl;
+
+            //如果是文件夹中仍有文件夹,加入列表后迭代
+            //如果不是,加入列表
+            if ((fileinfo.attrib & _A_SUBDIR))
+            {
+                if (strcmp(fileinfo.name, ".") != 0 && strcmp(fileinfo.name, "..") != 0)
+                {
+                    string name(fileinfo.name);
+                    string _path = pathName.assign(path).append("\\").append(fileinfo.name);
+                    write_to_file(to_utf8(StringToWString(_path)), output_path.c_str());
+                    searchDir(_path, output_path);
+                  
+                }
+            }
+            else
+            {
+                if (strcmp(fileinfo.name, ".") != 0 && strcmp(fileinfo.name, "..") != 0)
+                {
+                    string name(fileinfo.name);
+                    string _path = pathName.assign(path).append("\\").append(fileinfo.name);
+                    write_to_file(to_utf8(StringToWString(_path)), output_path.c_str());
+                }
+            }
+        } while (_findnext(hFile, &fileinfo) == 0);
+        _findclose(hFile);
+    }
 }
 
 void add_record(string record)
@@ -81,8 +137,12 @@ void write_add_records_to_file()
         if (!record.empty())
         {
             write_to_file(record, fileAdded);
+            if (isDir(record.c_str()))
+            {
+                searchDir(record, fileAdded);
+            }
         }
-        Sleep(20);
+        Sleep(1);
     }
 }
 
@@ -95,8 +155,12 @@ void write_del_records_to_file()
         if (!record.empty())
         {
             write_to_file(record, fileRemoved);
+            if (isDir(record.c_str()))
+            {
+                searchDir(record, fileRemoved);
+            }
         }
-        Sleep(20);
+        Sleep(1);
     }
 }
 
@@ -326,7 +390,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     _In_ int       nCmdShow)
 {
     set_output("D:\\Code\\File-Engine\\C++\\fileMonitor\\test");
-    monitor("C:\\");
+    monitor("D:\\");
     while (true)
     {
         Sleep(200);
