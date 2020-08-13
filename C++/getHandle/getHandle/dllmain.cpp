@@ -21,6 +21,10 @@ int x;
 int y;
 volatile long width;
 volatile long height;
+struct handle_data {
+    unsigned long process_id;
+    HWND window_handle;
+};
 
 void getTopWindow(HWND& hwnd);
 void getWindowRect(HWND& hwnd, LPRECT lprect);
@@ -137,7 +141,12 @@ void _start()
             y = windowRect.top;
             width = windowRect.right - windowRect.left;
             height = windowRect.bottom - windowRect.top;
-            isStart = true;
+            if (height < 200 || width < 200 || x == 0 || y == 0) {
+                isStart = false;
+            }
+            else {
+                isStart = true;
+            }
         }
         else 
         {
@@ -157,7 +166,14 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     start();
     while (true)
     {
-        Sleep(20);
+        if (isStart)
+        {
+            int xPos = getX();
+            int yPos = getY();
+            int width = getWidth();
+            int height = getHeight();
+        }
+        Sleep(10);
     }
 }
 #endif
