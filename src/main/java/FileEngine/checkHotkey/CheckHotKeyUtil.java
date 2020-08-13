@@ -105,7 +105,7 @@ public class CheckHotKeyUtil {
                         isExecuted = true;
                         if (!searchBar.isVisible()) {
                             if (System.currentTimeMillis() - endVisibleTime > 500) {
-                                searchBar.showSearchbar();
+                                searchBar.showSearchbar(true);
                                 startVisibleTime = System.currentTimeMillis();
                             }
                         } else {

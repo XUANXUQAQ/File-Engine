@@ -119,3 +119,4 @@ Optimizing...=
 Optimized=
 Settings=
 Exit=
+Text copied to clipboard=
