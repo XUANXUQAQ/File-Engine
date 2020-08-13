@@ -70,7 +70,6 @@ public class SearchBar {
     private Color fontColorWithCoverage;
     private Color fontColor;
     private volatile long startTime = 0;
-    private volatile long switchModeStartTime = 0;
     private volatile boolean isWaiting = false;
     private final Pattern semicolon;
     private final Pattern resultSplit;
@@ -1866,59 +1865,15 @@ public class SearchBar {
     }
 
     private void switchToExplorerMode() {
-        if (System.currentTimeMillis() - switchModeStartTime > 200) {
-            int searchBarHeight = (int) (GetHandle.INSTANCE.getHeight() * 0.75);
-            int labelHeight = searchBarHeight / 9;
-            if (labelHeight > 20) {
-                switchModeStartTime = System.currentTimeMillis();
-                if (showingMode.get() != EXPLORER_ATTACH) {
-                    showingMode.set(EXPLORER_ATTACH);
-                    //设置字体
-                    Font textFieldFont = new Font("Microsoft JhengHei", Font.PLAIN, (int) ((searchBarHeight * 0.4) / 96 * 72) / 4);
-                    textField.setFont(textFieldFont);
-                    Font labelFont = new Font("Microsoft JhengHei", Font.BOLD, (int) ((searchBarHeight * 0.2) / 96 * 72) / 4);
-                    label1.setFont(labelFont);
-                    label2.setFont(labelFont);
-                    label3.setFont(labelFont);
-                    label4.setFont(labelFont);
-                    label5.setFont(labelFont);
-                    label6.setFont(labelFont);
-                    label7.setFont(labelFont);
-                    label8.setFont(labelFont);
-                }
-            }
-        }
-    }
-
-    private void switchToNormalMode() {
-        if (System.currentTimeMillis() - switchModeStartTime > 200) {
-            switchModeStartTime = System.currentTimeMillis();
-            if (showingMode.get() != NORMAL_SHOWING) {
-                showingMode.set(NORMAL_SHOWING);
-                Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize(); // 获取屏幕大小
-                int searchBarWidth = (int) (screenSize.width * 0.4);
-                int searchBarHeight = (int) (screenSize.height * 0.5);
-                int positionX = screenSize.width / 2 - searchBarWidth / 2;
-                int positionY = screenSize.height / 2 - searchBarHeight / 2;
-                int labelHeight = searchBarHeight / 9;
-                //设置窗口大小
-                searchBar.setBounds(positionX, positionY, searchBarWidth, searchBarHeight);
-                //设置label大小
-                setLabelSize(searchBarWidth, labelHeight, labelHeight, label1);
-                setLabelSize(searchBarWidth, labelHeight, labelHeight * 2, label2);
-                setLabelSize(searchBarWidth, labelHeight, labelHeight * 3, label3);
-                setLabelSize(searchBarWidth, labelHeight, labelHeight * 4, label4);
-                setLabelSize(searchBarWidth, labelHeight, labelHeight * 5, label5);
-                setLabelSize(searchBarWidth, labelHeight, labelHeight * 6, label6);
-                setLabelSize(searchBarWidth, labelHeight, labelHeight * 7, label7);
-                setLabelSize(searchBarWidth, labelHeight, labelHeight * 8, label8);
-                //设置textField大小
-                textField.setSize(searchBarWidth - 6, labelHeight - 5);
-                textField.setLocation(3, 0);
+        int searchBarHeight = (int) (GetHandle.INSTANCE.getHeight() * 0.75);
+        int labelHeight = searchBarHeight / 9;
+        if (labelHeight > 20) {
+            if (showingMode.get() != EXPLORER_ATTACH) {
+                showingMode.set(EXPLORER_ATTACH);
                 //设置字体
-                Font labelFont = new Font("Microsoft JhengHei", Font.BOLD, (int) ((searchBarHeight * 0.2) / 96 * 72) / 4);
                 Font textFieldFont = new Font("Microsoft JhengHei", Font.PLAIN, (int) ((searchBarHeight * 0.4) / 96 * 72) / 4);
                 textField.setFont(textFieldFont);
+                Font labelFont = new Font("Microsoft JhengHei", Font.BOLD, (int) ((searchBarHeight * 0.2) / 96 * 72) / 4);
                 label1.setFont(labelFont);
                 label2.setFont(labelFont);
                 label3.setFont(labelFont);
@@ -1927,10 +1882,49 @@ public class SearchBar {
                 label6.setFont(labelFont);
                 label7.setFont(labelFont);
                 label8.setFont(labelFont);
-                if (SettingsFrame.isLoseFocusClose()) {
-                    closedTodo();
-                }
             }
+        }
+    }
+
+    private void switchToNormalMode() {
+        if (showingMode.get() != NORMAL_SHOWING) {
+            showingMode.set(NORMAL_SHOWING);
+            if (SettingsFrame.isLoseFocusClose()) {
+                closedTodo();
+            }
+            Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize(); // 获取屏幕大小
+            int width = screenSize.width;
+            int height = screenSize.height;
+            int searchBarWidth = (int) (width * 0.4);
+            int searchBarHeight = (int) (height * 0.5);
+            int labelHeight = searchBarHeight / 9;
+            //设置窗口大小
+            searchBar.setSize(searchBarWidth, searchBarHeight);
+            //设置label大小
+            setLabelSize(searchBarWidth, labelHeight, labelHeight, label1);
+            setLabelSize(searchBarWidth, labelHeight, labelHeight * 2, label2);
+            setLabelSize(searchBarWidth, labelHeight, labelHeight * 3, label3);
+            setLabelSize(searchBarWidth, labelHeight, labelHeight * 4, label4);
+            setLabelSize(searchBarWidth, labelHeight, labelHeight * 5, label5);
+            setLabelSize(searchBarWidth, labelHeight, labelHeight * 6, label6);
+            setLabelSize(searchBarWidth, labelHeight, labelHeight * 7, label7);
+            setLabelSize(searchBarWidth, labelHeight, labelHeight * 8, label8);
+            //设置textField大小
+            textField.setSize(searchBarWidth - 6, labelHeight - 5);
+            textField.setLocation(3, 0);
+            //设置字体
+            Font labelFont = new Font("Microsoft JhengHei", Font.BOLD, (int) ((searchBarHeight * 0.2) / 96 * 72) / 4);
+            Font textFieldFont = new Font("Microsoft JhengHei", Font.PLAIN, (int) ((searchBarHeight * 0.4) / 96 * 72) / 4);
+            textField.setFont(textFieldFont);
+            label1.setFont(labelFont);
+            label2.setFont(labelFont);
+            label3.setFont(labelFont);
+            label4.setFont(labelFont);
+            label5.setFont(labelFont);
+            label6.setFont(labelFont);
+            label7.setFont(labelFont);
+            label8.setFont(labelFont);
+            searchBar.setLocationRelativeTo(null);
         }
     }
 
