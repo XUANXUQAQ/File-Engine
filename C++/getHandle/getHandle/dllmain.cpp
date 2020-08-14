@@ -141,7 +141,7 @@ void _start()
             y = windowRect.top;
             width = windowRect.right - windowRect.left;
             height = windowRect.bottom - windowRect.top;
-            if (height < 200 || width < 200 || x == 0 || y == 0) {
+            if (height < 200 || width < 200 || x < 50 || y < 50) {
                 isStart = false;
             }
             else {

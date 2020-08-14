@@ -1,5 +1,6 @@
 package FileEngine.download;
 
+import FileEngine.enums.Enums;
 import FileEngine.frames.SettingsFrame;
 import FileEngine.threadPool.CachedThreadPool;
 
@@ -23,7 +24,7 @@ public class DownloadUtil {
                 while (SettingsFrame.isNotMainExit()) {
                     for (DownloadManager each : DOWNLOAD_MAP.values()) {
                         int status = each.getDownloadStatus();
-                        if (status == DownloadManager.DOWNLOAD_INTERRUPTED || status == DownloadManager.DOWNLOAD_ERROR) {
+                        if (status == Enums.DownloadStatus.DOWNLOAD_INTERRUPTED || status == Enums.DownloadStatus.DOWNLOAD_ERROR) {
                             deleteTask(each.getFileName());
                         }
                     }
@@ -79,7 +80,7 @@ public class DownloadUtil {
         if (hasTask(fileName)) {
             return DOWNLOAD_MAP.get(fileName).getDownloadStatus();
         }
-        return DownloadManager.DOWNLOAD_NO_TASK;
+        return Enums.DownloadStatus.DOWNLOAD_NO_TASK;
     }
 
     private void deleteTask(String fileName) {

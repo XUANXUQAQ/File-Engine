@@ -1,5 +1,6 @@
 package FileEngine.download;
 
+import FileEngine.enums.Enums;
 import FileEngine.frames.SettingsFrame;
 
 import java.io.*;
@@ -16,17 +17,11 @@ public class DownloadManager {
     private Proxy proxy = null;
     private Authenticator authenticator = null;
 
-    public static final int DOWNLOAD_DONE = 0;
-    public static final int DOWNLOAD_ERROR = 1;
-    public static final int DOWNLOAD_DOWNLOADING = 2;
-    public static final int DOWNLOAD_INTERRUPTED = 3;
-    public static final int DOWNLOAD_NO_TASK = 4;
-
     public DownloadManager(String url, String fileName, String savePath, SettingsFrame.ProxyInfo proxyInfo) {
         this.url = url;
         this.fileName = fileName;
         this.localPath = savePath;
-        this.downloadStatus = DOWNLOAD_DOWNLOADING;
+        this.downloadStatus = Enums.DownloadStatus.DOWNLOAD_DOWNLOADING;
         setProxy(proxyInfo.type, proxyInfo.address, proxyInfo.port, proxyInfo.userName, proxyInfo.password);
     }
 
@@ -76,15 +71,15 @@ public class DownloadManager {
             if (isUserInterrupted) {
                 throw new IOException("User Interrupted");
             }
-            downloadStatus = DOWNLOAD_DONE;
+            downloadStatus = Enums.DownloadStatus.DOWNLOAD_DONE;
         } catch (IOException e) {
             if (SettingsFrame.isDebug()) {
                 e.printStackTrace();
             }
             if ("User Interrupted".equals(e.getMessage())) {
-                downloadStatus = DOWNLOAD_INTERRUPTED;
+                downloadStatus = Enums.DownloadStatus.DOWNLOAD_INTERRUPTED;
             } else {
-                downloadStatus = DOWNLOAD_ERROR;
+                downloadStatus = Enums.DownloadStatus.DOWNLOAD_ERROR;
             }
         }
     }
