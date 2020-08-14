@@ -12,6 +12,8 @@ public interface GetHandle extends Library {
 
     boolean is_explorer_at_top();
 
+    boolean isDialogNotExist();
+
     long getX();
 
     long getY();

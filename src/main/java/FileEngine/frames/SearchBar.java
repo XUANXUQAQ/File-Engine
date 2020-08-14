@@ -196,6 +196,8 @@ public class SearchBar {
                 if (System.currentTimeMillis() - visibleStartTime > 500) {
                     if (showingMode.get() != Enums.ShowingSearchBarMode.EXPLORER_ATTACH && SettingsFrame.isLoseFocusClose()) {
                         closedTodo();
+                    } else if (showingMode.get() == Enums.ShowingSearchBarMode.EXPLORER_ATTACH) {
+                        closedWithoutHideSearchBar();
                     }
                 }
             }
@@ -233,9 +235,6 @@ public class SearchBar {
 
         //添加textfield对键盘上下键的响应
         addTextFieldKeyListener();
-
-        //添加窗口对激活事件的响应
-        registerWindowListener();
     }
 
     public static SearchBar getInstance() {
@@ -1771,29 +1770,18 @@ public class SearchBar {
         switchSearchBarShowingMode();
 
         changeSearchBarSizeWhenOnExplorerMode();
+
+        addSearchDialogWindowThread();
     }
 
-    private void registerWindowListener() {
-        searchBar.addWindowListener(new WindowAdapter() {
-            @Override
-            public void windowActivated(WindowEvent e) {
-                if (SettingsFrame.isDebug()) {
-                    System.out.println("Window activated.");
+    private void addSearchDialogWindowThread() {
+        CachedThreadPool.getInstance().executeTask(() -> {
+            try {
+                while (SettingsFrame.isNotMainExit()) {
+                    isWindowDeactivated = GetHandle.INSTANCE.isDialogNotExist();
+                    TimeUnit.MILLISECONDS.sleep(500);
                 }
-                isWindowDeactivated = false;
-            }
-
-            @Override
-            public void windowDeactivated(WindowEvent e) {
-                if (SettingsFrame.isDebug()) {
-                    System.out.println("Window deactivated.");
-                }
-                isWindowDeactivated = true;
-            }
-
-            @Override
-            public void windowLostFocus(WindowEvent e) {
-                isWindowDeactivated = true;
+            } catch (InterruptedException ignored) {
             }
         });
     }
@@ -1806,11 +1794,16 @@ public class SearchBar {
                     if (GetHandle.INSTANCE.is_explorer_at_top()) {
                         switchToExplorerMode();
                     } else {
-                        if (!searchBar.isActive() || !searchBar.isFocused() || isWindowDeactivated) {
-                            //确认是否explorer.exe无焦点
-                            TimeUnit.MILLISECONDS.sleep(200);
+                        if (isWindowDeactivated) {
+                            switchToNormalMode();
+                        }
+                        if (!searchBar.isFocused() || !searchBar.isActive()) {
+                            TimeUnit.MILLISECONDS.sleep(200); //等待窗口获取焦点
                             if (!GetHandle.INSTANCE.is_explorer_at_top()) {
-                                switchToNormalMode();
+                                TimeUnit.MILLISECONDS.sleep(200); //等待窗口获取焦点
+                                if (!searchBar.isFocused() || !searchBar.isActive()) {
+                                    switchToNormalMode();
+                                }
                             }
                         }
                     }
@@ -2918,6 +2911,9 @@ public class SearchBar {
             searchBar.toFront();
             searchBar.requestFocusInWindow();
             textField.requestFocusInWindow();
+            searchBar.setAutoRequestFocus(true);
+        } else {
+            searchBar.setAutoRequestFocus(false);
         }
         textField.setCaretPosition(0);
         isUsing = true;
@@ -3150,7 +3146,8 @@ public class SearchBar {
     }
 
     private void initCacheNum() {
-        try (PreparedStatement pStmt = SQLiteUtil.getConnection().prepareStatement("SELECT PATH FROM cache;"); ResultSet resultSet = pStmt.getResultSet()) {
+        try (PreparedStatement pStmt = SQLiteUtil.getConnection().prepareStatement("SELECT PATH FROM cache;");
+             ResultSet resultSet = pStmt.getResultSet()) {
             while (resultSet.next()) {
                 cacheNum.incrementAndGet();
             }

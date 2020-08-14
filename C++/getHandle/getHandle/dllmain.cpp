@@ -7,6 +7,7 @@
 #include <tchar.h>
 #include <thread>
 #include <dwmapi.h>
+#include <algorithm>
 #pragma comment(lib, "dwmapi.lib")
 #pragma comment(lib, "user32.lib")
 #pragma comment(lib, "kernel32")
@@ -31,6 +32,8 @@ void getWindowRect(HWND& hwnd, LPRECT lprect);
 bool isExplorerWindow(HWND& hwnd);
 DWORD getExplorerID();
 void _start();
+bool isFileChooserWindow(HWND& hwnd);
+extern "C" __declspec(dllexport) bool isDialogNotExist();
 extern "C" __declspec(dllexport) void start();
 extern "C" __declspec(dllexport) void stop();
 extern "C" __declspec(dllexport) bool is_explorer_at_top();
@@ -56,6 +59,25 @@ BOOL APIENTRY DllMain( HMODULE hModule,
     return TRUE;
 }
 
+__declspec(dllexport) bool isDialogNotExist()
+{
+    HWND hd = GetDesktopWindow();        //得到桌面窗口
+    hd = GetWindow(hd, GW_CHILD);        //得到屏幕上第一个子窗口
+    int num = 1;
+    while (hd != NULL)                    //循环得到所有的子窗口
+    {
+        if (IsWindowVisible(hd))
+        {
+            if (isFileChooserWindow(hd) || isExplorerWindow(hd))
+            {
+                return false;
+            }
+        }
+        hd = GetNextWindow(hd, GW_HWNDNEXT);
+    }
+    return true;
+}
+
 void getTopWindow(HWND& hwnd)
 {
     hwnd = ::GetForegroundWindow();
@@ -66,29 +88,30 @@ void getWindowRect(HWND& hwnd, LPRECT lprect)
     GetWindowRect(hwnd, lprect);
 }
 
-bool isExplorerWindow(HWND& hwnd)
+bool isFileChooserWindow(HWND& hwnd)
 {
-    DWORD procID;
-    GetWindowThreadProcessId(hwnd, &procID);
-    return (getExplorerID() == procID);
+    char title[100];
+    GetClassNameA(hwnd, title, 100);
+    string WindowClassName(title);
+    transform(WindowClassName.begin(), WindowClassName.end(), WindowClassName.begin(), ::tolower);
+    return WindowClassName.find("#32770") != string::npos ||
+        WindowClassName.find("dialog") != string::npos;
 }
 
-DWORD getExplorerID()
+bool isExplorerWindow(HWND& hwnd)
 {
-    HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-    if (INVALID_HANDLE_VALUE == hSnapshot) {
-        return NULL;
+    if (IsWindowEnabled(hwnd))
+    {
+        char className[200];
+        GetClassNameA(hwnd, className, 200);
+        string WindowClassName(className);
+        transform(WindowClassName.begin(), WindowClassName.end(), WindowClassName.begin(), ::tolower);
+        return (WindowClassName.find("cabinet") != string::npos);
     }
-    PROCESSENTRY32 pe = { sizeof(pe) };
-
-    for (BOOL ret = Process32First(hSnapshot, &pe); ret; ret = Process32Next(hSnapshot, &pe)) {
-        if (wcscmp(pe.szExeFile, _T("explorer.exe")) == 0) {
-            CloseHandle(hSnapshot);
-            return pe.th32ProcessID;
-        }
+    else
+    {
+        return false;
     }
-    CloseHandle(hSnapshot);
-    return 0;
 }
 
 __declspec(dllexport) void start()
@@ -134,7 +157,7 @@ void _start()
     while (isRunning)
     {
         getTopWindow(hwnd);
-        if (isExplorerWindow(hwnd))
+        if (isExplorerWindow(hwnd) || isFileChooserWindow(hwnd))
         {
             getWindowRect(hwnd, &windowRect);
             x = windowRect.left;
@@ -174,12 +197,16 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     start();
     while (true)
     {
-        if (isStart)
+        /*if (isStart)
         {
             int xPos = getX();
             int yPos = getY();
             int width = getWidth();
             int height = getHeight();
+        }*/
+        if (!isDialogNotExist())
+        {
+            Sleep(50);
         }
         Sleep(10);
     }
