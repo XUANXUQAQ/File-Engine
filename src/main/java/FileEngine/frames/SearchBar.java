@@ -195,9 +195,9 @@ public class SearchBar {
             public void focusLost(FocusEvent e) {
                 if (System.currentTimeMillis() - visibleStartTime > 500) {
                     if (showingMode.get() != Enums.ShowingSearchBarMode.EXPLORER_ATTACH && SettingsFrame.isLoseFocusClose()) {
-                        closedTodo();
+                        closeSearchBar();
                     } else if (showingMode.get() == Enums.ShowingSearchBarMode.EXPLORER_ATTACH) {
-                        closedWithoutHideSearchBar();
+                        closeWithoutHideSearchBar();
                     }
                 }
             }
@@ -331,9 +331,9 @@ public class SearchBar {
                         }
                     }
                     if (showingMode.get() != Enums.ShowingSearchBarMode.EXPLORER_ATTACH) {
-                        closedTodo();
+                        closeSearchBar();
                     } else {
-                        closedWithoutHideSearchBar();
+                        closeWithoutHideSearchBar();
                     }
                 }
             }
@@ -486,9 +486,9 @@ public class SearchBar {
                                 }
                             }
                             if (showingMode.get() != Enums.ShowingSearchBarMode.EXPLORER_ATTACH) {
-                                closedTodo();
+                                closeSearchBar();
                             } else {
-                                closedWithoutHideSearchBar();
+                                closeWithoutHideSearchBar();
                             }
                         }
                     } else if (SettingsFrame.getOpenLastFolderKeyCode() == key) {
@@ -510,7 +510,7 @@ public class SearchBar {
                                 }
                             }
                             if (key == 10) {
-                                closedTodo();
+                                closeSearchBar();
                             }
                         }
                     }
@@ -1930,7 +1930,7 @@ public class SearchBar {
             label8.setFont(labelFont);
             showingMode.set(Enums.ShowingSearchBarMode.NORMAL_SHOWING);
             if (SettingsFrame.isLoseFocusClose()) {
-                closedTodo();
+                closeSearchBar();
             }
         }
     }
@@ -2525,7 +2525,7 @@ public class SearchBar {
                             while ((column = commandQueue.poll()) != null) {
                                 searchAndAddToTempResults(System.currentTimeMillis(), column);
                                 if (!isUsing) {
-                                    closedTodo();
+                                    closeSearchBar();
                                 }
                             }
                         } catch (SQLException e) {
@@ -2606,18 +2606,18 @@ public class SearchBar {
                         if (search.getStatus() == SearchUtil.NORMAL) {
                             if (runningMode.get() == Enums.runningMode.COMMAND_MODE) {
                                 if (":update".equalsIgnoreCase(text)) {
-                                    closedTodo();
+                                    closeSearchBar();
                                     search.setStatus(SearchUtil.MANUAL_UPDATE);
                                     startSignal = false;
                                     continue;
                                 }
                                 if (":version".equalsIgnoreCase(text)) {
-                                    closedTodo();
+                                    closeSearchBar();
                                     JOptionPane.showMessageDialog(null, TranslateUtil.getInstance().getTranslation(
                                             "Current Version:") + SettingsFrame.version);
                                 }
                                 if (":help".equalsIgnoreCase(text)) {
-                                    closedTodo();
+                                    closeSearchBar();
                                     Desktop desktop;
                                     if (Desktop.isDesktopSupported()) {
                                         desktop = Desktop.getDesktop();
@@ -2625,7 +2625,7 @@ public class SearchBar {
                                     }
                                 }
                                 if (":clearbin".equalsIgnoreCase(text)) {
-                                    closedTodo();
+                                    closeSearchBar();
                                     int r = JOptionPane.showConfirmDialog(null, TranslateUtil.getInstance().getTranslation(
                                             "Are you sure you want to empty the recycle bin"));
                                     if (r == 0) {
@@ -2651,7 +2651,7 @@ public class SearchBar {
                                     }
                                     String[] cmdInfo = semicolon.split(i);
                                     if (cmdInfo[0].equals(text)) {
-                                        closedTodo();
+                                        closeSearchBar();
                                         openWithAdmin(cmdInfo[1]);
                                     }
                                 }
@@ -3274,8 +3274,8 @@ public class SearchBar {
         SwingUtilities.invokeLater(clear);
     }
 
-    public void closedTodo() {
-        if (searchBar.isVisible()) {
+    public void closeSearchBar() {
+        if (isVisible()) {
             searchBar.setVisible(false);
         }
         clearLabel();
@@ -3300,7 +3300,7 @@ public class SearchBar {
         isWaiting = false;
     }
 
-    private void closedWithoutHideSearchBar() {
+    private void closeWithoutHideSearchBar() {
         clearLabel();
         clearTextFieldText();
         startTime = System.currentTimeMillis();//结束搜索
