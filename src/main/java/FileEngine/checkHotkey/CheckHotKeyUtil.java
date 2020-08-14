@@ -112,7 +112,7 @@ public class CheckHotKeyUtil {
                         } else {
                             if (System.currentTimeMillis() - startVisibleTime > 200) {
                                 if (searchBar.getShowingMode() == Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
-                                    searchBar.closedTodo();
+                                    searchBar.closeSearchBar();
                                     endVisibleTime = System.currentTimeMillis();
                                 }
                             }
