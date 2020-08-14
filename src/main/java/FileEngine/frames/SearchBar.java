@@ -2928,12 +2928,12 @@ public class SearchBar {
     public void showSearchbar(boolean isGrabFocus) {
         searchBar.setVisible(true);
         if (isGrabFocus) {
-            searchBar.toFront();
-            searchBar.requestFocusInWindow();
-            textField.requestFocusInWindow();
-            searchBar.setAutoRequestFocus(true);
+            SwingUtilities.invokeLater(() -> searchBar.setAutoRequestFocus(true));
+            SwingUtilities.invokeLater(searchBar::toFront);
+            SwingUtilities.invokeLater(searchBar::requestFocusInWindow);
+            SwingUtilities.invokeLater(textField::requestFocusInWindow);
         } else {
-            searchBar.setAutoRequestFocus(false);
+            SwingUtilities.invokeLater(() -> searchBar.setAutoRequestFocus(false));
         }
         textField.setCaretPosition(0);
         isUsing = true;
