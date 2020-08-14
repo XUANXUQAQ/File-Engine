@@ -1,6 +1,7 @@
 package FileEngine.checkHotkey;
 
 import FileEngine.dllInterface.HotkeyListener;
+import FileEngine.enums.Enums;
 import FileEngine.frames.SearchBar;
 import FileEngine.frames.SettingsFrame;
 import FileEngine.threadPool.CachedThreadPool;
@@ -104,14 +105,16 @@ public class CheckHotKeyUtil {
                     if (!isExecuted && instance.getKeyStatus()) {
                         isExecuted = true;
                         if (!searchBar.isVisible()) {
-                            if (System.currentTimeMillis() - endVisibleTime > 500) {
+                            if (System.currentTimeMillis() - endVisibleTime > 200) {
                                 searchBar.showSearchbar(true);
                                 startVisibleTime = System.currentTimeMillis();
                             }
                         } else {
-                            if (System.currentTimeMillis() - startVisibleTime > 500) {
-                                searchBar.closedTodo();
-                                endVisibleTime = System.currentTimeMillis();
+                            if (System.currentTimeMillis() - startVisibleTime > 200) {
+                                if (searchBar.getShowingMode() == Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
+                                    searchBar.closedTodo();
+                                    endVisibleTime = System.currentTimeMillis();
+                                }
                             }
                         }
                     }
