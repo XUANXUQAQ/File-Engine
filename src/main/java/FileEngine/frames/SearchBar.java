@@ -1875,17 +1875,17 @@ public class SearchBar {
 
     private void switchToNormalMode() {
         if (showingMode.get() != Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
-            if (SettingsFrame.isLoseFocusClose()) {
-                closedTodo();
-            }
+            searchBar.setVisible(false);
             Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize(); // 获取屏幕大小
             int width = screenSize.width;
             int height = screenSize.height;
             int searchBarWidth = (int) (width * 0.4);
             int searchBarHeight = (int) (height * 0.5);
             int labelHeight = searchBarHeight / 9;
+            int positionX = width / 2 - searchBarWidth / 2;
+            int positionY = height / 2 - searchBarHeight / 2;
             //设置窗口大小
-            searchBar.setSize(searchBarWidth, searchBarHeight);
+            searchBar.setBounds(positionX, positionY, searchBarWidth, searchBarHeight);
             //设置label大小
             setLabelSize(searchBarWidth, labelHeight, labelHeight, label1);
             setLabelSize(searchBarWidth, labelHeight, labelHeight * 2, label2);
@@ -1910,8 +1910,10 @@ public class SearchBar {
             label6.setFont(labelFont);
             label7.setFont(labelFont);
             label8.setFont(labelFont);
-            searchBar.setLocationRelativeTo(null);
             showingMode.set(Enums.ShowingSearchBarMode.NORMAL_SHOWING);
+            if (SettingsFrame.isLoseFocusClose()) {
+                closedTodo();
+            }
         }
     }
 
