@@ -3362,5 +3362,8 @@ public class SearchBar {
         textField.setBackground(new Color(colorNum));
     }
 
+    public int getShowingMode() {
+        return showingMode.get();
+    }
 }
 
