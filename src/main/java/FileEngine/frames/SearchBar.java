@@ -1856,7 +1856,6 @@ public class SearchBar {
         int labelHeight = searchBarHeight / 9;
         if (labelHeight > 20) {
             if (showingMode.get() != Enums.ShowingSearchBarMode.EXPLORER_ATTACH) {
-                showingMode.set(Enums.ShowingSearchBarMode.EXPLORER_ATTACH);
                 //设置字体
                 Font textFieldFont = new Font("Microsoft JhengHei", Font.PLAIN, (int) ((searchBarHeight * 0.4) / 96 * 72) / 4);
                 textField.setFont(textFieldFont);
@@ -1869,13 +1868,13 @@ public class SearchBar {
                 label6.setFont(labelFont);
                 label7.setFont(labelFont);
                 label8.setFont(labelFont);
+                showingMode.set(Enums.ShowingSearchBarMode.EXPLORER_ATTACH);
             }
         }
     }
 
     private void switchToNormalMode() {
         if (showingMode.get() != Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
-            showingMode.set(Enums.ShowingSearchBarMode.NORMAL_SHOWING);
             if (SettingsFrame.isLoseFocusClose()) {
                 closedTodo();
             }
@@ -1912,6 +1911,7 @@ public class SearchBar {
             label7.setFont(labelFont);
             label8.setFont(labelFont);
             searchBar.setLocationRelativeTo(null);
+            showingMode.set(Enums.ShowingSearchBarMode.NORMAL_SHOWING);
         }
     }
 
