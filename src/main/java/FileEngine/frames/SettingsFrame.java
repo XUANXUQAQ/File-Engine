@@ -2,8 +2,8 @@ package FileEngine.frames;
 
 import FileEngine.SQLiteConfig.SQLiteUtil;
 import FileEngine.checkHotkey.CheckHotKeyUtil;
-import FileEngine.download.DownloadManager;
 import FileEngine.download.DownloadUtil;
+import FileEngine.enums.Enums;
 import FileEngine.moveFiles.MoveDesktopFiles;
 import FileEngine.pluginSystem.Plugin;
 import FileEngine.pluginSystem.PluginUtil;
@@ -571,7 +571,7 @@ public class SettingsFrame {
     private void addCheckForUpdateButtonListener() {
         buttonCheckUpdate.addActionListener(e -> {
             int status = DownloadUtil.getInstance().getDownloadStatus(getName());
-            if (status == DownloadManager.DOWNLOAD_DOWNLOADING) {
+            if (status == Enums.DownloadStatus.DOWNLOAD_DOWNLOADING) {
                 //取消下载
                 String fileName = getName();
                 DownloadUtil instance = DownloadUtil.getInstance();
@@ -579,8 +579,8 @@ public class SettingsFrame {
                 CachedThreadPool.getInstance().executeTask(() -> {
                     //等待下载取消
                     try {
-                        while (instance.getDownloadStatus(fileName) != DownloadManager.DOWNLOAD_INTERRUPTED) {
-                            if (instance.getDownloadStatus(fileName) == DownloadManager.DOWNLOAD_ERROR) {
+                        while (instance.getDownloadStatus(fileName) != Enums.DownloadStatus.DOWNLOAD_INTERRUPTED) {
+                            if (instance.getDownloadStatus(fileName) == Enums.DownloadStatus.DOWNLOAD_ERROR) {
                                 break;
                             }
                             if (buttonCheckUpdate.isEnabled()) {
@@ -966,7 +966,7 @@ public class SettingsFrame {
                 JOptionPane.showMessageDialog(frame, TranslateUtil.getInstance().getTranslation("The current Version is the latest."));
             } else {
                 //检查是否已经开始下载
-                boolean isPluginUpdating = DownloadUtil.getInstance().getDownloadStatus(pluginFullName) != DownloadManager.DOWNLOAD_NO_TASK;
+                boolean isPluginUpdating = DownloadUtil.getInstance().getDownloadStatus(pluginFullName) != Enums.DownloadStatus.DOWNLOAD_NO_TASK;
 
                 if (!isPluginUpdating) {
                     int ret = JOptionPane.showConfirmDialog(frame, TranslateUtil.getInstance().getTranslation("New version available, do you want to update?"));
@@ -983,8 +983,8 @@ public class SettingsFrame {
                     CachedThreadPool.getInstance().executeTask(() -> {
                         try {
                             //等待下载取消
-                            while (instance.getDownloadStatus(pluginFullName) != DownloadManager.DOWNLOAD_INTERRUPTED) {
-                                if (instance.getDownloadStatus(pluginFullName) == DownloadManager.DOWNLOAD_ERROR) {
+                            while (instance.getDownloadStatus(pluginFullName) != Enums.DownloadStatus.DOWNLOAD_INTERRUPTED) {
+                                if (instance.getDownloadStatus(pluginFullName) == Enums.DownloadStatus.DOWNLOAD_ERROR) {
                                     break;
                                 }
                                 if (buttonUpdatePlugin.isEnabled()) {
@@ -1183,12 +1183,12 @@ public class SettingsFrame {
     private void checkDownloadTask(JLabel label, JButton button, String fileName, String originButtonString) throws InterruptedException {
         //设置进度显示线程
         double progress;
-        if (DownloadUtil.getInstance().getDownloadStatus(fileName) != DownloadManager.DOWNLOAD_NO_TASK) {
+        if (DownloadUtil.getInstance().getDownloadStatus(fileName) != Enums.DownloadStatus.DOWNLOAD_NO_TASK) {
             progress = DownloadUtil.getInstance().getDownloadProgress(fileName);
             label.setText(TranslateUtil.getInstance().getTranslation("Downloading:") + (int) (progress * 100) + "%");
 
             int downloadingStatus = DownloadUtil.getInstance().getDownloadStatus(fileName);
-            if (downloadingStatus == DownloadManager.DOWNLOAD_DONE) {
+            if (downloadingStatus == Enums.DownloadStatus.DOWNLOAD_DONE) {
                 //下载完成，禁用按钮
                 label.setText(TranslateUtil.getInstance().getTranslation("Download Done"));
                 label.setText(TranslateUtil.getInstance().getTranslation("Downloaded"));
@@ -1200,15 +1200,15 @@ public class SettingsFrame {
                     } catch (IOException ignored) {
                     }
                 }
-            } else if (downloadingStatus == DownloadManager.DOWNLOAD_ERROR) {
+            } else if (downloadingStatus == Enums.DownloadStatus.DOWNLOAD_ERROR) {
                 //下载错误，重置button
                 label.setText(TranslateUtil.getInstance().getTranslation("Download failed"));
                 button.setText(TranslateUtil.getInstance().getTranslation(originButtonString));
                 button.setEnabled(true);
-            } else if (downloadingStatus == DownloadManager.DOWNLOAD_DOWNLOADING) {
+            } else if (downloadingStatus == Enums.DownloadStatus.DOWNLOAD_DOWNLOADING) {
                 //正在下载
                 button.setText(TranslateUtil.getInstance().getTranslation("Cancel"));
-            } else if (downloadingStatus == DownloadManager.DOWNLOAD_INTERRUPTED) {
+            } else if (downloadingStatus == Enums.DownloadStatus.DOWNLOAD_INTERRUPTED) {
                 //用户自行中断
                 label.setText("");
                 button.setText(TranslateUtil.getInstance().getTranslation(originButtonString));
@@ -1352,13 +1352,13 @@ public class SettingsFrame {
     public static JSONObject getUpdateInfo() throws IOException, InterruptedException {
         DownloadUtil downloadUtil = DownloadUtil.getInstance();
         int downloadStatus = downloadUtil.getDownloadStatus("version.json");
-        if (downloadStatus != DownloadManager.DOWNLOAD_DOWNLOADING) {
+        if (downloadStatus != Enums.DownloadStatus.DOWNLOAD_DOWNLOADING) {
             downloadUtil.downLoadFromUrl("https://raw.githubusercontent.com/XUANXUQAQ/File-Engine-Version/master/version.json",
                     "version.json", "tmp");
             int count = 0;
             boolean isError = false;
             //wait for task
-            while (downloadUtil.getDownloadStatus("version.json") != DownloadManager.DOWNLOAD_DONE) {
+            while (downloadUtil.getDownloadStatus("version.json") != Enums.DownloadStatus.DOWNLOAD_DONE) {
                 count++;
                 if (count >= 3) {
                     isError = true;
