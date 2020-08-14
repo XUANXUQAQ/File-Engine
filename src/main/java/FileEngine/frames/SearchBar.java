@@ -10,6 +10,7 @@ import FileEngine.enums.Enums;
 import FileEngine.getIcon.GetIconUtil;
 import FileEngine.pluginSystem.Plugin;
 import FileEngine.pluginSystem.PluginUtil;
+import FileEngine.robotUtil.RobotUtil;
 import FileEngine.search.SearchUtil;
 import FileEngine.threadPool.CachedThreadPool;
 import FileEngine.translate.TranslateUtil;
@@ -53,7 +54,8 @@ public class SearchBar {
     private static volatile boolean isCopyPathPressed = false;
     private static volatile boolean startSignal = false;
     private static volatile boolean isUserPressed = false;
-    private static volatile boolean isWindowDeactivated = false;
+    private static volatile boolean isExplorerWindowNotExist = false;
+    private static boolean isFocusedBefore = false;
     private static Border border;
     private final JFrame searchBar;
     private final JLabel label1;
@@ -189,6 +191,7 @@ public class SearchBar {
         textField.addFocusListener(new FocusListener() {
             @Override
             public void focusGained(FocusEvent e) {
+                isFocusedBefore = true;
             }
 
             @Override
@@ -272,8 +275,8 @@ public class SearchBar {
                                 searchBar.setVisible(false);
                             }
                             String res = listResults.get(labelCount.get());
-                            if (showingMode.get() == Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
-                                if (runningMode.get() == Enums.runningMode.NORMAL_MODE) {
+                            if (runningMode.get() == Enums.runningMode.NORMAL_MODE) {
+                                if (showingMode.get() == Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
                                     if (isOpenLastFolderPressed) {
                                         //打开上级文件夹
                                         File open = new File(res);
@@ -294,31 +297,27 @@ public class SearchBar {
                                         }
                                     }
                                     saveCache(res);
-                                } else if (runningMode.get() == Enums.runningMode.COMMAND_MODE) {
-                                    File open = new File(semicolon.split(res)[1]);
-                                    if (isOpenLastFolderPressed) {
-                                        //打开上级文件夹
-                                        try {
-                                            Runtime.getRuntime().exec("explorer.exe /select, \"" + open.getAbsolutePath() + "\"");
-                                        } catch (IOException e1) {
-                                            JOptionPane.showMessageDialog(null, TranslateUtil.getInstance().getTranslation("Execute failed"));
-                                        }
-                                    } else if (SettingsFrame.isDefaultAdmin() || isRunAsAdminPressed) {
+                                }
+                            } else if (runningMode.get() == Enums.runningMode.COMMAND_MODE) {
+                                File open = new File(semicolon.split(res)[1]);
+                                if (isOpenLastFolderPressed) {
+                                    //打开上级文件夹
+                                    try {
+                                        Runtime.getRuntime().exec("explorer.exe /select, \"" + open.getAbsolutePath() + "\"");
+                                    } catch (IOException e1) {
+                                        JOptionPane.showMessageDialog(null, TranslateUtil.getInstance().getTranslation("Execute failed"));
+                                    }
+                                } else if (SettingsFrame.isDefaultAdmin() || isRunAsAdminPressed) {
+                                    openWithAdmin(open.getAbsolutePath());
+                                } else if (isCopyPathPressed) {
+                                    copyToClipBoard(res);
+                                } else {
+                                    if (res.endsWith(".bat") || res.endsWith(".cmd")) {
                                         openWithAdmin(open.getAbsolutePath());
-                                    } else if (isCopyPathPressed) {
-                                        copyToClipBoard(res);
                                     } else {
-                                        if (res.endsWith(".bat") || res.endsWith(".cmd")) {
-                                            openWithAdmin(open.getAbsolutePath());
-                                        } else {
-                                            openWithoutAdmin(open.getAbsolutePath());
-                                        }
+                                        openWithoutAdmin(open.getAbsolutePath());
                                     }
                                 }
-                            } else {
-                                copyToClipBoard(res);
-                                taskBar.showMessage(TranslateUtil.getInstance().getTranslation("Info"),
-                                        TranslateUtil.getInstance().getTranslation("Text copied to clipboard"));
                             }
                         } else if (runningMode.get() == Enums.runningMode.PLUGIN_MODE) {
                             if (showingMode.get() == Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
@@ -436,8 +435,8 @@ public class SearchBar {
                             }
                             if (!(resultCount.get() == 0)) {
                                 String res = listResults.get(labelCount.get());
-                                if (showingMode.get() == Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
-                                    if (runningMode.get() == Enums.runningMode.NORMAL_MODE) {
+                                if (runningMode.get() == Enums.runningMode.NORMAL_MODE) {
+                                    if (showingMode.get() == Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
                                         if (isOpenLastFolderPressed) {
                                             //打开上级文件夹
                                             File open = new File(res);
@@ -458,31 +457,38 @@ public class SearchBar {
                                             }
                                         }
                                         saveCache(res);
-                                    } else if (runningMode.get() == Enums.runningMode.COMMAND_MODE) {
-                                        File open = new File(semicolon.split(res)[1]);
-                                        if (isOpenLastFolderPressed) {
-                                            //打开上级文件夹
-                                            try {
-                                                Runtime.getRuntime().exec("explorer.exe /select, \"" + open.getAbsolutePath() + "\"");
-                                            } catch (IOException e) {
-                                                JOptionPane.showMessageDialog(null, TranslateUtil.getInstance().getTranslation("Execute failed"));
-                                            }
-                                        } else if (SettingsFrame.isDefaultAdmin() || isRunAsAdminPressed) {
+                                    } else if (showingMode.get() == Enums.ShowingSearchBarMode.EXPLORER_ATTACH) {
+                                        int x, y;
+                                        if (isFile(res)) {
+                                            res = getParentPath(res);
+                                        }
+                                        copyToClipBoard(res);
+                                        x = GetHandle.INSTANCE.get_toolbar_click_x();
+                                        y = GetHandle.INSTANCE.get_toolbar_click_y();
+                                        RobotUtil.getInstance().mouseClicked(x, y, 1, InputEvent.BUTTON1_MASK);
+                                        RobotUtil.getInstance().keyTyped(KeyEvent.VK_CONTROL, KeyEvent.VK_V);
+                                        RobotUtil.getInstance().keyTyped(KeyEvent.VK_ENTER);
+                                    }
+                                } else if (runningMode.get() == Enums.runningMode.COMMAND_MODE) {
+                                    File open = new File(semicolon.split(res)[1]);
+                                    if (isOpenLastFolderPressed) {
+                                        //打开上级文件夹
+                                        try {
+                                            Runtime.getRuntime().exec("explorer.exe /select, \"" + open.getAbsolutePath() + "\"");
+                                        } catch (IOException e) {
+                                            JOptionPane.showMessageDialog(null, TranslateUtil.getInstance().getTranslation("Execute failed"));
+                                        }
+                                    } else if (SettingsFrame.isDefaultAdmin() || isRunAsAdminPressed) {
+                                        openWithAdmin(open.getAbsolutePath());
+                                    } else if (isCopyPathPressed) {
+                                        copyToClipBoard(res);
+                                    } else {
+                                        if (res.endsWith(".bat") || res.endsWith(".cmd")) {
                                             openWithAdmin(open.getAbsolutePath());
-                                        } else if (isCopyPathPressed) {
-                                            copyToClipBoard(res);
                                         } else {
-                                            if (res.endsWith(".bat") || res.endsWith(".cmd")) {
-                                                openWithAdmin(open.getAbsolutePath());
-                                            } else {
-                                                openWithoutAdmin(open.getAbsolutePath());
-                                            }
+                                            openWithoutAdmin(open.getAbsolutePath());
                                         }
                                     }
-                                } else {
-                                    copyToClipBoard(res);
-                                    taskBar.showMessage(TranslateUtil.getInstance().getTranslation("Info"),
-                                            TranslateUtil.getInstance().getTranslation("Text copied to clipboard"));
                                 }
                             }
                             if (showingMode.get() != Enums.ShowingSearchBarMode.EXPLORER_ATTACH) {
@@ -1780,8 +1786,8 @@ public class SearchBar {
         CachedThreadPool.getInstance().executeTask(() -> {
             try {
                 while (SettingsFrame.isNotMainExit()) {
-                    isWindowDeactivated = GetHandle.INSTANCE.isDialogNotExist();
-                    TimeUnit.MILLISECONDS.sleep(500);
+                    isExplorerWindowNotExist = GetHandle.INSTANCE.isDialogNotExist();
+                    TimeUnit.MILLISECONDS.sleep(250);
                 }
             } catch (InterruptedException ignored) {
             }
@@ -1796,20 +1802,25 @@ public class SearchBar {
                     if (GetHandle.INSTANCE.is_explorer_at_top()) {
                         switchToExplorerMode();
                     } else {
-                        if (isWindowDeactivated) {
+                        if (isExplorerWindowNotExist) {
                             switchToNormalMode();
+                            continue;
                         }
-                        if (!searchBar.isFocused() || !searchBar.isActive()) {
-                            TimeUnit.MILLISECONDS.sleep(200); //等待窗口获取焦点
-                            if (!GetHandle.INSTANCE.is_explorer_at_top()) {
+                        if (isFocusedBefore) {
+                            if (!searchBar.isFocused() || !searchBar.isActive()) {
                                 TimeUnit.MILLISECONDS.sleep(200); //等待窗口获取焦点
-                                if (!searchBar.isFocused() || !searchBar.isActive()) {
-                                    switchToNormalMode();
+                                if (!GetHandle.INSTANCE.is_explorer_at_top()) {
+                                    TimeUnit.MILLISECONDS.sleep(200); //等待窗口获取焦点
+                                    if (!searchBar.isFocused() || !searchBar.isActive()) {
+                                        switchToNormalMode();
+                                    }
                                 }
                             }
+                        } else {
+                            switchToNormalMode();
                         }
                     }
-                    TimeUnit.MILLISECONDS.sleep(50);
+                    TimeUnit.MILLISECONDS.sleep(10);
                 }
             } catch (InterruptedException ignored) {
             }
@@ -1913,6 +1924,7 @@ public class SearchBar {
     private void switchToNormalMode() {
         if (showingMode.get() != Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
             searchBar.setVisible(false);
+            isFocusedBefore = false;
             Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize(); // 获取屏幕大小
             int height = screenSize.height;
             int searchBarHeight = (int) (height * 0.5);
@@ -2928,12 +2940,12 @@ public class SearchBar {
     public void showSearchbar(boolean isGrabFocus) {
         searchBar.setVisible(true);
         if (isGrabFocus) {
-            SwingUtilities.invokeLater(() -> searchBar.setAutoRequestFocus(true));
-            SwingUtilities.invokeLater(searchBar::toFront);
-            SwingUtilities.invokeLater(searchBar::requestFocusInWindow);
-            SwingUtilities.invokeLater(textField::requestFocusInWindow);
+            searchBar.setAutoRequestFocus(true);
+            searchBar.toFront();
+            searchBar.requestFocusInWindow();
+            textField.requestFocusInWindow();
         } else {
-            SwingUtilities.invokeLater(() -> searchBar.setAutoRequestFocus(false));
+            searchBar.setAutoRequestFocus(false);
         }
         textField.setCaretPosition(0);
         isUsing = true;
