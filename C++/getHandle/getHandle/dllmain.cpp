@@ -22,6 +22,8 @@ int x;
 int y;
 volatile long width;
 volatile long height;
+int toolbar_click_x;
+int toolbar_click_y;
 struct handle_data {
     unsigned long process_id;
     HWND window_handle;
@@ -30,9 +32,10 @@ struct handle_data {
 void getTopWindow(HWND& hwnd);
 void getWindowRect(HWND& hwnd, LPRECT lprect);
 bool isExplorerWindow(HWND& hwnd);
-DWORD getExplorerID();
 void _start();
 bool isFileChooserWindow(HWND& hwnd);
+void setClickPos(HWND& fileChooserHwnd);
+BOOL CALLBACK findToolbar(HWND hwndChild, LPARAM lParam);
 extern "C" __declspec(dllexport) bool isDialogNotExist();
 extern "C" __declspec(dllexport) void start();
 extern "C" __declspec(dllexport) void stop();
@@ -41,6 +44,8 @@ extern "C" __declspec(dllexport) long getX();
 extern "C" __declspec(dllexport) long getY();
 extern "C" __declspec(dllexport) long getWidth();
 extern "C" __declspec(dllexport) long getHeight();
+extern "C" __declspec(dllexport) int get_toolbar_click_x();
+extern "C" __declspec(dllexport) int get_toolbar_click_y();
 
 
 BOOL APIENTRY DllMain( HMODULE hModule,
@@ -98,6 +103,35 @@ bool isFileChooserWindow(HWND& hwnd)
         WindowClassName.find("dialog") != string::npos;
 }
 
+void setClickPos(HWND& fileChooserHwnd)
+{
+    EnumChildWindows(fileChooserHwnd, findToolbar, NULL);
+}
+
+BOOL CALLBACK findToolbar(HWND hwndChild, LPARAM lParam)
+{
+    int toolbar_x;
+    int toolbar_y;
+    int toolbar_width;
+    int toolbar_height;
+    HWND hwd2 = FindWindowExA(hwndChild, NULL, "Address Band Root", NULL);
+    if (hwd2)
+    {
+        //todo 获取toolbar大小
+        RECT rect;
+        getWindowRect(hwd2, &rect);
+        toolbar_x = rect.left;
+        toolbar_y = rect.top;
+        toolbar_width = rect.right - rect.left;
+        toolbar_height = rect.bottom - rect.top;
+        toolbar_click_x = toolbar_x + toolbar_width - 80;
+        toolbar_click_y = toolbar_y + (toolbar_height / 2);
+        return false;
+    }
+    return true;
+}
+
+
 bool isExplorerWindow(HWND& hwnd)
 {
     if (IsWindowEnabled(hwnd))
@@ -150,6 +184,16 @@ __declspec(dllexport) long getHeight()
     return height;
 }
 
+__declspec(dllexport) int get_toolbar_click_x()
+{
+    return toolbar_click_x;
+}
+
+__declspec(dllexport) int get_toolbar_click_y()
+{
+    return toolbar_click_y;
+}
+
 void _start()
 {
     HWND hwnd;
@@ -160,6 +204,7 @@ void _start()
         if (isExplorerWindow(hwnd) || isFileChooserWindow(hwnd))
         {
             getWindowRect(hwnd, &windowRect);
+            setClickPos(hwnd);
             x = windowRect.left;
             y = windowRect.top;
             width = windowRect.right - windowRect.left;
@@ -167,7 +212,8 @@ void _start()
             if (height < 200 || width < 200 || x < 50 || y < 50) {
                 isStart = false;
             }
-            else {
+            else 
+            {
                 isStart = true;
             }
         }
@@ -175,15 +221,7 @@ void _start()
         {
             isStart = false;
         }
-        if (isStart)
-        {
-            Sleep(10);
-        } 
-        else
-        {
-
-            Sleep(300);
-        }
+        Sleep(50);
     }
 }
 
@@ -197,16 +235,15 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     start();
     while (true)
     {
-        /*if (isStart)
+        if (isStart)
         {
             int xPos = getX();
             int yPos = getY();
             int width = getWidth();
             int height = getHeight();
-        }*/
-        if (!isDialogNotExist())
-        {
-            Sleep(50);
+            int toolBarX = toolbar_click_x;
+            int toolBarY = toolbar_click_y;
+            Sleep(20);
         }
         Sleep(10);
     }

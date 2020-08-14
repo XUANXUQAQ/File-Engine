@@ -21,4 +21,8 @@ public interface GetHandle extends Library {
     long getWidth();
 
     long getHeight();
+
+    int get_toolbar_click_x();
+
+    int get_toolbar_click_y();
 }
