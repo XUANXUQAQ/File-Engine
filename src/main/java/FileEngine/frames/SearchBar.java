@@ -55,7 +55,6 @@ public class SearchBar {
     private static volatile boolean startSignal = false;
     private static volatile boolean isUserPressed = false;
     private static volatile boolean isExplorerWindowNotExist = false;
-    private static boolean isFocusedBefore = false;
     private static Border border;
     private final JFrame searchBar;
     private final JLabel label1;
@@ -191,7 +190,6 @@ public class SearchBar {
         textField.addFocusListener(new FocusListener() {
             @Override
             public void focusGained(FocusEvent e) {
-                isFocusedBefore = true;
             }
 
             @Override
@@ -1804,20 +1802,17 @@ public class SearchBar {
                     } else {
                         if (isExplorerWindowNotExist) {
                             switchToNormalMode();
+                            TimeUnit.MILLISECONDS.sleep(20);
                             continue;
                         }
-                        if (isFocusedBefore) {
-                            if (!searchBar.isFocused() || !searchBar.isActive()) {
+                        if (!searchBar.isFocused() || !searchBar.isActive()) {
+                            TimeUnit.MILLISECONDS.sleep(200); //等待窗口获取焦点
+                            if (!GetHandle.INSTANCE.is_explorer_at_top()) {
                                 TimeUnit.MILLISECONDS.sleep(200); //等待窗口获取焦点
-                                if (!GetHandle.INSTANCE.is_explorer_at_top()) {
-                                    TimeUnit.MILLISECONDS.sleep(200); //等待窗口获取焦点
-                                    if (!searchBar.isFocused() || !searchBar.isActive()) {
-                                        switchToNormalMode();
-                                    }
+                                if (!searchBar.isFocused() || !searchBar.isActive()) {
+                                    switchToNormalMode();
                                 }
                             }
-                        } else {
-                            switchToNormalMode();
                         }
                     }
                     TimeUnit.MILLISECONDS.sleep(10);
@@ -1892,7 +1887,7 @@ public class SearchBar {
                             }
                         }
                     }
-                    TimeUnit.MILLISECONDS.sleep(20);
+                    TimeUnit.MILLISECONDS.sleep(15);
                 }
             } catch (InterruptedException ignored) {
             }
@@ -1924,7 +1919,6 @@ public class SearchBar {
     private void switchToNormalMode() {
         if (showingMode.get() != Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
             searchBar.setVisible(false);
-            isFocusedBefore = false;
             Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize(); // 获取屏幕大小
             int height = screenSize.height;
             int searchBarHeight = (int) (height * 0.5);
@@ -2946,6 +2940,7 @@ public class SearchBar {
             textField.requestFocusInWindow();
         } else {
             searchBar.setAutoRequestFocus(false);
+            searchBar.transferFocus();
         }
         textField.setCaretPosition(0);
         isUsing = true;

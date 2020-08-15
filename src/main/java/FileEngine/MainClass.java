@@ -4,6 +4,8 @@ import FileEngine.SQLiteConfig.SQLiteUtil;
 import FileEngine.checkHotkey.CheckHotKeyUtil;
 import FileEngine.dllInterface.FileMonitor;
 import FileEngine.dllInterface.GetHandle;
+import FileEngine.frames.PluginMarket;
+import FileEngine.frames.SearchBar;
 import FileEngine.frames.SettingsFrame;
 import FileEngine.frames.TaskBar;
 import FileEngine.md5.Md5Util;
@@ -34,7 +36,7 @@ public class MainClass {
     private static final String IS_NTFS_64_MD_5 = "b5f7ea2923a42873883a3bcda2bafd2";
     private static final String SQLITE3_64_MD_5 = "658c71b8b93ba4eb5b4936f46a112449";
     private static final String UPDATER_BAT_64_MD_5 = "357d7cc1cf023cb6c90f73926c6f2f55";
-    private static final String GET_HANDLE_64_MD_5 = "34fc5bb527f222ec0e8a618a7d7319bf";
+    private static final String GET_HANDLE_64_MD_5 = "c4a583841461c12366da5740ee0487bd";
 
     private static final String SHORTCUT_GENERATOR_MD_5 = "fa4e26f99f3dcd58d827828c411ea5d7";
 
@@ -209,14 +211,17 @@ public class MainClass {
         try {
             while (SettingsFrame.isNotMainExit()) {
                 // 主循环开始
-                TimeUnit.MILLISECONDS.sleep(200);
+                TimeUnit.MILLISECONDS.sleep(50);
             }
+            SettingsFrame.getInstance().hideFrame();
+            PluginMarket.getInstance().hideWindow();
+            SearchBar.getInstance().closeSearchBar();
             PluginUtil.unloadAllPlugins();
             CheckHotKeyUtil.getInstance().stopListen();
             FileMonitor.INSTANCE.stop_monitor();
             SQLiteUtil.closeConnection();
             GetHandle.INSTANCE.stop();
-            Thread.sleep(8000);
+            TimeUnit.SECONDS.sleep(8);
             System.exit(0);
         } catch (InterruptedException ignored) {
         }
