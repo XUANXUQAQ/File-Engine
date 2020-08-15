@@ -16,6 +16,7 @@ import com.alibaba.fastjson.serializer.SerializerFeature;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileSystemView;
+import javax.swing.plaf.basic.BasicTabbedPaneUI;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
@@ -191,6 +192,13 @@ public class SettingsFrame {
     private JSeparator proxySeperater;
     private JLabel labelVacuumStatus;
     private JLabel labelApiVersion;
+    private JLabel labelPlaceHolder10;
+    private JLabel placeHolder1;
+    private JLabel placeHolder2;
+    private JLabel placeHolder4;
+    private JLabel placeHolder5;
+    private JLabel placeHolder6;
+    private JLabel placeHolder7;
 
     private static class SettingsFrameBuilder {
         private static final SettingsFrame instance = new SettingsFrame();
@@ -1126,6 +1134,19 @@ public class SettingsFrame {
 
         hotKeyListener = CheckHotKeyUtil.getInstance();
         searchBar = SearchBar.getInstance();
+
+        tabbedPane.setUI(new BasicTabbedPaneUI() {
+            private final Insets borderInsets = new Insets(0, 0, 0, 0);
+
+            @Override
+            protected void paintContentBorder(Graphics g, int tabPlacement, int selectedIndex) {
+            }
+
+            @Override
+            protected Insets getContentBorderInsets(int tabPlacement) {
+                return borderInsets;
+            }
+        });
 
         setAllSettings();
 

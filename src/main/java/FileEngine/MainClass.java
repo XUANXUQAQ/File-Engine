@@ -143,72 +143,72 @@ public class MainClass {
         }
     }
 
-    public static void main(String[] args) throws Exception {
-        Class.forName("org.sqlite.JDBC");
-        UIManager.setLookAndFeel(new WebLookAndFeel());
-
-        if (!System.getProperty("os.arch").contains("64")) {
-            System.err.println("NOT 64 BIT");
-            return;
-        }
-
-        SQLiteUtil.initConnection("jdbc:sqlite:data.db");
-
-        boolean isManualUpdate = false;
-        if (isDatabaseDamaged()) {
-            System.out.println("无data文件，正在搜索并重建");
-            //初始化数据库
-            SQLiteUtil.createAllTables();
-            isManualUpdate = true;
-        }
-
-        try (Statement stmt = SQLiteUtil.getStatement()) {
-            stmt.executeUpdate("CREATE TABLE IF NOT EXISTS cache(PATH text unique);");
-        }
-
-        startOrIgnoreUpdateAndExit(isUpdateSignExist());
-        updatePlugins();
-
-        //清空tmp
-        deleteDir(new File("tmp"));
-
-        if (!initFoldersAndFiles()) {
-            System.err.println("initialize dependencies failed");
-            return;
-        }
-
-        initializeDllInterface();
-
+    public static void main(String[] args) {
         try {
-            PluginUtil.loadAllPlugins("plugins");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+            Class.forName("org.sqlite.JDBC");
+            UIManager.setLookAndFeel(new WebLookAndFeel());
 
-        TaskBar taskBar = TaskBar.getInstance();
-        taskBar.showTaskBar();
-        SearchUtil search = SearchUtil.getInstance();
+            if (!System.getProperty("os.arch").contains("64")) {
+                System.err.println("NOT 64 BIT");
+                return;
+            }
 
-        if (isManualUpdate) {
-            search.setStatus(SearchUtil.MANUAL_UPDATE);
-        }
+            SQLiteUtil.initConnection("jdbc:sqlite:data.db");
 
-        TranslateUtil translateUtil = TranslateUtil.getInstance();
-        if (!isLatest()) {
-            taskBar.showMessage(translateUtil.getTranslation("Info"), translateUtil.getTranslation("New version can be updated"));
-        }
+            boolean isManualUpdate = false;
+            if (isDatabaseDamaged()) {
+                System.out.println("无data文件，正在搜索并重建");
+                //初始化数据库
+                SQLiteUtil.createAllTables();
+                isManualUpdate = true;
+            }
 
-        if (PluginUtil.isPluginTooOld()) {
-            String oldPlugins = PluginUtil.getAllOldPluginsName();
-            taskBar.showMessage(translateUtil.getTranslation("Warning"), oldPlugins + "\n" + translateUtil.getTranslation("Plugin Api is too old"));
-        }
+            try (Statement stmt = SQLiteUtil.getStatement()) {
+                stmt.executeUpdate("CREATE TABLE IF NOT EXISTS cache(PATH text unique);");
+            }
 
-        if (PluginUtil.isPluginRepeat()) {
-            String repeatPlugins = PluginUtil.getRepeatPlugins();
-            taskBar.showMessage(translateUtil.getTranslation("Warning"), repeatPlugins + "\n" + translateUtil.getTranslation("Duplicate plugin, please delete it in plugins folder"));
-        }
+            startOrIgnoreUpdateAndExit(isUpdateSignExist());
+            updatePlugins();
 
-        try {
+            //清空tmp
+            deleteDir(new File("tmp"));
+
+            if (!initFoldersAndFiles()) {
+                System.err.println("initialize dependencies failed");
+                return;
+            }
+
+            initializeDllInterface();
+
+            try {
+                PluginUtil.loadAllPlugins("plugins");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            TaskBar taskBar = TaskBar.getInstance();
+            taskBar.showTaskBar();
+            SearchUtil search = SearchUtil.getInstance();
+
+            if (isManualUpdate) {
+                search.setStatus(SearchUtil.MANUAL_UPDATE);
+            }
+
+            TranslateUtil translateUtil = TranslateUtil.getInstance();
+            if (!isLatest()) {
+                taskBar.showMessage(translateUtil.getTranslation("Info"), translateUtil.getTranslation("New version can be updated"));
+            }
+
+            if (PluginUtil.isPluginTooOld()) {
+                String oldPlugins = PluginUtil.getAllOldPluginsName();
+                taskBar.showMessage(translateUtil.getTranslation("Warning"), oldPlugins + "\n" + translateUtil.getTranslation("Plugin Api is too old"));
+            }
+
+            if (PluginUtil.isPluginRepeat()) {
+                String repeatPlugins = PluginUtil.getRepeatPlugins();
+                taskBar.showMessage(translateUtil.getTranslation("Warning"), repeatPlugins + "\n" + translateUtil.getTranslation("Duplicate plugin, please delete it in plugins folder"));
+            }
+
             while (SettingsFrame.isNotMainExit()) {
                 // 主循环开始
                 TimeUnit.MILLISECONDS.sleep(50);
@@ -223,7 +223,7 @@ public class MainClass {
             GetHandle.INSTANCE.stop();
             TimeUnit.SECONDS.sleep(8);
             System.exit(0);
-        } catch (InterruptedException ignored) {
+        } catch (Exception ignored) {
         }
     }
 
