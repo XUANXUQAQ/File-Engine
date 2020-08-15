@@ -1798,7 +1798,7 @@ public class SearchBar {
                 GetHandle.INSTANCE.start();
                 while (SettingsFrame.isNotMainExit()) {
                     if (GetHandle.INSTANCE.is_explorer_at_top()) {
-                        switchToExplorerMode();
+                        switchToExplorerAttachMode();
                     } else {
                         if (isExplorerWindowNotExist) {
                             switchToNormalMode();
@@ -1894,10 +1894,10 @@ public class SearchBar {
         });
     }
 
-    private void switchToExplorerMode() {
+    private void switchToExplorerAttachMode() {
         int searchBarHeight = (int) (GetHandle.INSTANCE.getHeight() * 0.75);
         int labelHeight = searchBarHeight / 9;
-        if (labelHeight > 20) {
+        if (labelHeight > 35) {
             if (showingMode.get() != Enums.ShowingSearchBarMode.EXPLORER_ATTACH) {
                 //设置字体
                 Font textFieldFont = new Font("Microsoft JhengHei", Font.PLAIN, (int) ((searchBarHeight * 0.4) / 96 * 72) / 4);
