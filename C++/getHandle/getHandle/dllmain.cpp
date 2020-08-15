@@ -71,7 +71,7 @@ __declspec(dllexport) bool isDialogNotExist()
     int num = 1;
     while (hd != NULL)                    //循环得到所有的子窗口
     {
-        if (IsWindowVisible(hd))
+        if (IsWindowVisible(hd) && !IsIconic(hd))
         {
             if (isFileChooserWindow(hd) || isExplorerWindow(hd))
             {

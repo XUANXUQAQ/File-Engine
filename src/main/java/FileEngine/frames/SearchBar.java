@@ -1802,7 +1802,7 @@ public class SearchBar {
                     } else {
                         if (isExplorerWindowNotExist) {
                             switchToNormalMode();
-                            TimeUnit.MILLISECONDS.sleep(20);
+                            TimeUnit.MILLISECONDS.sleep(200);
                             continue;
                         }
                         if (!searchBar.isFocused() || !searchBar.isActive()) {
@@ -1815,7 +1815,7 @@ public class SearchBar {
                             }
                         }
                     }
-                    TimeUnit.MILLISECONDS.sleep(10);
+                    TimeUnit.MILLISECONDS.sleep(200);
                 }
             } catch (InterruptedException ignored) {
             }
@@ -1883,7 +1883,7 @@ public class SearchBar {
                             textField.setSize(searchBarWidth - 6, labelHeight - 5);
                             textField.setLocation(3, 0);
                             if (!isVisible()) {
-                                showSearchbar(false);
+                                showSearchbar();
                             }
                         }
                     }
@@ -2931,17 +2931,12 @@ public class SearchBar {
         }
     }
 
-    public void showSearchbar(boolean isGrabFocus) {
+    public void showSearchbar() {
+        searchBar.setAutoRequestFocus(true);
         searchBar.setVisible(true);
-        if (isGrabFocus) {
-            searchBar.setAutoRequestFocus(true);
-            searchBar.toFront();
-            searchBar.requestFocusInWindow();
-            textField.requestFocusInWindow();
-        } else {
-            searchBar.setAutoRequestFocus(false);
-            searchBar.transferFocus();
-        }
+        searchBar.toFront();
+        searchBar.requestFocusInWindow();
+        textField.requestFocusInWindow();
         textField.setCaretPosition(0);
         isUsing = true;
         startTime = System.currentTimeMillis();
