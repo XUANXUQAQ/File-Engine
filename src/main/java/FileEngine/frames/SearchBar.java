@@ -1883,7 +1883,7 @@ public class SearchBar {
                             textField.setSize(searchBarWidth - 6, labelHeight - 5);
                             textField.setLocation(3, 0);
                             if (!isVisible()) {
-                                showSearchbar();
+                                showSearchbar(false);
                             }
                         }
                     }
@@ -2931,12 +2931,20 @@ public class SearchBar {
         }
     }
 
-    public void showSearchbar() {
-        searchBar.setAutoRequestFocus(true);
+    public void showSearchbar(boolean isGrabFocus) {
+        if (isGrabFocus) {
+            searchBar.setAutoRequestFocus(true);
+        } else {
+            searchBar.setAutoRequestFocus(false);
+        }
         searchBar.setVisible(true);
-        searchBar.toFront();
-        searchBar.requestFocusInWindow();
-        textField.requestFocusInWindow();
+        if (isGrabFocus) {
+            searchBar.toFront();
+            searchBar.requestFocusInWindow();
+            textField.requestFocusInWindow();
+        } else {
+            searchBar.transferFocus();
+        }
         textField.setCaretPosition(0);
         isUsing = true;
         startTime = System.currentTimeMillis();
