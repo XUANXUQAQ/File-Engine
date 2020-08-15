@@ -221,7 +221,14 @@ void _start()
         {
             isStart = false;
         }
-        Sleep(50);
+        if (isStart)
+        {
+            Sleep(10);
+        }
+        else
+        {
+            Sleep(300);
+        }
     }
 }
 

@@ -1577,7 +1577,7 @@ public class SettingsFrame {
         }
     }
 
-    protected void hideFrame() {
+    public void hideFrame() {
         frame.setVisible(false);
     }
 
