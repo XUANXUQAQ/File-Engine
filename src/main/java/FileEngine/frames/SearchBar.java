@@ -1771,6 +1771,8 @@ public class SearchBar {
 
         recreateIndexThread();
 
+        setSearchBarPosAndSize();
+
         switchSearchBarShowingMode();
 
         changeSearchBarSizeWhenOnExplorerMode();
@@ -1785,7 +1787,7 @@ public class SearchBar {
             try {
                 while (SettingsFrame.isNotMainExit()) {
                     isExplorerWindowNotExist = GetHandle.INSTANCE.isDialogNotExist();
-                    TimeUnit.MILLISECONDS.sleep(250);
+                    TimeUnit.MILLISECONDS.sleep(50);
                 }
             } catch (InterruptedException ignored) {
             }
@@ -1802,20 +1804,15 @@ public class SearchBar {
                     } else {
                         if (isExplorerWindowNotExist) {
                             switchToNormalMode();
-                            TimeUnit.MILLISECONDS.sleep(200);
+                            TimeUnit.MILLISECONDS.sleep(50);
                             continue;
                         }
-                        if (!searchBar.isFocused() || !searchBar.isActive()) {
-                            TimeUnit.MILLISECONDS.sleep(200); //等待窗口获取焦点
-                            if (!GetHandle.INSTANCE.is_explorer_at_top()) {
-                                TimeUnit.MILLISECONDS.sleep(200); //等待窗口获取焦点
-                                if (!searchBar.isFocused() || !searchBar.isActive()) {
-                                    switchToNormalMode();
-                                }
-                            }
+                        if (GetHandle.INSTANCE.isMouseClickOutSide()) {
+                            switchToNormalMode();
+                            GetHandle.INSTANCE.resetMouseStatus();
                         }
                     }
-                    TimeUnit.MILLISECONDS.sleep(200);
+                    TimeUnit.MILLISECONDS.sleep(50);
                 }
             } catch (InterruptedException ignored) {
             }
@@ -1851,6 +1848,23 @@ public class SearchBar {
                         textField.setLocation(3, 0);
                     }
                     TimeUnit.MILLISECONDS.sleep(50);
+                }
+            } catch (InterruptedException ignored) {
+            }
+        });
+    }
+
+    private void setSearchBarPosAndSize() {
+        CachedThreadPool.getInstance().executeTask(() -> {
+            try {
+                int x, y, width, height;
+                while (SettingsFrame.isNotMainExit()) {
+                    x = searchBar.getX();
+                    y = searchBar.getY();
+                    width = textField.getWidth();
+                    height = textField.getHeight();
+                    GetHandle.INSTANCE.set_searchBar(x, y, width, height);
+                    TimeUnit.MILLISECONDS.sleep(20);
                 }
             } catch (InterruptedException ignored) {
             }

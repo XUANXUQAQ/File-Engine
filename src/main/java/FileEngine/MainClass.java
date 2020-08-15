@@ -36,7 +36,7 @@ public class MainClass {
     private static final String IS_NTFS_64_MD_5 = "b5f7ea2923a42873883a3bcda2bafd2";
     private static final String SQLITE3_64_MD_5 = "658c71b8b93ba4eb5b4936f46a112449";
     private static final String UPDATER_BAT_64_MD_5 = "357d7cc1cf023cb6c90f73926c6f2f55";
-    private static final String GET_HANDLE_64_MD_5 = "2593628b6db5ecf45f14e3c1507bd28f";
+    private static final String GET_HANDLE_64_MD_5 = "bf4e73095d43f03a379842ce7a82e628";
 
     private static final String SHORTCUT_GENERATOR_MD_5 = "fa4e26f99f3dcd58d827828c411ea5d7";
 
