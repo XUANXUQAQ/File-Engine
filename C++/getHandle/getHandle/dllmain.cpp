@@ -11,6 +11,7 @@
 #pragma comment(lib, "dwmapi.lib")
 #pragma comment(lib, "user32.lib")
 #pragma comment(lib, "kernel32")
+#define IS_MOUSE_CLICKED(VK_NONAME) ((GetAsyncKeyState(VK_NONAME) & 0x8000) ? 1:0)
 //#define TEST
 
 
@@ -24,6 +25,13 @@ volatile long width;
 volatile long height;
 int toolbar_click_x;
 int toolbar_click_y;
+volatile int searchBarX;
+volatile int searchBarY;
+volatile int searchBarWidth;
+volatile int searchBarHeight;
+volatile bool is_click_not_explorer_or_searchbar;
+HHOOK hook;
+
 struct handle_data {
     unsigned long process_id;
     HWND window_handle;
@@ -36,6 +44,9 @@ void _start();
 bool isFileChooserWindow(HWND& hwnd);
 void setClickPos(HWND& fileChooserHwnd);
 BOOL CALLBACK findToolbar(HWND hwndChild, LPARAM lParam);
+bool isClickNotExplorerOrSearchBar();
+bool isMouseClicked();
+void _checkMouseStatus();
 extern "C" __declspec(dllexport) bool isDialogNotExist();
 extern "C" __declspec(dllexport) void start();
 extern "C" __declspec(dllexport) void stop();
@@ -45,23 +56,62 @@ extern "C" __declspec(dllexport) long getY();
 extern "C" __declspec(dllexport) long getWidth();
 extern "C" __declspec(dllexport) long getHeight();
 extern "C" __declspec(dllexport) int get_toolbar_click_x();
-extern "C" __declspec(dllexport) int get_toolbar_click_y();
+extern "C" __declspec(dllexport) int get_toolbar_click_y(); 
+extern "C" __declspec(dllexport) void set_searchBar(int x, int y, int width, int height);
+extern "C" __declspec(dllexport) bool isMouseClickOutSide();
+extern "C" __declspec(dllexport) void resetMouseStatus();
 
-
-BOOL APIENTRY DllMain( HMODULE hModule,
-                       DWORD  ul_reason_for_call,
-                       LPVOID lpReserved
-                     )
+__declspec(dllexport) void set_searchBar(int x, int y, int width, int height)
 {
-    switch (ul_reason_for_call)
+    searchBarX = x;
+    searchBarY = y;
+    searchBarWidth = width;
+    searchBarHeight = height;
+}
+
+__declspec(dllexport) bool isMouseClickOutSide()
+{
+    return is_click_not_explorer_or_searchbar;
+}
+
+bool isClickNotExplorerOrSearchBar()
+{
+    POINT point;
+    BOOL ret;
+    HWND hd;    //鼠标位置的窗口句柄
+    if (isMouseClicked())
     {
-    case DLL_PROCESS_ATTACH:
-    case DLL_THREAD_ATTACH:
-    case DLL_THREAD_DETACH:
-    case DLL_PROCESS_DETACH:
-        break;
+        ret = GetCursorPos(&point);
+        if (ret)
+        {
+            hd = WindowFromPoint(point);
+            if (isExplorerWindow(hd) || isFileChooserWindow(hd))
+            {
+                return false;
+            } 
+            else
+            {
+                //检查是否点击搜索框
+                if (point.x >= searchBarX &&
+                    point.x <= (searchBarX + searchBarWidth) &&
+                    point.y >= searchBarY &&
+                    point.y <= (searchBarY + searchBarHeight))
+                {
+                    return false;
+                }
+                else
+                {
+                    return true;
+                }
+            }
+        }
     }
-    return TRUE;
+    return false;
+}
+
+bool isMouseClicked()
+{
+    return IS_MOUSE_CLICKED(VK_RBUTTON) || IS_MOUSE_CLICKED(VK_MBUTTON) || IS_MOUSE_CLICKED(VK_LBUTTON);
 }
 
 __declspec(dllexport) bool isDialogNotExist()
@@ -131,7 +181,6 @@ BOOL CALLBACK findToolbar(HWND hwndChild, LPARAM lParam)
     return true;
 }
 
-
 bool isExplorerWindow(HWND& hwnd)
 {
     if (IsWindowEnabled(hwnd))
@@ -140,7 +189,12 @@ bool isExplorerWindow(HWND& hwnd)
         GetClassNameA(hwnd, className, 200);
         string WindowClassName(className);
         transform(WindowClassName.begin(), WindowClassName.end(), WindowClassName.begin(), ::tolower);
-        return (WindowClassName.find("cabinet") != string::npos);
+        return WindowClassName.find("cabinet") != string::npos || 
+            WindowClassName.find("directuihwnd") != string::npos ||
+            WindowClassName.find("systreeview") != string::npos ||
+            WindowClassName.find("universalsearchband") != string::npos ||
+            WindowClassName.find("address band root") != string::npos ||
+            WindowClassName.find("netuihwnd") != string::npos;
     }
     else
     {
@@ -152,6 +206,8 @@ __declspec(dllexport) void start()
 {
     thread t(_start);
     t.detach();
+    thread checkMouse(_checkMouseStatus);
+    checkMouse.detach();
 }
 
 __declspec(dllexport) void stop()
@@ -192,6 +248,22 @@ __declspec(dllexport) int get_toolbar_click_x()
 __declspec(dllexport) int get_toolbar_click_y()
 {
     return toolbar_click_y;
+}
+
+__declspec(dllexport) void resetMouseStatus()
+{
+    is_click_not_explorer_or_searchbar = false;
+}
+
+void _checkMouseStatus()
+{
+    while (isRunning)
+    {
+        if (!is_click_not_explorer_or_searchbar) {
+            is_click_not_explorer_or_searchbar = isClickNotExplorerOrSearchBar();
+        }
+        Sleep(10);
+    }
 }
 
 void _start()
@@ -242,7 +314,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     start();
     while (true)
     {
-        if (isStart)
+        /*if (isStart)
         {
             int xPos = getX();
             int yPos = getY();
@@ -251,6 +323,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
             int toolBarX = toolbar_click_x;
             int toolBarY = toolbar_click_y;
             Sleep(20);
+        }*/
+        if (is_click_not_explorer_or_searchbar)
+        {
+            Sleep(10);
+            break;
         }
         Sleep(10);
     }
