@@ -194,7 +194,8 @@ bool isExplorerWindow(HWND& hwnd)
             WindowClassName.find("systreeview") != string::npos ||
             WindowClassName.find("universalsearchband") != string::npos ||
             WindowClassName.find("address band root") != string::npos ||
-            WindowClassName.find("netuihwnd") != string::npos;
+            WindowClassName.find("netuihwnd") != string::npos ||
+            WindowClassName.find("rebarwindow") != string::npos;
     }
     else
     {
