@@ -327,11 +327,7 @@ public class SearchBar {
                             }
                         }
                     }
-                    if (showingMode.get() != Enums.ShowingSearchBarMode.EXPLORER_ATTACH) {
-                        closeSearchBar();
-                    } else {
-                        closeWithoutHideSearchBar();
-                    }
+                    detectShowingModeAndClose();
                 }
             }
 
@@ -496,11 +492,7 @@ public class SearchBar {
                                     }
                                 }
                             }
-                            if (showingMode.get() != Enums.ShowingSearchBarMode.EXPLORER_ATTACH) {
-                                closeSearchBar();
-                            } else {
-                                closeWithoutHideSearchBar();
-                            }
+                            detectShowingModeAndClose();
                         }
                     } else if (SettingsFrame.getOpenLastFolderKeyCode() == key) {
                         //打开上级文件夹热键被点击
@@ -1960,7 +1952,7 @@ public class SearchBar {
             label8.setFont(labelFont);
             showingMode.set(Enums.ShowingSearchBarMode.NORMAL_SHOWING);
             if (SettingsFrame.isLoseFocusClose()) {
-                closeSearchBar();
+                detectShowingModeAndClose();
             }
         }
     }
@@ -2555,7 +2547,7 @@ public class SearchBar {
                             while ((column = commandQueue.poll()) != null) {
                                 searchAndAddToTempResults(System.currentTimeMillis(), column);
                                 if (!isUsing) {
-                                    closeSearchBar();
+                                    detectShowingModeAndClose();
                                 }
                             }
                         } catch (SQLException e) {
@@ -2636,18 +2628,18 @@ public class SearchBar {
                         if (search.getStatus() == SearchUtil.NORMAL) {
                             if (runningMode.get() == Enums.runningMode.COMMAND_MODE) {
                                 if (":update".equalsIgnoreCase(text)) {
-                                    closeSearchBar();
+                                    detectShowingModeAndClose();
                                     search.setStatus(SearchUtil.MANUAL_UPDATE);
                                     startSignal = false;
                                     continue;
                                 }
                                 if (":version".equalsIgnoreCase(text)) {
-                                    closeSearchBar();
+                                    detectShowingModeAndClose();
                                     JOptionPane.showMessageDialog(null, TranslateUtil.getInstance().getTranslation(
                                             "Current Version:") + SettingsFrame.version);
                                 }
                                 if (":help".equalsIgnoreCase(text)) {
-                                    closeSearchBar();
+                                    detectShowingModeAndClose();
                                     Desktop desktop;
                                     if (Desktop.isDesktopSupported()) {
                                         desktop = Desktop.getDesktop();
@@ -2655,7 +2647,7 @@ public class SearchBar {
                                     }
                                 }
                                 if (":clearbin".equalsIgnoreCase(text)) {
-                                    closeSearchBar();
+                                    detectShowingModeAndClose();
                                     int r = JOptionPane.showConfirmDialog(null, TranslateUtil.getInstance().getTranslation(
                                             "Are you sure you want to empty the recycle bin"));
                                     if (r == 0) {
@@ -2681,7 +2673,7 @@ public class SearchBar {
                                     }
                                     String[] cmdInfo = semicolon.split(i);
                                     if (cmdInfo[0].equals(text)) {
-                                        closeSearchBar();
+                                        detectShowingModeAndClose();
                                         openWithAdmin(cmdInfo[1]);
                                     }
                                 }
@@ -3307,6 +3299,14 @@ public class SearchBar {
             }
         };
         SwingUtilities.invokeLater(clear);
+    }
+
+    private void detectShowingModeAndClose() {
+        if (showingMode.get() == Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
+            closeSearchBar();
+        } else if (showingMode.get() == Enums.ShowingSearchBarMode.EXPLORER_ATTACH) {
+            closeWithoutHideSearchBar();
+        }
     }
 
     public void closeSearchBar() {
