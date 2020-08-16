@@ -2968,6 +2968,9 @@ public class SearchBar {
         ImageIcon icon = GetIconUtil.getInstance().getBigIcon(path, iconSideLength, iconSideLength);
         label.setIcon(icon);
         label.setBorder(border);
+        if (name.length() >= 32) {
+            name = name.substring(0, 32) + "...";
+        }
         label.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>" + getParentPath(path) + "</body></html>");
         if (isChosen) {
             setLabelChosen(label);
