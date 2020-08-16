@@ -2247,7 +2247,7 @@ public class SearchBar {
             try {
                 while (SettingsFrame.isNotMainExit()) {
                     if (isUsing) {
-                        panel.repaint();
+                        searchBar.repaint();
                     }
                     TimeUnit.MILLISECONDS.sleep(250);
                 }
