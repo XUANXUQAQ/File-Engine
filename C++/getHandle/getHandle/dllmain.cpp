@@ -11,7 +11,7 @@
 #pragma comment(lib, "dwmapi.lib")
 #pragma comment(lib, "user32.lib")
 #pragma comment(lib, "kernel32")
-#define IS_MOUSE_CLICKED(VK_NONAME) ((GetAsyncKeyState(VK_NONAME) & 0x8000) ? 1:0)
+#define IS_MOUSE_CLICKED_OR_KEY_PRESSED(VK_NONAME) ((GetAsyncKeyState(VK_NONAME) & 0x8000) ? 1:0)
 //#define TEST
 
 
@@ -30,7 +30,6 @@ volatile int searchBarY;
 volatile int searchBarWidth;
 volatile int searchBarHeight;
 volatile bool is_click_not_explorer_or_searchbar;
-HHOOK hook;
 
 struct handle_data {
     unsigned long process_id;
@@ -44,9 +43,9 @@ void _start();
 bool isFileChooserWindow(HWND& hwnd);
 void setClickPos(HWND& fileChooserHwnd);
 BOOL CALLBACK findToolbar(HWND hwndChild, LPARAM lParam);
-bool isClickNotExplorerOrSearchBar();
-bool isMouseClicked();
+bool isClickNotExplorerOrSearchBarOrSwitchTask();
 void _checkMouseStatus();
+bool isMouseClickedOrSwitchTaskPressed();
 extern "C" __declspec(dllexport) bool isDialogNotExist();
 extern "C" __declspec(dllexport) void start();
 extern "C" __declspec(dllexport) void stop();
@@ -58,7 +57,7 @@ extern "C" __declspec(dllexport) long getHeight();
 extern "C" __declspec(dllexport) int get_toolbar_click_x();
 extern "C" __declspec(dllexport) int get_toolbar_click_y(); 
 extern "C" __declspec(dllexport) void set_searchBar(int x, int y, int width, int height);
-extern "C" __declspec(dllexport) bool isMouseClickOutSide();
+extern "C" __declspec(dllexport) bool isExplorerAndSearchbarNotFocused();
 extern "C" __declspec(dllexport) void resetMouseStatus();
 
 __declspec(dllexport) void set_searchBar(int x, int y, int width, int height)
@@ -69,17 +68,17 @@ __declspec(dllexport) void set_searchBar(int x, int y, int width, int height)
     searchBarHeight = height;
 }
 
-__declspec(dllexport) bool isMouseClickOutSide()
+__declspec(dllexport) bool isExplorerAndSearchbarNotFocused()
 {
     return is_click_not_explorer_or_searchbar;
 }
 
-bool isClickNotExplorerOrSearchBar()
+bool isClickNotExplorerOrSearchBarOrSwitchTask()
 {
     POINT point;
     BOOL ret;
     HWND hd;    //鼠标位置的窗口句柄
-    if (isMouseClicked())
+    if (isMouseClickedOrSwitchTaskPressed())
     {
         ret = GetCursorPos(&point);
         if (ret)
@@ -109,9 +108,10 @@ bool isClickNotExplorerOrSearchBar()
     return false;
 }
 
-bool isMouseClicked()
+bool isMouseClickedOrSwitchTaskPressed()
 {
-    return IS_MOUSE_CLICKED(VK_RBUTTON) || IS_MOUSE_CLICKED(VK_MBUTTON) || IS_MOUSE_CLICKED(VK_LBUTTON);
+    return IS_MOUSE_CLICKED_OR_KEY_PRESSED(VK_RBUTTON) || IS_MOUSE_CLICKED_OR_KEY_PRESSED(VK_MBUTTON) || IS_MOUSE_CLICKED_OR_KEY_PRESSED(VK_LBUTTON) ||
+        (IS_MOUSE_CLICKED_OR_KEY_PRESSED(VK_MENU) && IS_MOUSE_CLICKED_OR_KEY_PRESSED(VK_TAB));
 }
 
 __declspec(dllexport) bool isDialogNotExist()
@@ -260,7 +260,7 @@ void _checkMouseStatus()
     while (isRunning)
     {
         if (!is_click_not_explorer_or_searchbar) {
-            is_click_not_explorer_or_searchbar = isClickNotExplorerOrSearchBar();
+            is_click_not_explorer_or_searchbar = isClickNotExplorerOrSearchBarOrSwitchTask();
         }
         Sleep(10);
     }

@@ -1669,7 +1669,6 @@ public class SearchBar {
                     runningMode.set(Enums.runningMode.NORMAL_MODE);
                 }
                 if (text.isEmpty()) {
-                    panel.repaint();
                     resultCount.set(0);
                     labelCount.set(0);
                     currentLabelSelectedPosition.set(0);
@@ -1801,20 +1800,22 @@ public class SearchBar {
                 while (SettingsFrame.isNotMainExit()) {
                     if (GetHandle.INSTANCE.is_explorer_at_top()) {
                         switchToExplorerAttachMode();
+                        GetHandle.INSTANCE.resetMouseStatus();
                     } else {
                         if (isExplorerWindowNotExist) {
                             switchToNormalMode();
-                            TimeUnit.MILLISECONDS.sleep(50);
+                            TimeUnit.MILLISECONDS.sleep(250);
                             continue;
                         }
-                        if (GetHandle.INSTANCE.isMouseClickOutSide()) {
+                        if (GetHandle.INSTANCE.isExplorerAndSearchbarNotFocused()) {
                             switchToNormalMode();
-                            GetHandle.INSTANCE.resetMouseStatus();
                         }
                     }
-                    TimeUnit.MILLISECONDS.sleep(50);
+                    TimeUnit.MILLISECONDS.sleep(250);
                 }
             } catch (InterruptedException ignored) {
+            } finally {
+                GetHandle.INSTANCE.stop();
             }
         });
     }
@@ -1925,6 +1926,7 @@ public class SearchBar {
                 label6.setFont(labelFont);
                 label7.setFont(labelFont);
                 label8.setFont(labelFont);
+                GetHandle.INSTANCE.resetMouseStatus();
                 showingMode.set(Enums.ShowingSearchBarMode.EXPLORER_ATTACH);
             }
         }
@@ -1932,6 +1934,7 @@ public class SearchBar {
 
     private void switchToNormalMode() {
         if (showingMode.get() != Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
+            GetHandle.INSTANCE.resetMouseStatus();
             searchBar.setVisible(false);
             Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize(); // 获取屏幕大小
             int height = screenSize.height;
@@ -2946,11 +2949,7 @@ public class SearchBar {
     }
 
     public void showSearchbar(boolean isGrabFocus) {
-        if (isGrabFocus) {
-            searchBar.setAutoRequestFocus(true);
-        } else {
-            searchBar.setAutoRequestFocus(false);
-        }
+        searchBar.setAutoRequestFocus(isGrabFocus);
         searchBar.setVisible(true);
         if (isGrabFocus) {
             searchBar.toFront();
@@ -3294,7 +3293,12 @@ public class SearchBar {
     }
 
     private void clearTextFieldText() {
-        Runnable clear = () -> textField.setText(null);
+        Runnable clear = () -> {
+            try {
+                textField.setText(null);
+            } catch (Exception ignored) {
+            }
+        };
         SwingUtilities.invokeLater(clear);
     }
 
