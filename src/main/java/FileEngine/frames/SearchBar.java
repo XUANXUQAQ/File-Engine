@@ -79,7 +79,6 @@ public class SearchBar {
     private final AtomicInteger runningMode;
     private final AtomicInteger showingMode;
     private final AtomicInteger cacheNum;
-    private final JPanel panel;
     private long mouseWheelTime = 0;
     private final int iconSideLength;
     private long visibleStartTime = 0;
@@ -116,7 +115,7 @@ public class SearchBar {
         semicolon = Pattern.compile(";");
         resultSplit = Pattern.compile(":");
         blank = Pattern.compile(" ");
-        panel = new JPanel();
+        JPanel panel = new JPanel();
 
         search = SearchUtil.getInstance();
         taskBar = TaskBar.getInstance();
