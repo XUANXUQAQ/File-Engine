@@ -28,7 +28,8 @@ public interface GetHandle extends Library {
 
     void set_searchBar(int x, int y, int width, int height);
 
-    boolean isMouseClickOutSide();
+    boolean isExplorerAndSearchbarNotFocused();
 
     void resetMouseStatus();
+
 }

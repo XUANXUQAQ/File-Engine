@@ -3,7 +3,6 @@ package FileEngine;
 import FileEngine.SQLiteConfig.SQLiteUtil;
 import FileEngine.checkHotkey.CheckHotKeyUtil;
 import FileEngine.dllInterface.FileMonitor;
-import FileEngine.dllInterface.GetHandle;
 import FileEngine.frames.PluginMarket;
 import FileEngine.frames.SearchBar;
 import FileEngine.frames.SettingsFrame;
@@ -36,7 +35,7 @@ public class MainClass {
     private static final String IS_NTFS_64_MD_5 = "b5f7ea2923a42873883a3bcda2bafd2";
     private static final String SQLITE3_64_MD_5 = "658c71b8b93ba4eb5b4936f46a112449";
     private static final String UPDATER_BAT_64_MD_5 = "357d7cc1cf023cb6c90f73926c6f2f55";
-    private static final String GET_HANDLE_64_MD_5 = "bf4e73095d43f03a379842ce7a82e628";
+    private static final String GET_HANDLE_64_MD_5 = "cf76839bc30577b049233f7a885b63f";
 
     private static final String SHORTCUT_GENERATOR_MD_5 = "fa4e26f99f3dcd58d827828c411ea5d7";
 
@@ -220,7 +219,6 @@ public class MainClass {
             CheckHotKeyUtil.getInstance().stopListen();
             FileMonitor.INSTANCE.stop_monitor();
             SQLiteUtil.closeConnection();
-            GetHandle.INSTANCE.stop();
             TimeUnit.SECONDS.sleep(8);
             System.exit(0);
         } catch (Exception ignored) {
