@@ -356,6 +356,22 @@ public class SearchBar {
         });
     }
 
+    private void quickJump(String result) {
+        int x, y;
+        Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+        Transferable originalData = clipboard.getContents(null);
+        if (isFile(result)) {
+            result = getParentPath(result);
+        }
+        copyToClipBoard(result);
+        x = GetHandle.INSTANCE.get_toolbar_click_x();
+        y = GetHandle.INSTANCE.get_toolbar_click_y();
+        RobotUtil.getInstance().mouseClicked(x, y, 1, InputEvent.BUTTON1_MASK);
+        RobotUtil.getInstance().keyTyped(KeyEvent.VK_CONTROL, KeyEvent.VK_V);
+        RobotUtil.getInstance().keyTyped(KeyEvent.VK_ENTER);
+        clipboard.setContents(originalData, null);
+    }
+
     private void copyToClipBoard(String res) {
         Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
         Transferable trans = new StringSelection(res);
@@ -456,16 +472,7 @@ public class SearchBar {
                                         }
                                         saveCache(res);
                                     } else if (showingMode.get() == Enums.ShowingSearchBarMode.EXPLORER_ATTACH) {
-                                        int x, y;
-                                        if (isFile(res)) {
-                                            res = getParentPath(res);
-                                        }
-                                        copyToClipBoard(res);
-                                        x = GetHandle.INSTANCE.get_toolbar_click_x();
-                                        y = GetHandle.INSTANCE.get_toolbar_click_y();
-                                        RobotUtil.getInstance().mouseClicked(x, y, 1, InputEvent.BUTTON1_MASK);
-                                        RobotUtil.getInstance().keyTyped(KeyEvent.VK_CONTROL, KeyEvent.VK_V);
-                                        RobotUtil.getInstance().keyTyped(KeyEvent.VK_ENTER);
+                                        quickJump(res);
                                     }
                                 } else if (runningMode.get() == Enums.runningMode.COMMAND_MODE) {
                                     File open = new File(semicolon.split(res)[1]);
