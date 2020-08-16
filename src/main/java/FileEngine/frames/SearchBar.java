@@ -468,7 +468,11 @@ public class SearchBar {
                                         }
                                         saveCache(res);
                                     } else if (showingMode.get() == Enums.ShowingSearchBarMode.EXPLORER_ATTACH) {
-                                        quickJump(res);
+                                        if (isCopyPathPressed) {
+                                            copyToClipBoard(res);
+                                        } else {
+                                            quickJump(res);
+                                        }
                                     }
                                 } else if (runningMode.get() == Enums.runningMode.COMMAND_MODE) {
                                     File open = new File(semicolon.split(res)[1]);
