@@ -1201,7 +1201,7 @@ public class SettingsFrame {
         initThreadPool();
     }
 
-    private void checkDownloadTask(JLabel label, JButton button, String fileName, String originButtonString) throws InterruptedException {
+    private void checkDownloadTask(JLabel label, JButton button, String fileName, String originButtonString, String updateSignalFileName) throws InterruptedException {
         //设置进度显示线程
         double progress;
         if (DownloadUtil.getInstance().getDownloadStatus(fileName) != Enums.DownloadStatus.DOWNLOAD_NO_TASK) {
@@ -1214,7 +1214,7 @@ public class SettingsFrame {
                 label.setText(TranslateUtil.getInstance().getTranslation("Download Done"));
                 label.setText(TranslateUtil.getInstance().getTranslation("Downloaded"));
                 label.setEnabled(false);
-                File updatePluginSign = new File("user/update");
+                File updatePluginSign = new File("user/" + updateSignalFileName);
                 if (!updatePluginSign.exists()) {
                     try {
                         updatePluginSign.createNewFile();
@@ -1247,7 +1247,8 @@ public class SettingsFrame {
         try {
             String originString = button.getText();
             while (SettingsFrame.isNotMainExit()) {
-                checkDownloadTask(label, button, fileName, originString);
+                checkDownloadTask(label, button, fileName, originString, "update");
+                TimeUnit.MILLISECONDS.sleep(200);
             }
         } catch (InterruptedException ignored) {
         }
@@ -1262,7 +1263,8 @@ public class SettingsFrame {
                 String originString = buttonUpdatePlugin.getText();
                 while (isNotMainExit()) {
                     fileName = (String) listPlugins.getSelectedValue();
-                    checkDownloadTask(labelProgress, buttonUpdatePlugin, fileName + ".jar", originString);
+                    checkDownloadTask(labelProgress, buttonUpdatePlugin, fileName + ".jar", originString, "updatePlugin");
+                    TimeUnit.MILLISECONDS.sleep(200);
                 }
             } catch (InterruptedException ignored) {
             }

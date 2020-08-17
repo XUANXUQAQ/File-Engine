@@ -14,7 +14,7 @@ public class Enums {
         public static final int EXPLORER_ATTACH = 6;
     }
 
-    public static class runningMode {
+    public static class RunningMode {
         public static final int NORMAL_MODE = 7;
         public static final int COMMAND_MODE = 8;
         public static final int PLUGIN_MODE = 9;
