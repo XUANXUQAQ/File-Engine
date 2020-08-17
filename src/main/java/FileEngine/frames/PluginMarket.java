@@ -1,6 +1,5 @@
 package FileEngine.frames;
 
-import FileEngine.download.DownloadManager;
 import FileEngine.download.DownloadUtil;
 import FileEngine.enums.Enums;
 import FileEngine.pluginSystem.PluginUtil;
@@ -71,7 +70,7 @@ public class PluginMarket {
                         textAreaPluginDescription.setText("");
                     }
                 }
-            } catch (InterruptedException ignored) {
+            } catch (InterruptedException | IOException ignored) {
             }
         });
 
@@ -100,7 +99,7 @@ public class PluginMarket {
         });
     }
 
-    private void checkDownloadTask(JLabel label, JButton button, String fileName, String originButtonString) throws InterruptedException {
+    private void checkDownloadTask(JLabel label, JButton button, String fileName, String originButtonString) throws InterruptedException, IOException {
         //设置进度显示线程
         double progress;
         String pluginName;
@@ -118,10 +117,7 @@ public class PluginMarket {
                 button.setVisible(true);
                 File updatePluginSign = new File("user/updatePlugin");
                 if (!updatePluginSign.exists()) {
-                    try {
-                        updatePluginSign.createNewFile();
-                    } catch (IOException ignored) {
-                    }
+                    updatePluginSign.createNewFile();
                 }
             } else if (downloadingStatus == Enums.DownloadStatus.DOWNLOAD_ERROR) {
                 //下载错误，重置button
