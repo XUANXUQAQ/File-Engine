@@ -4,9 +4,15 @@ import FileEngine.enums.Enums;
 import FileEngine.frames.SettingsFrame;
 import FileEngine.threadPool.CachedThreadPool;
 
+import javax.net.ssl.*;
 import java.io.*;
 import java.math.BigDecimal;
 import java.net.*;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.security.Security;
+import java.security.cert.X509Certificate;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
@@ -123,11 +129,43 @@ public class DownloadUtil {
             return fileName;
         }
 
+
+        // trusting all certificate
+        public void doTrustToCertificates() throws Exception {
+            Security.addProvider(new com.sun.net.ssl.internal.ssl.Provider());
+            TrustManager[] trustAllCerts = new TrustManager[]{
+                    new X509TrustManager() {
+                        public X509Certificate[] getAcceptedIssuers() {
+                            return null;
+                        }
+
+                        public void checkServerTrusted(X509Certificate[] certs, String authType) {
+                        }
+
+                        public void checkClientTrusted(X509Certificate[] certs, String authType) {
+                        }
+                    }
+            };
+
+            SSLContext sc = SSLContext.getInstance("SSL");
+            sc.init(null, trustAllCerts, new SecureRandom());
+            HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+            HostnameVerifier hv = (urlHostName, session) -> {
+                if (!urlHostName.equalsIgnoreCase(session.getPeerHost())) {
+                    System.out.println("Warning: URL host '" + urlHostName + "' is different to SSLSession host '" + session.getPeerHost() + "'.");
+                }
+                return true;
+            };
+            HttpsURLConnection.setDefaultHostnameVerifier(hv);
+            System.setProperty("https.protocols", "TLSv1.2,TLSv1.1,SSLv3");
+        }
+
         public void download() {
             try {
                 System.setProperty("http.keepAlive", "false");
                 URL urlAddress = new URL(url);
                 HttpURLConnection con;
+                doTrustToCertificates();
                 if (proxy.equals(Proxy.NO_PROXY)) {
                     con = (HttpURLConnection) urlAddress.openConnection();
                     Authenticator.setDefault(null);
@@ -166,15 +204,15 @@ public class DownloadUtil {
                     throw new IOException("User Interrupted");
                 }
                 downloadStatus = Enums.DownloadStatus.DOWNLOAD_DONE;
-            } catch (IOException e) {
-                if (SettingsFrame.isDebug()) {
-                    e.printStackTrace();
-                }
+            } catch (IOException | NoSuchAlgorithmException | KeyManagementException e) {
+                e.printStackTrace();
                 if ("User Interrupted".equals(e.getMessage())) {
                     downloadStatus = Enums.DownloadStatus.DOWNLOAD_INTERRUPTED;
                 } else {
                     downloadStatus = Enums.DownloadStatus.DOWNLOAD_ERROR;
                 }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }
 
