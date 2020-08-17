@@ -35,7 +35,11 @@ public class TaskBar {
             // 创建托盘图标
             trayIcon = new TrayIcon(image);
             // 添加工具提示文本
-            trayIcon.setToolTip("File-Engine");
+            if (SettingsFrame.isDebug()) {
+                trayIcon.setToolTip("File-Engine(Debug)");
+            } else {
+                trayIcon.setToolTip("File-Engine");
+            }
             // 创建弹出菜单
             PopupMenu popupMenu = new PopupMenu();
 
