@@ -49,12 +49,12 @@ public class MainClass {
     }
 
     private static void updatePlugins() throws FileNotFoundException {
-        if (SettingsFrame.isDebug()) {
-            System.out.println("正在更新插件");
-        }
         File sign = new File("user/updatePlugin");
         File tmpPlugins = new File("tmp/pluginsUpdate");
         if (sign.exists()) {
+            if (SettingsFrame.isDebug()) {
+                System.out.println("正在更新插件");
+            }
             sign.delete();
             File[] files = tmpPlugins.listFiles();
             if (files == null || files.length == 0) {

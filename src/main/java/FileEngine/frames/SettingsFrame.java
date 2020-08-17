@@ -27,6 +27,8 @@ import java.sql.Statement;
 import java.util.HashSet;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 
 
 public class SettingsFrame {
@@ -963,14 +965,35 @@ public class SettingsFrame {
     }
 
     private void addButtonPluginUpdateCheckListener() {
+        AtomicLong startCheckTime = new AtomicLong(0L);
+        AtomicBoolean isVersionLatest = new AtomicBoolean(false);
         buttonUpdatePlugin.addActionListener(e -> {
-            boolean isVersionLatest;
+            startCheckTime.set(0L);
             String pluginName = (String) listPlugins.getSelectedValue();
             String pluginIdentifier = PluginUtil.getIdentifierByName(pluginName);
             Plugin plugin = PluginUtil.getPluginByIdentifier(pluginIdentifier);
             String pluginFullName = pluginName + ".jar";
-            isVersionLatest = plugin.isLatest();
-            if (isVersionLatest) {
+            Thread checkUpdateThread = new Thread(() -> {
+                startCheckTime.set(System.currentTimeMillis());
+                isVersionLatest.set(plugin.isLatest());
+                if (!Thread.interrupted()) {
+                    startCheckTime.set(0x100L); //表示检查成功
+                }
+            });
+            CachedThreadPool.getInstance().executeTask(checkUpdateThread);
+            //等待获取插件更新信息
+            try {
+                while (startCheckTime.get() != 0x100L) {
+                    TimeUnit.MILLISECONDS.sleep(200);
+                    if (System.currentTimeMillis() - startCheckTime.get() > 5000L && startCheckTime.get() != 0x100L) {
+                        checkUpdateThread.interrupt();
+                        JOptionPane.showMessageDialog(frame, TranslateUtil.getInstance().getTranslation("Check update failed"));
+                        return;
+                    }
+                }
+            } catch (InterruptedException ignored) {
+            }
+            if (isVersionLatest.get()) {
                 JOptionPane.showMessageDialog(frame, TranslateUtil.getInstance().getTranslation("The current Version is the latest."));
             } else {
                 //检查是否已经开始下载

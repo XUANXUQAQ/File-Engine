@@ -5,7 +5,7 @@ import java.util.concurrent.*;
 public class CachedThreadPool {
     private final ExecutorService cachedThreadPool = new ThreadPoolExecutor(
             0,
-            100,
+            200,
             60L,
             TimeUnit.SECONDS,
             new SynchronousQueue<>());
