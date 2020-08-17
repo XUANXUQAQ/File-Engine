@@ -1201,7 +1201,7 @@ public class SettingsFrame {
         initThreadPool();
     }
 
-    private void checkDownloadTask(JLabel label, JButton button, String fileName, String originButtonString, String updateSignalFileName) throws InterruptedException {
+    private void checkDownloadTask(JLabel label, JButton button, String fileName, String originButtonString, String updateSignalFileName) throws InterruptedException, IOException {
         //设置进度显示线程
         double progress;
         if (DownloadUtil.getInstance().getDownloadStatus(fileName) != Enums.DownloadStatus.DOWNLOAD_NO_TASK) {
@@ -1216,10 +1216,7 @@ public class SettingsFrame {
                 label.setEnabled(false);
                 File updatePluginSign = new File("user/" + updateSignalFileName);
                 if (!updatePluginSign.exists()) {
-                    try {
-                        updatePluginSign.createNewFile();
-                    } catch (IOException ignored) {
-                    }
+                    updatePluginSign.createNewFile();
                 }
             } else if (downloadingStatus == Enums.DownloadStatus.DOWNLOAD_ERROR) {
                 //下载错误，重置button
@@ -1250,7 +1247,7 @@ public class SettingsFrame {
                 checkDownloadTask(label, button, fileName, originString, "update");
                 TimeUnit.MILLISECONDS.sleep(200);
             }
-        } catch (InterruptedException ignored) {
+        } catch (InterruptedException | IOException ignored) {
         }
     }
 
@@ -1266,7 +1263,7 @@ public class SettingsFrame {
                     checkDownloadTask(labelProgress, buttonUpdatePlugin, fileName + ".jar", originString, "updatePlugin");
                     TimeUnit.MILLISECONDS.sleep(200);
                 }
-            } catch (InterruptedException ignored) {
+            } catch (InterruptedException | IOException ignored) {
             }
         });
     }
