@@ -18,7 +18,7 @@ A tool can make you work more efficiently.
  * 简洁UI，设置方便。
  * 自适应分辨率显示。    
 ### 该软件仅支持64位系统
-[下载最新稳定版64位](https://github.com/XUANXUQAQ/File-Engine/releases/download/2.5/File-Engine-x64.V2.5.7z)   
+[下载最新稳定版64位](https://github.com/XUANXUQAQ/File-Engine/releases/download/2.6/File-Engine-x64.V2.6.7z)   
 
 感谢以下项目：   
 1.fastjson (https://github.com/alibaba/fastjson)   
