@@ -1,5 +1,11 @@
 package FileEngine.frames;
 
+import FileEngine.SQLiteConfig.SQLiteUtil;
+import FileEngine.checkHotkey.CheckHotKeyUtil;
+import FileEngine.daemon.DaemonUtil;
+import FileEngine.dllInterface.FileMonitor;
+import FileEngine.pluginSystem.PluginUtil;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
@@ -45,10 +51,13 @@ public class TaskBar {
 
             MenuItem settings = new MenuItem("Settings");
             settings.addActionListener(e -> settingsFrame.showWindow());
+            MenuItem restartProc = new MenuItem("Restart");
+            restartProc.addActionListener(e -> restart());
             MenuItem close = new MenuItem("Exit");
             close.addActionListener(e -> closeAndExit());
 
             popupMenu.add(settings);
+            popupMenu.add(restartProc);
             popupMenu.add(close);
 
             // 为托盘图标加弹出菜弹
@@ -70,9 +79,29 @@ public class TaskBar {
         }
     }
 
-    public void closeAndExit() {
+    private void closeAndExit() {
         SettingsFrame.setMainExit(true);
         systemTray.remove(trayIcon);
+        SettingsFrame.getInstance().hideFrame();
+        PluginMarket.getInstance().hideWindow();
+        SearchBar.getInstance().closeSearchBar();
+        PluginUtil.unloadAllPlugins();
+        CheckHotKeyUtil.getInstance().stopListen();
+        FileMonitor.INSTANCE.stop_monitor();
+        SQLiteUtil.closeConnection();
+        DaemonUtil.stopDaemon();
+    }
+
+    private void restart() {
+        SettingsFrame.setMainExit(true);
+        systemTray.remove(trayIcon);
+        SettingsFrame.getInstance().hideFrame();
+        PluginMarket.getInstance().hideWindow();
+        SearchBar.getInstance().closeSearchBar();
+        PluginUtil.unloadAllPlugins();
+        CheckHotKeyUtil.getInstance().stopListen();
+        FileMonitor.INSTANCE.stop_monitor();
+        SQLiteUtil.closeConnection();
     }
 
     public void showMessage(String caption, String message) {
