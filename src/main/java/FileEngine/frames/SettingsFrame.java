@@ -586,8 +586,8 @@ public class SettingsFrame {
 
     private void addCheckForUpdateButtonListener() {
         buttonCheckUpdate.addActionListener(e -> {
-            int status = DownloadUtil.getInstance().getDownloadStatus(getName());
-            if (status == Enums.DownloadStatus.DOWNLOAD_DOWNLOADING) {
+            Enums.DownloadStatus_ status = DownloadUtil.getInstance().getDownloadStatus(getName());
+            if (status == Enums.DownloadStatus_.DOWNLOAD_DOWNLOADING) {
                 //取消下载
                 String fileName = getName();
                 DownloadUtil instance = DownloadUtil.getInstance();
@@ -595,7 +595,7 @@ public class SettingsFrame {
                 //复位button
                 buttonCheckUpdate.setText(TranslateUtil.getInstance().getTranslation("Check for update"));
                 buttonCheckUpdate.setEnabled(true);
-            } else if (status == Enums.DownloadStatus.DOWNLOAD_DONE) {
+            } else if (status == Enums.DownloadStatus_.DOWNLOAD_DONE) {
                 buttonCheckUpdate.setEnabled(false);
             } else {
                 //开始下载
@@ -967,14 +967,14 @@ public class SettingsFrame {
             Plugin plugin = PluginUtil.getPluginByIdentifier(pluginIdentifier);
             String pluginFullName = pluginName + ".jar";
             //检查是否已经开始下载
-            int downloadStatus = DownloadUtil.getInstance().getDownloadStatus(pluginFullName);
-            if (downloadStatus == Enums.DownloadStatus.DOWNLOAD_DOWNLOADING) {
+            Enums.DownloadStatus_ downloadStatus = DownloadUtil.getInstance().getDownloadStatus(pluginFullName);
+            if (downloadStatus == Enums.DownloadStatus_.DOWNLOAD_DOWNLOADING) {
                 //取消下载
                 DownloadUtil instance = DownloadUtil.getInstance();
                 instance.cancelDownload(pluginFullName);
                 buttonUpdatePlugin.setText(TranslateUtil.getInstance().getTranslation("Install"));
                 buttonUpdatePlugin.setEnabled(true);
-            } else if (downloadStatus == Enums.DownloadStatus.DOWNLOAD_DONE) {
+            } else if (downloadStatus == Enums.DownloadStatus_.DOWNLOAD_DONE) {
                 buttonUpdatePlugin.setEnabled(false);
             } else {
                 Thread checkUpdateThread = new Thread(() -> {
@@ -1214,12 +1214,12 @@ public class SettingsFrame {
     private void checkDownloadTask(JLabel label, JButton button, String fileName, String originButtonString, String updateSignalFileName) throws InterruptedException, IOException {
         //设置进度显示线程
         double progress;
-        if (DownloadUtil.getInstance().getDownloadStatus(fileName) != Enums.DownloadStatus.DOWNLOAD_NO_TASK) {
+        if (DownloadUtil.getInstance().getDownloadStatus(fileName) != Enums.DownloadStatus_.DOWNLOAD_NO_TASK) {
             progress = DownloadUtil.getInstance().getDownloadProgress(fileName);
             label.setText(TranslateUtil.getInstance().getTranslation("Downloading:") + (int) (progress * 100) + "%");
 
-            int downloadingStatus = DownloadUtil.getInstance().getDownloadStatus(fileName);
-            if (downloadingStatus == Enums.DownloadStatus.DOWNLOAD_DONE) {
+            Enums.DownloadStatus_ downloadingStatus = DownloadUtil.getInstance().getDownloadStatus(fileName);
+            if (downloadingStatus == Enums.DownloadStatus_.DOWNLOAD_DONE) {
                 //下载完成，禁用按钮
                 label.setText(TranslateUtil.getInstance().getTranslation("Download Done"));
                 label.setText(TranslateUtil.getInstance().getTranslation("Downloaded"));
@@ -1228,15 +1228,15 @@ public class SettingsFrame {
                 if (!updatePluginSign.exists()) {
                     updatePluginSign.createNewFile();
                 }
-            } else if (downloadingStatus == Enums.DownloadStatus.DOWNLOAD_ERROR) {
+            } else if (downloadingStatus == Enums.DownloadStatus_.DOWNLOAD_ERROR) {
                 //下载错误，重置button
                 label.setText(TranslateUtil.getInstance().getTranslation("Download failed"));
                 button.setText(TranslateUtil.getInstance().getTranslation(originButtonString));
                 button.setEnabled(true);
-            } else if (downloadingStatus == Enums.DownloadStatus.DOWNLOAD_DOWNLOADING) {
+            } else if (downloadingStatus == Enums.DownloadStatus_.DOWNLOAD_DOWNLOADING) {
                 //正在下载
                 button.setText(TranslateUtil.getInstance().getTranslation("Cancel"));
-            } else if (downloadingStatus == Enums.DownloadStatus.DOWNLOAD_INTERRUPTED) {
+            } else if (downloadingStatus == Enums.DownloadStatus_.DOWNLOAD_INTERRUPTED) {
                 //用户自行中断
                 label.setText("");
                 button.setText(TranslateUtil.getInstance().getTranslation(originButtonString));
@@ -1393,8 +1393,8 @@ public class SettingsFrame {
 
     public static JSONObject getUpdateInfo() throws IOException, InterruptedException {
         DownloadUtil downloadUtil = DownloadUtil.getInstance();
-        int downloadStatus = downloadUtil.getDownloadStatus("version.json");
-        if (downloadStatus != Enums.DownloadStatus.DOWNLOAD_DOWNLOADING) {
+        Enums.DownloadStatus_ downloadStatus = downloadUtil.getDownloadStatus("version.json");
+        if (downloadStatus != Enums.DownloadStatus_.DOWNLOAD_DOWNLOADING) {
             String url = getUpdateUrl();
             if (url != null) {
                 downloadUtil.downLoadFromUrl(url,
@@ -1402,7 +1402,7 @@ public class SettingsFrame {
                 int count = 0;
                 boolean isError = false;
                 //wait for task
-                while (downloadUtil.getDownloadStatus("version.json") != Enums.DownloadStatus.DOWNLOAD_DONE) {
+                while (downloadUtil.getDownloadStatus("version.json") != Enums.DownloadStatus_.DOWNLOAD_DONE) {
                     count++;
                     if (count >= 3) {
                         isError = true;

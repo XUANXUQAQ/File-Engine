@@ -32,8 +32,8 @@ public class DownloadUtil {
             try {
                 while (SettingsFrame.isNotMainExit()) {
                     for (DownloadManager each : DOWNLOAD_MAP.values()) {
-                        int status = each.getDownloadStatus();
-                        if (status == Enums.DownloadStatus.DOWNLOAD_INTERRUPTED || status == Enums.DownloadStatus.DOWNLOAD_ERROR) {
+                        Enums.DownloadStatus_ status = each.getDownloadStatus();
+                        if (status == Enums.DownloadStatus_.DOWNLOAD_INTERRUPTED || status == Enums.DownloadStatus_.DOWNLOAD_ERROR) {
                             deleteTask(each.getFileName());
                         }
                     }
@@ -85,11 +85,11 @@ public class DownloadUtil {
         return DOWNLOAD_MAP.containsKey(fileName);
     }
 
-    public int getDownloadStatus(String fileName) {
+    public Enums.DownloadStatus_ getDownloadStatus(String fileName) {
         if (hasTask(fileName)) {
             return DOWNLOAD_MAP.get(fileName).getDownloadStatus();
         }
-        return Enums.DownloadStatus.DOWNLOAD_NO_TASK;
+        return Enums.DownloadStatus_.DOWNLOAD_NO_TASK;
     }
 
     private void deleteTask(String fileName) {
@@ -113,7 +113,7 @@ public class DownloadUtil {
         private final String fileName;
         private volatile double progress = 0.0;
         private volatile boolean isUserInterrupted = false;
-        private volatile int downloadStatus;
+        private volatile Enums.DownloadStatus_ downloadStatus;
         private Proxy proxy = null;
         private Authenticator authenticator = null;
 
@@ -121,7 +121,7 @@ public class DownloadUtil {
             this.url = url;
             this.fileName = fileName;
             this.localPath = savePath;
-            this.downloadStatus = Enums.DownloadStatus.DOWNLOAD_DOWNLOADING;
+            this.downloadStatus = Enums.DownloadStatus_.DOWNLOAD_DOWNLOADING;
             setProxy(proxyInfo.type, proxyInfo.address, proxyInfo.port, proxyInfo.userName, proxyInfo.password);
         }
 
@@ -203,11 +203,11 @@ public class DownloadUtil {
                 if (isUserInterrupted) {
                     throw new IOException("User Interrupted");
                 }
-                downloadStatus = Enums.DownloadStatus.DOWNLOAD_DONE;
+                downloadStatus = Enums.DownloadStatus_.DOWNLOAD_DONE;
             } catch (IOException | NoSuchAlgorithmException | KeyManagementException e) {
                 e.printStackTrace();
                 if (!"User Interrupted".equals(e.getMessage())) {
-                    downloadStatus = Enums.DownloadStatus.DOWNLOAD_ERROR;
+                    downloadStatus = Enums.DownloadStatus_.DOWNLOAD_ERROR;
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -222,14 +222,14 @@ public class DownloadUtil {
 
         private void setInterrupt() {
             isUserInterrupted = true;
-            downloadStatus = Enums.DownloadStatus.DOWNLOAD_INTERRUPTED;
+            downloadStatus = Enums.DownloadStatus_.DOWNLOAD_INTERRUPTED;
         }
 
         private double getDownloadProgress() {
             return progress;
         }
 
-        private int getDownloadStatus() {
+        private Enums.DownloadStatus_ getDownloadStatus() {
             return downloadStatus;
         }
 
