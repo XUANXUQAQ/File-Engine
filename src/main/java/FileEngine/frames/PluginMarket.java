@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class PluginMarket {
     private static class PluginMarketBuilder {
@@ -178,10 +179,14 @@ public class PluginMarket {
     }
 
     private void addButtonInstallListener() {
+        DownloadUtil instance = DownloadUtil.getInstance();
         buttonInstall.addActionListener(e -> {
             String pluginName = (String) listPlugins.getSelectedValue();
             String pluginFullName = pluginName + ".jar";
-            if (DownloadUtil.getInstance().getDownloadStatus(pluginFullName) == Enums.DownloadStatus.DOWNLOAD_NO_TASK) {
+            int downloadStatus = instance.getDownloadStatus(pluginFullName);
+            if (downloadStatus == Enums.DownloadStatus.DOWNLOAD_NO_TASK ||
+                    downloadStatus == Enums.DownloadStatus.DOWNLOAD_INTERRUPTED ||
+                    downloadStatus == Enums.DownloadStatus.DOWNLOAD_ERROR) {
                 //没有下载过，开始下载
                 JSONObject info = getPluginDetailInfo(pluginName);
                 if (info != null) {
@@ -189,27 +194,12 @@ public class PluginMarket {
                     DownloadUtil.getInstance().downLoadFromUrl(downloadUrl, pluginFullName, "tmp/pluginsUpdate");
                     buttonInstall.setText(TranslateUtil.getInstance().getTranslation("Cancel"));
                 }
-            } else {
+            } else if (downloadStatus == Enums.DownloadStatus.DOWNLOAD_DOWNLOADING) {
                 //取消下载
-                DownloadUtil instance = DownloadUtil.getInstance();
                 instance.cancelDownload(pluginFullName);
-                CachedThreadPool.getInstance().executeTask(() -> {
-                    try {
-                        while (instance.getDownloadStatus(pluginFullName) != Enums.DownloadStatus.DOWNLOAD_INTERRUPTED) {
-                            if (instance.getDownloadStatus(pluginFullName) == Enums.DownloadStatus.DOWNLOAD_ERROR) {
-                                break;
-                            }
-                            if (buttonInstall.isEnabled()) {
-                                buttonInstall.setEnabled(false);
-                            }
-                            TimeUnit.MILLISECONDS.sleep(50);
-                        }
-                    } catch (InterruptedException ignored) {
-                    }
-                    //复位button
-                    buttonInstall.setEnabled(true);
-                    buttonInstall.setText(TranslateUtil.getInstance().getTranslation("Install"));
-                });
+                //复位button
+                buttonInstall.setEnabled(true);
+                buttonInstall.setText(TranslateUtil.getInstance().getTranslation("Install"));
             }
         });
     }
@@ -259,36 +249,59 @@ public class PluginMarket {
     }
 
     private void addSelectPluginOnListListener() {
+        AtomicBoolean isStartGetPluginInfo = new AtomicBoolean(false);
         listPlugins.addMouseListener(new MouseAdapter() {
             @Override
-            public void mouseClicked(MouseEvent e) {
-                String officialSite;
-                String version;
-                ImageIcon icon = null;
-                String author;
-                String pluginName;
-                String description;
-                pluginName = (String) listPlugins.getSelectedValue();
-                JSONObject info = getPluginDetailInfo(pluginName);
-                if (info != null) {
-                    officialSite = info.getString("officialSite");
-                    version = info.getString("version");
-                    String imageUrl = info.getString("icon");
-                    try {
-                        icon = getImageByUrl(imageUrl, pluginName);
-                    } catch (InterruptedException | IOException ignored) {
+            public void mousePressed(MouseEvent e) {
+                buttonInstall.setVisible(false);
+                buttonInstall.setEnabled(false);
+                isStartGetPluginInfo.set(true);
+                labelVersion.setText("");
+                labelOfficialSite.setText("");
+                labelPluginName.setText("");
+                textAreaPluginDescription.setText("");
+                labelAuthor.setText("");
+                labelIcon.setIcon(null);
+            }
+        });
+        CachedThreadPool.getInstance().executeTask(() -> {
+            try {
+                while (SettingsFrame.isNotMainExit()) {
+                    if (isStartGetPluginInfo.get()) {
+                        isStartGetPluginInfo.set(false);
+                        String officialSite;
+                        String version;
+                        ImageIcon icon;
+                        String author;
+                        String pluginName;
+                        String description;
+                        pluginName = (String) listPlugins.getSelectedValue();
+                        if (pluginName != null) {
+                            JSONObject info = getPluginDetailInfo(pluginName);
+                            if (info != null) {
+                                officialSite = info.getString("officialSite");
+                                version = info.getString("version");
+                                String imageUrl = info.getString("icon");
+                                description = info.getString("description");
+                                author = info.getString("author");
+                                labelVersion.setText(TranslateUtil.getInstance().getTranslation("Version") + ":" + version);
+                                labelOfficialSite.setText("<html><a href='" + officialSite + "'><font size=\"4\">" + pluginName + "</font></a></html>");
+                                labelPluginName.setText("<html><body><font size=\"+1\">" + pluginName + "</body></html>");
+                                textAreaPluginDescription.setText(description);
+                                labelAuthor.setText(author);
+                                buttonInstall.setVisible(true);
+                                buttonInstall.setEnabled(true);
+                                try {
+                                    icon = getImageByUrl(imageUrl, pluginName);
+                                    labelIcon.setIcon(icon);
+                                } catch (IOException ignored) {
+                                }
+                            }
+                        }
                     }
-                    description = info.getString("description");
-                    author = info.getString("author");
-                    labelVersion.setText(TranslateUtil.getInstance().getTranslation("Version") + ":" + version);
-                    labelIcon.setIcon(icon);
-                    labelOfficialSite.setText("<html><a href='" + officialSite + "'><font size=\"4\">" + pluginName + "</font></a></html>");
-                    labelPluginName.setText("<html><body><font size=\"+1\">" + pluginName + "</body></html>");
-                    textAreaPluginDescription.setText(description);
-                    labelAuthor.setText(author);
-                    buttonInstall.setVisible(true);
-                    buttonInstall.setEnabled(true);
+                    TimeUnit.MILLISECONDS.sleep(200);
                 }
+            } catch (InterruptedException ignored) {
             }
         });
     }
@@ -365,17 +378,32 @@ public class PluginMarket {
         return null;
     }
 
+    private String getPluginListUrl() {
+        //todo 添加更新服务器地址
+        switch (SettingsFrame.getUpdateAddress()) {
+            case "jsdelivr CDN":
+                return "https://cdn.jsdelivr.net/gh/XUANXUQAQ/File-Engine-Version/plugins.json";
+            case "GitHub":
+                return "https://raw.githubusercontent.com/XUANXUQAQ/File-Engine-Version/master/plugins.json";
+            default:
+                return null;
+        }
+    }
+
     private void initPluginList() {
         try {
-            JSONObject allPlugins = getPluginInfo(
-                    "https://raw.githubusercontent.com/XUANXUQAQ/File-Engine-Version/master/plugins.json",
-                    "allPluginsList.json");
-            if (allPlugins != null) {
-                Set<String> pluginSet = allPlugins.keySet();
-                for (String each : pluginSet) {
-                    NAME_PLUGIN_INFO_URL_MAP.put(each, allPlugins.getString(each));
+            String url = getPluginListUrl();
+            if (url != null) {
+                JSONObject allPlugins = getPluginInfo(
+                        url,
+                        "allPluginsList.json");
+                if (allPlugins != null) {
+                    Set<String> pluginSet = allPlugins.keySet();
+                    for (String each : pluginSet) {
+                        NAME_PLUGIN_INFO_URL_MAP.put(each, allPlugins.getString(each));
+                    }
+                    listPlugins.setListData(pluginSet.toArray());
                 }
-                listPlugins.setListData(pluginSet.toArray());
             }
             buttonInstall.setEnabled(false);
             buttonInstall.setVisible(false);

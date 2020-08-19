@@ -209,7 +209,9 @@ public class MainClass {
                 taskBar.showMessage(translateUtil.getTranslation("Warning"), repeatPlugins + "\n" + translateUtil.getTranslation("Duplicate plugin, please delete it in plugins folder"));
             }
 
-            DaemonUtil.startDaemon(new File("").getAbsolutePath());
+            if (!SettingsFrame.isDebug()) {
+                DaemonUtil.startDaemon(new File("").getAbsolutePath());
+            }
 
             while (SettingsFrame.isNotMainExit()) {
                 // 主循环开始

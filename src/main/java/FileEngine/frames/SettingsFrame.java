@@ -65,6 +65,7 @@ public class SettingsFrame {
     private static volatile int searchBarColor;
     private static volatile boolean isStartup;
     private static SearchBar searchBar;
+    private static String updateAddress;
     private final JFrame frame;
     private static ImageIcon frameIcon;
     private JTextField textFieldUpdateInterval;
@@ -201,6 +202,7 @@ public class SettingsFrame {
     private JLabel placeHolder5;
     private JLabel placeHolder6;
     private JLabel placeHolder7;
+    private JComboBox<String> chooseUpdateAddress;
 
     private static class SettingsFrameBuilder {
         private static final SettingsFrame instance = new SettingsFrame();
@@ -294,6 +296,10 @@ public class SettingsFrame {
 
     public static int getLabelColor() {
         return labelColor;
+    }
+
+    public static String getUpdateAddress() {
+        return updateAddress;
     }
 
     public static int getDefaultBackgroundColor() {
@@ -586,24 +592,11 @@ public class SettingsFrame {
                 String fileName = getName();
                 DownloadUtil instance = DownloadUtil.getInstance();
                 instance.cancelDownload(fileName);
-                CachedThreadPool.getInstance().executeTask(() -> {
-                    //等待下载取消
-                    try {
-                        while (instance.getDownloadStatus(fileName) != Enums.DownloadStatus.DOWNLOAD_INTERRUPTED) {
-                            if (instance.getDownloadStatus(fileName) == Enums.DownloadStatus.DOWNLOAD_ERROR) {
-                                break;
-                            }
-                            if (buttonCheckUpdate.isEnabled()) {
-                                buttonCheckUpdate.setEnabled(false);
-                            }
-                            TimeUnit.MILLISECONDS.sleep(50);
-                        }
-                    } catch (InterruptedException ignored) {
-                    }
-                    //复位button
-                    buttonCheckUpdate.setText(TranslateUtil.getInstance().getTranslation("Check for update"));
-                    buttonCheckUpdate.setEnabled(true);
-                });
+                //复位button
+                buttonCheckUpdate.setText(TranslateUtil.getInstance().getTranslation("Check for update"));
+                buttonCheckUpdate.setEnabled(true);
+            } else if (status == Enums.DownloadStatus.DOWNLOAD_DONE) {
+                buttonCheckUpdate.setEnabled(false);
             } else {
                 //开始下载
                 JSONObject updateInfo;
@@ -973,33 +966,40 @@ public class SettingsFrame {
             String pluginIdentifier = PluginUtil.getIdentifierByName(pluginName);
             Plugin plugin = PluginUtil.getPluginByIdentifier(pluginIdentifier);
             String pluginFullName = pluginName + ".jar";
-            Thread checkUpdateThread = new Thread(() -> {
-                startCheckTime.set(System.currentTimeMillis());
-                isVersionLatest.set(plugin.isLatest());
-                if (!Thread.interrupted()) {
-                    startCheckTime.set(0x100L); //表示检查成功
-                }
-            });
-            CachedThreadPool.getInstance().executeTask(checkUpdateThread);
-            //等待获取插件更新信息
-            try {
-                while (startCheckTime.get() != 0x100L) {
-                    TimeUnit.MILLISECONDS.sleep(200);
-                    if (System.currentTimeMillis() - startCheckTime.get() > 5000L && startCheckTime.get() != 0x100L) {
-                        checkUpdateThread.interrupt();
-                        JOptionPane.showMessageDialog(frame, TranslateUtil.getInstance().getTranslation("Check update failed"));
-                        return;
-                    }
-                }
-            } catch (InterruptedException ignored) {
-            }
-            if (isVersionLatest.get()) {
-                JOptionPane.showMessageDialog(frame, TranslateUtil.getInstance().getTranslation("The current Version is the latest."));
+            //检查是否已经开始下载
+            int downloadStatus = DownloadUtil.getInstance().getDownloadStatus(pluginFullName);
+            if (downloadStatus == Enums.DownloadStatus.DOWNLOAD_DOWNLOADING) {
+                //取消下载
+                DownloadUtil instance = DownloadUtil.getInstance();
+                instance.cancelDownload(pluginFullName);
+                buttonUpdatePlugin.setText(TranslateUtil.getInstance().getTranslation("Install"));
+                buttonUpdatePlugin.setEnabled(true);
+            } else if (downloadStatus == Enums.DownloadStatus.DOWNLOAD_DONE) {
+                buttonUpdatePlugin.setEnabled(false);
             } else {
-                //检查是否已经开始下载
-                boolean isPluginUpdating = DownloadUtil.getInstance().getDownloadStatus(pluginFullName) != Enums.DownloadStatus.DOWNLOAD_NO_TASK;
-
-                if (!isPluginUpdating) {
+                Thread checkUpdateThread = new Thread(() -> {
+                    startCheckTime.set(System.currentTimeMillis());
+                    isVersionLatest.set(plugin.isLatest());
+                    if (!Thread.interrupted()) {
+                        startCheckTime.set(0x100L); //表示检查成功
+                    }
+                });
+                CachedThreadPool.getInstance().executeTask(checkUpdateThread);
+                //等待获取插件更新信息
+                try {
+                    while (startCheckTime.get() != 0x100L) {
+                        TimeUnit.MILLISECONDS.sleep(200);
+                        if (System.currentTimeMillis() - startCheckTime.get() > 5000L && startCheckTime.get() != 0x100L) {
+                            checkUpdateThread.interrupt();
+                            JOptionPane.showMessageDialog(frame, TranslateUtil.getInstance().getTranslation("Check update failed"));
+                            return;
+                        }
+                    }
+                } catch (InterruptedException ignored) {
+                }
+                if (isVersionLatest.get()) {
+                    JOptionPane.showMessageDialog(frame, TranslateUtil.getInstance().getTranslation("The current Version is the latest."));
+                } else {
                     int ret = JOptionPane.showConfirmDialog(frame, TranslateUtil.getInstance().getTranslation("New version available, do you want to update?"));
                     if (ret == 0) {
                         //开始下载
@@ -1007,28 +1007,6 @@ public class SettingsFrame {
                         DownloadUtil.getInstance().downLoadFromUrl(url, pluginFullName, "tmp/pluginsUpdate");
                         buttonUpdatePlugin.setText(TranslateUtil.getInstance().getTranslation("Cancel"));
                     }
-                } else {
-                    //取消下载
-                    DownloadUtil instance = DownloadUtil.getInstance();
-                    instance.cancelDownload(pluginFullName);
-                    CachedThreadPool.getInstance().executeTask(() -> {
-                        try {
-                            //等待下载取消
-                            while (instance.getDownloadStatus(pluginFullName) != Enums.DownloadStatus.DOWNLOAD_INTERRUPTED) {
-                                if (instance.getDownloadStatus(pluginFullName) == Enums.DownloadStatus.DOWNLOAD_ERROR) {
-                                    break;
-                                }
-                                if (buttonUpdatePlugin.isEnabled()) {
-                                    buttonUpdatePlugin.setEnabled(false);
-                                }
-                                TimeUnit.MILLISECONDS.sleep(50);
-                            }
-                            //复位button
-                            buttonUpdatePlugin.setText(TranslateUtil.getInstance().getTranslation("Install"));
-                            buttonUpdatePlugin.setEnabled(true);
-                        } catch (InterruptedException ignored) {
-                        }
-                    });
                 }
             }
         });
@@ -1171,6 +1149,8 @@ public class SettingsFrame {
             }
         });
 
+        addUpdateAddressToComboBoxAndSetChosen();
+
         setAllSettings();
 
         translate();
@@ -1222,6 +1202,13 @@ public class SettingsFrame {
         initGUI();
 
         initThreadPool();
+    }
+
+    private void addUpdateAddressToComboBoxAndSetChosen() {
+        //todo 添加更新服务器地址
+        chooseUpdateAddress.addItem("jsdelivr CDN");
+        chooseUpdateAddress.addItem("GitHub");
+        chooseUpdateAddress.setSelectedItem(updateAddress);
     }
 
     private void checkDownloadTask(JLabel label, JButton button, String fileName, String originButtonString, String updateSignalFileName) throws InterruptedException, IOException {
@@ -1392,34 +1379,49 @@ public class SettingsFrame {
         return false;
     }
 
+    private static String getUpdateUrl() {
+        //todo 添加更新服务器地址
+        switch (updateAddress) {
+            case "jsdelivr CDN":
+                return "https://cdn.jsdelivr.net/gh/XUANXUQAQ/File-Engine-Version/version.json";
+            case "GitHub":
+                return "https://raw.githubusercontent.com/XUANXUQAQ/File-Engine-Version/master/version.json";
+            default:
+                return null;
+        }
+    }
+
     public static JSONObject getUpdateInfo() throws IOException, InterruptedException {
         DownloadUtil downloadUtil = DownloadUtil.getInstance();
         int downloadStatus = downloadUtil.getDownloadStatus("version.json");
         if (downloadStatus != Enums.DownloadStatus.DOWNLOAD_DOWNLOADING) {
-            downloadUtil.downLoadFromUrl("https://raw.githubusercontent.com/XUANXUQAQ/File-Engine-Version/master/version.json",
-                    "version.json", "tmp");
-            int count = 0;
-            boolean isError = false;
-            //wait for task
-            while (downloadUtil.getDownloadStatus("version.json") != Enums.DownloadStatus.DOWNLOAD_DONE) {
-                count++;
-                if (count >= 3) {
-                    isError = true;
-                    break;
+            String url = getUpdateUrl();
+            if (url != null) {
+                downloadUtil.downLoadFromUrl(url,
+                        "version.json", "tmp");
+                int count = 0;
+                boolean isError = false;
+                //wait for task
+                while (downloadUtil.getDownloadStatus("version.json") != Enums.DownloadStatus.DOWNLOAD_DONE) {
+                    count++;
+                    if (count >= 3) {
+                        isError = true;
+                        break;
+                    }
+                    TimeUnit.SECONDS.sleep(1);
                 }
-                TimeUnit.SECONDS.sleep(1);
-            }
-            if (isError) {
-                return null;
-            }
-            String eachLine;
-            StringBuilder strBuilder = new StringBuilder();
-            try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream("tmp/version.json"), StandardCharsets.UTF_8))) {
-                while ((eachLine = br.readLine()) != null) {
-                    strBuilder.append(eachLine);
+                if (isError) {
+                    throw new IOException("Download failed.");
                 }
+                String eachLine;
+                StringBuilder strBuilder = new StringBuilder();
+                try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream("tmp/version.json"), StandardCharsets.UTF_8))) {
+                    while ((eachLine = br.readLine()) != null) {
+                        strBuilder.append(eachLine);
+                    }
+                }
+                return JSONObject.parseObject(strBuilder.toString());
             }
-            return JSONObject.parseObject(strBuilder.toString());
         }
         return null;
     }
@@ -1433,6 +1435,11 @@ public class SettingsFrame {
             }
             JSONObject settingsInJson = JSON.parseObject(result.toString());
             isStartup = hasStartup();
+            if (settingsInJson.containsKey("updateAddress")) {
+                updateAddress = settingsInJson.getString("updateAddress");
+            } else {
+                updateAddress = "jsdelivr CDN";
+            }
             if (settingsInJson.containsKey("cacheNumLimit")) {
                 cacheNumLimit = settingsInJson.getInteger("cacheNumLimit");
             } else {
@@ -1568,6 +1575,7 @@ public class SettingsFrame {
             isStartup = false;
             cacheNumLimit = 1000;
             hotkey = "Ctrl + Alt + K";
+            updateAddress = "jsdelivr CDN";
             priorityFolder = "";
             searchDepth = 8;
             ignorePath = "C:\\Windows,";
@@ -1787,6 +1795,7 @@ public class SettingsFrame {
             proxyType = PROXY_DIRECT;
         }
 
+        updateAddress = (String) chooseUpdateAddress.getSelectedItem();
         priorityFolder = textFieldPriorityFolder.getText();
         hotkey = textFieldHotkey.getText();
         hotKeyListener.changeHotKey(hotkey);
@@ -1870,6 +1879,7 @@ public class SettingsFrame {
         allSettings.put("proxyUserName", proxyUserName);
         allSettings.put("proxyPassword", proxyPassword);
         allSettings.put("proxyType", proxyType);
+        allSettings.put("updateAddress", updateAddress);
         try (BufferedWriter buffW = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(settings), StandardCharsets.UTF_8))) {
             String format = JSON.toJSONString(allSettings, SerializerFeature.PrettyFormat, SerializerFeature.WriteMapNullValue, SerializerFeature.WriteDateUseDateFormat);
             buffW.write(format);
