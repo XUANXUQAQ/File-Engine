@@ -117,7 +117,7 @@ public class DownloadUtil {
         private Proxy proxy = null;
         private Authenticator authenticator = null;
 
-        public DownloadManager(String url, String fileName, String savePath, SettingsFrame.ProxyInfo proxyInfo) {
+        private DownloadManager(String url, String fileName, String savePath, SettingsFrame.ProxyInfo proxyInfo) {
             this.url = url;
             this.fileName = fileName;
             this.localPath = savePath;
@@ -125,13 +125,13 @@ public class DownloadUtil {
             setProxy(proxyInfo.type, proxyInfo.address, proxyInfo.port, proxyInfo.userName, proxyInfo.password);
         }
 
-        public String getFileName() {
+        private String getFileName() {
             return fileName;
         }
 
 
         // trusting all certificate
-        public void doTrustToCertificates() throws Exception {
+        private void doTrustToCertificates() throws Exception {
             Security.addProvider(new com.sun.net.ssl.internal.ssl.Provider());
             TrustManager[] trustAllCerts = new TrustManager[]{
                     new X509TrustManager() {
@@ -160,7 +160,7 @@ public class DownloadUtil {
             System.setProperty("https.protocols", "TLSv1.2,TLSv1.1,SSLv3");
         }
 
-        public void download() {
+        private void download() {
             try {
                 System.setProperty("http.keepAlive", "false");
                 URL urlAddress = new URL(url);
@@ -206,9 +206,7 @@ public class DownloadUtil {
                 downloadStatus = Enums.DownloadStatus.DOWNLOAD_DONE;
             } catch (IOException | NoSuchAlgorithmException | KeyManagementException e) {
                 e.printStackTrace();
-                if ("User Interrupted".equals(e.getMessage())) {
-                    downloadStatus = Enums.DownloadStatus.DOWNLOAD_INTERRUPTED;
-                } else {
+                if (!"User Interrupted".equals(e.getMessage())) {
                     downloadStatus = Enums.DownloadStatus.DOWNLOAD_ERROR;
                 }
             } catch (Exception e) {
@@ -222,15 +220,16 @@ public class DownloadUtil {
             return b1.divide(b2, 2, BigDecimal.ROUND_HALF_UP).doubleValue();
         }
 
-        public void setInterrupt() {
+        private void setInterrupt() {
             isUserInterrupted = true;
+            downloadStatus = Enums.DownloadStatus.DOWNLOAD_INTERRUPTED;
         }
 
-        public double getDownloadProgress() {
+        private double getDownloadProgress() {
             return progress;
         }
 
-        public int getDownloadStatus() {
+        private int getDownloadStatus() {
             return downloadStatus;
         }
 
