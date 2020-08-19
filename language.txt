@@ -120,3 +120,4 @@ Optimized=
 Settings=
 Exit=
 Text copied to clipboard=
+Choose update address=
