@@ -41,6 +41,8 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Pattern;
 
 
@@ -94,6 +96,7 @@ public class SearchBar {
     private final AtomicInteger resultCount;
     private final AtomicInteger currentLabelSelectedPosition;
     private volatile Plugin currentUsingPlugin;
+    private final Lock repaintLock = new ReentrantLock();
 
     private static class SearchBarBuilder {
         private static final SearchBar instance = new SearchBar();
@@ -269,7 +272,7 @@ public class SearchBar {
                     if (!(resultCount.get() == 0)) {
                         if (runningMode.get() != Enums.RunningMode.PLUGIN_MODE) {
                             if (showingMode.get() != Enums.ShowingSearchBarMode.EXPLORER_ATTACH) {
-                                searchBar.setVisible(false);
+                                setVisible(false);
                             }
                             String res = listResults.get(labelCount.get());
                             if (runningMode.get() == Enums.RunningMode.NORMAL_MODE) {
@@ -440,7 +443,7 @@ public class SearchBar {
                         if (runningMode.get() != Enums.RunningMode.PLUGIN_MODE) {
                             //enter被点击
                             if (showingMode.get() != Enums.ShowingSearchBarMode.EXPLORER_ATTACH) {
-                                searchBar.setVisible(false);
+                                setVisible(false);
                             }
                             if (!(resultCount.get() == 0)) {
                                 String res = listResults.get(labelCount.get());
@@ -1937,7 +1940,7 @@ public class SearchBar {
     private void switchToNormalMode() {
         if (showingMode.get() != Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
             GetHandle.INSTANCE.resetMouseStatus();
-            searchBar.setVisible(false);
+            setVisible(false);
             Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize(); // 获取屏幕大小
             int height = screenSize.height;
             int searchBarHeight = (int) (height * 0.5);
@@ -2242,7 +2245,9 @@ public class SearchBar {
             try {
                 while (SettingsFrame.isNotMainExit()) {
                     if (isUsing) {
+                        repaintLock.lock();
                         searchBar.repaint();
+                        repaintLock.unlock();
                     }
                     TimeUnit.MILLISECONDS.sleep(250);
                 }
@@ -2952,7 +2957,7 @@ public class SearchBar {
 
     public void showSearchbar(boolean isGrabFocus) {
         searchBar.setAutoRequestFocus(isGrabFocus);
-        searchBar.setVisible(true);
+        setVisible(true);
         if (isGrabFocus) {
             searchBar.toFront();
             searchBar.requestFocusInWindow();
@@ -3085,7 +3090,6 @@ public class SearchBar {
             } catch (IndexOutOfBoundsException ignored) {
             }
         }
-
     }
 
     private void clearALabel(JLabel label) {
@@ -3315,9 +3319,15 @@ public class SearchBar {
         }
     }
 
+    private void setVisible(boolean b) {
+        repaintLock.lock();
+        searchBar.setVisible(b);
+        repaintLock.unlock();
+    }
+
     public void closeSearchBar() {
         if (isVisible()) {
-            searchBar.setVisible(false);
+            setVisible(false);
         }
         clearLabel();
         clearTextFieldText();
