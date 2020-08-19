@@ -120,3 +120,4 @@ Optimized=最適化が完了しました
 Settings=セットアップ
 Exit=脱落
 Text copied to clipboard=テキストをクリップボードにコピーしました
+Choose update address=更新アドレスを選択

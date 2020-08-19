@@ -120,3 +120,4 @@ Optimized=優化完成
 Settings=設置
 Exit=退出
 Text copied to clipboard=文本已復製到剪貼板
+Choose update address=選擇更新地址

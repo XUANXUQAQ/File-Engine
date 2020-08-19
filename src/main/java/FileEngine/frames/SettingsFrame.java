@@ -203,6 +203,7 @@ public class SettingsFrame {
     private JLabel placeHolder6;
     private JLabel placeHolder7;
     private JComboBox<String> chooseUpdateAddress;
+    private JLabel chooseUpdateAddressLabel;
 
     private static class SettingsFrameBuilder {
         private static final SettingsFrame instance = new SettingsFrame();
@@ -1337,6 +1338,7 @@ public class SettingsFrame {
         labelPassword.setText(TranslateUtil.getInstance().getTranslation("Password"));
         labelProxyTip.setText(TranslateUtil.getInstance().getTranslation("If you need a proxy to access the Internet, You can add a proxy here."));
         frame.setTitle(TranslateUtil.getInstance().getTranslation("Settings"));
+        chooseUpdateAddressLabel.setText(TranslateUtil.getInstance().getTranslation("Choose update address"));
     }
 
     public static void setMainExit(boolean b) {
