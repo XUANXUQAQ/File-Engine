@@ -1107,6 +1107,7 @@ public class SettingsFrame {
         textFieldPort.setText(String.valueOf(proxyPort));
         textFieldUserName.setText(proxyUserName);
         textFieldPassword.setText(proxyPassword);
+        chooseUpdateAddress.setSelectedItem(updateAddress);
     }
 
     private void selectProxyType() {
@@ -1149,7 +1150,7 @@ public class SettingsFrame {
             }
         });
 
-        addUpdateAddressToComboBoxAndSetChosen();
+        addUpdateAddressToComboBox();
 
         setAllSettings();
 
@@ -1204,11 +1205,10 @@ public class SettingsFrame {
         initThreadPool();
     }
 
-    private void addUpdateAddressToComboBoxAndSetChosen() {
+    private void addUpdateAddressToComboBox() {
         //todo 添加更新服务器地址
         chooseUpdateAddress.addItem("jsdelivr CDN");
         chooseUpdateAddress.addItem("GitHub");
-        chooseUpdateAddress.setSelectedItem(updateAddress);
     }
 
     private void checkDownloadTask(JLabel label, JButton button, String fileName, String originButtonString, String updateSignalFileName) throws InterruptedException, IOException {
