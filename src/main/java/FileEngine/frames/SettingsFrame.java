@@ -32,7 +32,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 
 public class SettingsFrame {
-    public static final String version = "2.6"; //TODO 更改版本号
+    public static final String version = "2.7"; //TODO 更改版本号
     private static volatile boolean mainExit = false;
     private static volatile int cacheNumLimit;
     private static volatile String hotkey;
