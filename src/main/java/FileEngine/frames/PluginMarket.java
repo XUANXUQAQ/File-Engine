@@ -277,6 +277,10 @@ public class PluginMarket {
                         String description;
                         pluginName = (String) listPlugins.getSelectedValue();
                         if (pluginName != null) {
+                            if (isStartGetPluginInfo.get()) {
+                                //用户重新点击
+                                continue;
+                            }
                             JSONObject info = getPluginDetailInfo(pluginName);
                             if (info != null) {
                                 officialSite = info.getString("officialSite");
@@ -291,10 +295,15 @@ public class PluginMarket {
                                 labelAuthor.setText(author);
                                 buttonInstall.setVisible(true);
                                 buttonInstall.setEnabled(true);
-                                try {
-                                    icon = getImageByUrl(imageUrl, pluginName);
-                                    labelIcon.setIcon(icon);
-                                } catch (IOException ignored) {
+                                if (isStartGetPluginInfo.get()) {
+                                    //用户重新点击
+                                    continue;
+                                } else {
+                                    try {
+                                        icon = getImageByUrl(imageUrl, pluginName);
+                                        labelIcon.setIcon(icon);
+                                    } catch (IOException ignored) {
+                                    }
                                 }
                             }
                         }
