@@ -1,10 +1,7 @@
 package FileEngine;
 
 import FileEngine.SQLiteConfig.SQLiteUtil;
-import FileEngine.checkHotkey.CheckHotKeyUtil;
-import FileEngine.dllInterface.FileMonitor;
-import FileEngine.frames.PluginMarket;
-import FileEngine.frames.SearchBar;
+import FileEngine.daemon.DaemonUtil;
 import FileEngine.frames.SettingsFrame;
 import FileEngine.frames.TaskBar;
 import FileEngine.md5.Md5Util;
@@ -36,6 +33,7 @@ public class MainClass {
     private static final String SQLITE3_64_MD_5 = "658c71b8b93ba4eb5b4936f46a112449";
     private static final String UPDATER_BAT_64_MD_5 = "357d7cc1cf023cb6c90f73926c6f2f55";
     private static final String GET_HANDLE_64_MD_5 = "9f13bb1e2b10d8c1a2ca6f42f2a21d01";
+    private static final String DAEMON_PROCESS_64_MD_5 = "797826e9b5c4ca9ccc3fb90520e5d805";
 
     private static final String SHORTCUT_GENERATOR_MD_5 = "fa4e26f99f3dcd58d827828c411ea5d7";
 
@@ -211,17 +209,13 @@ public class MainClass {
                 taskBar.showMessage(translateUtil.getTranslation("Warning"), repeatPlugins + "\n" + translateUtil.getTranslation("Duplicate plugin, please delete it in plugins folder"));
             }
 
+            DaemonUtil.startDaemon(new File("").getAbsolutePath());
+
             while (SettingsFrame.isNotMainExit()) {
                 // 主循环开始
                 TimeUnit.MILLISECONDS.sleep(50);
             }
-            SettingsFrame.getInstance().hideFrame();
-            PluginMarket.getInstance().hideWindow();
-            SearchBar.getInstance().closeSearchBar();
-            PluginUtil.unloadAllPlugins();
-            CheckHotKeyUtil.getInstance().stopListen();
-            FileMonitor.INSTANCE.stop_monitor();
-            SQLiteUtil.closeConnection();
+            //确保关闭所有资源
             TimeUnit.SECONDS.sleep(8);
             System.exit(0);
         } catch (Exception ignored) {
@@ -239,6 +233,7 @@ public class MainClass {
         copyOrIgnoreFile("user/sqlite3.dll", "/win32-x86-64/sqlite3.dll", SQLITE3_64_MD_5);
         copyOrIgnoreFile("user/shortcutGenerator.vbs", "/shortcutGenerator.vbs", SHORTCUT_GENERATOR_MD_5);
         copyOrIgnoreFile("user/getHandle.dll", "/win32-x86-64/getHandle.dll", GET_HANDLE_64_MD_5);
+        copyOrIgnoreFile("user/daemonProcess.exe", "/win32-x86-64/daemonProcess.exe", DAEMON_PROCESS_64_MD_5);
     }
 
     private static void copyOrIgnoreFile(String path, String rootPath, String md5) {
