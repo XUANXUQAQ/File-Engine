@@ -121,3 +121,7 @@ Settings=
 Exit=
 Text copied to clipboard=
 Choose update address=
+Clear the recycle bin=
+Update file index=
+View help=
+View Version=

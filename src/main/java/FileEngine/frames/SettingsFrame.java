@@ -25,6 +25,7 @@ import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.sql.Statement;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -54,7 +55,7 @@ public class SettingsFrame {
     private static volatile int proxyType;
     private static File tmp;
     private static File settings;
-    private static HashSet<String> cmdSet;
+    private static LinkedHashSet<String> cmdSet;
     private static volatile int tmp_openLastFolderKeyCode;
     private static volatile int tmp_runAsAdminKeyCode;
     private static CheckHotKeyUtil hotKeyListener;
@@ -1123,7 +1124,7 @@ public class SettingsFrame {
         frame = new JFrame("Settings");
         tmp = new File("tmp");
         settings = new File("user/settings.json");
-        cmdSet = new HashSet<>();
+        cmdSet = new LinkedHashSet<>();
         frameIcon = new ImageIcon(SettingsFrame.class.getResource("/icons/frame.png"));
         ButtonGroup proxyButtonGroup = new ButtonGroup();
         proxyButtonGroup.add(radioButtonNoProxy);
