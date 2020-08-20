@@ -125,3 +125,4 @@ Clear the recycle bin=清空回收站
 Update file index=更新文件索引
 View help=查看帮助
 View Version=查看版本
+Failed to obtain plugin information=获取插件信息失败
