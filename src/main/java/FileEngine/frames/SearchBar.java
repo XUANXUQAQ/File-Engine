@@ -1908,6 +1908,9 @@ public class SearchBar {
 
     private void switchToNormalMode() {
         if (showingMode.get() != Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
+            if (SettingsFrame.isLoseFocusClose()) {
+                closeSearchBar();
+            }
             GetHandle.INSTANCE.resetMouseStatus();
             setVisible(false);
             Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize(); // 获取屏幕大小
@@ -1926,9 +1929,6 @@ public class SearchBar {
             label7.setFont(labelFont);
             label8.setFont(labelFont);
             showingMode.set(Enums.ShowingSearchBarMode.NORMAL_SHOWING);
-            if (SettingsFrame.isLoseFocusClose()) {
-                detectShowingModeAndClose();
-            }
         }
     }
 
