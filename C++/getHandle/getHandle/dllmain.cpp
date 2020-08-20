@@ -25,10 +25,6 @@ volatile long width;
 volatile long height;
 int toolbar_click_x;
 int toolbar_click_y;
-volatile int searchBarX;
-volatile int searchBarY;
-volatile int searchBarWidth;
-volatile int searchBarHeight;
 volatile bool is_click_not_explorer_or_searchbar;
 
 struct handle_data {
@@ -46,6 +42,7 @@ BOOL CALLBACK findToolbar(HWND hwndChild, LPARAM lParam);
 bool isClickNotExplorerOrSearchBarOrSwitchTask();
 void _checkMouseStatus();
 bool isMouseClickedOrSwitchTaskPressed();
+bool isSearchBarWindow(HWND& hd);
 extern "C" __declspec(dllexport) bool isDialogNotExist();
 extern "C" __declspec(dllexport) void start();
 extern "C" __declspec(dllexport) void stop();
@@ -56,17 +53,8 @@ extern "C" __declspec(dllexport) long getWidth();
 extern "C" __declspec(dllexport) long getHeight();
 extern "C" __declspec(dllexport) int get_toolbar_click_x();
 extern "C" __declspec(dllexport) int get_toolbar_click_y(); 
-extern "C" __declspec(dllexport) void set_searchBar(int x, int y, int width, int height);
 extern "C" __declspec(dllexport) bool isExplorerAndSearchbarNotFocused();
 extern "C" __declspec(dllexport) void resetMouseStatus();
-
-__declspec(dllexport) void set_searchBar(int x, int y, int width, int height)
-{
-    searchBarX = x;
-    searchBarY = y;
-    searchBarWidth = width;
-    searchBarHeight = height;
-}
 
 __declspec(dllexport) bool isExplorerAndSearchbarNotFocused()
 {
@@ -91,21 +79,18 @@ bool isClickNotExplorerOrSearchBarOrSwitchTask()
             else
             {
                 //检查是否点击搜索框
-                if (point.x >= searchBarX &&
-                    point.x <= (searchBarX + searchBarWidth) &&
-                    point.y >= searchBarY &&
-                    point.y <= (searchBarY + searchBarHeight))
-                {
-                    return false;
-                }
-                else
-                {
-                    return true;
-                }
+                return !(isSearchBarWindow(hd));
             }
         }
     }
     return false;
+}
+
+bool isSearchBarWindow(HWND& hd)
+{
+    char title[200];
+    GetWindowTextA(hd, title, 200);
+    return strcmp(title, "File-Engine-SearchBar") == 0;
 }
 
 bool isMouseClickedOrSwitchTaskPressed()
@@ -183,24 +168,22 @@ BOOL CALLBACK findToolbar(HWND hwndChild, LPARAM lParam)
 
 bool isExplorerWindow(HWND& hwnd)
 {
+    RECT windowRect;
     if (IsWindowEnabled(hwnd))
     {
         char className[200];
         GetClassNameA(hwnd, className, 200);
         string WindowClassName(className);
         transform(WindowClassName.begin(), WindowClassName.end(), WindowClassName.begin(), ::tolower);
-        return WindowClassName.find("cabinet") != string::npos || 
+        return (WindowClassName.find("cabinet") != string::npos ||
             WindowClassName.find("directuihwnd") != string::npos ||
             WindowClassName.find("systreeview") != string::npos ||
             WindowClassName.find("universalsearchband") != string::npos ||
             WindowClassName.find("address band root") != string::npos ||
             WindowClassName.find("netuihwnd") != string::npos ||
-            WindowClassName.find("rebarwindow") != string::npos;
+            WindowClassName.find("rebarwindow") != string::npos);
     }
-    else
-    {
-        return false;
-    }
+    return false;
 }
 
 __declspec(dllexport) void start()
@@ -277,7 +260,6 @@ void _start()
         if (isExplorerWindow(hwnd) || isFileChooserWindow(hwnd))
         {
             getWindowRect(hwnd, &windowRect);
-            setClickPos(hwnd);
             x = windowRect.left;
             y = windowRect.top;
             width = windowRect.right - windowRect.left;
@@ -285,8 +267,9 @@ void _start()
             if (height < 200 || width < 200 || x < 50 || y < 50) {
                 isStart = false;
             }
-            else 
+            else
             {
+                setClickPos(hwnd);
                 isStart = true;
             }
         }
