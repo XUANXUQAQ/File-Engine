@@ -14,6 +14,10 @@ public class GetIconUtil {
     private static ImageIcon folderImageIcon;
     private static ImageIcon txtImageIcon;
     private static ImageIcon vbsImageIcon;
+    private static ImageIcon helpIcon;
+    private static ImageIcon updateIcon;
+    private static ImageIcon blankIcon;
+    private static ImageIcon recycleBin;
     private volatile boolean isInitialized = false;
 
     private static class GetIconUtilBuilder {
@@ -34,11 +38,38 @@ public class GetIconUtil {
     }
 
     private void initIconCache(int width, int height) {
-        //添加其他常量图标  changeIcon((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(new File("")), width, height);
+        //添加其他常量图标  changeIcon((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(new File("")), width, height); 获取应用程序时使用
+        //或者 changeIcon(new ImageIcon(GetIconUtil.class.getResource("")), width, height); 本地图标时使用
         dllImageIcon = changeIcon((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(new File("C:\\Windows\\System32\\sysmain.dll")), width, height);
         folderImageIcon = changeIcon((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(new File("C:\\Windows")), width, height);
         txtImageIcon = changeIcon((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(new File("user\\cmds.txt")), width, height);
         vbsImageIcon = changeIcon((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(new File("user\\shortcutGenerator.vbs")), width, height);
+        blankIcon = changeIcon(new ImageIcon(GetIconUtil.class.getResource("/icons/blank.png")), width, height);
+        recycleBin = changeIcon(new ImageIcon(GetIconUtil.class.getResource("/icons/recyclebin.png")), width, height);
+        updateIcon = changeIcon(new ImageIcon(GetIconUtil.class.getResource("/icons/update.png")), width, height);
+        helpIcon = changeIcon(new ImageIcon(GetIconUtil.class.getResource("/icons/help.png")), width, height);
+    }
+
+    public ImageIcon getCommandIcon(String commandName, int width, int height) throws NullPointerException {
+        if (!isInitialized) {
+            initIconCache(width, height);
+            isInitialized = true;
+        }
+        if (commandName == null || commandName.isEmpty()) {
+            throw new NullPointerException("No icon matched with command");
+        }
+        switch (commandName) {
+            case "clearbin":
+                return recycleBin;
+            case "update":
+                return updateIcon;
+            case "help":
+                return helpIcon;
+            case "version":
+                return blankIcon;
+            default:
+                throw new NullPointerException("No icon matched with command");
+        }
     }
 
     public ImageIcon getBigIcon(String path, int width, int height) {
@@ -47,7 +78,7 @@ public class GetIconUtil {
             isInitialized = true;
         }
         if (path == null || path.isEmpty()) {
-            return null;
+            return blankIcon;
         }
         File f = new File(path);
         if (f.exists()) {
@@ -68,7 +99,7 @@ public class GetIconUtil {
                 return changeIcon((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(f), width, height);
             }
         } else {
-            return null;
+            return blankIcon;
         }
     }
 }

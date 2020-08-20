@@ -121,3 +121,7 @@ Settings=セットアップ
 Exit=脱落
 Text copied to clipboard=テキストをクリップボードにコピーしました
 Choose update address=更新アドレスを選択
+Clear the recycle bin=ごみ箱を空にします
+Update file index=ファイルインデックスを更新する
+View help=ヘルプを表示
+View Version=バージョンを表示

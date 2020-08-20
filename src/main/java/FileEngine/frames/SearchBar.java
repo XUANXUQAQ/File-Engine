@@ -35,6 +35,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -56,7 +57,6 @@ public class SearchBar {
     private static volatile boolean isCopyPathPressed = false;
     private static volatile boolean startSignal = false;
     private static volatile boolean isUserPressed = false;
-    private static volatile boolean isExplorerWindowNotExist = false;
     private static Border border;
     private final JFrame searchBar;
     private final JLabel label1;
@@ -76,7 +76,7 @@ public class SearchBar {
     private volatile long startTime = 0;
     private volatile boolean isWaiting = false;
     private final Pattern semicolon;
-    private final Pattern resultSplit;
+    private final Pattern colon;
     private final Pattern blank;
     private final AtomicInteger runningMode;
     private final AtomicInteger showingMode;
@@ -116,7 +116,7 @@ public class SearchBar {
         showingMode = new AtomicInteger(Enums.ShowingSearchBarMode.NORMAL_SHOWING);
         currentLabelSelectedPosition = new AtomicInteger(0);
         semicolon = Pattern.compile(";");
-        resultSplit = Pattern.compile(":");
+        colon = Pattern.compile(":");
         blank = Pattern.compile(" ");
         JPanel panel = new JPanel();
 
@@ -301,7 +301,16 @@ public class SearchBar {
                                     saveCache(res);
                                 }
                             } else if (runningMode.get() == Enums.RunningMode.COMMAND_MODE) {
-                                File open = new File(semicolon.split(res)[1]);
+                                String[] commandInfo = semicolon.split(res);
+                                boolean isExecuted = false;
+                                try {
+                                    isExecuted = runInternalCommand(colon.split(commandInfo[0])[1]);
+                                } catch (IOException | URISyntaxException ignored) {
+                                }
+                                if (isExecuted) {
+                                    return;
+                                }
+                                File open = new File(commandInfo[1]);
                                 if (isOpenLastFolderPressed) {
                                     //打开上级文件夹
                                     try {
@@ -479,7 +488,16 @@ public class SearchBar {
                                         }
                                     }
                                 } else if (runningMode.get() == Enums.RunningMode.COMMAND_MODE) {
-                                    File open = new File(semicolon.split(res)[1]);
+                                    String[] commandInfo = semicolon.split(res);
+                                    boolean isExecuted = false;
+                                    try {
+                                        isExecuted = runInternalCommand(colon.split(commandInfo[0])[1]);
+                                    } catch (IOException | URISyntaxException ignored) {
+                                    }
+                                    if (isExecuted) {
+                                        return;
+                                    }
+                                    File open = new File(commandInfo[1]);
                                     if (isOpenLastFolderPressed) {
                                         //打开上级文件夹
                                         try {
@@ -566,6 +584,50 @@ public class SearchBar {
                 }
             }
         });
+    }
+
+    private boolean runInternalCommand(String commandName) throws URISyntaxException, IOException {
+        switch (commandName) {
+            case "clearbin":
+                detectShowingModeAndClose();
+                int r = JOptionPane.showConfirmDialog(null, TranslateUtil.getInstance().getTranslation(
+                        "Are you sure you want to empty the recycle bin"));
+                if (r == 0) {
+                    try {
+                        File[] roots = File.listRoots();
+                        for (File root : roots) {
+                            Runtime.getRuntime().exec("cmd.exe /c rd /s /q " + root.getAbsolutePath() + "$Recycle.Bin");
+                        }
+                        JOptionPane.showMessageDialog(null, TranslateUtil.getInstance().getTranslation(
+                                "Successfully empty the recycle bin"));
+                    } catch (IOException e) {
+                        JOptionPane.showMessageDialog(null, TranslateUtil.getInstance().getTranslation(
+                                "Failed to empty the recycle bin"));
+                    }
+                }
+                return true;
+            case "update":
+                detectShowingModeAndClose();
+                search.setStatus(SearchUtil.MANUAL_UPDATE);
+                startSignal = false;
+                return true;
+            case "help":
+                detectShowingModeAndClose();
+                Desktop desktop;
+                if (Desktop.isDesktopSupported()) {
+                    desktop = Desktop.getDesktop();
+                    desktop.browse(new URI("https://github.com/XUANXUQAQ/File-Engine/wiki/Usage"));
+                }
+                return true;
+            case "version":
+                detectShowingModeAndClose();
+                JOptionPane.showMessageDialog(null, TranslateUtil.getInstance().getTranslation(
+                        "Current Version:") + SettingsFrame.version);
+                return true;
+            default:
+                break;
+        }
+        return false;
     }
 
     private void setLabelChosen(JLabel label) {
@@ -2641,7 +2703,12 @@ public class SearchBar {
                                         }
                                     }
                                 }
-                                for (String i : SettingsFrame.getCmdSet()) {
+                                LinkedHashSet<String> cmdSet = new LinkedHashSet<>(SettingsFrame.getCmdSet());
+                                cmdSet.add(":clearbin;" + TranslateUtil.getInstance().getTranslation("Clear the recycle bin"));
+                                cmdSet.add(":update;" + TranslateUtil.getInstance().getTranslation("Update file index"));
+                                cmdSet.add(":help;" + TranslateUtil.getInstance().getTranslation("View help"));
+                                cmdSet.add(":version;" + TranslateUtil.getInstance().getTranslation("View Version"));
+                                for (String i : cmdSet) {
                                     if (i.startsWith(text)) {
                                         resultCount.incrementAndGet();
                                         String result = TranslateUtil.getInstance().getTranslation("Run command") + i;
@@ -2660,7 +2727,7 @@ public class SearchBar {
                                 isStartSearchLocal = true;
                                 String[] strings;
                                 int length;
-                                strings = resultSplit.split(text);
+                                strings = colon.split(text);
                                 length = strings.length;
                                 if (length == 2) {
                                     searchCase = semicolon.split(strings[1]);
@@ -2964,7 +3031,12 @@ public class SearchBar {
         String[] info = semicolon.split(command);
         String path = info[1];
         String name = info[0];
-        ImageIcon imageIcon = GetIconUtil.getInstance().getBigIcon(path, iconSideLength, iconSideLength);
+        ImageIcon imageIcon;
+        try {
+            imageIcon = GetIconUtil.getInstance().getCommandIcon(colon.split(name)[1], iconSideLength, iconSideLength);
+        } catch (NullPointerException e) {
+            imageIcon = GetIconUtil.getInstance().getBigIcon(path, iconSideLength, iconSideLength);
+        }
         label.setIcon(imageIcon);
         label.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>" + path + "</font></body></html>");
         if (isChosen) {

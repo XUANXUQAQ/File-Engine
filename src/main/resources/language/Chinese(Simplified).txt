@@ -121,3 +121,7 @@ Settings=设置
 Exit=退出
 Text copied to clipboard=文本已复制到剪贴板
 Choose update address=选择更新地址
+Clear the recycle bin=清空回收站
+Update file index=更新文件索引
+View help=查看帮助
+View Version=查看版本
