@@ -14,7 +14,6 @@ import java.security.SecureRandom;
 import java.security.Security;
 import java.security.cert.X509Certificate;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 
 public class DownloadUtil {
     private final ConcurrentHashMap<String, DownloadManager> DOWNLOAD_MAP = new ConcurrentHashMap<>();
@@ -28,20 +27,6 @@ public class DownloadUtil {
     }
 
     private DownloadUtil() {
-        CachedThreadPool.getInstance().executeTask(() -> {
-            try {
-                while (SettingsFrame.isNotMainExit()) {
-                    for (DownloadManager each : DOWNLOAD_MAP.values()) {
-                        Enums.DownloadStatus_ status = each.getDownloadStatus();
-                        if (status == Enums.DownloadStatus_.DOWNLOAD_INTERRUPTED || status == Enums.DownloadStatus_.DOWNLOAD_ERROR) {
-                            deleteTask(each.getFileName());
-                        }
-                    }
-                    TimeUnit.SECONDS.sleep(5);
-                }
-            } catch (InterruptedException ignored) {
-            }
-        });
     }
 
     /**
@@ -92,10 +77,6 @@ public class DownloadUtil {
         return Enums.DownloadStatus_.DOWNLOAD_NO_TASK;
     }
 
-    private void deleteTask(String fileName) {
-        DOWNLOAD_MAP.remove(fileName);
-    }
-
     private boolean isFileNameNotContainsSuffix(String fileName) {
         if (fileName == null) {
             return false;
@@ -124,11 +105,6 @@ public class DownloadUtil {
             this.downloadStatus = Enums.DownloadStatus_.DOWNLOAD_DOWNLOADING;
             setProxy(proxyInfo.type, proxyInfo.address, proxyInfo.port, proxyInfo.userName, proxyInfo.password);
         }
-
-        private String getFileName() {
-            return fileName;
-        }
-
 
         // trusting all certificate
         private void doTrustToCertificates() throws Exception {
