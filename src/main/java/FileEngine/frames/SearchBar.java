@@ -1972,11 +1972,8 @@ public class SearchBar {
 
     private void switchToNormalMode() {
         if (showingMode.get() != Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
-            if (SettingsFrame.isLoseFocusClose()) {
-                closeSearchBar();
-            }
+            closeSearchBar();
             GetHandle.INSTANCE.resetMouseStatus();
-            setVisible(false);
             Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize(); // 获取屏幕大小
             int height = screenSize.height;
             int searchBarHeight = (int) (height * 0.5);
