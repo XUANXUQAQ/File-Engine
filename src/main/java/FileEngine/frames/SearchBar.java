@@ -42,8 +42,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Pattern;
 
 
@@ -96,7 +94,6 @@ public class SearchBar {
     private final AtomicInteger resultCount;
     private final AtomicInteger currentLabelSelectedPosition;
     private volatile Plugin currentUsingPlugin;
-    private final Lock repaintLock = new ReentrantLock();
 
     private static class SearchBarBuilder {
         private static final SearchBar instance = new SearchBar();
@@ -944,11 +941,16 @@ public class SearchBar {
     }
 
     private boolean isLabelNotEmpty(JLabel label) {
-        boolean isEmpty;
+        boolean isEmpty = true;
         try {
-            isEmpty = label.getText().isEmpty();
-        } catch (NullPointerException e) {
-            isEmpty = true;
+            String text;
+            if (label != null) {
+                text = label.getText();
+                if (text != null) {
+                    isEmpty = text.isEmpty();
+                }
+            }
+        } catch (NullPointerException ignored) {
         }
         return !isEmpty;
     }
@@ -2276,9 +2278,7 @@ public class SearchBar {
             try {
                 while (SettingsFrame.isNotMainExit()) {
                     if (isUsing) {
-                        repaintLock.lock();
                         searchBar.repaint();
-                        repaintLock.unlock();
                     }
                     TimeUnit.MILLISECONDS.sleep(250);
                 }
@@ -3361,9 +3361,7 @@ public class SearchBar {
     }
 
     private void setVisible(boolean b) {
-        repaintLock.lock();
         searchBar.setVisible(b);
-        repaintLock.unlock();
     }
 
     public void closeSearchBar() {
