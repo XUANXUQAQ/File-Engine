@@ -125,3 +125,4 @@ Clear the recycle bin=
 Update file index=
 View help=
 View Version=
+Failed to obtain plugin information=

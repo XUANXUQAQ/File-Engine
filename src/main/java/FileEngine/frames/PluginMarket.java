@@ -305,6 +305,8 @@ public class PluginMarket {
                                     } catch (IOException ignored) {
                                     }
                                 }
+                            } else {
+                                labelPluginName.setText(TranslateUtil.getInstance().getTranslation("Failed to obtain plugin information"));
                             }
                         }
                     }

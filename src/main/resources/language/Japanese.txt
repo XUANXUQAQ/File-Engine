@@ -125,3 +125,4 @@ Clear the recycle bin=ごみ箱を空にします
 Update file index=ファイルインデックスを更新する
 View help=ヘルプを表示
 View Version=バージョンを表示
+Failed to obtain plugin information=プラグイン情報の取得に失敗しました
