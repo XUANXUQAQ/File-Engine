@@ -26,8 +26,6 @@ public interface GetHandle extends Library {
 
     int get_toolbar_click_y();
 
-    void set_searchBar(int x, int y, int width, int height);
-
     boolean isExplorerAndSearchbarNotFocused();
 
     void resetMouseStatus();

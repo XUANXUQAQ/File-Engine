@@ -147,6 +147,7 @@ public class SearchBar {
         searchBar.setContentPane(panel);
         searchBar.setType(JFrame.Type.UTILITY);
         searchBar.setAlwaysOnTop(true);
+        searchBar.setTitle("File-Engine-SearchBar");
 
         //labels
         Font labelFont = new Font("Microsoft JhengHei", Font.BOLD, (int) ((searchBarHeight * 0.2) / 96 * 72) / 4);
@@ -1775,27 +1776,11 @@ public class SearchBar {
 
         recreateIndexThread();
 
-        setSearchBarPosAndSize();
-
         switchSearchBarShowingMode();
 
         changeSearchBarSizeWhenOnExplorerMode();
 
         changeSearchBarSizeWhenOnNormalMode();
-
-        addSearchDialogWindowThread();
-    }
-
-    private void addSearchDialogWindowThread() {
-        CachedThreadPool.getInstance().executeTask(() -> {
-            try {
-                while (SettingsFrame.isNotMainExit()) {
-                    isExplorerWindowNotExist = GetHandle.INSTANCE.isDialogNotExist();
-                    TimeUnit.MILLISECONDS.sleep(50);
-                }
-            } catch (InterruptedException ignored) {
-            }
-        });
     }
 
     private void switchSearchBarShowingMode() {
@@ -1807,16 +1792,16 @@ public class SearchBar {
                         switchToExplorerAttachMode();
                         GetHandle.INSTANCE.resetMouseStatus();
                     } else {
-                        if (isExplorerWindowNotExist) {
+                        if (GetHandle.INSTANCE.isDialogNotExist()) {
                             switchToNormalMode();
-                            TimeUnit.MILLISECONDS.sleep(250);
+                            TimeUnit.MILLISECONDS.sleep(100);
                             continue;
                         }
                         if (GetHandle.INSTANCE.isExplorerAndSearchbarNotFocused()) {
                             switchToNormalMode();
                         }
                     }
-                    TimeUnit.MILLISECONDS.sleep(250);
+                    TimeUnit.MILLISECONDS.sleep(100);
                 }
             } catch (InterruptedException ignored) {
             } finally {
@@ -1854,23 +1839,6 @@ public class SearchBar {
                         textField.setLocation(3, 0);
                     }
                     TimeUnit.MILLISECONDS.sleep(50);
-                }
-            } catch (InterruptedException ignored) {
-            }
-        });
-    }
-
-    private void setSearchBarPosAndSize() {
-        CachedThreadPool.getInstance().executeTask(() -> {
-            try {
-                int x, y, width, height;
-                while (SettingsFrame.isNotMainExit()) {
-                    x = searchBar.getX();
-                    y = searchBar.getY();
-                    width = textField.getWidth();
-                    height = textField.getHeight();
-                    GetHandle.INSTANCE.set_searchBar(x, y, width, height);
-                    TimeUnit.MILLISECONDS.sleep(20);
                 }
             } catch (InterruptedException ignored) {
             }
