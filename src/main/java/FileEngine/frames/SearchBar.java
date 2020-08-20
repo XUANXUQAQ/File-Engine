@@ -147,6 +147,7 @@ public class SearchBar {
         searchBar.setContentPane(panel);
         searchBar.setType(JFrame.Type.UTILITY);
         searchBar.setAlwaysOnTop(true);
+        //用于C++判断是否点击了当前窗口
         searchBar.setTitle("File-Engine-SearchBar");
 
         //labels
