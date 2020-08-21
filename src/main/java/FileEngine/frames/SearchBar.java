@@ -1935,9 +1935,6 @@ public class SearchBar {
                             //设置textField大小
                             textField.setSize(searchBarWidth - 6, labelHeight - 5);
                             textField.setLocation(3, 0);
-                            if (!isVisible()) {
-                                showSearchbar(false);
-                            }
                         }
                     }
                     TimeUnit.MILLISECONDS.sleep(15);
@@ -1966,6 +1963,9 @@ public class SearchBar {
                 label8.setFont(labelFont);
                 GetHandle.INSTANCE.resetMouseStatus();
                 showingMode.set(Enums.ShowingSearchBarMode.EXPLORER_ATTACH);
+                if (!isVisible()) {
+                    showSearchbar(false);
+                }
             }
         }
     }
