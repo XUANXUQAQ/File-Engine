@@ -1827,7 +1827,7 @@ public class SearchBar {
 
         addSqlCommandThread();
 
-        pollCommandsAndsearchDatabaseThread();
+        pollCommandsAndSearchDatabaseThread();
 
         createSqlIndexThread();
 
@@ -2284,10 +2284,17 @@ public class SearchBar {
         });
     }
 
+    private void addCommandsToCommandQueue(int startIndex) {
+        String command;
+        for (int i = startIndex; i <= 40; ++i) {
+            command = "list" + i;
+            commandQueue.add(command);
+        }
+    }
+
     private void addSqlCommandThread() {
         CachedThreadPool.getInstance().executeTask(() -> {
             //添加搜索路径线程
-            String command;
             int ascII;
             try {
                 while (SettingsFrame.isNotMainExit()) {
@@ -2298,271 +2305,153 @@ public class SearchBar {
 
                         switch (asciiGroup) {
                             case 0:
-                                for (int i = 0; i <= 40; i++) {
-                                    command = "list" + i;
-                                    commandQueue.add(command);
-                                }
+                                addCommandsToCommandQueue(0);
                                 break;
+
                             case 1:
-                                for (int i = 1; i <= 40; i++) {
-                                    command = "list" + i;
-                                    commandQueue.add(command);
-                                }
+                                addCommandsToCommandQueue(1);
                                 break;
 
                             case 2:
-                                for (int i = 2; i <= 40; i++) {
-                                    command = "list" + i;
-                                    commandQueue.add(command);
-                                }
+                                addCommandsToCommandQueue(2);
                                 break;
 
                             case 3:
-                                for (int i = 3; i <= 40; i++) {
-                                    command = "list" + i;
-                                    commandQueue.add(command);
-                                }
+                                addCommandsToCommandQueue(3);
                                 break;
 
                             case 4:
-                                for (int i = 4; i <= 40; i++) {
-                                    command = "list" + i;
-                                    commandQueue.add(command);
-                                }
+                                addCommandsToCommandQueue(4);
                                 break;
 
                             case 5:
-                                for (int i = 5; i <= 40; i++) {
-                                    command = "list" + i;
-                                    commandQueue.add(command);
-                                }
+                                addCommandsToCommandQueue(5);
                                 break;
                             case 6:
-                                for (int i = 6; i <= 40; i++) {
-                                    command = "list" + i;
-                                    commandQueue.add(command);
-                                }
+                                addCommandsToCommandQueue(6);
                                 break;
 
                             case 7:
-                                for (int i = 7; i <= 40; i++) {
-                                    command = "list" + i;
-                                    commandQueue.add(command);
-                                }
+                                addCommandsToCommandQueue(7);
                                 break;
 
                             case 8:
-                                for (int i = 8; i <= 40; i++) {
-                                    command = "list" + i;
-                                    commandQueue.add(command);
-                                }
+                                addCommandsToCommandQueue(8);
                                 break;
 
                             case 9:
-                                for (int i = 9; i <= 40; i++) {
-                                    command = "list" + i;
-                                    commandQueue.add(command);
-                                }
+                                addCommandsToCommandQueue(9);
                                 break;
 
                             case 10:
-                                for (int i = 10; i <= 40; i++) {
-                                    command = "list" + i;
-                                    commandQueue.add(command);
-                                }
+                                addCommandsToCommandQueue(10);
                                 break;
 
                             case 11:
-                                for (int i = 11; i <= 40; i++) {
-                                    command = "list" + i;
-                                    commandQueue.add(command);
-                                }
+                                addCommandsToCommandQueue(11);
                                 break;
 
                             case 12:
-                                for (int i = 12; i <= 40; i++) {
-                                    command = "list" + i;
-                                    commandQueue.add(command);
-                                }
+                                addCommandsToCommandQueue(12);
                                 break;
 
                             case 13:
-                                for (int i = 13; i <= 40; i++) {
-                                    command = "list" + i;
-                                    commandQueue.add(command);
-                                }
+                                addCommandsToCommandQueue(13);
                                 break;
 
                             case 14:
-                                for (int i = 14; i <= 40; i++) {
-                                    command = "list" + i;
-                                    commandQueue.add(command);
-                                }
+                                addCommandsToCommandQueue(14);
                                 break;
 
                             case 15:
-                                for (int i = 15; i <= 40; i++) {
-                                    command = "list" + i;
-                                    commandQueue.add(command);
-                                }
+                                addCommandsToCommandQueue(15);
                                 break;
 
                             case 16:
-                                for (int i = 16; i <= 40; i++) {
-                                    command = "list" + i;
-                                    commandQueue.add(command);
-                                }
+                                addCommandsToCommandQueue(16);
                                 break;
 
                             case 17:
-                                for (int i = 17; i <= 40; i++) {
-                                    command = "list" + i;
-                                    commandQueue.add(command);
-                                }
+                                addCommandsToCommandQueue(17);
                                 break;
 
                             case 18:
-                                for (int i = 18; i <= 40; i++) {
-                                    command = "list" + i;
-                                    commandQueue.add(command);
-                                }
+                                addCommandsToCommandQueue(18);
                                 break;
 
                             case 19:
-                                for (int i = 19; i <= 40; i++) {
-                                    command = "list" + i;
-                                    commandQueue.add(command);
-                                }
+                                addCommandsToCommandQueue(19);
                                 break;
 
                             case 20:
-                                for (int i = 20; i <= 40; i++) {
-                                    command = "list" + i;
-                                    commandQueue.add(command);
-                                }
+                                addCommandsToCommandQueue(20);
                                 break;
 
                             case 21:
-                                for (int i = 21; i <= 40; i++) {
-                                    command = "list" + i;
-                                    commandQueue.add(command);
-                                }
+                                addCommandsToCommandQueue(21);
                                 break;
 
                             case 22:
-                                for (int i = 22; i <= 40; i++) {
-                                    command = "list" + i;
-                                    commandQueue.add(command);
-                                }
+                                addCommandsToCommandQueue(22);
                                 break;
 
                             case 23:
-                                for (int i = 23; i <= 40; i++) {
-                                    command = "list" + i;
-                                    commandQueue.add(command);
-                                }
+                                addCommandsToCommandQueue(23);
                                 break;
 
                             case 24:
-                                for (int i = 24; i <= 40; i++) {
-                                    command = "list" + i;
-                                    commandQueue.add(command);
-                                }
+                                addCommandsToCommandQueue(24);
                                 break;
 
                             case 25:
-                                for (int i = 25; i <= 40; i++) {
-                                    command = "list" + i;
-                                    commandQueue.add(command);
-                                }
+                                addCommandsToCommandQueue(25);
                                 break;
                             case 26:
-                                for (int i = 26; i <= 40; i++) {
-                                    command = "list" + i;
-                                    commandQueue.add(command);
-                                }
+                                addCommandsToCommandQueue(26);
                                 break;
                             case 27:
-                                for (int i = 27; i <= 40; i++) {
-                                    command = "list" + i;
-                                    commandQueue.add(command);
-                                }
+                                addCommandsToCommandQueue(27);
                                 break;
                             case 28:
-                                for (int i = 28; i <= 40; i++) {
-                                    command = "list" + i;
-                                    commandQueue.add(command);
-                                }
+                                addCommandsToCommandQueue(28);
                                 break;
                             case 29:
-                                for (int i = 29; i <= 40; i++) {
-                                    command = "list" + i;
-                                    commandQueue.add(command);
-                                }
+                                addCommandsToCommandQueue(29);
                                 break;
                             case 30:
-                                for (int i = 30; i <= 40; i++) {
-                                    command = "list" + i;
-                                    commandQueue.add(command);
-                                }
+                                addCommandsToCommandQueue(30);
                                 break;
                             case 31:
-                                for (int i = 31; i <= 40; i++) {
-                                    command = "list" + i;
-                                    commandQueue.add(command);
-                                }
+                                addCommandsToCommandQueue(31);
                                 break;
                             case 32:
-                                for (int i = 32; i <= 40; i++) {
-                                    command = "list" + i;
-                                    commandQueue.add(command);
-                                }
+                                addCommandsToCommandQueue(32);
                                 break;
                             case 33:
-                                for (int i = 33; i <= 40; i++) {
-                                    command = "list" + i;
-                                    commandQueue.add(command);
-                                }
+                                addCommandsToCommandQueue(33);
                                 break;
                             case 34:
-                                for (int i = 34; i <= 40; i++) {
-                                    command = "list" + i;
-                                    commandQueue.add(command);
-                                }
+                                addCommandsToCommandQueue(34);
                                 break;
                             case 35:
-                                for (int i = 35; i <= 40; i++) {
-                                    command = "list" + i;
-                                    commandQueue.add(command);
-                                }
+                                addCommandsToCommandQueue(35);
                                 break;
                             case 36:
-                                for (int i = 36; i <= 40; i++) {
-                                    command = "list" + i;
-                                    commandQueue.add(command);
-                                }
+                                addCommandsToCommandQueue(36);
                                 break;
                             case 37:
-                                for (int i = 37; i <= 40; i++) {
-                                    command = "list" + i;
-                                    commandQueue.add(command);
-                                }
+                                addCommandsToCommandQueue(37);
                                 break;
                             case 38:
-                                for (int i = 38; i <= 40; i++) {
-                                    command = "list" + i;
-                                    commandQueue.add(command);
-                                }
+                                addCommandsToCommandQueue(38);
                                 break;
                             case 39:
-                                for (int i = 39; i <= 40; i++) {
-                                    command = "list" + i;
-                                    commandQueue.add(command);
-                                }
+                                addCommandsToCommandQueue(39);
                                 break;
                             case 40:
-                                command = "list40";
-                                commandQueue.add(command);
+                                addCommandsToCommandQueue(40);
+                                break;
+                            default:
                                 break;
                         }
                     }
@@ -2573,7 +2462,7 @@ public class SearchBar {
         });
     }
 
-    private void pollCommandsAndsearchDatabaseThread() {
+    private void pollCommandsAndSearchDatabaseThread() {
         CachedThreadPool.getInstance().executeTask(() -> {
             try {
                 String column;
@@ -2663,43 +2552,8 @@ public class SearchBar {
                         String text = getTextFieldText();
                         if (search.getStatus() == SearchUtil.NORMAL) {
                             if (runningMode.get() == Enums.RunningMode.COMMAND_MODE) {
-                                if (":update".equalsIgnoreCase(text)) {
-                                    detectShowingModeAndClose();
-                                    search.setStatus(SearchUtil.MANUAL_UPDATE);
-                                    startSignal = false;
-                                    continue;
-                                }
-                                if (":version".equalsIgnoreCase(text)) {
-                                    detectShowingModeAndClose();
-                                    JOptionPane.showMessageDialog(null, TranslateUtil.getInstance().getTranslation(
-                                            "Current Version:") + SettingsFrame.version);
-                                }
-                                if (":help".equalsIgnoreCase(text)) {
-                                    detectShowingModeAndClose();
-                                    Desktop desktop;
-                                    if (Desktop.isDesktopSupported()) {
-                                        desktop = Desktop.getDesktop();
-                                        desktop.browse(new URI("https://github.com/XUANXUQAQ/File-Engine/wiki/Usage"));
-                                    }
-                                }
-                                if (":clearbin".equalsIgnoreCase(text)) {
-                                    detectShowingModeAndClose();
-                                    int r = JOptionPane.showConfirmDialog(null, TranslateUtil.getInstance().getTranslation(
-                                            "Are you sure you want to empty the recycle bin"));
-                                    if (r == 0) {
-                                        try {
-                                            File[] roots = File.listRoots();
-                                            for (File root : roots) {
-                                                Runtime.getRuntime().exec("cmd.exe /c rd /s /q " + root.getAbsolutePath() + "$Recycle.Bin");
-                                            }
-                                            JOptionPane.showMessageDialog(null, TranslateUtil.getInstance().getTranslation(
-                                                    "Successfully empty the recycle bin"));
-                                        } catch (IOException e) {
-                                            JOptionPane.showMessageDialog(null, TranslateUtil.getInstance().getTranslation(
-                                                    "Failed to empty the recycle bin"));
-                                        }
-                                    }
-                                }
+                                //去掉冒号
+                                runInternalCommand(text.substring(1).toLowerCase());
                                 LinkedHashSet<String> cmdSet = new LinkedHashSet<>(SettingsFrame.getCmdSet());
                                 cmdSet.add(":clearbin;" + TranslateUtil.getInstance().getTranslation("Clear the recycle bin"));
                                 cmdSet.add(":update;" + TranslateUtil.getInstance().getTranslation("Update file index"));
