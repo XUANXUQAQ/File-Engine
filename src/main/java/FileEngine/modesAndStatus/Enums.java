@@ -14,9 +14,9 @@ public class Enums {
     }
 
     public static class ProxyType {
-        public static final int PROXY_HTTP = 5;
-        public static final int PROXY_SOCKS = 6;
-        public static final int PROXY_DIRECT = 7;
+        public static final int PROXY_HTTP = 0x100;
+        public static final int PROXY_SOCKS = 0x200;
+        public static final int PROXY_DIRECT = 0x300;
     }
 
     public enum DownloadStatus {

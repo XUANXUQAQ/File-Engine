@@ -776,9 +776,9 @@ public class SettingsFrame {
                         //执行VACUUM命令
                         try (Statement stmt = SQLiteUtil.getStatement()) {
                             stmt.execute("VACUUM;");
-                        } catch (Exception throwables) {
+                        } catch (Exception ex) {
                             if (AllConfigs.isDebug()) {
-                                throwables.printStackTrace();
+                                ex.printStackTrace();
                             }
                         } finally {
                             if (AllConfigs.isDebug()) {
@@ -971,10 +971,10 @@ public class SettingsFrame {
     }
 
     private void selectProxyType() {
-        if (AllConfigs.getProxyType() == Enums.ProxyType.PROXY_HTTP) {
-            radioButtonProxyTypeHttp.setSelected(true);
-        } else if (AllConfigs.getProxyType() == Enums.ProxyType.PROXY_SOCKS) {
+        if (AllConfigs.getProxyType() == Enums.ProxyType.PROXY_SOCKS) {
             radioButtonProxyTypeSocks5.setSelected(true);
+        } else {
+            radioButtonProxyTypeHttp.setSelected(true);
         }
     }
 
@@ -1503,7 +1503,6 @@ public class SettingsFrame {
         if (updateTimeLimitTemp > 3600 || updateTimeLimitTemp <= 0) {
             strBuilder.append(TranslateUtil.getInstance().getTranslation("The file index update setting is wrong, please change")).append("\n");
         }
-        boolean tmp_isStartup = checkBoxAddToStartup.isSelected();
         try {
             cacheNumLimitTemp = Integer.parseInt(textFieldCacheNum.getText());
         } catch (Exception e1) {
