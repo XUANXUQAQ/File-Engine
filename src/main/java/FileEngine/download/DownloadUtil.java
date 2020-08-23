@@ -162,7 +162,8 @@ public class DownloadUtil {
                 if (!saveDir.exists()) {
                     saveDir.mkdirs();
                 }
-                BufferedOutputStream bfos = new BufferedOutputStream(new FileOutputStream(new File(saveDir + File.separator + fileName)));
+                File fileFullPath = new File(saveDir + File.separator + fileName);
+                BufferedOutputStream bfos = new BufferedOutputStream(new FileOutputStream(fileFullPath));
 
                 int fileLength = con.getContentLength();
                 while ((len = in.read(buffer)) != -1) {
@@ -177,6 +178,8 @@ public class DownloadUtil {
                 in.close();
                 con.disconnect();
                 if (isUserInterrupted) {
+                    //删除文件
+                    fileFullPath.delete();
                     throw new IOException("User Interrupted");
                 }
                 downloadStatus = Enums.DownloadStatus.DOWNLOAD_DONE;

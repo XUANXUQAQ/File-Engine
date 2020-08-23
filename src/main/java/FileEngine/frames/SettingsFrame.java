@@ -694,8 +694,8 @@ public class SettingsFrame {
             public void mousePressed(MouseEvent e) {
                 String pluginName = (String) listPlugins.getSelectedValue();
                 if (pluginName != null) {
-                    String pluginIdentifier = PluginUtil.getIdentifierByName(pluginName);
-                    Plugin plugin = PluginUtil.getPluginByIdentifier(pluginIdentifier);
+                    String pluginIdentifier = PluginUtil.getInstance().getIdentifierByName(pluginName);
+                    Plugin plugin = PluginUtil.getInstance().getPluginByIdentifier(pluginIdentifier);
                     int apiVersion;
                     ImageIcon icon = plugin.getPluginIcon();
                     String description = plugin.getDescription();
@@ -823,8 +823,8 @@ public class SettingsFrame {
         buttonUpdatePlugin.addActionListener(e -> {
             startCheckTime.set(0L);
             String pluginName = (String) listPlugins.getSelectedValue();
-            String pluginIdentifier = PluginUtil.getIdentifierByName(pluginName);
-            Plugin plugin = PluginUtil.getPluginByIdentifier(pluginIdentifier);
+            String pluginIdentifier = PluginUtil.getInstance().getIdentifierByName(pluginName);
+            Plugin plugin = PluginUtil.getInstance().getPluginByIdentifier(pluginIdentifier);
             String pluginFullName = pluginName + ".jar";
             //检查是否已经开始下载
             Enums.DownloadStatus downloadStatus = DownloadUtil.getInstance().getDownloadStatus(pluginFullName);
@@ -879,7 +879,7 @@ public class SettingsFrame {
         labelFastJson.setText("2.FastJson");
         labelJna.setText("3.Java-Native-Access");
         labelSQLite.setText("4.SQLite-JDBC");
-        labelPluginNum.setText(String.valueOf(PluginUtil.getInstalledPluginNum()));
+        labelPluginNum.setText(String.valueOf(PluginUtil.getInstance().getInstalledPluginNum()));
         ImageIcon imageIcon = new ImageIcon(SettingsFrame.class.getResource("/icons/frame.png"));
         labelIcon.setIcon(imageIcon);
         labelVersion.setText(TranslateUtil.getInstance().getTranslation("Current Version:") + AllConfigs.version);
@@ -937,7 +937,7 @@ public class SettingsFrame {
         listCmds.setListData(AllConfigs.getCmdSet().toArray());
         listLanguage.setListData(TranslateUtil.getInstance().getLanguageSet().toArray());
         listLanguage.setSelectedValue(TranslateUtil.getInstance().getLanguage(), true);
-        Object[] plugins = PluginUtil.getPluginArray();
+        Object[] plugins = PluginUtil.getInstance().getPluginArray();
         listPlugins.setListData(plugins);
         buttonUpdatePlugin.setVisible(false);
         if (plugins.length == 0) {

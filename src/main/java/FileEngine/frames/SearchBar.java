@@ -53,7 +53,7 @@ public class SearchBar {
     private static volatile boolean isCopyPathPressed = false;
     private static volatile boolean startSignal = false;
     private static volatile boolean isUserPressed = false;
-    private static Border border;
+    private final Border border;
     private final JFrame searchBar;
     private final JLabel label1;
     private final JLabel label2;
@@ -1685,7 +1685,7 @@ public class SearchBar {
                     runningMode.set(Enums.RunningMode.PLUGIN_MODE);
                     String subText = text.substring(1);
                     String[] s = blank.split(subText);
-                    currentUsingPlugin = PluginUtil.getPluginByIdentifier(s[0]);
+                    currentUsingPlugin = PluginUtil.getInstance().getPluginByIdentifier(s[0]);
                     int length = s.length;
                     if (currentUsingPlugin != null && length > 1) {
                         for (int i = 1; i < length - 1; ++i) {
@@ -1720,7 +1720,7 @@ public class SearchBar {
                         runningMode.set(Enums.RunningMode.PLUGIN_MODE);
                         String subText = text.substring(1);
                         String[] s = blank.split(subText);
-                        currentUsingPlugin = PluginUtil.getPluginByIdentifier(s[0]);
+                        currentUsingPlugin = PluginUtil.getInstance().getPluginByIdentifier(s[0]);
                         int length = s.length;
                         if (currentUsingPlugin != null && length > 1) {
                             for (int i = 1; i < length - 1; ++i) {
@@ -2103,7 +2103,7 @@ public class SearchBar {
                 String[] message;
                 Plugin plugin;
                 while (AllConfigs.isNotMainExit()) {
-                    Iterator<Plugin> iter = PluginUtil.getPluginMapIter();
+                    Iterator<Plugin> iter = PluginUtil.getInstance().getPluginMapIter();
                     while (iter.hasNext()) {
                         plugin = iter.next();
                         message = plugin.getMessage();

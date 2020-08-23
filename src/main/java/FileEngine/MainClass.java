@@ -182,7 +182,7 @@ public class MainClass {
             initializeDllInterface();
 
             try {
-                PluginUtil.loadAllPlugins("plugins");
+                PluginUtil.getInstance().loadAllPlugins("plugins");
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -200,13 +200,13 @@ public class MainClass {
                 taskBar.showMessage(translateUtil.getTranslation("Info"), translateUtil.getTranslation("New version can be updated"));
             }
 
-            if (PluginUtil.isPluginTooOld()) {
-                String oldPlugins = PluginUtil.getAllOldPluginsName();
+            if (PluginUtil.getInstance().isPluginTooOld()) {
+                String oldPlugins = PluginUtil.getInstance().getAllOldPluginsName();
                 taskBar.showMessage(translateUtil.getTranslation("Warning"), oldPlugins + "\n" + translateUtil.getTranslation("Plugin Api is too old"));
             }
 
-            if (PluginUtil.isPluginRepeat()) {
-                String repeatPlugins = PluginUtil.getRepeatPlugins();
+            if (PluginUtil.getInstance().isPluginRepeat()) {
+                String repeatPlugins = PluginUtil.getInstance().getRepeatPlugins();
                 taskBar.showMessage(translateUtil.getTranslation("Warning"), repeatPlugins + "\n" + translateUtil.getTranslation("Duplicate plugin, please delete it in plugins folder"));
             }
 
