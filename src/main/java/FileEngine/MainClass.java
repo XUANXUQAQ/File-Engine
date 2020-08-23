@@ -1,6 +1,7 @@
 package FileEngine;
 
 import FileEngine.SQLiteConfig.SQLiteUtil;
+import FileEngine.configs.AllConfigs;
 import FileEngine.daemon.DaemonUtil;
 import FileEngine.frames.SettingsFrame;
 import FileEngine.frames.TaskBar;
@@ -50,7 +51,7 @@ public class MainClass {
         File sign = new File("user/updatePlugin");
         File tmpPlugins = new File("tmp/pluginsUpdate");
         if (sign.exists()) {
-            if (SettingsFrame.isDebug()) {
+            if (AllConfigs.isDebug()) {
                 System.out.println("正在更新插件");
             }
             sign.delete();
@@ -209,11 +210,11 @@ public class MainClass {
                 taskBar.showMessage(translateUtil.getTranslation("Warning"), repeatPlugins + "\n" + translateUtil.getTranslation("Duplicate plugin, please delete it in plugins folder"));
             }
 
-            if (!SettingsFrame.isDebug()) {
+            if (!AllConfigs.isDebug()) {
                 DaemonUtil.startDaemon(new File("").getAbsolutePath());
             }
 
-            while (SettingsFrame.isNotMainExit()) {
+            while (AllConfigs.isNotMainExit()) {
                 // 主循环开始
                 TimeUnit.MILLISECONDS.sleep(50);
             }
@@ -242,7 +243,7 @@ public class MainClass {
         File target = new File(path);
         String fileMd5 = Md5Util.getMD5(target.getAbsolutePath());
         if (!target.exists() || !md5.equals(fileMd5)) {
-            if (SettingsFrame.isDebug()) {
+            if (AllConfigs.isDebug()) {
                 System.out.println("正在重新释放文件：" + path);
             }
             InputStream resource = MainClass.class.getResourceAsStream(rootPath);
@@ -325,7 +326,7 @@ public class MainClass {
             JSONObject info = SettingsFrame.getUpdateInfo();
             if (info != null) {
                 String latestVersion = info.getString("version");
-                if (Double.parseDouble(latestVersion) > Double.parseDouble(SettingsFrame.version)) {
+                if (Double.parseDouble(latestVersion) > Double.parseDouble(AllConfigs.version)) {
                     return false;
                 }
             }

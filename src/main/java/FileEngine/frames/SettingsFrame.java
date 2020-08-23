@@ -2,8 +2,9 @@ package FileEngine.frames;
 
 import FileEngine.SQLiteConfig.SQLiteUtil;
 import FileEngine.checkHotkey.CheckHotKeyUtil;
+import FileEngine.configs.AllConfigs;
 import FileEngine.download.DownloadUtil;
-import FileEngine.enums.Enums;
+import FileEngine.modesAndStatus.Enums;
 import FileEngine.moveFiles.MoveDesktopFiles;
 import FileEngine.pluginSystem.Plugin;
 import FileEngine.pluginSystem.PluginUtil;
@@ -20,55 +21,22 @@ import javax.swing.plaf.basic.BasicTabbedPaneUI;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
-import java.net.Proxy;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.sql.Statement;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 
 public class SettingsFrame {
-    public static final String version = "2.7"; //TODO 更改版本号
-    private static volatile boolean mainExit = false;
-    private static volatile int cacheNumLimit;
-    private static volatile String hotkey;
-    private static volatile int updateTimeLimit;
-    private static volatile String ignorePath;
-    private static volatile String priorityFolder;
-    private static volatile int searchDepth;
-    private static volatile boolean isDefaultAdmin;
-    private static volatile boolean isLoseFocusClose;
-    private static volatile int openLastFolderKeyCode;
-    private static volatile int runAsAdminKeyCode;
-    private static volatile int copyPathKeyCode;
-    private static volatile float transparency;
-    private static volatile int tmp_copyPathKeyCode;
-    private static volatile String proxyAddress;
-    private static volatile int proxyPort;
-    private static volatile String proxyUserName;
-    private static volatile String proxyPassword;
-    private static volatile int proxyType;
-    private static File tmp;
-    private static File settings;
-    private static LinkedHashSet<String> cmdSet;
-    private static volatile int tmp_openLastFolderKeyCode;
-    private static volatile int tmp_runAsAdminKeyCode;
     private static CheckHotKeyUtil hotKeyListener;
-    private static volatile int labelColor;
-    private static volatile int defaultBackgroundColor;
-    private static volatile int fontColorWithCoverage;
-    private static volatile int fontColor;
-    private static volatile int searchBarColor;
-    private static volatile boolean isStartup;
+    private static volatile int tmp_copyPathKeyCode;
+    private static volatile int tmp_runAsAdminKeyCode;
+    private static volatile int tmp_openLastFolderKeyCode;
     private static SearchBar searchBar;
-    private static String updateAddress;
-    private final JFrame frame;
     private static ImageIcon frameIcon;
+    private final JFrame frame;
     private JTextField textFieldUpdateInterval;
     private JTextField textFieldCacheNum;
     private JTextArea textAreaIgnorePath;
@@ -210,124 +178,14 @@ public class SettingsFrame {
         private static final SettingsFrame instance = new SettingsFrame();
     }
 
-    private static final int PROXY_HTTP = 0;
-    private static final int PROXY_SOCKS = 1;
-    private static final int PROXY_DIRECT = 2;
-
-    public static class ProxyInfo {
-        public final String address;
-        public final int port;
-        public final String userName;
-        public final String password;
-        public final Proxy.Type type;
-
-        protected ProxyInfo(String proxyAddress, int proxyPort, String proxyUserName, String proxyPassword, int proxyType) {
-            this.address = proxyAddress;
-            this.port = proxyPort;
-            this.userName = proxyUserName;
-            this.password = proxyPassword;
-            if (PROXY_HTTP == proxyType) {
-                this.type = Proxy.Type.HTTP;
-            } else if (PROXY_SOCKS == proxyType) {
-                this.type = Proxy.Type.SOCKS;
-            } else {
-                this.type = Proxy.Type.DIRECT;
-            }
-        }
-    }
-
     public static SettingsFrame getInstance() {
         return SettingsFrameBuilder.instance;
     }
 
-    public static boolean isNotMainExit() {
-        return !mainExit;
-    }
-
-    public static int getCacheNumLimit() {
-        return cacheNumLimit;
-    }
-
-    public static int getUpdateTimeLimit() {
-        return updateTimeLimit;
-    }
-
-    public static String getIgnorePath() {
-        return ignorePath;
-    }
-
-    public static String getPriorityFolder() {
-        return priorityFolder;
-    }
-
-    public static int getSearchDepth() {
-        return searchDepth;
-    }
-
-    public static boolean isDefaultAdmin() {
-        return isDefaultAdmin;
-    }
-
-    public static boolean isLoseFocusClose() {
-        return isLoseFocusClose;
-    }
-
-    public static int getOpenLastFolderKeyCode() {
-        return openLastFolderKeyCode;
-    }
-
-    public static int getRunAsAdminKeyCode() {
-        return runAsAdminKeyCode;
-    }
-
-    public static int getCopyPathKeyCode() {
-        return copyPathKeyCode;
-    }
-
-    public static float getTransparency() {
-        return transparency;
-    }
-
-    public static File getTmp() {
-        return tmp;
-    }
-
-    public static HashSet<String> getCmdSet() {
-        return cmdSet;
-    }
-
-    public static int getLabelColor() {
-        return labelColor;
-    }
-
-    public static String getUpdateAddress() {
-        return updateAddress;
-    }
-
-    public static int getDefaultBackgroundColor() {
-        return defaultBackgroundColor;
-    }
-
-    public static int getFontColorWithCoverage() {
-        return fontColorWithCoverage;
-    }
-
-    public static int getFontColor() {
-        return fontColor;
-    }
-
-    public static String getName() {
-        return "File-Engine-x64.exe";
-    }
-
-    public static ProxyInfo getProxy() {
-        return new ProxyInfo(proxyAddress, proxyPort, proxyUserName, proxyPassword, proxyType);
-    }
-
     private void addCheckboxListener() {
         checkBoxAddToStartup.addActionListener(e -> setStartup(checkBoxAddToStartup.isSelected()));
-        checkBoxAdmin.addActionListener(e -> isDefaultAdmin = checkBoxAdmin.isSelected());
-        checkBoxLoseFocus.addActionListener(e -> isLoseFocusClose = checkBoxLoseFocus.isSelected());
+        checkBoxAdmin.addActionListener(e -> AllConfigs.setIsDefaultAdmin(checkBoxAdmin.isSelected()));
+        checkBoxLoseFocus.addActionListener(e -> AllConfigs.setIsLoseFocusClose(checkBoxLoseFocus.isSelected()));
     }
 
     private void addButtonRemoveDesktopListener() {
@@ -548,8 +406,8 @@ public class SettingsFrame {
             int returnValue = fileChooser.showDialog(new Label(), TranslateUtil.getInstance().getTranslation("Choose"));
             if (returnValue == JFileChooser.APPROVE_OPTION) {
                 cmd = fileChooser.getSelectedFile().getAbsolutePath();
-                cmdSet.add(":" + name + ";" + cmd);
-                listCmds.setListData(cmdSet.toArray());
+                AllConfigs.getCmdSet().add(":" + name + ";" + cmd);
+                listCmds.setListData(AllConfigs.getCmdSet().toArray());
             }
 
         });
@@ -558,8 +416,8 @@ public class SettingsFrame {
     private void addButtonDelCMDListener() {
         buttonDelCmd.addActionListener(e -> {
             String del = (String) listCmds.getSelectedValue();
-            cmdSet.remove(del);
-            listCmds.setListData(cmdSet.toArray());
+            AllConfigs.getCmdSet().remove(del);
+            listCmds.setListData(AllConfigs.getCmdSet().toArray());
 
         });
     }
@@ -588,16 +446,16 @@ public class SettingsFrame {
 
     private void addCheckForUpdateButtonListener() {
         buttonCheckUpdate.addActionListener(e -> {
-            Enums.DownloadStatus_ status = DownloadUtil.getInstance().getDownloadStatus(getName());
-            if (status == Enums.DownloadStatus_.DOWNLOAD_DOWNLOADING) {
+            Enums.DownloadStatus status = DownloadUtil.getInstance().getDownloadStatus(AllConfigs.getName());
+            if (status == Enums.DownloadStatus.DOWNLOAD_DOWNLOADING) {
                 //取消下载
-                String fileName = getName();
+                String fileName = AllConfigs.getName();
                 DownloadUtil instance = DownloadUtil.getInstance();
                 instance.cancelDownload(fileName);
                 //复位button
                 buttonCheckUpdate.setText(TranslateUtil.getInstance().getTranslation("Check for update"));
                 buttonCheckUpdate.setEnabled(true);
-            } else if (status == Enums.DownloadStatus_.DOWNLOAD_DONE) {
+            } else if (status == Enums.DownloadStatus.DOWNLOAD_DONE) {
                 buttonCheckUpdate.setEnabled(false);
             } else {
                 //开始下载
@@ -615,7 +473,7 @@ public class SettingsFrame {
                     return;
                 }
 
-                if (Double.parseDouble(latestVersion) > Double.parseDouble(version)) {
+                if (Double.parseDouble(latestVersion) > Double.parseDouble(AllConfigs.version)) {
                     String description = updateInfo.getString("description");
                     int result = JOptionPane.showConfirmDialog(frame,
                             TranslateUtil.getInstance().getTranslation(
@@ -627,9 +485,9 @@ public class SettingsFrame {
                         String urlChoose;
                         String fileName;
                         urlChoose = "url64";
-                        fileName = getName();
+                        fileName = AllConfigs.getName();
                         DownloadUtil download = DownloadUtil.getInstance();
-                        download.downLoadFromUrl(updateInfo.getString(urlChoose), fileName, tmp.getAbsolutePath());
+                        download.downLoadFromUrl(updateInfo.getString(urlChoose), fileName, AllConfigs.getTmp().getAbsolutePath());
                         //更新button为取消
                         buttonCheckUpdate.setText(TranslateUtil.getInstance().getTranslation("Cancel"));
                     }
@@ -910,7 +768,7 @@ public class SettingsFrame {
             if (0 == ret) {
                 int status = SearchUtil.getInstance().getStatus();
                 if (status == SearchUtil.NORMAL) {
-                    if (isDebug()) {
+                    if (AllConfigs.isDebug()) {
                         System.out.println("开始VACUUM");
                     }
                     SearchUtil.getInstance().setStatus(SearchUtil.VACUUM);
@@ -919,11 +777,11 @@ public class SettingsFrame {
                         try (Statement stmt = SQLiteUtil.getStatement()) {
                             stmt.execute("VACUUM;");
                         } catch (Exception throwables) {
-                            if (isDebug()) {
+                            if (AllConfigs.isDebug()) {
                                 throwables.printStackTrace();
                             }
                         } finally {
-                            if (isDebug()) {
+                            if (AllConfigs.isDebug()) {
                                 System.out.println("结束VACUUM");
                             }
                             SearchUtil.getInstance().setStatus(SearchUtil.NORMAL);
@@ -969,14 +827,14 @@ public class SettingsFrame {
             Plugin plugin = PluginUtil.getPluginByIdentifier(pluginIdentifier);
             String pluginFullName = pluginName + ".jar";
             //检查是否已经开始下载
-            Enums.DownloadStatus_ downloadStatus = DownloadUtil.getInstance().getDownloadStatus(pluginFullName);
-            if (downloadStatus == Enums.DownloadStatus_.DOWNLOAD_DOWNLOADING) {
+            Enums.DownloadStatus downloadStatus = DownloadUtil.getInstance().getDownloadStatus(pluginFullName);
+            if (downloadStatus == Enums.DownloadStatus.DOWNLOAD_DOWNLOADING) {
                 //取消下载
                 DownloadUtil instance = DownloadUtil.getInstance();
                 instance.cancelDownload(pluginFullName);
                 buttonUpdatePlugin.setText(TranslateUtil.getInstance().getTranslation("Install"));
                 buttonUpdatePlugin.setEnabled(true);
-            } else if (downloadStatus == Enums.DownloadStatus_.DOWNLOAD_DONE) {
+            } else if (downloadStatus == Enums.DownloadStatus.DOWNLOAD_DONE) {
                 buttonUpdatePlugin.setEnabled(false);
             } else {
                 Thread checkUpdateThread = new Thread(() -> {
@@ -1024,59 +882,59 @@ public class SettingsFrame {
         labelPluginNum.setText(String.valueOf(PluginUtil.getInstalledPluginNum()));
         ImageIcon imageIcon = new ImageIcon(SettingsFrame.class.getResource("/icons/frame.png"));
         labelIcon.setIcon(imageIcon);
-        labelVersion.setText(TranslateUtil.getInstance().getTranslation("Current Version:") + version);
-        checkBoxAddToStartup.setSelected(isStartup);
-        textFieldUpdateInterval.setText(String.valueOf(updateTimeLimit));
-        textAreaIgnorePath.setText(ignorePath.replaceAll(",", ",\n"));
-        textFieldCacheNum.setText(String.valueOf(cacheNumLimit));
-        textFieldSearchDepth.setText(String.valueOf(searchDepth));
-        textFieldHotkey.setText(hotkey);
-        textFieldPriorityFolder.setText(priorityFolder);
-        checkBoxAdmin.setSelected(isDefaultAdmin);
-        textFieldSearchBarColor.setText(Integer.toHexString(searchBarColor));
-        Color tmp_searchBarColor = new Color(searchBarColor);
+        labelVersion.setText(TranslateUtil.getInstance().getTranslation("Current Version:") + AllConfigs.version);
+        checkBoxAddToStartup.setSelected(AllConfigs.hasStartup());
+        textFieldUpdateInterval.setText(String.valueOf(AllConfigs.getUpdateTimeLimit()));
+        textAreaIgnorePath.setText(AllConfigs.getIgnorePath().replaceAll(",", ",\n"));
+        textFieldCacheNum.setText(String.valueOf(AllConfigs.getCacheNumLimit()));
+        textFieldSearchDepth.setText(String.valueOf(AllConfigs.getSearchDepth()));
+        textFieldHotkey.setText(AllConfigs.getHotkey());
+        textFieldPriorityFolder.setText(AllConfigs.getPriorityFolder());
+        checkBoxAdmin.setSelected(AllConfigs.isDefaultAdmin());
+        textFieldSearchBarColor.setText(Integer.toHexString(AllConfigs.getSearchBarColor()));
+        Color tmp_searchBarColor = new Color(AllConfigs.getSearchBarColor());
         searchBarColorChooser.setBackground(tmp_searchBarColor);
         searchBarColorChooser.setForeground(tmp_searchBarColor);
-        textFieldBackgroundDefault.setText(Integer.toHexString(defaultBackgroundColor));
-        Color tmp_defaultBackgroundColor = new Color(defaultBackgroundColor);
+        textFieldBackgroundDefault.setText(Integer.toHexString(AllConfigs.getDefaultBackgroundColor()));
+        Color tmp_defaultBackgroundColor = new Color(AllConfigs.getDefaultBackgroundColor());
         defaultBackgroundChooser.setBackground(tmp_defaultBackgroundColor);
         defaultBackgroundChooser.setForeground(tmp_defaultBackgroundColor);
-        textFieldLabelColor.setText(Integer.toHexString(labelColor));
-        Color tmp_labelColor = new Color(labelColor);
+        textFieldLabelColor.setText(Integer.toHexString(AllConfigs.getLabelColor()));
+        Color tmp_labelColor = new Color(AllConfigs.getLabelColor());
         labelColorChooser.setBackground(tmp_labelColor);
         labelColorChooser.setForeground(tmp_labelColor);
-        textFieldFontColorWithCoverage.setText(Integer.toHexString(fontColorWithCoverage));
-        Color tmp_fontColorWithCoverage = new Color(fontColorWithCoverage);
+        textFieldFontColorWithCoverage.setText(Integer.toHexString(AllConfigs.getFontColorWithCoverage()));
+        Color tmp_fontColorWithCoverage = new Color(AllConfigs.getFontColorWithCoverage());
         FontColorWithCoverageChooser.setBackground(tmp_fontColorWithCoverage);
         FontColorWithCoverageChooser.setForeground(tmp_fontColorWithCoverage);
-        checkBoxLoseFocus.setSelected(isLoseFocusClose);
-        textFieldTransparency.setText(String.valueOf(transparency));
-        textFieldFontColor.setText(Integer.toHexString(fontColor));
-        Color tmp_fontColor = new Color(fontColor);
+        checkBoxLoseFocus.setSelected(AllConfigs.isLoseFocusClose());
+        textFieldTransparency.setText(String.valueOf(AllConfigs.getTransparency()));
+        textFieldFontColor.setText(Integer.toHexString(AllConfigs.getFontColor()));
+        Color tmp_fontColor = new Color(AllConfigs.getFontColor());
         FontColorChooser.setBackground(tmp_fontColor);
         FontColorChooser.setForeground(tmp_fontColor);
-        if (runAsAdminKeyCode == 17) {
+        if (AllConfigs.getRunAsAdminKeyCode() == 17) {
             textFieldRunAsAdminHotKey.setText("Ctrl + Enter");
-        } else if (runAsAdminKeyCode == 16) {
+        } else if (AllConfigs.getRunAsAdminKeyCode() == 16) {
             textFieldRunAsAdminHotKey.setText("Shift + Enter");
-        } else if (runAsAdminKeyCode == 18) {
+        } else if (AllConfigs.getRunAsAdminKeyCode() == 18) {
             textFieldRunAsAdminHotKey.setText("Alt + Enter");
         }
-        if (openLastFolderKeyCode == 17) {
+        if (AllConfigs.getOpenLastFolderKeyCode() == 17) {
             textFieldOpenLastFolder.setText("Ctrl + Enter");
-        } else if (openLastFolderKeyCode == 16) {
+        } else if (AllConfigs.getOpenLastFolderKeyCode() == 16) {
             textFieldOpenLastFolder.setText("Shift + Enter");
-        } else if (openLastFolderKeyCode == 18) {
+        } else if (AllConfigs.getOpenLastFolderKeyCode() == 18) {
             textFieldOpenLastFolder.setText("Alt + Enter");
         }
-        if (copyPathKeyCode == 17) {
+        if (AllConfigs.getCopyPathKeyCode() == 17) {
             textFieldCopyPath.setText("Ctrl + Enter");
-        } else if (copyPathKeyCode == 16) {
+        } else if (AllConfigs.getCopyPathKeyCode() == 16) {
             textFieldCopyPath.setText("Shift + Enter");
-        } else if (copyPathKeyCode == 18) {
+        } else if (AllConfigs.getCopyPathKeyCode() == 18) {
             textFieldCopyPath.setText("Alt + Enter");
         }
-        listCmds.setListData(cmdSet.toArray());
+        listCmds.setListData(AllConfigs.getCmdSet().toArray());
         listLanguage.setListData(TranslateUtil.getInstance().getLanguageSet().toArray());
         listLanguage.setSelectedValue(TranslateUtil.getInstance().getLanguage(), true);
         Object[] plugins = PluginUtil.getPluginArray();
@@ -1085,7 +943,7 @@ public class SettingsFrame {
         if (plugins.length == 0) {
             PluginSettingsPanel.setVisible(false);
         }
-        if (proxyType == PROXY_DIRECT) {
+        if (AllConfigs.getProxyType() == Enums.ProxyType.PROXY_DIRECT) {
             radioButtonNoProxy.setSelected(true);
             radioButtonUseProxy.setSelected(false);
             radioButtonProxyTypeHttp.setEnabled(false);
@@ -1105,26 +963,23 @@ public class SettingsFrame {
             textFieldPassword.setEnabled(true);
             selectProxyType();
         }
-        textFieldAddress.setText(proxyAddress);
-        textFieldPort.setText(String.valueOf(proxyPort));
-        textFieldUserName.setText(proxyUserName);
-        textFieldPassword.setText(proxyPassword);
-        chooseUpdateAddress.setSelectedItem(updateAddress);
+        textFieldAddress.setText(AllConfigs.getProxyAddress());
+        textFieldPort.setText(String.valueOf(AllConfigs.getProxyPort()));
+        textFieldUserName.setText(AllConfigs.getProxyUserName());
+        textFieldPassword.setText(AllConfigs.getProxyPassword());
+        chooseUpdateAddress.setSelectedItem(AllConfigs.getUpdateAddress());
     }
 
     private void selectProxyType() {
-        if (proxyType == PROXY_HTTP) {
+        if (AllConfigs.getProxyType() == Enums.ProxyType.PROXY_HTTP) {
             radioButtonProxyTypeHttp.setSelected(true);
-        } else if (proxyType == PROXY_SOCKS) {
+        } else if (AllConfigs.getProxyType() == Enums.ProxyType.PROXY_SOCKS) {
             radioButtonProxyTypeSocks5.setSelected(true);
         }
     }
 
     private SettingsFrame() {
         frame = new JFrame("Settings");
-        tmp = new File("tmp");
-        settings = new File("user/settings.json");
-        cmdSet = new LinkedHashSet<>();
         frameIcon = new ImageIcon(SettingsFrame.class.getResource("/icons/frame.png"));
         ButtonGroup proxyButtonGroup = new ButtonGroup();
         proxyButtonGroup.add(radioButtonNoProxy);
@@ -1216,12 +1071,12 @@ public class SettingsFrame {
     private void checkDownloadTask(JLabel label, JButton button, String fileName, String originButtonString, String updateSignalFileName) throws InterruptedException, IOException {
         //设置进度显示线程
         double progress;
-        if (DownloadUtil.getInstance().getDownloadStatus(fileName) != Enums.DownloadStatus_.DOWNLOAD_NO_TASK) {
+        if (DownloadUtil.getInstance().getDownloadStatus(fileName) != Enums.DownloadStatus.DOWNLOAD_NO_TASK) {
             progress = DownloadUtil.getInstance().getDownloadProgress(fileName);
             label.setText(TranslateUtil.getInstance().getTranslation("Downloading:") + (int) (progress * 100) + "%");
 
-            Enums.DownloadStatus_ downloadingStatus = DownloadUtil.getInstance().getDownloadStatus(fileName);
-            if (downloadingStatus == Enums.DownloadStatus_.DOWNLOAD_DONE) {
+            Enums.DownloadStatus downloadingStatus = DownloadUtil.getInstance().getDownloadStatus(fileName);
+            if (downloadingStatus == Enums.DownloadStatus.DOWNLOAD_DONE) {
                 //下载完成，禁用按钮
                 label.setText(TranslateUtil.getInstance().getTranslation("Download Done"));
                 label.setText(TranslateUtil.getInstance().getTranslation("Downloaded"));
@@ -1230,15 +1085,15 @@ public class SettingsFrame {
                 if (!updatePluginSign.exists()) {
                     updatePluginSign.createNewFile();
                 }
-            } else if (downloadingStatus == Enums.DownloadStatus_.DOWNLOAD_ERROR) {
+            } else if (downloadingStatus == Enums.DownloadStatus.DOWNLOAD_ERROR) {
                 //下载错误，重置button
                 label.setText(TranslateUtil.getInstance().getTranslation("Download failed"));
                 button.setText(TranslateUtil.getInstance().getTranslation(originButtonString));
                 button.setEnabled(true);
-            } else if (downloadingStatus == Enums.DownloadStatus_.DOWNLOAD_DOWNLOADING) {
+            } else if (downloadingStatus == Enums.DownloadStatus.DOWNLOAD_DOWNLOADING) {
                 //正在下载
                 button.setText(TranslateUtil.getInstance().getTranslation("Cancel"));
-            } else if (downloadingStatus == Enums.DownloadStatus_.DOWNLOAD_INTERRUPTED) {
+            } else if (downloadingStatus == Enums.DownloadStatus.DOWNLOAD_INTERRUPTED) {
                 //用户自行中断
                 label.setText("");
                 button.setText(TranslateUtil.getInstance().getTranslation(originButtonString));
@@ -1255,7 +1110,7 @@ public class SettingsFrame {
     private void addShowDownloadProgressTask(JLabel label, JButton button, String fileName) {
         try {
             String originString = button.getText();
-            while (SettingsFrame.isNotMainExit()) {
+            while (AllConfigs.isNotMainExit()) {
                 checkDownloadTask(label, button, fileName, originString, "update");
                 TimeUnit.MILLISECONDS.sleep(200);
             }
@@ -1264,13 +1119,13 @@ public class SettingsFrame {
     }
 
     private void initThreadPool() {
-        CachedThreadPool.getInstance().executeTask(() -> addShowDownloadProgressTask(labelDownloadProgress, buttonCheckUpdate, getName()));
+        CachedThreadPool.getInstance().executeTask(() -> addShowDownloadProgressTask(labelDownloadProgress, buttonCheckUpdate, AllConfigs.getName()));
 
         CachedThreadPool.getInstance().executeTask(() -> {
             try {
                 String fileName;
                 String originString = buttonUpdatePlugin.getText();
-                while (isNotMainExit()) {
+                while (AllConfigs.isNotMainExit()) {
                     fileName = (String) listPlugins.getSelectedValue();
                     checkDownloadTask(labelProgress, buttonUpdatePlugin, fileName + ".jar", originString, "updatePlugin");
                     TimeUnit.MILLISECONDS.sleep(200);
@@ -1326,7 +1181,7 @@ public class SettingsFrame {
         buttonSave.setText(TranslateUtil.getInstance().getTranslation("Save"));
         labelTranslationTip.setText(TranslateUtil.getInstance().getTranslation("The translation might not be 100% accurate"));
         labelLanguageChooseTip.setText(TranslateUtil.getInstance().getTranslation("Choose a language"));
-        labelVersion.setText(TranslateUtil.getInstance().getTranslation("Current Version:") + version);
+        labelVersion.setText(TranslateUtil.getInstance().getTranslation("Current Version:") + AllConfigs.version);
         labelInstalledPluginNum.setText(TranslateUtil.getInstance().getTranslation("Installed plugins num:"));
         buttonUpdatePlugin.setText(TranslateUtil.getInstance().getTranslation("Check for update"));
         buttonPluginMarket.setText(TranslateUtil.getInstance().getTranslation("Plugin Market"));
@@ -1342,39 +1197,9 @@ public class SettingsFrame {
         chooseUpdateAddressLabel.setText(TranslateUtil.getInstance().getTranslation("Choose update address"));
     }
 
-    public static void setMainExit(boolean b) {
-        mainExit = b;
-    }
-
-    protected static boolean isAdmin() {
-        try {
-            ProcessBuilder processBuilder = new ProcessBuilder("cmd.exe");
-            Process process = processBuilder.start();
-            PrintStream printStream = new PrintStream(process.getOutputStream(), true);
-            Scanner scanner = new Scanner(process.getInputStream());
-            printStream.println("@echo off");
-            printStream.println(">nul 2>&1 \"%SYSTEMROOT%\\system32\\cacls.exe\" \"%SYSTEMROOT%\\system32\\config\\system\"");
-            printStream.println("echo %errorlevel%");
-
-            boolean printedErrorlevel = false;
-            while (true) {
-                String nextLine = scanner.nextLine();
-                if (printedErrorlevel) {
-                    int errorlevel = Integer.parseInt(nextLine);
-                    scanner.close();
-                    return errorlevel == 0;
-                } else if ("echo %errorlevel%".equals(nextLine)) {
-                    printedErrorlevel = true;
-                }
-            }
-        } catch (IOException e) {
-            return false;
-        }
-    }
-
     private boolean isRepeatCommand(String name) {
         name = ":" + name;
-        for (String each : cmdSet) {
+        for (String each : AllConfigs.getCmdSet()) {
             if (each.substring(0, each.indexOf(";")).equals(name)) {
                 return true;
             }
@@ -1382,7 +1207,188 @@ public class SettingsFrame {
         return false;
     }
 
-    private static String getUpdateUrl() {
+    private void readAllSettings() {
+        try (BufferedReader buffR = new BufferedReader(new InputStreamReader(new FileInputStream("user/settings.json"), StandardCharsets.UTF_8))) {
+            String line;
+            StringBuilder result = new StringBuilder();
+            while (null != (line = buffR.readLine())) {
+                result.append(line);
+            }
+            JSONObject settingsInJson = JSON.parseObject(result.toString());
+            if (settingsInJson.containsKey("updateAddress")) {
+                AllConfigs.setUpdateAddress(settingsInJson.getString("updateAddress"));
+            } else {
+                AllConfigs.setUpdateAddress("jsdelivr CDN");
+            }
+            if (settingsInJson.containsKey("cacheNumLimit")) {
+                AllConfigs.setCacheNumLimit(settingsInJson.getInteger("cacheNumLimit"));
+            } else {
+                AllConfigs.setCacheNumLimit(1000);
+            }
+            if (settingsInJson.containsKey("hotkey")) {
+                String tmp = settingsInJson.getString("hotkey");
+                if (tmp == null) {
+                    AllConfigs.setHotkey("Ctrl + Alt + K");
+                } else {
+                    AllConfigs.setHotkey(tmp);
+                }
+            } else {
+                AllConfigs.setHotkey("Ctrl + Alt + K");
+            }
+            if (settingsInJson.containsKey("priorityFolder")) {
+                String tmp = settingsInJson.getString("priorityFolder");
+                if (tmp == null) {
+                    AllConfigs.setPriorityFolder("");
+                } else {
+                    AllConfigs.setPriorityFolder(tmp);
+                }
+            } else {
+                AllConfigs.setPriorityFolder("");
+            }
+            if (settingsInJson.containsKey("searchDepth")) {
+                AllConfigs.setSearchDepth(settingsInJson.getInteger("searchDepth"));
+            } else {
+                AllConfigs.setSearchDepth(8);
+            }
+            if (settingsInJson.containsKey("ignorePath")) {
+                String tmp = settingsInJson.getString("ignorePath");
+                if (tmp == null) {
+                    AllConfigs.setIgnorePath("C:\\Windows,");
+                } else {
+                    AllConfigs.setIgnorePath(tmp);
+                }
+            } else {
+                AllConfigs.setIgnorePath("C:\\Windows,");
+            }
+            if (settingsInJson.containsKey("updateTimeLimit")) {
+                AllConfigs.setUpdateTimeLimit(settingsInJson.getInteger("updateTimeLimit"));
+            } else {
+                AllConfigs.setUpdateTimeLimit(5);
+            }
+            if (settingsInJson.containsKey("isDefaultAdmin")) {
+                AllConfigs.setIsDefaultAdmin(settingsInJson.getBoolean("isDefaultAdmin"));
+            } else {
+                AllConfigs.setIsDefaultAdmin(false);
+            }
+            if (settingsInJson.containsKey("isLoseFocusClose")) {
+                AllConfigs.setIsLoseFocusClose(settingsInJson.getBoolean("isLoseFocusClose"));
+            } else {
+                AllConfigs.setIsLoseFocusClose(true);
+            }
+            if (settingsInJson.containsKey("openLastFolderKeyCode")) {
+                AllConfigs.setOpenLastFolderKeyCode(settingsInJson.getInteger("openLastFolderKeyCode"));
+            } else {
+                AllConfigs.setOpenLastFolderKeyCode(17);
+            }
+            tmp_openLastFolderKeyCode = AllConfigs.getOpenLastFolderKeyCode();
+            if (settingsInJson.containsKey("runAsAdminKeyCode")) {
+                AllConfigs.setRunAsAdminKeyCode(settingsInJson.getInteger("runAsAdminKeyCode"));
+            } else {
+                AllConfigs.setRunAsAdminKeyCode(16);
+            }
+            tmp_runAsAdminKeyCode = AllConfigs.getRunAsAdminKeyCode();
+            if (settingsInJson.containsKey("copyPathKeyCode")) {
+                AllConfigs.setCopyPathKeyCode(settingsInJson.getInteger("copyPathKeyCode"));
+            } else {
+                AllConfigs.setCopyPathKeyCode(18);
+            }
+            tmp_copyPathKeyCode = AllConfigs.getCopyPathKeyCode();
+            if (settingsInJson.containsKey("transparency")) {
+                AllConfigs.setTransparency(settingsInJson.getFloat("transparency"));
+            } else {
+                AllConfigs.setTransparency(0.8f);
+            }
+            if (settingsInJson.containsKey("searchBarColor")) {
+                AllConfigs.setSearchBarColor(settingsInJson.getInteger("searchBarColor"));
+            } else {
+                AllConfigs.setSearchBarColor(0xffffff);
+            }
+            if (settingsInJson.containsKey("defaultBackground")) {
+                AllConfigs.setDefaultBackgroundColor(settingsInJson.getInteger("defaultBackground"));
+            } else {
+                AllConfigs.setDefaultBackgroundColor(0xffffff);
+            }
+            if (settingsInJson.containsKey("fontColorWithCoverage")) {
+                AllConfigs.setFontColorWithCoverage(settingsInJson.getInteger("fontColorWithCoverage"));
+            } else {
+                AllConfigs.setFontColorWithCoverage(0x6666ff);
+            }
+            if (settingsInJson.containsKey("labelColor")) {
+                AllConfigs.setLabelColor(settingsInJson.getInteger("labelColor"));
+            } else {
+                AllConfigs.setLabelColor(0xcccccc);
+            }
+            if (settingsInJson.containsKey("fontColor")) {
+                AllConfigs.setFontColor(settingsInJson.getInteger("fontColor"));
+            } else {
+                AllConfigs.setFontColor(0);
+            }
+            if (settingsInJson.containsKey("language")) {
+                String language = settingsInJson.getString("language");
+                if (language == null || language.isEmpty()) {
+                    language = TranslateUtil.getInstance().getDefaultLang();
+                }
+                TranslateUtil.getInstance().setLanguage(language);
+            } else {
+                TranslateUtil.getInstance().setLanguage(TranslateUtil.getInstance().getDefaultLang());
+            }
+            if (settingsInJson.containsKey("proxyAddress")) {
+                AllConfigs.setProxyAddress(settingsInJson.getString("proxyAddress"));
+            } else {
+                AllConfigs.setProxyAddress("");
+            }
+            if (settingsInJson.containsKey("proxyPort")) {
+                AllConfigs.setProxyPort(settingsInJson.getInteger("proxyPort"));
+            } else {
+                AllConfigs.setProxyPort(0);
+            }
+            if (settingsInJson.containsKey("proxyUserName")) {
+                AllConfigs.setProxyUserName(settingsInJson.getString("proxyUserName"));
+            } else {
+                AllConfigs.setProxyUserName("");
+            }
+            if (settingsInJson.containsKey("proxyPassword")) {
+                AllConfigs.setProxyPassword(settingsInJson.getString("proxyPassword"));
+            } else {
+                AllConfigs.setProxyPassword("");
+            }
+            if (settingsInJson.containsKey("proxyType")) {
+                AllConfigs.setProxyType(settingsInJson.getInteger("proxyType"));
+            } else {
+                AllConfigs.setProxyType(Enums.ProxyType.PROXY_DIRECT);
+            }
+        } catch (NullPointerException | IOException e) {
+            AllConfigs.setCacheNumLimit(1000);
+            AllConfigs.setHotkey("Ctrl + Alt + K");
+            AllConfigs.setUpdateAddress("jsdelivr CDN");
+            AllConfigs.setPriorityFolder("");
+            AllConfigs.setSearchDepth(8);
+            AllConfigs.setIgnorePath("C:\\Windows,");
+            AllConfigs.setUpdateTimeLimit(5);
+            AllConfigs.setIsDefaultAdmin(false);
+            AllConfigs.setIsLoseFocusClose(true);
+            AllConfigs.setOpenLastFolderKeyCode(17);
+            AllConfigs.setRunAsAdminKeyCode(16);
+            AllConfigs.setCopyPathKeyCode(18);
+            AllConfigs.setTransparency(0.8f);
+            AllConfigs.setSearchBarColor(0xffffff);
+            AllConfigs.setDefaultBackgroundColor(0xffffff);
+            AllConfigs.setFontColorWithCoverage(0x6666ff);
+            AllConfigs.setLabelColor(0xcccccc);
+            AllConfigs.setFontColor(0);
+            TranslateUtil.getInstance().setLanguage(TranslateUtil.getInstance().getDefaultLang());
+            tmp_openLastFolderKeyCode = AllConfigs.getOpenLastFolderKeyCode();
+            tmp_runAsAdminKeyCode = AllConfigs.getRunAsAdminKeyCode();
+            tmp_copyPathKeyCode = AllConfigs.getCopyPathKeyCode();
+            AllConfigs.setProxyAddress("");
+            AllConfigs.setProxyPort(0);
+            AllConfigs.setProxyUserName("");
+            AllConfigs.setProxyPassword("");
+            AllConfigs.setProxyType(Enums.ProxyType.PROXY_DIRECT);
+        }
+    }
+
+    private static String getUpdateUrl(String updateAddress) {
         //todo 添加更新服务器地址
         switch (updateAddress) {
             case "jsdelivr CDN":
@@ -1396,16 +1402,16 @@ public class SettingsFrame {
 
     public static JSONObject getUpdateInfo() throws IOException, InterruptedException {
         DownloadUtil downloadUtil = DownloadUtil.getInstance();
-        Enums.DownloadStatus_ downloadStatus = downloadUtil.getDownloadStatus("version.json");
-        if (downloadStatus != Enums.DownloadStatus_.DOWNLOAD_DOWNLOADING) {
-            String url = getUpdateUrl();
+        Enums.DownloadStatus downloadStatus = downloadUtil.getDownloadStatus("version.json");
+        if (downloadStatus != Enums.DownloadStatus.DOWNLOAD_DOWNLOADING) {
+            String url = getUpdateUrl(AllConfigs.getUpdateAddress());
             if (url != null) {
                 downloadUtil.downLoadFromUrl(url,
                         "version.json", "tmp");
                 int count = 0;
                 boolean isError = false;
                 //wait for task
-                while (downloadUtil.getDownloadStatus("version.json") != Enums.DownloadStatus_.DOWNLOAD_DONE) {
+                while (downloadUtil.getDownloadStatus("version.json") != Enums.DownloadStatus.DOWNLOAD_DONE) {
                     count++;
                     if (count >= 3) {
                         isError = true;
@@ -1429,195 +1435,17 @@ public class SettingsFrame {
         return null;
     }
 
-    private void readAllSettings() {
-        try (BufferedReader buffR = new BufferedReader(new InputStreamReader(new FileInputStream("user/settings.json"), StandardCharsets.UTF_8))) {
-            String line;
-            StringBuilder result = new StringBuilder();
-            while (null != (line = buffR.readLine())) {
-                result.append(line);
-            }
-            JSONObject settingsInJson = JSON.parseObject(result.toString());
-            isStartup = hasStartup();
-            if (settingsInJson.containsKey("updateAddress")) {
-                updateAddress = settingsInJson.getString("updateAddress");
-            } else {
-                updateAddress = "jsdelivr CDN";
-            }
-            if (settingsInJson.containsKey("cacheNumLimit")) {
-                cacheNumLimit = settingsInJson.getInteger("cacheNumLimit");
-            } else {
-                cacheNumLimit = 1000;
-            }
-            if (settingsInJson.containsKey("hotkey")) {
-                hotkey = settingsInJson.getString("hotkey");
-                if (hotkey == null) {
-                    hotkey = "Ctrl + Alt + K";
-                }
-            } else {
-                hotkey = "Ctrl + Alt + K";
-            }
-            if (settingsInJson.containsKey("priorityFolder")) {
-                priorityFolder = settingsInJson.getString("priorityFolder");
-                if (priorityFolder == null) {
-                    priorityFolder = "";
-                }
-            } else {
-                priorityFolder = "";
-            }
-            if (settingsInJson.containsKey("searchDepth")) {
-                searchDepth = settingsInJson.getInteger("searchDepth");
-            } else {
-                searchDepth = 8;
-            }
-            if (settingsInJson.containsKey("ignorePath")) {
-                ignorePath = settingsInJson.getString("ignorePath");
-                if (ignorePath == null) {
-                    ignorePath = "C:\\Windows,";
-                }
-            } else {
-                ignorePath = "C:\\Windows,";
-            }
-            if (settingsInJson.containsKey("updateTimeLimit")) {
-                updateTimeLimit = settingsInJson.getInteger("updateTimeLimit");
-            } else {
-                updateTimeLimit = 5;
-            }
-            if (settingsInJson.containsKey("isDefaultAdmin")) {
-                isDefaultAdmin = settingsInJson.getBoolean("isDefaultAdmin");
-            } else {
-                isDefaultAdmin = false;
-            }
-            if (settingsInJson.containsKey("isLoseFocusClose")) {
-                isLoseFocusClose = settingsInJson.getBoolean("isLoseFocusClose");
-            } else {
-                isLoseFocusClose = true;
-            }
-            if (settingsInJson.containsKey("openLastFolderKeyCode")) {
-                openLastFolderKeyCode = settingsInJson.getInteger("openLastFolderKeyCode");
-            } else {
-                openLastFolderKeyCode = 17;
-            }
-            tmp_openLastFolderKeyCode = openLastFolderKeyCode;
-            if (settingsInJson.containsKey("runAsAdminKeyCode")) {
-                runAsAdminKeyCode = settingsInJson.getInteger("runAsAdminKeyCode");
-            } else {
-                runAsAdminKeyCode = 16;
-            }
-            tmp_runAsAdminKeyCode = runAsAdminKeyCode;
-            if (settingsInJson.containsKey("copyPathKeyCode")) {
-                copyPathKeyCode = settingsInJson.getInteger("copyPathKeyCode");
-            } else {
-                copyPathKeyCode = 18;
-            }
-            tmp_copyPathKeyCode = copyPathKeyCode;
-            if (settingsInJson.containsKey("transparency")) {
-                transparency = settingsInJson.getFloat("transparency");
-            } else {
-                transparency = 0.8f;
-            }
-            if (settingsInJson.containsKey("searchBarColor")) {
-                searchBarColor = settingsInJson.getInteger("searchBarColor");
-            } else {
-                searchBarColor = 0xffffff;
-            }
-            if (settingsInJson.containsKey("defaultBackground")) {
-                defaultBackgroundColor = settingsInJson.getInteger("defaultBackground");
-            } else {
-                defaultBackgroundColor = 0xffffff;
-            }
-            if (settingsInJson.containsKey("fontColorWithCoverage")) {
-                fontColorWithCoverage = settingsInJson.getInteger("fontColorWithCoverage");
-            } else {
-                fontColorWithCoverage = 0x6666ff;
-            }
-            if (settingsInJson.containsKey("labelColor")) {
-                labelColor = settingsInJson.getInteger("labelColor");
-            } else {
-                labelColor = 0xcccccc;
-            }
-            if (settingsInJson.containsKey("fontColor")) {
-                fontColor = settingsInJson.getInteger("fontColor");
-            } else {
-                fontColor = 0;
-            }
-            if (settingsInJson.containsKey("language")) {
-                String language = settingsInJson.getString("language");
-                if (language == null || language.isEmpty()) {
-                    language = TranslateUtil.getInstance().getDefaultLang();
-                }
-                TranslateUtil.getInstance().setLanguage(language);
-            } else {
-                TranslateUtil.getInstance().setLanguage(TranslateUtil.getInstance().getDefaultLang());
-            }
-            if (settingsInJson.containsKey("proxyAddress")) {
-                proxyAddress = settingsInJson.getString("proxyAddress");
-            } else {
-                proxyAddress = "";
-            }
-            if (settingsInJson.containsKey("proxyPort")) {
-                proxyPort = settingsInJson.getInteger("proxyPort");
-            } else {
-                proxyPort = 0;
-            }
-            if (settingsInJson.containsKey("proxyUserName")) {
-                proxyUserName = settingsInJson.getString("proxyUserName");
-            } else {
-                proxyUserName = "";
-            }
-            if (settingsInJson.containsKey("proxyPassword")) {
-                proxyPassword = settingsInJson.getString("proxyPassword");
-            } else {
-                proxyPassword = "";
-            }
-            if (settingsInJson.containsKey("proxyType")) {
-                proxyType = settingsInJson.getInteger("proxyType");
-            } else {
-                proxyType = PROXY_DIRECT;
-            }
-        } catch (NullPointerException | IOException e) {
-            isStartup = false;
-            cacheNumLimit = 1000;
-            hotkey = "Ctrl + Alt + K";
-            updateAddress = "jsdelivr CDN";
-            priorityFolder = "";
-            searchDepth = 8;
-            ignorePath = "C:\\Windows,";
-            updateTimeLimit = 5;
-            isDefaultAdmin = false;
-            isLoseFocusClose = true;
-            openLastFolderKeyCode = 17;
-            runAsAdminKeyCode = 16;
-            copyPathKeyCode = 18;
-            transparency = 0.8f;
-            searchBarColor = 0xffffff;
-            defaultBackgroundColor = 0xffffff;
-            fontColorWithCoverage = 0x6666ff;
-            labelColor = 0xcccccc;
-            fontColor = 0;
-            TranslateUtil.getInstance().setLanguage(TranslateUtil.getInstance().getDefaultLang());
-            tmp_openLastFolderKeyCode = openLastFolderKeyCode;
-            tmp_runAsAdminKeyCode = runAsAdminKeyCode;
-            tmp_copyPathKeyCode = copyPathKeyCode;
-            proxyAddress = "";
-            proxyPort = 0;
-            proxyUserName = "";
-            proxyPassword = "";
-            proxyType = PROXY_DIRECT;
-        }
-    }
-
     private void setAllSettings() {
-        hotKeyListener.registerHotkey(hotkey);
-        searchBar.setTransparency(transparency);
-        searchBar.setDefaultBackgroundColor(defaultBackgroundColor);
-        searchBar.setLabelColor(labelColor);
-        searchBar.setFontColorWithCoverage(fontColorWithCoverage);
-        searchBar.setFontColor(fontColor);
-        searchBar.setSearchBarColor(searchBarColor);
+        hotKeyListener.registerHotkey(AllConfigs.getHotkey());
+        searchBar.setTransparency(AllConfigs.getTransparency());
+        searchBar.setDefaultBackgroundColor(AllConfigs.getDefaultBackgroundColor());
+        searchBar.setLabelColor(AllConfigs.getLabelColor());
+        searchBar.setFontColorWithCoverage(AllConfigs.getFontColorWithCoverage());
+        searchBar.setFontColor(AllConfigs.getFontColor());
+        searchBar.setSearchBarColor(AllConfigs.getSearchBarColor());
 
         initCmdSetSettings();
-
-        saveAllSettings();
+        AllConfigs.saveAllSettings();
     }
 
     private void initCmdSetSettings() {
@@ -1625,7 +1453,7 @@ public class SettingsFrame {
         try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream("user/cmds.txt"), StandardCharsets.UTF_8))) {
             String each;
             while ((each = br.readLine()) != null) {
-                cmdSet.add(each);
+                AllConfigs.addToCmdSet(each);
             }
         } catch (IOException ignored) {
         }
@@ -1788,63 +1616,64 @@ public class SettingsFrame {
             JOptionPane.showMessageDialog(frame, errors);
             return;
         }
+        //所有配置均正确
 
         if (radioButtonProxyTypeSocks5.isSelected()) {
-            proxyType = PROXY_SOCKS;
+            AllConfigs.setProxyType(Enums.ProxyType.PROXY_SOCKS);
         } else if (radioButtonProxyTypeHttp.isSelected()) {
-            proxyType = PROXY_HTTP;
+            AllConfigs.setProxyType(Enums.ProxyType.PROXY_HTTP);
         }
         if (radioButtonNoProxy.isSelected()) {
-            proxyType = PROXY_DIRECT;
+            AllConfigs.setProxyType(Enums.ProxyType.PROXY_DIRECT);
         }
 
-        updateAddress = (String) chooseUpdateAddress.getSelectedItem();
-        priorityFolder = textFieldPriorityFolder.getText();
-        hotkey = textFieldHotkey.getText();
-        hotKeyListener.changeHotKey(hotkey);
-        cacheNumLimit = cacheNumLimitTemp;
-        updateTimeLimit = updateTimeLimitTemp;
-        ignorePath = ignorePathTemp;
-        searchDepth = searchDepthTemp;
-        transparency = transparencyTemp;
-        labelColor = tmp_labelColor;
-        defaultBackgroundColor = tmp_defaultBackgroundColor;
-        searchBarColor = tmp_searchBarColor;
-        fontColorWithCoverage = tmp_fontColorWithCoverage;
-        fontColor = tmp_fontColor;
-        SearchBar instance = SearchBar.getInstance();
-        instance.setTransparency(transparency);
-        instance.setDefaultBackgroundColor(defaultBackgroundColor);
-        instance.setLabelColor(labelColor);
-        instance.setFontColorWithCoverage(fontColorWithCoverage);
-        instance.setFontColor(fontColor);
-        instance.setSearchBarColor(searchBarColor);
-        Color tmp_color = new Color(labelColor);
+        AllConfigs.setUpdateAddress((String) chooseUpdateAddress.getSelectedItem());
+        AllConfigs.setPriorityFolder(textFieldPriorityFolder.getText());
+        AllConfigs.setHotkey(textFieldHotkey.getText());
+        AllConfigs.setCacheNumLimit(cacheNumLimitTemp);
+        AllConfigs.setUpdateTimeLimit(updateTimeLimitTemp);
+        AllConfigs.setIgnorePath(ignorePathTemp);
+        AllConfigs.setSearchDepth(searchDepthTemp);
+        AllConfigs.setTransparency(transparencyTemp);
+        AllConfigs.setLabelColor(tmp_labelColor);
+        AllConfigs.setDefaultBackgroundColor(tmp_defaultBackgroundColor);
+        AllConfigs.setSearchBarColor(tmp_searchBarColor);
+        AllConfigs.setFontColorWithCoverage(tmp_fontColorWithCoverage);
+        AllConfigs.setFontColor(tmp_fontColor);
+        AllConfigs.setProxyAddress(tmp_proxyAddress);
+        AllConfigs.setProxyPort(tmp_proxyPort);
+        AllConfigs.setProxyUserName(tmp_proxyUserName);
+        AllConfigs.setProxyPassword(tmp_proxyPassword);
+        AllConfigs.setOpenLastFolderKeyCode(tmp_openLastFolderKeyCode);
+        AllConfigs.setRunAsAdminKeyCode(tmp_runAsAdminKeyCode);
+        AllConfigs.setCopyPathKeyCode(tmp_copyPathKeyCode);
+
+        hotKeyListener.changeHotKey(AllConfigs.getHotkey());
+        searchBar.setTransparency(AllConfigs.getTransparency());
+        searchBar.setDefaultBackgroundColor(AllConfigs.getDefaultBackgroundColor());
+        searchBar.setLabelColor(AllConfigs.getLabelColor());
+        searchBar.setFontColorWithCoverage(AllConfigs.getFontColorWithCoverage());
+        searchBar.setFontColor(AllConfigs.getFontColor());
+        searchBar.setSearchBarColor(AllConfigs.getSearchBarColor());
+
+        Color tmp_color = new Color(AllConfigs.getLabelColor());
         labelColorChooser.setBackground(tmp_color);
         labelColorChooser.setForeground(tmp_color);
-        tmp_color = new Color(defaultBackgroundColor);
+        tmp_color = new Color(AllConfigs.getDefaultBackgroundColor());
         defaultBackgroundChooser.setBackground(tmp_color);
         defaultBackgroundChooser.setForeground(tmp_color);
-        tmp_color = new Color(fontColorWithCoverage);
+        tmp_color = new Color(AllConfigs.getFontColorWithCoverage());
         FontColorWithCoverageChooser.setBackground(tmp_color);
         FontColorWithCoverageChooser.setForeground(tmp_color);
-        tmp_color = new Color(fontColor);
+        tmp_color = new Color(AllConfigs.getFontColor());
         FontColorChooser.setBackground(tmp_color);
         FontColorChooser.setForeground(tmp_color);
-        proxyAddress = tmp_proxyAddress;
-        proxyPort = tmp_proxyPort;
-        proxyUserName = tmp_proxyUserName;
-        proxyPassword = tmp_proxyPassword;
-        isStartup = tmp_isStartup;
-        openLastFolderKeyCode = tmp_openLastFolderKeyCode;
-        runAsAdminKeyCode = tmp_runAsAdminKeyCode;
-        copyPathKeyCode = tmp_copyPathKeyCode;
 
-        saveAllSettings();
+        AllConfigs.saveAllSettings();
 
         //保存自定义命令
         StringBuilder strb = new StringBuilder();
-        for (String each : cmdSet) {
+        for (String each : AllConfigs.getCmdSet()) {
             strb.append(each);
             strb.append("\n");
         }
@@ -1855,71 +1684,10 @@ public class SettingsFrame {
         hideFrame();
     }
 
-    private static void saveAllSettings() {
-        JSONObject allSettings = new JSONObject();
-        //保存设置
-        allSettings.put("hotkey", hotkey);
-        allSettings.put("isStartup", isStartup);
-        allSettings.put("cacheNumLimit", cacheNumLimit);
-        allSettings.put("updateTimeLimit", updateTimeLimit);
-        allSettings.put("ignorePath", ignorePath);
-        allSettings.put("searchDepth", searchDepth);
-        allSettings.put("priorityFolder", priorityFolder);
-        allSettings.put("isDefaultAdmin", isDefaultAdmin);
-        allSettings.put("isLoseFocusClose", isLoseFocusClose);
-        allSettings.put("runAsAdminKeyCode", runAsAdminKeyCode);
-        allSettings.put("openLastFolderKeyCode", openLastFolderKeyCode);
-        allSettings.put("copyPathKeyCode", copyPathKeyCode);
-        allSettings.put("transparency", transparency);
-        allSettings.put("labelColor", labelColor);
-        allSettings.put("defaultBackground", defaultBackgroundColor);
-        allSettings.put("searchBarColor", searchBarColor);
-        allSettings.put("fontColorWithCoverage", fontColorWithCoverage);
-        allSettings.put("fontColor", fontColor);
-        allSettings.put("language", TranslateUtil.getInstance().getLanguage());
-        allSettings.put("proxyAddress", proxyAddress);
-        allSettings.put("proxyPort", proxyPort);
-        allSettings.put("proxyUserName", proxyUserName);
-        allSettings.put("proxyPassword", proxyPassword);
-        allSettings.put("proxyType", proxyType);
-        allSettings.put("updateAddress", updateAddress);
-        try (BufferedWriter buffW = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(settings), StandardCharsets.UTF_8))) {
-            String format = JSON.toJSONString(allSettings, SerializerFeature.PrettyFormat, SerializerFeature.WriteMapNullValue, SerializerFeature.WriteDateUseDateFormat);
-            buffW.write(format);
-        } catch (IOException ignored) {
-        }
-    }
-
-    public static boolean isDebug() {
-        try {
-            String res = System.getProperty("File_Engine_Debug");
-            return "true".equalsIgnoreCase(res);
-        } catch (NullPointerException e) {
-            return false;
-        }
-    }
-
-    private static boolean hasStartup() {
-        try {
-            String command = "cmd.exe /c schtasks /query /tn \"File-Engine\"";
-            Process p = Runtime.getRuntime().exec(command);
-            StringBuilder strBuilder = new StringBuilder();
-            String line;
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
-                while ((line = reader.readLine()) != null) {
-                    strBuilder.append(line);
-                }
-            }
-            return strBuilder.toString().contains("File-Engine");
-        } catch (IOException e) {
-            return false;
-        }
-    }
-
     private void setStartup(boolean b) {
         if (b) {
             String command = "cmd.exe /c schtasks /create /ru \"administrators\" /rl HIGHEST /sc ONLOGON /tn \"File-Engine\" /tr ";
-            File FileEngine = new File(getName());
+            File FileEngine = new File(AllConfigs.getName());
             String absolutePath = "\"\"" + FileEngine.getAbsolutePath() + "\"\" /f";
             command += absolutePath;
             Process p;
@@ -1962,7 +1730,7 @@ public class SettingsFrame {
 
         boolean isSelected = checkBoxAddToStartup.isSelected();
         JSONObject allSettings = null;
-        try (BufferedReader buffR1 = new BufferedReader(new InputStreamReader(new FileInputStream(settings), StandardCharsets.UTF_8))) {
+        try (BufferedReader buffR1 = new BufferedReader(new InputStreamReader(new FileInputStream(AllConfigs.getSettings()), StandardCharsets.UTF_8))) {
             String line;
             StringBuilder result = new StringBuilder();
             while (null != (line = buffR1.readLine())) {
@@ -1973,7 +1741,7 @@ public class SettingsFrame {
         } catch (IOException ignored) {
         }
         //保存设置
-        try (BufferedWriter buffW = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(settings), StandardCharsets.UTF_8))) {
+        try (BufferedWriter buffW = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(AllConfigs.getSettings()), StandardCharsets.UTF_8))) {
             String format = JSON.toJSONString(allSettings, SerializerFeature.PrettyFormat, SerializerFeature.WriteMapNullValue, SerializerFeature.WriteDateUseDateFormat);
             buffW.write(format);
         } catch (IOException ignored) {

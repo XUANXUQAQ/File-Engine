@@ -1,9 +1,9 @@
 package FileEngine.checkHotkey;
 
+import FileEngine.configs.AllConfigs;
 import FileEngine.dllInterface.HotkeyListener;
-import FileEngine.enums.Enums;
+import FileEngine.modesAndStatus.Enums;
 import FileEngine.frames.SearchBar;
-import FileEngine.frames.SettingsFrame;
 import FileEngine.threadPool.CachedThreadPool;
 
 import java.awt.event.KeyEvent;
@@ -101,7 +101,7 @@ public class CheckHotKeyUtil {
             SearchBar searchBar = SearchBar.getInstance();
             HotkeyListener instance = HotkeyListener.INSTANCE;
             try {
-                while (SettingsFrame.isNotMainExit()) {
+                while (AllConfigs.isNotMainExit()) {
                     if (!isExecuted && instance.getKeyStatus()) {
                         isExecuted = true;
                         if (!searchBar.isVisible()) {
