@@ -1,7 +1,7 @@
 package FileEngine.download;
 
-import FileEngine.enums.Enums;
-import FileEngine.frames.SettingsFrame;
+import FileEngine.configs.AllConfigs;
+import FileEngine.modesAndStatus.Enums;
 import FileEngine.threadPool.CachedThreadPool;
 
 import javax.net.ssl.*;
@@ -36,7 +36,7 @@ public class DownloadUtil {
      * @param savePath 保存位置
      */
     public void downLoadFromUrl(String urlStr, String fileName, String savePath) {
-        DownloadManager downloadManager = new DownloadManager(urlStr, fileName, savePath, SettingsFrame.getProxy());
+        DownloadManager downloadManager = new DownloadManager(urlStr, fileName, savePath, AllConfigs.getProxy());
         CachedThreadPool.getInstance().executeTask(downloadManager::download);
         DOWNLOAD_MAP.put(fileName, downloadManager);
     }
@@ -55,7 +55,7 @@ public class DownloadUtil {
         if (isFileNameNotContainsSuffix(fileName)) {
             System.err.println("Warning:" + fileName + " doesn't have suffix");
         }
-        if (SettingsFrame.isDebug()) {
+        if (AllConfigs.isDebug()) {
             System.out.println("cancel downloading " + fileName);
         }
         if (hasTask(fileName)) {
@@ -70,18 +70,18 @@ public class DownloadUtil {
         return DOWNLOAD_MAP.containsKey(fileName);
     }
 
-    public Enums.DownloadStatus_ getDownloadStatus(String fileName) {
+    public Enums.DownloadStatus getDownloadStatus(String fileName) {
         if (hasTask(fileName)) {
             return DOWNLOAD_MAP.get(fileName).getDownloadStatus();
         }
-        return Enums.DownloadStatus_.DOWNLOAD_NO_TASK;
+        return Enums.DownloadStatus.DOWNLOAD_NO_TASK;
     }
 
     private boolean isFileNameNotContainsSuffix(String fileName) {
         if (fileName == null) {
             return false;
         }
-        if (SettingsFrame.isDebug()) {
+        if (AllConfigs.isDebug()) {
             return fileName.lastIndexOf(".") == -1;
         } else {
             return false;
@@ -94,15 +94,15 @@ public class DownloadUtil {
         private final String fileName;
         private volatile double progress = 0.0;
         private volatile boolean isUserInterrupted = false;
-        private volatile Enums.DownloadStatus_ downloadStatus;
+        private volatile Enums.DownloadStatus downloadStatus;
         private Proxy proxy = null;
         private Authenticator authenticator = null;
 
-        private DownloadManager(String url, String fileName, String savePath, SettingsFrame.ProxyInfo proxyInfo) {
+        private DownloadManager(String url, String fileName, String savePath, AllConfigs.ProxyInfo proxyInfo) {
             this.url = url;
             this.fileName = fileName;
             this.localPath = savePath;
-            this.downloadStatus = Enums.DownloadStatus_.DOWNLOAD_DOWNLOADING;
+            this.downloadStatus = Enums.DownloadStatus.DOWNLOAD_DOWNLOADING;
             setProxy(proxyInfo.type, proxyInfo.address, proxyInfo.port, proxyInfo.userName, proxyInfo.password);
         }
 
@@ -179,11 +179,11 @@ public class DownloadUtil {
                 if (isUserInterrupted) {
                     throw new IOException("User Interrupted");
                 }
-                downloadStatus = Enums.DownloadStatus_.DOWNLOAD_DONE;
+                downloadStatus = Enums.DownloadStatus.DOWNLOAD_DONE;
             } catch (IOException | NoSuchAlgorithmException | KeyManagementException e) {
                 e.printStackTrace();
                 if (!"User Interrupted".equals(e.getMessage())) {
-                    downloadStatus = Enums.DownloadStatus_.DOWNLOAD_ERROR;
+                    downloadStatus = Enums.DownloadStatus.DOWNLOAD_ERROR;
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -198,14 +198,14 @@ public class DownloadUtil {
 
         private void setInterrupt() {
             isUserInterrupted = true;
-            downloadStatus = Enums.DownloadStatus_.DOWNLOAD_INTERRUPTED;
+            downloadStatus = Enums.DownloadStatus.DOWNLOAD_INTERRUPTED;
         }
 
         private double getDownloadProgress() {
             return progress;
         }
 
-        private Enums.DownloadStatus_ getDownloadStatus() {
+        private Enums.DownloadStatus getDownloadStatus() {
             return downloadStatus;
         }
 

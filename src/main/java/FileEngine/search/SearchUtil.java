@@ -1,10 +1,10 @@
 package FileEngine.search;
 
 import FileEngine.SQLiteConfig.SQLiteUtil;
+import FileEngine.configs.AllConfigs;
 import FileEngine.dllInterface.GetAscII;
 import FileEngine.dllInterface.IsLocalDisk;
 import FileEngine.dllInterface.isNTFS;
-import FileEngine.frames.SettingsFrame;
 import FileEngine.frames.TaskBar;
 import FileEngine.translate.TranslateUtil;
 
@@ -355,7 +355,7 @@ public class SearchUtil {
             ConcurrentLinkedQueue<String> commandQueue = new ConcurrentLinkedQueue<>(commandSet);
             commandSet.clear();
             try {
-                if (SettingsFrame.isDebug()) {
+                if (AllConfigs.isDebug()) {
                     System.out.println("----------------------------------------------");
                     System.out.println("执行SQL命令");
                     System.out.println("----------------------------------------------");
@@ -365,7 +365,7 @@ public class SearchUtil {
                     stmt.execute(each);
                 }
             } catch (SQLException e) {
-                if (SettingsFrame.isDebug()) {
+                if (AllConfigs.isDebug()) {
                     e.printStackTrace();
                 }
                 //不删除执行失败的记录
@@ -488,7 +488,7 @@ public class SearchUtil {
             Runtime.getRuntime().exec(command, null, new File("user"));
             waitForTask("fileSearcher.exe");
         } catch (IOException | InterruptedException e) {
-            if (!(e instanceof InterruptedException) && SettingsFrame.isDebug()) {
+            if (!(e instanceof InterruptedException) && AllConfigs.isDebug()) {
                 e.printStackTrace();
             }
         }

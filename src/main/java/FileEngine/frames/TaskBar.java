@@ -2,6 +2,7 @@ package FileEngine.frames;
 
 import FileEngine.SQLiteConfig.SQLiteUtil;
 import FileEngine.checkHotkey.CheckHotKeyUtil;
+import FileEngine.configs.AllConfigs;
 import FileEngine.daemon.DaemonUtil;
 import FileEngine.dllInterface.FileMonitor;
 import FileEngine.pluginSystem.PluginUtil;
@@ -41,7 +42,7 @@ public class TaskBar {
             // 创建托盘图标
             trayIcon = new TrayIcon(image);
             // 添加工具提示文本
-            if (SettingsFrame.isDebug()) {
+            if (AllConfigs.isDebug()) {
                 trayIcon.setToolTip("File-Engine(Debug)");
             } else {
                 trayIcon.setToolTip("File-Engine");
@@ -80,7 +81,7 @@ public class TaskBar {
     }
 
     private void closeAndExit() {
-        SettingsFrame.setMainExit(true);
+        AllConfigs.setMainExit(true);
         systemTray.remove(trayIcon);
         SettingsFrame.getInstance().hideFrame();
         PluginMarket.getInstance().hideWindow();
@@ -93,7 +94,7 @@ public class TaskBar {
     }
 
     private void restart() {
-        SettingsFrame.setMainExit(true);
+        AllConfigs.setMainExit(true);
         systemTray.remove(trayIcon);
         SettingsFrame.getInstance().hideFrame();
         PluginMarket.getInstance().hideWindow();

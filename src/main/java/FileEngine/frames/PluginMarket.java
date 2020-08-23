@@ -1,7 +1,8 @@
 package FileEngine.frames;
 
+import FileEngine.configs.AllConfigs;
 import FileEngine.download.DownloadUtil;
-import FileEngine.enums.Enums;
+import FileEngine.modesAndStatus.Enums;
 import FileEngine.pluginSystem.PluginUtil;
 import FileEngine.threadPool.CachedThreadPool;
 import FileEngine.translate.TranslateUtil;
@@ -55,7 +56,7 @@ public class PluginMarket {
             try {
                 String pluginName;
                 String originString = buttonInstall.getText();
-                while (SettingsFrame.isNotMainExit()) {
+                while (AllConfigs.isNotMainExit()) {
                     pluginName = (String) listPlugins.getSelectedValue();
                     if (pluginName != null) {
                         checkDownloadTask(labelProgress, buttonInstall, pluginName + ".jar", originString);
@@ -78,7 +79,7 @@ public class PluginMarket {
         CachedThreadPool.getInstance().executeTask(() -> {
             HashSet<String> pluginSet = new HashSet<>();
             try {
-                while (SettingsFrame.isNotMainExit()) {
+                while (AllConfigs.isNotMainExit()) {
                     if (isStartSearch) {
                         isStartSearch = false;
                         if (searchKeywords == null || searchKeywords.isEmpty()) {
@@ -105,12 +106,12 @@ public class PluginMarket {
         double progress;
         String pluginName;
         TranslateUtil translateUtil = TranslateUtil.getInstance();
-        Enums.DownloadStatus_ downloadingStatus = DownloadUtil.getInstance().getDownloadStatus(fileName);
-        if (downloadingStatus != Enums.DownloadStatus_.DOWNLOAD_NO_TASK) {
+        Enums.DownloadStatus downloadingStatus = DownloadUtil.getInstance().getDownloadStatus(fileName);
+        if (downloadingStatus != Enums.DownloadStatus.DOWNLOAD_NO_TASK) {
             progress = DownloadUtil.getInstance().getDownloadProgress(fileName);
             label.setText(translateUtil.getTranslation("Downloading:") + (int) (progress * 100) + "%");
 
-            if (downloadingStatus == Enums.DownloadStatus_.DOWNLOAD_DONE) {
+            if (downloadingStatus == Enums.DownloadStatus.DOWNLOAD_DONE) {
                 //下载完成，禁用按钮
                 label.setText(translateUtil.getTranslation("Download Done"));
                 label.setText(translateUtil.getTranslation("Downloaded"));
@@ -120,17 +121,17 @@ public class PluginMarket {
                 if (!updatePluginSign.exists()) {
                     updatePluginSign.createNewFile();
                 }
-            } else if (downloadingStatus == Enums.DownloadStatus_.DOWNLOAD_ERROR) {
+            } else if (downloadingStatus == Enums.DownloadStatus.DOWNLOAD_ERROR) {
                 //下载错误，重置button
                 label.setText(translateUtil.getTranslation("Download failed"));
                 button.setText(translateUtil.getTranslation(originButtonString));
                 button.setEnabled(true);
                 button.setVisible(true);
-            } else if (downloadingStatus == Enums.DownloadStatus_.DOWNLOAD_DOWNLOADING) {
+            } else if (downloadingStatus == Enums.DownloadStatus.DOWNLOAD_DOWNLOADING) {
                 //正在下载
                 button.setText(translateUtil.getTranslation("Cancel"));
                 button.setVisible(true);
-            } else if (downloadingStatus == Enums.DownloadStatus_.DOWNLOAD_INTERRUPTED) {
+            } else if (downloadingStatus == Enums.DownloadStatus.DOWNLOAD_INTERRUPTED) {
                 //用户自行中断
                 label.setText("");
                 button.setText(translateUtil.getTranslation(originButtonString));
@@ -183,10 +184,10 @@ public class PluginMarket {
         buttonInstall.addActionListener(e -> {
             String pluginName = (String) listPlugins.getSelectedValue();
             String pluginFullName = pluginName + ".jar";
-            Enums.DownloadStatus_ downloadStatus = instance.getDownloadStatus(pluginFullName);
-            if (downloadStatus == Enums.DownloadStatus_.DOWNLOAD_NO_TASK ||
-                    downloadStatus == Enums.DownloadStatus_.DOWNLOAD_INTERRUPTED ||
-                    downloadStatus == Enums.DownloadStatus_.DOWNLOAD_ERROR) {
+            Enums.DownloadStatus downloadStatus = instance.getDownloadStatus(pluginFullName);
+            if (downloadStatus == Enums.DownloadStatus.DOWNLOAD_NO_TASK ||
+                    downloadStatus == Enums.DownloadStatus.DOWNLOAD_INTERRUPTED ||
+                    downloadStatus == Enums.DownloadStatus.DOWNLOAD_ERROR) {
                 //没有下载过，开始下载
                 JSONObject info = getPluginDetailInfo(pluginName);
                 if (info != null) {
@@ -194,7 +195,7 @@ public class PluginMarket {
                     DownloadUtil.getInstance().downLoadFromUrl(downloadUrl, pluginFullName, "tmp/pluginsUpdate");
                     buttonInstall.setText(TranslateUtil.getInstance().getTranslation("Cancel"));
                 }
-            } else if (downloadStatus == Enums.DownloadStatus_.DOWNLOAD_DOWNLOADING) {
+            } else if (downloadStatus == Enums.DownloadStatus.DOWNLOAD_DOWNLOADING) {
                 //取消下载
                 instance.cancelDownload(pluginFullName);
                 //复位button
@@ -266,7 +267,7 @@ public class PluginMarket {
         });
         CachedThreadPool.getInstance().executeTask(() -> {
             try {
-                while (SettingsFrame.isNotMainExit()) {
+                while (AllConfigs.isNotMainExit()) {
                     if (isStartGetPluginInfo.get()) {
                         isStartGetPluginInfo.set(false);
                         String officialSite;
@@ -323,8 +324,8 @@ public class PluginMarket {
         if (!icon.exists()) {
             DownloadUtil.getInstance().downLoadFromUrl(url, icon.getName(), "tmp");
 
-            while (DownloadUtil.getInstance().getDownloadStatus(icon.getName()) != Enums.DownloadStatus_.DOWNLOAD_DONE) {
-                if (DownloadUtil.getInstance().getDownloadStatus(icon.getName()) == Enums.DownloadStatus_.DOWNLOAD_ERROR) {
+            while (DownloadUtil.getInstance().getDownloadStatus(icon.getName()) != Enums.DownloadStatus.DOWNLOAD_DONE) {
+                if (DownloadUtil.getInstance().getDownloadStatus(icon.getName()) == Enums.DownloadStatus.DOWNLOAD_ERROR) {
                     return null;
                 }
                 if (count > 30) {
@@ -355,16 +356,16 @@ public class PluginMarket {
 
     private static JSONObject getPluginInfo(String url, String saveFileName) throws IOException, InterruptedException {
         DownloadUtil downloadUtil = DownloadUtil.getInstance();
-        Enums.DownloadStatus_ downloadStatus = downloadUtil.getDownloadStatus(saveFileName);
-        if (downloadStatus != Enums.DownloadStatus_.DOWNLOAD_DOWNLOADING) {
+        Enums.DownloadStatus downloadStatus = downloadUtil.getDownloadStatus(saveFileName);
+        if (downloadStatus != Enums.DownloadStatus.DOWNLOAD_DOWNLOADING) {
             //判断是否已下载完成
-            if (downloadStatus != Enums.DownloadStatus_.DOWNLOAD_DONE) {
+            if (downloadStatus != Enums.DownloadStatus.DOWNLOAD_DONE) {
                 downloadUtil.downLoadFromUrl(url,
                         saveFileName, "tmp");
                 int count = 0;
                 boolean isError = false;
                 //wait for task
-                while (downloadUtil.getDownloadStatus(saveFileName) != Enums.DownloadStatus_.DOWNLOAD_DONE) {
+                while (downloadUtil.getDownloadStatus(saveFileName) != Enums.DownloadStatus.DOWNLOAD_DONE) {
                     count++;
                     if (count >= 3) {
                         isError = true;
@@ -391,7 +392,7 @@ public class PluginMarket {
 
     private String getPluginListUrl() {
         //todo 添加更新服务器地址
-        switch (SettingsFrame.getUpdateAddress()) {
+        switch (AllConfigs.getUpdateAddress()) {
             case "jsdelivr CDN":
                 return "https://cdn.jsdelivr.net/gh/XUANXUQAQ/File-Engine-Version/plugins.json";
             case "GitHub":
