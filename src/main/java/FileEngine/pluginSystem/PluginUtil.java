@@ -25,22 +25,33 @@ public class PluginUtil {
         public final Object clsInstance;
     }
 
-    private static final ConcurrentHashMap<String, Plugin> PLUGIN_MAP = new ConcurrentHashMap<>();
-    private static final ConcurrentHashMap<String, String> NAME_IDENTIFIER_MAP = new ConcurrentHashMap<>();
-    private static final HashSet<String> OLD_PLUGINS = new HashSet<>();
-    private static final HashSet<String> REPEAT_PLUGINS = new HashSet<>();
-    private static boolean isTooOld = false;
-    private static boolean isRepeat = false;
+    private static class PluginUtilBuilder {
+        private static final PluginUtil INSTANCE = new PluginUtil();
+    }
 
-    public static boolean isPluginTooOld() {
+    public static PluginUtil getInstance() {
+        return PluginUtilBuilder.INSTANCE;
+    }
+
+    private PluginUtil() {
+    }
+
+    private final ConcurrentHashMap<String, Plugin> PLUGIN_MAP = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, String> NAME_IDENTIFIER_MAP = new ConcurrentHashMap<>();
+    private final HashSet<String> OLD_PLUGINS = new HashSet<>();
+    private final HashSet<String> REPEAT_PLUGINS = new HashSet<>();
+    private boolean isTooOld = false;
+    private boolean isRepeat = false;
+
+    public boolean isPluginTooOld() {
         return isTooOld;
     }
 
-    public static boolean isPluginRepeat() {
+    public boolean isPluginRepeat() {
         return isRepeat;
     }
 
-    public static String getRepeatPlugins() {
+    public String getRepeatPlugins() {
         StringBuilder strb = new StringBuilder();
         for (String repeatPlugins : REPEAT_PLUGINS) {
             strb.append(repeatPlugins).append(",");
@@ -48,19 +59,19 @@ public class PluginUtil {
         return strb.substring(0, strb.length() - 1);
     }
 
-    public static Iterator<Plugin> getPluginMapIter() {
+    public Iterator<Plugin> getPluginMapIter() {
         return PLUGIN_MAP.values().iterator();
     }
 
-    public static Plugin getPluginByIdentifier(String identifier) {
+    public Plugin getPluginByIdentifier(String identifier) {
         return PLUGIN_MAP.get(identifier);
     }
 
-    public static int getInstalledPluginNum() {
+    public int getInstalledPluginNum() {
         return PLUGIN_MAP.size();
     }
 
-    public static String getAllOldPluginsName() {
+    public String getAllOldPluginsName() {
         StringBuilder strb = new StringBuilder();
         for (String oldPlugin : OLD_PLUGINS) {
             strb.append(oldPlugin).append(",");
@@ -68,7 +79,7 @@ public class PluginUtil {
         return strb.substring(0, strb.length() - 1);
     }
 
-    private static String readAll(InputStream inputStream) {
+    private String readAll(InputStream inputStream) {
         StringBuilder strb = new StringBuilder();
         String line;
         try (BufferedReader buffr = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
@@ -81,13 +92,13 @@ public class PluginUtil {
         return strb.toString();
     }
 
-    private static void unloadPlugin(Plugin plugin) {
+    private void unloadPlugin(Plugin plugin) {
         if (plugin != null) {
             plugin.unloadPlugin();
         }
     }
 
-    private static boolean loadPlugin(File pluginFile, String className, String identifier) throws Exception {
+    private boolean loadPlugin(File pluginFile, String className, String identifier) throws Exception {
         boolean isTooOld = false;
         URLClassLoader classLoader = new URLClassLoader(
                 new URL[]{pluginFile.toURI().toURL()},
@@ -105,22 +116,22 @@ public class PluginUtil {
         return isTooOld;
     }
 
-    public static void unloadAllPlugins() {
+    public void unloadAllPlugins() {
         for (String each : PLUGIN_MAP.keySet()) {
             unloadPlugin(PLUGIN_MAP.get(each));
         }
     }
 
-    public static String getIdentifierByName(String name) {
+    public String getIdentifierByName(String name) {
         return NAME_IDENTIFIER_MAP.get(name);
     }
 
-    public static Object[] getPluginArray() {
+    public Object[] getPluginArray() {
         ArrayList<String> list = new ArrayList<>(NAME_IDENTIFIER_MAP.keySet());
         return list.toArray();
     }
 
-    public static void loadAllPlugins(String pluginPath) throws Exception {
+    public void loadAllPlugins(String pluginPath) throws Exception {
         FilenameFilter filter = (dir, name) -> name.endsWith(".jar");
         File[] files = new File(pluginPath).listFiles(filter);
         if (files == null || files.length == 0) {

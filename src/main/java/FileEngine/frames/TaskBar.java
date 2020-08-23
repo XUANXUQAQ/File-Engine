@@ -86,7 +86,7 @@ public class TaskBar {
         SettingsFrame.getInstance().hideFrame();
         PluginMarket.getInstance().hideWindow();
         SearchBar.getInstance().closeSearchBar();
-        PluginUtil.unloadAllPlugins();
+        PluginUtil.getInstance().unloadAllPlugins();
         CheckHotKeyUtil.getInstance().stopListen();
         FileMonitor.INSTANCE.stop_monitor();
         SQLiteUtil.closeConnection();
@@ -99,7 +99,7 @@ public class TaskBar {
         SettingsFrame.getInstance().hideFrame();
         PluginMarket.getInstance().hideWindow();
         SearchBar.getInstance().closeSearchBar();
-        PluginUtil.unloadAllPlugins();
+        PluginUtil.getInstance().unloadAllPlugins();
         CheckHotKeyUtil.getInstance().stopListen();
         FileMonitor.INSTANCE.stop_monitor();
         SQLiteUtil.closeConnection();

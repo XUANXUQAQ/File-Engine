@@ -9,19 +9,22 @@ import java.io.File;
  * @author XUANXU
  */
 public class GetIconUtil {
-    private final FileSystemView FILE_SYSTEM_VIEW = FileSystemView.getFileSystemView();
-    private static ImageIcon dllImageIcon;
-    private static ImageIcon folderImageIcon;
-    private static ImageIcon txtImageIcon;
-    private static ImageIcon vbsImageIcon;
-    private static ImageIcon helpIcon;
-    private static ImageIcon updateIcon;
-    private static ImageIcon blankIcon;
-    private static ImageIcon recycleBin;
+    private static final FileSystemView FILE_SYSTEM_VIEW = FileSystemView.getFileSystemView();
+    private ImageIcon dllImageIcon;
+    private ImageIcon folderImageIcon;
+    private ImageIcon txtImageIcon;
+    private ImageIcon vbsImageIcon;
+    private ImageIcon helpIcon;
+    private ImageIcon updateIcon;
+    private ImageIcon blankIcon;
+    private ImageIcon recycleBin;
     private volatile boolean isInitialized = false;
 
     private static class GetIconUtilBuilder {
         private static final GetIconUtil INSTANCE = new GetIconUtil();
+    }
+
+    private GetIconUtil() {
     }
 
     public static GetIconUtil getInstance() {

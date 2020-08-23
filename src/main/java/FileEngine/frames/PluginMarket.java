@@ -141,7 +141,7 @@ public class PluginMarket {
         } else {
             int index = fileName.indexOf(".");
             pluginName = fileName.substring(0, index);
-            if (PluginUtil.getIdentifierByName(pluginName) != null) {
+            if (PluginUtil.getInstance().getIdentifierByName(pluginName) != null) {
                 label.setText("");
                 button.setText(translateUtil.getTranslation("Installed"));
                 button.setEnabled(false);
@@ -151,7 +151,7 @@ public class PluginMarket {
                 button.setEnabled(true);
             }
         }
-        Thread.sleep(100);
+        TimeUnit.MILLISECONDS.sleep(100);
     }
 
     public void showWindow() {
