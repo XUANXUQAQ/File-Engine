@@ -130,12 +130,18 @@ void getWindowRect(HWND& hwnd, LPRECT lprect)
 
 bool isFileChooserWindow(HWND& hwnd)
 {
+    char _windowClassName[100];
     char title[100];
-    GetClassNameA(hwnd, title, 100);
-    string WindowClassName(title);
+    GetClassNameA(hwnd, _windowClassName, 100);
+    GetWindowTextA(hwnd, title, 100);
+    string windowTitle(title);
+    string WindowClassName(_windowClassName);
+    transform(windowTitle.begin(), windowTitle.end(), windowTitle.begin(), ::tolower);
     transform(WindowClassName.begin(), WindowClassName.end(), WindowClassName.begin(), ::tolower);
-    return WindowClassName.find("#32770") != string::npos ||
-        WindowClassName.find("dialog") != string::npos;
+    return (WindowClassName.find("#32770") != string::npos ||
+        WindowClassName.find("dialog") != string::npos) && 
+        windowTitle.find("internet download manager") == string::npos && 
+        windowTitle.find("push commits to") == string::npos;
 }
 
 void setClickPos(HWND& fileChooserHwnd)
@@ -168,7 +174,6 @@ BOOL CALLBACK findToolbar(HWND hwndChild, LPARAM lParam)
 
 bool isExplorerWindow(HWND& hwnd)
 {
-    RECT windowRect;
     if (IsWindowEnabled(hwnd))
     {
         char className[200];
