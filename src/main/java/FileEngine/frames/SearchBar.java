@@ -1987,6 +1987,11 @@ public class SearchBar {
                 label8.setFont(labelFont);
                 GetHandle.INSTANCE.resetMouseStatus();
                 showingMode.set(Enums.ShowingSearchBarMode.EXPLORER_ATTACH);
+                //让更改窗口大小线程先运行
+                try {
+                    TimeUnit.MILLISECONDS.sleep(50);
+                } catch (InterruptedException ignored) {
+                }
                 if (!isVisible()) {
                     showSearchbar(false);
                 }
@@ -2874,6 +2879,7 @@ public class SearchBar {
             searchBar.requestFocusInWindow();
             textField.requestFocusInWindow();
         } else {
+            textField.transferFocus();
             searchBar.transferFocus();
         }
         textField.setCaretPosition(0);

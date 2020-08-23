@@ -325,7 +325,7 @@ public class AllConfigs {
         public final String password;
         public final Proxy.Type type;
 
-        protected ProxyInfo(String proxyAddress, int proxyPort, String proxyUserName, String proxyPassword, int proxyType) {
+        private ProxyInfo(String proxyAddress, int proxyPort, String proxyUserName, String proxyPassword, int proxyType) {
             this.address = proxyAddress;
             this.port = proxyPort;
             this.userName = proxyUserName;
