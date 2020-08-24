@@ -1066,6 +1066,7 @@ public class SettingsFrame {
         //todo 添加更新服务器地址
         chooseUpdateAddress.addItem("jsdelivr CDN");
         chooseUpdateAddress.addItem("GitHub");
+        chooseUpdateAddress.addItem("GitHack");
     }
 
     private void checkDownloadTask(JLabel label, JButton button, String fileName, String originButtonString, String updateSignalFileName) throws InterruptedException, IOException {
@@ -1388,13 +1389,15 @@ public class SettingsFrame {
         }
     }
 
-    private static String getUpdateUrl(String updateAddress) {
+    private static String getUpdateUrl() {
         //todo 添加更新服务器地址
-        switch (updateAddress) {
+        switch (AllConfigs.getUpdateAddress()) {
             case "jsdelivr CDN":
                 return "https://cdn.jsdelivr.net/gh/XUANXUQAQ/File-Engine-Version/version.json";
             case "GitHub":
                 return "https://raw.githubusercontent.com/XUANXUQAQ/File-Engine-Version/master/version.json";
+            case "GitHack":
+                return "https://raw.githack.com/XUANXUQAQ/File-Engine-Version/master/version.json";
             default:
                 return null;
         }
@@ -1404,7 +1407,7 @@ public class SettingsFrame {
         DownloadUtil downloadUtil = DownloadUtil.getInstance();
         Enums.DownloadStatus downloadStatus = downloadUtil.getDownloadStatus("version.json");
         if (downloadStatus != Enums.DownloadStatus.DOWNLOAD_DOWNLOADING) {
-            String url = getUpdateUrl(AllConfigs.getUpdateAddress());
+            String url = getUpdateUrl();
             if (url != null) {
                 downloadUtil.downLoadFromUrl(url,
                         "version.json", "tmp");
