@@ -397,6 +397,8 @@ public class PluginMarket {
                 return "https://cdn.jsdelivr.net/gh/XUANXUQAQ/File-Engine-Version/plugins.json";
             case "GitHub":
                 return "https://raw.githubusercontent.com/XUANXUQAQ/File-Engine-Version/master/plugins.json";
+            case "GitHack":
+                return "https://raw.githack.com/XUANXUQAQ/File-Engine-Version/master/plugins.json";
             default:
                 return null;
         }
