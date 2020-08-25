@@ -214,10 +214,6 @@ public class AllConfigs {
         return tmp;
     }
 
-    public static File getSettings() {
-        return settings;
-    }
-
     public static LinkedHashSet<String> getCmdSet() {
         return cmdSet;
     }
