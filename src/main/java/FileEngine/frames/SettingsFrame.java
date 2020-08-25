@@ -173,6 +173,7 @@ public class SettingsFrame {
     private JLabel placeHolder7;
     private JComboBox<String> chooseUpdateAddress;
     private JLabel chooseUpdateAddressLabel;
+    private JLabel labelPlaceHolderWhatever2;
 
     private static class SettingsFrameBuilder {
         private static final SettingsFrame instance = new SettingsFrame();
