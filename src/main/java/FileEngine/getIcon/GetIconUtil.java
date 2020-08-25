@@ -84,9 +84,10 @@ public class GetIconUtil {
             return blankIcon;
         }
         File f = new File(path);
+        path = path.toLowerCase();
         if (f.exists()) {
             //已保存的常量图标
-            if (path.endsWith(".dll")) {
+            if (path.endsWith(".dll") || path.endsWith(".sys")) {
                 return dllImageIcon;
             }
             if (path.endsWith(".txt")) {
