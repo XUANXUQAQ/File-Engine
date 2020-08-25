@@ -13,7 +13,6 @@ import FileEngine.threadPool.CachedThreadPool;
 import FileEngine.translate.TranslateUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import com.alibaba.fastjson.serializer.SerializerFeature;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileSystemView;
@@ -1716,38 +1715,19 @@ public class SettingsFrame {
             try {
                 p = Runtime.getRuntime().exec(command);
                 p.waitFor();
-                BufferedReader outPut = new BufferedReader(new InputStreamReader(p.getErrorStream()));
-                String line;
                 StringBuilder result = new StringBuilder();
-                while ((line = outPut.readLine()) != null) {
-                    result.append(line);
+                try (BufferedReader outPut = new BufferedReader(new InputStreamReader(p.getErrorStream()))) {
+                    String line;
+                    while ((line = outPut.readLine()) != null) {
+                        result.append(line);
+                    }
                 }
-                outPut.close();
                 if (!result.toString().isEmpty()) {
                     checkBoxAddToStartup.setSelected(true);
                     JOptionPane.showMessageDialog(frame, TranslateUtil.getInstance().getTranslation("Delete startup failed, please try to run as administrator"));
                 }
             } catch (IOException | InterruptedException ignored) {
             }
-        }
-
-        boolean isSelected = checkBoxAddToStartup.isSelected();
-        JSONObject allSettings = null;
-        try (BufferedReader buffR1 = new BufferedReader(new InputStreamReader(new FileInputStream(AllConfigs.getSettings()), StandardCharsets.UTF_8))) {
-            String line;
-            StringBuilder result = new StringBuilder();
-            while (null != (line = buffR1.readLine())) {
-                result.append(line);
-            }
-            allSettings = JSON.parseObject(result.toString());
-            allSettings.put("isStartup", isSelected);
-        } catch (IOException ignored) {
-        }
-        //保存设置
-        try (BufferedWriter buffW = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(AllConfigs.getSettings()), StandardCharsets.UTF_8))) {
-            String format = JSON.toJSONString(allSettings, SerializerFeature.PrettyFormat, SerializerFeature.WriteMapNullValue, SerializerFeature.WriteDateUseDateFormat);
-            buffW.write(format);
-        } catch (IOException ignored) {
         }
     }
 }
