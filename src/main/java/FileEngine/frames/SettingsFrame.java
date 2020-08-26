@@ -22,13 +22,16 @@ import java.awt.event.*;
 import java.io.*;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.sql.ResultSet;
 import java.sql.Statement;
+import java.util.LinkedHashSet;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 
 public class SettingsFrame {
+    private final LinkedHashSet<String> cacheSet = new LinkedHashSet<>();
     private static CheckHotKeyUtil hotKeyListener;
     private static volatile int tmp_copyPathKeyCode;
     private static volatile int tmp_runAsAdminKeyCode;
@@ -173,6 +176,16 @@ public class SettingsFrame {
     private JComboBox<String> chooseUpdateAddress;
     private JLabel chooseUpdateAddressLabel;
     private JLabel labelPlaceHolderWhatever2;
+    private JPanel tabCache;
+    private JLabel labelCacheSettings;
+    private JLabel labelCacheTip;
+    private JList<Object> listCache;
+    private JLabel labelPlaceHolderWhatever3;
+    private JButton buttonDeleteCache;
+    private JScrollPane cacheScrollPane;
+    private JLabel labelVacuumTip2;
+    private JLabel labelCacheTip2;
+    private JButton buttonDeleteAllCache;
 
     private static class SettingsFrameBuilder {
         private static final SettingsFrame instance = new SettingsFrame();
@@ -741,6 +754,15 @@ public class SettingsFrame {
         });
     }
 
+    private void addButtonDeleteCacheListener() {
+        buttonDeleteCache.addActionListener(e -> {
+            String cache = (String) listCache.getSelectedValue();
+            SearchUtil.getInstance().removeFileFromCache(cache);
+            cacheSet.remove(cache);
+            listCache.setListData(cacheSet.toArray());
+        });
+    }
+
     private void addButtonProxyListener() {
         radioButtonNoProxy.addActionListener(e -> {
             radioButtonProxyTypeHttp.setEnabled(false);
@@ -806,6 +828,20 @@ public class SettingsFrame {
                 } else if (status == SearchUtil.VACUUM) {
                     JOptionPane.showMessageDialog(frame, TranslateUtil.getInstance().getTranslation("Task is still running."));
                 }
+            }
+        });
+    }
+
+    private void addButtonDeleteAllCacheListener() {
+        buttonDeleteAllCache.addActionListener(e -> {
+            int ret = JOptionPane.showConfirmDialog(frame,
+                    TranslateUtil.getInstance().getTranslation("The operation is irreversible. Are you sure you want to clear the cache?"));
+            if (0 == ret) {
+                for (String each : cacheSet) {
+                    SearchUtil.getInstance().removeFileFromCache(each);
+                }
+                cacheSet.clear();
+                listCache.setListData(cacheSet.toArray());
             }
         });
     }
@@ -968,6 +1004,19 @@ public class SettingsFrame {
         textFieldUserName.setText(AllConfigs.getProxyUserName());
         textFieldPassword.setText(AllConfigs.getProxyPassword());
         chooseUpdateAddress.setSelectedItem(AllConfigs.getUpdateAddress());
+        listCache.setListData(cacheSet.toArray());
+    }
+
+    private void initCacheArray() {
+        String eachLine;
+        try (Statement stmt = SQLiteUtil.getStatement(); ResultSet resultSet = stmt.executeQuery("SELECT PATH FROM cache;")) {
+            while (resultSet.next()) {
+                eachLine = resultSet.getString("PATH");
+                cacheSet.add(eachLine);
+            }
+        } catch (Exception throwables) {
+            throwables.printStackTrace();
+        }
     }
 
     private void selectProxyType() {
@@ -1010,6 +1059,8 @@ public class SettingsFrame {
         addUpdateAddressToComboBox();
 
         setAllSettings();
+
+        initCacheArray();
 
         translate();
 
@@ -1057,9 +1108,17 @@ public class SettingsFrame {
 
         addButtonProxyListener();
 
+        addButtonDeleteCacheListener();
+
+        addButtonDeleteAllCacheListener();
+
         initGUI();
 
         initThreadPool();
+    }
+
+    public void addCache(String cache) {
+        cacheSet.add(cache);
     }
 
     private void addUpdateAddressToComboBox() {
@@ -1140,13 +1199,14 @@ public class SettingsFrame {
         tabbedPane.setTitleAt(0, TranslateUtil.getInstance().getTranslation("General"));
         tabbedPane.setTitleAt(1, TranslateUtil.getInstance().getTranslation("Search settings"));
         tabbedPane.setTitleAt(2, TranslateUtil.getInstance().getTranslation("Search bar settings"));
-        tabbedPane.setTitleAt(3, TranslateUtil.getInstance().getTranslation("Proxy settings"));
-        tabbedPane.setTitleAt(4, TranslateUtil.getInstance().getTranslation("Plugins"));
-        tabbedPane.setTitleAt(5, TranslateUtil.getInstance().getTranslation("Hotkey settings"));
-        tabbedPane.setTitleAt(6, TranslateUtil.getInstance().getTranslation("Language settings"));
-        tabbedPane.setTitleAt(7, TranslateUtil.getInstance().getTranslation("My commands"));
-        tabbedPane.setTitleAt(8, TranslateUtil.getInstance().getTranslation("Color settings"));
-        tabbedPane.setTitleAt(9, TranslateUtil.getInstance().getTranslation("About"));
+        tabbedPane.setTitleAt(3, TranslateUtil.getInstance().getTranslation("Cache"));
+        tabbedPane.setTitleAt(4, TranslateUtil.getInstance().getTranslation("Proxy settings"));
+        tabbedPane.setTitleAt(5, TranslateUtil.getInstance().getTranslation("Plugins"));
+        tabbedPane.setTitleAt(6, TranslateUtil.getInstance().getTranslation("Hotkey settings"));
+        tabbedPane.setTitleAt(7, TranslateUtil.getInstance().getTranslation("Language settings"));
+        tabbedPane.setTitleAt(8, TranslateUtil.getInstance().getTranslation("My commands"));
+        tabbedPane.setTitleAt(9, TranslateUtil.getInstance().getTranslation("Color settings"));
+        tabbedPane.setTitleAt(10, TranslateUtil.getInstance().getTranslation("About"));
         checkBoxAddToStartup.setText(TranslateUtil.getInstance().getTranslation("Add to startup"));
         buttonSaveAndRemoveDesktop.setText(TranslateUtil.getInstance().getTranslation("Backup and remove all desktop files"));
         labelMaxCacheNum.setText(TranslateUtil.getInstance().getTranslation("Set the maximum number of caches:"));
@@ -1186,7 +1246,8 @@ public class SettingsFrame {
         labelInstalledPluginNum.setText(TranslateUtil.getInstance().getTranslation("Installed plugins num:"));
         buttonUpdatePlugin.setText(TranslateUtil.getInstance().getTranslation("Check for update"));
         buttonPluginMarket.setText(TranslateUtil.getInstance().getTranslation("Plugin Market"));
-        labelVacuumTip.setText(TranslateUtil.getInstance().getTranslation("Click to organize the database and reduce the size of the database, but it will consume a lot of time."));
+        labelVacuumTip.setText(TranslateUtil.getInstance().getTranslation("Click to organize the database and reduce the size of the database,"));
+        labelVacuumTip2.setText(TranslateUtil.getInstance().getTranslation("but it will consume a lot of time."));
         radioButtonNoProxy.setText(TranslateUtil.getInstance().getTranslation("No proxy"));
         radioButtonUseProxy.setText(TranslateUtil.getInstance().getTranslation("Configure proxy"));
         labelAddress.setText(TranslateUtil.getInstance().getTranslation("Address"));
@@ -1196,6 +1257,11 @@ public class SettingsFrame {
         labelProxyTip.setText(TranslateUtil.getInstance().getTranslation("If you need a proxy to access the Internet, You can add a proxy here."));
         frame.setTitle(TranslateUtil.getInstance().getTranslation("Settings"));
         chooseUpdateAddressLabel.setText(TranslateUtil.getInstance().getTranslation("Choose update address"));
+        labelCacheSettings.setText(TranslateUtil.getInstance().getTranslation("Cache Settings"));
+        labelCacheTip.setText(TranslateUtil.getInstance().getTranslation("You can edit the saved caches here"));
+        buttonDeleteCache.setText(TranslateUtil.getInstance().getTranslation("Delete cache"));
+        labelCacheTip2.setText(TranslateUtil.getInstance().getTranslation("The cache is automatically generated by the software and will be displayed first when searching."));
+        buttonDeleteAllCache.setText(TranslateUtil.getInstance().getTranslation("Delete all"));
     }
 
     private boolean isRepeatCommand(String name) {

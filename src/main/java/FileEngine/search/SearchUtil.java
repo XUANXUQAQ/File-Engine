@@ -340,7 +340,7 @@ public class SearchUtil {
         addAddSqlCommandByAscii(asciiGroup, path);
     }
 
-    public void removeFileToCache(String path) {
+    public void removeFileFromCache(String path) {
         String command = "DELETE from cache where PATH=" + "\"" + path + "\";";
         commandSet.add(command);
     }
