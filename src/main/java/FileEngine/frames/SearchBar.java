@@ -3116,6 +3116,7 @@ public class SearchBar {
     private void saveCache(String content) {
         if (cacheNum.get() < AllConfigs.getCacheNumLimit()) {
             search.addFileToCache(content);
+            SettingsFrame.getInstance().addCache(content);
         }
     }
 
@@ -3137,7 +3138,7 @@ public class SearchBar {
             while (resultSet.next()) {
                 String eachCache = resultSet.getString("PATH");
                 if (!(isExist(eachCache))) {
-                    search.removeFileToCache(eachCache);
+                    search.removeFileFromCache(eachCache);
                 } else {
                     checkIsMatchedAndAddToList(eachCache, false);
                 }
