@@ -24,14 +24,15 @@ import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.sql.ResultSet;
 import java.sql.Statement;
-import java.util.LinkedHashSet;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 
 public class SettingsFrame {
-    private final LinkedHashSet<String> cacheSet = new LinkedHashSet<>();
+    private final Set<String> cacheSet = ConcurrentHashMap.newKeySet();
     private static CheckHotKeyUtil hotKeyListener;
     private static volatile int tmp_copyPathKeyCode;
     private static volatile int tmp_runAsAdminKeyCode;
