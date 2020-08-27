@@ -11,6 +11,12 @@ public class MoveFilesUtil {
         this.preserveFiles = preserveFiles;
     }
 
+    /**
+     * 清空文件夹
+     *
+     * @param dir 文件夹路径
+     * @return true如果删除完成 否则false
+     */
     private boolean deleteDir(File dir) {
         // 如果是文件夹
         if (dir.isDirectory()) {
