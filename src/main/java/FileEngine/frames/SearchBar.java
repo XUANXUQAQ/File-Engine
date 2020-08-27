@@ -3393,6 +3393,9 @@ public class SearchBar {
         SwingUtilities.invokeLater(clear);
     }
 
+    /**
+     * 检测当前模式并重置状态
+     */
     private void detectShowingModeAndClose() {
         if (showingMode.get() == Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
             closeSearchBar();
@@ -3405,6 +3408,9 @@ public class SearchBar {
         searchBar.setVisible(b);
     }
 
+    /**
+     * 重置所有状态并关闭窗口
+     */
     public void closeSearchBar() {
         if (isVisible()) {
             setVisible(false);
@@ -3431,6 +3437,9 @@ public class SearchBar {
         isWaiting = false;
     }
 
+    /**
+     * 重置所有状态但不关闭窗口
+     */
     private void closeWithoutHideSearchBar() {
         clearLabel();
         clearTextFieldText();
@@ -3454,6 +3463,11 @@ public class SearchBar {
         isWaiting = false;
     }
 
+    /**
+     * 判断窗口是否可见
+     *
+     * @return true如果可见 否则false
+     */
     public boolean isVisible() {
         return searchBar.isVisible();
     }
