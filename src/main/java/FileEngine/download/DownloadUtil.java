@@ -41,6 +41,12 @@ public class DownloadUtil {
         DOWNLOAD_MAP.put(fileName, downloadManager);
     }
 
+    /**
+     * 根据下载文件名获取当前下载进度
+     *
+     * @param fileName 下载文件名
+     * @return 进度
+     */
     public double getDownloadProgress(String fileName) {
         if (isFileNameNotContainsSuffix(fileName)) {
             System.err.println("Warning:" + fileName + " doesn't have suffix");
@@ -51,6 +57,11 @@ public class DownloadUtil {
         return 0.0;
     }
 
+    /**
+     * 取消下载任务
+     *
+     * @param fileName 下载文件名
+     */
     public void cancelDownload(String fileName) {
         if (isFileNameNotContainsSuffix(fileName)) {
             System.err.println("Warning:" + fileName + " doesn't have suffix");
@@ -63,6 +74,12 @@ public class DownloadUtil {
         }
     }
 
+    /**
+     * 判断是否有当前下载任务
+     *
+     * @param fileName 下载文件名
+     * @return 任务是否存在
+     */
     private boolean hasTask(String fileName) {
         if (isFileNameNotContainsSuffix(fileName)) {
             System.err.println("Warning:" + fileName + " doesn't have suffix");
@@ -70,6 +87,12 @@ public class DownloadUtil {
         return DOWNLOAD_MAP.containsKey(fileName);
     }
 
+    /**
+     * 获取当前任务的下载状态， 已完成 无任务 下载错误 已取消
+     *
+     * @param fileName 下载文件名
+     * @return 当前任务状态
+     */
     public Enums.DownloadStatus getDownloadStatus(String fileName) {
         if (hasTask(fileName)) {
             return DOWNLOAD_MAP.get(fileName).getDownloadStatus();
@@ -77,6 +100,12 @@ public class DownloadUtil {
         return Enums.DownloadStatus.DOWNLOAD_NO_TASK;
     }
 
+    /**
+     * 判断当前下载文件是否拥有文件后缀名，debug使用
+     *
+     * @param fileName 下载文件名
+     * @return true和false
+     */
     private boolean isFileNameNotContainsSuffix(String fileName) {
         if (fileName == null) {
             return false;

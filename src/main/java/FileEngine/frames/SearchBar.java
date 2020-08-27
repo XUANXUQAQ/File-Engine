@@ -79,18 +79,18 @@ public class SearchBar {
     private final AtomicInteger cacheNum;
     private long mouseWheelTime = 0;
     private final int iconSideLength;
-    private long visibleStartTime = 0;
-    private final ConcurrentLinkedQueue<String> tempResults;
-    private final ConcurrentLinkedQueue<String> commandQueue;
-    private final CopyOnWriteArrayList<String> listResults;
+    private long visibleStartTime = 0;  //记录窗口开始可见的事件，窗口默认最短可见时间0.5秒，防止窗口快速闪烁
+    private final ConcurrentLinkedQueue<String> tempResults;  //在优先文件夹和数据库cache未搜索完时暂时保存结果，搜索完后会立即被转移到listResults
+    private final ConcurrentLinkedQueue<String> commandQueue;  //保存需要被执行的sql语句
+    private final CopyOnWriteArrayList<String> listResults;  //保存从数据库中找出符合条件的记录（文件路径）
     private final Set<String> listResultsCopy;
     private volatile String[] searchCase;
     private volatile String searchText;
     private volatile String[] keywords;
     private final SearchUtil search;
     private final TaskBar taskBar;
-    private final AtomicInteger resultCount;
-    private final AtomicInteger currentLabelSelectedPosition;
+    private final AtomicInteger resultCount;  //保存当前选中的结果是在listResults中的第几个 范围 0 - listResults.size()
+    private final AtomicInteger currentLabelSelectedPosition;   //保存当前是哪个label被选中 范围 0 - 7
     private volatile Plugin currentUsingPlugin;
 
     private static class SearchBarBuilder {
@@ -241,6 +241,15 @@ public class SearchBar {
         return SearchBarBuilder.instance;
     }
 
+    /**
+     * 初始化label
+     *
+     * @param font      字体
+     * @param width     宽
+     * @param height    高
+     * @param positionY Y坐标值
+     * @param label     需要初始化的label
+     */
     private void initLabel(Font font, int width, int height, int positionY, JLabel label) {
         label.setSize(width, height);
         label.setLocation(0, positionY);
@@ -251,17 +260,24 @@ public class SearchBar {
         label.setFocusable(false);
     }
 
+    /**
+     * 用于模式切换时实时修改label大小
+     *
+     * @param width     宽
+     * @param height    高
+     * @param positionY Y坐标
+     * @param label     需要修改大小的label
+     */
     private void setLabelSize(int width, int height, int positionY, JLabel label) {
         label.setSize(width, height);
         label.setLocation(0, positionY);
     }
 
+    /**
+     * 让搜索窗口响应鼠标双击事件以打开文件
+     */
     private void addSearchBarMouseListener() {
-        searchBar.addMouseListener(new MouseListener() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-            }
-
+        searchBar.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
                 int count = e.getClickCount();
@@ -338,28 +354,11 @@ public class SearchBar {
                     detectShowingModeAndClose();
                 }
             }
-
-            @Override
-            public void mouseReleased(MouseEvent e) {
-                if (runningMode.get() == Enums.RunningMode.PLUGIN_MODE) {
-                    if (currentUsingPlugin != null) {
-                        if (!(resultCount.get() == 0)) {
-                            currentUsingPlugin.mouseReleased(e, listResults.get(labelCount.get()));
-                        }
-                    }
-                }
-            }
-
-            @Override
-            public void mouseEntered(MouseEvent e) {
-            }
-
-            @Override
-            public void mouseExited(MouseEvent e) {
-            }
         });
     }
 
+
+    //在explorer attach模式时操作鼠标和键盘以快速跳转到文件位置
     private void quickJump(String result) {
         int x, y;
         Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
@@ -376,6 +375,11 @@ public class SearchBar {
         clipboard.setContents(originalData, null);
     }
 
+    /**
+     * 复制信息到系统剪贴板
+     *
+     * @param res 需要复制的信息
+     */
     private void copyToClipBoard(String res) {
         Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
         Transferable trans = new StringSelection(res);
@@ -386,6 +390,9 @@ public class SearchBar {
         return textField.getText();
     }
 
+    /**
+     * 使窗口检测键盘事件，用于检测enter被点击时，打开文件，或打开文件所在位置，或复制文件路径，或以管理员方式打开
+     */
     private void addTextFieldKeyListener() {
         textField.addKeyListener(new KeyListener() {
             final int timeLimit = 50;
@@ -581,6 +588,10 @@ public class SearchBar {
         });
     }
 
+    /**
+     * 在command模式下，检测当前输入信息是否是软件已经定义的内部命令
+     * clearbin update help version
+     */
     private boolean runInternalCommand(String commandName) throws URISyntaxException, IOException {
         switch (commandName) {
             case "clearbin":
@@ -625,14 +636,27 @@ public class SearchBar {
         return false;
     }
 
+    /**
+     * 设置当前label为选中状态
+     *
+     * @param label 需要设置的label
+     */
     private void setLabelChosen(JLabel label) {
         label.setBackground(labelColor);
     }
 
+    /**
+     * 设置当前label为未选中
+     *
+     * @param label 需要设置的label
+     */
     private void setLabelNotChosen(JLabel label) {
         label.setBackground(backgroundColor);
     }
 
+    /**
+     * 检测鼠标在窗口的位置，并设置鼠标所在位置的label为选中
+     */
     private void addSearchBarMouseMotionListener() {
         //判断鼠标位置
         int labelPosition = label1.getY();
@@ -892,6 +916,11 @@ public class SearchBar {
         });
     }
 
+    /**
+     * 检测当前选中的label的下一个label是否可用（是否有结果在显示）
+     *
+     * @return true false
+     */
     private boolean isNextLabelValid() {
         boolean isNextLabelValid = false;
         switch (labelCount.get()) {
@@ -938,6 +967,12 @@ public class SearchBar {
         return isNextLabelValid;
     }
 
+    /**
+     * 检测当前窗口是否未显示任何结果
+     *
+     * @param label 判断的label
+     * @return true如果label上有显示 否则false
+     */
     private boolean isLabelNotEmpty(JLabel label) {
         boolean isEmpty = true;
         try {
@@ -953,6 +988,7 @@ public class SearchBar {
         return !isEmpty;
     }
 
+    //获取当前选中label的编号 从0-7
     private int getCurrentLabelPos() {
         return currentLabelSelectedPosition.get();
     }
@@ -2789,6 +2825,12 @@ public class SearchBar {
     }
 
 
+    /**
+     * 检查文件路径是否匹配所有输入规则
+     *
+     * @param path 文件路径
+     * @return true如果满足所有条件 否则false
+     */
     private boolean check(String path) {
         String name = getFileName(path);
         if (searchCase == null || searchCase.length == 0) {
@@ -2825,10 +2867,24 @@ public class SearchBar {
         return false;
     }
 
+    /**
+     * 检查当前文件路径是否已被加入到listResults中
+     *
+     * @param result 文件路径
+     * @return true如果还未被加入
+     */
     private boolean isResultNotRepeat(String result) {
         return !(tempResults.contains(result) || listResultsCopy.contains(result));
     }
 
+
+    /**
+     * 检查文件路径是否匹配然后加入到列表
+     *
+     * @param path        文件路径
+     * @param isPutToTemp 是否放到临时容器，在搜索优先文件夹和cache时为false，其他为true
+     * @return 当前容器中结果数量是否已超过100个
+     */
     private boolean checkIsMatchedAndAddToList(String path, boolean isPutToTemp) {
         if (check(path)) {
             if (isPutToTemp) {
@@ -2852,6 +2908,13 @@ public class SearchBar {
         return resultCount.get() >= 100;
     }
 
+    /**
+     * 搜索数据酷并加入到tempQueue中
+     *
+     * @param time   开始搜索时间，用于检测用于重新输入匹配信息后快速停止
+     * @param column 数据库表
+     * @throws SQLException 错误处理
+     */
     private void searchAndAddToTempResults(long time, String column) throws SQLException {
         //为label添加结果
         String each;
@@ -2871,6 +2934,11 @@ public class SearchBar {
         }
     }
 
+    /**
+     * 显示窗口
+     *
+     * @param isGrabFocus 是否强制抓取焦点（由操作系统决定，有时想抓也抓不到）
+     */
     public void showSearchbar(boolean isGrabFocus) {
         searchBar.setAutoRequestFocus(isGrabFocus);
         setVisible(true);
@@ -2888,6 +2956,13 @@ public class SearchBar {
         visibleStartTime = startTime;
     }
 
+    /**
+     * 在label上显示当前文件路径对应文件的信息
+     *
+     * @param path     文件路径
+     * @param label    需要显示的label
+     * @param isChosen 是否当前被选中
+     */
     private void showResultOnLabel(String path, JLabel label, boolean isChosen) {
         String name = getFileName(path);
         ImageIcon icon = GetIconUtil.getInstance().getBigIcon(path, iconSideLength, iconSideLength);
@@ -2904,10 +2979,24 @@ public class SearchBar {
         }
     }
 
+    /**
+     * 在label上显示插件返回的信息（由插件自己实现）
+     *
+     * @param result   结果
+     * @param label    需要显示的label
+     * @param isChosen 是否当前被选中
+     */
     private void showPluginResultOnLabel(String result, JLabel label, boolean isChosen) {
         currentUsingPlugin.showResultOnLabel(result, label, isChosen);
     }
 
+    /**
+     * 在label上显示命令信息
+     *
+     * @param command  命令
+     * @param label    需要显示的label
+     * @param isChosen 是否当前被选中
+     */
     private void showCommandOnLabel(String command, JLabel label, boolean isChosen) {
         String[] info = semicolon.split(command);
         String path = info[1];
@@ -2928,6 +3017,18 @@ public class SearchBar {
         label.setBorder(border);
     }
 
+    /**
+     * 用于控制8个label显示信息
+     *
+     * @param isLabel1Chosen label1是否被选中
+     * @param isLabel2Chosen label2是否被选中
+     * @param isLabel3Chosen label3是否被选中
+     * @param isLabel4Chosen label4是否被选中
+     * @param isLabel5Chosen label5是否被选中
+     * @param isLabel6Chosen label6是否被选中
+     * @param isLabel7Chosen label7是否被选中
+     * @param isLabel8Chosen label8是否被选中
+     */
     private void showResults(boolean isLabel1Chosen, boolean isLabel2Chosen, boolean isLabel3Chosen, boolean isLabel4Chosen,
                              boolean isLabel5Chosen, boolean isLabel6Chosen, boolean isLabel7Chosen, boolean isLabel8Chosen) {
         if (runningMode.get() == Enums.RunningMode.NORMAL_MODE) {
@@ -3014,6 +3115,11 @@ public class SearchBar {
         }
     }
 
+    /**
+     * 清空单个label的所有信息
+     *
+     * @param label 需要清空的label
+     */
     private void clearALabel(JLabel label) {
         label.setBackground(null);
         label.setText(null);
@@ -3021,6 +3127,9 @@ public class SearchBar {
         label.setBorder(null);
     }
 
+    /**
+     * 清空所有label
+     */
     private void clearLabel() {
         clearALabel(label1);
         clearALabel(label2);
@@ -3032,6 +3141,11 @@ public class SearchBar {
         clearALabel(label8);
     }
 
+    /**
+     * 以管理员方式运行文件，失败则打开文件位置
+     *
+     * @param path 文件路径
+     */
     private void openWithAdmin(String path) {
         File name = new File(path);
         if (name.exists()) {
@@ -3054,6 +3168,11 @@ public class SearchBar {
         }
     }
 
+    /**
+     * 以普通权限运行文件，失败则打开文件位置
+     *
+     * @param path 文件路径
+     */
     private void openWithoutAdmin(String path) {
         if (isExist(path)) {
             try {
@@ -3084,6 +3203,13 @@ public class SearchBar {
         }
     }
 
+    /**
+     * 创建需要打开的文件的快捷方式
+     *
+     * @param fileOrFolderPath  文件路径
+     * @param writeShortCutPath 保存快捷方式的位置
+     * @throws Exception 创建错误
+     */
     private void createShortCut(String fileOrFolderPath, String writeShortCutPath) throws Exception {
         File shortcutGen = new File("user/shortcutGenerator.vbs");
         String shortcutGenPath = shortcutGen.getAbsolutePath();
@@ -3102,6 +3228,12 @@ public class SearchBar {
         return "";
     }
 
+    /**
+     * 获取文件名对应的ascii总和
+     *
+     * @param path 文件路径
+     * @return ascii总和
+     */
     private int getAscIISum(String path) {
         if (path != null) {
             path = path.toUpperCase();
@@ -3113,6 +3245,11 @@ public class SearchBar {
         return 0;
     }
 
+    /**
+     * 保存当前文件路径到数据库缓存
+     *
+     * @param content 文件路径
+     */
     private void saveCache(String content) {
         if (cacheNum.get() < AllConfigs.getCacheNumLimit()) {
             search.addFileToCache(content);
@@ -3120,6 +3257,9 @@ public class SearchBar {
         }
     }
 
+    /**
+     * 获取数据库缓存条目数量，用于判断软件是否还能继续写入缓存
+     */
     private void initCacheNum() {
         try (PreparedStatement pStmt = SQLiteUtil.getConnection().prepareStatement("SELECT PATH FROM cache;");
              ResultSet resultSet = pStmt.getResultSet()) {
@@ -3133,6 +3273,9 @@ public class SearchBar {
         }
     }
 
+    /**
+     * 从缓存中搜索结果并将匹配的放入listResults
+     */
     private void searchCache() {
         try (Statement stmt = SQLiteUtil.getStatement(); ResultSet resultSet = stmt.executeQuery("SELECT PATH FROM cache;")) {
             while (resultSet.next()) {
@@ -3150,6 +3293,14 @@ public class SearchBar {
         }
     }
 
+    /**
+     * 判断文件路径是否满足当前匹配结果（该方法由check（String）方法使用），检查文件路径使用check（String）方法。
+     *
+     * @param name         文件路径
+     * @param isIgnoreCase 是否忽略大小谢
+     * @return true如果匹配成功
+     * @see #check(String);
+     */
     private boolean isMatched(String name, boolean isIgnoreCase) {
         for (String each : keywords) {
             if (isIgnoreCase) {
@@ -3165,6 +3316,9 @@ public class SearchBar {
         return true;
     }
 
+    /**
+     * 搜索优先文件夹
+     */
     private void searchPriorityFolder() {
         File path = new File(AllConfigs.getPriorityFolder());
         boolean exist = path.exists();
@@ -3220,6 +3374,11 @@ public class SearchBar {
         }
     }
 
+    /**
+     * 设置窗口透明度
+     *
+     * @param trans 透明度
+     */
     protected void setTransparency(float trans) {
         searchBar.setOpacity(trans);
     }

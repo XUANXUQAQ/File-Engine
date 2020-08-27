@@ -15,6 +15,7 @@ public class CheckHotKeyUtil {
 
     private final HashMap<String, Integer> map;
     private final Pattern plus;
+    private boolean isRegistered = false;
 
     private static class CheckHotKeyBuilder {
         private static final CheckHotKeyUtil INSTANCE = new CheckHotKeyUtil();
@@ -24,11 +25,14 @@ public class CheckHotKeyUtil {
         return CheckHotKeyBuilder.INSTANCE;
     }
 
+    //关闭对热键的检测，在程序彻底关闭时调用
     public void stopListen() {
         HotkeyListener.INSTANCE.stopListen();
     }
 
+    //注册快捷键
     public void registerHotkey(String hotkey) {
+        isRegistered = true;
         int hotkey1 = -1, hotkey2 = -1, hotkey3 = -1, hotkey4 = -1, hotkey5;
         String[] hotkeys = plus.split(hotkey);
         int length = hotkeys.length;
@@ -55,6 +59,7 @@ public class CheckHotKeyUtil {
         });
     }
 
+    //检查快捷键是否有效
     public boolean isHotkeyAvailable(String hotkey) {
         String[] hotkeys = plus.split(hotkey);
         int length = hotkeys.length;
@@ -67,7 +72,11 @@ public class CheckHotKeyUtil {
         return 64 < hotkey.charAt(hotkey.length() - 1) && hotkey.charAt(hotkey.length() - 1) < 91;
     }
 
+    //更改快捷键,必须在register后才可用
     public void changeHotKey(String hotkey) {
+        if (!isRegistered) {
+            throw new NullPointerException();
+        }
         int hotkey1 = -1, hotkey2 = -1, hotkey3 = -1, hotkey4 = -1, hotkey5;
         String[] hotkeys = plus.split(hotkey);
         int length = hotkeys.length;
@@ -101,6 +110,7 @@ public class CheckHotKeyUtil {
             SearchBar searchBar = SearchBar.getInstance();
             HotkeyListener instance = HotkeyListener.INSTANCE;
             try {
+                //获取快捷键状态，检测是否被按下线程
                 while (AllConfigs.isNotMainExit()) {
                     if (!isExecuted && instance.getKeyStatus()) {
                         isExecuted = true;

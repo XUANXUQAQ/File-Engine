@@ -11,6 +11,9 @@ import java.net.Proxy;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashSet;
 
+/**
+ * 保存软件运行时的所有配置信息
+ */
 public class AllConfigs {
     public static final String version = "2.7"; //TODO 更改版本号
 
