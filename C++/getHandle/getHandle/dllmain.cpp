@@ -141,7 +141,8 @@ bool isFileChooserWindow(HWND& hwnd)
     return (WindowClassName.find("#32770") != string::npos ||
         WindowClassName.find("dialog") != string::npos) && 
         windowTitle.find("internet download manager") == string::npos && 
-        windowTitle.find("push commits to") == string::npos;
+        windowTitle.find("push commits to") == string::npos &&
+        windowTitle.find("geek uninstaller") == string::npos;
 }
 
 void setClickPos(HWND& fileChooserHwnd)
