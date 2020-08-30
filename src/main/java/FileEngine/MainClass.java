@@ -83,7 +83,7 @@ import java.util.concurrent.TimeUnit;
 
 public class MainClass {
     private static final String FILE_MONITOR_64_MD_5 = "cc0fde81b51c9f600b464634c2de4327";
-    private static final String FILE_SEARCHER_64_MD_5 = "2b816061156e1c0e76e012ef59e2fcf8";
+    private static final String FILE_SEARCHER_64_MD_5 = "c1c9de6ab35ed5091ab6c55babd54404";
     private static final String GET_ASC_II_64_MD_5 = "eff607d2dd4a7e4c878948fe8f24b3ea";
     private static final String HOTKEY_LISTENER_64_MD_5 = "41388e31d6fc22fb430f636d402cf608";
     private static final String IS_LOCAL_DISK_64_MD_5 = "64f64bc828f477aa9ce6f5f8fd6010f3";

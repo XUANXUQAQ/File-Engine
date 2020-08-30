@@ -8,12 +8,12 @@
         "driver": {
           "name": "PREfast",
           "fullName": "PREfast Code Analysis",
-          "version": "14.26.28805.0"
+          "version": "14.27.29111.0"
         }
       },
       "invocations": [
         {
-          "commandLine": "\"D:\\Softwares\\Visual Studio\\VC\\Tools\\MSVC\\14.26.28801\\bin\\HostX86\\x64\\c1xx.dll\" -ACf{1F7B090C-16DB-4822-966A-A93D26ED4681} -ACpmspft140.dll -Alint -D_PREFAST_ -D_AST_FE_ -Analyze -zm0x00227190 -il C:\\Users\\13927\\AppData\\Local\\Temp\\_CL_745727baast -typedil -f fileSearcher.cpp -Ze -D_MSC_EXTENSIONS -Zp16 -pc \\:/ -D_MSC_VER=1926 -D_MSC_FULL_VER=192628805 -D_MSC_BUILD=0 -D_M_AMD64=100 -ZILP448 -D_M_X64=100 -D_WIN64 -D_WIN32 -GR -D_CPPRTTI -nologo -W 3 -diagnostics:column -D_GUARDOVERFLOW_CRT_ALLOCATORS=1 -GF -Og -Ot -Oy -Oi -ltcg -DCODE_ANALYSIS -DNDEBUG -D_CONSOLE -D_UNICODE -DUNICODE -EHs -D_CPPUNWIND -EHc -MT -clrNoPureCRT -D_MT -GS -D_M_FP_PRECISE -permissive- -Zc:wchar_t -Zc:forScope -Fox64\\Release\\fileSearcher.obj -Fdx64\\Release\\vc142.pdb -Gd -wd 4996 -analyze:projectdirectory D:\\Code\\C++\\fileSearcher\\fileSearcher\\ -analyze:rulesetdirectory ;D:\\Softwares\\Visual Studio\\Team Tools\\Static Analysis Tools\\\\Rule Sets; -analyze:ruleset D:\\Softwares\\Visual Studio\\Team Tools\\Static Analysis Tools\\Rule Sets\\NativeRecommendedRules.ruleset -analyze:quiet -analyze:plugin D:\\Softwares\\Visual Studio\\VC\\Tools\\MSVC\\14.26.28801\\bin\\HostX86\\x86\\EspXEngine.dll -FC -errorreport:prompt -I D:\\Softwares\\Visual Studio\\VC\\Tools\\MSVC\\14.26.28801\\include -I D:\\Softwares\\Visual Studio\\VC\\Tools\\MSVC\\14.26.28801\\atlmfc\\include -I D:\\Softwares\\Visual Studio\\VC\\Auxiliary\\VS\\include -I D:\\Windows Kits\\10\\Include\\10.0.18362.0\\ucrt -I D:\\Windows Kits\\10\\Include\\10.0.18362.0\\um -I D:\\Windows Kits\\10\\Include\\10.0.18362.0\\shared -I D:\\Windows Kits\\10\\Include\\10.0.18362.0\\winrt -I D:\\Windows Kits\\10\\Include\\10.0.18362.0\\cppwinrt -I C:\\Program Files (x86)\\Windows Kits\\NETFXSDK\\4.8\\Include\\um",
+          "commandLine": "D:\\Software\\Microsoft\\VC\\Tools\\MSVC\\14.27.29110\\bin\\HostX86\\x64\\c1xx.dll -ACf{1F7B090C-16DB-4822-966A-A93D26ED4681} -ACpmspft140.dll -Alint -D_PREFAST_ -D_AST_FE_ -Analyze -zm0x00857180 -il C:\\Users\\13927\\AppData\\Local\\Temp\\_CL_33899210ast -typedil -f fileSearcher.cpp -Ze -D_MSC_EXTENSIONS -Zp16 -pc \\:/ -D_MSC_VER=1927 -D_MSC_FULL_VER=192729111 -D_MSC_BUILD=0 -D_M_AMD64=100 -ZILP448 -D_M_X64=100 -D_WIN64 -D_WIN32 -GR -D_CPPRTTI -nologo -W 3 -diagnostics:column -D_GUARDOVERFLOW_CRT_ALLOCATORS=1 -GF -Og -Ot -Oy -Oi -ltcg -DCODE_ANALYSIS -DNDEBUG -D_CONSOLE -D_UNICODE -DUNICODE -EHs -D_CPPUNWIND -EHc -MT -clrNoPureCRT -D_MT -GS -D_M_FP_PRECISE -permissive- -Zc:wchar_t -Zc:forScope -Fox64\\Release\\fileSearcher.obj -Fdx64\\Release\\vc142.pdb -Gd -wd 4996 -analyze:projectdirectory D:\\Code\\File-Engine\\C++\\fileSearcher\\fileSearcher\\ -analyze:rulesetdirectory ;D:\\Software\\Microsoft\\Team Tools\\Static Analysis Tools\\\\Rule Sets; -analyze:ruleset D:\\Software\\Microsoft\\Team Tools\\Static Analysis Tools\\Rule Sets\\NativeRecommendedRules.ruleset -analyze:quiet -analyze:plugin D:\\Software\\Microsoft\\VC\\Tools\\MSVC\\14.27.29110\\bin\\HostX86\\x86\\EspXEngine.dll -FC -errorreport:prompt -I D:\\Software\\Microsoft\\VC\\Tools\\MSVC\\14.27.29110\\include -I D:\\Software\\Microsoft\\VC\\Tools\\MSVC\\14.27.29110\\atlmfc\\include -I D:\\Software\\Microsoft\\VC\\Auxiliary\\VS\\include -I D:\\Windows Kits\\10\\Include\\10.0.18362.0\\ucrt -I D:\\Windows Kits\\10\\Include\\10.0.18362.0\\um -I D:\\Windows Kits\\10\\Include\\10.0.18362.0\\shared -I D:\\Windows Kits\\10\\Include\\10.0.18362.0\\winrt -I D:\\Windows Kits\\10\\Include\\10.0.18362.0\\cppwinrt -I C:\\Program Files (x86)\\Windows Kits\\NETFXSDK\\4.8\\Include\\um",
           "executionSuccessful": true,
           "ruleConfigurationOverrides": [
             {
@@ -1300,6 +1300,51 @@
                 "level": "warning"
               },
               "descriptor": {
+                "id": "C26815"
+              }
+            },
+            {
+              "configuration": {
+                "enabled": true,
+                "level": "warning"
+              },
+              "descriptor": {
+                "id": "C26816"
+              }
+            },
+            {
+              "configuration": {
+                "enabled": true,
+                "level": "warning"
+              },
+              "descriptor": {
+                "id": "C26817"
+              }
+            },
+            {
+              "configuration": {
+                "enabled": true,
+                "level": "warning"
+              },
+              "descriptor": {
+                "id": "C26819"
+              }
+            },
+            {
+              "configuration": {
+                "enabled": true,
+                "level": "warning"
+              },
+              "descriptor": {
+                "id": "C26820"
+              }
+            },
+            {
+              "configuration": {
+                "enabled": true,
+                "level": "warning"
+              },
+              "descriptor": {
                 "id": "C28020"
               }
             },
@@ -2146,7 +2191,7 @@
       "artifacts": [
         {
           "location": {
-            "uri": "file:///d:/code/c++/filesearcher/filesearcher/filesearcher.cpp"
+            "uri": "file:///d:/code/file-engine/c++/filesearcher/filesearcher/filesearcher.cpp"
           },
           "roles": [
             "analysisTarget",
@@ -2155,7 +2200,15 @@
         },
         {
           "location": {
-            "uri": "file:///d:/code/c++/filesearcher/filesearcher/sqlite3.h"
+            "uri": "file:///d:/code/file-engine/c++/filesearcher/filesearcher/search.h"
+          },
+          "roles": [
+            "resultFile"
+          ]
+        },
+        {
+          "location": {
+            "uri": "file:///d:/code/file-engine/c++/filesearcher/filesearcher/sqlite3.h"
           },
           "roles": [
             "resultFile"

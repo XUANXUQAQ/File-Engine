@@ -1,7 +1,7 @@
 ﻿  fileSearcher.cpp
 D:\Code\File-Engine\C++\fileSearcher\fileSearcher\Search.h(408,71): warning C4267: “参数”: 从“size_t”转换到“int”，可能丢失数据
   正在生成代码
-  Compiler version has changed, fall back to full compilation.
-  All 594 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  Previous IPDB not found, fall back to full compilation.
+  All 597 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
   已完成代码的生成
   fileSearcher.vcxproj -> D:\Code\File-Engine\C++\fileSearcher\x64\Release\fileSearcher.exe
