@@ -4,7 +4,6 @@ import FileEngine.SQLiteConfig.SQLiteUtil;
 import FileEngine.checkHotkey.CheckHotKeyUtil;
 import FileEngine.configs.AllConfigs;
 import FileEngine.download.DownloadUtil;
-import FileEngine.modesAndStatus.Enums;
 import FileEngine.moveFiles.MoveDesktopFiles;
 import FileEngine.pluginSystem.Plugin;
 import FileEngine.pluginSystem.PluginUtil;
@@ -460,8 +459,8 @@ public class SettingsFrame {
 
     private void addCheckForUpdateButtonListener() {
         buttonCheckUpdate.addActionListener(e -> {
-            Enums.DownloadStatus status = DownloadUtil.getInstance().getDownloadStatus(AllConfigs.getName());
-            if (status == Enums.DownloadStatus.DOWNLOAD_DOWNLOADING) {
+            AllConfigs.DownloadStatus status = DownloadUtil.getInstance().getDownloadStatus(AllConfigs.getName());
+            if (status == AllConfigs.DownloadStatus.DOWNLOAD_DOWNLOADING) {
                 //取消下载
                 String fileName = AllConfigs.getName();
                 DownloadUtil instance = DownloadUtil.getInstance();
@@ -469,7 +468,7 @@ public class SettingsFrame {
                 //复位button
                 buttonCheckUpdate.setText(TranslateUtil.getInstance().getTranslation("Check for update"));
                 buttonCheckUpdate.setEnabled(true);
-            } else if (status == Enums.DownloadStatus.DOWNLOAD_DONE) {
+            } else if (status == AllConfigs.DownloadStatus.DOWNLOAD_DONE) {
                 buttonCheckUpdate.setEnabled(false);
             } else {
                 //开始下载
@@ -864,14 +863,14 @@ public class SettingsFrame {
             Plugin plugin = PluginUtil.getInstance().getPluginByIdentifier(pluginIdentifier);
             String pluginFullName = pluginName + ".jar";
             //检查是否已经开始下载
-            Enums.DownloadStatus downloadStatus = DownloadUtil.getInstance().getDownloadStatus(pluginFullName);
-            if (downloadStatus == Enums.DownloadStatus.DOWNLOAD_DOWNLOADING) {
+            AllConfigs.DownloadStatus downloadStatus = DownloadUtil.getInstance().getDownloadStatus(pluginFullName);
+            if (downloadStatus == AllConfigs.DownloadStatus.DOWNLOAD_DOWNLOADING) {
                 //取消下载
                 DownloadUtil instance = DownloadUtil.getInstance();
                 instance.cancelDownload(pluginFullName);
                 buttonUpdatePlugin.setText(TranslateUtil.getInstance().getTranslation("Install"));
                 buttonUpdatePlugin.setEnabled(true);
-            } else if (downloadStatus == Enums.DownloadStatus.DOWNLOAD_DONE) {
+            } else if (downloadStatus == AllConfigs.DownloadStatus.DOWNLOAD_DONE) {
                 buttonUpdatePlugin.setEnabled(false);
             } else {
                 Thread checkUpdateThread = new Thread(() -> {
@@ -980,7 +979,7 @@ public class SettingsFrame {
         if (plugins.length == 0) {
             PluginSettingsPanel.setVisible(false);
         }
-        if (AllConfigs.getProxyType() == Enums.ProxyType.PROXY_DIRECT) {
+        if (AllConfigs.getProxyType() == AllConfigs.ProxyType.PROXY_DIRECT) {
             radioButtonNoProxy.setSelected(true);
             radioButtonUseProxy.setSelected(false);
             radioButtonProxyTypeHttp.setEnabled(false);
@@ -1021,7 +1020,7 @@ public class SettingsFrame {
     }
 
     private void selectProxyType() {
-        if (AllConfigs.getProxyType() == Enums.ProxyType.PROXY_SOCKS) {
+        if (AllConfigs.getProxyType() == AllConfigs.ProxyType.PROXY_SOCKS) {
             radioButtonProxyTypeSocks5.setSelected(true);
         } else {
             radioButtonProxyTypeHttp.setSelected(true);
@@ -1132,12 +1131,12 @@ public class SettingsFrame {
     private void checkDownloadTask(JLabel label, JButton button, String fileName, String originButtonString, String updateSignalFileName) throws InterruptedException, IOException {
         //设置进度显示线程
         double progress;
-        if (DownloadUtil.getInstance().getDownloadStatus(fileName) != Enums.DownloadStatus.DOWNLOAD_NO_TASK) {
+        if (DownloadUtil.getInstance().getDownloadStatus(fileName) != AllConfigs.DownloadStatus.DOWNLOAD_NO_TASK) {
             progress = DownloadUtil.getInstance().getDownloadProgress(fileName);
             label.setText(TranslateUtil.getInstance().getTranslation("Downloading:") + (int) (progress * 100) + "%");
 
-            Enums.DownloadStatus downloadingStatus = DownloadUtil.getInstance().getDownloadStatus(fileName);
-            if (downloadingStatus == Enums.DownloadStatus.DOWNLOAD_DONE) {
+            AllConfigs.DownloadStatus downloadingStatus = DownloadUtil.getInstance().getDownloadStatus(fileName);
+            if (downloadingStatus == AllConfigs.DownloadStatus.DOWNLOAD_DONE) {
                 //下载完成，禁用按钮
                 label.setText(TranslateUtil.getInstance().getTranslation("Download Done"));
                 label.setText(TranslateUtil.getInstance().getTranslation("Downloaded"));
@@ -1146,15 +1145,15 @@ public class SettingsFrame {
                 if (!updatePluginSign.exists()) {
                     updatePluginSign.createNewFile();
                 }
-            } else if (downloadingStatus == Enums.DownloadStatus.DOWNLOAD_ERROR) {
+            } else if (downloadingStatus == AllConfigs.DownloadStatus.DOWNLOAD_ERROR) {
                 //下载错误，重置button
                 label.setText(TranslateUtil.getInstance().getTranslation("Download failed"));
                 button.setText(TranslateUtil.getInstance().getTranslation(originButtonString));
                 button.setEnabled(true);
-            } else if (downloadingStatus == Enums.DownloadStatus.DOWNLOAD_DOWNLOADING) {
+            } else if (downloadingStatus == AllConfigs.DownloadStatus.DOWNLOAD_DOWNLOADING) {
                 //正在下载
                 button.setText(TranslateUtil.getInstance().getTranslation("Cancel"));
-            } else if (downloadingStatus == Enums.DownloadStatus.DOWNLOAD_INTERRUPTED) {
+            } else if (downloadingStatus == AllConfigs.DownloadStatus.DOWNLOAD_INTERRUPTED) {
                 //用户自行中断
                 label.setText("");
                 button.setText(TranslateUtil.getInstance().getTranslation(originButtonString));
@@ -1423,7 +1422,7 @@ public class SettingsFrame {
             if (settingsInJson.containsKey("proxyType")) {
                 AllConfigs.setProxyType(settingsInJson.getInteger("proxyType"));
             } else {
-                AllConfigs.setProxyType(Enums.ProxyType.PROXY_DIRECT);
+                AllConfigs.setProxyType(AllConfigs.ProxyType.PROXY_DIRECT);
             }
         } catch (NullPointerException | IOException e) {
             AllConfigs.setCacheNumLimit(1000);
@@ -1452,7 +1451,7 @@ public class SettingsFrame {
             AllConfigs.setProxyPort(0);
             AllConfigs.setProxyUserName("");
             AllConfigs.setProxyPassword("");
-            AllConfigs.setProxyType(Enums.ProxyType.PROXY_DIRECT);
+            AllConfigs.setProxyType(AllConfigs.ProxyType.PROXY_DIRECT);
         }
     }
 
@@ -1472,8 +1471,8 @@ public class SettingsFrame {
 
     public static JSONObject getUpdateInfo() throws IOException, InterruptedException {
         DownloadUtil downloadUtil = DownloadUtil.getInstance();
-        Enums.DownloadStatus downloadStatus = downloadUtil.getDownloadStatus("version.json");
-        if (downloadStatus != Enums.DownloadStatus.DOWNLOAD_DOWNLOADING) {
+        AllConfigs.DownloadStatus downloadStatus = downloadUtil.getDownloadStatus("version.json");
+        if (downloadStatus != AllConfigs.DownloadStatus.DOWNLOAD_DOWNLOADING) {
             String url = getUpdateUrl();
             if (url != null) {
                 downloadUtil.downLoadFromUrl(url,
@@ -1481,7 +1480,7 @@ public class SettingsFrame {
                 int count = 0;
                 boolean isError = false;
                 //wait for task
-                while (downloadUtil.getDownloadStatus("version.json") != Enums.DownloadStatus.DOWNLOAD_DONE) {
+                while (downloadUtil.getDownloadStatus("version.json") != AllConfigs.DownloadStatus.DOWNLOAD_DONE) {
                     count++;
                     if (count >= 3) {
                         isError = true;
@@ -1688,12 +1687,12 @@ public class SettingsFrame {
         //所有配置均正确
 
         if (radioButtonProxyTypeSocks5.isSelected()) {
-            AllConfigs.setProxyType(Enums.ProxyType.PROXY_SOCKS);
+            AllConfigs.setProxyType(AllConfigs.ProxyType.PROXY_SOCKS);
         } else if (radioButtonProxyTypeHttp.isSelected()) {
-            AllConfigs.setProxyType(Enums.ProxyType.PROXY_HTTP);
+            AllConfigs.setProxyType(AllConfigs.ProxyType.PROXY_HTTP);
         }
         if (radioButtonNoProxy.isSelected()) {
-            AllConfigs.setProxyType(Enums.ProxyType.PROXY_DIRECT);
+            AllConfigs.setProxyType(AllConfigs.ProxyType.PROXY_DIRECT);
         }
 
         AllConfigs.setUpdateAddress((String) chooseUpdateAddress.getSelectedItem());

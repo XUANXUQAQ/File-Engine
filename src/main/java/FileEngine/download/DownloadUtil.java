@@ -1,7 +1,6 @@
 package FileEngine.download;
 
 import FileEngine.configs.AllConfigs;
-import FileEngine.modesAndStatus.Enums;
 import FileEngine.threadPool.CachedThreadPool;
 
 import javax.net.ssl.*;
@@ -93,11 +92,11 @@ public class DownloadUtil {
      * @param fileName 下载文件名
      * @return 当前任务状态
      */
-    public Enums.DownloadStatus getDownloadStatus(String fileName) {
+    public AllConfigs.DownloadStatus getDownloadStatus(String fileName) {
         if (hasTask(fileName)) {
             return DOWNLOAD_MAP.get(fileName).getDownloadStatus();
         }
-        return Enums.DownloadStatus.DOWNLOAD_NO_TASK;
+        return AllConfigs.DownloadStatus.DOWNLOAD_NO_TASK;
     }
 
     /**
@@ -123,7 +122,7 @@ public class DownloadUtil {
         private final String fileName;
         private volatile double progress = 0.0;
         private volatile boolean isUserInterrupted = false;
-        private volatile Enums.DownloadStatus downloadStatus;
+        private volatile AllConfigs.DownloadStatus downloadStatus;
         private Proxy proxy = null;
         private Authenticator authenticator = null;
 
@@ -131,7 +130,7 @@ public class DownloadUtil {
             this.url = url;
             this.fileName = fileName;
             this.localPath = savePath;
-            this.downloadStatus = Enums.DownloadStatus.DOWNLOAD_DOWNLOADING;
+            this.downloadStatus = AllConfigs.DownloadStatus.DOWNLOAD_DOWNLOADING;
             setProxy(proxyInfo.type, proxyInfo.address, proxyInfo.port, proxyInfo.userName, proxyInfo.password);
         }
 
@@ -211,11 +210,11 @@ public class DownloadUtil {
                     fileFullPath.delete();
                     throw new IOException("User Interrupted");
                 }
-                downloadStatus = Enums.DownloadStatus.DOWNLOAD_DONE;
+                downloadStatus = AllConfigs.DownloadStatus.DOWNLOAD_DONE;
             } catch (IOException | NoSuchAlgorithmException | KeyManagementException e) {
                 e.printStackTrace();
                 if (!"User Interrupted".equals(e.getMessage())) {
-                    downloadStatus = Enums.DownloadStatus.DOWNLOAD_ERROR;
+                    downloadStatus = AllConfigs.DownloadStatus.DOWNLOAD_ERROR;
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -230,14 +229,14 @@ public class DownloadUtil {
 
         private void setInterrupt() {
             isUserInterrupted = true;
-            downloadStatus = Enums.DownloadStatus.DOWNLOAD_INTERRUPTED;
+            downloadStatus = AllConfigs.DownloadStatus.DOWNLOAD_INTERRUPTED;
         }
 
         private double getDownloadProgress() {
             return progress;
         }
 
-        private Enums.DownloadStatus getDownloadStatus() {
+        private AllConfigs.DownloadStatus getDownloadStatus() {
             return downloadStatus;
         }
 

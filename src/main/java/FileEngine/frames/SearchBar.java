@@ -7,7 +7,6 @@ import FileEngine.dllInterface.FileMonitor;
 import FileEngine.dllInterface.GetAscII;
 import FileEngine.dllInterface.GetHandle;
 import FileEngine.dllInterface.IsLocalDisk;
-import FileEngine.modesAndStatus.Enums;
 import FileEngine.getIcon.GetIconUtil;
 import FileEngine.pluginSystem.Plugin;
 import FileEngine.pluginSystem.PluginUtil;
@@ -106,9 +105,9 @@ public class SearchBar {
         searchBar = new JFrame();
         labelCount = new AtomicInteger(0);
         resultCount = new AtomicInteger(0);
-        runningMode = new AtomicInteger(Enums.RunningMode.NORMAL_MODE);
+        runningMode = new AtomicInteger(AllConfigs.RunningMode.NORMAL_MODE);
         cacheNum = new AtomicInteger(0);
-        showingMode = new AtomicInteger(Enums.ShowingSearchBarMode.NORMAL_SHOWING);
+        showingMode = new AtomicInteger(AllConfigs.ShowingSearchBarMode.NORMAL_SHOWING);
         currentLabelSelectedPosition = new AtomicInteger(0);
         semicolon = Pattern.compile(";");
         colon = Pattern.compile(":");
@@ -194,9 +193,9 @@ public class SearchBar {
             @Override
             public void focusLost(FocusEvent e) {
                 if (System.currentTimeMillis() - visibleStartTime > 500) {
-                    if (showingMode.get() != Enums.ShowingSearchBarMode.EXPLORER_ATTACH && AllConfigs.isLoseFocusClose()) {
+                    if (showingMode.get() != AllConfigs.ShowingSearchBarMode.EXPLORER_ATTACH && AllConfigs.isLoseFocusClose()) {
                         closeSearchBar();
-                    } else if (showingMode.get() == Enums.ShowingSearchBarMode.EXPLORER_ATTACH) {
+                    } else if (showingMode.get() == AllConfigs.ShowingSearchBarMode.EXPLORER_ATTACH) {
                         closeWithoutHideSearchBar();
                     }
                 }
@@ -283,13 +282,13 @@ public class SearchBar {
                 int count = e.getClickCount();
                 if (count == 2) {
                     if (!(resultCount.get() == 0)) {
-                        if (runningMode.get() != Enums.RunningMode.PLUGIN_MODE) {
-                            if (showingMode.get() != Enums.ShowingSearchBarMode.EXPLORER_ATTACH) {
+                        if (runningMode.get() != AllConfigs.RunningMode.PLUGIN_MODE) {
+                            if (showingMode.get() != AllConfigs.ShowingSearchBarMode.EXPLORER_ATTACH) {
                                 setVisible(false);
                             }
                             String res = listResults.get(labelCount.get());
-                            if (runningMode.get() == Enums.RunningMode.NORMAL_MODE) {
-                                if (showingMode.get() == Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
+                            if (runningMode.get() == AllConfigs.RunningMode.NORMAL_MODE) {
+                                if (showingMode.get() == AllConfigs.ShowingSearchBarMode.NORMAL_SHOWING) {
                                     if (isOpenLastFolderPressed) {
                                         //打开上级文件夹
                                         File open = new File(res);
@@ -311,7 +310,7 @@ public class SearchBar {
                                     }
                                     saveCache(res);
                                 }
-                            } else if (runningMode.get() == Enums.RunningMode.COMMAND_MODE) {
+                            } else if (runningMode.get() == AllConfigs.RunningMode.COMMAND_MODE) {
                                 String[] commandInfo = semicolon.split(res);
                                 boolean isExecuted = false;
                                 try {
@@ -341,8 +340,8 @@ public class SearchBar {
                                     }
                                 }
                             }
-                        } else if (runningMode.get() == Enums.RunningMode.PLUGIN_MODE) {
-                            if (showingMode.get() == Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
+                        } else if (runningMode.get() == AllConfigs.RunningMode.PLUGIN_MODE) {
+                            if (showingMode.get() == AllConfigs.ShowingSearchBarMode.NORMAL_SHOWING) {
                                 if (currentUsingPlugin != null) {
                                     if (!(resultCount.get() == 0)) {
                                         currentUsingPlugin.mousePressed(e, listResults.get(labelCount.get()));
@@ -453,15 +452,15 @@ public class SearchBar {
                             }
                         }
                     } else if (10 == key) {
-                        if (runningMode.get() != Enums.RunningMode.PLUGIN_MODE) {
+                        if (runningMode.get() != AllConfigs.RunningMode.PLUGIN_MODE) {
                             //enter被点击
-                            if (showingMode.get() != Enums.ShowingSearchBarMode.EXPLORER_ATTACH) {
+                            if (showingMode.get() != AllConfigs.ShowingSearchBarMode.EXPLORER_ATTACH) {
                                 setVisible(false);
                             }
                             if (!(resultCount.get() == 0)) {
                                 String res = listResults.get(labelCount.get());
-                                if (runningMode.get() == Enums.RunningMode.NORMAL_MODE) {
-                                    if (showingMode.get() == Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
+                                if (runningMode.get() == AllConfigs.RunningMode.NORMAL_MODE) {
+                                    if (showingMode.get() == AllConfigs.ShowingSearchBarMode.NORMAL_SHOWING) {
                                         if (isOpenLastFolderPressed) {
                                             //打开上级文件夹
                                             File open = new File(res);
@@ -482,14 +481,14 @@ public class SearchBar {
                                             }
                                         }
                                         saveCache(res);
-                                    } else if (showingMode.get() == Enums.ShowingSearchBarMode.EXPLORER_ATTACH) {
+                                    } else if (showingMode.get() == AllConfigs.ShowingSearchBarMode.EXPLORER_ATTACH) {
                                         if (isCopyPathPressed) {
                                             copyToClipBoard(res);
                                         } else {
                                             quickJump(res);
                                         }
                                     }
-                                } else if (runningMode.get() == Enums.RunningMode.COMMAND_MODE) {
+                                } else if (runningMode.get() == AllConfigs.RunningMode.COMMAND_MODE) {
                                     String[] commandInfo = semicolon.split(res);
                                     boolean isExecuted = false;
                                     try {
@@ -532,8 +531,8 @@ public class SearchBar {
                         isCopyPathPressed = true;
                     }
                 }
-                if (showingMode.get() == Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
-                    if (runningMode.get() == Enums.RunningMode.PLUGIN_MODE) {
+                if (showingMode.get() == AllConfigs.ShowingSearchBarMode.NORMAL_SHOWING) {
+                    if (runningMode.get() == AllConfigs.RunningMode.PLUGIN_MODE) {
                         if (key != 38 && key != 40) {
                             if (currentUsingPlugin != null) {
                                 if (!(resultCount.get() == 0)) {
@@ -561,7 +560,7 @@ public class SearchBar {
                     isCopyPathPressed = false;
                 }
 
-                if (runningMode.get() == Enums.RunningMode.PLUGIN_MODE) {
+                if (runningMode.get() == AllConfigs.RunningMode.PLUGIN_MODE) {
                     if (key != 38 && key != 40) {
                         if (currentUsingPlugin != null) {
                             if (!(resultCount.get() == 0)) {
@@ -574,7 +573,7 @@ public class SearchBar {
 
             @Override
             public void keyTyped(KeyEvent arg0) {
-                if (runningMode.get() == Enums.RunningMode.PLUGIN_MODE) {
+                if (runningMode.get() == AllConfigs.RunningMode.PLUGIN_MODE) {
                     int key = arg0.getKeyCode();
                     if (key != 38 && key != 40) {
                         if (currentUsingPlugin != null) {
@@ -1270,7 +1269,7 @@ public class SearchBar {
                     setLabelChosen(label8);
                     break;
                 case 7:
-                    if (runningMode.get() == Enums.RunningMode.NORMAL_MODE) {
+                    if (runningMode.get() == AllConfigs.RunningMode.NORMAL_MODE) {
                         //到达最下端，刷新显示
                         try {
                             String path = listResults.get(labelCount.get() - 7);
@@ -1301,7 +1300,7 @@ public class SearchBar {
                                 e.printStackTrace();
                             }
                         }
-                    } else if (runningMode.get() == Enums.RunningMode.COMMAND_MODE) {
+                    } else if (runningMode.get() == AllConfigs.RunningMode.COMMAND_MODE) {
                         //到达了最下端，刷新显示
                         try {
                             String command = listResults.get(labelCount.get() - 7);
@@ -1332,7 +1331,7 @@ public class SearchBar {
                                 e.printStackTrace();
                             }
                         }
-                    } else if (runningMode.get() == Enums.RunningMode.PLUGIN_MODE) {
+                    } else if (runningMode.get() == AllConfigs.RunningMode.PLUGIN_MODE) {
                         try {
                             String command = listResults.get(labelCount.get() - 7);
                             showPluginResultOnLabel(command, label1, false);
@@ -1378,7 +1377,7 @@ public class SearchBar {
             int size;
             switch (position) {
                 case 0:
-                    if (runningMode.get() == Enums.RunningMode.NORMAL_MODE) {
+                    if (runningMode.get() == AllConfigs.RunningMode.NORMAL_MODE) {
                         //到达了最上端，刷新显示
                         try {
                             String path = listResults.get(labelCount.get());
@@ -1409,7 +1408,7 @@ public class SearchBar {
                                 e.printStackTrace();
                             }
                         }
-                    } else if (runningMode.get() == Enums.RunningMode.COMMAND_MODE) {
+                    } else if (runningMode.get() == AllConfigs.RunningMode.COMMAND_MODE) {
                         //到达了最上端，刷新显示
                         try {
                             String command = listResults.get(labelCount.get());
@@ -1440,7 +1439,7 @@ public class SearchBar {
                                 e.printStackTrace();
                             }
                         }
-                    } else if (runningMode.get() == Enums.RunningMode.PLUGIN_MODE) {
+                    } else if (runningMode.get() == AllConfigs.RunningMode.PLUGIN_MODE) {
                         try {
                             String command = listResults.get(labelCount.get());
                             showPluginResultOnLabel(command, label1, true);
@@ -1716,9 +1715,9 @@ public class SearchBar {
                 String text = getTextFieldText();
                 char first = text.charAt(0);
                 if (first == ':') {
-                    runningMode.set(Enums.RunningMode.COMMAND_MODE);
+                    runningMode.set(AllConfigs.RunningMode.COMMAND_MODE);
                 } else if (first == '>') {
-                    runningMode.set(Enums.RunningMode.PLUGIN_MODE);
+                    runningMode.set(AllConfigs.RunningMode.PLUGIN_MODE);
                     String subText = text.substring(1);
                     String[] s = blank.split(subText);
                     currentUsingPlugin = PluginUtil.getInstance().getPluginByIdentifier(s[0]);
@@ -1733,7 +1732,7 @@ public class SearchBar {
                         strb.delete(0, strb.length());
                     }
                 } else {
-                    runningMode.set(Enums.RunningMode.NORMAL_MODE);
+                    runningMode.set(AllConfigs.RunningMode.NORMAL_MODE);
                 }
             }
 
@@ -1751,9 +1750,9 @@ public class SearchBar {
                 try {
                     char first = text.charAt(0);
                     if (first == ':') {
-                        runningMode.set(Enums.RunningMode.COMMAND_MODE);
+                        runningMode.set(AllConfigs.RunningMode.COMMAND_MODE);
                     } else if (first == '>') {
-                        runningMode.set(Enums.RunningMode.PLUGIN_MODE);
+                        runningMode.set(AllConfigs.RunningMode.PLUGIN_MODE);
                         String subText = text.substring(1);
                         String[] s = blank.split(subText);
                         currentUsingPlugin = PluginUtil.getInstance().getPluginByIdentifier(s[0]);
@@ -1768,10 +1767,10 @@ public class SearchBar {
                             strb.delete(0, strb.length());
                         }
                     } else {
-                        runningMode.set(Enums.RunningMode.NORMAL_MODE);
+                        runningMode.set(AllConfigs.RunningMode.NORMAL_MODE);
                     }
                 } catch (StringIndexOutOfBoundsException e1) {
-                    runningMode.set(Enums.RunningMode.NORMAL_MODE);
+                    runningMode.set(AllConfigs.RunningMode.NORMAL_MODE);
                 }
                 if (text.isEmpty()) {
                     resultCount.set(0);
@@ -1939,7 +1938,7 @@ public class SearchBar {
         CachedThreadPool.getInstance().executeTask(() -> {
             try {
                 while (AllConfigs.isNotMainExit()) {
-                    if (showingMode.get() == Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
+                    if (showingMode.get() == AllConfigs.ShowingSearchBarMode.NORMAL_SHOWING) {
                         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize(); // 获取屏幕大小
                         int width = screenSize.width;
                         int height = screenSize.height;
@@ -1974,7 +1973,7 @@ public class SearchBar {
         CachedThreadPool.getInstance().executeTask(() -> {
             try {
                 while (AllConfigs.isNotMainExit()) {
-                    if (showingMode.get() == Enums.ShowingSearchBarMode.EXPLORER_ATTACH) {
+                    if (showingMode.get() == AllConfigs.ShowingSearchBarMode.EXPLORER_ATTACH) {
                         int searchBarHeight = (int) (GetHandle.INSTANCE.getHeight() * 0.75);
                         int labelHeight = searchBarHeight / 9;
                         if (labelHeight > 20) {
@@ -2008,7 +2007,7 @@ public class SearchBar {
         int searchBarHeight = (int) (GetHandle.INSTANCE.getHeight() * 0.75);
         int labelHeight = searchBarHeight / 9;
         if (labelHeight > 35) {
-            if (showingMode.get() != Enums.ShowingSearchBarMode.EXPLORER_ATTACH) {
+            if (showingMode.get() != AllConfigs.ShowingSearchBarMode.EXPLORER_ATTACH) {
                 //设置字体
                 Font textFieldFont = new Font("Microsoft JhengHei", Font.PLAIN, (int) ((searchBarHeight * 0.4) / 96 * 72) / 4);
                 textField.setFont(textFieldFont);
@@ -2022,7 +2021,7 @@ public class SearchBar {
                 label7.setFont(labelFont);
                 label8.setFont(labelFont);
                 GetHandle.INSTANCE.resetMouseStatus();
-                showingMode.set(Enums.ShowingSearchBarMode.EXPLORER_ATTACH);
+                showingMode.set(AllConfigs.ShowingSearchBarMode.EXPLORER_ATTACH);
                 //让更改窗口大小线程先运行
                 try {
                     TimeUnit.MILLISECONDS.sleep(50);
@@ -2036,7 +2035,7 @@ public class SearchBar {
     }
 
     private void switchToNormalMode() {
-        if (showingMode.get() != Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
+        if (showingMode.get() != AllConfigs.ShowingSearchBarMode.NORMAL_SHOWING) {
             closeSearchBar();
             GetHandle.INSTANCE.resetMouseStatus();
             Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize(); // 获取屏幕大小
@@ -2054,7 +2053,7 @@ public class SearchBar {
             label6.setFont(labelFont);
             label7.setFont(labelFont);
             label8.setFont(labelFont);
-            showingMode.set(Enums.ShowingSearchBarMode.NORMAL_SHOWING);
+            showingMode.set(AllConfigs.ShowingSearchBarMode.NORMAL_SHOWING);
         }
     }
 
@@ -2532,7 +2531,7 @@ public class SearchBar {
             try {
                 String column;
                 while (AllConfigs.isNotMainExit()) {
-                    if (runningMode.get() == Enums.RunningMode.NORMAL_MODE) {
+                    if (runningMode.get() == AllConfigs.RunningMode.NORMAL_MODE) {
                         try {
                             while ((column = commandQueue.poll()) != null) {
                                 searchAndAddToTempResults(System.currentTimeMillis(), column);
@@ -2616,7 +2615,7 @@ public class SearchBar {
                         tempResults.clear();
                         String text = getTextFieldText();
                         if (search.getStatus() == SearchUtil.NORMAL) {
-                            if (runningMode.get() == Enums.RunningMode.COMMAND_MODE) {
+                            if (runningMode.get() == AllConfigs.RunningMode.COMMAND_MODE) {
                                 //去掉冒号
                                 runInternalCommand(text.substring(1).toLowerCase());
                                 LinkedHashSet<String> cmdSet = new LinkedHashSet<>(AllConfigs.getCmdSet());
@@ -2639,7 +2638,7 @@ public class SearchBar {
                                 }
                                 showResults(true, false, false, false,
                                         false, false, false, false);
-                            } else if (runningMode.get() == Enums.RunningMode.NORMAL_MODE) {
+                            } else if (runningMode.get() == AllConfigs.RunningMode.NORMAL_MODE) {
                                 isStartSearchLocal = true;
                                 String[] strings;
                                 int length;
@@ -2658,10 +2657,10 @@ public class SearchBar {
                                 searchPriorityFolder();
                                 searchCache();
                                 isCacheAndPrioritySearched = true;
-                            } else if (runningMode.get() == Enums.RunningMode.PLUGIN_MODE) {
+                            } else if (runningMode.get() == AllConfigs.RunningMode.PLUGIN_MODE) {
                                 String result;
                                 if (currentUsingPlugin != null) {
-                                    while (runningMode.get() == Enums.RunningMode.PLUGIN_MODE) {
+                                    while (runningMode.get() == AllConfigs.RunningMode.PLUGIN_MODE) {
                                         try {
                                             if ((result = currentUsingPlugin.pollFromResultQueue()) != null) {
                                                 if (isResultNotRepeat(result)) {
@@ -3031,7 +3030,7 @@ public class SearchBar {
      */
     private void showResults(boolean isLabel1Chosen, boolean isLabel2Chosen, boolean isLabel3Chosen, boolean isLabel4Chosen,
                              boolean isLabel5Chosen, boolean isLabel6Chosen, boolean isLabel7Chosen, boolean isLabel8Chosen) {
-        if (runningMode.get() == Enums.RunningMode.NORMAL_MODE) {
+        if (runningMode.get() == AllConfigs.RunningMode.NORMAL_MODE) {
             try {
                 String path = listResults.get(0);
                 showResultOnLabel(path, label1, isLabel1Chosen);
@@ -3058,7 +3057,7 @@ public class SearchBar {
                 showResultOnLabel(path, label8, isLabel8Chosen);
             } catch (IndexOutOfBoundsException ignored) {
             }
-        } else if (runningMode.get() == Enums.RunningMode.COMMAND_MODE) {
+        } else if (runningMode.get() == AllConfigs.RunningMode.COMMAND_MODE) {
             try {
                 String command = listResults.get(0);
                 showCommandOnLabel(command, label1, isLabel1Chosen);
@@ -3085,7 +3084,7 @@ public class SearchBar {
                 showCommandOnLabel(command, label8, isLabel8Chosen);
             } catch (IndexOutOfBoundsException ignored) {
             }
-        } else if (runningMode.get() == Enums.RunningMode.PLUGIN_MODE) {
+        } else if (runningMode.get() == AllConfigs.RunningMode.PLUGIN_MODE) {
             try {
                 String command = listResults.get(0);
                 showPluginResultOnLabel(command, label1, isLabel1Chosen);
@@ -3397,9 +3396,9 @@ public class SearchBar {
      * 检测当前模式并重置状态
      */
     private void detectShowingModeAndClose() {
-        if (showingMode.get() == Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
+        if (showingMode.get() == AllConfigs.ShowingSearchBarMode.NORMAL_SHOWING) {
             closeSearchBar();
-        } else if (showingMode.get() == Enums.ShowingSearchBarMode.EXPLORER_ATTACH) {
+        } else if (showingMode.get() == AllConfigs.ShowingSearchBarMode.EXPLORER_ATTACH) {
             closeWithoutHideSearchBar();
         }
     }
