@@ -3413,10 +3413,10 @@ public class SearchBar {
      */
     public void closeSearchBar() {
         if (isVisible()) {
+            clearLabel();
+            clearTextFieldText();
             setVisible(false);
         }
-        clearLabel();
-        clearTextFieldText();
         startTime = System.currentTimeMillis();//结束搜索
         isUsing = false;
         labelCount.set(0);
