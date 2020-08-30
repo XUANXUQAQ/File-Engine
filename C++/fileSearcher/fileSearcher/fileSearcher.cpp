@@ -68,6 +68,8 @@ int main(int argc, char* argv[])
         }
 
         cout << "ignorePathVector Size:" << ignorePathVector.size() << endl;
+
+        initAllVector();
         if (atoi(isIgnoreSearchDepth) == 1)
         {
             cout << "ignore searchDepth!!!" << endl;

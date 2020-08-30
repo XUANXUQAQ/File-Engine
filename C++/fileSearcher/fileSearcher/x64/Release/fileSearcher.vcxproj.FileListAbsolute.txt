@@ -1,0 +1,2 @@
+D:\Code\File-Engine\C++\fileSearcher\x64\Release\fileSearcher.exe.lastcodeanalysissucceeded
+D:\Code\File-Engine\C++\fileSearcher\fileSearcher\x64\Release\NativeCodeAnalysis.read.1.tlog
