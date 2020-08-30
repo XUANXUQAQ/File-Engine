@@ -1,6 +1,5 @@
 package FileEngine.configs;
 
-import FileEngine.modesAndStatus.Enums;
 import FileEngine.translate.TranslateUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
@@ -317,6 +316,10 @@ public class AllConfigs {
         }
     }
 
+    public enum DownloadStatus {
+        DOWNLOAD_DONE, DOWNLOAD_ERROR, DOWNLOAD_DOWNLOADING, DOWNLOAD_INTERRUPTED, DOWNLOAD_NO_TASK
+    }
+
     public static class ProxyInfo {
         public final String address;
         public final int port;
@@ -329,13 +332,30 @@ public class AllConfigs {
             this.port = proxyPort;
             this.userName = proxyUserName;
             this.password = proxyPassword;
-            if (Enums.ProxyType.PROXY_HTTP == proxyType) {
+            if (ProxyType.PROXY_HTTP == proxyType) {
                 this.type = Proxy.Type.HTTP;
-            } else if (Enums.ProxyType.PROXY_SOCKS == proxyType) {
+            } else if (ProxyType.PROXY_SOCKS == proxyType) {
                 this.type = Proxy.Type.SOCKS;
             } else {
                 this.type = Proxy.Type.DIRECT;
             }
         }
+    }
+
+    public static class ShowingSearchBarMode {
+        public static final int NORMAL_SHOWING = 0;
+        public static final int EXPLORER_ATTACH = 1;
+    }
+
+    public static class RunningMode {
+        public static final int NORMAL_MODE = 2;
+        public static final int COMMAND_MODE = 3;
+        public static final int PLUGIN_MODE = 4;
+    }
+
+    public static class ProxyType {
+        public static final int PROXY_HTTP = 0x100;
+        public static final int PROXY_SOCKS = 0x200;
+        public static final int PROXY_DIRECT = 0x300;
     }
 }
