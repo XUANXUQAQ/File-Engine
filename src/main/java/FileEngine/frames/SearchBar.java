@@ -590,6 +590,7 @@ public class SearchBar {
     /**
      * 在command模式下，检测当前输入信息是否是软件已经定义的内部命令
      * clearbin update help version
+     * return true only the internal command was executed. Otherwise false
      */
     private boolean runInternalCommand(String commandName) throws URISyntaxException, IOException {
         switch (commandName) {
