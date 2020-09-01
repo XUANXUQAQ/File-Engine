@@ -284,7 +284,9 @@ public class SearchBar {
                     if (!(resultCount.get() == 0)) {
                         if (runningMode.get() != AllConfigs.RunningMode.PLUGIN_MODE) {
                             if (showingMode.get() != AllConfigs.ShowingSearchBarMode.EXPLORER_ATTACH) {
-                                setVisible(false);
+                                if (isVisible()) {
+                                    setVisible(false);
+                                }
                             }
                             String res = listResults.get(labelCount.get());
                             if (runningMode.get() == AllConfigs.RunningMode.NORMAL_MODE) {
@@ -455,7 +457,9 @@ public class SearchBar {
                         if (runningMode.get() != AllConfigs.RunningMode.PLUGIN_MODE) {
                             //enter被点击
                             if (showingMode.get() != AllConfigs.ShowingSearchBarMode.EXPLORER_ATTACH) {
-                                setVisible(false);
+                                if (isVisible()) {
+                                    setVisible(false);
+                                }
                             }
                             if (!(resultCount.get() == 0)) {
                                 String res = listResults.get(labelCount.get());
