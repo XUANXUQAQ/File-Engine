@@ -2712,13 +2712,19 @@ public class SearchBar {
         CachedThreadPool.getInstance().executeTask(() -> {
             //检测文件添加线程
             String filesToAdd;
+            int count;
             try (BufferedReader readerAdd = new BufferedReader(new InputStreamReader(
                     new FileInputStream(AllConfigs.getTmp().getAbsolutePath() + File.separator + "fileAdded.txt"),
                     StandardCharsets.UTF_8))) {
                 while (AllConfigs.isNotMainExit()) {
                     if (search.getStatus() == SearchUtil.NORMAL) {
-                        if ((filesToAdd = readerAdd.readLine()) != null) {
+                        count = 0;
+                        while ((filesToAdd = readerAdd.readLine()) != null) {
                             search.addFileToDatabase(filesToAdd);
+                            count++;
+                            if (count > 3000) {
+                                break;
+                            }
                             if (AllConfigs.isDebug()) {
                                 System.out.println("添加" + filesToAdd);
                             }
@@ -2737,13 +2743,19 @@ public class SearchBar {
     private void deleteRecordsToDatabaseThread() {
         CachedThreadPool.getInstance().executeTask(() -> {
             String filesToRemove;
+            int count;
             try (BufferedReader readerRemove = new BufferedReader(new InputStreamReader(
                     new FileInputStream(AllConfigs.getTmp().getAbsolutePath() + File.separator + "fileRemoved.txt"),
                     StandardCharsets.UTF_8))) {
                 while (AllConfigs.isNotMainExit()) {
                     if (search.getStatus() == SearchUtil.NORMAL) {
-                        if ((filesToRemove = readerRemove.readLine()) != null) {
+                        count = 0;
+                        while ((filesToRemove = readerRemove.readLine()) != null) {
                             search.removeFileFromDatabase(filesToRemove);
+                            count++;
+                            if (count > 3000) {
+                                break;
+                            }
                             if (AllConfigs.isDebug()) {
                                 System.out.println("删除" + filesToRemove);
                             }
