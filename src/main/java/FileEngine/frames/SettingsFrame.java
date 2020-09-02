@@ -15,7 +15,6 @@ import com.alibaba.fastjson.JSONObject;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileSystemView;
-import javax.swing.plaf.basic.BasicTabbedPaneUI;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
@@ -1042,19 +1041,6 @@ public class SettingsFrame {
 
         hotKeyListener = CheckHotKeyUtil.getInstance();
         searchBar = SearchBar.getInstance();
-
-        tabbedPane.setUI(new BasicTabbedPaneUI() {
-            private final Insets borderInsets = new Insets(0, 0, 0, 0);
-
-            @Override
-            protected void paintContentBorder(Graphics g, int tabPlacement, int selectedIndex) {
-            }
-
-            @Override
-            protected Insets getContentBorderInsets(int tabPlacement) {
-                return borderInsets;
-            }
-        });
 
         addUpdateAddressToComboBox();
 
