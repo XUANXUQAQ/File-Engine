@@ -345,7 +345,7 @@ public class SearchBar {
                         } else if (runningMode.get() == AllConfigs.RunningMode.PLUGIN_MODE) {
                             if (showingMode.get() == AllConfigs.ShowingSearchBarMode.NORMAL_SHOWING) {
                                 if (currentUsingPlugin != null) {
-                                    if (!(resultCount.get() == 0)) {
+                                    if (resultCount.get() != 0) {
                                         currentUsingPlugin.mousePressed(e, listResults.get(labelCount.get()));
                                     }
                                 }
@@ -353,6 +353,17 @@ public class SearchBar {
                         }
                     }
                     detectShowingModeAndClose();
+                }
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                if (runningMode.get() == AllConfigs.RunningMode.PLUGIN_MODE) {
+                    if (currentUsingPlugin != null) {
+                        if (resultCount.get() != 0) {
+                            currentUsingPlugin.mouseReleased(e, listResults.get(labelCount.get()));
+                        }
+                    }
                 }
             }
         });
