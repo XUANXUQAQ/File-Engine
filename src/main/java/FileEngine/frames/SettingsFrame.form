@@ -239,14 +239,6 @@
                   <text value="Click to organize the database and reduce the size of the database,"/>
                 </properties>
               </component>
-              <component id="33f4a" class="javax.swing.JLabel" binding="labelVacuumStatus">
-                <constraints>
-                  <grid row="2" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
-                </constraints>
-                <properties>
-                  <text value=""/>
-                </properties>
-              </component>
               <component id="32215" class="javax.swing.JLabel" binding="labelVacuumTip2">
                 <constraints>
                   <grid row="3" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
@@ -261,6 +253,14 @@
                 </constraints>
                 <properties>
                   <text value="SQLite Vacuum"/>
+                </properties>
+              </component>
+              <component id="33f4a" class="javax.swing.JLabel" binding="labelVacuumStatus">
+                <constraints>
+                  <grid row="3" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                </constraints>
+                <properties>
+                  <text value=""/>
                 </properties>
               </component>
             </children>
