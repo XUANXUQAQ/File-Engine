@@ -145,7 +145,7 @@ public class SearchBar {
         searchBar.setTitle("File-Engine-SearchBar");
 
         //labels
-        Font labelFont = new Font("Microsoft JhengHei", Font.BOLD, (int) ((searchBarHeight * 0.2) / 96 * 72) / 4);
+        Font labelFont = new Font(null, Font.BOLD, (int) ((searchBarHeight * 0.2) / 96 * 72) / 4);
         label1 = new JLabel();
         label2 = new JLabel();
         label3 = new JLabel();
@@ -177,7 +177,7 @@ public class SearchBar {
         //TextField
         textField = new JTextField(1000);
         textField.setSize(searchBarWidth - 6, labelHeight - 5);
-        Font textFieldFont = new Font("Microsoft JhengHei", Font.PLAIN, (int) ((searchBarHeight * 0.4) / 96 * 72) / 4);
+        Font textFieldFont = new Font(null, Font.PLAIN, (int) ((searchBarHeight * 0.4) / 96 * 72) / 4);
         textField.setFont(textFieldFont);
         textField.setBorder(border);
         textField.setForeground(Color.BLACK);
@@ -2014,9 +2014,9 @@ public class SearchBar {
         if (labelHeight > 35) {
             if (showingMode.get() != AllConfigs.ShowingSearchBarMode.EXPLORER_ATTACH) {
                 //设置字体
-                Font textFieldFont = new Font("Microsoft JhengHei", Font.PLAIN, (int) ((searchBarHeight * 0.4) / 96 * 72) / 4);
+                Font textFieldFont = new Font(null, Font.PLAIN, (int) ((searchBarHeight * 0.4) / 96 * 72) / 4);
                 textField.setFont(textFieldFont);
-                Font labelFont = new Font("Microsoft JhengHei", Font.BOLD, (int) ((searchBarHeight * 0.2) / 96 * 72) / 4);
+                Font labelFont = new Font(null, Font.BOLD, (int) ((searchBarHeight * 0.2) / 96 * 72) / 4);
                 label1.setFont(labelFont);
                 label2.setFont(labelFont);
                 label3.setFont(labelFont);
@@ -2047,8 +2047,8 @@ public class SearchBar {
             int height = screenSize.height;
             int searchBarHeight = (int) (height * 0.5);
             //设置字体
-            Font labelFont = new Font("Microsoft JhengHei", Font.BOLD, (int) ((searchBarHeight * 0.2) / 96 * 72) / 4);
-            Font textFieldFont = new Font("Microsoft JhengHei", Font.PLAIN, (int) ((searchBarHeight * 0.4) / 96 * 72) / 4);
+            Font labelFont = new Font(null, Font.BOLD, (int) ((searchBarHeight * 0.2) / 96 * 72) / 4);
+            Font textFieldFont = new Font(null, Font.PLAIN, (int) ((searchBarHeight * 0.4) / 96 * 72) / 4);
             textField.setFont(textFieldFont);
             label1.setFont(labelFont);
             label2.setFont(labelFont);
