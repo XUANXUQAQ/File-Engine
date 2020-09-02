@@ -382,6 +382,10 @@ public class SearchBar {
         x = GetHandle.INSTANCE.get_toolbar_click_x();
         y = GetHandle.INSTANCE.get_toolbar_click_y();
         RobotUtil.getInstance().mouseClicked(x, y, 1, InputEvent.BUTTON1_MASK);
+        try {
+            TimeUnit.MILLISECONDS.sleep(50);
+        } catch (InterruptedException ignored) {
+        }
         RobotUtil.getInstance().keyTyped(KeyEvent.VK_CONTROL, KeyEvent.VK_V);
         RobotUtil.getInstance().keyTyped(KeyEvent.VK_ENTER);
         clipboard.setContents(originalData, null);
