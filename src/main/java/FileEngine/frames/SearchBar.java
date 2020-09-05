@@ -2975,7 +2975,7 @@ public class SearchBar {
         setVisible(true);
         if (isGrabFocus) {
             searchBar.toFront();
-            searchBar.requestFocusInWindow();
+            searchBar.requestFocus();
             textField.requestFocusInWindow();
         } else {
             textField.transferFocus();
