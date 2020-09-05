@@ -8,12 +8,14 @@
 #include <fstream>
 #include <ctype.h>
 #include <thread>
-#include <concurrent_queue.h>
+#include <concurrent_unordered_set.h>
 #include <io.h>
 //#define TEST
 
 using namespace std;
 using namespace concurrency;
+
+typedef concurrent_unordered_set<string> fileSet;
 
 extern "C" __declspec(dllexport) void monitor(const char* path);
 extern "C" __declspec(dllexport) void stop_monitor();
@@ -36,8 +38,8 @@ wchar_t fileName[1000];
 wchar_t fileRename[1000];
 static volatile bool isRunning = true;
 char* output = new char[1000];
-concurrent_queue<string> add_queue;
-concurrent_queue<string> del_queue;
+fileSet add_set;
+fileSet del_set;
 char fileRemoved[1000];
 char fileAdded[1000];
 
@@ -113,12 +115,12 @@ void searchDir(string path, string output_path)
 
 void add_record(string record)
 {
-    add_queue.push(record);
+    add_set.insert(record);
 }
 
 void delete_record(string record)
 {
-    del_queue.push(record);
+    del_set.insert(record);
 }
 
 void write_to_file(string record, const char* file_path) 
@@ -133,16 +135,22 @@ void write_add_records_to_file()
     while (isRunning)
     {
         string record;
-        add_queue.try_pop(record);
-        if (!record.empty())
-        {
-            write_to_file(record, fileAdded);
-            if (isDir(record.c_str()))
+        fileSet::iterator iter;
+        for (iter = add_set.begin(); iter != add_set.end(); ++iter) {
+            record = *iter;
+            if (!isRunning)
+                break;
+            if (!record.empty())
             {
-                searchDir(record, fileAdded);
+                write_to_file(record, fileAdded);
+                if (isDir(record.c_str()))
+                {
+                    searchDir(record, fileAdded);
+                }
             }
         }
-        Sleep(1);
+        add_set.clear();
+        Sleep(500);
     }
 }
 
@@ -151,16 +159,18 @@ void write_del_records_to_file()
     while (isRunning)
     {
         string record;
-        del_queue.try_pop(record);
-        if (!record.empty())
-        {
-            write_to_file(record, fileRemoved);
-            if (isDir(record.c_str()))
+        fileSet::iterator iter;
+        for (iter = del_set.begin(); iter != del_set.end(); ++iter) {
+            record = *iter;
+            if (!isRunning)
+                break;
+            if (!record.empty())
             {
-                searchDir(record, fileRemoved);
+                write_to_file(record, fileRemoved);
             }
         }
-        Sleep(1);
+        del_set.clear();
+        Sleep(500);
     }
 }
 
