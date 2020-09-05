@@ -1,8 +1,8 @@
 ﻿  dllmain.cpp
     正在创建库 D:\Code\File-Engine\C++\fileMonitor\x64\Release\fileMonitor.lib 和对象 D:\Code\File-Engine\C++\fileMonitor\x64\Release\fileMonitor.exp
   正在生成代码
-  2 of 600 functions ( 0.3%) were compiled, the rest were copied from previous compilation.
-    0 functions were new in current compilation
-    1 functions had inline decision re-evaluated but remain unchanged
+  13 of 694 functions ( 1.9%) were compiled, the rest were copied from previous compilation.
+    4 functions were new in current compilation
+    2 functions had inline decision re-evaluated but remain unchanged
   已完成代码的生成
   fileMonitor.vcxproj -> D:\Code\File-Engine\C++\fileMonitor\x64\Release\fileMonitor.dll
