@@ -188,7 +188,6 @@ public class SearchBar {
         textField.addFocusListener(new FocusListener() {
             @Override
             public void focusGained(FocusEvent e) {
-                textField.requestFocusInWindow();
             }
 
             @Override
@@ -2977,6 +2976,7 @@ public class SearchBar {
         if (isGrabFocus) {
             searchBar.toFront();
             searchBar.requestFocus();
+            textField.requestFocusInWindow();
         } else {
             searchBar.transferFocus();
         }
