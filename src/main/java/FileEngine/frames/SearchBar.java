@@ -79,7 +79,7 @@ public class SearchBar {
     private long mouseWheelTime = 0;
     private final int iconSideLength;
     private long visibleStartTime = 0;  //记录窗口开始可见的事件，窗口默认最短可见时间0.5秒，防止窗口快速闪烁
-    private final ConcurrentLinkedQueue<String> tempResults;  //在优先文件夹和数据库cache未搜索完时暂时保存结果，搜索完后会立即被转移到listResults
+    private final Set<String> tempResults;  //在优先文件夹和数据库cache未搜索完时暂时保存结果，搜索完后会立即被转移到listResults
     private final ConcurrentLinkedQueue<String> commandQueue;  //保存需要被执行的sql语句
     private final CopyOnWriteArrayList<String> listResults;  //保存从数据库中找出符合条件的记录（文件路径）
     private final Set<String> listResultsCopy;
@@ -98,7 +98,7 @@ public class SearchBar {
 
     private SearchBar() {
         listResults = new CopyOnWriteArrayList<>();
-        tempResults = new ConcurrentLinkedQueue<>();
+        tempResults = ConcurrentHashMap.newKeySet();
         commandQueue = new ConcurrentLinkedQueue<>();
         listResultsCopy = ConcurrentHashMap.newKeySet();
         border = BorderFactory.createLineBorder(new Color(73, 162, 255, 255));
@@ -188,6 +188,7 @@ public class SearchBar {
         textField.addFocusListener(new FocusListener() {
             @Override
             public void focusGained(FocusEvent e) {
+                textField.requestFocusInWindow();
             }
 
             @Override
@@ -2131,16 +2132,16 @@ public class SearchBar {
         CachedThreadPool.getInstance().executeTask(() -> {
             //合并搜索结果线程
             try {
-                String record;
                 while (AllConfigs.isNotMainExit()) {
                     if (isCacheAndPrioritySearched) {
-                        while ((record = tempResults.poll()) != null) {
+                        for (String record : tempResults) {
                             if (!listResultsCopy.contains(record)) {
                                 resultCount.incrementAndGet();
                                 listResults.add(record);
                                 listResultsCopy.add(record);
                             }
                         }
+                        tempResults.clear();
                     }
                     TimeUnit.MILLISECONDS.sleep(20);
                 }
@@ -2976,9 +2977,7 @@ public class SearchBar {
         if (isGrabFocus) {
             searchBar.toFront();
             searchBar.requestFocus();
-            textField.requestFocusInWindow();
         } else {
-            textField.transferFocus();
             searchBar.transferFocus();
         }
         textField.setCaretPosition(0);
@@ -3285,6 +3284,7 @@ public class SearchBar {
         if (cacheNum.get() < AllConfigs.getCacheNumLimit()) {
             search.addFileToCache(content);
             SettingsFrame.getInstance().addCache(content);
+            cacheNum.incrementAndGet();
         }
     }
 
@@ -3352,9 +3352,9 @@ public class SearchBar {
      */
     private void searchPriorityFolder() {
         File path = new File(AllConfigs.getPriorityFolder());
-        boolean exist = path.exists();
+        boolean isPriorityFolderExist = path.exists();
         AtomicInteger taskNum = new AtomicInteger(0);
-        if (exist) {
+        if (isPriorityFolderExist) {
             ConcurrentLinkedQueue<String> listRemain = new ConcurrentLinkedQueue<>();
             File[] files = path.listFiles();
             if (!(null == files || files.length == 0)) {
@@ -3364,7 +3364,8 @@ public class SearchBar {
                         listRemain.add(each.getAbsolutePath());
                     }
                 }
-                int threadCount = 8;
+                int cpuCores = Runtime.getRuntime().availableProcessors();
+                final int threadCount = Math.min(cpuCores, 8);
                 for (int i = 0; i < threadCount; ++i) {
                     CachedThreadPool.getInstance().executeTask(() -> {
                         long startSearchTime = System.currentTimeMillis();
