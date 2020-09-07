@@ -1112,6 +1112,7 @@ public class SettingsFrame {
         chooseUpdateAddress.addItem("jsdelivr CDN");
         chooseUpdateAddress.addItem("GitHub");
         chooseUpdateAddress.addItem("GitHack");
+        chooseUpdateAddress.addItem("Gitee");
     }
 
     private void checkDownloadTask(JLabel label, JButton button, String fileName, String originButtonString, String updateSignalFileName) throws InterruptedException, IOException {
@@ -1450,6 +1451,8 @@ public class SettingsFrame {
                 return "https://raw.githubusercontent.com/XUANXUQAQ/File-Engine-Version/master/version.json";
             case "GitHack":
                 return "https://raw.githack.com/XUANXUQAQ/File-Engine-Version/master/version.json";
+            case "Gitee":
+                return "https://gitee.com/XUANXUQAQ/file-engine-version/raw/master/version.json";
             default:
                 return null;
         }
