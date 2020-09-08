@@ -180,7 +180,7 @@ public class DownloadUtil {
                 //设置超时为3秒
                 con.setConnectTimeout(3000);
                 //防止屏蔽程序抓取而返回403错误
-                con.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.116 Safari/537.36 Edg/80.0.361.57");
+                con.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.83 Safari/537.36 Edg/85.0.564.44");
                 InputStream in = con.getInputStream();
                 byte[] buffer = new byte[1];
                 int currentProgress = 0;
@@ -249,6 +249,5 @@ public class DownloadUtil {
                 proxy = new Proxy(proxyType, sa);
             }
         }
-
     }
 }
