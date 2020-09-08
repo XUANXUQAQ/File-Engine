@@ -125,8 +125,6 @@ public class SettingsFrame {
     private JPanel tabPlugin;
     private JLabel labelInstalledPluginNum;
     private JLabel labelPluginNum;
-    private JLabel labelPlaceHolder2;
-    private JLabel labelPlaceHolder3;
     private JPanel PluginPanel;
     private JPanel PluginSettingsPanel;
     private JList<Object> listPlugins;
@@ -169,7 +167,6 @@ public class SettingsFrame {
     private JLabel placeHolder1;
     private JLabel placeHolder2;
     private JLabel placeHolder4;
-    private JLabel placeHolder5;
     private JLabel placeHolder6;
     private JLabel placeHolder7;
     private JComboBox<String> chooseUpdateAddress;
@@ -274,7 +271,6 @@ public class SettingsFrame {
                         textFieldHotkey.setText(null);
                     }
                 }
-
             }
 
             @Override
