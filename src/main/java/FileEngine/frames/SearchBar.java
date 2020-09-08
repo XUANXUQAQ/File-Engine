@@ -3410,7 +3410,7 @@ public class SearchBar {
      *
      * @param trans 透明度
      */
-    protected void setTransparency(float trans) {
+    public void setTransparency(float trans) {
         searchBar.setOpacity(trans);
     }
 
@@ -3518,23 +3518,23 @@ public class SearchBar {
         return file.isDirectory();
     }
 
-    protected void setFontColorWithCoverage(int colorNum) {
+    public void setFontColorWithCoverage(int colorNum) {
         fontColorWithCoverage = new Color(colorNum);
     }
 
-    protected void setDefaultBackgroundColor(int colorNum) {
+    public void setDefaultBackgroundColor(int colorNum) {
         backgroundColor = new Color(colorNum);
     }
 
-    protected void setLabelColor(int colorNum) {
+    public void setLabelColor(int colorNum) {
         labelColor = new Color(colorNum);
     }
 
-    protected void setFontColor(int colorNum) {
+    public void setFontColor(int colorNum) {
         fontColor = new Color(colorNum);
     }
 
-    protected void setSearchBarColor(int colorNum) {
+    public void setSearchBarColor(int colorNum) {
         textField.setBackground(new Color(colorNum));
     }
 

@@ -10,7 +10,6 @@ import FileEngine.pluginSystem.PluginUtil;
 import FileEngine.search.SearchUtil;
 import FileEngine.threadPool.CachedThreadPool;
 import FileEngine.translate.TranslateUtil;
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 
 import javax.swing.*;
@@ -1033,14 +1032,16 @@ public class SettingsFrame {
         proxyTypeButtonGroup.add(radioButtonProxyTypeHttp);
         proxyTypeButtonGroup.add(radioButtonProxyTypeSocks5);
 
-        readAllSettings();
+        tmp_openLastFolderKeyCode = AllConfigs.getOpenLastFolderKeyCode();
+        tmp_runAsAdminKeyCode = AllConfigs.getRunAsAdminKeyCode();
+        tmp_copyPathKeyCode = AllConfigs.getCopyPathKeyCode();
 
         hotKeyListener = CheckHotKeyUtil.getInstance();
         searchBar = SearchBar.getInstance();
 
         addUpdateAddressToComboBox();
 
-        setAllSettings();
+        initCmdSetSettings();
 
         initCacheArray();
 
@@ -1257,187 +1258,6 @@ public class SettingsFrame {
         return false;
     }
 
-    private void readAllSettings() {
-        try (BufferedReader buffR = new BufferedReader(new InputStreamReader(new FileInputStream("user/settings.json"), StandardCharsets.UTF_8))) {
-            String line;
-            StringBuilder result = new StringBuilder();
-            while (null != (line = buffR.readLine())) {
-                result.append(line);
-            }
-            JSONObject settingsInJson = JSON.parseObject(result.toString());
-            if (settingsInJson.containsKey("updateAddress")) {
-                AllConfigs.setUpdateAddress(settingsInJson.getString("updateAddress"));
-            } else {
-                AllConfigs.setUpdateAddress("jsdelivr CDN");
-            }
-            if (settingsInJson.containsKey("cacheNumLimit")) {
-                AllConfigs.setCacheNumLimit(settingsInJson.getInteger("cacheNumLimit"));
-            } else {
-                AllConfigs.setCacheNumLimit(1000);
-            }
-            if (settingsInJson.containsKey("hotkey")) {
-                String tmp = settingsInJson.getString("hotkey");
-                if (tmp == null) {
-                    AllConfigs.setHotkey("Ctrl + Alt + K");
-                } else {
-                    AllConfigs.setHotkey(tmp);
-                }
-            } else {
-                AllConfigs.setHotkey("Ctrl + Alt + K");
-            }
-            if (settingsInJson.containsKey("priorityFolder")) {
-                String tmp = settingsInJson.getString("priorityFolder");
-                if (tmp == null) {
-                    AllConfigs.setPriorityFolder("");
-                } else {
-                    AllConfigs.setPriorityFolder(tmp);
-                }
-            } else {
-                AllConfigs.setPriorityFolder("");
-            }
-            if (settingsInJson.containsKey("searchDepth")) {
-                AllConfigs.setSearchDepth(settingsInJson.getInteger("searchDepth"));
-            } else {
-                AllConfigs.setSearchDepth(8);
-            }
-            if (settingsInJson.containsKey("ignorePath")) {
-                String tmp = settingsInJson.getString("ignorePath");
-                if (tmp == null) {
-                    AllConfigs.setIgnorePath("C:\\Windows,");
-                } else {
-                    AllConfigs.setIgnorePath(tmp);
-                }
-            } else {
-                AllConfigs.setIgnorePath("C:\\Windows,");
-            }
-            if (settingsInJson.containsKey("updateTimeLimit")) {
-                AllConfigs.setUpdateTimeLimit(settingsInJson.getInteger("updateTimeLimit"));
-            } else {
-                AllConfigs.setUpdateTimeLimit(5);
-            }
-            if (settingsInJson.containsKey("isDefaultAdmin")) {
-                AllConfigs.setIsDefaultAdmin(settingsInJson.getBoolean("isDefaultAdmin"));
-            } else {
-                AllConfigs.setIsDefaultAdmin(false);
-            }
-            if (settingsInJson.containsKey("isLoseFocusClose")) {
-                AllConfigs.setIsLoseFocusClose(settingsInJson.getBoolean("isLoseFocusClose"));
-            } else {
-                AllConfigs.setIsLoseFocusClose(true);
-            }
-            if (settingsInJson.containsKey("openLastFolderKeyCode")) {
-                AllConfigs.setOpenLastFolderKeyCode(settingsInJson.getInteger("openLastFolderKeyCode"));
-            } else {
-                AllConfigs.setOpenLastFolderKeyCode(17);
-            }
-            tmp_openLastFolderKeyCode = AllConfigs.getOpenLastFolderKeyCode();
-            if (settingsInJson.containsKey("runAsAdminKeyCode")) {
-                AllConfigs.setRunAsAdminKeyCode(settingsInJson.getInteger("runAsAdminKeyCode"));
-            } else {
-                AllConfigs.setRunAsAdminKeyCode(16);
-            }
-            tmp_runAsAdminKeyCode = AllConfigs.getRunAsAdminKeyCode();
-            if (settingsInJson.containsKey("copyPathKeyCode")) {
-                AllConfigs.setCopyPathKeyCode(settingsInJson.getInteger("copyPathKeyCode"));
-            } else {
-                AllConfigs.setCopyPathKeyCode(18);
-            }
-            tmp_copyPathKeyCode = AllConfigs.getCopyPathKeyCode();
-            if (settingsInJson.containsKey("transparency")) {
-                AllConfigs.setTransparency(settingsInJson.getFloat("transparency"));
-            } else {
-                AllConfigs.setTransparency(0.8f);
-            }
-            if (settingsInJson.containsKey("searchBarColor")) {
-                AllConfigs.setSearchBarColor(settingsInJson.getInteger("searchBarColor"));
-            } else {
-                AllConfigs.setSearchBarColor(0xffffff);
-            }
-            if (settingsInJson.containsKey("defaultBackground")) {
-                AllConfigs.setDefaultBackgroundColor(settingsInJson.getInteger("defaultBackground"));
-            } else {
-                AllConfigs.setDefaultBackgroundColor(0xffffff);
-            }
-            if (settingsInJson.containsKey("fontColorWithCoverage")) {
-                AllConfigs.setFontColorWithCoverage(settingsInJson.getInteger("fontColorWithCoverage"));
-            } else {
-                AllConfigs.setFontColorWithCoverage(0x6666ff);
-            }
-            if (settingsInJson.containsKey("labelColor")) {
-                AllConfigs.setLabelColor(settingsInJson.getInteger("labelColor"));
-            } else {
-                AllConfigs.setLabelColor(0xcccccc);
-            }
-            if (settingsInJson.containsKey("fontColor")) {
-                AllConfigs.setFontColor(settingsInJson.getInteger("fontColor"));
-            } else {
-                AllConfigs.setFontColor(0);
-            }
-            if (settingsInJson.containsKey("language")) {
-                String language = settingsInJson.getString("language");
-                if (language == null || language.isEmpty()) {
-                    language = TranslateUtil.getInstance().getDefaultLang();
-                }
-                TranslateUtil.getInstance().setLanguage(language);
-            } else {
-                TranslateUtil.getInstance().setLanguage(TranslateUtil.getInstance().getDefaultLang());
-            }
-            if (settingsInJson.containsKey("proxyAddress")) {
-                AllConfigs.setProxyAddress(settingsInJson.getString("proxyAddress"));
-            } else {
-                AllConfigs.setProxyAddress("");
-            }
-            if (settingsInJson.containsKey("proxyPort")) {
-                AllConfigs.setProxyPort(settingsInJson.getInteger("proxyPort"));
-            } else {
-                AllConfigs.setProxyPort(0);
-            }
-            if (settingsInJson.containsKey("proxyUserName")) {
-                AllConfigs.setProxyUserName(settingsInJson.getString("proxyUserName"));
-            } else {
-                AllConfigs.setProxyUserName("");
-            }
-            if (settingsInJson.containsKey("proxyPassword")) {
-                AllConfigs.setProxyPassword(settingsInJson.getString("proxyPassword"));
-            } else {
-                AllConfigs.setProxyPassword("");
-            }
-            if (settingsInJson.containsKey("proxyType")) {
-                AllConfigs.setProxyType(settingsInJson.getInteger("proxyType"));
-            } else {
-                AllConfigs.setProxyType(AllConfigs.ProxyType.PROXY_DIRECT);
-            }
-        } catch (NullPointerException | IOException e) {
-            AllConfigs.setCacheNumLimit(1000);
-            AllConfigs.setHotkey("Ctrl + Alt + K");
-            AllConfigs.setUpdateAddress("jsdelivr CDN");
-            AllConfigs.setPriorityFolder("");
-            AllConfigs.setSearchDepth(8);
-            AllConfigs.setIgnorePath("C:\\Windows,");
-            AllConfigs.setUpdateTimeLimit(5);
-            AllConfigs.setIsDefaultAdmin(false);
-            AllConfigs.setIsLoseFocusClose(true);
-            AllConfigs.setOpenLastFolderKeyCode(17);
-            AllConfigs.setRunAsAdminKeyCode(16);
-            AllConfigs.setCopyPathKeyCode(18);
-            AllConfigs.setTransparency(0.8f);
-            AllConfigs.setSearchBarColor(0xffffff);
-            AllConfigs.setDefaultBackgroundColor(0xffffff);
-            AllConfigs.setFontColorWithCoverage(0x6666ff);
-            AllConfigs.setLabelColor(0xcccccc);
-            AllConfigs.setFontColor(0);
-            TranslateUtil.getInstance().setLanguage(TranslateUtil.getInstance().getDefaultLang());
-            tmp_openLastFolderKeyCode = AllConfigs.getOpenLastFolderKeyCode();
-            tmp_runAsAdminKeyCode = AllConfigs.getRunAsAdminKeyCode();
-            tmp_copyPathKeyCode = AllConfigs.getCopyPathKeyCode();
-            AllConfigs.setProxyAddress("");
-            AllConfigs.setProxyPort(0);
-            AllConfigs.setProxyUserName("");
-            AllConfigs.setProxyPassword("");
-            AllConfigs.setProxyType(AllConfigs.ProxyType.PROXY_DIRECT);
-        }
-    }
-
     private static String getUpdateUrl() {
         //todo 添加更新服务器地址
         switch (AllConfigs.getUpdateAddress()) {
@@ -1487,19 +1307,6 @@ public class SettingsFrame {
             }
         }
         return null;
-    }
-
-    private void setAllSettings() {
-        hotKeyListener.registerHotkey(AllConfigs.getHotkey());
-        searchBar.setTransparency(AllConfigs.getTransparency());
-        searchBar.setDefaultBackgroundColor(AllConfigs.getDefaultBackgroundColor());
-        searchBar.setLabelColor(AllConfigs.getLabelColor());
-        searchBar.setFontColorWithCoverage(AllConfigs.getFontColorWithCoverage());
-        searchBar.setFontColor(AllConfigs.getFontColor());
-        searchBar.setSearchBarColor(AllConfigs.getSearchBarColor());
-
-        initCmdSetSettings();
-        AllConfigs.saveAllSettings();
     }
 
     private void initCmdSetSettings() {

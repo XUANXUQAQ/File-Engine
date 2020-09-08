@@ -191,13 +191,14 @@ public class MainClass {
         boolean ret = false;
         int count = 0;
         File updater = new File("updater.bat");
-
-        while (!ret) {
-            ret = updater.delete();
-            Thread.sleep(1000);
-            count++;
-            if (count > 3) {
-                break;
+        if (updater.exists()) {
+            while (!ret) {
+                ret = updater.delete();
+                Thread.sleep(1000);
+                count++;
+                if (count > 3) {
+                    break;
+                }
             }
         }
     }
@@ -245,6 +246,7 @@ public class MainClass {
                 e.printStackTrace();
             }
 
+            AllConfigs.readAllSettings();
             TaskBar taskBar = TaskBar.getInstance();
             taskBar.showTaskBar();
             SearchUtil search = SearchUtil.getInstance();
@@ -332,12 +334,12 @@ public class MainClass {
             File update = new File("user/update");
             update.delete();
             File updaterBat = new File("updater.bat");
-            copyOrIgnoreFile("updater.bat", "/win32-x86-64/updater.bat", UPDATER_BAT_64_MD_5);
+            copyOrIgnoreFile("updater.bat", "/updater.bat", UPDATER_BAT_64_MD_5);
             Desktop desktop;
             if (Desktop.isDesktopSupported()) {
                 desktop = Desktop.getDesktop();
                 desktop.open(updaterBat);
-                Thread.sleep(100);
+                Thread.sleep(500);
                 System.exit(0);
             }
         } else {
