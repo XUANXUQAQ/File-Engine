@@ -994,15 +994,12 @@ public class SearchBar {
      */
     private boolean isLabelNotEmpty(JLabel label) {
         boolean isEmpty = true;
-        try {
-            String text;
-            if (label != null) {
-                text = label.getText();
-                if (text != null) {
-                    isEmpty = text.isEmpty();
-                }
+        String text;
+        if (label != null) {
+            text = label.getText();
+            if (text != null) {
+                isEmpty = text.isEmpty();
             }
-        } catch (NullPointerException ignored) {
         }
         return !isEmpty;
     }
@@ -1722,7 +1719,7 @@ public class SearchBar {
             final StringBuilder strb = new StringBuilder();
             @Override
             public void insertUpdate(DocumentEvent e) {
-                clearLabel();
+                clearAllLabels();
                 listResults.clear();
                 listResultsCopy.clear();
                 tempResults.clear();
@@ -1758,7 +1755,7 @@ public class SearchBar {
 
             @Override
             public void removeUpdate(DocumentEvent e) {
-                clearLabel();
+                clearAllLabels();
                 listResults.clear();
                 listResultsCopy.clear();
                 tempResults.clear();
@@ -2325,15 +2322,20 @@ public class SearchBar {
                                 isLabel8Chosen = true;
                                 break;
                         }
-                        if (!isLabelNotEmpty(label2) || !isLabelNotEmpty(label3) || !isLabelNotEmpty(label4) || !isLabelNotEmpty(label5)
-                                || !isLabelNotEmpty(label6) || !isLabelNotEmpty(label7) || !isLabelNotEmpty(label8)) {
+                        if (!isLabelNotEmpty(label2) ||
+                                !isLabelNotEmpty(label3) ||
+                                !isLabelNotEmpty(label4) ||
+                                !isLabelNotEmpty(label5) ||
+                                !isLabelNotEmpty(label6) ||
+                                !isLabelNotEmpty(label7) ||
+                                !isLabelNotEmpty(label8)) {
                             showResults(isLabel1Chosen, isLabel2Chosen, isLabel3Chosen, isLabel4Chosen,
                                     isLabel5Chosen, isLabel6Chosen, isLabel7Chosen, isLabel8Chosen);
                         }
                     }
                     String text = getTextFieldText();
                     if (text.isEmpty()) {
-                        clearLabel();
+                        clearAllLabels();
                         listResults.clear();
                         listResultsCopy.clear();
                         resultCount.set(0);
@@ -2624,11 +2626,9 @@ public class SearchBar {
                         resultCount.set(0);
                         labelCount.set(0);
                         currentLabelSelectedPosition.set(0);
-                        clearLabel();
+                        clearAllLabels();
                         if (!getTextFieldText().isEmpty()) {
                             setLabelChosen(label1);
-                        } else {
-                            clearLabel();
                         }
                         listResults.clear();
                         listResultsCopy.clear();
@@ -2681,7 +2681,7 @@ public class SearchBar {
                                 String result;
                                 if (currentUsingPlugin != null) {
                                     while (runningMode.get() == AllConfigs.RunningMode.PLUGIN_MODE) {
-                                        try {
+                                        if (currentUsingPlugin != null) {
                                             if ((result = currentUsingPlugin.pollFromResultQueue()) != null) {
                                                 if (isResultNotRepeat(result)) {
                                                     listResults.add(result);
@@ -2689,7 +2689,6 @@ public class SearchBar {
                                                     resultCount.incrementAndGet();
                                                 }
                                             }
-                                        } catch (NullPointerException ignored) {
                                         }
                                         TimeUnit.MILLISECONDS.sleep(10);
                                     }
@@ -2710,7 +2709,7 @@ public class SearchBar {
                         if (search.getStatus() != SearchUtil.NORMAL) {
                             //开启线程等待搜索完成
                             addSearchWaiter();
-                            clearLabel();
+                            clearAllLabels();
                         }
                     }
                     TimeUnit.MILLISECONDS.sleep(20);
@@ -3160,7 +3159,7 @@ public class SearchBar {
     /**
      * 清空所有label
      */
-    private void clearLabel() {
+    private void clearAllLabels() {
         clearALabel(label1);
         clearALabel(label2);
         clearALabel(label3);
@@ -3445,7 +3444,7 @@ public class SearchBar {
      */
     public void closeSearchBar() {
         if (isVisible()) {
-            clearLabel();
+            clearAllLabels();
             setVisible(false);
         }
         clearTextFieldText();
@@ -3473,7 +3472,7 @@ public class SearchBar {
      * 重置所有状态但不关闭窗口
      */
     private void closeWithoutHideSearchBar() {
-        clearLabel();
+        clearAllLabels();
         clearTextFieldText();
         startTime = System.currentTimeMillis();//结束搜索
         isUsing = true;
