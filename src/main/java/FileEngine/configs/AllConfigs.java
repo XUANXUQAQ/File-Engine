@@ -44,6 +44,7 @@ public class AllConfigs {
     private static volatile int fontColorWithCoverage;
     private static volatile int fontColor;
     private static volatile int searchBarColor;
+    private static volatile int searchBarFontColor;
     private static String updateAddress;
 
     public static int getProxyPort() {
@@ -142,12 +143,20 @@ public class AllConfigs {
         AllConfigs.defaultBackgroundColor = defaultBackgroundColor;
     }
 
-    public static void setFontColorWithCoverage(int fontColorWithCoverage) {
+    public static void setLabelFontColorWithCoverage(int fontColorWithCoverage) {
         AllConfigs.fontColorWithCoverage = fontColorWithCoverage;
     }
 
-    public static void setFontColor(int fontColor) {
+    public static void setSearchBarFontColor(int color) {
+        searchBarFontColor = color;
+    }
+
+    public static void setLabelFontColor(int fontColor) {
         AllConfigs.fontColor = fontColor;
+    }
+
+    public static int getSearchBarFontColor() {
+        return searchBarFontColor;
     }
 
     public static int getSearchBarColor() {
@@ -238,11 +247,11 @@ public class AllConfigs {
         return defaultBackgroundColor;
     }
 
-    public static int getFontColorWithCoverage() {
+    public static int getLabelFontColorWithCoverage() {
         return fontColorWithCoverage;
     }
 
-    public static int getFontColor() {
+    public static int getLabelFontColor() {
         return fontColor;
     }
 
@@ -357,9 +366,9 @@ public class AllConfigs {
                 AllConfigs.setDefaultBackgroundColor(0xffffff);
             }
             if (settingsInJson.containsKey("fontColorWithCoverage")) {
-                AllConfigs.setFontColorWithCoverage(settingsInJson.getInteger("fontColorWithCoverage"));
+                AllConfigs.setLabelFontColorWithCoverage(settingsInJson.getInteger("fontColorWithCoverage"));
             } else {
-                AllConfigs.setFontColorWithCoverage(0x6666ff);
+                AllConfigs.setLabelFontColorWithCoverage(0x6666ff);
             }
             if (settingsInJson.containsKey("labelColor")) {
                 AllConfigs.setLabelColor(settingsInJson.getInteger("labelColor"));
@@ -367,9 +376,9 @@ public class AllConfigs {
                 AllConfigs.setLabelColor(0xcccccc);
             }
             if (settingsInJson.containsKey("fontColor")) {
-                AllConfigs.setFontColor(settingsInJson.getInteger("fontColor"));
+                AllConfigs.setLabelFontColor(settingsInJson.getInteger("fontColor"));
             } else {
-                AllConfigs.setFontColor(0);
+                AllConfigs.setLabelFontColor(0);
             }
             if (settingsInJson.containsKey("language")) {
                 String language = settingsInJson.getString("language");
@@ -405,6 +414,11 @@ public class AllConfigs {
             } else {
                 AllConfigs.setProxyType(AllConfigs.ProxyType.PROXY_DIRECT);
             }
+            if (settingsInJson.containsKey("searchBarFontColor")) {
+                AllConfigs.setSearchBarFontColor(settingsInJson.getInteger("searchBarFontColor"));
+            } else {
+                AllConfigs.setSearchBarFontColor(0);
+            }
         } catch (NullPointerException | IOException e) {
             AllConfigs.setCacheNumLimit(1000);
             AllConfigs.setHotkey("Ctrl + Alt + K");
@@ -421,9 +435,10 @@ public class AllConfigs {
             AllConfigs.setTransparency(0.8f);
             AllConfigs.setSearchBarColor(0xffffff);
             AllConfigs.setDefaultBackgroundColor(0xffffff);
-            AllConfigs.setFontColorWithCoverage(0x6666ff);
+            AllConfigs.setLabelFontColorWithCoverage(0x6666ff);
             AllConfigs.setLabelColor(0xcccccc);
-            AllConfigs.setFontColor(0);
+            AllConfigs.setSearchBarFontColor(0);
+            AllConfigs.setLabelFontColor(0);
             TranslateUtil.getInstance().setLanguage(TranslateUtil.getInstance().getDefaultLang());
             AllConfigs.setProxyAddress("");
             AllConfigs.setProxyPort(0);
@@ -441,9 +456,10 @@ public class AllConfigs {
         searchBar.setTransparency(AllConfigs.getTransparency());
         searchBar.setDefaultBackgroundColor(AllConfigs.getDefaultBackgroundColor());
         searchBar.setLabelColor(AllConfigs.getLabelColor());
-        searchBar.setFontColorWithCoverage(AllConfigs.getFontColorWithCoverage());
-        searchBar.setFontColor(AllConfigs.getFontColor());
+        searchBar.setFontColorWithCoverage(AllConfigs.getLabelFontColorWithCoverage());
+        searchBar.setLabelFontColor(AllConfigs.getLabelFontColor());
         searchBar.setSearchBarColor(AllConfigs.getSearchBarColor());
+        searchBar.setSearchBarFontColor(AllConfigs.getSearchBarFontColor());
     }
 
     public static void saveAllSettings() {
@@ -473,6 +489,7 @@ public class AllConfigs {
         allSettings.put("proxyPassword", proxyPassword);
         allSettings.put("proxyType", proxyType);
         allSettings.put("updateAddress", updateAddress);
+        allSettings.put("searchBarFontColor", searchBarFontColor);
         try (BufferedWriter buffW = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(settings), StandardCharsets.UTF_8))) {
             String format = JSON.toJSONString(allSettings, SerializerFeature.PrettyFormat, SerializerFeature.WriteMapNullValue, SerializerFeature.WriteDateUseDateFormat);
             buffW.write(format);
