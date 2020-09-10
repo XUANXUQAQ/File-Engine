@@ -181,6 +181,10 @@ public class SettingsFrame {
     private JLabel labelVacuumTip2;
     private JLabel labelCacheTip2;
     private JButton buttonDeleteAllCache;
+    private JLabel labelSearchBarFontColor;
+    private JLabel labelSharp9;
+    private JTextField textFieldSearchBarFontColor;
+    private JLabel SearchBarFontColorChooser;
 
     private static class SettingsFrameBuilder {
         private static final SettingsFrame instance = new SettingsFrame();
@@ -533,6 +537,7 @@ public class SettingsFrame {
             textFieldLabelColor.setText(Integer.toHexString(0xcccccc));
             textFieldBackgroundDefault.setText(Integer.toHexString(0xffffff));
             textFieldFontColor.setText(Integer.toHexString(0));
+            textFieldSearchBarFontColor.setText(Integer.toHexString(0));
         });
     }
 
@@ -659,6 +664,38 @@ public class SettingsFrame {
                 textFieldFontColor.setText(rgb.toString());
                 FontColorChooser.setBackground(color);
                 FontColorChooser.setForeground(color);
+            }
+        });
+
+        SearchBarFontColorChooser.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                Color color = JColorChooser.showDialog(null, TranslateUtil.getInstance().getTranslation("Choose Color"), null);
+                if (color == null) {
+                    return;
+                }
+                int r = color.getRed();
+                int g = color.getGreen();
+                int b = color.getBlue();
+                StringBuilder rgb = new StringBuilder();
+                if (r == 0) {
+                    rgb.append("00");
+                } else {
+                    rgb.append(Integer.toHexString(r));
+                }
+                if (g == 0) {
+                    rgb.append("00");
+                } else {
+                    rgb.append(Integer.toHexString(g));
+                }
+                if (b == 0) {
+                    rgb.append("00");
+                } else {
+                    rgb.append(Integer.toHexString(b));
+                }
+                textFieldSearchBarFontColor.setText(rgb.toString());
+                SearchBarFontColorChooser.setBackground(color);
+                SearchBarFontColorChooser.setForeground(color);
             }
         });
 
@@ -902,8 +939,7 @@ public class SettingsFrame {
         });
     }
 
-    private void initGUI() {
-        //设置窗口显示
+    private void setLabelGui() {
         labelAboutGithub.setText("<html><a href='https://github.com/XUANXUQAQ/File-Engine'><font size=\"4\">File-Engine</font></a></html>");
         labelWebLookAndFeel.setText("1.WebLookAndFeel");
         labelFastJson.setText("2.FastJson");
@@ -913,36 +949,26 @@ public class SettingsFrame {
         ImageIcon imageIcon = new ImageIcon(SettingsFrame.class.getResource("/icons/frame.png"));
         labelIcon.setIcon(imageIcon);
         labelVersion.setText(TranslateUtil.getInstance().getTranslation("Current Version:") + AllConfigs.version);
-        checkBoxAddToStartup.setSelected(AllConfigs.hasStartup());
-        textFieldUpdateInterval.setText(String.valueOf(AllConfigs.getUpdateTimeLimit()));
-        textAreaIgnorePath.setText(AllConfigs.getIgnorePath().replaceAll(",", ",\n"));
+    }
+
+    private void setTextFieldAndTextAreaGui() {
+        textFieldBackgroundDefault.setText(Integer.toHexString(AllConfigs.getDefaultBackgroundColor()));
+        textFieldLabelColor.setText(Integer.toHexString(AllConfigs.getLabelColor()));
+        textFieldFontColorWithCoverage.setText(Integer.toHexString(AllConfigs.getLabelFontColorWithCoverage()));
+        textFieldTransparency.setText(String.valueOf(AllConfigs.getTransparency()));
+        textFieldFontColor.setText(Integer.toHexString(AllConfigs.getLabelFontColor()));
+        textFieldSearchBarFontColor.setText(Integer.toHexString(AllConfigs.getSearchBarFontColor()));
         textFieldCacheNum.setText(String.valueOf(AllConfigs.getCacheNumLimit()));
         textFieldSearchDepth.setText(String.valueOf(AllConfigs.getSearchDepth()));
         textFieldHotkey.setText(AllConfigs.getHotkey());
         textFieldPriorityFolder.setText(AllConfigs.getPriorityFolder());
-        checkBoxAdmin.setSelected(AllConfigs.isDefaultAdmin());
+        textFieldUpdateInterval.setText(String.valueOf(AllConfigs.getUpdateTimeLimit()));
         textFieldSearchBarColor.setText(Integer.toHexString(AllConfigs.getSearchBarColor()));
-        Color tmp_searchBarColor = new Color(AllConfigs.getSearchBarColor());
-        searchBarColorChooser.setBackground(tmp_searchBarColor);
-        searchBarColorChooser.setForeground(tmp_searchBarColor);
-        textFieldBackgroundDefault.setText(Integer.toHexString(AllConfigs.getDefaultBackgroundColor()));
-        Color tmp_defaultBackgroundColor = new Color(AllConfigs.getDefaultBackgroundColor());
-        defaultBackgroundChooser.setBackground(tmp_defaultBackgroundColor);
-        defaultBackgroundChooser.setForeground(tmp_defaultBackgroundColor);
-        textFieldLabelColor.setText(Integer.toHexString(AllConfigs.getLabelColor()));
-        Color tmp_labelColor = new Color(AllConfigs.getLabelColor());
-        labelColorChooser.setBackground(tmp_labelColor);
-        labelColorChooser.setForeground(tmp_labelColor);
-        textFieldFontColorWithCoverage.setText(Integer.toHexString(AllConfigs.getFontColorWithCoverage()));
-        Color tmp_fontColorWithCoverage = new Color(AllConfigs.getFontColorWithCoverage());
-        FontColorWithCoverageChooser.setBackground(tmp_fontColorWithCoverage);
-        FontColorWithCoverageChooser.setForeground(tmp_fontColorWithCoverage);
-        checkBoxLoseFocus.setSelected(AllConfigs.isLoseFocusClose());
-        textFieldTransparency.setText(String.valueOf(AllConfigs.getTransparency()));
-        textFieldFontColor.setText(Integer.toHexString(AllConfigs.getFontColor()));
-        Color tmp_fontColor = new Color(AllConfigs.getFontColor());
-        FontColorChooser.setBackground(tmp_fontColor);
-        FontColorChooser.setForeground(tmp_fontColor);
+        textFieldAddress.setText(AllConfigs.getProxyAddress());
+        textFieldPort.setText(String.valueOf(AllConfigs.getProxyPort()));
+        textFieldUserName.setText(AllConfigs.getProxyUserName());
+        textFieldPassword.setText(AllConfigs.getProxyPassword());
+        textAreaIgnorePath.setText(AllConfigs.getIgnorePath().replaceAll(",", ",\n"));
         if (AllConfigs.getRunAsAdminKeyCode() == 17) {
             textFieldRunAsAdminHotKey.setText("Ctrl + Enter");
         } else if (AllConfigs.getRunAsAdminKeyCode() == 16) {
@@ -964,15 +990,63 @@ public class SettingsFrame {
         } else if (AllConfigs.getCopyPathKeyCode() == 18) {
             textFieldCopyPath.setText("Alt + Enter");
         }
+    }
+
+    private void setColorChooserGui() {
+        Color tmp_searchBarColor = new Color(AllConfigs.getSearchBarColor());
+        searchBarColorChooser.setBackground(tmp_searchBarColor);
+        searchBarColorChooser.setForeground(tmp_searchBarColor);
+
+        Color tmp_defaultBackgroundColor = new Color(AllConfigs.getDefaultBackgroundColor());
+        defaultBackgroundChooser.setBackground(tmp_defaultBackgroundColor);
+        defaultBackgroundChooser.setForeground(tmp_defaultBackgroundColor);
+
+        Color tmp_labelColor = new Color(AllConfigs.getLabelColor());
+        labelColorChooser.setBackground(tmp_labelColor);
+        labelColorChooser.setForeground(tmp_labelColor);
+
+        Color tmp_fontColorWithCoverage = new Color(AllConfigs.getLabelFontColorWithCoverage());
+        FontColorWithCoverageChooser.setBackground(tmp_fontColorWithCoverage);
+        FontColorWithCoverageChooser.setForeground(tmp_fontColorWithCoverage);
+
+        Color tmp_fontColor = new Color(AllConfigs.getLabelFontColor());
+        FontColorChooser.setBackground(tmp_fontColor);
+        FontColorChooser.setForeground(tmp_fontColor);
+
+        Color tmp_searchBarFontColor = new Color(AllConfigs.getSearchBarFontColor());
+        SearchBarFontColorChooser.setBackground(tmp_searchBarFontColor);
+        SearchBarFontColorChooser.setForeground(tmp_searchBarFontColor);
+    }
+
+    private void setCheckBoxGui() {
+        checkBoxLoseFocus.setSelected(AllConfigs.isLoseFocusClose());
+        checkBoxAddToStartup.setSelected(AllConfigs.hasStartup());
+        checkBoxAdmin.setSelected(AllConfigs.isDefaultAdmin());
+    }
+
+    private void setListGui() {
         listCmds.setListData(AllConfigs.getCmdSet().toArray());
         listLanguage.setListData(TranslateUtil.getInstance().getLanguageSet().toArray());
         listLanguage.setSelectedValue(TranslateUtil.getInstance().getLanguage(), true);
         Object[] plugins = PluginUtil.getInstance().getPluginArray();
         listPlugins.setListData(plugins);
+        listCache.setListData(cacheSet.toArray());
+    }
+
+    private void initGUI() {
+        //设置窗口显示
+        setLabelGui();
+        setListGui();
+        setColorChooserGui();
+        setTextFieldAndTextAreaGui();
+        setCheckBoxGui();
+
+        Object[] plugins = PluginUtil.getInstance().getPluginArray();
         buttonUpdatePlugin.setVisible(false);
         if (plugins.length == 0) {
             PluginSettingsPanel.setVisible(false);
         }
+
         if (AllConfigs.getProxyType() == AllConfigs.ProxyType.PROXY_DIRECT) {
             radioButtonNoProxy.setSelected(true);
             radioButtonUseProxy.setSelected(false);
@@ -993,12 +1067,7 @@ public class SettingsFrame {
             textFieldPassword.setEnabled(true);
             selectProxyType();
         }
-        textFieldAddress.setText(AllConfigs.getProxyAddress());
-        textFieldPort.setText(String.valueOf(AllConfigs.getProxyPort()));
-        textFieldUserName.setText(AllConfigs.getProxyUserName());
-        textFieldPassword.setText(AllConfigs.getProxyPassword());
         chooseUpdateAddress.setSelectedItem(AllConfigs.getUpdateAddress());
-        listCache.setListData(cacheSet.toArray());
     }
 
     private void initCacheArray() {
@@ -1217,7 +1286,7 @@ public class SettingsFrame {
         labelLabelColor.setText(TranslateUtil.getInstance().getTranslation("Chosen label color:"));
         labelFontColor.setText(TranslateUtil.getInstance().getTranslation("Chosen label font Color:"));
         labelDefaultColor.setText(TranslateUtil.getInstance().getTranslation("Default background Color:"));
-        labelNotChosenFontColor.setText(TranslateUtil.getInstance().getTranslation("Unchosen label Color:"));
+        labelNotChosenFontColor.setText(TranslateUtil.getInstance().getTranslation("Unchosen label font Color:"));
         buttonResetColor.setText(TranslateUtil.getInstance().getTranslation("Reset to default"));
         labelGitHubTip.setText(TranslateUtil.getInstance().getTranslation("This is an open source software,GitHub:"));
         labelGithubIssue.setText(TranslateUtil.getInstance().getTranslation("If you find a bug or have some suggestions, welcome to GitHub for feedback"));
@@ -1246,6 +1315,7 @@ public class SettingsFrame {
         buttonDeleteCache.setText(TranslateUtil.getInstance().getTranslation("Delete cache"));
         labelCacheTip2.setText(TranslateUtil.getInstance().getTranslation("The cache is automatically generated by the software and will be displayed first when searching."));
         buttonDeleteAllCache.setText(TranslateUtil.getInstance().getTranslation("Delete all"));
+        labelSearchBarFontColor.setText(TranslateUtil.getInstance().getTranslation("SearchBar Font Color:"));
     }
 
     private boolean isRepeatCommand(String name) {
@@ -1347,15 +1417,8 @@ public class SettingsFrame {
         frame.setVisible(true);
     }
 
-
-    private void saveChanges() {
-        StringBuilder strBuilder = new StringBuilder();
+    private void checkUpdateTimeLimit(StringBuilder strBuilder) {
         int updateTimeLimitTemp;
-        int cacheNumLimitTemp;
-        String ignorePathTemp;
-        int searchDepthTemp;
-        float transparencyTemp;
-
         try {
             updateTimeLimitTemp = Integer.parseInt(textFieldUpdateInterval.getText());
         } catch (Exception e1) {
@@ -1364,6 +1427,10 @@ public class SettingsFrame {
         if (updateTimeLimitTemp > 3600 || updateTimeLimitTemp <= 0) {
             strBuilder.append(TranslateUtil.getInstance().getTranslation("The file index update setting is wrong, please change")).append("\n");
         }
+    }
+
+    private void checkCacheNumLimit(StringBuilder strBuilder) {
+        int cacheNumLimitTemp;
         try {
             cacheNumLimitTemp = Integer.parseInt(textFieldCacheNum.getText());
         } catch (Exception e1) {
@@ -1372,27 +1439,36 @@ public class SettingsFrame {
         if (cacheNumLimitTemp > 10000 || cacheNumLimitTemp <= 0) {
             strBuilder.append(TranslateUtil.getInstance().getTranslation("The cache capacity is set incorrectly, please change")).append("\n");
         }
-        ignorePathTemp = textAreaIgnorePath.getText();
-        ignorePathTemp = ignorePathTemp.replaceAll("\n", "");
+    }
 
+    private void checkSearchDepth(StringBuilder strBuilder) {
+        int searchDepthTemp;
         try {
             searchDepthTemp = Integer.parseInt(textFieldSearchDepth.getText());
         } catch (Exception e1) {
             searchDepthTemp = -1;
         }
-
         if (searchDepthTemp > 10 || searchDepthTemp <= 0) {
             strBuilder.append(TranslateUtil.getInstance().getTranslation("Search depth setting is wrong, please change")).append("\n");
         }
+    }
 
+    private void checkHotKey(StringBuilder strBuilder) {
         String tmp_hotkey = textFieldHotkey.getText();
-        if (tmp_hotkey.length() == 1) {
+        if (tmp_hotkey.length() < 5) {
             strBuilder.append(TranslateUtil.getInstance().getTranslation("Hotkey setting is wrong, please change")).append("\n");
         } else {
             if (!CheckHotKeyUtil.getInstance().isHotkeyAvailable(tmp_hotkey)) {
                 strBuilder.append(TranslateUtil.getInstance().getTranslation("Hotkey setting is wrong, please change")).append("\n");
             }
         }
+        if (tmp_openLastFolderKeyCode == tmp_runAsAdminKeyCode || tmp_openLastFolderKeyCode == tmp_copyPathKeyCode || tmp_runAsAdminKeyCode == tmp_copyPathKeyCode) {
+            strBuilder.append(TranslateUtil.getInstance().getTranslation("HotKey conflict")).append("\n");
+        }
+    }
+
+    private void checkTransparency(StringBuilder strBuilder) {
+        float transparencyTemp;
         try {
             transparencyTemp = Float.parseFloat(textFieldTransparency.getText());
         } catch (Exception e) {
@@ -1401,11 +1477,9 @@ public class SettingsFrame {
         if (transparencyTemp > 1 || transparencyTemp <= 0) {
             strBuilder.append(TranslateUtil.getInstance().getTranslation("Transparency setting error")).append("\n");
         }
+    }
 
-        if (tmp_openLastFolderKeyCode == tmp_runAsAdminKeyCode || tmp_openLastFolderKeyCode == tmp_copyPathKeyCode || tmp_runAsAdminKeyCode == tmp_copyPathKeyCode) {
-            strBuilder.append(TranslateUtil.getInstance().getTranslation("HotKey conflict")).append("\n");
-        }
-
+    private void checkLabelColor(StringBuilder strBuilder) {
         int tmp_labelColor;
         try {
             tmp_labelColor = Integer.parseInt(textFieldLabelColor.getText(), 16);
@@ -1415,7 +1489,9 @@ public class SettingsFrame {
         if (tmp_labelColor < 0) {
             strBuilder.append(TranslateUtil.getInstance().getTranslation("Chosen label color is set incorrectly")).append("\n");
         }
+    }
 
+    private void checkLabelFontColorWithCoverage(StringBuilder strBuilder) {
         int tmp_fontColorWithCoverage;
         try {
             tmp_fontColorWithCoverage = Integer.parseInt(textFieldFontColorWithCoverage.getText(), 16);
@@ -1425,7 +1501,9 @@ public class SettingsFrame {
         if (tmp_fontColorWithCoverage < 0) {
             strBuilder.append(TranslateUtil.getInstance().getTranslation("Chosen label font color is set incorrectly")).append("\n");
         }
+    }
 
+    private void checkDefaultBackgroundColor(StringBuilder strBuilder) {
         int tmp_defaultBackgroundColor;
         try {
             tmp_defaultBackgroundColor = Integer.parseInt(textFieldBackgroundDefault.getText(), 16);
@@ -1435,17 +1513,21 @@ public class SettingsFrame {
         if (tmp_defaultBackgroundColor < 0) {
             strBuilder.append(TranslateUtil.getInstance().getTranslation("Incorrect default background color setting")).append("\n");
         }
+    }
 
-        int tmp_fontColor;
+    private void checkLabelFontColor(StringBuilder strBuilder) {
+        int tmp_labelFontColor;
         try {
-            tmp_fontColor = Integer.parseInt(textFieldFontColor.getText(), 16);
+            tmp_labelFontColor = Integer.parseInt(textFieldFontColor.getText(), 16);
         } catch (Exception e) {
-            tmp_fontColor = -1;
+            tmp_labelFontColor = -1;
         }
-        if (tmp_fontColor < 0) {
+        if (tmp_labelFontColor < 0) {
             strBuilder.append(TranslateUtil.getInstance().getTranslation("Unchosen label font color is set incorrectly")).append("\n");
         }
+    }
 
+    private void checkSearchBarColor(StringBuilder strBuilder) {
         int tmp_searchBarColor;
         try {
             tmp_searchBarColor = Integer.parseInt(textFieldSearchBarColor.getText(), 16);
@@ -1455,20 +1537,52 @@ public class SettingsFrame {
         if (tmp_searchBarColor < 0) {
             strBuilder.append(TranslateUtil.getInstance().getTranslation("The color of the search bar is set incorrectly")).append("\n");
         }
+    }
+
+    private void checkSearchBarFontColor(StringBuilder strBuilder) {
+        int tmp_searchBarFontColor;
+        try {
+            tmp_searchBarFontColor = Integer.parseInt(textFieldSearchBarFontColor.getText(), 16);
+        } catch (Exception e) {
+            tmp_searchBarFontColor = -1;
+        }
+        if (tmp_searchBarFontColor < 0) {
+            strBuilder.append(TranslateUtil.getInstance().getTranslation("The font color of the search bar is set incorrectly")).append("\n");
+        }
+    }
+
+    private void checkProxy(StringBuilder strBuilder) {
+        try {
+            Integer.parseInt(textFieldPort.getText());
+        } catch (Exception e) {
+            strBuilder.append(TranslateUtil.getInstance().getTranslation("Proxy port is set incorrectly.")).append("\n");
+        }
+    }
+
+    private void saveChanges() {
+        StringBuilder strBuilder = new StringBuilder();
+
+        checkProxy(strBuilder);
+        checkSearchBarColor(strBuilder);
+        checkSearchBarFontColor(strBuilder);
+        checkLabelColor(strBuilder);
+        checkLabelFontColor(strBuilder);
+        checkLabelFontColorWithCoverage(strBuilder);
+        checkDefaultBackgroundColor(strBuilder);
+        checkTransparency(strBuilder);
+        checkHotKey(strBuilder);
+        checkSearchDepth(strBuilder);
+        checkCacheNumLimit(strBuilder);
+        checkUpdateTimeLimit(strBuilder);
+
+        String ignorePathTemp;
+        ignorePathTemp = textAreaIgnorePath.getText();
+        ignorePathTemp = ignorePathTemp.replaceAll("\n", "");
+
+        //重新显示翻译GUI
         if (!listLanguage.getSelectedValue().equals(TranslateUtil.getInstance().getLanguage())) {
             TranslateUtil.getInstance().setLanguage((String) listLanguage.getSelectedValue());
             translate();
-        }
-
-        String tmp_proxyAddress = textFieldAddress.getText();
-        String tmp_proxyUserName = textFieldUserName.getText();
-        String tmp_proxyPassword = textFieldPassword.getText();
-
-        int tmp_proxyPort = 0;
-        try {
-            tmp_proxyPort = Integer.parseInt(textFieldPort.getText());
-        } catch (Exception e) {
-            strBuilder.append(TranslateUtil.getInstance().getTranslation("Proxy port is set incorrectly.")).append("\n");
         }
 
         String errors = strBuilder.toString();
@@ -1477,6 +1591,10 @@ public class SettingsFrame {
             return;
         }
         //所有配置均正确
+
+        String tmp_proxyAddress = textFieldAddress.getText();
+        String tmp_proxyUserName = textFieldUserName.getText();
+        String tmp_proxyPassword = textFieldPassword.getText();
 
         if (radioButtonProxyTypeSocks5.isSelected()) {
             AllConfigs.setProxyType(AllConfigs.ProxyType.PROXY_SOCKS);
@@ -1490,18 +1608,19 @@ public class SettingsFrame {
         AllConfigs.setUpdateAddress((String) chooseUpdateAddress.getSelectedItem());
         AllConfigs.setPriorityFolder(textFieldPriorityFolder.getText());
         AllConfigs.setHotkey(textFieldHotkey.getText());
-        AllConfigs.setCacheNumLimit(cacheNumLimitTemp);
-        AllConfigs.setUpdateTimeLimit(updateTimeLimitTemp);
+        AllConfigs.setCacheNumLimit(Integer.parseInt(textFieldCacheNum.getText()));
+        AllConfigs.setUpdateTimeLimit(Integer.parseInt(textFieldUpdateInterval.getText()));
         AllConfigs.setIgnorePath(ignorePathTemp);
-        AllConfigs.setSearchDepth(searchDepthTemp);
-        AllConfigs.setTransparency(transparencyTemp);
-        AllConfigs.setLabelColor(tmp_labelColor);
-        AllConfigs.setDefaultBackgroundColor(tmp_defaultBackgroundColor);
-        AllConfigs.setSearchBarColor(tmp_searchBarColor);
-        AllConfigs.setFontColorWithCoverage(tmp_fontColorWithCoverage);
-        AllConfigs.setFontColor(tmp_fontColor);
+        AllConfigs.setSearchDepth(Integer.parseInt(textFieldSearchDepth.getText()));
+        AllConfigs.setTransparency(Float.parseFloat(textFieldTransparency.getText()));
+        AllConfigs.setLabelColor(Integer.parseInt(textFieldLabelColor.getText(), 16));
+        AllConfigs.setDefaultBackgroundColor(Integer.parseInt(textFieldBackgroundDefault.getText(), 16));
+        AllConfigs.setSearchBarColor(Integer.parseInt(textFieldSearchBarColor.getText(), 16));
+        AllConfigs.setLabelFontColorWithCoverage(Integer.parseInt(textFieldFontColorWithCoverage.getText(), 16));
+        AllConfigs.setLabelFontColor(Integer.parseInt(textFieldFontColor.getText(), 16));
+        AllConfigs.setSearchBarFontColor(Integer.parseInt(textFieldSearchBarFontColor.getText(), 16));
         AllConfigs.setProxyAddress(tmp_proxyAddress);
-        AllConfigs.setProxyPort(tmp_proxyPort);
+        AllConfigs.setProxyPort(Integer.parseInt(textFieldPort.getText()));
         AllConfigs.setProxyUserName(tmp_proxyUserName);
         AllConfigs.setProxyPassword(tmp_proxyPassword);
         AllConfigs.setOpenLastFolderKeyCode(tmp_openLastFolderKeyCode);
@@ -1512,9 +1631,10 @@ public class SettingsFrame {
         searchBar.setTransparency(AllConfigs.getTransparency());
         searchBar.setDefaultBackgroundColor(AllConfigs.getDefaultBackgroundColor());
         searchBar.setLabelColor(AllConfigs.getLabelColor());
-        searchBar.setFontColorWithCoverage(AllConfigs.getFontColorWithCoverage());
-        searchBar.setFontColor(AllConfigs.getFontColor());
+        searchBar.setFontColorWithCoverage(AllConfigs.getLabelFontColorWithCoverage());
+        searchBar.setLabelFontColor(AllConfigs.getLabelFontColor());
         searchBar.setSearchBarColor(AllConfigs.getSearchBarColor());
+        searchBar.setSearchBarFontColor(AllConfigs.getSearchBarFontColor());
 
         Color tmp_color = new Color(AllConfigs.getLabelColor());
         labelColorChooser.setBackground(tmp_color);
@@ -1522,12 +1642,15 @@ public class SettingsFrame {
         tmp_color = new Color(AllConfigs.getDefaultBackgroundColor());
         defaultBackgroundChooser.setBackground(tmp_color);
         defaultBackgroundChooser.setForeground(tmp_color);
-        tmp_color = new Color(AllConfigs.getFontColorWithCoverage());
+        tmp_color = new Color(AllConfigs.getLabelFontColorWithCoverage());
         FontColorWithCoverageChooser.setBackground(tmp_color);
         FontColorWithCoverageChooser.setForeground(tmp_color);
-        tmp_color = new Color(AllConfigs.getFontColor());
+        tmp_color = new Color(AllConfigs.getLabelFontColor());
         FontColorChooser.setBackground(tmp_color);
         FontColorChooser.setForeground(tmp_color);
+        tmp_color = new Color(AllConfigs.getSearchBarFontColor());
+        SearchBarFontColorChooser.setBackground(tmp_color);
+        SearchBarFontColorChooser.setForeground(tmp_color);
 
         AllConfigs.saveAllSettings();
 

@@ -67,7 +67,7 @@ public class SearchBar {
     private Color labelColor;
     private Color backgroundColor;
     private Color fontColorWithCoverage;
-    private Color fontColor;
+    private Color labelFontColor;
     private volatile long startTime = 0;
     private volatile boolean isWaiting = false;
     private final Pattern semicolon;
@@ -127,9 +127,9 @@ public class SearchBar {
 
 
         labelColor = new Color(AllConfigs.getLabelColor());
-        fontColorWithCoverage = new Color(AllConfigs.getFontColorWithCoverage());
+        fontColorWithCoverage = new Color(AllConfigs.getLabelFontColorWithCoverage());
         backgroundColor = new Color(AllConfigs.getDefaultBackgroundColor());
-        fontColor = new Color(AllConfigs.getFontColor());
+        labelFontColor = new Color(AllConfigs.getLabelFontColor());
 
         //frame
         searchBar.setBounds(positionX, positionY, searchBarWidth, searchBarHeight);
@@ -253,7 +253,7 @@ public class SearchBar {
         label.setSize(width, height);
         label.setLocation(0, positionY);
         label.setFont(font);
-        label.setForeground(fontColor);
+        label.setForeground(labelFontColor);
         label.setOpaque(true);
         label.setBackground(null);
         label.setFocusable(false);
@@ -2198,75 +2198,75 @@ public class SearchBar {
                     int position = getCurrentLabelPos();
                     if (position == 0) {
                         label1.setForeground(fontColorWithCoverage);
-                        label2.setForeground(fontColor);
-                        label3.setForeground(fontColor);
-                        label4.setForeground(fontColor);
-                        label5.setForeground(fontColor);
-                        label6.setForeground(fontColor);
-                        label7.setForeground(fontColor);
-                        label8.setForeground(fontColor);
+                        label2.setForeground(labelFontColor);
+                        label3.setForeground(labelFontColor);
+                        label4.setForeground(labelFontColor);
+                        label5.setForeground(labelFontColor);
+                        label6.setForeground(labelFontColor);
+                        label7.setForeground(labelFontColor);
+                        label8.setForeground(labelFontColor);
                     } else if (position == 1) {
-                        label1.setForeground(fontColor);
+                        label1.setForeground(labelFontColor);
                         label2.setForeground(fontColorWithCoverage);
-                        label3.setForeground(fontColor);
-                        label4.setForeground(fontColor);
-                        label5.setForeground(fontColor);
-                        label6.setForeground(fontColor);
-                        label7.setForeground(fontColor);
-                        label8.setForeground(fontColor);
+                        label3.setForeground(labelFontColor);
+                        label4.setForeground(labelFontColor);
+                        label5.setForeground(labelFontColor);
+                        label6.setForeground(labelFontColor);
+                        label7.setForeground(labelFontColor);
+                        label8.setForeground(labelFontColor);
                     } else if (position == 2) {
-                        label1.setForeground(fontColor);
-                        label2.setForeground(fontColor);
+                        label1.setForeground(labelFontColor);
+                        label2.setForeground(labelFontColor);
                         label3.setForeground(fontColorWithCoverage);
-                        label4.setForeground(fontColor);
-                        label5.setForeground(fontColor);
-                        label6.setForeground(fontColor);
-                        label7.setForeground(fontColor);
-                        label8.setForeground(fontColor);
+                        label4.setForeground(labelFontColor);
+                        label5.setForeground(labelFontColor);
+                        label6.setForeground(labelFontColor);
+                        label7.setForeground(labelFontColor);
+                        label8.setForeground(labelFontColor);
                     } else if (position == 3) {
-                        label1.setForeground(fontColor);
-                        label2.setForeground(fontColor);
-                        label3.setForeground(fontColor);
+                        label1.setForeground(labelFontColor);
+                        label2.setForeground(labelFontColor);
+                        label3.setForeground(labelFontColor);
                         label4.setForeground(fontColorWithCoverage);
-                        label5.setForeground(fontColor);
-                        label6.setForeground(fontColor);
-                        label7.setForeground(fontColor);
-                        label8.setForeground(fontColor);
+                        label5.setForeground(labelFontColor);
+                        label6.setForeground(labelFontColor);
+                        label7.setForeground(labelFontColor);
+                        label8.setForeground(labelFontColor);
                     } else if (position == 4) {
-                        label1.setForeground(fontColor);
-                        label2.setForeground(fontColor);
-                        label3.setForeground(fontColor);
-                        label4.setForeground(fontColor);
+                        label1.setForeground(labelFontColor);
+                        label2.setForeground(labelFontColor);
+                        label3.setForeground(labelFontColor);
+                        label4.setForeground(labelFontColor);
                         label5.setForeground(fontColorWithCoverage);
-                        label6.setForeground(fontColor);
-                        label7.setForeground(fontColor);
-                        label8.setForeground(fontColor);
+                        label6.setForeground(labelFontColor);
+                        label7.setForeground(labelFontColor);
+                        label8.setForeground(labelFontColor);
                     } else if (position == 5) {
-                        label1.setForeground(fontColor);
-                        label2.setForeground(fontColor);
-                        label3.setForeground(fontColor);
-                        label4.setForeground(fontColor);
-                        label5.setForeground(fontColor);
+                        label1.setForeground(labelFontColor);
+                        label2.setForeground(labelFontColor);
+                        label3.setForeground(labelFontColor);
+                        label4.setForeground(labelFontColor);
+                        label5.setForeground(labelFontColor);
                         label6.setForeground(fontColorWithCoverage);
-                        label7.setForeground(fontColor);
-                        label8.setForeground(fontColor);
+                        label7.setForeground(labelFontColor);
+                        label8.setForeground(labelFontColor);
                     } else if (position == 6) {
-                        label1.setForeground(fontColor);
-                        label2.setForeground(fontColor);
-                        label3.setForeground(fontColor);
-                        label4.setForeground(fontColor);
-                        label5.setForeground(fontColor);
-                        label6.setForeground(fontColor);
+                        label1.setForeground(labelFontColor);
+                        label2.setForeground(labelFontColor);
+                        label3.setForeground(labelFontColor);
+                        label4.setForeground(labelFontColor);
+                        label5.setForeground(labelFontColor);
+                        label6.setForeground(labelFontColor);
                         label7.setForeground(fontColorWithCoverage);
-                        label8.setForeground(fontColor);
+                        label8.setForeground(labelFontColor);
                     } else if (position >= 7) {
-                        label1.setForeground(fontColor);
-                        label2.setForeground(fontColor);
-                        label3.setForeground(fontColor);
-                        label4.setForeground(fontColor);
-                        label5.setForeground(fontColor);
-                        label6.setForeground(fontColor);
-                        label7.setForeground(fontColor);
+                        label1.setForeground(labelFontColor);
+                        label2.setForeground(labelFontColor);
+                        label3.setForeground(labelFontColor);
+                        label4.setForeground(labelFontColor);
+                        label5.setForeground(labelFontColor);
+                        label6.setForeground(labelFontColor);
+                        label7.setForeground(labelFontColor);
                         label8.setForeground(fontColorWithCoverage);
                     }
                     TimeUnit.MILLISECONDS.sleep(20);
@@ -3530,8 +3530,8 @@ public class SearchBar {
         labelColor = new Color(colorNum);
     }
 
-    public void setFontColor(int colorNum) {
-        fontColor = new Color(colorNum);
+    public void setLabelFontColor(int colorNum) {
+        labelFontColor = new Color(colorNum);
     }
 
     public void setSearchBarColor(int colorNum) {
@@ -3540,6 +3540,10 @@ public class SearchBar {
 
     public int getShowingMode() {
         return showingMode.get();
+    }
+
+    public void setSearchBarFontColor(int colorNum) {
+        textField.setForeground(new Color(colorNum));
     }
 }
 
