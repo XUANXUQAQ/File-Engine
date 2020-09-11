@@ -4,12 +4,13 @@ import javax.swing.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
+import java.util.LinkedList;
 
 public class Plugin {
     private static final int API_VERSION = 3;
     private final Object instance;
-    private final ArrayList<String> methodList = new ArrayList<>();
+    private final LinkedList<String> methodList = new LinkedList<>();
+    private boolean isAllMethodLoaded = false;
     private Method pluginTextChanged;
     private Method pluginLoadPlugin;
     private Method pluginUnloadPlugin;
@@ -31,17 +32,22 @@ public class Plugin {
     private Method pluginGetAuthor;
     private Method pluginClearResultQueue;
 
-    public Plugin(PluginUtil.PluginInfo pluginInfo) {
-        Class<?> aClass = pluginInfo.cls;
-        this.instance = pluginInfo.clsInstance;
+    public Plugin(PluginUtil.PluginClassAndInstanceInfo pluginClassAndInstanceInfo) {
+        Class<?> aClass = pluginClassAndInstanceInfo.cls;
+        this.instance = pluginClassAndInstanceInfo.clsInstance;
         initMethodList();
         for (String each : methodList) {
             try {
                 loadMethod(each, aClass);
+                isAllMethodLoaded = true;
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
+    }
+
+    public boolean isPluginLoadedSuccessfully() {
+        return isAllMethodLoaded;
     }
 
     private void initMethodList() {

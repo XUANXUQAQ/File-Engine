@@ -15,8 +15,8 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
 public class PluginUtil {
-    protected static class PluginInfo {
-        public PluginInfo(Class<?> cls, Object instance) {
+    protected static class PluginClassAndInstanceInfo {
+        public PluginClassAndInstanceInfo(Class<?> cls, Object instance) {
             this.cls = cls;
             this.clsInstance = instance;
         }
@@ -106,14 +106,18 @@ public class PluginUtil {
         );
         Class<?> c = Class.forName(className, true, classLoader);
         Object instance = c.getDeclaredConstructor().newInstance();
-        PluginInfo pluginInfo = new PluginInfo(c, instance);
-        Plugin plugin = new Plugin(pluginInfo);
-        plugin.loadPlugin();
-        if (plugin.getApiVersion() != Plugin.getLatestApiVersion()) {
-            isTooOld = true;
+        PluginClassAndInstanceInfo pluginClassAndInstanceInfo = new PluginClassAndInstanceInfo(c, instance);
+        Plugin plugin = new Plugin(pluginClassAndInstanceInfo);
+        if (plugin.isPluginLoadedSuccessfully()) {
+            plugin.loadPlugin();
+            if (plugin.getApiVersion() != Plugin.getLatestApiVersion()) {
+                isTooOld = true;
+            }
+            PLUGIN_MAP.put(identifier, plugin);
+            return isTooOld;
+        } else {
+            throw new Exception("loading plugin failed.");
         }
-        PLUGIN_MAP.put(identifier, plugin);
-        return isTooOld;
     }
 
     public void unloadAllPlugins() {
@@ -131,36 +135,44 @@ public class PluginUtil {
         return list.toArray();
     }
 
-    public void loadAllPlugins(String pluginPath) throws Exception {
+    public void loadAllPlugins(String pluginPath) {
         FilenameFilter filter = (dir, name) -> name.endsWith(".jar");
         File[] files = new File(pluginPath).listFiles(filter);
         if (files == null || files.length == 0) {
             return;
         }
-        for (File jar : files) {
-            JarFile jarFile = new JarFile(jar);
-            Enumeration<?> enu = jarFile.entries();
-            while (enu.hasMoreElements()) {
-                JarEntry element = (JarEntry) enu.nextElement();
-                String name = element.getName();
-                if ("PluginInfo.json".equals(name)) {
-                    String pluginInfo = readAll(jarFile.getInputStream(element));
-                    JSONObject json = JSONObject.parseObject(pluginInfo);
-                    String className = json.getString("className");
-                    String identifier = json.getString("identifier");
-                    String pluginName = json.getString("name");
-                    if (getIdentifierByName(pluginName) == null) {
-                        isTooOld |= loadPlugin(jar, className, identifier);
-                        NAME_IDENTIFIER_MAP.put(pluginName, identifier);
-                        if (isTooOld) {
-                            OLD_PLUGINS.add(pluginName);
+        try {
+            for (File jar : files) {
+                JarFile jarFile = new JarFile(jar);
+                Enumeration<?> enu = jarFile.entries();
+                while (enu.hasMoreElements()) {
+                    JarEntry element = (JarEntry) enu.nextElement();
+                    String name = element.getName();
+                    if ("PluginInfo.json".equals(name)) {
+                        String pluginInfo = readAll(jarFile.getInputStream(element));
+                        JSONObject json = JSONObject.parseObject(pluginInfo);
+                        String className = json.getString("className");
+                        String identifier = json.getString("identifier");
+                        String pluginName = json.getString("name");
+                        if (getIdentifierByName(pluginName) == null) {
+                            try {
+                                isTooOld |= loadPlugin(jar, className, identifier);
+                                NAME_IDENTIFIER_MAP.put(pluginName, identifier);
+                                if (isTooOld) {
+                                    OLD_PLUGINS.add(pluginName);
+                                }
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        } else {
+                            REPEAT_PLUGINS.add(jar.getName());
+                            isRepeat = true;
                         }
-                    } else {
-                        REPEAT_PLUGINS.add(jar.getName());
-                        isRepeat = true;
                     }
                 }
             }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 }
