@@ -113,6 +113,7 @@ public class SearchBar {
         colon = Pattern.compile(":");
         blank = Pattern.compile(" ");
         JPanel panel = new JPanel();
+        Color transparentColor = new Color(0, 0, 0, 0);
 
         search = SearchUtil.getInstance();
         taskBar = TaskBar.getInstance();
@@ -136,7 +137,7 @@ public class SearchBar {
         searchBar.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
         searchBar.setUndecorated(true);
         searchBar.getRootPane().setWindowDecorationStyle(JRootPane.NONE);
-        searchBar.setBackground(null);
+        searchBar.setBackground(transparentColor);
         searchBar.setOpacity(AllConfigs.getTransparency());
         searchBar.setContentPane(panel);
         searchBar.setType(JFrame.Type.UTILITY);
@@ -170,9 +171,6 @@ public class SearchBar {
         URL icon = TaskBar.class.getResource("/icons/taskbar_32x32.png");
         Image image = new ImageIcon(icon).getImage();
         searchBar.setIconImage(image);
-        Color transparentColor = new Color(0, 0, 0, 0);
-        searchBar.setBackground(transparentColor);
-
 
         //TextField
         textField = new JTextField(1000);
