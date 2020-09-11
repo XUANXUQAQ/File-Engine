@@ -240,11 +240,7 @@ public class MainClass {
 
             initializeDllInterface();
 
-            try {
-                PluginUtil.getInstance().loadAllPlugins("plugins");
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            PluginUtil.getInstance().loadAllPlugins("plugins");
 
             AllConfigs.readAllSettings();
             TaskBar taskBar = TaskBar.getInstance();
