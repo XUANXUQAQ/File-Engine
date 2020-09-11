@@ -921,6 +921,9 @@ public class SettingsFrame {
                             JOptionPane.showMessageDialog(frame, TranslateUtil.getInstance().getTranslation("Check update failed"));
                             return;
                         }
+                        if (!AllConfigs.isNotMainExit()) {
+                            return;
+                        }
                     }
                 } catch (InterruptedException ignored) {
                 }
@@ -1028,7 +1031,7 @@ public class SettingsFrame {
         listCmds.setListData(AllConfigs.getCmdSet().toArray());
         listLanguage.setListData(TranslateUtil.getInstance().getLanguageSet().toArray());
         listLanguage.setSelectedValue(TranslateUtil.getInstance().getLanguage(), true);
-        Object[] plugins = PluginUtil.getInstance().getPluginArray();
+        Object[] plugins = PluginUtil.getInstance().getPluginNameArray();
         listPlugins.setListData(plugins);
         listCache.setListData(cacheSet.toArray());
     }
@@ -1041,7 +1044,7 @@ public class SettingsFrame {
         setTextFieldAndTextAreaGui();
         setCheckBoxGui();
 
-        Object[] plugins = PluginUtil.getInstance().getPluginArray();
+        Object[] plugins = PluginUtil.getInstance().getPluginNameArray();
         buttonUpdatePlugin.setVisible(false);
         if (plugins.length == 0) {
             PluginSettingsPanel.setVisible(false);

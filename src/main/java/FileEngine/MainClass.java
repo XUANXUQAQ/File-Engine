@@ -12,6 +12,7 @@ import FileEngine.frames.TaskBar;
 import FileEngine.md5.Md5Util;
 import FileEngine.pluginSystem.PluginUtil;
 import FileEngine.search.SearchUtil;
+import FileEngine.threadPool.CachedThreadPool;
 import FileEngine.translate.TranslateUtil;
 import com.alibaba.fastjson.JSONObject;
 import com.formdev.flatlaf.FlatDarculaLaf;
@@ -21,6 +22,7 @@ import java.io.*;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 
 /***
@@ -270,8 +272,21 @@ public class MainClass {
                 DaemonUtil.startDaemon(new File("").getAbsolutePath());
             }
 
+            StringBuilder stringBuilder = new StringBuilder();
+            AtomicBoolean isFinished = new AtomicBoolean(false);
+            CachedThreadPool.getInstance().executeTask(() -> PluginUtil.getInstance().isAllPluginLatest(stringBuilder, isFinished));
+
             while (AllConfigs.isNotMainExit()) {
                 // 主循环开始
+                if (isFinished.get()) {
+                    isFinished.set(false);
+                    String notLatestPlugins = stringBuilder.toString();
+                    if (!notLatestPlugins.isEmpty()) {
+                        TaskBar.getInstance().showMessage(TranslateUtil.getInstance().getTranslation("Info"),
+                                TranslateUtil.getInstance().getTranslation(notLatestPlugins + "\n" +
+                                        TranslateUtil.getInstance().getTranslation("New versions of these plugins can be updated")));
+                    }
+                }
                 TimeUnit.MILLISECONDS.sleep(50);
             }
             //确保关闭所有资源
