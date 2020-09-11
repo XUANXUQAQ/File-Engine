@@ -147,6 +147,7 @@
                   <component id="2b65" class="javax.swing.JTextArea" binding="textAreaIgnorePath">
                     <constraints/>
                     <properties>
+                      <foreground color="-1"/>
                       <lineWrap value="true"/>
                       <opaque value="false"/>
                       <wrapStyleWord value="true"/>
@@ -675,7 +676,7 @@
                         <properties>
                           <editable value="false"/>
                           <enabled value="true"/>
-                          <foreground color="-13355980"/>
+                          <foreground color="-1"/>
                           <lineWrap value="true"/>
                           <wrapStyleWord value="true"/>
                         </properties>
