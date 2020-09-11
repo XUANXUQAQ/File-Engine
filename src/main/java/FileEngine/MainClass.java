@@ -239,9 +239,10 @@ public class MainClass {
 
             initializeDllInterface();
 
+            AllConfigs.readAllSettings();
+
             PluginUtil.getInstance().loadAllPlugins("plugins");
 
-            AllConfigs.readAllSettings();
             TaskBar taskBar = TaskBar.getInstance();
             taskBar.showTaskBar();
             SearchUtil search = SearchUtil.getInstance();
