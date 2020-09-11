@@ -1,5 +1,6 @@
 package FileEngine.pluginSystem;
 
+import FileEngine.configs.AllConfigs;
 import com.alibaba.fastjson.JSONObject;
 
 import java.io.*;
@@ -108,21 +109,24 @@ public class PluginUtil {
         Object instance = c.getDeclaredConstructor().newInstance();
         PluginClassAndInstanceInfo pluginClassAndInstanceInfo = new PluginClassAndInstanceInfo(c, instance);
         Plugin plugin = new Plugin(pluginClassAndInstanceInfo);
-        if (plugin.isPluginLoadedSuccessfully()) {
-            plugin.loadPlugin();
-            if (plugin.getApiVersion() != Plugin.getLatestApiVersion()) {
-                isTooOld = true;
-            }
-            PLUGIN_MAP.put(identifier, plugin);
-            return isTooOld;
-        } else {
-            throw new Exception("loading plugin failed.");
+        plugin.loadPlugin();
+        plugin.setCurrentTheme(AllConfigs.getDefaultBackgroundColor(), AllConfigs.getLabelColor());
+        if (plugin.getApiVersion() != Plugin.getLatestApiVersion()) {
+            isTooOld = true;
         }
+        PLUGIN_MAP.put(identifier, plugin);
+        return isTooOld;
     }
 
     public void unloadAllPlugins() {
         for (String each : PLUGIN_MAP.keySet()) {
             unloadPlugin(PLUGIN_MAP.get(each));
+        }
+    }
+
+    public void setCurrentTheme(int defaultColor, int chosenLabelColor) {
+        for (Plugin each : PLUGIN_MAP.values()) {
+            each.setCurrentTheme(defaultColor, chosenLabelColor);
         }
     }
 
