@@ -941,7 +941,7 @@ public class SettingsFrame {
 
     private void setLabelGui() {
         labelAboutGithub.setText("<html><a href='https://github.com/XUANXUQAQ/File-Engine'><font size=\"4\">File-Engine</font></a></html>");
-        labelWebLookAndFeel.setText("1.WebLookAndFeel");
+        labelWebLookAndFeel.setText("1.FlatLaf");
         labelFastJson.setText("2.FastJson");
         labelJna.setText("3.Java-Native-Access");
         labelSQLite.setText("4.SQLite-JDBC");
@@ -1092,6 +1092,11 @@ public class SettingsFrame {
 
     private SettingsFrame() {
         frame = new JFrame("Settings");
+
+        frame.dispose();
+        frame.setUndecorated(true);
+        frame.getRootPane().setWindowDecorationStyle(JRootPane.FRAME);
+
         frameIcon = new ImageIcon(SettingsFrame.class.getResource("/icons/frame.png"));
         ButtonGroup proxyButtonGroup = new ButtonGroup();
         proxyButtonGroup.add(radioButtonNoProxy);
