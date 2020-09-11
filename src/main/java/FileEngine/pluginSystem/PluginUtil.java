@@ -1,6 +1,7 @@
 package FileEngine.pluginSystem;
 
 import FileEngine.configs.AllConfigs;
+import FileEngine.threadPool.CachedThreadPool;
 import com.alibaba.fastjson.JSONObject;
 
 import java.io.*;
@@ -12,6 +13,9 @@ import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
@@ -37,7 +41,7 @@ public class PluginUtil {
     private PluginUtil() {
     }
 
-    private final ConcurrentHashMap<String, Plugin> PLUGIN_MAP = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Plugin> IDENTIFIER_PLUGIN_MAP = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, String> NAME_IDENTIFIER_MAP = new ConcurrentHashMap<>();
     private final HashSet<String> OLD_PLUGINS = new HashSet<>();
     private final HashSet<String> REPEAT_PLUGINS = new HashSet<>();
@@ -61,15 +65,15 @@ public class PluginUtil {
     }
 
     public Iterator<Plugin> getPluginMapIter() {
-        return PLUGIN_MAP.values().iterator();
+        return IDENTIFIER_PLUGIN_MAP.values().iterator();
     }
 
     public Plugin getPluginByIdentifier(String identifier) {
-        return PLUGIN_MAP.get(identifier);
+        return IDENTIFIER_PLUGIN_MAP.get(identifier);
     }
 
     public int getInstalledPluginNum() {
-        return PLUGIN_MAP.size();
+        return IDENTIFIER_PLUGIN_MAP.size();
     }
 
     public String getAllOldPluginsName() {
@@ -114,18 +118,18 @@ public class PluginUtil {
         if (plugin.getApiVersion() != Plugin.getLatestApiVersion()) {
             isTooOld = true;
         }
-        PLUGIN_MAP.put(identifier, plugin);
+        IDENTIFIER_PLUGIN_MAP.put(identifier, plugin);
         return isTooOld;
     }
 
     public void unloadAllPlugins() {
-        for (String each : PLUGIN_MAP.keySet()) {
-            unloadPlugin(PLUGIN_MAP.get(each));
+        for (Plugin each : IDENTIFIER_PLUGIN_MAP.values()) {
+            unloadPlugin(each);
         }
     }
 
     public void setCurrentTheme(int defaultColor, int chosenLabelColor) {
-        for (Plugin each : PLUGIN_MAP.values()) {
+        for (Plugin each : IDENTIFIER_PLUGIN_MAP.values()) {
             each.setCurrentTheme(defaultColor, chosenLabelColor);
         }
     }
@@ -135,6 +139,11 @@ public class PluginUtil {
     }
 
     public Object[] getPluginArray() {
+        ArrayList<Plugin> list = new ArrayList<>(IDENTIFIER_PLUGIN_MAP.values());
+        return list.toArray();
+    }
+
+    public Object[] getPluginNameArray() {
         ArrayList<String> list = new ArrayList<>(NAME_IDENTIFIER_MAP.keySet());
         return list.toArray();
     }
@@ -160,9 +169,10 @@ public class PluginUtil {
                         String pluginName = json.getString("name");
                         if (getIdentifierByName(pluginName) == null) {
                             try {
-                                isTooOld |= loadPlugin(jar, className, identifier);
+                                boolean isPluginApiTooOld= loadPlugin(jar, className, identifier);
+                                isTooOld |= isPluginApiTooOld;
                                 NAME_IDENTIFIER_MAP.put(pluginName, identifier);
-                                if (isTooOld) {
+                                if (isPluginApiTooOld) {
                                     OLD_PLUGINS.add(pluginName);
                                 }
                             } catch (Exception e) {
@@ -177,6 +187,57 @@ public class PluginUtil {
             }
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    public void isAllPluginLatest(StringBuilder stringBuilder, AtomicBoolean isFinished) {
+        boolean isLatest;
+        for (String each : NAME_IDENTIFIER_MAP.keySet()) {
+            try {
+                isLatest = isPluginLatest(IDENTIFIER_PLUGIN_MAP.get(NAME_IDENTIFIER_MAP.get(each)));
+                if (AllConfigs.isDebug()) {
+                    System.out.println("++++++++++++++++++++++++++++++++++++++++++++");
+                    System.out.println("插件：" + each + "已检查完毕，结果：" + isLatest);
+                    System.out.println("++++++++++++++++++++++++++++++++++++++++++++\n");
+                }
+                if (!isLatest) {
+                    stringBuilder.append(each).append(",");
+                }
+            }catch (Exception e) {
+                System.err.println("++++++++++++++++++++++++++++++++++++++++++++");
+                System.err.println("插件：" + each + "检查更新失败");
+                System.err.println("++++++++++++++++++++++++++++++++++++++++++++");
+            }
+        }
+        isFinished.set(true);
+    }
+
+    private boolean isPluginLatest(Plugin plugin) throws Exception {
+        AtomicLong startCheckTime = new AtomicLong();
+        AtomicBoolean isVersionLatest = new AtomicBoolean();
+        Thread checkUpdateThread = new Thread(() -> {
+            startCheckTime.set(System.currentTimeMillis());
+            isVersionLatest.set(plugin.isLatest());
+            if (!Thread.interrupted()) {
+                startCheckTime.set(0x100L); //表示检查成功
+            }
+        });
+        CachedThreadPool.getInstance().executeTask(checkUpdateThread);
+        //等待获取插件更新信息
+        try {
+            while (startCheckTime.get() != 0x100L) {
+                TimeUnit.MILLISECONDS.sleep(200);
+                if (System.currentTimeMillis() - startCheckTime.get() > 5000L && startCheckTime.get() != 0x100L) {
+                    checkUpdateThread.interrupt();
+                    throw new Exception("check update failed.");
+                }
+                if (!AllConfigs.isNotMainExit()) {
+                    break;
+                }
+            }
+            return isVersionLatest.get();
+        } catch (InterruptedException e) {
+            throw new Exception("check update failed.");
         }
     }
 }
