@@ -13,10 +13,9 @@ import FileEngine.md5.Md5Util;
 import FileEngine.pluginSystem.PluginUtil;
 import FileEngine.search.SearchUtil;
 import FileEngine.translate.TranslateUtil;
-import br.com.margel.weblaf.WebLookAndFeel;
 import com.alibaba.fastjson.JSONObject;
+import com.formdev.flatlaf.FlatDarculaLaf;
 
-import javax.swing.*;
 import java.awt.*;
 import java.io.*;
 import java.sql.Statement;
@@ -206,7 +205,7 @@ public class MainClass {
     public static void main(String[] args) {
         try {
             Class.forName("org.sqlite.JDBC");
-            UIManager.setLookAndFeel(new WebLookAndFeel());
+            FlatDarculaLaf.install();
 
             if (!System.getProperty("os.arch").contains("64")) {
                 System.err.println("NOT 64 BIT");

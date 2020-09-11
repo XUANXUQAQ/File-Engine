@@ -22,7 +22,7 @@ A tool can make you work more efficiently.
 
 感谢以下项目：   
 1.fastjson (https://github.com/alibaba/fastjson)   
-2.WebLookAndFeel (https://github.com/XUANXUQAQ/WebLookAndFeel)   
+2.FlatLaf (https://github.com/JFormDesigner/FlatLaf)   
 3.jna (https://github.com/java-native-access/jna)   
 4.sqlite_jdbc (https://github.com/xerial/sqlite-jdbc)   
 

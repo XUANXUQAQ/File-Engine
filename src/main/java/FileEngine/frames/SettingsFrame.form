@@ -9,7 +9,7 @@
       <background color="-1"/>
       <doubleBuffered value="true"/>
       <minimumSize width="850" height="600"/>
-      <opaque value="true"/>
+      <opaque value="false"/>
       <preferredSize width="850" height="600"/>
       <requestFocusEnabled value="true"/>
       <verifyInputWhenFocusTarget value="true"/>
@@ -24,7 +24,7 @@
           </grid>
         </constraints>
         <properties>
-          <background color="-1"/>
+          <background color="-12828863"/>
           <doubleBuffered value="true"/>
           <focusable value="false"/>
           <opaque value="false"/>

@@ -24,7 +24,7 @@ Or enter :help in the search bar. by default Ctrl + Alt + K to call out the sear
 
 Thanks for the following project:   
 1.fastjson (https://github.com/alibaba/fastjson)   
-2.WebLookAndFeel (https://github.com/XUANXUQAQ/WebLookAndFeel)   
+2.FlatLaf (https://github.com/JFormDesigner/FlatLaf)   
 3.jna (https://github.com/java-native-access/jna)   
 4.sqlite_jdbc (https://github.com/xerial/sqlite-jdbc)   
 
