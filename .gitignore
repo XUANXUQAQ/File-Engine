@@ -228,3 +228,4 @@ $RECYCLE.BIN/
 *.msm
 *.msp
 !/src/main/resources/
+META-INF/
