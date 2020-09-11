@@ -1657,6 +1657,8 @@ public class SettingsFrame {
         SearchBarFontColorChooser.setBackground(tmp_color);
         SearchBarFontColorChooser.setForeground(tmp_color);
 
+        PluginUtil.getInstance().setCurrentTheme(AllConfigs.getDefaultBackgroundColor(), AllConfigs.getLabelColor());
+
         AllConfigs.saveAllSettings();
 
         //保存自定义命令

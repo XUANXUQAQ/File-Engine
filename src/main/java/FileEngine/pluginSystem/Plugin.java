@@ -1,5 +1,7 @@
 package FileEngine.pluginSystem;
 
+import com.alibaba.fastjson.JSONObject;
+
 import javax.swing.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
@@ -7,10 +9,9 @@ import java.lang.reflect.Method;
 import java.util.LinkedList;
 
 public class Plugin {
-    private static final int API_VERSION = 3;
+    private static final int API_VERSION = 4;
     private final Object instance;
     private final LinkedList<String> methodList = new LinkedList<>();
-    private boolean isAllMethodLoaded = false;
     private Method pluginTextChanged;
     private Method pluginLoadPlugin;
     private Method pluginUnloadPlugin;
@@ -31,6 +32,7 @@ public class Plugin {
     private Method pluginGetApiVersion;
     private Method pluginGetAuthor;
     private Method pluginClearResultQueue;
+    private Method pluginSetCurrentTheme;
 
     public Plugin(PluginUtil.PluginClassAndInstanceInfo pluginClassAndInstanceInfo) {
         Class<?> aClass = pluginClassAndInstanceInfo.cls;
@@ -39,15 +41,10 @@ public class Plugin {
         for (String each : methodList) {
             try {
                 loadMethod(each, aClass);
-                isAllMethodLoaded = true;
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
-    }
-
-    public boolean isPluginLoadedSuccessfully() {
-        return isAllMethodLoaded;
     }
 
     private void initMethodList() {
@@ -71,6 +68,7 @@ public class Plugin {
         methodList.add("getApiVersion");
         methodList.add("getAuthor");
         methodList.add("clearResultQueue");
+        methodList.add("setCurrentTheme");
     }
 
     private void loadMethod(String methodName, Class<?> aClass) throws Exception {
@@ -135,8 +133,18 @@ public class Plugin {
             case "clearResultQueue":
                 pluginClearResultQueue = aClass.getDeclaredMethod("clearResultQueue");
                 break;
+            case "setCurrentTheme":
+                pluginSetCurrentTheme = aClass.getDeclaredMethod("setCurrentTheme", int.class, int.class);
             default:
                 break;
+        }
+    }
+
+    public void setCurrentTheme(int defaultColor, int chosenLabelColor) {
+        try {
+            pluginSetCurrentTheme.invoke(instance, defaultColor, chosenLabelColor);
+        }catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
