@@ -59,6 +59,7 @@ public class PluginMarket {
                 String pluginName;
                 String originString = buttonInstall.getText();
                 while (AllConfigs.isNotMainExit()) {
+                    TimeUnit.MILLISECONDS.sleep(100);
                     pluginName = (String) listPlugins.getSelectedValue();
                     if (pluginName != null) {
                         checkDownloadTask(labelProgress, buttonInstall, pluginName + ".jar", originString);
@@ -82,6 +83,7 @@ public class PluginMarket {
             HashSet<String> pluginSet = new HashSet<>();
             try {
                 while (AllConfigs.isNotMainExit()) {
+                    TimeUnit.MILLISECONDS.sleep(100);
                     if (isStartSearch) {
                         isStartSearch = false;
                         if (searchKeywords == null || searchKeywords.isEmpty()) {
@@ -103,7 +105,7 @@ public class PluginMarket {
         });
     }
 
-    private void checkDownloadTask(JLabel label, JButton button, String fileName, String originButtonString) throws InterruptedException, IOException {
+    private void checkDownloadTask(JLabel label, JButton button, String fileName, String originButtonString) throws IOException {
         //设置进度显示线程
         double progress;
         String pluginName;
@@ -153,7 +155,6 @@ public class PluginMarket {
                 button.setEnabled(true);
             }
         }
-        TimeUnit.MILLISECONDS.sleep(100);
     }
 
     public void showWindow() {
@@ -316,7 +317,7 @@ public class PluginMarket {
                             }
                         }
                     }
-                    TimeUnit.MILLISECONDS.sleep(200);
+                    TimeUnit.MILLISECONDS.sleep(100);
                 }
             } catch (InterruptedException ignored) {
             }
