@@ -138,3 +138,5 @@ SearchBar Font Color:=Colore carattere barra di ricerca:
 The font color of the search bar is set incorrectly=Il colore del carattere della barra di ricerca è impostato in modo errato
 New versions of these plugins can be updated=Le nuove versioni di questi plugin possono essere aggiornate
 Optimize database=ottimizzare il database
+Border Color:=Colore del bordo:
+Border color is set incorrectly=Il colore del bordo non è impostato correttamente

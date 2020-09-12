@@ -45,7 +45,22 @@ public class AllConfigs {
     private static volatile int fontColor;
     private static volatile int searchBarColor;
     private static volatile int searchBarFontColor;
+    private static volatile int borderColor;
     private static String updateAddress;
+    private static int setterCount = 0;
+    private static boolean isAllowChangeSettings = false;
+
+    public static void allowChangeSettings() {
+        isAllowChangeSettings = true;
+    }
+
+    public static void denyChangeSettings() {
+        isAllowChangeSettings = false;
+        if (setterCount != 25) {
+            System.err.println("警告：set方法并未被完全调用");
+        }
+        setterCount = 0;
+    }
 
     public static int getProxyPort() {
         return proxyPort;
@@ -68,91 +83,228 @@ public class AllConfigs {
     }
 
     public static void setCacheNumLimit(int cacheNumLimit) {
-        AllConfigs.cacheNumLimit = cacheNumLimit;
+        if (isAllowChangeSettings) {
+            setterCount++;
+            AllConfigs.cacheNumLimit = cacheNumLimit;
+        } else {
+            System.err.println("你应该在修改设置前先调用allowChangeSettings()方法，您的设置并未生效");
+        }
     }
 
     public static void setHotkey(String hotkey) {
-        AllConfigs.hotkey = hotkey;
+        if (isAllowChangeSettings) {
+            setterCount++;
+            AllConfigs.hotkey = hotkey;
+        } else {
+            System.err.println("你应该在修改设置前先调用allowChangeSettings()方法，您的设置并未生效");
+        }
     }
 
     public static void setUpdateTimeLimit(int updateTimeLimit) {
-        AllConfigs.updateTimeLimit = updateTimeLimit;
+        if (isAllowChangeSettings) {
+            setterCount++;
+            AllConfigs.updateTimeLimit = updateTimeLimit;
+        } else {
+            System.err.println("你应该在修改设置前先调用allowChangeSettings()方法，您的设置并未生效");
+        }
     }
 
     public static void setIgnorePath(String ignorePath) {
-        AllConfigs.ignorePath = ignorePath;
+        if (isAllowChangeSettings) {
+            setterCount++;
+            AllConfigs.ignorePath = ignorePath;
+        } else {
+            System.err.println("你应该在修改设置前先调用allowChangeSettings()方法，您的设置并未生效");
+        }
     }
 
     public static void setPriorityFolder(String priorityFolder) {
-        AllConfigs.priorityFolder = priorityFolder;
+        if (isAllowChangeSettings) {
+            setterCount++;
+            AllConfigs.priorityFolder = priorityFolder;
+        } else {
+            System.err.println("你应该在修改设置前先调用allowChangeSettings()方法，您的设置并未生效");
+        }
     }
 
     public static void setSearchDepth(int searchDepth) {
-        AllConfigs.searchDepth = searchDepth;
+        if (isAllowChangeSettings) {
+            setterCount++;
+            AllConfigs.searchDepth = searchDepth;
+        } else {
+            System.err.println("你应该在修改设置前先调用allowChangeSettings()方法，您的设置并未生效");
+        }
     }
 
     public static void setIsDefaultAdmin(boolean isDefaultAdmin) {
-        AllConfigs.isDefaultAdmin = isDefaultAdmin;
+        if (isAllowChangeSettings) {
+            setterCount++;
+            AllConfigs.isDefaultAdmin = isDefaultAdmin;
+        } else {
+            System.err.println("你应该在修改设置前先调用allowChangeSettings()方法，您的设置并未生效");
+        }
     }
 
     public static void setIsLoseFocusClose(boolean isLoseFocusClose) {
-        AllConfigs.isLoseFocusClose = isLoseFocusClose;
+        if (isAllowChangeSettings) {
+            setterCount++;
+            AllConfigs.isLoseFocusClose = isLoseFocusClose;
+        } else {
+            System.err.println("你应该在修改设置前先调用allowChangeSettings()方法，您的设置并未生效");
+        }
     }
 
     public static void setOpenLastFolderKeyCode(int openLastFolderKeyCode) {
-        AllConfigs.openLastFolderKeyCode = openLastFolderKeyCode;
+        if (isAllowChangeSettings) {
+            setterCount++;
+            AllConfigs.openLastFolderKeyCode = openLastFolderKeyCode;
+        } else {
+            System.err.println("你应该在修改设置前先调用allowChangeSettings()方法，您的设置并未生效");
+        }
     }
 
     public static void setRunAsAdminKeyCode(int runAsAdminKeyCode) {
-        AllConfigs.runAsAdminKeyCode = runAsAdminKeyCode;
+        if (isAllowChangeSettings) {
+            setterCount++;
+            AllConfigs.runAsAdminKeyCode = runAsAdminKeyCode;
+        } else {
+            System.err.println("你应该在修改设置前先调用allowChangeSettings()方法，您的设置并未生效");
+        }
     }
 
     public static void setCopyPathKeyCode(int copyPathKeyCode) {
-        AllConfigs.copyPathKeyCode = copyPathKeyCode;
+        if (isAllowChangeSettings) {
+            setterCount++;
+            AllConfigs.copyPathKeyCode = copyPathKeyCode;
+        } else {
+            System.err.println("你应该在修改设置前先调用allowChangeSettings()方法，您的设置并未生效");
+        }
     }
 
     public static void setTransparency(float transparency) {
-        AllConfigs.transparency = transparency;
+        if (isAllowChangeSettings) {
+            setterCount++;
+            AllConfigs.transparency = transparency;
+        } else {
+            System.err.println("你应该在修改设置前先调用allowChangeSettings()方法，您的设置并未生效");
+        }
     }
 
     public static void setProxyAddress(String proxyAddress) {
-        AllConfigs.proxyAddress = proxyAddress;
+        if (isAllowChangeSettings) {
+            setterCount++;
+            AllConfigs.proxyAddress = proxyAddress;
+        } else {
+            System.err.println("你应该在修改设置前先调用allowChangeSettings()方法，您的设置并未生效");
+        }
     }
 
     public static void setProxyPort(int proxyPort) {
-        AllConfigs.proxyPort = proxyPort;
+        if (isAllowChangeSettings) {
+            setterCount++;
+            AllConfigs.proxyPort = proxyPort;
+        } else {
+            System.err.println("你应该在修改设置前先调用allowChangeSettings()方法，您的设置并未生效");
+        }
     }
 
     public static void setProxyUserName(String proxyUserName) {
-        AllConfigs.proxyUserName = proxyUserName;
+        if (isAllowChangeSettings) {
+            setterCount++;
+            AllConfigs.proxyUserName = proxyUserName;
+        } else {
+            System.err.println("你应该在修改设置前先调用allowChangeSettings()方法，您的设置并未生效");
+        }
     }
 
     public static void setProxyPassword(String proxyPassword) {
-        AllConfigs.proxyPassword = proxyPassword;
+        if (isAllowChangeSettings) {
+            setterCount++;
+            AllConfigs.proxyPassword = proxyPassword;
+        } else {
+            System.err.println("你应该在修改设置前先调用allowChangeSettings()方法，您的设置并未生效");
+        }
     }
 
     public static void setProxyType(int proxyType) {
-        AllConfigs.proxyType = proxyType;
+        if (isAllowChangeSettings) {
+            setterCount++;
+            AllConfigs.proxyType = proxyType;
+        } else {
+            System.err.println("你应该在修改设置前先调用allowChangeSettings()方法，您的设置并未生效");
+        }
     }
 
     public static void setLabelColor(int labelColor) {
-        AllConfigs.labelColor = labelColor;
+        if (isAllowChangeSettings) {
+            setterCount++;
+            AllConfigs.labelColor = labelColor;
+        } else {
+            System.err.println("你应该在修改设置前先调用allowChangeSettings()方法，您的设置并未生效");
+        }
     }
 
     public static void setDefaultBackgroundColor(int defaultBackgroundColor) {
-        AllConfigs.defaultBackgroundColor = defaultBackgroundColor;
+        if (isAllowChangeSettings) {
+            setterCount++;
+            AllConfigs.defaultBackgroundColor = defaultBackgroundColor;
+        } else {
+            System.err.println("你应该在修改设置前先调用allowChangeSettings()方法，您的设置并未生效");
+        }
     }
 
     public static void setLabelFontColorWithCoverage(int fontColorWithCoverage) {
-        AllConfigs.fontColorWithCoverage = fontColorWithCoverage;
+        if (isAllowChangeSettings) {
+            setterCount++;
+            AllConfigs.fontColorWithCoverage = fontColorWithCoverage;
+        } else {
+            System.err.println("你应该在修改设置前先调用allowChangeSettings()方法，您的设置并未生效");
+        }
     }
 
     public static void setSearchBarFontColor(int color) {
-        searchBarFontColor = color;
+        if (isAllowChangeSettings) {
+            setterCount++;
+            searchBarFontColor = color;
+        } else {
+            System.err.println("你应该在修改设置前先调用allowChangeSettings()方法，您的设置并未生效");
+        }
     }
 
     public static void setLabelFontColor(int fontColor) {
-        AllConfigs.fontColor = fontColor;
+        if (isAllowChangeSettings) {
+            setterCount++;
+            AllConfigs.fontColor = fontColor;
+        } else {
+            System.err.println("你应该在修改设置前先调用allowChangeSettings()方法，您的设置并未生效");
+        }
+    }
+
+    public static void setBorderColor(int color) {
+        if (isAllowChangeSettings) {
+            setterCount++;
+            borderColor = color;
+        } else {
+            System.err.println("你应该在修改设置前先调用allowChangeSettings()方法，您的设置并未生效");
+        }
+    }
+
+    public static void setSearchBarColor(int searchBarColor) {
+        if (isAllowChangeSettings) {
+            setterCount++;
+            AllConfigs.searchBarColor = searchBarColor;
+        } else {
+            System.err.println("你应该在修改设置前先调用allowChangeSettings()方法，您的设置并未生效");
+        }
+    }
+
+    public static void setUpdateAddress(String updateAddress) {
+        if (isAllowChangeSettings) {
+            setterCount++;
+            AllConfigs.updateAddress = updateAddress;
+        } else {
+            System.err.println("你应该在修改设置前先调用allowChangeSettings()方法，您的设置并未生效");
+        }
     }
 
     public static int getSearchBarFontColor() {
@@ -161,14 +313,6 @@ public class AllConfigs {
 
     public static int getSearchBarColor() {
         return searchBarColor;
-    }
-
-    public static void setSearchBarColor(int searchBarColor) {
-        AllConfigs.searchBarColor = searchBarColor;
-    }
-
-    public static void setUpdateAddress(String updateAddress) {
-        AllConfigs.updateAddress = updateAddress;
     }
 
     public static String getHotkey() {
@@ -255,6 +399,10 @@ public class AllConfigs {
         return fontColor;
     }
 
+    public static int getBorderColor() {
+        return borderColor;
+    }
+
     public static String getName() {
         return "File-Engine-x64.exe";
     }
@@ -267,119 +415,263 @@ public class AllConfigs {
         mainExit = b;
     }
 
-    public static void readAllSettings() {
-        try (BufferedReader buffR = new BufferedReader(new InputStreamReader(new FileInputStream("user/settings.json"), StandardCharsets.UTF_8))) {
-            String line;
-            StringBuilder result = new StringBuilder();
-            while (null != (line = buffR.readLine())) {
-                result.append(line);
-            }
-            JSONObject settingsInJson = JSON.parseObject(result.toString());
+    private static void readUpdateAddress(JSONObject settingsInJson) {
+        if (settingsInJson != null) {
             if (settingsInJson.containsKey("updateAddress")) {
-                AllConfigs.setUpdateAddress(settingsInJson.getString("updateAddress"));
+                updateAddress = settingsInJson.getString("updateAddress");
             } else {
-                AllConfigs.setUpdateAddress("jsdelivr CDN");
+                updateAddress = "jsdelivr CDN";
             }
+        } else {
+            updateAddress = "jsdelivr CDN";
+        }
+    }
+
+    private static void readCacheNumLimit(JSONObject settingsInJson) {
+        if (settingsInJson != null) {
             if (settingsInJson.containsKey("cacheNumLimit")) {
-                AllConfigs.setCacheNumLimit(settingsInJson.getInteger("cacheNumLimit"));
+                cacheNumLimit = settingsInJson.getInteger("cacheNumLimit");
             } else {
-                AllConfigs.setCacheNumLimit(1000);
+                cacheNumLimit = 1000;
             }
+        }else {
+            cacheNumLimit = 1000;
+        }
+    }
+
+    private static void readHotKey(JSONObject settingsInJson) {
+        if (settingsInJson != null) {
             if (settingsInJson.containsKey("hotkey")) {
                 String tmp = settingsInJson.getString("hotkey");
                 if (tmp == null) {
-                    AllConfigs.setHotkey("Ctrl + Alt + K");
+                    hotkey = "Ctrl + Alt + K";
                 } else {
-                    AllConfigs.setHotkey(tmp);
+                    hotkey = tmp;
                 }
             } else {
-                AllConfigs.setHotkey("Ctrl + Alt + K");
+                hotkey = "Ctrl + Alt + K";
             }
+        }else {
+            hotkey = "Ctrl + Alt + K";
+        }
+    }
+
+    private static void readPriorityFolder(JSONObject settingsInJson) {
+        if (settingsInJson != null) {
             if (settingsInJson.containsKey("priorityFolder")) {
                 String tmp = settingsInJson.getString("priorityFolder");
                 if (tmp == null) {
-                    AllConfigs.setPriorityFolder("");
+                    priorityFolder = "";
                 } else {
-                    AllConfigs.setPriorityFolder(tmp);
+                    priorityFolder = tmp;
                 }
             } else {
-                AllConfigs.setPriorityFolder("");
+                priorityFolder = "";
             }
+        }else {
+            priorityFolder = "";
+        }
+    }
+
+    private static void readSearchDepth(JSONObject settingsInJson) {
+        if (settingsInJson != null) {
             if (settingsInJson.containsKey("searchDepth")) {
-                AllConfigs.setSearchDepth(settingsInJson.getInteger("searchDepth"));
+                searchDepth = settingsInJson.getInteger("searchDepth");
             } else {
-                AllConfigs.setSearchDepth(8);
+                searchDepth = 8;
             }
+        }else {
+            searchDepth = 8;
+        }
+    }
+
+    private static void readIgnorePath(JSONObject settingsInJson) {
+        if (settingsInJson != null) {
             if (settingsInJson.containsKey("ignorePath")) {
                 String tmp = settingsInJson.getString("ignorePath");
                 if (tmp == null) {
-                    AllConfigs.setIgnorePath("C:\\Windows,");
+                    ignorePath = "C:\\Windows,";
                 } else {
-                    AllConfigs.setIgnorePath(tmp);
+                    ignorePath = tmp;
                 }
             } else {
-                AllConfigs.setIgnorePath("C:\\Windows,");
+                ignorePath = "C:\\Windows,";
             }
+        }else {
+            ignorePath = "C:\\Windows,";
+        }
+    }
+
+    private static void readUpdateTimeLimit(JSONObject settingsInJson) {
+        if (settingsInJson != null) {
             if (settingsInJson.containsKey("updateTimeLimit")) {
-                AllConfigs.setUpdateTimeLimit(settingsInJson.getInteger("updateTimeLimit"));
+                updateTimeLimit = settingsInJson.getInteger("updateTimeLimit");
             } else {
-                AllConfigs.setUpdateTimeLimit(5);
+                updateTimeLimit = 5;
             }
+        } else {
+            updateTimeLimit = 5;
+        }
+    }
+
+    private static void readIsDefaultAdmin(JSONObject settingsInJson) {
+        if (settingsInJson != null) {
             if (settingsInJson.containsKey("isDefaultAdmin")) {
-                AllConfigs.setIsDefaultAdmin(settingsInJson.getBoolean("isDefaultAdmin"));
+                isDefaultAdmin = settingsInJson.getBoolean("isDefaultAdmin");
             } else {
-                AllConfigs.setIsDefaultAdmin(false);
+                isDefaultAdmin = false;
             }
+        } else {
+            isDefaultAdmin = false;
+        }
+    }
+
+    private static void readIsLoseFocusClose(JSONObject settingsInJson) {
+        if (settingsInJson != null) {
             if (settingsInJson.containsKey("isLoseFocusClose")) {
-                AllConfigs.setIsLoseFocusClose(settingsInJson.getBoolean("isLoseFocusClose"));
+                isLoseFocusClose = settingsInJson.getBoolean("isLoseFocusClose");
             } else {
-                AllConfigs.setIsLoseFocusClose(true);
+                isLoseFocusClose = true;
             }
+        } else {
+            isLoseFocusClose = true;
+        }
+    }
+
+    private static void readOpenLastFolderKeyCode(JSONObject settingsInJson) {
+        if (settingsInJson != null) {
             if (settingsInJson.containsKey("openLastFolderKeyCode")) {
-                AllConfigs.setOpenLastFolderKeyCode(settingsInJson.getInteger("openLastFolderKeyCode"));
+                openLastFolderKeyCode = settingsInJson.getInteger("openLastFolderKeyCode");
             } else {
-                AllConfigs.setOpenLastFolderKeyCode(17);
+                openLastFolderKeyCode = 17;
             }
+        } else {
+            openLastFolderKeyCode = 17;
+        }
+    }
+
+    private static void readRunAsAdminKeyCode(JSONObject settingsInJson) {
+        if (settingsInJson != null) {
             if (settingsInJson.containsKey("runAsAdminKeyCode")) {
-                AllConfigs.setRunAsAdminKeyCode(settingsInJson.getInteger("runAsAdminKeyCode"));
+                runAsAdminKeyCode = settingsInJson.getInteger("runAsAdminKeyCode");
             } else {
-                AllConfigs.setRunAsAdminKeyCode(16);
+                runAsAdminKeyCode = 16;
             }
+        }else {
+            runAsAdminKeyCode = 16;
+        }
+    }
+
+    private static void readCopyPathKeyCode(JSONObject settingsInJson) {
+        if (settingsInJson != null) {
             if (settingsInJson.containsKey("copyPathKeyCode")) {
-                AllConfigs.setCopyPathKeyCode(settingsInJson.getInteger("copyPathKeyCode"));
+                copyPathKeyCode = settingsInJson.getInteger("copyPathKeyCode");
             } else {
-                AllConfigs.setCopyPathKeyCode(18);
+                copyPathKeyCode = 18;
             }
+        } else {
+            copyPathKeyCode = 18;
+        }
+    }
+
+    private static void readTransparency(JSONObject settingsInJson) {
+        if (settingsInJson != null) {
             if (settingsInJson.containsKey("transparency")) {
-                AllConfigs.setTransparency(settingsInJson.getFloat("transparency"));
+                transparency = settingsInJson.getFloat("transparency");
             } else {
-                AllConfigs.setTransparency(0.8f);
+                transparency = 0.8f;
             }
+        }else {
+            transparency = 0.8f;
+        }
+    }
+
+    private static void readSearchBarColor(JSONObject settingsInJson) {
+        if (settingsInJson != null) {
             if (settingsInJson.containsKey("searchBarColor")) {
-                AllConfigs.setSearchBarColor(settingsInJson.getInteger("searchBarColor"));
+                searchBarColor = settingsInJson.getInteger("searchBarColor");
             } else {
-                AllConfigs.setSearchBarColor(0xffffff);
+                searchBarColor = 0xffffff;
             }
+        } else {
+            searchBarColor = 0xffffff;
+        }
+    }
+
+    private static void readDefaultBackground(JSONObject settingsInJson) {
+        if (settingsInJson != null) {
             if (settingsInJson.containsKey("defaultBackground")) {
-                AllConfigs.setDefaultBackgroundColor(settingsInJson.getInteger("defaultBackground"));
+                defaultBackgroundColor = settingsInJson.getInteger("defaultBackground");
             } else {
-                AllConfigs.setDefaultBackgroundColor(0xffffff);
+                defaultBackgroundColor = 0xffffff;
             }
+        } else {
+            defaultBackgroundColor = 0xffffff;
+        }
+    }
+
+    private static void readBorderColor(JSONObject settingsInJson) {
+        if (settingsInJson != null) {
+            if (settingsInJson.containsKey("borderColor")) {
+                borderColor = settingsInJson.getInteger("borderColor");
+            } else {
+                borderColor = 0xffffff;
+            }
+        } else {
+            borderColor = 0xffffff;
+        }
+    }
+
+    private static void readFontColorWithCoverage(JSONObject settingsInJson) {
+        if (settingsInJson != null) {
             if (settingsInJson.containsKey("fontColorWithCoverage")) {
-                AllConfigs.setLabelFontColorWithCoverage(settingsInJson.getInteger("fontColorWithCoverage"));
+                fontColorWithCoverage = settingsInJson.getInteger("fontColorWithCoverage");
             } else {
-                AllConfigs.setLabelFontColorWithCoverage(0x6666ff);
+                fontColorWithCoverage = 0x6666ff;
             }
+        } else {
+            fontColorWithCoverage = 0x6666ff;
+        }
+    }
+
+    private static void readLabelColor(JSONObject settingsInJson) {
+        if (settingsInJson != null) {
             if (settingsInJson.containsKey("labelColor")) {
-                AllConfigs.setLabelColor(settingsInJson.getInteger("labelColor"));
+                labelColor = settingsInJson.getInteger("labelColor");
             } else {
-                AllConfigs.setLabelColor(0xcccccc);
+                labelColor = 0xcccccc;
             }
+        }else {
+            labelColor = 0xcccccc;
+        }
+    }
+
+    private static void readFontColor(JSONObject settingsInJson) {
+        if (settingsInJson != null) {
             if (settingsInJson.containsKey("fontColor")) {
-                AllConfigs.setLabelFontColor(settingsInJson.getInteger("fontColor"));
+                fontColor = settingsInJson.getInteger("fontColor");
             } else {
-                AllConfigs.setLabelFontColor(0);
+                fontColor = 0;
             }
+        } else {
+            fontColor = 0;
+        }
+    }
+
+    private static void readSearchBarFontColor(JSONObject settingsInJson) {
+        if (settingsInJson != null) {
+            if (settingsInJson.containsKey("searchBarFontColor")) {
+                searchBarFontColor = settingsInJson.getInteger("searchBarFontColor");
+            } else {
+                searchBarFontColor = 0;
+            }
+        } else {
+            searchBarFontColor = 0;
+        }
+    }
+
+    private static void readLanguage(JSONObject settingsInJson) {
+        if (settingsInJson != null) {
             if (settingsInJson.containsKey("language")) {
                 String language = settingsInJson.getString("language");
                 if (language == null || language.isEmpty()) {
@@ -389,77 +681,95 @@ public class AllConfigs {
             } else {
                 TranslateUtil.getInstance().setLanguage(TranslateUtil.getInstance().getDefaultLang());
             }
-            if (settingsInJson.containsKey("proxyAddress")) {
-                AllConfigs.setProxyAddress(settingsInJson.getString("proxyAddress"));
-            } else {
-                AllConfigs.setProxyAddress("");
-            }
-            if (settingsInJson.containsKey("proxyPort")) {
-                AllConfigs.setProxyPort(settingsInJson.getInteger("proxyPort"));
-            } else {
-                AllConfigs.setProxyPort(0);
-            }
-            if (settingsInJson.containsKey("proxyUserName")) {
-                AllConfigs.setProxyUserName(settingsInJson.getString("proxyUserName"));
-            } else {
-                AllConfigs.setProxyUserName("");
-            }
-            if (settingsInJson.containsKey("proxyPassword")) {
-                AllConfigs.setProxyPassword(settingsInJson.getString("proxyPassword"));
-            } else {
-                AllConfigs.setProxyPassword("");
-            }
-            if (settingsInJson.containsKey("proxyType")) {
-                AllConfigs.setProxyType(settingsInJson.getInteger("proxyType"));
-            } else {
-                AllConfigs.setProxyType(AllConfigs.ProxyType.PROXY_DIRECT);
-            }
-            if (settingsInJson.containsKey("searchBarFontColor")) {
-                AllConfigs.setSearchBarFontColor(settingsInJson.getInteger("searchBarFontColor"));
-            } else {
-                AllConfigs.setSearchBarFontColor(0);
-            }
-        } catch (NullPointerException | IOException e) {
-            AllConfigs.setCacheNumLimit(1000);
-            AllConfigs.setHotkey("Ctrl + Alt + K");
-            AllConfigs.setUpdateAddress("jsdelivr CDN");
-            AllConfigs.setPriorityFolder("");
-            AllConfigs.setSearchDepth(8);
-            AllConfigs.setIgnorePath("C:\\Windows,");
-            AllConfigs.setUpdateTimeLimit(5);
-            AllConfigs.setIsDefaultAdmin(false);
-            AllConfigs.setIsLoseFocusClose(true);
-            AllConfigs.setOpenLastFolderKeyCode(17);
-            AllConfigs.setRunAsAdminKeyCode(16);
-            AllConfigs.setCopyPathKeyCode(18);
-            AllConfigs.setTransparency(0.8f);
-            AllConfigs.setSearchBarColor(0xffffff);
-            AllConfigs.setDefaultBackgroundColor(0xffffff);
-            AllConfigs.setLabelFontColorWithCoverage(0x6666ff);
-            AllConfigs.setLabelColor(0xcccccc);
-            AllConfigs.setSearchBarFontColor(0);
-            AllConfigs.setLabelFontColor(0);
+        } else {
             TranslateUtil.getInstance().setLanguage(TranslateUtil.getInstance().getDefaultLang());
-            AllConfigs.setProxyAddress("");
-            AllConfigs.setProxyPort(0);
-            AllConfigs.setProxyUserName("");
-            AllConfigs.setProxyPassword("");
-            AllConfigs.setProxyType(AllConfigs.ProxyType.PROXY_DIRECT);
         }
-        setAllSettings();
-        saveAllSettings();
     }
 
-    private static void setAllSettings() {
-        CheckHotKeyUtil.getInstance().registerHotkey(AllConfigs.getHotkey());
+    private static void readProxy(JSONObject settingsInJson) {
+        if (settingsInJson != null) {
+            if (settingsInJson.containsKey("proxyAddress")) {
+                proxyAddress = settingsInJson.getString("proxyAddress");
+            } else {
+                proxyAddress = "";
+            }
+            if (settingsInJson.containsKey("proxyPort")) {
+                proxyPort = settingsInJson.getInteger("proxyPort");
+            } else {
+                proxyPort = 0;
+            }
+            if (settingsInJson.containsKey("proxyUserName")) {
+                proxyUserName = settingsInJson.getString("proxyUserName");
+            } else {
+                proxyUserName = "";
+            }
+            if (settingsInJson.containsKey("proxyPassword")) {
+                proxyPassword = settingsInJson.getString("proxyPassword");
+            } else {
+                proxyPassword = "";
+            }
+            if (settingsInJson.containsKey("proxyType")) {
+                proxyType = settingsInJson.getInteger("proxyType");
+            } else {
+                proxyType = AllConfigs.ProxyType.PROXY_DIRECT;
+            }
+        } else {
+            proxyAddress = "";
+            proxyPort = 0;
+            proxyUserName = "";
+            proxyPassword = "";
+            proxyType = ProxyType.PROXY_DIRECT;
+        }
+    }
+
+    public static void readAllSettings() {
+        try (BufferedReader buffR = new BufferedReader(new InputStreamReader(new FileInputStream("user/settings.json"), StandardCharsets.UTF_8))) {
+            String line;
+            StringBuilder result = new StringBuilder();
+            while (null != (line = buffR.readLine())) {
+                result.append(line);
+            }
+            JSONObject settingsInJson = JSON.parseObject(result.toString());
+            readProxy(settingsInJson);
+            readLabelColor(settingsInJson);
+            readLanguage(settingsInJson);
+            readBorderColor(settingsInJson);
+            readSearchBarColor(settingsInJson);
+            readSearchBarFontColor(settingsInJson);
+            readFontColor(settingsInJson);
+            readFontColorWithCoverage(settingsInJson);
+            readDefaultBackground(settingsInJson);
+            readTransparency(settingsInJson);
+            readCopyPathKeyCode(settingsInJson);
+            readRunAsAdminKeyCode(settingsInJson);
+            readOpenLastFolderKeyCode(settingsInJson);
+            readIsLoseFocusClose(settingsInJson);
+            readIsDefaultAdmin(settingsInJson);
+            readUpdateTimeLimit(settingsInJson);
+            readIgnorePath(settingsInJson);
+            readSearchDepth(settingsInJson);
+            readPriorityFolder(settingsInJson);
+            readCacheNumLimit(settingsInJson);
+            readUpdateAddress(settingsInJson);
+            readHotKey(settingsInJson);
+        } catch (IOException ignored) {
+        }finally {
+            setAllSettings();
+            saveAllSettings();
+        }
+    }
+
+    public static void setAllSettings() {
+        CheckHotKeyUtil.getInstance().registerHotkey(hotkey);
         SearchBar searchBar = SearchBar.getInstance();
-        searchBar.setTransparency(AllConfigs.getTransparency());
-        searchBar.setDefaultBackgroundColor(AllConfigs.getDefaultBackgroundColor());
-        searchBar.setLabelColor(AllConfigs.getLabelColor());
-        searchBar.setFontColorWithCoverage(AllConfigs.getLabelFontColorWithCoverage());
-        searchBar.setLabelFontColor(AllConfigs.getLabelFontColor());
-        searchBar.setSearchBarColor(AllConfigs.getSearchBarColor());
-        searchBar.setSearchBarFontColor(AllConfigs.getSearchBarFontColor());
+        searchBar.setTransparency(transparency);
+        searchBar.setDefaultBackgroundColor(defaultBackgroundColor);
+        searchBar.setLabelColor(labelColor);
+        searchBar.setFontColorWithCoverage(fontColorWithCoverage);
+        searchBar.setLabelFontColor(fontColor);
+        searchBar.setSearchBarColor(searchBarColor);
+        searchBar.setSearchBarFontColor(searchBarFontColor);
+        searchBar.setBorderColor(borderColor);
     }
 
     public static void saveAllSettings() {
@@ -490,6 +800,7 @@ public class AllConfigs {
         allSettings.put("proxyType", proxyType);
         allSettings.put("updateAddress", updateAddress);
         allSettings.put("searchBarFontColor", searchBarFontColor);
+        allSettings.put("borderColor", borderColor);
         try (BufferedWriter buffW = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(settings), StandardCharsets.UTF_8))) {
             String format = JSON.toJSONString(allSettings, SerializerFeature.PrettyFormat, SerializerFeature.WriteMapNullValue, SerializerFeature.WriteDateUseDateFormat);
             buffW.write(format);

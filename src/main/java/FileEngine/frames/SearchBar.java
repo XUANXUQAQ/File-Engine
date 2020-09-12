@@ -52,7 +52,7 @@ public class SearchBar {
     private static volatile boolean isCopyPathPressed = false;
     private static volatile boolean startSignal = false;
     private static volatile boolean isUserPressed = false;
-    private final Border border;
+    private Border border;
     private final JFrame searchBar;
     private final JLabel label1;
     private final JLabel label2;
@@ -101,7 +101,6 @@ public class SearchBar {
         tempResults = ConcurrentHashMap.newKeySet();
         commandQueue = new ConcurrentLinkedQueue<>();
         listResultsCopy = ConcurrentHashMap.newKeySet();
-        border = BorderFactory.createLineBorder(new Color(73, 162, 255, 255));
         searchBar = new JFrame();
         labelCount = new AtomicInteger(0);
         resultCount = new AtomicInteger(0);
@@ -131,6 +130,7 @@ public class SearchBar {
         fontColorWithCoverage = new Color(AllConfigs.getLabelFontColorWithCoverage());
         backgroundColor = new Color(AllConfigs.getDefaultBackgroundColor());
         labelFontColor = new Color(AllConfigs.getLabelFontColor());
+        border = BorderFactory.createLineBorder(new Color(AllConfigs.getBorderColor()));
 
         //frame
         searchBar.setBounds(positionX, positionY, searchBarWidth, searchBarHeight);
@@ -1858,7 +1858,6 @@ public class SearchBar {
             } else {
                 setLabelNotChosen(label);
             }
-            label.setBorder(border);
         }
     }
 
@@ -3542,6 +3541,11 @@ public class SearchBar {
 
     public void setSearchBarFontColor(int colorNum) {
         textField.setForeground(new Color(colorNum));
+    }
+
+    public void setBorderColor(int colorNum) {
+        border = BorderFactory.createLineBorder(new Color(colorNum));
+        textField.setBorder(border);
     }
 }
 
