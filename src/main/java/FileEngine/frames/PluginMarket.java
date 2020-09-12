@@ -176,6 +176,7 @@ public class PluginMarket {
         frame.setLocationRelativeTo(null);
         float trans = AllConfigs.getTransparency();
         frame.setOpacity(trans < 0.6f ? 0.95f : trans);
+        frame.setTitle(TranslateUtil.getInstance().getTranslation("Plugin Market"));
         frame.setVisible(true);
     }
 
