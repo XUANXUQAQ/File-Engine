@@ -137,3 +137,4 @@ Delete all=
 SearchBar Font Color:=
 The font color of the search bar is set incorrectly=
 New versions of these plugins can be updated=
+Optimize database=

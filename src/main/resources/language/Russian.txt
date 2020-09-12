@@ -137,3 +137,4 @@ Delete all=Удалить все
 SearchBar Font Color:=Цвет шрифта панели поиска:
 The font color of the search bar is set incorrectly=Неправильно задан цвет шрифта строки поиска
 New versions of these plugins can be updated=Новые версии этих плагинов могут быть обновлены
+Optimize database=оптимизировать базу данных

@@ -137,3 +137,4 @@ Delete all=すべて削除
 SearchBar Font Color:=検索バーのフォントの色：
 The font color of the search bar is set incorrectly=検索バーのフォントの色が正しく設定されていません
 New versions of these plugins can be updated=これらのプラグインの新しいバージョンを更新できます
+Optimize database=データベースを最適化する
