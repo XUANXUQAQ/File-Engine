@@ -137,3 +137,4 @@ Delete all=删除所有
 SearchBar Font Color:=搜索框字体设置
 The font color of the search bar is set incorrectly=搜索栏的字体颜色设置不正确
 New versions of these plugins can be updated=这些插件有新的版本可更新
+Optimize database=优化数据库
