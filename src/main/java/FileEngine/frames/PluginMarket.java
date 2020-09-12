@@ -51,6 +51,9 @@ public class PluginMarket {
         addSearchPluginListener();
         addButtonInstallListener();
         addOpenPluginOfficialSiteListener();
+        frame.dispose();
+        frame.setUndecorated(true);
+        frame.getRootPane().setWindowDecorationStyle(JRootPane.FRAME);
         CachedThreadPool.getInstance().executeTask(() -> {
             try {
                 String pluginName;
@@ -171,6 +174,8 @@ public class PluginMarket {
         frame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
         frame.setResizable(false);
         frame.setLocationRelativeTo(null);
+        float trans = AllConfigs.getTransparency();
+        frame.setOpacity(trans < 0.6f ? 0.95f : trans);
         frame.setVisible(true);
     }
 
