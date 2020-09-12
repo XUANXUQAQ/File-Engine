@@ -1423,6 +1423,8 @@ public class SettingsFrame {
 
         tabbedPane.setSelectedIndex(0);
         frame.setLocationRelativeTo(null);
+        float transparency = AllConfigs.getTransparency();
+        frame.setOpacity(transparency < 0.6f ? 0.95f : transparency + 0.1f);
         frame.setVisible(true);
     }
 
