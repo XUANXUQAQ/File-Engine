@@ -19,10 +19,10 @@ using namespace std;
 
 volatile bool isStart = false;
 volatile bool isRunning = true;
-int x;
-int y;
-volatile long width;
-volatile long height;
+int explorerX;
+int explorerY;
+volatile long explorerWidth;
+volatile long explorerHeight;
 int toolbar_click_x;
 int toolbar_click_y;
 volatile bool is_click_not_explorer_or_searchbar;
@@ -47,10 +47,10 @@ extern "C" __declspec(dllexport) bool isDialogNotExist();
 extern "C" __declspec(dllexport) void start();
 extern "C" __declspec(dllexport) void stop();
 extern "C" __declspec(dllexport) bool is_explorer_at_top();
-extern "C" __declspec(dllexport) long getX();
-extern "C" __declspec(dllexport) long getY();
-extern "C" __declspec(dllexport) long getWidth();
-extern "C" __declspec(dllexport) long getHeight();
+extern "C" __declspec(dllexport) long getExplorerX();
+extern "C" __declspec(dllexport) long getExplorerY();
+extern "C" __declspec(dllexport) long getExplorerWidth();
+extern "C" __declspec(dllexport) long getExplorerHeight();
 extern "C" __declspec(dllexport) int get_toolbar_click_x();
 extern "C" __declspec(dllexport) int get_toolbar_click_y(); 
 extern "C" __declspec(dllexport) bool isExplorerAndSearchbarNotFocused();
@@ -159,7 +159,6 @@ BOOL CALLBACK findToolbar(HWND hwndChild, LPARAM lParam)
     HWND hwd2 = FindWindowExA(hwndChild, NULL, "Address Band Root", NULL);
     if (hwd2)
     {
-        //todo 获取toolbar大小
         RECT rect;
         getWindowRect(hwd2, &rect);
         toolbar_x = rect.left;
@@ -210,24 +209,24 @@ __declspec(dllexport) bool is_explorer_at_top()
     return isStart;
 }
 
-__declspec(dllexport) long getX()
+__declspec(dllexport) long getExplorerX()
 {
-    return x;
+    return explorerX;
 }
 
-__declspec(dllexport) long getY()
+__declspec(dllexport) long getExplorerY()
 {
-    return y;
+    return explorerY;
 }
 
-__declspec(dllexport) long getWidth()
+__declspec(dllexport) long getExplorerWidth()
 {
-    return width;
+    return explorerWidth;
 }
 
-__declspec(dllexport) long getHeight()
+__declspec(dllexport) long getExplorerHeight()
 {
-    return height;
+    return explorerHeight;
 }
 
 __declspec(dllexport) int get_toolbar_click_x()
@@ -266,11 +265,11 @@ void _start()
         if (isExplorerWindow(hwnd) || isFileChooserWindow(hwnd))
         {
             getWindowRect(hwnd, &windowRect);
-            x = windowRect.left;
-            y = windowRect.top;
-            width = windowRect.right - windowRect.left;
-            height = windowRect.bottom - windowRect.top;
-            if (height < 200 || width < 200 || x < 50 || y < 50) {
+            explorerX = windowRect.left;
+            explorerY = windowRect.top;
+            explorerWidth = windowRect.right - windowRect.left;
+            explorerHeight = windowRect.bottom - windowRect.top;
+            if (explorerHeight < 200 || explorerWidth < 200 || explorerX < 50 || explorerY < 50) {
                 isStart = false;
             }
             else
@@ -306,10 +305,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     {
         /*if (isStart)
         {
-            int xPos = getX();
-            int yPos = getY();
-            int width = getWidth();
-            int height = getHeight();
+            int xPos = getExplorerX();
+            int yPos = getExplorerY();
+            int width = getExplorerWidth();
+            int height = getExplorerHeight();
             int toolBarX = toolbar_click_x;
             int toolBarY = toolbar_click_y;
             Sleep(20);

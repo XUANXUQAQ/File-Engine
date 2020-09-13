@@ -1988,12 +1988,12 @@ public class SearchBar {
             try {
                 while (AllConfigs.isNotMainExit()) {
                     if (showingMode.get() == AllConfigs.ShowingSearchBarMode.EXPLORER_ATTACH) {
-                        int searchBarHeight = (int) (GetHandle.INSTANCE.getHeight() * 0.75);
+                        int searchBarHeight = (int) (GetHandle.INSTANCE.getExplorerHeight() * 0.75);
                         int labelHeight = searchBarHeight / 9;
                         if (labelHeight > 20) {
-                            int searchBarWidth = (int) (GetHandle.INSTANCE.getWidth() / 3);
-                            int positionX = (int) (GetHandle.INSTANCE.getX());
-                            int positionY = (int) (GetHandle.INSTANCE.getY() - labelHeight - 5);
+                            int searchBarWidth = (int) (GetHandle.INSTANCE.getExplorerWidth() / 3);
+                            int positionX = (int) (GetHandle.INSTANCE.getExplorerX());
+                            int positionY = (int) (GetHandle.INSTANCE.getExplorerY() - labelHeight - 5);
                             //设置窗口大小
                             searchBar.setBounds(positionX, positionY, searchBarWidth, searchBarHeight);
                             //设置label大小
@@ -2018,7 +2018,7 @@ public class SearchBar {
     }
 
     private void switchToExplorerAttachMode() {
-        int searchBarHeight = (int) (GetHandle.INSTANCE.getHeight() * 0.75);
+        int searchBarHeight = (int) (GetHandle.INSTANCE.getExplorerHeight() * 0.75);
         int labelHeight = searchBarHeight / 9;
         if (labelHeight > 35) {
             if (showingMode.get() != AllConfigs.ShowingSearchBarMode.EXPLORER_ATTACH) {
@@ -2964,17 +2964,19 @@ public class SearchBar {
     /**
      * 显示窗口
      *
-     * @param isGrabFocus 是否强制抓取焦点（由操作系统决定，有时想抓也抓不到）
+     * @param isGrabFocus 是否强制抓取焦点
      */
     public void showSearchbar(boolean isGrabFocus) {
         searchBar.setAutoRequestFocus(isGrabFocus);
         setVisible(true);
         if (isGrabFocus) {
-            searchBar.toFront();
-            searchBar.requestFocus();
-            textField.requestFocusInWindow();
+            //使用鼠标点击窗口以获得焦点
+            int X = searchBar.getX() + (textField.getWidth() / 2);
+            int Y = searchBar.getY() + (textField.getHeight() / 2);
+            RobotUtil.getInstance().mouseClicked(X, Y, 1, InputEvent.BUTTON1_MASK);
         } else {
-            searchBar.transferFocus();
+            textField.transferFocus();
+            searchBar.transferFocusBackward();
         }
         textField.setCaretPosition(0);
         isUsing = true;
