@@ -14,13 +14,13 @@ public interface GetHandle extends Library {
 
     boolean isDialogNotExist();
 
-    long getX();
+    long getExplorerX();
 
-    long getY();
+    long getExplorerY();
 
-    long getWidth();
+    long getExplorerWidth();
 
-    long getHeight();
+    long getExplorerHeight();
 
     int get_toolbar_click_x();
 
@@ -29,5 +29,4 @@ public interface GetHandle extends Library {
     boolean isExplorerAndSearchbarNotFocused();
 
     void resetMouseStatus();
-
 }
