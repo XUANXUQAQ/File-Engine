@@ -140,4 +140,4 @@ New versions of these plugins can be updated=Новые версии этих п
 Optimize database=оптимизировать базу данных
 Border Color:=Цвет границы:
 Border color is set incorrectly=Цвет границы установлен неправильно
-Current Caches Num:=Текущий номер кеша
+Current Caches Num:=Текущий номер кеша:
