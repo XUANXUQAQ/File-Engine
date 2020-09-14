@@ -141,3 +141,4 @@ Optimize database=优化数据库
 Border Color:=边框颜色:
 Border color is set incorrectly=边框颜色设置不正确
 Current Caches Num:=当前缓存数量:
+The result has been copied to the clipboard=结果已复制到剪贴板

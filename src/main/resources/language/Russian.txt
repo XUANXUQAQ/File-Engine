@@ -141,3 +141,4 @@ Optimize database=оптимизировать базу данных
 Border Color:=Цвет границы:
 Border color is set incorrectly=Цвет границы установлен неправильно
 Current Caches Num:=Текущий номер кеша:
+The result has been copied to the clipboard=Результат скопирован в буфер обмена

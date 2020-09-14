@@ -230,7 +230,7 @@ public class SearchBar {
         //添加结果的鼠标移动事件响应
         addSearchBarMouseMotionListener();
 
-        //添加textfield对键盘上下键的响应
+        //添加textfield对键盘的响应
         addTextFieldKeyListener();
     }
 
@@ -300,7 +300,7 @@ public class SearchBar {
                                     } else if (AllConfigs.isDefaultAdmin() || isRunAsAdminPressed) {
                                         openWithAdmin(res);
                                     } else if (isCopyPathPressed) {
-                                        copyToClipBoard(res);
+                                        copyToClipBoard(res, true);
                                     } else {
                                         if (res.endsWith(".bat") || res.endsWith(".cmd")) {
                                             openWithAdmin(res);
@@ -331,7 +331,7 @@ public class SearchBar {
                                 } else if (AllConfigs.isDefaultAdmin() || isRunAsAdminPressed) {
                                     openWithAdmin(open.getAbsolutePath());
                                 } else if (isCopyPathPressed) {
-                                    copyToClipBoard(res);
+                                    copyToClipBoard(res, true);
                                 } else {
                                     if (res.endsWith(".bat") || res.endsWith(".cmd")) {
                                         openWithAdmin(open.getAbsolutePath());
@@ -376,7 +376,7 @@ public class SearchBar {
         if (isFile(result)) {
             result = getParentPath(result);
         }
-        copyToClipBoard(result);
+        copyToClipBoard(result, false);
         x = GetHandle.INSTANCE.get_toolbar_click_x();
         y = GetHandle.INSTANCE.get_toolbar_click_y();
         RobotUtil.getInstance().mouseClicked(x, y, 1, InputEvent.BUTTON1_MASK);
@@ -394,10 +394,15 @@ public class SearchBar {
      *
      * @param res 需要复制的信息
      */
-    private void copyToClipBoard(String res) {
+    private void copyToClipBoard(String res, boolean isNotifyUser) {
         Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
         Transferable trans = new StringSelection(res);
         clipboard.setContents(trans, null);
+        if (isNotifyUser) {
+            TaskBar.getInstance().showMessage(
+                    TranslateUtil.getInstance().getTranslation("Info"),
+                    TranslateUtil.getInstance().getTranslation("The result has been copied to the clipboard"));
+        }
     }
 
     private String getTextFieldText() {
@@ -417,9 +422,10 @@ public class SearchBar {
             public void keyPressed(KeyEvent arg0) {
                 int key = arg0.getKeyCode();
                 if (key == 8 && getTextFieldText().isEmpty()) {
+                    //消除搜索框为空时按删除键发出的无效提示音
                     arg0.consume();
                 }
-                if (!(resultCount.get() == 0)) {
+                if (resultCount.get() != 0) {
                     if (38 == key) {
                         //上键被点击
                         if (isFirstPress || System.currentTimeMillis() - pressTime > timeLimit) {
@@ -469,7 +475,7 @@ public class SearchBar {
                     } else if (10 == key) {
                         if (runningMode.get() != AllConfigs.RunningMode.PLUGIN_MODE) {
                             //enter被点击
-                            if (showingMode.get() != AllConfigs.ShowingSearchBarMode.EXPLORER_ATTACH) {
+                            if (showingMode.get() == AllConfigs.ShowingSearchBarMode.NORMAL_SHOWING) {
                                 if (isVisible()) {
                                     setVisible(false);
                                 }
@@ -489,7 +495,7 @@ public class SearchBar {
                                         } else if (AllConfigs.isDefaultAdmin() || isRunAsAdminPressed) {
                                             openWithAdmin(res);
                                         } else if (isCopyPathPressed) {
-                                            copyToClipBoard(res);
+                                            copyToClipBoard(res, true);
                                         } else {
                                             if (res.endsWith(".bat") || res.endsWith(".cmd")) {
                                                 openWithAdmin(res);
@@ -500,7 +506,7 @@ public class SearchBar {
                                         saveCache(res);
                                     } else if (showingMode.get() == AllConfigs.ShowingSearchBarMode.EXPLORER_ATTACH) {
                                         if (isCopyPathPressed) {
-                                            copyToClipBoard(res);
+                                            copyToClipBoard(res, true);
                                         } else {
                                             quickJump(res);
                                         }
@@ -526,7 +532,7 @@ public class SearchBar {
                                     } else if (AllConfigs.isDefaultAdmin() || isRunAsAdminPressed) {
                                         openWithAdmin(open.getAbsolutePath());
                                     } else if (isCopyPathPressed) {
-                                        copyToClipBoard(res);
+                                        copyToClipBoard(res, true);
                                     } else {
                                         if (res.endsWith(".bat") || res.endsWith(".cmd")) {
                                             openWithAdmin(open.getAbsolutePath());
@@ -566,7 +572,6 @@ public class SearchBar {
 
             @Override
             public void keyReleased(KeyEvent arg0) {
-
                 int key = arg0.getKeyCode();
                 if (AllConfigs.getOpenLastFolderKeyCode() == key) {
                     //复位按键状态
@@ -648,9 +653,8 @@ public class SearchBar {
                         "Current Version:") + AllConfigs.version);
                 return true;
             default:
-                break;
+                return false;
         }
-        return false;
     }
 
     /**
