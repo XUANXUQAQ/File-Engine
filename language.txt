@@ -141,3 +141,4 @@ Optimize database=
 Border Color:=
 Border color is set incorrectly=
 Current Caches Num:=
+The result has been copied to the clipboard=
