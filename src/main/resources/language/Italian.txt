@@ -140,3 +140,4 @@ New versions of these plugins can be updated=Le nuove versioni di questi plugin 
 Optimize database=ottimizzare il database
 Border Color:=Colore del bordo:
 Border color is set incorrectly=Il colore del bordo non è impostato correttamente
+Current Caches Num:=Numero di cache corrente

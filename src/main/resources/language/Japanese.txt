@@ -140,3 +140,4 @@ New versions of these plugins can be updated=これらのプラグインの新�
 Optimize database=データベースを最適化する
 Border Color:=ボーダの色:
 Border color is set incorrectly=境界線の色が正しく設定されていません
+Current Caches Num:=現在のキャッシュ番号

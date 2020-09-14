@@ -140,3 +140,4 @@ New versions of these plugins can be updated=
 Optimize database=
 Border Color:=
 Border color is set incorrectly=
+Current Caches Num:=

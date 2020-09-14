@@ -1,5 +1,6 @@
 package FileEngine.configs;
 
+import FileEngine.SQLiteConfig.SQLiteUtil;
 import FileEngine.checkHotkey.CheckHotKeyUtil;
 import FileEngine.frames.SearchBar;
 import FileEngine.translate.TranslateUtil;
@@ -10,7 +11,12 @@ import com.alibaba.fastjson.serializer.SerializerFeature;
 import java.io.*;
 import java.net.Proxy;
 import java.nio.charset.StandardCharsets;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.LinkedHashSet;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * 保存软件运行时的所有配置信息
@@ -49,6 +55,7 @@ public class AllConfigs {
     private static String updateAddress;
     private static int setterCount = 0;
     private static boolean isAllowChangeSettings = false;
+    private static final AtomicInteger cacheNum = new AtomicInteger(0);
 
     public static void allowChangeSettings() {
         isAllowChangeSettings = true;
@@ -60,6 +67,10 @@ public class AllConfigs {
             System.err.println("警告：set方法并未被完全调用");
         }
         setterCount = 0;
+    }
+
+    public static int getCacheNum() {
+        return cacheNum.get();
     }
 
     public static int getProxyPort() {
@@ -415,6 +426,34 @@ public class AllConfigs {
         mainExit = b;
     }
 
+    public static void resetCacheNumToZero() {
+        cacheNum.set(0);
+    }
+
+    public static void decrementCacheNum() {
+        cacheNum.decrementAndGet();
+    }
+
+    public static void incrementCacheNum() {
+        cacheNum.incrementAndGet();
+    }
+
+    /**
+     * 获取数据库缓存条目数量，用于判断软件是否还能继续写入缓存
+     */
+    private static void initCacheNum() {
+        try (PreparedStatement pStmt = SQLiteUtil.getConnection().prepareStatement("SELECT PATH FROM cache;");
+             ResultSet resultSet = pStmt.executeQuery()) {
+            while (resultSet.next()) {
+                cacheNum.incrementAndGet();
+            }
+        } catch (Exception throwables) {
+            if (AllConfigs.isDebug()) {
+                throwables.printStackTrace();
+            }
+        }
+    }
+
     private static void readUpdateAddress(JSONObject settingsInJson) {
         if (settingsInJson != null) {
             if (settingsInJson.containsKey("updateAddress")) {
@@ -752,6 +791,7 @@ public class AllConfigs {
             readCacheNumLimit(settingsInJson);
             readUpdateAddress(settingsInJson);
             readHotKey(settingsInJson);
+            initCacheNum();
         } catch (IOException ignored) {
         }finally {
             setAllSettings();
