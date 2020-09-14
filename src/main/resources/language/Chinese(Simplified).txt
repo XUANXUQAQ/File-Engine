@@ -140,4 +140,4 @@ New versions of these plugins can be updated=这些插件有新的版本可更�
 Optimize database=优化数据库
 Border Color:=边框颜色:
 Border color is set incorrectly=边框颜色设置不正确
-Current Caches Num:=当前缓存数量
+Current Caches Num:=当前缓存数量:
