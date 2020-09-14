@@ -75,7 +75,6 @@ public class SearchBar {
     private final Pattern blank;
     private final AtomicInteger runningMode;
     private final AtomicInteger showingMode;
-    private final AtomicInteger cacheNum;
     private long mouseWheelTime = 0;
     private final int iconSideLength;
     private long visibleStartTime = 0;  //记录窗口开始可见的事件，窗口默认最短可见时间0.5秒，防止窗口快速闪烁
@@ -105,7 +104,6 @@ public class SearchBar {
         labelCount = new AtomicInteger(0);
         resultCount = new AtomicInteger(0);
         runningMode = new AtomicInteger(AllConfigs.RunningMode.NORMAL_MODE);
-        cacheNum = new AtomicInteger(0);
         showingMode = new AtomicInteger(AllConfigs.ShowingSearchBarMode.NORMAL_SHOWING);
         currentLabelSelectedPosition = new AtomicInteger(0);
         semicolon = Pattern.compile(";");
@@ -186,12 +184,16 @@ public class SearchBar {
         textField.addFocusListener(new FocusListener() {
             @Override
             public void focusGained(FocusEvent e) {
+                if (System.currentTimeMillis() - visibleStartTime < 500 && showingMode.get() == AllConfigs.ShowingSearchBarMode.EXPLORER_ATTACH) {
+                    //在explorer attach模式下 500ms内窗口就获取到了焦点
+                    searchBar.transferFocusBackward();
+                }
             }
 
             @Override
             public void focusLost(FocusEvent e) {
                 if (System.currentTimeMillis() - visibleStartTime > 500) {
-                    if (showingMode.get() != AllConfigs.ShowingSearchBarMode.EXPLORER_ATTACH && AllConfigs.isLoseFocusClose()) {
+                    if (showingMode.get() == AllConfigs.ShowingSearchBarMode.NORMAL_SHOWING && AllConfigs.isLoseFocusClose()) {
                         closeSearchBar();
                     } else if (showingMode.get() == AllConfigs.ShowingSearchBarMode.EXPLORER_ATTACH) {
                         closeWithoutHideSearchBar();
@@ -212,8 +214,6 @@ public class SearchBar {
         panel.add(label6);
         panel.add(label7);
         panel.add(label8);
-
-        initCacheNum();
 
         //开启所有线程
         initThreadPool();
@@ -2974,9 +2974,6 @@ public class SearchBar {
             int X = searchBar.getX() + (textField.getWidth() / 2);
             int Y = searchBar.getY() + (textField.getHeight() / 2);
             RobotUtil.getInstance().mouseClicked(X, Y, 1, InputEvent.BUTTON1_MASK);
-        } else {
-            textField.transferFocus();
-            searchBar.transferFocusBackward();
         }
         textField.setCaretPosition(0);
         isUsing = true;
@@ -3279,25 +3276,11 @@ public class SearchBar {
      * @param content 文件路径
      */
     private void saveCache(String content) {
-        if (cacheNum.get() < AllConfigs.getCacheNumLimit()) {
-            search.addFileToCache(content);
-            SettingsFrame.getInstance().addCache(content);
-            cacheNum.incrementAndGet();
-        }
-    }
-
-    /**
-     * 获取数据库缓存条目数量，用于判断软件是否还能继续写入缓存
-     */
-    private void initCacheNum() {
-        try (PreparedStatement pStmt = SQLiteUtil.getConnection().prepareStatement("SELECT PATH FROM cache;");
-             ResultSet resultSet = pStmt.getResultSet()) {
-            while (resultSet.next()) {
-                cacheNum.incrementAndGet();
-            }
-        } catch (SQLException throwables) {
-            if (AllConfigs.isDebug()) {
-                throwables.printStackTrace();
+        if (AllConfigs.getCacheNum() < AllConfigs.getCacheNumLimit()) {
+            if (!SettingsFrame.getInstance().isCacheExist(content)) {
+                search.addFileToCache(content);
+                SettingsFrame.getInstance().addCache(content);
+                AllConfigs.incrementCacheNum();
             }
         }
     }

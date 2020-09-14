@@ -187,6 +187,7 @@ public class SettingsFrame {
     private JLabel labelSharp2;
     private JTextField textFieldBorderColor;
     private JLabel borderColorChooser;
+    private JLabel labelCurrentCacheNum;
 
     private static class SettingsFrameBuilder {
         private static final SettingsFrame instance = new SettingsFrame();
@@ -423,8 +424,10 @@ public class SettingsFrame {
     private void addButtonDelCMDListener() {
         buttonDelCmd.addActionListener(e -> {
             String del = (String) listCmds.getSelectedValue();
-            AllConfigs.getCmdSet().remove(del);
-            listCmds.setListData(AllConfigs.getCmdSet().toArray());
+            if (del != null) {
+                AllConfigs.getCmdSet().remove(del);
+                listCmds.setListData(AllConfigs.getCmdSet().toArray());
+            }
 
         });
     }
@@ -707,9 +710,12 @@ public class SettingsFrame {
     private void addButtonDeleteCacheListener() {
         buttonDeleteCache.addActionListener(e -> {
             String cache = (String) listCache.getSelectedValue();
-            SearchUtil.getInstance().removeFileFromCache(cache);
-            cacheSet.remove(cache);
-            listCache.setListData(cacheSet.toArray());
+            if (cache != null) {
+                SearchUtil.getInstance().removeFileFromCache(cache);
+                cacheSet.remove(cache);
+                AllConfigs.decrementCacheNum();
+                listCache.setListData(cacheSet.toArray());
+            }
         });
     }
 
@@ -791,6 +797,7 @@ public class SettingsFrame {
                     SearchUtil.getInstance().removeFileFromCache(each);
                 }
                 cacheSet.clear();
+                AllConfigs.resetCacheNumToZero();
                 listCache.setListData(cacheSet.toArray());
             }
         });
@@ -871,6 +878,7 @@ public class SettingsFrame {
         ImageIcon imageIcon = new ImageIcon(SettingsFrame.class.getResource("/icons/frame.png"));
         labelIcon.setIcon(imageIcon);
         labelVersion.setText(TranslateUtil.getInstance().getTranslation("Current Version:") + AllConfigs.version);
+        labelCurrentCacheNum.setText(TranslateUtil.getInstance().getTranslation("Current Caches Num:") + AllConfigs.getCacheNum());
     }
 
     private void setTextFieldAndTextAreaGui() {
@@ -1096,6 +1104,10 @@ public class SettingsFrame {
         initThreadPool();
     }
 
+    public boolean isCacheExist(String cache) {
+        return cacheSet.contains(cache);
+    }
+
     public void addCache(String cache) {
         cacheSet.add(cache);
     }
@@ -1245,6 +1257,7 @@ public class SettingsFrame {
         labelSearchBarFontColor.setText(TranslateUtil.getInstance().getTranslation("SearchBar Font Color:"));
         buttonVacuum.setText(TranslateUtil.getInstance().getTranslation("Optimize database"));
         labelBorderColor.setText(TranslateUtil.getInstance().getTranslation("Border Color:"));
+        labelCurrentCacheNum.setText(TranslateUtil.getInstance().getTranslation("Current Caches Num:") + AllConfigs.getCacheNum());
     }
 
     private boolean isRepeatCommand(String name) {
