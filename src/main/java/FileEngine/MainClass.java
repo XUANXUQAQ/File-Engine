@@ -92,7 +92,7 @@ public class MainClass {
     private static final String IS_NTFS_64_MD_5 = "0b5f7ea2923a42873883a3bcda2bafd2";
     private static final String SQLITE3_64_MD_5 = "658c71b8b93ba4eb5b4936f46a112449";
     private static final String UPDATER_BAT_64_MD_5 = "357d7cc1cf023cb6c90f73926c6f2f55";
-    private static final String GET_HANDLE_64_MD_5 = "30b08755f413f7676d3dfa8752cf20ab";
+    private static final String GET_HANDLE_64_MD_5 = "c927c8221e3fadf42d408f0589059531";
     private static final String DAEMON_PROCESS_64_MD_5 = "797826e9b5c4ca9ccc3fb90520e5d805";
 
     private static final String SHORTCUT_GENERATOR_MD_5 = "fa4e26f99f3dcd58d827828c411ea5d7";

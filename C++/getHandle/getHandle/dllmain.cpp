@@ -17,8 +17,8 @@
 
 using namespace std;
 
-volatile bool isStart = false;
-volatile bool isRunning = true;
+volatile bool isExplorerWindowAtTop = false;
+volatile bool isRunning = false;
 int explorerX;
 int explorerY;
 volatile long explorerWidth;
@@ -26,6 +26,7 @@ volatile long explorerHeight;
 int toolbar_click_x;
 int toolbar_click_y;
 volatile bool is_click_not_explorer_or_searchbar;
+HWND searchBarHWND;
 
 struct handle_data {
     unsigned long process_id;
@@ -39,10 +40,12 @@ void _start();
 bool isFileChooserWindow(HWND& hwnd);
 void setClickPos(HWND& fileChooserHwnd);
 BOOL CALLBACK findToolbar(HWND hwndChild, LPARAM lParam);
+BOOL CALLBACK findSeachBar(HWND hwndChild, LPARAM lParam);
 bool isClickNotExplorerOrSearchBarOrSwitchTask();
 void _checkMouseStatus();
 bool isMouseClickedOrSwitchTaskPressed();
 bool isSearchBarWindow(HWND& hd);
+void grabSearchBarHWND();
 extern "C" __declspec(dllexport) bool isDialogNotExist();
 extern "C" __declspec(dllexport) void start();
 extern "C" __declspec(dllexport) void stop();
@@ -55,10 +58,29 @@ extern "C" __declspec(dllexport) int get_toolbar_click_x();
 extern "C" __declspec(dllexport) int get_toolbar_click_y(); 
 extern "C" __declspec(dllexport) bool isExplorerAndSearchbarNotFocused();
 extern "C" __declspec(dllexport) void resetMouseStatus();
+extern "C" __declspec(dllexport) void transferSearchBarFocus();
 
 __declspec(dllexport) bool isExplorerAndSearchbarNotFocused()
 {
     return is_click_not_explorer_or_searchbar;
+}
+
+__declspec(dllexport) void transferSearchBarFocus()
+{
+    if (!searchBarHWND)
+    {
+        grabSearchBarHWND();
+    }
+    if (searchBarHWND)
+    {
+        //转移窗口焦点
+        SendMessage(searchBarHWND, WM_KILLFOCUS, NULL, NULL);
+    }
+}
+
+void grabSearchBarHWND()
+{
+    EnumWindows(findSeachBar, NULL);
 }
 
 bool isClickNotExplorerOrSearchBarOrSwitchTask()
@@ -150,21 +172,26 @@ void setClickPos(HWND& fileChooserHwnd)
     EnumChildWindows(fileChooserHwnd, findToolbar, NULL);
 }
 
+BOOL CALLBACK findSeachBar(HWND hwndChild, LPARAM lParam)
+{
+    if (isSearchBarWindow(hwndChild))
+    {
+        return false;
+    }
+    return true;
+}
+
 BOOL CALLBACK findToolbar(HWND hwndChild, LPARAM lParam)
 {
-    int toolbar_x;
-    int toolbar_y;
-    int toolbar_width;
-    int toolbar_height;
     HWND hwd2 = FindWindowExA(hwndChild, NULL, "Address Band Root", NULL);
     if (hwd2)
     {
         RECT rect;
         getWindowRect(hwd2, &rect);
-        toolbar_x = rect.left;
-        toolbar_y = rect.top;
-        toolbar_width = rect.right - rect.left;
-        toolbar_height = rect.bottom - rect.top;
+        int toolbar_x = rect.left;
+        int toolbar_y = rect.top;
+        int toolbar_width = rect.right - rect.left;
+        int toolbar_height = rect.bottom - rect.top;
         toolbar_click_x = toolbar_x + toolbar_width - 80;
         toolbar_click_y = toolbar_y + (toolbar_height / 2);
         return false;
@@ -193,10 +220,14 @@ bool isExplorerWindow(HWND& hwnd)
 
 __declspec(dllexport) void start()
 {
-    thread t(_start);
-    t.detach();
-    thread checkMouse(_checkMouseStatus);
-    checkMouse.detach();
+    if (!isRunning)
+    {
+        isRunning = true;
+        thread t(_start);
+        t.detach();
+        thread checkMouse(_checkMouseStatus);
+        checkMouse.detach();
+    }
 }
 
 __declspec(dllexport) void stop()
@@ -206,7 +237,7 @@ __declspec(dllexport) void stop()
 
 __declspec(dllexport) bool is_explorer_at_top()
 {
-    return isStart;
+    return isExplorerWindowAtTop;
 }
 
 __declspec(dllexport) long getExplorerX()
@@ -270,19 +301,19 @@ void _start()
             explorerWidth = windowRect.right - windowRect.left;
             explorerHeight = windowRect.bottom - windowRect.top;
             if (explorerHeight < 200 || explorerWidth < 200 || explorerX < 50 || explorerY < 50) {
-                isStart = false;
+                isExplorerWindowAtTop = false;
             }
             else
             {
                 setClickPos(hwnd);
-                isStart = true;
+                isExplorerWindowAtTop = true;
             }
         }
         else 
         {
-            isStart = false;
+            isExplorerWindowAtTop = false;
         }
-        if (isStart)
+        if (isExplorerWindowAtTop)
         {
             Sleep(10);
         }
@@ -303,7 +334,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     start();
     while (true)
     {
-        /*if (isStart)
+        /*if (isExplorerWindowAtTop)
         {
             int xPos = getExplorerX();
             int yPos = getExplorerY();
