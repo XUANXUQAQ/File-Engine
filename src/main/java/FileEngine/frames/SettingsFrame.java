@@ -34,7 +34,7 @@ public class SettingsFrame {
     private static volatile int tmp_runAsAdminKeyCode;
     private static volatile int tmp_openLastFolderKeyCode;
     private static ImageIcon frameIcon;
-    private final JFrame frame;
+    private final JFrame frame = new JFrame("Settings");
     private JTextField textFieldUpdateInterval;
     private JTextField textFieldCacheNum;
     private JTextArea textAreaIgnorePath;
@@ -1026,9 +1026,6 @@ public class SettingsFrame {
     }
 
     private SettingsFrame() {
-        frame = new JFrame("Settings");
-
-        frame.dispose();
         frame.setUndecorated(true);
         frame.getRootPane().setWindowDecorationStyle(JRootPane.FRAME);
 
