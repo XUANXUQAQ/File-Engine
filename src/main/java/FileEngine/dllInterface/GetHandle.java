@@ -29,4 +29,6 @@ public interface GetHandle extends Library {
     boolean isExplorerAndSearchbarNotFocused();
 
     void resetMouseStatus();
+
+    void transferSearchBarFocus();
 }

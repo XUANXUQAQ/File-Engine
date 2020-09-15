@@ -184,9 +184,10 @@ public class SearchBar {
         textField.addFocusListener(new FocusListener() {
             @Override
             public void focusGained(FocusEvent e) {
-                if (System.currentTimeMillis() - visibleStartTime < 500 && showingMode.get() == AllConfigs.ShowingSearchBarMode.EXPLORER_ATTACH) {
-                    //在explorer attach模式下 500ms内窗口就获取到了焦点
+                if (System.currentTimeMillis() - visibleStartTime < 1000 && showingMode.get() == AllConfigs.ShowingSearchBarMode.EXPLORER_ATTACH) {
+                    //在explorer attach模式下 1s内窗口就获取到了焦点
                     searchBar.transferFocusBackward();
+                    GetHandle.INSTANCE.transferSearchBarFocus();
                 }
             }
 
