@@ -361,9 +361,9 @@ public class MainClass {
     private static boolean initFoldersAndFiles() {
         boolean isFailed;
         //settings.json
-        isFailed = createFileOrFolder("user/settings.json", true, false);
+        //isFailed = createFileOrFolder("user/settings.json", true, false);
         //user
-        isFailed &= createFileOrFolder("user", false, false);
+        isFailed = createFileOrFolder("user", false, false);
         //plugins
         isFailed &= createFileOrFolder("plugins", false, false);
         //tmp
