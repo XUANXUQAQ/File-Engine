@@ -218,7 +218,6 @@ public class SearchUtil {
             case 13:
                 command = "INSERT OR IGNORE INTO list13(PATH) VALUES(\"" + path + "\");";
                 break;
-
             case 14:
                 command = "INSERT OR IGNORE INTO list14(PATH) VALUES(\"" + path + "\");";
                 break;

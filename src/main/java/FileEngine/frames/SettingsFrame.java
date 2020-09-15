@@ -1153,7 +1153,6 @@ public class SettingsFrame {
             button.setText(TranslateUtil.getInstance().getTranslation(originButtonString));
             button.setEnabled(true);
         }
-        Thread.sleep(100);
     }
 
     private void addShowDownloadProgressTask(JLabel label, JButton button, String fileName) {
