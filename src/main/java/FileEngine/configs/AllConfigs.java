@@ -13,8 +13,6 @@ import java.net.Proxy;
 import java.nio.charset.StandardCharsets;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.LinkedHashSet;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -56,6 +54,7 @@ public class AllConfigs {
     private static int setterCount = 0;
     private static boolean isAllowChangeSettings = false;
     private static final AtomicInteger cacheNum = new AtomicInteger(0);
+    private static boolean isFirstRunApp = false;
 
     public static void allowChangeSettings() {
         isAllowChangeSettings = true;
@@ -67,6 +66,10 @@ public class AllConfigs {
             System.err.println("警告：set方法并未被完全调用");
         }
         setterCount = 0;
+    }
+
+    public static boolean isFirstRun() {
+        return isFirstRunApp;
     }
 
     public static int getCacheNum() {
@@ -761,42 +764,52 @@ public class AllConfigs {
         }
     }
 
-    public static void readAllSettings() {
-        try (BufferedReader buffR = new BufferedReader(new InputStreamReader(new FileInputStream("user/settings.json"), StandardCharsets.UTF_8))) {
-            String line;
-            StringBuilder result = new StringBuilder();
-            while (null != (line = buffR.readLine())) {
-                result.append(line);
+    private static JSONObject readSettingsJSON() {
+        File settings = new File("user/settings.json");
+        if (settings.exists()) {
+            try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(settings), StandardCharsets.UTF_8))) {
+                String line;
+                StringBuilder result = new StringBuilder();
+                while (null != (line = br.readLine())) {
+                    result.append(line);
+                }
+                return JSONObject.parseObject(result.toString());
+            } catch (IOException e) {
+                return null;
             }
-            JSONObject settingsInJson = JSON.parseObject(result.toString());
-            readProxy(settingsInJson);
-            readLabelColor(settingsInJson);
-            readLanguage(settingsInJson);
-            readBorderColor(settingsInJson);
-            readSearchBarColor(settingsInJson);
-            readSearchBarFontColor(settingsInJson);
-            readFontColor(settingsInJson);
-            readFontColorWithCoverage(settingsInJson);
-            readDefaultBackground(settingsInJson);
-            readTransparency(settingsInJson);
-            readCopyPathKeyCode(settingsInJson);
-            readRunAsAdminKeyCode(settingsInJson);
-            readOpenLastFolderKeyCode(settingsInJson);
-            readIsLoseFocusClose(settingsInJson);
-            readIsDefaultAdmin(settingsInJson);
-            readUpdateTimeLimit(settingsInJson);
-            readIgnorePath(settingsInJson);
-            readSearchDepth(settingsInJson);
-            readPriorityFolder(settingsInJson);
-            readCacheNumLimit(settingsInJson);
-            readUpdateAddress(settingsInJson);
-            readHotKey(settingsInJson);
-            initCacheNum();
-        } catch (IOException ignored) {
-        }finally {
-            setAllSettings();
-            saveAllSettings();
+        } else {
+            isFirstRunApp = true;
+            return null;
         }
+    }
+
+    public static void readAllSettings() {
+        JSONObject settingsInJson = readSettingsJSON();
+        readProxy(settingsInJson);
+        readLabelColor(settingsInJson);
+        readLanguage(settingsInJson);
+        readBorderColor(settingsInJson);
+        readSearchBarColor(settingsInJson);
+        readSearchBarFontColor(settingsInJson);
+        readFontColor(settingsInJson);
+        readFontColorWithCoverage(settingsInJson);
+        readDefaultBackground(settingsInJson);
+        readTransparency(settingsInJson);
+        readCopyPathKeyCode(settingsInJson);
+        readRunAsAdminKeyCode(settingsInJson);
+        readOpenLastFolderKeyCode(settingsInJson);
+        readIsLoseFocusClose(settingsInJson);
+        readIsDefaultAdmin(settingsInJson);
+        readUpdateTimeLimit(settingsInJson);
+        readIgnorePath(settingsInJson);
+        readSearchDepth(settingsInJson);
+        readPriorityFolder(settingsInJson);
+        readCacheNumLimit(settingsInJson);
+        readUpdateAddress(settingsInJson);
+        readHotKey(settingsInJson);
+        initCacheNum();
+        setAllSettings();
+        saveAllSettings();
     }
 
     public static void setAllSettings() {

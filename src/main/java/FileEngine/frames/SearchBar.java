@@ -2620,6 +2620,9 @@ public class SearchBar {
             //缓存和常用文件夹搜索线程
             //停顿时间0.5s，每一次输入会更新一次startTime，该线程记录endTime
             try {
+                if (AllConfigs.isFirstRun()) {
+                    runInternalCommand("help");
+                }
                 while (AllConfigs.isNotMainExit()) {
                     long endTime = System.currentTimeMillis();
                     if ((endTime - startTime > 500) && startSignal) {
