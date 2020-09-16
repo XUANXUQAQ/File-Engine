@@ -6,25 +6,56 @@ import FileEngine.configs.AllConfigs;
 import FileEngine.daemon.DaemonUtil;
 import FileEngine.dllInterface.FileMonitor;
 import FileEngine.pluginSystem.PluginUtil;
+import FileEngine.threadPool.CachedThreadPool;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.net.URL;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.TimeUnit;
 
 
 public class TaskBar {
     private TrayIcon trayIcon = null;
     private SystemTray systemTray;
+    private final ConcurrentLinkedQueue<MessageStruct> messageQueue = new ConcurrentLinkedQueue<>();
 
     private static class TaskBarBuilder {
         private static final TaskBar INSTANCE = new TaskBar();
     }
 
-    private TaskBar() {
+    private static class MessageStruct {
+        private final String caption;
+        private final String message;
+
+        private MessageStruct(String caption, String message) {
+            this.caption = caption;
+            this.message = message;
+        }
     }
 
+    private TaskBar() {
+        startShowMessageThread();
+    }
+
+    private void startShowMessageThread() {
+        CachedThreadPool.getInstance().executeTask(() -> {
+            try {
+                MessageStruct message;
+                while (AllConfigs.isNotMainExit()) {
+                    message = messageQueue.poll();
+                    if (message != null) {
+                        showMessageOnTrayIcon(message.caption, message.message);
+                        TimeUnit.SECONDS.sleep(5);
+                    }
+                    TimeUnit.MILLISECONDS.sleep(200);
+                }
+            } catch (InterruptedException ignored) {
+            }
+        });
+    }
 
     public static TaskBar getInstance() {
         return TaskBarBuilder.INSTANCE;
@@ -106,6 +137,10 @@ public class TaskBar {
     }
 
     public void showMessage(String caption, String message) {
+        messageQueue.add(new MessageStruct(caption, message));
+    }
+
+    private void showMessageOnTrayIcon(String caption, String message) {
         if (trayIcon != null) {
             trayIcon.displayMessage(caption, message, TrayIcon.MessageType.INFO);
         }
