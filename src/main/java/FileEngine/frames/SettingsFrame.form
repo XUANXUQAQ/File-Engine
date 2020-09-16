@@ -750,7 +750,7 @@
                       </grid>
                     </constraints>
                     <properties>
-                      <opaque value="true"/>
+                      <opaque value="false"/>
                       <selectionMode value="1"/>
                     </properties>
                   </component>

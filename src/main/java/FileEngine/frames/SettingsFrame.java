@@ -1117,7 +1117,7 @@ public class SettingsFrame {
         chooseUpdateAddress.addItem("Gitee");
     }
 
-    private void checkDownloadTask(JLabel label, JButton button, String fileName, String originButtonString, String updateSignalFileName) throws InterruptedException, IOException {
+    private void checkDownloadTask(JLabel label, JButton button, String fileName, String originButtonString, String updateSignalFileName) throws IOException {
         //设置进度显示线程
         double progress;
         if (DownloadUtil.getInstance().getDownloadStatus(fileName) != AllConfigs.DownloadStatus.DOWNLOAD_NO_TASK) {

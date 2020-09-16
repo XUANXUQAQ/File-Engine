@@ -31,31 +31,35 @@ public class CheckHotKeyUtil {
 
     //注册快捷键
     public void registerHotkey(String hotkey) {
-        isRegistered = true;
-        int hotkey1 = -1, hotkey2 = -1, hotkey3 = -1, hotkey4 = -1, hotkey5;
-        String[] hotkeys = plus.split(hotkey);
-        int length = hotkeys.length;
-        for (int i = 0; i < length - 1; i++) {
-            if (i == 0) {
-                hotkey1 = map.get(hotkeys[i]);
-            } else if (i == 1) {
-                hotkey2 = map.get(hotkeys[i]);
-            } else if (i == 2) {
-                hotkey3 = map.get(hotkeys[i]);
-            } else if (i == 4) {
-                hotkey4 = map.get(hotkeys[i]);
+        if (!isRegistered) {
+            isRegistered = true;
+            int hotkey1 = -1, hotkey2 = -1, hotkey3 = -1, hotkey4 = -1, hotkey5;
+            String[] hotkeys = plus.split(hotkey);
+            int length = hotkeys.length;
+            for (int i = 0; i < length - 1; i++) {
+                if (i == 0) {
+                    hotkey1 = map.get(hotkeys[i]);
+                } else if (i == 1) {
+                    hotkey2 = map.get(hotkeys[i]);
+                } else if (i == 2) {
+                    hotkey3 = map.get(hotkeys[i]);
+                } else if (i == 4) {
+                    hotkey4 = map.get(hotkeys[i]);
+                }
             }
+            hotkey5 = hotkeys[length - 1].charAt(0);
+            int finalHotkey = hotkey1;
+            int finalHotkey1 = hotkey2;
+            int finalHotkey2 = hotkey3;
+            int finalHotkey3 = hotkey4;
+            int finalHotkey4 = hotkey5;
+            CachedThreadPool.getInstance().executeTask(() -> {
+                HotkeyListener.INSTANCE.registerHotKey(finalHotkey, finalHotkey1, finalHotkey2, finalHotkey3, finalHotkey4);
+                HotkeyListener.INSTANCE.startListen();
+            });
+        } else {
+            changeHotKey(hotkey);
         }
-        hotkey5 = hotkeys[length - 1].charAt(0);
-        int finalHotkey = hotkey1;
-        int finalHotkey1 = hotkey2;
-        int finalHotkey2 = hotkey3;
-        int finalHotkey3 = hotkey4;
-        int finalHotkey4 = hotkey5;
-        CachedThreadPool.getInstance().executeTask(() -> {
-            HotkeyListener.INSTANCE.registerHotKey(finalHotkey, finalHotkey1, finalHotkey2, finalHotkey3, finalHotkey4);
-            HotkeyListener.INSTANCE.startListen();
-        });
     }
 
     //检查快捷键是否有效
@@ -72,7 +76,7 @@ public class CheckHotKeyUtil {
     }
 
     //更改快捷键,必须在register后才可用
-    public void changeHotKey(String hotkey) {
+    private void changeHotKey(String hotkey) {
         if (!isRegistered) {
             throw new NullPointerException();
         }
