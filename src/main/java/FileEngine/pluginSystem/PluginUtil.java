@@ -114,7 +114,7 @@ public class PluginUtil {
         PluginClassAndInstanceInfo pluginClassAndInstanceInfo = new PluginClassAndInstanceInfo(c, instance);
         Plugin plugin = new Plugin(pluginClassAndInstanceInfo);
         plugin.loadPlugin();
-        plugin.setCurrentTheme(AllConfigs.getDefaultBackgroundColor(), AllConfigs.getLabelColor());
+        plugin.setCurrentTheme(AllConfigs.getDefaultBackgroundColor(), AllConfigs.getLabelColor(), AllConfigs.getBorderColor());
         if (plugin.getApiVersion() != Plugin.getLatestApiVersion()) {
             isTooOld = true;
         }
@@ -128,9 +128,9 @@ public class PluginUtil {
         }
     }
 
-    public void setCurrentTheme(int defaultColor, int chosenLabelColor) {
+    public void setCurrentTheme(int defaultColor, int chosenLabelColor, int borderColor) {
         for (Plugin each : IDENTIFIER_PLUGIN_MAP.values()) {
-            each.setCurrentTheme(defaultColor, chosenLabelColor);
+            each.setCurrentTheme(defaultColor, chosenLabelColor, borderColor);
         }
     }
 
