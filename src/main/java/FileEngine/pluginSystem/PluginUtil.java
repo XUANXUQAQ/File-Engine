@@ -138,11 +138,6 @@ public class PluginUtil {
         return NAME_IDENTIFIER_MAP.get(name);
     }
 
-    public Object[] getPluginArray() {
-        ArrayList<Plugin> list = new ArrayList<>(IDENTIFIER_PLUGIN_MAP.values());
-        return list.toArray();
-    }
-
     public Object[] getPluginNameArray() {
         ArrayList<String> list = new ArrayList<>(NAME_IDENTIFIER_MAP.keySet());
         return list.toArray();
