@@ -134,15 +134,15 @@ public class Plugin {
                 pluginClearResultQueue = aClass.getDeclaredMethod("clearResultQueue");
                 break;
             case "setCurrentTheme":
-                pluginSetCurrentTheme = aClass.getDeclaredMethod("setCurrentTheme", int.class, int.class);
+                pluginSetCurrentTheme = aClass.getDeclaredMethod("setCurrentTheme", int.class, int.class, int.class);
             default:
                 break;
         }
     }
 
-    public void setCurrentTheme(int defaultColor, int chosenLabelColor) {
+    public void setCurrentTheme(int defaultColor, int chosenLabelColor, int borderColor) {
         try {
-            pluginSetCurrentTheme.invoke(instance, defaultColor, chosenLabelColor);
+            pluginSetCurrentTheme.invoke(instance, defaultColor, chosenLabelColor, borderColor);
         }catch (Exception e) {
             e.printStackTrace();
         }

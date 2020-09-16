@@ -1610,7 +1610,7 @@ public class SettingsFrame {
         borderColorChooser.setBackground(tmp_color);
         borderColorChooser.setForeground(tmp_color);
 
-        PluginUtil.getInstance().setCurrentTheme(AllConfigs.getDefaultBackgroundColor(), AllConfigs.getLabelColor());
+        PluginUtil.getInstance().setCurrentTheme(AllConfigs.getDefaultBackgroundColor(), AllConfigs.getLabelColor(), AllConfigs.getBorderColor());
 
         //保存自定义命令
         StringBuilder strb = new StringBuilder();
