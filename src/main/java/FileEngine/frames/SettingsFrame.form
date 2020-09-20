@@ -929,6 +929,7 @@
                   <gridbag weightx="1.0" weighty="1.0"/>
                 </constraints>
                 <properties>
+                  <opaque value="false"/>
                   <selectionMode value="0"/>
                 </properties>
               </component>
