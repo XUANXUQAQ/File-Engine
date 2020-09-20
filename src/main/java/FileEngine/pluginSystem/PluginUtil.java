@@ -43,9 +43,9 @@ public class PluginUtil {
 
     private final ConcurrentHashMap<String, Plugin> IDENTIFIER_PLUGIN_MAP = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, String> NAME_IDENTIFIER_MAP = new ConcurrentHashMap<>();
-    private final HashSet<String> OLD_PLUGINS = new HashSet<>();
-    private final HashSet<String> REPEAT_PLUGINS = new HashSet<>();
-    private final HashSet<String> LOAD_ERROR_PLUGINS = new HashSet<>();
+    private HashSet<String> OLD_PLUGINS = new HashSet<>();
+    private HashSet<String> REPEAT_PLUGINS = new HashSet<>();
+    private HashSet<String> LOAD_ERROR_PLUGINS = new HashSet<>();
     private boolean isTooOld = false;
 
     public boolean isPluginTooOld() {
@@ -65,6 +65,7 @@ public class PluginUtil {
         for (String each : LOAD_ERROR_PLUGINS) {
             strb.append(each).append(",");
         }
+        LOAD_ERROR_PLUGINS = null;
         return strb.substring(0, strb.length() - 1);
     }
 
@@ -73,6 +74,7 @@ public class PluginUtil {
         for (String repeatPlugins : REPEAT_PLUGINS) {
             strb.append(repeatPlugins).append(",");
         }
+        REPEAT_PLUGINS = null;
         return strb.substring(0, strb.length() - 1);
     }
 
@@ -93,6 +95,7 @@ public class PluginUtil {
         for (String oldPlugin : OLD_PLUGINS) {
             strb.append(oldPlugin).append(",");
         }
+        OLD_PLUGINS = null;
         return strb.substring(0, strb.length() - 1);
     }
 
