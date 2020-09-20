@@ -45,15 +45,27 @@ public class PluginUtil {
     private final ConcurrentHashMap<String, String> NAME_IDENTIFIER_MAP = new ConcurrentHashMap<>();
     private final HashSet<String> OLD_PLUGINS = new HashSet<>();
     private final HashSet<String> REPEAT_PLUGINS = new HashSet<>();
+    private final HashSet<String> LOAD_ERROR_PLUGINS = new HashSet<>();
     private boolean isTooOld = false;
-    private boolean isRepeat = false;
 
     public boolean isPluginTooOld() {
         return isTooOld;
     }
 
     public boolean isPluginRepeat() {
-        return isRepeat;
+        return !REPEAT_PLUGINS.isEmpty();
+    }
+
+    public boolean isPluginLoadError() {
+        return !LOAD_ERROR_PLUGINS.isEmpty();
+    }
+
+    public String getLoadingErrorPlugins() {
+        StringBuilder strb = new StringBuilder();
+        for (String each : LOAD_ERROR_PLUGINS) {
+            strb.append(each).append(",");
+        }
+        return strb.substring(0, strb.length() - 1);
     }
 
     public String getRepeatPlugins() {
@@ -171,11 +183,11 @@ public class PluginUtil {
                                     OLD_PLUGINS.add(pluginName);
                                 }
                             } catch (Exception e) {
+                                LOAD_ERROR_PLUGINS.add(pluginName);
                                 e.printStackTrace();
                             }
                         } else {
                             REPEAT_PLUGINS.add(jar.getName());
-                            isRepeat = true;
                         }
                     }
                 }

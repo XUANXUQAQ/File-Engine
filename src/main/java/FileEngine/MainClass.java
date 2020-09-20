@@ -268,6 +268,11 @@ public class MainClass {
                 taskBar.showMessage(translateUtil.getTranslation("Warning"), repeatPlugins + "\n" + translateUtil.getTranslation("Duplicate plugin, please delete it in plugins folder"));
             }
 
+            if (PluginUtil.getInstance().isPluginLoadError()) {
+                String errorPlugins = PluginUtil.getInstance().getLoadingErrorPlugins();
+                taskBar.showMessage(translateUtil.getTranslation("Warning"), errorPlugins + "\n" + translateUtil.getTranslation("Loading plugins error"));
+            }
+
             if (!AllConfigs.isDebug()) {
                 DaemonUtil.startDaemon(new File("").getAbsolutePath());
             }

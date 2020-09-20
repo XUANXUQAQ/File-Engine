@@ -142,3 +142,4 @@ Border Color:=邊框顏色:
 Border color is set incorrectly=邊框顏色設置不正確
 Current Caches Num:=當前緩存數量：
 The result has been copied to the clipboard=結果已復製到剪貼板
+Loading plugins error=加載插件錯誤
