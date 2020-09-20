@@ -142,3 +142,4 @@ Border Color:=ボーダの色:
 Border color is set incorrectly=境界線の色が正しく設定されていません
 Current Caches Num:=現在のキャッシュ番号:
 The result has been copied to the clipboard=結果はクリップボードにコピーされました
+Loading plugins error=プラグインの読み込みエラー
