@@ -216,6 +216,8 @@ public class MainClass {
                 taskBar.showMessage(translateUtil.getTranslation("Warning"), errorPlugins + "\n" + translateUtil.getTranslation("Loading plugins error"));
             }
 
+            PluginUtil.getInstance().releaseAllResources();
+
             if (!AllConfigs.isDebug()) {
                 DaemonUtil.startDaemon(new File("").getAbsolutePath());
             }

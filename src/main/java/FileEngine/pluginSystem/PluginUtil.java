@@ -46,10 +46,9 @@ public class PluginUtil {
     private HashSet<String> OLD_PLUGINS = new HashSet<>();
     private HashSet<String> REPEAT_PLUGINS = new HashSet<>();
     private HashSet<String> LOAD_ERROR_PLUGINS = new HashSet<>();
-    private boolean isTooOld = false;
 
     public boolean isPluginTooOld() {
-        return isTooOld;
+        return !OLD_PLUGINS.isEmpty();
     }
 
     public boolean isPluginRepeat() {
@@ -65,7 +64,6 @@ public class PluginUtil {
         for (String each : LOAD_ERROR_PLUGINS) {
             strb.append(each).append(",");
         }
-        LOAD_ERROR_PLUGINS = null;
         return strb.substring(0, strb.length() - 1);
     }
 
@@ -74,8 +72,13 @@ public class PluginUtil {
         for (String repeatPlugins : REPEAT_PLUGINS) {
             strb.append(repeatPlugins).append(",");
         }
-        REPEAT_PLUGINS = null;
         return strb.substring(0, strb.length() - 1);
+    }
+
+    public void releaseAllResources() {
+        REPEAT_PLUGINS = null;
+        LOAD_ERROR_PLUGINS = null;
+        OLD_PLUGINS = null;
     }
 
     public Iterator<Plugin> getPluginMapIter() {
@@ -95,7 +98,6 @@ public class PluginUtil {
         for (String oldPlugin : OLD_PLUGINS) {
             strb.append(oldPlugin).append(",");
         }
-        OLD_PLUGINS = null;
         return strb.substring(0, strb.length() - 1);
     }
 
@@ -130,7 +132,7 @@ public class PluginUtil {
         Plugin plugin = new Plugin(pluginClassAndInstanceInfo);
         plugin.loadPlugin();
         plugin.setCurrentTheme(AllConfigs.getDefaultBackgroundColor(), AllConfigs.getLabelColor(), AllConfigs.getBorderColor());
-        if (plugin.getApiVersion() != Plugin.getLatestApiVersion()) {
+        if (Plugin.getLatestApiVersion() - plugin.getApiVersion() >= 2) {
             isTooOld = true;
         }
         IDENTIFIER_PLUGIN_MAP.put(identifier, plugin);
@@ -180,7 +182,6 @@ public class PluginUtil {
                         if (getIdentifierByName(pluginName) == null) {
                             try {
                                 boolean isPluginApiTooOld= loadPlugin(jar, className, identifier);
-                                isTooOld |= isPluginApiTooOld;
                                 NAME_IDENTIFIER_MAP.put(pluginName, identifier);
                                 if (isPluginApiTooOld) {
                                     OLD_PLUGINS.add(pluginName);
