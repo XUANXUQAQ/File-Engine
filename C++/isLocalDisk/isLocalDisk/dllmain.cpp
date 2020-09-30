@@ -7,31 +7,39 @@
 using namespace std;
 
 extern "C" __declspec(dllexport) bool isLocalDisk(const char* path);
+extern "C" __declspec(dllexport) bool isDiskNTFS(const char* disk);
 
-#ifndef TEST
-BOOL APIENTRY DllMain( HMODULE hModule,
-                       DWORD  ul_reason_for_call,
-                       LPVOID lpReserved
-                     )
+
+__declspec(dllexport) bool isDiskNTFS(const char* disk)
 {
-    switch (ul_reason_for_call)
-    {
-    case DLL_PROCESS_ATTACH:
-    case DLL_THREAD_ATTACH:
-    case DLL_THREAD_DETACH:
-    case DLL_PROCESS_DETACH:
-        break;
-    }
-    return TRUE;
+	char lpRootPathName[20];
+	strcpy_s(lpRootPathName, disk);
+	char lpVolumeNameBuffer[MAX_PATH];
+	DWORD lpVolumeSerialNumber;
+	DWORD lpMaximumComponentLength;
+	DWORD lpFileSystemFlags;
+	char lpFileSystemNameBuffer[MAX_PATH];
+
+	if (GetVolumeInformationA(
+		lpRootPathName,
+		lpVolumeNameBuffer,
+		MAX_PATH,
+		&lpVolumeSerialNumber,
+		&lpMaximumComponentLength,
+		&lpFileSystemFlags,
+		lpFileSystemNameBuffer,
+		MAX_PATH
+	)) {
+		if (!strcmp(lpFileSystemNameBuffer, "NTFS")) {
+			return true;
+		}
+	}
+	return false;
 }
-#endif
 
 __declspec(dllexport) bool isLocalDisk(const char* path)
 {
-    WCHAR disk[260];
-    memset(disk,0, lstrlenW(disk));
-    MultiByteToWideChar(CP_ACP, 0, path, strlen(path) + 1, disk, sizeof(disk) / sizeof(disk[0]));
-    UINT type = GetDriveType(disk);
+    UINT type = GetDriveTypeA(path);
     if (type == DRIVE_FIXED)
     {
         return true;

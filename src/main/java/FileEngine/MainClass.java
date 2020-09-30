@@ -30,9 +30,8 @@ public class MainClass {
     private static final String FILE_SEARCHER_64_MD_5 = "c1c9de6ab35ed5091ab6c55babd54404";
     private static final String GET_ASC_II_64_MD_5 = "eff607d2dd4a7e4c878948fe8f24b3ea";
     private static final String HOTKEY_LISTENER_64_MD_5 = "41388e31d6fc22fb430f636d402cf608";
-    private static final String IS_LOCAL_DISK_64_MD_5 = "64f64bc828f477aa9ce6f5f8fd6010f3";
+    private static final String IS_LOCAL_DISK_64_MD_5 = "f8a71d3496d8cc188713d521e6dfa2b2";
     private static final String FILE_SEARCHER_USN_64_MD_5 = "f9bb252301900a7868163419a376a8f6";
-    private static final String IS_NTFS_64_MD_5 = "b492fef64750bb42a589fa25aaba5bbf";
     private static final String SQLITE3_64_MD_5 = "658c71b8b93ba4eb5b4936f46a112449";
     private static final String UPDATER_BAT_64_MD_5 = "357d7cc1cf023cb6c90f73926c6f2f55";
     private static final String GET_HANDLE_64_MD_5 = "c927c8221e3fadf42d408f0589059531";
@@ -45,7 +44,6 @@ public class MainClass {
         Class.forName("FileEngine.dllInterface.IsLocalDisk");
         Class.forName("FileEngine.dllInterface.HotkeyListener");
         Class.forName("FileEngine.dllInterface.GetAscII");
-        Class.forName("FileEngine.dllInterface.isNTFS");
         Class.forName("FileEngine.dllInterface.GetHandle");
     }
 
@@ -266,7 +264,6 @@ public class MainClass {
         copyOrIgnoreFile("user/isLocalDisk.dll", "/win32-x86-64/isLocalDisk.dll", IS_LOCAL_DISK_64_MD_5);
         copyOrIgnoreFile("user/fileSearcher.exe", "/win32-x86-64/fileSearcher.exe", FILE_SEARCHER_64_MD_5);
         copyOrIgnoreFile("user/fileSearcherUSN.exe", "/win32-x86-64/fileSearcherUSN.exe", FILE_SEARCHER_USN_64_MD_5);
-        copyOrIgnoreFile("user/isNTFS.dll", "/win32-x86-64/isNTFS.dll", IS_NTFS_64_MD_5);
         copyOrIgnoreFile("user/sqlite3.dll", "/win32-x86-64/sqlite3.dll", SQLITE3_64_MD_5);
         copyOrIgnoreFile("user/shortcutGenerator.vbs", "/shortcutGenerator.vbs", SHORTCUT_GENERATOR_MD_5);
         copyOrIgnoreFile("user/getHandle.dll", "/win32-x86-64/getHandle.dll", GET_HANDLE_64_MD_5);
