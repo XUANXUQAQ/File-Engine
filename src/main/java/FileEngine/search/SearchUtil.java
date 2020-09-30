@@ -4,7 +4,6 @@ import FileEngine.SQLiteConfig.SQLiteUtil;
 import FileEngine.configs.AllConfigs;
 import FileEngine.dllInterface.GetAscII;
 import FileEngine.dllInterface.IsLocalDisk;
-import FileEngine.dllInterface.isNTFS;
 import FileEngine.frames.TaskBar;
 import FileEngine.translate.TranslateUtil;
 
@@ -393,7 +392,7 @@ public class SearchUtil {
         StringBuilder strb = new StringBuilder(26);
         for (File root : roots) {
             if (IsLocalDisk.INSTANCE.isLocalDisk(root.getAbsolutePath())) {
-                if (isNTFS.INSTANCE.isDiskNTFS(root.getAbsolutePath())) {
+                if (IsLocalDisk.INSTANCE.isDiskNTFS(root.getAbsolutePath())) {
                     canSearchByUsn = true;
                     strb.append(root.getAbsolutePath()).append(",");
                 } else {
