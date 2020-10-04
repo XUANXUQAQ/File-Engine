@@ -6,6 +6,11 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 
 public class DaemonUtil {
+
+    /**
+     * 开启守护进程
+     * @param currentWorkingDir 当前进程工作环境位置
+     */
     public static void startDaemon(String currentWorkingDir) {
         try {
             if (!isDaemonExist()) {
@@ -23,6 +28,9 @@ public class DaemonUtil {
         }
     }
 
+    /**
+     * 关闭守护进程
+     */
     public static void stopDaemon() {
         File closeSignal = new File("tmp/closeDaemon");
         try {
@@ -32,6 +40,10 @@ public class DaemonUtil {
         }
     }
 
+    /**
+     * 检测进程是否存在
+     * @return true如果进程以存在
+     */
     private static boolean isDaemonExist() throws IOException, InterruptedException {
         StringBuilder strBuilder = new StringBuilder();
         Process p = Runtime.getRuntime().exec("tasklist /FI \"IMAGENAME eq " + "daemonProcess.exe" + "\"");
