@@ -664,7 +664,9 @@ public class SearchBar {
      * @param label 需要设置的label
      */
     private void setLabelChosen(JLabel label) {
-        label.setBackground(labelColor);
+        if (label != null) {
+            label.setBackground(labelColor);
+        }
     }
 
     /**
@@ -673,7 +675,9 @@ public class SearchBar {
      * @param label 需要设置的label
      */
     private void setLabelNotChosen(JLabel label) {
-        label.setBackground(backgroundColor);
+        if (label != null) {
+            label.setBackground(backgroundColor);
+        }
     }
 
     /**
@@ -1061,648 +1065,212 @@ public class SearchBar {
     }
 
     private void moveDownward(int position) {
-        try {
-            currentLabelSelectedPosition.incrementAndGet();
-            if (currentLabelSelectedPosition.get() > 7) {
-                currentLabelSelectedPosition.set(7);
-            }
-            switch (position) {
-                case 0:
-                    int size = resultCount.get();
-                    if (size == 2) {
-                        setLabelNotChosen(label1);
-                        setLabelChosen(label2);
-                    } else if (size == 3) {
-                        setLabelNotChosen(label1);
-                        setLabelChosen(label2);
-                        setLabelNotChosen(label3);
-                    } else if (size == 4) {
-                        setLabelNotChosen(label1);
-                        setLabelChosen(label2);
-                        setLabelNotChosen(label3);
-                        setLabelNotChosen(label4);
-                    } else if (size == 5) {
-                        setLabelNotChosen(label1);
-                        setLabelChosen(label2);
-                        setLabelNotChosen(label3);
-                        setLabelNotChosen(label4);
-                        setLabelNotChosen(label5);
-                    } else if (size == 6) {
-                        setLabelNotChosen(label1);
-                        setLabelChosen(label2);
-                        setLabelNotChosen(label3);
-                        setLabelNotChosen(label4);
-                        setLabelNotChosen(label5);
-                        setLabelNotChosen(label6);
-                    } else if (size == 7) {
-                        setLabelNotChosen(label1);
-                        setLabelChosen(label2);
-                        setLabelNotChosen(label3);
-                        setLabelNotChosen(label4);
-                        setLabelNotChosen(label5);
-                        setLabelNotChosen(label6);
-                        setLabelNotChosen(label7);
-                    } else if (size > 7) {
-                        setLabelNotChosen(label1);
-                        setLabelChosen(label2);
-                        setLabelNotChosen(label3);
-                        setLabelNotChosen(label4);
-                        setLabelNotChosen(label5);
-                        setLabelNotChosen(label6);
-                        setLabelNotChosen(label7);
-                        setLabelNotChosen(label8);
-                    }
-                    break;
-                case 1:
-                    size = resultCount.get();
-                    if (size == 3) {
-                        setLabelNotChosen(label1);
-                        setLabelNotChosen(label2);
-                        setLabelChosen(label3);
-                    } else if (size == 4) {
-                        setLabelNotChosen(label1);
-                        setLabelNotChosen(label2);
-                        setLabelChosen(label3);
-                        setLabelNotChosen(label4);
-                    } else if (size == 5) {
-                        setLabelNotChosen(label1);
-                        setLabelNotChosen(label2);
-                        setLabelChosen(label3);
-                        setLabelNotChosen(label4);
-                        setLabelNotChosen(label5);
-                    } else if (size == 6) {
-                        setLabelNotChosen(label1);
-                        setLabelNotChosen(label2);
-                        setLabelChosen(label3);
-                        setLabelNotChosen(label4);
-                        setLabelNotChosen(label5);
-                        setLabelNotChosen(label6);
-                    } else if (size == 7) {
-                        setLabelNotChosen(label1);
-                        setLabelNotChosen(label2);
-                        setLabelChosen(label3);
-                        setLabelNotChosen(label4);
-                        setLabelNotChosen(label5);
-                        setLabelNotChosen(label6);
-                        setLabelNotChosen(label7);
-                    } else if (size > 7) {
-                        setLabelNotChosen(label1);
-                        setLabelNotChosen(label2);
-                        setLabelChosen(label3);
-                        setLabelNotChosen(label4);
-                        setLabelNotChosen(label5);
-                        setLabelNotChosen(label6);
-                        setLabelNotChosen(label7);
-                        setLabelNotChosen(label8);
-                    }
-                    break;
-                case 2:
-                    size = resultCount.get();
-                    if (size == 4) {
-                        setLabelNotChosen(label1);
-                        setLabelNotChosen(label2);
-                        setLabelNotChosen(label3);
-                        setLabelChosen(label4);
-                    } else if (size == 5) {
-                        setLabelNotChosen(label1);
-                        setLabelNotChosen(label2);
-                        setLabelNotChosen(label3);
-                        setLabelChosen(label4);
-                        setLabelNotChosen(label5);
-                    } else if (size == 6) {
-                        setLabelNotChosen(label1);
-                        setLabelNotChosen(label2);
-                        setLabelNotChosen(label3);
-                        setLabelChosen(label4);
-                        setLabelNotChosen(label5);
-                        setLabelNotChosen(label6);
-                    } else if (size == 7) {
-                        setLabelNotChosen(label1);
-                        setLabelNotChosen(label2);
-                        setLabelNotChosen(label3);
-                        setLabelChosen(label4);
-                        setLabelNotChosen(label5);
-                        setLabelNotChosen(label6);
-                        setLabelNotChosen(label7);
-                    } else if (size > 7) {
-                        setLabelNotChosen(label1);
-                        setLabelNotChosen(label2);
-                        setLabelNotChosen(label3);
-                        setLabelChosen(label4);
-                        setLabelNotChosen(label5);
-                        setLabelNotChosen(label6);
-                        setLabelNotChosen(label7);
-                        setLabelNotChosen(label8);
-                    }
-                    break;
-                case 3:
-                    size = resultCount.get();
-                    if (size == 5) {
-                        setLabelNotChosen(label1);
-                        setLabelNotChosen(label2);
-                        setLabelNotChosen(label3);
-                        setLabelNotChosen(label4);
-                        setLabelChosen(label5);
-                    } else if (size == 6) {
-                        setLabelNotChosen(label1);
-                        setLabelNotChosen(label2);
-                        setLabelNotChosen(label3);
-                        setLabelNotChosen(label4);
-                        setLabelChosen(label5);
-                        setLabelNotChosen(label6);
-                    } else if (size == 7) {
-                        setLabelNotChosen(label1);
-                        setLabelNotChosen(label2);
-                        setLabelNotChosen(label3);
-                        setLabelNotChosen(label4);
-                        setLabelChosen(label5);
-                        setLabelNotChosen(label6);
-                        setLabelNotChosen(label7);
-                    } else if (size > 7) {
-                        setLabelNotChosen(label1);
-                        setLabelNotChosen(label2);
-                        setLabelNotChosen(label3);
-                        setLabelNotChosen(label4);
-                        setLabelChosen(label5);
-                        setLabelNotChosen(label6);
-                        setLabelNotChosen(label7);
-                        setLabelNotChosen(label8);
-                    }
-                    break;
-                case 4:
-                    size = resultCount.get();
-                    if (size == 6) {
-                        setLabelNotChosen(label1);
-                        setLabelNotChosen(label2);
-                        setLabelNotChosen(label3);
-                        setLabelNotChosen(label4);
-                        setLabelNotChosen(label5);
-                        setLabelChosen(label6);
-                    } else if (size == 7) {
-                        setLabelNotChosen(label1);
-                        setLabelNotChosen(label2);
-                        setLabelNotChosen(label3);
-                        setLabelNotChosen(label4);
-                        setLabelNotChosen(label5);
-                        setLabelChosen(label6);
-                        setLabelNotChosen(label7);
-                    } else if (size > 7) {
-                        setLabelNotChosen(label1);
-                        setLabelNotChosen(label2);
-                        setLabelNotChosen(label3);
-                        setLabelNotChosen(label4);
-                        setLabelNotChosen(label5);
-                        setLabelChosen(label6);
-                        setLabelNotChosen(label7);
-                        setLabelNotChosen(label8);
-                    }
-                    break;
-                case 5:
-                    size = resultCount.get();
-                    if (size == 7) {
-                        setLabelNotChosen(label1);
-                        setLabelNotChosen(label2);
-                        setLabelNotChosen(label3);
-                        setLabelNotChosen(label4);
-                        setLabelNotChosen(label5);
-                        setLabelNotChosen(label6);
-                        setLabelChosen(label7);
-                    } else if (size > 7) {
-                        setLabelNotChosen(label1);
-                        setLabelNotChosen(label2);
-                        setLabelNotChosen(label3);
-                        setLabelNotChosen(label4);
-                        setLabelNotChosen(label5);
-                        setLabelNotChosen(label6);
-                        setLabelChosen(label7);
-                        setLabelNotChosen(label8);
-                    }
-                    break;
-                case 6:
+        currentLabelSelectedPosition.incrementAndGet();
+        if (currentLabelSelectedPosition.get() > 7) {
+            currentLabelSelectedPosition.set(7);
+        }
+        switch (position) {
+            case 0:
+                int size = resultCount.get();
+                if (size == 2) {
+                    setLabelNotChosen(label1);
+                    setLabelChosen(label2);
+                } else if (size == 3) {
+                    setLabelNotChosen(label1);
+                    setLabelChosen(label2);
+                    setLabelNotChosen(label3);
+                } else if (size == 4) {
+                    setLabelNotChosen(label1);
+                    setLabelChosen(label2);
+                    setLabelNotChosen(label3);
+                    setLabelNotChosen(label4);
+                } else if (size == 5) {
+                    setLabelNotChosen(label1);
+                    setLabelChosen(label2);
+                    setLabelNotChosen(label3);
+                    setLabelNotChosen(label4);
+                    setLabelNotChosen(label5);
+                } else if (size == 6) {
+                    setLabelNotChosen(label1);
+                    setLabelChosen(label2);
+                    setLabelNotChosen(label3);
+                    setLabelNotChosen(label4);
+                    setLabelNotChosen(label5);
+                    setLabelNotChosen(label6);
+                } else if (size == 7) {
+                    setLabelNotChosen(label1);
+                    setLabelChosen(label2);
+                    setLabelNotChosen(label3);
+                    setLabelNotChosen(label4);
+                    setLabelNotChosen(label5);
+                    setLabelNotChosen(label6);
+                    setLabelNotChosen(label7);
+                } else if (size > 7) {
+                    setLabelNotChosen(label1);
+                    setLabelChosen(label2);
+                    setLabelNotChosen(label3);
+                    setLabelNotChosen(label4);
+                    setLabelNotChosen(label5);
+                    setLabelNotChosen(label6);
+                    setLabelNotChosen(label7);
+                    setLabelNotChosen(label8);
+                }
+                break;
+            case 1:
+                size = resultCount.get();
+                if (size == 3) {
+                    setLabelNotChosen(label1);
+                    setLabelNotChosen(label2);
+                    setLabelChosen(label3);
+                } else if (size == 4) {
+                    setLabelNotChosen(label1);
+                    setLabelNotChosen(label2);
+                    setLabelChosen(label3);
+                    setLabelNotChosen(label4);
+                } else if (size == 5) {
+                    setLabelNotChosen(label1);
+                    setLabelNotChosen(label2);
+                    setLabelChosen(label3);
+                    setLabelNotChosen(label4);
+                    setLabelNotChosen(label5);
+                } else if (size == 6) {
+                    setLabelNotChosen(label1);
+                    setLabelNotChosen(label2);
+                    setLabelChosen(label3);
+                    setLabelNotChosen(label4);
+                    setLabelNotChosen(label5);
+                    setLabelNotChosen(label6);
+                } else if (size == 7) {
+                    setLabelNotChosen(label1);
+                    setLabelNotChosen(label2);
+                    setLabelChosen(label3);
+                    setLabelNotChosen(label4);
+                    setLabelNotChosen(label5);
+                    setLabelNotChosen(label6);
+                    setLabelNotChosen(label7);
+                } else if (size > 7) {
+                    setLabelNotChosen(label1);
+                    setLabelNotChosen(label2);
+                    setLabelChosen(label3);
+                    setLabelNotChosen(label4);
+                    setLabelNotChosen(label5);
+                    setLabelNotChosen(label6);
+                    setLabelNotChosen(label7);
+                    setLabelNotChosen(label8);
+                }
+                break;
+            case 2:
+                size = resultCount.get();
+                if (size == 4) {
+                    setLabelNotChosen(label1);
+                    setLabelNotChosen(label2);
+                    setLabelNotChosen(label3);
+                    setLabelChosen(label4);
+                } else if (size == 5) {
+                    setLabelNotChosen(label1);
+                    setLabelNotChosen(label2);
+                    setLabelNotChosen(label3);
+                    setLabelChosen(label4);
+                    setLabelNotChosen(label5);
+                } else if (size == 6) {
+                    setLabelNotChosen(label1);
+                    setLabelNotChosen(label2);
+                    setLabelNotChosen(label3);
+                    setLabelChosen(label4);
+                    setLabelNotChosen(label5);
+                    setLabelNotChosen(label6);
+                } else if (size == 7) {
+                    setLabelNotChosen(label1);
+                    setLabelNotChosen(label2);
+                    setLabelNotChosen(label3);
+                    setLabelChosen(label4);
+                    setLabelNotChosen(label5);
+                    setLabelNotChosen(label6);
+                    setLabelNotChosen(label7);
+                } else if (size > 7) {
+                    setLabelNotChosen(label1);
+                    setLabelNotChosen(label2);
+                    setLabelNotChosen(label3);
+                    setLabelChosen(label4);
+                    setLabelNotChosen(label5);
+                    setLabelNotChosen(label6);
+                    setLabelNotChosen(label7);
+                    setLabelNotChosen(label8);
+                }
+                break;
+            case 3:
+                size = resultCount.get();
+                if (size == 5) {
+                    setLabelNotChosen(label1);
+                    setLabelNotChosen(label2);
+                    setLabelNotChosen(label3);
+                    setLabelNotChosen(label4);
+                    setLabelChosen(label5);
+                } else if (size == 6) {
+                    setLabelNotChosen(label1);
+                    setLabelNotChosen(label2);
+                    setLabelNotChosen(label3);
+                    setLabelNotChosen(label4);
+                    setLabelChosen(label5);
+                    setLabelNotChosen(label6);
+                } else if (size == 7) {
+                    setLabelNotChosen(label1);
+                    setLabelNotChosen(label2);
+                    setLabelNotChosen(label3);
+                    setLabelNotChosen(label4);
+                    setLabelChosen(label5);
+                    setLabelNotChosen(label6);
+                    setLabelNotChosen(label7);
+                } else if (size > 7) {
+                    setLabelNotChosen(label1);
+                    setLabelNotChosen(label2);
+                    setLabelNotChosen(label3);
+                    setLabelNotChosen(label4);
+                    setLabelChosen(label5);
+                    setLabelNotChosen(label6);
+                    setLabelNotChosen(label7);
+                    setLabelNotChosen(label8);
+                }
+                break;
+            case 4:
+                size = resultCount.get();
+                if (size == 6) {
+                    setLabelNotChosen(label1);
+                    setLabelNotChosen(label2);
+                    setLabelNotChosen(label3);
+                    setLabelNotChosen(label4);
+                    setLabelNotChosen(label5);
+                    setLabelChosen(label6);
+                } else if (size == 7) {
+                    setLabelNotChosen(label1);
+                    setLabelNotChosen(label2);
+                    setLabelNotChosen(label3);
+                    setLabelNotChosen(label4);
+                    setLabelNotChosen(label5);
+                    setLabelChosen(label6);
+                    setLabelNotChosen(label7);
+                } else if (size > 7) {
+                    setLabelNotChosen(label1);
+                    setLabelNotChosen(label2);
+                    setLabelNotChosen(label3);
+                    setLabelNotChosen(label4);
+                    setLabelNotChosen(label5);
+                    setLabelChosen(label6);
+                    setLabelNotChosen(label7);
+                    setLabelNotChosen(label8);
+                }
+                break;
+            case 5:
+                size = resultCount.get();
+                if (size == 7) {
                     setLabelNotChosen(label1);
                     setLabelNotChosen(label2);
                     setLabelNotChosen(label3);
                     setLabelNotChosen(label4);
                     setLabelNotChosen(label5);
                     setLabelNotChosen(label6);
-                    setLabelNotChosen(label7);
-                    setLabelChosen(label8);
-                    break;
-                case 7:
-                    if (runningMode.get() == AllConfigs.RunningMode.NORMAL_MODE) {
-                        //到达最下端，刷新显示
-                        try {
-                            String path = listResults.get(labelCount.get() - 7);
-                            showResultOnLabel(path, label1, false);
-
-                            path = listResults.get(labelCount.get() - 6);
-                            showResultOnLabel(path, label2, false);
-
-                            path = listResults.get(labelCount.get() - 5);
-                            showResultOnLabel(path, label3, false);
-
-                            path = listResults.get(labelCount.get() - 4);
-                            showResultOnLabel(path, label4, false);
-
-                            path = listResults.get(labelCount.get() - 3);
-                            showResultOnLabel(path, label5, false);
-
-                            path = listResults.get(labelCount.get() - 2);
-                            showResultOnLabel(path, label6, false);
-
-                            path = listResults.get(labelCount.get() - 1);
-                            showResultOnLabel(path, label7, false);
-
-                            path = listResults.get(labelCount.get());
-                            showResultOnLabel(path, label8, true);
-                        } catch (ArrayIndexOutOfBoundsException e) {
-                            if (AllConfigs.isDebug()) {
-                                e.printStackTrace();
-                            }
-                        }
-                    } else if (runningMode.get() == AllConfigs.RunningMode.COMMAND_MODE) {
-                        //到达了最下端，刷新显示
-                        try {
-                            String command = listResults.get(labelCount.get() - 7);
-                            showCommandOnLabel(command, label1, false);
-
-                            command = listResults.get(labelCount.get() - 6);
-                            showCommandOnLabel(command, label2, false);
-
-                            command = listResults.get(labelCount.get() - 5);
-                            showCommandOnLabel(command, label3, false);
-
-                            command = listResults.get(labelCount.get() - 4);
-                            showCommandOnLabel(command, label4, false);
-
-                            command = listResults.get(labelCount.get() - 3);
-                            showCommandOnLabel(command, label5, false);
-
-                            command = listResults.get(labelCount.get() - 2);
-                            showCommandOnLabel(command, label6, false);
-
-                            command = listResults.get(labelCount.get() - 1);
-                            showCommandOnLabel(command, label7, false);
-
-                            command = listResults.get(labelCount.get());
-                            showCommandOnLabel(command, label8, true);
-                        } catch (ArrayIndexOutOfBoundsException e) {
-                            if (AllConfigs.isDebug()) {
-                                e.printStackTrace();
-                            }
-                        }
-                    } else if (runningMode.get() == AllConfigs.RunningMode.PLUGIN_MODE) {
-                        try {
-                            String command = listResults.get(labelCount.get() - 7);
-                            showPluginResultOnLabel(command, label1, false);
-
-                            command = listResults.get(labelCount.get() - 6);
-                            showPluginResultOnLabel(command, label2, false);
-
-                            command = listResults.get(labelCount.get() - 5);
-                            showPluginResultOnLabel(command, label3, false);
-
-                            command = listResults.get(labelCount.get() - 4);
-                            showPluginResultOnLabel(command, label4, false);
-
-                            command = listResults.get(labelCount.get() - 3);
-                            showPluginResultOnLabel(command, label5, false);
-
-                            command = listResults.get(labelCount.get() - 2);
-                            showPluginResultOnLabel(command, label6, false);
-
-                            command = listResults.get(labelCount.get() - 1);
-                            showPluginResultOnLabel(command, label7, false);
-
-                            command = listResults.get(labelCount.get());
-                            showPluginResultOnLabel(command, label8, true);
-                        } catch (ArrayIndexOutOfBoundsException e) {
-                            if (AllConfigs.isDebug()) {
-                                e.printStackTrace();
-                            }
-                        }
-                    }
-                    break;
-            }
-        } catch (NullPointerException ignored) {
-        }
-    }
-
-    private void moveUpward(int position) {
-        try {
-            currentLabelSelectedPosition.decrementAndGet();
-            if (currentLabelSelectedPosition.get() < 0) {
-                currentLabelSelectedPosition.set(0);
-            }
-            int size;
-            switch (position) {
-                case 0:
-                    if (runningMode.get() == AllConfigs.RunningMode.NORMAL_MODE) {
-                        //到达了最上端，刷新显示
-                        try {
-                            String path = listResults.get(labelCount.get());
-                            showResultOnLabel(path, label1, true);
-
-                            path = listResults.get(labelCount.get() + 1);
-                            showResultOnLabel(path, label2, false);
-
-                            path = listResults.get(labelCount.get() + 2);
-                            showResultOnLabel(path, label3, false);
-
-                            path = listResults.get(labelCount.get() + 3);
-                            showResultOnLabel(path, label4, false);
-
-                            path = listResults.get(labelCount.get() + 4);
-                            showResultOnLabel(path, label5, false);
-
-                            path = listResults.get(labelCount.get() + 5);
-                            showResultOnLabel(path, label6, false);
-
-                            path = listResults.get(labelCount.get() + 6);
-                            showResultOnLabel(path, label7, false);
-
-                            path = listResults.get(labelCount.get() + 7);
-                            showResultOnLabel(path, label8, false);
-                        } catch (ArrayIndexOutOfBoundsException e) {
-                            if (AllConfigs.isDebug()) {
-                                e.printStackTrace();
-                            }
-                        }
-                    } else if (runningMode.get() == AllConfigs.RunningMode.COMMAND_MODE) {
-                        //到达了最上端，刷新显示
-                        try {
-                            String command = listResults.get(labelCount.get());
-                            showCommandOnLabel(command, label1, true);
-
-                            command = listResults.get(labelCount.get() + 1);
-                            showCommandOnLabel(command, label2, false);
-
-                            command = listResults.get(labelCount.get() + 2);
-                            showCommandOnLabel(command, label3, false);
-
-                            command = listResults.get(labelCount.get() + 3);
-                            showCommandOnLabel(command, label4, false);
-
-                            command = listResults.get(labelCount.get() + 4);
-                            showCommandOnLabel(command, label5, false);
-
-                            command = listResults.get(labelCount.get() + 5);
-                            showCommandOnLabel(command, label6, false);
-
-                            command = listResults.get(labelCount.get() + 6);
-                            showCommandOnLabel(command, label7, false);
-
-                            command = listResults.get(labelCount.get() + 7);
-                            showCommandOnLabel(command, label8, false);
-                        } catch (ArrayIndexOutOfBoundsException e) {
-                            if (AllConfigs.isDebug()) {
-                                e.printStackTrace();
-                            }
-                        }
-                    } else if (runningMode.get() == AllConfigs.RunningMode.PLUGIN_MODE) {
-                        try {
-                            String command = listResults.get(labelCount.get());
-                            showPluginResultOnLabel(command, label1, true);
-
-                            command = listResults.get(labelCount.get() + 1);
-                            showPluginResultOnLabel(command, label2, false);
-
-                            command = listResults.get(labelCount.get() + 2);
-                            showPluginResultOnLabel(command, label3, false);
-
-                            command = listResults.get(labelCount.get() + 3);
-                            showPluginResultOnLabel(command, label4, false);
-
-                            command = listResults.get(labelCount.get() + 4);
-                            showPluginResultOnLabel(command, label5, false);
-
-                            command = listResults.get(labelCount.get() + 5);
-                            showPluginResultOnLabel(command, label6, false);
-
-                            command = listResults.get(labelCount.get() + 6);
-                            showPluginResultOnLabel(command, label7, false);
-
-                            command = listResults.get(labelCount.get() + 7);
-                            showPluginResultOnLabel(command, label8, false);
-                        } catch (ArrayIndexOutOfBoundsException e) {
-                            if (AllConfigs.isDebug()) {
-                                e.printStackTrace();
-                            }
-                        }
-                    }
-                    break;
-                case 1:
-                    size = resultCount.get();
-                    if (size == 2) {
-                        setLabelChosen(label1);
-                        setLabelNotChosen(label2);
-                    } else if (size == 3) {
-                        setLabelChosen(label1);
-                        setLabelNotChosen(label2);
-                        setLabelNotChosen(label3);
-                    } else if (size == 4) {
-                        setLabelChosen(label1);
-                        setLabelNotChosen(label2);
-                        setLabelNotChosen(label3);
-                        setLabelNotChosen(label4);
-                    } else if (size == 5) {
-                        setLabelChosen(label1);
-                        setLabelNotChosen(label2);
-                        setLabelNotChosen(label3);
-                        setLabelNotChosen(label4);
-                        setLabelNotChosen(label5);
-                    } else if (size == 6) {
-                        setLabelChosen(label1);
-                        setLabelNotChosen(label2);
-                        setLabelNotChosen(label3);
-                        setLabelNotChosen(label4);
-                        setLabelNotChosen(label5);
-                        setLabelNotChosen(label6);
-                    } else if (size == 7) {
-                        setLabelChosen(label1);
-                        setLabelNotChosen(label2);
-                        setLabelNotChosen(label3);
-                        setLabelNotChosen(label4);
-                        setLabelNotChosen(label5);
-                        setLabelNotChosen(label6);
-                        setLabelNotChosen(label7);
-                    } else if (size > 7) {
-                        setLabelChosen(label1);
-                        setLabelNotChosen(label2);
-                        setLabelNotChosen(label3);
-                        setLabelNotChosen(label4);
-                        setLabelNotChosen(label5);
-                        setLabelNotChosen(label6);
-                        setLabelNotChosen(label7);
-                        setLabelNotChosen(label8);
-                    }
-                    break;
-                case 2:
-                    size = resultCount.get();
-                    if (size == 3) {
-                        setLabelNotChosen(label1);
-                        setLabelChosen(label2);
-                        setLabelNotChosen(label3);
-                    } else if (size == 4) {
-                        setLabelNotChosen(label1);
-                        setLabelChosen(label2);
-                        setLabelNotChosen(label3);
-                        setLabelNotChosen(label4);
-                    } else if (size == 5) {
-                        setLabelNotChosen(label1);
-                        setLabelChosen(label2);
-                        setLabelNotChosen(label3);
-                        setLabelNotChosen(label4);
-                        setLabelNotChosen(label5);
-                    } else if (size == 6) {
-                        setLabelNotChosen(label1);
-                        setLabelChosen(label2);
-                        setLabelNotChosen(label3);
-                        setLabelNotChosen(label4);
-                        setLabelNotChosen(label5);
-                        setLabelNotChosen(label6);
-                    } else if (size == 7) {
-                        setLabelNotChosen(label1);
-                        setLabelChosen(label2);
-                        setLabelNotChosen(label3);
-                        setLabelNotChosen(label4);
-                        setLabelNotChosen(label5);
-                        setLabelNotChosen(label6);
-                        setLabelNotChosen(label7);
-                    } else if (size > 7) {
-                        setLabelNotChosen(label1);
-                        setLabelChosen(label2);
-                        setLabelNotChosen(label3);
-                        setLabelNotChosen(label4);
-                        setLabelNotChosen(label5);
-                        setLabelNotChosen(label6);
-                        setLabelNotChosen(label7);
-                        setLabelNotChosen(label8);
-                    }
-                    break;
-                case 3:
-                    size = resultCount.get();
-                    if (size == 4) {
-                        setLabelNotChosen(label1);
-                        setLabelNotChosen(label2);
-                        setLabelChosen(label3);
-                        setLabelNotChosen(label4);
-                    } else if (size == 5) {
-                        setLabelNotChosen(label1);
-                        setLabelNotChosen(label2);
-                        setLabelChosen(label3);
-                        setLabelNotChosen(label4);
-                        setLabelNotChosen(label5);
-                    } else if (size == 6) {
-                        setLabelNotChosen(label1);
-                        setLabelNotChosen(label2);
-                        setLabelChosen(label3);
-                        setLabelNotChosen(label4);
-                        setLabelNotChosen(label5);
-                        setLabelNotChosen(label6);
-                    } else if (size == 7) {
-                        setLabelNotChosen(label1);
-                        setLabelNotChosen(label2);
-                        setLabelChosen(label3);
-                        setLabelNotChosen(label4);
-                        setLabelNotChosen(label5);
-                        setLabelNotChosen(label6);
-                        setLabelNotChosen(label7);
-                    } else if (size > 7) {
-                        setLabelNotChosen(label1);
-                        setLabelNotChosen(label2);
-                        setLabelChosen(label3);
-                        setLabelNotChosen(label4);
-                        setLabelNotChosen(label5);
-                        setLabelNotChosen(label6);
-                        setLabelNotChosen(label7);
-                        setLabelNotChosen(label8);
-                    }
-                    break;
-                case 4:
-                    size = resultCount.get();
-                    if (size == 5) {
-                        setLabelNotChosen(label1);
-                        setLabelNotChosen(label2);
-                        setLabelNotChosen(label3);
-                        setLabelChosen(label4);
-                        setLabelNotChosen(label5);
-                    } else if (size == 6) {
-                        setLabelNotChosen(label1);
-                        setLabelNotChosen(label2);
-                        setLabelNotChosen(label3);
-                        setLabelChosen(label4);
-                        setLabelNotChosen(label5);
-                        setLabelNotChosen(label6);
-                    } else if (size == 7) {
-                        setLabelNotChosen(label1);
-                        setLabelNotChosen(label2);
-                        setLabelNotChosen(label3);
-                        setLabelChosen(label4);
-                        setLabelNotChosen(label5);
-                        setLabelNotChosen(label6);
-                        setLabelNotChosen(label7);
-                    } else if (size > 7) {
-                        setLabelNotChosen(label1);
-                        setLabelNotChosen(label2);
-                        setLabelNotChosen(label3);
-                        setLabelChosen(label4);
-                        setLabelNotChosen(label5);
-                        setLabelNotChosen(label6);
-                        setLabelNotChosen(label7);
-                        setLabelNotChosen(label8);
-                    }
-                    break;
-                case 5:
-                    size = resultCount.get();
-                    if (size == 6) {
-                        setLabelNotChosen(label1);
-                        setLabelNotChosen(label2);
-                        setLabelNotChosen(label3);
-                        setLabelNotChosen(label4);
-                        setLabelChosen(label5);
-                        setLabelNotChosen(label6);
-                    } else if (size == 7) {
-                        setLabelNotChosen(label1);
-                        setLabelNotChosen(label2);
-                        setLabelNotChosen(label3);
-                        setLabelNotChosen(label4);
-                        setLabelChosen(label5);
-                        setLabelNotChosen(label6);
-                        setLabelNotChosen(label7);
-                    } else if (size > 7) {
-                        setLabelNotChosen(label1);
-                        setLabelNotChosen(label2);
-                        setLabelNotChosen(label3);
-                        setLabelNotChosen(label4);
-                        setLabelChosen(label5);
-                        setLabelNotChosen(label6);
-                        setLabelNotChosen(label7);
-                        setLabelNotChosen(label8);
-                    }
-                    break;
-                case 6:
-                    size = resultCount.get();
-                    if (size == 7) {
-                        setLabelNotChosen(label1);
-                        setLabelNotChosen(label2);
-                        setLabelNotChosen(label3);
-                        setLabelNotChosen(label4);
-                        setLabelNotChosen(label5);
-                        setLabelChosen(label6);
-                        setLabelNotChosen(label7);
-                    } else if (size > 7) {
-                        setLabelNotChosen(label1);
-                        setLabelNotChosen(label2);
-                        setLabelNotChosen(label3);
-                        setLabelNotChosen(label4);
-                        setLabelNotChosen(label5);
-                        setLabelChosen(label6);
-                        setLabelNotChosen(label7);
-                        setLabelNotChosen(label8);
-                    }
-                    break;
-                case 7:
+                    setLabelChosen(label7);
+                } else if (size > 7) {
                     setLabelNotChosen(label1);
                     setLabelNotChosen(label2);
                     setLabelNotChosen(label3);
@@ -1711,9 +1279,439 @@ public class SearchBar {
                     setLabelNotChosen(label6);
                     setLabelChosen(label7);
                     setLabelNotChosen(label8);
-                    break;
-            }
-        } catch (NullPointerException ignored) {
+                }
+                break;
+            case 6:
+                setLabelNotChosen(label1);
+                setLabelNotChosen(label2);
+                setLabelNotChosen(label3);
+                setLabelNotChosen(label4);
+                setLabelNotChosen(label5);
+                setLabelNotChosen(label6);
+                setLabelNotChosen(label7);
+                setLabelChosen(label8);
+                break;
+            case 7:
+                if (runningMode.get() == AllConfigs.RunningMode.NORMAL_MODE) {
+                    //到达最下端，刷新显示
+                    try {
+                        String path = listResults.get(labelCount.get() - 7);
+                        showResultOnLabel(path, label1, false);
+
+                        path = listResults.get(labelCount.get() - 6);
+                        showResultOnLabel(path, label2, false);
+
+                        path = listResults.get(labelCount.get() - 5);
+                        showResultOnLabel(path, label3, false);
+
+                        path = listResults.get(labelCount.get() - 4);
+                        showResultOnLabel(path, label4, false);
+
+                        path = listResults.get(labelCount.get() - 3);
+                        showResultOnLabel(path, label5, false);
+
+                        path = listResults.get(labelCount.get() - 2);
+                        showResultOnLabel(path, label6, false);
+
+                        path = listResults.get(labelCount.get() - 1);
+                        showResultOnLabel(path, label7, false);
+
+                        path = listResults.get(labelCount.get());
+                        showResultOnLabel(path, label8, true);
+                    } catch (ArrayIndexOutOfBoundsException e) {
+                        if (AllConfigs.isDebug()) {
+                            e.printStackTrace();
+                        }
+                    }
+                } else if (runningMode.get() == AllConfigs.RunningMode.COMMAND_MODE) {
+                    //到达了最下端，刷新显示
+                    try {
+                        String command = listResults.get(labelCount.get() - 7);
+                        showCommandOnLabel(command, label1, false);
+
+                        command = listResults.get(labelCount.get() - 6);
+                        showCommandOnLabel(command, label2, false);
+
+                        command = listResults.get(labelCount.get() - 5);
+                        showCommandOnLabel(command, label3, false);
+
+                        command = listResults.get(labelCount.get() - 4);
+                        showCommandOnLabel(command, label4, false);
+
+                        command = listResults.get(labelCount.get() - 3);
+                        showCommandOnLabel(command, label5, false);
+
+                        command = listResults.get(labelCount.get() - 2);
+                        showCommandOnLabel(command, label6, false);
+
+                        command = listResults.get(labelCount.get() - 1);
+                        showCommandOnLabel(command, label7, false);
+
+                        command = listResults.get(labelCount.get());
+                        showCommandOnLabel(command, label8, true);
+                    } catch (ArrayIndexOutOfBoundsException e) {
+                        if (AllConfigs.isDebug()) {
+                            e.printStackTrace();
+                        }
+                    }
+                } else if (runningMode.get() == AllConfigs.RunningMode.PLUGIN_MODE) {
+                    try {
+                        String command = listResults.get(labelCount.get() - 7);
+                        showPluginResultOnLabel(command, label1, false);
+
+                        command = listResults.get(labelCount.get() - 6);
+                        showPluginResultOnLabel(command, label2, false);
+
+                        command = listResults.get(labelCount.get() - 5);
+                        showPluginResultOnLabel(command, label3, false);
+
+                        command = listResults.get(labelCount.get() - 4);
+                        showPluginResultOnLabel(command, label4, false);
+
+                        command = listResults.get(labelCount.get() - 3);
+                        showPluginResultOnLabel(command, label5, false);
+
+                        command = listResults.get(labelCount.get() - 2);
+                        showPluginResultOnLabel(command, label6, false);
+
+                        command = listResults.get(labelCount.get() - 1);
+                        showPluginResultOnLabel(command, label7, false);
+
+                        command = listResults.get(labelCount.get());
+                        showPluginResultOnLabel(command, label8, true);
+                    } catch (ArrayIndexOutOfBoundsException e) {
+                        if (AllConfigs.isDebug()) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+                break;
+        }
+    }
+
+    private void moveUpward(int position) {
+        currentLabelSelectedPosition.decrementAndGet();
+        if (currentLabelSelectedPosition.get() < 0) {
+            currentLabelSelectedPosition.set(0);
+        }
+        int size;
+        switch (position) {
+            case 0:
+                if (runningMode.get() == AllConfigs.RunningMode.NORMAL_MODE) {
+                    //到达了最上端，刷新显示
+                    try {
+                        String path = listResults.get(labelCount.get());
+                        showResultOnLabel(path, label1, true);
+
+                        path = listResults.get(labelCount.get() + 1);
+                        showResultOnLabel(path, label2, false);
+
+                        path = listResults.get(labelCount.get() + 2);
+                        showResultOnLabel(path, label3, false);
+
+                        path = listResults.get(labelCount.get() + 3);
+                        showResultOnLabel(path, label4, false);
+
+                        path = listResults.get(labelCount.get() + 4);
+                        showResultOnLabel(path, label5, false);
+
+                        path = listResults.get(labelCount.get() + 5);
+                        showResultOnLabel(path, label6, false);
+
+                        path = listResults.get(labelCount.get() + 6);
+                        showResultOnLabel(path, label7, false);
+
+                        path = listResults.get(labelCount.get() + 7);
+                        showResultOnLabel(path, label8, false);
+                    } catch (ArrayIndexOutOfBoundsException e) {
+                        if (AllConfigs.isDebug()) {
+                            e.printStackTrace();
+                        }
+                    }
+                } else if (runningMode.get() == AllConfigs.RunningMode.COMMAND_MODE) {
+                    //到达了最上端，刷新显示
+                    try {
+                        String command = listResults.get(labelCount.get());
+                        showCommandOnLabel(command, label1, true);
+
+                        command = listResults.get(labelCount.get() + 1);
+                        showCommandOnLabel(command, label2, false);
+
+                        command = listResults.get(labelCount.get() + 2);
+                        showCommandOnLabel(command, label3, false);
+
+                        command = listResults.get(labelCount.get() + 3);
+                        showCommandOnLabel(command, label4, false);
+
+                        command = listResults.get(labelCount.get() + 4);
+                        showCommandOnLabel(command, label5, false);
+
+                        command = listResults.get(labelCount.get() + 5);
+                        showCommandOnLabel(command, label6, false);
+
+                        command = listResults.get(labelCount.get() + 6);
+                        showCommandOnLabel(command, label7, false);
+
+                        command = listResults.get(labelCount.get() + 7);
+                        showCommandOnLabel(command, label8, false);
+                    } catch (ArrayIndexOutOfBoundsException e) {
+                        if (AllConfigs.isDebug()) {
+                            e.printStackTrace();
+                        }
+                    }
+                } else if (runningMode.get() == AllConfigs.RunningMode.PLUGIN_MODE) {
+                    try {
+                        String command = listResults.get(labelCount.get());
+                        showPluginResultOnLabel(command, label1, true);
+
+                        command = listResults.get(labelCount.get() + 1);
+                        showPluginResultOnLabel(command, label2, false);
+
+                        command = listResults.get(labelCount.get() + 2);
+                        showPluginResultOnLabel(command, label3, false);
+
+                        command = listResults.get(labelCount.get() + 3);
+                        showPluginResultOnLabel(command, label4, false);
+
+                        command = listResults.get(labelCount.get() + 4);
+                        showPluginResultOnLabel(command, label5, false);
+
+                        command = listResults.get(labelCount.get() + 5);
+                        showPluginResultOnLabel(command, label6, false);
+
+                        command = listResults.get(labelCount.get() + 6);
+                        showPluginResultOnLabel(command, label7, false);
+
+                        command = listResults.get(labelCount.get() + 7);
+                        showPluginResultOnLabel(command, label8, false);
+                    } catch (ArrayIndexOutOfBoundsException e) {
+                        if (AllConfigs.isDebug()) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+                break;
+            case 1:
+                size = resultCount.get();
+                if (size == 2) {
+                    setLabelChosen(label1);
+                    setLabelNotChosen(label2);
+                } else if (size == 3) {
+                    setLabelChosen(label1);
+                    setLabelNotChosen(label2);
+                    setLabelNotChosen(label3);
+                } else if (size == 4) {
+                    setLabelChosen(label1);
+                    setLabelNotChosen(label2);
+                    setLabelNotChosen(label3);
+                    setLabelNotChosen(label4);
+                } else if (size == 5) {
+                    setLabelChosen(label1);
+                    setLabelNotChosen(label2);
+                    setLabelNotChosen(label3);
+                    setLabelNotChosen(label4);
+                    setLabelNotChosen(label5);
+                } else if (size == 6) {
+                    setLabelChosen(label1);
+                    setLabelNotChosen(label2);
+                    setLabelNotChosen(label3);
+                    setLabelNotChosen(label4);
+                    setLabelNotChosen(label5);
+                    setLabelNotChosen(label6);
+                } else if (size == 7) {
+                    setLabelChosen(label1);
+                    setLabelNotChosen(label2);
+                    setLabelNotChosen(label3);
+                    setLabelNotChosen(label4);
+                    setLabelNotChosen(label5);
+                    setLabelNotChosen(label6);
+                    setLabelNotChosen(label7);
+                } else if (size > 7) {
+                    setLabelChosen(label1);
+                    setLabelNotChosen(label2);
+                    setLabelNotChosen(label3);
+                    setLabelNotChosen(label4);
+                    setLabelNotChosen(label5);
+                    setLabelNotChosen(label6);
+                    setLabelNotChosen(label7);
+                    setLabelNotChosen(label8);
+                }
+                break;
+            case 2:
+                size = resultCount.get();
+                if (size == 3) {
+                    setLabelNotChosen(label1);
+                    setLabelChosen(label2);
+                    setLabelNotChosen(label3);
+                } else if (size == 4) {
+                    setLabelNotChosen(label1);
+                    setLabelChosen(label2);
+                    setLabelNotChosen(label3);
+                    setLabelNotChosen(label4);
+                } else if (size == 5) {
+                    setLabelNotChosen(label1);
+                    setLabelChosen(label2);
+                    setLabelNotChosen(label3);
+                    setLabelNotChosen(label4);
+                    setLabelNotChosen(label5);
+                } else if (size == 6) {
+                    setLabelNotChosen(label1);
+                    setLabelChosen(label2);
+                    setLabelNotChosen(label3);
+                    setLabelNotChosen(label4);
+                    setLabelNotChosen(label5);
+                    setLabelNotChosen(label6);
+                } else if (size == 7) {
+                    setLabelNotChosen(label1);
+                    setLabelChosen(label2);
+                    setLabelNotChosen(label3);
+                    setLabelNotChosen(label4);
+                    setLabelNotChosen(label5);
+                    setLabelNotChosen(label6);
+                    setLabelNotChosen(label7);
+                } else if (size > 7) {
+                    setLabelNotChosen(label1);
+                    setLabelChosen(label2);
+                    setLabelNotChosen(label3);
+                    setLabelNotChosen(label4);
+                    setLabelNotChosen(label5);
+                    setLabelNotChosen(label6);
+                    setLabelNotChosen(label7);
+                    setLabelNotChosen(label8);
+                }
+                break;
+            case 3:
+                size = resultCount.get();
+                if (size == 4) {
+                    setLabelNotChosen(label1);
+                    setLabelNotChosen(label2);
+                    setLabelChosen(label3);
+                    setLabelNotChosen(label4);
+                } else if (size == 5) {
+                    setLabelNotChosen(label1);
+                    setLabelNotChosen(label2);
+                    setLabelChosen(label3);
+                    setLabelNotChosen(label4);
+                    setLabelNotChosen(label5);
+                } else if (size == 6) {
+                    setLabelNotChosen(label1);
+                    setLabelNotChosen(label2);
+                    setLabelChosen(label3);
+                    setLabelNotChosen(label4);
+                    setLabelNotChosen(label5);
+                    setLabelNotChosen(label6);
+                } else if (size == 7) {
+                    setLabelNotChosen(label1);
+                    setLabelNotChosen(label2);
+                    setLabelChosen(label3);
+                    setLabelNotChosen(label4);
+                    setLabelNotChosen(label5);
+                    setLabelNotChosen(label6);
+                    setLabelNotChosen(label7);
+                } else if (size > 7) {
+                    setLabelNotChosen(label1);
+                    setLabelNotChosen(label2);
+                    setLabelChosen(label3);
+                    setLabelNotChosen(label4);
+                    setLabelNotChosen(label5);
+                    setLabelNotChosen(label6);
+                    setLabelNotChosen(label7);
+                    setLabelNotChosen(label8);
+                }
+                break;
+            case 4:
+                size = resultCount.get();
+                if (size == 5) {
+                    setLabelNotChosen(label1);
+                    setLabelNotChosen(label2);
+                    setLabelNotChosen(label3);
+                    setLabelChosen(label4);
+                    setLabelNotChosen(label5);
+                } else if (size == 6) {
+                    setLabelNotChosen(label1);
+                    setLabelNotChosen(label2);
+                    setLabelNotChosen(label3);
+                    setLabelChosen(label4);
+                    setLabelNotChosen(label5);
+                    setLabelNotChosen(label6);
+                } else if (size == 7) {
+                    setLabelNotChosen(label1);
+                    setLabelNotChosen(label2);
+                    setLabelNotChosen(label3);
+                    setLabelChosen(label4);
+                    setLabelNotChosen(label5);
+                    setLabelNotChosen(label6);
+                    setLabelNotChosen(label7);
+                } else if (size > 7) {
+                    setLabelNotChosen(label1);
+                    setLabelNotChosen(label2);
+                    setLabelNotChosen(label3);
+                    setLabelChosen(label4);
+                    setLabelNotChosen(label5);
+                    setLabelNotChosen(label6);
+                    setLabelNotChosen(label7);
+                    setLabelNotChosen(label8);
+                }
+                break;
+            case 5:
+                size = resultCount.get();
+                if (size == 6) {
+                    setLabelNotChosen(label1);
+                    setLabelNotChosen(label2);
+                    setLabelNotChosen(label3);
+                    setLabelNotChosen(label4);
+                    setLabelChosen(label5);
+                    setLabelNotChosen(label6);
+                } else if (size == 7) {
+                    setLabelNotChosen(label1);
+                    setLabelNotChosen(label2);
+                    setLabelNotChosen(label3);
+                    setLabelNotChosen(label4);
+                    setLabelChosen(label5);
+                    setLabelNotChosen(label6);
+                    setLabelNotChosen(label7);
+                } else if (size > 7) {
+                    setLabelNotChosen(label1);
+                    setLabelNotChosen(label2);
+                    setLabelNotChosen(label3);
+                    setLabelNotChosen(label4);
+                    setLabelChosen(label5);
+                    setLabelNotChosen(label6);
+                    setLabelNotChosen(label7);
+                    setLabelNotChosen(label8);
+                }
+                break;
+            case 6:
+                size = resultCount.get();
+                if (size == 7) {
+                    setLabelNotChosen(label1);
+                    setLabelNotChosen(label2);
+                    setLabelNotChosen(label3);
+                    setLabelNotChosen(label4);
+                    setLabelNotChosen(label5);
+                    setLabelChosen(label6);
+                    setLabelNotChosen(label7);
+                } else if (size > 7) {
+                    setLabelNotChosen(label1);
+                    setLabelNotChosen(label2);
+                    setLabelNotChosen(label3);
+                    setLabelNotChosen(label4);
+                    setLabelNotChosen(label5);
+                    setLabelChosen(label6);
+                    setLabelNotChosen(label7);
+                    setLabelNotChosen(label8);
+                }
+                break;
+            case 7:
+                setLabelNotChosen(label1);
+                setLabelNotChosen(label2);
+                setLabelNotChosen(label3);
+                setLabelNotChosen(label4);
+                setLabelNotChosen(label5);
+                setLabelNotChosen(label6);
+                setLabelChosen(label7);
+                setLabelNotChosen(label8);
+                break;
         }
     }
 
@@ -3035,10 +3033,8 @@ public class SearchBar {
         String[] info = semicolon.split(command);
         String path = info[1];
         String name = info[0];
-        ImageIcon imageIcon;
-        try {
-            imageIcon = GetIconUtil.getInstance().getCommandIcon(colon.split(name)[1], iconSideLength, iconSideLength);
-        } catch (NullPointerException e) {
+        ImageIcon imageIcon = GetIconUtil.getInstance().getCommandIcon(colon.split(name)[1], iconSideLength, iconSideLength);
+        if (imageIcon == null) {
             imageIcon = GetIconUtil.getInstance().getBigIcon(path, iconSideLength, iconSideLength);
         }
         label.setIcon(imageIcon);
