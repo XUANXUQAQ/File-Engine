@@ -33,10 +33,10 @@ int toolbar_click_y;
 volatile bool is_click_not_explorer_or_searchbar;
 HWND searchBarHWND;
 
-
 void getTopWindow(HWND* hwnd);
 void getWindowRect(const HWND& hwnd, LPRECT lprect);
-bool isExplorerWindow(const HWND& hwnd);
+bool isExplorerWindowLowCost(const HWND& hwnd);
+bool isExplorerWindowHighCost(const HWND& hwnd);
 void _start();
 bool isFileChooserWindow(const HWND& hwnd);
 void setClickPos(const HWND& fileChooserHwnd);
@@ -48,6 +48,8 @@ bool isMouseClickedOrSwitchTaskPressed();
 bool isSearchBarWindow(const HWND& hd);
 void grabSearchBarHWND();
 wstring GetProcessNameByHandle(HWND nlHandle);
+
+
 extern "C" __declspec(dllexport) bool isDialogNotExist();
 extern "C" __declspec(dllexport) void start();
 extern "C" __declspec(dllexport) void stop();
@@ -96,7 +98,7 @@ bool isClickNotExplorerOrSearchBarOrSwitchTask()
         if (ret)
         {
             hd = WindowFromPoint(point);
-            if (isExplorerWindow(hd) || isFileChooserWindow(hd))
+            if (isExplorerWindowHighCost(hd) || isFileChooserWindow(hd))
             {
                 return false;
             } 
@@ -139,7 +141,7 @@ __declspec(dllexport) bool isDialogNotExist()
             int tmp_explorerHeight = windowRect.bottom - windowRect.top;
             if (!(tmp_explorerHeight < EXPLORER_MIN_HEIGHT || tmp_explorerWidth < EXPLORER_MIN_WIDTH || tmp_explorerX < EXPLORER_MIN_X_POS || tmp_explorerY < EXPLORER_MIN_Y_POS))
             {
-                if (isExplorerWindow(hd) || isFileChooserWindow(hd))
+                if (isExplorerWindowLowCost(hd) || isFileChooserWindow(hd))
                 {
                     return false;
                 }
@@ -212,6 +214,7 @@ BOOL CALLBACK findToolbar(HWND hwndChild, LPARAM lParam)
     return true;
 }
 
+
 wstring GetProcessNameByHandle(HWND nlHandle)
 {
     wstring loStrRet = L"";
@@ -245,13 +248,25 @@ wstring GetProcessNameByHandle(HWND nlHandle)
     return loStrRet;
 }
 
-bool isExplorerWindow(const HWND& hwnd)
+//不要在长时间循环中使用
+bool isExplorerWindowHighCost(const HWND& hwnd)
+{
+    wstring proc_name = GetProcessNameByHandle(hwnd);
+    transform(proc_name.begin(), proc_name.end(), proc_name.begin(), ::tolower);
+    return proc_name.find(_T("explorer.exe")) != wstring::npos;
+}
+
+
+bool isExplorerWindowLowCost(const HWND& hwnd)
 {
     if (IsWindowEnabled(hwnd) && !IsIconic(hwnd))
     {
-        wstring proc_name = GetProcessNameByHandle(hwnd);
-        transform(proc_name.begin(), proc_name.end(), proc_name.begin(), ::tolower);
-        return proc_name.find(_T("explorer.exe")) != wstring::npos;
+        char className[200];
+        GetClassNameA(hwnd, className, 200);
+        string WindowClassName(className);
+        transform(WindowClassName.begin(), WindowClassName.end(), WindowClassName.begin(), ::tolower);
+        //使用检测窗口类名的方式更节省CPU资源
+        return WindowClassName.find("cabinet") != string::npos; 
     }
     return false;
 }
@@ -331,7 +346,7 @@ void _start()
     while (isRunning)
     {
         getTopWindow(&hwnd);
-        if (isExplorerWindow(hwnd) || isFileChooserWindow(hwnd))
+        if (isExplorerWindowLowCost(hwnd) || isFileChooserWindow(hwnd))
         {
             getWindowRect(hwnd, &windowRect);
             explorerX = windowRect.left;
@@ -347,7 +362,7 @@ void _start()
                 isExplorerWindowAtTop = true;
             }
         }
-        else 
+        else
         {
             isExplorerWindowAtTop = false;
         }
@@ -362,32 +377,3 @@ void _start()
     }
 }
 
-
-#ifdef TEST
-int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
-    _In_opt_ HINSTANCE hPrevInstance,
-    _In_ LPWSTR    lpCmdLine,
-    _In_ int       nCmdShow)
-{
-    start();
-    while (true)
-    {
-        /*if (isExplorerWindowAtTop)
-        {
-            int xPos = getExplorerX();
-            int yPos = getExplorerY();
-            int width = getExplorerWidth();
-            int height = getExplorerHeight();
-            int toolBarX = toolbar_click_x;
-            int toolBarY = toolbar_click_y;
-            Sleep(20);
-        }*/
-        if (is_click_not_explorer_or_searchbar)
-        {
-            Sleep(10);
-            break;
-        }
-        Sleep(10);
-    }
-}
-#endif
