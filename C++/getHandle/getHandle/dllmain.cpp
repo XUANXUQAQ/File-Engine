@@ -12,6 +12,11 @@
 #pragma comment(lib, "user32.lib")
 #pragma comment(lib, "kernel32")
 #define IS_MOUSE_CLICKED_OR_KEY_PRESSED(VK_NONAME) ((GetAsyncKeyState(VK_NONAME) & 0x8000) ? 1:0)
+
+constexpr auto EXPLORER_MIN_HEIGHT = 200;       //当窗口大小满足这些条件后才开始判断是否为explorer.exe
+constexpr auto EXPLORER_MIN_WIDTH = 200;
+constexpr auto EXPLORER_MIN_X_POS = 50;
+constexpr auto EXPLORER_MIN_Y_POS = 50;
 //#define TEST
 
 
@@ -120,18 +125,37 @@ bool isMouseClickedOrSwitchTaskPressed()
 
 __declspec(dllexport) bool isDialogNotExist()
 {
-    HWND hd = GetDesktopWindow();        //得到桌面窗口
-    hd = GetWindow(hd, GW_CHILD);        //得到屏幕上第一个子窗口
-    while (hd != NULL)                    //循环得到所有的子窗口
+    HWND topWindow;
+    getTopWindow(&topWindow);
+    bool isFileChooserAtTop = isFileChooserWindow(topWindow);
+    if (isFileChooserAtTop)
     {
-        if (IsWindowVisible(hd) && !IsIconic(hd))
+        return false;
+    }
+    else
+    {
+        RECT windowRect;
+        HWND hd = GetDesktopWindow();        //得到桌面窗口
+        hd = GetWindow(hd, GW_CHILD);        //得到屏幕上第一个子窗口
+        while (hd != NULL)                    //循环得到所有的子窗口
         {
-            if (isFileChooserWindow(hd) || isExplorerWindow(hd))
+            if (IsWindowVisible(hd) && !IsIconic(hd))
             {
-                return false;
+                getWindowRect(hd, &windowRect);
+                int tmp_explorerX = windowRect.left;
+                int tmp_explorerY = windowRect.top;
+                int tmp_explorerWidth = windowRect.right - windowRect.left;
+                int tmp_explorerHeight = windowRect.bottom - windowRect.top;
+                if (!(tmp_explorerHeight < EXPLORER_MIN_HEIGHT || tmp_explorerWidth < EXPLORER_MIN_WIDTH || tmp_explorerX < EXPLORER_MIN_X_POS || tmp_explorerY < EXPLORER_MIN_Y_POS))
+                {
+                    if (isExplorerWindow(hd))
+                    {
+                        return false;
+                    }
+                }
             }
+            hd = GetWindow(hd, GW_HWNDNEXT);
         }
-        hd = GetWindow(hd, GW_HWNDNEXT);
     }
     return true;
 }
@@ -321,7 +345,7 @@ void _start()
             explorerY = windowRect.top;
             explorerWidth = windowRect.right - windowRect.left;
             explorerHeight = windowRect.bottom - windowRect.top;
-            if (explorerHeight < 200 || explorerWidth < 200 || explorerX < 50 || explorerY < 50) {
+            if (explorerHeight < EXPLORER_MIN_HEIGHT || explorerWidth < EXPLORER_MIN_WIDTH || explorerX < EXPLORER_MIN_X_POS || explorerY < EXPLORER_MIN_Y_POS) {
                 isExplorerWindowAtTop = false;
             }
             else
