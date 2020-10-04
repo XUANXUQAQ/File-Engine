@@ -181,10 +181,13 @@ bool isFileChooserWindow(const HWND& hwnd)
     transform(windowTitle.begin(), windowTitle.end(), windowTitle.begin(), ::tolower);
     transform(WindowClassName.begin(), WindowClassName.end(), WindowClassName.begin(), ::tolower);
     return ((WindowClassName.find("#32770") != string::npos ||
-        WindowClassName.find("dialog") != string::npos)) && 
-        windowTitle.find("internet download manager") == string::npos && 
+        WindowClassName.find("dialog") != string::npos)) 
+        && 
+        //排除已知的例外
+        (windowTitle.find("internet download manager") == string::npos && 
         windowTitle.find("push commits to") == string::npos &&
-        windowTitle.find("geek uninstaller") == string::npos;
+        windowTitle.find("geek uninstaller") == string::npos && 
+        windowTitle.find("rainmeter") == string::npos);
 }
 
 void setClickPos(const HWND& fileChooserHwnd)
