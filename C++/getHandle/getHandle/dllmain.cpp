@@ -28,23 +28,19 @@ int toolbar_click_y;
 volatile bool is_click_not_explorer_or_searchbar;
 HWND searchBarHWND;
 
-struct handle_data {
-    unsigned long process_id;
-    HWND window_handle;
-};
 
-void getTopWindow(HWND& hwnd);
-void getWindowRect(HWND& hwnd, LPRECT lprect);
-bool isExplorerWindow(HWND& hwnd);
+void getTopWindow(HWND* hwnd);
+void getWindowRect(const HWND& hwnd, LPRECT lprect);
+bool isExplorerWindow(const HWND& hwnd);
 void _start();
-bool isFileChooserWindow(HWND& hwnd);
-void setClickPos(HWND& fileChooserHwnd);
+bool isFileChooserWindow(const HWND& hwnd);
+void setClickPos(const HWND& fileChooserHwnd);
 BOOL CALLBACK findToolbar(HWND hwndChild, LPARAM lParam);
 BOOL CALLBACK findSeachBar(HWND hwndChild, LPARAM lParam);
 bool isClickNotExplorerOrSearchBarOrSwitchTask();
 void _checkMouseStatus();
 bool isMouseClickedOrSwitchTaskPressed();
-bool isSearchBarWindow(HWND& hd);
+bool isSearchBarWindow(const HWND& hd);
 void grabSearchBarHWND();
 extern "C" __declspec(dllexport) bool isDialogNotExist();
 extern "C" __declspec(dllexport) void start();
@@ -108,7 +104,7 @@ bool isClickNotExplorerOrSearchBarOrSwitchTask()
     return false;
 }
 
-bool isSearchBarWindow(HWND& hd)
+bool isSearchBarWindow(const HWND& hd)
 {
     char title[200];
     GetWindowTextA(hd, title, 200);
@@ -125,7 +121,6 @@ __declspec(dllexport) bool isDialogNotExist()
 {
     HWND hd = GetDesktopWindow();        //得到桌面窗口
     hd = GetWindow(hd, GW_CHILD);        //得到屏幕上第一个子窗口
-    int num = 1;
     while (hd != NULL)                    //循环得到所有的子窗口
     {
         if (IsWindowVisible(hd) && !IsIconic(hd))
@@ -135,22 +130,22 @@ __declspec(dllexport) bool isDialogNotExist()
                 return false;
             }
         }
-        hd = GetNextWindow(hd, GW_HWNDNEXT);
+        hd = GetWindow(hd, GW_HWNDNEXT);
     }
     return true;
 }
 
-void getTopWindow(HWND& hwnd)
+void getTopWindow(HWND* hwnd)
 {
-    hwnd = ::GetForegroundWindow();
+    *hwnd = ::GetForegroundWindow();
 }
 
-void getWindowRect(HWND& hwnd, LPRECT lprect)
+void getWindowRect(const HWND& hwnd, LPRECT lprect)
 {
     GetWindowRect(hwnd, lprect);
 }
 
-bool isFileChooserWindow(HWND& hwnd)
+bool isFileChooserWindow(const HWND& hwnd)
 {
     char _windowClassName[100];
     char title[100];
@@ -160,14 +155,14 @@ bool isFileChooserWindow(HWND& hwnd)
     string WindowClassName(_windowClassName);
     transform(windowTitle.begin(), windowTitle.end(), windowTitle.begin(), ::tolower);
     transform(WindowClassName.begin(), WindowClassName.end(), WindowClassName.begin(), ::tolower);
-    return (WindowClassName.find("#32770") != string::npos ||
-        WindowClassName.find("dialog") != string::npos) && 
+    return ((WindowClassName.find("#32770") != string::npos ||
+        WindowClassName.find("dialog") != string::npos)) && 
         windowTitle.find("internet download manager") == string::npos && 
         windowTitle.find("push commits to") == string::npos &&
         windowTitle.find("geek uninstaller") == string::npos;
 }
 
-void setClickPos(HWND& fileChooserHwnd)
+void setClickPos(const HWND& fileChooserHwnd)
 {
     EnumChildWindows(fileChooserHwnd, findToolbar, NULL);
 }
@@ -199,9 +194,9 @@ BOOL CALLBACK findToolbar(HWND hwndChild, LPARAM lParam)
     return true;
 }
 
-bool isExplorerWindow(HWND& hwnd)
+bool isExplorerWindow(const HWND& hwnd)
 {
-    if (IsWindowEnabled(hwnd))
+    if (IsWindowEnabled(hwnd) && !IsIconic(hwnd))
     {
         char className[200];
         GetClassNameA(hwnd, className, 200);
@@ -292,7 +287,7 @@ void _start()
     RECT windowRect;
     while (isRunning)
     {
-        getTopWindow(hwnd);
+        getTopWindow(&hwnd);
         if (isExplorerWindow(hwnd) || isFileChooserWindow(hwnd))
         {
             getWindowRect(hwnd, &windowRect);
