@@ -42,6 +42,7 @@ void _checkMouseStatus();
 bool isMouseClickedOrSwitchTaskPressed();
 bool isSearchBarWindow(const HWND& hd);
 void grabSearchBarHWND();
+wstring GetProcessNameByHandle(HWND nlHandle);
 extern "C" __declspec(dllexport) bool isDialogNotExist();
 extern "C" __declspec(dllexport) void start();
 extern "C" __declspec(dllexport) void stop();
@@ -194,21 +195,46 @@ BOOL CALLBACK findToolbar(HWND hwndChild, LPARAM lParam)
     return true;
 }
 
+wstring GetProcessNameByHandle(HWND nlHandle)
+{
+    wstring loStrRet = L"";
+    //得到该进程的进程id
+    DWORD ldwProID;
+    GetWindowThreadProcessId(nlHandle, &ldwProID);
+    if (0 == ldwProID)
+    {
+        return L"";
+    }
+    HANDLE handle = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    if (handle == (HANDLE)-1)
+    {
+        //AfxMessageBox(L"CreateToolhelp32Snapshot error");
+        return loStrRet;
+    }
+    PROCESSENTRY32 procinfo;
+    procinfo.dwSize = sizeof(PROCESSENTRY32);
+    BOOL more = ::Process32First(handle, &procinfo);
+    while (more)
+    {
+        if (procinfo.th32ProcessID == ldwProID)
+        {
+            loStrRet = procinfo.szExeFile;
+            CloseHandle(handle);
+            return loStrRet;
+        }
+        more = Process32Next(handle, &procinfo);
+    }
+    CloseHandle(handle);
+    return loStrRet;
+}
+
 bool isExplorerWindow(const HWND& hwnd)
 {
     if (IsWindowEnabled(hwnd) && !IsIconic(hwnd))
     {
-        char className[200];
-        GetClassNameA(hwnd, className, 200);
-        string WindowClassName(className);
-        transform(WindowClassName.begin(), WindowClassName.end(), WindowClassName.begin(), ::tolower);
-        return (WindowClassName.find("cabinet") != string::npos ||
-            WindowClassName.find("directuihwnd") != string::npos ||
-            WindowClassName.find("systreeview") != string::npos ||
-            WindowClassName.find("universalsearchband") != string::npos ||
-            WindowClassName.find("address band root") != string::npos ||
-            WindowClassName.find("netuihwnd") != string::npos ||
-            WindowClassName.find("rebarwindow") != string::npos);
+        wstring proc_name = GetProcessNameByHandle(hwnd);
+        transform(proc_name.begin(), proc_name.end(), proc_name.begin(), ::tolower);
+        return proc_name.find(_T("explorer.exe")) != wstring::npos;
     }
     return false;
 }
