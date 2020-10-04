@@ -44,9 +44,9 @@ public class RobotUtil {
             for (int each : keyCodes) {
                 robot.keyPress(each);
             }
-            //保持按下状态100毫秒
+            //保持按下状态50毫秒
             try {
-                TimeUnit.MILLISECONDS.sleep(100);
+                TimeUnit.MILLISECONDS.sleep(50);
             } catch (InterruptedException ignored) {
             }
             //全部释放

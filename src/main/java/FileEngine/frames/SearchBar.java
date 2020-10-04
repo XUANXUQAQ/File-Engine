@@ -1935,12 +1935,7 @@ public class SearchBar {
                         switchToExplorerAttachMode();
                         GetHandle.INSTANCE.resetMouseStatus();
                     } else {
-                        if (GetHandle.INSTANCE.isDialogNotExist()) {
-                            switchToNormalMode();
-                            TimeUnit.MILLISECONDS.sleep(100);
-                            continue;
-                        }
-                        if (GetHandle.INSTANCE.isExplorerAndSearchbarNotFocused()) {
+                        if (GetHandle.INSTANCE.isDialogNotExist() || GetHandle.INSTANCE.isExplorerAndSearchbarNotFocused()) {
                             switchToNormalMode();
                         }
                     }
