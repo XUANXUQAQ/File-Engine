@@ -125,37 +125,27 @@ bool isMouseClickedOrSwitchTaskPressed()
 
 __declspec(dllexport) bool isDialogNotExist()
 {
-    HWND topWindow;
-    getTopWindow(&topWindow);
-    bool isFileChooserAtTop = isFileChooserWindow(topWindow);
-    if (isFileChooserAtTop)
+    RECT windowRect;
+    HWND hd = GetDesktopWindow();        //得到桌面窗口
+    hd = GetWindow(hd, GW_CHILD);        //得到屏幕上第一个子窗口
+    while (hd != NULL)                    //循环得到所有的子窗口
     {
-        return false;
-    }
-    else
-    {
-        RECT windowRect;
-        HWND hd = GetDesktopWindow();        //得到桌面窗口
-        hd = GetWindow(hd, GW_CHILD);        //得到屏幕上第一个子窗口
-        while (hd != NULL)                    //循环得到所有的子窗口
+        if (IsWindowVisible(hd) && !IsIconic(hd))
         {
-            if (IsWindowVisible(hd) && !IsIconic(hd))
+            getWindowRect(hd, &windowRect);
+            int tmp_explorerX = windowRect.left;
+            int tmp_explorerY = windowRect.top;
+            int tmp_explorerWidth = windowRect.right - windowRect.left;
+            int tmp_explorerHeight = windowRect.bottom - windowRect.top;
+            if (!(tmp_explorerHeight < EXPLORER_MIN_HEIGHT || tmp_explorerWidth < EXPLORER_MIN_WIDTH || tmp_explorerX < EXPLORER_MIN_X_POS || tmp_explorerY < EXPLORER_MIN_Y_POS))
             {
-                getWindowRect(hd, &windowRect);
-                int tmp_explorerX = windowRect.left;
-                int tmp_explorerY = windowRect.top;
-                int tmp_explorerWidth = windowRect.right - windowRect.left;
-                int tmp_explorerHeight = windowRect.bottom - windowRect.top;
-                if (!(tmp_explorerHeight < EXPLORER_MIN_HEIGHT || tmp_explorerWidth < EXPLORER_MIN_WIDTH || tmp_explorerX < EXPLORER_MIN_X_POS || tmp_explorerY < EXPLORER_MIN_Y_POS))
+                if (isExplorerWindow(hd) || isFileChooserWindow(hd))
                 {
-                    if (isExplorerWindow(hd))
-                    {
-                        return false;
-                    }
+                    return false;
                 }
             }
-            hd = GetWindow(hd, GW_HWNDNEXT);
         }
+        hd = GetWindow(hd, GW_HWNDNEXT);
     }
     return true;
 }
