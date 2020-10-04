@@ -53,13 +53,14 @@ public class GetIconUtil {
         helpIcon = changeIcon(new ImageIcon(GetIconUtil.class.getResource("/icons/help.png")), width, height);
     }
 
-    public ImageIcon getCommandIcon(String commandName, int width, int height) throws NullPointerException {
+    public ImageIcon getCommandIcon(String commandName, int width, int height) {
         if (!isInitialized) {
             initIconCache(width, height);
             isInitialized = true;
         }
         if (commandName == null || commandName.isEmpty()) {
-            throw new NullPointerException("No icon matched with command");
+            System.err.println("No icon matched with command");
+            return null;
         }
         switch (commandName) {
             case "clearbin":
@@ -71,7 +72,8 @@ public class GetIconUtil {
             case "version":
                 return blankIcon;
             default:
-                throw new NullPointerException("No icon matched with command");
+                System.err.println("No icon matched with command");
+                return null;
         }
     }
 
