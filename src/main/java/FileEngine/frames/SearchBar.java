@@ -1933,13 +1933,7 @@ public class SearchBar {
                         switchToExplorerAttachMode();
                         GetHandle.INSTANCE.resetMouseStatus();
                     } else {
-                        boolean isFileChooserNotExist = GetHandle.INSTANCE.isDialogNotExist();
-                        boolean isExplorerAndSearchBarNotFocused = GetHandle.INSTANCE.isExplorerAndSearchbarNotFocused();
-                        if (AllConfigs.isDebug()) {
-                            System.out.println("当前isFileChooserNotExist : " + isFileChooserNotExist);
-                            System.out.println("当前isExplorerAndSearchBarNotFocused : " + isExplorerAndSearchBarNotFocused);
-                        }
-                        if (isFileChooserNotExist || isExplorerAndSearchBarNotFocused) {
+                        if (GetHandle.INSTANCE.isDialogNotExist() || GetHandle.INSTANCE.isExplorerAndSearchbarNotFocused()) {
                             switchToNormalMode();
                         }
                     }
