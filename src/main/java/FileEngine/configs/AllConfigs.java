@@ -22,6 +22,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class AllConfigs {
     public static final String version = "2.9"; //TODO 更改版本号
 
+    private static final int allSetMethodsNum = 25;
+
     private static volatile boolean mainExit = false;
     private static volatile int cacheNumLimit;
     private static volatile String hotkey;
@@ -62,7 +64,7 @@ public class AllConfigs {
 
     public static void denyChangeSettings() {
         isAllowChangeSettings = false;
-        if (setterCount != 25) {
+        if (setterCount != allSetMethodsNum) {
             System.err.println("警告：set方法并未被完全调用");
         }
         setterCount = 0;
