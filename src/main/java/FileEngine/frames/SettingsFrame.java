@@ -188,6 +188,8 @@ public class SettingsFrame {
     private JTextField textFieldBorderColor;
     private JLabel borderColorChooser;
     private JLabel labelCurrentCacheNum;
+    private JLabel labelUninstallPluginTip;
+    private JLabel labelUninstallPluginTip2;
 
     private static class SettingsFrameBuilder {
         private static final SettingsFrame instance = new SettingsFrame();
@@ -976,11 +978,7 @@ public class SettingsFrame {
         setTextFieldAndTextAreaGui();
         setCheckBoxGui();
 
-        Object[] plugins = PluginUtil.getInstance().getPluginNameArray();
         buttonUpdatePlugin.setVisible(false);
-        if (plugins.length == 0) {
-            PluginSettingsPanel.setVisible(false);
-        }
 
         if (AllConfigs.getProxyType() == AllConfigs.ProxyType.PROXY_DIRECT) {
             radioButtonNoProxy.setSelected(true);
@@ -1254,6 +1252,8 @@ public class SettingsFrame {
         buttonVacuum.setText(TranslateUtil.getInstance().getTranslation("Optimize database"));
         labelBorderColor.setText(TranslateUtil.getInstance().getTranslation("Border Color:"));
         labelCurrentCacheNum.setText(TranslateUtil.getInstance().getTranslation("Current Caches Num:") + AllConfigs.getCacheNum());
+        labelUninstallPluginTip.setText(TranslateUtil.getInstance().getTranslation("If you need to delete a plug-in, just delete it under the \"plugins\" folder in the software directory."));
+        labelUninstallPluginTip2.setText(TranslateUtil.getInstance().getTranslation("Tip:"));
     }
 
     private boolean isRepeatCommand(String name) {

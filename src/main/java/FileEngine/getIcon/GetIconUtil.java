@@ -1,5 +1,7 @@
 package FileEngine.getIcon;
 
+import FileEngine.configs.AllConfigs;
+
 import javax.swing.*;
 import javax.swing.filechooser.FileSystemView;
 import java.awt.*;
@@ -59,7 +61,9 @@ public class GetIconUtil {
             isInitialized = true;
         }
         if (commandName == null || commandName.isEmpty()) {
-            System.err.println("No icon matched with command");
+            if (AllConfigs.isDebug()) {
+                System.err.println("Command is empty");
+            }
             return null;
         }
         switch (commandName) {
@@ -72,7 +76,9 @@ public class GetIconUtil {
             case "version":
                 return blankIcon;
             default:
-                System.err.println("No icon matched with command");
+                if (AllConfigs.isDebug()) {
+                    System.err.println("No icon matched with command");
+                }
                 return null;
         }
     }
