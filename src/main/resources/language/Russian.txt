@@ -143,3 +143,5 @@ Border color is set incorrectly=Цвет границы установлен н�
 Current Caches Num:=Текущий номер кеша:
 The result has been copied to the clipboard=Результат скопирован в буфер обмена
 Loading plugins error=Ошибка загрузки плагинов
+Tip:=незамедлительный
+If you need to delete a plug-in, just delete it under the "plugins" folder in the software directory.=Если вам нужно удалить плагин, просто удалите его в папке «plugins» в каталоге программного обеспечения.
