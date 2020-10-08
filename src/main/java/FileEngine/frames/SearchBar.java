@@ -303,11 +303,7 @@ public class SearchBar {
                                     } else if (isCopyPathPressed) {
                                         copyToClipBoard(res, true);
                                     } else {
-                                        if (res.endsWith(".bat") || res.endsWith(".cmd")) {
-                                            openWithAdmin(res);
-                                        } else {
-                                            openWithoutAdmin(res);
-                                        }
+                                        openWithoutAdmin(res);
                                     }
                                     saveCache(res);
                                 }
@@ -334,11 +330,7 @@ public class SearchBar {
                                 } else if (isCopyPathPressed) {
                                     copyToClipBoard(res, true);
                                 } else {
-                                    if (res.endsWith(".bat") || res.endsWith(".cmd")) {
-                                        openWithAdmin(open.getAbsolutePath());
-                                    } else {
-                                        openWithoutAdmin(open.getAbsolutePath());
-                                    }
+                                    openWithoutAdmin(open.getAbsolutePath());
                                 }
                             }
                         } else if (runningMode.get() == AllConfigs.RunningMode.PLUGIN_MODE) {
@@ -498,11 +490,7 @@ public class SearchBar {
                                         } else if (isCopyPathPressed) {
                                             copyToClipBoard(res, true);
                                         } else {
-                                            if (res.endsWith(".bat") || res.endsWith(".cmd")) {
-                                                openWithAdmin(res);
-                                            } else {
-                                                openWithoutAdmin(res);
-                                            }
+                                            openWithoutAdmin(res);
                                         }
                                         saveCache(res);
                                     } else if (showingMode.get() == AllConfigs.ShowingSearchBarMode.EXPLORER_ATTACH) {
@@ -535,11 +523,7 @@ public class SearchBar {
                                     } else if (isCopyPathPressed) {
                                         copyToClipBoard(res, true);
                                     } else {
-                                        if (res.endsWith(".bat") || res.endsWith(".cmd")) {
-                                            openWithAdmin(open.getAbsolutePath());
-                                        } else {
-                                            openWithoutAdmin(open.getAbsolutePath());
-                                        }
+                                        openWithoutAdmin(open.getAbsolutePath());
                                     }
                                 }
                             }
