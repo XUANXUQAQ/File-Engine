@@ -109,6 +109,11 @@ bool isClickNotExplorerOrSearchBarOrSwitchTask()
             }
         }
     }
+    else
+    {
+        getTopWindow(&hd);
+        return !(isFileChooserWindow(hd) || isExplorerWindowLowCost(hd) || isSearchBarWindow(hd));
+    }
     return false;
 }
 
