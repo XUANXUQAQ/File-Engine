@@ -447,11 +447,9 @@ public class AllConfigs {
      * 获取数据库缓存条目数量，用于判断软件是否还能继续写入缓存
      */
     private static void initCacheNum() {
-        try (PreparedStatement pStmt = SQLiteUtil.getConnection().prepareStatement("SELECT PATH FROM cache;");
+        try (PreparedStatement pStmt = SQLiteUtil.getConnection().prepareStatement("SELECT COUNT(PATH) FROM cache;");
              ResultSet resultSet = pStmt.executeQuery()) {
-            while (resultSet.next()) {
-                cacheNum.incrementAndGet();
-            }
+            cacheNum.set(resultSet.getInt(1));
         } catch (Exception throwables) {
             if (AllConfigs.isDebug()) {
                 throwables.printStackTrace();
