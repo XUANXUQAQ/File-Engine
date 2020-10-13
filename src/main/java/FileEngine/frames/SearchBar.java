@@ -374,7 +374,7 @@ public class SearchBar {
         y = GetHandle.INSTANCE.get_toolbar_click_y();
         RobotUtil.getInstance().mouseClicked(x, y, 1, InputEvent.BUTTON1_MASK);
         try {
-            TimeUnit.MILLISECONDS.sleep(50);
+            TimeUnit.MILLISECONDS.sleep(25);
         } catch (InterruptedException ignored) {
         }
         RobotUtil.getInstance().keyTyped(KeyEvent.VK_CONTROL, KeyEvent.VK_V);
@@ -468,6 +468,7 @@ public class SearchBar {
                     } else if (10 == key) {
                         if (runningMode.get() != AllConfigs.RunningMode.PLUGIN_MODE) {
                             //enter被点击
+                            clearAllLabels();
                             if (showingMode.get() == AllConfigs.ShowingSearchBarMode.NORMAL_SHOWING) {
                                 if (isVisible()) {
                                     setVisible(false);
@@ -1921,7 +1922,7 @@ public class SearchBar {
                             switchToNormalMode();
                         }
                     }
-                    TimeUnit.MILLISECONDS.sleep(100);
+                    TimeUnit.MILLISECONDS.sleep(500);
                 }
             } catch (InterruptedException ignored) {
             } finally {
@@ -2019,10 +2020,6 @@ public class SearchBar {
                 GetHandle.INSTANCE.resetMouseStatus();
                 showingMode.set(AllConfigs.ShowingSearchBarMode.EXPLORER_ATTACH);
                 //让更改窗口大小线程先运行
-                try {
-                    TimeUnit.MILLISECONDS.sleep(50);
-                } catch (InterruptedException ignored) {
-                }
                 if (!isVisible()) {
                     showSearchbar(false);
                 }
