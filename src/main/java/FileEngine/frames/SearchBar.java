@@ -1922,7 +1922,7 @@ public class SearchBar {
                             switchToNormalMode();
                         }
                     }
-                    TimeUnit.MILLISECONDS.sleep(500);
+                    TimeUnit.MILLISECONDS.sleep(400);
                 }
             } catch (InterruptedException ignored) {
             } finally {
@@ -1966,32 +1966,36 @@ public class SearchBar {
         });
     }
 
+    private void getExplorerSizeAndChangeSearchBarSizeExplorerMode() {
+        int searchBarHeight = (int) (GetHandle.INSTANCE.getExplorerHeight() * 0.75);
+        int labelHeight = searchBarHeight / 9;
+        if (labelHeight > 20) {
+            int searchBarWidth = (int) (GetHandle.INSTANCE.getExplorerWidth() / 3);
+            int positionX = (int) (GetHandle.INSTANCE.getExplorerX());
+            int positionY = (int) (GetHandle.INSTANCE.getExplorerY() - labelHeight - 5);
+            //设置窗口大小
+            searchBar.setBounds(positionX, positionY, searchBarWidth, searchBarHeight);
+            //设置label大小
+            setLabelSize(searchBarWidth, labelHeight, labelHeight, label1);
+            setLabelSize(searchBarWidth, labelHeight, labelHeight * 2, label2);
+            setLabelSize(searchBarWidth, labelHeight, labelHeight * 3, label3);
+            setLabelSize(searchBarWidth, labelHeight, labelHeight * 4, label4);
+            setLabelSize(searchBarWidth, labelHeight, labelHeight * 5, label5);
+            setLabelSize(searchBarWidth, labelHeight, labelHeight * 6, label6);
+            setLabelSize(searchBarWidth, labelHeight, labelHeight * 7, label7);
+            setLabelSize(searchBarWidth, labelHeight, labelHeight * 8, label8);
+            //设置textField大小
+            textField.setSize(searchBarWidth - 6, labelHeight - 5);
+            textField.setLocation(3, 0);
+        }
+    }
+
     private void changeSearchBarSizeWhenOnExplorerMode() {
         CachedThreadPool.getInstance().executeTask(() -> {
             try {
                 while (AllConfigs.isNotMainExit()) {
                     if (showingMode.get() == AllConfigs.ShowingSearchBarMode.EXPLORER_ATTACH) {
-                        int searchBarHeight = (int) (GetHandle.INSTANCE.getExplorerHeight() * 0.75);
-                        int labelHeight = searchBarHeight / 9;
-                        if (labelHeight > 20) {
-                            int searchBarWidth = (int) (GetHandle.INSTANCE.getExplorerWidth() / 3);
-                            int positionX = (int) (GetHandle.INSTANCE.getExplorerX());
-                            int positionY = (int) (GetHandle.INSTANCE.getExplorerY() - labelHeight - 5);
-                            //设置窗口大小
-                            searchBar.setBounds(positionX, positionY, searchBarWidth, searchBarHeight);
-                            //设置label大小
-                            setLabelSize(searchBarWidth, labelHeight, labelHeight, label1);
-                            setLabelSize(searchBarWidth, labelHeight, labelHeight * 2, label2);
-                            setLabelSize(searchBarWidth, labelHeight, labelHeight * 3, label3);
-                            setLabelSize(searchBarWidth, labelHeight, labelHeight * 4, label4);
-                            setLabelSize(searchBarWidth, labelHeight, labelHeight * 5, label5);
-                            setLabelSize(searchBarWidth, labelHeight, labelHeight * 6, label6);
-                            setLabelSize(searchBarWidth, labelHeight, labelHeight * 7, label7);
-                            setLabelSize(searchBarWidth, labelHeight, labelHeight * 8, label8);
-                            //设置textField大小
-                            textField.setSize(searchBarWidth - 6, labelHeight - 5);
-                            textField.setLocation(3, 0);
-                        }
+                        getExplorerSizeAndChangeSearchBarSizeExplorerMode();
                     }
                     TimeUnit.MILLISECONDS.sleep(15);
                 }
@@ -2019,7 +2023,7 @@ public class SearchBar {
                 label8.setFont(labelFont);
                 GetHandle.INSTANCE.resetMouseStatus();
                 showingMode.set(AllConfigs.ShowingSearchBarMode.EXPLORER_ATTACH);
-                //让更改窗口大小线程先运行
+                getExplorerSizeAndChangeSearchBarSizeExplorerMode();
                 if (!isVisible()) {
                     showSearchbar(false);
                 }
