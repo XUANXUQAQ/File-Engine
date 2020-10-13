@@ -46,7 +46,7 @@ public class RobotUtil {
             }
             //保持按下状态50毫秒
             try {
-                TimeUnit.MILLISECONDS.sleep(50);
+                TimeUnit.MILLISECONDS.sleep(25);
             } catch (InterruptedException ignored) {
             }
             //全部释放
