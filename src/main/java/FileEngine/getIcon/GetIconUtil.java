@@ -15,7 +15,6 @@ public class GetIconUtil {
     private ImageIcon dllImageIcon;
     private ImageIcon folderImageIcon;
     private ImageIcon txtImageIcon;
-    private ImageIcon vbsImageIcon;
     private ImageIcon helpIcon;
     private ImageIcon updateIcon;
     private ImageIcon blankIcon;
@@ -48,7 +47,6 @@ public class GetIconUtil {
         dllImageIcon = changeIcon((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(new File("C:\\Windows\\System32\\sysmain.dll")), width, height);
         folderImageIcon = changeIcon((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(new File("C:\\Windows")), width, height);
         txtImageIcon = changeIcon((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(new File("user\\cmds.txt")), width, height);
-        vbsImageIcon = changeIcon((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(new File("user\\shortcutGenerator.vbs")), width, height);
         blankIcon = changeIcon(new ImageIcon(GetIconUtil.class.getResource("/icons/blank.png")), width, height);
         recycleBin = changeIcon(new ImageIcon(GetIconUtil.class.getResource("/icons/recyclebin.png")), width, height);
         updateIcon = changeIcon(new ImageIcon(GetIconUtil.class.getResource("/icons/update.png")), width, height);
@@ -100,9 +98,6 @@ public class GetIconUtil {
             }
             if (path.endsWith(".txt")) {
                 return txtImageIcon;
-            }
-            if (path.endsWith(".vbs")) {
-                return vbsImageIcon;
             }
             //检测是否为文件夹
             if (f.isDirectory()) {
