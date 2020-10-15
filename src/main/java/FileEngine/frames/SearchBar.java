@@ -3210,9 +3210,13 @@ public class SearchBar {
         File file = new File(path);
         if (file.exists()) {
             try {
-                String command = "start " + path.substring(0,2) + "\"" + path.substring(2) + "\"";
-                String vbsFilePath = generateBatAndVbsFile(command, System.getProperty("java.io.tmpdir"), getParentPath(path));
-                Runtime.getRuntime().exec("explorer.exe " + vbsFilePath.substring(0,2) + "\"" + vbsFilePath.substring(2) + "\"");
+                if (file.isFile()) {
+                    String command = "start " + path.substring(0, 2) + "\"" + path.substring(2) + "\"";
+                    String vbsFilePath = generateBatAndVbsFile(command, System.getProperty("java.io.tmpdir"), getParentPath(path));
+                    Runtime.getRuntime().exec("explorer.exe " + vbsFilePath.substring(0, 2) + "\"" + vbsFilePath.substring(2) + "\"");
+                } else {
+                    Runtime.getRuntime().exec("explorer.exe \"" + path + "\"");
+                }
             } catch (Exception e) {
                 //打开上级文件夹
                 try {
