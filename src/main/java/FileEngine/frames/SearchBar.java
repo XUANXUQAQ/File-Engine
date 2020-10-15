@@ -3177,6 +3177,13 @@ public class SearchBar {
         }
     }
 
+    /**
+     * 在windows的temp目录中生成bat以及用于隐藏bat的vbs脚本
+     * @param command 要运行的cmd命令
+     * @param filePath 文件位置（必须传入文件夹）
+     * @param workingDir 应用打开后的工作目录
+     * @return vbs的路径
+     */
     private String generateBatAndVbsFile(String command, String filePath, String workingDir) {
         char disk = workingDir.charAt(0);
         String start = workingDir.substring(0,2);
