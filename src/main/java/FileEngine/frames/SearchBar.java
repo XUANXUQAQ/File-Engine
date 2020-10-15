@@ -3215,14 +3215,25 @@ public class SearchBar {
      */
     private void openWithoutAdmin(String path) {
         File file = new File(path);
+        String pathLower = path.toLowerCase();
         if (file.exists()) {
             try {
-                if (file.isFile()) {
-                    String command = "start " + path.substring(0, 2) + "\"" + path.substring(2) + "\"";
-                    String vbsFilePath = generateBatAndVbsFile(command, System.getProperty("java.io.tmpdir"), getParentPath(path));
-                    Runtime.getRuntime().exec("explorer.exe " + vbsFilePath.substring(0, 2) + "\"" + vbsFilePath.substring(2) + "\"");
-                } else {
+                if (pathLower.endsWith(".url")) {
+                    Desktop desktop;
+                    if (Desktop.isDesktopSupported()) {
+                        desktop = Desktop.getDesktop();
+                        desktop.open(new File(path));
+                    }
+                } else if (pathLower.endsWith(".lnk")) {
                     Runtime.getRuntime().exec("explorer.exe \"" + path + "\"");
+                } else {
+                    if (file.isFile()) {
+                        String command = "start " + path.substring(0, 2) + "\"" + path.substring(2) + "\"";
+                        String vbsFilePath = generateBatAndVbsFile(command, System.getProperty("java.io.tmpdir"), getParentPath(path));
+                        Runtime.getRuntime().exec("explorer.exe " + vbsFilePath.substring(0, 2) + "\"" + vbsFilePath.substring(2) + "\"");
+                    } else {
+                        Runtime.getRuntime().exec("explorer.exe \"" + path + "\"");
+                    }
                 }
             } catch (Exception e) {
                 //打开上级文件夹
