@@ -10,7 +10,7 @@ public interface GetHandle extends Library {
 
     void stop();
 
-    boolean is_explorer_at_top();
+    boolean isExplorerAtTop();
 
     boolean isDialogNotExist();
 
@@ -22,9 +22,9 @@ public interface GetHandle extends Library {
 
     long getExplorerHeight();
 
-    int get_toolbar_click_x();
+    int getToolbarClickX();
 
-    int get_toolbar_click_y();
+    int getToolbarClickY();
 
     boolean isExplorerAndSearchbarNotFocused();
 
