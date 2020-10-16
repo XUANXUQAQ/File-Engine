@@ -458,10 +458,10 @@ public class SettingsFrame {
 
     private void addCheckForUpdateButtonListener() {
         buttonCheckUpdate.addActionListener(e -> {
-            AllConfigs.DownloadStatus status = DownloadUtil.getInstance().getDownloadStatus(AllConfigs.getName());
+            AllConfigs.DownloadStatus status = DownloadUtil.getInstance().getDownloadStatus(AllConfigs.FILE_NAME);
             if (status == AllConfigs.DownloadStatus.DOWNLOAD_DOWNLOADING) {
                 //取消下载
-                String fileName = AllConfigs.getName();
+                String fileName = AllConfigs.FILE_NAME;
                 DownloadUtil instance = DownloadUtil.getInstance();
                 instance.cancelDownload(fileName);
                 //复位button
@@ -497,7 +497,7 @@ public class SettingsFrame {
                         String urlChoose;
                         String fileName;
                         urlChoose = "url64";
-                        fileName = AllConfigs.getName();
+                        fileName = AllConfigs.FILE_NAME;
                         DownloadUtil download = DownloadUtil.getInstance();
                         download.downLoadFromUrl(updateInfo.getString(urlChoose), fileName, AllConfigs.getTmp().getAbsolutePath());
                         //更新button为取消
@@ -1165,7 +1165,8 @@ public class SettingsFrame {
     }
 
     private void initThreadPool() {
-        CachedThreadPool.getInstance().executeTask(() -> addShowDownloadProgressTask(labelDownloadProgress, buttonCheckUpdate, AllConfigs.getName()));
+        CachedThreadPool.getInstance().executeTask(() ->
+                addShowDownloadProgressTask(labelDownloadProgress, buttonCheckUpdate, AllConfigs.FILE_NAME));
 
         CachedThreadPool.getInstance().executeTask(() -> {
             try {
@@ -1628,7 +1629,7 @@ public class SettingsFrame {
     private void setStartup(boolean b) {
         if (b) {
             String command = "cmd.exe /c schtasks /create /ru \"administrators\" /rl HIGHEST /sc ONLOGON /tn \"File-Engine\" /tr ";
-            File FileEngine = new File(AllConfigs.getName());
+            File FileEngine = new File(AllConfigs.FILE_NAME);
             String absolutePath = "\"\"" + FileEngine.getAbsolutePath() + "\"\" /f";
             command += absolutePath;
             Process p;

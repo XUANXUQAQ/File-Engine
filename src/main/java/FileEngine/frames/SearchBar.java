@@ -370,14 +370,14 @@ public class SearchBar {
             result = getParentPath(result);
         }
         copyToClipBoard(result, false);
-        x = GetHandle.INSTANCE.get_toolbar_click_x();
-        y = GetHandle.INSTANCE.get_toolbar_click_y();
+        x = GetHandle.INSTANCE.getToolbarClickX();
+        y = GetHandle.INSTANCE.getToolbarClickY();
         RobotUtil.getInstance().mouseClicked(x, y, 1, InputEvent.BUTTON1_MASK);
+        RobotUtil.getInstance().keyTyped(KeyEvent.VK_CONTROL, KeyEvent.VK_V);
         try {
-            TimeUnit.MILLISECONDS.sleep(25);
+            Thread.sleep(50);
         } catch (InterruptedException ignored) {
         }
-        RobotUtil.getInstance().keyTyped(KeyEvent.VK_CONTROL, KeyEvent.VK_V);
         RobotUtil.getInstance().keyTyped(KeyEvent.VK_ENTER);
         clipboard.setContents(originalData, null);
     }
@@ -1914,7 +1914,7 @@ public class SearchBar {
             try {
                 GetHandle.INSTANCE.start();
                 while (AllConfigs.isNotMainExit()) {
-                    if (GetHandle.INSTANCE.is_explorer_at_top()) {
+                    if (GetHandle.INSTANCE.isExplorerAtTop()) {
                         switchToExplorerAttachMode();
                         GetHandle.INSTANCE.resetMouseStatus();
                     } else {

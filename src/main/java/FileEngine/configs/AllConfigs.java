@@ -22,6 +22,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class AllConfigs {
     public static final String version = "2.9"; //TODO 更改版本号
 
+    public static final String FILE_NAME = "File-Engine-x64.exe";
+
     private static final int allSetMethodsNum = 25;
 
     private static volatile boolean mainExit = false;
@@ -417,10 +419,6 @@ public class AllConfigs {
 
     public static int getBorderColor() {
         return borderColor;
-    }
-
-    public static String getName() {
-        return "File-Engine-x64.exe";
     }
 
     public static ProxyInfo getProxy() {

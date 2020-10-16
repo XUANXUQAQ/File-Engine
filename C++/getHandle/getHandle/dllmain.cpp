@@ -53,13 +53,13 @@ wstring GetProcessNameByHandle(HWND nlHandle);
 extern "C" __declspec(dllexport) bool isDialogNotExist();
 extern "C" __declspec(dllexport) void start();
 extern "C" __declspec(dllexport) void stop();
-extern "C" __declspec(dllexport) bool is_explorer_at_top();
+extern "C" __declspec(dllexport) bool isExplorerAtTop();
 extern "C" __declspec(dllexport) long getExplorerX();
 extern "C" __declspec(dllexport) long getExplorerY();
 extern "C" __declspec(dllexport) long getExplorerWidth();
 extern "C" __declspec(dllexport) long getExplorerHeight();
-extern "C" __declspec(dllexport) int get_toolbar_click_x();
-extern "C" __declspec(dllexport) int get_toolbar_click_y(); 
+extern "C" __declspec(dllexport) int getToolbarClickX();
+extern "C" __declspec(dllexport) int getToolbarClickY(); 
 extern "C" __declspec(dllexport) bool isExplorerAndSearchbarNotFocused();
 extern "C" __declspec(dllexport) void resetMouseStatus();
 extern "C" __declspec(dllexport) void transferSearchBarFocus();
@@ -196,6 +196,7 @@ BOOL CALLBACK findSeachBar(HWND hwndChild, LPARAM lParam)
 {
     if (isSearchBarWindow(hwndChild))
     {
+        searchBarHWND = hwndChild;
         return false;
     }
     return true;
@@ -293,7 +294,7 @@ __declspec(dllexport) void stop()
     isRunning = false;
 }
 
-__declspec(dllexport) bool is_explorer_at_top()
+__declspec(dllexport) bool isExplorerAtTop()
 {
     return isExplorerWindowAtTop;
 }
@@ -318,12 +319,12 @@ __declspec(dllexport) long getExplorerHeight()
     return explorerHeight;
 }
 
-__declspec(dllexport) int get_toolbar_click_x()
+__declspec(dllexport) int getToolbarClickX()
 {
     return toolbar_click_x;
 }
 
-__declspec(dllexport) int get_toolbar_click_y()
+__declspec(dllexport) int getToolbarClickY()
 {
     return toolbar_click_y;
 }

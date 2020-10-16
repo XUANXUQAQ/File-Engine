@@ -31,10 +31,6 @@ public class RobotUtil {
             robot.mouseMove(x, y);
             for (int i = 0; i < count; ++i) {
                 robot.mousePress(mouseButtonNum);
-                try {
-                    TimeUnit.MILLISECONDS.sleep(20);
-                }catch (InterruptedException ignored) {
-                }
                 robot.mouseRelease(mouseButtonNum);
             }
             //鼠标归位
@@ -45,13 +41,12 @@ public class RobotUtil {
     public void keyTyped(int... keyCodes) {
         if (robot != null) {
             //全部点击
-            for (int each : keyCodes) {
-                robot.keyPress(each);
-            }
-            //保持按下状态
             try {
-                TimeUnit.MILLISECONDS.sleep(25);
-            } catch (InterruptedException ignored) {
+                for (int each : keyCodes) {
+                    robot.keyPress(each);
+                    TimeUnit.MILLISECONDS.sleep(25);
+                }
+            }catch (InterruptedException ignored){
             }
             //全部释放
             for (int each : keyCodes) {
