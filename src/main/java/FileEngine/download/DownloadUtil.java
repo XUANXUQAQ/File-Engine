@@ -187,8 +187,12 @@ public class DownloadUtil {
                 int len;
                 //文件保存位置
                 File saveDir = new File(localPath);
+
                 if (!saveDir.exists()) {
                     saveDir.mkdirs();
+                }
+                if (!saveDir.exists()) {
+                    throw new IOException("Create dirs failed");
                 }
                 File fileFullPath = new File(saveDir + File.separator + fileName);
                 BufferedOutputStream bfos = new BufferedOutputStream(new FileOutputStream(fileFullPath));
