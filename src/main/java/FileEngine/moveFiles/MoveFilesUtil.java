@@ -7,7 +7,7 @@ import java.util.ArrayList;
 public class MoveFilesUtil {
     private final ArrayList<String> preserveFiles;
 
-    public MoveFilesUtil(ArrayList<String> preserveFiles) {
+    protected MoveFilesUtil(ArrayList<String> preserveFiles) {
         this.preserveFiles = preserveFiles;
     }
 
@@ -86,7 +86,13 @@ public class MoveFilesUtil {
         return isHasRepeatFiles;
     }
 
-    public boolean moveFolder(String oldPath, String newPath) {
+    /**
+     * 移动一个文件夹中的所有文件到另一个文件夹
+     * @param oldPath 需要移动的文件夹
+     * @param newPath 移动到的文件夹
+     * @return 是否含有冲突文件
+     */
+    protected boolean moveFolder(String oldPath, String newPath) {
         // 先复制文件
         boolean isHasRepeated = copyFolder(oldPath, newPath);
         deleteDir(new File(oldPath));

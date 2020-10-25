@@ -11,9 +11,9 @@ import java.util.ArrayList;
  * @author XUANXU
  */
 public class MoveDesktopFiles {
-    public void start() {
-        boolean desktop1;
-        boolean desktop2;
+    public static void start() {
+        boolean desktop1HasConflictFile;
+        boolean desktop2HasConflictFile;
         boolean mkdirRet = true;
         File fileDesktop = FileSystemView.getFileSystemView().getHomeDirectory();
         File fileBackUp = new File("Files");
@@ -25,9 +25,9 @@ public class MoveDesktopFiles {
             preserveFiles.add(fileDesktop.getAbsolutePath());
             preserveFiles.add("C:\\Users\\Public\\Desktop");
             MoveFilesUtil moveFiles = new MoveFilesUtil(preserveFiles);
-            desktop1 = moveFiles.moveFolder(fileDesktop.getAbsolutePath(), fileBackUp.getAbsolutePath());
-            desktop2 = moveFiles.moveFolder("C:\\Users\\Public\\Desktop", fileBackUp.getAbsolutePath());
-            if (desktop1 || desktop2) {
+            desktop1HasConflictFile = moveFiles.moveFolder(fileDesktop.getAbsolutePath(), fileBackUp.getAbsolutePath());
+            desktop2HasConflictFile = moveFiles.moveFolder("C:\\Users\\Public\\Desktop", fileBackUp.getAbsolutePath());
+            if (desktop1HasConflictFile || desktop2HasConflictFile) {
                 JOptionPane.showMessageDialog(null,
                         TranslateUtil.getInstance().getTranslation("Files with the same name are detected, please move them by yourself"));
             }

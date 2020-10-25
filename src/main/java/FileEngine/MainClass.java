@@ -21,6 +21,7 @@ import java.awt.*;
 import java.io.*;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -52,7 +53,10 @@ public class MainClass {
             if (AllConfigs.isDebug()) {
                 System.out.println("正在更新插件");
             }
-            sign.delete();
+            boolean isUpdatePluginSignDeleted = sign.delete();
+            if (!isUpdatePluginSignDeleted) {
+                System.err.println("删除插件更新标志失败");
+            }
             File[] files = tmpPlugins.listFiles();
             if (files == null || files.length == 0) {
                 return;
@@ -222,6 +226,11 @@ public class MainClass {
             AtomicBoolean isFinished = new AtomicBoolean(false);
             CachedThreadPool.getInstance().executeTask(() -> PluginUtil.getInstance().isAllPluginLatest(stringBuilder, isFinished));
 
+            Date startTime = new Date();
+            Date endTime;
+            int checkTimeCount = 0;
+            long timeDiff;
+
             while (AllConfigs.isNotMainExit()) {
                 // 主循环开始
                 if (isFinished.get()) {
@@ -231,6 +240,19 @@ public class MainClass {
                         TaskBar.getInstance().showMessage(TranslateUtil.getInstance().getTranslation("Info"),
                                 TranslateUtil.getInstance().getTranslation(notLatestPlugins + "\n" +
                                         TranslateUtil.getInstance().getTranslation("New versions of these plugins can be updated")));
+                    }
+                }
+                //检查已工作时间
+                checkTimeCount++;
+                if (checkTimeCount > 2000) {
+                    //100s检查一次时间
+                    checkTimeCount = 0;
+                    endTime = new Date();
+                    timeDiff = endTime.getTime() - startTime.getTime();
+                    long diffDays = timeDiff / (24 * 60 * 60 * 1000);
+                    if (diffDays > 6) {
+                        //启动时间已经超过6天,自动重启
+                        TaskBar.getInstance().restart();
                     }
                 }
                 TimeUnit.MILLISECONDS.sleep(50);

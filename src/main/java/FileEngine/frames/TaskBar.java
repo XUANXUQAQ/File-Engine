@@ -124,7 +124,7 @@ public class TaskBar {
         DaemonUtil.stopDaemon();
     }
 
-    private void restart() {
+    public void restart() {
         AllConfigs.setMainExit(true);
         systemTray.remove(trayIcon);
         SettingsFrame.getInstance().hideFrame();
