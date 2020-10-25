@@ -33,10 +33,16 @@ public class DaemonUtil {
      */
     public static void stopDaemon() {
         File closeSignal = new File("tmp/closeDaemon");
-        try {
-            closeSignal.createNewFile();
-        } catch (IOException e) {
-            e.printStackTrace();
+        if (!closeSignal.exists()) {
+            boolean isCreated = false;
+            try {
+                isCreated = closeSignal.createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            if (!isCreated) {
+                System.err.println("创建守护进程关闭标志文件失败");
+            }
         }
     }
 
