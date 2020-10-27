@@ -48,7 +48,6 @@ public class SearchBar {
     private static volatile boolean isStartSearchLocal = false;
     private static volatile boolean isLockMouseMotion = false;
     private static volatile boolean isOpenLastFolderPressed = false;
-    private static volatile boolean isUsing = false;
     private static volatile boolean isRunAsAdminPressed = false;
     private static volatile boolean isCopyPathPressed = false;
     private static volatile boolean startSignal = false;
@@ -78,7 +77,8 @@ public class SearchBar {
     private final AtomicInteger showingMode;
     private long mouseWheelTime = 0;
     private final int iconSideLength;
-    private long visibleStartTime = 0;  //记录窗口开始可见的事件，窗口默认最短可见时间0.5秒，防止窗口快速闪烁
+    private volatile long visibleStartTime = 0;  //记录窗口开始可见的事件，窗口默认最短可见时间0.5秒，防止窗口快速闪烁
+    private volatile long firstResultStartShowingTime = 0;  //记录开始显示结果的时间，用于防止刚开始移动到鼠标导致误触
     private final Set<String> tempResults;  //在优先文件夹和数据库cache未搜索完时暂时保存结果，搜索完后会立即被转移到listResults
     private final ConcurrentLinkedQueue<String> commandQueue;  //保存需要被执行的sql语句
     private final CopyOnWriteArrayList<String> listResults;  //保存从数据库中找出符合条件的记录（文件路径）
@@ -701,259 +701,262 @@ public class SearchBar {
 
             @Override
             public void mouseMoved(MouseEvent e) {
-                int currentX = e.getX();
-                int currentY = e.getY();
-                if (lastPositionX == 0 || lastPositionY == 0) {
-                    lastPositionX = currentX;
-                    lastPositionY = currentY;
-                }
-                //计算鼠标当前位置到上次位置的直线距离
-                absoluteDistance = Math.sqrt(Math.pow((currentX - lastPositionX), 2) + Math.pow((currentY - lastPositionY), 2));
-                if (shouldSave.get()) {
-                    //超过50毫秒，保存一次鼠标位置
-                    shouldSave.set(false);
-                    lastPositionX = currentX;
-                    lastPositionY = currentY;
-                }
-                //距离大于鼠标最小移动值
-                if (absoluteDistance > minMouseMoveDistance) {
-                    //判定当前位置
-                    if (!isLockMouseMotion) {
-                        int position = getCurrentLabelPos();
-                        int mouseOnWhichLabel = 0;
-                        if (labelPosition2 <= e.getY() && e.getY() < labelPosition3) {
-                            mouseOnWhichLabel = 1;
-                        } else if (labelPosition3 <= e.getY() && e.getY() < labelPosition4) {
-                            mouseOnWhichLabel = 2;
-                        } else if (labelPosition4 <= e.getY() && e.getY() < labelPosition5) {
-                            mouseOnWhichLabel = 3;
-                        } else if (labelPosition5 <= e.getY() && e.getY() < labelPosition6) {
-                            mouseOnWhichLabel = 4;
-                        } else if (labelPosition6 <= e.getY() && e.getY() < labelPosition7) {
-                            mouseOnWhichLabel = 5;
-                        } else if (labelPosition7 <= e.getY() && e.getY() < labelPosition8) {
-                            mouseOnWhichLabel = 6;
-                        } else if (labelPosition8 <= e.getY() && e.getY() < labelPosition9) {
-                            mouseOnWhichLabel = 7;
-                        }
-                        if (mouseOnWhichLabel < resultCount.get()) {
-                            int ret;
-                            if (position < mouseOnWhichLabel) {
-                                ret = mouseOnWhichLabel - position;
-                            } else {
-                                ret = -(position - mouseOnWhichLabel);
+                //开始显示500ms后才开始响应鼠标移动事件
+                if (System.currentTimeMillis() - firstResultStartShowingTime > 500) {
+                    int currentX = e.getX();
+                    int currentY = e.getY();
+                    if (lastPositionX == 0 || lastPositionY == 0) {
+                        lastPositionX = currentX;
+                        lastPositionY = currentY;
+                    }
+                    //计算鼠标当前位置到上次位置的直线距离
+                    absoluteDistance = Math.sqrt(Math.pow((currentX - lastPositionX), 2) + Math.pow((currentY - lastPositionY), 2));
+                    if (shouldSave.get()) {
+                        //超过50毫秒，保存一次鼠标位置
+                        shouldSave.set(false);
+                        lastPositionX = currentX;
+                        lastPositionY = currentY;
+                    }
+                    //距离大于鼠标最小移动值
+                    if (absoluteDistance > minMouseMoveDistance) {
+                        //判定当前位置
+                        if (!isLockMouseMotion) {
+                            int position = getCurrentLabelPos();
+                            int mouseOnWhichLabel = 0;
+                            if (labelPosition2 <= e.getY() && e.getY() < labelPosition3) {
+                                mouseOnWhichLabel = 1;
+                            } else if (labelPosition3 <= e.getY() && e.getY() < labelPosition4) {
+                                mouseOnWhichLabel = 2;
+                            } else if (labelPosition4 <= e.getY() && e.getY() < labelPosition5) {
+                                mouseOnWhichLabel = 3;
+                            } else if (labelPosition5 <= e.getY() && e.getY() < labelPosition6) {
+                                mouseOnWhichLabel = 4;
+                            } else if (labelPosition6 <= e.getY() && e.getY() < labelPosition7) {
+                                mouseOnWhichLabel = 5;
+                            } else if (labelPosition7 <= e.getY() && e.getY() < labelPosition8) {
+                                mouseOnWhichLabel = 6;
+                            } else if (labelPosition8 <= e.getY() && e.getY() < labelPosition9) {
+                                mouseOnWhichLabel = 7;
                             }
-                            labelCount.getAndAdd(ret);
-                            currentLabelSelectedPosition.getAndAdd(ret);
-                            switch (mouseOnWhichLabel) {
-                                case 0:
-                                    if (isLabelNotEmpty(label1)) {
-                                        setLabelChosen(label1);
-                                    }
-                                    if (isLabelNotEmpty(label2)) {
-                                        setLabelNotChosen(label2);
-                                    }
-                                    if (isLabelNotEmpty(label3)) {
-                                        setLabelNotChosen(label3);
-                                    }
-                                    if (isLabelNotEmpty(label4)) {
-                                        setLabelNotChosen(label4);
-                                    }
-                                    if (isLabelNotEmpty(label5)) {
-                                        setLabelNotChosen(label5);
-                                    }
-                                    if (isLabelNotEmpty(label6)) {
-                                        setLabelNotChosen(label6);
-                                    }
-                                    if (isLabelNotEmpty(label7)) {
-                                        setLabelNotChosen(label7);
-                                    }
-                                    if (isLabelNotEmpty(label8)) {
-                                        setLabelNotChosen(label8);
-                                    }
-                                    break;
-                                case 1:
-                                    if (isLabelNotEmpty(label1)) {
-                                        setLabelNotChosen(label1);
-                                    }
-                                    if (isLabelNotEmpty(label2)) {
-                                        setLabelChosen(label2);
-                                    }
-                                    if (isLabelNotEmpty(label3)) {
-                                        setLabelNotChosen(label3);
-                                    }
-                                    if (isLabelNotEmpty(label4)) {
-                                        setLabelNotChosen(label4);
-                                    }
-                                    if (isLabelNotEmpty(label5)) {
-                                        setLabelNotChosen(label5);
-                                    }
-                                    if (isLabelNotEmpty(label6)) {
-                                        setLabelNotChosen(label6);
-                                    }
-                                    if (isLabelNotEmpty(label7)) {
-                                        setLabelNotChosen(label7);
-                                    }
-                                    if (isLabelNotEmpty(label8)) {
-                                        setLabelNotChosen(label8);
-                                    }
-                                    break;
-                                case 2:
-                                    if (isLabelNotEmpty(label1)) {
-                                        setLabelNotChosen(label1);
-                                    }
-                                    if (isLabelNotEmpty(label2)) {
-                                        setLabelNotChosen(label2);
-                                    }
-                                    if (isLabelNotEmpty(label3)) {
-                                        setLabelChosen(label3);
-                                    }
-                                    if (isLabelNotEmpty(label4)) {
-                                        setLabelNotChosen(label4);
-                                    }
-                                    if (isLabelNotEmpty(label5)) {
-                                        setLabelNotChosen(label5);
-                                    }
-                                    if (isLabelNotEmpty(label6)) {
-                                        setLabelNotChosen(label6);
-                                    }
-                                    if (isLabelNotEmpty(label7)) {
-                                        setLabelNotChosen(label7);
-                                    }
-                                    if (isLabelNotEmpty(label8)) {
-                                        setLabelNotChosen(label8);
-                                    }
-                                    break;
-                                case 3:
-                                    if (isLabelNotEmpty(label1)) {
-                                        setLabelNotChosen(label1);
-                                    }
-                                    if (isLabelNotEmpty(label2)) {
-                                        setLabelNotChosen(label2);
-                                    }
-                                    if (isLabelNotEmpty(label3)) {
-                                        setLabelNotChosen(label3);
-                                    }
-                                    if (isLabelNotEmpty(label4)) {
-                                        setLabelChosen(label4);
-                                    }
-                                    if (isLabelNotEmpty(label5)) {
-                                        setLabelNotChosen(label5);
-                                    }
-                                    if (isLabelNotEmpty(label6)) {
-                                        setLabelNotChosen(label6);
-                                    }
-                                    if (isLabelNotEmpty(label7)) {
-                                        setLabelNotChosen(label7);
-                                    }
-                                    if (isLabelNotEmpty(label8)) {
-                                        setLabelNotChosen(label8);
-                                    }
-                                    break;
-                                case 4:
-                                    if (isLabelNotEmpty(label1)) {
-                                        setLabelNotChosen(label1);
-                                    }
-                                    if (isLabelNotEmpty(label2)) {
-                                        setLabelNotChosen(label2);
-                                    }
-                                    if (isLabelNotEmpty(label3)) {
-                                        setLabelNotChosen(label3);
-                                    }
-                                    if (isLabelNotEmpty(label4)) {
-                                        setLabelNotChosen(label4);
-                                    }
-                                    if (isLabelNotEmpty(label5)) {
-                                        setLabelChosen(label5);
-                                    }
-                                    if (isLabelNotEmpty(label6)) {
-                                        setLabelNotChosen(label6);
-                                    }
-                                    if (isLabelNotEmpty(label7)) {
-                                        setLabelNotChosen(label7);
-                                    }
-                                    if (isLabelNotEmpty(label8)) {
-                                        setLabelNotChosen(label8);
-                                    }
-                                    break;
-                                case 5:
-                                    if (isLabelNotEmpty(label1)) {
-                                        setLabelNotChosen(label1);
-                                    }
-                                    if (isLabelNotEmpty(label2)) {
-                                        setLabelNotChosen(label2);
-                                    }
-                                    if (isLabelNotEmpty(label3)) {
-                                        setLabelNotChosen(label3);
-                                    }
-                                    if (isLabelNotEmpty(label4)) {
-                                        setLabelNotChosen(label4);
-                                    }
-                                    if (isLabelNotEmpty(label5)) {
-                                        setLabelNotChosen(label5);
-                                    }
-                                    if (isLabelNotEmpty(label6)) {
-                                        setLabelChosen(label6);
-                                    }
-                                    if (isLabelNotEmpty(label7)) {
-                                        setLabelNotChosen(label7);
-                                    }
-                                    if (isLabelNotEmpty(label8)) {
-                                        setLabelNotChosen(label8);
-                                    }
-                                    break;
-                                case 6:
-                                    if (isLabelNotEmpty(label1)) {
-                                        setLabelNotChosen(label1);
-                                    }
-                                    if (isLabelNotEmpty(label2)) {
-                                        setLabelNotChosen(label2);
-                                    }
-                                    if (isLabelNotEmpty(label3)) {
-                                        setLabelNotChosen(label3);
-                                    }
-                                    if (isLabelNotEmpty(label4)) {
-                                        setLabelNotChosen(label4);
-                                    }
-                                    if (isLabelNotEmpty(label5)) {
-                                        setLabelNotChosen(label5);
-                                    }
-                                    if (isLabelNotEmpty(label6)) {
-                                        setLabelNotChosen(label6);
-                                    }
-                                    if (isLabelNotEmpty(label7)) {
-                                        setLabelChosen(label7);
-                                    }
-                                    if (isLabelNotEmpty(label8)) {
-                                        setLabelNotChosen(label8);
-                                    }
-                                    break;
-                                case 7:
-                                    if (isLabelNotEmpty(label1)) {
-                                        setLabelNotChosen(label1);
-                                    }
-                                    if (isLabelNotEmpty(label2)) {
-                                        setLabelNotChosen(label2);
-                                    }
-                                    if (isLabelNotEmpty(label3)) {
-                                        setLabelNotChosen(label3);
-                                    }
-                                    if (isLabelNotEmpty(label4)) {
-                                        setLabelNotChosen(label4);
-                                    }
-                                    if (isLabelNotEmpty(label5)) {
-                                        setLabelNotChosen(label5);
-                                    }
-                                    if (isLabelNotEmpty(label6)) {
-                                        setLabelNotChosen(label6);
-                                    }
-                                    if (isLabelNotEmpty(label7)) {
-                                        setLabelNotChosen(label7);
-                                    }
-                                    if (isLabelNotEmpty(label8)) {
-                                        setLabelChosen(label8);
-                                    }
-                                    break;
+                            if (mouseOnWhichLabel < resultCount.get()) {
+                                int ret;
+                                if (position < mouseOnWhichLabel) {
+                                    ret = mouseOnWhichLabel - position;
+                                } else {
+                                    ret = -(position - mouseOnWhichLabel);
+                                }
+                                labelCount.getAndAdd(ret);
+                                currentLabelSelectedPosition.getAndAdd(ret);
+                                switch (mouseOnWhichLabel) {
+                                    case 0:
+                                        if (isLabelNotEmpty(label1)) {
+                                            setLabelChosen(label1);
+                                        }
+                                        if (isLabelNotEmpty(label2)) {
+                                            setLabelNotChosen(label2);
+                                        }
+                                        if (isLabelNotEmpty(label3)) {
+                                            setLabelNotChosen(label3);
+                                        }
+                                        if (isLabelNotEmpty(label4)) {
+                                            setLabelNotChosen(label4);
+                                        }
+                                        if (isLabelNotEmpty(label5)) {
+                                            setLabelNotChosen(label5);
+                                        }
+                                        if (isLabelNotEmpty(label6)) {
+                                            setLabelNotChosen(label6);
+                                        }
+                                        if (isLabelNotEmpty(label7)) {
+                                            setLabelNotChosen(label7);
+                                        }
+                                        if (isLabelNotEmpty(label8)) {
+                                            setLabelNotChosen(label8);
+                                        }
+                                        break;
+                                    case 1:
+                                        if (isLabelNotEmpty(label1)) {
+                                            setLabelNotChosen(label1);
+                                        }
+                                        if (isLabelNotEmpty(label2)) {
+                                            setLabelChosen(label2);
+                                        }
+                                        if (isLabelNotEmpty(label3)) {
+                                            setLabelNotChosen(label3);
+                                        }
+                                        if (isLabelNotEmpty(label4)) {
+                                            setLabelNotChosen(label4);
+                                        }
+                                        if (isLabelNotEmpty(label5)) {
+                                            setLabelNotChosen(label5);
+                                        }
+                                        if (isLabelNotEmpty(label6)) {
+                                            setLabelNotChosen(label6);
+                                        }
+                                        if (isLabelNotEmpty(label7)) {
+                                            setLabelNotChosen(label7);
+                                        }
+                                        if (isLabelNotEmpty(label8)) {
+                                            setLabelNotChosen(label8);
+                                        }
+                                        break;
+                                    case 2:
+                                        if (isLabelNotEmpty(label1)) {
+                                            setLabelNotChosen(label1);
+                                        }
+                                        if (isLabelNotEmpty(label2)) {
+                                            setLabelNotChosen(label2);
+                                        }
+                                        if (isLabelNotEmpty(label3)) {
+                                            setLabelChosen(label3);
+                                        }
+                                        if (isLabelNotEmpty(label4)) {
+                                            setLabelNotChosen(label4);
+                                        }
+                                        if (isLabelNotEmpty(label5)) {
+                                            setLabelNotChosen(label5);
+                                        }
+                                        if (isLabelNotEmpty(label6)) {
+                                            setLabelNotChosen(label6);
+                                        }
+                                        if (isLabelNotEmpty(label7)) {
+                                            setLabelNotChosen(label7);
+                                        }
+                                        if (isLabelNotEmpty(label8)) {
+                                            setLabelNotChosen(label8);
+                                        }
+                                        break;
+                                    case 3:
+                                        if (isLabelNotEmpty(label1)) {
+                                            setLabelNotChosen(label1);
+                                        }
+                                        if (isLabelNotEmpty(label2)) {
+                                            setLabelNotChosen(label2);
+                                        }
+                                        if (isLabelNotEmpty(label3)) {
+                                            setLabelNotChosen(label3);
+                                        }
+                                        if (isLabelNotEmpty(label4)) {
+                                            setLabelChosen(label4);
+                                        }
+                                        if (isLabelNotEmpty(label5)) {
+                                            setLabelNotChosen(label5);
+                                        }
+                                        if (isLabelNotEmpty(label6)) {
+                                            setLabelNotChosen(label6);
+                                        }
+                                        if (isLabelNotEmpty(label7)) {
+                                            setLabelNotChosen(label7);
+                                        }
+                                        if (isLabelNotEmpty(label8)) {
+                                            setLabelNotChosen(label8);
+                                        }
+                                        break;
+                                    case 4:
+                                        if (isLabelNotEmpty(label1)) {
+                                            setLabelNotChosen(label1);
+                                        }
+                                        if (isLabelNotEmpty(label2)) {
+                                            setLabelNotChosen(label2);
+                                        }
+                                        if (isLabelNotEmpty(label3)) {
+                                            setLabelNotChosen(label3);
+                                        }
+                                        if (isLabelNotEmpty(label4)) {
+                                            setLabelNotChosen(label4);
+                                        }
+                                        if (isLabelNotEmpty(label5)) {
+                                            setLabelChosen(label5);
+                                        }
+                                        if (isLabelNotEmpty(label6)) {
+                                            setLabelNotChosen(label6);
+                                        }
+                                        if (isLabelNotEmpty(label7)) {
+                                            setLabelNotChosen(label7);
+                                        }
+                                        if (isLabelNotEmpty(label8)) {
+                                            setLabelNotChosen(label8);
+                                        }
+                                        break;
+                                    case 5:
+                                        if (isLabelNotEmpty(label1)) {
+                                            setLabelNotChosen(label1);
+                                        }
+                                        if (isLabelNotEmpty(label2)) {
+                                            setLabelNotChosen(label2);
+                                        }
+                                        if (isLabelNotEmpty(label3)) {
+                                            setLabelNotChosen(label3);
+                                        }
+                                        if (isLabelNotEmpty(label4)) {
+                                            setLabelNotChosen(label4);
+                                        }
+                                        if (isLabelNotEmpty(label5)) {
+                                            setLabelNotChosen(label5);
+                                        }
+                                        if (isLabelNotEmpty(label6)) {
+                                            setLabelChosen(label6);
+                                        }
+                                        if (isLabelNotEmpty(label7)) {
+                                            setLabelNotChosen(label7);
+                                        }
+                                        if (isLabelNotEmpty(label8)) {
+                                            setLabelNotChosen(label8);
+                                        }
+                                        break;
+                                    case 6:
+                                        if (isLabelNotEmpty(label1)) {
+                                            setLabelNotChosen(label1);
+                                        }
+                                        if (isLabelNotEmpty(label2)) {
+                                            setLabelNotChosen(label2);
+                                        }
+                                        if (isLabelNotEmpty(label3)) {
+                                            setLabelNotChosen(label3);
+                                        }
+                                        if (isLabelNotEmpty(label4)) {
+                                            setLabelNotChosen(label4);
+                                        }
+                                        if (isLabelNotEmpty(label5)) {
+                                            setLabelNotChosen(label5);
+                                        }
+                                        if (isLabelNotEmpty(label6)) {
+                                            setLabelNotChosen(label6);
+                                        }
+                                        if (isLabelNotEmpty(label7)) {
+                                            setLabelChosen(label7);
+                                        }
+                                        if (isLabelNotEmpty(label8)) {
+                                            setLabelNotChosen(label8);
+                                        }
+                                        break;
+                                    case 7:
+                                        if (isLabelNotEmpty(label1)) {
+                                            setLabelNotChosen(label1);
+                                        }
+                                        if (isLabelNotEmpty(label2)) {
+                                            setLabelNotChosen(label2);
+                                        }
+                                        if (isLabelNotEmpty(label3)) {
+                                            setLabelNotChosen(label3);
+                                        }
+                                        if (isLabelNotEmpty(label4)) {
+                                            setLabelNotChosen(label4);
+                                        }
+                                        if (isLabelNotEmpty(label5)) {
+                                            setLabelNotChosen(label5);
+                                        }
+                                        if (isLabelNotEmpty(label6)) {
+                                            setLabelNotChosen(label6);
+                                        }
+                                        if (isLabelNotEmpty(label7)) {
+                                            setLabelNotChosen(label7);
+                                        }
+                                        if (isLabelNotEmpty(label8)) {
+                                            setLabelChosen(label8);
+                                        }
+                                        break;
+                                }
                             }
                         }
                     }
@@ -1735,85 +1738,67 @@ public class SearchBar {
         }
     }
 
+    //只在重新输入需要初始化所有设置时使用
+    private void clearAllAndResetAll() {
+        clearAllLabels();
+        listResults.clear();
+        listResultsCopy.clear();
+        tempResults.clear();
+        firstResultStartShowingTime = 0;
+        resultCount.set(0);
+        labelCount.set(0);
+        currentLabelSelectedPosition.set(0);
+        isCacheAndPrioritySearched = false;
+    }
+
+    //设置当前运行模式
+    private void setRunningMode() {
+        String text = getTextFieldText();
+        final StringBuilder strb = new StringBuilder();
+        if (text == null || text.isEmpty()) {
+            runningMode.set(AllConfigs.RunningMode.NORMAL_MODE);
+        } else {
+            char first = text.charAt(0);
+            if (first == ':') {
+                runningMode.set(AllConfigs.RunningMode.COMMAND_MODE);
+            } else if (first == '>') {
+                runningMode.set(AllConfigs.RunningMode.PLUGIN_MODE);
+                String subText = text.substring(1);
+                String[] s = blank.split(subText);
+                currentUsingPlugin = PluginUtil.getInstance().getPluginByIdentifier(s[0]);
+                int length = s.length;
+                if (currentUsingPlugin != null && length > 1) {
+                    for (int i = 1; i < length - 1; ++i) {
+                        strb.append(s[i]).append(" ");
+                    }
+                    strb.append(s[length - 1]);
+                    currentUsingPlugin.textChanged(strb.toString());
+                    currentUsingPlugin.clearResultQueue();
+                    strb.delete(0, strb.length());
+                }
+            } else {
+                runningMode.set(AllConfigs.RunningMode.NORMAL_MODE);
+            }
+        }
+    }
+
     private void addTextFieldDocumentListener() {
         textField.getDocument().addDocumentListener(new DocumentListener() {
-            final StringBuilder strb = new StringBuilder();
             @Override
             public void insertUpdate(DocumentEvent e) {
-                clearAllLabels();
-                listResults.clear();
-                listResultsCopy.clear();
-                tempResults.clear();
-                resultCount.set(0);
-                labelCount.set(0);
-                currentLabelSelectedPosition.set(0);
-                isCacheAndPrioritySearched = false;
+                clearAllAndResetAll();
+                setRunningMode();
                 startTime = System.currentTimeMillis();
                 startSignal = true;
-                String text = getTextFieldText();
-                char first = text.charAt(0);
-                if (first == ':') {
-                    runningMode.set(AllConfigs.RunningMode.COMMAND_MODE);
-                } else if (first == '>') {
-                    runningMode.set(AllConfigs.RunningMode.PLUGIN_MODE);
-                    String subText = text.substring(1);
-                    String[] s = blank.split(subText);
-                    currentUsingPlugin = PluginUtil.getInstance().getPluginByIdentifier(s[0]);
-                    int length = s.length;
-                    if (currentUsingPlugin != null && length > 1) {
-                        for (int i = 1; i < length - 1; ++i) {
-                            strb.append(s[i]).append(" ");
-                        }
-                        strb.append(s[length - 1]);
-                        currentUsingPlugin.textChanged(strb.toString());
-                        currentUsingPlugin.clearResultQueue();
-                        strb.delete(0, strb.length());
-                    }
-                } else {
-                    runningMode.set(AllConfigs.RunningMode.NORMAL_MODE);
-                }
             }
 
             @Override
             public void removeUpdate(DocumentEvent e) {
-                clearAllLabels();
-                listResults.clear();
-                listResultsCopy.clear();
-                tempResults.clear();
-                resultCount.set(0);
-                labelCount.set(0);
-                currentLabelSelectedPosition.set(0);
-                isCacheAndPrioritySearched = false;
-                String text = getTextFieldText();
-                try {
-                    char first = text.charAt(0);
-                    if (first == ':') {
-                        runningMode.set(AllConfigs.RunningMode.COMMAND_MODE);
-                    } else if (first == '>') {
-                        runningMode.set(AllConfigs.RunningMode.PLUGIN_MODE);
-                        String subText = text.substring(1);
-                        String[] s = blank.split(subText);
-                        currentUsingPlugin = PluginUtil.getInstance().getPluginByIdentifier(s[0]);
-                        int length = s.length;
-                        if (currentUsingPlugin != null && length > 1) {
-                            for (int i = 1; i < length - 1; ++i) {
-                                strb.append(s[i]).append(" ");
-                            }
-                            strb.append(s[length - 1]);
-                            currentUsingPlugin.textChanged(strb.toString());
-                            currentUsingPlugin.clearResultQueue();
-                            strb.delete(0, strb.length());
-                        }
-                    } else {
-                        runningMode.set(AllConfigs.RunningMode.NORMAL_MODE);
-                    }
-                } catch (StringIndexOutOfBoundsException e1) {
-                    runningMode.set(AllConfigs.RunningMode.NORMAL_MODE);
-                }
-                if (text.isEmpty()) {
+                clearAllAndResetAll();
+                setRunningMode();
+                if (getTextFieldText().isEmpty()) {
                     resultCount.set(0);
                     labelCount.set(0);
-                    currentLabelSelectedPosition.set(0);
                     startTime = System.currentTimeMillis();
                     startSignal = false;
                 } else {
@@ -2344,6 +2329,7 @@ public class SearchBar {
                                 !isLabelNotEmpty(label6) ||
                                 !isLabelNotEmpty(label7) ||
                                 !isLabelNotEmpty(label8)) {
+                            //设置窗口上的文字和图片显示，键盘模式
                             showResults(isLabel1Chosen, isLabel2Chosen, isLabel3Chosen, isLabel4Chosen,
                                     isLabel5Chosen, isLabel6Chosen, isLabel7Chosen, isLabel8Chosen);
                         }
@@ -2355,7 +2341,7 @@ public class SearchBar {
                         listResultsCopy.clear();
                         resultCount.set(0);
                     }
-
+                    //设置窗口是被选中还是未被选中，鼠标模式
                     setLabelChosenOrNotChosenMouseMode(0, label1);
                     setLabelChosenOrNotChosenMouseMode(1, label2);
                     setLabelChosenOrNotChosenMouseMode(2, label3);
@@ -2364,6 +2350,10 @@ public class SearchBar {
                     setLabelChosenOrNotChosenMouseMode(5, label6);
                     setLabelChosenOrNotChosenMouseMode(6, label7);
                     setLabelChosenOrNotChosenMouseMode(7, label8);
+
+                    if (!listResults.isEmpty() && firstResultStartShowingTime == 0) {
+                        firstResultStartShowingTime = System.currentTimeMillis();
+                    }
                     TimeUnit.MILLISECONDS.sleep(50);
                 }
             } catch (InterruptedException ignored) {
@@ -2375,7 +2365,7 @@ public class SearchBar {
         CachedThreadPool.getInstance().executeTask(() -> {
             try {
                 while (AllConfigs.isNotMainExit()) {
-                    if (isUsing) {
+                    if (isVisible()) {
                         searchBar.repaint();
                     }
                     TimeUnit.MILLISECONDS.sleep(250);
@@ -2572,7 +2562,7 @@ public class SearchBar {
                         try {
                             while ((column = commandQueue.poll()) != null) {
                                 searchAndAddToTempResults(System.currentTimeMillis(), column);
-                                if (!isUsing) {
+                                if (!isVisible()) {
                                     detectShowingModeAndClose();
                                 }
                             }
@@ -2601,7 +2591,7 @@ public class SearchBar {
                             break OutLoop;
                         }
                         try {
-                            if (!isUsing && SearchUtil.getInstance().getStatus() == SearchUtil.NORMAL) {
+                            if (!isVisible() && SearchUtil.getInstance().getStatus() == SearchUtil.NORMAL) {
                                 stmt.execute(createIndex);
                             }
                         } catch (Exception e) {
@@ -2613,7 +2603,7 @@ public class SearchBar {
                         TimeUnit.SECONDS.sleep(5);
                     }
                     try {
-                        if (!isUsing && SearchUtil.getInstance().getStatus() == SearchUtil.NORMAL) {
+                        if (!isVisible() && SearchUtil.getInstance().getStatus() == SearchUtil.NORMAL) {
                             stmt.execute("CREATE INDEX IF NOT EXISTS cache_index on cache(PATH);");
                         }
                     } catch (Exception e) {
@@ -2677,7 +2667,7 @@ public class SearchBar {
                                 showResults(true, false, false, false,
                                         false, false, false, false);
                             } else if (runningMode.get() == AllConfigs.RunningMode.NORMAL_MODE) {
-                                isStartSearchLocal = true;
+                                //对搜索关键字赋值
                                 String[] strings;
                                 int length;
                                 strings = colon.split(text);
@@ -2691,6 +2681,8 @@ public class SearchBar {
                                 }
                                 keywords = semicolon.split(searchText);
                                 searchCaseToLowerAndRemoveConflict();
+
+                                isStartSearchLocal = true;
                                 isCacheAndPrioritySearched = false;
                                 searchPriorityFolder();
                                 searchCache();
@@ -2997,7 +2989,6 @@ public class SearchBar {
             RobotUtil.getInstance().mouseClicked(X, Y, 1, InputEvent.BUTTON1_MASK);
         }
         textField.setCaretPosition(0);
-        isUsing = true;
         startTime = System.currentTimeMillis();
         visibleStartTime = startTime;
     }
@@ -3469,7 +3460,6 @@ public class SearchBar {
         }
         clearTextFieldText();
         startTime = System.currentTimeMillis();//结束搜索
-        isUsing = false;
         labelCount.set(0);
         resultCount.set(0);
         currentLabelSelectedPosition.set(0);
@@ -3495,7 +3485,6 @@ public class SearchBar {
         clearAllLabels();
         clearTextFieldText();
         startTime = System.currentTimeMillis();//结束搜索
-        isUsing = true;
         labelCount.set(0);
         resultCount.set(0);
         currentLabelSelectedPosition.set(0);
