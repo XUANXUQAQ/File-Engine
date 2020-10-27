@@ -329,7 +329,7 @@ public class SearchBar {
                                 } else if (AllConfigs.isDefaultAdmin() || isRunAsAdminPressed) {
                                     openWithAdmin(open.getAbsolutePath());
                                 } else if (isCopyPathPressed) {
-                                    copyToClipBoard(res, true);
+                                    copyToClipBoard(open.getAbsolutePath(), true);
                                 } else {
                                     openWithoutAdmin(open.getAbsolutePath());
                                 }
@@ -523,7 +523,7 @@ public class SearchBar {
                                     } else if (AllConfigs.isDefaultAdmin() || isRunAsAdminPressed) {
                                         openWithAdmin(open.getAbsolutePath());
                                     } else if (isCopyPathPressed) {
-                                        copyToClipBoard(res, true);
+                                        copyToClipBoard(open.getAbsolutePath(), true);
                                     } else {
                                         openWithoutAdmin(open.getAbsolutePath());
                                     }
