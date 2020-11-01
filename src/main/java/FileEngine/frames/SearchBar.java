@@ -3063,7 +3063,6 @@ public class SearchBar {
         textField.setCaretPosition(0);
         startTime = System.currentTimeMillis();
         visibleStartTime = startTime;
-        GetHandle.INSTANCE.setSearchBarUsingStatus(true);
     }
 
     /**
@@ -3521,6 +3520,7 @@ public class SearchBar {
 
     private void setVisible(boolean b) {
         searchBar.setVisible(b);
+        GetHandle.INSTANCE.setSearchBarUsingStatus(b);
     }
 
     /**
@@ -3532,7 +3532,6 @@ public class SearchBar {
             setVisible(false);
         }
         clearTextFieldText();
-        GetHandle.INSTANCE.setSearchBarUsingStatus(false);
         startTime = System.currentTimeMillis();//结束搜索
         labelCount.set(0);
         resultCount.set(0);
@@ -3559,7 +3558,6 @@ public class SearchBar {
     private void closeWithoutHideSearchBar() {
         clearAllLabels();
         clearTextFieldText();
-        GetHandle.INSTANCE.setSearchBarUsingStatus(false);
         startTime = System.currentTimeMillis();//结束搜索
         labelCount.set(0);
         resultCount.set(0);
