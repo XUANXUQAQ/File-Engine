@@ -33,6 +33,7 @@ public class SettingsFrame {
     private static volatile int tmp_copyPathKeyCode;
     private static volatile int tmp_runAsAdminKeyCode;
     private static volatile int tmp_openLastFolderKeyCode;
+    private static volatile boolean isStartupChanged = false;
     private static ImageIcon frameIcon;
     private final JFrame frame = new JFrame("Settings");
     private JTextField textFieldUpdateInterval;
@@ -197,6 +198,10 @@ public class SettingsFrame {
 
     public static SettingsFrame getInstance() {
         return SettingsFrameBuilder.instance;
+    }
+
+    private void addCheckBoxStartupListener() {
+        checkBoxAddToStartup.addChangeListener(e -> isStartupChanged = true);
     }
 
     private void addButtonRemoveDesktopListener() {
@@ -1048,6 +1053,8 @@ public class SettingsFrame {
 
         translate();
 
+        addCheckBoxStartupListener();
+
         addButtonRemoveDesktopListener();
 
         addFileChooserButtonListener();
@@ -1627,46 +1634,49 @@ public class SettingsFrame {
     }
 
     private void setStartup(boolean b) {
-        if (b) {
-            String command = "cmd.exe /c schtasks /create /ru \"administrators\" /rl HIGHEST /sc ONLOGON /tn \"File-Engine\" /tr ";
-            File FileEngine = new File(AllConfigs.FILE_NAME);
-            String absolutePath = "\"\"" + FileEngine.getAbsolutePath() + "\"\" /f";
-            command += absolutePath;
-            Process p;
-            try {
-                p = Runtime.getRuntime().exec(command);
-                p.waitFor();
-                BufferedReader outPut = new BufferedReader(new InputStreamReader(p.getErrorStream()));
-                String line;
-                StringBuilder result = new StringBuilder();
-                while ((line = outPut.readLine()) != null) {
-                    result.append(line);
-                }
-                outPut.close();
-                if (!result.toString().isEmpty()) {
-                    checkBoxAddToStartup.setSelected(false);
-                    JOptionPane.showMessageDialog(frame, TranslateUtil.getInstance().getTranslation("Add to startup failed, please try to run as administrator"));
-                }
-            } catch (IOException | InterruptedException ignored) {
-            }
-        } else {
-            String command = "cmd.exe /c schtasks /delete /tn \"File-Engine\" /f";
-            Process p;
-            try {
-                p = Runtime.getRuntime().exec(command);
-                p.waitFor();
-                StringBuilder result = new StringBuilder();
-                try (BufferedReader outPut = new BufferedReader(new InputStreamReader(p.getErrorStream()))) {
+        if (isStartupChanged) {
+            isStartupChanged = false;
+            if (b) {
+                String command = "cmd.exe /c schtasks /create /ru \"administrators\" /rl HIGHEST /sc ONLOGON /tn \"File-Engine\" /tr ";
+                File FileEngine = new File(AllConfigs.FILE_NAME);
+                String absolutePath = "\"\"" + FileEngine.getAbsolutePath() + "\"\" /f";
+                command += absolutePath;
+                Process p;
+                try {
+                    p = Runtime.getRuntime().exec(command);
+                    p.waitFor();
+                    BufferedReader outPut = new BufferedReader(new InputStreamReader(p.getErrorStream()));
                     String line;
+                    StringBuilder result = new StringBuilder();
                     while ((line = outPut.readLine()) != null) {
                         result.append(line);
                     }
+                    outPut.close();
+                    if (!result.toString().isEmpty()) {
+                        checkBoxAddToStartup.setSelected(false);
+                        JOptionPane.showMessageDialog(frame, TranslateUtil.getInstance().getTranslation("Add to startup failed, please try to run as administrator"));
+                    }
+                } catch (IOException | InterruptedException ignored) {
                 }
-                if (!result.toString().isEmpty()) {
-                    checkBoxAddToStartup.setSelected(true);
-                    JOptionPane.showMessageDialog(frame, TranslateUtil.getInstance().getTranslation("Delete startup failed, please try to run as administrator"));
+            } else {
+                String command = "cmd.exe /c schtasks /delete /tn \"File-Engine\" /f";
+                Process p;
+                try {
+                    p = Runtime.getRuntime().exec(command);
+                    p.waitFor();
+                    StringBuilder result = new StringBuilder();
+                    try (BufferedReader outPut = new BufferedReader(new InputStreamReader(p.getErrorStream()))) {
+                        String line;
+                        while ((line = outPut.readLine()) != null) {
+                            result.append(line);
+                        }
+                    }
+                    if (!result.toString().isEmpty()) {
+                        checkBoxAddToStartup.setSelected(true);
+                        JOptionPane.showMessageDialog(frame, TranslateUtil.getInstance().getTranslation("Delete startup failed, please try to run as administrator"));
+                    }
+                } catch (IOException | InterruptedException ignored) {
                 }
-            } catch (IOException | InterruptedException ignored) {
             }
         }
     }
