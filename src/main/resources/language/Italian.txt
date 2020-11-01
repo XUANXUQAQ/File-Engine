@@ -145,3 +145,4 @@ The result has been copied to the clipboard=Il risultato è stato copiato negli 
 Loading plugins error=Errore durante il caricamento dei plugin
 Tip:=richiesta
 If you need to delete a plug-in, just delete it under the "plugins" folder in the software directory.=Se è necessario eliminare un plug-in, è sufficiente eliminarlo nella cartella "plug-in" nella directory del software.
+Shortcut created=Collegamento creato

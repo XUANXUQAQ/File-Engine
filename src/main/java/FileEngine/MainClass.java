@@ -32,11 +32,12 @@ public class MainClass {
     private static final String GET_ASC_II_64_MD_5 = "eff607d2dd4a7e4c878948fe8f24b3ea";
     private static final String HOTKEY_LISTENER_64_MD_5 = "41388e31d6fc22fb430f636d402cf608";
     private static final String IS_LOCAL_DISK_64_MD_5 = "f8a71d3496d8cc188713d521e6dfa2b2";
-    private static final String FILE_SEARCHER_USN_64_MD_5 = "f9bb252301900a7868163419a376a8f6";
+    private static final String FILE_SEARCHER_USN_64_MD_5 = "5b45b0526a48df5e91b00b6ca7dbdcfc";
     private static final String SQLITE3_64_MD_5 = "658c71b8b93ba4eb5b4936f46a112449";
     private static final String UPDATER_BAT_64_MD_5 = "357d7cc1cf023cb6c90f73926c6f2f55";
-    private static final String GET_HANDLE_64_MD_5 = "c141494b4ef6028ff1dc679a374741e8";
+    private static final String GET_HANDLE_64_MD_5 = "bf8e6ad0bb3074e01df3221e559d12ef";
     private static final String DAEMON_PROCESS_64_MD_5 = "797826e9b5c4ca9ccc3fb90520e5d805";
+    private static final String SHORTCUT_GEN_MD_5="d2d3215c2a0741370851f2d4ed738b54";
 
     private static void initializeDllInterface() throws ClassNotFoundException {
         Class.forName("FileEngine.dllInterface.FileMonitor");
@@ -64,25 +65,8 @@ public class MainClass {
             for (File eachPlugin : files) {
                 String pluginName = eachPlugin.getName();
                 File targetPlugin = new File("plugins" + File.separator + pluginName);
-                copyFile(new FileInputStream(eachPlugin), targetPlugin);
+                CopyFileUtil.copyFile(new FileInputStream(eachPlugin), targetPlugin);
             }
-        }
-    }
-
-    private static void copyFile(InputStream source, File dest) {
-        try (BufferedInputStream bis = new BufferedInputStream(source);
-             BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(dest))) {
-            byte[] buffer = new byte[8192];
-            int count = bis.read(buffer);
-            while (count != -1) {
-                //使用缓冲流写数据
-                bos.write(buffer, 0, count);
-                //刷新
-                bos.flush();
-                count = bis.read(buffer);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 
@@ -287,6 +271,7 @@ public class MainClass {
         copyOrIgnoreFile("user/sqlite3.dll", "/win32-x86-64/sqlite3.dll", SQLITE3_64_MD_5);
         copyOrIgnoreFile("user/getHandle.dll", "/win32-x86-64/getHandle.dll", GET_HANDLE_64_MD_5);
         copyOrIgnoreFile("user/daemonProcess.exe", "/win32-x86-64/daemonProcess.exe", DAEMON_PROCESS_64_MD_5);
+        copyOrIgnoreFile("user/shortcutGenerator.vbs", "/shortcutGenerator.vbs", SHORTCUT_GEN_MD_5);
     }
 
     private static void copyOrIgnoreFile(String path, String rootPath, String md5) {
@@ -297,7 +282,7 @@ public class MainClass {
                 System.out.println("正在重新释放文件：" + path);
             }
             InputStream resource = MainClass.class.getResourceAsStream(rootPath);
-            copyFile(resource, target);
+            CopyFileUtil.copyFile(resource, target);
             try {
                 resource.close();
             } catch (IOException e) {

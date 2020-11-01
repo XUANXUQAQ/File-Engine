@@ -153,11 +153,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="checkHwnd.h" />
     <ClInclude Include="framework.h" />
+    <ClInclude Include="getExplorerPath.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="checkHwnd.cpp" />
     <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="getExplorerPath.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

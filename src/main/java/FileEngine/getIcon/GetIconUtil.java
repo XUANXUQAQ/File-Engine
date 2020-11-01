@@ -74,9 +74,6 @@ public class GetIconUtil {
             case "version":
                 return blankIcon;
             default:
-                if (AllConfigs.isDebug()) {
-                    System.err.println("No icon matched with command");
-                }
                 return null;
         }
     }
