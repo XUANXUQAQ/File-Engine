@@ -28,7 +28,7 @@ public interface GetHandle extends Library {
 
     boolean isExplorerAndSearchbarNotFocused();
 
-    void resetMouseStatus();
+    void setExplorerPath();
 
-    void transferSearchBarFocus();
+    String getExplorerPath();
 }

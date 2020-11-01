@@ -2,23 +2,23 @@
 #include "pch.h"
 #include <Windows.h>
 #include <iostream>
-#include <stdint.h>
 #include <tlhelp32.h>
 #include <tchar.h>
 #include <thread>
 #include <dwmapi.h>
-#include <algorithm>
-#pragma comment(lib, "dwmapi.lib")
-#pragma comment(lib, "user32.lib")
+#include "checkHwnd.h"
+#include "getExplorerPath.h"
+#pragma comment(lib, "dwmapi")
+#pragma comment(lib, "user32")
 #pragma comment(lib, "kernel32")
 #define IS_MOUSE_CLICKED_OR_KEY_PRESSED(VK_NONAME) ((GetAsyncKeyState(VK_NONAME) & 0x8000) ? 1:0)
+//#define TEST
+
 
 constexpr auto EXPLORER_MIN_HEIGHT = 200;       //当窗口大小满足这些条件后才开始判断是否为explorer.exe
 constexpr auto EXPLORER_MIN_WIDTH = 200;
 constexpr auto EXPLORER_MIN_X_POS = 50;
 constexpr auto EXPLORER_MIN_Y_POS = 50;
-//#define TEST
-
 
 using namespace std;
 
@@ -32,23 +32,18 @@ int toolbar_click_x;
 int toolbar_click_y;
 volatile bool is_click_not_explorer_or_searchbar;
 HWND searchBarHWND;
+char explorer_path[1000];
 
 void getTopWindow(HWND* hwnd);
 void getWindowRect(const HWND& hwnd, LPRECT lprect);
-bool isExplorerWindowLowCost(const HWND& hwnd);
-bool isExplorerWindowHighCost(const HWND& hwnd);
-void _start();
-bool isFileChooserWindow(const HWND& hwnd);
+void checkTopWindowThread();
 void setClickPos(const HWND& fileChooserHwnd);
 BOOL CALLBACK findToolbar(HWND hwndChild, LPARAM lParam);
 BOOL CALLBACK findSeachBar(HWND hwndChild, LPARAM lParam);
 bool isClickNotExplorerOrSearchBarOrSwitchTask();
-void _checkMouseStatus();
+void checkMouseClickHWND();
 bool isMouseClickedOrSwitchTaskPressed();
-bool isSearchBarWindow(const HWND& hd);
 void grabSearchBarHWND();
-wstring GetProcessNameByHandle(HWND nlHandle);
-
 
 extern "C" __declspec(dllexport) bool isDialogNotExist();
 extern "C" __declspec(dllexport) void start();
@@ -61,25 +56,32 @@ extern "C" __declspec(dllexport) long getExplorerHeight();
 extern "C" __declspec(dllexport) int getToolbarClickX();
 extern "C" __declspec(dllexport) int getToolbarClickY(); 
 extern "C" __declspec(dllexport) bool isExplorerAndSearchbarNotFocused();
-extern "C" __declspec(dllexport) void resetMouseStatus();
-extern "C" __declspec(dllexport) void transferSearchBarFocus();
+extern "C" __declspec(dllexport) void setExplorerPath();
+extern "C" __declspec(dllexport) const char* getExplorerPath();
+
+__declspec(dllexport) void setExplorerPath()
+{
+    POINT p;
+    GetCursorPos(&p);
+    HWND hd = ::WindowFromPoint(p);
+    hd = GetAncestor(hd, GA_ROOT);
+    string path_tmp = getPathByHWND(hd);
+#ifdef TEST
+    char windowClassName[200];
+    GetClassNameA(hd, windowClassName, 200);
+    std::cout << "class name:" << windowClassName << endl;
+#endif
+    strcpy_s(explorer_path, 1000, path_tmp.c_str());
+}
+
+__declspec(dllexport) const char* getExplorerPath()
+{
+    return explorer_path;
+}
 
 __declspec(dllexport) bool isExplorerAndSearchbarNotFocused()
 {
     return is_click_not_explorer_or_searchbar;
-}
-
-__declspec(dllexport) void transferSearchBarFocus()
-{
-    if (!searchBarHWND)
-    {
-        grabSearchBarHWND();
-    }
-    if (searchBarHWND)
-    {
-        //转移窗口焦点
-        SendMessage(searchBarHWND, WM_KILLFOCUS, NULL, NULL);
-    }
 }
 
 void grabSearchBarHWND()
@@ -90,23 +92,18 @@ void grabSearchBarHWND()
 bool isClickNotExplorerOrSearchBarOrSwitchTask()
 {
     POINT point;
-    BOOL ret;
     HWND hd;    //鼠标位置的窗口句柄
     if (isMouseClickedOrSwitchTaskPressed())
     {
-        ret = GetCursorPos(&point);
-        if (ret)
+        if (GetCursorPos(&point))
         {
             hd = WindowFromPoint(point);
             if (isExplorerWindowHighCost(hd) || isFileChooserWindow(hd))
             {
                 return false;
             } 
-            else
-            {
-                //检查是否点击搜索框
-                return !(isSearchBarWindow(hd));
-            }
+	           //检查是否点击搜索框
+	          return !(isSearchBarWindow(hd));
         }
     }
     else
@@ -115,13 +112,6 @@ bool isClickNotExplorerOrSearchBarOrSwitchTask()
         return !(isFileChooserWindow(hd) || isExplorerWindowLowCost(hd) || isSearchBarWindow(hd));
     }
     return false;
-}
-
-bool isSearchBarWindow(const HWND& hd)
-{
-    char title[200];
-    GetWindowTextA(hd, title, 200);
-    return strcmp(title, "File-Engine-SearchBar") == 0;
 }
 
 bool isMouseClickedOrSwitchTaskPressed()
@@ -135,7 +125,7 @@ __declspec(dllexport) bool isDialogNotExist()
     RECT windowRect;
     HWND hd = GetDesktopWindow();        //得到桌面窗口
     hd = GetWindow(hd, GW_CHILD);        //得到屏幕上第一个子窗口
-    while (hd != NULL)                    //循环得到所有的子窗口
+    while (hd != nullptr)                    //循环得到所有的子窗口
     {
         if (IsWindowVisible(hd) && !IsIconic(hd))
         {
@@ -167,26 +157,6 @@ void getWindowRect(const HWND& hwnd, LPRECT lprect)
     GetWindowRect(hwnd, lprect);
 }
 
-bool isFileChooserWindow(const HWND& hwnd)
-{
-    char _windowClassName[100];
-    char title[100];
-    GetClassNameA(hwnd, _windowClassName, 100);
-    GetWindowTextA(hwnd, title, 100);
-    string windowTitle(title);
-    string WindowClassName(_windowClassName);
-    transform(windowTitle.begin(), windowTitle.end(), windowTitle.begin(), ::tolower);
-    transform(WindowClassName.begin(), WindowClassName.end(), WindowClassName.begin(), ::tolower);
-    return ((WindowClassName.find("#32770") != string::npos ||
-        WindowClassName.find("dialog") != string::npos)) 
-        && 
-        //排除已知的例外
-        (windowTitle.find("internet download manager") == string::npos && 
-        windowTitle.find("push commits to") == string::npos &&
-        windowTitle.find("geek uninstaller") == string::npos && 
-        windowTitle.find("rainmeter") == string::npos);
-}
-
 void setClickPos(const HWND& fileChooserHwnd)
 {
     EnumChildWindows(fileChooserHwnd, findToolbar, NULL);
@@ -204,8 +174,8 @@ BOOL CALLBACK findSeachBar(HWND hwndChild, LPARAM lParam)
 
 BOOL CALLBACK findToolbar(HWND hwndChild, LPARAM lParam)
 {
-    HWND hwd2 = FindWindowExA(hwndChild, NULL, "Address Band Root", NULL);
-    if (hwd2)
+    HWND hwd2 = FindWindowExA(hwndChild, nullptr, "Address Band Root", nullptr);
+    if (IsWindow(hwd2))
     {
         RECT rect;
         getWindowRect(hwd2, &rect);
@@ -221,70 +191,14 @@ BOOL CALLBACK findToolbar(HWND hwndChild, LPARAM lParam)
 }
 
 
-wstring GetProcessNameByHandle(HWND nlHandle)
-{
-    wstring loStrRet = L"";
-    //得到该进程的进程id
-    DWORD ldwProID;
-    GetWindowThreadProcessId(nlHandle, &ldwProID);
-    if (0 == ldwProID)
-    {
-        return L"";
-    }
-    HANDLE handle = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-    if (handle == (HANDLE)-1)
-    {
-        //AfxMessageBox(L"CreateToolhelp32Snapshot error");
-        return loStrRet;
-    }
-    PROCESSENTRY32 procinfo;
-    procinfo.dwSize = sizeof(PROCESSENTRY32);
-    BOOL more = ::Process32First(handle, &procinfo);
-    while (more)
-    {
-        if (procinfo.th32ProcessID == ldwProID)
-        {
-            loStrRet = procinfo.szExeFile;
-            CloseHandle(handle);
-            return loStrRet;
-        }
-        more = Process32Next(handle, &procinfo);
-    }
-    CloseHandle(handle);
-    return loStrRet;
-}
-
-//不要在长时间循环中使用
-bool isExplorerWindowHighCost(const HWND& hwnd)
-{
-    wstring proc_name = GetProcessNameByHandle(hwnd);
-    transform(proc_name.begin(), proc_name.end(), proc_name.begin(), ::tolower);
-    return proc_name.find(_T("explorer.exe")) != wstring::npos;
-}
-
-
-bool isExplorerWindowLowCost(const HWND& hwnd)
-{
-    if (IsWindowEnabled(hwnd) && !IsIconic(hwnd))
-    {
-        char className[200];
-        GetClassNameA(hwnd, className, 200);
-        string WindowClassName(className);
-        transform(WindowClassName.begin(), WindowClassName.end(), WindowClassName.begin(), ::tolower);
-        //使用检测窗口类名的方式更节省CPU资源
-        return WindowClassName.find("cabinet") != string::npos; 
-    }
-    return false;
-}
-
 __declspec(dllexport) void start()
 {
     if (!isRunning)
     {
         isRunning = true;
-        thread t(_start);
+        thread t(checkTopWindowThread);
         t.detach();
-        thread checkMouse(_checkMouseStatus);
+        thread checkMouse(checkMouseClickHWND);
         checkMouse.detach();
     }
 }
@@ -329,23 +243,16 @@ __declspec(dllexport) int getToolbarClickY()
     return toolbar_click_y;
 }
 
-__declspec(dllexport) void resetMouseStatus()
-{
-    is_click_not_explorer_or_searchbar = false;
-}
-
-void _checkMouseStatus()
+void checkMouseClickHWND()
 {
     while (isRunning)
     {
-        if (!is_click_not_explorer_or_searchbar) {
-            is_click_not_explorer_or_searchbar = isClickNotExplorerOrSearchBarOrSwitchTask();
-        }
+        is_click_not_explorer_or_searchbar = isClickNotExplorerOrSearchBarOrSwitchTask();
         Sleep(10);
     }
 }
 
-void _start()
+void checkTopWindowThread()
 {
     HWND hwnd;
     RECT windowRect;

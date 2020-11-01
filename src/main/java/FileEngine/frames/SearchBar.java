@@ -1,6 +1,7 @@
 package FileEngine.frames;
 
 
+import FileEngine.CopyFileUtil;
 import FileEngine.SQLiteConfig.SQLiteUtil;
 import FileEngine.configs.AllConfigs;
 import FileEngine.dllInterface.FileMonitor;
@@ -52,6 +53,7 @@ public class SearchBar {
     private static volatile boolean isCopyPathPressed = false;
     private static volatile boolean startSignal = false;
     private static volatile boolean isUserPressed = false;
+    private static volatile boolean isMouseDraggedInWindow = false;
     private Border border;
     private final JFrame searchBar;
     private final JLabel label1;
@@ -62,7 +64,7 @@ public class SearchBar {
     private final JLabel label6;
     private final JLabel label7;
     private final JLabel label8;
-    private final AtomicInteger labelCount;
+    private final AtomicInteger labelCount;  //保存当前选中的结果是在listResults中的第几个 范围 0 - listResults.size()
     private final JTextField textField;
     private Color labelColor;
     private Color backgroundColor;
@@ -88,7 +90,7 @@ public class SearchBar {
     private volatile String[] keywords;
     private final SearchUtil search;
     private final TaskBar taskBar;
-    private final AtomicInteger resultCount;  //保存当前选中的结果是在listResults中的第几个 范围 0 - listResults.size()
+    private final AtomicInteger resultCount;  //保存当前共有多少个结果
     private final AtomicInteger currentLabelSelectedPosition;   //保存当前是哪个label被选中 范围 0 - 7
     private volatile Plugin currentUsingPlugin;
 
@@ -188,7 +190,6 @@ public class SearchBar {
                 if (System.currentTimeMillis() - visibleStartTime < 1000 && showingMode.get() == AllConfigs.ShowingSearchBarMode.EXPLORER_ATTACH) {
                     //在explorer attach模式下 1s内窗口就获取到了焦点
                     searchBar.transferFocusBackward();
-                    GetHandle.INSTANCE.transferSearchBarFocus();
                 }
             }
 
@@ -273,6 +274,32 @@ public class SearchBar {
     }
 
     /**
+     * 创建需要打开的文件的快捷方式
+     *
+     * @param fileOrFolderPath  文件路径
+     * @param writeShortCutPath 保存快捷方式的位置
+     * @throws Exception 创建错误
+     */
+    private void createShortCut(String fileOrFolderPath, String writeShortCutPath, boolean isNotifyUser) throws Exception {
+        String lower = fileOrFolderPath.toLowerCase();
+        if (lower.endsWith(".lnk") || lower.endsWith(".url")) {
+            //直接复制文件
+            CopyFileUtil.copyFile(new File(fileOrFolderPath), new File(writeShortCutPath));
+        }else {
+            File shortcutGen = new File("user/shortcutGenerator.vbs");
+            String shortcutGenPath = shortcutGen.getAbsolutePath();
+            String start = "cmd.exe /c start " + shortcutGenPath.substring(0, 2);
+            String end = "\"" + shortcutGenPath.substring(2) + "\"";
+            String commandToGenLnk = start + end + " /target:" + "\"" + fileOrFolderPath + "\"" + " " + "/shortcut:" + "\"" + writeShortCutPath + "\"" + " /workingdir:" + "\"" + fileOrFolderPath.substring(0, fileOrFolderPath.lastIndexOf(File.separator)) + "\"";
+            Runtime.getRuntime().exec("cmd.exe " + commandToGenLnk);
+        }
+        if (isNotifyUser) {
+            TaskBar.getInstance().showMessage(TranslateUtil.getInstance().getTranslation("Info"),
+                    TranslateUtil.getInstance().getTranslation("Shortcut created"));
+        }
+    }
+
+    /**
      * 让搜索窗口响应鼠标双击事件以打开文件
      */
     private void addSearchBarMouseListener() {
@@ -281,7 +308,7 @@ public class SearchBar {
             public void mousePressed(MouseEvent e) {
                 int count = e.getClickCount();
                 if (count == 2) {
-                    if (!(resultCount.get() == 0)) {
+                    if (resultCount.get() != 0) {
                         if (runningMode.get() != AllConfigs.RunningMode.PLUGIN_MODE) {
                             if (showingMode.get() != AllConfigs.ShowingSearchBarMode.EXPLORER_ATTACH) {
                                 if (isVisible()) {
@@ -350,6 +377,45 @@ public class SearchBar {
 
             @Override
             public void mouseReleased(MouseEvent e) {
+                if (isMouseDraggedInWindow) {
+                    isMouseDraggedInWindow = false;
+                    GetHandle.INSTANCE.setExplorerPath();
+                    if (AllConfigs.isDebug()) {
+                        Point point = java.awt.MouseInfo.getPointerInfo().getLocation();
+                        System.out.println("鼠标释放");
+                        System.out.println("鼠标X：" + point.x);
+                        System.out.println("鼠标Y：" + point.y);
+                        System.out.println("path:" + GetHandle.INSTANCE.getExplorerPath());
+                    }
+                    //创建快捷方式
+                    try {
+                        String writePath = GetHandle.INSTANCE.getExplorerPath();
+                        if (writePath != null) {
+                            if (!writePath.isEmpty()) {
+                                String result = listResults.get(labelCount.get());
+                                if (runningMode.get() == AllConfigs.RunningMode.NORMAL_MODE) {
+                                    //普通模式直接获取文件路径
+                                    File f = new File(result);
+                                    createShortCut(f.getAbsolutePath(), writePath + File.separator + f.getName(), true);
+                                } else if (runningMode.get() == AllConfigs.RunningMode.COMMAND_MODE) {
+                                    String[] commandInfo = semicolon.split(result);
+                                    //获取命令后的文件路径
+                                    if (commandInfo != null) {
+                                        if (commandInfo.length > 1) {
+                                            File f = new File(commandInfo[1]);
+                                            if (f.exists()) {
+                                                createShortCut(f.getAbsolutePath(),
+                                                        writePath + File.separator + f.getName(), true);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    } catch (Exception exception) {
+                        exception.printStackTrace();
+                    }
+                }
                 if (runningMode.get() == AllConfigs.RunningMode.PLUGIN_MODE) {
                     if (currentUsingPlugin != null) {
                         if (resultCount.get() != 0) {
@@ -475,7 +541,7 @@ public class SearchBar {
                                     setVisible(false);
                                 }
                             }
-                            if (!(resultCount.get() == 0)) {
+                            if (resultCount.get() != 0) {
                                 String res = listResults.get(labelCount.get());
                                 if (runningMode.get() == AllConfigs.RunningMode.NORMAL_MODE) {
                                     if (showingMode.get() == AllConfigs.ShowingSearchBarMode.NORMAL_SHOWING) {
@@ -545,7 +611,7 @@ public class SearchBar {
                     if (runningMode.get() == AllConfigs.RunningMode.PLUGIN_MODE) {
                         if (key != 38 && key != 40) {
                             if (currentUsingPlugin != null) {
-                                if (!(resultCount.get() == 0)) {
+                                if (resultCount.get() != 0) {
                                     currentUsingPlugin.keyPressed(arg0, listResults.get(labelCount.get()));
                                 }
                             }
@@ -572,7 +638,7 @@ public class SearchBar {
                 if (runningMode.get() == AllConfigs.RunningMode.PLUGIN_MODE) {
                     if (key != 38 && key != 40) {
                         if (currentUsingPlugin != null) {
-                            if (!(resultCount.get() == 0)) {
+                            if (resultCount.get() != 0) {
                                 currentUsingPlugin.keyReleased(arg0, listResults.get(labelCount.get()));
                             }
                         }
@@ -586,7 +652,7 @@ public class SearchBar {
                     int key = arg0.getKeyCode();
                     if (key != 38 && key != 40) {
                         if (currentUsingPlugin != null) {
-                            if (!(resultCount.get() == 0)) {
+                            if (resultCount.get() != 0) {
                                 currentUsingPlugin.keyTyped(arg0, listResults.get(labelCount.get()));
                             }
                         }
@@ -698,6 +764,15 @@ public class SearchBar {
             double absoluteDistance;
             int lastPositionX = 0;
             int lastPositionY = 0;
+
+            @Override
+            public void mouseDragged(MouseEvent e) {
+                int mode = runningMode.get();
+                isMouseDraggedInWindow = (
+                        mode == AllConfigs.RunningMode.NORMAL_MODE ||
+                        mode == AllConfigs.RunningMode.COMMAND_MODE
+                );
+            }
 
             @Override
             public void mouseMoved(MouseEvent e) {
@@ -1936,7 +2011,6 @@ public class SearchBar {
                 while (AllConfigs.isNotMainExit()) {
                     if (GetHandle.INSTANCE.isExplorerAtTop()) {
                         switchToExplorerAttachMode();
-                        GetHandle.INSTANCE.resetMouseStatus();
                     } else {
                         if (GetHandle.INSTANCE.isDialogNotExist() || GetHandle.INSTANCE.isExplorerAndSearchbarNotFocused()) {
                             switchToNormalMode();
@@ -2041,7 +2115,6 @@ public class SearchBar {
                 label6.setFont(labelFont);
                 label7.setFont(labelFont);
                 label8.setFont(labelFont);
-                GetHandle.INSTANCE.resetMouseStatus();
                 showingMode.set(AllConfigs.ShowingSearchBarMode.EXPLORER_ATTACH);
                 getExplorerSizeAndChangeSearchBarSizeExplorerMode();
                 if (!isVisible()) {
@@ -2054,7 +2127,6 @@ public class SearchBar {
     private void switchToNormalMode() {
         if (showingMode.get() != AllConfigs.ShowingSearchBarMode.NORMAL_SHOWING) {
             closeSearchBar();
-            GetHandle.INSTANCE.resetMouseStatus();
             Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize(); // 获取屏幕大小
             int height = screenSize.height;
             int searchBarHeight = (int) (height * 0.5);
@@ -3476,6 +3548,7 @@ public class SearchBar {
         isCacheAndPrioritySearched = false;
         isStartSearchLocal = false;
         isWaiting = false;
+        isMouseDraggedInWindow = false;
     }
 
     /**
@@ -3501,6 +3574,7 @@ public class SearchBar {
         isCacheAndPrioritySearched = false;
         isStartSearchLocal = false;
         isWaiting = false;
+        isMouseDraggedInWindow = false;
     }
 
     /**

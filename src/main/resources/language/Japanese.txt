@@ -145,3 +145,4 @@ The result has been copied to the clipboard=結果はクリップボードにコ
 Loading plugins error=プラグインの読み込みエラー
 Tip:=促す
 If you need to delete a plug-in, just delete it under the "plugins" folder in the software directory.=プラグインを削除したい場合は、ソフトウェアの「plugins」フォルダにあるプラグインを削除してください。
+Shortcut created=ショートカットが作成されました

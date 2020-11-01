@@ -33,10 +33,10 @@ std::string to_utf8(const wchar_t* buffer, int len)
 		0,
 		buffer,
 		len,
-		NULL,
+		nullptr,
 		0,
-		NULL,
-		NULL);
+		nullptr,
+		nullptr);
 	if (nChars == 0)
 	{
 		return "";
@@ -50,8 +50,8 @@ std::string to_utf8(const wchar_t* buffer, int len)
 		len,
 		const_cast<char*>(newbuffer.c_str()),
 		nChars,
-		NULL,
-		NULL);
+		nullptr,
+		nullptr);
 
 	return newbuffer;
 }
@@ -66,7 +66,7 @@ class Volume {
 public:
 	Volume(char vol, sqlite3* database, vector<string> ignorePaths) {
 		this->vol = vol;
-		hVol = NULL;
+		hVol = nullptr;
 		path = "";
 		db = database;
 		addIgnorePath(ignorePaths);
@@ -112,9 +112,7 @@ public:
 			mutex_lock.unlock();
 			return true;
 		}
-		else {
-			return false;
-		}
+		return false;
 	}
 
 private:
@@ -124,47 +122,47 @@ private:
 	Frn_Pfrn_Name_Map frnPfrnNameMap;
 	sqlite3* db;
 	CString path;
-	sqlite3_stmt* stmt0 = NULL;
-	sqlite3_stmt* stmt1 = NULL;
-	sqlite3_stmt* stmt2 = NULL;
-	sqlite3_stmt* stmt3 = NULL;
-	sqlite3_stmt* stmt4 = NULL;
-	sqlite3_stmt* stmt5 = NULL;
-	sqlite3_stmt* stmt6 = NULL;
-	sqlite3_stmt* stmt7 = NULL;
-	sqlite3_stmt* stmt8 = NULL;
-	sqlite3_stmt* stmt9 = NULL;
-	sqlite3_stmt* stmt10 = NULL;
-	sqlite3_stmt* stmt11 = NULL;
-	sqlite3_stmt* stmt12 = NULL;
-	sqlite3_stmt* stmt13 = NULL;
-	sqlite3_stmt* stmt14 = NULL;
-	sqlite3_stmt* stmt15 = NULL;
-	sqlite3_stmt* stmt16 = NULL;
-	sqlite3_stmt* stmt17 = NULL;
-	sqlite3_stmt* stmt18 = NULL;
-	sqlite3_stmt* stmt19 = NULL;
-	sqlite3_stmt* stmt20 = NULL;
-	sqlite3_stmt* stmt21 = NULL;
-	sqlite3_stmt* stmt22 = NULL;
-	sqlite3_stmt* stmt23 = NULL;
-	sqlite3_stmt* stmt24 = NULL;
-	sqlite3_stmt* stmt25 = NULL;
-	sqlite3_stmt* stmt26 = NULL;
-	sqlite3_stmt* stmt27 = NULL;
-	sqlite3_stmt* stmt28 = NULL;
-	sqlite3_stmt* stmt29 = NULL;
-	sqlite3_stmt* stmt30 = NULL;
-	sqlite3_stmt* stmt31 = NULL;
-	sqlite3_stmt* stmt32 = NULL;
-	sqlite3_stmt* stmt33 = NULL;
-	sqlite3_stmt* stmt34 = NULL;
-	sqlite3_stmt* stmt35 = NULL;
-	sqlite3_stmt* stmt36 = NULL;
-	sqlite3_stmt* stmt37 = NULL;
-	sqlite3_stmt* stmt38 = NULL;
-	sqlite3_stmt* stmt39 = NULL;
-	sqlite3_stmt* stmt40 = NULL;
+	sqlite3_stmt* stmt0 = nullptr;
+	sqlite3_stmt* stmt1 = nullptr;
+	sqlite3_stmt* stmt2 = nullptr;
+	sqlite3_stmt* stmt3 = nullptr;
+	sqlite3_stmt* stmt4 = nullptr;
+	sqlite3_stmt* stmt5 = nullptr;
+	sqlite3_stmt* stmt6 = nullptr;
+	sqlite3_stmt* stmt7 = nullptr;
+	sqlite3_stmt* stmt8 = nullptr;
+	sqlite3_stmt* stmt9 = nullptr;
+	sqlite3_stmt* stmt10 = nullptr;
+	sqlite3_stmt* stmt11 = nullptr;
+	sqlite3_stmt* stmt12 = nullptr;
+	sqlite3_stmt* stmt13 = nullptr;
+	sqlite3_stmt* stmt14 = nullptr;
+	sqlite3_stmt* stmt15 = nullptr;
+	sqlite3_stmt* stmt16 = nullptr;
+	sqlite3_stmt* stmt17 = nullptr;
+	sqlite3_stmt* stmt18 = nullptr;
+	sqlite3_stmt* stmt19 = nullptr;
+	sqlite3_stmt* stmt20 = nullptr;
+	sqlite3_stmt* stmt21 = nullptr;
+	sqlite3_stmt* stmt22 = nullptr;
+	sqlite3_stmt* stmt23 = nullptr;
+	sqlite3_stmt* stmt24 = nullptr;
+	sqlite3_stmt* stmt25 = nullptr;
+	sqlite3_stmt* stmt26 = nullptr;
+	sqlite3_stmt* stmt27 = nullptr;
+	sqlite3_stmt* stmt28 = nullptr;
+	sqlite3_stmt* stmt29 = nullptr;
+	sqlite3_stmt* stmt30 = nullptr;
+	sqlite3_stmt* stmt31 = nullptr;
+	sqlite3_stmt* stmt32 = nullptr;
+	sqlite3_stmt* stmt33 = nullptr;
+	sqlite3_stmt* stmt34 = nullptr;
+	sqlite3_stmt* stmt35 = nullptr;
+	sqlite3_stmt* stmt36 = nullptr;
+	sqlite3_stmt* stmt37 = nullptr;
+	sqlite3_stmt* stmt38 = nullptr;
+	sqlite3_stmt* stmt39 = nullptr;
+	sqlite3_stmt* stmt40 = nullptr;
 
 	USN_JOURNAL_DATA ujd;
 	CREATE_USN_JOURNAL_DATA cujd;
@@ -476,20 +474,17 @@ bool Volume::getHandle() {
 	hVol = CreateFile(lpFileName,
 		GENERIC_READ | GENERIC_WRITE, // 可以为0
 		FILE_SHARE_READ | FILE_SHARE_WRITE, // 必须包含有FILE_SHARE_WRITE
-		NULL,
+		nullptr,
 		OPEN_EXISTING, // 必须包含OPEN_EXISTING, CREATE_ALWAYS可能会导致错误
 		FILE_ATTRIBUTE_READONLY, // FILE_ATTRIBUTE_NORMAL可能会导致错误
-		NULL);
+		nullptr);
 
 
 	if (INVALID_HANDLE_VALUE != hVol) {
 		return true;
 	}
-	else {
-		return false;
-		//		exit(1);
-		//MessageBox(NULL, _T("USN错误"), _T("错误"), MB_OK);
-	}
+	
+	return false;
 }
 
 bool Volume::createUSN() {
@@ -502,10 +497,10 @@ bool Volume::createUSN() {
 			FSCTL_CREATE_USN_JOURNAL,      // dwIoControlCode
 			&cujd,           // input buffer
 			sizeof(cujd),         // size of input buffer
-			NULL,                          // lpOutBuffer
+			nullptr,                          // lpOutBuffer
 			0,                             // nOutBufferSize
 			&br,     // number of bytes returned
-			NULL) // OVERLAPPED structure	
+			nullptr) // OVERLAPPED structure	
 		) {
 		return true;
 	}
@@ -520,12 +515,12 @@ bool Volume::getUSNInfo() {
 	if (
 		DeviceIoControl(hVol, // handle to volume
 			FSCTL_QUERY_USN_JOURNAL,// dwIoControlCode
-			NULL,            // lpInBuffer
+			nullptr,            // lpInBuffer
 			0,               // nInBufferSize
 			&ujd,     // output buffer
 			sizeof(ujd),  // size of output buffer
 			&br, // number of bytes returned
-			NULL) // OVERLAPPED structure
+			nullptr) // OVERLAPPED structure
 		) {
 		return true;
 	}
@@ -598,10 +593,10 @@ bool Volume::deleteUSN() {
 		FSCTL_DELETE_USN_JOURNAL,
 		&dujd,
 		sizeof(dujd),
-		NULL,
+		nullptr,
 		0,
 		&br,
-		NULL)
+		nullptr)
 		) {
 		CloseHandle(hVol);
 		return true;
