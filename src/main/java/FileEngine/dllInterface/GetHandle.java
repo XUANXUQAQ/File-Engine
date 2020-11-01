@@ -31,4 +31,6 @@ public interface GetHandle extends Library {
     void setExplorerPath();
 
     String getExplorerPath();
+
+    void setSearchBarUsingStatus(boolean b);
 }
