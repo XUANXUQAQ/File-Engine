@@ -33,6 +33,7 @@ int toolbar_click_y;
 volatile bool is_click_not_explorer_or_searchbar;
 HWND searchBarHWND;
 char explorer_path[1000];
+volatile bool isSearchBarUsing = false;
 
 void getTopWindow(HWND* hwnd);
 void getWindowRect(const HWND& hwnd, LPRECT lprect);
@@ -58,6 +59,12 @@ extern "C" __declspec(dllexport) int getToolbarClickY();
 extern "C" __declspec(dllexport) bool isExplorerAndSearchbarNotFocused();
 extern "C" __declspec(dllexport) void setExplorerPath();
 extern "C" __declspec(dllexport) const char* getExplorerPath();
+extern "C" __declspec(dllexport) void setSearchBarUsingStatus(bool b);
+
+__declspec(dllexport) void setSearchBarUsingStatus(bool b)
+{
+    isSearchBarUsing = b;
+}
 
 __declspec(dllexport) void setExplorerPath()
 {
@@ -247,7 +254,10 @@ void checkMouseClickHWND()
 {
     while (isRunning)
     {
-        is_click_not_explorer_or_searchbar = isClickNotExplorerOrSearchBarOrSwitchTask();
+    	if (isSearchBarUsing)
+    	{
+            is_click_not_explorer_or_searchbar = isClickNotExplorerOrSearchBarOrSwitchTask();
+    	}
         Sleep(10);
     }
 }
