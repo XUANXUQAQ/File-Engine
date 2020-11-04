@@ -441,11 +441,12 @@ public class SearchBar {
         y = GetHandle.INSTANCE.getToolbarClickY();
         RobotUtil.getInstance().mouseClicked(x, y, 1, InputEvent.BUTTON1_MASK);
         RobotUtil.getInstance().keyTyped(KeyEvent.VK_CONTROL, KeyEvent.VK_V);
+        RobotUtil.getInstance().keyTyped(KeyEvent.VK_ENTER);
         try {
-            Thread.sleep(50);
+            //保证在执行粘贴操作时不会被提前恢复数据
+            Thread.sleep(250);
         } catch (InterruptedException ignored) {
         }
-        RobotUtil.getInstance().keyTyped(KeyEvent.VK_ENTER);
         clipboard.setContents(originalData, null);
     }
 
@@ -462,10 +463,6 @@ public class SearchBar {
             TaskBar.getInstance().showMessage(
                     TranslateUtil.getInstance().getTranslation("Info"),
                     TranslateUtil.getInstance().getTranslation("The result has been copied to the clipboard"));
-        }
-        try {
-            Thread.sleep(25);
-        }catch (InterruptedException ignored) {
         }
     }
 
