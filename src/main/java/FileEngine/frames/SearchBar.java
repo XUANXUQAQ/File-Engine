@@ -463,6 +463,10 @@ public class SearchBar {
                     TranslateUtil.getInstance().getTranslation("Info"),
                     TranslateUtil.getInstance().getTranslation("The result has been copied to the clipboard"));
         }
+        try {
+            Thread.sleep(25);
+        }catch (InterruptedException ignored) {
+        }
     }
 
     private String getTextFieldText() {
