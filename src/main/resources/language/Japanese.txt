@@ -147,3 +147,5 @@ Tip:=促す
 If you need to delete a plug-in, just delete it under the "plugins" folder in the software directory.=プラグインを削除したい場合は、ソフトウェアの「plugins」フォルダにあるプラグインを削除してください。
 Shortcut created=ショートカットが作成されました
 Show tip on creating shortcut=ショートカットの作成に関するヒントを表示する
+Errors=エラー
+Failed to save settings, do you still close the window=設定の保存に失敗しましたが、ウィンドウを閉じますか

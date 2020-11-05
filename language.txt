@@ -147,3 +147,5 @@ Tip:=
 If you need to delete a plug-in, just delete it under the "plugins" folder in the software directory.=
 Shortcut created=
 Show tip on creating shortcut=
+Errors=
+Failed to save settings, do you still close the window=
