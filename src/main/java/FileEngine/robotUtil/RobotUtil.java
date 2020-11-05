@@ -49,6 +49,7 @@ public class RobotUtil {
             //全部释放
             for (int each : keyCodes) {
                 robot.keyRelease(each);
+                robot.delay(10);
             }
         }
     }

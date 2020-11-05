@@ -84,8 +84,11 @@ bool isFileChooserWindow(const HWND& hwnd)
         WindowClassName.find("dialog") != std::string::npos))
         &&
         //排除已知的例外
-        (windowTitle.find("internet download manager") == std::string::npos &&
+        (
+            windowTitle.find("internet download manager") == std::string::npos &&
             windowTitle.find("push commits to") == std::string::npos &&
             windowTitle.find("geek uninstaller") == std::string::npos &&
-            windowTitle.find("rainmeter") == std::string::npos);
+            windowTitle.find("rainmeter") == std::string::npos &&
+            windowTitle.find("techpowerup") == std::string::npos
+		);
 }
