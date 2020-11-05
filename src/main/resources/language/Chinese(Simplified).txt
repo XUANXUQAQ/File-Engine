@@ -147,3 +147,5 @@ Tip:=提示：
 If you need to delete a plug-in, just delete it under the "plugins" folder in the software directory.=如果你需要删除插件，只需要在该软件目录下的"plugins"文件夹下删除即可。
 Shortcut created=已创建快捷方式
 Show tip on creating shortcut=显示有关创建快捷方式的提示
+Errors=错误
+Failed to save settings, do you still close the window=保存设置失败，是否仍然关闭窗口

@@ -34,6 +34,7 @@ public class SettingsFrame {
     private static volatile int tmp_runAsAdminKeyCode;
     private static volatile int tmp_openLastFolderKeyCode;
     private static volatile boolean isStartupChanged = false;
+    private static volatile boolean isSettingsChanged = false;
     private static ImageIcon frameIcon;
     private final JFrame frame = new JFrame("Settings");
     private JTextField textFieldUpdateInterval;
@@ -202,8 +203,28 @@ public class SettingsFrame {
         return SettingsFrameBuilder.instance;
     }
 
+    private void addWindowCloseListener() {
+        frame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                String errors = saveChanges(false);
+                if (!errors.isEmpty()) {
+                    int ret = JOptionPane.showConfirmDialog(null,
+                            TranslateUtil.getInstance().getTranslation("Errors") + ":\n" + errors + "\n" +
+                            TranslateUtil.getInstance().getTranslation("Failed to save settings, do you still close the window"));
+                    if (ret == JOptionPane.YES_OPTION) {
+                        hideFrame();
+                    }
+                } else {
+                    hideFrame();
+                }
+            }
+        });
+    }
+
     private void addCheckBoxStartupListener() {
-        checkBoxAddToStartup.addChangeListener(e -> isStartupChanged = true);
+        checkBoxAddToStartup.addChangeListener(e -> isStartupChanged = true
+        );
     }
 
     private void addButtonRemoveDesktopListener() {
@@ -215,7 +236,7 @@ public class SettingsFrame {
             }
             int isConfirmed = JOptionPane.showConfirmDialog(frame, TranslateUtil.getInstance().getTranslation("Whether to remove and backup all files on the desktop," +
                     "they will be in the program's Files folder, which may take a few minutes"));
-            if (isConfirmed == 0) {
+            if (isConfirmed == JOptionPane.YES_OPTION) {
                 CachedThreadPool.getInstance().executeTask(MoveDesktopFiles::start);
             }
         });
@@ -442,7 +463,7 @@ public class SettingsFrame {
     }
 
     private void addButtonSaveListener() {
-        buttonSave.addActionListener(e -> saveChanges());
+        buttonSave.addActionListener(e -> saveChanges(true));
     }
 
     private void addGitHubLabelListener() {
@@ -499,7 +520,7 @@ public class SettingsFrame {
                                     "New Version available") + latestVersion + "," +
                                     TranslateUtil.getInstance().getTranslation("Whether to update") + "\n" +
                                     TranslateUtil.getInstance().getTranslation("update content") + "\n" + description);
-                    if (result == 0) {
+                    if (result == JOptionPane.YES_OPTION) {
                         //开始更新,下载更新文件到tmp
                         String urlChoose;
                         String fileName;
@@ -752,7 +773,7 @@ public class SettingsFrame {
     private void addButtonVacuumListener() {
         buttonVacuum.addActionListener(e -> {
             int ret = JOptionPane.showConfirmDialog(frame, TranslateUtil.getInstance().getTranslation("Confirm whether to start optimizing the database?"));
-            if (0 == ret) {
+            if (JOptionPane.YES_OPTION == ret) {
                 int status = SearchUtil.getInstance().getStatus();
                 if (status == SearchUtil.NORMAL) {
                     if (AllConfigs.isDebug()) {
@@ -801,7 +822,7 @@ public class SettingsFrame {
         buttonDeleteAllCache.addActionListener(e -> {
             int ret = JOptionPane.showConfirmDialog(frame,
                     TranslateUtil.getInstance().getTranslation("The operation is irreversible. Are you sure you want to clear the cache?"));
-            if (0 == ret) {
+            if (JOptionPane.YES_OPTION == ret) {
                 for (String each : cacheSet) {
                     SearchUtil.getInstance().removeFileFromCache(each);
                 }
@@ -866,7 +887,7 @@ public class SettingsFrame {
                     JOptionPane.showMessageDialog(frame, TranslateUtil.getInstance().getTranslation("The current Version is the latest."));
                 } else {
                     int ret = JOptionPane.showConfirmDialog(frame, TranslateUtil.getInstance().getTranslation("New version available, do you want to update?"));
-                    if (ret == 0) {
+                    if (ret == JOptionPane.YES_OPTION) {
                         //开始下载
                         String url = plugin.getUpdateURL();
                         DownloadUtil.getInstance().downLoadFromUrl(url, pluginFullName, "tmp/pluginsUpdate");
@@ -1055,6 +1076,8 @@ public class SettingsFrame {
         initCacheArray();
 
         translate();
+
+        addWindowCloseListener();
 
         addCheckBoxStartupListener();
 
@@ -1368,7 +1391,7 @@ public class SettingsFrame {
     }
 
 
-    protected boolean isSettingsVisible() {
+    protected boolean isSettingsFrameVisible() {
         return frame.isVisible();
     }
 
@@ -1382,7 +1405,7 @@ public class SettingsFrame {
         frame.setSize(width, height);
         frame.setContentPane(SettingsFrameBuilder.instance.panel);
         frame.setIconImage(frameIcon.getImage());
-        frame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
+        frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         frame.setResizable(false);
 
         tabbedPane.setSelectedIndex(0);
@@ -1546,7 +1569,7 @@ public class SettingsFrame {
         }
     }
 
-    private void saveChanges() {
+    private String saveChanges(boolean isPopErrorWindow) {
         StringBuilder strBuilder = new StringBuilder();
 
         checkProxy(strBuilder);
@@ -1567,17 +1590,20 @@ public class SettingsFrame {
         ignorePathTemp = textAreaIgnorePath.getText();
         ignorePathTemp = ignorePathTemp.replaceAll("\n", "");
 
+        String errors = strBuilder.toString();
+        if (!errors.isEmpty()) {
+            if (isPopErrorWindow) {
+                JOptionPane.showMessageDialog(frame, errors);
+            }
+            return errors;
+        }
+
         //重新显示翻译GUI
         if (!listLanguage.getSelectedValue().equals(TranslateUtil.getInstance().getLanguage())) {
             TranslateUtil.getInstance().setLanguage((String) listLanguage.getSelectedValue());
             translate();
         }
 
-        String errors = strBuilder.toString();
-        if (!errors.isEmpty()) {
-            JOptionPane.showMessageDialog(frame, errors);
-            return;
-        }
         //所有配置均正确
         //使所有配置生效
         String tmp_proxyAddress = textFieldAddress.getText();
@@ -1659,6 +1685,7 @@ public class SettingsFrame {
         } catch (IOException ignored) {
         }
         hideFrame();
+        return "";
     }
 
     private void setStartup(boolean b) {
