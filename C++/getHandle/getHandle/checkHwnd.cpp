@@ -89,6 +89,7 @@ bool isFileChooserWindow(const HWND& hwnd)
             windowTitle.find("push commits to") == std::string::npos &&
             windowTitle.find("geek uninstaller") == std::string::npos &&
             windowTitle.find("rainmeter") == std::string::npos &&
-            windowTitle.find("techpowerup") == std::string::npos
+            windowTitle.find("techpowerup") == std::string::npos &&
+            WindowClassName.find("sunawt") == std::string::npos
 		);
 }
