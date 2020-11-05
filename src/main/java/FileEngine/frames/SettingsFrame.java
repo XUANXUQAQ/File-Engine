@@ -191,6 +191,8 @@ public class SettingsFrame {
     private JLabel labelCurrentCacheNum;
     private JLabel labelUninstallPluginTip;
     private JLabel labelUninstallPluginTip2;
+    private JCheckBox checkBoxIsShowTipOnCreatingLnk;
+    private JLabel labelPlaceHolder15;
 
     private static class SettingsFrameBuilder {
         private static final SettingsFrame instance = new SettingsFrame();
@@ -964,6 +966,7 @@ public class SettingsFrame {
         checkBoxLoseFocus.setSelected(AllConfigs.isLoseFocusClose());
         checkBoxAddToStartup.setSelected(AllConfigs.hasStartup());
         checkBoxAdmin.setSelected(AllConfigs.isDefaultAdmin());
+        checkBoxIsShowTipOnCreatingLnk.setSelected(AllConfigs.isShowTipOnCreatingLnk());
     }
 
     private void setListGui() {
@@ -1189,7 +1192,7 @@ public class SettingsFrame {
         });
     }
 
-    private void translate() {
+    private void translateTabbedPane() {
         tabbedPane.setTitleAt(0, TranslateUtil.getInstance().getTranslation("General"));
         tabbedPane.setTitleAt(1, TranslateUtil.getInstance().getTranslation("Search settings"));
         tabbedPane.setTitleAt(2, TranslateUtil.getInstance().getTranslation("Search bar settings"));
@@ -1201,67 +1204,91 @@ public class SettingsFrame {
         tabbedPane.setTitleAt(8, TranslateUtil.getInstance().getTranslation("My commands"));
         tabbedPane.setTitleAt(9, TranslateUtil.getInstance().getTranslation("Color settings"));
         tabbedPane.setTitleAt(10, TranslateUtil.getInstance().getTranslation("About"));
-        checkBoxAddToStartup.setText(TranslateUtil.getInstance().getTranslation("Add to startup"));
-        buttonSaveAndRemoveDesktop.setText(TranslateUtil.getInstance().getTranslation("Backup and remove all desktop files"));
+    }
+
+    private void translateLabels() {
         labelMaxCacheNum.setText(TranslateUtil.getInstance().getTranslation("Set the maximum number of caches:"));
-        ButtonPriorityFolder.setText(TranslateUtil.getInstance().getTranslation("Choose"));
-        buttonChooseFile.setText(TranslateUtil.getInstance().getTranslation("Choose"));
         labelUpdateInterval.setText(TranslateUtil.getInstance().getTranslation("File update detection interval:"));
         labelSecond.setText(TranslateUtil.getInstance().getTranslation("Seconds"));
         labelSearchDepth.setText(TranslateUtil.getInstance().getTranslation("Search depth (too large may affect performance):"));
         labeltipPriorityFolder.setText(TranslateUtil.getInstance().getTranslation("Priority search folder location (double-click to clear):"));
         labelConstIgnorePathTip.setText(TranslateUtil.getInstance().getTranslation("Separate different paths with commas, and ignore C:\\Windows by default"));
         labelSetIgnorePathTip.setText(TranslateUtil.getInstance().getTranslation("Set ignore folder:"));
-        checkBoxLoseFocus.setText(TranslateUtil.getInstance().getTranslation("Close search bar when focus lost"));
-        checkBoxAdmin.setText(TranslateUtil.getInstance().getTranslation("Open other programs as an administrator (provided that the software has privileges)"));
         labelTransparency.setText(TranslateUtil.getInstance().getTranslation("Search bar transparency:"));
         labelOpenSearchBarHotKey.setText(TranslateUtil.getInstance().getTranslation("Open search bar:"));
         labelRunAsAdminHotKey.setText(TranslateUtil.getInstance().getTranslation("Run as administrator:"));
         labelOpenFolderHotKey.setText(TranslateUtil.getInstance().getTranslation("Open the parent folder:"));
         labelCopyPathHotKey.setText(TranslateUtil.getInstance().getTranslation("Copy path:"));
-        labelCmdTip2.setText(TranslateUtil.getInstance().getTranslation("You can add custom commands here. After adding, you can enter \": + your set identifier\" in the search box to quickly open"));
-        buttonAddCMD.setText(TranslateUtil.getInstance().getTranslation("Add"));
-        buttonDelCmd.setText(TranslateUtil.getInstance().getTranslation("Delete"));
+        labelCmdTip2.setText(TranslateUtil.getInstance().getTranslation("You can add custom commands here. After adding, " +
+                "you can enter \": + your set identifier\" in the search box to quickly open"));
         labelColorTip.setText(TranslateUtil.getInstance().getTranslation("Please enter the hexadecimal value of RGB color"));
         labelSearchBarColor.setText(TranslateUtil.getInstance().getTranslation("Search bar Color:"));
         labelLabelColor.setText(TranslateUtil.getInstance().getTranslation("Chosen label color:"));
         labelFontColor.setText(TranslateUtil.getInstance().getTranslation("Chosen label font Color:"));
         labelDefaultColor.setText(TranslateUtil.getInstance().getTranslation("Default background Color:"));
         labelNotChosenFontColor.setText(TranslateUtil.getInstance().getTranslation("Unchosen label font Color:"));
-        buttonResetColor.setText(TranslateUtil.getInstance().getTranslation("Reset to default"));
         labelGitHubTip.setText(TranslateUtil.getInstance().getTranslation("This is an open source software,GitHub:"));
         labelGithubIssue.setText(TranslateUtil.getInstance().getTranslation("If you find a bug or have some suggestions, welcome to GitHub for feedback"));
-        buttonCheckUpdate.setText(TranslateUtil.getInstance().getTranslation("Check for update"));
         labelDescription.setText(TranslateUtil.getInstance().getTranslation("Thanks for the following project"));
-        buttonSave.setText(TranslateUtil.getInstance().getTranslation("Save"));
         labelTranslationTip.setText(TranslateUtil.getInstance().getTranslation("The translation might not be 100% accurate"));
         labelLanguageChooseTip.setText(TranslateUtil.getInstance().getTranslation("Choose a language"));
         labelVersion.setText(TranslateUtil.getInstance().getTranslation("Current Version:") + AllConfigs.version);
         labelInstalledPluginNum.setText(TranslateUtil.getInstance().getTranslation("Installed plugins num:"));
-        buttonUpdatePlugin.setText(TranslateUtil.getInstance().getTranslation("Check for update"));
-        buttonPluginMarket.setText(TranslateUtil.getInstance().getTranslation("Plugin Market"));
         labelVacuumTip.setText(TranslateUtil.getInstance().getTranslation("Click to organize the database and reduce the size of the database,"));
         labelVacuumTip2.setText(TranslateUtil.getInstance().getTranslation("but it will consume a lot of time."));
-        radioButtonNoProxy.setText(TranslateUtil.getInstance().getTranslation("No proxy"));
-        radioButtonUseProxy.setText(TranslateUtil.getInstance().getTranslation("Configure proxy"));
         labelAddress.setText(TranslateUtil.getInstance().getTranslation("Address"));
         labelPort.setText(TranslateUtil.getInstance().getTranslation("Port"));
         labelUserName.setText(TranslateUtil.getInstance().getTranslation("User name"));
         labelPassword.setText(TranslateUtil.getInstance().getTranslation("Password"));
         labelProxyTip.setText(TranslateUtil.getInstance().getTranslation("If you need a proxy to access the Internet, You can add a proxy here."));
-        frame.setTitle(TranslateUtil.getInstance().getTranslation("Settings"));
-        chooseUpdateAddressLabel.setText(TranslateUtil.getInstance().getTranslation("Choose update address"));
         labelCacheSettings.setText(TranslateUtil.getInstance().getTranslation("Cache Settings"));
         labelCacheTip.setText(TranslateUtil.getInstance().getTranslation("You can edit the saved caches here"));
-        buttonDeleteCache.setText(TranslateUtil.getInstance().getTranslation("Delete cache"));
-        labelCacheTip2.setText(TranslateUtil.getInstance().getTranslation("The cache is automatically generated by the software and will be displayed first when searching."));
-        buttonDeleteAllCache.setText(TranslateUtil.getInstance().getTranslation("Delete all"));
+        labelCacheTip2.setText(TranslateUtil.getInstance().getTranslation("The cache is automatically generated " +
+                "by the software and will be displayed first when searching."));
         labelSearchBarFontColor.setText(TranslateUtil.getInstance().getTranslation("SearchBar Font Color:"));
-        buttonVacuum.setText(TranslateUtil.getInstance().getTranslation("Optimize database"));
         labelBorderColor.setText(TranslateUtil.getInstance().getTranslation("Border Color:"));
         labelCurrentCacheNum.setText(TranslateUtil.getInstance().getTranslation("Current Caches Num:") + AllConfigs.getCacheNum());
         labelUninstallPluginTip.setText(TranslateUtil.getInstance().getTranslation("If you need to delete a plug-in, just delete it under the \"plugins\" folder in the software directory."));
         labelUninstallPluginTip2.setText(TranslateUtil.getInstance().getTranslation("Tip:"));
+        chooseUpdateAddressLabel.setText(TranslateUtil.getInstance().getTranslation("Choose update address"));
+    }
+
+    private void translateCheckBoxs() {
+        checkBoxAddToStartup.setText(TranslateUtil.getInstance().getTranslation("Add to startup"));
+        checkBoxLoseFocus.setText(TranslateUtil.getInstance().getTranslation("Close search bar when focus lost"));
+        checkBoxAdmin.setText(TranslateUtil.getInstance().getTranslation("Open other programs as an administrator " +
+                "(provided that the software has privileges)"));
+        checkBoxIsShowTipOnCreatingLnk.setText(TranslateUtil.getInstance().getTranslation("Show tip on creating shortcut"));
+    }
+
+    private void translateButtons() {
+        buttonSaveAndRemoveDesktop.setText(TranslateUtil.getInstance().getTranslation("Backup and remove all desktop files"));
+        ButtonPriorityFolder.setText(TranslateUtil.getInstance().getTranslation("Choose"));
+        buttonChooseFile.setText(TranslateUtil.getInstance().getTranslation("Choose"));
+        buttonAddCMD.setText(TranslateUtil.getInstance().getTranslation("Add"));
+        buttonDelCmd.setText(TranslateUtil.getInstance().getTranslation("Delete"));
+        buttonResetColor.setText(TranslateUtil.getInstance().getTranslation("Reset to default"));
+        buttonCheckUpdate.setText(TranslateUtil.getInstance().getTranslation("Check for update"));
+        buttonSave.setText(TranslateUtil.getInstance().getTranslation("Save"));
+        buttonUpdatePlugin.setText(TranslateUtil.getInstance().getTranslation("Check for update"));
+        buttonPluginMarket.setText(TranslateUtil.getInstance().getTranslation("Plugin Market"));
+        buttonDeleteCache.setText(TranslateUtil.getInstance().getTranslation("Delete cache"));
+        buttonDeleteAllCache.setText(TranslateUtil.getInstance().getTranslation("Delete all"));
+        buttonVacuum.setText(TranslateUtil.getInstance().getTranslation("Optimize database"));
+    }
+
+    private void translateRadioButtons() {
+        radioButtonNoProxy.setText(TranslateUtil.getInstance().getTranslation("No proxy"));
+        radioButtonUseProxy.setText(TranslateUtil.getInstance().getTranslation("Configure proxy"));
+    }
+
+    private void translate() {
+        translateTabbedPane();
+        translateLabels();
+        translateCheckBoxs();
+        translateButtons();
+        translateRadioButtons();
+        frame.setTitle(TranslateUtil.getInstance().getTranslation("Settings"));
     }
 
     private boolean isRepeatCommand(String name) {
@@ -1577,6 +1604,7 @@ public class SettingsFrame {
         AllConfigs.setSearchDepth(Integer.parseInt(textFieldSearchDepth.getText()));
         AllConfigs.setIsDefaultAdmin(checkBoxAdmin.isSelected());
         AllConfigs.setIsLoseFocusClose(checkBoxLoseFocus.isSelected());
+        AllConfigs.setIsShowTipCreatingLnk(checkBoxIsShowTipOnCreatingLnk.isSelected());
         AllConfigs.setTransparency(Float.parseFloat(textFieldTransparency.getText()));
         AllConfigs.setLabelColor(Integer.parseInt(textFieldLabelColor.getText(), 16));
         AllConfigs.setBorderColor(Integer.parseInt(textFieldBorderColor.getText(), 16));

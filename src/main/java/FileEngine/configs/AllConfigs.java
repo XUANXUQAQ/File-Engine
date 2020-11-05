@@ -24,10 +24,11 @@ public class AllConfigs {
 
     public static final String FILE_NAME = "File-Engine-x64.exe";
 
-    private static final int allSetMethodsNum = 25;
+    private static final int allSetMethodsNum = 26;
 
     private static volatile boolean mainExit = false;
     private static volatile int cacheNumLimit;
+    private static volatile boolean isShowTipCreatingLnk;
     private static volatile String hotkey;
     private static volatile int updateTimeLimit;
     private static volatile String ignorePath;
@@ -60,6 +61,10 @@ public class AllConfigs {
     private static final AtomicInteger cacheNum = new AtomicInteger(0);
     private static boolean isFirstRunApp = false;
 
+    private static void showError() {
+        System.err.println("你应该在修改设置前先调用allowChangeSettings()方法，您的设置并未生效");
+    }
+
     public static void allowChangeSettings() {
         isAllowChangeSettings = true;
     }
@@ -70,6 +75,10 @@ public class AllConfigs {
             System.err.println("警告：set方法并未被完全调用");
         }
         setterCount = 0;
+    }
+
+    public static boolean isShowTipOnCreatingLnk() {
+        return isShowTipCreatingLnk;
     }
 
     public static boolean isFirstRun() {
@@ -100,12 +109,21 @@ public class AllConfigs {
         return proxyAddress;
     }
 
+    public static void setIsShowTipCreatingLnk(boolean b) {
+        if (isAllowChangeSettings) {
+            setterCount++;
+            isShowTipCreatingLnk = b;
+        } else {
+            showError();
+        }
+    }
+
     public static void setCacheNumLimit(int cacheNumLimit) {
         if (isAllowChangeSettings) {
             setterCount++;
             AllConfigs.cacheNumLimit = cacheNumLimit;
         } else {
-            System.err.println("你应该在修改设置前先调用allowChangeSettings()方法，您的设置并未生效");
+            showError();
         }
     }
 
@@ -114,7 +132,7 @@ public class AllConfigs {
             setterCount++;
             AllConfigs.hotkey = hotkey;
         } else {
-            System.err.println("你应该在修改设置前先调用allowChangeSettings()方法，您的设置并未生效");
+            showError();
         }
     }
 
@@ -123,7 +141,7 @@ public class AllConfigs {
             setterCount++;
             AllConfigs.updateTimeLimit = updateTimeLimit;
         } else {
-            System.err.println("你应该在修改设置前先调用allowChangeSettings()方法，您的设置并未生效");
+            showError();
         }
     }
 
@@ -132,7 +150,7 @@ public class AllConfigs {
             setterCount++;
             AllConfigs.ignorePath = ignorePath;
         } else {
-            System.err.println("你应该在修改设置前先调用allowChangeSettings()方法，您的设置并未生效");
+            showError();
         }
     }
 
@@ -141,7 +159,7 @@ public class AllConfigs {
             setterCount++;
             AllConfigs.priorityFolder = priorityFolder;
         } else {
-            System.err.println("你应该在修改设置前先调用allowChangeSettings()方法，您的设置并未生效");
+            showError();
         }
     }
 
@@ -150,7 +168,7 @@ public class AllConfigs {
             setterCount++;
             AllConfigs.searchDepth = searchDepth;
         } else {
-            System.err.println("你应该在修改设置前先调用allowChangeSettings()方法，您的设置并未生效");
+            showError();
         }
     }
 
@@ -159,7 +177,7 @@ public class AllConfigs {
             setterCount++;
             AllConfigs.isDefaultAdmin = isDefaultAdmin;
         } else {
-            System.err.println("你应该在修改设置前先调用allowChangeSettings()方法，您的设置并未生效");
+            showError();
         }
     }
 
@@ -168,7 +186,7 @@ public class AllConfigs {
             setterCount++;
             AllConfigs.isLoseFocusClose = isLoseFocusClose;
         } else {
-            System.err.println("你应该在修改设置前先调用allowChangeSettings()方法，您的设置并未生效");
+            showError();
         }
     }
 
@@ -177,7 +195,7 @@ public class AllConfigs {
             setterCount++;
             AllConfigs.openLastFolderKeyCode = openLastFolderKeyCode;
         } else {
-            System.err.println("你应该在修改设置前先调用allowChangeSettings()方法，您的设置并未生效");
+            showError();
         }
     }
 
@@ -186,7 +204,7 @@ public class AllConfigs {
             setterCount++;
             AllConfigs.runAsAdminKeyCode = runAsAdminKeyCode;
         } else {
-            System.err.println("你应该在修改设置前先调用allowChangeSettings()方法，您的设置并未生效");
+            showError();
         }
     }
 
@@ -195,7 +213,7 @@ public class AllConfigs {
             setterCount++;
             AllConfigs.copyPathKeyCode = copyPathKeyCode;
         } else {
-            System.err.println("你应该在修改设置前先调用allowChangeSettings()方法，您的设置并未生效");
+            showError();
         }
     }
 
@@ -204,7 +222,7 @@ public class AllConfigs {
             setterCount++;
             AllConfigs.transparency = transparency;
         } else {
-            System.err.println("你应该在修改设置前先调用allowChangeSettings()方法，您的设置并未生效");
+            showError();
         }
     }
 
@@ -213,7 +231,7 @@ public class AllConfigs {
             setterCount++;
             AllConfigs.proxyAddress = proxyAddress;
         } else {
-            System.err.println("你应该在修改设置前先调用allowChangeSettings()方法，您的设置并未生效");
+            showError();
         }
     }
 
@@ -222,7 +240,7 @@ public class AllConfigs {
             setterCount++;
             AllConfigs.proxyPort = proxyPort;
         } else {
-            System.err.println("你应该在修改设置前先调用allowChangeSettings()方法，您的设置并未生效");
+            showError();
         }
     }
 
@@ -231,7 +249,7 @@ public class AllConfigs {
             setterCount++;
             AllConfigs.proxyUserName = proxyUserName;
         } else {
-            System.err.println("你应该在修改设置前先调用allowChangeSettings()方法，您的设置并未生效");
+            showError();
         }
     }
 
@@ -240,7 +258,7 @@ public class AllConfigs {
             setterCount++;
             AllConfigs.proxyPassword = proxyPassword;
         } else {
-            System.err.println("你应该在修改设置前先调用allowChangeSettings()方法，您的设置并未生效");
+            showError();
         }
     }
 
@@ -249,7 +267,7 @@ public class AllConfigs {
             setterCount++;
             AllConfigs.proxyType = proxyType;
         } else {
-            System.err.println("你应该在修改设置前先调用allowChangeSettings()方法，您的设置并未生效");
+            showError();
         }
     }
 
@@ -258,7 +276,7 @@ public class AllConfigs {
             setterCount++;
             AllConfigs.labelColor = labelColor;
         } else {
-            System.err.println("你应该在修改设置前先调用allowChangeSettings()方法，您的设置并未生效");
+            showError();
         }
     }
 
@@ -267,7 +285,7 @@ public class AllConfigs {
             setterCount++;
             AllConfigs.defaultBackgroundColor = defaultBackgroundColor;
         } else {
-            System.err.println("你应该在修改设置前先调用allowChangeSettings()方法，您的设置并未生效");
+            showError();
         }
     }
 
@@ -276,7 +294,7 @@ public class AllConfigs {
             setterCount++;
             AllConfigs.fontColorWithCoverage = fontColorWithCoverage;
         } else {
-            System.err.println("你应该在修改设置前先调用allowChangeSettings()方法，您的设置并未生效");
+            showError();
         }
     }
 
@@ -285,7 +303,7 @@ public class AllConfigs {
             setterCount++;
             searchBarFontColor = color;
         } else {
-            System.err.println("你应该在修改设置前先调用allowChangeSettings()方法，您的设置并未生效");
+            showError();
         }
     }
 
@@ -294,7 +312,7 @@ public class AllConfigs {
             setterCount++;
             AllConfigs.fontColor = fontColor;
         } else {
-            System.err.println("你应该在修改设置前先调用allowChangeSettings()方法，您的设置并未生效");
+            showError();
         }
     }
 
@@ -303,7 +321,7 @@ public class AllConfigs {
             setterCount++;
             borderColor = color;
         } else {
-            System.err.println("你应该在修改设置前先调用allowChangeSettings()方法，您的设置并未生效");
+            showError();
         }
     }
 
@@ -312,7 +330,7 @@ public class AllConfigs {
             setterCount++;
             AllConfigs.searchBarColor = searchBarColor;
         } else {
-            System.err.println("你应该在修改设置前先调用allowChangeSettings()方法，您的设置并未生效");
+            showError();
         }
     }
 
@@ -321,7 +339,7 @@ public class AllConfigs {
             setterCount++;
             AllConfigs.updateAddress = updateAddress;
         } else {
-            System.err.println("你应该在修改设置前先调用allowChangeSettings()方法，您的设置并未生效");
+            showError();
         }
     }
 
@@ -762,7 +780,19 @@ public class AllConfigs {
         }
     }
 
-    private static JSONObject readSettingsJSON() {
+    private static void readShowTipOnCreatingLnk(JSONObject settingsInJson) {
+        if (settingsInJson != null) {
+            if (settingsInJson.containsKey("isShowTipOnCreatingLnk")) {
+                isShowTipCreatingLnk = settingsInJson.getBoolean("isShowTipOnCreatingLnk");
+            } else {
+                isShowTipCreatingLnk = true;
+            }
+        } else {
+            isShowTipCreatingLnk = true;
+        }
+    }
+
+    private static JSONObject getSettingsJSON() {
         File settings = new File("user/settings.json");
         if (settings.exists()) {
             try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(settings), StandardCharsets.UTF_8))) {
@@ -782,7 +812,7 @@ public class AllConfigs {
     }
 
     public static void readAllSettings() {
-        JSONObject settingsInJson = readSettingsJSON();
+        JSONObject settingsInJson = getSettingsJSON();
         readProxy(settingsInJson);
         readLabelColor(settingsInJson);
         readLanguage(settingsInJson);
@@ -805,6 +835,7 @@ public class AllConfigs {
         readCacheNumLimit(settingsInJson);
         readUpdateAddress(settingsInJson);
         readHotKey(settingsInJson);
+        readShowTipOnCreatingLnk(settingsInJson);
         initCacheNum();
         setAllSettings();
         saveAllSettings();
@@ -852,6 +883,7 @@ public class AllConfigs {
         allSettings.put("updateAddress", updateAddress);
         allSettings.put("searchBarFontColor", searchBarFontColor);
         allSettings.put("borderColor", borderColor);
+        allSettings.put("isShowTipOnCreatingLnk", isShowTipCreatingLnk);
         try (BufferedWriter buffW = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(settings), StandardCharsets.UTF_8))) {
             String format = JSON.toJSONString(allSettings, SerializerFeature.PrettyFormat, SerializerFeature.WriteMapNullValue, SerializerFeature.WriteDateUseDateFormat);
             buffW.write(format);

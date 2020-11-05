@@ -395,7 +395,7 @@ public class SearchBar {
                                 if (runningMode.get() == AllConfigs.RunningMode.NORMAL_MODE) {
                                     //普通模式直接获取文件路径
                                     File f = new File(result);
-                                    createShortCut(f.getAbsolutePath(), writePath + File.separator + f.getName(), true);
+                                    createShortCut(f.getAbsolutePath(), writePath + File.separator + f.getName(), AllConfigs.isShowTipOnCreatingLnk());
                                 } else if (runningMode.get() == AllConfigs.RunningMode.COMMAND_MODE) {
                                     String[] commandInfo = semicolon.split(result);
                                     //获取命令后的文件路径
@@ -404,7 +404,7 @@ public class SearchBar {
                                             File f = new File(commandInfo[1]);
                                             if (f.exists()) {
                                                 createShortCut(f.getAbsolutePath(),
-                                                        writePath + File.separator + f.getName(), true);
+                                                        writePath + File.separator + f.getName(), AllConfigs.isShowTipOnCreatingLnk());
                                             }
                                         }
                                     }

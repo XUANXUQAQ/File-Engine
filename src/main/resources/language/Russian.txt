@@ -146,3 +146,4 @@ Loading plugins error=Ошибка загрузки плагинов
 Tip:=незамедлительный
 If you need to delete a plug-in, just delete it under the "plugins" folder in the software directory.=Если вам нужно удалить плагин, просто удалите его в папке «plugins» в каталоге программного обеспечения.
 Shortcut created=Ярлык создан
+Show tip on creating shortcut=Показать подсказку по созданию ярлыка
