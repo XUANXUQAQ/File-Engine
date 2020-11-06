@@ -41,6 +41,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 
@@ -2945,11 +2946,10 @@ public class SearchBar {
      * @return true如果满足所有条件 否则false
      */
     private boolean check(String path) {
-        String name = getFileName(path);
         if (searchCase == null || searchCase.length == 0) {
-            return isMatched(name, true);
+            return isMatched(path, true);
         } else {
-            if (isMatched(name, true)) {
+            if (isMatched(path, true)) {
                 for (String eachCase : searchCase) {
                     switch (eachCase) {
                         case "f":
@@ -2963,12 +2963,12 @@ public class SearchBar {
                             }
                             break;
                         case "full":
-                            if (!name.equalsIgnoreCase(searchText)) {
+                            if (!getFileName(path).equalsIgnoreCase(searchText)) {
                                 return false;
                             }
                             break;
                         case "case":
-                            if (!isMatched(name, false)) {
+                            if (!isMatched(path, false)) {
                                 return false;
                             }
                     }
@@ -3358,7 +3358,7 @@ public class SearchBar {
         if (path != null) {
             path = path.toUpperCase();
             if (path.contains(";")) {
-                path = path.replace(";", "");
+                path = path.replaceAll(";", "");
             }
             return GetAscII.INSTANCE.getAscII(path);
         }
@@ -3403,13 +3403,22 @@ public class SearchBar {
     /**
      * 判断文件路径是否满足当前匹配结果（该方法由check（String）方法使用），检查文件路径使用check（String）方法。
      *
-     * @param name         文件路径
+     * @param path         文件路径
      * @param isIgnoreCase 是否忽略大小谢
      * @return true如果匹配成功
      * @see #check(String);
      */
-    private boolean isMatched(String name, boolean isIgnoreCase) {
+    private boolean isMatched(String path, boolean isIgnoreCase) {
+        String name;
         for (String each : keywords) {
+            if (each.contains("/") || each.contains(File.separator)) {
+                //匹配路径
+                each = each.replaceAll("/|\\\\", Matcher.quoteReplacement(File.separator));
+                name = getParentPath(path);
+            } else {
+                //匹配名字
+                name = getFileName(path);
+            }
             if (isIgnoreCase) {
                 if (!name.toLowerCase().contains(each.toLowerCase())) {
                     return false;
