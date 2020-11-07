@@ -2465,7 +2465,7 @@ public class SearchBar {
                 while (AllConfigs.isNotMainExit()) {
                     if (isStartSearchLocal) {
                         isStartSearchLocal = false;
-                        ascII = getAscIISum(searchText);
+                        ascII = getAscIISum(keywords);
                         int asciiGroup = ascII / 100;
 
                         switch (asciiGroup) {
@@ -3351,16 +3351,20 @@ public class SearchBar {
     /**
      * 获取文件名对应的ascii总和
      *
-     * @param path 文件路径
+     * @param words 关键字
      * @return ascii总和
      */
-    private int getAscIISum(String path) {
-        if (path != null) {
-            path = path.toUpperCase();
-            if (path.contains(";")) {
-                path = path.replaceAll(";", "");
+    private int getAscIISum(String[] words) {
+        StringBuilder stringBuilder = new StringBuilder();
+        if (words != null) {
+            for (String each : words) {
+                if (each.contains("/") || each.contains(File.separator)) {
+                    continue;
+                }
+                each = semicolon.matcher(each.toUpperCase()).replaceAll("");
+                stringBuilder.append(each);
             }
-            return GetAscII.INSTANCE.getAscII(path);
+            return GetAscII.INSTANCE.getAscII(stringBuilder.toString());
         }
         return 0;
     }
@@ -3413,7 +3417,7 @@ public class SearchBar {
         for (String each : keywords) {
             if (each.contains("/") || each.contains(File.separator)) {
                 //匹配路径
-                each = each.replaceAll("/|\\\\", Matcher.quoteReplacement(File.separator));
+                each = each.replaceAll("/", Matcher.quoteReplacement(File.separator));
                 name = getParentPath(path);
             } else {
                 //匹配名字
@@ -3579,7 +3583,7 @@ public class SearchBar {
 
     private String getParentPath(String path) {
         File f = new File(path);
-        return f.getParent();
+        return f.getParentFile().getAbsolutePath();
     }
 
     private boolean isFile(String text) {
