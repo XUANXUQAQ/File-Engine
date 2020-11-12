@@ -34,7 +34,6 @@ public class SettingsFrame {
     private static volatile int tmp_runAsAdminKeyCode;
     private static volatile int tmp_openLastFolderKeyCode;
     private static volatile boolean isStartupChanged = false;
-    private static volatile boolean isSettingsChanged = false;
     private static ImageIcon frameIcon;
     private final JFrame frame = new JFrame("Settings");
     private JTextField textFieldUpdateInterval;
@@ -223,8 +222,12 @@ public class SettingsFrame {
     }
 
     private void addCheckBoxStartupListener() {
-        checkBoxAddToStartup.addChangeListener(e -> isStartupChanged = true
-        );
+        checkBoxAddToStartup.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                isStartupChanged = true;
+            }
+        });
     }
 
     private void addButtonRemoveDesktopListener() {
@@ -301,60 +304,6 @@ public class SettingsFrame {
                         textFieldHotkey.setText(null);
                     }
                 }
-            }
-
-            @Override
-            public void keyReleased(KeyEvent e) {
-                reset = true;
-            }
-        });
-        textFieldHotkey.addKeyListener(new KeyListener() {
-            boolean reset = true;
-
-            @Override
-            public void keyTyped(KeyEvent e) {
-            }
-
-            @Override
-            public void keyPressed(KeyEvent e) {
-                int key = e.getKeyCode();
-                if (reset) {
-                    textFieldHotkey.setText(null);
-                    reset = false;
-                }
-                textFieldHotkey.setCaretPosition(textFieldHotkey.getText().length());
-                if (key == 17) {
-                    if (!textFieldHotkey.getText().contains("Ctrl + ")) {
-                        textFieldHotkey.setText(textFieldHotkey.getText() + "Ctrl + ");
-                    }
-                } else if (key == 18) {
-                    if (!textFieldHotkey.getText().contains("Alt + ")) {
-                        textFieldHotkey.setText(textFieldHotkey.getText() + "Alt + ");
-                    }
-                } else if (key == 524) {
-                    if (!textFieldHotkey.getText().contains("Win + ")) {
-                        textFieldHotkey.setText(textFieldHotkey.getText() + "Win + ");
-                    }
-                } else if (key == 16) {
-                    if (!textFieldHotkey.getText().contains("Shift + ")) {
-                        textFieldHotkey.setText(textFieldHotkey.getText() + "Shift + ");
-                    }
-                } else if (64 < key && key < 91) {
-                    String txt = textFieldHotkey.getText();
-                    if (!txt.isEmpty()) {
-                        char c1 = Character.toUpperCase(txt.charAt(txt.length() - 1));
-                        if (64 < c1 && c1 < 91) {
-                            String text = txt.substring(0, txt.length() - 1);
-                            textFieldHotkey.setText(text + (char) key);
-                        } else {
-                            textFieldHotkey.setText(txt + (char) key);
-                        }
-                    }
-                    if (txt.length() == 1) {
-                        textFieldHotkey.setText(null);
-                    }
-                }
-
             }
 
             @Override
