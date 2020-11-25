@@ -2161,7 +2161,7 @@ public class SearchBar {
                 }
                 if (isFileCreated) {
                     try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(startTimeCount), StandardCharsets.UTF_8));
-                         Statement stmt = SQLiteUtil.getStatement()) {
+                         PreparedStatement pStmt = SQLiteUtil.getConnection().prepareStatement("VACUUM;")) {
                         //读取启动次数
                         String times = reader.readLine();
                         if (!(times == null || times.isEmpty())) {
@@ -2176,7 +2176,7 @@ public class SearchBar {
                                         if (AllConfigs.isDebug()) {
                                             System.out.println("开启次数超过10次，优化数据库");
                                         }
-                                        stmt.execute("VACUUM;");
+                                        pStmt.execute();
                                     } catch (Exception ignored) {
                                     }
                                     SearchUtil.getInstance().setStatus(SearchUtil.NORMAL);
@@ -3388,7 +3388,8 @@ public class SearchBar {
      * 从缓存中搜索结果并将匹配的放入listResults
      */
     private void searchCache() {
-        try (Statement stmt = SQLiteUtil.getStatement(); ResultSet resultSet = stmt.executeQuery("SELECT PATH FROM cache;")) {
+        try (PreparedStatement pStmt = SQLiteUtil.getConnection().prepareStatement("SELECT PATH FROM cache;");
+             ResultSet resultSet = pStmt.executeQuery()) {
             while (resultSet.next()) {
                 String eachCache = resultSet.getString("PATH");
                 if (!(isExist(eachCache))) {

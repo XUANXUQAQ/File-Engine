@@ -26,6 +26,14 @@ public class AllConfigs {
 
     private static final int allSetMethodsNum = 26;
 
+    public static final int defaultLabelColor = 0xcccccc;
+    public static final int defaultWindowBackgroundColor = 0x333333;
+    public static final int defaultBorderColor = 0xcccccc;
+    public static final int defaultFontColor = 0xcccccc;
+    public static final int defaultFontColorWithCoverage = 0;
+    public static final int defaultSearchbarColor = 0x333333;
+    public static final int defaultSearchbarFontColor = 0xffffff;
+
     private static volatile boolean mainExit = false;
     private static volatile int cacheNumLimit;
     private static volatile boolean isShowTipCreatingLnk;
@@ -649,10 +657,10 @@ public class AllConfigs {
             if (settingsInJson.containsKey("searchBarColor")) {
                 searchBarColor = settingsInJson.getInteger("searchBarColor");
             } else {
-                searchBarColor = 0xffffff;
+                searchBarColor = defaultSearchbarColor;
             }
         } else {
-            searchBarColor = 0xffffff;
+            searchBarColor = defaultSearchbarColor;
         }
     }
 
@@ -661,10 +669,10 @@ public class AllConfigs {
             if (settingsInJson.containsKey("defaultBackground")) {
                 defaultBackgroundColor = settingsInJson.getInteger("defaultBackground");
             } else {
-                defaultBackgroundColor = 0xffffff;
+                defaultBackgroundColor = defaultWindowBackgroundColor;
             }
         } else {
-            defaultBackgroundColor = 0xffffff;
+            defaultBackgroundColor = defaultWindowBackgroundColor;
         }
     }
 
@@ -673,10 +681,10 @@ public class AllConfigs {
             if (settingsInJson.containsKey("borderColor")) {
                 borderColor = settingsInJson.getInteger("borderColor");
             } else {
-                borderColor = 0xffffff;
+                borderColor = defaultBorderColor;
             }
         } else {
-            borderColor = 0xffffff;
+            borderColor = defaultBorderColor;
         }
     }
 
@@ -685,10 +693,10 @@ public class AllConfigs {
             if (settingsInJson.containsKey("fontColorWithCoverage")) {
                 fontColorWithCoverage = settingsInJson.getInteger("fontColorWithCoverage");
             } else {
-                fontColorWithCoverage = 0x6666ff;
+                fontColorWithCoverage = defaultFontColorWithCoverage;
             }
         } else {
-            fontColorWithCoverage = 0x6666ff;
+            fontColorWithCoverage = defaultFontColorWithCoverage;
         }
     }
 
@@ -697,10 +705,10 @@ public class AllConfigs {
             if (settingsInJson.containsKey("labelColor")) {
                 labelColor = settingsInJson.getInteger("labelColor");
             } else {
-                labelColor = 0xcccccc;
+                labelColor = defaultLabelColor;
             }
         }else {
-            labelColor = 0xcccccc;
+            labelColor = defaultLabelColor;
         }
     }
 
@@ -709,10 +717,10 @@ public class AllConfigs {
             if (settingsInJson.containsKey("fontColor")) {
                 fontColor = settingsInJson.getInteger("fontColor");
             } else {
-                fontColor = 0;
+                fontColor = defaultFontColor;
             }
         } else {
-            fontColor = 0;
+            fontColor = defaultFontColor;
         }
     }
 
@@ -721,10 +729,10 @@ public class AllConfigs {
             if (settingsInJson.containsKey("searchBarFontColor")) {
                 searchBarFontColor = settingsInJson.getInteger("searchBarFontColor");
             } else {
-                searchBarFontColor = 0;
+                searchBarFontColor = defaultSearchbarFontColor;
             }
         } else {
-            searchBarFontColor = 0;
+            searchBarFontColor = defaultSearchbarFontColor;
         }
     }
 
