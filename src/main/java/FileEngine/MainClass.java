@@ -19,6 +19,7 @@ import com.formdev.flatlaf.FlatDarculaLaf;
 
 import java.awt.*;
 import java.io.*;
+import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Date;
@@ -151,8 +152,8 @@ public class MainClass {
                 isManualUpdate = true;
             }
 
-            try (Statement stmt = SQLiteUtil.getStatement()) {
-                stmt.executeUpdate("CREATE TABLE IF NOT EXISTS cache(PATH text unique);");
+            try (PreparedStatement pStmt = SQLiteUtil.getConnection().prepareStatement("CREATE TABLE IF NOT EXISTS cache(PATH text unique);")) {
+                pStmt.executeUpdate();
             }
 
             startOrIgnoreUpdateAndExit(isUpdateSignExist());

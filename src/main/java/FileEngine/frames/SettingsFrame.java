@@ -19,6 +19,7 @@ import java.awt.event.*;
 import java.io.*;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.Set;
@@ -510,13 +511,13 @@ public class SettingsFrame {
 
     private void addResetColorButtonListener() {
         buttonResetColor.addActionListener(e -> {
-            textFieldFontColorWithCoverage.setText(Integer.toHexString(0x6666ff));
-            textFieldSearchBarColor.setText(Integer.toHexString(0xffffff));
-            textFieldLabelColor.setText(Integer.toHexString(0xcccccc));
-            textFieldBackgroundDefault.setText(Integer.toHexString(0xffffff));
-            textFieldFontColor.setText(Integer.toHexString(0));
-            textFieldSearchBarFontColor.setText(Integer.toHexString(0));
-            textFieldBorderColor.setText(Integer.toHexString(0xffffff));
+            textFieldFontColorWithCoverage.setText(Integer.toHexString(AllConfigs.defaultFontColorWithCoverage));
+            textFieldSearchBarColor.setText(Integer.toHexString(AllConfigs.defaultSearchbarColor));
+            textFieldLabelColor.setText(Integer.toHexString(AllConfigs.defaultLabelColor));
+            textFieldBackgroundDefault.setText(Integer.toHexString(AllConfigs.defaultWindowBackgroundColor));
+            textFieldFontColor.setText(Integer.toHexString(AllConfigs.defaultFontColor));
+            textFieldSearchBarFontColor.setText(Integer.toHexString(AllConfigs.defaultSearchbarFontColor));
+            textFieldBorderColor.setText(Integer.toHexString(AllConfigs.defaultBorderColor));
         });
     }
 
@@ -983,7 +984,8 @@ public class SettingsFrame {
 
     private void initCacheArray() {
         String eachLine;
-        try (Statement stmt = SQLiteUtil.getStatement(); ResultSet resultSet = stmt.executeQuery("SELECT PATH FROM cache;")) {
+        try (PreparedStatement pStmt = SQLiteUtil.getConnection().prepareStatement("SELECT PATH FROM cache;");
+             ResultSet resultSet = pStmt.executeQuery()) {
             while (resultSet.next()) {
                 eachLine = resultSet.getString("PATH");
                 cacheSet.add(eachLine);
