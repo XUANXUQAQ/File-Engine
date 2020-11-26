@@ -910,7 +910,7 @@ public class AllConfigs {
 
     public static boolean hasStartup() {
         try {
-            String command = "cmd.exe /c schtasks /query /tn \"File-Engine\"";
+            String command = "cmd.exe /c chcp 65001 & schtasks /query /tn \"File-Engine\"";
             Process p = Runtime.getRuntime().exec(command);
             StringBuilder strBuilder = new StringBuilder();
             String line;
