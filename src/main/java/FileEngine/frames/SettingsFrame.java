@@ -387,6 +387,13 @@ public class SettingsFrame {
                 JOptionPane.showMessageDialog(frame, TranslateUtil.getInstance().getTranslation("Conflict with existing commands"));
                 return;
             }
+            if (name.length() == 1) {
+                int ret = JOptionPane.showConfirmDialog(frame,
+                        TranslateUtil.getInstance().getTranslation("The identifier you entered is too short, continue") + "?");
+                if (ret != JOptionPane.OK_OPTION) {
+                    return;
+                }
+            }
             String cmd;
             JOptionPane.showMessageDialog(frame, TranslateUtil.getInstance().getTranslation("Please select the location of the executable file (a folder is also acceptable)"));
             JFileChooser fileChooser = new JFileChooser();
@@ -397,7 +404,6 @@ public class SettingsFrame {
                 AllConfigs.getCmdSet().add(":" + name + ";" + cmd);
                 listCmds.setListData(AllConfigs.getCmdSet().toArray());
             }
-
         });
     }
 

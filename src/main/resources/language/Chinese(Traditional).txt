@@ -149,3 +149,4 @@ Shortcut created=已創建快捷方式
 Show tip on creating shortcut=顯示有關創建快捷方式的提示
 Errors=錯誤
 Failed to save settings, do you still close the window=保存設置失敗，是否仍然關閉窗口
+The identifier you entered is too short, continue=您輸入的標識符太短，是否繼續

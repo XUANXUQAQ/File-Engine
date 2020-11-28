@@ -149,3 +149,4 @@ Shortcut created=Collegamento creato
 Show tip on creating shortcut=Mostra suggerimento sulla creazione di scorciatoie
 Errors=errore
 Failed to save settings, do you still close the window=Impossibile salvare le impostazioni, chiudere comunque la finestra
+The identifier you entered is too short, continue=L'identificatore inserito è troppo breve, continua
