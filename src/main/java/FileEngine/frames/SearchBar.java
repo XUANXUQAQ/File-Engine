@@ -3324,8 +3324,14 @@ public class SearchBar {
                 } else if (pathLower.endsWith(".lnk")) {
                     Runtime.getRuntime().exec("explorer.exe \"" + path + "\"");
                 } else {
+                    String command;
                     if (file.isFile()) {
-                        String command = "start /k " + path.substring(0, 2) + "\"" + path.substring(2) + "\"";
+                        if (pathLower.endsWith(".cmd") || pathLower.endsWith(".bat")) {
+                            command = "start /k " + path.substring(0, 2) + "\"" + path.substring(2) + "\"";
+                        } else {
+                            command = "start " + path.substring(0, 2) + "\"" + path.substring(2) + "\"";
+                        }
+
                         String vbsFilePath = generateBatAndVbsFile(command, System.getProperty("java.io.tmpdir"), getParentPath(path));
                         Runtime.getRuntime().exec("explorer.exe " + vbsFilePath.substring(0, 2) + "\"" + vbsFilePath.substring(2) + "\"");
                     } else {
