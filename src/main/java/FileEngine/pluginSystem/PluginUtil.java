@@ -8,10 +8,7 @@ import java.io.*;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.HashSet;
-import java.util.Iterator;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -38,11 +35,11 @@ public class PluginUtil {
         return PluginUtilBuilder.INSTANCE;
     }
 
-    private PluginUtil() {
-    }
+    private PluginUtil() {}
 
     private final ConcurrentHashMap<String, Plugin> IDENTIFIER_PLUGIN_MAP = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, String> NAME_IDENTIFIER_MAP = new ConcurrentHashMap<>();
+    private final Set<String> NOT_LATEST_PLUGINS = ConcurrentHashMap.newKeySet();
     private HashSet<String> OLD_PLUGINS = new HashSet<>();
     private HashSet<String> REPEAT_PLUGINS = new HashSet<>();
     private HashSet<String> LOAD_ERROR_PLUGINS = new HashSet<>();
@@ -57,6 +54,18 @@ public class PluginUtil {
 
     public boolean isPluginLoadError() {
         return !LOAD_ERROR_PLUGINS.isEmpty();
+    }
+
+    public boolean isPluginsNotLatest(String pluginName) {
+        return NOT_LATEST_PLUGINS.contains(pluginName);
+    }
+
+    public void removeFromPluginsCanUpdate(String pluginName) {
+        NOT_LATEST_PLUGINS.remove(pluginName);
+    }
+
+    public void addPluginsCanUpdate(String pluginName) {
+        NOT_LATEST_PLUGINS.add(pluginName);
     }
 
     public String getLoadingErrorPlugins() {
@@ -201,7 +210,7 @@ public class PluginUtil {
         }
     }
 
-    public void isAllPluginLatest(StringBuilder stringBuilder, AtomicBoolean isFinished) {
+    public void isAllPluginLatest(StringBuilder oldPlugins, AtomicBoolean isFinished) {
         boolean isLatest;
         for (String each : NAME_IDENTIFIER_MAP.keySet()) {
             try {
@@ -209,12 +218,13 @@ public class PluginUtil {
                 if (AllConfigs.isDebug()) {
                     System.out.println("++++++++++++++++++++++++++++++++++++++++++++");
                     System.out.println("插件：" + each + "已检查完毕，结果：" + isLatest);
-                    System.out.println("++++++++++++++++++++++++++++++++++++++++++++\n");
+                    System.out.println("++++++++++++++++++++++++++++++++++++++++++++");
                 }
                 if (!isLatest) {
-                    stringBuilder.append(each).append(",");
+                    oldPlugins.append(each).append(",");
+                    NOT_LATEST_PLUGINS.add(each);
                 }
-            }catch (Exception e) {
+            } catch (Exception e) {
                 System.err.println("++++++++++++++++++++++++++++++++++++++++++++");
                 System.err.println("插件：" + each + "检查更新失败");
                 System.err.println("++++++++++++++++++++++++++++++++++++++++++++");
@@ -228,9 +238,14 @@ public class PluginUtil {
         AtomicBoolean isVersionLatest = new AtomicBoolean();
         Thread checkUpdateThread = new Thread(() -> {
             startCheckTime.set(System.currentTimeMillis());
-            isVersionLatest.set(plugin.isLatest());
-            if (!Thread.interrupted()) {
-                startCheckTime.set(0x100L); //表示检查成功
+            try {
+                isVersionLatest.set(plugin.isLatest());
+                if (!Thread.interrupted()) {
+                    startCheckTime.set(0x100L); //表示检查成功
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                startCheckTime.set(0xFFFL);
             }
         });
         CachedThreadPool.getInstance().executeTask(checkUpdateThread);
@@ -238,7 +253,7 @@ public class PluginUtil {
         try {
             while (startCheckTime.get() != 0x100L) {
                 TimeUnit.MILLISECONDS.sleep(200);
-                if (System.currentTimeMillis() - startCheckTime.get() > 5000L && startCheckTime.get() != 0x100L) {
+                if ((System.currentTimeMillis() - startCheckTime.get() > 5000L && startCheckTime.get() != 0x100L) || startCheckTime.get() == 0xFFFL) {
                     checkUpdateThread.interrupt();
                     throw new Exception("check update failed.");
                 }

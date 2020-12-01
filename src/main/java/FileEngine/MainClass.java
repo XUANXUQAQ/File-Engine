@@ -10,6 +10,7 @@ import FileEngine.frames.SearchBar;
 import FileEngine.frames.SettingsFrame;
 import FileEngine.frames.TaskBar;
 import FileEngine.md5.Md5Util;
+import FileEngine.moveFiles.CopyFileUtil;
 import FileEngine.pluginSystem.PluginUtil;
 import FileEngine.search.SearchUtil;
 import FileEngine.threadPool.CachedThreadPool;
@@ -346,6 +347,7 @@ public class MainClass {
                 result = true;
             }
         } catch (IOException e) {
+            e.printStackTrace();
             result = false;
         }
         return result;
@@ -366,7 +368,8 @@ public class MainClass {
                     return false;
                 }
             }
-        } catch (IOException | InterruptedException ignored) {
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
         }
         return true;
     }

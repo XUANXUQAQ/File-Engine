@@ -288,12 +288,8 @@ public class Plugin {
         }
     }
 
-    public boolean isLatest() {
-        try {
-            return (boolean) pluginIsLatest.invoke(instance);
-        } catch (Exception e) {
-            return true;
-        }
+    public boolean isLatest() throws Exception {
+        return (boolean) pluginIsLatest.invoke(instance);
     }
 
     public String getUpdateURL() {

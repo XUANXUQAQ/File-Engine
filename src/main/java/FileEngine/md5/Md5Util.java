@@ -26,7 +26,7 @@ public class Md5Util {
             }
             return hexValue.toString();
         } catch (NoSuchAlgorithmException | IOException e) {
-            return null;
+            return "";
         }
     }
 }
