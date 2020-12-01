@@ -2413,6 +2413,7 @@ public class SearchBar {
                         clearAllLabels();
                         listResults.clear();
                         listResultsCopy.clear();
+                        tempResults.clear();
                         allResultNum.set(0);
                     }
                     //设置窗口是被选中还是未被选中，鼠标模式
@@ -2633,22 +2634,16 @@ public class SearchBar {
                 String column;
                 while (AllConfigs.isNotMainExit()) {
                     if (runningMode.get() == AllConfigs.RunningMode.NORMAL_MODE) {
-                        try {
-                            while ((column = commandQueue.poll()) != null) {
-                                searchAndAddToTempResults(System.currentTimeMillis(), column);
-                                if (!isVisible()) {
-                                    detectShowingModeAndClose();
-                                }
-                            }
-                        } catch (SQLException e) {
-                            if (AllConfigs.isDebug()) {
-                                e.printStackTrace();
+                        while ((column = commandQueue.poll()) != null) {
+                            searchAndAddToTempResults(System.currentTimeMillis(), column);
+                            if (!isVisible()) {
+                                detectShowingModeAndClose();
                             }
                         }
                     }
                     TimeUnit.MILLISECONDS.sleep(10);
                 }
-            } catch (InterruptedException ignored) {
+            } catch (InterruptedException | SQLException ignored) {
             }
         });
     }
@@ -2996,29 +2991,36 @@ public class SearchBar {
      *
      * @param path        文件路径
      * @param isPutToTemp 是否放到临时容器，在搜索优先文件夹和cache时为false，其他为true
-     * @return 当前容器中结果数量是否已超过100个
      */
-    private boolean checkIsMatchedAndAddToList(String path, boolean isPutToTemp) {
+    private void checkIsMatchedAndAddToList(String path, boolean isPutToTemp) {
+        //若结果已大于5000则不再进行搜索
+        if (allResultNum.get() > 5000) {
+            return;
+        }
+
         if (check(path)) {
-            if (isPutToTemp) {
-                if (isExist(path)) {
+            //字符串匹配通过
+            allResultNum.incrementAndGet();
+            if (isExist(path)) {
+                if (isPutToTemp) {
+                    if (allResultNum.get() >= 100) {
+                        try {
+                            TimeUnit.MILLISECONDS.sleep(1);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
                     tempResults.add(path);
                 } else {
-                    search.removeFileFromDatabase(path);
-                }
-            } else {
-                if (isExist(path)) {
                     if (isResultNotRepeat(path)) {
-                        allResultNum.incrementAndGet();
                         listResults.add(path);
                         listResultsCopy.add(path);
                     }
-                } else {
-                    search.removeFileFromDatabase(path);
                 }
+            } else {
+                search.removeFileFromDatabase(path);
             }
         }
-        return allResultNum.get() >= 100;
     }
 
     /**
@@ -3031,16 +3033,16 @@ public class SearchBar {
     private void searchAndAddToTempResults(long time, String column) throws SQLException {
         //为label添加结果
         String each;
-        boolean isResultsExcessive = false;
         String pSql = "SELECT PATH FROM " + column + ";";
-        try (PreparedStatement pStmt = SQLiteUtil.getConnection().prepareStatement(pSql); ResultSet resultSet = pStmt.executeQuery()) {
+        try (PreparedStatement pStmt = SQLiteUtil.getConnection().prepareStatement(pSql);
+             ResultSet resultSet = pStmt.executeQuery()) {
             while (resultSet.next()) {
                 each = resultSet.getString("PATH");
                 if (search.getStatus() == SearchUtil.NORMAL) {
-                    isResultsExcessive = checkIsMatchedAndAddToList(each, true);
+                    checkIsMatchedAndAddToList(each, true);
                 }
                 //用户重新输入了信息
-                if (isResultsExcessive || (startTime > time)) {
+                if (startTime > time) {
                     break;
                 }
             }
