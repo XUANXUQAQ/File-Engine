@@ -2996,29 +2996,24 @@ public class SearchBar {
         if (allResultNum.get() > 5000) {
             return;
         }
-
-        if (check(path)) {
+        if (check(path) && isExist(path) && isResultNotRepeat(path)) {
             //字符串匹配通过
             allResultNum.incrementAndGet();
-            if (isExist(path)) {
-                if (isPutToTemp) {
-                    if (allResultNum.get() >= 100) {
-                        try {
-                            TimeUnit.MILLISECONDS.sleep(1);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                    tempResults.add(path);
-                } else {
-                    if (isResultNotRepeat(path)) {
-                        listResults.add(path);
-                        listResultsCopy.add(path);
+            if (isPutToTemp) {
+                if (allResultNum.get() >= 100) {
+                    try {
+                        TimeUnit.MILLISECONDS.sleep(1);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
                     }
                 }
+                tempResults.add(path);
             } else {
-                search.removeFileFromDatabase(path);
+                listResults.add(path);
+                listResultsCopy.add(path);
             }
+        } else {
+            search.removeFileFromDatabase(path);
         }
     }
 
