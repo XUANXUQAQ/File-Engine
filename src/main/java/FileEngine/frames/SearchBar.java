@@ -2206,7 +2206,6 @@ public class SearchBar {
                     if (isCacheAndPrioritySearched) {
                         for (String record : tempResults) {
                             if (!listResultsCopy.contains(record)) {
-                                allResultNum.incrementAndGet();
                                 listResults.add(record);
                                 listResultsCopy.add(record);
                             }
