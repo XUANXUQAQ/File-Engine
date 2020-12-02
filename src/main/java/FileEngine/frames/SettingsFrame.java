@@ -21,7 +21,10 @@ import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.LinkedList;
+import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -734,6 +737,34 @@ public class SettingsFrame {
         });
     }
 
+    private void clearDatabase() {
+        String column;
+        for (int i = 0; i <= 40; ++i) {
+            column = "list" + i;
+            clearDatabase(column);
+        }
+        SearchUtil.getInstance().executeImmediately();
+    }
+
+    private void clearDatabase(String column) {
+        String pSql = "SELECT PATH FROM " + column + ";";
+        File file;
+        try (PreparedStatement pStmt = SQLiteUtil.getConnection().prepareStatement(pSql);ResultSet resultSet = pStmt.executeQuery()) {
+            while (resultSet.next()) {
+                String record = resultSet.getString("PATH");
+                file = new File(record);
+                if (!file.exists()) {
+                    if (AllConfigs.isDebug()) {
+                        System.err.println("正在删除" + record);
+                    }
+                    SearchUtil.getInstance().removeFileFromDatabase(record);
+                }
+            }
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+    }
+
     private void addButtonVacuumListener() {
         buttonVacuum.addActionListener(e -> {
             int ret = JOptionPane.showConfirmDialog(frame, TranslateUtil.getInstance().getTranslation("Confirm whether to start optimizing the database?"));
@@ -741,12 +772,13 @@ public class SettingsFrame {
                 int status = SearchUtil.getInstance().getStatus();
                 if (status == SearchUtil.NORMAL) {
                     if (AllConfigs.isDebug()) {
-                        System.out.println("开始VACUUM");
+                        System.out.println("开始优化");
                     }
                     SearchUtil.getInstance().setStatus(SearchUtil.VACUUM);
                     CachedThreadPool.getInstance().executeTask(() -> {
                         //执行VACUUM命令
                         try (Statement stmt = SQLiteUtil.getStatement()) {
+                            clearDatabase();
                             stmt.execute("VACUUM;");
                         } catch (Exception ex) {
                             if (AllConfigs.isDebug()) {
@@ -754,7 +786,7 @@ public class SettingsFrame {
                             }
                         } finally {
                             if (AllConfigs.isDebug()) {
-                                System.out.println("结束VACUUM");
+                                System.out.println("结束优化");
                             }
                             SearchUtil.getInstance().setStatus(SearchUtil.NORMAL);
                         }

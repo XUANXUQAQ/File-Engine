@@ -5,6 +5,7 @@ import FileEngine.configs.AllConfigs;
 import FileEngine.dllInterface.GetAscII;
 import FileEngine.dllInterface.IsLocalDisk;
 import FileEngine.frames.TaskBar;
+import FileEngine.threadPool.CachedThreadPool;
 import FileEngine.translate.TranslateUtil;
 
 import javax.swing.filechooser.FileSystemView;
@@ -21,16 +22,33 @@ import java.util.concurrent.TimeUnit;
 public class SearchUtil {
     private final Set<String> commandSet = ConcurrentHashMap.newKeySet();
     private volatile int status;
+    private volatile boolean isExecuteImmediately = false;
 
     public static final int NORMAL = 0;
     public static final int VACUUM = 1;
     public static final int MANUAL_UPDATE = 2;
+
+    private static final int MAX_SQL_NUM = 5000;
 
     private static class SearchBuilder {
         private static final SearchUtil INSTANCE = new SearchUtil();
     }
 
     private SearchUtil() {
+        CachedThreadPool.getInstance().executeTask(() -> {
+            try (Statement statement = SQLiteUtil.getStatement()) {
+                while (AllConfigs.isNotMainExit()) {
+                    if (isExecuteImmediately) {
+                        isExecuteImmediately = false;
+                        executeAllCommands(statement);
+                    }
+                    TimeUnit.MILLISECONDS.sleep(100);
+                }
+            } catch (InterruptedException ignored) {
+            } catch (Exception throwables) {
+                throwables.printStackTrace();
+            }
+        });
     }
 
     public static SearchUtil getInstance() {
@@ -168,7 +186,7 @@ public class SearchUtil {
                 break;
         }
         if (command != null) {
-            commandSet.add(command);
+            addToCommandSet(command);
         }
     }
 
@@ -303,7 +321,7 @@ public class SearchUtil {
                 break;
         }
         if (command != null) {
-            commandSet.add(command);
+            addToCommandSet(command);
         }
     }
 
@@ -340,12 +358,16 @@ public class SearchUtil {
 
     public void removeFileFromCache(String path) {
         String command = "DELETE from cache where PATH=" + "\"" + path + "\";";
-        commandSet.add(command);
+        addToCommandSet(command);
+    }
+
+    public void executeImmediately() {
+        isExecuteImmediately = true;
     }
 
     public void addFileToCache(String path) {
         String command = "INSERT OR IGNORE INTO cache(PATH) VALUES(\"" + path + "\");";
-        commandSet.add(command);
+        addToCommandSet(command);
     }
 
     public void executeAllCommands(Statement stmt) {
@@ -375,6 +397,18 @@ public class SearchUtil {
                     throwables.printStackTrace();
                 }
             }
+        }
+    }
+
+    private void addToCommandSet(String sql) {
+        if (commandSet.size() < MAX_SQL_NUM) {
+            commandSet.add(sql);
+        } else {
+            if (AllConfigs.isDebug()) {
+                System.err.println("添加sql语句" + sql + "失败，已达到最大上限");
+            }
+            //立即处理sql语句
+            isExecuteImmediately = true;
         }
     }
 
