@@ -782,7 +782,7 @@ public class SearchBar {
                 int labelPosition9 = labelPosition * 9;
 
                 //开始显示500ms后才开始响应鼠标移动事件
-                if (System.currentTimeMillis() - firstResultStartShowingTime > 500) {
+                if (System.currentTimeMillis() - firstResultStartShowingTime > 500 && firstResultStartShowingTime != 0) {
                     int currentX = e.getX();
                     int currentY = e.getY();
                     if (lastPositionX == 0 || lastPositionY == 0) {
