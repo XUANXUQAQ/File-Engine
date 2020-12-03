@@ -2733,7 +2733,7 @@ public class SearchBar {
                                     String[] cmdInfo = semicolon.split(i);
                                     if (cmdInfo[0].equals(text)) {
                                         detectShowingModeAndClose();
-                                        openWithAdmin(cmdInfo[1]);
+                                        openWithoutAdmin(cmdInfo[1]);
                                     }
                                 }
                                 showResults(true, false, false, false,
