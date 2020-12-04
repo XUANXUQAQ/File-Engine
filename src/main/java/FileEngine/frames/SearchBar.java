@@ -2650,7 +2650,7 @@ public class SearchBar {
     }
 
     private void pollCommandsAndSearchDatabaseThread() {
-        for (int i = 0; i < 2; i++) {
+        for (int i = 0; i < 3; i++) {
             CachedThreadPool.getInstance().executeTask(this::searchMethod);
         }
     }
