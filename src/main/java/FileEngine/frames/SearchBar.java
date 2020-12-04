@@ -2650,7 +2650,8 @@ public class SearchBar {
     }
 
     private void pollCommandsAndSearchDatabaseThread() {
-        for (int i = 0; i < 3; i++) {
+        int ncpuCores = Runtime.getRuntime().availableProcessors();
+        for (int i = 0; i < Math.min(4, ncpuCores); i++) {
             CachedThreadPool.getInstance().executeTask(this::searchMethod);
         }
     }
