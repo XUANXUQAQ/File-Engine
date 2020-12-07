@@ -25,9 +25,9 @@ public class SQLiteUtil {
         sqLiteConfig.setLockingMode(SQLiteConfig.LockingMode.NORMAL);
     }
 
-    public static Statement getStatement() throws Exception {
+    public static Statement getStatement() throws SQLException {
         if (conn == null) {
-            throw new Exception("The connection must be initialized first, call initConnection(String url)");
+            throw new SQLException("The connection must be initialized first, call initConnection(String url)");
         }
         return conn.createStatement();
     }
