@@ -1,7 +1,6 @@
 package FileEngine.frames;
 
 
-import FileEngine.moveFiles.CopyFileUtil;
 import FileEngine.SQLiteConfig.SQLiteUtil;
 import FileEngine.configs.AllConfigs;
 import FileEngine.dllInterface.FileMonitor;
@@ -9,13 +8,13 @@ import FileEngine.dllInterface.GetAscII;
 import FileEngine.dllInterface.GetHandle;
 import FileEngine.dllInterface.IsLocalDisk;
 import FileEngine.getIcon.GetIconUtil;
+import FileEngine.moveFiles.CopyFileUtil;
 import FileEngine.pluginSystem.Plugin;
 import FileEngine.pluginSystem.PluginUtil;
 import FileEngine.robotUtil.RobotUtil;
 import FileEngine.search.SearchUtil;
 import FileEngine.threadPool.CachedThreadPool;
 import FileEngine.translate.TranslateUtil;
-import sun.misc.Cache;
 
 import javax.swing.*;
 import javax.swing.border.Border;
@@ -96,7 +95,7 @@ public class SearchBar {
     private final AtomicInteger currentLabelSelectedPosition;   //保存当前是哪个label被选中 范围 0 - 7
     private volatile Plugin currentUsingPlugin;
 
-    private static final int MAX_RESULTS_COUNT = 5000;
+    private static final int MAX_RESULTS_COUNT = 200;
 
     private static class SearchBarBuilder {
         private static final SearchBar instance = new SearchBar();
@@ -2635,23 +2634,38 @@ public class SearchBar {
     }
 
     private void searchMethod() {
-        try {
+        try (Statement statement = SQLiteUtil.getStatement()) {
+            ArrayList<String> list = new ArrayList<>();
+            int count = 0;
             String column;
             while (AllConfigs.isNotMainExit()) {
                 if (runningMode.get() == AllConfigs.RunningMode.NORMAL_MODE) {
                     while ((column = commandQueue.poll()) != null) {
-                        searchAndAddToTempResults(System.currentTimeMillis(), column);
+                        list.add(column);
+                        TimeUnit.NANOSECONDS.sleep(500);
+                        count++;
+                        if (count > 10) {
+                            break;
+                        }
+                    }
+                    if (!list.isEmpty()) {
+                        if (AllConfigs.isDebug()) {
+                            System.err.println("执行数量：" + list.size());
+                        }
+                        searchAndAddToTempResults(statement, System.currentTimeMillis(), list.toArray());
+                        count = 0;
+                        list.clear();
                     }
                 }
                 TimeUnit.MILLISECONDS.sleep(10);
             }
-        } catch (InterruptedException | SQLException ignored) {
+        } catch (InterruptedException | SQLException e) {
+            e.printStackTrace();
         }
     }
 
     private void pollCommandsAndSearchDatabaseThread() {
-        int ncpuCores = Runtime.getRuntime().availableProcessors();
-        for (int i = 0; i < Math.min(4, ncpuCores); i++) {
+        for (int i = 0; i < AllConfigs.getSearchThreadNum(); i++) {
             CachedThreadPool.getInstance().executeTask(this::searchMethod);
         }
     }
@@ -3017,31 +3031,36 @@ public class SearchBar {
      * @param column 数据库表
      * @throws SQLException 错误处理
      */
-    private void searchAndAddToTempResults(long time, String column) throws SQLException {
+    private void searchAndAddToTempResults(Statement stmt, long time, Object[] column) throws SQLException {
         //结果太多则不再进行搜索
         if (listResultsNum.get() + tempResultNum.get() > MAX_RESULTS_COUNT) {
             commandQueue.clear();
             return;
         }
         //为label添加结果
+        for (Object o : column) {
+            try (ResultSet resultSet = stmt.executeQuery("SELECT PATH FROM " + o + " ;")) {
+                checkResultSetAndAddToTemp(resultSet, time);
+            }
+        }
+    }
+
+    private void checkResultSetAndAddToTemp(ResultSet resultSet, long time) throws SQLException {
         String each;
-        String pSql = "SELECT PATH FROM " + column + ";";
-        try (PreparedStatement pStmt = SQLiteUtil.getConnection().prepareStatement(pSql);
-             ResultSet resultSet = pStmt.executeQuery()) {
-            while (resultSet.next()) {
-                //结果太多则不再进行搜索
-                if (listResultsNum.get() + tempResultNum.get() > MAX_RESULTS_COUNT) {
-                    commandQueue.clear();
-                    return;
-                }
-                each = resultSet.getString("PATH");
-                if (search.getStatus() == SearchUtil.NORMAL) {
-                    checkIsMatchedAndAddToList(each, true);
-                }
-                //用户重新输入了信息
-                if (startTime > time) {
-                    break;
-                }
+        while (resultSet.next()) {
+            //结果太多则不再进行搜索
+            if (listResultsNum.get() + tempResultNum.get() > MAX_RESULTS_COUNT) {
+                commandQueue.clear();
+                return;
+            }
+            each = resultSet.getString("PATH");
+            if (search.getStatus() == SearchUtil.NORMAL) {
+                checkIsMatchedAndAddToList(each, true);
+            }
+            //用户重新输入了信息
+            if (startTime > time) {
+                commandQueue.clear();
+                return;
             }
         }
     }

@@ -777,9 +777,9 @@ public class SettingsFrame {
                     SearchUtil.getInstance().setStatus(SearchUtil.VACUUM);
                     CachedThreadPool.getInstance().executeTask(() -> {
                         //执行VACUUM命令
-                        try (Statement stmt = SQLiteUtil.getStatement()) {
+                        try (PreparedStatement stmt = SQLiteUtil.getConnection().prepareStatement("VACUUM;")) {
                             clearDatabase();
-                            stmt.execute("VACUUM;");
+                            stmt.execute();
                         } catch (Exception ex) {
                             if (AllConfigs.isDebug()) {
                                 ex.printStackTrace();
