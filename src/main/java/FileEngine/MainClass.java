@@ -30,11 +30,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class MainClass {
     private static final String FILE_MONITOR_64_MD_5 = "7258ca0167d10d6cd6963fd0c35dff84";
-    private static final String FILE_SEARCHER_64_MD_5 = "c1c9de6ab35ed5091ab6c55babd54404";
+    private static final String FILE_SEARCHER_64_MD_5 = "8d81d484cfc1c2cfaea7e822dd086f0d";
     private static final String GET_ASC_II_64_MD_5 = "eff607d2dd4a7e4c878948fe8f24b3ea";
     private static final String HOTKEY_LISTENER_64_MD_5 = "41388e31d6fc22fb430f636d402cf608";
     private static final String IS_LOCAL_DISK_64_MD_5 = "f8a71d3496d8cc188713d521e6dfa2b2";
-    private static final String FILE_SEARCHER_USN_64_MD_5 = "5b45b0526a48df5e91b00b6ca7dbdcfc";
+    private static final String FILE_SEARCHER_USN_64_MD_5 = "4bda825986f333e8efbb11e5d3a77158";
     private static final String SQLITE3_64_MD_5 = "658c71b8b93ba4eb5b4936f46a112449";
     private static final String UPDATER_BAT_64_MD_5 = "357d7cc1cf023cb6c90f73926c6f2f55";
     private static final String GET_HANDLE_64_MD_5 = "c0c533468bf2928e4d8a2189104f28a0";
@@ -153,7 +153,7 @@ public class MainClass {
                 isManualUpdate = true;
             }
 
-            try (PreparedStatement pStmt = SQLiteUtil.getConnection().prepareStatement("CREATE TABLE IF NOT EXISTS cache(PATH text unique);")) {
+            try (PreparedStatement pStmt = SQLiteUtil.getPreparedStatement("CREATE TABLE IF NOT EXISTS cache(PATH text unique);")) {
                 pStmt.executeUpdate();
             }
 
@@ -247,6 +247,7 @@ public class MainClass {
             TimeUnit.SECONDS.sleep(8);
             System.exit(0);
         } catch (Exception e) {
+            e.printStackTrace();
             closeAndExit();
         }
     }
@@ -259,7 +260,7 @@ public class MainClass {
         PluginUtil.getInstance().unloadAllPlugins();
         CheckHotKeyUtil.getInstance().stopListen();
         FileMonitor.INSTANCE.stop_monitor();
-        SQLiteUtil.closeConnection();
+        SQLiteUtil.closeAll();
         DaemonUtil.stopDaemon();
     }
 

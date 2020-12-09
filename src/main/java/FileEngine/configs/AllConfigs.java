@@ -13,6 +13,7 @@ import java.net.Proxy;
 import java.nio.charset.StandardCharsets;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.Statement;
 import java.util.LinkedHashSet;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -476,8 +477,8 @@ public class AllConfigs {
      * 获取数据库缓存条目数量，用于判断软件是否还能继续写入缓存
      */
     private static void initCacheNum() {
-        try (PreparedStatement pStmt = SQLiteUtil.getConnection().prepareStatement("SELECT COUNT(PATH) FROM cache;");
-             ResultSet resultSet = pStmt.executeQuery()) {
+        try (PreparedStatement stmt = SQLiteUtil.getPreparedStatement("SELECT COUNT(PATH) FROM cache;");
+             ResultSet resultSet = stmt.executeQuery()) {
             cacheNum.set(resultSet.getInt(1));
         } catch (Exception throwables) {
             if (AllConfigs.isDebug()) {

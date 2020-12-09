@@ -3,6 +3,7 @@
 #include "Volume.h"
 #include <fstream>
 #include <thread>
+//#define TEST
 
 typedef struct{
 	char disk;
@@ -24,6 +25,7 @@ void initUSN(parameter p) {
 		volume.initVolume();
 		tasksFinished++;
 #ifdef TEST
+		cout << "path : " << p.disk << endl;
 		cout << "Initialize done " << p.disk << endl;
 #endif
 	}
@@ -53,7 +55,6 @@ int main() {
 	char output[1000];
 	char ignorePath[1000];
 
-	size_t diskCount = 0;
 	vector<string> diskVec;
 	vector<string> ignorePathsVec;
 
@@ -74,14 +75,14 @@ int main() {
 		return 0;
 	}
 
-	sqlite3_exec(db, "PRAGMA TEMP_STORE=MEMORY;", 0, 0, 0);
-	sqlite3_exec(db, "PRAGMA journal_mode=OFF;", 0, 0, 0);
-	sqlite3_exec(db, "PRAGMA cache_size=50000;", 0, 0, 0);
-	sqlite3_exec(db, "PRAGMA page_size=16384;", 0, 0, 0);
-	sqlite3_exec(db, "PRAGMA auto_vacuum=0;", 0, 0, 0);
-	sqlite3_exec(db, "PRAGMA mmap_size=4096;", 0, 0, 0);
+	sqlite3_exec(db, "PRAGMA TEMP_STORE=MEMORY;", nullptr, nullptr, nullptr);
+	sqlite3_exec(db, "PRAGMA journal_mode=OFF;", nullptr, nullptr, nullptr);
+	sqlite3_exec(db, "PRAGMA cache_size=262144;", nullptr, nullptr, nullptr);
+	sqlite3_exec(db, "PRAGMA page_size=65535;", nullptr, nullptr, nullptr);
+	sqlite3_exec(db, "PRAGMA auto_vacuum=0;", nullptr, nullptr, nullptr);
+	sqlite3_exec(db, "PRAGMA mmap_size=4096;", nullptr, nullptr, nullptr);
 
-	sqlite3_exec(db, "BEGIN;", 0, 0, 0);
+	sqlite3_exec(db, "BEGIN;", nullptr, nullptr, nullptr);
 
 	splitString(diskPath, diskVec);
 	splitString(ignorePath, ignorePathsVec);
@@ -90,7 +91,7 @@ int main() {
 
 	for (vector<string>::iterator iter = diskVec.begin(); iter != diskVec.end(); iter++) {
 		disk = (*iter)[0];
-		if (((65 <= disk) && (disk <= 90)) || ((97 <= disk) && (disk <= 122))) {
+		if (65 <= disk && disk <= 90 || 97 <= disk && disk <= 122) {
 			parameter p;
 			p.disk = disk;
 			p.ignorePath = ignorePathsVec;
@@ -107,3 +108,4 @@ int main() {
 	sqlite3_close(db);
 	return 0;
 }
+

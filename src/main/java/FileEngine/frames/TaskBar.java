@@ -120,7 +120,7 @@ public class TaskBar {
         PluginUtil.getInstance().unloadAllPlugins();
         CheckHotKeyUtil.getInstance().stopListen();
         FileMonitor.INSTANCE.stop_monitor();
-        SQLiteUtil.closeConnection();
+        SQLiteUtil.closeAll();
         DaemonUtil.stopDaemon();
     }
 
@@ -133,7 +133,7 @@ public class TaskBar {
         PluginUtil.getInstance().unloadAllPlugins();
         CheckHotKeyUtil.getInstance().stopListen();
         FileMonitor.INSTANCE.stop_monitor();
-        SQLiteUtil.closeConnection();
+        SQLiteUtil.closeAll();
     }
 
     public void showMessage(String caption, String message) {
