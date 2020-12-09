@@ -2,10 +2,7 @@ package FileEngine.SQLiteConfig;
 
 import org.sqlite.SQLiteConfig;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 
 /**
  * @author XUANXU
@@ -18,11 +15,18 @@ public class SQLiteUtil {
     private static void init() {
         sqLiteConfig = new SQLiteConfig();
         sqLiteConfig.setTempStore(SQLiteConfig.TempStore.MEMORY);
-        sqLiteConfig.setJournalMode(SQLiteConfig.JournalMode.WAL);
-        sqLiteConfig.setPageSize(16384 * 2);
+        sqLiteConfig.setJournalMode(SQLiteConfig.JournalMode.OFF);
+        sqLiteConfig.setPageSize(65535);
         sqLiteConfig.setDefaultCacheSize(256*1024);
         sqLiteConfig.setSynchronous(SQLiteConfig.SynchronousMode.OFF);
         sqLiteConfig.setLockingMode(SQLiteConfig.LockingMode.NORMAL);
+    }
+
+    public static PreparedStatement getPreparedStatement(String sql) throws SQLException {
+        if (conn == null) {
+            throw new SQLException("The connection must be initialized first, call initConnection(String url)");
+        }
+        return conn.prepareStatement(sql);
     }
 
     public static Statement getStatement() throws SQLException {
@@ -40,23 +44,19 @@ public class SQLiteUtil {
         conn = DriverManager.getConnection(url, sqLiteConfig.toProperties());
     }
 
-    public static Connection getConnection() {
-        return conn;
-    }
-
     public static void createAllTables() throws Exception {
         String sql = "CREATE TABLE IF NOT EXISTS list";
         try (Statement stmt = getStatement()) {
             stmt.execute("BEGIN;");
             for (int i = 0; i <= 40; i++) {
-                String command = sql + i + " " + "(PATH text unique)" + ";";
+                String command = sql + i + " " + "(ASCII INT, PATH text unique)" + ";";
                 stmt.executeUpdate(command);
             }
             stmt.execute("COMMIT;");
         }
     }
 
-    public static void closeConnection() {
+    public static void closeAll() {
         try {
             conn.close();
         } catch (SQLException throwables) {

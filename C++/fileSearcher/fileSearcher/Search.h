@@ -123,10 +123,10 @@ void initAllVector() {
     command40.reserve(30000);
 }
 
-void saveResult(string path, int ascII)
+inline void saveResult(const string path, const int ascII)
 {
-    string* _path = new string(to_utf8(StringToWString(path)));
-    int asciiGroup = ascII / 100;
+	auto _path = new string(to_utf8(StringToWString(path)));
+	const int asciiGroup = ascII / 100;
     switch (asciiGroup)
     {
     case 0:
@@ -284,7 +284,7 @@ void saveResult(string path, int ascII)
 }
 
 
-void addIgnorePath(const char* path)
+inline void addIgnorePath(const char* path)
 {
     string str(path);
     transform(str.begin(), str.end(), str.begin(), ::tolower);
@@ -292,16 +292,16 @@ void addIgnorePath(const char* path)
     ignorePathVector.emplace_back(str);
 }
 
-void setSearchDepth(int i)
+inline void setSearchDepth(const int i)
 {
     searchDepth = i;
 }
 
-int count(string path, string pattern)
+inline int count(const string path, const string pattern)
 {
     size_t begin = -1;
-    int count = 0;
-    while ((begin = path.find(pattern, (unsigned __int64)begin + 1)) != string::npos)
+    auto count = 0;
+    while ((begin = path.find(pattern, static_cast<unsigned long long>(begin) + 1)) != string::npos)
     {
         count++;
         begin = begin + pattern.length();
@@ -309,7 +309,7 @@ int count(string path, string pattern)
     return count;
 }
 
-bool isSearchDepthOut(string path)
+inline bool isSearchDepthOut(string path)
 {
     int num = count(path, "\\");
     if (num > searchDepth - 2)
@@ -319,7 +319,7 @@ bool isSearchDepthOut(string path)
     return false;
 }
 
-bool isIgnore(string path)
+inline bool isIgnore(string path)
 {
     if (path.find("$") != string::npos)
     {
@@ -337,11 +337,11 @@ bool isIgnore(string path)
     return false;
 }
 
-void search(string path, string exd)
+inline void search(const string path, const string exd)
 {
     //cout << "getFiles()" << path<< endl;
     //文件句柄
-    intptr_t hFile = 0;
+    intptr_t hFile;
     //文件信息
     struct _finddata_t fileinfo;
     string pathName, exdName;
@@ -402,24 +402,28 @@ void search(string path, string exd)
     }
 }
 
-void executeAll(vector<string*>& vec, const char* init) {
-    sqlite3_stmt* stmt = NULL;
+inline void executeAll(vector<string*>& vec, const char* init) {
+    sqlite3_stmt* stmt = nullptr;
     string str;
-    size_t rc = sqlite3_prepare_v2(db, init, strlen(init), &stmt, NULL);
+    size_t rc = sqlite3_prepare_v2(db, init, strlen(init), &stmt, 0);
     if (rc != SQLITE_OK) {
         cout << "error preparing statement" << endl;
         exit(-1);
     }
-    for (vector<string*>::iterator iter = vec.begin(); iter != vec.end(); ++iter) {
-        str = *(*iter);
+    for (auto& iter : vec)
+    {
+        str = *iter;
         sqlite3_reset(stmt);
-        sqlite3_bind_text(stmt, 1, str.c_str(), -1, SQLITE_STATIC);
+        const string::size_type iPos = str.find_last_of('\\') + 1;
+        const auto filename = str.substr(iPos, str.length() - iPos);
+        sqlite3_bind_int(stmt, 1, getAscIISum(filename));
+        sqlite3_bind_text(stmt, 2, str.c_str(), -1, SQLITE_STATIC);
         sqlite3_step(stmt);
     }
     sqlite3_finalize(stmt);
 }
 
-void searchFiles(const char* path, const char* exd)
+inline void searchFiles(const char* path, const char* exd)
 {
     cout << "start Search" << endl;
     string file(path);
@@ -428,7 +432,7 @@ void searchFiles(const char* path, const char* exd)
     cout << "end Search" << endl;
 }
 
-void searchIgnoreSearchDepth(string path, string exd)
+inline void searchIgnoreSearchDepth(string path, string exd)
 {
     //cout << "getFiles()" << path<< endl;
     //文件句柄
@@ -494,7 +498,7 @@ void searchIgnoreSearchDepth(string path, string exd)
 }
 
 
-void searchFilesIgnoreSearchDepth(const char* path, const char* exd)
+inline void searchFilesIgnoreSearchDepth(const char* path, const char* exd)
 {
     string file(path);
     string suffix(exd);
@@ -503,7 +507,7 @@ void searchFilesIgnoreSearchDepth(const char* path, const char* exd)
     cout << "end search without searchDepth" << endl;
 }
 
-int getAscIISum(string name)
+inline int getAscIISum(string name)
 {
     int sum = 0;
     size_t length = name.length();
@@ -517,17 +521,17 @@ int getAscIISum(string name)
     return sum;
 }
 
-std::string to_utf8(const wchar_t* buffer, int len)
+inline std::string to_utf8(const wchar_t* buffer, int len)
 {
     int nChars = ::WideCharToMultiByte(
         CP_UTF8,
         0,
         buffer,
         len,
-        NULL,
+        nullptr,
         0,
-        NULL,
-        NULL);
+        nullptr,
+        nullptr);
     if (nChars == 0)
     {
         return "";
@@ -541,18 +545,18 @@ std::string to_utf8(const wchar_t* buffer, int len)
         len,
         const_cast<char*>(newbuffer.c_str()),
         nChars,
-        NULL,
-        NULL);
+        nullptr,
+        nullptr);
 
     return newbuffer;
 }
 
-std::string to_utf8(const std::wstring& str)
+inline std::string to_utf8(const std::wstring& str)
 {
     return to_utf8(str.c_str(), (int)str.size());
 }
 
-std::wstring StringToWString(const std::string& str)
+inline std::wstring StringToWString(const std::string& str)
 {
     setlocale(LC_ALL, "chs");
     const char* point_to_source = str.c_str();

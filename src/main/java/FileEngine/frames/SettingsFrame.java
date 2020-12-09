@@ -747,9 +747,9 @@ public class SettingsFrame {
     }
 
     private void clearDatabase(String column) {
-        String pSql = "SELECT PATH FROM " + column + ";";
         File file;
-        try (PreparedStatement pStmt = SQLiteUtil.getConnection().prepareStatement(pSql);ResultSet resultSet = pStmt.executeQuery()) {
+        try(PreparedStatement pStmt = SQLiteUtil.getPreparedStatement(column);
+            ResultSet resultSet = pStmt.executeQuery()) {
             while (resultSet.next()) {
                 String record = resultSet.getString("PATH");
                 file = new File(record);
@@ -760,8 +760,8 @@ public class SettingsFrame {
                     SearchUtil.getInstance().removeFileFromDatabase(record);
                 }
             }
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
     }
 
@@ -777,7 +777,7 @@ public class SettingsFrame {
                     SearchUtil.getInstance().setStatus(SearchUtil.VACUUM);
                     CachedThreadPool.getInstance().executeTask(() -> {
                         //执行VACUUM命令
-                        try (PreparedStatement stmt = SQLiteUtil.getConnection().prepareStatement("VACUUM;")) {
+                        try (PreparedStatement stmt = SQLiteUtil.getPreparedStatement("VACUUM;")) {
                             clearDatabase();
                             stmt.execute();
                         } catch (Exception ex) {
@@ -1052,8 +1052,8 @@ public class SettingsFrame {
 
     private void initCacheArray() {
         String eachLine;
-        try (PreparedStatement pStmt = SQLiteUtil.getConnection().prepareStatement("SELECT PATH FROM cache;");
-             ResultSet resultSet = pStmt.executeQuery()) {
+        try (PreparedStatement statement = SQLiteUtil.getPreparedStatement("SELECT PATH FROM cache;");
+             ResultSet resultSet = statement.executeQuery()) {
             while (resultSet.next()) {
                 eachLine = resultSet.getString("PATH");
                 cacheSet.add(eachLine);

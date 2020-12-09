@@ -1,17 +1,3 @@
 ﻿  fileSearcher.cpp
-D:\Code\File-Engine\C++\fileSearcher\fileSearcher\fileSearcher.cpp(135,24): warning C4477: “printf”: 格式字符串“%x”需要类型“unsigned int”的参数，但可变参数 1 拥有了类型“DWORDLONG”
-D:\Code\File-Engine\C++\fileSearcher\fileSearcher\fileSearcher.cpp(135,24): message : 请考虑在格式字符串中使用“%llx”
-D:\Code\File-Engine\C++\fileSearcher\fileSearcher\fileSearcher.cpp(135,24): message : 请考虑在格式字符串中使用“%Ix”
-D:\Code\File-Engine\C++\fileSearcher\fileSearcher\fileSearcher.cpp(135,24): message : 请考虑在格式字符串中使用“%I64x”
-D:\Code\File-Engine\C++\fileSearcher\fileSearcher\fileSearcher.cpp(137,24): warning C4477: “printf”: 格式字符串“%x”需要类型“unsigned int”的参数，但可变参数 1 拥有了类型“DWORDLONG”
-D:\Code\File-Engine\C++\fileSearcher\fileSearcher\fileSearcher.cpp(137,24): message : 请考虑在格式字符串中使用“%llx”
-D:\Code\File-Engine\C++\fileSearcher\fileSearcher\fileSearcher.cpp(137,24): message : 请考虑在格式字符串中使用“%Ix”
-D:\Code\File-Engine\C++\fileSearcher\fileSearcher\fileSearcher.cpp(137,24): message : 请考虑在格式字符串中使用“%I64x”
-D:\Code\File-Engine\C++\fileSearcher\fileSearcher\fileSearcher.cpp(90,10): warning C4101: “ret”: 未引用的局部变量
-D:\Code\File-Engine\C++\fileSearcher\fileSearcher\fileSearcher.cpp(192,31): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
-D:\Code\File-Engine\C++\fileSearcher\fileSearcher\fileSearcher.cpp(387,28): warning C4244: “=”: 从“intptr_t”转换到“long”，可能丢失数据
-D:\Code\File-Engine\C++\fileSearcher\fileSearcher\fileSearcher.cpp(493,68): warning C4267: “=”: 从“size_t”转换到“int”，可能丢失数据
-D:\Code\File-Engine\C++\fileSearcher\fileSearcher\fileSearcher.cpp(496,41): warning C4267: “=”: 从“size_t”转换到“int”，可能丢失数据
-D:\Code\File-Engine\C++\fileSearcher\fileSearcher\fileSearcher.cpp(518,39): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
-D:\Code\File-Engine\C++\fileSearcher\fileSearcher\fileSearcher.cpp(605,70): warning C4267: “参数”: 从“size_t”转换到“int”，可能丢失数据
-  fileSearcher.vcxproj -> D:\Code\File-Engine\C++\fileSearcher\x64\Debug\fileSearcher.exe
+D:\Code\File-Engine\File-Engine\C++\fileSearcher\fileSearcher\Search.h(408,68): warning C4267: “参数”: 从“size_t”转换到“int”，可能丢失数据
+  fileSearcher.vcxproj -> D:\Code\File-Engine\File-Engine\C++\fileSearcher\x64\Debug\fileSearcher.exe
