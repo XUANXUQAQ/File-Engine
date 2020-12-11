@@ -14,15 +14,13 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
-import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 
 public class SearchUtil {
     private final ConcurrentLinkedQueue<SQLWithTaskId> commandSet = new ConcurrentLinkedQueue<>();
-    private volatile Enums.DatabaseStatus status;
+    private volatile Enums.DatabaseStatus status = Enums.DatabaseStatus.NORMAL;
     private volatile boolean isExecuteImmediately = false;
 
     private static final int MAX_SQL_NUM = 5000;
