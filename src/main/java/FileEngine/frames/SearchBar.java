@@ -3019,22 +3019,23 @@ public class SearchBar {
      * @param isChosen 是否当前被选中
      */
     private void showResultOnLabel(String path, JLabel label, boolean isChosen) {
-        if (isExist(path)) {
-            String name = getFileName(path);
-            ImageIcon icon = GetIconUtil.getInstance().getBigIcon(path, iconSideLength, iconSideLength);
-            label.setIcon(icon);
-            label.setBorder(border);
-            if (name.length() >= 32) {
-                name = name.substring(0, 32) + "...";
-            }
+        String name = getFileName(path);
+        if (name.length() >= 32) {
+            name = name.substring(0, 32) + "...";
+        }
+        if (isExist(path)){
             label.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>" + getParentPath(path) + "</body></html>");
-            if (isChosen) {
-                setLabelChosen(label);
-            } else {
-                setLabelNotChosen(label);
-            }
         } else {
             search.removeFileFromDatabase(path);
+            label.setText(TranslateUtil.getInstance().getTranslation("File not exist"));
+        }
+        ImageIcon icon = GetIconUtil.getInstance().getBigIcon(path, iconSideLength, iconSideLength);
+        label.setIcon(icon);
+        label.setBorder(border);
+        if (isChosen) {
+            setLabelChosen(label);
+        } else {
+            setLabelNotChosen(label);
         }
     }
 

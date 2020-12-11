@@ -151,3 +151,4 @@ Errors=错误
 Failed to save settings, do you still close the window=保存设置失败，是否仍然关闭窗口
 The identifier you entered is too short, continue=您输入的标识符太短，是否继续
 Update=更新
+File not exist=文件不存在

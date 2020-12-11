@@ -151,3 +151,4 @@ Errors=ошибка
 Failed to save settings, do you still close the window=Не удалось сохранить настройки, вы все равно закрываете окно
 The identifier you entered is too short, continue=Введенный вами идентификатор слишком короткий, продолжить
 Update=Обновить
+File not exist=файл не существует
