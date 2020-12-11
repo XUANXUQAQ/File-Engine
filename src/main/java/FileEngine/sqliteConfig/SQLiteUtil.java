@@ -8,12 +8,10 @@ import java.sql.*;
  * @author XUANXU
  */
 public class SQLiteUtil {
-    private static SQLiteConfig sqLiteConfig;
-    private static volatile boolean isInitialized = false;
+    private static final SQLiteConfig sqLiteConfig = new SQLiteConfig();
     private static Connection conn;
 
-    private static void init() {
-        sqLiteConfig = new SQLiteConfig();
+    private static void initSqliteConfig() {
         sqLiteConfig.setTempStore(SQLiteConfig.TempStore.MEMORY);
         sqLiteConfig.setJournalMode(SQLiteConfig.JournalMode.OFF);
         sqLiteConfig.setPageSize(65535);
@@ -37,10 +35,7 @@ public class SQLiteUtil {
     }
 
     public static void initConnection(String url) throws SQLException {
-        if (!isInitialized) {
-            init();
-            isInitialized = true;
-        }
+        initSqliteConfig();
         conn = DriverManager.getConnection(url, sqLiteConfig.toProperties());
     }
 

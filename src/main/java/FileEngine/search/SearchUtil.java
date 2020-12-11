@@ -27,6 +27,7 @@ public class SearchUtil {
     public static final int NORMAL = 0;
     public static final int VACUUM = 1;
     public static final int MANUAL_UPDATE = 2;
+    public static final int EXECUTING = 3;
 
     private static final int MAX_SQL_NUM = 5000;
 
@@ -370,8 +371,9 @@ public class SearchUtil {
         addToCommandSet(command);
     }
 
-    public void executeAllCommands(Statement stmt) {
+    private void executeAllCommands(Statement stmt) {
         if (!commandSet.isEmpty()) {
+            status = EXECUTING;
             ConcurrentLinkedQueue<String> commandQueue = new ConcurrentLinkedQueue<>(commandSet);
             commandSet.clear();
             try {
@@ -396,6 +398,7 @@ public class SearchUtil {
                 } catch (SQLException throwables) {
                     throwables.printStackTrace();
                 }
+                status = NORMAL;
             }
         }
     }
@@ -456,8 +459,18 @@ public class SearchUtil {
                 }
             }
         }
+        createAllIndex();
         status = NORMAL;
         TaskBar.getInstance().showMessage(TranslateUtil.getInstance().getTranslation("Info"), TranslateUtil.getInstance().getTranslation("Search Done"));
+    }
+
+    private void createAllIndex() {
+        commandSet.add("CREATE INDEX IF NOT EXISTS cache_index ON cache(PATH);");
+        for (int i = 0; i <= 40; ++i) {
+            String createIndex = "CREATE INDEX IF NOT EXISTS list" + i + "_index ON list" + i + "(ASCII, PATH);";
+            commandSet.add(createIndex);
+        }
+        executeImmediately();
     }
 
     private void searchByUSN(String paths, String ignorePath) throws IOException, InterruptedException {
@@ -537,20 +550,20 @@ public class SearchUtil {
         waitForTask("fileSearcher.exe");
     }
 
-    public void updateLists(String ignorePath, int searchDepth, Statement stmt) {
+    public void updateLists(String ignorePath, int searchDepth) {
         TaskBar.getInstance().showMessage(TranslateUtil.getInstance().getTranslation("Info"), TranslateUtil.getInstance().getTranslation("Updating file index"));
-        clearAllTablesAndIndex(stmt);
+        clearAllTablesAndIndex();
         searchFile(ignorePath, searchDepth);
     }
 
-    private void clearAllTablesAndIndex(Statement stmt) {
+    private void clearAllTablesAndIndex() {
         commandSet.clear();
         //删除所有表和索引
         for (int i = 0; i <= 40; i++) {
             commandSet.add("DROP TABLE IF EXISTS list" + i + ";");
             commandSet.add("DROP INDEX IF EXISTS list" + i + "_index;");
         }
-        executeAllCommands(stmt);
+        executeImmediately();
         try {
             SQLiteUtil.createAllTables();
         } catch (Exception e) {

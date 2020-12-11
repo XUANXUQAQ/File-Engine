@@ -13,7 +13,6 @@ import java.net.Proxy;
 import java.nio.charset.StandardCharsets;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.Statement;
 import java.util.LinkedHashSet;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -64,7 +63,6 @@ public class AllConfigs {
     private static volatile int searchBarColor;
     private static volatile int searchBarFontColor;
     private static volatile int borderColor;
-    private static volatile int searchThreadNum;
     private static String updateAddress;
     private static int setterCount = 0;
     private static boolean isAllowChangeSettings = false;
@@ -73,10 +71,6 @@ public class AllConfigs {
 
     private static void showError() {
         System.err.println("你应该在修改设置前先调用allowChangeSettings()方法，您的设置并未生效");
-    }
-
-    public static int getSearchThreadNum() {
-        return searchThreadNum;
     }
 
     public static void allowChangeSettings() {
@@ -794,18 +788,6 @@ public class AllConfigs {
         }
     }
 
-    private static void readSearchThreadNum(JSONObject settingsInJson) {
-        if (settingsInJson != null) {
-            if (settingsInJson.containsKey("searchThreadNum")) {
-                searchThreadNum = settingsInJson.getInteger("searchThreadNum");
-            } else {
-                searchThreadNum = 4;
-            }
-        } else {
-            searchThreadNum = 4;
-        }
-    }
-
     private static void readShowTipOnCreatingLnk(JSONObject settingsInJson) {
         if (settingsInJson != null) {
             if (settingsInJson.containsKey("isShowTipOnCreatingLnk")) {
@@ -862,7 +844,6 @@ public class AllConfigs {
         readUpdateAddress(settingsInJson);
         readHotKey(settingsInJson);
         readShowTipOnCreatingLnk(settingsInJson);
-        readSearchThreadNum(settingsInJson);
         initCacheNum();
         setAllSettings();
         saveAllSettings();
@@ -911,7 +892,6 @@ public class AllConfigs {
         allSettings.put("searchBarFontColor", searchBarFontColor);
         allSettings.put("borderColor", borderColor);
         allSettings.put("isShowTipOnCreatingLnk", isShowTipCreatingLnk);
-        allSettings.put("searchThreadNum", searchThreadNum);
         try (BufferedWriter buffW = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(settings), StandardCharsets.UTF_8))) {
             String format = JSON.toJSONString(allSettings, SerializerFeature.PrettyFormat, SerializerFeature.WriteMapNullValue, SerializerFeature.WriteDateUseDateFormat);
             buffW.write(format);

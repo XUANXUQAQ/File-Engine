@@ -33,7 +33,6 @@ import java.nio.charset.StandardCharsets;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -1997,8 +1996,6 @@ public class SearchBar {
 
         pollCommandsAndSearchDatabaseThread();
 
-        createSqlIndexThread();
-
         sendSignalAndShowCommandThread();
 
         addRecordsToDatabaseThread();
@@ -2635,65 +2632,19 @@ public class SearchBar {
         });
     }
 
-    private void searchMethod() {
-        try {
-            String column;
-            while (AllConfigs.isNotMainExit()) {
-                if (runningMode.get() == AllConfigs.RunningMode.NORMAL_MODE) {
-                    while ((column = commandQueue.poll()) != null) {
-                        searchAndAddToTempResults(System.currentTimeMillis(), column);
-                        TimeUnit.NANOSECONDS.sleep(500);
-                    }
-                }
-                TimeUnit.MILLISECONDS.sleep(10);
-            }
-        } catch (InterruptedException | SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
     private void pollCommandsAndSearchDatabaseThread() {
-        for (int i = 0; i < AllConfigs.getSearchThreadNum(); i++) {
-            CachedThreadPool.getInstance().executeTask(this::searchMethod);
-        }
-    }
-
-    private void createSqlIndexThread() {
         CachedThreadPool.getInstance().executeTask(() -> {
-            //后台自动创建数据库索引
-            try (Statement stmt = SQLiteUtil.getStatement()) {
-                OutLoop:
+            try {
+                String column;
                 while (AllConfigs.isNotMainExit()) {
-                    try {
-                        if (!isVisible() && SearchUtil.getInstance().getStatus() == SearchUtil.NORMAL) {
-                            stmt.executeUpdate("CREATE INDEX IF NOT EXISTS cache_index ON cache(PATH);");
-                        }
-                    } catch (Exception e) {
-                        if (AllConfigs.isDebug()) {
-                            System.err.println("error create cache index");
-                            e.printStackTrace();
+                    if (runningMode.get() == AllConfigs.RunningMode.NORMAL_MODE) {
+                        while ((column = commandQueue.poll()) != null) {
+                            searchAndAddToTempResults(System.currentTimeMillis(), column);
                         }
                     }
-                    for (int i = 0; i <= 40; ++i) {
-                        String createIndex = "CREATE INDEX IF NOT EXISTS list" + i + "_index ON list" + i + "(ASCII, PATH);";
-                        if (!AllConfigs.isNotMainExit()) {
-                            break OutLoop;
-                        }
-                        try {
-                            if (!isVisible() && SearchUtil.getInstance().getStatus() == SearchUtil.NORMAL) {
-                                stmt.executeUpdate(createIndex);
-                            }
-                        } catch (Exception e) {
-                            if (AllConfigs.isDebug()) {
-                                System.err.println("error sql " + createIndex);
-                                e.printStackTrace();
-                            }
-                        }
-                        TimeUnit.SECONDS.sleep(1);
-                    }
-                    TimeUnit.SECONDS.sleep(5);
+                    TimeUnit.MILLISECONDS.sleep(10);
                 }
-            } catch (Exception ignored) {
+            } catch (InterruptedException ignored) {
             }
         });
     }
@@ -2873,19 +2824,14 @@ public class SearchBar {
         CachedThreadPool.getInstance().executeTask(() -> {
             // 时间检测线程
             final long updateTimeLimit = AllConfigs.getUpdateTimeLimit();
-            while (AllConfigs.isNotMainExit()) {
-                try (Statement stmt = SQLiteUtil.getStatement()) {
-                    while (AllConfigs.isNotMainExit()) {
-                        if (search.getStatus() == SearchUtil.NORMAL) {
-                            search.executeAllCommands(stmt);
-                        }
-                        TimeUnit.SECONDS.sleep(updateTimeLimit);
+            try {
+                while (AllConfigs.isNotMainExit()) {
+                    if (search.getStatus() == SearchUtil.NORMAL) {
+                        search.executeImmediately();
                     }
-                } catch (Exception e) {
-                    if (AllConfigs.isDebug()) {
-                        e.printStackTrace();
-                    }
+                    TimeUnit.SECONDS.sleep(updateTimeLimit);
                 }
+            } catch (InterruptedException ignored) {
             }
         });
     }
@@ -2896,16 +2842,11 @@ public class SearchBar {
             try {
                 while (AllConfigs.isNotMainExit()) {
                     if (search.getStatus() == SearchUtil.MANUAL_UPDATE) {
-                        try (Statement stmt = SQLiteUtil.getStatement()) {
-                            search.updateLists(AllConfigs.getIgnorePath(), AllConfigs.getSearchDepth(), stmt);
-                        }
+                        search.updateLists(AllConfigs.getIgnorePath(), AllConfigs.getSearchDepth());
                     }
                     TimeUnit.MILLISECONDS.sleep(10);
                 }
-            } catch (Exception e) {
-                if (AllConfigs.isDebug() && !(e instanceof InterruptedException)) {
-                    e.printStackTrace();
-                }
+            } catch (InterruptedException ignored) {
             }
         });
     }
@@ -2996,21 +2937,17 @@ public class SearchBar {
      * @param isPutToTemp 是否放到临时容器，在搜索优先文件夹和cache时为false，其他为true
      */
     private void checkIsMatchedAndAddToList(String path, boolean isPutToTemp) {
-        if (isExist(path)) {
-            if (check(path)) {
-                if (isResultNotRepeat(path)) {
-                    //字符串匹配通过
-                    if (isPutToTemp) {
-                        tempResultNum.incrementAndGet();
-                        tempResults.add(path);
-                    } else {
-                        listResultsNum.incrementAndGet();
-                        listResults.add(path);
-                    }
+        if (check(path)) {
+            if (isResultNotRepeat(path)) {
+                //字符串匹配通过
+                if (isPutToTemp) {
+                    tempResultNum.incrementAndGet();
+                    tempResults.add(path);
+                } else {
+                    listResultsNum.incrementAndGet();
+                    listResults.add(path);
                 }
             }
-        } else {
-            search.removeFileFromDatabase(path);
         }
     }
 
@@ -3019,9 +2956,8 @@ public class SearchBar {
      *
      * @param time   开始搜索时间，用于检测用于重新输入匹配信息后快速停止
      * @param eachColumn 数据库表
-     * @throws SQLException 错误处理
      */
-    private void searchAndAddToTempResults(long time, String eachColumn) throws SQLException {
+    private void searchAndAddToTempResults(long time, String eachColumn) {
         //结果太多则不再进行搜索
         if (listResultsNum.get() + tempResultNum.get() > MAX_RESULTS_COUNT) {
             commandQueue.clear();
@@ -3029,9 +2965,13 @@ public class SearchBar {
         }
         String sql;
         //为label添加结果
-        sql = "SELECT PATH FROM " + eachColumn + " " + ";";
-        try (PreparedStatement stmt = SQLiteUtil.getPreparedStatement(sql);ResultSet resultSet = stmt.executeQuery()) {
+        sql = "SELECT PATH FROM " + eachColumn + ";";
+
+        try (PreparedStatement stmt = SQLiteUtil.getPreparedStatement(sql);
+             ResultSet resultSet = stmt.executeQuery()) {
+
             String each;
+
             while (resultSet.next()) {
                 //结果太多则不再进行搜索
                 if (listResultsNum.get() + tempResultNum.get() > MAX_RESULTS_COUNT) {
@@ -3048,6 +2988,9 @@ public class SearchBar {
                     return;
                 }
             }
+        } catch (SQLException throwables) {
+            System.err.println("error sql : " + sql);
+            throwables.printStackTrace();
         }
     }
 
@@ -3078,18 +3021,22 @@ public class SearchBar {
      * @param isChosen 是否当前被选中
      */
     private void showResultOnLabel(String path, JLabel label, boolean isChosen) {
-        String name = getFileName(path);
-        ImageIcon icon = GetIconUtil.getInstance().getBigIcon(path, iconSideLength, iconSideLength);
-        label.setIcon(icon);
-        label.setBorder(border);
-        if (name.length() >= 32) {
-            name = name.substring(0, 32) + "...";
-        }
-        label.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>" + getParentPath(path) + "</body></html>");
-        if (isChosen) {
-            setLabelChosen(label);
+        if (isExist(path)) {
+            String name = getFileName(path);
+            ImageIcon icon = GetIconUtil.getInstance().getBigIcon(path, iconSideLength, iconSideLength);
+            label.setIcon(icon);
+            label.setBorder(border);
+            if (name.length() >= 32) {
+                name = name.substring(0, 32) + "...";
+            }
+            label.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>" + getParentPath(path) + "</body></html>");
+            if (isChosen) {
+                setLabelChosen(label);
+            } else {
+                setLabelNotChosen(label);
+            }
         } else {
-            setLabelNotChosen(label);
+            search.removeFileFromDatabase(path);
         }
     }
 

@@ -1,7 +1,6 @@
 package FileEngine.robotUtil;
 
 import java.awt.*;
-import java.util.concurrent.TimeUnit;
 
 public class RobotUtil {
     private static Robot robot = null;
