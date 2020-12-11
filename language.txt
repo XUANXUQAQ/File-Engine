@@ -151,3 +151,4 @@ Errors=
 Failed to save settings, do you still close the window=
 The identifier you entered is too short, continue=
 Update=
+File not exist=
