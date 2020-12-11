@@ -20,6 +20,12 @@ public class SQLiteUtil {
         sqLiteConfig.setLockingMode(SQLiteConfig.LockingMode.NORMAL);
     }
 
+    /**
+     * 仅用于select语句，以及需要及时生效的SQL语句
+     * @param sql select语句
+     * @return 已编译的PreparedStatement
+     * @throws SQLException 失败
+     */
     public static PreparedStatement getPreparedStatement(String sql) throws SQLException {
         if (conn == null) {
             throw new SQLException("The connection must be initialized first, call initConnection(String url)");
@@ -27,6 +33,11 @@ public class SQLiteUtil {
         return conn.prepareStatement(sql);
     }
 
+    /**
+     * 用于需要重复运行多次指令的地方
+     * @return Statement
+     * @throws SQLException 失败
+     */
     public static Statement getStatement() throws SQLException {
         if (conn == null) {
             throw new SQLException("The connection must be initialized first, call initConnection(String url)");
@@ -37,18 +48,6 @@ public class SQLiteUtil {
     public static void initConnection(String url) throws SQLException {
         initSqliteConfig();
         conn = DriverManager.getConnection(url, sqLiteConfig.toProperties());
-    }
-
-    public static void createAllTables() throws Exception {
-        String sql = "CREATE TABLE IF NOT EXISTS list";
-        try (Statement stmt = getStatement()) {
-            stmt.execute("BEGIN;");
-            for (int i = 0; i <= 40; i++) {
-                String command = sql + i + " " + "(ASCII INT, PATH text unique)" + ";";
-                stmt.executeUpdate(command);
-            }
-            stmt.execute("COMMIT;");
-        }
     }
 
     public static void closeAll() {

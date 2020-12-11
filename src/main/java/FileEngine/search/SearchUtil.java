@@ -2,6 +2,7 @@ package FileEngine.search;
 
 import FileEngine.SQLiteConfig.SQLiteUtil;
 import FileEngine.configs.AllConfigs;
+import FileEngine.configs.Enums;
 import FileEngine.dllInterface.GetAscII;
 import FileEngine.dllInterface.IsLocalDisk;
 import FileEngine.frames.TaskBar;
@@ -13,25 +14,20 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 
-
 public class SearchUtil {
-    private final Set<String> commandSet = ConcurrentHashMap.newKeySet();
-    private volatile int status;
+    private final ConcurrentLinkedQueue<SQLWithTaskId> commandSet = new ConcurrentLinkedQueue<>();
+    private volatile Enums.DatabaseStatus status;
     private volatile boolean isExecuteImmediately = false;
-
-    public static final int NORMAL = 0;
-    public static final int VACUUM = 1;
-    public static final int MANUAL_UPDATE = 2;
-    public static final int EXECUTING = 3;
 
     private static final int MAX_SQL_NUM = 5000;
 
-    private static class SearchBuilder {
+    private static class SearchUtilBuilder {
         private static final SearchUtil INSTANCE = new SearchUtil();
     }
 
@@ -53,7 +49,7 @@ public class SearchUtil {
     }
 
     public static SearchUtil getInstance() {
-        return SearchBuilder.INSTANCE;
+        return SearchUtilBuilder.INSTANCE;
     }
 
     private void addDeleteSqlCommandByAscii(int asciiGroup, String path) {
@@ -187,7 +183,7 @@ public class SearchUtil {
                 break;
         }
         if (command != null) {
-            addToCommandSet(command);
+            addToCommandSet(new SQLWithTaskId(SqlTaskIds.DELETE_FROM_LIST, command));
         }
     }
 
@@ -323,7 +319,7 @@ public class SearchUtil {
                 break;
         }
         if (command != null) {
-            addToCommandSet(command);
+            addToCommandSet(new SQLWithTaskId(SqlTaskIds.INSERT_TO_LIST, command));
         }
     }
 
@@ -359,7 +355,7 @@ public class SearchUtil {
 
     public void removeFileFromCache(String path) {
         String command = "DELETE from cache where PATH=" + "\"" + path + "\";";
-        addToCommandSet(command);
+        addToCommandSet(new SQLWithTaskId(SqlTaskIds.DELETE_FROM_CACHE, command));
     }
 
     public void executeImmediately() {
@@ -368,13 +364,12 @@ public class SearchUtil {
 
     public void addFileToCache(String path) {
         String command = "INSERT OR IGNORE INTO cache(PATH) VALUES(\"" + path + "\");";
-        addToCommandSet(command);
+        addToCommandSet(new SQLWithTaskId(SqlTaskIds.INSERT_TO_CACHE, command));
     }
 
     private void executeAllCommands(Statement stmt) {
         if (!commandSet.isEmpty()) {
-            status = EXECUTING;
-            ConcurrentLinkedQueue<String> commandQueue = new ConcurrentLinkedQueue<>(commandSet);
+            LinkedHashSet<SQLWithTaskId> tempCommandMap = new LinkedHashSet<>(commandSet);
             commandSet.clear();
             try {
                 if (AllConfigs.isDebug()) {
@@ -383,27 +378,29 @@ public class SearchUtil {
                     System.out.println("----------------------------------------------");
                 }
                 stmt.execute("BEGIN;");
-                for (String each : commandQueue) {
-                    stmt.execute(each);
+                for (SQLWithTaskId each : tempCommandMap) {
+                    stmt.execute(each.sql);
                 }
             } catch (SQLException e) {
                 if (AllConfigs.isDebug()) {
                     e.printStackTrace();
+                    for (SQLWithTaskId each : tempCommandMap) {
+                        System.err.println("执行失败：" + each.sql + "                 任务组：" + each.taskId);
+                    }
                 }
                 //不删除执行失败的记录
-                commandSet.addAll(commandQueue);
+                commandSet.addAll(tempCommandMap);
             } finally {
                 try {
                     stmt.execute("COMMIT;");
                 } catch (SQLException throwables) {
                     throwables.printStackTrace();
                 }
-                status = NORMAL;
             }
         }
     }
 
-    private void addToCommandSet(String sql) {
+    private void addToCommandSet(SQLWithTaskId sql) {
         if (commandSet.size() < MAX_SQL_NUM) {
             commandSet.add(sql);
         } else {
@@ -415,11 +412,11 @@ public class SearchUtil {
         }
     }
 
-    public int getStatus() {
+    public Enums.DatabaseStatus getStatus() {
         return status;
     }
 
-    public void setStatus(int status) {
+    public void setStatus(Enums.DatabaseStatus status) {
         this.status = status;
     }
 
@@ -460,15 +457,15 @@ public class SearchUtil {
             }
         }
         createAllIndex();
-        status = NORMAL;
+        status = Enums.DatabaseStatus.NORMAL;
         TaskBar.getInstance().showMessage(TranslateUtil.getInstance().getTranslation("Info"), TranslateUtil.getInstance().getTranslation("Search Done"));
     }
 
     private void createAllIndex() {
-        commandSet.add("CREATE INDEX IF NOT EXISTS cache_index ON cache(PATH);");
+        commandSet.add(new SQLWithTaskId(SqlTaskIds.CREATE_INDEX, "CREATE INDEX IF NOT EXISTS cache_index ON cache(PATH);"));
         for (int i = 0; i <= 40; ++i) {
             String createIndex = "CREATE INDEX IF NOT EXISTS list" + i + "_index ON list" + i + "(ASCII, PATH);";
-            commandSet.add(createIndex);
+            commandSet.add(new SQLWithTaskId(SqlTaskIds.CREATE_INDEX, createIndex));
         }
         executeImmediately();
     }
@@ -488,7 +485,7 @@ public class SearchUtil {
         }
         String command = "cmd.exe /c " + start + end;
         Runtime.getRuntime().exec(command, null, new File("user"));
-        waitForTask("fileSearcherUSN.exe");
+        waitForProcess("fileSearcherUSN.exe");
         try (BufferedWriter buffW = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("user/MFTSearchInfo.dat"), StandardCharsets.UTF_8))) {
             buffW.write("");
         }
@@ -514,7 +511,7 @@ public class SearchUtil {
         return false;
     }
 
-    private void waitForTask(String procName) throws IOException, InterruptedException {
+    private void waitForProcess(String procName) throws IOException, InterruptedException {
         StringBuilder strBuilder = new StringBuilder();
         while (isTaskExist(procName, strBuilder)) {
             TimeUnit.MILLISECONDS.sleep(10);
@@ -531,7 +528,7 @@ public class SearchUtil {
         String command = "cmd.exe /c " + start + end + " \"" + path + "\"" + " \"1\" " + "\"" + ignorePath + "\" " + "\"" + database.getAbsolutePath() + "\" " + "\"" + "1" + "\"";
         try {
             Runtime.getRuntime().exec(command, null, new File("user"));
-            waitForTask("fileSearcher.exe");
+            waitForProcess("fileSearcher.exe");
         } catch (IOException | InterruptedException e) {
             if (!(e instanceof InterruptedException) && AllConfigs.isDebug()) {
                 e.printStackTrace();
@@ -547,27 +544,90 @@ public class SearchUtil {
         File database = new File("data.db");
         String command = "cmd.exe /c " + start + end + " \"" + path + "\"" + " \"" + searchDepth + "\" " + "\"" + ignorePath + "\" " + "\"" + database.getAbsolutePath() + "\" " + "\"" + "0" + "\"";
         Runtime.getRuntime().exec(command, null, new File("user"));
-        waitForTask("fileSearcher.exe");
+        waitForProcess("fileSearcher.exe");
     }
 
     public void updateLists(String ignorePath, int searchDepth) {
         TaskBar.getInstance().showMessage(TranslateUtil.getInstance().getTranslation("Info"), TranslateUtil.getInstance().getTranslation("Updating file index"));
-        clearAllTablesAndIndex();
+        recreateDatabase();
+        waitForCommandSet(SqlTaskIds.CREATE_TABLE);
         searchFile(ignorePath, searchDepth);
     }
 
-    private void clearAllTablesAndIndex() {
-        commandSet.clear();
-        //删除所有表和索引
-        for (int i = 0; i <= 40; i++) {
-            commandSet.add("DROP TABLE IF EXISTS list" + i + ";");
-            commandSet.add("DROP INDEX IF EXISTS list" + i + "_index;");
-        }
-        executeImmediately();
+    private void waitForCommandSet(SqlTaskIds taskId) {
         try {
-            SQLiteUtil.createAllTables();
-        } catch (Exception e) {
-            e.printStackTrace();
+            int count = 0;
+            while (AllConfigs.isNotMainExit()) {
+                count++;
+                //等待10s
+                if (count > 1000) {
+                    System.err.println("等待SQL语句任务" + taskId + "处理超时");
+                    break;
+                }
+                //判断commandSet中是否还有taskId存在
+                if (!isTaskExistInCommandSet(taskId)) {
+                    break;
+                }
+                TimeUnit.MILLISECONDS.sleep(10);
+            }
+        }catch (InterruptedException ignored) {
         }
     }
+
+    private boolean isTaskExistInCommandSet(SqlTaskIds taskId) {
+        for (SQLWithTaskId tasks : commandSet) {
+            if (tasks.taskId == taskId) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void recreateDatabase() {
+        commandSet.clear();
+        //删除所有表和索引
+
+        for (int i = 0; i <= 40; i++) {
+            commandSet.add(new SQLWithTaskId(SqlTaskIds.DROP_TABLE, "DROP TABLE IF EXISTS list" + i + ";"));
+            commandSet.add(new SQLWithTaskId(SqlTaskIds.DROP_INDEX, "DROP INDEX IF EXISTS list" + i + "_index;"));
+        }
+        //创建新表
+        String sql = "CREATE TABLE IF NOT EXISTS list";
+        for (int i = 0; i <= 40; i++) {
+            String command = sql + i + " " + "(ASCII INT, PATH text unique)" + ";";
+            commandSet.add(new SQLWithTaskId(SqlTaskIds.CREATE_TABLE, command));
+        }
+        executeImmediately();
+    }
+
+    /**
+     * 只在Main方法第一次初始化时使用，之后的操作交给commandSet托管
+     */
+    public static void createAllTables() throws Exception {
+        String sql = "CREATE TABLE IF NOT EXISTS list";
+        try (Statement stmt = SQLiteUtil.getStatement()) {
+            stmt.execute("BEGIN;");
+            for (int i = 0; i <= 40; i++) {
+                String command = sql + i + " " + "(ASCII INT, PATH text unique)" + ";";
+                stmt.executeUpdate(command);
+            }
+            stmt.execute("COMMIT;");
+        }
+    }
+
+    private static class SQLWithTaskId {
+        private final String sql;
+        private final SqlTaskIds taskId;
+
+        private SQLWithTaskId(SqlTaskIds taskId, String sql) {
+            this.sql = sql;
+            this.taskId = taskId;
+        }
+    }
+
+    private enum SqlTaskIds {
+        DELETE_FROM_LIST, DELETE_FROM_CACHE, INSERT_TO_LIST, INSERT_TO_CACHE,
+        CREATE_INDEX, CREATE_TABLE, DROP_TABLE, DROP_INDEX
+    }
 }
+
