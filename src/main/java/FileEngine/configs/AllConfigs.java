@@ -9,7 +9,6 @@ import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.serializer.SerializerFeature;
 
 import java.io.*;
-import java.net.Proxy;
 import java.nio.charset.StandardCharsets;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -777,14 +776,14 @@ public class AllConfigs {
             if (settingsInJson.containsKey("proxyType")) {
                 proxyType = settingsInJson.getInteger("proxyType");
             } else {
-                proxyType = AllConfigs.ProxyType.PROXY_DIRECT;
+                proxyType = Enums.ProxyType.PROXY_DIRECT;
             }
         } else {
             proxyAddress = "";
             proxyPort = 0;
             proxyUserName = "";
             proxyPassword = "";
-            proxyType = ProxyType.PROXY_DIRECT;
+            proxyType = Enums.ProxyType.PROXY_DIRECT;
         }
     }
 
@@ -923,48 +922,5 @@ public class AllConfigs {
         } catch (IOException e) {
             return false;
         }
-    }
-
-    public enum DownloadStatus {
-        DOWNLOAD_DONE, DOWNLOAD_ERROR, DOWNLOAD_DOWNLOADING, DOWNLOAD_INTERRUPTED, DOWNLOAD_NO_TASK
-    }
-
-    public static class ProxyInfo {
-        public final String address;
-        public final int port;
-        public final String userName;
-        public final String password;
-        public final Proxy.Type type;
-
-        private ProxyInfo(String proxyAddress, int proxyPort, String proxyUserName, String proxyPassword, int proxyType) {
-            this.address = proxyAddress;
-            this.port = proxyPort;
-            this.userName = proxyUserName;
-            this.password = proxyPassword;
-            if (ProxyType.PROXY_HTTP == proxyType) {
-                this.type = Proxy.Type.HTTP;
-            } else if (ProxyType.PROXY_SOCKS == proxyType) {
-                this.type = Proxy.Type.SOCKS;
-            } else {
-                this.type = Proxy.Type.DIRECT;
-            }
-        }
-    }
-
-    public static class ShowingSearchBarMode {
-        public static final int NORMAL_SHOWING = 0;
-        public static final int EXPLORER_ATTACH = 1;
-    }
-
-    public static class RunningMode {
-        public static final int NORMAL_MODE = 2;
-        public static final int COMMAND_MODE = 3;
-        public static final int PLUGIN_MODE = 4;
-    }
-
-    public static class ProxyType {
-        public static final int PROXY_HTTP = 0x100;
-        public static final int PROXY_SOCKS = 0x200;
-        public static final int PROXY_DIRECT = 0x300;
     }
 }

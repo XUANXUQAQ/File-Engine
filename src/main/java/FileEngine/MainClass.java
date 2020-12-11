@@ -3,6 +3,7 @@ package FileEngine;
 import FileEngine.SQLiteConfig.SQLiteUtil;
 import FileEngine.checkHotkey.CheckHotKeyUtil;
 import FileEngine.configs.AllConfigs;
+import FileEngine.configs.Enums;
 import FileEngine.daemon.DaemonUtil;
 import FileEngine.dllInterface.FileMonitor;
 import FileEngine.frames.PluginMarket;
@@ -76,7 +77,7 @@ public class MainClass {
         try (Statement stmt = SQLiteUtil.getStatement()) {
             for (String tableName : tableNames) {
                 String sql = "SELECT PATH FROM " + tableName + ";";
-                stmt.execute(sql);
+                stmt.executeQuery(sql);
             }
             return true;
         } catch (Exception e) {
@@ -149,7 +150,7 @@ public class MainClass {
             if (isDatabaseDamaged()) {
                 System.out.println("无data文件，正在搜索并重建");
                 //初始化数据库
-                SQLiteUtil.createAllTables();
+                SearchUtil.createAllTables();
                 isManualUpdate = true;
             }
 
@@ -179,7 +180,7 @@ public class MainClass {
             SearchUtil search = SearchUtil.getInstance();
 
             if (isManualUpdate) {
-                search.setStatus(SearchUtil.MANUAL_UPDATE);
+                search.setStatus(Enums.DatabaseStatus.MANUAL_UPDATE);
             }
 
             TranslateUtil translateUtil = TranslateUtil.getInstance();
