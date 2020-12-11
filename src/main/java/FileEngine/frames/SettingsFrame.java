@@ -786,6 +786,7 @@ public class SettingsFrame {
                             if (AllConfigs.isDebug()) {
                                 System.out.println("结束优化");
                             }
+                            System.gc();
                             SearchUtil.getInstance().setStatus(Enums.DatabaseStatus.NORMAL);
                         }
                     });
