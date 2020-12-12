@@ -2889,35 +2889,32 @@ public class SearchBar {
         if (searchCase == null || searchCase.length == 0) {
             return isMatched(path, true);
         } else {
-            if (isMatched(path, true)) {
-                for (String eachCase : searchCase) {
-                    switch (eachCase) {
-                        case "f":
-                            if (!isFile(path)) {
-                                return false;
-                            }
-                            break;
-                        case "d":
-                            if (!isDirectory(path)) {
-                                return false;
-                            }
-                            break;
-                        case "full":
-                            if (!getFileName(path).equalsIgnoreCase(searchText)) {
-                                return false;
-                            }
-                            break;
-                        case "case":
-                            if (!isMatched(path, false)) {
-                                return false;
-                            }
-                    }
+            for (String eachCase : searchCase) {
+                switch (eachCase) {
+                    case "f":
+                        if (isMatched(path, true) && !isFile(path)) {
+                            return false;
+                        }
+                        break;
+                    case "d":
+                        if (isMatched(path, true) && !isDirectory(path)) {
+                            return false;
+                        }
+                        break;
+                    case "full":
+                        if (isMatched(path, true) && !getFileName(path).equalsIgnoreCase(searchText)) {
+                            return false;
+                        }
+                        break;
+                    case "case":
+                        if (!isMatched(path, false)) {
+                            return false;
+                        }
                 }
-                //所有规则均已匹配
-                return true;
             }
+            //所有规则均已匹配
+            return true;
         }
-        return false;
     }
 
     /**
