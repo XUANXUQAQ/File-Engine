@@ -2892,17 +2892,17 @@ public class SearchBar {
             for (String eachCase : searchCase) {
                 switch (eachCase) {
                     case "f":
-                        if (isMatched(path, true) && !isFile(path)) {
+                        if (!isMatched(path, true) || !isFile(path)) {
                             return false;
                         }
                         break;
                     case "d":
-                        if (isMatched(path, true) && !isDirectory(path)) {
+                        if (!isMatched(path, true) || !isDirectory(path)) {
                             return false;
                         }
                         break;
                     case "full":
-                        if (isMatched(path, true) && !getFileName(path).equalsIgnoreCase(searchText)) {
+                        if (!isMatched(path, true) || !getFileName(path).equalsIgnoreCase(searchText)) {
                             return false;
                         }
                         break;
