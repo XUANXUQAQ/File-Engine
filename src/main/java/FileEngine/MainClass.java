@@ -76,7 +76,7 @@ public class MainClass {
     private static boolean isTableExist(ArrayList<String> tableNames) {
         try (Statement stmt = SQLiteUtil.getStatement()) {
             for (String tableName : tableNames) {
-                String sql = "SELECT PATH FROM " + tableName + ";";
+                String sql = "SELECT ASCII, PATH FROM " + tableName + ";";
                 stmt.executeQuery(sql);
             }
             return true;
