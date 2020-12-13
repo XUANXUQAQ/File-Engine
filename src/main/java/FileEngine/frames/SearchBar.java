@@ -2775,9 +2775,6 @@ public class SearchBar {
                             if (count > 3000) {
                                 break;
                             }
-                            if (AllConfigs.isDebug()) {
-                                System.out.println("添加" + filesToAdd);
-                            }
                         }
                     }
                     TimeUnit.MILLISECONDS.sleep(1);
@@ -2805,9 +2802,6 @@ public class SearchBar {
                             count++;
                             if (count > 3000) {
                                 break;
-                            }
-                            if (AllConfigs.isDebug()) {
-                                System.out.println("删除" + filesToRemove);
                             }
                         }
                     }
@@ -3022,17 +3016,18 @@ public class SearchBar {
         }
         if (isExist(path)){
             label.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>" + getParentPath(path) + "</body></html>");
+            ImageIcon icon = GetIconUtil.getInstance().getBigIcon(path, iconSideLength, iconSideLength);
+            label.setIcon(icon);
+            label.setBorder(border);
+            if (isChosen) {
+                setLabelChosen(label);
+            } else {
+                setLabelNotChosen(label);
+            }
         } else {
             search.removeFileFromDatabase(path);
-            label.setText(TranslateUtil.getInstance().getTranslation("File not exist"));
-        }
-        ImageIcon icon = GetIconUtil.getInstance().getBigIcon(path, iconSideLength, iconSideLength);
-        label.setIcon(icon);
-        label.setBorder(border);
-        if (isChosen) {
-            setLabelChosen(label);
-        } else {
-            setLabelNotChosen(label);
+            listResults.remove(path);
+            listResultsNum.decrementAndGet();
         }
     }
 
