@@ -50,14 +50,12 @@ public class SearchUtil {
         return SearchUtilBuilder.INSTANCE;
     }
 
-    private void addDeleteSqlCommandByAscii(int asciiGroup, String path) {
+    private void addDeleteSqlCommandByAscii(int asciiSum, String path) {
         String command;
+        int asciiGroup = asciiSum / 100;
         int tempAscii;
         for (int i = 0; i < 3; i++) {
             //计算ascii可能有误差，因此需要在多个表中尝试删除
-            if (asciiGroup > 39) {
-                break;
-            }
             tempAscii = asciiGroup + i -1;
             switch (tempAscii) {
                 case 0:
@@ -186,6 +184,9 @@ public class SearchUtil {
                 default:
                     command = null;
                     break;
+            }
+            if (asciiGroup > 39) {
+                break;
             }
             if (command != null && isCommandNotRepeat(command)) {
                 addToCommandSet(new SQLWithTaskId(SqlTaskIds.DELETE_FROM_LIST, command));
@@ -350,19 +351,27 @@ public class SearchUtil {
 
     public void removeFileFromDatabase(String path) {
         int asciiSum = getAscIISum(getFileName(path));
-        int asciiGroup = asciiSum / 100;
-        addDeleteSqlCommandByAscii(asciiGroup, path);
+        addDeleteSqlCommandByAscii(asciiSum, path);
         if (AllConfigs.isDebug()) {
-            System.out.println("删除" + path + "," + "asciiGroup为" + asciiGroup);
+            System.out.println("删除" + path + "," + "asciiSum为" + asciiSum);
         }
     }
 
     public void addFileToDatabase(String path) {
         int asciiSum = getAscIISum(getFileName(path));
-        int asciiGroup = asciiSum / 100;
-        addAddSqlCommandByAscii(asciiGroup, path);
+        addAddSqlCommandByAscii(asciiSum, path);
         if (AllConfigs.isDebug()) {
-            System.out.println("添加" + path + "," + "asciiGroup为" + asciiGroup);
+            System.out.println("添加" + path + "," + "asciiSum为" + asciiSum);
+        }
+    }
+
+    public void addFileToCache(String path) {
+        String command = "INSERT OR IGNORE INTO cache(PATH) VALUES(\"" + path + "\");";
+        if (isCommandNotRepeat(command)) {
+            addToCommandSet(new SQLWithTaskId(SqlTaskIds.INSERT_TO_CACHE, command));
+            if (AllConfigs.isDebug()) {
+                System.out.println("添加" + path + "到缓存");
+            }
         }
     }
 
@@ -378,16 +387,6 @@ public class SearchUtil {
 
     public void executeImmediately() {
         isExecuteImmediately = true;
-    }
-
-    public void addFileToCache(String path) {
-        String command = "INSERT OR IGNORE INTO cache(PATH) VALUES(\"" + path + "\");";
-        if (isCommandNotRepeat(command)) {
-            addToCommandSet(new SQLWithTaskId(SqlTaskIds.INSERT_TO_CACHE, command));
-            if (AllConfigs.isDebug()) {
-                System.out.println("添加" + path + "到缓存");
-            }
-        }
     }
 
     private void executeAllCommands(Statement stmt) {
@@ -408,7 +407,7 @@ public class SearchUtil {
                 if (AllConfigs.isDebug()) {
                     e.printStackTrace();
                     for (SQLWithTaskId each : tempCommandMap) {
-                        System.err.println("执行失败：" + each.sql + "                 任务组：" + each.taskId);
+                        System.err.println("执行失败：" + each.sql + "----------------任务组：" + each.taskId);
                     }
                 }
                 //不删除执行失败的记录

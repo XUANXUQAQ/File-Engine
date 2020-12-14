@@ -2931,13 +2931,17 @@ public class SearchBar {
     private void checkIsMatchedAndAddToList(String path, boolean isPutToTemp) {
         if (check(path)) {
             if (isResultNotRepeat(path)) {
-                //字符串匹配通过
-                if (isPutToTemp) {
-                    tempResultNum.incrementAndGet();
-                    tempResults.add(path);
+                if (isExist(path)) {
+                    //字符串匹配通过
+                    if (isPutToTemp) {
+                        tempResultNum.incrementAndGet();
+                        tempResults.add(path);
+                    } else {
+                        listResultsNum.incrementAndGet();
+                        listResults.add(path);
+                    }
                 } else {
-                    listResultsNum.incrementAndGet();
-                    listResults.add(path);
+                    search.removeFileFromDatabase(path);
                 }
             }
         }
@@ -2957,13 +2961,12 @@ public class SearchBar {
         }
         String sql;
         //为label添加结果
-        sql = "SELECT PATH FROM " + eachColumn + ";";
+        sql = "SELECT PATH FROM " + eachColumn + " ORDER BY ASCII " + ";";
 
         try (PreparedStatement stmt = SQLiteUtil.getPreparedStatement(sql);
              ResultSet resultSet = stmt.executeQuery()) {
 
             String each;
-
             while (resultSet.next()) {
                 //结果太多则不再进行搜索
                 //用户重新输入了信息
@@ -2975,7 +2978,6 @@ public class SearchBar {
                 if (search.getStatus() == Enums.DatabaseStatus.NORMAL) {
                     checkIsMatchedAndAddToList(each, true);
                 }
-
             }
         } catch (SQLException throwables) {
             System.err.println("error sql : " + sql);
@@ -3016,18 +3018,16 @@ public class SearchBar {
         }
         if (isExist(path)){
             label.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>" + getParentPath(path) + "</body></html>");
-            ImageIcon icon = GetIconUtil.getInstance().getBigIcon(path, iconSideLength, iconSideLength);
-            label.setIcon(icon);
-            label.setBorder(border);
-            if (isChosen) {
-                setLabelChosen(label);
-            } else {
-                setLabelNotChosen(label);
-            }
         } else {
-            search.removeFileFromDatabase(path);
-            listResults.remove(path);
-            listResultsNum.decrementAndGet();
+            label.setText(TranslateUtil.getInstance().getTranslation("File not exist"));
+        }
+        ImageIcon icon = GetIconUtil.getInstance().getBigIcon(path, iconSideLength, iconSideLength);
+        label.setIcon(icon);
+        label.setBorder(border);
+        if (isChosen) {
+            setLabelChosen(label);
+        } else {
+            setLabelNotChosen(label);
         }
     }
 
