@@ -36,10 +36,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
@@ -84,7 +81,7 @@ public class SearchBar {
     private final int iconSideLength;
     private volatile long visibleStartTime = 0;  //记录窗口开始可见的事件，窗口默认最短可见时间0.5秒，防止窗口快速闪烁
     private volatile long firstResultStartShowingTime = 0;  //记录开始显示结果的时间，用于防止刚开始移动到鼠标导致误触
-    private final Set<String> tempResults;  //在优先文件夹和数据库cache未搜索完时暂时保存结果，搜索完后会立即被转移到listResults
+    private final ConcurrentSkipListSet<String> tempResults;  //在优先文件夹和数据库cache未搜索完时暂时保存结果，搜索完后会立即被转移到listResults
     private final ConcurrentLinkedQueue<String> commandQueue;  //保存需要被执行的sql语句
     private final CopyOnWriteArrayList<String> listResults;  //保存从数据库中找出符合条件的记录（文件路径）
     private volatile String[] searchCase;
@@ -104,7 +101,7 @@ public class SearchBar {
 
     private SearchBar() {
         listResults = new CopyOnWriteArrayList<>();
-        tempResults = ConcurrentHashMap.newKeySet();
+        tempResults = new ConcurrentSkipListSet<>();
         commandQueue = new ConcurrentLinkedQueue<>();
         searchBar = new JFrame();
         R.getInstance().addComponent("searchbar", searchBar);
@@ -2936,7 +2933,7 @@ public class SearchBar {
      * @param path        文件路径
      * @param isPutToTemp 是否放到临时容器，在搜索优先文件夹和cache时为false，其他为true
      */
-    private void checkIsMatchedAndAddToList(String path, boolean isPutToTemp) {
+    private void checkIsMatchedAndAddToList(String path, boolean isPutToTemp, boolean isResultFromCache) {
         if (check(path)) {
             if (isResultNotRepeat(path)) {
                 if (isExist(path)) {
@@ -2949,7 +2946,11 @@ public class SearchBar {
                         listResults.add(path);
                     }
                 } else {
-                    search.removeFileFromDatabase(path);
+                    if (isResultFromCache) {
+                        search.removeFileFromCache(path);
+                    } else {
+                        search.removeFileFromDatabase(path);
+                    }
                 }
             }
         }
@@ -2984,7 +2985,7 @@ public class SearchBar {
                 }
                 each = resultSet.getString("PATH");
                 if (search.getStatus() == Enums.DatabaseStatus.NORMAL) {
-                    checkIsMatchedAndAddToList(each, true);
+                    checkIsMatchedAndAddToList(each, true, false);
                 }
             }
         } catch (SQLException throwables) {
@@ -3024,11 +3025,7 @@ public class SearchBar {
         if (name.length() >= 32) {
             name = name.substring(0, 32) + "...";
         }
-        if (isExist(path)){
-            label.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>" + getParentPath(path) + "</body></html>");
-        } else {
-            label.setText(TranslateUtil.getInstance().getTranslation("File not exist"));
-        }
+        label.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>" + getParentPath(path) + "</body></html>");
         ImageIcon icon = GetIconUtil.getInstance().getBigIcon(path, iconSideLength, iconSideLength);
         label.setIcon(icon);
         label.setBorder(border);
@@ -3205,22 +3202,24 @@ public class SearchBar {
      * @param path 文件路径
      */
     private void openWithAdmin(String path) {
-        File name = new File(path);
-        if (name.exists()) {
+        File file = new File(path);
+        if (file.exists()) {
             try {
-                String command = name.getAbsolutePath();
+                String command = file.getAbsolutePath();
                 String start = "cmd.exe /c start " + command.substring(0, 2);
                 String end = "\"" + command.substring(2) + "\"";
-                Runtime.getRuntime().exec(start + end, null, name.getParentFile());
+                Runtime.getRuntime().exec(start + end, null, file.getParentFile());
             } catch (IOException e) {
                 //打开上级文件夹
                 try {
-                    openFolderByExplorerWithException(name.getAbsolutePath());
+                    openFolderByExplorerWithException(file.getAbsolutePath());
                 } catch (IOException e1) {
                     JOptionPane.showMessageDialog(null, TranslateUtil.getInstance().getTranslation("Execute failed"));
                     e.printStackTrace();
                 }
             }
+        } else {
+            JOptionPane.showMessageDialog(null, TranslateUtil.getInstance().getTranslation("File not exist"));
         }
     }
 
@@ -3263,10 +3262,10 @@ public class SearchBar {
     private void openWithoutAdmin(String path) {
         File file = new File(path);
         String pathLower = path.toLowerCase();
+        Desktop desktop;
         if (file.exists()) {
             try {
                 if (pathLower.endsWith(".url")) {
-                    Desktop desktop;
                     if (Desktop.isDesktopSupported()) {
                         desktop = Desktop.getDesktop();
                         desktop.open(new File(path));
@@ -3281,7 +3280,6 @@ public class SearchBar {
                         } else {
                             command = "start " + path.substring(0, 2) + "\"" + path.substring(2) + "\"";
                         }
-
                         String vbsFilePath = generateBatAndVbsFile(command, System.getProperty("java.io.tmpdir"), getParentPath(path));
                         Runtime.getRuntime().exec("explorer.exe " + vbsFilePath.substring(0, 2) + "\"" + vbsFilePath.substring(2) + "\"");
                     } else {
@@ -3293,6 +3291,8 @@ public class SearchBar {
                 e.printStackTrace();
                 openFolderByExplorer(path);
             }
+        } else {
+            JOptionPane.showMessageDialog(null, TranslateUtil.getInstance().getTranslation("File not exist"));
         }
     }
 
@@ -3348,11 +3348,7 @@ public class SearchBar {
              ResultSet resultSet = statement.executeQuery()) {
             while (resultSet.next()) {
                 String eachCache = resultSet.getString("PATH");
-                if (!(isExist(eachCache))) {
-                    search.removeFileFromCache(eachCache);
-                } else {
-                    checkIsMatchedAndAddToList(eachCache, false);
-                }
+                checkIsMatchedAndAddToList(eachCache, false, true);
             }
         } catch (Exception throwables) {
             if (AllConfigs.isDebug()) {
@@ -3407,7 +3403,7 @@ public class SearchBar {
             File[] files = path.listFiles();
             if (!(null == files || files.length == 0)) {
                 for (File each : files) {
-                    checkIsMatchedAndAddToList(each.getAbsolutePath(), false);
+                    checkIsMatchedAndAddToList(each.getAbsolutePath(), false, false);
                     if (each.isDirectory()) {
                         listRemain.add(each.getAbsolutePath());
                     }
@@ -3423,7 +3419,7 @@ public class SearchBar {
                                 File[] allFiles = new File(remain).listFiles();
                                 if (!(allFiles == null || allFiles.length == 0)) {
                                     for (File each : allFiles) {
-                                        checkIsMatchedAndAddToList(each.getAbsolutePath(), false);
+                                        checkIsMatchedAndAddToList(each.getAbsolutePath(), false, false);
                                         if (startTime > startSearchTime) {
                                             listRemain.clear();
                                             break;
