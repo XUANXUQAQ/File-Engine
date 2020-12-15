@@ -22,9 +22,8 @@ public class TaskBar {
     private SystemTray systemTray;
     private final ConcurrentLinkedQueue<MessageStruct> messageQueue = new ConcurrentLinkedQueue<>();
 
-    private static class TaskBarBuilder {
-        private static final TaskBar INSTANCE = new TaskBar();
-    }
+    private static volatile TaskBar INSTANCE = null;
+
 
     private static class MessageStruct {
         private final String caption;
@@ -58,7 +57,14 @@ public class TaskBar {
     }
 
     public static TaskBar getInstance() {
-        return TaskBarBuilder.INSTANCE;
+        if (INSTANCE == null) {
+            synchronized (TaskBar.class) {
+                if (INSTANCE == null) {
+                    INSTANCE = new TaskBar();
+                }
+            }
+        }
+        return INSTANCE;
     }
 
     public void showTaskBar() {

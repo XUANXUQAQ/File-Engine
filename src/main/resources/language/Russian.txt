@@ -152,3 +152,4 @@ Failed to save settings, do you still close the window=Не удалось со�
 The identifier you entered is too short, continue=Введенный вами идентификатор слишком короткий, продолжить
 Update=Обновить
 File not exist=файл не существует
+change theme=Менять тему

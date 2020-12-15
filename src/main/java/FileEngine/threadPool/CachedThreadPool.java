@@ -10,16 +10,19 @@ public class CachedThreadPool {
             TimeUnit.SECONDS,
             new SynchronousQueue<>());
 
+    private static volatile CachedThreadPool INSTANCE = null;
 
-    private static class CachedThreadPoolBuilder {
-        private static final CachedThreadPool INSTANCE = new CachedThreadPool();
-    }
-
-    private CachedThreadPool() {
-    }
+    private CachedThreadPool() {}
 
     public static CachedThreadPool getInstance() {
-        return CachedThreadPoolBuilder.INSTANCE;
+        if (INSTANCE == null) {
+            synchronized (CachedThreadPool.class) {
+                if (INSTANCE == null) {
+                    INSTANCE = new CachedThreadPool();
+                }
+            }
+        }
+        return INSTANCE;
     }
 
     public void executeTask(Runnable todo) {

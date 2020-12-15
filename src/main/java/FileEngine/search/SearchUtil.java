@@ -25,9 +25,7 @@ public class SearchUtil {
 
     private static final int MAX_SQL_NUM = 5000;
 
-    private static class SearchUtilBuilder {
-        private static final SearchUtil INSTANCE = new SearchUtil();
-    }
+    private static volatile SearchUtil INSTANCE = null;
 
     private SearchUtil() {
         CachedThreadPool.getInstance().executeTask(() -> {
@@ -47,7 +45,14 @@ public class SearchUtil {
     }
 
     public static SearchUtil getInstance() {
-        return SearchUtilBuilder.INSTANCE;
+        if (INSTANCE == null) {
+            synchronized (SearchUtil.class) {
+                if (INSTANCE == null) {
+                    INSTANCE = new SearchUtil();
+                }
+            }
+        }
+        return INSTANCE;
     }
 
     private void addDeleteSqlCommandByAscii(int asciiSum, String path) {

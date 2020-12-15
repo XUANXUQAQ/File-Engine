@@ -152,3 +152,4 @@ Failed to save settings, do you still close the window=保存設置失敗，是�
 The identifier you entered is too short, continue=您輸入的標識符太短，是否繼續
 Update=更新
 File not exist=檔案不存在
+change theme=更改主題

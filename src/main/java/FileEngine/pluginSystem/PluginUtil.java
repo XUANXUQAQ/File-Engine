@@ -27,12 +27,17 @@ public class PluginUtil {
         public final Object clsInstance;
     }
 
-    private static class PluginUtilBuilder {
-        private static final PluginUtil INSTANCE = new PluginUtil();
-    }
+    private static volatile PluginUtil INSTANCE = null;
 
     public static PluginUtil getInstance() {
-        return PluginUtilBuilder.INSTANCE;
+        if (INSTANCE == null) {
+            synchronized (PluginUtil.class) {
+                if (INSTANCE == null) {
+                    INSTANCE = new PluginUtil();
+                }
+            }
+        }
+        return INSTANCE;
     }
 
     private PluginUtil() {}

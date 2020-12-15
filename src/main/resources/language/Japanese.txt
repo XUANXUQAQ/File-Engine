@@ -152,3 +152,4 @@ Failed to save settings, do you still close the window=設定の保存に失敗�
 The identifier you entered is too short, continue=入力した識別子が短すぎます。続行してください
 Update=更新
 File not exist=ファイルは存在しません
+change theme=テーマを変更する

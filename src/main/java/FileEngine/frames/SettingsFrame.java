@@ -8,6 +8,7 @@ import FileEngine.download.DownloadUtil;
 import FileEngine.moveFiles.MoveDesktopFiles;
 import FileEngine.pluginSystem.Plugin;
 import FileEngine.pluginSystem.PluginUtil;
+import FileEngine.r.R;
 import FileEngine.search.SearchUtil;
 import FileEngine.threadPool.CachedThreadPool;
 import FileEngine.translate.TranslateUtil;
@@ -23,6 +24,7 @@ import java.nio.charset.StandardCharsets;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -70,7 +72,6 @@ public class SettingsFrame {
     private JButton buttonDelCmd;
     private JScrollPane scrollPaneCmd;
     private JList<Object> listCmds;
-    private JButton buttonSave;
     private JLabel labelAbout;
     private JLabel labelAboutGithub;
     private JLabel labelGitHubTip;
@@ -197,6 +198,13 @@ public class SettingsFrame {
     private JCheckBox checkBoxIsShowTipOnCreatingLnk;
     private JLabel labelPlaceHolder15;
     private JLabel labelPlaceHolder12;
+    private JLabel labelPlaceHolder;
+    private JList<Object> listSwingThemes;
+    private JScrollPane paneSwingThemes;
+    private JButton buttonChangeTheme;
+    private JLabel labelRemoveDesktop;
+    private JLabel labelPlaceHolder2;
+    private JLabel labelPlaceHolder3;
 
     private static class SettingsFrameBuilder {
         private static final SettingsFrame instance = new SettingsFrame();
@@ -210,7 +218,7 @@ public class SettingsFrame {
         frame.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                String errors = saveChanges(false);
+                String errors = saveChanges();
                 if (!errors.isEmpty()) {
                     int ret = JOptionPane.showConfirmDialog(null,
                             TranslateUtil.getInstance().getTranslation("Errors") + ":\n" + errors + "\n" +
@@ -419,10 +427,6 @@ public class SettingsFrame {
             }
 
         });
-    }
-
-    private void addButtonSaveListener() {
-        buttonSave.addActionListener(e -> saveChanges(true));
     }
 
     private void addGitHubLabelListener() {
@@ -702,6 +706,12 @@ public class SettingsFrame {
         });
     }
 
+    private void addButtonChangeThemeListener() {
+        //移除显示theme框，改为弹出窗口
+        tabGeneral.remove(paneSwingThemes);
+        buttonChangeTheme.addActionListener(e -> JOptionPane.showMessageDialog(frame, paneSwingThemes, "Theme", JOptionPane.PLAIN_MESSAGE));
+    }
+
     private void addButtonDeleteCacheListener() {
         buttonDeleteCache.addActionListener(e -> {
             String cache = (String) listCache.getSelectedValue();
@@ -832,6 +842,16 @@ public class SettingsFrame {
         buttonPluginMarket.addActionListener(e -> {
             PluginMarket pluginMarket = PluginMarket.getInstance();
             pluginMarket.showWindow();
+        });
+    }
+
+    private void addSwingThemePreviewListener() {
+        listSwingThemes.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                String swingTheme = (String) listSwingThemes.getSelectedValue();
+                AllConfigs.setSwingPreview(swingTheme);
+            }
         });
     }
 
@@ -1011,6 +1031,12 @@ public class SettingsFrame {
         Object[] plugins = PluginUtil.getInstance().getPluginNameArray();
         listPlugins.setListData(plugins);
         listCache.setListData(cacheSet.toArray());
+        ArrayList<String> list = new ArrayList<>();
+        for (Enums.SwingThemes each : Enums.SwingThemes.values()) {
+            list.add(each.toString());
+        }
+        listSwingThemes.setListData(list.toArray());
+        listSwingThemes.setSelectedValue(AllConfigs.getSwingTheme(), true);
     }
 
     private void initGUI() {
@@ -1021,10 +1047,7 @@ public class SettingsFrame {
         setTextFieldAndTextAreaGui();
         setCheckBoxGui();
 
-        Color color = new Color(43,123,80);
-
         buttonUpdatePlugin.setVisible(false);
-        buttonUpdatePlugin.setBackground(color);
 
         if (AllConfigs.getProxyType() == Enums.ProxyType.PROXY_DIRECT) {
             radioButtonNoProxy.setSelected(true);
@@ -1071,8 +1094,11 @@ public class SettingsFrame {
     }
 
     private SettingsFrame() {
+        R.getInstance().addComponent("settings-frame", frame);
         frame.setUndecorated(true);
         frame.getRootPane().setWindowDecorationStyle(JRootPane.FRAME);
+
+        tabbedPane.setBackground(new Color(0,0,0,0));
 
         frameIcon = new ImageIcon(SettingsFrame.class.getResource("/icons/frame.png"));
         ButtonGroup proxyButtonGroup = new ButtonGroup();
@@ -1117,8 +1143,6 @@ public class SettingsFrame {
 
         addButtonDelCMDListener();
 
-        addButtonSaveListener();
-
         addGitHubLabelListener();
 
         addCheckForUpdateButtonListener();
@@ -1135,6 +1159,8 @@ public class SettingsFrame {
 
         addButtonViewPluginMarketListener();
 
+        addSwingThemePreviewListener();
+
         addPluginOfficialSiteListener();
 
         addButtonVacuumListener();
@@ -1142,6 +1168,8 @@ public class SettingsFrame {
         addButtonProxyListener();
 
         addButtonDeleteCacheListener();
+
+        addButtonChangeThemeListener();
 
         addButtonDeleteAllCacheListener();
 
@@ -1297,6 +1325,7 @@ public class SettingsFrame {
         labelUninstallPluginTip.setText(TranslateUtil.getInstance().getTranslation("If you need to delete a plug-in, just delete it under the \"plugins\" folder in the software directory."));
         labelUninstallPluginTip2.setText(TranslateUtil.getInstance().getTranslation("Tip:"));
         chooseUpdateAddressLabel.setText(TranslateUtil.getInstance().getTranslation("Choose update address"));
+        labelRemoveDesktop.setText(TranslateUtil.getInstance().getTranslation("Backup and remove all desktop files") + ":");
     }
 
     private void translateCheckBoxs() {
@@ -1315,11 +1344,11 @@ public class SettingsFrame {
         buttonDelCmd.setText(TranslateUtil.getInstance().getTranslation("Delete"));
         buttonResetColor.setText(TranslateUtil.getInstance().getTranslation("Reset to default"));
         buttonCheckUpdate.setText(TranslateUtil.getInstance().getTranslation("Check for update"));
-        buttonSave.setText(TranslateUtil.getInstance().getTranslation("Save"));
         buttonUpdatePlugin.setText(TranslateUtil.getInstance().getTranslation("Check for update"));
         buttonPluginMarket.setText(TranslateUtil.getInstance().getTranslation("Plugin Market"));
         buttonDeleteCache.setText(TranslateUtil.getInstance().getTranslation("Delete cache"));
         buttonDeleteAllCache.setText(TranslateUtil.getInstance().getTranslation("Delete all"));
+        buttonChangeTheme.setText(TranslateUtil.getInstance().getTranslation("change theme"));
         buttonVacuum.setText(TranslateUtil.getInstance().getTranslation("Optimize database"));
     }
 
@@ -1433,8 +1462,6 @@ public class SettingsFrame {
 
         tabbedPane.setSelectedIndex(0);
         frame.setLocationRelativeTo(null);
-        float transparency = AllConfigs.getTransparency();
-        frame.setOpacity(transparency < 0.6f ? 0.95f : transparency);
         frame.setVisible(true);
     }
 
@@ -1592,32 +1619,29 @@ public class SettingsFrame {
         }
     }
 
-    private String saveChanges(boolean isPopErrorWindow) {
-        StringBuilder strBuilder = new StringBuilder();
+    private String saveChanges() {
+        StringBuilder errorsStrb = new StringBuilder();
 
-        checkProxy(strBuilder);
-        checkSearchBarColor(strBuilder);
-        checkSearchBarFontColor(strBuilder);
-        checkLabelColor(strBuilder);
-        checkLabelFontColor(strBuilder);
-        checkLabelFontColorWithCoverage(strBuilder);
-        checkBorderColor(strBuilder);
-        checkDefaultBackgroundColor(strBuilder);
-        checkTransparency(strBuilder);
-        checkHotKey(strBuilder);
-        checkSearchDepth(strBuilder);
-        checkCacheNumLimit(strBuilder);
-        checkUpdateTimeLimit(strBuilder);
+        checkProxy(errorsStrb);
+        checkSearchBarColor(errorsStrb);
+        checkSearchBarFontColor(errorsStrb);
+        checkLabelColor(errorsStrb);
+        checkLabelFontColor(errorsStrb);
+        checkLabelFontColorWithCoverage(errorsStrb);
+        checkBorderColor(errorsStrb);
+        checkDefaultBackgroundColor(errorsStrb);
+        checkTransparency(errorsStrb);
+        checkHotKey(errorsStrb);
+        checkSearchDepth(errorsStrb);
+        checkCacheNumLimit(errorsStrb);
+        checkUpdateTimeLimit(errorsStrb);
 
-        String ignorePathTemp;
-        ignorePathTemp = textAreaIgnorePath.getText();
-        ignorePathTemp = ignorePathTemp.replaceAll("\n", "");
+        String ignorePathTemp = textAreaIgnorePath.getText().replaceAll("\n", "");
 
-        String errors = strBuilder.toString();
+        String swingTheme = (String) listSwingThemes.getSelectedValue();
+
+        String errors = errorsStrb.toString();
         if (!errors.isEmpty()) {
-            if (isPopErrorWindow) {
-                JOptionPane.showMessageDialog(frame, errors);
-            }
             return errors;
         }
 
@@ -1669,6 +1693,7 @@ public class SettingsFrame {
         AllConfigs.setOpenLastFolderKeyCode(tmp_openLastFolderKeyCode);
         AllConfigs.setRunAsAdminKeyCode(tmp_runAsAdminKeyCode);
         AllConfigs.setCopyPathKeyCode(tmp_copyPathKeyCode);
+        AllConfigs.setSwingTheme(swingTheme);
 
         AllConfigs.denyChangeSettings();
 

@@ -21,15 +21,19 @@ public class GetIconUtil {
     private ImageIcon recycleBin;
     private volatile boolean isInitialized = false;
 
-    private static class GetIconUtilBuilder {
-        private static final GetIconUtil INSTANCE = new GetIconUtil();
-    }
+    private static volatile GetIconUtil INSTANCE = null;
 
-    private GetIconUtil() {
-    }
+    private GetIconUtil() {}
 
     public static GetIconUtil getInstance() {
-        return GetIconUtilBuilder.INSTANCE;
+        if (INSTANCE == null) {
+            synchronized (GetIconUtil.class) {
+                if (INSTANCE == null) {
+                    INSTANCE = new GetIconUtil();
+                }
+            }
+        }
+        return INSTANCE;
     }
 
     private ImageIcon changeIcon(ImageIcon icon, int width, int height) {

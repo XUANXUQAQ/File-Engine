@@ -23,4 +23,12 @@ public class Enums {
         public static final int PROXY_SOCKS = 0x200;
         public static final int PROXY_DIRECT = 0x300;
     }
+
+    public enum SwingThemes {
+        CoreFlatDarculaLaf, CoreFlatDarkLaf, CoreFlatLightLaf, CoreFlatIntelliJLaf,
+        Arc, ArcDark, ArcDarkOrange, Carbon,
+        CyanLight, DarkFlat, DarkPurple, Dracula,
+        Gray, LightFlat, MaterialDesignDark, Monocai,
+        Nord, OneDark, MaterialDarker, MaterialLighter
+    }
 }
