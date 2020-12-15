@@ -152,3 +152,4 @@ Failed to save settings, do you still close the window=Impossibile salvare le im
 The identifier you entered is too short, continue=L'identificatore inserito è troppo breve, continua
 Update=Aggiornare
 File not exist=file non esiste
+change theme=Cambia tema

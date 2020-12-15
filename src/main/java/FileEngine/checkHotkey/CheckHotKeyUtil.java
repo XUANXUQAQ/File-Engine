@@ -16,13 +16,17 @@ public class CheckHotKeyUtil {
     private final HashMap<String, Integer> map;
     private final Pattern plus;
     private boolean isRegistered = false;
-
-    private static class CheckHotKeyBuilder {
-        private static final CheckHotKeyUtil INSTANCE = new CheckHotKeyUtil();
-    }
+    private static volatile CheckHotKeyUtil INSTANCE = null;
 
     public static CheckHotKeyUtil getInstance() {
-        return CheckHotKeyBuilder.INSTANCE;
+        if (INSTANCE == null) {
+            synchronized (CheckHotKeyUtil.class) {
+                if (INSTANCE == null) {
+                    INSTANCE = new CheckHotKeyUtil();
+                }
+            }
+        }
+        return INSTANCE;
     }
 
     //关闭对热键的检测，在程序彻底关闭时调用

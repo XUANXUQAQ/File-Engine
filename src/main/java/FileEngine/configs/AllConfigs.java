@@ -3,11 +3,19 @@ package FileEngine.configs;
 import FileEngine.SQLiteConfig.SQLiteUtil;
 import FileEngine.checkHotkey.CheckHotKeyUtil;
 import FileEngine.frames.SearchBar;
+import FileEngine.r.R;
 import FileEngine.translate.TranslateUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.serializer.SerializerFeature;
+import com.formdev.flatlaf.*;
+import com.formdev.flatlaf.intellijthemes.*;
+import com.formdev.flatlaf.intellijthemes.materialthemeuilite.FlatMaterialDarkerIJTheme;
+import com.formdev.flatlaf.intellijthemes.materialthemeuilite.FlatMaterialLighterIJTheme;
+import com.sun.istack.internal.NotNull;
 
+import javax.swing.*;
+import java.awt.*;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.sql.PreparedStatement;
@@ -19,11 +27,11 @@ import java.util.concurrent.atomic.AtomicInteger;
  * 保存软件运行时的所有配置信息
  */
 public class AllConfigs {
-    public static final String version = "2.9"; //TODO 更改版本号
+    public static final String version = "3.0"; //TODO 更改版本号
 
     public static final String FILE_NAME = "File-Engine-x64.exe";
 
-    private static final int allSetMethodsNum = 26;
+    private static final int allSetMethodsNum = 27;
 
     public static final int defaultLabelColor = 0xcccccc;
     public static final int defaultWindowBackgroundColor = 0x333333;
@@ -67,6 +75,7 @@ public class AllConfigs {
     private static boolean isAllowChangeSettings = false;
     private static final AtomicInteger cacheNum = new AtomicInteger(0);
     private static boolean isFirstRunApp = false;
+    private static Enums.SwingThemes swingTheme;
 
     private static void showError() {
         System.err.println("你应该在修改设置前先调用allowChangeSettings()方法，您的设置并未生效");
@@ -82,6 +91,28 @@ public class AllConfigs {
             System.err.println("警告：set方法并未被完全调用");
         }
         setterCount = 0;
+    }
+
+    public static String getSwingTheme() {
+        return swingTheme.toString();
+    }
+
+    public static void setSwingTheme(String swingTheme) {
+        if (isAllowChangeSettings) {
+            setterCount++;
+            AllConfigs.swingTheme = swingThemesMapper(swingTheme);
+        } else {
+            showError();
+        }
+    }
+
+    private static Enums.SwingThemes swingThemesMapper(String swingTheme) {
+        for (Enums.SwingThemes each : Enums.SwingThemes.values()) {
+            if (each.toString().equals(swingTheme)) {
+                return each;
+            }
+        }
+        return Enums.SwingThemes.CoreFlatDarculaLaf;
     }
 
     public static boolean isShowTipOnCreatingLnk() {
@@ -481,322 +512,104 @@ public class AllConfigs {
     }
 
     private static void readUpdateAddress(JSONObject settingsInJson) {
-        if (settingsInJson != null) {
-            if (settingsInJson.containsKey("updateAddress")) {
-                updateAddress = settingsInJson.getString("updateAddress");
-            } else {
-                updateAddress = "jsdelivr CDN";
-            }
-        } else {
-            updateAddress = "jsdelivr CDN";
-        }
+        updateAddress = (String) getFromJson(settingsInJson, "updateAddress", "jsdelivr CDN");
     }
 
     private static void readCacheNumLimit(JSONObject settingsInJson) {
-        if (settingsInJson != null) {
-            if (settingsInJson.containsKey("cacheNumLimit")) {
-                cacheNumLimit = settingsInJson.getInteger("cacheNumLimit");
-            } else {
-                cacheNumLimit = 1000;
-            }
-        }else {
-            cacheNumLimit = 1000;
-        }
+        cacheNumLimit = (int) getFromJson(settingsInJson, "cacheNumLimit", 1000);
     }
 
     private static void readHotKey(JSONObject settingsInJson) {
-        if (settingsInJson != null) {
-            if (settingsInJson.containsKey("hotkey")) {
-                String tmp = settingsInJson.getString("hotkey");
-                if (tmp == null) {
-                    hotkey = "Ctrl + Alt + K";
-                } else {
-                    hotkey = tmp;
-                }
-            } else {
-                hotkey = "Ctrl + Alt + K";
-            }
-        }else {
-            hotkey = "Ctrl + Alt + K";
-        }
+        hotkey = (String) getFromJson(settingsInJson, "hotkey", "Ctrl + Alt + K");
     }
 
     private static void readPriorityFolder(JSONObject settingsInJson) {
-        if (settingsInJson != null) {
-            if (settingsInJson.containsKey("priorityFolder")) {
-                String tmp = settingsInJson.getString("priorityFolder");
-                if (tmp == null) {
-                    priorityFolder = "";
-                } else {
-                    priorityFolder = tmp;
-                }
-            } else {
-                priorityFolder = "";
-            }
-        }else {
-            priorityFolder = "";
-        }
+        priorityFolder = (String) getFromJson(settingsInJson, "priorityFolder", "");
     }
 
     private static void readSearchDepth(JSONObject settingsInJson) {
-        if (settingsInJson != null) {
-            if (settingsInJson.containsKey("searchDepth")) {
-                searchDepth = settingsInJson.getInteger("searchDepth");
-            } else {
-                searchDepth = 8;
-            }
-        }else {
-            searchDepth = 8;
-        }
+        searchDepth = (int) getFromJson(settingsInJson, "searchDepth", 8);
     }
 
     private static void readIgnorePath(JSONObject settingsInJson) {
-        if (settingsInJson != null) {
-            if (settingsInJson.containsKey("ignorePath")) {
-                String tmp = settingsInJson.getString("ignorePath");
-                if (tmp == null) {
-                    ignorePath = "C:\\Windows,";
-                } else {
-                    ignorePath = tmp;
-                }
-            } else {
-                ignorePath = "C:\\Windows,";
-            }
-        }else {
-            ignorePath = "C:\\Windows,";
-        }
+        ignorePath = (String) getFromJson(settingsInJson, "ignorePath", "C:\\Windows,");
     }
 
     private static void readUpdateTimeLimit(JSONObject settingsInJson) {
-        if (settingsInJson != null) {
-            if (settingsInJson.containsKey("updateTimeLimit")) {
-                updateTimeLimit = settingsInJson.getInteger("updateTimeLimit");
-            } else {
-                updateTimeLimit = 5;
-            }
-        } else {
-            updateTimeLimit = 5;
-        }
+        updateTimeLimit = (int) getFromJson(settingsInJson, "updateTimeLimit", 5);
     }
 
     private static void readIsDefaultAdmin(JSONObject settingsInJson) {
-        if (settingsInJson != null) {
-            if (settingsInJson.containsKey("isDefaultAdmin")) {
-                isDefaultAdmin = settingsInJson.getBoolean("isDefaultAdmin");
-            } else {
-                isDefaultAdmin = false;
-            }
-        } else {
-            isDefaultAdmin = false;
-        }
+        isDefaultAdmin = (boolean) getFromJson(settingsInJson, "isDefaultAdmin", false);
     }
 
     private static void readIsLoseFocusClose(JSONObject settingsInJson) {
-        if (settingsInJson != null) {
-            if (settingsInJson.containsKey("isLoseFocusClose")) {
-                isLoseFocusClose = settingsInJson.getBoolean("isLoseFocusClose");
-            } else {
-                isLoseFocusClose = true;
-            }
-        } else {
-            isLoseFocusClose = true;
-        }
+        isLoseFocusClose = (boolean) getFromJson(settingsInJson, "isLoseFocusClose", true);
     }
 
     private static void readOpenLastFolderKeyCode(JSONObject settingsInJson) {
-        if (settingsInJson != null) {
-            if (settingsInJson.containsKey("openLastFolderKeyCode")) {
-                openLastFolderKeyCode = settingsInJson.getInteger("openLastFolderKeyCode");
-            } else {
-                openLastFolderKeyCode = 17;
-            }
-        } else {
-            openLastFolderKeyCode = 17;
-        }
+        openLastFolderKeyCode = (int) getFromJson(settingsInJson, "openLastFolderKeyCode", 17);
     }
 
     private static void readRunAsAdminKeyCode(JSONObject settingsInJson) {
-        if (settingsInJson != null) {
-            if (settingsInJson.containsKey("runAsAdminKeyCode")) {
-                runAsAdminKeyCode = settingsInJson.getInteger("runAsAdminKeyCode");
-            } else {
-                runAsAdminKeyCode = 16;
-            }
-        }else {
-            runAsAdminKeyCode = 16;
-        }
+        runAsAdminKeyCode = (int) getFromJson(settingsInJson, "runAsAdminKeyCode", 16);
     }
 
     private static void readCopyPathKeyCode(JSONObject settingsInJson) {
-        if (settingsInJson != null) {
-            if (settingsInJson.containsKey("copyPathKeyCode")) {
-                copyPathKeyCode = settingsInJson.getInteger("copyPathKeyCode");
-            } else {
-                copyPathKeyCode = 18;
-            }
-        } else {
-            copyPathKeyCode = 18;
-        }
+        copyPathKeyCode = (int) getFromJson(settingsInJson, "copyPathKeyCode", 18);
     }
 
     private static void readTransparency(JSONObject settingsInJson) {
-        if (settingsInJson != null) {
-            if (settingsInJson.containsKey("transparency")) {
-                transparency = settingsInJson.getFloat("transparency");
-            } else {
-                transparency = 0.8f;
-            }
-        }else {
-            transparency = 0.8f;
-        }
+        transparency = Float.parseFloat(getFromJson(settingsInJson, "transparency", 0.8f).toString());
     }
 
     private static void readSearchBarColor(JSONObject settingsInJson) {
-        if (settingsInJson != null) {
-            if (settingsInJson.containsKey("searchBarColor")) {
-                searchBarColor = settingsInJson.getInteger("searchBarColor");
-            } else {
-                searchBarColor = defaultSearchbarColor;
-            }
-        } else {
-            searchBarColor = defaultSearchbarColor;
-        }
+        searchBarColor = (int) getFromJson(settingsInJson, "searchBarColor", defaultSearchbarColor);
     }
 
     private static void readDefaultBackground(JSONObject settingsInJson) {
-        if (settingsInJson != null) {
-            if (settingsInJson.containsKey("defaultBackground")) {
-                defaultBackgroundColor = settingsInJson.getInteger("defaultBackground");
-            } else {
-                defaultBackgroundColor = defaultWindowBackgroundColor;
-            }
-        } else {
-            defaultBackgroundColor = defaultWindowBackgroundColor;
-        }
+        defaultBackgroundColor = (int) getFromJson(settingsInJson, "defaultBackground", defaultWindowBackgroundColor);
     }
 
     private static void readBorderColor(JSONObject settingsInJson) {
-        if (settingsInJson != null) {
-            if (settingsInJson.containsKey("borderColor")) {
-                borderColor = settingsInJson.getInteger("borderColor");
-            } else {
-                borderColor = defaultBorderColor;
-            }
-        } else {
-            borderColor = defaultBorderColor;
-        }
+        borderColor = (int) getFromJson(settingsInJson, "borderColor", defaultBorderColor);
     }
 
     private static void readFontColorWithCoverage(JSONObject settingsInJson) {
-        if (settingsInJson != null) {
-            if (settingsInJson.containsKey("fontColorWithCoverage")) {
-                fontColorWithCoverage = settingsInJson.getInteger("fontColorWithCoverage");
-            } else {
-                fontColorWithCoverage = defaultFontColorWithCoverage;
-            }
-        } else {
-            fontColorWithCoverage = defaultFontColorWithCoverage;
-        }
+        fontColorWithCoverage = (int) getFromJson(settingsInJson, "fontColorWithCoverage", defaultFontColorWithCoverage);
     }
 
     private static void readLabelColor(JSONObject settingsInJson) {
-        if (settingsInJson != null) {
-            if (settingsInJson.containsKey("labelColor")) {
-                labelColor = settingsInJson.getInteger("labelColor");
-            } else {
-                labelColor = defaultLabelColor;
-            }
-        }else {
-            labelColor = defaultLabelColor;
-        }
+        labelColor = (int) getFromJson(settingsInJson, "labelColor", defaultLabelColor);
     }
 
     private static void readFontColor(JSONObject settingsInJson) {
-        if (settingsInJson != null) {
-            if (settingsInJson.containsKey("fontColor")) {
-                fontColor = settingsInJson.getInteger("fontColor");
-            } else {
-                fontColor = defaultFontColor;
-            }
-        } else {
-            fontColor = defaultFontColor;
-        }
+        fontColor = (int) getFromJson(settingsInJson, "fontColor", defaultFontColor);
     }
 
     private static void readSearchBarFontColor(JSONObject settingsInJson) {
-        if (settingsInJson != null) {
-            if (settingsInJson.containsKey("searchBarFontColor")) {
-                searchBarFontColor = settingsInJson.getInteger("searchBarFontColor");
-            } else {
-                searchBarFontColor = defaultSearchbarFontColor;
-            }
-        } else {
-            searchBarFontColor = defaultSearchbarFontColor;
-        }
+        searchBarFontColor = (int) getFromJson(settingsInJson, "searchBarFontColor", defaultSearchbarFontColor);
     }
 
     private static void readLanguage(JSONObject settingsInJson) {
-        if (settingsInJson != null) {
-            if (settingsInJson.containsKey("language")) {
-                String language = settingsInJson.getString("language");
-                if (language == null || language.isEmpty()) {
-                    language = TranslateUtil.getInstance().getDefaultLang();
-                }
-                TranslateUtil.getInstance().setLanguage(language);
-            } else {
-                TranslateUtil.getInstance().setLanguage(TranslateUtil.getInstance().getDefaultLang());
-            }
-        } else {
-            TranslateUtil.getInstance().setLanguage(TranslateUtil.getInstance().getDefaultLang());
-        }
+        String language = (String) getFromJson(settingsInJson, "language", TranslateUtil.getInstance().getDefaultLang());
+        TranslateUtil.getInstance().setLanguage(language);
     }
 
     private static void readProxy(JSONObject settingsInJson) {
-        if (settingsInJson != null) {
-            if (settingsInJson.containsKey("proxyAddress")) {
-                proxyAddress = settingsInJson.getString("proxyAddress");
-            } else {
-                proxyAddress = "";
-            }
-            if (settingsInJson.containsKey("proxyPort")) {
-                proxyPort = settingsInJson.getInteger("proxyPort");
-            } else {
-                proxyPort = 0;
-            }
-            if (settingsInJson.containsKey("proxyUserName")) {
-                proxyUserName = settingsInJson.getString("proxyUserName");
-            } else {
-                proxyUserName = "";
-            }
-            if (settingsInJson.containsKey("proxyPassword")) {
-                proxyPassword = settingsInJson.getString("proxyPassword");
-            } else {
-                proxyPassword = "";
-            }
-            if (settingsInJson.containsKey("proxyType")) {
-                proxyType = settingsInJson.getInteger("proxyType");
-            } else {
-                proxyType = Enums.ProxyType.PROXY_DIRECT;
-            }
-        } else {
-            proxyAddress = "";
-            proxyPort = 0;
-            proxyUserName = "";
-            proxyPassword = "";
-            proxyType = Enums.ProxyType.PROXY_DIRECT;
-        }
+        proxyAddress = (String) getFromJson(settingsInJson, "proxyAddress", "");
+        proxyPort = (int) getFromJson(settingsInJson, "proxyPort", 0);
+        proxyUserName = (String) getFromJson(settingsInJson, "proxyUserName", "");
+        proxyPassword = (String) getFromJson(settingsInJson, "proxyPassword", "");
+        proxyType = (int) getFromJson(settingsInJson, "proxyType", Enums.ProxyType.PROXY_DIRECT);
+    }
+
+    private static void readSwingTheme(JSONObject settingsInJson) {
+        swingTheme = swingThemesMapper((String) getFromJson(settingsInJson, "swingTheme", "CoreFlatDarculaLaf"));
     }
 
     private static void readShowTipOnCreatingLnk(JSONObject settingsInJson) {
-        if (settingsInJson != null) {
-            if (settingsInJson.containsKey("isShowTipOnCreatingLnk")) {
-                isShowTipCreatingLnk = settingsInJson.getBoolean("isShowTipOnCreatingLnk");
-            } else {
-                isShowTipCreatingLnk = true;
-            }
-        } else {
-            isShowTipCreatingLnk = true;
-        }
+        isShowTipCreatingLnk = (boolean) getFromJson(settingsInJson, "isShowTipOnCreatingLnk", true);
     }
 
     private static JSONObject getSettingsJSON() {
@@ -816,6 +629,14 @@ public class AllConfigs {
             isFirstRunApp = true;
             return null;
         }
+    }
+
+    private static Object getFromJson(JSONObject json,String key, @NotNull Object defaultObj) {
+        if (json == null) {
+            return defaultObj;
+        }
+        Object tmp = json.getOrDefault(key, defaultObj);
+        return tmp != null ? tmp : defaultObj;
     }
 
     public static void readAllSettings() {
@@ -843,12 +664,14 @@ public class AllConfigs {
         readUpdateAddress(settingsInJson);
         readHotKey(settingsInJson);
         readShowTipOnCreatingLnk(settingsInJson);
+        readSwingTheme(settingsInJson);
         initCacheNum();
         setAllSettings();
         saveAllSettings();
     }
 
     public static void setAllSettings() {
+        setSwing(swingTheme);
         CheckHotKeyUtil.getInstance().registerHotkey(hotkey);
         SearchBar searchBar = SearchBar.getInstance();
         searchBar.setTransparency(transparency);
@@ -859,6 +682,58 @@ public class AllConfigs {
         searchBar.setSearchBarColor(searchBarColor);
         searchBar.setSearchBarFontColor(searchBarFontColor);
         searchBar.setBorderColor(borderColor);
+    }
+
+    public static void setSwingPreview(String theme) {
+        Enums.SwingThemes t = swingThemesMapper(theme);
+        setSwing(t);
+    }
+
+    private static void setSwing(Enums.SwingThemes theme) {
+        if (theme == Enums.SwingThemes.CoreFlatIntelliJLaf) {
+            FlatIntelliJLaf.install();
+        } else if (theme == Enums.SwingThemes.CoreFlatLightLaf) {
+            FlatLightLaf.install();
+        } else if (theme == Enums.SwingThemes.CoreFlatDarkLaf) {
+            FlatDarkLaf.install();
+        } else if (theme == Enums.SwingThemes.Arc) {
+            FlatArcIJTheme.install();
+        } else if (theme == Enums.SwingThemes.ArcDark) {
+            FlatArcDarkIJTheme.install();
+        } else if (theme == Enums.SwingThemes.DarkFlat) {
+            FlatDarkFlatIJTheme.install();
+        } else if (theme == Enums.SwingThemes.Carbon) {
+            FlatCarbonIJTheme.install();
+        } else if (theme == Enums.SwingThemes.CyanLight) {
+            FlatCyanLightIJTheme.install();
+        } else if (theme == Enums.SwingThemes.DarkPurple) {
+            FlatDarkPurpleIJTheme.install();
+        } else if (theme == Enums.SwingThemes.LightFlat) {
+            FlatLightFlatIJTheme.install();
+        } else if (theme == Enums.SwingThemes.Monocai) {
+            FlatMonocaiIJTheme.install();
+        } else if (theme == Enums.SwingThemes.OneDark) {
+            FlatOneDarkIJTheme.install();
+        } else if (theme == Enums.SwingThemes.Gray) {
+            FlatGrayIJTheme.install();
+        } else if (theme == Enums.SwingThemes.MaterialDesignDark) {
+            FlatMaterialDesignDarkIJTheme.install();
+        } else if (theme == Enums.SwingThemes.MaterialLighter) {
+            FlatMaterialLighterIJTheme.install();
+        } else if (theme == Enums.SwingThemes.MaterialDarker) {
+            FlatMaterialDarkerIJTheme.install();
+        } else if (theme == Enums.SwingThemes.ArcDarkOrange) {
+            FlatArcDarkOrangeIJTheme.install();
+        } else if (theme == Enums.SwingThemes.Dracula) {
+            FlatDraculaIJTheme.install();
+        } else if (theme == Enums.SwingThemes.Nord) {
+            FlatNordIJTheme.install();
+        } else {
+            FlatDarculaLaf.install();
+        }
+        for (Component c : R.getInstance().getAllComponents()) {
+            SwingUtilities.updateComponentTreeUI(c);
+        }
     }
 
     public static void saveAllSettings() {
@@ -891,6 +766,7 @@ public class AllConfigs {
         allSettings.put("searchBarFontColor", searchBarFontColor);
         allSettings.put("borderColor", borderColor);
         allSettings.put("isShowTipOnCreatingLnk", isShowTipCreatingLnk);
+        allSettings.put("swingTheme", swingTheme.toString());
         try (BufferedWriter buffW = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(settings), StandardCharsets.UTF_8))) {
             String format = JSON.toJSONString(allSettings, SerializerFeature.PrettyFormat, SerializerFeature.WriteMapNullValue, SerializerFeature.WriteDateUseDateFormat);
             buffW.write(format);

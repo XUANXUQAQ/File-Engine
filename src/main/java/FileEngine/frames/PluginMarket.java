@@ -4,6 +4,7 @@ import FileEngine.configs.AllConfigs;
 import FileEngine.configs.Enums;
 import FileEngine.download.DownloadUtil;
 import FileEngine.pluginSystem.PluginUtil;
+import FileEngine.r.R;
 import FileEngine.threadPool.CachedThreadPool;
 import FileEngine.translate.TranslateUtil;
 import com.alibaba.fastjson.JSONObject;
@@ -48,6 +49,8 @@ public class PluginMarket {
     private volatile boolean isStartSearch = false;
 
     private PluginMarket() {
+        R.getInstance().addComponent("plugin-market", frame);
+
         addSelectPluginOnListListener();
         addSearchPluginListener();
         addButtonInstallListener();
@@ -176,8 +179,6 @@ public class PluginMarket {
         frame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
         frame.setResizable(false);
         frame.setLocationRelativeTo(null);
-        float trans = AllConfigs.getTransparency();
-        frame.setOpacity(trans < 0.6f ? 0.95f : trans);
         frame.setTitle(TranslateUtil.getInstance().getTranslation("Plugin Market"));
         frame.setVisible(true);
     }

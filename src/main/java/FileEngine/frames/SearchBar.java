@@ -12,6 +12,7 @@ import FileEngine.getIcon.GetIconUtil;
 import FileEngine.moveFiles.CopyFileUtil;
 import FileEngine.pluginSystem.Plugin;
 import FileEngine.pluginSystem.PluginUtil;
+import FileEngine.r.R;
 import FileEngine.robotUtil.RobotUtil;
 import FileEngine.search.SearchUtil;
 import FileEngine.threadPool.CachedThreadPool;
@@ -98,15 +99,15 @@ public class SearchBar {
 
     private static final int MAX_RESULTS_COUNT = 200;
 
-    private static class SearchBarBuilder {
-        private static final SearchBar instance = new SearchBar();
-    }
+    private static volatile SearchBar instance = null;
+
 
     private SearchBar() {
         listResults = new CopyOnWriteArrayList<>();
         tempResults = ConcurrentHashMap.newKeySet();
         commandQueue = new ConcurrentLinkedQueue<>();
         searchBar = new JFrame();
+        R.getInstance().addComponent("searchbar", searchBar);
         currentResultCount = new AtomicInteger(0);
         listResultsNum = new AtomicInteger(0);
         tempResultNum = new AtomicInteger(0);
@@ -243,7 +244,14 @@ public class SearchBar {
     }
 
     public static SearchBar getInstance() {
-        return SearchBarBuilder.instance;
+        if (instance == null) {
+            synchronized (SearchBar.class) {
+                if (instance == null) {
+                    instance = new SearchBar();
+                }
+            }
+        }
+        return instance;
     }
 
     /**

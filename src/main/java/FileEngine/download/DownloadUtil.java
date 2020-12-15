@@ -17,13 +17,17 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class DownloadUtil {
     private final ConcurrentHashMap<String, DownloadManager> DOWNLOAD_MAP = new ConcurrentHashMap<>();
-
-    private static class DownloadUpdateBuilder {
-        private static final DownloadUtil INSTANCE = new DownloadUtil();
-    }
+    private static volatile DownloadUtil INSTANCE = null;
 
     public static DownloadUtil getInstance() {
-        return DownloadUpdateBuilder.INSTANCE;
+        if (INSTANCE == null) {
+            synchronized (DownloadUtil.class) {
+                if (INSTANCE == null) {
+                    INSTANCE = new DownloadUtil();
+                }
+            }
+        }
+        return INSTANCE;
     }
 
     private DownloadUtil() {

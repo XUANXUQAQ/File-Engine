@@ -17,7 +17,6 @@ import FileEngine.search.SearchUtil;
 import FileEngine.threadPool.CachedThreadPool;
 import FileEngine.translate.TranslateUtil;
 import com.alibaba.fastjson.JSONObject;
-import com.formdev.flatlaf.FlatDarculaLaf;
 
 import java.awt.*;
 import java.io.*;
@@ -137,7 +136,6 @@ public class MainClass {
     public static void main(String[] args) {
         try {
             Class.forName("org.sqlite.JDBC");
-            FlatDarculaLaf.install();
 
             if (!System.getProperty("os.arch").contains("64")) {
                 System.err.println("NOT 64 BIT");
