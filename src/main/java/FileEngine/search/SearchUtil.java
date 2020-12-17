@@ -1,17 +1,24 @@
 package FileEngine.search;
 
+import FileEngine.IsDebug;
 import FileEngine.SQLiteConfig.SQLiteUtil;
 import FileEngine.configs.AllConfigs;
 import FileEngine.configs.Enums;
 import FileEngine.dllInterface.GetAscII;
 import FileEngine.dllInterface.IsLocalDisk;
-import FileEngine.frames.TaskBar;
+import FileEngine.taskHandler.TaskUtil;
+import FileEngine.taskHandler.Task;
+import FileEngine.taskHandler.TaskHandler;
+import FileEngine.taskHandler.impl.taskbar.ShowTaskBarMessageTask;
+import FileEngine.taskHandler.impl.database.*;
 import FileEngine.threadPool.CachedThreadPool;
 import FileEngine.translate.TranslateUtil;
 
 import javax.swing.filechooser.FileSystemView;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.LinkedHashSet;
@@ -30,7 +37,7 @@ public class SearchUtil {
     private SearchUtil() {
         CachedThreadPool.getInstance().executeTask(() -> {
             try (Statement statement = SQLiteUtil.getStatement()) {
-                while (AllConfigs.isNotMainExit()) {
+                while (TaskUtil.getInstance().isNotMainExit()) {
                     if (isExecuteImmediately) {
                         isExecuteImmediately = false;
                         executeAllCommands(statement);
@@ -45,6 +52,11 @@ public class SearchUtil {
     }
 
     public static SearchUtil getInstance() {
+        initInstance();
+        return INSTANCE;
+    }
+
+    private static void initInstance() {
         if (INSTANCE == null) {
             synchronized (SearchUtil.class) {
                 if (INSTANCE == null) {
@@ -52,7 +64,6 @@ public class SearchUtil {
                 }
             }
         }
-        return INSTANCE;
     }
 
     private void addDeleteSqlCommandByAscii(int asciiSum, String path) {
@@ -354,43 +365,43 @@ public class SearchUtil {
         return 0;
     }
 
-    public void removeFileFromDatabase(String path) {
+    private void removeFileFromDatabase(String path) {
         int asciiSum = getAscIISum(getFileName(path));
         addDeleteSqlCommandByAscii(asciiSum, path);
-        if (AllConfigs.isDebug()) {
+        if (IsDebug.isDebug()) {
             System.out.println("删除" + path + "," + "asciiSum为" + asciiSum);
         }
     }
 
-    public void addFileToDatabase(String path) {
+    private void addFileToDatabase(String path) {
         int asciiSum = getAscIISum(getFileName(path));
         addAddSqlCommandByAscii(asciiSum, path);
-        if (AllConfigs.isDebug()) {
+        if (IsDebug.isDebug()) {
             System.out.println("添加" + path + "," + "asciiSum为" + asciiSum);
         }
     }
 
-    public void addFileToCache(String path) {
+    private void addFileToCache(String path) {
         String command = "INSERT OR IGNORE INTO cache(PATH) VALUES(\"" + path + "\");";
         if (isCommandNotRepeat(command)) {
             addToCommandSet(new SQLWithTaskId(SqlTaskIds.INSERT_TO_CACHE, command));
-            if (AllConfigs.isDebug()) {
+            if (IsDebug.isDebug()) {
                 System.out.println("添加" + path + "到缓存");
             }
         }
     }
 
-    public void removeFileFromCache(String path) {
+    private void removeFileFromCache(String path) {
         String command = "DELETE from cache where PATH=" + "\"" + path + "\";";
         if (isCommandNotRepeat(command)) {
             addToCommandSet(new SQLWithTaskId(SqlTaskIds.DELETE_FROM_CACHE, command));
-            if (AllConfigs.isDebug()) {
+            if (IsDebug.isDebug()) {
                 System.out.println("删除" + path + "到缓存");
             }
         }
     }
 
-    public void executeImmediately() {
+    private void executeImmediately() {
         isExecuteImmediately = true;
     }
 
@@ -399,7 +410,7 @@ public class SearchUtil {
             LinkedHashSet<SQLWithTaskId> tempCommandMap = new LinkedHashSet<>(commandSet);
             commandSet.clear();
             try {
-                if (AllConfigs.isDebug()) {
+                if (IsDebug.isDebug()) {
                     System.out.println("----------------------------------------------");
                     System.out.println("执行SQL命令");
                     System.out.println("----------------------------------------------");
@@ -409,7 +420,7 @@ public class SearchUtil {
                     stmt.execute(each.sql);
                 }
             } catch (SQLException e) {
-                if (AllConfigs.isDebug()) {
+                if (IsDebug.isDebug()) {
                     e.printStackTrace();
                     for (SQLWithTaskId each : tempCommandMap) {
                         System.err.println("执行失败：" + each.sql + "----------------任务组：" + each.taskId);
@@ -431,7 +442,7 @@ public class SearchUtil {
         if (commandSet.size() < MAX_SQL_NUM) {
             commandSet.add(sql);
         } else {
-            if (AllConfigs.isDebug()) {
+            if (IsDebug.isDebug()) {
                 System.err.println("添加sql语句" + sql + "失败，已达到最大上限");
             }
             //立即处理sql语句
@@ -440,9 +451,6 @@ public class SearchUtil {
     }
 
     private boolean isCommandNotRepeat(String sql) {
-        if (AllConfigs.isDebug()) {
-            System.err.println(sql + "---该SQL已存在");
-        }
         for (SQLWithTaskId each : commandSet) {
             if (each.sql.equals(sql)) {
                 return false;
@@ -455,7 +463,7 @@ public class SearchUtil {
         return status;
     }
 
-    public void setStatus(Enums.DatabaseStatus status) {
+    private void setStatus(Enums.DatabaseStatus status) {
         this.status = status;
     }
 
@@ -496,8 +504,9 @@ public class SearchUtil {
             }
         }
         createAllIndex();
-        status = Enums.DatabaseStatus.NORMAL;
-        TaskBar.getInstance().showMessage(TranslateUtil.getInstance().getTranslation("Info"), TranslateUtil.getInstance().getTranslation("Search Done"));
+        TaskUtil.getInstance().putTask(new ShowTaskBarMessageTask(
+                TranslateUtil.getInstance().getTranslation("Info"),
+                TranslateUtil.getInstance().getTranslation("Search Done")));
     }
 
     private void createAllIndex() {
@@ -569,7 +578,7 @@ public class SearchUtil {
             Runtime.getRuntime().exec(command, null, new File("user"));
             waitForProcess("fileSearcher.exe");
         } catch (IOException | InterruptedException e) {
-            if (!(e instanceof InterruptedException) && AllConfigs.isDebug()) {
+            if (!(e instanceof InterruptedException) && IsDebug.isDebug()) {
                 e.printStackTrace();
             }
         }
@@ -586,8 +595,7 @@ public class SearchUtil {
         waitForProcess("fileSearcher.exe");
     }
 
-    public void updateLists(String ignorePath, int searchDepth) {
-        TaskBar.getInstance().showMessage(TranslateUtil.getInstance().getTranslation("Info"), TranslateUtil.getInstance().getTranslation("Updating file index"));
+    private void updateLists(String ignorePath, int searchDepth) {
         recreateDatabase();
         waitForCommandSet(SqlTaskIds.CREATE_TABLE);
         searchFile(ignorePath, searchDepth);
@@ -596,7 +604,7 @@ public class SearchUtil {
     private void waitForCommandSet(SqlTaskIds taskId) {
         try {
             int count = 0;
-            while (AllConfigs.isNotMainExit()) {
+            while (TaskUtil.getInstance().isNotMainExit()) {
                 count++;
                 //等待10s
                 if (count > 1000) {
@@ -639,10 +647,119 @@ public class SearchUtil {
         executeImmediately();
     }
 
+    public static void registerTaskHandler() {
+        TaskUtil taskUtil = TaskUtil.getInstance();
+        taskUtil.registerTaskHandler(AddToCacheTask.class, new TaskHandler() {
+            @Override
+            public void todo(Task task) {
+                getInstance().addFileToCache(((AddToCacheTask) task).path);
+            }
+        });
+
+        taskUtil.registerTaskHandler(DeleteFromCacheTask.class, new TaskHandler() {
+            @Override
+            public void todo(Task task) {
+                getInstance().removeFileFromCache(((DeleteFromCacheTask) task).path);
+            }
+        });
+
+        taskUtil.registerTaskHandler(AddToDatabaseTask.class, new TaskHandler() {
+            @Override
+            public void todo(Task task) {
+                getInstance().addFileToDatabase(((AddToDatabaseTask) task).path);
+            }
+        });
+
+        taskUtil.registerTaskHandler(DeleteFromDatabaseTask.class, new TaskHandler() {
+            @Override
+            public void todo(Task task) {
+                getInstance().removeFileFromDatabase(((DeleteFromDatabaseTask) task).path);
+            }
+        });
+
+        taskUtil.registerTaskHandler(UpdateDatabaseTask.class, new TaskHandler() {
+            @Override
+            public void todo(Task task) {
+                getInstance().setStatus(Enums.DatabaseStatus.MANUAL_UPDATE);
+                getInstance().updateLists(AllConfigs.getInstance().getIgnorePath(), AllConfigs.getInstance().getSearchDepth());
+                getInstance().setStatus(Enums.DatabaseStatus.NORMAL);
+            }
+        });
+
+        taskUtil.registerTaskHandler(ExecuteSQLTask.class, new TaskHandler() {
+            @Override
+            public void todo(Task task) {
+                getInstance().executeImmediately();
+            }
+        });
+
+        taskUtil.registerTaskHandler(InitTablesTask.class, new TaskHandler() {
+            @Override
+            public void todo(Task task) {
+                try {
+                    getInstance().createAllTables();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
+        taskUtil.registerTaskHandler(OptimiseDatabaseTask.class, new TaskHandler() {
+            @Override
+            public void todo(Task task) {
+                getInstance().setStatus(Enums.DatabaseStatus.VACUUM);
+                //执行VACUUM命令
+                try (PreparedStatement stmt = SQLiteUtil.getPreparedStatement("VACUUM;")) {
+                    getInstance().clearDatabase();
+                    stmt.execute();
+                } catch (Exception ex) {
+                    if (IsDebug.isDebug()) {
+                        ex.printStackTrace();
+                    }
+                } finally {
+                    if (IsDebug.isDebug()) {
+                        System.out.println("结束优化");
+                    }
+                    System.gc();
+                    getInstance().setStatus(Enums.DatabaseStatus.NORMAL);
+                }
+            }
+        });
+    }
+
+    private void clearDatabase() {
+        String column;
+        for (int i = 0; i <= 40; ++i) {
+            column = "list" + i;
+            clearDatabase(column);
+        }
+    }
+
+    private void clearDatabase(String column) {
+        File file;
+        String sql = "SELECT PATH FROM " + column + ";";
+        TaskUtil taskUtil = TaskUtil.getInstance();
+        try(PreparedStatement pStmt = SQLiteUtil.getPreparedStatement(sql);
+            ResultSet resultSet = pStmt.executeQuery()) {
+            while (resultSet.next()) {
+                String record = resultSet.getString("PATH");
+                file = new File(record);
+                if (!file.exists()) {
+                    if (IsDebug.isDebug()) {
+                        System.err.println("正在删除" + record);
+                    }
+                    taskUtil.putTask(new DeleteFromDatabaseTask(record));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
     /**
      * 只在Main方法第一次初始化时使用，之后的操作交给commandSet托管
      */
-    public static void createAllTables() throws Exception {
+    private void createAllTables() throws Exception {
         String sql = "CREATE TABLE IF NOT EXISTS list";
         try (Statement stmt = SQLiteUtil.getStatement()) {
             stmt.execute("BEGIN;");

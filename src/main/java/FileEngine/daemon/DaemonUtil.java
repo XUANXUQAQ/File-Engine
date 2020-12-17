@@ -1,17 +1,54 @@
 package FileEngine.daemon;
 
+import FileEngine.taskHandler.TaskUtil;
+import FileEngine.taskHandler.Task;
+import FileEngine.taskHandler.TaskHandler;
+import FileEngine.taskHandler.impl.daemon.StartDaemonTask;
+import FileEngine.taskHandler.impl.daemon.StopDaemonTask;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
 public class DaemonUtil {
+    private static volatile DaemonUtil instance = null;
+
+    private DaemonUtil() {}
+
+    public static DaemonUtil getInstance() {
+        if (instance == null) {
+            synchronized (DaemonUtil.class) {
+                if (instance == null) {
+                    instance = new DaemonUtil();
+                }
+            }
+        }
+        return instance;
+    }
+
+    public static void registerTaskHandler() {
+        TaskUtil.getInstance().registerTaskHandler(StartDaemonTask.class, new TaskHandler() {
+            @Override
+            public void todo(Task task) {
+                getInstance().startDaemon(((StartDaemonTask) task).currentWorkingDir);
+            }
+        });
+
+        TaskUtil.getInstance().registerTaskHandler(StopDaemonTask.class, new TaskHandler() {
+            @Override
+            public void todo(Task task) {
+                getInstance().stopDaemon();
+            }
+        });
+    }
+
 
     /**
      * 开启守护进程
      * @param currentWorkingDir 当前进程工作环境位置
      */
-    public static void startDaemon(String currentWorkingDir) {
+    private void startDaemon(String currentWorkingDir) {
         try {
             if (!isDaemonExist()) {
                 File daemonProcess = new File("user/daemonProcess.exe");
@@ -31,7 +68,7 @@ public class DaemonUtil {
     /**
      * 关闭守护进程
      */
-    public static void stopDaemon() {
+    private void stopDaemon() {
         File closeSignal = new File("tmp/closeDaemon");
         if (!closeSignal.exists()) {
             boolean isCreated = false;
@@ -50,7 +87,7 @@ public class DaemonUtil {
      * 检测进程是否存在
      * @return true如果进程以存在
      */
-    private static boolean isDaemonExist() throws IOException, InterruptedException {
+    private boolean isDaemonExist() throws IOException, InterruptedException {
         StringBuilder strBuilder = new StringBuilder();
         Process p = Runtime.getRuntime().exec("tasklist /FI \"IMAGENAME eq " + "daemonProcess.exe" + "\"");
         p.waitFor();

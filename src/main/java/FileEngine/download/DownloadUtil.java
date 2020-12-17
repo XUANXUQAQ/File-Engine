@@ -1,8 +1,14 @@
 package FileEngine.download;
 
+import FileEngine.IsDebug;
 import FileEngine.configs.AllConfigs;
 import FileEngine.configs.Enums;
 import FileEngine.configs.ProxyInfo;
+import FileEngine.taskHandler.TaskUtil;
+import FileEngine.taskHandler.Task;
+import FileEngine.taskHandler.TaskHandler;
+import FileEngine.taskHandler.impl.download.StartDownloadTask;
+import FileEngine.taskHandler.impl.download.StopDownloadTask;
 import FileEngine.threadPool.CachedThreadPool;
 
 import javax.net.ssl.*;
@@ -20,6 +26,11 @@ public class DownloadUtil {
     private static volatile DownloadUtil INSTANCE = null;
 
     public static DownloadUtil getInstance() {
+        initInstance();
+        return INSTANCE;
+    }
+
+    private static void initInstance() {
         if (INSTANCE == null) {
             synchronized (DownloadUtil.class) {
                 if (INSTANCE == null) {
@@ -27,10 +38,26 @@ public class DownloadUtil {
                 }
             }
         }
-        return INSTANCE;
     }
 
-    private DownloadUtil() {
+    private DownloadUtil() {}
+
+    public static void registerTaskHandler() {
+        TaskUtil.getInstance().registerTaskHandler(StartDownloadTask.class, new TaskHandler() {
+            @Override
+            public void todo(Task task) {
+                StartDownloadTask startDownloadTask = (StartDownloadTask) task;
+                getInstance().downLoadFromUrl(startDownloadTask.url, startDownloadTask.fileName, startDownloadTask.savePath);
+            }
+        });
+
+        TaskUtil.getInstance().registerTaskHandler(StopDownloadTask.class, new TaskHandler() {
+            @Override
+            public void todo(Task task) {
+                StopDownloadTask stopDownloadTask = (StopDownloadTask) task;
+                getInstance().cancelDownload(stopDownloadTask.fileName);
+            }
+        });
     }
 
     /**
@@ -39,8 +66,8 @@ public class DownloadUtil {
      * @param urlStr   地址
      * @param savePath 保存位置
      */
-    public void downLoadFromUrl(String urlStr, String fileName, String savePath) {
-        DownloadManager downloadManager = new DownloadManager(urlStr, fileName, savePath, AllConfigs.getProxy());
+    private void downLoadFromUrl(String urlStr, String fileName, String savePath) {
+        DownloadManager downloadManager = new DownloadManager(urlStr, fileName, savePath, AllConfigs.getInstance().getProxy());
         CachedThreadPool.getInstance().executeTask(downloadManager::download);
         DOWNLOAD_MAP.put(fileName, downloadManager);
     }
@@ -66,11 +93,11 @@ public class DownloadUtil {
      *
      * @param fileName 下载文件名
      */
-    public void cancelDownload(String fileName) {
+    private void cancelDownload(String fileName) {
         if (isFileNameNotContainsSuffix(fileName)) {
             System.err.println("Warning:" + fileName + " doesn't have suffix");
         }
-        if (AllConfigs.isDebug()) {
+        if (IsDebug.isDebug()) {
             System.out.println("cancel downloading " + fileName);
         }
         if (hasTask(fileName)) {
@@ -114,7 +141,7 @@ public class DownloadUtil {
         if (fileName == null) {
             return false;
         }
-        if (AllConfigs.isDebug()) {
+        if (IsDebug.isDebug()) {
             return fileName.lastIndexOf(".") == -1;
         } else {
             return false;
