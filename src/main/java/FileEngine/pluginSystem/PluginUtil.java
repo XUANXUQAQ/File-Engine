@@ -1,6 +1,11 @@
 package FileEngine.pluginSystem;
 
+import FileEngine.IsDebug;
 import FileEngine.configs.AllConfigs;
+import FileEngine.taskHandler.TaskUtil;
+import FileEngine.taskHandler.Task;
+import FileEngine.taskHandler.TaskHandler;
+import FileEngine.taskHandler.impl.plugin.*;
 import FileEngine.threadPool.CachedThreadPool;
 import com.alibaba.fastjson.JSONObject;
 
@@ -30,6 +35,11 @@ public class PluginUtil {
     private static volatile PluginUtil INSTANCE = null;
 
     public static PluginUtil getInstance() {
+        initInstance();
+        return INSTANCE;
+    }
+
+    private static void initInstance() {
         if (INSTANCE == null) {
             synchronized (PluginUtil.class) {
                 if (INSTANCE == null) {
@@ -37,7 +47,6 @@ public class PluginUtil {
                 }
             }
         }
-        return INSTANCE;
     }
 
     private PluginUtil() {}
@@ -65,11 +74,11 @@ public class PluginUtil {
         return NOT_LATEST_PLUGINS.contains(pluginName);
     }
 
-    public void removeFromPluginsCanUpdate(String pluginName) {
+    private void removeFromPluginsCanUpdate(String pluginName) {
         NOT_LATEST_PLUGINS.remove(pluginName);
     }
 
-    public void addPluginsCanUpdate(String pluginName) {
+    private void addPluginsCanUpdate(String pluginName) {
         NOT_LATEST_PLUGINS.add(pluginName);
     }
 
@@ -89,7 +98,7 @@ public class PluginUtil {
         return strb.substring(0, strb.length() - 1);
     }
 
-    public void releaseAllResources() {
+    private void releaseAllResources() {
         REPEAT_PLUGINS = null;
         LOAD_ERROR_PLUGINS = null;
         OLD_PLUGINS = null;
@@ -145,7 +154,7 @@ public class PluginUtil {
         PluginClassAndInstanceInfo pluginClassAndInstanceInfo = new PluginClassAndInstanceInfo(c, instance);
         Plugin plugin = new Plugin(pluginClassAndInstanceInfo);
         plugin.loadPlugin();
-        plugin.setCurrentTheme(AllConfigs.getDefaultBackgroundColor(), AllConfigs.getLabelColor(), AllConfigs.getBorderColor());
+        plugin.setCurrentTheme(AllConfigs.getInstance().getDefaultBackgroundColor(), AllConfigs.getInstance().getLabelColor(), AllConfigs.getInstance().getBorderColor());
         if (Plugin.getLatestApiVersion() - plugin.getApiVersion() >= 2) {
             isTooOld = true;
         }
@@ -153,13 +162,13 @@ public class PluginUtil {
         return isTooOld;
     }
 
-    public void unloadAllPlugins() {
+    private void unloadAllPlugins() {
         for (Plugin each : IDENTIFIER_PLUGIN_MAP.values()) {
             unloadPlugin(each);
         }
     }
 
-    public void setCurrentTheme(int defaultColor, int chosenLabelColor, int borderColor) {
+    private void setCurrentTheme(int defaultColor, int chosenLabelColor, int borderColor) {
         for (Plugin each : IDENTIFIER_PLUGIN_MAP.values()) {
             each.setCurrentTheme(defaultColor, chosenLabelColor, borderColor);
         }
@@ -174,7 +183,7 @@ public class PluginUtil {
         return list.toArray();
     }
 
-    public void loadAllPlugins(String pluginPath) {
+    private void loadAllPlugins(String pluginPath) {
         FilenameFilter filter = (dir, name) -> name.endsWith(".jar");
         File[] files = new File(pluginPath).listFiles(filter);
         if (files == null || files.length == 0) {
@@ -220,7 +229,7 @@ public class PluginUtil {
         for (String each : NAME_IDENTIFIER_MAP.keySet()) {
             try {
                 isLatest = isPluginLatest(IDENTIFIER_PLUGIN_MAP.get(NAME_IDENTIFIER_MAP.get(each)));
-                if (AllConfigs.isDebug()) {
+                if (IsDebug.isDebug()) {
                     System.out.println("++++++++++++++++++++++++++++++++++++++++++++");
                     System.out.println("插件：" + each + "已检查完毕，结果：" + isLatest);
                     System.out.println("++++++++++++++++++++++++++++++++++++++++++++");
@@ -230,9 +239,11 @@ public class PluginUtil {
                     NOT_LATEST_PLUGINS.add(each);
                 }
             } catch (Exception e) {
-                System.err.println("++++++++++++++++++++++++++++++++++++++++++++");
-                System.err.println("插件：" + each + "检查更新失败");
-                System.err.println("++++++++++++++++++++++++++++++++++++++++++++");
+                if (IsDebug.isDebug()) {
+                    System.err.println("++++++++++++++++++++++++++++++++++++++++++++");
+                    System.err.println("插件：" + each + "检查更新失败");
+                    System.err.println("++++++++++++++++++++++++++++++++++++++++++++");
+                }
             }
         }
         isFinished.set(true);
@@ -262,7 +273,7 @@ public class PluginUtil {
                     checkUpdateThread.interrupt();
                     throw new Exception("check update failed.");
                 }
-                if (!AllConfigs.isNotMainExit()) {
+                if (!TaskUtil.getInstance().isNotMainExit()) {
                     break;
                 }
             }
@@ -270,5 +281,51 @@ public class PluginUtil {
         } catch (InterruptedException e) {
             throw new Exception("check update failed.");
         }
+    }
+
+    public static void registerTaskHandler() {
+        TaskUtil taskUtil = TaskUtil.getInstance();
+        taskUtil.registerTaskHandler(AddPluginsCanUpdateTask.class, new TaskHandler() {
+            @Override
+            public void todo(Task task) {
+                getInstance().addPluginsCanUpdate(((AddPluginsCanUpdateTask) task).pluginName);
+            }
+        });
+
+        taskUtil.registerTaskHandler(LoadAllPluginsTask.class, new TaskHandler() {
+            @Override
+            public void todo(Task task) {
+                getInstance().loadAllPlugins(((LoadAllPluginsTask) task).pluginDirPath);
+            }
+        });
+
+        taskUtil.registerTaskHandler(ReleasePluginResourcesTask.class, new TaskHandler() {
+            @Override
+            public void todo(Task task) {
+                getInstance().releaseAllResources();
+            }
+        });
+
+        taskUtil.registerTaskHandler(RemoveFromPluginsCanUpdateTask.class, new TaskHandler() {
+            @Override
+            public void todo(Task task) {
+                getInstance().removeFromPluginsCanUpdate(((RemoveFromPluginsCanUpdateTask) task).pluginName);
+            }
+        });
+
+        taskUtil.registerTaskHandler(SetPluginsCurrentThemeTask.class, new TaskHandler() {
+            @Override
+            public void todo(Task task) {
+                SetPluginsCurrentThemeTask task1 = (SetPluginsCurrentThemeTask) task;
+                getInstance().setCurrentTheme(task1.defaultColor, task1.chosenColor, task1.borderColor);
+            }
+        });
+
+        taskUtil.registerTaskHandler(UnloadAllPluginsTask.class, new TaskHandler() {
+            @Override
+            public void todo(Task task) {
+                getInstance().unloadAllPlugins();
+            }
+        });
     }
 }

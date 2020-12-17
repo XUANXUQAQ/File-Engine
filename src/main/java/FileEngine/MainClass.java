@@ -1,19 +1,21 @@
 package FileEngine;
 
 import FileEngine.SQLiteConfig.SQLiteUtil;
-import FileEngine.checkHotkey.CheckHotKeyUtil;
+import FileEngine.classScan.ClassScannerUtil;
 import FileEngine.configs.AllConfigs;
-import FileEngine.configs.Enums;
-import FileEngine.daemon.DaemonUtil;
-import FileEngine.dllInterface.FileMonitor;
-import FileEngine.frames.PluginMarket;
-import FileEngine.frames.SearchBar;
+import FileEngine.taskHandler.TaskUtil;
+import FileEngine.taskHandler.Task;
+import FileEngine.taskHandler.impl.taskbar.ShowTaskBarMessageTask;
+import FileEngine.taskHandler.impl.stop.CloseTask;
+import FileEngine.taskHandler.impl.ReadConfigsAndBootSystemTask;
+import FileEngine.taskHandler.impl.database.InitTablesTask;
+import FileEngine.taskHandler.impl.database.UpdateDatabaseTask;
+import FileEngine.taskHandler.impl.plugin.ReleasePluginResourcesTask;
 import FileEngine.frames.SettingsFrame;
 import FileEngine.frames.TaskBar;
 import FileEngine.md5.Md5Util;
 import FileEngine.moveFiles.CopyFileUtil;
 import FileEngine.pluginSystem.PluginUtil;
-import FileEngine.search.SearchUtil;
 import FileEngine.threadPool.CachedThreadPool;
 import FileEngine.translate.TranslateUtil;
 import com.alibaba.fastjson.JSONObject;
@@ -53,7 +55,7 @@ public class MainClass {
         File sign = new File("user/updatePlugin");
         File tmpPlugins = new File("tmp/pluginsUpdate");
         if (sign.exists()) {
-            if (AllConfigs.isDebug()) {
+            if (IsDebug.isDebug()) {
                 System.out.println("正在更新插件");
             }
             boolean isUpdatePluginSignDeleted = sign.delete();
@@ -133,6 +135,10 @@ public class MainClass {
         }
     }
 
+    private static void registerAllTaskHandler() {
+        ClassScannerUtil.executeAllMethodByName("registerTaskHandler");
+    }
+
     public static void main(String[] args) {
         try {
             Class.forName("org.sqlite.JDBC");
@@ -148,7 +154,7 @@ public class MainClass {
             if (isDatabaseDamaged()) {
                 System.out.println("无data文件，正在搜索并重建");
                 //初始化数据库
-                SearchUtil.createAllTables();
+                TaskUtil.getInstance().putTask(new InitTablesTask());
                 isManualUpdate = true;
             }
 
@@ -169,43 +175,43 @@ public class MainClass {
 
             initializeDllInterface();
 
-            AllConfigs.readAllSettings();
+            initAll();
 
-            PluginUtil.getInstance().loadAllPlugins("plugins");
-
-            TaskBar taskBar = TaskBar.getInstance();
-            taskBar.showTaskBar();
-            SearchUtil search = SearchUtil.getInstance();
+            TaskUtil taskUtil = TaskUtil.getInstance();
 
             if (isManualUpdate) {
-                search.setStatus(Enums.DatabaseStatus.MANUAL_UPDATE);
+                taskUtil.putTask(new ShowTaskBarMessageTask(
+                        TranslateUtil.getInstance().getTranslation("Info"),
+                        TranslateUtil.getInstance().getTranslation("Updating file index")));
+                taskUtil.putTask(new UpdateDatabaseTask());
             }
 
             TranslateUtil translateUtil = TranslateUtil.getInstance();
+
             if (!isLatest()) {
-                taskBar.showMessage(translateUtil.getTranslation("Info"), translateUtil.getTranslation("New version can be updated"));
+                taskUtil.putTask(new ShowTaskBarMessageTask(
+                        translateUtil.getTranslation("Info"), translateUtil.getTranslation("New version can be updated")));
             }
 
             if (PluginUtil.getInstance().isPluginTooOld()) {
                 String oldPlugins = PluginUtil.getInstance().getAllOldPluginsName();
-                taskBar.showMessage(translateUtil.getTranslation("Warning"), oldPlugins + "\n" + translateUtil.getTranslation("Plugin Api is too old"));
+                taskUtil.putTask(new ShowTaskBarMessageTask(
+                        translateUtil.getTranslation("Warning"), oldPlugins + "\n" + translateUtil.getTranslation("Plugin Api is too old")));
             }
 
             if (PluginUtil.getInstance().isPluginRepeat()) {
                 String repeatPlugins = PluginUtil.getInstance().getRepeatPlugins();
-                taskBar.showMessage(translateUtil.getTranslation("Warning"), repeatPlugins + "\n" + translateUtil.getTranslation("Duplicate plugin, please delete it in plugins folder"));
+                taskUtil.putTask(new ShowTaskBarMessageTask(
+                        translateUtil.getTranslation("Warning"), repeatPlugins + "\n" + translateUtil.getTranslation("Duplicate plugin, please delete it in plugins folder")));
             }
 
             if (PluginUtil.getInstance().isPluginLoadError()) {
                 String errorPlugins = PluginUtil.getInstance().getLoadingErrorPlugins();
-                taskBar.showMessage(translateUtil.getTranslation("Warning"), errorPlugins + "\n" + translateUtil.getTranslation("Loading plugins error"));
+                taskUtil.putTask(new ShowTaskBarMessageTask(
+                        translateUtil.getTranslation("Warning"), errorPlugins + "\n" + translateUtil.getTranslation("Loading plugins error")));
             }
 
-            PluginUtil.getInstance().releaseAllResources();
-
-            if (!AllConfigs.isDebug()) {
-                DaemonUtil.startDaemon(new File("").getAbsolutePath());
-            }
+            taskUtil.putTask(new ReleasePluginResourcesTask());
 
             StringBuilder stringBuilder = new StringBuilder();
             AtomicBoolean isFinished = new AtomicBoolean(false);
@@ -216,15 +222,18 @@ public class MainClass {
             int checkTimeCount = 0;
             long timeDiff;
 
-            while (AllConfigs.isNotMainExit()) {
+            while (TaskUtil.getInstance().isNotMainExit()) {
                 // 主循环开始
                 if (isFinished.get()) {
                     isFinished.set(false);
                     String notLatestPlugins = stringBuilder.toString();
                     if (!notLatestPlugins.isEmpty()) {
-                        TaskBar.getInstance().showMessage(TranslateUtil.getInstance().getTranslation("Info"),
-                                TranslateUtil.getInstance().getTranslation(notLatestPlugins + "\n" +
-                                        TranslateUtil.getInstance().getTranslation("New versions of these plugins can be updated")));
+                        TaskUtil.getInstance().putTask(new ShowTaskBarMessageTask(
+                                TranslateUtil.getInstance().getTranslation("Info"),
+                                TranslateUtil.getInstance().getTranslation(
+                                        notLatestPlugins +
+                                                "\n" +
+                                                TranslateUtil.getInstance().getTranslation("New versions of these plugins can be updated"))));
                     }
                 }
                 //检查已工作时间
@@ -243,7 +252,7 @@ public class MainClass {
                 TimeUnit.MILLISECONDS.sleep(50);
             }
             //确保关闭所有资源
-            TimeUnit.SECONDS.sleep(8);
+            TimeUnit.SECONDS.sleep(5);
             System.exit(0);
         } catch (Exception e) {
             e.printStackTrace();
@@ -251,16 +260,19 @@ public class MainClass {
         }
     }
 
+    private static void initAll() {
+        registerAllTaskHandler();
+
+        TaskUtil taskUtil = TaskUtil.getInstance();
+
+        Task task = new ReadConfigsAndBootSystemTask();
+        taskUtil.putTask(task);
+        taskUtil.waitForTask(task);
+    }
+
     private static void closeAndExit() {
-        AllConfigs.setMainExit(true);
-        SettingsFrame.getInstance().hideFrame();
-        PluginMarket.getInstance().hideWindow();
-        SearchBar.getInstance().closeSearchBar();
-        PluginUtil.getInstance().unloadAllPlugins();
-        CheckHotKeyUtil.getInstance().stopListen();
-        FileMonitor.INSTANCE.stop_monitor();
-        SQLiteUtil.closeAll();
-        DaemonUtil.stopDaemon();
+        TaskUtil taskUtil = TaskUtil.getInstance();
+        taskUtil.putTask(new CloseTask());
     }
 
     private static void releaseAllDependence() {
@@ -280,7 +292,7 @@ public class MainClass {
         File target = new File(path);
         String fileMd5 = Md5Util.getMD5(target.getAbsolutePath());
         if (!target.exists() || !md5.equals(fileMd5)) {
-            if (AllConfigs.isDebug()) {
+            if (IsDebug.isDebug()) {
                 System.out.println("正在重新释放文件：" + path);
             }
             InputStream resource = MainClass.class.getResourceAsStream(rootPath);

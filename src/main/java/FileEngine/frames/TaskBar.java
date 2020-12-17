@@ -1,11 +1,14 @@
 package FileEngine.frames;
 
-import FileEngine.SQLiteConfig.SQLiteUtil;
-import FileEngine.checkHotkey.CheckHotKeyUtil;
-import FileEngine.configs.AllConfigs;
-import FileEngine.daemon.DaemonUtil;
-import FileEngine.dllInterface.FileMonitor;
-import FileEngine.pluginSystem.PluginUtil;
+import FileEngine.IsDebug;
+import FileEngine.taskHandler.TaskUtil;
+import FileEngine.taskHandler.Task;
+import FileEngine.taskHandler.TaskHandler;
+import FileEngine.taskHandler.impl.taskbar.ShowTaskBarIconTask;
+import FileEngine.taskHandler.impl.taskbar.ShowTaskBarMessageTask;
+import FileEngine.taskHandler.impl.stop.CloseTask;
+import FileEngine.taskHandler.impl.stop.RestartTask;
+import FileEngine.taskHandler.impl.frame.settingsFrame.ShowSettingsFrameTask;
 import FileEngine.threadPool.CachedThreadPool;
 
 import javax.swing.*;
@@ -37,13 +40,14 @@ public class TaskBar {
 
     private TaskBar() {
         startShowMessageThread();
+        showTaskBar();
     }
 
     private void startShowMessageThread() {
         CachedThreadPool.getInstance().executeTask(() -> {
             try {
                 MessageStruct message;
-                while (AllConfigs.isNotMainExit()) {
+                while (TaskUtil.getInstance().isNotMainExit()) {
                     message = messageQueue.poll();
                     if (message != null) {
                         showMessageOnTrayIcon(message.caption, message.message);
@@ -57,6 +61,11 @@ public class TaskBar {
     }
 
     public static TaskBar getInstance() {
+        initInstance();
+        return INSTANCE;
+    }
+
+    private static void initInstance() {
         if (INSTANCE == null) {
             synchronized (TaskBar.class) {
                 if (INSTANCE == null) {
@@ -64,10 +73,9 @@ public class TaskBar {
                 }
             }
         }
-        return INSTANCE;
     }
 
-    public void showTaskBar() {
+    private void showTaskBar() {
         SettingsFrame settingsFrame = SettingsFrame.getInstance();
         // 判断是否支持系统托盘
         if (SystemTray.isSupported()) {
@@ -79,7 +87,7 @@ public class TaskBar {
             // 创建托盘图标
             trayIcon = new TrayIcon(image);
             // 添加工具提示文本
-            if (AllConfigs.isDebug()) {
+            if (IsDebug.isDebug()) {
                 trayIcon.setToolTip("File-Engine(Debug)");
             } else {
                 trayIcon.setToolTip("File-Engine");
@@ -88,7 +96,9 @@ public class TaskBar {
             PopupMenu popupMenu = new PopupMenu();
 
             MenuItem settings = new MenuItem("Settings");
-            settings.addActionListener(e -> settingsFrame.showWindow());
+            settings.addActionListener(e -> {
+                TaskUtil.getInstance().putTask(new ShowSettingsFrameTask());
+            });
             MenuItem restartProc = new MenuItem("Restart");
             restartProc.addActionListener(e -> restart());
             MenuItem close = new MenuItem("Exit");
@@ -104,7 +114,7 @@ public class TaskBar {
                 @Override
                 public void mouseClicked(MouseEvent e) {
                     if (MouseEvent.BUTTON1 == e.getButton() && !settingsFrame.isSettingsFrameVisible()) {
-                        settingsFrame.showWindow();
+                        TaskUtil.getInstance().putTask(new ShowSettingsFrameTask());
                     }
                 }
             });
@@ -118,31 +128,18 @@ public class TaskBar {
     }
 
     private void closeAndExit() {
-        AllConfigs.setMainExit(true);
+        TaskUtil taskUtil = TaskUtil.getInstance();
+        taskUtil.putTask(new CloseTask());
         systemTray.remove(trayIcon);
-        SettingsFrame.getInstance().hideFrame();
-        PluginMarket.getInstance().hideWindow();
-        SearchBar.getInstance().closeSearchBar();
-        PluginUtil.getInstance().unloadAllPlugins();
-        CheckHotKeyUtil.getInstance().stopListen();
-        FileMonitor.INSTANCE.stop_monitor();
-        SQLiteUtil.closeAll();
-        DaemonUtil.stopDaemon();
     }
 
     public void restart() {
-        AllConfigs.setMainExit(true);
+        TaskUtil taskUtil = TaskUtil.getInstance();
+        taskUtil.putTask(new RestartTask());
         systemTray.remove(trayIcon);
-        SettingsFrame.getInstance().hideFrame();
-        PluginMarket.getInstance().hideWindow();
-        SearchBar.getInstance().closeSearchBar();
-        PluginUtil.getInstance().unloadAllPlugins();
-        CheckHotKeyUtil.getInstance().stopListen();
-        FileMonitor.INSTANCE.stop_monitor();
-        SQLiteUtil.closeAll();
     }
 
-    public void showMessage(String caption, String message) {
+    private void showMessage(String caption, String message) {
         messageQueue.add(new MessageStruct(caption, message));
     }
 
@@ -150,5 +147,22 @@ public class TaskBar {
         if (trayIcon != null) {
             trayIcon.displayMessage(caption, message, TrayIcon.MessageType.INFO);
         }
+    }
+
+    public static void registerTaskHandler() {
+        TaskUtil.getInstance().registerTaskHandler(ShowTaskBarMessageTask.class, new TaskHandler() {
+            @Override
+            public void todo(Task task) {
+                ShowTaskBarMessageTask showTaskBarMessageTask = (ShowTaskBarMessageTask) task;
+                getInstance().showMessage(showTaskBarMessageTask.caption, showTaskBarMessageTask.message);
+            }
+        });
+
+        TaskUtil.getInstance().registerTaskHandler(ShowTaskBarIconTask.class, new TaskHandler() {
+            @Override
+            public void todo(Task task) {
+                getInstance();
+            }
+        });
     }
 }

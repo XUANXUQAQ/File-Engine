@@ -1,8 +1,14 @@
 package FileEngine.checkHotkey;
 
-import FileEngine.configs.AllConfigs;
 import FileEngine.configs.Enums;
 import FileEngine.dllInterface.HotkeyListener;
+import FileEngine.taskHandler.TaskUtil;
+import FileEngine.taskHandler.Task;
+import FileEngine.taskHandler.TaskHandler;
+import FileEngine.taskHandler.impl.frame.searchBar.HideSearchBarTask;
+import FileEngine.taskHandler.impl.frame.searchBar.ShowSearchBarTask;
+import FileEngine.taskHandler.impl.hotkey.RegisterHotKeyTask;
+import FileEngine.taskHandler.impl.hotkey.StopListenHotkeyTask;
 import FileEngine.frames.SearchBar;
 import FileEngine.threadPool.CachedThreadPool;
 
@@ -19,6 +25,11 @@ public class CheckHotKeyUtil {
     private static volatile CheckHotKeyUtil INSTANCE = null;
 
     public static CheckHotKeyUtil getInstance() {
+        initInstance();
+        return INSTANCE;
+    }
+
+    private static void initInstance() {
         if (INSTANCE == null) {
             synchronized (CheckHotKeyUtil.class) {
                 if (INSTANCE == null) {
@@ -26,16 +37,15 @@ public class CheckHotKeyUtil {
                 }
             }
         }
-        return INSTANCE;
     }
 
     //关闭对热键的检测，在程序彻底关闭时调用
-    public void stopListen() {
+    private void stopListen() {
         HotkeyListener.INSTANCE.stopListen();
     }
 
     //注册快捷键
-    public void registerHotkey(String hotkey) {
+    private void registerHotkey(String hotkey) {
         if (!isRegistered) {
             isRegistered = true;
             int hotkey1 = -1, hotkey2 = -1, hotkey3 = -1, hotkey4 = -1, hotkey5;
@@ -102,15 +112,8 @@ public class CheckHotKeyUtil {
         hotkey5 = hotkeys[length - 1].charAt(0);
         HotkeyListener.INSTANCE.registerHotKey(hotkey1, hotkey2, hotkey3, hotkey4, hotkey5);
     }
-
-    private CheckHotKeyUtil() {
-        plus = Pattern.compile(" \\+ ");
-        map = new HashMap<>();
-        map.put("Ctrl", KeyEvent.VK_CONTROL);
-        map.put("Alt", KeyEvent.VK_ALT);
-        map.put("Shift", KeyEvent.VK_SHIFT);
-        map.put("Win", 0x5B);
-
+    
+    private void startListenHotkeyThread() {
         CachedThreadPool.getInstance().executeTask(() -> {
             boolean isExecuted = false;
             long startVisibleTime = 0;
@@ -119,18 +122,18 @@ public class CheckHotKeyUtil {
             HotkeyListener instance = HotkeyListener.INSTANCE;
             try {
                 //获取快捷键状态，检测是否被按下线程
-                while (AllConfigs.isNotMainExit()) {
+                while (TaskUtil.getInstance().isNotMainExit()) {
                     if (!isExecuted && instance.getKeyStatus()) {
                         isExecuted = true;
                         if (!searchBar.isVisible()) {
                             if (System.currentTimeMillis() - endVisibleTime > 200) {
-                                searchBar.showSearchbar(true);
+                                TaskUtil.getInstance().putTask(new ShowSearchBarTask(true));
                                 startVisibleTime = System.currentTimeMillis();
                             }
                         } else {
                             if (System.currentTimeMillis() - startVisibleTime > 200) {
                                 if (searchBar.getShowingMode() == Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
-                                    searchBar.closeSearchBar();
+                                    TaskUtil.getInstance().putTask(new HideSearchBarTask());
                                     endVisibleTime = System.currentTimeMillis();
                                 }
                             }
@@ -145,4 +148,36 @@ public class CheckHotKeyUtil {
             }
         });
     }
+    
+    public static void registerTaskHandler() {
+        TaskUtil.getInstance().registerTaskHandler(RegisterHotKeyTask.class, new TaskHandler() {
+            @Override
+            public void todo(Task task) {
+                getInstance().registerHotkey(((RegisterHotKeyTask) task).hotkey);
+            }
+        });
+
+        TaskUtil.getInstance().registerTaskHandler(StopListenHotkeyTask.class, new TaskHandler() {
+            @Override
+            public void todo(Task task) {
+                getInstance().stopListen();
+            }
+        });
+    }
+    
+    private void initThreadPool() {
+        startListenHotkeyThread();
+    }
+
+    private CheckHotKeyUtil() {
+        plus = Pattern.compile(" \\+ ");
+        map = new HashMap<>();
+        map.put("Ctrl", KeyEvent.VK_CONTROL);
+        map.put("Alt", KeyEvent.VK_ALT);
+        map.put("Shift", KeyEvent.VK_SHIFT);
+        map.put("Win", 0x5B);
+
+        initThreadPool();
+    }
 }
+

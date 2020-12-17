@@ -1,14 +1,28 @@
 package FileEngine.configs;
 
+import FileEngine.IsDebug;
 import FileEngine.SQLiteConfig.SQLiteUtil;
-import FileEngine.checkHotkey.CheckHotKeyUtil;
-import FileEngine.frames.SearchBar;
+import FileEngine.taskHandler.TaskUtil;
+import FileEngine.taskHandler.Task;
+import FileEngine.taskHandler.TaskHandler;
+import FileEngine.taskHandler.impl.ReadConfigsAndBootSystemTask;
+import FileEngine.taskHandler.impl.configs.SaveConfigsTask;
+import FileEngine.taskHandler.impl.daemon.StartDaemonTask;
+import FileEngine.taskHandler.impl.frame.searchBar.*;
+import FileEngine.taskHandler.impl.hotkey.RegisterHotKeyTask;
+import FileEngine.taskHandler.impl.monitorDisk.StartMonitorDiskTask;
+import FileEngine.taskHandler.impl.plugin.LoadAllPluginsTask;
+import FileEngine.taskHandler.impl.plugin.SetPluginsCurrentThemeTask;
+import FileEngine.taskHandler.impl.taskbar.ShowTaskBarIconTask;
 import FileEngine.r.R;
 import FileEngine.translate.TranslateUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.serializer.SerializerFeature;
-import com.formdev.flatlaf.*;
+import com.formdev.flatlaf.FlatDarculaLaf;
+import com.formdev.flatlaf.FlatDarkLaf;
+import com.formdev.flatlaf.FlatIntelliJLaf;
+import com.formdev.flatlaf.FlatLightLaf;
 import com.formdev.flatlaf.intellijthemes.*;
 import com.formdev.flatlaf.intellijthemes.materialthemeuilite.FlatMaterialDarkerIJTheme;
 import com.formdev.flatlaf.intellijthemes.materialthemeuilite.FlatMaterialLighterIJTheme;
@@ -41,7 +55,6 @@ public class AllConfigs {
     public static final int defaultSearchbarColor = 0x333333;
     public static final int defaultSearchbarFontColor = 0xffffff;
 
-    private static volatile boolean mainExit = false;
     private static volatile int cacheNumLimit;
     private static volatile boolean isShowTipCreatingLnk;
     private static volatile String hotkey;
@@ -77,15 +90,30 @@ public class AllConfigs {
     private static boolean isFirstRunApp = false;
     private static Enums.SwingThemes swingTheme;
 
-    private static void showError() {
+    private static volatile AllConfigs instance = null;
+
+    private AllConfigs() {}
+
+    public static AllConfigs getInstance() {
+        if (instance == null) {
+            synchronized (AllConfigs.class) {
+                if (instance == null) {
+                    instance = new AllConfigs();
+                }
+            }
+        }
+        return instance;
+    }
+
+    private void showError() {
         System.err.println("你应该在修改设置前先调用allowChangeSettings()方法，您的设置并未生效");
     }
 
-    public static void allowChangeSettings() {
+    public void allowChangeSettings() {
         isAllowChangeSettings = true;
     }
 
-    public static void denyChangeSettings() {
+    public void denyChangeSettings() {
         isAllowChangeSettings = false;
         if (setterCount != allSetMethodsNum) {
             System.err.println("警告：set方法并未被完全调用");
@@ -93,11 +121,11 @@ public class AllConfigs {
         setterCount = 0;
     }
 
-    public static String getSwingTheme() {
+    public String getSwingTheme() {
         return swingTheme.toString();
     }
 
-    public static void setSwingTheme(String swingTheme) {
+    public void setSwingTheme(String swingTheme) {
         if (isAllowChangeSettings) {
             setterCount++;
             AllConfigs.swingTheme = swingThemesMapper(swingTheme);
@@ -106,7 +134,7 @@ public class AllConfigs {
         }
     }
 
-    private static Enums.SwingThemes swingThemesMapper(String swingTheme) {
+    private Enums.SwingThemes swingThemesMapper(String swingTheme) {
         for (Enums.SwingThemes each : Enums.SwingThemes.values()) {
             if (each.toString().equals(swingTheme)) {
                 return each;
@@ -115,39 +143,39 @@ public class AllConfigs {
         return Enums.SwingThemes.CoreFlatDarculaLaf;
     }
 
-    public static boolean isShowTipOnCreatingLnk() {
+    public boolean isShowTipOnCreatingLnk() {
         return isShowTipCreatingLnk;
     }
 
-    public static boolean isFirstRun() {
+    public boolean isFirstRun() {
         return isFirstRunApp;
     }
 
-    public static int getCacheNum() {
+    public int getCacheNum() {
         return cacheNum.get();
     }
 
-    public static int getProxyPort() {
+    public int getProxyPort() {
         return proxyPort;
     }
 
-    public static String getProxyUserName() {
+    public String getProxyUserName() {
         return proxyUserName;
     }
 
-    public static String getProxyPassword() {
+    public String getProxyPassword() {
         return proxyPassword;
     }
 
-    public static int getProxyType() {
+    public int getProxyType() {
         return proxyType;
     }
 
-    public static String getProxyAddress() {
+    public String getProxyAddress() {
         return proxyAddress;
     }
 
-    public static void setIsShowTipCreatingLnk(boolean b) {
+    public void setIsShowTipCreatingLnk(boolean b) {
         if (isAllowChangeSettings) {
             setterCount++;
             isShowTipCreatingLnk = b;
@@ -156,7 +184,7 @@ public class AllConfigs {
         }
     }
 
-    public static void setCacheNumLimit(int cacheNumLimit) {
+    public void setCacheNumLimit(int cacheNumLimit) {
         if (isAllowChangeSettings) {
             setterCount++;
             AllConfigs.cacheNumLimit = cacheNumLimit;
@@ -165,7 +193,7 @@ public class AllConfigs {
         }
     }
 
-    public static void setHotkey(String hotkey) {
+    public void setHotkey(String hotkey) {
         if (isAllowChangeSettings) {
             setterCount++;
             AllConfigs.hotkey = hotkey;
@@ -174,7 +202,7 @@ public class AllConfigs {
         }
     }
 
-    public static void setUpdateTimeLimit(int updateTimeLimit) {
+    public void setUpdateTimeLimit(int updateTimeLimit) {
         if (isAllowChangeSettings) {
             setterCount++;
             AllConfigs.updateTimeLimit = updateTimeLimit;
@@ -183,7 +211,7 @@ public class AllConfigs {
         }
     }
 
-    public static void setIgnorePath(String ignorePath) {
+    public void setIgnorePath(String ignorePath) {
         if (isAllowChangeSettings) {
             setterCount++;
             AllConfigs.ignorePath = ignorePath;
@@ -192,7 +220,7 @@ public class AllConfigs {
         }
     }
 
-    public static void setPriorityFolder(String priorityFolder) {
+    public void setPriorityFolder(String priorityFolder) {
         if (isAllowChangeSettings) {
             setterCount++;
             AllConfigs.priorityFolder = priorityFolder;
@@ -201,7 +229,7 @@ public class AllConfigs {
         }
     }
 
-    public static void setSearchDepth(int searchDepth) {
+    public void setSearchDepth(int searchDepth) {
         if (isAllowChangeSettings) {
             setterCount++;
             AllConfigs.searchDepth = searchDepth;
@@ -210,7 +238,7 @@ public class AllConfigs {
         }
     }
 
-    public static void setIsDefaultAdmin(boolean isDefaultAdmin) {
+    public void setIsDefaultAdmin(boolean isDefaultAdmin) {
         if (isAllowChangeSettings) {
             setterCount++;
             AllConfigs.isDefaultAdmin = isDefaultAdmin;
@@ -219,7 +247,7 @@ public class AllConfigs {
         }
     }
 
-    public static void setIsLoseFocusClose(boolean isLoseFocusClose) {
+    public void setIsLoseFocusClose(boolean isLoseFocusClose) {
         if (isAllowChangeSettings) {
             setterCount++;
             AllConfigs.isLoseFocusClose = isLoseFocusClose;
@@ -228,7 +256,7 @@ public class AllConfigs {
         }
     }
 
-    public static void setOpenLastFolderKeyCode(int openLastFolderKeyCode) {
+    public void setOpenLastFolderKeyCode(int openLastFolderKeyCode) {
         if (isAllowChangeSettings) {
             setterCount++;
             AllConfigs.openLastFolderKeyCode = openLastFolderKeyCode;
@@ -237,7 +265,7 @@ public class AllConfigs {
         }
     }
 
-    public static void setRunAsAdminKeyCode(int runAsAdminKeyCode) {
+    public void setRunAsAdminKeyCode(int runAsAdminKeyCode) {
         if (isAllowChangeSettings) {
             setterCount++;
             AllConfigs.runAsAdminKeyCode = runAsAdminKeyCode;
@@ -246,7 +274,7 @@ public class AllConfigs {
         }
     }
 
-    public static void setCopyPathKeyCode(int copyPathKeyCode) {
+    public void setCopyPathKeyCode(int copyPathKeyCode) {
         if (isAllowChangeSettings) {
             setterCount++;
             AllConfigs.copyPathKeyCode = copyPathKeyCode;
@@ -255,7 +283,7 @@ public class AllConfigs {
         }
     }
 
-    public static void setTransparency(float transparency) {
+    public void setTransparency(float transparency) {
         if (isAllowChangeSettings) {
             setterCount++;
             AllConfigs.transparency = transparency;
@@ -264,7 +292,7 @@ public class AllConfigs {
         }
     }
 
-    public static void setProxyAddress(String proxyAddress) {
+    public void setProxyAddress(String proxyAddress) {
         if (isAllowChangeSettings) {
             setterCount++;
             AllConfigs.proxyAddress = proxyAddress;
@@ -273,7 +301,7 @@ public class AllConfigs {
         }
     }
 
-    public static void setProxyPort(int proxyPort) {
+    public void setProxyPort(int proxyPort) {
         if (isAllowChangeSettings) {
             setterCount++;
             AllConfigs.proxyPort = proxyPort;
@@ -282,7 +310,7 @@ public class AllConfigs {
         }
     }
 
-    public static void setProxyUserName(String proxyUserName) {
+    public void setProxyUserName(String proxyUserName) {
         if (isAllowChangeSettings) {
             setterCount++;
             AllConfigs.proxyUserName = proxyUserName;
@@ -291,7 +319,7 @@ public class AllConfigs {
         }
     }
 
-    public static void setProxyPassword(String proxyPassword) {
+    public void setProxyPassword(String proxyPassword) {
         if (isAllowChangeSettings) {
             setterCount++;
             AllConfigs.proxyPassword = proxyPassword;
@@ -300,7 +328,7 @@ public class AllConfigs {
         }
     }
 
-    public static void setProxyType(int proxyType) {
+    public void setProxyType(int proxyType) {
         if (isAllowChangeSettings) {
             setterCount++;
             AllConfigs.proxyType = proxyType;
@@ -309,7 +337,7 @@ public class AllConfigs {
         }
     }
 
-    public static void setLabelColor(int labelColor) {
+    public void setLabelColor(int labelColor) {
         if (isAllowChangeSettings) {
             setterCount++;
             AllConfigs.labelColor = labelColor;
@@ -318,7 +346,7 @@ public class AllConfigs {
         }
     }
 
-    public static void setDefaultBackgroundColor(int defaultBackgroundColor) {
+    public void setDefaultBackgroundColor(int defaultBackgroundColor) {
         if (isAllowChangeSettings) {
             setterCount++;
             AllConfigs.defaultBackgroundColor = defaultBackgroundColor;
@@ -327,7 +355,7 @@ public class AllConfigs {
         }
     }
 
-    public static void setLabelFontColorWithCoverage(int fontColorWithCoverage) {
+    public void setLabelFontColorWithCoverage(int fontColorWithCoverage) {
         if (isAllowChangeSettings) {
             setterCount++;
             AllConfigs.fontColorWithCoverage = fontColorWithCoverage;
@@ -336,7 +364,7 @@ public class AllConfigs {
         }
     }
 
-    public static void setSearchBarFontColor(int color) {
+    public void setSearchBarFontColor(int color) {
         if (isAllowChangeSettings) {
             setterCount++;
             searchBarFontColor = color;
@@ -345,7 +373,7 @@ public class AllConfigs {
         }
     }
 
-    public static void setLabelFontColor(int fontColor) {
+    public void setLabelFontColor(int fontColor) {
         if (isAllowChangeSettings) {
             setterCount++;
             AllConfigs.fontColor = fontColor;
@@ -354,7 +382,7 @@ public class AllConfigs {
         }
     }
 
-    public static void setBorderColor(int color) {
+    public void setBorderColor(int color) {
         if (isAllowChangeSettings) {
             setterCount++;
             borderColor = color;
@@ -363,7 +391,7 @@ public class AllConfigs {
         }
     }
 
-    public static void setSearchBarColor(int searchBarColor) {
+    public void setSearchBarColor(int searchBarColor) {
         if (isAllowChangeSettings) {
             setterCount++;
             AllConfigs.searchBarColor = searchBarColor;
@@ -372,7 +400,7 @@ public class AllConfigs {
         }
     }
 
-    public static void setUpdateAddress(String updateAddress) {
+    public void setUpdateAddress(String updateAddress) {
         if (isAllowChangeSettings) {
             setterCount++;
             AllConfigs.updateAddress = updateAddress;
@@ -381,222 +409,214 @@ public class AllConfigs {
         }
     }
 
-    public static int getSearchBarFontColor() {
+    public int getSearchBarFontColor() {
         return searchBarFontColor;
     }
 
-    public static int getSearchBarColor() {
+    public int getSearchBarColor() {
         return searchBarColor;
     }
 
-    public static String getHotkey() {
+    public String getHotkey() {
         return hotkey;
     }
 
-    public static boolean isNotMainExit() {
-        return !mainExit;
-    }
-
-    public static int getCacheNumLimit() {
+    public int getCacheNumLimit() {
         return cacheNumLimit;
     }
 
-    public static int getUpdateTimeLimit() {
+    public int getUpdateTimeLimit() {
         return updateTimeLimit;
     }
 
-    public static String getIgnorePath() {
+    public String getIgnorePath() {
         return ignorePath;
     }
 
-    public static String getPriorityFolder() {
+    public String getPriorityFolder() {
         return priorityFolder;
     }
 
-    public static int getSearchDepth() {
+    public int getSearchDepth() {
         return searchDepth;
     }
 
-    public static boolean isDefaultAdmin() {
+    public boolean isDefaultAdmin() {
         return isDefaultAdmin;
     }
 
-    public static boolean isLoseFocusClose() {
+    public boolean isLoseFocusClose() {
         return isLoseFocusClose;
     }
 
-    public static int getOpenLastFolderKeyCode() {
+    public int getOpenLastFolderKeyCode() {
         return openLastFolderKeyCode;
     }
 
-    public static int getRunAsAdminKeyCode() {
+    public int getRunAsAdminKeyCode() {
         return runAsAdminKeyCode;
     }
 
-    public static int getCopyPathKeyCode() {
+    public int getCopyPathKeyCode() {
         return copyPathKeyCode;
     }
 
-    public static float getTransparency() {
+    public float getTransparency() {
         return transparency;
     }
 
-    public static File getTmp() {
+    public File getTmp() {
         return tmp;
     }
 
-    public static LinkedHashSet<String> getCmdSet() {
+    public LinkedHashSet<String> getCmdSet() {
         return cmdSet;
     }
 
-    public static void addToCmdSet(String cmd) {
+    public void addToCmdSet(String cmd) {
         cmdSet.add(cmd);
     }
 
-    public static int getLabelColor() {
+    public int getLabelColor() {
         return labelColor;
     }
 
-    public static String getUpdateAddress() {
+    public String getUpdateAddress() {
         return updateAddress;
     }
 
-    public static int getDefaultBackgroundColor() {
+    public int getDefaultBackgroundColor() {
         return defaultBackgroundColor;
     }
 
-    public static int getLabelFontColorWithCoverage() {
+    public int getLabelFontColorWithCoverage() {
         return fontColorWithCoverage;
     }
 
-    public static int getLabelFontColor() {
+    public int getLabelFontColor() {
         return fontColor;
     }
 
-    public static int getBorderColor() {
+    public int getBorderColor() {
         return borderColor;
     }
 
-    public static ProxyInfo getProxy() {
+    public ProxyInfo getProxy() {
         return new ProxyInfo(proxyAddress, proxyPort, proxyUserName, proxyPassword, proxyType);
     }
 
-    public static void setMainExit(boolean b) {
-        mainExit = b;
-    }
-
-    public static void resetCacheNumToZero() {
+    public void resetCacheNumToZero() {
         cacheNum.set(0);
     }
 
-    public static void decrementCacheNum() {
+    public void decrementCacheNum() {
         cacheNum.decrementAndGet();
     }
 
-    public static void incrementCacheNum() {
+    public void incrementCacheNum() {
         cacheNum.incrementAndGet();
     }
 
     /**
      * 获取数据库缓存条目数量，用于判断软件是否还能继续写入缓存
      */
-    private static void initCacheNum() {
+    private void initCacheNum() {
         try (PreparedStatement stmt = SQLiteUtil.getPreparedStatement("SELECT COUNT(PATH) FROM cache;");
              ResultSet resultSet = stmt.executeQuery()) {
             cacheNum.set(resultSet.getInt(1));
         } catch (Exception throwables) {
-            if (AllConfigs.isDebug()) {
+            if (IsDebug.isDebug()) {
                 throwables.printStackTrace();
             }
         }
     }
 
-    private static void readUpdateAddress(JSONObject settingsInJson) {
+    private void readUpdateAddress(JSONObject settingsInJson) {
         updateAddress = (String) getFromJson(settingsInJson, "updateAddress", "jsdelivr CDN");
     }
 
-    private static void readCacheNumLimit(JSONObject settingsInJson) {
+    private void readCacheNumLimit(JSONObject settingsInJson) {
         cacheNumLimit = (int) getFromJson(settingsInJson, "cacheNumLimit", 1000);
     }
 
-    private static void readHotKey(JSONObject settingsInJson) {
+    private void readHotKey(JSONObject settingsInJson) {
         hotkey = (String) getFromJson(settingsInJson, "hotkey", "Ctrl + Alt + K");
     }
 
-    private static void readPriorityFolder(JSONObject settingsInJson) {
+    private void readPriorityFolder(JSONObject settingsInJson) {
         priorityFolder = (String) getFromJson(settingsInJson, "priorityFolder", "");
     }
 
-    private static void readSearchDepth(JSONObject settingsInJson) {
+    private void readSearchDepth(JSONObject settingsInJson) {
         searchDepth = (int) getFromJson(settingsInJson, "searchDepth", 8);
     }
 
-    private static void readIgnorePath(JSONObject settingsInJson) {
+    private void readIgnorePath(JSONObject settingsInJson) {
         ignorePath = (String) getFromJson(settingsInJson, "ignorePath", "C:\\Windows,");
     }
 
-    private static void readUpdateTimeLimit(JSONObject settingsInJson) {
+    private void readUpdateTimeLimit(JSONObject settingsInJson) {
         updateTimeLimit = (int) getFromJson(settingsInJson, "updateTimeLimit", 5);
     }
 
-    private static void readIsDefaultAdmin(JSONObject settingsInJson) {
+    private void readIsDefaultAdmin(JSONObject settingsInJson) {
         isDefaultAdmin = (boolean) getFromJson(settingsInJson, "isDefaultAdmin", false);
     }
 
-    private static void readIsLoseFocusClose(JSONObject settingsInJson) {
+    private void readIsLoseFocusClose(JSONObject settingsInJson) {
         isLoseFocusClose = (boolean) getFromJson(settingsInJson, "isLoseFocusClose", true);
     }
 
-    private static void readOpenLastFolderKeyCode(JSONObject settingsInJson) {
+    private void readOpenLastFolderKeyCode(JSONObject settingsInJson) {
         openLastFolderKeyCode = (int) getFromJson(settingsInJson, "openLastFolderKeyCode", 17);
     }
 
-    private static void readRunAsAdminKeyCode(JSONObject settingsInJson) {
+    private void readRunAsAdminKeyCode(JSONObject settingsInJson) {
         runAsAdminKeyCode = (int) getFromJson(settingsInJson, "runAsAdminKeyCode", 16);
     }
 
-    private static void readCopyPathKeyCode(JSONObject settingsInJson) {
+    private void readCopyPathKeyCode(JSONObject settingsInJson) {
         copyPathKeyCode = (int) getFromJson(settingsInJson, "copyPathKeyCode", 18);
     }
 
-    private static void readTransparency(JSONObject settingsInJson) {
+    private void readTransparency(JSONObject settingsInJson) {
         transparency = Float.parseFloat(getFromJson(settingsInJson, "transparency", 0.8f).toString());
     }
 
-    private static void readSearchBarColor(JSONObject settingsInJson) {
+    private void readSearchBarColor(JSONObject settingsInJson) {
         searchBarColor = (int) getFromJson(settingsInJson, "searchBarColor", defaultSearchbarColor);
     }
 
-    private static void readDefaultBackground(JSONObject settingsInJson) {
+    private void readDefaultBackground(JSONObject settingsInJson) {
         defaultBackgroundColor = (int) getFromJson(settingsInJson, "defaultBackground", defaultWindowBackgroundColor);
     }
 
-    private static void readBorderColor(JSONObject settingsInJson) {
+    private void readBorderColor(JSONObject settingsInJson) {
         borderColor = (int) getFromJson(settingsInJson, "borderColor", defaultBorderColor);
     }
 
-    private static void readFontColorWithCoverage(JSONObject settingsInJson) {
+    private void readFontColorWithCoverage(JSONObject settingsInJson) {
         fontColorWithCoverage = (int) getFromJson(settingsInJson, "fontColorWithCoverage", defaultFontColorWithCoverage);
     }
 
-    private static void readLabelColor(JSONObject settingsInJson) {
+    private void readLabelColor(JSONObject settingsInJson) {
         labelColor = (int) getFromJson(settingsInJson, "labelColor", defaultLabelColor);
     }
 
-    private static void readFontColor(JSONObject settingsInJson) {
+    private void readFontColor(JSONObject settingsInJson) {
         fontColor = (int) getFromJson(settingsInJson, "fontColor", defaultFontColor);
     }
 
-    private static void readSearchBarFontColor(JSONObject settingsInJson) {
+    private void readSearchBarFontColor(JSONObject settingsInJson) {
         searchBarFontColor = (int) getFromJson(settingsInJson, "searchBarFontColor", defaultSearchbarFontColor);
     }
 
-    private static void readLanguage(JSONObject settingsInJson) {
+    private void readLanguage(JSONObject settingsInJson) {
         String language = (String) getFromJson(settingsInJson, "language", TranslateUtil.getInstance().getDefaultLang());
         TranslateUtil.getInstance().setLanguage(language);
     }
 
-    private static void readProxy(JSONObject settingsInJson) {
+    private void readProxy(JSONObject settingsInJson) {
         proxyAddress = (String) getFromJson(settingsInJson, "proxyAddress", "");
         proxyPort = (int) getFromJson(settingsInJson, "proxyPort", 0);
         proxyUserName = (String) getFromJson(settingsInJson, "proxyUserName", "");
@@ -604,15 +624,15 @@ public class AllConfigs {
         proxyType = (int) getFromJson(settingsInJson, "proxyType", Enums.ProxyType.PROXY_DIRECT);
     }
 
-    private static void readSwingTheme(JSONObject settingsInJson) {
+    private void readSwingTheme(JSONObject settingsInJson) {
         swingTheme = swingThemesMapper((String) getFromJson(settingsInJson, "swingTheme", "CoreFlatDarculaLaf"));
     }
 
-    private static void readShowTipOnCreatingLnk(JSONObject settingsInJson) {
+    private void readShowTipOnCreatingLnk(JSONObject settingsInJson) {
         isShowTipCreatingLnk = (boolean) getFromJson(settingsInJson, "isShowTipOnCreatingLnk", true);
     }
 
-    private static JSONObject getSettingsJSON() {
+    private JSONObject getSettingsJSON() {
         File settings = new File("user/settings.json");
         if (settings.exists()) {
             try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(settings), StandardCharsets.UTF_8))) {
@@ -631,7 +651,7 @@ public class AllConfigs {
         }
     }
 
-    private static Object getFromJson(JSONObject json,String key, @NotNull Object defaultObj) {
+    private Object getFromJson(JSONObject json,String key, @NotNull Object defaultObj) {
         if (json == null) {
             return defaultObj;
         }
@@ -639,7 +659,7 @@ public class AllConfigs {
         return tmp != null ? tmp : defaultObj;
     }
 
-    public static void readAllSettings() {
+    private void readAllSettings() {
         JSONObject settingsInJson = getSettingsJSON();
         readProxy(settingsInJson);
         readLabelColor(settingsInJson);
@@ -666,30 +686,32 @@ public class AllConfigs {
         readShowTipOnCreatingLnk(settingsInJson);
         readSwingTheme(settingsInJson);
         initCacheNum();
-        setAllSettings();
-        saveAllSettings();
     }
 
-    public static void setAllSettings() {
+    private void setAllSettings() {
         setSwing(swingTheme);
-        CheckHotKeyUtil.getInstance().registerHotkey(hotkey);
-        SearchBar searchBar = SearchBar.getInstance();
-        searchBar.setTransparency(transparency);
-        searchBar.setDefaultBackgroundColor(defaultBackgroundColor);
-        searchBar.setLabelColor(labelColor);
-        searchBar.setFontColorWithCoverage(fontColorWithCoverage);
-        searchBar.setLabelFontColor(fontColor);
-        searchBar.setSearchBarColor(searchBarColor);
-        searchBar.setSearchBarFontColor(searchBarFontColor);
-        searchBar.setBorderColor(borderColor);
+        TaskUtil taskUtil = TaskUtil.getInstance();
+        taskUtil.putTask(new SetPluginsCurrentThemeTask(
+                AllConfigs.getInstance().getDefaultBackgroundColor(),
+                AllConfigs.getInstance().getLabelColor(),
+                AllConfigs.getInstance().getBorderColor()));
+        taskUtil.putTask(new RegisterHotKeyTask(hotkey));
+        taskUtil.putTask(new SetSearchBarTransparencyTask(transparency));
+        taskUtil.putTask(new SetSearchBarDefaultBackgroundTask(defaultBackgroundColor));
+        taskUtil.putTask(new SetSearchBarLabelColorTask(labelColor));
+        taskUtil.putTask(new SetSearchBarFontColorWithCoverageTask(fontColorWithCoverage));
+        taskUtil.putTask(new SetSearchBarLabelFontColorTask(fontColor));
+        taskUtil.putTask(new SetSearchBarColorTask(searchBarColor));
+        taskUtil.putTask(new SetSearchBarFontColorTask(searchBarFontColor));
+        taskUtil.putTask(new SetBorderColorTask(borderColor));
     }
 
-    public static void setSwingPreview(String theme) {
+    public void setSwingPreview(String theme) {
         Enums.SwingThemes t = swingThemesMapper(theme);
         setSwing(t);
     }
 
-    private static void setSwing(Enums.SwingThemes theme) {
+    private void setSwing(Enums.SwingThemes theme) {
         if (theme == Enums.SwingThemes.CoreFlatIntelliJLaf) {
             FlatIntelliJLaf.install();
         } else if (theme == Enums.SwingThemes.CoreFlatLightLaf) {
@@ -736,7 +758,7 @@ public class AllConfigs {
         }
     }
 
-    public static void saveAllSettings() {
+    private void saveAllSettings() {
         JSONObject allSettings = new JSONObject();
         //保存设置
         allSettings.put("hotkey", hotkey);
@@ -774,16 +796,7 @@ public class AllConfigs {
         }
     }
 
-    public static boolean isDebug() {
-        try {
-            String res = System.getProperty("File_Engine_Debug");
-            return "true".equalsIgnoreCase(res);
-        } catch (NullPointerException e) {
-            return false;
-        }
-    }
-
-    public static boolean hasStartup() {
+    public boolean hasStartup() {
         try {
             String command = "cmd.exe /c chcp 65001 & schtasks /query /tn \"File-Engine\"";
             Process p = Runtime.getRuntime().exec(command);
@@ -798,5 +811,31 @@ public class AllConfigs {
         } catch (IOException e) {
             return false;
         }
+    }
+
+    public static void registerTaskHandler() {
+        TaskUtil taskUtil = TaskUtil.getInstance();
+        taskUtil.registerTaskHandler(ReadConfigsAndBootSystemTask.class, new TaskHandler() {
+            @Override
+            public void todo(Task task) {
+                getInstance().readAllSettings();
+                getInstance().saveAllSettings();
+
+                taskUtil.putTask(new LoadAllPluginsTask("plugins"));
+                taskUtil.putTask(new StartMonitorDiskTask());
+                taskUtil.putTask(new ShowTaskBarIconTask());
+                if (!IsDebug.isDebug()) {
+                    taskUtil.putTask(new StartDaemonTask(new File("").getAbsolutePath()));
+                }
+                getInstance().setAllSettings();
+            }
+        });
+        taskUtil.registerTaskHandler(SaveConfigsTask.class, new TaskHandler() {
+            @Override
+            public void todo(Task task) {
+                getInstance().saveAllSettings();
+                getInstance().setAllSettings();
+            }
+        });
     }
 }

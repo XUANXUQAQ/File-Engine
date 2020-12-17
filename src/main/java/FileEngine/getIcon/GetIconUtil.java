@@ -1,6 +1,6 @@
 package FileEngine.getIcon;
 
-import FileEngine.configs.AllConfigs;
+import FileEngine.IsDebug;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileSystemView;
@@ -26,6 +26,11 @@ public class GetIconUtil {
     private GetIconUtil() {}
 
     public static GetIconUtil getInstance() {
+        initInstance();
+        return INSTANCE;
+    }
+
+    private static void initInstance() {
         if (INSTANCE == null) {
             synchronized (GetIconUtil.class) {
                 if (INSTANCE == null) {
@@ -33,7 +38,6 @@ public class GetIconUtil {
                 }
             }
         }
-        return INSTANCE;
     }
 
     private ImageIcon changeIcon(ImageIcon icon, int width, int height) {
@@ -63,7 +67,7 @@ public class GetIconUtil {
             isInitialized = true;
         }
         if (commandName == null || commandName.isEmpty()) {
-            if (AllConfigs.isDebug()) {
+            if (IsDebug.isDebug()) {
                 System.err.println("Command is empty");
             }
             return null;

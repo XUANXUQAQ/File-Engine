@@ -10,9 +10,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
 public class TranslateUtil {
-    private static class TranslateUtilBuilder {
-        private static final TranslateUtil INSTANCE = new TranslateUtil();
-    }
+    private static volatile TranslateUtil INSTANCE = null;
+
 
     private volatile static String language;
     private final HashSet<String> languageSet = new HashSet<>();
@@ -25,7 +24,14 @@ public class TranslateUtil {
     }
 
     public static TranslateUtil getInstance() {
-        return TranslateUtilBuilder.INSTANCE;
+        if (INSTANCE == null) {
+            synchronized (TranslateUtil.class) {
+                if (INSTANCE == null) {
+                    INSTANCE = new TranslateUtil();
+                }
+            }
+        }
+        return INSTANCE;
     }
 
     public String getTranslation(String text) {
