@@ -2,9 +2,6 @@ package FileEngine.taskHandler;
 
 import FileEngine.IsDebug;
 import FileEngine.SQLiteConfig.SQLiteUtil;
-import FileEngine.taskHandler.impl.stop.StopTask;
-import FileEngine.taskHandler.impl.stop.CloseTask;
-import FileEngine.taskHandler.impl.stop.RestartTask;
 import FileEngine.taskHandler.impl.daemon.StopDaemonTask;
 import FileEngine.taskHandler.impl.frame.pluginMarket.HidePluginMarketTask;
 import FileEngine.taskHandler.impl.frame.searchBar.HideSearchBarTask;
@@ -12,6 +9,9 @@ import FileEngine.taskHandler.impl.frame.settingsFrame.HideSettingsFrameTask;
 import FileEngine.taskHandler.impl.hotkey.StopListenHotkeyTask;
 import FileEngine.taskHandler.impl.monitorDisk.StopMonitorDiskTask;
 import FileEngine.taskHandler.impl.plugin.UnloadAllPluginsTask;
+import FileEngine.taskHandler.impl.stop.CloseTask;
+import FileEngine.taskHandler.impl.stop.RestartTask;
+import FileEngine.taskHandler.impl.stop.StopTask;
 import FileEngine.threadPool.CachedThreadPool;
 import com.sun.istack.internal.NotNull;
 
@@ -24,11 +24,15 @@ public class TaskUtil {
     private static volatile TaskUtil instance = null;
     private final AtomicBoolean exit = new AtomicBoolean(false);
     private final ConcurrentLinkedQueue<Task> TASK_QUEUE = new ConcurrentLinkedQueue<>();
-    private final ConcurrentHashMap<Class<? extends Task>, TaskHandler> taskHandlerMap = new ConcurrentHashMap<>();
+    private final ConcurrentLinkedQueue<Task> ASYNC_TASK_QUEUE = new ConcurrentLinkedQueue<>();
+    private final ConcurrentHashMap<Class<? extends Task>, TaskHandler> TASK_HANDLER_MAP = new ConcurrentHashMap<>();
     private final AtomicBoolean isRejectTask = new AtomicBoolean(false);
+
+    private final int MAX_TASK_RETRY_TIME = 20;
 
     private TaskUtil() {
         handleTask();
+        startAsyncTaskHandleThread();
     }
 
     public static TaskUtil getInstance() {
@@ -76,7 +80,7 @@ public class TaskUtil {
         return false;
     }
 
-    private boolean executeTask(Task task) {
+    private boolean executeTaskFailed(Task task) {
         if (task instanceof StopTask) {
             if (task instanceof RestartTask) {
                 restart();
@@ -85,21 +89,17 @@ public class TaskUtil {
             }
             task.setFinished();
             isRejectTask.set(true);
-            return true;
+            return false;
         }
-        for (Class<? extends Task> eachTaskType : taskHandlerMap.keySet()) {
+        task.incrementExecuteTimes();
+        for (Class<? extends Task> eachTaskType : TASK_HANDLER_MAP.keySet()) {
             if (eachTaskType.isInstance(task)) {
-                if (task.isBlock()) {
-                    taskHandlerMap.get(eachTaskType).doTask(task);
-                } else {
-                    task.setFinished();
-                    CachedThreadPool.getInstance().executeTask(() -> taskHandlerMap.get(eachTaskType).doTask(task));
-                }
-                return true;
+                TASK_HANDLER_MAP.get(eachTaskType).doTask(task);
+                return false;
             }
         }
         //当前无可以接该任务的handler
-        return false;
+        return true;
     }
 
     /**
@@ -128,29 +128,63 @@ public class TaskUtil {
         if (IsDebug.isDebug()) {
             System.err.println("注册监听器" + taskType.toString());
         }
-        taskHandlerMap.put(taskType, handler);
+        TASK_HANDLER_MAP.put(taskType, handler);
+    }
+
+    private void startAsyncTaskHandleThread() {
+        for (int i = 0; i < 2; i++) {
+            CachedThreadPool.getInstance().executeTask(() -> {
+                try {
+                    while (!exit.get()) {
+                        Task task = ASYNC_TASK_QUEUE.poll();
+                        if (task != null && !task.isFinished()) {
+                            if (task.getExecuteTimes() > MAX_TASK_RETRY_TIME) {
+                                if (IsDebug.isDebug()) {
+                                    System.err.println("任务超时---" + task.toString());
+                                }
+                                task.setFailed();
+                                continue;
+                            }
+                            if (executeTaskFailed(task)) {
+                                System.err.println("异步任务执行失败---" + task.toString());
+                                ASYNC_TASK_QUEUE.add(task);
+                            }
+                        }
+                        TimeUnit.MILLISECONDS.sleep(5);
+                    }
+                } catch (InterruptedException ignored) {
+                }
+            });
+        }
     }
 
     private void handleTask() {
         CachedThreadPool.getInstance().executeTask(() -> {
             try {
-                boolean isExecuted;
                 while (!exit.get() || !TASK_QUEUE.isEmpty()) {
+                    //移除失败和已执行的任务
+                    TASK_QUEUE.removeIf(task -> task.isFailed() || task.isFinished());
                     //取出任务
                     for (Task task : TASK_QUEUE) {
-                        isExecuted = executeTask(task);
-                        if (!isExecuted) {
-                            System.err.println("当前任务执行失败---" + task.toString());
-                            task.incrementExecuteTimes();
-                        }
-                        if (task.getExecuteTimes() > 500) {
+
+                        if (task.getExecuteTimes() > MAX_TASK_RETRY_TIME) {
                             if (IsDebug.isDebug()) {
                                 System.err.println("任务超时---" + task.toString());
-                                task.setFailed();
                             }
+                            task.setFailed();
+                            continue;
                         }
+
+                        if (task.isBlock()) {
+                            if (executeTaskFailed(task)) {
+                                System.err.println("当前任务执行失败---" + task.toString());
+                            }
+                        } else {
+                            ASYNC_TASK_QUEUE.add(task);
+                            TASK_QUEUE.remove(task);
+                        }
+
                     }
-                    TASK_QUEUE.removeIf(task -> task.isFailed() || task.isFinished());
                     TimeUnit.MILLISECONDS.sleep(10);
                 }
                 if (IsDebug.isDebug()) {
