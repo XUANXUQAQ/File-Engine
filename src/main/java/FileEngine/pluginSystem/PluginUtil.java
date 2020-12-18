@@ -22,15 +22,6 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
 public class PluginUtil {
-    protected static class PluginClassAndInstanceInfo {
-        public PluginClassAndInstanceInfo(Class<?> cls, Object instance) {
-            this.cls = cls;
-            this.clsInstance = instance;
-        }
-
-        public final Class<?> cls;
-        public final Object clsInstance;
-    }
 
     private static volatile PluginUtil INSTANCE = null;
 

@@ -2,7 +2,7 @@ package FileEngine.frames;
 
 
 import FileEngine.IsDebug;
-import FileEngine.SQLiteConfig.SQLiteUtil;
+import FileEngine.database.SQLiteUtil;
 import FileEngine.configs.AllConfigs;
 import FileEngine.configs.Enums;
 import FileEngine.dllInterface.FileMonitor;
@@ -23,7 +23,7 @@ import FileEngine.pluginSystem.Plugin;
 import FileEngine.pluginSystem.PluginUtil;
 import FileEngine.r.R;
 import FileEngine.robotUtil.RobotUtil;
-import FileEngine.search.SearchUtil;
+import FileEngine.database.DatabaseUtil;
 import FileEngine.threadPool.CachedThreadPool;
 import FileEngine.translate.TranslateUtil;
 
@@ -102,7 +102,7 @@ public class SearchBar {
     private volatile String[] searchCase;
     private volatile String searchText;
     private volatile String[] keywords;
-    private final SearchUtil search;
+    private final DatabaseUtil search;
     private final AtomicInteger listResultsNum;  //保存当前listResults中有多少个结果
     private final AtomicInteger tempResultNum;  //保存当前tempResults中有多少个结果
     private final AtomicInteger currentLabelSelectedPosition;   //保存当前是哪个label被选中 范围 0 - 7
@@ -132,7 +132,7 @@ public class SearchBar {
         JPanel panel = new JPanel();
         Color transparentColor = new Color(0, 0, 0, 0);
 
-        search = SearchUtil.getInstance();
+        search = DatabaseUtil.getInstance();
 
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize(); // 获取屏幕大小
         int width = screenSize.width;
@@ -2286,7 +2286,7 @@ public class SearchBar {
                         //使用次数大于10次，优化数据库
                         if (startTimes >= 10) {
                             startTimes = 0;
-                            if (SearchUtil.getInstance().getStatus() == Enums.DatabaseStatus.NORMAL) {
+                            if (DatabaseUtil.getInstance().getStatus() == Enums.DatabaseStatus.NORMAL) {
                                 System.err.println("开启次数超过10次，优化数据库");
                                 TaskUtil.getInstance().putTask(new ShowTaskBarMessageTask(
                                         TranslateUtil.getInstance().getTranslation("Info"),
@@ -2732,7 +2732,7 @@ public class SearchBar {
             try {
                 String column;
                 while (TaskUtil.getInstance().isNotMainExit()) {
-                    if (runningMode == Enums.RunningMode.NORMAL_MODE && SearchUtil.getInstance().getStatus() == Enums.DatabaseStatus.NORMAL) {
+                    if (runningMode == Enums.RunningMode.NORMAL_MODE && DatabaseUtil.getInstance().getStatus() == Enums.DatabaseStatus.NORMAL) {
                         while ((column = commandQueue.poll()) != null) {
                             searchAndAddToTempResults(System.currentTimeMillis(), column);
                         }
@@ -3392,8 +3392,7 @@ public class SearchBar {
                 if (each.contains("/") || each.contains(File.separator)) {
                     continue;
                 }
-                each = semicolon.matcher(each.toUpperCase()).replaceAll("");
-                stringBuilder.append(each);
+                stringBuilder.append(each.toUpperCase());
             }
             return GetAscII.INSTANCE.getAscII(stringBuilder.toString());
         }

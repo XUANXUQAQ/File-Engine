@@ -1,7 +1,7 @@
 package FileEngine.frames;
 
 import FileEngine.IsDebug;
-import FileEngine.SQLiteConfig.SQLiteUtil;
+import FileEngine.database.SQLiteUtil;
 import FileEngine.checkHotkey.CheckHotKeyUtil;
 import FileEngine.configs.AllConfigs;
 import FileEngine.configs.Enums;
@@ -23,7 +23,7 @@ import FileEngine.moveFiles.MoveDesktopFiles;
 import FileEngine.pluginSystem.Plugin;
 import FileEngine.pluginSystem.PluginUtil;
 import FileEngine.r.R;
-import FileEngine.search.SearchUtil;
+import FileEngine.database.DatabaseUtil;
 import FileEngine.threadPool.CachedThreadPool;
 import FileEngine.translate.TranslateUtil;
 import com.alibaba.fastjson.JSONObject;
@@ -768,7 +768,7 @@ public class SettingsFrame {
         buttonVacuum.addActionListener(e -> {
             int ret = JOptionPane.showConfirmDialog(frame, TranslateUtil.getInstance().getTranslation("Confirm whether to start optimizing the database?"));
             if (JOptionPane.YES_OPTION == ret) {
-                Enums.DatabaseStatus status = SearchUtil.getInstance().getStatus();
+                Enums.DatabaseStatus status = DatabaseUtil.getInstance().getStatus();
                 if (status == Enums.DatabaseStatus.NORMAL) {
                     if (IsDebug.isDebug()) {
                         System.out.println("开始优化");
@@ -777,7 +777,7 @@ public class SettingsFrame {
                     CachedThreadPool.getInstance().executeTask(() -> {
                         //实时显示VACUUM状态
                         try {
-                            SearchUtil instance = SearchUtil.getInstance();
+                            DatabaseUtil instance = DatabaseUtil.getInstance();
                             while (instance.getStatus() == Enums.DatabaseStatus.VACUUM) {
                                 labelVacuumStatus.setText(TranslateUtil.getInstance().getTranslation("Optimizing..."));
                                 TimeUnit.MILLISECONDS.sleep(50);

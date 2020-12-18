@@ -1,7 +1,7 @@
 package FileEngine.taskHandler;
 
 import FileEngine.IsDebug;
-import FileEngine.SQLiteConfig.SQLiteUtil;
+import FileEngine.database.SQLiteUtil;
 import FileEngine.taskHandler.impl.daemon.StopDaemonTask;
 import FileEngine.taskHandler.impl.frame.pluginMarket.HidePluginMarketTask;
 import FileEngine.taskHandler.impl.frame.searchBar.HideSearchBarTask;
@@ -81,6 +81,9 @@ public class TaskUtil {
     }
 
     private boolean executeTaskFailed(Task task) {
+        if (IsDebug.isDebug()) {
+            System.err.println("正在尝试执行任务---" + task.toString());
+        }
         if (task instanceof StopTask) {
             if (task instanceof RestartTask) {
                 restart();
@@ -135,7 +138,7 @@ public class TaskUtil {
         for (int i = 0; i < 2; i++) {
             CachedThreadPool.getInstance().executeTask(() -> {
                 try {
-                    while (!exit.get()) {
+                    while (isThreadNotExit()) {
                         Task task = ASYNC_TASK_QUEUE.poll();
                         if (task != null && !task.isFinished()) {
                             if (task.getExecuteTimes() > MAX_TASK_RETRY_TIME) {
@@ -158,10 +161,14 @@ public class TaskUtil {
         }
     }
 
+    private boolean isThreadNotExit() {
+        return (!exit.get() || !TASK_QUEUE.isEmpty() || !ASYNC_TASK_QUEUE.isEmpty());
+    }
+
     private void handleTask() {
         CachedThreadPool.getInstance().executeTask(() -> {
             try {
-                while (!exit.get() || !TASK_QUEUE.isEmpty()) {
+                while (isThreadNotExit()) {
                     //移除失败和已执行的任务
                     TASK_QUEUE.removeIf(task -> task.isFailed() || task.isFinished());
                     //取出任务
