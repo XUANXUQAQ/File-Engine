@@ -1,7 +1,6 @@
-package FileEngine.search;
+package FileEngine.database;
 
 import FileEngine.IsDebug;
-import FileEngine.SQLiteConfig.SQLiteUtil;
 import FileEngine.configs.AllConfigs;
 import FileEngine.configs.Enums;
 import FileEngine.dllInterface.GetAscII;
@@ -25,16 +24,16 @@ import java.util.LinkedHashSet;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 
-public class SearchUtil {
+public class DatabaseUtil {
     private final ConcurrentLinkedQueue<SQLWithTaskId> commandSet = new ConcurrentLinkedQueue<>();
     private volatile Enums.DatabaseStatus status = Enums.DatabaseStatus.NORMAL;
     private volatile boolean isExecuteImmediately = false;
 
     private static final int MAX_SQL_NUM = 5000;
 
-    private static volatile SearchUtil INSTANCE = null;
+    private static volatile DatabaseUtil INSTANCE = null;
 
-    private SearchUtil() {
+    private DatabaseUtil() {
         CachedThreadPool.getInstance().executeTask(() -> {
             try (Statement statement = SQLiteUtil.getStatement()) {
                 while (TaskUtil.getInstance().isNotMainExit()) {
@@ -51,16 +50,16 @@ public class SearchUtil {
         });
     }
 
-    public static SearchUtil getInstance() {
+    public static DatabaseUtil getInstance() {
         initInstance();
         return INSTANCE;
     }
 
     private static void initInstance() {
         if (INSTANCE == null) {
-            synchronized (SearchUtil.class) {
+            synchronized (DatabaseUtil.class) {
                 if (INSTANCE == null) {
-                    INSTANCE = new SearchUtil();
+                    INSTANCE = new DatabaseUtil();
                 }
             }
         }

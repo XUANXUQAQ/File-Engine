@@ -32,7 +32,7 @@ public class Plugin {
     private Method pluginClearResultQueue;
     private Method pluginSetCurrentTheme;
 
-    public Plugin(PluginUtil.PluginClassAndInstanceInfo pluginClassAndInstanceInfo) {
+    public Plugin(PluginClassAndInstanceInfo pluginClassAndInstanceInfo) {
         Class<?> aClass = pluginClassAndInstanceInfo.cls;
         this.instance = pluginClassAndInstanceInfo.clsInstance;
         initMethodList();

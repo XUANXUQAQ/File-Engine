@@ -1,7 +1,7 @@
 package FileEngine.configs;
 
 import FileEngine.IsDebug;
-import FileEngine.SQLiteConfig.SQLiteUtil;
+import FileEngine.database.SQLiteUtil;
 import FileEngine.taskHandler.TaskUtil;
 import FileEngine.taskHandler.Task;
 import FileEngine.taskHandler.TaskHandler;

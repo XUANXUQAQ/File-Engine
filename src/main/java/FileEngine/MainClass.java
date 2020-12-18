@@ -1,6 +1,6 @@
 package FileEngine;
 
-import FileEngine.SQLiteConfig.SQLiteUtil;
+import FileEngine.database.SQLiteUtil;
 import FileEngine.classScan.ClassScannerUtil;
 import FileEngine.configs.AllConfigs;
 import FileEngine.taskHandler.TaskUtil;
