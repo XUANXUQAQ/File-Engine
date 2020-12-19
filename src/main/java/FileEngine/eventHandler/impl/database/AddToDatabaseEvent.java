@@ -4,5 +4,6 @@ public class AddToDatabaseEvent extends DatabaseEvent {
 
     public AddToDatabaseEvent(String path) {
         super(path);
+        this.setBlock();
     }
 }

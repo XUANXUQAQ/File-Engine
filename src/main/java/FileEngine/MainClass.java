@@ -1,16 +1,16 @@
 package FileEngine;
 
-import FileEngine.database.SQLiteUtil;
 import FileEngine.classScan.ClassScannerUtil;
 import FileEngine.configs.AllConfigs;
-import FileEngine.eventHandler.EventUtil;
+import FileEngine.database.SQLiteUtil;
 import FileEngine.eventHandler.Event;
-import FileEngine.eventHandler.impl.taskbar.ShowTaskBarMessageEvent;
-import FileEngine.eventHandler.impl.stop.CloseEvent;
+import FileEngine.eventHandler.EventUtil;
 import FileEngine.eventHandler.impl.ReadConfigsAndBootSystemEvent;
 import FileEngine.eventHandler.impl.database.InitTablesEvent;
 import FileEngine.eventHandler.impl.database.UpdateDatabaseEvent;
 import FileEngine.eventHandler.impl.plugin.ReleasePluginResourcesEvent;
+import FileEngine.eventHandler.impl.stop.CloseEvent;
+import FileEngine.eventHandler.impl.taskbar.ShowTaskBarMessageEvent;
 import FileEngine.frames.SettingsFrame;
 import FileEngine.frames.TaskBar;
 import FileEngine.md5.Md5Util;
@@ -154,7 +154,6 @@ public class MainClass {
             if (isDatabaseDamaged()) {
                 System.out.println("无data文件，正在搜索并重建");
                 //初始化数据库
-                EventUtil.getInstance().putTask(new InitTablesEvent());
                 isManualUpdate = true;
             }
 
@@ -175,16 +174,14 @@ public class MainClass {
 
             initializeDllInterface();
 
-            initAll();
+            if (initAll()) {
+                System.err.println("初始化失败");
+                System.exit(0);
+            }
 
             EventUtil eventUtil = EventUtil.getInstance();
 
-            if (isManualUpdate) {
-                eventUtil.putTask(new ShowTaskBarMessageEvent(
-                        TranslateUtil.getInstance().getTranslation("Info"),
-                        TranslateUtil.getInstance().getTranslation("Updating file index")));
-                eventUtil.putTask(new UpdateDatabaseEvent());
-            }
+            EventUtil.getInstance().putTask(new InitTablesEvent());
 
             TranslateUtil translateUtil = TranslateUtil.getInstance();
 
@@ -212,6 +209,13 @@ public class MainClass {
             }
 
             eventUtil.putTask(new ReleasePluginResourcesEvent());
+
+            if (isManualUpdate) {
+                eventUtil.putTask(new ShowTaskBarMessageEvent(
+                        TranslateUtil.getInstance().getTranslation("Info"),
+                        TranslateUtil.getInstance().getTranslation("Updating file index")));
+                eventUtil.putTask(new UpdateDatabaseEvent());
+            }
 
             StringBuilder stringBuilder = new StringBuilder();
             AtomicBoolean isFinished = new AtomicBoolean(false);
@@ -260,14 +264,14 @@ public class MainClass {
         }
     }
 
-    private static void initAll() {
+    private static boolean initAll() {
         registerAllEventHandler();
 
         EventUtil eventUtil = EventUtil.getInstance();
 
         Event event = new ReadConfigsAndBootSystemEvent();
         eventUtil.putTask(event);
-        eventUtil.waitForTask(event);
+        return eventUtil.waitForTask(event);
     }
 
     private static void closeAndExit() {

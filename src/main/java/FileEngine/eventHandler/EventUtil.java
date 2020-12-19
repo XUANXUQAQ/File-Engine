@@ -31,8 +31,8 @@ public class EventUtil {
     private final int MAX_TASK_RETRY_TIME = 20;
 
     private EventUtil() {
-        handleTask();
-        startAsyncTaskHandleThread();
+        startBlockEventHandler();
+        startAsyncEventHandler();
     }
 
     public static EventUtil getInstance() {
@@ -62,28 +62,34 @@ public class EventUtil {
         exit.set(true);
     }
 
-    public void waitForTask(@NotNull Event event) {
+    /**
+     * 等待任务
+     * @param event 任务实例
+     * @return true如果任务正常执行失败， false如果执行正常完成
+     */
+    public boolean waitForTask(@NotNull Event event) {
         try {
-            while (hasTaskByInstance(event)) {
+            int timeout = 200;
+            int count = 0;
+            while (!event.isFinished() || !event.isFailed()) {
+                count++;
+                if (count > timeout){
+                    System.err.println("等待" + event.toString() + "超时");
+                    break;
+                }
                 TimeUnit.MILLISECONDS.sleep(50);
             }
         }catch (InterruptedException ignored){
         }
+        return event.isFailed();
     }
 
-    private boolean hasTaskByInstance(@NotNull Event event) {
-        for (Event each : eventQueue) {
-            if (each.equals(event)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
+    /**
+     * 执行任务
+     * @param event 任务
+     * @return true如果执行失败，false执行成功
+     */
     private boolean executeTaskFailed(Event event) {
-        if (IsDebug.isDebug()) {
-            System.err.println("正在尝试执行任务---" + event.toString());
-        }
         if (event instanceof StopEvent) {
             if (event instanceof RestartEvent) {
                 restart();
@@ -115,7 +121,11 @@ public class EventUtil {
             System.err.println("尝试放入任务---" + event.toString());
         }
         if (!isRejectTask.get()) {
-            eventQueue.add(event);
+            if (event.isBlock()) {
+                eventQueue.add(event);
+            } else {
+                asyncEventQueue.add(event);
+            }
         } else {
             if (isDebug) {
                 System.err.println("任务已被拒绝---" + event.toString());
@@ -127,33 +137,50 @@ public class EventUtil {
         return !exit.get();
     }
 
-    public void register(@NotNull Class<? extends Event> taskType, @NotNull EventHandler handler) {
+    /**
+     * 注册任务监听器
+     * @param eventType 需要监听的任务类型
+     * @param handler 需要执行的操作
+     */
+    public void register(@NotNull Class<? extends Event> eventType, @NotNull EventHandler handler) {
         if (IsDebug.isDebug()) {
-            System.err.println("注册监听器" + taskType.toString());
+            System.err.println("注册监听器" + eventType.toString());
         }
-        TASK_HANDLER_MAP.put(taskType, handler);
+        TASK_HANDLER_MAP.put(eventType, handler);
     }
 
-    private void startAsyncTaskHandleThread() {
-        for (int i = 0; i < 2; i++) {
-            CachedThreadPool.getInstance().executeTask(() -> {
+    private void startAsyncEventHandler() {
+        CachedThreadPool cachedThreadPool = CachedThreadPool.getInstance();
+        for (int i = 0; i < 4; i++) {
+            cachedThreadPool.executeTask(() -> {
                 try {
+                    Event event;
                     while (isEventHandlerNotExit()) {
-                        Event event = asyncEventQueue.poll();
-                        if (event != null && !event.isFinished()) {
-                            if (event.getExecuteTimes() > MAX_TASK_RETRY_TIME) {
-                                if (IsDebug.isDebug()) {
-                                    System.err.println("任务超时---" + event.toString());
+                        //取出任务
+                        if ((event = asyncEventQueue.poll()) != null) {
+                            //判断任务是否执行完成或者失败
+                            if (!event.isFinished() && !event.isFailed()) {
+                                //判断是否超过最大次数
+                                if (event.getExecuteTimes() < MAX_TASK_RETRY_TIME) {
+                                    if (IsDebug.isDebug()) {
+                                        System.err.println("异步线程正在尝试执行任务---" + event.toString());
+                                    }
+                                    if (executeTaskFailed(event)) {
+                                        System.err.println("异步任务执行失败---" + event.toString());
+                                        asyncEventQueue.add(event);
+                                    }
+                                } else {
+                                    event.setFailed();
+                                    if (IsDebug.isDebug()) {
+                                        System.err.println("任务超时---" + event.toString());
+                                    }
                                 }
-                                event.setFailed();
-                                continue;
-                            }
-                            if (executeTaskFailed(event)) {
-                                System.err.println("异步任务执行失败---" + event.toString());
-                                asyncEventQueue.add(event);
                             }
                         }
                         TimeUnit.MILLISECONDS.sleep(5);
+                    }
+                    if (IsDebug.isDebug()) {
+                        System.err.println("******异步任务执行线程退出******");
                     }
                 } catch (InterruptedException ignored) {
                 }
@@ -165,37 +192,36 @@ public class EventUtil {
         return (!exit.get() || !eventQueue.isEmpty() || !asyncEventQueue.isEmpty());
     }
 
-    private void handleTask() {
+    private void startBlockEventHandler() {
         CachedThreadPool.getInstance().executeTask(() -> {
             try {
+                Event event;
                 while (isEventHandlerNotExit()) {
-                    //移除失败和已执行的任务
-                    eventQueue.removeIf(task -> task.isFailed() || task.isFinished());
                     //取出任务
-                    for (Event event : eventQueue) {
-
-                        if (event.getExecuteTimes() > MAX_TASK_RETRY_TIME) {
-                            if (IsDebug.isDebug()) {
-                                System.err.println("任务超时---" + event.toString());
+                    if ((event = eventQueue.poll()) != null) {
+                        //判断任务是否已经被执行或者失败
+                        if (!event.isFinished() && !event.isFailed()) {
+                            //判断任务是否超过最大执行次数
+                            if (event.getExecuteTimes() < MAX_TASK_RETRY_TIME) {
+                                if (IsDebug.isDebug()) {
+                                    System.err.println("同步线程正在尝试执行任务---" + event.toString());
+                                }
+                                if (executeTaskFailed(event)) {
+                                    System.err.println("当前任务执行失败---" + event.toString());
+                                    eventQueue.add(event);
+                                }
+                            } else {
+                                event.setFailed();
+                                if (IsDebug.isDebug()) {
+                                    System.err.println("任务超时---" + event.toString());
+                                }
                             }
-                            event.setFailed();
-                            continue;
                         }
-
-                        if (event.isBlock()) {
-                            if (executeTaskFailed(event)) {
-                                System.err.println("当前任务执行失败---" + event.toString());
-                            }
-                        } else {
-                            asyncEventQueue.add(event);
-                            eventQueue.remove(event);
-                        }
-
                     }
                     TimeUnit.MILLISECONDS.sleep(5);
                 }
                 if (IsDebug.isDebug()) {
-                    System.err.println("******取任务线程退出******");
+                    System.err.println("******同步任务执行线程退出******");
                 }
             } catch (InterruptedException ignored) {
             }
