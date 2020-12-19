@@ -6,6 +6,7 @@ import FileEngine.database.SQLiteUtil;
 import FileEngine.eventHandler.Event;
 import FileEngine.eventHandler.EventUtil;
 import FileEngine.eventHandler.impl.ReadConfigsAndBootSystemEvent;
+import FileEngine.eventHandler.impl.SetDefaultSwingLaf;
 import FileEngine.eventHandler.impl.configs.SetConfigsEvent;
 import FileEngine.eventHandler.impl.database.UpdateDatabaseEvent;
 import FileEngine.eventHandler.impl.plugin.ReleasePluginResourcesEvent;
@@ -178,6 +179,8 @@ public class MainClass {
                 System.err.println("初始化失败");
                 System.exit(0);
             }
+
+            eventUtil.putTask(new SetDefaultSwingLaf());
 
             ClassScannerUtil.executeStaticMethodByName("getInstance");
 
