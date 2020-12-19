@@ -2,28 +2,27 @@ package FileEngine.frames;
 
 
 import FileEngine.IsDebug;
-import FileEngine.database.SQLiteUtil;
 import FileEngine.configs.AllConfigs;
 import FileEngine.configs.Enums;
+import FileEngine.database.DatabaseUtil;
+import FileEngine.database.SQLiteUtil;
 import FileEngine.dllInterface.FileMonitor;
 import FileEngine.dllInterface.GetAscII;
 import FileEngine.dllInterface.GetHandle;
 import FileEngine.dllInterface.IsLocalDisk;
-import FileEngine.eventHandler.EventUtil;
 import FileEngine.eventHandler.Event;
 import FileEngine.eventHandler.EventHandler;
-import FileEngine.eventHandler.impl.taskbar.ShowTaskBarMessageEvent;
+import FileEngine.eventHandler.EventUtil;
 import FileEngine.eventHandler.impl.database.*;
 import FileEngine.eventHandler.impl.frame.searchBar.*;
 import FileEngine.eventHandler.impl.monitorDisk.StartMonitorDiskEvent;
 import FileEngine.eventHandler.impl.monitorDisk.StopMonitorDiskEvent;
+import FileEngine.eventHandler.impl.taskbar.ShowTaskBarMessageEvent;
 import FileEngine.getIcon.GetIconUtil;
 import FileEngine.moveFiles.CopyFileUtil;
 import FileEngine.pluginSystem.Plugin;
 import FileEngine.pluginSystem.PluginUtil;
-import FileEngine.r.R;
 import FileEngine.robotUtil.RobotUtil;
-import FileEngine.database.DatabaseUtil;
 import FileEngine.threadPool.CachedThreadPool;
 import FileEngine.translate.TranslateUtil;
 
@@ -45,7 +44,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Scanner;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -102,7 +100,7 @@ public class SearchBar {
     private volatile String[] searchCase;
     private volatile String searchText;
     private volatile String[] keywords;
-    private final DatabaseUtil search;
+    private final DatabaseUtil databaseUtil;
     private final AtomicInteger listResultsNum;  //保存当前listResults中有多少个结果
     private final AtomicInteger tempResultNum;  //保存当前tempResults中有多少个结果
     private final AtomicInteger currentLabelSelectedPosition;   //保存当前是哪个label被选中 范围 0 - 7
@@ -118,7 +116,6 @@ public class SearchBar {
         tempResults = new ConcurrentSkipListSet<>();
         commandQueue = new ConcurrentLinkedQueue<>();
         searchBar = new JFrame();
-        R.getInstance().addComponent("searchbar", searchBar);
         currentResultCount = new AtomicInteger(0);
         listResultsNum = new AtomicInteger(0);
         tempResultNum = new AtomicInteger(0);
@@ -132,7 +129,7 @@ public class SearchBar {
         JPanel panel = new JPanel();
         Color transparentColor = new Color(0, 0, 0, 0);
 
-        search = DatabaseUtil.getInstance();
+        databaseUtil = DatabaseUtil.getInstance();
 
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize(); // 获取屏幕大小
         int width = screenSize.width;
@@ -1990,7 +1987,7 @@ public class SearchBar {
             CachedThreadPool.getInstance().executeTask(() -> {
                 try {
                     while (isWaiting) {
-                        if (search.getStatus() == Enums.DatabaseStatus.NORMAL) {
+                        if (databaseUtil.getStatus() == Enums.DatabaseStatus.NORMAL) {
                             startTime = System.currentTimeMillis() - 500;
                             startSignal = true;
                             isWaiting = false;
@@ -2009,8 +2006,6 @@ public class SearchBar {
 
         mergeTempQueueAndListResultsThread();
 
-        checkPluginMessageThread();
-
         lockMouseMotionThread();
 
         setForegroundOnLabelThread();
@@ -2024,12 +2019,6 @@ public class SearchBar {
         pollCommandsAndSearchDatabaseThread();
 
         sendSignalAndShowCommandThread();
-
-        addRecordsToDatabaseThread();
-
-        deleteRecordsToDatabaseThread();
-
-        checkTimeAndExecuteSqlCommandsThread();
 
         switchSearchBarShowingMode();
 
@@ -2325,28 +2314,6 @@ public class SearchBar {
                     TimeUnit.MILLISECONDS.sleep(20);
                 }
             } catch (InterruptedException ignored) {
-            }
-        });
-    }
-
-    private void checkPluginMessageThread() {
-        CachedThreadPool.getInstance().executeTask(() -> {
-            try {
-                String[] message;
-                Plugin plugin;
-                while (EventUtil.getInstance().isNotMainExit()) {
-                    Iterator<Plugin> iter = PluginUtil.getInstance().getPluginMapIter();
-                    while (iter.hasNext()) {
-                        plugin = iter.next();
-                        message = plugin.getMessage();
-                        if (message != null) {
-                            EventUtil.getInstance().putTask(new ShowTaskBarMessageEvent(message[0], message[1]));
-                        }
-                    }
-                    TimeUnit.MILLISECONDS.sleep(50);
-                }
-            } catch (InterruptedException e) {
-                e.printStackTrace();
             }
         });
     }
@@ -2764,7 +2731,7 @@ public class SearchBar {
                         }
                         clearListAndTempAndReset();
                         String text = getTextFieldText();
-                        if (search.getStatus() == Enums.DatabaseStatus.NORMAL) {
+                        if (databaseUtil.getStatus() == Enums.DatabaseStatus.NORMAL) {
                             if (runningMode == Enums.RunningMode.COMMAND_MODE) {
                                 //去掉冒号
                                 runInternalCommand(text.substring(1).toLowerCase());
@@ -2828,15 +2795,15 @@ public class SearchBar {
                             showResults(true, false, false, false,
                                     false, false, false, false);
 
-                        } else if (search.getStatus() == Enums.DatabaseStatus.VACUUM) {
+                        } else if (databaseUtil.getStatus() == Enums.DatabaseStatus.VACUUM) {
                             setLabelChosen(label1);
                             label1.setText(TranslateUtil.getInstance().getTranslation("Organizing database"));
-                        } else if (search.getStatus() == Enums.DatabaseStatus.MANUAL_UPDATE) {
+                        } else if (databaseUtil.getStatus() == Enums.DatabaseStatus.MANUAL_UPDATE) {
                             setLabelChosen(label1);
                             label1.setText(TranslateUtil.getInstance().getTranslation("Updating file index") + "...");
                         }
 
-                        if (search.getStatus() != Enums.DatabaseStatus.NORMAL) {
+                        if (databaseUtil.getStatus() != Enums.DatabaseStatus.NORMAL) {
                             //开启线程等待搜索完成
                             addSearchWaiter();
                             clearAllLabels();
@@ -2848,80 +2815,6 @@ public class SearchBar {
 
             } catch (URISyntaxException | IOException e) {
                 e.printStackTrace();
-            }
-        });
-    }
-
-    private void addRecordsToDatabaseThread() {
-        CachedThreadPool.getInstance().executeTask(() -> {
-            //检测文件添加线程
-            String filesToAdd;
-            int count;
-            EventUtil eventUtil = EventUtil.getInstance();
-            try (BufferedReader readerAdd = new BufferedReader(new InputStreamReader(
-                    new FileInputStream(AllConfigs.getInstance().getTmp().getAbsolutePath() + File.separator + "fileAdded.txt"),
-                    StandardCharsets.UTF_8))) {
-                while (EventUtil.getInstance().isNotMainExit()) {
-                    if (search.getStatus() == Enums.DatabaseStatus.NORMAL) {
-                        count = 0;
-                        while ((filesToAdd = readerAdd.readLine()) != null) {
-                            eventUtil.putTask(new AddToDatabaseEvent(filesToAdd));
-                            count++;
-                            if (count > 3000) {
-                                break;
-                            }
-                        }
-                    }
-                    TimeUnit.MILLISECONDS.sleep(1);
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (InterruptedException ignored) {
-            }
-        });
-    }
-
-    private void deleteRecordsToDatabaseThread() {
-        CachedThreadPool.getInstance().executeTask(() -> {
-            String filesToRemove;
-            int count;
-            EventUtil eventUtil = EventUtil.getInstance();
-            try (BufferedReader readerRemove = new BufferedReader(new InputStreamReader(
-                    new FileInputStream(AllConfigs.getInstance().getTmp().getAbsolutePath() + File.separator + "fileRemoved.txt"),
-                    StandardCharsets.UTF_8))) {
-                while (EventUtil.getInstance().isNotMainExit()) {
-                    if (search.getStatus() == Enums.DatabaseStatus.NORMAL) {
-                        count = 0;
-                        while ((filesToRemove = readerRemove.readLine()) != null) {
-                            eventUtil.putTask(new DeleteFromDatabaseEvent(filesToRemove));
-                            count++;
-                            if (count > 3000) {
-                                break;
-                            }
-                        }
-                    }
-                    TimeUnit.MILLISECONDS.sleep(1);
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (InterruptedException ignored) {
-            }
-        });
-    }
-
-    private void checkTimeAndExecuteSqlCommandsThread() {
-        CachedThreadPool.getInstance().executeTask(() -> {
-            // 时间检测线程
-            final long updateTimeLimit = AllConfigs.getInstance().getUpdateTimeLimit();
-            try {
-                EventUtil eventUtil = EventUtil.getInstance();
-                while (EventUtil.getInstance().isNotMainExit()) {
-                    TimeUnit.SECONDS.sleep(updateTimeLimit);
-                    if (search.getStatus() == Enums.DatabaseStatus.NORMAL) {
-                        eventUtil.putTask(new ExecuteSQLEvent());
-                    }
-                }
-            } catch (InterruptedException ignored) {
             }
         });
     }
@@ -3059,7 +2952,7 @@ public class SearchBar {
                     return;
                 }
                 each = resultSet.getString("PATH");
-                if (search.getStatus() == Enums.DatabaseStatus.NORMAL) {
+                if (databaseUtil.getStatus() == Enums.DatabaseStatus.NORMAL) {
                     checkIsMatchedAndAddToList(each, true, false);
                 }
             }

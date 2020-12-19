@@ -1,29 +1,31 @@
 package FileEngine.frames;
 
 import FileEngine.IsDebug;
-import FileEngine.database.SQLiteUtil;
 import FileEngine.checkHotkey.CheckHotKeyUtil;
 import FileEngine.configs.AllConfigs;
 import FileEngine.configs.Enums;
+import FileEngine.database.DatabaseUtil;
+import FileEngine.database.SQLiteUtil;
 import FileEngine.download.DownloadUtil;
-import FileEngine.eventHandler.EventUtil;
 import FileEngine.eventHandler.Event;
 import FileEngine.eventHandler.EventHandler;
-import FileEngine.eventHandler.impl.frame.pluginMarket.ShowPluginMarket;
-import FileEngine.eventHandler.impl.frame.settingsFrame.HideSettingsFrameEvent;
+import FileEngine.eventHandler.EventUtil;
+import FileEngine.eventHandler.impl.SetDefaultSwingLaf;
+import FileEngine.eventHandler.impl.SetSwingLaf;
 import FileEngine.eventHandler.impl.configs.SaveConfigsEvent;
+import FileEngine.eventHandler.impl.configs.SetConfigsEvent;
 import FileEngine.eventHandler.impl.database.DeleteFromCacheEvent;
 import FileEngine.eventHandler.impl.database.OptimiseDatabaseEvent;
 import FileEngine.eventHandler.impl.download.StartDownloadEvent;
 import FileEngine.eventHandler.impl.download.StopDownloadEvent;
+import FileEngine.eventHandler.impl.frame.pluginMarket.ShowPluginMarket;
+import FileEngine.eventHandler.impl.frame.settingsFrame.HideSettingsFrameEvent;
 import FileEngine.eventHandler.impl.frame.settingsFrame.ShowSettingsFrameEvent;
 import FileEngine.eventHandler.impl.plugin.AddPluginsCanUpdateEvent;
 import FileEngine.eventHandler.impl.plugin.RemoveFromPluginsCanUpdateEvent;
 import FileEngine.moveFiles.MoveDesktopFiles;
 import FileEngine.pluginSystem.Plugin;
 import FileEngine.pluginSystem.PluginUtil;
-import FileEngine.r.R;
-import FileEngine.database.DatabaseUtil;
 import FileEngine.threadPool.CachedThreadPool;
 import FileEngine.translate.TranslateUtil;
 import com.alibaba.fastjson.JSONObject;
@@ -218,6 +220,8 @@ public class SettingsFrame {
     private JLabel labelRemoveDesktop;
     private JLabel labelPlaceHolder2;
     private JLabel labelPlaceHolder3;
+    private JScrollPane paneListPlugins;
+    private JScrollPane paneListLanguage;
 
     private static volatile SettingsFrame instance = null;
 
@@ -728,7 +732,7 @@ public class SettingsFrame {
     private void addButtonChangeThemeListener() {
         //移除显示theme框，改为弹出窗口
         tabGeneral.remove(paneSwingThemes);
-        buttonChangeTheme.addActionListener(e -> JOptionPane.showMessageDialog(frame, paneSwingThemes, "Theme", JOptionPane.PLAIN_MESSAGE));
+        buttonChangeTheme.addActionListener(e -> JOptionPane.showMessageDialog(null, paneSwingThemes, "Theme", JOptionPane.PLAIN_MESSAGE));
     }
 
     private void addButtonDeleteCacheListener() {
@@ -813,9 +817,7 @@ public class SettingsFrame {
     }
 
     private void addButtonViewPluginMarketListener() {
-        buttonPluginMarket.addActionListener(e -> {
-            EventUtil.getInstance().putTask(new ShowPluginMarket());
-        });
+        buttonPluginMarket.addActionListener(e -> EventUtil.getInstance().putTask(new ShowPluginMarket()));
     }
 
     private void addSwingThemePreviewListener() {
@@ -823,7 +825,7 @@ public class SettingsFrame {
             @Override
             public void mouseClicked(MouseEvent e) {
                 String swingTheme = (String) listSwingThemes.getSelectedValue();
-                AllConfigs.getInstance().setSwingPreview(swingTheme);
+                EventUtil.getInstance().putTask(new SetSwingLaf(swingTheme));
             }
         });
     }
@@ -1068,7 +1070,6 @@ public class SettingsFrame {
     }
 
     private SettingsFrame() {
-        R.getInstance().addComponent("settings-frame", frame);
         frame.setUndecorated(true);
         frame.getRootPane().setWindowDecorationStyle(JRootPane.FRAME);
 
@@ -1452,6 +1453,7 @@ public class SettingsFrame {
         tabbedPane.setSelectedIndex(0);
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
+        EventUtil.getInstance().putTask(new SetDefaultSwingLaf());
     }
 
     private void checkUpdateTimeLimit(StringBuilder strBuilder) {
@@ -1686,7 +1688,10 @@ public class SettingsFrame {
 
         AllConfigs.getInstance().denyChangeSettings();
 
-        EventUtil.getInstance().putTask(new SaveConfigsEvent());
+        SaveConfigsEvent event = new SaveConfigsEvent();
+        EventUtil.getInstance().putTask(event);
+        EventUtil.getInstance().waitForTask(event);
+        EventUtil.getInstance().putTask(new SetConfigsEvent());
 
         Color tmp_color = new Color(AllConfigs.getInstance().getLabelColor());
         labelColorChooser.setBackground(tmp_color);

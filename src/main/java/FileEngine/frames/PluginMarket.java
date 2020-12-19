@@ -3,15 +3,15 @@ package FileEngine.frames;
 import FileEngine.configs.AllConfigs;
 import FileEngine.configs.Enums;
 import FileEngine.download.DownloadUtil;
-import FileEngine.eventHandler.EventUtil;
 import FileEngine.eventHandler.Event;
 import FileEngine.eventHandler.EventHandler;
-import FileEngine.eventHandler.impl.frame.pluginMarket.HidePluginMarketEvent;
+import FileEngine.eventHandler.EventUtil;
+import FileEngine.eventHandler.impl.SetDefaultSwingLaf;
 import FileEngine.eventHandler.impl.download.StartDownloadEvent;
 import FileEngine.eventHandler.impl.download.StopDownloadEvent;
+import FileEngine.eventHandler.impl.frame.pluginMarket.HidePluginMarketEvent;
 import FileEngine.eventHandler.impl.frame.pluginMarket.ShowPluginMarket;
 import FileEngine.pluginSystem.PluginUtil;
-import FileEngine.r.R;
 import FileEngine.threadPool.CachedThreadPool;
 import FileEngine.translate.TranslateUtil;
 import com.alibaba.fastjson.JSONObject;
@@ -55,8 +55,6 @@ public class PluginMarket {
     private volatile boolean isStartSearch = false;
 
     private PluginMarket() {
-        R.getInstance().addComponent("plugin-market", frame);
-
         addSelectPluginOnListListener();
         addSearchPluginListener();
         addButtonInstallListener();
@@ -187,6 +185,7 @@ public class PluginMarket {
         frame.setLocationRelativeTo(null);
         frame.setTitle(TranslateUtil.getInstance().getTranslation("Plugin Market"));
         frame.setVisible(true);
+        EventUtil.getInstance().putTask(new SetDefaultSwingLaf());
     }
 
     public static void registerEventHandler() {

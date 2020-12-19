@@ -6,6 +6,7 @@ import FileEngine.eventHandler.EventUtil;
 import FileEngine.eventHandler.Event;
 import FileEngine.eventHandler.EventHandler;
 import FileEngine.eventHandler.impl.plugin.*;
+import FileEngine.eventHandler.impl.taskbar.ShowTaskBarMessageEvent;
 import FileEngine.threadPool.CachedThreadPool;
 import com.alibaba.fastjson.JSONObject;
 
@@ -26,11 +27,6 @@ public class PluginUtil {
     private static volatile PluginUtil INSTANCE = null;
 
     public static PluginUtil getInstance() {
-        initInstance();
-        return INSTANCE;
-    }
-
-    private static void initInstance() {
         if (INSTANCE == null) {
             synchronized (PluginUtil.class) {
                 if (INSTANCE == null) {
@@ -38,9 +34,34 @@ public class PluginUtil {
                 }
             }
         }
+        return INSTANCE;
     }
 
-    private PluginUtil() {}
+    private void checkPluginMessageThread() {
+        CachedThreadPool.getInstance().executeTask(() -> {
+            try {
+                String[] message;
+                Plugin plugin;
+                while (EventUtil.getInstance().isNotMainExit()) {
+                    Iterator<Plugin> iter = PluginUtil.getInstance().getPluginMapIter();
+                    while (iter.hasNext()) {
+                        plugin = iter.next();
+                        message = plugin.getMessage();
+                        if (message != null) {
+                            EventUtil.getInstance().putTask(new ShowTaskBarMessageEvent(message[0], message[1]));
+                        }
+                    }
+                    TimeUnit.MILLISECONDS.sleep(50);
+                }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
+    private PluginUtil() {
+        checkPluginMessageThread();
+    }
 
     private final ConcurrentHashMap<String, Plugin> IDENTIFIER_PLUGIN_MAP = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, String> NAME_IDENTIFIER_MAP = new ConcurrentHashMap<>();

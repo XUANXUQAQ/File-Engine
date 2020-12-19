@@ -6,7 +6,10 @@ import FileEngine.eventHandler.Event;
 import FileEngine.eventHandler.EventHandler;
 import FileEngine.eventHandler.EventUtil;
 import FileEngine.eventHandler.impl.ReadConfigsAndBootSystemEvent;
+import FileEngine.eventHandler.impl.SetDefaultSwingLaf;
+import FileEngine.eventHandler.impl.SetSwingLaf;
 import FileEngine.eventHandler.impl.configs.SaveConfigsEvent;
+import FileEngine.eventHandler.impl.configs.SetConfigsEvent;
 import FileEngine.eventHandler.impl.daemon.StartDaemonEvent;
 import FileEngine.eventHandler.impl.frame.searchBar.*;
 import FileEngine.eventHandler.impl.hotkey.RegisterHotKeyEvent;
@@ -14,7 +17,6 @@ import FileEngine.eventHandler.impl.monitorDisk.StartMonitorDiskEvent;
 import FileEngine.eventHandler.impl.plugin.LoadAllPluginsEvent;
 import FileEngine.eventHandler.impl.plugin.SetPluginsCurrentThemeEvent;
 import FileEngine.eventHandler.impl.taskbar.ShowTaskBarIconEvent;
-import FileEngine.r.R;
 import FileEngine.translate.TranslateUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
@@ -689,7 +691,6 @@ public class AllConfigs {
     }
 
     private void setAllSettings() {
-        setSwing(swingTheme);
         EventUtil eventUtil = EventUtil.getInstance();
         eventUtil.putTask(new SetPluginsCurrentThemeEvent(
                 AllConfigs.getInstance().getDefaultBackgroundColor(),
@@ -706,12 +707,7 @@ public class AllConfigs {
         eventUtil.putTask(new SetBorderColorEvent(borderColor));
     }
 
-    public void setSwingPreview(String theme) {
-        Enums.SwingThemes t = swingThemesMapper(theme);
-        setSwing(t);
-    }
-
-    private void setSwing(Enums.SwingThemes theme) {
+    private void setSwingLaf(Enums.SwingThemes theme) {
         if (theme == Enums.SwingThemes.CoreFlatIntelliJLaf) {
             FlatIntelliJLaf.install();
         } else if (theme == Enums.SwingThemes.CoreFlatLightLaf) {
@@ -753,8 +749,11 @@ public class AllConfigs {
         } else {
             FlatDarculaLaf.install();
         }
-        for (Component c : R.getInstance().getAllComponents()) {
-            SwingUtilities.updateComponentTreeUI(c);
+        for (Frame frame : JFrame.getFrames()) {
+            try {
+                SwingUtilities.updateComponentTreeUI(frame);
+            } catch (RuntimeException ignored) {
+            }
         }
     }
 
@@ -827,14 +826,42 @@ public class AllConfigs {
                 if (!IsDebug.isDebug()) {
                     eventUtil.putTask(new StartDaemonEvent(new File("").getAbsolutePath()));
                 }
+            }
+        });
+
+        eventUtil.register(SetConfigsEvent.class, new EventHandler() {
+            @Override
+            public void todo(Event event) {
                 getInstance().setAllSettings();
             }
         });
+
+        eventUtil.register(SetDefaultSwingLaf.class, new EventHandler() {
+            @Override
+            public void todo(Event event) {
+                try {
+                    getInstance().setSwingLaf(swingTheme);
+                } catch (Exception ignored) {
+                }
+            }
+        });
+
+        eventUtil.register(SetSwingLaf.class, new EventHandler() {
+            @Override
+            public void todo(Event event) {
+                try {
+                    AllConfigs instance = getInstance();
+                    String theme = ((SetSwingLaf) event).theme;
+                    instance.setSwingLaf(instance.swingThemesMapper(theme));
+                } catch (Exception ignored) {
+                }
+            }
+        });
+
         eventUtil.register(SaveConfigsEvent.class, new EventHandler() {
             @Override
             public void todo(Event event) {
                 getInstance().saveAllSettings();
-                getInstance().setAllSettings();
             }
         });
     }

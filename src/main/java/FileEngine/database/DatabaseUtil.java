@@ -34,6 +34,9 @@ public class DatabaseUtil {
     private static volatile DatabaseUtil INSTANCE = null;
 
     private DatabaseUtil() {
+        addRecordsToDatabaseThread();
+        deleteRecordsToDatabaseThread();
+        checkTimeAndExecuteSqlCommandsThread();
         CachedThreadPool.getInstance().executeTask(() -> {
             try (Statement statement = SQLiteUtil.getStatement()) {
                 while (EventUtil.getInstance().isNotMainExit()) {
@@ -51,11 +54,6 @@ public class DatabaseUtil {
     }
 
     public static DatabaseUtil getInstance() {
-        initInstance();
-        return INSTANCE;
-    }
-
-    private static void initInstance() {
         if (INSTANCE == null) {
             synchronized (DatabaseUtil.class) {
                 if (INSTANCE == null) {
@@ -63,6 +61,35 @@ public class DatabaseUtil {
                 }
             }
         }
+        return INSTANCE;
+    }
+
+    private void deleteRecordsToDatabaseThread() {
+        CachedThreadPool.getInstance().executeTask(() -> {
+            String filesToRemove;
+            int count;
+            EventUtil eventUtil = EventUtil.getInstance();
+            try (BufferedReader readerRemove = new BufferedReader(new InputStreamReader(
+                    new FileInputStream(AllConfigs.getInstance().getTmp().getAbsolutePath() + File.separator + "fileRemoved.txt"),
+                    StandardCharsets.UTF_8))) {
+                while (EventUtil.getInstance().isNotMainExit()) {
+                    if (status == Enums.DatabaseStatus.NORMAL) {
+                        count = 0;
+                        while ((filesToRemove = readerRemove.readLine()) != null) {
+                            eventUtil.putTask(new DeleteFromDatabaseEvent(filesToRemove));
+                            count++;
+                            if (count > 3000) {
+                                break;
+                            }
+                        }
+                    }
+                    TimeUnit.MILLISECONDS.sleep(1);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (InterruptedException ignored) {
+            }
+        });
     }
 
     private void addDeleteSqlCommandByAscii(int asciiSum, String path) {
@@ -649,6 +676,52 @@ public class DatabaseUtil {
         executeImmediately();
     }
 
+    private void checkTimeAndExecuteSqlCommandsThread() {
+        CachedThreadPool.getInstance().executeTask(() -> {
+            // 时间检测线程
+            final long updateTimeLimit = AllConfigs.getInstance().getUpdateTimeLimit();
+            try {
+                EventUtil eventUtil = EventUtil.getInstance();
+                while (EventUtil.getInstance().isNotMainExit()) {
+                    TimeUnit.SECONDS.sleep(updateTimeLimit);
+                    if (status == Enums.DatabaseStatus.NORMAL) {
+                        eventUtil.putTask(new ExecuteSQLEvent());
+                    }
+                }
+            } catch (InterruptedException ignored) {
+            }
+        });
+    }
+
+    private void addRecordsToDatabaseThread() {
+        CachedThreadPool.getInstance().executeTask(() -> {
+            //检测文件添加线程
+            String filesToAdd;
+            int count;
+            EventUtil eventUtil = EventUtil.getInstance();
+            try (BufferedReader readerAdd = new BufferedReader(new InputStreamReader(
+                    new FileInputStream(AllConfigs.getInstance().getTmp().getAbsolutePath() + File.separator + "fileAdded.txt"),
+                    StandardCharsets.UTF_8))) {
+                while (EventUtil.getInstance().isNotMainExit()) {
+                    if (status == Enums.DatabaseStatus.NORMAL) {
+                        count = 0;
+                        while ((filesToAdd = readerAdd.readLine()) != null) {
+                            eventUtil.putTask(new AddToDatabaseEvent(filesToAdd));
+                            count++;
+                            if (count > 3000) {
+                                break;
+                            }
+                        }
+                    }
+                    TimeUnit.MILLISECONDS.sleep(1);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (InterruptedException ignored) {
+            }
+        });
+    }
+
     public static void registerEventHandler() {
         EventUtil eventUtil = EventUtil.getInstance();
         eventUtil.register(AddToCacheEvent.class, new EventHandler() {
@@ -692,17 +765,6 @@ public class DatabaseUtil {
             @Override
             public void todo(Event event) {
                 getInstance().executeImmediately();
-            }
-        });
-
-        eventUtil.register(InitTablesEvent.class, new EventHandler() {
-            @Override
-            public void todo(Event event) {
-                try {
-                    getInstance().createAllTables();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
             }
         });
 

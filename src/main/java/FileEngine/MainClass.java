@@ -6,7 +6,7 @@ import FileEngine.database.SQLiteUtil;
 import FileEngine.eventHandler.Event;
 import FileEngine.eventHandler.EventUtil;
 import FileEngine.eventHandler.impl.ReadConfigsAndBootSystemEvent;
-import FileEngine.eventHandler.impl.database.InitTablesEvent;
+import FileEngine.eventHandler.impl.configs.SetConfigsEvent;
 import FileEngine.eventHandler.impl.database.UpdateDatabaseEvent;
 import FileEngine.eventHandler.impl.plugin.ReleasePluginResourcesEvent;
 import FileEngine.eventHandler.impl.stop.CloseEvent;
@@ -135,10 +135,6 @@ public class MainClass {
         }
     }
 
-    private static void registerAllEventHandler() {
-        ClassScannerUtil.executeStaticMethodByName("registerEventHandler");
-    }
-
     public static void main(String[] args) {
         try {
             Class.forName("org.sqlite.JDBC");
@@ -174,14 +170,18 @@ public class MainClass {
 
             initializeDllInterface();
 
-            if (initAll()) {
+            EventUtil eventUtil = EventUtil.getInstance();
+
+            ClassScannerUtil.executeStaticMethodByName("registerEventHandler");
+
+            if (initAllFailed()) {
                 System.err.println("初始化失败");
                 System.exit(0);
             }
 
-            EventUtil eventUtil = EventUtil.getInstance();
+            ClassScannerUtil.executeStaticMethodByName("getInstance");
 
-            EventUtil.getInstance().putTask(new InitTablesEvent());
+            eventUtil.putTask(new SetConfigsEvent());
 
             TranslateUtil translateUtil = TranslateUtil.getInstance();
 
@@ -217,9 +217,9 @@ public class MainClass {
                 eventUtil.putTask(new UpdateDatabaseEvent());
             }
 
-            StringBuilder stringBuilder = new StringBuilder();
+            StringBuilder notLatestPluginsBuilder = new StringBuilder();
             AtomicBoolean isFinished = new AtomicBoolean(false);
-            CachedThreadPool.getInstance().executeTask(() -> PluginUtil.getInstance().isAllPluginLatest(stringBuilder, isFinished));
+            CachedThreadPool.getInstance().executeTask(() -> PluginUtil.getInstance().isAllPluginLatest(notLatestPluginsBuilder, isFinished));
 
             Date startTime = new Date();
             Date endTime;
@@ -230,7 +230,7 @@ public class MainClass {
                 // 主循环开始
                 if (isFinished.get()) {
                     isFinished.set(false);
-                    String notLatestPlugins = stringBuilder.toString();
+                    String notLatestPlugins = notLatestPluginsBuilder.toString();
                     if (!notLatestPlugins.isEmpty()) {
                         EventUtil.getInstance().putTask(new ShowTaskBarMessageEvent(
                                 TranslateUtil.getInstance().getTranslation("Info"),
@@ -264,9 +264,7 @@ public class MainClass {
         }
     }
 
-    private static boolean initAll() {
-        registerAllEventHandler();
-
+    private static boolean initAllFailed() {
         EventUtil eventUtil = EventUtil.getInstance();
 
         Event event = new ReadConfigsAndBootSystemEvent();
