@@ -182,8 +182,6 @@ public class MainClass {
 
             eventUtil.putTask(new SetDefaultSwingLaf());
 
-            ClassScannerUtil.executeStaticMethodByName("getInstance");
-
             eventUtil.putTask(new SetConfigsEvent());
 
             TranslateUtil translateUtil = TranslateUtil.getInstance();

@@ -122,9 +122,13 @@ public class EventUtil {
         }
         if (!isRejectTask.get()) {
             if (event.isBlock()) {
-                eventQueue.add(event);
+                if (!eventQueue.contains(event)) {
+                    eventQueue.add(event);
+                }
             } else {
-                asyncEventQueue.add(event);
+                if (!asyncEventQueue.contains(event)) {
+                    asyncEventQueue.add(event);
+                }
             }
         } else {
             if (isDebug) {
