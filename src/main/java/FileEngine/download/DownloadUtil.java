@@ -4,11 +4,11 @@ import FileEngine.IsDebug;
 import FileEngine.configs.AllConfigs;
 import FileEngine.configs.Enums;
 import FileEngine.configs.ProxyInfo;
-import FileEngine.taskHandler.TaskUtil;
-import FileEngine.taskHandler.Task;
-import FileEngine.taskHandler.TaskHandler;
-import FileEngine.taskHandler.impl.download.StartDownloadTask;
-import FileEngine.taskHandler.impl.download.StopDownloadTask;
+import FileEngine.eventHandler.EventUtil;
+import FileEngine.eventHandler.Event;
+import FileEngine.eventHandler.EventHandler;
+import FileEngine.eventHandler.impl.download.StartDownloadEvent;
+import FileEngine.eventHandler.impl.download.StopDownloadEvent;
 import FileEngine.threadPool.CachedThreadPool;
 
 import javax.net.ssl.*;
@@ -42,19 +42,19 @@ public class DownloadUtil {
 
     private DownloadUtil() {}
 
-    public static void registerTaskHandler() {
-        TaskUtil.getInstance().registerTaskHandler(StartDownloadTask.class, new TaskHandler() {
+    public static void registerEventHandler() {
+        EventUtil.getInstance().register(StartDownloadEvent.class, new EventHandler() {
             @Override
-            public void todo(Task task) {
-                StartDownloadTask startDownloadTask = (StartDownloadTask) task;
+            public void todo(Event event) {
+                StartDownloadEvent startDownloadTask = (StartDownloadEvent) event;
                 getInstance().downLoadFromUrl(startDownloadTask.url, startDownloadTask.fileName, startDownloadTask.savePath);
             }
         });
 
-        TaskUtil.getInstance().registerTaskHandler(StopDownloadTask.class, new TaskHandler() {
+        EventUtil.getInstance().register(StopDownloadEvent.class, new EventHandler() {
             @Override
-            public void todo(Task task) {
-                StopDownloadTask stopDownloadTask = (StopDownloadTask) task;
+            public void todo(Event event) {
+                StopDownloadEvent stopDownloadTask = (StopDownloadEvent) event;
                 getInstance().cancelDownload(stopDownloadTask.fileName);
             }
         });

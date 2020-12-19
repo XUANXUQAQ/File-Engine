@@ -1,14 +1,14 @@
 package FileEngine.frames;
 
 import FileEngine.IsDebug;
-import FileEngine.taskHandler.TaskUtil;
-import FileEngine.taskHandler.Task;
-import FileEngine.taskHandler.TaskHandler;
-import FileEngine.taskHandler.impl.taskbar.ShowTaskBarIconTask;
-import FileEngine.taskHandler.impl.taskbar.ShowTaskBarMessageTask;
-import FileEngine.taskHandler.impl.stop.CloseTask;
-import FileEngine.taskHandler.impl.stop.RestartTask;
-import FileEngine.taskHandler.impl.frame.settingsFrame.ShowSettingsFrameTask;
+import FileEngine.eventHandler.EventUtil;
+import FileEngine.eventHandler.Event;
+import FileEngine.eventHandler.EventHandler;
+import FileEngine.eventHandler.impl.taskbar.ShowTaskBarIconEvent;
+import FileEngine.eventHandler.impl.taskbar.ShowTaskBarMessageEvent;
+import FileEngine.eventHandler.impl.stop.CloseEvent;
+import FileEngine.eventHandler.impl.stop.RestartEvent;
+import FileEngine.eventHandler.impl.frame.settingsFrame.ShowSettingsFrameEvent;
 import FileEngine.threadPool.CachedThreadPool;
 
 import javax.swing.*;
@@ -47,7 +47,7 @@ public class TaskBar {
         CachedThreadPool.getInstance().executeTask(() -> {
             try {
                 MessageStruct message;
-                while (TaskUtil.getInstance().isNotMainExit()) {
+                while (EventUtil.getInstance().isNotMainExit()) {
                     message = messageQueue.poll();
                     if (message != null) {
                         showMessageOnTrayIcon(message.caption, message.message);
@@ -97,7 +97,7 @@ public class TaskBar {
 
             MenuItem settings = new MenuItem("Settings");
             settings.addActionListener(e -> {
-                TaskUtil.getInstance().putTask(new ShowSettingsFrameTask());
+                EventUtil.getInstance().putTask(new ShowSettingsFrameEvent());
             });
             MenuItem restartProc = new MenuItem("Restart");
             restartProc.addActionListener(e -> restart());
@@ -114,7 +114,7 @@ public class TaskBar {
                 @Override
                 public void mouseClicked(MouseEvent e) {
                     if (MouseEvent.BUTTON1 == e.getButton() && !settingsFrame.isSettingsFrameVisible()) {
-                        TaskUtil.getInstance().putTask(new ShowSettingsFrameTask());
+                        EventUtil.getInstance().putTask(new ShowSettingsFrameEvent());
                     }
                 }
             });
@@ -128,14 +128,14 @@ public class TaskBar {
     }
 
     private void closeAndExit() {
-        TaskUtil taskUtil = TaskUtil.getInstance();
-        taskUtil.putTask(new CloseTask());
+        EventUtil eventUtil = EventUtil.getInstance();
+        eventUtil.putTask(new CloseEvent());
         systemTray.remove(trayIcon);
     }
 
     public void restart() {
-        TaskUtil taskUtil = TaskUtil.getInstance();
-        taskUtil.putTask(new RestartTask());
+        EventUtil eventUtil = EventUtil.getInstance();
+        eventUtil.putTask(new RestartEvent());
         systemTray.remove(trayIcon);
     }
 
@@ -149,18 +149,18 @@ public class TaskBar {
         }
     }
 
-    public static void registerTaskHandler() {
-        TaskUtil.getInstance().registerTaskHandler(ShowTaskBarMessageTask.class, new TaskHandler() {
+    public static void registerEventHandler() {
+        EventUtil.getInstance().register(ShowTaskBarMessageEvent.class, new EventHandler() {
             @Override
-            public void todo(Task task) {
-                ShowTaskBarMessageTask showTaskBarMessageTask = (ShowTaskBarMessageTask) task;
+            public void todo(Event event) {
+                ShowTaskBarMessageEvent showTaskBarMessageTask = (ShowTaskBarMessageEvent) event;
                 getInstance().showMessage(showTaskBarMessageTask.caption, showTaskBarMessageTask.message);
             }
         });
 
-        TaskUtil.getInstance().registerTaskHandler(ShowTaskBarIconTask.class, new TaskHandler() {
+        EventUtil.getInstance().register(ShowTaskBarIconEvent.class, new EventHandler() {
             @Override
-            public void todo(Task task) {
+            public void todo(Event event) {
                 getInstance();
             }
         });

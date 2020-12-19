@@ -6,19 +6,19 @@ import FileEngine.checkHotkey.CheckHotKeyUtil;
 import FileEngine.configs.AllConfigs;
 import FileEngine.configs.Enums;
 import FileEngine.download.DownloadUtil;
-import FileEngine.taskHandler.TaskUtil;
-import FileEngine.taskHandler.Task;
-import FileEngine.taskHandler.TaskHandler;
-import FileEngine.taskHandler.impl.frame.pluginMarket.ShowPluginMarket;
-import FileEngine.taskHandler.impl.frame.settingsFrame.HideSettingsFrameTask;
-import FileEngine.taskHandler.impl.configs.SaveConfigsTask;
-import FileEngine.taskHandler.impl.database.DeleteFromCacheTask;
-import FileEngine.taskHandler.impl.database.OptimiseDatabaseTask;
-import FileEngine.taskHandler.impl.download.StartDownloadTask;
-import FileEngine.taskHandler.impl.download.StopDownloadTask;
-import FileEngine.taskHandler.impl.frame.settingsFrame.ShowSettingsFrameTask;
-import FileEngine.taskHandler.impl.plugin.AddPluginsCanUpdateTask;
-import FileEngine.taskHandler.impl.plugin.RemoveFromPluginsCanUpdateTask;
+import FileEngine.eventHandler.EventUtil;
+import FileEngine.eventHandler.Event;
+import FileEngine.eventHandler.EventHandler;
+import FileEngine.eventHandler.impl.frame.pluginMarket.ShowPluginMarket;
+import FileEngine.eventHandler.impl.frame.settingsFrame.HideSettingsFrameEvent;
+import FileEngine.eventHandler.impl.configs.SaveConfigsEvent;
+import FileEngine.eventHandler.impl.database.DeleteFromCacheEvent;
+import FileEngine.eventHandler.impl.database.OptimiseDatabaseEvent;
+import FileEngine.eventHandler.impl.download.StartDownloadEvent;
+import FileEngine.eventHandler.impl.download.StopDownloadEvent;
+import FileEngine.eventHandler.impl.frame.settingsFrame.ShowSettingsFrameEvent;
+import FileEngine.eventHandler.impl.plugin.AddPluginsCanUpdateEvent;
+import FileEngine.eventHandler.impl.plugin.RemoveFromPluginsCanUpdateEvent;
 import FileEngine.moveFiles.MoveDesktopFiles;
 import FileEngine.pluginSystem.Plugin;
 import FileEngine.pluginSystem.PluginUtil;
@@ -472,7 +472,7 @@ public class SettingsFrame {
             if (status == Enums.DownloadStatus.DOWNLOAD_DOWNLOADING) {
                 //取消下载
                 String fileName = AllConfigs.FILE_NAME;
-                TaskUtil.getInstance().putTask(new StopDownloadTask(fileName));
+                EventUtil.getInstance().putTask(new StopDownloadEvent(fileName));
                 //复位button
                 buttonCheckUpdate.setText(TranslateUtil.getInstance().getTranslation("Check for update"));
                 buttonCheckUpdate.setEnabled(true);
@@ -507,7 +507,7 @@ public class SettingsFrame {
                         String fileName;
                         urlChoose = "url64";
                         fileName = AllConfigs.FILE_NAME;
-                        TaskUtil.getInstance().putTask(new StartDownloadTask(
+                        EventUtil.getInstance().putTask(new StartDownloadEvent(
                                 updateInfo.getString(urlChoose), fileName, AllConfigs.getInstance().getTmp().getAbsolutePath()));
 
                         //更新button为取消
@@ -735,7 +735,7 @@ public class SettingsFrame {
         buttonDeleteCache.addActionListener(e -> {
             String cache = (String) listCache.getSelectedValue();
             if (cache != null) {
-                TaskUtil.getInstance().putTask(new DeleteFromCacheTask(cache));
+                EventUtil.getInstance().putTask(new DeleteFromCacheEvent(cache));
                 cacheSet.remove(cache);
                 AllConfigs.getInstance().decrementCacheNum();
                 listCache.setListData(cacheSet.toArray());
@@ -773,7 +773,7 @@ public class SettingsFrame {
                     if (IsDebug.isDebug()) {
                         System.out.println("开始优化");
                     }
-                    TaskUtil.getInstance().putTask(new OptimiseDatabaseTask());
+                    EventUtil.getInstance().putTask(new OptimiseDatabaseEvent());
                     CachedThreadPool.getInstance().executeTask(() -> {
                         //实时显示VACUUM状态
                         try {
@@ -803,7 +803,7 @@ public class SettingsFrame {
                     TranslateUtil.getInstance().getTranslation("The operation is irreversible. Are you sure you want to clear the cache?"));
             if (JOptionPane.YES_OPTION == ret) {
                 for (String each : cacheSet) {
-                    TaskUtil.getInstance().putTask(new DeleteFromCacheTask(each));
+                    EventUtil.getInstance().putTask(new DeleteFromCacheEvent(each));
                 }
                 cacheSet.clear();
                 AllConfigs.getInstance().resetCacheNumToZero();
@@ -814,7 +814,7 @@ public class SettingsFrame {
 
     private void addButtonViewPluginMarketListener() {
         buttonPluginMarket.addActionListener(e -> {
-            TaskUtil.getInstance().putTask(new ShowPluginMarket());
+            EventUtil.getInstance().putTask(new ShowPluginMarket());
         });
     }
 
@@ -843,11 +843,11 @@ public class SettingsFrame {
             Enums.DownloadStatus downloadStatus = DownloadUtil.getInstance().getDownloadStatus(pluginFullName);
             if (downloadStatus == Enums.DownloadStatus.DOWNLOAD_DOWNLOADING) {
                 //取消下载
-                TaskUtil.getInstance().putTask(new StopDownloadTask(pluginFullName));
+                EventUtil.getInstance().putTask(new StopDownloadEvent(pluginFullName));
                 buttonUpdatePlugin.setEnabled(true);
             } else if (downloadStatus == Enums.DownloadStatus.DOWNLOAD_DONE) {
                 buttonUpdatePlugin.setEnabled(false);
-                TaskUtil.getInstance().putTask(new RemoveFromPluginsCanUpdateTask(pluginName));
+                EventUtil.getInstance().putTask(new RemoveFromPluginsCanUpdateEvent(pluginName));
             } else {
                 if (!PluginUtil.getInstance().isPluginsNotLatest(pluginName)) {
                     Thread checkUpdateThread = new Thread(() -> {
@@ -872,7 +872,7 @@ public class SettingsFrame {
                                 JOptionPane.showMessageDialog(frame, TranslateUtil.getInstance().getTranslation("Check update failed"));
                                 return;
                             }
-                            if (!TaskUtil.getInstance().isNotMainExit()) {
+                            if (!EventUtil.getInstance().isNotMainExit()) {
                                 return;
                             }
                         }
@@ -889,15 +889,15 @@ public class SettingsFrame {
                     if (isSkipConfirm.get()) {
                         //直接开始下载
                         String url = plugin.getUpdateURL();
-                        TaskUtil.getInstance().putTask(new StartDownloadTask(
+                        EventUtil.getInstance().putTask(new StartDownloadEvent(
                                 url, pluginFullName, new File(AllConfigs.getInstance().getTmp(), "pluginsUpdate").getAbsolutePath()));
                     } else {
-                        TaskUtil.getInstance().putTask(new AddPluginsCanUpdateTask(pluginName));
+                        EventUtil.getInstance().putTask(new AddPluginsCanUpdateEvent(pluginName));
                         int ret = JOptionPane.showConfirmDialog(frame, TranslateUtil.getInstance().getTranslation("New version available, do you want to update?"));
                         if (ret == JOptionPane.YES_OPTION) {
                             //开始下载
                             String url = plugin.getUpdateURL();
-                            TaskUtil.getInstance().putTask(new StartDownloadTask(
+                            EventUtil.getInstance().putTask(new StartDownloadEvent(
                                     url, pluginFullName, new File(AllConfigs.getInstance().getTmp(), "pluginsUpdate").getAbsolutePath()));
                         }
                     }
@@ -1209,7 +1209,7 @@ public class SettingsFrame {
     private void addShowDownloadProgressTask(JLabel label, JButton button, String fileName) {
         try {
             String originString = button.getText();
-            while (TaskUtil.getInstance().isNotMainExit()) {
+            while (EventUtil.getInstance().isNotMainExit()) {
                 checkDownloadTask(label, button, fileName, originString, "update");
                 TimeUnit.MILLISECONDS.sleep(200);
             }
@@ -1225,7 +1225,7 @@ public class SettingsFrame {
             try {
                 String fileName;
                 String originString = buttonUpdatePlugin.getText();
-                while (TaskUtil.getInstance().isNotMainExit()) {
+                while (EventUtil.getInstance().isNotMainExit()) {
                     if (isUpdateButtonPluginString) {
                         isUpdateButtonPluginString = false;
                         originString = buttonUpdatePlugin.getText();
@@ -1372,7 +1372,7 @@ public class SettingsFrame {
         if (downloadStatus != Enums.DownloadStatus.DOWNLOAD_DOWNLOADING) {
             String url = getUpdateUrl();
             if (url != null) {
-                TaskUtil.getInstance().putTask(new StartDownloadTask(
+                EventUtil.getInstance().putTask(new StartDownloadEvent(
                         url, "version.json", AllConfigs.getInstance().getTmp().getAbsolutePath()));
                 int count = 0;
                 boolean isError = false;
@@ -1416,17 +1416,17 @@ public class SettingsFrame {
         frame.setVisible(false);
     }
 
-    public static void registerTaskHandler() {
-        TaskUtil taskUtil = TaskUtil.getInstance();
-        taskUtil.registerTaskHandler(ShowSettingsFrameTask.class, new TaskHandler() {
+    public static void registerEventHandler() {
+        EventUtil eventUtil = EventUtil.getInstance();
+        eventUtil.register(ShowSettingsFrameEvent.class, new EventHandler() {
             @Override
-            public void todo(Task task) {
+            public void todo(Event event) {
                 getInstance().showWindow();
             }
         });
-        taskUtil.registerTaskHandler(HideSettingsFrameTask.class, new TaskHandler() {
+        eventUtil.register(HideSettingsFrameEvent.class, new EventHandler() {
             @Override
-            public void todo(Task task) {
+            public void todo(Event event) {
                 getInstance().hideFrame();
             }
         });
@@ -1686,7 +1686,7 @@ public class SettingsFrame {
 
         AllConfigs.getInstance().denyChangeSettings();
 
-        TaskUtil.getInstance().putTask(new SaveConfigsTask());
+        EventUtil.getInstance().putTask(new SaveConfigsEvent());
 
         Color tmp_color = new Color(AllConfigs.getInstance().getLabelColor());
         labelColorChooser.setBackground(tmp_color);

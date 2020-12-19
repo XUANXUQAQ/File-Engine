@@ -5,11 +5,11 @@ import FileEngine.configs.AllConfigs;
 import FileEngine.configs.Enums;
 import FileEngine.dllInterface.GetAscII;
 import FileEngine.dllInterface.IsLocalDisk;
-import FileEngine.taskHandler.TaskUtil;
-import FileEngine.taskHandler.Task;
-import FileEngine.taskHandler.TaskHandler;
-import FileEngine.taskHandler.impl.taskbar.ShowTaskBarMessageTask;
-import FileEngine.taskHandler.impl.database.*;
+import FileEngine.eventHandler.EventUtil;
+import FileEngine.eventHandler.Event;
+import FileEngine.eventHandler.EventHandler;
+import FileEngine.eventHandler.impl.taskbar.ShowTaskBarMessageEvent;
+import FileEngine.eventHandler.impl.database.*;
 import FileEngine.threadPool.CachedThreadPool;
 import FileEngine.translate.TranslateUtil;
 
@@ -36,7 +36,7 @@ public class DatabaseUtil {
     private DatabaseUtil() {
         CachedThreadPool.getInstance().executeTask(() -> {
             try (Statement statement = SQLiteUtil.getStatement()) {
-                while (TaskUtil.getInstance().isNotMainExit()) {
+                while (EventUtil.getInstance().isNotMainExit()) {
                     if (isExecuteImmediately) {
                         isExecuteImmediately = false;
                         executeAllCommands(statement);
@@ -503,7 +503,7 @@ public class DatabaseUtil {
             }
         }
         createAllIndex();
-        TaskUtil.getInstance().putTask(new ShowTaskBarMessageTask(
+        EventUtil.getInstance().putTask(new ShowTaskBarMessageEvent(
                 TranslateUtil.getInstance().getTranslation("Info"),
                 TranslateUtil.getInstance().getTranslation("Search Done")));
     }
@@ -603,7 +603,7 @@ public class DatabaseUtil {
     private void waitForCommandSet(SqlTaskIds taskId) {
         try {
             int count = 0;
-            while (TaskUtil.getInstance().isNotMainExit()) {
+            while (EventUtil.getInstance().isNotMainExit()) {
                 count++;
                 //等待10s
                 if (count > 1000) {
@@ -646,55 +646,55 @@ public class DatabaseUtil {
         executeImmediately();
     }
 
-    public static void registerTaskHandler() {
-        TaskUtil taskUtil = TaskUtil.getInstance();
-        taskUtil.registerTaskHandler(AddToCacheTask.class, new TaskHandler() {
+    public static void registerEventHandler() {
+        EventUtil eventUtil = EventUtil.getInstance();
+        eventUtil.register(AddToCacheEvent.class, new EventHandler() {
             @Override
-            public void todo(Task task) {
-                getInstance().addFileToCache(((AddToCacheTask) task).path);
+            public void todo(Event event) {
+                getInstance().addFileToCache(((AddToCacheEvent) event).path);
             }
         });
 
-        taskUtil.registerTaskHandler(DeleteFromCacheTask.class, new TaskHandler() {
+        eventUtil.register(DeleteFromCacheEvent.class, new EventHandler() {
             @Override
-            public void todo(Task task) {
-                getInstance().removeFileFromCache(((DeleteFromCacheTask) task).path);
+            public void todo(Event event) {
+                getInstance().removeFileFromCache(((DeleteFromCacheEvent) event).path);
             }
         });
 
-        taskUtil.registerTaskHandler(AddToDatabaseTask.class, new TaskHandler() {
+        eventUtil.register(AddToDatabaseEvent.class, new EventHandler() {
             @Override
-            public void todo(Task task) {
-                getInstance().addFileToDatabase(((AddToDatabaseTask) task).path);
+            public void todo(Event event) {
+                getInstance().addFileToDatabase(((AddToDatabaseEvent) event).path);
             }
         });
 
-        taskUtil.registerTaskHandler(DeleteFromDatabaseTask.class, new TaskHandler() {
+        eventUtil.register(DeleteFromDatabaseEvent.class, new EventHandler() {
             @Override
-            public void todo(Task task) {
-                getInstance().removeFileFromDatabase(((DeleteFromDatabaseTask) task).path);
+            public void todo(Event event) {
+                getInstance().removeFileFromDatabase(((DeleteFromDatabaseEvent) event).path);
             }
         });
 
-        taskUtil.registerTaskHandler(UpdateDatabaseTask.class, new TaskHandler() {
+        eventUtil.register(UpdateDatabaseEvent.class, new EventHandler() {
             @Override
-            public void todo(Task task) {
+            public void todo(Event event) {
                 getInstance().setStatus(Enums.DatabaseStatus.MANUAL_UPDATE);
                 getInstance().updateLists(AllConfigs.getInstance().getIgnorePath(), AllConfigs.getInstance().getSearchDepth());
                 getInstance().setStatus(Enums.DatabaseStatus.NORMAL);
             }
         });
 
-        taskUtil.registerTaskHandler(ExecuteSQLTask.class, new TaskHandler() {
+        eventUtil.register(ExecuteSQLEvent.class, new EventHandler() {
             @Override
-            public void todo(Task task) {
+            public void todo(Event event) {
                 getInstance().executeImmediately();
             }
         });
 
-        taskUtil.registerTaskHandler(InitTablesTask.class, new TaskHandler() {
+        eventUtil.register(InitTablesEvent.class, new EventHandler() {
             @Override
-            public void todo(Task task) {
+            public void todo(Event event) {
                 try {
                     getInstance().createAllTables();
                 } catch (Exception e) {
@@ -703,9 +703,9 @@ public class DatabaseUtil {
             }
         });
 
-        taskUtil.registerTaskHandler(OptimiseDatabaseTask.class, new TaskHandler() {
+        eventUtil.register(OptimiseDatabaseEvent.class, new EventHandler() {
             @Override
-            public void todo(Task task) {
+            public void todo(Event event) {
                 getInstance().setStatus(Enums.DatabaseStatus.VACUUM);
                 //执行VACUUM命令
                 try (PreparedStatement stmt = SQLiteUtil.getPreparedStatement("VACUUM;")) {
@@ -737,7 +737,7 @@ public class DatabaseUtil {
     private void clearDatabase(String column) {
         File file;
         String sql = "SELECT PATH FROM " + column + ";";
-        TaskUtil taskUtil = TaskUtil.getInstance();
+        EventUtil eventUtil = EventUtil.getInstance();
         try(PreparedStatement pStmt = SQLiteUtil.getPreparedStatement(sql);
             ResultSet resultSet = pStmt.executeQuery()) {
             while (resultSet.next()) {
@@ -747,7 +747,7 @@ public class DatabaseUtil {
                     if (IsDebug.isDebug()) {
                         System.err.println("正在删除" + record);
                     }
-                    taskUtil.putTask(new DeleteFromDatabaseTask(record));
+                    eventUtil.putTask(new DeleteFromDatabaseEvent(record));
                 }
             }
         } catch (SQLException e) {

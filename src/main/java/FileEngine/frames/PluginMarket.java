@@ -3,13 +3,13 @@ package FileEngine.frames;
 import FileEngine.configs.AllConfigs;
 import FileEngine.configs.Enums;
 import FileEngine.download.DownloadUtil;
-import FileEngine.taskHandler.TaskUtil;
-import FileEngine.taskHandler.Task;
-import FileEngine.taskHandler.TaskHandler;
-import FileEngine.taskHandler.impl.frame.pluginMarket.HidePluginMarketTask;
-import FileEngine.taskHandler.impl.download.StartDownloadTask;
-import FileEngine.taskHandler.impl.download.StopDownloadTask;
-import FileEngine.taskHandler.impl.frame.pluginMarket.ShowPluginMarket;
+import FileEngine.eventHandler.EventUtil;
+import FileEngine.eventHandler.Event;
+import FileEngine.eventHandler.EventHandler;
+import FileEngine.eventHandler.impl.frame.pluginMarket.HidePluginMarketEvent;
+import FileEngine.eventHandler.impl.download.StartDownloadEvent;
+import FileEngine.eventHandler.impl.download.StopDownloadEvent;
+import FileEngine.eventHandler.impl.frame.pluginMarket.ShowPluginMarket;
 import FileEngine.pluginSystem.PluginUtil;
 import FileEngine.r.R;
 import FileEngine.threadPool.CachedThreadPool;
@@ -68,7 +68,7 @@ public class PluginMarket {
             try {
                 String pluginName;
                 String originString = buttonInstall.getText();
-                while (TaskUtil.getInstance().isNotMainExit()) {
+                while (EventUtil.getInstance().isNotMainExit()) {
                     TimeUnit.MILLISECONDS.sleep(100);
                     pluginName = (String) listPlugins.getSelectedValue();
                     if (pluginName != null) {
@@ -92,7 +92,7 @@ public class PluginMarket {
         CachedThreadPool.getInstance().executeTask(() -> {
             HashSet<String> pluginSet = new HashSet<>();
             try {
-                while (TaskUtil.getInstance().isNotMainExit()) {
+                while (EventUtil.getInstance().isNotMainExit()) {
                     TimeUnit.MILLISECONDS.sleep(100);
                     if (isStartSearch) {
                         isStartSearch = false;
@@ -189,18 +189,18 @@ public class PluginMarket {
         frame.setVisible(true);
     }
 
-    public static void registerTaskHandler() {
-        TaskUtil taskUtil = TaskUtil.getInstance();
-        taskUtil.registerTaskHandler(ShowPluginMarket.class, new TaskHandler() {
+    public static void registerEventHandler() {
+        EventUtil eventUtil = EventUtil.getInstance();
+        eventUtil.register(ShowPluginMarket.class, new EventHandler() {
             @Override
-            public void todo(Task task) {
+            public void todo(Event event) {
                 getInstance().showWindow();
             }
         });
 
-        taskUtil.registerTaskHandler(HidePluginMarketTask.class, new TaskHandler() {
+        eventUtil.register(HidePluginMarketEvent.class, new EventHandler() {
             @Override
-            public void todo(Task task) {
+            public void todo(Event event) {
                 getInstance().hideWindow();
             }
         });
@@ -223,7 +223,7 @@ public class PluginMarket {
                 JSONObject info = getPluginDetailInfo(pluginName);
                 if (info != null) {
                     String downloadUrl = info.getString("url");
-                    TaskUtil.getInstance().putTask(new StartDownloadTask(
+                    EventUtil.getInstance().putTask(new StartDownloadEvent(
                             downloadUrl, pluginFullName,
                             new File(AllConfigs.getInstance().getTmp(), "pluginsUpdate").getAbsolutePath()));
 
@@ -231,7 +231,7 @@ public class PluginMarket {
                 }
             } else if (downloadStatus == Enums.DownloadStatus.DOWNLOAD_DOWNLOADING) {
                 //取消下载
-                TaskUtil.getInstance().putTask(new StopDownloadTask(pluginFullName));
+                EventUtil.getInstance().putTask(new StopDownloadEvent(pluginFullName));
                 //复位button
                 buttonInstall.setEnabled(true);
                 buttonInstall.setText(TranslateUtil.getInstance().getTranslation("Install"));
@@ -301,7 +301,7 @@ public class PluginMarket {
         });
         CachedThreadPool.getInstance().executeTask(() -> {
             try {
-                while (TaskUtil.getInstance().isNotMainExit()) {
+                while (EventUtil.getInstance().isNotMainExit()) {
                     if (isStartGetPluginInfo.get()) {
                         isStartGetPluginInfo.set(false);
                         String officialSite;
@@ -356,7 +356,7 @@ public class PluginMarket {
         File icon = new File("tmp/$$" + pluginName);
         int count = 0;
         if (!icon.exists()) {
-            TaskUtil.getInstance().putTask(new StartDownloadTask(url, icon.getName(), "tmp"));
+            EventUtil.getInstance().putTask(new StartDownloadEvent(url, icon.getName(), "tmp"));
 
             while (DownloadUtil.getInstance().getDownloadStatus(icon.getName()) != Enums.DownloadStatus.DOWNLOAD_DONE) {
                 if (DownloadUtil.getInstance().getDownloadStatus(icon.getName()) == Enums.DownloadStatus.DOWNLOAD_ERROR) {
@@ -394,7 +394,7 @@ public class PluginMarket {
         if (downloadStatus != Enums.DownloadStatus.DOWNLOAD_DOWNLOADING) {
             //判断是否已下载完成
             if (downloadStatus != Enums.DownloadStatus.DOWNLOAD_DONE) {
-                TaskUtil.getInstance().putTask(new StartDownloadTask(url, saveFileName, AllConfigs.getInstance().getTmp().getAbsolutePath()));
+                EventUtil.getInstance().putTask(new StartDownloadEvent(url, saveFileName, AllConfigs.getInstance().getTmp().getAbsolutePath()));
 
                 int count = 0;
                 boolean isError = false;

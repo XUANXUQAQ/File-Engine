@@ -2,10 +2,10 @@ package FileEngine.pluginSystem;
 
 import FileEngine.IsDebug;
 import FileEngine.configs.AllConfigs;
-import FileEngine.taskHandler.TaskUtil;
-import FileEngine.taskHandler.Task;
-import FileEngine.taskHandler.TaskHandler;
-import FileEngine.taskHandler.impl.plugin.*;
+import FileEngine.eventHandler.EventUtil;
+import FileEngine.eventHandler.Event;
+import FileEngine.eventHandler.EventHandler;
+import FileEngine.eventHandler.impl.plugin.*;
 import FileEngine.threadPool.CachedThreadPool;
 import com.alibaba.fastjson.JSONObject;
 
@@ -264,7 +264,7 @@ public class PluginUtil {
                     checkUpdateThread.interrupt();
                     throw new Exception("check update failed.");
                 }
-                if (!TaskUtil.getInstance().isNotMainExit()) {
+                if (!EventUtil.getInstance().isNotMainExit()) {
                     break;
                 }
             }
@@ -274,47 +274,47 @@ public class PluginUtil {
         }
     }
 
-    public static void registerTaskHandler() {
-        TaskUtil taskUtil = TaskUtil.getInstance();
-        taskUtil.registerTaskHandler(AddPluginsCanUpdateTask.class, new TaskHandler() {
+    public static void registerEventHandler() {
+        EventUtil eventUtil = EventUtil.getInstance();
+        eventUtil.register(AddPluginsCanUpdateEvent.class, new EventHandler() {
             @Override
-            public void todo(Task task) {
-                getInstance().addPluginsCanUpdate(((AddPluginsCanUpdateTask) task).pluginName);
+            public void todo(Event event) {
+                getInstance().addPluginsCanUpdate(((AddPluginsCanUpdateEvent) event).pluginName);
             }
         });
 
-        taskUtil.registerTaskHandler(LoadAllPluginsTask.class, new TaskHandler() {
+        eventUtil.register(LoadAllPluginsEvent.class, new EventHandler() {
             @Override
-            public void todo(Task task) {
-                getInstance().loadAllPlugins(((LoadAllPluginsTask) task).pluginDirPath);
+            public void todo(Event event) {
+                getInstance().loadAllPlugins(((LoadAllPluginsEvent) event).pluginDirPath);
             }
         });
 
-        taskUtil.registerTaskHandler(ReleasePluginResourcesTask.class, new TaskHandler() {
+        eventUtil.register(ReleasePluginResourcesEvent.class, new EventHandler() {
             @Override
-            public void todo(Task task) {
+            public void todo(Event event) {
                 getInstance().releaseAllResources();
             }
         });
 
-        taskUtil.registerTaskHandler(RemoveFromPluginsCanUpdateTask.class, new TaskHandler() {
+        eventUtil.register(RemoveFromPluginsCanUpdateEvent.class, new EventHandler() {
             @Override
-            public void todo(Task task) {
-                getInstance().removeFromPluginsCanUpdate(((RemoveFromPluginsCanUpdateTask) task).pluginName);
+            public void todo(Event event) {
+                getInstance().removeFromPluginsCanUpdate(((RemoveFromPluginsCanUpdateEvent) event).pluginName);
             }
         });
 
-        taskUtil.registerTaskHandler(SetPluginsCurrentThemeTask.class, new TaskHandler() {
+        eventUtil.register(SetPluginsCurrentThemeEvent.class, new EventHandler() {
             @Override
-            public void todo(Task task) {
-                SetPluginsCurrentThemeTask task1 = (SetPluginsCurrentThemeTask) task;
+            public void todo(Event event) {
+                SetPluginsCurrentThemeEvent task1 = (SetPluginsCurrentThemeEvent) event;
                 getInstance().setCurrentTheme(task1.defaultColor, task1.chosenColor, task1.borderColor);
             }
         });
 
-        taskUtil.registerTaskHandler(UnloadAllPluginsTask.class, new TaskHandler() {
+        eventUtil.register(UnloadAllPluginsEvent.class, new EventHandler() {
             @Override
-            public void todo(Task task) {
+            public void todo(Event event) {
                 getInstance().unloadAllPlugins();
             }
         });
