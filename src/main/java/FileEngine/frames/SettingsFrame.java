@@ -650,7 +650,7 @@ public class SettingsFrame {
     private void addListPluginMouseListener() {
         listPlugins.addMouseListener(new MouseAdapter() {
             @Override
-            public void mousePressed(MouseEvent e) {
+            public void mouseClicked(MouseEvent e) {
                 String pluginName = (String) listPlugins.getSelectedValue();
                 if (pluginName != null) {
                     String pluginIdentifier = PluginUtil.getInstance().getIdentifierByName(pluginName);
