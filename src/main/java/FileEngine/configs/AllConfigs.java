@@ -749,12 +749,11 @@ public class AllConfigs {
         } else {
             FlatDarculaLaf.install();
         }
-        for (Frame frame : JFrame.getFrames()) {
-            try {
+        SwingUtilities.invokeLater(() -> {
+            for (Frame frame : JFrame.getFrames()) {
                 SwingUtilities.updateComponentTreeUI(frame);
-            } catch (RuntimeException ignored) {
             }
-        }
+        });
     }
 
     private void saveAllSettings() {
