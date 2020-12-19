@@ -2,18 +2,18 @@ package FileEngine.configs;
 
 import FileEngine.IsDebug;
 import FileEngine.database.SQLiteUtil;
-import FileEngine.taskHandler.TaskUtil;
-import FileEngine.taskHandler.Task;
-import FileEngine.taskHandler.TaskHandler;
-import FileEngine.taskHandler.impl.ReadConfigsAndBootSystemTask;
-import FileEngine.taskHandler.impl.configs.SaveConfigsTask;
-import FileEngine.taskHandler.impl.daemon.StartDaemonTask;
-import FileEngine.taskHandler.impl.frame.searchBar.*;
-import FileEngine.taskHandler.impl.hotkey.RegisterHotKeyTask;
-import FileEngine.taskHandler.impl.monitorDisk.StartMonitorDiskTask;
-import FileEngine.taskHandler.impl.plugin.LoadAllPluginsTask;
-import FileEngine.taskHandler.impl.plugin.SetPluginsCurrentThemeTask;
-import FileEngine.taskHandler.impl.taskbar.ShowTaskBarIconTask;
+import FileEngine.eventHandler.EventUtil;
+import FileEngine.eventHandler.Event;
+import FileEngine.eventHandler.EventHandler;
+import FileEngine.eventHandler.impl.ReadConfigsAndBootSystemEvent;
+import FileEngine.eventHandler.impl.configs.SaveConfigsEvent;
+import FileEngine.eventHandler.impl.daemon.StartDaemonEvent;
+import FileEngine.eventHandler.impl.frame.searchBar.*;
+import FileEngine.eventHandler.impl.hotkey.RegisterHotKeyEvent;
+import FileEngine.eventHandler.impl.monitorDisk.StartMonitorDiskEvent;
+import FileEngine.eventHandler.impl.plugin.LoadAllPluginsEvent;
+import FileEngine.eventHandler.impl.plugin.SetPluginsCurrentThemeEvent;
+import FileEngine.eventHandler.impl.taskbar.ShowTaskBarIconEvent;
 import FileEngine.r.R;
 import FileEngine.translate.TranslateUtil;
 import com.alibaba.fastjson.JSON;
@@ -690,20 +690,20 @@ public class AllConfigs {
 
     private void setAllSettings() {
         setSwing(swingTheme);
-        TaskUtil taskUtil = TaskUtil.getInstance();
-        taskUtil.putTask(new SetPluginsCurrentThemeTask(
+        EventUtil eventUtil = EventUtil.getInstance();
+        eventUtil.putTask(new SetPluginsCurrentThemeEvent(
                 AllConfigs.getInstance().getDefaultBackgroundColor(),
                 AllConfigs.getInstance().getLabelColor(),
                 AllConfigs.getInstance().getBorderColor()));
-        taskUtil.putTask(new RegisterHotKeyTask(hotkey));
-        taskUtil.putTask(new SetSearchBarTransparencyTask(transparency));
-        taskUtil.putTask(new SetSearchBarDefaultBackgroundTask(defaultBackgroundColor));
-        taskUtil.putTask(new SetSearchBarLabelColorTask(labelColor));
-        taskUtil.putTask(new SetSearchBarFontColorWithCoverageTask(fontColorWithCoverage));
-        taskUtil.putTask(new SetSearchBarLabelFontColorTask(fontColor));
-        taskUtil.putTask(new SetSearchBarColorTask(searchBarColor));
-        taskUtil.putTask(new SetSearchBarFontColorTask(searchBarFontColor));
-        taskUtil.putTask(new SetBorderColorTask(borderColor));
+        eventUtil.putTask(new RegisterHotKeyEvent(hotkey));
+        eventUtil.putTask(new SetSearchBarTransparencyEvent(transparency));
+        eventUtil.putTask(new SetSearchBarDefaultBackgroundEvent(defaultBackgroundColor));
+        eventUtil.putTask(new SetSearchBarLabelColorEvent(labelColor));
+        eventUtil.putTask(new SetSearchBarFontColorWithCoverageEvent(fontColorWithCoverage));
+        eventUtil.putTask(new SetSearchBarLabelFontColorEvent(fontColor));
+        eventUtil.putTask(new SetSearchBarColorEvent(searchBarColor));
+        eventUtil.putTask(new SetSearchBarFontColorEvent(searchBarFontColor));
+        eventUtil.putTask(new SetBorderColorEvent(borderColor));
     }
 
     public void setSwingPreview(String theme) {
@@ -813,26 +813,26 @@ public class AllConfigs {
         }
     }
 
-    public static void registerTaskHandler() {
-        TaskUtil taskUtil = TaskUtil.getInstance();
-        taskUtil.registerTaskHandler(ReadConfigsAndBootSystemTask.class, new TaskHandler() {
+    public static void registerEventHandler() {
+        EventUtil eventUtil = EventUtil.getInstance();
+        eventUtil.register(ReadConfigsAndBootSystemEvent.class, new EventHandler() {
             @Override
-            public void todo(Task task) {
+            public void todo(Event event) {
                 getInstance().readAllSettings();
                 getInstance().saveAllSettings();
 
-                taskUtil.putTask(new LoadAllPluginsTask("plugins"));
-                taskUtil.putTask(new StartMonitorDiskTask());
-                taskUtil.putTask(new ShowTaskBarIconTask());
+                eventUtil.putTask(new LoadAllPluginsEvent("plugins"));
+                eventUtil.putTask(new StartMonitorDiskEvent());
+                eventUtil.putTask(new ShowTaskBarIconEvent());
                 if (!IsDebug.isDebug()) {
-                    taskUtil.putTask(new StartDaemonTask(new File("").getAbsolutePath()));
+                    eventUtil.putTask(new StartDaemonEvent(new File("").getAbsolutePath()));
                 }
                 getInstance().setAllSettings();
             }
         });
-        taskUtil.registerTaskHandler(SaveConfigsTask.class, new TaskHandler() {
+        eventUtil.register(SaveConfigsEvent.class, new EventHandler() {
             @Override
-            public void todo(Task task) {
+            public void todo(Event event) {
                 getInstance().saveAllSettings();
                 getInstance().setAllSettings();
             }

@@ -1,10 +1,10 @@
 package FileEngine.daemon;
 
-import FileEngine.taskHandler.TaskUtil;
-import FileEngine.taskHandler.Task;
-import FileEngine.taskHandler.TaskHandler;
-import FileEngine.taskHandler.impl.daemon.StartDaemonTask;
-import FileEngine.taskHandler.impl.daemon.StopDaemonTask;
+import FileEngine.eventHandler.EventUtil;
+import FileEngine.eventHandler.Event;
+import FileEngine.eventHandler.EventHandler;
+import FileEngine.eventHandler.impl.daemon.StartDaemonEvent;
+import FileEngine.eventHandler.impl.daemon.StopDaemonEvent;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -27,17 +27,17 @@ public class DaemonUtil {
         return instance;
     }
 
-    public static void registerTaskHandler() {
-        TaskUtil.getInstance().registerTaskHandler(StartDaemonTask.class, new TaskHandler() {
+    public static void registerEventHandler() {
+        EventUtil.getInstance().register(StartDaemonEvent.class, new EventHandler() {
             @Override
-            public void todo(Task task) {
-                getInstance().startDaemon(((StartDaemonTask) task).currentWorkingDir);
+            public void todo(Event event) {
+                getInstance().startDaemon(((StartDaemonEvent) event).currentWorkingDir);
             }
         });
 
-        TaskUtil.getInstance().registerTaskHandler(StopDaemonTask.class, new TaskHandler() {
+        EventUtil.getInstance().register(StopDaemonEvent.class, new EventHandler() {
             @Override
-            public void todo(Task task) {
+            public void todo(Event event) {
                 getInstance().stopDaemon();
             }
         });

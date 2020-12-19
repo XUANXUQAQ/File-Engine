@@ -10,7 +10,7 @@ public class ClassScannerUtil {
         return ScannerExecutor.getInstance().search(packageName);
     }
 
-    public static void executeAllMethodByName(String methodName) {
+    public static void executeStaticMethodByName(String methodName) {
         String packageName = "FileEngine";
         Set<String> classNames = searchClasses(packageName);
         if (classNames != null) {

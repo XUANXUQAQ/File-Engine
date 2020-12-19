@@ -9,14 +9,14 @@ import FileEngine.dllInterface.FileMonitor;
 import FileEngine.dllInterface.GetAscII;
 import FileEngine.dllInterface.GetHandle;
 import FileEngine.dllInterface.IsLocalDisk;
-import FileEngine.taskHandler.TaskUtil;
-import FileEngine.taskHandler.Task;
-import FileEngine.taskHandler.TaskHandler;
-import FileEngine.taskHandler.impl.taskbar.ShowTaskBarMessageTask;
-import FileEngine.taskHandler.impl.database.*;
-import FileEngine.taskHandler.impl.frame.searchBar.*;
-import FileEngine.taskHandler.impl.monitorDisk.StartMonitorDiskTask;
-import FileEngine.taskHandler.impl.monitorDisk.StopMonitorDiskTask;
+import FileEngine.eventHandler.EventUtil;
+import FileEngine.eventHandler.Event;
+import FileEngine.eventHandler.EventHandler;
+import FileEngine.eventHandler.impl.taskbar.ShowTaskBarMessageEvent;
+import FileEngine.eventHandler.impl.database.*;
+import FileEngine.eventHandler.impl.frame.searchBar.*;
+import FileEngine.eventHandler.impl.monitorDisk.StartMonitorDiskEvent;
+import FileEngine.eventHandler.impl.monitorDisk.StopMonitorDiskEvent;
 import FileEngine.getIcon.GetIconUtil;
 import FileEngine.moveFiles.CopyFileUtil;
 import FileEngine.pluginSystem.Plugin;
@@ -321,7 +321,7 @@ public class SearchBar {
             Runtime.getRuntime().exec("cmd.exe " + commandToGenLnk);
         }
         if (isNotifyUser) {
-            TaskUtil.getInstance().putTask(new ShowTaskBarMessageTask(
+            EventUtil.getInstance().putTask(new ShowTaskBarMessageEvent(
                     TranslateUtil.getInstance().getTranslation("Info"),
                     TranslateUtil.getInstance().getTranslation("Shortcut created")));
         }
@@ -484,7 +484,7 @@ public class SearchBar {
         Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
         clipboard.setContents(data, null);
         if (isNotifyUser) {
-            TaskUtil.getInstance().putTask(new ShowTaskBarMessageTask(
+            EventUtil.getInstance().putTask(new ShowTaskBarMessageEvent(
                     TranslateUtil.getInstance().getTranslation("Info"),
                     TranslateUtil.getInstance().getTranslation("The result has been copied to the clipboard")));
         }
@@ -718,10 +718,10 @@ public class SearchBar {
                 return true;
             case "update":
                 detectShowingModeAndClose();
-                TaskUtil.getInstance().putTask(new ShowTaskBarMessageTask(
+                EventUtil.getInstance().putTask(new ShowTaskBarMessageEvent(
                         TranslateUtil.getInstance().getTranslation("Info"),
                         TranslateUtil.getInstance().getTranslation("Updating file index")));
-                TaskUtil.getInstance().putTask(new UpdateDatabaseTask());
+                EventUtil.getInstance().putTask(new UpdateDatabaseEvent());
                 startSignal = false;
                 return true;
             case "help":
@@ -773,7 +773,7 @@ public class SearchBar {
         //添加一个线程不断更新鼠标保存时间
         CachedThreadPool.getInstance().executeTask(() -> {
             try {
-                while (TaskUtil.getInstance().isNotMainExit()) {
+                while (EventUtil.getInstance().isNotMainExit()) {
                     shouldSaveMousePos.set(true);
                     TimeUnit.MILLISECONDS.sleep(50);
                 }
@@ -1967,7 +1967,7 @@ public class SearchBar {
                 }
             } else {
                 System.out.println("Not administrator, file monitoring function is turned off");
-                TaskUtil.getInstance().putTask(new ShowTaskBarMessageTask(
+                EventUtil.getInstance().putTask(new ShowTaskBarMessageEvent(
                         TranslateUtil.getInstance().getTranslation("Warning"),
                         TranslateUtil.getInstance().getTranslation("Not administrator, file monitoring function is turned off")));
             }
@@ -2036,97 +2036,97 @@ public class SearchBar {
         changeSearchBarSize();
     }
 
-    public static void registerTaskHandler() {
-        TaskUtil taskUtil = TaskUtil.getInstance();
-        taskUtil.registerTaskHandler(ShowSearchBarTask.class, new TaskHandler() {
+    public static void registerEventHandler() {
+        EventUtil eventUtil = EventUtil.getInstance();
+        eventUtil.register(ShowSearchBarEvent.class, new EventHandler() {
             @Override
-            public void todo(Task task) {
-                ShowSearchBarTask showSearchBarTask = (ShowSearchBarTask) task;
+            public void todo(Event event) {
+                ShowSearchBarEvent showSearchBarTask = (ShowSearchBarEvent) event;
                 getInstance().showSearchbar(showSearchBarTask.isGrabFocus);
             }
         });
 
-        taskUtil.registerTaskHandler(StartMonitorDiskTask.class, new TaskHandler() {
+        eventUtil.register(StartMonitorDiskEvent.class, new EventHandler() {
             @Override
-            public void todo(Task task) {
+            public void todo(Event event) {
                 getInstance().startMonitorDisk();
             }
         });
 
-        taskUtil.registerTaskHandler(StopMonitorDiskTask.class, new TaskHandler() {
+        eventUtil.register(StopMonitorDiskEvent.class, new EventHandler() {
             @Override
-            public void todo(Task task) {
+            public void todo(Event event) {
                 FileMonitor.INSTANCE.stop_monitor();
             }
         });
 
-        taskUtil.registerTaskHandler(HideSearchBarTask.class, new TaskHandler() {
+        eventUtil.register(HideSearchBarEvent.class, new EventHandler() {
             @Override
-            public void todo(Task task) {
+            public void todo(Event event) {
                 getInstance().closeSearchBar();
             }
         });
 
-        taskUtil.registerTaskHandler(SetSearchBarTransparencyTask.class, new TaskHandler() {
+        eventUtil.register(SetSearchBarTransparencyEvent.class, new EventHandler() {
             @Override
-            public void todo(Task task) {
-                SetSearchBarTransparencyTask task1 = (SetSearchBarTransparencyTask) task;
+            public void todo(Event event) {
+                SetSearchBarTransparencyEvent task1 = (SetSearchBarTransparencyEvent) event;
                 getInstance().setTransparency(task1.trans);
             }
         });
 
-        taskUtil.registerTaskHandler(SetBorderColorTask.class, new TaskHandler() {
+        eventUtil.register(SetBorderColorEvent.class, new EventHandler() {
             @Override
-            public void todo(Task task) {
-                SetBorderColorTask setBorderColorTask = (SetBorderColorTask) task;
+            public void todo(Event event) {
+                SetBorderColorEvent setBorderColorTask = (SetBorderColorEvent) event;
                 getInstance().setBorderColor(setBorderColorTask.color);
             }
         });
 
-        taskUtil.registerTaskHandler(SetSearchBarColorTask.class, new TaskHandler() {
+        eventUtil.register(SetSearchBarColorEvent.class, new EventHandler() {
             @Override
-            public void todo(Task task) {
-                SetSearchBarColorTask setSearchBarColorTask = (SetSearchBarColorTask) task;
+            public void todo(Event event) {
+                SetSearchBarColorEvent setSearchBarColorTask = (SetSearchBarColorEvent) event;
                 getInstance().setSearchBarColor(setSearchBarColorTask.color);
             }
         });
 
-        taskUtil.registerTaskHandler(SetSearchBarLabelColorTask.class, new TaskHandler() {
+        eventUtil.register(SetSearchBarLabelColorEvent.class, new EventHandler() {
             @Override
-            public void todo(Task task) {
-                SetSearchBarLabelColorTask setSearchBarLabelColorTask = (SetSearchBarLabelColorTask) task;
+            public void todo(Event event) {
+                SetSearchBarLabelColorEvent setSearchBarLabelColorTask = (SetSearchBarLabelColorEvent) event;
                 getInstance().setLabelColor(setSearchBarLabelColorTask.color);
             }
         });
 
-        taskUtil.registerTaskHandler(SetSearchBarDefaultBackgroundTask.class, new TaskHandler() {
+        eventUtil.register(SetSearchBarDefaultBackgroundEvent.class, new EventHandler() {
             @Override
-            public void todo(Task task) {
-                SetSearchBarDefaultBackgroundTask setSearchBarDefaultBackgroundTask = (SetSearchBarDefaultBackgroundTask) task;
+            public void todo(Event event) {
+                SetSearchBarDefaultBackgroundEvent setSearchBarDefaultBackgroundTask = (SetSearchBarDefaultBackgroundEvent) event;
                 getInstance().setDefaultBackgroundColor(setSearchBarDefaultBackgroundTask.color);
             }
         });
 
-        taskUtil.registerTaskHandler(SetSearchBarFontColorWithCoverageTask.class, new TaskHandler() {
+        eventUtil.register(SetSearchBarFontColorWithCoverageEvent.class, new EventHandler() {
             @Override
-            public void todo(Task task) {
-                SetSearchBarFontColorWithCoverageTask task1 = (SetSearchBarFontColorWithCoverageTask) task;
+            public void todo(Event event) {
+                SetSearchBarFontColorWithCoverageEvent task1 = (SetSearchBarFontColorWithCoverageEvent) event;
                 getInstance().setFontColorWithCoverage(task1.color);
             }
         });
 
-        taskUtil.registerTaskHandler(SetSearchBarLabelFontColorTask.class, new TaskHandler() {
+        eventUtil.register(SetSearchBarLabelFontColorEvent.class, new EventHandler() {
             @Override
-            public void todo(Task task) {
-                SetSearchBarLabelFontColorTask setSearchBarLabelFontColorTask = (SetSearchBarLabelFontColorTask) task;
+            public void todo(Event event) {
+                SetSearchBarLabelFontColorEvent setSearchBarLabelFontColorTask = (SetSearchBarLabelFontColorEvent) event;
                 getInstance().setLabelFontColor(setSearchBarLabelFontColorTask.color);
             }
         });
 
-        taskUtil.registerTaskHandler(SetSearchBarFontColorTask.class, new TaskHandler() {
+        eventUtil.register(SetSearchBarFontColorEvent.class, new EventHandler() {
             @Override
-            public void todo(Task task) {
-                SetSearchBarFontColorTask setSearchBarFontColorTask = (SetSearchBarFontColorTask) task;
+            public void todo(Event event) {
+                SetSearchBarFontColorEvent setSearchBarFontColorTask = (SetSearchBarFontColorEvent) event;
                 getInstance().setSearchBarFontColor(setSearchBarFontColorTask.color);
             }
         });
@@ -2136,7 +2136,7 @@ public class SearchBar {
         CachedThreadPool.getInstance().executeTask(() -> {
             try {
                 GetHandle.INSTANCE.start();
-                while (TaskUtil.getInstance().isNotMainExit()) {
+                while (EventUtil.getInstance().isNotMainExit()) {
                     if (GetHandle.INSTANCE.isExplorerAtTop()) {
                         switchToExplorerAttachMode();
                     } else {
@@ -2180,7 +2180,7 @@ public class SearchBar {
     private void changeSearchBarSize() {
         CachedThreadPool.getInstance().executeTask(() -> {
             try {
-                while (TaskUtil.getInstance().isNotMainExit()) {
+                while (EventUtil.getInstance().isNotMainExit()) {
                     if (showingMode == Enums.ShowingSearchBarMode.EXPLORER_ATTACH) {
                         getExplorerSizeAndChangeSearchBarSizeExplorerMode();
                     } else if (showingMode == Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
@@ -2288,10 +2288,10 @@ public class SearchBar {
                             startTimes = 0;
                             if (DatabaseUtil.getInstance().getStatus() == Enums.DatabaseStatus.NORMAL) {
                                 System.err.println("开启次数超过10次，优化数据库");
-                                TaskUtil.getInstance().putTask(new ShowTaskBarMessageTask(
+                                EventUtil.getInstance().putTask(new ShowTaskBarMessageEvent(
                                         TranslateUtil.getInstance().getTranslation("Info"),
                                         TranslateUtil.getInstance().getTranslation("Updating file index")));
-                                TaskUtil.getInstance().putTask(new UpdateDatabaseTask());
+                                EventUtil.getInstance().putTask(new UpdateDatabaseEvent());
                             }
                         }
                     }
@@ -2311,7 +2311,7 @@ public class SearchBar {
         CachedThreadPool.getInstance().executeTask(() -> {
             //合并搜索结果线程
             try {
-                while (TaskUtil.getInstance().isNotMainExit()) {
+                while (EventUtil.getInstance().isNotMainExit()) {
                     if (isCacheAndPrioritySearched) {
                         for (String record : tempResults) {
                             if (!listResults.contains(record)) {
@@ -2334,13 +2334,13 @@ public class SearchBar {
             try {
                 String[] message;
                 Plugin plugin;
-                while (TaskUtil.getInstance().isNotMainExit()) {
+                while (EventUtil.getInstance().isNotMainExit()) {
                     Iterator<Plugin> iter = PluginUtil.getInstance().getPluginMapIter();
                     while (iter.hasNext()) {
                         plugin = iter.next();
                         message = plugin.getMessage();
                         if (message != null) {
-                            TaskUtil.getInstance().putTask(new ShowTaskBarMessageTask(message[0], message[1]));
+                            EventUtil.getInstance().putTask(new ShowTaskBarMessageEvent(message[0], message[1]));
                         }
                     }
                     TimeUnit.MILLISECONDS.sleep(50);
@@ -2355,7 +2355,7 @@ public class SearchBar {
         CachedThreadPool.getInstance().executeTask(() -> {
             //锁住MouseMotion检测，阻止同时发出两个动作
             try {
-                while (TaskUtil.getInstance().isNotMainExit()) {
+                while (EventUtil.getInstance().isNotMainExit()) {
                     if (System.currentTimeMillis() - mouseWheelTime > 500) {
                         isLockMouseMotion = false;
                     }
@@ -2369,7 +2369,7 @@ public class SearchBar {
     private void setForegroundOnLabelThread() {
         CachedThreadPool.getInstance().executeTask(() -> {
             try {
-                while (TaskUtil.getInstance().isNotMainExit()) {
+                while (EventUtil.getInstance().isNotMainExit()) {
                     //字体染色线程
                     //判定当前选定位置
                     int position = getCurrentLabelPos();
@@ -2461,7 +2461,7 @@ public class SearchBar {
             try {
                 boolean isLabel1Chosen, isLabel2Chosen, isLabel3Chosen, isLabel4Chosen,
                         isLabel5Chosen, isLabel6Chosen, isLabel7Chosen, isLabel8Chosen;
-                while (TaskUtil.getInstance().isNotMainExit()) {
+                while (EventUtil.getInstance().isNotMainExit()) {
                     isLabel1Chosen = false;
                     isLabel2Chosen = false;
                     isLabel3Chosen = false;
@@ -2538,7 +2538,7 @@ public class SearchBar {
     private void repaintFrameThread() {
         CachedThreadPool.getInstance().executeTask(() -> {
             try {
-                while (TaskUtil.getInstance().isNotMainExit()) {
+                while (EventUtil.getInstance().isNotMainExit()) {
                     if (isVisible()) {
                         searchBar.repaint();
                     }
@@ -2562,7 +2562,7 @@ public class SearchBar {
             //添加搜索路径线程
             int ascII;
             try {
-                while (TaskUtil.getInstance().isNotMainExit()) {
+                while (EventUtil.getInstance().isNotMainExit()) {
                     if (isStartSearchLocal) {
                         isStartSearchLocal = false;
                         ascII = getAscIISum(keywords);
@@ -2731,7 +2731,7 @@ public class SearchBar {
         CachedThreadPool.getInstance().executeTask(() -> {
             try {
                 String column;
-                while (TaskUtil.getInstance().isNotMainExit()) {
+                while (EventUtil.getInstance().isNotMainExit()) {
                     if (runningMode == Enums.RunningMode.NORMAL_MODE && DatabaseUtil.getInstance().getStatus() == Enums.DatabaseStatus.NORMAL) {
                         while ((column = commandQueue.poll()) != null) {
                             searchAndAddToTempResults(System.currentTimeMillis(), column);
@@ -2752,7 +2752,7 @@ public class SearchBar {
                 if (AllConfigs.getInstance().isFirstRun()) {
                     runInternalCommand("help");
                 }
-                while (TaskUtil.getInstance().isNotMainExit()) {
+                while (EventUtil.getInstance().isNotMainExit()) {
                     long endTime = System.currentTimeMillis();
                     if ((endTime - startTime > 500) && startSignal) {
                         startSignal = false; //开始搜索 计时停止
@@ -2857,15 +2857,15 @@ public class SearchBar {
             //检测文件添加线程
             String filesToAdd;
             int count;
-            TaskUtil taskUtil = TaskUtil.getInstance();
+            EventUtil eventUtil = EventUtil.getInstance();
             try (BufferedReader readerAdd = new BufferedReader(new InputStreamReader(
                     new FileInputStream(AllConfigs.getInstance().getTmp().getAbsolutePath() + File.separator + "fileAdded.txt"),
                     StandardCharsets.UTF_8))) {
-                while (TaskUtil.getInstance().isNotMainExit()) {
+                while (EventUtil.getInstance().isNotMainExit()) {
                     if (search.getStatus() == Enums.DatabaseStatus.NORMAL) {
                         count = 0;
                         while ((filesToAdd = readerAdd.readLine()) != null) {
-                            taskUtil.putTask(new AddToDatabaseTask(filesToAdd));
+                            eventUtil.putTask(new AddToDatabaseEvent(filesToAdd));
                             count++;
                             if (count > 3000) {
                                 break;
@@ -2885,15 +2885,15 @@ public class SearchBar {
         CachedThreadPool.getInstance().executeTask(() -> {
             String filesToRemove;
             int count;
-            TaskUtil taskUtil = TaskUtil.getInstance();
+            EventUtil eventUtil = EventUtil.getInstance();
             try (BufferedReader readerRemove = new BufferedReader(new InputStreamReader(
                     new FileInputStream(AllConfigs.getInstance().getTmp().getAbsolutePath() + File.separator + "fileRemoved.txt"),
                     StandardCharsets.UTF_8))) {
-                while (TaskUtil.getInstance().isNotMainExit()) {
+                while (EventUtil.getInstance().isNotMainExit()) {
                     if (search.getStatus() == Enums.DatabaseStatus.NORMAL) {
                         count = 0;
                         while ((filesToRemove = readerRemove.readLine()) != null) {
-                            taskUtil.putTask(new DeleteFromDatabaseTask(filesToRemove));
+                            eventUtil.putTask(new DeleteFromDatabaseEvent(filesToRemove));
                             count++;
                             if (count > 3000) {
                                 break;
@@ -2914,10 +2914,10 @@ public class SearchBar {
             // 时间检测线程
             final long updateTimeLimit = AllConfigs.getInstance().getUpdateTimeLimit();
             try {
-                TaskUtil taskUtil = TaskUtil.getInstance();
-                while (TaskUtil.getInstance().isNotMainExit()) {
+                EventUtil eventUtil = EventUtil.getInstance();
+                while (EventUtil.getInstance().isNotMainExit()) {
                     if (search.getStatus() == Enums.DatabaseStatus.NORMAL) {
-                        taskUtil.putTask(new ExecuteSQLTask());
+                        eventUtil.putTask(new ExecuteSQLEvent());
                     }
                     TimeUnit.SECONDS.sleep(updateTimeLimit);
                 }
@@ -3022,9 +3022,9 @@ public class SearchBar {
                     }
                 } else {
                     if (isResultFromCache) {
-                        TaskUtil.getInstance().putTask(new DeleteFromCacheTask(path));
+                        EventUtil.getInstance().putTask(new DeleteFromCacheEvent(path));
                     } else {
-                        TaskUtil.getInstance().putTask(new DeleteFromDatabaseTask(path));
+                        EventUtil.getInstance().putTask(new DeleteFromDatabaseEvent(path));
                     }
                 }
             }
@@ -3407,7 +3407,7 @@ public class SearchBar {
     private void saveCache(String content) {
         if (AllConfigs.getInstance().getCacheNum() < AllConfigs.getInstance().getCacheNumLimit()) {
             if (!SettingsFrame.getInstance().isCacheExist(content)) {
-                TaskUtil.getInstance().putTask(new AddToCacheTask(content));
+                EventUtil.getInstance().putTask(new AddToCacheEvent(content));
                 SettingsFrame.getInstance().addCache(content);
                 AllConfigs.getInstance().incrementCacheNum();
             }
@@ -3514,7 +3514,7 @@ public class SearchBar {
                     while (taskNum.get() != threadCount) {
                         TimeUnit.MILLISECONDS.sleep(100);
                         count++;
-                        if (count >= 10 || (!TaskUtil.getInstance().isNotMainExit())) {
+                        if (count >= 10 || (!EventUtil.getInstance().isNotMainExit())) {
                             break;
                         }
                     }

@@ -3,14 +3,14 @@ package FileEngine;
 import FileEngine.database.SQLiteUtil;
 import FileEngine.classScan.ClassScannerUtil;
 import FileEngine.configs.AllConfigs;
-import FileEngine.taskHandler.TaskUtil;
-import FileEngine.taskHandler.Task;
-import FileEngine.taskHandler.impl.taskbar.ShowTaskBarMessageTask;
-import FileEngine.taskHandler.impl.stop.CloseTask;
-import FileEngine.taskHandler.impl.ReadConfigsAndBootSystemTask;
-import FileEngine.taskHandler.impl.database.InitTablesTask;
-import FileEngine.taskHandler.impl.database.UpdateDatabaseTask;
-import FileEngine.taskHandler.impl.plugin.ReleasePluginResourcesTask;
+import FileEngine.eventHandler.EventUtil;
+import FileEngine.eventHandler.Event;
+import FileEngine.eventHandler.impl.taskbar.ShowTaskBarMessageEvent;
+import FileEngine.eventHandler.impl.stop.CloseEvent;
+import FileEngine.eventHandler.impl.ReadConfigsAndBootSystemEvent;
+import FileEngine.eventHandler.impl.database.InitTablesEvent;
+import FileEngine.eventHandler.impl.database.UpdateDatabaseEvent;
+import FileEngine.eventHandler.impl.plugin.ReleasePluginResourcesEvent;
 import FileEngine.frames.SettingsFrame;
 import FileEngine.frames.TaskBar;
 import FileEngine.md5.Md5Util;
@@ -135,8 +135,8 @@ public class MainClass {
         }
     }
 
-    private static void registerAllTaskHandler() {
-        ClassScannerUtil.executeAllMethodByName("registerTaskHandler");
+    private static void registerAllEventHandler() {
+        ClassScannerUtil.executeStaticMethodByName("registerEventHandler");
     }
 
     public static void main(String[] args) {
@@ -154,7 +154,7 @@ public class MainClass {
             if (isDatabaseDamaged()) {
                 System.out.println("无data文件，正在搜索并重建");
                 //初始化数据库
-                TaskUtil.getInstance().putTask(new InitTablesTask());
+                EventUtil.getInstance().putTask(new InitTablesEvent());
                 isManualUpdate = true;
             }
 
@@ -177,41 +177,41 @@ public class MainClass {
 
             initAll();
 
-            TaskUtil taskUtil = TaskUtil.getInstance();
+            EventUtil eventUtil = EventUtil.getInstance();
 
             if (isManualUpdate) {
-                taskUtil.putTask(new ShowTaskBarMessageTask(
+                eventUtil.putTask(new ShowTaskBarMessageEvent(
                         TranslateUtil.getInstance().getTranslation("Info"),
                         TranslateUtil.getInstance().getTranslation("Updating file index")));
-                taskUtil.putTask(new UpdateDatabaseTask());
+                eventUtil.putTask(new UpdateDatabaseEvent());
             }
 
             TranslateUtil translateUtil = TranslateUtil.getInstance();
 
             if (!isLatest()) {
-                taskUtil.putTask(new ShowTaskBarMessageTask(
+                eventUtil.putTask(new ShowTaskBarMessageEvent(
                         translateUtil.getTranslation("Info"), translateUtil.getTranslation("New version can be updated")));
             }
 
             if (PluginUtil.getInstance().isPluginTooOld()) {
                 String oldPlugins = PluginUtil.getInstance().getAllOldPluginsName();
-                taskUtil.putTask(new ShowTaskBarMessageTask(
+                eventUtil.putTask(new ShowTaskBarMessageEvent(
                         translateUtil.getTranslation("Warning"), oldPlugins + "\n" + translateUtil.getTranslation("Plugin Api is too old")));
             }
 
             if (PluginUtil.getInstance().isPluginRepeat()) {
                 String repeatPlugins = PluginUtil.getInstance().getRepeatPlugins();
-                taskUtil.putTask(new ShowTaskBarMessageTask(
+                eventUtil.putTask(new ShowTaskBarMessageEvent(
                         translateUtil.getTranslation("Warning"), repeatPlugins + "\n" + translateUtil.getTranslation("Duplicate plugin, please delete it in plugins folder")));
             }
 
             if (PluginUtil.getInstance().isPluginLoadError()) {
                 String errorPlugins = PluginUtil.getInstance().getLoadingErrorPlugins();
-                taskUtil.putTask(new ShowTaskBarMessageTask(
+                eventUtil.putTask(new ShowTaskBarMessageEvent(
                         translateUtil.getTranslation("Warning"), errorPlugins + "\n" + translateUtil.getTranslation("Loading plugins error")));
             }
 
-            taskUtil.putTask(new ReleasePluginResourcesTask());
+            eventUtil.putTask(new ReleasePluginResourcesEvent());
 
             StringBuilder stringBuilder = new StringBuilder();
             AtomicBoolean isFinished = new AtomicBoolean(false);
@@ -222,13 +222,13 @@ public class MainClass {
             int checkTimeCount = 0;
             long timeDiff;
 
-            while (TaskUtil.getInstance().isNotMainExit()) {
+            while (EventUtil.getInstance().isNotMainExit()) {
                 // 主循环开始
                 if (isFinished.get()) {
                     isFinished.set(false);
                     String notLatestPlugins = stringBuilder.toString();
                     if (!notLatestPlugins.isEmpty()) {
-                        TaskUtil.getInstance().putTask(new ShowTaskBarMessageTask(
+                        EventUtil.getInstance().putTask(new ShowTaskBarMessageEvent(
                                 TranslateUtil.getInstance().getTranslation("Info"),
                                 TranslateUtil.getInstance().getTranslation(
                                         notLatestPlugins +
@@ -244,8 +244,8 @@ public class MainClass {
                     endTime = new Date();
                     timeDiff = endTime.getTime() - startTime.getTime();
                     long diffDays = timeDiff / (24 * 60 * 60 * 1000);
-                    if (diffDays > 6) {
-                        //启动时间已经超过6天,自动重启
+                    if (diffDays > 3) {
+                        //启动时间已经超过3天,自动重启
                         TaskBar.getInstance().restart();
                     }
                 }
@@ -261,18 +261,18 @@ public class MainClass {
     }
 
     private static void initAll() {
-        registerAllTaskHandler();
+        registerAllEventHandler();
 
-        TaskUtil taskUtil = TaskUtil.getInstance();
+        EventUtil eventUtil = EventUtil.getInstance();
 
-        Task task = new ReadConfigsAndBootSystemTask();
-        taskUtil.putTask(task);
-        taskUtil.waitForTask(task);
+        Event event = new ReadConfigsAndBootSystemEvent();
+        eventUtil.putTask(event);
+        eventUtil.waitForTask(event);
     }
 
     private static void closeAndExit() {
-        TaskUtil taskUtil = TaskUtil.getInstance();
-        taskUtil.putTask(new CloseTask());
+        EventUtil eventUtil = EventUtil.getInstance();
+        eventUtil.putTask(new CloseEvent());
     }
 
     private static void releaseAllDependence() {

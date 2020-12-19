@@ -2,13 +2,13 @@ package FileEngine.checkHotkey;
 
 import FileEngine.configs.Enums;
 import FileEngine.dllInterface.HotkeyListener;
-import FileEngine.taskHandler.TaskUtil;
-import FileEngine.taskHandler.Task;
-import FileEngine.taskHandler.TaskHandler;
-import FileEngine.taskHandler.impl.frame.searchBar.HideSearchBarTask;
-import FileEngine.taskHandler.impl.frame.searchBar.ShowSearchBarTask;
-import FileEngine.taskHandler.impl.hotkey.RegisterHotKeyTask;
-import FileEngine.taskHandler.impl.hotkey.StopListenHotkeyTask;
+import FileEngine.eventHandler.EventUtil;
+import FileEngine.eventHandler.Event;
+import FileEngine.eventHandler.EventHandler;
+import FileEngine.eventHandler.impl.frame.searchBar.HideSearchBarEvent;
+import FileEngine.eventHandler.impl.frame.searchBar.ShowSearchBarEvent;
+import FileEngine.eventHandler.impl.hotkey.RegisterHotKeyEvent;
+import FileEngine.eventHandler.impl.hotkey.StopListenHotkeyEvent;
 import FileEngine.frames.SearchBar;
 import FileEngine.threadPool.CachedThreadPool;
 
@@ -122,18 +122,18 @@ public class CheckHotKeyUtil {
             HotkeyListener instance = HotkeyListener.INSTANCE;
             try {
                 //获取快捷键状态，检测是否被按下线程
-                while (TaskUtil.getInstance().isNotMainExit()) {
+                while (EventUtil.getInstance().isNotMainExit()) {
                     if (!isExecuted && instance.getKeyStatus()) {
                         isExecuted = true;
                         if (!searchBar.isVisible()) {
                             if (System.currentTimeMillis() - endVisibleTime > 200) {
-                                TaskUtil.getInstance().putTask(new ShowSearchBarTask(true));
+                                EventUtil.getInstance().putTask(new ShowSearchBarEvent(true));
                                 startVisibleTime = System.currentTimeMillis();
                             }
                         } else {
                             if (System.currentTimeMillis() - startVisibleTime > 200) {
                                 if (searchBar.getShowingMode() == Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
-                                    TaskUtil.getInstance().putTask(new HideSearchBarTask());
+                                    EventUtil.getInstance().putTask(new HideSearchBarEvent());
                                     endVisibleTime = System.currentTimeMillis();
                                 }
                             }
@@ -149,17 +149,17 @@ public class CheckHotKeyUtil {
         });
     }
     
-    public static void registerTaskHandler() {
-        TaskUtil.getInstance().registerTaskHandler(RegisterHotKeyTask.class, new TaskHandler() {
+    public static void registerEventHandler() {
+        EventUtil.getInstance().register(RegisterHotKeyEvent.class, new EventHandler() {
             @Override
-            public void todo(Task task) {
-                getInstance().registerHotkey(((RegisterHotKeyTask) task).hotkey);
+            public void todo(Event event) {
+                getInstance().registerHotkey(((RegisterHotKeyEvent) event).hotkey);
             }
         });
 
-        TaskUtil.getInstance().registerTaskHandler(StopListenHotkeyTask.class, new TaskHandler() {
+        EventUtil.getInstance().register(StopListenHotkeyEvent.class, new EventHandler() {
             @Override
-            public void todo(Task task) {
+            public void todo(Event event) {
                 getInstance().stopListen();
             }
         });
