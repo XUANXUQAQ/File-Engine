@@ -8,5 +8,6 @@ public class DatabaseEvent extends Event {
     protected DatabaseEvent(String path) {
         super();
         this.path = path;
+        this.setBlock();
     }
 }

@@ -417,6 +417,9 @@ public class DatabaseUtil {
                 stmt.execute("BEGIN;");
                 for (SQLWithTaskId each : tempCommandMap) {
                     stmt.execute(each.sql);
+                    if (IsDebug.isDebug()) {
+                        System.err.println("当前执行SQL---" + each.sql + "----------------任务组：" + each.taskId);
+                    }
                 }
             } catch (SQLException e) {
                 if (IsDebug.isDebug()) {
@@ -445,7 +448,7 @@ public class DatabaseUtil {
                 System.err.println("添加sql语句" + sql + "失败，已达到最大上限");
             }
             //立即处理sql语句
-            isExecuteImmediately = true;
+            executeImmediately();
         }
     }
 

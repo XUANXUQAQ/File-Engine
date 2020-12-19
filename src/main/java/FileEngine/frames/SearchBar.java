@@ -2916,10 +2916,10 @@ public class SearchBar {
             try {
                 EventUtil eventUtil = EventUtil.getInstance();
                 while (EventUtil.getInstance().isNotMainExit()) {
+                    TimeUnit.SECONDS.sleep(updateTimeLimit);
                     if (search.getStatus() == Enums.DatabaseStatus.NORMAL) {
                         eventUtil.putTask(new ExecuteSQLEvent());
                     }
-                    TimeUnit.SECONDS.sleep(updateTimeLimit);
                 }
             } catch (InterruptedException ignored) {
             }
