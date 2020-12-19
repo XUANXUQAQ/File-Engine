@@ -63,10 +63,15 @@ public class TranslateUtil {
             case "zh-TW":
                 return "繁體中文";
             case "ru-RU":
-                return "Russian";
+                return "русский";
             case "it-IT":
             case "it-CH":
-                return "Italian";
+                return "italiano";
+            case "de-AT":
+            case "de-DE":
+            case "de-LU":
+            case "de-CH":
+                return "German";
             default:
                 return "English(US)";
         }
@@ -78,8 +83,9 @@ public class TranslateUtil {
         languageSet.add("English(US)");
         languageSet.add("日本語");
         languageSet.add("繁體中文");
-        languageSet.add("Russian");
-        languageSet.add("Italian");
+        languageSet.add("русский");
+        languageSet.add("italiano");
+        languageSet.add("Deutsche");
     }
 
     private void initLanguageFileMap() {
@@ -87,8 +93,9 @@ public class TranslateUtil {
         fileMap.put("简体中文", "/language/Chinese(Simplified).txt");
         fileMap.put("日本語", "/language/Japanese.txt");
         fileMap.put("繁體中文", "/language/Chinese(Traditional).txt");
-        fileMap.put("Russian", "/language/Russian.txt");
-        fileMap.put("Italian", "/language/Italian.txt");
+        fileMap.put("русский", "/language/Russian.txt");
+        fileMap.put("italiano", "/language/Italian.txt");
+        fileMap.put("Deutsche", "/language/German.txt");
     }
 
     private void initTranslations() {

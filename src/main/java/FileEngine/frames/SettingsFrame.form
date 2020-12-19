@@ -167,7 +167,7 @@
               </component>
             </children>
           </grid>
-          <grid id="21c26" binding="tabSearchSettings" layout-manager="GridLayoutManager" row-count="8" column-count="4" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+          <grid id="21c26" binding="tabSearchSettings" layout-manager="GridLayoutManager" row-count="8" column-count="5" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
             <margin top="0" left="0" bottom="0" right="0"/>
             <constraints>
               <tabbedpane title="Search settings"/>
@@ -307,6 +307,11 @@
                   <text value="SQLite Vacuum"/>
                 </properties>
               </component>
+              <hspacer id="1b8cd">
+                <constraints>
+                  <grid row="3" column="4" row-span="1" col-span="1" vsize-policy="1" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                </constraints>
+              </hspacer>
             </children>
           </grid>
           <grid id="dcaba" binding="tabSearchBarSettings" layout-manager="GridLayoutManager" row-count="9" column-count="4" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
@@ -419,7 +424,7 @@
               </component>
             </children>
           </grid>
-          <grid id="8b55c" binding="tabCache" layout-manager="GridLayoutManager" row-count="7" column-count="4" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+          <grid id="8b55c" binding="tabCache" layout-manager="GridLayoutManager" row-count="7" column-count="5" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
             <margin top="0" left="0" bottom="0" right="0"/>
             <constraints>
               <tabbedpane title="Cache"/>
@@ -511,9 +516,14 @@
                   <text value="Current Caches Num:"/>
                 </properties>
               </component>
+              <hspacer id="b72e4">
+                <constraints>
+                  <grid row="4" column="4" row-span="1" col-span="1" vsize-policy="1" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                </constraints>
+              </hspacer>
             </children>
           </grid>
-          <grid id="4c845" binding="tabProxy" layout-manager="GridLayoutManager" row-count="10" column-count="6" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+          <grid id="4c845" binding="tabProxy" layout-manager="GridLayoutManager" row-count="12" column-count="4" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
             <margin top="0" left="0" bottom="0" right="0"/>
             <constraints>
               <tabbedpane title="Proxy settings"/>
@@ -525,7 +535,7 @@
             <children>
               <hspacer id="8bcee">
                 <constraints>
-                  <grid row="7" column="5" row-span="2" col-span="1" vsize-policy="1" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                  <grid row="7" column="3" row-span="2" col-span="1" vsize-policy="1" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
                 </constraints>
               </hspacer>
               <component id="19870" class="javax.swing.JLabel" binding="labelPlaceHolder7">
@@ -589,22 +599,6 @@
                   <text value="Port"/>
                 </properties>
               </component>
-              <component id="30e9b" class="javax.swing.JLabel" binding="labelUserName">
-                <constraints>
-                  <grid row="7" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
-                </constraints>
-                <properties>
-                  <text value="User name"/>
-                </properties>
-              </component>
-              <component id="f14a6" class="javax.swing.JLabel" binding="labelPassword">
-                <constraints>
-                  <grid row="7" column="4" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
-                </constraints>
-                <properties>
-                  <text value="Password"/>
-                </properties>
-              </component>
               <component id="a8b56" class="javax.swing.JTextField" binding="textFieldAddress">
                 <constraints>
                   <grid row="8" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="9" fill="1" indent="0" use-parent-layout="false">
@@ -625,29 +619,9 @@
                   <opaque value="false"/>
                 </properties>
               </component>
-              <component id="341c9" class="javax.swing.JTextField" binding="textFieldUserName">
-                <constraints>
-                  <grid row="8" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="9" fill="1" indent="0" use-parent-layout="false">
-                    <preferred-size width="150" height="-1"/>
-                  </grid>
-                </constraints>
-                <properties>
-                  <opaque value="false"/>
-                </properties>
-              </component>
-              <component id="2916b" class="javax.swing.JTextField" binding="textFieldPassword">
-                <constraints>
-                  <grid row="8" column="4" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="9" fill="1" indent="0" use-parent-layout="false">
-                    <preferred-size width="150" height="-1"/>
-                  </grid>
-                </constraints>
-                <properties>
-                  <opaque value="false"/>
-                </properties>
-              </component>
               <vspacer id="384a1">
                 <constraints>
-                  <grid row="9" column="1" row-span="1" col-span="1" vsize-policy="6" hsize-policy="1" anchor="0" fill="2" indent="0" use-parent-layout="false"/>
+                  <grid row="11" column="1" row-span="1" col-span="1" vsize-policy="6" hsize-policy="1" anchor="0" fill="2" indent="0" use-parent-layout="false"/>
                 </constraints>
               </vspacer>
               <component id="ad02" class="javax.swing.JLabel" binding="labelProxyTip">
@@ -668,7 +642,7 @@
               </component>
               <component id="6802c" class="javax.swing.JSeparator" binding="proxySeperater">
                 <constraints>
-                  <grid row="5" column="1" row-span="1" col-span="4" vsize-policy="2" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                  <grid row="5" column="1" row-span="1" col-span="3" vsize-policy="2" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties/>
               </component>
@@ -678,6 +652,42 @@
                 </constraints>
                 <properties>
                   <text value="      "/>
+                </properties>
+              </component>
+              <component id="30e9b" class="javax.swing.JLabel" binding="labelUserName">
+                <constraints>
+                  <grid row="9" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                </constraints>
+                <properties>
+                  <text value="User name"/>
+                </properties>
+              </component>
+              <component id="341c9" class="javax.swing.JTextField" binding="textFieldUserName">
+                <constraints>
+                  <grid row="10" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="9" fill="1" indent="0" use-parent-layout="false">
+                    <preferred-size width="150" height="-1"/>
+                  </grid>
+                </constraints>
+                <properties>
+                  <opaque value="false"/>
+                </properties>
+              </component>
+              <component id="f14a6" class="javax.swing.JLabel" binding="labelPassword">
+                <constraints>
+                  <grid row="9" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                </constraints>
+                <properties>
+                  <text value="Password"/>
+                </properties>
+              </component>
+              <component id="2916b" class="javax.swing.JTextField" binding="textFieldPassword">
+                <constraints>
+                  <grid row="10" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="9" fill="1" indent="0" use-parent-layout="false">
+                    <preferred-size width="150" height="-1"/>
+                  </grid>
+                </constraints>
+                <properties>
+                  <opaque value="false"/>
                 </properties>
               </component>
             </children>
@@ -1057,7 +1067,7 @@
               </hspacer>
             </children>
           </grid>
-          <grid id="42c04" binding="tabCommands" layout-manager="GridLayoutManager" row-count="3" column-count="3" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+          <grid id="42c04" binding="tabCommands" layout-manager="GridLayoutManager" row-count="3" column-count="4" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
             <margin top="0" left="0" bottom="0" right="0"/>
             <constraints>
               <tabbedpane title="My commands"/>
@@ -1118,6 +1128,11 @@
                   <text value="      "/>
                 </properties>
               </component>
+              <hspacer id="8eecb">
+                <constraints>
+                  <grid row="1" column="3" row-span="1" col-span="1" vsize-policy="1" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                </constraints>
+              </hspacer>
             </children>
           </grid>
           <grid id="d679f" binding="tabColorSettings" layout-manager="GridBagLayout">
@@ -1440,6 +1455,12 @@
                   <text value="preview"/>
                 </properties>
               </component>
+              <hspacer id="a1948">
+                <constraints>
+                  <grid row="2" column="5" row-span="1" col-span="1" vsize-policy="1" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                  <gridbag weightx="0.0" weighty="0.0"/>
+                </constraints>
+              </hspacer>
             </children>
           </grid>
           <grid id="5fbe4" binding="tabAbout" layout-manager="GridLayoutManager" row-count="14" column-count="10" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
