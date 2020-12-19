@@ -71,7 +71,7 @@ public class EventUtil {
         try {
             int timeout = 200;
             int count = 0;
-            while (!event.isFinished() || !event.isFailed()) {
+            while (!event.isFailed() && !event.isFinished()) {
                 count++;
                 if (count > timeout){
                     System.err.println("等待" + event.toString() + "超时");
