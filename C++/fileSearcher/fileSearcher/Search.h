@@ -66,10 +66,10 @@ int dbRes;
 
 void searchFiles(const char* path, const char* exd);
 void addIgnorePath(const char* path);
-int count(string path, string pattern);
-bool isSearchDepthOut(string path);
+int count(const string& path, const string& pattern);
+bool isSearchDepthOut(const string& path);
 bool isIgnore(string path);
-void search(string path, string exd);
+void search(const string& path, const string& exd);
 void searchIgnoreSearchDepth(string path, string exd);
 std::wstring StringToWString(const std::string& str);
 void executeAll(vector<string*>& vec, const char* init);
@@ -79,7 +79,7 @@ std::string to_utf8(const wchar_t* buffer, int len);
 int getAscIISum(string name);
 
 
-void initAllVector() {
+inline void initAllVector() {
     command0.reserve(30000);
     command1.reserve(30000);
     command2.reserve(30000);
@@ -125,8 +125,8 @@ void initAllVector() {
 
 inline void saveResult(const string path, const int ascII)
 {
-	auto _path = new string(to_utf8(StringToWString(path)));
-	const int asciiGroup = ascII / 100;
+	auto* _path = new string(to_utf8(StringToWString(path)));
+	const auto asciiGroup = ascII / 100;
     switch (asciiGroup)
     {
     case 0:
@@ -297,7 +297,7 @@ inline void setSearchDepth(const int i)
     searchDepth = i;
 }
 
-inline int count(const string path, const string pattern)
+inline auto count(const string& path, const string& pattern) -> int
 {
     size_t begin = -1;
     auto count = 0;
@@ -309,9 +309,9 @@ inline int count(const string path, const string pattern)
     return count;
 }
 
-inline bool isSearchDepthOut(string path)
+inline bool isSearchDepthOut(const string& path)
 {
-    int num = count(path, "\\");
+	const auto num = count(path, "\\");
     if (num > searchDepth - 2)
     {
         return true;
@@ -321,12 +321,12 @@ inline bool isSearchDepthOut(string path)
 
 inline bool isIgnore(string path)
 {
-    if (path.find("$") != string::npos)
+    if (path.find('$') != string::npos)
     {
         return true;
     }
     transform(path.begin(), path.end(), path.begin(), ::tolower);
-    size_t size = ignorePathVector.size();
+    const auto size = ignorePathVector.size();
     for (size_t i = 0; i < size; i++)
     {
         if (path.find(ignorePathVector[i]) != string::npos)
@@ -337,13 +337,13 @@ inline bool isIgnore(string path)
     return false;
 }
 
-inline void search(const string path, const string exd)
+inline void search(const string& path, const string& exd)
 {
     //cout << "getFiles()" << path<< endl;
     //文件句柄
     intptr_t hFile;
     //文件信息
-    struct _finddata_t fileinfo;
+    struct _finddata_t fileinfo{};
     string pathName, exdName;
 
     if (0 != strcmp(exd.c_str(), ""))
@@ -368,15 +368,14 @@ inline void search(const string path, const string exd)
                 if (strcmp(fileinfo.name, ".") != 0 && strcmp(fileinfo.name, "..") != 0)
                 {
                     string name(fileinfo.name);
-                    string _path = pathName.assign(path).append("\\").append(fileinfo.name);
+                    const auto _path = pathName.assign(path).append("\\").append(fileinfo.name);
                     transform(name.begin(), name.end(), name.begin(), ::toupper);
-                    int ascII;
-                    ascII = getAscIISum(name);
+                    const auto ascII = getAscIISum(name);
                     saveResult(_path, ascII);
 
-                    bool SearchDepthOut = isSearchDepthOut(path);
-                    bool Ignore = isIgnore(path);
-                    bool result = !Ignore && !SearchDepthOut;
+                    const auto SearchDepthOut = isSearchDepthOut(path);
+                    const auto Ignore = isIgnore(path);
+                    const auto result = !Ignore && !SearchDepthOut;
                     if (result)
                     {
                         search(_path, exd);
@@ -388,11 +387,10 @@ inline void search(const string path, const string exd)
                 if (strcmp(fileinfo.name, ".") != 0 && strcmp(fileinfo.name, "..") != 0)
                 {
                     string name(fileinfo.name);
-                    string _path = pathName.assign(path).append("\\").append(fileinfo.name);
+                    const auto _path = pathName.assign(path).append("\\").append(fileinfo.name);
                     transform(name.begin(), name.end(), name.begin(), ::toupper);
-                    int ascII;
 
-                    ascII = getAscIISum(name);
+                    int ascII = getAscIISum(name);
                     saveResult(_path, ascII);
 
                 }
@@ -405,9 +403,10 @@ inline void search(const string path, const string exd)
 inline void executeAll(vector<string*>& vec, const char* init) {
     sqlite3_stmt* stmt = nullptr;
     string str;
-    size_t rc = sqlite3_prepare_v2(db, init, strlen(init), &stmt, 0);
+    const size_t rc = sqlite3_prepare_v2(db, init, strlen(init), &stmt, 0);  // NOLINT(clang-diagnostic-shorten-64-to-32)
     if (rc != SQLITE_OK) {
         cout << "error preparing statement" << endl;
+        cerr << "init sql:" << init << endl;
         exit(-1);
     }
     for (auto& iter : vec)
@@ -426,19 +425,19 @@ inline void executeAll(vector<string*>& vec, const char* init) {
 inline void searchFiles(const char* path, const char* exd)
 {
     cout << "start Search" << endl;
-    string file(path);
-    string suffix(exd);
+    const string file(path);
+    const string suffix(exd);
     search(file, suffix);
     cout << "end Search" << endl;
 }
 
-inline void searchIgnoreSearchDepth(string path, string exd)
+inline void searchIgnoreSearchDepth(const string path, const string exd)
 {
     //cout << "getFiles()" << path<< endl;
     //文件句柄
-    intptr_t hFile = 0;
+    intptr_t hFile;
     //文件信息
-    struct _finddata_t fileinfo;
+    struct _finddata_t fileinfo{};
     string pathName, exdName;
 
     if (0 != strcmp(exd.c_str(), ""))
@@ -463,7 +462,7 @@ inline void searchIgnoreSearchDepth(string path, string exd)
                 if (strcmp(fileinfo.name, ".") != 0 && strcmp(fileinfo.name, "..") != 0)
                 {
                     string name(fileinfo.name);
-                    string _path = pathName.assign(path).append("\\").append(fileinfo.name);
+                    auto _path = pathName.assign(path).append("\\").append(fileinfo.name);
                     transform(name.begin(), name.end(), name.begin(), ::toupper);
                     int ascII;
 
@@ -471,7 +470,7 @@ inline void searchIgnoreSearchDepth(string path, string exd)
 
                     saveResult(_path, ascII);
 
-                    bool Ignore = isIgnore(path);
+                    auto Ignore = isIgnore(path);
                     if (!Ignore)
                     {
                         searchIgnoreSearchDepth(_path, exd);
@@ -484,11 +483,10 @@ inline void searchIgnoreSearchDepth(string path, string exd)
                 if (strcmp(fileinfo.name, ".") != 0 && strcmp(fileinfo.name, "..") != 0)
                 {
                     string name(fileinfo.name);
-                    string _path = pathName.assign(path).append("\\").append(fileinfo.name);
+                    auto _path = pathName.assign(path).append("\\").append(fileinfo.name);
                     transform(name.begin(), name.end(), name.begin(), ::toupper);
-                    int ascII;
 
-                    ascII = getAscIISum(name);
+                    auto ascII = getAscIISum(name);
                     saveResult(_path, ascII);
                 }
             }
@@ -500,8 +498,8 @@ inline void searchIgnoreSearchDepth(string path, string exd)
 
 inline void searchFilesIgnoreSearchDepth(const char* path, const char* exd)
 {
-    string file(path);
-    string suffix(exd);
+	const string file(path);
+    const string suffix(exd);
     cout << "start search without searchDepth" << endl;
     searchIgnoreSearchDepth(file, suffix);
     cout << "end search without searchDepth" << endl;
@@ -509,8 +507,8 @@ inline void searchFilesIgnoreSearchDepth(const char* path, const char* exd)
 
 inline int getAscIISum(string name)
 {
-    int sum = 0;
-    size_t length = name.length();
+	auto sum = 0;
+    const auto length = name.length();
     for (size_t i = 0; i < length; i++)
     {
         if (name[i] > 0)
@@ -553,15 +551,15 @@ inline std::string to_utf8(const wchar_t* buffer, int len)
 
 inline std::string to_utf8(const std::wstring& str)
 {
-    return to_utf8(str.c_str(), (int)str.size());
+    return to_utf8(str.c_str(), static_cast<int>(str.size()));
 }
 
 inline std::wstring StringToWString(const std::string& str)
 {
     setlocale(LC_ALL, "chs");
-    const char* point_to_source = str.c_str();
-    size_t new_size = str.size() + 1;
-    wchar_t* point_to_destination = new wchar_t[new_size];
+    const auto* const point_to_source = str.c_str();
+    const auto new_size = str.size() + 1;
+    auto* point_to_destination = new wchar_t[new_size];
     wmemset(point_to_destination, 0, new_size);
     mbstowcs(point_to_destination, point_to_source, new_size);
     std::wstring result = point_to_destination;

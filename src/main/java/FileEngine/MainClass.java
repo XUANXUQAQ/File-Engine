@@ -33,7 +33,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class MainClass {
     private static final String FILE_MONITOR_64_MD_5 = "7258ca0167d10d6cd6963fd0c35dff84";
-    private static final String FILE_SEARCHER_64_MD_5 = "8d81d484cfc1c2cfaea7e822dd086f0d";
+    private static final String FILE_SEARCHER_64_MD_5 = "fa6a144d3f7bf6363abd143ce777f417";
     private static final String GET_ASC_II_64_MD_5 = "eff607d2dd4a7e4c878948fe8f24b3ea";
     private static final String HOTKEY_LISTENER_64_MD_5 = "41388e31d6fc22fb430f636d402cf608";
     private static final String IS_LOCAL_DISK_64_MD_5 = "f8a71d3496d8cc188713d521e6dfa2b2";
