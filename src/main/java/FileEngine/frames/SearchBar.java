@@ -2272,11 +2272,10 @@ public class SearchBar {
                     String times = reader.readLine();
                     if (!(times == null || times.isEmpty())) {
                         startTimes = Integer.parseInt(times);
-                        //使用次数大于10次，优化数据库
-                        if (startTimes >= 10) {
+                        //使用次数大于3次，优化数据库
+                        if (startTimes >= 3) {
                             startTimes = 0;
                             if (DatabaseUtil.getInstance().getStatus() == Enums.DatabaseStatus.NORMAL) {
-                                System.err.println("开启次数超过10次，优化数据库");
                                 EventUtil.getInstance().putTask(new ShowTaskBarMessageEvent(
                                         TranslateUtil.getInstance().getTranslation("Info"),
                                         TranslateUtil.getInstance().getTranslation("Updating file index")));

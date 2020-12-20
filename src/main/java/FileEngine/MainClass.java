@@ -236,6 +236,7 @@ public class MainClass {
             Date endTime;
             int checkTimeCount = 0;
             long timeDiff;
+            long div = 24 * 60 * 60 * 1000;
 
             while (EventUtil.getInstance().isNotMainExit()) {
                 // 主循环开始
@@ -258,9 +259,9 @@ public class MainClass {
                     checkTimeCount = 0;
                     endTime = new Date();
                     timeDiff = endTime.getTime() - startTime.getTime();
-                    long diffDays = timeDiff / (24 * 60 * 60 * 1000);
-                    if (diffDays > 3) {
-                        //启动时间已经超过3天,自动重启
+                    long diffDays = timeDiff / div;
+                    if (diffDays > 2) {
+                        //启动时间已经超过2天,自动重启
                         TaskBar.getInstance().restart();
                     }
                 }
