@@ -2002,8 +2002,6 @@ public class SearchBar {
     }
 
     private void initThreadPool() {
-        checkStartTimeAndOptimizeDatabase();
-
         mergeTempQueueAndListResultsThread();
 
         lockMouseMotionThread();
@@ -2249,50 +2247,6 @@ public class SearchBar {
             label8.setFont(labelFont);
             showingMode= Enums.ShowingSearchBarMode.NORMAL_SHOWING;
         }
-    }
-
-    private void checkStartTimeAndOptimizeDatabase() {
-        CachedThreadPool.getInstance().executeTask(() -> {
-            int startTimes = 0;
-            File startTimeCount = new File("user/startTimeCount.dat");
-            boolean isFileCreated;
-            if (!startTimeCount.exists()) {
-                try {
-                    isFileCreated = startTimeCount.createNewFile();
-                } catch (IOException e) {
-                    isFileCreated = false;
-                    e.printStackTrace();
-                }
-            } else {
-                isFileCreated = true;
-            }
-            if (isFileCreated) {
-                try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(startTimeCount), StandardCharsets.UTF_8))) {
-                    //读取启动次数
-                    String times = reader.readLine();
-                    if (!(times == null || times.isEmpty())) {
-                        startTimes = Integer.parseInt(times);
-                        //使用次数大于3次，优化数据库
-                        if (startTimes >= 3) {
-                            startTimes = 0;
-                            if (DatabaseUtil.getInstance().getStatus() == Enums.DatabaseStatus.NORMAL) {
-                                EventUtil.getInstance().putTask(new ShowTaskBarMessageEvent(
-                                        TranslateUtil.getInstance().getTranslation("Info"),
-                                        TranslateUtil.getInstance().getTranslation("Updating file index")));
-                                EventUtil.getInstance().putTask(new UpdateDatabaseEvent());
-                            }
-                        }
-                    }
-                    //自增后写入
-                    startTimes++;
-                    try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(startTimeCount), StandardCharsets.UTF_8))) {
-                        writer.write(String.valueOf(startTimes));
-                    }
-                } catch (Exception throwables) {
-                    throwables.printStackTrace();
-                }
-            }
-        });
     }
 
     private void mergeTempQueueAndListResultsThread() {
