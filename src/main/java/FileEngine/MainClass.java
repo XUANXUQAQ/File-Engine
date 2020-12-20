@@ -2,6 +2,8 @@ package FileEngine;
 
 import FileEngine.classScan.ClassScannerUtil;
 import FileEngine.configs.AllConfigs;
+import FileEngine.configs.Enums;
+import FileEngine.database.DatabaseUtil;
 import FileEngine.database.SQLiteUtil;
 import FileEngine.eventHandler.Event;
 import FileEngine.eventHandler.EventUtil;
@@ -21,9 +23,12 @@ import FileEngine.threadPool.CachedThreadPool;
 import FileEngine.translate.TranslateUtil;
 import com.alibaba.fastjson.JSONObject;
 
+import javax.swing.*;
 import java.awt.*;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Date;
@@ -140,27 +145,63 @@ public class MainClass {
         }
     }
 
+    private static void createCacheTable() throws SQLException {
+        try (PreparedStatement pStmt = SQLiteUtil.getPreparedStatement("CREATE TABLE IF NOT EXISTS cache(PATH text unique);")) {
+            pStmt.executeUpdate();
+        }
+    }
+
+    private static void checkVersion() {
+        EventUtil eventUtil = EventUtil.getInstance();
+        TranslateUtil translateUtil = TranslateUtil.getInstance();
+        if (!isLatest()) {
+            eventUtil.putTask(new ShowTaskBarMessageEvent(
+                    translateUtil.getTranslation("Info"), translateUtil.getTranslation("New version can be updated")));
+        }
+    }
+
+    private static void checkOldPlugin() {
+        EventUtil eventUtil = EventUtil.getInstance();
+        TranslateUtil translateUtil = TranslateUtil.getInstance();
+        if (PluginUtil.getInstance().isPluginTooOld()) {
+            String oldPlugins = PluginUtil.getInstance().getAllOldPluginsName();
+            eventUtil.putTask(new ShowTaskBarMessageEvent(
+                    translateUtil.getTranslation("Warning"), oldPlugins + "\n" + translateUtil.getTranslation("Plugin Api is too old")));
+        }
+    }
+
+    private static void checkRepeatPlugin() {
+        EventUtil eventUtil = EventUtil.getInstance();
+        TranslateUtil translateUtil = TranslateUtil.getInstance();
+        if (PluginUtil.getInstance().isPluginRepeat()) {
+            String repeatPlugins = PluginUtil.getInstance().getRepeatPlugins();
+            eventUtil.putTask(new ShowTaskBarMessageEvent(
+                    translateUtil.getTranslation("Warning"), repeatPlugins + "\n" + translateUtil.getTranslation("Duplicate plugin, please delete it in plugins folder")));
+        }
+    }
+
+    private static void checkErrorPlugin() {
+        EventUtil eventUtil = EventUtil.getInstance();
+        TranslateUtil translateUtil = TranslateUtil.getInstance();
+        if (PluginUtil.getInstance().isPluginLoadError()) {
+            String errorPlugins = PluginUtil.getInstance().getLoadingErrorPlugins();
+            eventUtil.putTask(new ShowTaskBarMessageEvent(
+                    translateUtil.getTranslation("Warning"), errorPlugins + "\n" + translateUtil.getTranslation("Loading plugins error")));
+        }
+    }
+
     public static void main(String[] args) {
         try {
             Class.forName("org.sqlite.JDBC");
 
             if (!System.getProperty("os.arch").contains("64")) {
-                System.err.println("NOT 64 BIT");
+                JOptionPane.showMessageDialog(null, "Not 64 Bit", "ERROR", JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
             SQLiteUtil.initConnection("jdbc:sqlite:data.db");
 
-            boolean isManualUpdate = false;
-            if (isDatabaseDamaged()) {
-                System.out.println("无data文件，正在搜索并重建");
-                //初始化数据库
-                isManualUpdate = true;
-            }
-
-            try (PreparedStatement pStmt = SQLiteUtil.getPreparedStatement("CREATE TABLE IF NOT EXISTS cache(PATH text unique);")) {
-                pStmt.executeUpdate();
-            }
+            createCacheTable();
 
             startOrIgnoreUpdateAndExit(isUpdateSignExist());
             updatePlugins();
@@ -188,91 +229,122 @@ public class MainClass {
 
             eventUtil.putTask(new SetConfigsEvent());
 
-            TranslateUtil translateUtil = TranslateUtil.getInstance();
+            checkVersion();
 
-            if (!isLatest()) {
-                eventUtil.putTask(new ShowTaskBarMessageEvent(
-                        translateUtil.getTranslation("Info"), translateUtil.getTranslation("New version can be updated")));
-            }
+            checkOldPlugin();
 
-            if (PluginUtil.getInstance().isPluginTooOld()) {
-                String oldPlugins = PluginUtil.getInstance().getAllOldPluginsName();
-                eventUtil.putTask(new ShowTaskBarMessageEvent(
-                        translateUtil.getTranslation("Warning"), oldPlugins + "\n" + translateUtil.getTranslation("Plugin Api is too old")));
-            }
+            checkRepeatPlugin();
 
-            if (PluginUtil.getInstance().isPluginRepeat()) {
-                String repeatPlugins = PluginUtil.getInstance().getRepeatPlugins();
-                eventUtil.putTask(new ShowTaskBarMessageEvent(
-                        translateUtil.getTranslation("Warning"), repeatPlugins + "\n" + translateUtil.getTranslation("Duplicate plugin, please delete it in plugins folder")));
-            }
-
-            if (PluginUtil.getInstance().isPluginLoadError()) {
-                String errorPlugins = PluginUtil.getInstance().getLoadingErrorPlugins();
-                eventUtil.putTask(new ShowTaskBarMessageEvent(
-                        translateUtil.getTranslation("Warning"), errorPlugins + "\n" + translateUtil.getTranslation("Loading plugins error")));
-            }
+            checkErrorPlugin();
 
             eventUtil.putTask(new ReleasePluginResourcesEvent());
 
-            if (isManualUpdate) {
+            if (isDatabaseDamaged()) {
                 eventUtil.putTask(new ShowTaskBarMessageEvent(
                         TranslateUtil.getInstance().getTranslation("Info"),
                         TranslateUtil.getInstance().getTranslation("Updating file index")));
                 eventUtil.putTask(new UpdateDatabaseEvent());
+            } else {
+                checkIndex();
             }
-
-            StringBuilder notLatestPluginsBuilder = new StringBuilder();
-            AtomicBoolean isFinished = new AtomicBoolean(false);
-            CachedThreadPool.getInstance().executeTask(() -> PluginUtil.getInstance().isAllPluginLatest(notLatestPluginsBuilder, isFinished));
 
             if (isAtDiskC()) {
                 eventUtil.putTask(new ShowTaskBarMessageEvent(
                         TranslateUtil.getInstance().getTranslation("Warning"),
                         TranslateUtil.getInstance().getTranslation("Putting the software on the C drive may cause index failure issue")));
             }
-
-            Date startTime = new Date();
-            Date endTime;
-            int checkTimeCount = 0;
-            long timeDiff;
-            long div = 24 * 60 * 60 * 1000;
-
-            while (EventUtil.getInstance().isNotMainExit()) {
-                // 主循环开始
-                if (isFinished.get()) {
-                    isFinished.set(false);
-                    String notLatestPlugins = notLatestPluginsBuilder.toString();
-                    if (!notLatestPlugins.isEmpty()) {
-                        EventUtil.getInstance().putTask(new ShowTaskBarMessageEvent(
-                                TranslateUtil.getInstance().getTranslation("Info"),
-                                TranslateUtil.getInstance().getTranslation(
-                                        notLatestPlugins +
-                                                "\n" +
-                                                TranslateUtil.getInstance().getTranslation("New versions of these plugins can be updated"))));
-                    }
-                }
-                //检查已工作时间
-                checkTimeCount++;
-                if (checkTimeCount > 2000) {
-                    //100s检查一次时间
-                    checkTimeCount = 0;
-                    endTime = new Date();
-                    timeDiff = endTime.getTime() - startTime.getTime();
-                    long diffDays = timeDiff / div;
-                    if (diffDays > 2) {
-                        //启动时间已经超过2天,自动重启
-                        TaskBar.getInstance().restart();
-                    }
-                }
-                TimeUnit.MILLISECONDS.sleep(50);
-            }
+            mainLoop();
             //确保关闭所有资源
             TimeUnit.SECONDS.sleep(5);
             System.exit(0);
         } catch (Exception e) {
             e.printStackTrace();
             closeAndExit();
+        }
+    }
+
+    private static void mainLoop() throws InterruptedException {
+        Date startTime = new Date();
+        Date endTime;
+        int checkTimeCount = 0;
+        long timeDiff;
+        long div = 24 * 60 * 60 * 1000;
+
+        StringBuilder notLatestPluginsBuilder = new StringBuilder();
+        AtomicBoolean isFinished = new AtomicBoolean(false);
+        CachedThreadPool.getInstance().executeTask(() -> PluginUtil.getInstance().isAllPluginLatest(notLatestPluginsBuilder, isFinished));
+
+        EventUtil eventUtil = EventUtil.getInstance();
+        while (eventUtil.isNotMainExit()) {
+            // 主循环开始
+            if (isFinished.get()) {
+                isFinished.set(false);
+                String notLatestPlugins = notLatestPluginsBuilder.toString();
+                if (!notLatestPlugins.isEmpty()) {
+                    EventUtil.getInstance().putTask(new ShowTaskBarMessageEvent(
+                            TranslateUtil.getInstance().getTranslation("Info"),
+                            TranslateUtil.getInstance().getTranslation(
+                                    notLatestPlugins +
+                                            "\n" +
+                                            TranslateUtil.getInstance().getTranslation("New versions of these plugins can be updated"))));
+                }
+            }
+            //检查已工作时间
+            checkTimeCount++;
+            if (checkTimeCount > 2000) {
+                //100s检查一次时间
+                checkTimeCount = 0;
+                endTime = new Date();
+                timeDiff = endTime.getTime() - startTime.getTime();
+                long diffDays = timeDiff / div;
+                if (diffDays > 2) {
+                    //启动时间已经超过2天,自动重启
+                    TaskBar.getInstance().restart();
+                }
+            }
+            TimeUnit.MILLISECONDS.sleep(50);
+        }
+    }
+
+    private static void checkIndex() {
+        int startTimes = 0;
+        File startTimeCount = new File("user/startTimeCount.dat");
+        boolean isFileCreated;
+        if (!startTimeCount.exists()) {
+            try {
+                isFileCreated = startTimeCount.createNewFile();
+            } catch (IOException e) {
+                isFileCreated = false;
+                e.printStackTrace();
+            }
+        } else {
+            isFileCreated = true;
+        }
+        if (isFileCreated) {
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(startTimeCount), StandardCharsets.UTF_8))) {
+                //读取启动次数
+                String times = reader.readLine();
+                if (!(times == null || times.isEmpty())) {
+                    startTimes = Integer.parseInt(times);
+                    //使用次数大于3次，优化数据库
+                    if (startTimes >= 3) {
+                        startTimes = 0;
+                        if (DatabaseUtil.getInstance().getStatus() == Enums.DatabaseStatus.NORMAL) {
+                            EventUtil.getInstance().putTask(new ShowTaskBarMessageEvent(
+                                    TranslateUtil.getInstance().getTranslation("Info"),
+                                    TranslateUtil.getInstance().getTranslation("Updating file index")));
+                            EventUtil.getInstance().putTask(new UpdateDatabaseEvent());
+                        }
+                    }
+                }
+                //自增后写入
+                startTimes++;
+                try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(startTimeCount), StandardCharsets.UTF_8))) {
+                    writer.write(String.valueOf(startTimes));
+                }
+            } catch (Exception throwables) {
+                throwables.printStackTrace();
+            }
         }
     }
 
