@@ -37,16 +37,16 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 
 public class MainClass {
-    private static final String FILE_MONITOR_64_MD_5 = "7258ca0167d10d6cd6963fd0c35dff84";
+    private static final String FILE_MONITOR_64_MD_5 = "f4ca7d02da7b1ef46a7e392365b6cf58";
     private static final String FILE_SEARCHER_64_MD_5 = "fa6a144d3f7bf6363abd143ce777f417";
     private static final String GET_ASC_II_64_MD_5 = "eff607d2dd4a7e4c878948fe8f24b3ea";
-    private static final String HOTKEY_LISTENER_64_MD_5 = "41388e31d6fc22fb430f636d402cf608";
+    private static final String HOTKEY_LISTENER_64_MD_5 = "dca474d8385fd9bbd6a3ea3e7375bba0";
     private static final String IS_LOCAL_DISK_64_MD_5 = "f8a71d3496d8cc188713d521e6dfa2b2";
     private static final String FILE_SEARCHER_USN_64_MD_5 = "4bda825986f333e8efbb11e5d3a77158";
     private static final String SQLITE3_64_MD_5 = "658c71b8b93ba4eb5b4936f46a112449";
     private static final String UPDATER_BAT_64_MD_5 = "357d7cc1cf023cb6c90f73926c6f2f55";
-    private static final String GET_HANDLE_64_MD_5 = "c0c533468bf2928e4d8a2189104f28a0";
-    private static final String DAEMON_PROCESS_64_MD_5 = "797826e9b5c4ca9ccc3fb90520e5d805";
+    private static final String GET_HANDLE_64_MD_5 = "df48132c425c20ba65821bb73657a3fc";
+    private static final String DAEMON_PROCESS_64_MD_5 = "9a0529b3f8ee3961e0f9ed5f562cd0e1";
     private static final String SHORTCUT_GEN_MD_5="d2d3215c2a0741370851f2d4ed738b54";
 
     private static void initializeDllInterface() throws ClassNotFoundException {

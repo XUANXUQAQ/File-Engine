@@ -2,19 +2,19 @@
 #include <algorithm>
 #include <string>
 #include <tchar.h>
-#include <tlhelp32.h>
+#include <TlHelp32.h>
 #include <Windows.h>
 
-std::wstring GetProcessNameByHandle(HWND nlHandle);
+std::wstring get_process_name_by_handle(HWND nlHandle);
 
-bool isSearchBarWindow(const HWND& hd)
+bool is_search_bar_window(const HWND& hd)
 {
     char title[200];
     GetWindowTextA(hd, title, 200);
     return strcmp(title, "File-Engine-SearchBar") == 0;
 }
 
-bool isExplorerWindowLowCost(const HWND& hwnd)
+bool is_explorer_window_low_cost(const HWND& hwnd)
 {
     if (IsWindowEnabled(hwnd) && !IsIconic(hwnd))
     {
@@ -31,12 +31,12 @@ bool isExplorerWindowLowCost(const HWND& hwnd)
 //不要在长时间循环中使用
 bool isExplorerWindowHighCost(const HWND& hwnd)
 {
-	std::wstring proc_name = GetProcessNameByHandle(hwnd);
+	std::wstring proc_name = get_process_name_by_handle(hwnd);
     transform(proc_name.begin(), proc_name.end(), proc_name.begin(), ::tolower);
     return proc_name.find(_T("explorer.exe")) != std::wstring::npos;
 }
 
-std::wstring GetProcessNameByHandle(HWND nlHandle)
+std::wstring get_process_name_by_handle(HWND nlHandle)
 {
 	std::wstring loStrRet;
     //得到该进程的进程id
@@ -46,8 +46,8 @@ std::wstring GetProcessNameByHandle(HWND nlHandle)
     {
         return L"";
     }
-    HANDLE handle = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-    if (handle == (HANDLE)-1)
+	auto* const handle = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    if (handle == reinterpret_cast<HANDLE>(-1))
     {
         //AfxMessageBox(L"CreateToolhelp32Snapshot error");
         return loStrRet;
@@ -70,7 +70,7 @@ std::wstring GetProcessNameByHandle(HWND nlHandle)
 }
 
 
-bool isFileChooserWindow(const HWND& hwnd)
+bool is_file_chooser_window(const HWND& hwnd)
 {
     char _windowClassName[100];
     char title[100];
