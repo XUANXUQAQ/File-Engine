@@ -5,11 +5,11 @@ import FileEngine.configs.AllConfigs;
 import FileEngine.configs.Enums;
 import FileEngine.dllInterface.GetAscII;
 import FileEngine.dllInterface.IsLocalDisk;
-import FileEngine.eventHandler.EventUtil;
 import FileEngine.eventHandler.Event;
 import FileEngine.eventHandler.EventHandler;
-import FileEngine.eventHandler.impl.taskbar.ShowTaskBarMessageEvent;
+import FileEngine.eventHandler.EventUtil;
 import FileEngine.eventHandler.impl.database.*;
+import FileEngine.eventHandler.impl.taskbar.ShowTaskBarMessageEvent;
 import FileEngine.threadPool.CachedThreadPool;
 import FileEngine.translate.TranslateUtil;
 
@@ -23,13 +23,11 @@ import java.sql.Statement;
 import java.util.LinkedHashSet;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class DatabaseUtil {
     private final ConcurrentLinkedQueue<SQLWithTaskId> commandSet = new ConcurrentLinkedQueue<>();
     private volatile Enums.DatabaseStatus status = Enums.DatabaseStatus.NORMAL;
     private volatile boolean isExecuteImmediately = false;
-    private final AtomicInteger updateListsCount = new AtomicInteger(0);
 
     private static final int MAX_SQL_NUM = 5000;
 
@@ -513,7 +511,6 @@ public class DatabaseUtil {
                 }
             }
         }
-        canSearchByUsn = updateListsCount.get() < 3 && canSearchByUsn;
         if (canSearchByUsn) {
             try {
                 searchByUSN(ntfsDisk.toString(), ignorePath.toLowerCase());
@@ -639,7 +636,6 @@ public class DatabaseUtil {
     }
 
     private void updateLists(String ignorePath, int searchDepth) {
-        updateListsCount.incrementAndGet();
         recreateDatabase();
         waitForCommandSet(SqlTaskIds.CREATE_TABLE);
         searchFile(ignorePath, searchDepth);
