@@ -2734,26 +2734,28 @@ public class SearchBar {
                         if (databaseUtil.getStatus() == Enums.DatabaseStatus.NORMAL) {
                             if (runningMode == Enums.RunningMode.COMMAND_MODE) {
                                 //去掉冒号
-                                runInternalCommand(text.substring(1).toLowerCase());
-                                LinkedHashSet<String> cmdSet = new LinkedHashSet<>(AllConfigs.getInstance().getCmdSet());
-                                cmdSet.add(":clearbin;" + TranslateUtil.getInstance().getTranslation("Clear the recycle bin"));
-                                cmdSet.add(":update;" + TranslateUtil.getInstance().getTranslation("Update file index"));
-                                cmdSet.add(":help;" + TranslateUtil.getInstance().getTranslation("View help"));
-                                cmdSet.add(":version;" + TranslateUtil.getInstance().getTranslation("View Version"));
-                                for (String i : cmdSet) {
-                                    if (i.startsWith(text)) {
-                                        listResultsNum.incrementAndGet();
-                                        String result = TranslateUtil.getInstance().getTranslation("Run command") + i;
-                                        listResults.add(result);
+                                boolean isExecuted = runInternalCommand(text.substring(1).toLowerCase());
+                                if (!isExecuted) {
+                                    LinkedHashSet<String> cmdSet = new LinkedHashSet<>(AllConfigs.getInstance().getCmdSet());
+                                    cmdSet.add(":clearbin;" + TranslateUtil.getInstance().getTranslation("Clear the recycle bin"));
+                                    cmdSet.add(":update;" + TranslateUtil.getInstance().getTranslation("Update file index"));
+                                    cmdSet.add(":help;" + TranslateUtil.getInstance().getTranslation("View help"));
+                                    cmdSet.add(":version;" + TranslateUtil.getInstance().getTranslation("View Version"));
+                                    for (String i : cmdSet) {
+                                        if (i.startsWith(text)) {
+                                            listResultsNum.incrementAndGet();
+                                            String result = TranslateUtil.getInstance().getTranslation("Run command") + i;
+                                            listResults.add(result);
+                                        }
+                                        String[] cmdInfo = semicolon.split(i);
+                                        if (cmdInfo[0].equals(text)) {
+                                            detectShowingModeAndClose();
+                                            openWithoutAdmin(cmdInfo[1]);
+                                        }
                                     }
-                                    String[] cmdInfo = semicolon.split(i);
-                                    if (cmdInfo[0].equals(text)) {
-                                        detectShowingModeAndClose();
-                                        openWithoutAdmin(cmdInfo[1]);
-                                    }
+                                    showResults(true, false, false, false,
+                                            false, false, false, false);
                                 }
-                                showResults(true, false, false, false,
-                                        false, false, false, false);
                             } else if (runningMode == Enums.RunningMode.NORMAL_MODE) {
                                 //对搜索关键字赋值
                                 String[] strings;

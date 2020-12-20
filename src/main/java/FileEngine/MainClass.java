@@ -87,6 +87,10 @@ public class MainClass {
         }
     }
 
+    private static boolean isAtDiskC() {
+        return new File("").getAbsolutePath().startsWith("C:");
+    }
+
     private static boolean isDatabaseDamaged() {
         ArrayList<String> list = new ArrayList<>();
         for (int i = 0; i <= 40; i++) {
@@ -221,6 +225,12 @@ public class MainClass {
             StringBuilder notLatestPluginsBuilder = new StringBuilder();
             AtomicBoolean isFinished = new AtomicBoolean(false);
             CachedThreadPool.getInstance().executeTask(() -> PluginUtil.getInstance().isAllPluginLatest(notLatestPluginsBuilder, isFinished));
+
+            if (isAtDiskC()) {
+                eventUtil.putTask(new ShowTaskBarMessageEvent(
+                        TranslateUtil.getInstance().getTranslation("Warning"),
+                        TranslateUtil.getInstance().getTranslation("Putting the software on the C drive may cause index failure issue")));
+            }
 
             Date startTime = new Date();
             Date endTime;

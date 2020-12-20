@@ -153,3 +153,4 @@ The identifier you entered is too short, continue=Введенный вами и
 Update=Обновить
 File not exist=файл не существует
 change theme=Менять тему
+Putting the software on the C drive may cause index failure issue=Размещение программного обеспечения на диске C может вызвать проблему с ошибкой индекса

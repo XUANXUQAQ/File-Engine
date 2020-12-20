@@ -153,3 +153,4 @@ The identifier you entered is too short, continue=您输入的标识符太短，
 Update=更新
 File not exist=文件不存在
 change theme=更改主题
+Putting the software on the C drive may cause index failure issue=将软件放在C驱动器上可能会导致索引失败问题
