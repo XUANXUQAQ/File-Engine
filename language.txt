@@ -153,3 +153,4 @@ The identifier you entered is too short, continue=
 Update=
 File not exist=
 change theme=
+Putting the software on the C drive may cause index failure issue=

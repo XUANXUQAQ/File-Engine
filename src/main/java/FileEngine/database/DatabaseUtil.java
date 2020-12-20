@@ -23,11 +23,13 @@ import java.sql.Statement;
 import java.util.LinkedHashSet;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class DatabaseUtil {
     private final ConcurrentLinkedQueue<SQLWithTaskId> commandSet = new ConcurrentLinkedQueue<>();
     private volatile Enums.DatabaseStatus status = Enums.DatabaseStatus.NORMAL;
     private volatile boolean isExecuteImmediately = false;
+    private final AtomicInteger updateListsCount = new AtomicInteger(0);
 
     private static final int MAX_SQL_NUM = 5000;
 
@@ -499,30 +501,41 @@ public class DatabaseUtil {
     private void searchFile(String ignorePath, int searchDepth) {
         boolean canSearchByUsn = false;
         File[] roots = File.listRoots();
-        StringBuilder strb = new StringBuilder(26);
+        StringBuilder ntfsDisk = new StringBuilder(50);
+        StringBuilder nonNtfsDisk = new StringBuilder(50);
         for (File root : roots) {
             if (IsLocalDisk.INSTANCE.isLocalDisk(root.getAbsolutePath())) {
                 if (IsLocalDisk.INSTANCE.isDiskNTFS(root.getAbsolutePath())) {
                     canSearchByUsn = true;
-                    strb.append(root.getAbsolutePath()).append(",");
+                    ntfsDisk.append(root.getAbsolutePath()).append(",");
                 } else {
-                    String path = root.getAbsolutePath();
-                    path = path.substring(0, 2);
-                    try {
-                        searchFile(path, searchDepth, ignorePath);
-                    } catch (InterruptedException | IOException e) {
-                        e.printStackTrace();
-                    }
+                    nonNtfsDisk.append(root.getAbsolutePath()).append(",");
                 }
             }
         }
+        canSearchByUsn = updateListsCount.get() < 3 && canSearchByUsn;
         if (canSearchByUsn) {
             try {
-                searchByUSN(strb.toString(), ignorePath.toLowerCase());
+                searchByUSN(ntfsDisk.toString(), ignorePath.toLowerCase());
             } catch (IOException | InterruptedException e) {
                 e.printStackTrace();
             }
+        } else {
+            nonNtfsDisk.append(ntfsDisk);
         }
+
+        String[] paths = nonNtfsDisk.toString().split(",");
+        for (String path : paths) {
+            if (!path.isEmpty()) {
+                path = path.substring(0, 2);
+                try {
+                    searchFile(path, searchDepth, ignorePath);
+                } catch (InterruptedException | IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
         String[] desktops = new String[]{getDesktop(), "C:\\Users\\Public\\Desktop"};
         for (String eachDesktop : desktops) {
             File[] desktopFiles = new File(eachDesktop).listFiles();
@@ -533,6 +546,7 @@ public class DatabaseUtil {
             }
         }
         createAllIndex();
+        waitForCommandSet(SqlTaskIds.CREATE_INDEX);
         EventUtil.getInstance().putTask(new ShowTaskBarMessageEvent(
                 TranslateUtil.getInstance().getTranslation("Info"),
                 TranslateUtil.getInstance().getTranslation("Search Done")));
@@ -625,6 +639,7 @@ public class DatabaseUtil {
     }
 
     private void updateLists(String ignorePath, int searchDepth) {
+        updateListsCount.incrementAndGet();
         recreateDatabase();
         waitForCommandSet(SqlTaskIds.CREATE_TABLE);
         searchFile(ignorePath, searchDepth);
@@ -817,21 +832,6 @@ public class DatabaseUtil {
             }
         } catch (SQLException e) {
             e.printStackTrace();
-        }
-    }
-
-    /**
-     * 只在Main方法第一次初始化时使用，之后的操作交给commandSet托管
-     */
-    private void createAllTables() throws Exception {
-        String sql = "CREATE TABLE IF NOT EXISTS list";
-        try (Statement stmt = SQLiteUtil.getStatement()) {
-            stmt.execute("BEGIN;");
-            for (int i = 0; i <= 40; i++) {
-                String command = sql + i + " " + "(ASCII INT, PATH text unique)" + ";";
-                stmt.executeUpdate(command);
-            }
-            stmt.execute("COMMIT;");
         }
     }
 
