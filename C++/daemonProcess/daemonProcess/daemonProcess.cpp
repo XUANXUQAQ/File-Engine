@@ -1,8 +1,8 @@
 ﻿#include <iostream>
 #include <Windows.h>
 #include <direct.h>
-#include "psapi.h"    
-#include <tlhelp32.h> 
+#include "Psapi.h"
+#include <TlHelp32.h>
 #pragma comment(lib, "shell32.lib")
 //#define TEST
 
@@ -17,46 +17,52 @@ int checkTimeCount = 10;
 int checkTimeCount = 100;
 #endif
 
-bool isCloseExist();
-BOOL FindProcess(const WCHAR* procName);
-void restartFileEngine();
+bool is_close_exist();
+BOOL find_process(const WCHAR* procName);
+void restart_file_engine();
 
-int main(int argc, char* argv[])
+int main(const int argc, char* argv[])
 {
-    if (argc == 2)
+    try
     {
-        strcpy_s(fileEngineDir, argv[1]);
-        string fileEngineExeDirString(fileEngineDir);
-        fileEngineExeDirString += "\\";
-        fileEngineExeDirString += "File-Engine-x64.exe";
-        strcpy_s(fileEngineExeDir, fileEngineExeDirString.c_str());
-        string fileEngineDirectory(fileEngineDir);
-        fileEngineDirectory += "\\";
-        fileEngineDirectory += "tmp";
-        fileEngineDirectory += "\\";
-        fileEngineDirectory += "closeDaemon";
-        strcpy_s(closeSignalFile, fileEngineDirectory.c_str());
-
-        cout << "file-engine-x64.exe path : " << fileEngineExeDir << endl;
-        cout << "close signal file : " << closeSignalFile << endl;
-
-        int count = 0;
-        const WCHAR* procName = L"File-Engine-x64.exe";
-        while (!isCloseExist())
+        if (argc == 2)
         {
-            count++;
-            if (count > checkTimeCount)
+            strcpy_s(fileEngineDir, argv[1]);
+            string file_engine_exe_dir_string(fileEngineDir);
+            file_engine_exe_dir_string += "\\";
+            file_engine_exe_dir_string += "File-Engine-x64.exe";
+            strcpy_s(fileEngineExeDir, file_engine_exe_dir_string.c_str());
+            string file_engine_directory(fileEngineDir);
+            file_engine_directory += "\\";
+            file_engine_directory += "tmp";
+            file_engine_directory += "\\";
+            file_engine_directory += "closeDaemon";
+            strcpy_s(closeSignalFile, file_engine_directory.c_str());
+
+            cout << "file-engine-x64.exe path : " << fileEngineExeDir << endl;
+            cout << "close signal file : " << closeSignalFile << endl;
+
+            auto count = 0;
+            const auto* const proc_name = L"File-Engine-x64.exe";
+
+            while (!is_close_exist())
             {
-                count = 0;
-                if (!FindProcess(procName))
+                count++;
+                if (count > checkTimeCount)
                 {
-                    cout << "File-Engine process not exist" << endl;
-                    restartFileEngine();
+                    count = 0;
+                    if (!find_process(proc_name))
+                    {
+                        cout << "File-Engine process not exist" << endl;
+                        restart_file_engine();
+                    }
                 }
+                Sleep(100);
             }
-            Sleep(100);
         }
     }
+    catch (...)
+    {}
 #ifdef TEST
     else
     {
@@ -65,17 +71,17 @@ int main(int argc, char* argv[])
 #endif
 }
 
-void restartFileEngine()
+void restart_file_engine()
 {
-    ShellExecuteA(NULL, "open", fileEngineExeDir, NULL, fileEngineDir, SW_SHOWNORMAL);
+    ShellExecuteA(nullptr, "open", fileEngineExeDir, nullptr, fileEngineDir, SW_SHOWNORMAL);
 }
 
 
-bool isCloseExist()
+bool is_close_exist()
 {
     FILE* fp;
     fopen_s(&fp, closeSignalFile ,"rb");
-    if (fp != NULL)
+    if (fp != nullptr)
     {
         fclose(fp);
         return true;
@@ -87,15 +93,15 @@ bool isCloseExist()
 }
 
 
-BOOL FindProcess(const WCHAR* procName)
+BOOL find_process(const WCHAR* procName)
 {
     PROCESSENTRY32 pe;
     DWORD id = 0;
-    HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    auto* const hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
     pe.dwSize = sizeof(PROCESSENTRY32);
     if (!Process32First(hSnapshot, &pe))
         return 0;
-    while (1)
+    while (true)
     {
         pe.dwSize = sizeof(PROCESSENTRY32);
         if (Process32Next(hSnapshot, &pe) == FALSE)

@@ -2,7 +2,7 @@
 #include "pch.h"
 #include <Windows.h>
 #include <iostream>
-#include <tlhelp32.h>
+#include <TlHelp32.h>
 #include <tchar.h>
 #include <thread>
 #include <dwmapi.h>
@@ -105,18 +105,18 @@ bool isClickNotExplorerOrSearchBarOrSwitchTask()
         if (GetCursorPos(&point))
         {
             hd = WindowFromPoint(point);
-            if (isExplorerWindowHighCost(hd) || isFileChooserWindow(hd))
+            if (isExplorerWindowHighCost(hd) || is_file_chooser_window(hd))
             {
                 return false;
             } 
 	           //检查是否点击搜索框
-	          return !(isSearchBarWindow(hd));
+	          return !(is_search_bar_window(hd));
         }
     }
     else
     {
         getTopWindow(&hd);
-        return !(isFileChooserWindow(hd) || isExplorerWindowLowCost(hd) || isSearchBarWindow(hd));
+        return !(is_file_chooser_window(hd) || is_explorer_window_low_cost(hd) || is_search_bar_window(hd));
     }
     return false;
 }
@@ -143,7 +143,7 @@ __declspec(dllexport) bool isDialogNotExist()
             int tmp_explorerHeight = windowRect.bottom - windowRect.top;
             if (!(tmp_explorerHeight < EXPLORER_MIN_HEIGHT || tmp_explorerWidth < EXPLORER_MIN_WIDTH || tmp_explorerX < EXPLORER_MIN_X_POS || tmp_explorerY < EXPLORER_MIN_Y_POS))
             {
-                if (isExplorerWindowLowCost(hd) || isFileChooserWindow(hd))
+                if (is_explorer_window_low_cost(hd) || is_file_chooser_window(hd))
                 {
                     return false;
                 }
@@ -171,7 +171,7 @@ void setClickPos(const HWND& fileChooserHwnd)
 
 BOOL CALLBACK findSeachBar(HWND hwndChild, LPARAM lParam)
 {
-    if (isSearchBarWindow(hwndChild))
+    if (is_search_bar_window(hwndChild))
     {
         searchBarHWND = hwndChild;
         return false;
@@ -269,7 +269,7 @@ void checkTopWindowThread()
     while (isRunning)
     {
         getTopWindow(&hwnd);
-        if (isExplorerWindowLowCost(hwnd) || isFileChooserWindow(hwnd))
+        if (is_explorer_window_low_cost(hwnd) || is_file_chooser_window(hwnd))
         {
             getWindowRect(hwnd, &windowRect);
             explorerX = windowRect.left;

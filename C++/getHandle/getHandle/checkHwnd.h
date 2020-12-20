@@ -2,10 +2,10 @@
 #include <Windows.h>
 
 
-bool isSearchBarWindow(const HWND& hd);
+bool is_search_bar_window(const HWND& hd);
 
-bool isExplorerWindowLowCost(const HWND& hwnd);
+bool is_explorer_window_low_cost(const HWND& hwnd);
 
 bool isExplorerWindowHighCost(const HWND& hwnd);
 
-bool isFileChooserWindow(const HWND& hwnd);
+bool is_file_chooser_window(const HWND& hwnd);

@@ -1,6 +1,5 @@
 ﻿// dllmain.cpp : 定义 DLL 应用程序的入口点。
 #include "pch.h"
-#include <iostream>
 #include <Windows.h>
 #include <WinUser.h>
 #include <fstream>
@@ -20,22 +19,6 @@ static volatile int hotkey2;
 static volatile int hotkey3;
 static volatile int hotkey4;
 static volatile int hotkey5;
-
-BOOL APIENTRY DllMain( HMODULE hModule,
-                       DWORD  ul_reason_for_call,
-                       LPVOID lpReserved
-                     )
-{
-    switch (ul_reason_for_call)
-    {
-    case DLL_PROCESS_ATTACH:
-    case DLL_THREAD_ATTACH:
-    case DLL_THREAD_DETACH:
-    case DLL_PROCESS_DETACH:
-        break;
-    }
-    return TRUE;
-}
 
 __declspec(dllexport) void stopListen()
 {

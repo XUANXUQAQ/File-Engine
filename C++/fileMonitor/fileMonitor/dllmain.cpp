@@ -6,7 +6,6 @@
 #include <iomanip>
 #include <string>
 #include <fstream>
-#include <ctype.h>
 #include <thread>
 #include <concurrent_unordered_set.h>
 #include <io.h>
@@ -43,25 +42,9 @@ fileSet del_set;
 char fileRemoved[1000];
 char fileAdded[1000];
 
-BOOL APIENTRY DllMain( HMODULE hModule,
-                       DWORD  ul_reason_for_call,
-                       LPVOID lpReserved
-                     )
-{
-    switch (ul_reason_for_call)
-    {
-    case DLL_PROCESS_ATTACH:
-    case DLL_THREAD_ATTACH:
-    case DLL_THREAD_DETACH:
-    case DLL_PROCESS_DETACH:
-        break;
-    }
-    return TRUE;
-}
-
 bool isDir(const char* path)
 {
-    struct stat s;
+    struct stat s{};
     if (stat(path, &s) == 0) {
         if (s.st_mode & S_IFDIR) {
             return true;
@@ -70,15 +53,15 @@ bool isDir(const char* path)
     return false;
 }
 
-void searchDir(string path, string output_path)
+void searchDir(const string path, const string output_path)
 {
     //cout << "getFiles()" << path<< endl;
     //文件句柄
-    intptr_t hFile = 0;
+    intptr_t hFile;
     //文件信息
-    struct _finddata_t fileinfo;
-    string pathName, exdName;
-    exdName = "\\*";
+    struct _finddata_t fileinfo{};
+    string pathName;
+    string exdName = "\\*";
 
     if ((hFile = _findfirst(pathName.assign(path).append(exdName).c_str(), &fileinfo)) != -1)
     {
@@ -181,10 +164,10 @@ std::string to_utf8(const wchar_t* buffer, int len)
         0,
         buffer,
         len,
-        NULL,
+        nullptr,
         0,
-        NULL,
-        NULL);
+        nullptr,
+        nullptr);
     if (nChars == 0)
     {
         return "";
@@ -198,21 +181,21 @@ std::string to_utf8(const wchar_t* buffer, int len)
         len,
         const_cast<char*>(newbuffer.c_str()),
         nChars,
-        NULL,
-        NULL);
+        nullptr,
+        nullptr);
 
     return newbuffer;
 }
 
 std::string to_utf8(const std::wstring & str)
 {
-    return to_utf8(str.c_str(), (int)str.size());
+    return to_utf8(str.c_str(), static_cast<int>(str.size()));
 }
 
 std::wstring StringToWString(const std::string & str)
 {
     setlocale(LC_ALL, "chs");
-    const char* point_to_source = str.c_str();
+    auto point_to_source = str.c_str();
     size_t new_size = str.size() + 1;
     wchar_t* point_to_destination = new wchar_t[new_size];
     wmemset(point_to_destination, 0, new_size);
@@ -275,10 +258,10 @@ void monitor_path(const char* path)
     HANDLE dirHandle = CreateFile(_dir,
         GENERIC_READ | GENERIC_WRITE | FILE_LIST_DIRECTORY,
         FILE_SHARE_READ | FILE_SHARE_WRITE,
-        NULL,
+        nullptr,
         OPEN_EXISTING,
         FILE_FLAG_BACKUP_SEMANTICS,
-        NULL);
+        nullptr);
 
     if (dirHandle == INVALID_HANDLE_VALUE) //若网络重定向或目标文件系统不支持该操作，函数失败，同时调用GetLastError()返回ERROR_INVALID_FUNCTION
     {
@@ -286,13 +269,13 @@ void monitor_path(const char* path)
         exit(0);
     }
 
-    FILE_NOTIFY_INFORMATION* pnotify = (FILE_NOTIFY_INFORMATION*)notify;
+    auto* pnotify = reinterpret_cast<FILE_NOTIFY_INFORMATION*>(notify);
 
     while (isRunning)
     {
         if (ReadDirectoryChangesW(dirHandle, &notify, 1024, true,
             FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_DIR_NAME | FILE_NOTIFY_CHANGE_SIZE,
-            &cbBytes, NULL, NULL))
+            &cbBytes, nullptr, nullptr))
         {
             //转换文件名为多字节字符串;
             if (pnotify->FileName)
@@ -300,17 +283,17 @@ void monitor_path(const char* path)
                 memset(file_name, 0, sizeof(file_name));
                 memset(fileName, 0, sizeof(fileName));
                 wcscpy_s(fileName, pnotify->FileName);
-                WideCharToMultiByte(CP_ACP, 0, pnotify->FileName, pnotify->FileNameLength / 2, file_name, 250, NULL, NULL);
+                WideCharToMultiByte(CP_ACP, 0, pnotify->FileName, pnotify->FileNameLength / 2, file_name, 250, nullptr, nullptr);
             }
 
             //获取重命名的文件名;
             if (pnotify->NextEntryOffset != 0 && (pnotify->FileNameLength > 0 && pnotify->FileNameLength < 1000))
             {
-                PFILE_NOTIFY_INFORMATION p = (PFILE_NOTIFY_INFORMATION)((char*)pnotify + pnotify->NextEntryOffset);
+                PFILE_NOTIFY_INFORMATION p = reinterpret_cast<PFILE_NOTIFY_INFORMATION>(reinterpret_cast<char*>(pnotify) + pnotify->NextEntryOffset);
                 memset(file_rename, 0, 1000);
                 memset(fileRename, 0, 1000);
                 wcscpy_s(fileRename, pnotify->FileName);
-                WideCharToMultiByte(CP_ACP, 0, p->FileName, p->FileNameLength / 2, file_rename, 250, NULL, NULL);
+                WideCharToMultiByte(CP_ACP, 0, p->FileName, p->FileNameLength / 2, file_rename, 250, nullptr, nullptr);
             }
 
             if (file_name[strlen(file_name) - 1] == '~')
@@ -326,7 +309,7 @@ void monitor_path(const char* path)
             switch (pnotify->Action)
             {
             case FILE_ACTION_ADDED:
-                if (strstr(file_name, "$RECYCLE.BIN") == NULL)
+                if (strstr(file_name, "$RECYCLE.BIN") == nullptr)
                 {
                     string data;
                     data.append(_path);
@@ -339,7 +322,7 @@ void monitor_path(const char* path)
                 break;
 
             case FILE_ACTION_MODIFIED:
-                if (strstr(file_name, "$RECYCLE.BIN") == NULL && strstr(file_name, "fileAdded.txt") == NULL && strstr(file_name, "fileRemoved.txt") == NULL)
+                if (strstr(file_name, "$RECYCLE.BIN") == nullptr && strstr(file_name, "fileAdded.txt") == nullptr && strstr(file_name, "fileRemoved.txt") == nullptr)
                 {
                     string data;
                     data.append(_path);
@@ -352,7 +335,7 @@ void monitor_path(const char* path)
                 break;
 
             case FILE_ACTION_REMOVED:
-                if (strstr(file_name, "$RECYCLE.BIN") == NULL)
+                if (strstr(file_name, "$RECYCLE.BIN") == nullptr)
                 {
                     string data;
                     data.append(_path);
@@ -365,7 +348,7 @@ void monitor_path(const char* path)
                 break;
 
             case FILE_ACTION_RENAMED_OLD_NAME:
-                if (strstr(file_name, "$RECYCLE.BIN") == NULL)
+                if (strstr(file_name, "$RECYCLE.BIN") == nullptr)
                 {
                     string data;
                     data.append(_path);

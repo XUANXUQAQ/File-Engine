@@ -2,7 +2,7 @@
 
 #include <algorithm>
 #include <Windows.h>
-#include <shlobj.h>
+#include <ShlObj.h>
 #include <atlcomcli.h>  // for COM smart pointers
 #include <iostream>
 #include <vector>
@@ -96,7 +96,7 @@ std::vector< ExplorerFolderInfo > GetCurrentExplorerFolders()
         // Get the interface from which we can finally query the PIDL of
         // the current folder.
         CComPtr< IPersistFolder2 > pFolder;
-        if (FAILED(pFolderView->GetFolder(IID_IPersistFolder2, (void**)&pFolder)))
+        if (FAILED(pFolderView->GetFolder(IID_IPersistFolder2, reinterpret_cast<void**>(&pFolder))))
             continue;
 
         LPITEMIDLIST pidl = nullptr;
@@ -112,7 +112,7 @@ std::vector< ExplorerFolderInfo > GetCurrentExplorerFolders()
 
 std::string to_utf8(const wchar_t* buffer, int len)
 {
-    int nChars = ::WideCharToMultiByte(
+	const auto nChars = ::WideCharToMultiByte(
         CP_UTF8,
         0,
         buffer,
