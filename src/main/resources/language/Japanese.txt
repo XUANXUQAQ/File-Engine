@@ -154,3 +154,5 @@ Update=更新
 File not exist=ファイルは存在しません
 change theme=テーマを変更する
 Putting the software on the C drive may cause index failure issue=ソフトウェアをCドライブに置くと、インデックス障害の問題が発生する可能性があります
+Preview=プレビュー
+Close preview window=プレビューウィンドウを閉じる

@@ -1,7 +1,7 @@
 package FileEngine.configs;
 
 import FileEngine.IsDebug;
-import FileEngine.database.SQLiteUtil;
+import FileEngine.utils.database.SQLiteUtil;
 import FileEngine.eventHandler.Event;
 import FileEngine.eventHandler.EventHandler;
 import FileEngine.eventHandler.EventUtil;
@@ -17,7 +17,7 @@ import FileEngine.eventHandler.impl.monitorDisk.StartMonitorDiskEvent;
 import FileEngine.eventHandler.impl.plugin.LoadAllPluginsEvent;
 import FileEngine.eventHandler.impl.plugin.SetPluginsCurrentThemeEvent;
 import FileEngine.eventHandler.impl.taskbar.ShowTaskBarIconEvent;
-import FileEngine.translate.TranslateUtil;
+import FileEngine.utils.TranslateUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.serializer.SerializerFeature;

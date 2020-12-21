@@ -154,3 +154,5 @@ Update=更新
 File not exist=檔案不存在
 change theme=更改主題
 Putting the software on the C drive may cause index failure issue=將軟件放在C驅動器上可能會導致索引失敗問題
+Preview=預覽
+Close preview window=關閉預覽窗口

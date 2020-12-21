@@ -9,7 +9,7 @@ import FileEngine.eventHandler.impl.taskbar.ShowTaskBarMessageEvent;
 import FileEngine.eventHandler.impl.stop.CloseEvent;
 import FileEngine.eventHandler.impl.stop.RestartEvent;
 import FileEngine.eventHandler.impl.frame.settingsFrame.ShowSettingsFrameEvent;
-import FileEngine.threadPool.CachedThreadPool;
+import FileEngine.utils.CachedThreadPoolUtil;
 
 import javax.swing.*;
 import java.awt.*;
@@ -44,7 +44,7 @@ public class TaskBar {
     }
 
     private void startShowMessageThread() {
-        CachedThreadPool.getInstance().executeTask(() -> {
+        CachedThreadPoolUtil.getInstance().executeTask(() -> {
             try {
                 MessageStruct message;
                 while (EventUtil.getInstance().isNotMainExit()) {

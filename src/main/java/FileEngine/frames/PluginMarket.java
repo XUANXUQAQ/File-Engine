@@ -2,7 +2,7 @@ package FileEngine.frames;
 
 import FileEngine.configs.AllConfigs;
 import FileEngine.configs.Enums;
-import FileEngine.download.DownloadUtil;
+import FileEngine.utils.download.DownloadUtil;
 import FileEngine.eventHandler.Event;
 import FileEngine.eventHandler.EventHandler;
 import FileEngine.eventHandler.EventUtil;
@@ -11,9 +11,9 @@ import FileEngine.eventHandler.impl.download.StartDownloadEvent;
 import FileEngine.eventHandler.impl.download.StopDownloadEvent;
 import FileEngine.eventHandler.impl.frame.pluginMarket.HidePluginMarketEvent;
 import FileEngine.eventHandler.impl.frame.pluginMarket.ShowPluginMarket;
-import FileEngine.pluginSystem.PluginUtil;
-import FileEngine.threadPool.CachedThreadPool;
-import FileEngine.translate.TranslateUtil;
+import FileEngine.utils.pluginSystem.PluginUtil;
+import FileEngine.utils.CachedThreadPoolUtil;
+import FileEngine.utils.TranslateUtil;
 import com.alibaba.fastjson.JSONObject;
 
 import javax.imageio.ImageIO;
@@ -62,7 +62,7 @@ public class PluginMarket {
         frame.dispose();
         frame.setUndecorated(true);
         frame.getRootPane().setWindowDecorationStyle(JRootPane.FRAME);
-        CachedThreadPool.getInstance().executeTask(() -> {
+        CachedThreadPoolUtil.getInstance().executeTask(() -> {
             try {
                 String pluginName;
                 String originString = buttonInstall.getText();
@@ -87,7 +87,7 @@ public class PluginMarket {
             }
         });
 
-        CachedThreadPool.getInstance().executeTask(() -> {
+        CachedThreadPoolUtil.getInstance().executeTask(() -> {
             HashSet<String> pluginSet = new HashSet<>();
             try {
                 while (EventUtil.getInstance().isNotMainExit()) {
@@ -298,7 +298,7 @@ public class PluginMarket {
                 labelIcon.setIcon(null);
             }
         });
-        CachedThreadPool.getInstance().executeTask(() -> {
+        CachedThreadPoolUtil.getInstance().executeTask(() -> {
             try {
                 while (EventUtil.getInstance().isNotMainExit()) {
                     if (isStartGetPluginInfo.get()) {

@@ -154,3 +154,5 @@ Update=Aggiornare
 File not exist=file non esiste
 change theme=Cambia tema
 Putting the software on the C drive may cause index failure issue=Mettere il software sull'unità C può causare problemi di errore dell'indice
+Preview=Anteprima
+Close preview window=Chiudi la finestra di anteprima

@@ -1,10 +1,10 @@
 package FileEngine;
 
-import FileEngine.classScan.ClassScannerUtil;
+import FileEngine.utils.classScan.ClassScannerUtil;
 import FileEngine.configs.AllConfigs;
 import FileEngine.configs.Enums;
-import FileEngine.database.DatabaseUtil;
-import FileEngine.database.SQLiteUtil;
+import FileEngine.utils.database.DatabaseUtil;
+import FileEngine.utils.database.SQLiteUtil;
 import FileEngine.eventHandler.Event;
 import FileEngine.eventHandler.EventUtil;
 import FileEngine.eventHandler.impl.ReadConfigsAndBootSystemEvent;
@@ -15,11 +15,11 @@ import FileEngine.eventHandler.impl.plugin.ReleasePluginResourcesEvent;
 import FileEngine.eventHandler.impl.stop.CloseEvent;
 import FileEngine.eventHandler.impl.taskbar.ShowTaskBarMessageEvent;
 import FileEngine.frames.SettingsFrame;
-import FileEngine.md5.Md5Util;
-import FileEngine.moveFiles.CopyFileUtil;
-import FileEngine.pluginSystem.PluginUtil;
-import FileEngine.threadPool.CachedThreadPool;
-import FileEngine.translate.TranslateUtil;
+import FileEngine.utils.Md5Util;
+import FileEngine.utils.moveFiles.CopyFileUtil;
+import FileEngine.utils.pluginSystem.PluginUtil;
+import FileEngine.utils.CachedThreadPoolUtil;
+import FileEngine.utils.TranslateUtil;
 import com.alibaba.fastjson.JSONObject;
 
 import javax.swing.*;
@@ -271,7 +271,7 @@ public class MainClass {
 
         StringBuilder notLatestPluginsBuilder = new StringBuilder();
         AtomicBoolean isFinished = new AtomicBoolean(false);
-        CachedThreadPool.getInstance().executeTask(() -> PluginUtil.getInstance().isAllPluginLatest(notLatestPluginsBuilder, isFinished));
+        CachedThreadPoolUtil.getInstance().executeTask(() -> PluginUtil.getInstance().isAllPluginLatest(notLatestPluginsBuilder, isFinished));
 
         EventUtil eventUtil = EventUtil.getInstance();
         TranslateUtil translateUtil = TranslateUtil.getInstance();
