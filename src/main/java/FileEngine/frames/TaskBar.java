@@ -97,7 +97,7 @@ public class TaskBar {
 
             MenuItem settings = new MenuItem("Settings");
             settings.addActionListener(e -> {
-                EventUtil.getInstance().putTask(new ShowSettingsFrameEvent());
+                EventUtil.getInstance().putEvent(new ShowSettingsFrameEvent());
             });
             MenuItem restartProc = new MenuItem("Restart");
             restartProc.addActionListener(e -> restart());
@@ -114,7 +114,7 @@ public class TaskBar {
                 @Override
                 public void mouseClicked(MouseEvent e) {
                     if (MouseEvent.BUTTON1 == e.getButton() && !settingsFrame.isSettingsFrameVisible()) {
-                        EventUtil.getInstance().putTask(new ShowSettingsFrameEvent());
+                        EventUtil.getInstance().putEvent(new ShowSettingsFrameEvent());
                     }
                 }
             });
@@ -129,13 +129,13 @@ public class TaskBar {
 
     private void closeAndExit() {
         EventUtil eventUtil = EventUtil.getInstance();
-        eventUtil.putTask(new CloseEvent());
+        eventUtil.putEvent(new CloseEvent());
         systemTray.remove(trayIcon);
     }
 
-    public void restart() {
+    private void restart() {
         EventUtil eventUtil = EventUtil.getInstance();
-        eventUtil.putTask(new RestartEvent());
+        eventUtil.putEvent(new RestartEvent());
         systemTray.remove(trayIcon);
     }
 

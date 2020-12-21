@@ -39,7 +39,6 @@ import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -318,7 +317,7 @@ public class SearchBar {
             Runtime.getRuntime().exec("cmd.exe " + commandToGenLnk);
         }
         if (isNotifyUser) {
-            EventUtil.getInstance().putTask(new ShowTaskBarMessageEvent(
+            EventUtil.getInstance().putEvent(new ShowTaskBarMessageEvent(
                     TranslateUtil.getInstance().getTranslation("Info"),
                     TranslateUtil.getInstance().getTranslation("Shortcut created")));
         }
@@ -481,7 +480,7 @@ public class SearchBar {
         Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
         clipboard.setContents(data, null);
         if (isNotifyUser) {
-            EventUtil.getInstance().putTask(new ShowTaskBarMessageEvent(
+            EventUtil.getInstance().putEvent(new ShowTaskBarMessageEvent(
                     TranslateUtil.getInstance().getTranslation("Info"),
                     TranslateUtil.getInstance().getTranslation("The result has been copied to the clipboard")));
         }
@@ -715,10 +714,10 @@ public class SearchBar {
                 return true;
             case "update":
                 detectShowingModeAndClose();
-                EventUtil.getInstance().putTask(new ShowTaskBarMessageEvent(
+                EventUtil.getInstance().putEvent(new ShowTaskBarMessageEvent(
                         TranslateUtil.getInstance().getTranslation("Info"),
                         TranslateUtil.getInstance().getTranslation("Updating file index")));
-                EventUtil.getInstance().putTask(new UpdateDatabaseEvent());
+                EventUtil.getInstance().putEvent(new UpdateDatabaseEvent());
                 startSignal = false;
                 return true;
             case "help":
@@ -1964,7 +1963,7 @@ public class SearchBar {
                 }
             } else {
                 System.out.println("Not administrator, file monitoring function is turned off");
-                EventUtil.getInstance().putTask(new ShowTaskBarMessageEvent(
+                EventUtil.getInstance().putEvent(new ShowTaskBarMessageEvent(
                         TranslateUtil.getInstance().getTranslation("Warning"),
                         TranslateUtil.getInstance().getTranslation("Not administrator, file monitoring function is turned off")));
             }
@@ -2870,9 +2869,9 @@ public class SearchBar {
                     }
                 } else {
                     if (isResultFromCache) {
-                        EventUtil.getInstance().putTask(new DeleteFromCacheEvent(path));
+                        EventUtil.getInstance().putEvent(new DeleteFromCacheEvent(path));
                     } else {
-                        EventUtil.getInstance().putTask(new DeleteFromDatabaseEvent(path));
+                        EventUtil.getInstance().putEvent(new DeleteFromDatabaseEvent(path));
                     }
                 }
             }
@@ -3255,7 +3254,7 @@ public class SearchBar {
     private void saveCache(String content) {
         if (AllConfigs.getInstance().getCacheNum() < AllConfigs.getInstance().getCacheNumLimit()) {
             if (!SettingsFrame.getInstance().isCacheExist(content)) {
-                EventUtil.getInstance().putTask(new AddToCacheEvent(content));
+                EventUtil.getInstance().putEvent(new AddToCacheEvent(content));
                 SettingsFrame.getInstance().addCache(content);
                 AllConfigs.getInstance().incrementCacheNum();
             }

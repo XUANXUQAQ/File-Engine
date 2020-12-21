@@ -692,19 +692,19 @@ public class AllConfigs {
 
     private void setAllSettings() {
         EventUtil eventUtil = EventUtil.getInstance();
-        eventUtil.putTask(new SetPluginsCurrentThemeEvent(
+        eventUtil.putEvent(new SetPluginsCurrentThemeEvent(
                 AllConfigs.getInstance().getDefaultBackgroundColor(),
                 AllConfigs.getInstance().getLabelColor(),
                 AllConfigs.getInstance().getBorderColor()));
-        eventUtil.putTask(new RegisterHotKeyEvent(hotkey));
-        eventUtil.putTask(new SetSearchBarTransparencyEvent(transparency));
-        eventUtil.putTask(new SetSearchBarDefaultBackgroundEvent(defaultBackgroundColor));
-        eventUtil.putTask(new SetSearchBarLabelColorEvent(labelColor));
-        eventUtil.putTask(new SetSearchBarFontColorWithCoverageEvent(fontColorWithCoverage));
-        eventUtil.putTask(new SetSearchBarLabelFontColorEvent(fontColor));
-        eventUtil.putTask(new SetSearchBarColorEvent(searchBarColor));
-        eventUtil.putTask(new SetSearchBarFontColorEvent(searchBarFontColor));
-        eventUtil.putTask(new SetBorderColorEvent(borderColor));
+        eventUtil.putEvent(new RegisterHotKeyEvent(hotkey));
+        eventUtil.putEvent(new SetSearchBarTransparencyEvent(transparency));
+        eventUtil.putEvent(new SetSearchBarDefaultBackgroundEvent(defaultBackgroundColor));
+        eventUtil.putEvent(new SetSearchBarLabelColorEvent(labelColor));
+        eventUtil.putEvent(new SetSearchBarFontColorWithCoverageEvent(fontColorWithCoverage));
+        eventUtil.putEvent(new SetSearchBarLabelFontColorEvent(fontColor));
+        eventUtil.putEvent(new SetSearchBarColorEvent(searchBarColor));
+        eventUtil.putEvent(new SetSearchBarFontColorEvent(searchBarFontColor));
+        eventUtil.putEvent(new SetBorderColorEvent(borderColor));
     }
 
     private void setSwingLaf(Enums.SwingThemes theme) {
@@ -819,11 +819,11 @@ public class AllConfigs {
                 getInstance().readAllSettings();
                 getInstance().saveAllSettings();
 
-                eventUtil.putTask(new LoadAllPluginsEvent("plugins"));
-                eventUtil.putTask(new StartMonitorDiskEvent());
-                eventUtil.putTask(new ShowTaskBarIconEvent());
+                eventUtil.putEvent(new LoadAllPluginsEvent("plugins"));
+                eventUtil.putEvent(new StartMonitorDiskEvent());
+                eventUtil.putEvent(new ShowTaskBarIconEvent());
                 if (!IsDebug.isDebug()) {
-                    eventUtil.putTask(new StartDaemonEvent(new File("").getAbsolutePath()));
+                    eventUtil.putEvent(new StartDaemonEvent(new File("").getAbsolutePath()));
                 }
             }
         });

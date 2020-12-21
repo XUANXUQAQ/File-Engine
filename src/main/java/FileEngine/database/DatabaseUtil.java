@@ -76,7 +76,7 @@ public class DatabaseUtil {
                     if (status == Enums.DatabaseStatus.NORMAL) {
                         count = 0;
                         while ((filesToRemove = readerRemove.readLine()) != null) {
-                            eventUtil.putTask(new DeleteFromDatabaseEvent(filesToRemove));
+                            eventUtil.putEvent(new DeleteFromDatabaseEvent(filesToRemove));
                             count++;
                             if (count > 3000) {
                                 break;
@@ -544,7 +544,7 @@ public class DatabaseUtil {
         }
         createAllIndex();
         waitForCommandSet(SqlTaskIds.CREATE_INDEX);
-        EventUtil.getInstance().putTask(new ShowTaskBarMessageEvent(
+        EventUtil.getInstance().putEvent(new ShowTaskBarMessageEvent(
                 TranslateUtil.getInstance().getTranslation("Info"),
                 TranslateUtil.getInstance().getTranslation("Search Done")));
     }
@@ -696,7 +696,7 @@ public class DatabaseUtil {
                 while (EventUtil.getInstance().isNotMainExit()) {
                     TimeUnit.SECONDS.sleep(updateTimeLimit);
                     if (status == Enums.DatabaseStatus.NORMAL) {
-                        eventUtil.putTask(new ExecuteSQLEvent());
+                        eventUtil.putEvent(new ExecuteSQLEvent());
                     }
                 }
             } catch (InterruptedException ignored) {
@@ -717,7 +717,7 @@ public class DatabaseUtil {
                     if (status == Enums.DatabaseStatus.NORMAL) {
                         count = 0;
                         while ((filesToAdd = readerAdd.readLine()) != null) {
-                            eventUtil.putTask(new AddToDatabaseEvent(filesToAdd));
+                            eventUtil.putEvent(new AddToDatabaseEvent(filesToAdd));
                             count++;
                             if (count > 3000) {
                                 break;
@@ -823,7 +823,7 @@ public class DatabaseUtil {
                     if (IsDebug.isDebug()) {
                         System.err.println("正在删除" + record);
                     }
-                    eventUtil.putTask(new DeleteFromDatabaseEvent(record));
+                    eventUtil.putEvent(new DeleteFromDatabaseEvent(record));
                 }
             }
         } catch (SQLException e) {

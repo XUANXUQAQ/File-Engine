@@ -48,7 +48,7 @@ public class PluginUtil {
                         plugin = iter.next();
                         message = plugin.getMessage();
                         if (message != null) {
-                            EventUtil.getInstance().putTask(new ShowTaskBarMessageEvent(message[0], message[1]));
+                            EventUtil.getInstance().putEvent(new ShowTaskBarMessageEvent(message[0], message[1]));
                         }
                     }
                     TimeUnit.MILLISECONDS.sleep(50);

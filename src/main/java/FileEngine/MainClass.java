@@ -15,7 +15,6 @@ import FileEngine.eventHandler.impl.plugin.ReleasePluginResourcesEvent;
 import FileEngine.eventHandler.impl.stop.CloseEvent;
 import FileEngine.eventHandler.impl.taskbar.ShowTaskBarMessageEvent;
 import FileEngine.frames.SettingsFrame;
-import FileEngine.frames.TaskBar;
 import FileEngine.md5.Md5Util;
 import FileEngine.moveFiles.CopyFileUtil;
 import FileEngine.pluginSystem.PluginUtil;
@@ -83,7 +82,7 @@ public class MainClass {
     private static boolean isTableExist(ArrayList<String> tableNames) {
         try (Statement stmt = SQLiteUtil.getStatement()) {
             for (String tableName : tableNames) {
-                String sql = "SELECT ASCII, PATH FROM " + tableName + ";";
+                String sql= String.format("SELECT ASCII, PATH FROM %s;", tableName);
                 stmt.executeQuery(sql);
             }
             return true;
@@ -155,7 +154,7 @@ public class MainClass {
         EventUtil eventUtil = EventUtil.getInstance();
         TranslateUtil translateUtil = TranslateUtil.getInstance();
         if (!isLatest()) {
-            eventUtil.putTask(new ShowTaskBarMessageEvent(
+            eventUtil.putEvent(new ShowTaskBarMessageEvent(
                     translateUtil.getTranslation("Info"), translateUtil.getTranslation("New version can be updated")));
         }
     }
@@ -165,7 +164,7 @@ public class MainClass {
         TranslateUtil translateUtil = TranslateUtil.getInstance();
         if (PluginUtil.getInstance().isPluginTooOld()) {
             String oldPlugins = PluginUtil.getInstance().getAllOldPluginsName();
-            eventUtil.putTask(new ShowTaskBarMessageEvent(
+            eventUtil.putEvent(new ShowTaskBarMessageEvent(
                     translateUtil.getTranslation("Warning"), oldPlugins + "\n" + translateUtil.getTranslation("Plugin Api is too old")));
         }
     }
@@ -175,7 +174,7 @@ public class MainClass {
         TranslateUtil translateUtil = TranslateUtil.getInstance();
         if (PluginUtil.getInstance().isPluginRepeat()) {
             String repeatPlugins = PluginUtil.getInstance().getRepeatPlugins();
-            eventUtil.putTask(new ShowTaskBarMessageEvent(
+            eventUtil.putEvent(new ShowTaskBarMessageEvent(
                     translateUtil.getTranslation("Warning"), repeatPlugins + "\n" + translateUtil.getTranslation("Duplicate plugin, please delete it in plugins folder")));
         }
     }
@@ -185,7 +184,7 @@ public class MainClass {
         TranslateUtil translateUtil = TranslateUtil.getInstance();
         if (PluginUtil.getInstance().isPluginLoadError()) {
             String errorPlugins = PluginUtil.getInstance().getLoadingErrorPlugins();
-            eventUtil.putTask(new ShowTaskBarMessageEvent(
+            eventUtil.putEvent(new ShowTaskBarMessageEvent(
                     translateUtil.getTranslation("Warning"), errorPlugins + "\n" + translateUtil.getTranslation("Loading plugins error")));
         }
     }
@@ -225,9 +224,9 @@ public class MainClass {
                 System.exit(0);
             }
 
-            eventUtil.putTask(new SetDefaultSwingLaf());
+            eventUtil.putEvent(new SetDefaultSwingLaf());
 
-            eventUtil.putTask(new SetConfigsEvent());
+            eventUtil.putEvent(new SetConfigsEvent());
 
             checkVersion();
 
@@ -237,19 +236,19 @@ public class MainClass {
 
             checkErrorPlugin();
 
-            eventUtil.putTask(new ReleasePluginResourcesEvent());
+            eventUtil.putEvent(new ReleasePluginResourcesEvent());
 
             if (isDatabaseDamaged()) {
-                eventUtil.putTask(new ShowTaskBarMessageEvent(
+                eventUtil.putEvent(new ShowTaskBarMessageEvent(
                         TranslateUtil.getInstance().getTranslation("Info"),
                         TranslateUtil.getInstance().getTranslation("Updating file index")));
-                eventUtil.putTask(new UpdateDatabaseEvent());
+                eventUtil.putEvent(new UpdateDatabaseEvent());
             } else {
                 checkIndex();
             }
 
             if (isAtDiskC()) {
-                eventUtil.putTask(new ShowTaskBarMessageEvent(
+                eventUtil.putEvent(new ShowTaskBarMessageEvent(
                         TranslateUtil.getInstance().getTranslation("Warning"),
                         TranslateUtil.getInstance().getTranslation("Putting the software on the C drive may cause index failure issue")));
             }
@@ -275,18 +274,17 @@ public class MainClass {
         CachedThreadPool.getInstance().executeTask(() -> PluginUtil.getInstance().isAllPluginLatest(notLatestPluginsBuilder, isFinished));
 
         EventUtil eventUtil = EventUtil.getInstance();
+        TranslateUtil translateUtil = TranslateUtil.getInstance();
         while (eventUtil.isNotMainExit()) {
             // 主循环开始
             if (isFinished.get()) {
                 isFinished.set(false);
                 String notLatestPlugins = notLatestPluginsBuilder.toString();
                 if (!notLatestPlugins.isEmpty()) {
-                    EventUtil.getInstance().putTask(new ShowTaskBarMessageEvent(
-                            TranslateUtil.getInstance().getTranslation("Info"),
-                            TranslateUtil.getInstance().getTranslation(
-                                    notLatestPlugins +
-                                            "\n" +
-                                            TranslateUtil.getInstance().getTranslation("New versions of these plugins can be updated"))));
+                    eventUtil.putEvent(new ShowTaskBarMessageEvent(
+                            translateUtil.getTranslation("Info"),
+                            notLatestPlugins + "\n" +
+                            translateUtil.getTranslation("New versions of these plugins can be updated")));
                 }
             }
             //检查已工作时间
@@ -298,8 +296,12 @@ public class MainClass {
                 timeDiff = endTime.getTime() - startTime.getTime();
                 long diffDays = timeDiff / div;
                 if (diffDays > 2) {
-                    //启动时间已经超过2天,自动重启
-                    TaskBar.getInstance().restart();
+                    startTime = endTime;
+                    //启动时间已经超过2天,更新索引
+                    eventUtil.putEvent(new ShowTaskBarMessageEvent(
+                            TranslateUtil.getInstance().getTranslation("Info"),
+                            TranslateUtil.getInstance().getTranslation("Updating file index")));
+                    eventUtil.putEvent(new UpdateDatabaseEvent());
                 }
             }
             TimeUnit.MILLISECONDS.sleep(50);
@@ -330,10 +332,10 @@ public class MainClass {
                     if (startTimes >= 3) {
                         startTimes = 0;
                         if (DatabaseUtil.getInstance().getStatus() == Enums.DatabaseStatus.NORMAL) {
-                            EventUtil.getInstance().putTask(new ShowTaskBarMessageEvent(
+                            EventUtil.getInstance().putEvent(new ShowTaskBarMessageEvent(
                                     TranslateUtil.getInstance().getTranslation("Info"),
                                     TranslateUtil.getInstance().getTranslation("Updating file index")));
-                            EventUtil.getInstance().putTask(new UpdateDatabaseEvent());
+                            EventUtil.getInstance().putEvent(new UpdateDatabaseEvent());
                         }
                     }
                 }
@@ -352,13 +354,13 @@ public class MainClass {
         EventUtil eventUtil = EventUtil.getInstance();
 
         Event event = new ReadConfigsAndBootSystemEvent();
-        eventUtil.putTask(event);
-        return eventUtil.waitForTask(event);
+        eventUtil.putEvent(event);
+        return eventUtil.waitForEvent(event);
     }
 
     private static void closeAndExit() {
         EventUtil eventUtil = EventUtil.getInstance();
-        eventUtil.putTask(new CloseEvent());
+        eventUtil.putEvent(new CloseEvent());
     }
 
     private static void releaseAllDependence() {

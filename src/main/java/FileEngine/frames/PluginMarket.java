@@ -185,7 +185,7 @@ public class PluginMarket {
         frame.setLocationRelativeTo(null);
         frame.setTitle(TranslateUtil.getInstance().getTranslation("Plugin Market"));
         frame.setVisible(true);
-        EventUtil.getInstance().putTask(new SetDefaultSwingLaf());
+        EventUtil.getInstance().putEvent(new SetDefaultSwingLaf());
     }
 
     public static void registerEventHandler() {
@@ -222,7 +222,7 @@ public class PluginMarket {
                 JSONObject info = getPluginDetailInfo(pluginName);
                 if (info != null) {
                     String downloadUrl = info.getString("url");
-                    EventUtil.getInstance().putTask(new StartDownloadEvent(
+                    EventUtil.getInstance().putEvent(new StartDownloadEvent(
                             downloadUrl, pluginFullName,
                             new File(AllConfigs.getInstance().getTmp(), "pluginsUpdate").getAbsolutePath()));
 
@@ -230,7 +230,7 @@ public class PluginMarket {
                 }
             } else if (downloadStatus == Enums.DownloadStatus.DOWNLOAD_DOWNLOADING) {
                 //取消下载
-                EventUtil.getInstance().putTask(new StopDownloadEvent(pluginFullName));
+                EventUtil.getInstance().putEvent(new StopDownloadEvent(pluginFullName));
                 //复位button
                 buttonInstall.setEnabled(true);
                 buttonInstall.setText(TranslateUtil.getInstance().getTranslation("Install"));
@@ -355,7 +355,7 @@ public class PluginMarket {
         File icon = new File("tmp/$$" + pluginName);
         int count = 0;
         if (!icon.exists()) {
-            EventUtil.getInstance().putTask(new StartDownloadEvent(url, icon.getName(), "tmp"));
+            EventUtil.getInstance().putEvent(new StartDownloadEvent(url, icon.getName(), "tmp"));
 
             while (DownloadUtil.getInstance().getDownloadStatus(icon.getName()) != Enums.DownloadStatus.DOWNLOAD_DONE) {
                 if (DownloadUtil.getInstance().getDownloadStatus(icon.getName()) == Enums.DownloadStatus.DOWNLOAD_ERROR) {
@@ -393,7 +393,7 @@ public class PluginMarket {
         if (downloadStatus != Enums.DownloadStatus.DOWNLOAD_DOWNLOADING) {
             //判断是否已下载完成
             if (downloadStatus != Enums.DownloadStatus.DOWNLOAD_DONE) {
-                EventUtil.getInstance().putTask(new StartDownloadEvent(url, saveFileName, AllConfigs.getInstance().getTmp().getAbsolutePath()));
+                EventUtil.getInstance().putEvent(new StartDownloadEvent(url, saveFileName, AllConfigs.getInstance().getTmp().getAbsolutePath()));
 
                 int count = 0;
                 boolean isError = false;

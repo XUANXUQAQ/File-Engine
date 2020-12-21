@@ -127,13 +127,13 @@ public class CheckHotKeyUtil {
                         isExecuted = true;
                         if (!searchBar.isVisible()) {
                             if (System.currentTimeMillis() - endVisibleTime > 200) {
-                                EventUtil.getInstance().putTask(new ShowSearchBarEvent(true));
+                                EventUtil.getInstance().putEvent(new ShowSearchBarEvent(true));
                                 startVisibleTime = System.currentTimeMillis();
                             }
                         } else {
                             if (System.currentTimeMillis() - startVisibleTime > 200) {
                                 if (searchBar.getShowingMode() == Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
-                                    EventUtil.getInstance().putTask(new HideSearchBarEvent());
+                                    EventUtil.getInstance().putEvent(new HideSearchBarEvent());
                                     endVisibleTime = System.currentTimeMillis();
                                 }
                             }

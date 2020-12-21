@@ -476,7 +476,7 @@ public class SettingsFrame {
             if (status == Enums.DownloadStatus.DOWNLOAD_DOWNLOADING) {
                 //取消下载
                 String fileName = AllConfigs.FILE_NAME;
-                EventUtil.getInstance().putTask(new StopDownloadEvent(fileName));
+                EventUtil.getInstance().putEvent(new StopDownloadEvent(fileName));
                 //复位button
                 buttonCheckUpdate.setText(TranslateUtil.getInstance().getTranslation("Check for update"));
                 buttonCheckUpdate.setEnabled(true);
@@ -511,7 +511,7 @@ public class SettingsFrame {
                         String fileName;
                         urlChoose = "url64";
                         fileName = AllConfigs.FILE_NAME;
-                        EventUtil.getInstance().putTask(new StartDownloadEvent(
+                        EventUtil.getInstance().putEvent(new StartDownloadEvent(
                                 updateInfo.getString(urlChoose), fileName, AllConfigs.getInstance().getTmp().getAbsolutePath()));
 
                         //更新button为取消
@@ -739,7 +739,7 @@ public class SettingsFrame {
         buttonDeleteCache.addActionListener(e -> {
             String cache = (String) listCache.getSelectedValue();
             if (cache != null) {
-                EventUtil.getInstance().putTask(new DeleteFromCacheEvent(cache));
+                EventUtil.getInstance().putEvent(new DeleteFromCacheEvent(cache));
                 cacheSet.remove(cache);
                 AllConfigs.getInstance().decrementCacheNum();
                 listCache.setListData(cacheSet.toArray());
@@ -777,7 +777,7 @@ public class SettingsFrame {
                     if (IsDebug.isDebug()) {
                         System.out.println("开始优化");
                     }
-                    EventUtil.getInstance().putTask(new OptimiseDatabaseEvent());
+                    EventUtil.getInstance().putEvent(new OptimiseDatabaseEvent());
                     CachedThreadPool.getInstance().executeTask(() -> {
                         //实时显示VACUUM状态
                         try {
@@ -807,7 +807,7 @@ public class SettingsFrame {
                     TranslateUtil.getInstance().getTranslation("The operation is irreversible. Are you sure you want to clear the cache?"));
             if (JOptionPane.YES_OPTION == ret) {
                 for (String each : cacheSet) {
-                    EventUtil.getInstance().putTask(new DeleteFromCacheEvent(each));
+                    EventUtil.getInstance().putEvent(new DeleteFromCacheEvent(each));
                 }
                 cacheSet.clear();
                 AllConfigs.getInstance().resetCacheNumToZero();
@@ -817,7 +817,7 @@ public class SettingsFrame {
     }
 
     private void addButtonViewPluginMarketListener() {
-        buttonPluginMarket.addActionListener(e -> EventUtil.getInstance().putTask(new ShowPluginMarket()));
+        buttonPluginMarket.addActionListener(e -> EventUtil.getInstance().putEvent(new ShowPluginMarket()));
     }
 
     private void addSwingThemePreviewListener() {
@@ -825,7 +825,7 @@ public class SettingsFrame {
             @Override
             public void mouseClicked(MouseEvent e) {
                 String swingTheme = (String) listSwingThemes.getSelectedValue();
-                EventUtil.getInstance().putTask(new SetSwingLaf(swingTheme));
+                EventUtil.getInstance().putEvent(new SetSwingLaf(swingTheme));
             }
         });
     }
@@ -845,11 +845,11 @@ public class SettingsFrame {
             Enums.DownloadStatus downloadStatus = DownloadUtil.getInstance().getDownloadStatus(pluginFullName);
             if (downloadStatus == Enums.DownloadStatus.DOWNLOAD_DOWNLOADING) {
                 //取消下载
-                EventUtil.getInstance().putTask(new StopDownloadEvent(pluginFullName));
+                EventUtil.getInstance().putEvent(new StopDownloadEvent(pluginFullName));
                 buttonUpdatePlugin.setEnabled(true);
             } else if (downloadStatus == Enums.DownloadStatus.DOWNLOAD_DONE) {
                 buttonUpdatePlugin.setEnabled(false);
-                EventUtil.getInstance().putTask(new RemoveFromPluginsCanUpdateEvent(pluginName));
+                EventUtil.getInstance().putEvent(new RemoveFromPluginsCanUpdateEvent(pluginName));
             } else {
                 if (!PluginUtil.getInstance().isPluginsNotLatest(pluginName)) {
                     Thread checkUpdateThread = new Thread(() -> {
@@ -891,15 +891,15 @@ public class SettingsFrame {
                     if (isSkipConfirm.get()) {
                         //直接开始下载
                         String url = plugin.getUpdateURL();
-                        EventUtil.getInstance().putTask(new StartDownloadEvent(
+                        EventUtil.getInstance().putEvent(new StartDownloadEvent(
                                 url, pluginFullName, new File(AllConfigs.getInstance().getTmp(), "pluginsUpdate").getAbsolutePath()));
                     } else {
-                        EventUtil.getInstance().putTask(new AddPluginsCanUpdateEvent(pluginName));
+                        EventUtil.getInstance().putEvent(new AddPluginsCanUpdateEvent(pluginName));
                         int ret = JOptionPane.showConfirmDialog(frame, TranslateUtil.getInstance().getTranslation("New version available, do you want to update?"));
                         if (ret == JOptionPane.YES_OPTION) {
                             //开始下载
                             String url = plugin.getUpdateURL();
-                            EventUtil.getInstance().putTask(new StartDownloadEvent(
+                            EventUtil.getInstance().putEvent(new StartDownloadEvent(
                                     url, pluginFullName, new File(AllConfigs.getInstance().getTmp(), "pluginsUpdate").getAbsolutePath()));
                         }
                     }
@@ -1373,7 +1373,7 @@ public class SettingsFrame {
         if (downloadStatus != Enums.DownloadStatus.DOWNLOAD_DOWNLOADING) {
             String url = getUpdateUrl();
             if (url != null) {
-                EventUtil.getInstance().putTask(new StartDownloadEvent(
+                EventUtil.getInstance().putEvent(new StartDownloadEvent(
                         url, "version.json", AllConfigs.getInstance().getTmp().getAbsolutePath()));
                 int count = 0;
                 boolean isError = false;
@@ -1453,7 +1453,7 @@ public class SettingsFrame {
         tabbedPane.setSelectedIndex(0);
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
-        EventUtil.getInstance().putTask(new SetDefaultSwingLaf());
+        EventUtil.getInstance().putEvent(new SetDefaultSwingLaf());
     }
 
     private void checkUpdateTimeLimit(StringBuilder strBuilder) {
@@ -1689,9 +1689,9 @@ public class SettingsFrame {
         AllConfigs.getInstance().denyChangeSettings();
 
         SaveConfigsEvent event = new SaveConfigsEvent();
-        EventUtil.getInstance().putTask(event);
-        EventUtil.getInstance().waitForTask(event);
-        EventUtil.getInstance().putTask(new SetConfigsEvent());
+        EventUtil.getInstance().putEvent(event);
+        EventUtil.getInstance().waitForEvent(event);
+        EventUtil.getInstance().putEvent(new SetConfigsEvent());
 
         Color tmp_color = new Color(AllConfigs.getInstance().getLabelColor());
         labelColorChooser.setBackground(tmp_color);
