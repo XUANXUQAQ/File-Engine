@@ -154,3 +154,5 @@ Update=
 File not exist=
 change theme=
 Putting the software on the C drive may cause index failure issue=
+Preview=
+Close preview window=

@@ -1,7 +1,7 @@
 package FileEngine.eventHandler;
 
 import FileEngine.IsDebug;
-import FileEngine.database.SQLiteUtil;
+import FileEngine.utils.database.SQLiteUtil;
 import FileEngine.eventHandler.impl.daemon.StopDaemonEvent;
 import FileEngine.eventHandler.impl.frame.pluginMarket.HidePluginMarketEvent;
 import FileEngine.eventHandler.impl.frame.searchBar.HideSearchBarEvent;
@@ -12,7 +12,7 @@ import FileEngine.eventHandler.impl.plugin.UnloadAllPluginsEvent;
 import FileEngine.eventHandler.impl.stop.CloseEvent;
 import FileEngine.eventHandler.impl.stop.RestartEvent;
 import FileEngine.eventHandler.impl.stop.StopEvent;
-import FileEngine.threadPool.CachedThreadPool;
+import FileEngine.utils.CachedThreadPoolUtil;
 import com.sun.istack.internal.NotNull;
 
 import java.util.concurrent.ConcurrentHashMap;
@@ -154,9 +154,9 @@ public class EventUtil {
     }
 
     private void startAsyncEventHandler() {
-        CachedThreadPool cachedThreadPool = CachedThreadPool.getInstance();
+        CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
         for (int i = 0; i < 4; i++) {
-            cachedThreadPool.executeTask(() -> {
+            cachedThreadPoolUtil.executeTask(() -> {
                 try {
                     Event event;
                     while (isEventHandlerNotExit()) {
@@ -197,7 +197,7 @@ public class EventUtil {
     }
 
     private void startBlockEventHandler() {
-        CachedThreadPool.getInstance().executeTask(() -> {
+        CachedThreadPoolUtil.getInstance().executeTask(() -> {
             try {
                 Event event;
                 while (isEventHandlerNotExit()) {
