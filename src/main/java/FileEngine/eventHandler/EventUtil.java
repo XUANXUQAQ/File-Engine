@@ -48,16 +48,16 @@ public class EventUtil {
 
     private void close() {
         restart();
-        putTask(new StopDaemonEvent());
+        putEvent(new StopDaemonEvent());
     }
 
     private void restart() {
-        putTask(new HideSettingsFrameEvent());
-        putTask(new HidePluginMarketEvent());
-        putTask(new HideSearchBarEvent());
-        putTask(new StopListenHotkeyEvent());
-        putTask(new StopMonitorDiskEvent());
-        putTask(new UnloadAllPluginsEvent());
+        putEvent(new HideSettingsFrameEvent());
+        putEvent(new HidePluginMarketEvent());
+        putEvent(new HideSearchBarEvent());
+        putEvent(new StopListenHotkeyEvent());
+        putEvent(new StopMonitorDiskEvent());
+        putEvent(new UnloadAllPluginsEvent());
         SQLiteUtil.closeAll();
         exit.set(true);
     }
@@ -67,7 +67,7 @@ public class EventUtil {
      * @param event 任务实例
      * @return true如果任务正常执行失败， false如果执行正常完成
      */
-    public boolean waitForTask(@NotNull Event event) {
+    public boolean waitForEvent(@NotNull Event event) {
         try {
             int timeout = 200;
             int count = 0;
@@ -115,7 +115,7 @@ public class EventUtil {
      * 发送任务
      * @param event 任务
      */
-    public void putTask(Event event) {
+    public void putEvent(Event event) {
         boolean isDebug = IsDebug.isDebug();
         if (isDebug) {
             System.err.println("尝试放入任务---" + event.toString());
