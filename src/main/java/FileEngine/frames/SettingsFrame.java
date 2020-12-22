@@ -34,6 +34,8 @@ import com.alibaba.fastjson.JSONObject;
 import com.sun.istack.internal.NotNull;
 
 import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.filechooser.FileSystemView;
 import java.awt.*;
 import java.awt.event.*;
@@ -43,6 +45,7 @@ import java.nio.charset.StandardCharsets;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -235,6 +238,8 @@ public class SettingsFrame {
     private JButton buttonClosePreview;
     private JLabel placeholder;
     private JLabel placeholder2;
+    private JTextField textFieldSearchCommands;
+    private JLabel labelSearchCommand;
 
     private static volatile SettingsFrame instance = null;
 
@@ -851,6 +856,54 @@ public class SettingsFrame {
         });
     }
 
+    private void addTextFieldSearchCommandsListener() {
+        final String[] searchText = new String[1];
+        AtomicBoolean isStart = new AtomicBoolean(false);
+
+        cachedThreadPoolUtil.executeTask(() -> {
+            try {
+                String tmp;
+                HashSet<String> cmdSetTmp = new HashSet<>();
+
+                while (eventUtil.isNotMainExit()) {
+                    if (isStart.get()) {
+                        if ((tmp = searchText[0]) == null || tmp.isEmpty()) {
+                            listCmds.setListData(allConfigs.getCmdSet().toArray());
+                        } else {
+                            cmdSetTmp.clear();
+                            for (String each : allConfigs.getCmdSet()) {
+                                if (each.toLowerCase().contains(tmp.toLowerCase())) {
+                                    cmdSetTmp.add(each);
+                                }
+                            }
+                            listCmds.setListData(cmdSetTmp.toArray());
+                        }
+                    }
+                    TimeUnit.MILLISECONDS.sleep(100);
+                }
+            } catch (InterruptedException ignored) {
+            }
+        });
+
+        textFieldSearchCommands.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                searchText[0] = textFieldSearchCommands.getText();
+                isStart.set(true);
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                searchText[0] = textFieldSearchCommands.getText();
+                isStart.set(true);
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+            }
+        });
+    }
+
     private void addButtonClosePreviewListener() {
         buttonClosePreview.addActionListener(e -> eventUtil.putEvent(
                 new HideSearchBarEvent()
@@ -1209,6 +1262,7 @@ public class SettingsFrame {
         addButtonDeleteAllCacheListener();
         addButtonPreviewListener();
         addButtonClosePreviewListener();
+        addTextFieldSearchCommandsListener();
     }
 
     public boolean isCacheExist(String cache) {
@@ -1341,7 +1395,7 @@ public class SettingsFrame {
         labelLanguageChooseTip.setText(translateUtil.getTranslation("Choose a language"));
         labelVersion.setText(translateUtil.getTranslation("Current Version:") + AllConfigs.version);
         labelInstalledPluginNum.setText(translateUtil.getTranslation("Installed plugins num:"));
-        labelVacuumTip.setText(translateUtil.getTranslation("Click to organize the database and reduce the size of the database,"));
+        labelVacuumTip.setText(translateUtil.getTranslation("Click to organize the database and reduce the size of the database"));
         labelVacuumTip2.setText(translateUtil.getTranslation("but it will consume a lot of time."));
         labelAddress.setText(translateUtil.getTranslation("Address"));
         labelPort.setText(translateUtil.getTranslation("Port"));
@@ -1359,6 +1413,7 @@ public class SettingsFrame {
         labelUninstallPluginTip2.setText(translateUtil.getTranslation("Tip:"));
         chooseUpdateAddressLabel.setText(translateUtil.getTranslation("Choose update address"));
         labelRemoveDesktop.setText(translateUtil.getTranslation("Backup and remove all desktop files") + ":");
+        labelSearchCommand.setText(translateUtil.getTranslation("Search"));
     }
 
     private void translateCheckBoxs() {
