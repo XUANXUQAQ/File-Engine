@@ -1,14 +1,8 @@
 package FileEngine.frames;
 
 import FileEngine.IsDebug;
-import FileEngine.eventHandler.impl.frame.searchBar.HideSearchBarEvent;
-import FileEngine.eventHandler.impl.frame.searchBar.PreviewSearchBarEvent;
-import FileEngine.utils.CheckHotKeyUtil;
 import FileEngine.configs.AllConfigs;
 import FileEngine.configs.Enums;
-import FileEngine.utils.database.DatabaseUtil;
-import FileEngine.utils.database.SQLiteUtil;
-import FileEngine.utils.download.DownloadUtil;
 import FileEngine.eventHandler.Event;
 import FileEngine.eventHandler.EventHandler;
 import FileEngine.eventHandler.EventUtil;
@@ -21,16 +15,23 @@ import FileEngine.eventHandler.impl.database.OptimiseDatabaseEvent;
 import FileEngine.eventHandler.impl.download.StartDownloadEvent;
 import FileEngine.eventHandler.impl.download.StopDownloadEvent;
 import FileEngine.eventHandler.impl.frame.pluginMarket.ShowPluginMarket;
+import FileEngine.eventHandler.impl.frame.searchBar.HideSearchBarEvent;
+import FileEngine.eventHandler.impl.frame.searchBar.PreviewSearchBarEvent;
 import FileEngine.eventHandler.impl.frame.settingsFrame.HideSettingsFrameEvent;
 import FileEngine.eventHandler.impl.frame.settingsFrame.ShowSettingsFrameEvent;
 import FileEngine.eventHandler.impl.plugin.AddPluginsCanUpdateEvent;
 import FileEngine.eventHandler.impl.plugin.RemoveFromPluginsCanUpdateEvent;
+import FileEngine.utils.CachedThreadPoolUtil;
+import FileEngine.utils.CheckHotKeyUtil;
+import FileEngine.utils.TranslateUtil;
+import FileEngine.utils.database.DatabaseUtil;
+import FileEngine.utils.database.SQLiteUtil;
+import FileEngine.utils.download.DownloadUtil;
 import FileEngine.utils.moveFiles.MoveDesktopFiles;
 import FileEngine.utils.pluginSystem.Plugin;
 import FileEngine.utils.pluginSystem.PluginUtil;
-import FileEngine.utils.CachedThreadPoolUtil;
-import FileEngine.utils.TranslateUtil;
 import com.alibaba.fastjson.JSONObject;
+import com.sun.istack.internal.NotNull;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileSystemView;
@@ -47,6 +48,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.regex.Pattern;
 
 
 public class SettingsFrame {
@@ -56,12 +58,13 @@ public class SettingsFrame {
     private static volatile int tmp_openLastFolderKeyCode;
     private static volatile boolean isStartupChanged = false;
     private static volatile boolean isUpdateButtonPluginString = false;
-    private static ImageIcon frameIcon;
-    private final JFrame frame = new JFrame("Settings");
+    private static final ImageIcon frameIcon = new ImageIcon(SettingsFrame.class.getResource("/icons/frame.png"));
+    private static final JFrame frame = new JFrame("Settings");
     private static final TranslateUtil translateUtil = TranslateUtil.getInstance();
     private static final EventUtil eventUtil = EventUtil.getInstance();
     private static final AllConfigs allConfigs = AllConfigs.getInstance();
     private static final CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
+    private static final Pattern rgbHexPattern = Pattern.compile("^[a-fA-F0-9]{6}$");
     private JTextField textFieldUpdateInterval;
     private JTextField textFieldCacheNum;
     private JTextArea textAreaIgnorePath;
@@ -231,6 +234,7 @@ public class SettingsFrame {
     private JButton buttonPreviewColor;
     private JButton buttonClosePreview;
     private JLabel placeholder;
+    private JLabel placeholder2;
 
     private static volatile SettingsFrame instance = null;
 
@@ -556,102 +560,139 @@ public class SettingsFrame {
 
     private void addResetColorButtonListener() {
         buttonResetColor.addActionListener(e -> {
-            textFieldFontColorWithCoverage.setText(Integer.toHexString(AllConfigs.defaultFontColorWithCoverage));
-            textFieldSearchBarColor.setText(Integer.toHexString(AllConfigs.defaultSearchbarColor));
-            textFieldLabelColor.setText(Integer.toHexString(AllConfigs.defaultLabelColor));
-            textFieldBackgroundDefault.setText(Integer.toHexString(AllConfigs.defaultWindowBackgroundColor));
-            textFieldFontColor.setText(Integer.toHexString(AllConfigs.defaultFontColor));
-            textFieldSearchBarFontColor.setText(Integer.toHexString(AllConfigs.defaultSearchbarFontColor));
-            textFieldBorderColor.setText(Integer.toHexString(AllConfigs.defaultBorderColor));
+            textFieldFontColorWithCoverage.setText(toRGBHexString(AllConfigs.defaultFontColorWithCoverage));
+            textFieldSearchBarColor.setText(toRGBHexString(AllConfigs.defaultSearchbarColor));
+            textFieldLabelColor.setText(toRGBHexString(AllConfigs.defaultLabelColor));
+            textFieldBackgroundDefault.setText(toRGBHexString(AllConfigs.defaultWindowBackgroundColor));
+            textFieldFontColor.setText(toRGBHexString(AllConfigs.defaultFontColor));
+            textFieldSearchBarFontColor.setText(toRGBHexString(AllConfigs.defaultSearchbarFontColor));
+            textFieldBorderColor.setText(toRGBHexString(AllConfigs.defaultBorderColor));
         });
     }
 
+    private boolean canParseToRGB(String str) {
+        if (str != null) {
+            if (!str.isEmpty()) {
+                return rgbHexPattern.matcher(str).matches();
+            }
+        }
+        return false;
+    }
+
+    private Color getColorFromTextFieldStr(@NotNull JTextField textField) {
+        String tmp;
+        return canParseToRGB(tmp = textField.getText()) ? new Color(Integer.parseInt(tmp, 16)) : null;
+    }
+
+    private void setColorChooserLabel(Color color, @NotNull JLabel label) {
+        if (color != null) {
+            label.setBackground(color);
+            label.setForeground(color);
+        }
+    }
+
     private void addColorChooserLabelListener() {
+        cachedThreadPoolUtil.executeTask(() -> {
+            try {
+                Color labelColor;
+                Color fontColorWithCoverage;
+                Color defaultBackgroundColor;
+                Color defaultFontColor;
+                Color searchBarColor;
+                Color searchBarFontColor;
+                Color borderColor;
+                while (eventUtil.isNotMainExit()) {
+                    labelColor = getColorFromTextFieldStr(textFieldLabelColor);
+                    fontColorWithCoverage = getColorFromTextFieldStr(textFieldFontColorWithCoverage);
+                    defaultBackgroundColor = getColorFromTextFieldStr(textFieldBackgroundDefault);
+                    defaultFontColor = getColorFromTextFieldStr(textFieldFontColor);
+                    searchBarColor = getColorFromTextFieldStr(textFieldSearchBarColor);
+                    searchBarFontColor = getColorFromTextFieldStr(textFieldSearchBarFontColor);
+                    borderColor = getColorFromTextFieldStr(textFieldBorderColor);
+                    setColorChooserLabel(labelColor, labelColorChooser);
+                    setColorChooserLabel(fontColorWithCoverage, FontColorWithCoverageChooser);
+                    setColorChooserLabel(defaultBackgroundColor, defaultBackgroundChooser);
+                    setColorChooserLabel(defaultFontColor, FontColorChooser);
+                    setColorChooserLabel(searchBarColor, searchBarColorChooser);
+                    setColorChooserLabel(searchBarFontColor, SearchBarFontColorChooser);
+                    setColorChooserLabel(borderColor, borderColorChooser);
+                    TimeUnit.MILLISECONDS.sleep(50);
+                }
+            } catch (InterruptedException ignored) {
+            }
+        });
+
         labelColorChooser.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                Color color = JColorChooser.showDialog(null, translateUtil.getTranslation("Choose Color"), null);
+                Color color = JColorChooser.showDialog(frame, translateUtil.getTranslation("Choose Color"), null);
                 if (color == null) {
                     return;
                 }
                 textFieldLabelColor.setText(parseColorHex(color));
-                labelColorChooser.setBackground(color);
-                labelColorChooser.setForeground(color);
             }
         });
         FontColorWithCoverageChooser.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                Color color = JColorChooser.showDialog(null, translateUtil.getTranslation("Choose Color"), null);
+                Color color = JColorChooser.showDialog(frame, translateUtil.getTranslation("Choose Color"), null);
                 if (color == null) {
                     return;
                 }
                 textFieldFontColorWithCoverage.setText(parseColorHex(color));
-                FontColorWithCoverageChooser.setBackground(color);
-                FontColorWithCoverageChooser.setForeground(color);
             }
         });
         defaultBackgroundChooser.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                Color color = JColorChooser.showDialog(null, translateUtil.getTranslation("Choose Color"), null);
+                Color color = JColorChooser.showDialog(frame, translateUtil.getTranslation("Choose Color"), null);
                 if (color == null) {
                     return;
                 }
                 textFieldBackgroundDefault.setText(parseColorHex(color));
-                defaultBackgroundChooser.setBackground(color);
-                defaultBackgroundChooser.setForeground(color);
             }
         });
         FontColorChooser.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                Color color = JColorChooser.showDialog(null, translateUtil.getTranslation("Choose Color"), null);
+                Color color = JColorChooser.showDialog(frame, translateUtil.getTranslation("Choose Color"), null);
                 if (color == null) {
                     return;
                 }
                 textFieldFontColor.setText(parseColorHex(color));
-                FontColorChooser.setBackground(color);
-                FontColorChooser.setForeground(color);
             }
         });
 
         SearchBarFontColorChooser.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                Color color = JColorChooser.showDialog(null, translateUtil.getTranslation("Choose Color"), null);
+                Color color = JColorChooser.showDialog(frame, translateUtil.getTranslation("Choose Color"), null);
                 if (color == null) {
                     return;
                 }
                 textFieldSearchBarFontColor.setText(parseColorHex(color));
-                SearchBarFontColorChooser.setBackground(color);
-                SearchBarFontColorChooser.setForeground(color);
             }
         });
 
         borderColorChooser.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                Color color = JColorChooser.showDialog(null, translateUtil.getTranslation("Choose Color"), null);
+                Color color = JColorChooser.showDialog(frame, translateUtil.getTranslation("Choose Color"), null);
                 if (color == null) {
                     return;
                 }
                 textFieldBorderColor.setText(parseColorHex(color));
-                borderColorChooser.setBackground(color);
-                borderColorChooser.setForeground(color);
             }
         });
 
         searchBarColorChooser.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                Color color = JColorChooser.showDialog(null, translateUtil.getTranslation("Choose Color"), null);
+                Color color = JColorChooser.showDialog(frame, translateUtil.getTranslation("Choose Color"), null);
                 if (color == null) {
                     return;
                 }
                 textFieldSearchBarColor.setText(parseColorHex(color));
-                searchBarColorChooser.setBackground(color);
-                searchBarColorChooser.setForeground(color);
             }
         });
     }
@@ -953,20 +994,24 @@ public class SettingsFrame {
         labelCurrentCacheNum.setText(translateUtil.getTranslation("Current Caches Num:") + allConfigs.getCacheNum());
     }
 
+    private String toRGBHexString(int colorRGB) {
+        return String.format("%06x", colorRGB);
+    }
+
     private void setTextFieldAndTextAreaGui() {
-        textFieldBackgroundDefault.setText(Integer.toHexString(allConfigs.getDefaultBackgroundColor()));
-        textFieldLabelColor.setText(Integer.toHexString(allConfigs.getLabelColor()));
-        textFieldFontColorWithCoverage.setText(Integer.toHexString(allConfigs.getLabelFontColorWithCoverage()));
+        textFieldBackgroundDefault.setText(toRGBHexString(allConfigs.getDefaultBackgroundColor()));
+        textFieldLabelColor.setText(toRGBHexString(allConfigs.getLabelColor()));
+        textFieldFontColorWithCoverage.setText(toRGBHexString(allConfigs.getLabelFontColorWithCoverage()));
         textFieldTransparency.setText(String.valueOf(allConfigs.getTransparency()));
-        textFieldBorderColor.setText(Integer.toHexString(allConfigs.getBorderColor()));
-        textFieldFontColor.setText(Integer.toHexString(allConfigs.getLabelFontColor()));
-        textFieldSearchBarFontColor.setText(Integer.toHexString(allConfigs.getSearchBarFontColor()));
+        textFieldBorderColor.setText(toRGBHexString(allConfigs.getBorderColor()));
+        textFieldFontColor.setText(toRGBHexString(allConfigs.getLabelFontColor()));
+        textFieldSearchBarFontColor.setText(toRGBHexString(allConfigs.getSearchBarFontColor()));
         textFieldCacheNum.setText(String.valueOf(allConfigs.getCacheNumLimit()));
         textFieldSearchDepth.setText(String.valueOf(allConfigs.getSearchDepth()));
         textFieldHotkey.setText(allConfigs.getHotkey());
         textFieldPriorityFolder.setText(allConfigs.getPriorityFolder());
         textFieldUpdateInterval.setText(String.valueOf(allConfigs.getUpdateTimeLimit()));
-        textFieldSearchBarColor.setText(Integer.toHexString(allConfigs.getSearchBarColor()));
+        textFieldSearchBarColor.setText(toRGBHexString(allConfigs.getSearchBarColor()));
         textFieldAddress.setText(allConfigs.getProxyAddress());
         textFieldPort.setText(String.valueOf(allConfigs.getProxyPort()));
         textFieldUserName.setText(allConfigs.getProxyUserName());
@@ -1104,10 +1149,10 @@ public class SettingsFrame {
     private SettingsFrame() {
         frame.setUndecorated(true);
         frame.getRootPane().setWindowDecorationStyle(JRootPane.FRAME);
+        frame.setIconImage(frameIcon.getImage());
 
         tabbedPane.setBackground(new Color(0,0,0,0));
 
-        frameIcon = new ImageIcon(SettingsFrame.class.getResource("/icons/frame.png"));
         ButtonGroup proxyButtonGroup = new ButtonGroup();
         proxyButtonGroup.add(radioButtonNoProxy);
         proxyButtonGroup.add(radioButtonUseProxy);
@@ -1457,17 +1502,19 @@ public class SettingsFrame {
         int width = Integer.parseInt(translateUtil.getFrameWidth());
         int height = Integer.parseInt(translateUtil.getFrameHeight());
 
+        frame.setContentPane(getInstance().panel);
+
         panel.setSize(width, height);
         frame.setSize(width, height);
-        frame.setContentPane(getInstance().panel);
-        frame.setIconImage(frameIcon.getImage());
         frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         frame.setResizable(false);
-
         tabbedPane.setSelectedIndex(0);
         frame.setLocationRelativeTo(null);
+
+        Event setSwing = new SetDefaultSwingLaf();
+        eventUtil.putEvent(setSwing);
+        eventUtil.waitForEvent(setSwing);
         frame.setVisible(true);
-        eventUtil.putEvent(new SetDefaultSwingLaf());
     }
 
     private void checkUpdateTimeLimit(StringBuilder strBuilder) {
@@ -1533,85 +1580,43 @@ public class SettingsFrame {
     }
 
     private void checkLabelColor(StringBuilder strBuilder) {
-        int tmp_labelColor;
-        try {
-            tmp_labelColor = Integer.parseInt(textFieldLabelColor.getText(), 16);
-        } catch (Exception e) {
-            tmp_labelColor = -1;
-        }
-        if (tmp_labelColor < 0) {
+        if (!canParseToRGB(textFieldLabelColor.getText())) {
             strBuilder.append(translateUtil.getTranslation("Chosen label color is set incorrectly")).append("\n");
         }
     }
 
     private void checkLabelFontColorWithCoverage(StringBuilder strBuilder) {
-        int tmp_fontColorWithCoverage;
-        try {
-            tmp_fontColorWithCoverage = Integer.parseInt(textFieldFontColorWithCoverage.getText(), 16);
-        } catch (Exception e) {
-            tmp_fontColorWithCoverage = -1;
-        }
-        if (tmp_fontColorWithCoverage < 0) {
+        if (!canParseToRGB(textFieldFontColorWithCoverage.getText())) {
             strBuilder.append(translateUtil.getTranslation("Chosen label font color is set incorrectly")).append("\n");
         }
     }
 
     private void checkDefaultBackgroundColor(StringBuilder strBuilder) {
-        int tmp_defaultBackgroundColor;
-        try {
-            tmp_defaultBackgroundColor = Integer.parseInt(textFieldBackgroundDefault.getText(), 16);
-        } catch (Exception e) {
-            tmp_defaultBackgroundColor = -1;
-        }
-        if (tmp_defaultBackgroundColor < 0) {
+        if (!canParseToRGB(textFieldBackgroundDefault.getText())) {
             strBuilder.append(translateUtil.getTranslation("Incorrect default background color setting")).append("\n");
         }
     }
 
     private void checkBorderColor(StringBuilder stringBuilder) {
-        int tmp_borderColor;
-        try {
-            tmp_borderColor = Integer.parseInt(textFieldBorderColor.getText(), 16);
-        }catch (Exception e) {
-            tmp_borderColor = -1;
-        }
-        if (tmp_borderColor < 0) {
+        if (!canParseToRGB(textFieldBorderColor.getText())) {
             stringBuilder.append(translateUtil.getTranslation("Border color is set incorrectly")).append("\n");
         }
     }
 
     private void checkLabelFontColor(StringBuilder strBuilder) {
-        int tmp_labelFontColor;
-        try {
-            tmp_labelFontColor = Integer.parseInt(textFieldFontColor.getText(), 16);
-        } catch (Exception e) {
-            tmp_labelFontColor = -1;
-        }
-        if (tmp_labelFontColor < 0) {
+        if (!canParseToRGB(textFieldFontColor.getText())) {
             strBuilder.append(translateUtil.getTranslation("Unchosen label font color is set incorrectly")).append("\n");
         }
     }
 
     private void checkSearchBarColor(StringBuilder strBuilder) {
-        int tmp_searchBarColor;
-        try {
-            tmp_searchBarColor = Integer.parseInt(textFieldSearchBarColor.getText(), 16);
-        } catch (Exception e) {
-            tmp_searchBarColor = -1;
-        }
-        if (tmp_searchBarColor < 0) {
+        if (!canParseToRGB(textFieldSearchBarColor.getText())) {
             strBuilder.append(translateUtil.getTranslation("The color of the search bar is set incorrectly")).append("\n");
         }
     }
 
     private void checkSearchBarFontColor(StringBuilder strBuilder) {
-        int tmp_searchBarFontColor;
-        try {
-            tmp_searchBarFontColor = Integer.parseInt(textFieldSearchBarFontColor.getText(), 16);
-        } catch (Exception e) {
-            tmp_searchBarFontColor = -1;
-        }
-        if (tmp_searchBarFontColor < 0) {
+        if (!canParseToRGB(textFieldSearchBarFontColor.getText())) {
             strBuilder.append(translateUtil.getTranslation("The font color of the search bar is set incorrectly")).append("\n");
         }
     }
@@ -1619,7 +1624,7 @@ public class SettingsFrame {
     private void checkProxy(StringBuilder strBuilder) {
         try {
             Integer.parseInt(textFieldPort.getText());
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             strBuilder.append(translateUtil.getTranslation("Proxy port is set incorrectly.")).append("\n");
         }
     }
