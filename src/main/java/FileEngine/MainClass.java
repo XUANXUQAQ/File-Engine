@@ -299,8 +299,8 @@ public class MainClass {
                     startTime = endTime;
                     //启动时间已经超过2天,更新索引
                     eventUtil.putEvent(new ShowTaskBarMessageEvent(
-                            TranslateUtil.getInstance().getTranslation("Info"),
-                            TranslateUtil.getInstance().getTranslation("Updating file index")));
+                            translateUtil.getTranslation("Info"),
+                            translateUtil.getTranslation("Updating file index")));
                     eventUtil.putEvent(new UpdateDatabaseEvent());
                 }
             }

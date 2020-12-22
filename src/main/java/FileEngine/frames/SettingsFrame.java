@@ -58,7 +58,10 @@ public class SettingsFrame {
     private static volatile boolean isUpdateButtonPluginString = false;
     private static ImageIcon frameIcon;
     private final JFrame frame = new JFrame("Settings");
-    private final TranslateUtil translateUtil = TranslateUtil.getInstance();
+    private static final TranslateUtil translateUtil = TranslateUtil.getInstance();
+    private static final EventUtil eventUtil = EventUtil.getInstance();
+    private static final AllConfigs allConfigs = AllConfigs.getInstance();
+    private static final CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
     private JTextField textFieldUpdateInterval;
     private JTextField textFieldCacheNum;
     private JTextArea textAreaIgnorePath;
@@ -281,7 +284,7 @@ public class SettingsFrame {
             int isConfirmed = JOptionPane.showConfirmDialog(frame, translateUtil.getTranslation("Whether to remove and backup all files on the desktop," +
                     "they will be in the program's Files folder, which may take a few minutes"));
             if (isConfirmed == JOptionPane.YES_OPTION) {
-                CachedThreadPoolUtil.getInstance().executeTask(MoveDesktopFiles::start);
+                cachedThreadPoolUtil.executeTask(MoveDesktopFiles::start);
             }
         });
     }
@@ -441,8 +444,8 @@ public class SettingsFrame {
             int returnValue = fileChooser.showDialog(new Label(), translateUtil.getTranslation("Choose"));
             if (returnValue == JFileChooser.APPROVE_OPTION) {
                 cmd = fileChooser.getSelectedFile().getAbsolutePath();
-                AllConfigs.getInstance().getCmdSet().add(":" + name + ";" + cmd);
-                listCmds.setListData(AllConfigs.getInstance().getCmdSet().toArray());
+                allConfigs.getCmdSet().add(":" + name + ";" + cmd);
+                listCmds.setListData(allConfigs.getCmdSet().toArray());
             }
         });
     }
@@ -451,8 +454,8 @@ public class SettingsFrame {
         buttonDelCmd.addActionListener(e -> {
             String del = (String) listCmds.getSelectedValue();
             if (del != null) {
-                AllConfigs.getInstance().getCmdSet().remove(del);
-                listCmds.setListData(AllConfigs.getInstance().getCmdSet().toArray());
+                allConfigs.getCmdSet().remove(del);
+                listCmds.setListData(allConfigs.getCmdSet().toArray());
             }
 
         });
@@ -482,7 +485,7 @@ public class SettingsFrame {
             if (status == Enums.DownloadStatus.DOWNLOAD_DOWNLOADING) {
                 //取消下载
                 String fileName = AllConfigs.FILE_NAME;
-                EventUtil.getInstance().putEvent(new StopDownloadEvent(fileName));
+                eventUtil.putEvent(new StopDownloadEvent(fileName));
                 //复位button
                 buttonCheckUpdate.setText(translateUtil.getTranslation("Check for update"));
                 buttonCheckUpdate.setEnabled(true);
@@ -517,8 +520,8 @@ public class SettingsFrame {
                         String fileName;
                         urlChoose = "url64";
                         fileName = AllConfigs.FILE_NAME;
-                        EventUtil.getInstance().putEvent(new StartDownloadEvent(
-                                updateInfo.getString(urlChoose), fileName, AllConfigs.getInstance().getTmp().getAbsolutePath()));
+                        eventUtil.putEvent(new StartDownloadEvent(
+                                updateInfo.getString(urlChoose), fileName, allConfigs.getTmp().getAbsolutePath()));
 
                         //更新button为取消
                         buttonCheckUpdate.setText(translateUtil.getTranslation("Cancel"));
@@ -745,9 +748,9 @@ public class SettingsFrame {
         buttonDeleteCache.addActionListener(e -> {
             String cache = (String) listCache.getSelectedValue();
             if (cache != null) {
-                EventUtil.getInstance().putEvent(new DeleteFromCacheEvent(cache));
+                eventUtil.putEvent(new DeleteFromCacheEvent(cache));
                 cacheSet.remove(cache);
-                AllConfigs.getInstance().decrementCacheNum();
+                allConfigs.decrementCacheNum();
                 listCache.setListData(cacheSet.toArray());
             }
         });
@@ -783,8 +786,8 @@ public class SettingsFrame {
                     if (IsDebug.isDebug()) {
                         System.out.println("开始优化");
                     }
-                    EventUtil.getInstance().putEvent(new OptimiseDatabaseEvent());
-                    CachedThreadPoolUtil.getInstance().executeTask(() -> {
+                    eventUtil.putEvent(new OptimiseDatabaseEvent());
+                    cachedThreadPoolUtil.executeTask(() -> {
                         //实时显示VACUUM状态
                         try {
                             DatabaseUtil instance = DatabaseUtil.getInstance();
@@ -808,14 +811,14 @@ public class SettingsFrame {
     }
 
     private void addButtonClosePreviewListener() {
-        buttonClosePreview.addActionListener(e -> EventUtil.getInstance().putEvent(
+        buttonClosePreview.addActionListener(e -> eventUtil.putEvent(
                 new HideSearchBarEvent()
         ));
     }
 
     private void addButtonPreviewListener() {
         buttonPreviewColor.addActionListener(e ->
-                EventUtil.getInstance().putEvent(
+                eventUtil.putEvent(
                         new PreviewSearchBarEvent(
                                 textFieldBorderColor.getText(),
                                 textFieldSearchBarColor.getText(),
@@ -835,17 +838,17 @@ public class SettingsFrame {
                     translateUtil.getTranslation("The operation is irreversible. Are you sure you want to clear the cache?"));
             if (JOptionPane.YES_OPTION == ret) {
                 for (String each : cacheSet) {
-                    EventUtil.getInstance().putEvent(new DeleteFromCacheEvent(each));
+                    eventUtil.putEvent(new DeleteFromCacheEvent(each));
                 }
                 cacheSet.clear();
-                AllConfigs.getInstance().resetCacheNumToZero();
+                allConfigs.resetCacheNumToZero();
                 listCache.setListData(cacheSet.toArray());
             }
         });
     }
 
     private void addButtonViewPluginMarketListener() {
-        buttonPluginMarket.addActionListener(e -> EventUtil.getInstance().putEvent(new ShowPluginMarket()));
+        buttonPluginMarket.addActionListener(e -> eventUtil.putEvent(new ShowPluginMarket()));
     }
 
     private void addSwingThemePreviewListener() {
@@ -853,7 +856,7 @@ public class SettingsFrame {
             @Override
             public void mouseClicked(MouseEvent e) {
                 String swingTheme = (String) listSwingThemes.getSelectedValue();
-                EventUtil.getInstance().putEvent(new SetSwingLaf(swingTheme));
+                eventUtil.putEvent(new SetSwingLaf(swingTheme));
             }
         });
     }
@@ -873,11 +876,11 @@ public class SettingsFrame {
             Enums.DownloadStatus downloadStatus = DownloadUtil.getInstance().getDownloadStatus(pluginFullName);
             if (downloadStatus == Enums.DownloadStatus.DOWNLOAD_DOWNLOADING) {
                 //取消下载
-                EventUtil.getInstance().putEvent(new StopDownloadEvent(pluginFullName));
+                eventUtil.putEvent(new StopDownloadEvent(pluginFullName));
                 buttonUpdatePlugin.setEnabled(true);
             } else if (downloadStatus == Enums.DownloadStatus.DOWNLOAD_DONE) {
                 buttonUpdatePlugin.setEnabled(false);
-                EventUtil.getInstance().putEvent(new RemoveFromPluginsCanUpdateEvent(pluginName));
+                eventUtil.putEvent(new RemoveFromPluginsCanUpdateEvent(pluginName));
             } else {
                 if (!PluginUtil.getInstance().isPluginsNotLatest(pluginName)) {
                     Thread checkUpdateThread = new Thread(() -> {
@@ -892,7 +895,7 @@ public class SettingsFrame {
                             startCheckTime.set(0xFFFL);  //表示检查失败
                         }
                     });
-                    CachedThreadPoolUtil.getInstance().executeTask(checkUpdateThread);
+                    cachedThreadPoolUtil.executeTask(checkUpdateThread);
                     //等待获取插件更新信息
                     try {
                         while (startCheckTime.get() != 0x100L) {
@@ -902,7 +905,7 @@ public class SettingsFrame {
                                 JOptionPane.showMessageDialog(frame, translateUtil.getTranslation("Check update failed"));
                                 return;
                             }
-                            if (!EventUtil.getInstance().isNotMainExit()) {
+                            if (!eventUtil.isNotMainExit()) {
                                 return;
                             }
                         }
@@ -914,21 +917,22 @@ public class SettingsFrame {
                     isSkipConfirm.set(true);
                 }
                 if (isVersionLatest.get()) {
-                    JOptionPane.showMessageDialog(frame, translateUtil.getTranslation("The current Version is the latest."));
+                    JOptionPane.showMessageDialog(frame, plugin.getVersion() +
+                            translateUtil.getTranslation("The current Version is the latest."));
                 } else {
                     if (isSkipConfirm.get()) {
                         //直接开始下载
                         String url = plugin.getUpdateURL();
-                        EventUtil.getInstance().putEvent(new StartDownloadEvent(
-                                url, pluginFullName, new File(AllConfigs.getInstance().getTmp(), "pluginsUpdate").getAbsolutePath()));
+                        eventUtil.putEvent(new StartDownloadEvent(
+                                url, pluginFullName, new File(allConfigs.getTmp(), "pluginsUpdate").getAbsolutePath()));
                     } else {
-                        EventUtil.getInstance().putEvent(new AddPluginsCanUpdateEvent(pluginName));
+                        eventUtil.putEvent(new AddPluginsCanUpdateEvent(pluginName));
                         int ret = JOptionPane.showConfirmDialog(frame, translateUtil.getTranslation("New version available, do you want to update?"));
                         if (ret == JOptionPane.YES_OPTION) {
                             //开始下载
                             String url = plugin.getUpdateURL();
-                            EventUtil.getInstance().putEvent(new StartDownloadEvent(
-                                    url, pluginFullName, new File(AllConfigs.getInstance().getTmp(), "pluginsUpdate").getAbsolutePath()));
+                            eventUtil.putEvent(new StartDownloadEvent(
+                                    url, pluginFullName, new File(allConfigs.getTmp(), "pluginsUpdate").getAbsolutePath()));
                         }
                     }
                 }
@@ -946,90 +950,90 @@ public class SettingsFrame {
         ImageIcon imageIcon = new ImageIcon(SettingsFrame.class.getResource("/icons/frame.png"));
         labelIcon.setIcon(imageIcon);
         labelVersion.setText(translateUtil.getTranslation("Current Version:") + AllConfigs.version);
-        labelCurrentCacheNum.setText(translateUtil.getTranslation("Current Caches Num:") + AllConfigs.getInstance().getCacheNum());
+        labelCurrentCacheNum.setText(translateUtil.getTranslation("Current Caches Num:") + allConfigs.getCacheNum());
     }
 
     private void setTextFieldAndTextAreaGui() {
-        textFieldBackgroundDefault.setText(Integer.toHexString(AllConfigs.getInstance().getDefaultBackgroundColor()));
-        textFieldLabelColor.setText(Integer.toHexString(AllConfigs.getInstance().getLabelColor()));
-        textFieldFontColorWithCoverage.setText(Integer.toHexString(AllConfigs.getInstance().getLabelFontColorWithCoverage()));
-        textFieldTransparency.setText(String.valueOf(AllConfigs.getInstance().getTransparency()));
-        textFieldBorderColor.setText(Integer.toHexString(AllConfigs.getInstance().getBorderColor()));
-        textFieldFontColor.setText(Integer.toHexString(AllConfigs.getInstance().getLabelFontColor()));
-        textFieldSearchBarFontColor.setText(Integer.toHexString(AllConfigs.getInstance().getSearchBarFontColor()));
-        textFieldCacheNum.setText(String.valueOf(AllConfigs.getInstance().getCacheNumLimit()));
-        textFieldSearchDepth.setText(String.valueOf(AllConfigs.getInstance().getSearchDepth()));
-        textFieldHotkey.setText(AllConfigs.getInstance().getHotkey());
-        textFieldPriorityFolder.setText(AllConfigs.getInstance().getPriorityFolder());
-        textFieldUpdateInterval.setText(String.valueOf(AllConfigs.getInstance().getUpdateTimeLimit()));
-        textFieldSearchBarColor.setText(Integer.toHexString(AllConfigs.getInstance().getSearchBarColor()));
-        textFieldAddress.setText(AllConfigs.getInstance().getProxyAddress());
-        textFieldPort.setText(String.valueOf(AllConfigs.getInstance().getProxyPort()));
-        textFieldUserName.setText(AllConfigs.getInstance().getProxyUserName());
-        textFieldPassword.setText(AllConfigs.getInstance().getProxyPassword());
-        textAreaIgnorePath.setText(AllConfigs.getInstance().getIgnorePath().replaceAll(",", ",\n"));
-        if (AllConfigs.getInstance().getRunAsAdminKeyCode() == 17) {
+        textFieldBackgroundDefault.setText(Integer.toHexString(allConfigs.getDefaultBackgroundColor()));
+        textFieldLabelColor.setText(Integer.toHexString(allConfigs.getLabelColor()));
+        textFieldFontColorWithCoverage.setText(Integer.toHexString(allConfigs.getLabelFontColorWithCoverage()));
+        textFieldTransparency.setText(String.valueOf(allConfigs.getTransparency()));
+        textFieldBorderColor.setText(Integer.toHexString(allConfigs.getBorderColor()));
+        textFieldFontColor.setText(Integer.toHexString(allConfigs.getLabelFontColor()));
+        textFieldSearchBarFontColor.setText(Integer.toHexString(allConfigs.getSearchBarFontColor()));
+        textFieldCacheNum.setText(String.valueOf(allConfigs.getCacheNumLimit()));
+        textFieldSearchDepth.setText(String.valueOf(allConfigs.getSearchDepth()));
+        textFieldHotkey.setText(allConfigs.getHotkey());
+        textFieldPriorityFolder.setText(allConfigs.getPriorityFolder());
+        textFieldUpdateInterval.setText(String.valueOf(allConfigs.getUpdateTimeLimit()));
+        textFieldSearchBarColor.setText(Integer.toHexString(allConfigs.getSearchBarColor()));
+        textFieldAddress.setText(allConfigs.getProxyAddress());
+        textFieldPort.setText(String.valueOf(allConfigs.getProxyPort()));
+        textFieldUserName.setText(allConfigs.getProxyUserName());
+        textFieldPassword.setText(allConfigs.getProxyPassword());
+        textAreaIgnorePath.setText(allConfigs.getIgnorePath().replaceAll(",", ",\n"));
+        if (allConfigs.getRunAsAdminKeyCode() == 17) {
             textFieldRunAsAdminHotKey.setText("Ctrl + Enter");
-        } else if (AllConfigs.getInstance().getRunAsAdminKeyCode() == 16) {
+        } else if (allConfigs.getRunAsAdminKeyCode() == 16) {
             textFieldRunAsAdminHotKey.setText("Shift + Enter");
-        } else if (AllConfigs.getInstance().getRunAsAdminKeyCode() == 18) {
+        } else if (allConfigs.getRunAsAdminKeyCode() == 18) {
             textFieldRunAsAdminHotKey.setText("Alt + Enter");
         }
-        if (AllConfigs.getInstance().getOpenLastFolderKeyCode() == 17) {
+        if (allConfigs.getOpenLastFolderKeyCode() == 17) {
             textFieldOpenLastFolder.setText("Ctrl + Enter");
-        } else if (AllConfigs.getInstance().getOpenLastFolderKeyCode() == 16) {
+        } else if (allConfigs.getOpenLastFolderKeyCode() == 16) {
             textFieldOpenLastFolder.setText("Shift + Enter");
-        } else if (AllConfigs.getInstance().getOpenLastFolderKeyCode() == 18) {
+        } else if (allConfigs.getOpenLastFolderKeyCode() == 18) {
             textFieldOpenLastFolder.setText("Alt + Enter");
         }
-        if (AllConfigs.getInstance().getCopyPathKeyCode() == 17) {
+        if (allConfigs.getCopyPathKeyCode() == 17) {
             textFieldCopyPath.setText("Ctrl + Enter");
-        } else if (AllConfigs.getInstance().getCopyPathKeyCode() == 16) {
+        } else if (allConfigs.getCopyPathKeyCode() == 16) {
             textFieldCopyPath.setText("Shift + Enter");
-        } else if (AllConfigs.getInstance().getCopyPathKeyCode() == 18) {
+        } else if (allConfigs.getCopyPathKeyCode() == 18) {
             textFieldCopyPath.setText("Alt + Enter");
         }
     }
 
     private void setColorChooserGui() {
-        Color tmp_searchBarColor = new Color(AllConfigs.getInstance().getSearchBarColor());
+        Color tmp_searchBarColor = new Color(allConfigs.getSearchBarColor());
         searchBarColorChooser.setBackground(tmp_searchBarColor);
         searchBarColorChooser.setForeground(tmp_searchBarColor);
 
-        Color tmp_defaultBackgroundColor = new Color(AllConfigs.getInstance().getDefaultBackgroundColor());
+        Color tmp_defaultBackgroundColor = new Color(allConfigs.getDefaultBackgroundColor());
         defaultBackgroundChooser.setBackground(tmp_defaultBackgroundColor);
         defaultBackgroundChooser.setForeground(tmp_defaultBackgroundColor);
 
-        Color tmp_labelColor = new Color(AllConfigs.getInstance().getLabelColor());
+        Color tmp_labelColor = new Color(allConfigs.getLabelColor());
         labelColorChooser.setBackground(tmp_labelColor);
         labelColorChooser.setForeground(tmp_labelColor);
 
-        Color tmp_fontColorWithCoverage = new Color(AllConfigs.getInstance().getLabelFontColorWithCoverage());
+        Color tmp_fontColorWithCoverage = new Color(allConfigs.getLabelFontColorWithCoverage());
         FontColorWithCoverageChooser.setBackground(tmp_fontColorWithCoverage);
         FontColorWithCoverageChooser.setForeground(tmp_fontColorWithCoverage);
 
-        Color tmp_fontColor = new Color(AllConfigs.getInstance().getLabelFontColor());
+        Color tmp_fontColor = new Color(allConfigs.getLabelFontColor());
         FontColorChooser.setBackground(tmp_fontColor);
         FontColorChooser.setForeground(tmp_fontColor);
 
-        Color tmp_searchBarFontColor = new Color(AllConfigs.getInstance().getSearchBarFontColor());
+        Color tmp_searchBarFontColor = new Color(allConfigs.getSearchBarFontColor());
         SearchBarFontColorChooser.setBackground(tmp_searchBarFontColor);
         SearchBarFontColorChooser.setForeground(tmp_searchBarFontColor);
 
-        Color tmp_borderColor = new Color(AllConfigs.getInstance().getBorderColor());
+        Color tmp_borderColor = new Color(allConfigs.getBorderColor());
         borderColorChooser.setBackground(tmp_borderColor);
         borderColorChooser.setForeground(tmp_borderColor);
     }
 
     private void setCheckBoxGui() {
-        checkBoxLoseFocus.setSelected(AllConfigs.getInstance().isLoseFocusClose());
-        checkBoxAddToStartup.setSelected(AllConfigs.getInstance().hasStartup());
-        checkBoxAdmin.setSelected(AllConfigs.getInstance().isDefaultAdmin());
-        checkBoxIsShowTipOnCreatingLnk.setSelected(AllConfigs.getInstance().isShowTipOnCreatingLnk());
+        checkBoxLoseFocus.setSelected(allConfigs.isLoseFocusClose());
+        checkBoxAddToStartup.setSelected(allConfigs.hasStartup());
+        checkBoxAdmin.setSelected(allConfigs.isDefaultAdmin());
+        checkBoxIsShowTipOnCreatingLnk.setSelected(allConfigs.isShowTipOnCreatingLnk());
     }
 
     private void setListGui() {
-        listCmds.setListData(AllConfigs.getInstance().getCmdSet().toArray());
+        listCmds.setListData(allConfigs.getCmdSet().toArray());
         listLanguage.setListData(translateUtil.getLanguageSet().toArray());
         listLanguage.setSelectedValue(translateUtil.getLanguage(), true);
         Object[] plugins = PluginUtil.getInstance().getPluginNameArray();
@@ -1040,7 +1044,7 @@ public class SettingsFrame {
             list.add(each.toString());
         }
         listSwingThemes.setListData(list.toArray());
-        listSwingThemes.setSelectedValue(AllConfigs.getInstance().getSwingTheme(), true);
+        listSwingThemes.setSelectedValue(allConfigs.getSwingTheme(), true);
     }
 
     private void initGUI() {
@@ -1053,7 +1057,7 @@ public class SettingsFrame {
 
         buttonUpdatePlugin.setVisible(false);
 
-        if (AllConfigs.getInstance().getProxyType() == Enums.ProxyType.PROXY_DIRECT) {
+        if (allConfigs.getProxyType() == Enums.ProxyType.PROXY_DIRECT) {
             radioButtonNoProxy.setSelected(true);
             radioButtonUseProxy.setSelected(false);
             radioButtonProxyTypeHttp.setEnabled(false);
@@ -1073,7 +1077,7 @@ public class SettingsFrame {
             textFieldPassword.setEnabled(true);
             selectProxyType();
         }
-        chooseUpdateAddress.setSelectedItem(AllConfigs.getInstance().getUpdateAddress());
+        chooseUpdateAddress.setSelectedItem(allConfigs.getUpdateAddress());
     }
 
     private void initCacheArray() {
@@ -1090,7 +1094,7 @@ public class SettingsFrame {
     }
 
     private void selectProxyType() {
-        if (AllConfigs.getInstance().getProxyType() == Enums.ProxyType.PROXY_SOCKS) {
+        if (allConfigs.getProxyType() == Enums.ProxyType.PROXY_SOCKS) {
             radioButtonProxyTypeSocks5.setSelected(true);
         } else {
             radioButtonProxyTypeHttp.setSelected(true);
@@ -1112,9 +1116,9 @@ public class SettingsFrame {
         proxyTypeButtonGroup.add(radioButtonProxyTypeHttp);
         proxyTypeButtonGroup.add(radioButtonProxyTypeSocks5);
 
-        tmp_openLastFolderKeyCode = AllConfigs.getInstance().getOpenLastFolderKeyCode();
-        tmp_runAsAdminKeyCode = AllConfigs.getInstance().getRunAsAdminKeyCode();
-        tmp_copyPathKeyCode = AllConfigs.getInstance().getCopyPathKeyCode();
+        tmp_openLastFolderKeyCode = allConfigs.getOpenLastFolderKeyCode();
+        tmp_runAsAdminKeyCode = allConfigs.getRunAsAdminKeyCode();
+        tmp_copyPathKeyCode = allConfigs.getCopyPathKeyCode();
 
         addUpdateAddressToComboBox();
 
@@ -1219,7 +1223,7 @@ public class SettingsFrame {
     private void addShowDownloadProgressTask(JLabel label, JButton button, String fileName) {
         try {
             String originString = button.getText();
-            while (EventUtil.getInstance().isNotMainExit()) {
+            while (eventUtil.isNotMainExit()) {
                 checkDownloadTask(label, button, fileName, originString, "update");
                 TimeUnit.MILLISECONDS.sleep(200);
             }
@@ -1228,14 +1232,14 @@ public class SettingsFrame {
     }
 
     private void initThreadPool() {
-        CachedThreadPoolUtil.getInstance().executeTask(() ->
+        cachedThreadPoolUtil.executeTask(() ->
                 addShowDownloadProgressTask(labelDownloadProgress, buttonCheckUpdate, AllConfigs.FILE_NAME));
 
-        CachedThreadPoolUtil.getInstance().executeTask(() -> {
+        cachedThreadPoolUtil.executeTask(() -> {
             try {
                 String fileName;
                 String originString = buttonUpdatePlugin.getText();
-                while (EventUtil.getInstance().isNotMainExit()) {
+                while (eventUtil.isNotMainExit()) {
                     if (isUpdateButtonPluginString) {
                         isUpdateButtonPluginString = false;
                         originString = buttonUpdatePlugin.getText();
@@ -1305,7 +1309,7 @@ public class SettingsFrame {
                 "by the software and will be displayed first when searching."));
         labelSearchBarFontColor.setText(translateUtil.getTranslation("SearchBar Font Color:"));
         labelBorderColor.setText(translateUtil.getTranslation("Border Color:"));
-        labelCurrentCacheNum.setText(translateUtil.getTranslation("Current Caches Num:") + AllConfigs.getInstance().getCacheNum());
+        labelCurrentCacheNum.setText(translateUtil.getTranslation("Current Caches Num:") + allConfigs.getCacheNum());
         labelUninstallPluginTip.setText(translateUtil.getTranslation("If you need to delete a plug-in, just delete it under the \"plugins\" folder in the software directory."));
         labelUninstallPluginTip2.setText(translateUtil.getTranslation("Tip:"));
         chooseUpdateAddressLabel.setText(translateUtil.getTranslation("Choose update address"));
@@ -1354,7 +1358,7 @@ public class SettingsFrame {
 
     private boolean isRepeatCommand(String name) {
         name = ":" + name;
-        for (String each : AllConfigs.getInstance().getCmdSet()) {
+        for (String each : allConfigs.getCmdSet()) {
             if (each.substring(0, each.indexOf(";")).equals(name)) {
                 return true;
             }
@@ -1384,8 +1388,8 @@ public class SettingsFrame {
         if (downloadStatus != Enums.DownloadStatus.DOWNLOAD_DOWNLOADING) {
             String url = getUpdateUrl();
             if (url != null) {
-                EventUtil.getInstance().putEvent(new StartDownloadEvent(
-                        url, "version.json", AllConfigs.getInstance().getTmp().getAbsolutePath()));
+                eventUtil.putEvent(new StartDownloadEvent(
+                        url, "version.json", allConfigs.getTmp().getAbsolutePath()));
                 int count = 0;
                 boolean isError = false;
                 //wait for task
@@ -1418,7 +1422,7 @@ public class SettingsFrame {
         try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream("user/cmds.txt"), StandardCharsets.UTF_8))) {
             String each;
             while ((each = br.readLine()) != null) {
-                AllConfigs.getInstance().addToCmdSet(each);
+                allConfigs.addToCmdSet(each);
             }
         } catch (IOException ignored) {
         }
@@ -1429,7 +1433,6 @@ public class SettingsFrame {
     }
 
     public static void registerEventHandler() {
-        EventUtil eventUtil = EventUtil.getInstance();
         eventUtil.register(ShowSettingsFrameEvent.class, new EventHandler() {
             @Override
             public void todo(Event event) {
@@ -1464,7 +1467,7 @@ public class SettingsFrame {
         tabbedPane.setSelectedIndex(0);
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
-        EventUtil.getInstance().putEvent(new SetDefaultSwingLaf());
+        eventUtil.putEvent(new SetDefaultSwingLaf());
     }
 
     private void checkUpdateTimeLimit(StringBuilder strBuilder) {
@@ -1660,72 +1663,72 @@ public class SettingsFrame {
         String tmp_proxyPassword = textFieldPassword.getText();
 
         setStartup(checkBoxAddToStartup.isSelected());
-        AllConfigs.getInstance().allowChangeSettings();
+        allConfigs.allowChangeSettings();
 
         if (radioButtonProxyTypeSocks5.isSelected()) {
-            AllConfigs.getInstance().setProxyType(Enums.ProxyType.PROXY_SOCKS);
+            allConfigs.setProxyType(Enums.ProxyType.PROXY_SOCKS);
         } else if (radioButtonProxyTypeHttp.isSelected()) {
-            AllConfigs.getInstance().setProxyType(Enums.ProxyType.PROXY_HTTP);
+            allConfigs.setProxyType(Enums.ProxyType.PROXY_HTTP);
         }
         if (radioButtonNoProxy.isSelected()) {
-            AllConfigs.getInstance().setProxyType(Enums.ProxyType.PROXY_DIRECT);
+            allConfigs.setProxyType(Enums.ProxyType.PROXY_DIRECT);
         }
-        AllConfigs.getInstance().setUpdateAddress((String) chooseUpdateAddress.getSelectedItem());
-        AllConfigs.getInstance().setPriorityFolder(textFieldPriorityFolder.getText());
-        AllConfigs.getInstance().setHotkey(textFieldHotkey.getText());
-        AllConfigs.getInstance().setCacheNumLimit(Integer.parseInt(textFieldCacheNum.getText()));
-        AllConfigs.getInstance().setUpdateTimeLimit(Integer.parseInt(textFieldUpdateInterval.getText()));
-        AllConfigs.getInstance().setIgnorePath(ignorePathTemp);
-        AllConfigs.getInstance().setSearchDepth(Integer.parseInt(textFieldSearchDepth.getText()));
-        AllConfigs.getInstance().setIsDefaultAdmin(checkBoxAdmin.isSelected());
-        AllConfigs.getInstance().setIsLoseFocusClose(checkBoxLoseFocus.isSelected());
-        AllConfigs.getInstance().setIsShowTipCreatingLnk(checkBoxIsShowTipOnCreatingLnk.isSelected());
-        AllConfigs.getInstance().setTransparency(Float.parseFloat(textFieldTransparency.getText()));
-        AllConfigs.getInstance().setLabelColor(Integer.parseInt(textFieldLabelColor.getText(), 16));
-        AllConfigs.getInstance().setBorderColor(Integer.parseInt(textFieldBorderColor.getText(), 16));
-        AllConfigs.getInstance().setDefaultBackgroundColor(Integer.parseInt(textFieldBackgroundDefault.getText(), 16));
-        AllConfigs.getInstance().setSearchBarColor(Integer.parseInt(textFieldSearchBarColor.getText(), 16));
-        AllConfigs.getInstance().setLabelFontColorWithCoverage(Integer.parseInt(textFieldFontColorWithCoverage.getText(), 16));
-        AllConfigs.getInstance().setLabelFontColor(Integer.parseInt(textFieldFontColor.getText(), 16));
-        AllConfigs.getInstance().setSearchBarFontColor(Integer.parseInt(textFieldSearchBarFontColor.getText(), 16));
-        AllConfigs.getInstance().setProxyAddress(tmp_proxyAddress);
-        AllConfigs.getInstance().setProxyPort(Integer.parseInt(textFieldPort.getText()));
-        AllConfigs.getInstance().setProxyUserName(tmp_proxyUserName);
-        AllConfigs.getInstance().setProxyPassword(tmp_proxyPassword);
-        AllConfigs.getInstance().setOpenLastFolderKeyCode(tmp_openLastFolderKeyCode);
-        AllConfigs.getInstance().setRunAsAdminKeyCode(tmp_runAsAdminKeyCode);
-        AllConfigs.getInstance().setCopyPathKeyCode(tmp_copyPathKeyCode);
-        AllConfigs.getInstance().setSwingTheme(swingTheme);
+        allConfigs.setUpdateAddress((String) chooseUpdateAddress.getSelectedItem());
+        allConfigs.setPriorityFolder(textFieldPriorityFolder.getText());
+        allConfigs.setHotkey(textFieldHotkey.getText());
+        allConfigs.setCacheNumLimit(Integer.parseInt(textFieldCacheNum.getText()));
+        allConfigs.setUpdateTimeLimit(Integer.parseInt(textFieldUpdateInterval.getText()));
+        allConfigs.setIgnorePath(ignorePathTemp);
+        allConfigs.setSearchDepth(Integer.parseInt(textFieldSearchDepth.getText()));
+        allConfigs.setIsDefaultAdmin(checkBoxAdmin.isSelected());
+        allConfigs.setIsLoseFocusClose(checkBoxLoseFocus.isSelected());
+        allConfigs.setIsShowTipCreatingLnk(checkBoxIsShowTipOnCreatingLnk.isSelected());
+        allConfigs.setTransparency(Float.parseFloat(textFieldTransparency.getText()));
+        allConfigs.setLabelColor(Integer.parseInt(textFieldLabelColor.getText(), 16));
+        allConfigs.setBorderColor(Integer.parseInt(textFieldBorderColor.getText(), 16));
+        allConfigs.setDefaultBackgroundColor(Integer.parseInt(textFieldBackgroundDefault.getText(), 16));
+        allConfigs.setSearchBarColor(Integer.parseInt(textFieldSearchBarColor.getText(), 16));
+        allConfigs.setLabelFontColorWithCoverage(Integer.parseInt(textFieldFontColorWithCoverage.getText(), 16));
+        allConfigs.setLabelFontColor(Integer.parseInt(textFieldFontColor.getText(), 16));
+        allConfigs.setSearchBarFontColor(Integer.parseInt(textFieldSearchBarFontColor.getText(), 16));
+        allConfigs.setProxyAddress(tmp_proxyAddress);
+        allConfigs.setProxyPort(Integer.parseInt(textFieldPort.getText()));
+        allConfigs.setProxyUserName(tmp_proxyUserName);
+        allConfigs.setProxyPassword(tmp_proxyPassword);
+        allConfigs.setOpenLastFolderKeyCode(tmp_openLastFolderKeyCode);
+        allConfigs.setRunAsAdminKeyCode(tmp_runAsAdminKeyCode);
+        allConfigs.setCopyPathKeyCode(tmp_copyPathKeyCode);
+        allConfigs.setSwingTheme(swingTheme);
 
-        AllConfigs.getInstance().denyChangeSettings();
+        allConfigs.denyChangeSettings();
 
         SaveConfigsEvent event = new SaveConfigsEvent();
-        EventUtil.getInstance().putEvent(event);
-        EventUtil.getInstance().waitForEvent(event);
-        EventUtil.getInstance().putEvent(new SetConfigsEvent());
+        eventUtil.putEvent(event);
+        eventUtil.waitForEvent(event);
+        eventUtil.putEvent(new SetConfigsEvent());
 
-        Color tmp_color = new Color(AllConfigs.getInstance().getLabelColor());
+        Color tmp_color = new Color(allConfigs.getLabelColor());
         labelColorChooser.setBackground(tmp_color);
         labelColorChooser.setForeground(tmp_color);
-        tmp_color = new Color(AllConfigs.getInstance().getDefaultBackgroundColor());
+        tmp_color = new Color(allConfigs.getDefaultBackgroundColor());
         defaultBackgroundChooser.setBackground(tmp_color);
         defaultBackgroundChooser.setForeground(tmp_color);
-        tmp_color = new Color(AllConfigs.getInstance().getLabelFontColorWithCoverage());
+        tmp_color = new Color(allConfigs.getLabelFontColorWithCoverage());
         FontColorWithCoverageChooser.setBackground(tmp_color);
         FontColorWithCoverageChooser.setForeground(tmp_color);
-        tmp_color = new Color(AllConfigs.getInstance().getLabelFontColor());
+        tmp_color = new Color(allConfigs.getLabelFontColor());
         FontColorChooser.setBackground(tmp_color);
         FontColorChooser.setForeground(tmp_color);
-        tmp_color = new Color(AllConfigs.getInstance().getSearchBarFontColor());
+        tmp_color = new Color(allConfigs.getSearchBarFontColor());
         SearchBarFontColorChooser.setBackground(tmp_color);
         SearchBarFontColorChooser.setForeground(tmp_color);
-        tmp_color = new Color(AllConfigs.getInstance().getBorderColor());
+        tmp_color = new Color(allConfigs.getBorderColor());
         borderColorChooser.setBackground(tmp_color);
         borderColorChooser.setForeground(tmp_color);
 
         //保存自定义命令
         StringBuilder strb = new StringBuilder();
-        for (String each : AllConfigs.getInstance().getCmdSet()) {
+        for (String each : allConfigs.getCmdSet()) {
             strb.append(each);
             strb.append("\n");
         }
