@@ -2,7 +2,6 @@ package FileEngine.frames;
 
 import FileEngine.configs.AllConfigs;
 import FileEngine.configs.Enums;
-import FileEngine.utils.download.DownloadUtil;
 import FileEngine.eventHandler.Event;
 import FileEngine.eventHandler.EventHandler;
 import FileEngine.eventHandler.EventUtil;
@@ -11,9 +10,10 @@ import FileEngine.eventHandler.impl.download.StartDownloadEvent;
 import FileEngine.eventHandler.impl.download.StopDownloadEvent;
 import FileEngine.eventHandler.impl.frame.pluginMarket.HidePluginMarketEvent;
 import FileEngine.eventHandler.impl.frame.pluginMarket.ShowPluginMarket;
-import FileEngine.utils.pluginSystem.PluginUtil;
 import FileEngine.utils.CachedThreadPoolUtil;
 import FileEngine.utils.TranslateUtil;
+import FileEngine.utils.download.DownloadUtil;
+import FileEngine.utils.pluginSystem.PluginUtil;
 import com.alibaba.fastjson.JSONObject;
 
 import javax.imageio.ImageIO;
@@ -50,9 +50,7 @@ public class PluginMarket {
     private JPanel panel;
     private JLabel labelProgress;
     private final JFrame frame = new JFrame("Plugin Market");
-    private volatile String searchKeywords;
     private final HashMap<String, String> NAME_PLUGIN_INFO_URL_MAP = new HashMap<>();
-    private volatile boolean isStartSearch = false;
 
     private PluginMarket() {
         addSelectPluginOnListListener();
@@ -84,31 +82,6 @@ public class PluginMarket {
                     }
                 }
             } catch (InterruptedException | IOException ignored) {
-            }
-        });
-
-        CachedThreadPoolUtil.getInstance().executeTask(() -> {
-            HashSet<String> pluginSet = new HashSet<>();
-            try {
-                while (EventUtil.getInstance().isNotMainExit()) {
-                    TimeUnit.MILLISECONDS.sleep(100);
-                    if (isStartSearch) {
-                        isStartSearch = false;
-                        if (searchKeywords == null || searchKeywords.isEmpty()) {
-                            listPlugins.setListData(NAME_PLUGIN_INFO_URL_MAP.keySet().toArray());
-                        } else {
-                            pluginSet.clear();
-                            for (String each : NAME_PLUGIN_INFO_URL_MAP.keySet()) {
-                                if (each.toLowerCase().contains(searchKeywords.toLowerCase())) {
-                                    pluginSet.add(each);
-                                }
-                            }
-                            listPlugins.setListData(pluginSet.toArray());
-                        }
-                    }
-                    TimeUnit.MILLISECONDS.sleep(100);
-                }
-            } catch (InterruptedException ignored) {
             }
         });
     }
@@ -239,17 +212,47 @@ public class PluginMarket {
     }
 
     private void addSearchPluginListener() {
+        AtomicBoolean isStartSearch = new AtomicBoolean(false);
+        final String[] searchKeywords = new String[1];
+
+        CachedThreadPoolUtil.getInstance().executeTask(() -> {
+            try {
+                String tmp;
+                HashSet<String> pluginSet = new HashSet<>();
+                EventUtil eventUtil = EventUtil.getInstance();
+
+                while (eventUtil.isNotMainExit()) {
+                    if (isStartSearch.get()) {
+                        isStartSearch.set(false);
+                        if ((tmp = searchKeywords[0]) == null || tmp.isEmpty()) {
+                            listPlugins.setListData(NAME_PLUGIN_INFO_URL_MAP.keySet().toArray());
+                        } else {
+                            pluginSet.clear();
+                            for (String each : NAME_PLUGIN_INFO_URL_MAP.keySet()) {
+                                if (each.toLowerCase().contains(tmp.toLowerCase())) {
+                                    pluginSet.add(each);
+                                }
+                            }
+                            listPlugins.setListData(pluginSet.toArray());
+                        }
+                    }
+                    TimeUnit.MILLISECONDS.sleep(100);
+                }
+            } catch (InterruptedException ignored) {
+            }
+        });
+
         textFieldSearchPlugin.getDocument().addDocumentListener(new DocumentListener() {
             @Override
             public void insertUpdate(DocumentEvent e) {
-                searchKeywords = textFieldSearchPlugin.getText();
-                isStartSearch = true;
+                searchKeywords[0] = textFieldSearchPlugin.getText();
+                isStartSearch.set(true);
             }
 
             @Override
             public void removeUpdate(DocumentEvent e) {
-                searchKeywords = textFieldSearchPlugin.getText();
-                isStartSearch = true;
+                searchKeywords[0] = textFieldSearchPlugin.getText();
+                isStartSearch.set(true);
             }
 
             @Override
