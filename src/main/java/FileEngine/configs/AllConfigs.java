@@ -49,13 +49,13 @@ public class AllConfigs {
 
     private static final int allSetMethodsNum = 27;
 
-    public static final int defaultLabelColor = 0xcccccc;
-    public static final int defaultWindowBackgroundColor = 0x333333;
-    public static final int defaultBorderColor = 0xcccccc;
-    public static final int defaultFontColor = 0xcccccc;
-    public static final int defaultFontColorWithCoverage = 0;
-    public static final int defaultSearchbarColor = 0x333333;
-    public static final int defaultSearchbarFontColor = 0xffffff;
+    public static final int defaultLabelColor = 16777215;
+    public static final int defaultWindowBackgroundColor = 13421772;
+    public static final int defaultBorderColor = 13421772;
+    public static final int defaultFontColor = 0;
+    public static final int defaultFontColorWithCoverage = 10066431;
+    public static final int defaultSearchbarColor = 13421772;
+    public static final int defaultSearchbarFontColor = 0;
 
     private static volatile int cacheNumLimit;
     private static volatile boolean isShowTipCreatingLnk;
@@ -142,7 +142,7 @@ public class AllConfigs {
                 return each;
             }
         }
-        return Enums.SwingThemes.CoreFlatDarculaLaf;
+        return Enums.SwingThemes.MaterialLighter;
     }
 
     public boolean isShowTipOnCreatingLnk() {
