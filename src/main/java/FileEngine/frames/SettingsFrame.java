@@ -867,6 +867,7 @@ public class SettingsFrame {
 
                 while (eventUtil.isNotMainExit()) {
                     if (isStart.get()) {
+                        isStart.set(false);
                         if ((tmp = searchText[0]) == null || tmp.isEmpty()) {
                             listCmds.setListData(allConfigs.getCmdSet().toArray());
                         } else {
@@ -1324,7 +1325,7 @@ public class SettingsFrame {
             String originString = button.getText();
             while (eventUtil.isNotMainExit()) {
                 checkDownloadTask(label, button, fileName, originString, "update");
-                TimeUnit.MILLISECONDS.sleep(200);
+                TimeUnit.MILLISECONDS.sleep(50);
             }
         } catch (InterruptedException | IOException ignored) {
         }
@@ -1346,7 +1347,7 @@ public class SettingsFrame {
                         fileName = (String) listPlugins.getSelectedValue();
                         checkDownloadTask(labelProgress, buttonUpdatePlugin, fileName + ".jar", originString, "updatePlugin");
                     }
-                    TimeUnit.MILLISECONDS.sleep(200);
+                    TimeUnit.MILLISECONDS.sleep(50);
                 }
             } catch (InterruptedException | IOException ignored) {
             }
