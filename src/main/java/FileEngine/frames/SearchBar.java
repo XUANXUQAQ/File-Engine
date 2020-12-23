@@ -2910,8 +2910,6 @@ public class SearchBar {
                 } else {
                     if (isResultFromCache) {
                         EventUtil.getInstance().putEvent(new DeleteFromCacheEvent(path));
-                    } else {
-                        EventUtil.getInstance().putEvent(new DeleteFromDatabaseEvent(path));
                     }
                 }
             }
