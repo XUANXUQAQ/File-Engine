@@ -1,9 +1,17 @@
 package FileEngine.eventHandler.impl.database;
 
-public class AddToDatabaseEvent extends DatabaseEvent {
+import java.util.LinkedHashSet;
 
-    public AddToDatabaseEvent(String path) {
-        super(path);
+public class AddToDatabaseEvent extends DatabaseEvent {
+    private final LinkedHashSet<String> paths;
+
+    public Object[] getPaths() {
+        return paths.toArray();
+    }
+
+    public AddToDatabaseEvent(LinkedHashSet<String> paths) {
+        super(null);
+        this.paths = paths;
         this.setBlock();
     }
 }

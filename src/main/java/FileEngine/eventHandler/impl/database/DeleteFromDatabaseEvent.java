@@ -1,9 +1,17 @@
 package FileEngine.eventHandler.impl.database;
 
-public class DeleteFromDatabaseEvent extends DatabaseEvent {
+import java.util.LinkedHashSet;
 
-    public DeleteFromDatabaseEvent(String path) {
-        super(path);
+public class DeleteFromDatabaseEvent extends DatabaseEvent {
+    private final LinkedHashSet<String> paths;
+
+    public Object[] getPaths() {
+        return paths.toArray();
+    }
+
+    public DeleteFromDatabaseEvent(LinkedHashSet<String> paths) {
+        super(null);
+        this.paths = paths;
         this.setBlock();
     }
 }
