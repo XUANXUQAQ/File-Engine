@@ -158,32 +158,33 @@ public class EventUtil {
         for (int i = 0; i < 4; i++) {
             cachedThreadPoolUtil.executeTask(() -> {
                 try {
+                    final boolean isDebug = IsDebug.isDebug();
                     Event event;
                     while (isEventHandlerNotExit()) {
                         //取出任务
                         if ((event = asyncEventQueue.poll()) != null) {
                             //判断任务是否执行完成或者失败
-                            if (!event.isFinished() && !event.isFailed()) {
+                            if (event.isFinished() || event.isFailed()) {
+                                continue;
+                            } else if (event.getExecuteTimes() < MAX_TASK_RETRY_TIME) {
                                 //判断是否超过最大次数
-                                if (event.getExecuteTimes() < MAX_TASK_RETRY_TIME) {
-                                    if (IsDebug.isDebug()) {
-                                        System.err.println("异步线程正在尝试执行任务---" + event.toString());
-                                    }
-                                    if (executeTaskFailed(event)) {
-                                        System.err.println("异步任务执行失败---" + event.toString());
-                                        asyncEventQueue.add(event);
-                                    }
-                                } else {
-                                    event.setFailed();
-                                    if (IsDebug.isDebug()) {
-                                        System.err.println("任务超时---" + event.toString());
-                                    }
+                                if (isDebug) {
+                                    System.err.println("异步线程正在尝试执行任务---" + event.toString());
+                                }
+                                if (executeTaskFailed(event)) {
+                                    System.err.println("异步任务执行失败---" + event.toString());
+                                    asyncEventQueue.add(event);
+                                }
+                            } else {
+                                event.setFailed();
+                                if (isDebug) {
+                                    System.err.println("任务超时---" + event.toString());
                                 }
                             }
                         }
                         TimeUnit.MILLISECONDS.sleep(5);
                     }
-                    if (IsDebug.isDebug()) {
+                    if (isDebug) {
                         System.err.println("******异步任务执行线程退出******");
                     }
                 } catch (InterruptedException ignored) {
@@ -200,6 +201,7 @@ public class EventUtil {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             try {
                 Event event;
+                final boolean isDebug = IsDebug.isDebug();
                 while (isEventHandlerNotExit()) {
                     //取出任务
                     if ((event = eventQueue.poll()) != null) {
@@ -207,7 +209,7 @@ public class EventUtil {
                         if (!event.isFinished() && !event.isFailed()) {
                             //判断任务是否超过最大执行次数
                             if (event.getExecuteTimes() < MAX_TASK_RETRY_TIME) {
-                                if (IsDebug.isDebug()) {
+                                if (isDebug) {
                                     System.err.println("同步线程正在尝试执行任务---" + event.toString());
                                 }
                                 if (executeTaskFailed(event)) {
@@ -216,7 +218,7 @@ public class EventUtil {
                                 }
                             } else {
                                 event.setFailed();
-                                if (IsDebug.isDebug()) {
+                                if (isDebug) {
                                     System.err.println("任务超时---" + event.toString());
                                 }
                             }
@@ -224,7 +226,7 @@ public class EventUtil {
                     }
                     TimeUnit.MILLISECONDS.sleep(5);
                 }
-                if (IsDebug.isDebug()) {
+                if (isDebug) {
                     System.err.println("******同步任务执行线程退出******");
                 }
             } catch (InterruptedException ignored) {

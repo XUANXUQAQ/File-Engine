@@ -56,16 +56,16 @@ import java.util.regex.Pattern;
 
 
 public class SearchBar {
-    private static volatile boolean isCacheAndPrioritySearched = false;
-    private static volatile boolean isStartSearchLocal = false;
-    private static volatile boolean isLockMouseMotion = false;
-    private static volatile boolean isOpenLastFolderPressed = false;
-    private static volatile boolean isRunAsAdminPressed = false;
-    private static volatile boolean isCopyPathPressed = false;
-    private static volatile boolean startSignal = false;
-    private static volatile boolean isUserPressed = false;
-    private static volatile boolean isMouseDraggedInWindow = false;
-    private static volatile boolean isPreviewMode = false;
+    private final AtomicBoolean isCacheAndPrioritySearched = new AtomicBoolean(false);
+    private final AtomicBoolean isStartSearchLocal = new AtomicBoolean(false);
+    private final AtomicBoolean isLockMouseMotion = new AtomicBoolean(false);
+    private final AtomicBoolean isOpenLastFolderPressed = new AtomicBoolean(false);
+    private final AtomicBoolean isRunAsAdminPressed = new AtomicBoolean(false);
+    private final AtomicBoolean isCopyPathPressed = new AtomicBoolean(false);
+    private final AtomicBoolean startSignal = new AtomicBoolean(false);
+    private final AtomicBoolean isUserPressed = new AtomicBoolean(false);
+    private final AtomicBoolean isMouseDraggedInWindow = new AtomicBoolean(false);
+    private static final AtomicBoolean isPreviewMode = new AtomicBoolean(false);
     private Border border;
     private final JFrame searchBar;
     private final JLabel label1;
@@ -83,7 +83,7 @@ public class SearchBar {
     private Color fontColorWithCoverage;
     private Color labelFontColor;
     private volatile long startTime = 0;
-    private volatile boolean isWaiting = false;
+    private final AtomicBoolean isWaiting = new AtomicBoolean(false);
     private final Pattern semicolon;
     private final Pattern colon;
     private final Pattern slash;
@@ -210,7 +210,7 @@ public class SearchBar {
             public void focusLost(FocusEvent e) {
                 if (System.currentTimeMillis() - visibleStartTime > 500) {
                     if (showingMode == Enums.ShowingSearchBarMode.NORMAL_SHOWING && AllConfigs.getInstance().isLoseFocusClose()) {
-                        if (!isPreviewMode) {
+                        if (!isPreviewMode.get()) {
                             closeSearchBar();
                         }
                     } else if (showingMode == Enums.ShowingSearchBarMode.EXPLORER_ATTACH) {
@@ -345,12 +345,12 @@ public class SearchBar {
                             String res = listResults.get(currentResultCount.get());
                             if (runningMode == Enums.RunningMode.NORMAL_MODE) {
                                 if (showingMode == Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
-                                    if (isOpenLastFolderPressed) {
+                                    if (isOpenLastFolderPressed.get()) {
                                         //打开上级文件夹
                                         openFolderByExplorer(res);
-                                    } else if (AllConfigs.getInstance().isDefaultAdmin() || isRunAsAdminPressed) {
+                                    } else if (AllConfigs.getInstance().isDefaultAdmin() || isRunAsAdminPressed.get()) {
                                         openWithAdmin(res);
-                                    } else if (isCopyPathPressed) {
+                                    } else if (isCopyPathPressed.get()) {
                                         copyToClipBoard(res, true);
                                     } else {
                                         openWithoutAdmin(res);
@@ -368,12 +368,12 @@ public class SearchBar {
                                     return;
                                 }
                                 File open = new File(commandInfo[1]);
-                                if (isOpenLastFolderPressed) {
+                                if (isOpenLastFolderPressed.get()) {
                                     //打开上级文件夹
                                     openFolderByExplorer(open.getAbsolutePath());
-                                } else if (AllConfigs.getInstance().isDefaultAdmin() || isRunAsAdminPressed) {
+                                } else if (AllConfigs.getInstance().isDefaultAdmin() || isRunAsAdminPressed.get()) {
                                     openWithAdmin(open.getAbsolutePath());
-                                } else if (isCopyPathPressed) {
+                                } else if (isCopyPathPressed.get()) {
                                     copyToClipBoard(open.getAbsolutePath(), true);
                                 } else {
                                     openWithoutAdmin(open.getAbsolutePath());
@@ -395,8 +395,8 @@ public class SearchBar {
 
             @Override
             public void mouseReleased(MouseEvent e) {
-                if (isMouseDraggedInWindow) {
-                    isMouseDraggedInWindow = false;
+                if (isMouseDraggedInWindow.get()) {
+                    isMouseDraggedInWindow.set(false);
                     GetHandle.INSTANCE.setExplorerPath();
                     if (IsDebug.isDebug()) {
                         Point point = java.awt.MouseInfo.getPointerInfo().getLocation();
@@ -448,6 +448,7 @@ public class SearchBar {
     //在explorer attach模式时操作鼠标和键盘以快速跳转到文件位置
     private void quickJump(String result) {
         int x, y;
+        RobotUtil robotUtil = RobotUtil.getInstance();
         Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
         Transferable originalData = clipboard.getContents(null);
         if (isFile(result)) {
@@ -456,9 +457,9 @@ public class SearchBar {
         copyToClipBoard(result, false);
         x = GetHandle.INSTANCE.getToolbarClickX();
         y = GetHandle.INSTANCE.getToolbarClickY();
-        RobotUtil.getInstance().mouseClicked(x, y, 1, InputEvent.BUTTON1_MASK);
-        RobotUtil.getInstance().keyTyped(KeyEvent.VK_CONTROL, KeyEvent.VK_V);
-        RobotUtil.getInstance().keyTyped(KeyEvent.VK_ENTER);
+        robotUtil.mouseClicked(x, y, 1, InputEvent.BUTTON1_MASK);
+        robotUtil.keyTyped(KeyEvent.VK_CONTROL, KeyEvent.VK_V);
+        robotUtil.keyTyped(KeyEvent.VK_ENTER);
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             try {
                 //保证在执行粘贴操作时不会被提前恢复数据
@@ -517,7 +518,7 @@ public class SearchBar {
                             isFirstPress = false;
                             if (isLabelNotEmpty(label1) && isLabelNotEmpty(label2) && isLabelNotEmpty(label3) && isLabelNotEmpty(label4)
                                     && isLabelNotEmpty(label5) && isLabelNotEmpty(label6) && isLabelNotEmpty(label7) && isLabelNotEmpty(label8)) {
-                                isUserPressed = true;
+                                isUserPressed.set(true);
                             }
 
                             if (!getTextFieldText().isEmpty()) {
@@ -539,7 +540,7 @@ public class SearchBar {
                             isFirstPress = false;
                             if (isLabelNotEmpty(label1) && isLabelNotEmpty(label2) && isLabelNotEmpty(label3) && isLabelNotEmpty(label4)
                                     && isLabelNotEmpty(label5) && isLabelNotEmpty(label6) && isLabelNotEmpty(label7) && isLabelNotEmpty(label8)) {
-                                isUserPressed = true;
+                                isUserPressed.set(true);
                             }
                             boolean isNextLabelValid = isNextLabelValid();
                             if (isNextLabelValid) {
@@ -569,19 +570,19 @@ public class SearchBar {
                                 String res = listResults.get(currentResultCount.get());
                                 if (runningMode == Enums.RunningMode.NORMAL_MODE) {
                                     if (showingMode == Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
-                                        if (isOpenLastFolderPressed) {
+                                        if (isOpenLastFolderPressed.get()) {
                                             //打开上级文件夹
                                             openFolderByExplorer(res);
-                                        } else if (AllConfigs.getInstance().isDefaultAdmin() || isRunAsAdminPressed) {
+                                        } else if (AllConfigs.getInstance().isDefaultAdmin() || isRunAsAdminPressed.get()) {
                                             openWithAdmin(res);
-                                        } else if (isCopyPathPressed) {
+                                        } else if (isCopyPathPressed.get()) {
                                             copyToClipBoard(res, true);
                                         } else {
                                             openWithoutAdmin(res);
                                         }
                                         saveCache(res);
                                     } else if (showingMode == Enums.ShowingSearchBarMode.EXPLORER_ATTACH) {
-                                        if (isCopyPathPressed) {
+                                        if (isCopyPathPressed.get()) {
                                             copyToClipBoard(res, true);
                                         } else {
                                             quickJump(res);
@@ -598,12 +599,12 @@ public class SearchBar {
                                         return;
                                     }
                                     File open = new File(commandInfo[1]);
-                                    if (isOpenLastFolderPressed) {
+                                    if (isOpenLastFolderPressed.get()) {
                                         //打开上级文件夹
                                         openFolderByExplorer(open.getAbsolutePath());
-                                    } else if (AllConfigs.getInstance().isDefaultAdmin() || isRunAsAdminPressed) {
+                                    } else if (AllConfigs.getInstance().isDefaultAdmin() || isRunAsAdminPressed.get()) {
                                         openWithAdmin(open.getAbsolutePath());
-                                    } else if (isCopyPathPressed) {
+                                    } else if (isCopyPathPressed.get()) {
                                         copyToClipBoard(open.getAbsolutePath(), true);
                                     } else {
                                         openWithoutAdmin(open.getAbsolutePath());
@@ -614,12 +615,12 @@ public class SearchBar {
                         }
                     } else if (AllConfigs.getInstance().getOpenLastFolderKeyCode() == key) {
                         //打开上级文件夹热键被点击
-                        isOpenLastFolderPressed = true;
+                        isOpenLastFolderPressed.set(true);
                     } else if (AllConfigs.getInstance().getRunAsAdminKeyCode() == key) {
                         //以管理员方式运行热键被点击
-                        isRunAsAdminPressed = true;
+                        isRunAsAdminPressed.set(true);
                     } else if (AllConfigs.getInstance().getCopyPathKeyCode() == key) {
-                        isCopyPathPressed = true;
+                        isCopyPathPressed.set(true);
                     }
                 }
                 if (showingMode == Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
@@ -643,11 +644,11 @@ public class SearchBar {
                 int key = arg0.getKeyCode();
                 if (AllConfigs.getInstance().getOpenLastFolderKeyCode() == key) {
                     //复位按键状态
-                    isOpenLastFolderPressed = false;
+                    isOpenLastFolderPressed.set(false);
                 } else if (AllConfigs.getInstance().getRunAsAdminKeyCode() == key) {
-                    isRunAsAdminPressed = false;
+                    isRunAsAdminPressed.set(false);
                 } else if (AllConfigs.getInstance().getCopyPathKeyCode() == key) {
-                    isCopyPathPressed = false;
+                    isCopyPathPressed.set(false);
                 }
 
                 if (runningMode == Enums.RunningMode.PLUGIN_MODE) {
@@ -699,9 +700,8 @@ public class SearchBar {
         switch (commandName) {
             case "clearbin":
                 detectShowingModeAndClose();
-                int r = JOptionPane.showConfirmDialog(null, TranslateUtil.getInstance().getTranslation(
-                        "Are you sure you want to empty the recycle bin"));
-                if (r == 0) {
+                if (JOptionPane.showConfirmDialog(null, TranslateUtil.getInstance().getTranslation(
+                    "Are you sure you want to empty the recycle bin")) == JOptionPane.OK_OPTION) {
                     try {
                         File[] roots = File.listRoots();
                         for (File root : roots) {
@@ -721,9 +721,10 @@ public class SearchBar {
                         TranslateUtil.getInstance().getTranslation("Info"),
                         TranslateUtil.getInstance().getTranslation("Updating file index")));
                 EventUtil.getInstance().putEvent(new UpdateDatabaseEvent());
-                startSignal = false;
+                startSignal.set(false);
                 return true;
             case "help":
+                //todo 制作交互教程动画
                 detectShowingModeAndClose();
                 Desktop desktop;
                 if (Desktop.isDesktopSupported()) {
@@ -749,6 +750,7 @@ public class SearchBar {
     private void setLabelChosen(JLabel label) {
         if (label != null) {
             label.setBackground(labelColor);
+            label.setForeground(fontColorWithCoverage);
         }
     }
 
@@ -760,6 +762,7 @@ public class SearchBar {
     private void setLabelNotChosen(JLabel label) {
         if (label != null) {
             label.setBackground(backgroundColor);
+            label.setForeground(labelFontColor);
         }
     }
 
@@ -788,7 +791,7 @@ public class SearchBar {
             @Override
             public void mouseDragged(MouseEvent e) {
                 Enums.RunningMode mode = runningMode;
-                isMouseDraggedInWindow = (
+                isMouseDraggedInWindow.set(
                         mode == Enums.RunningMode.NORMAL_MODE ||
                         mode == Enums.RunningMode.COMMAND_MODE
                 );
@@ -826,7 +829,7 @@ public class SearchBar {
                     //距离大于鼠标最小移动值
                     if (absoluteDistance > minMouseMoveDistance) {
                         //判定当前位置
-                        if (!isLockMouseMotion) {
+                        if (!isLockMouseMotion.get()) {
                             int position = getCurrentLabelPos();
                             int mouseOnWhichLabel = 0;
                             if (labelPosition2 <= e.getY() && e.getY() < labelPosition3) {
@@ -1148,12 +1151,12 @@ public class SearchBar {
     private void addSearchBarMouseWheelListener() {
         searchBar.addMouseWheelListener(e -> {
             mouseWheelTime = System.currentTimeMillis();
-            isLockMouseMotion = true;
+            isLockMouseMotion.set(true);
             if (e.getPreciseWheelRotation() > 0) {
                 //向下滚动
                 if (isLabelNotEmpty(label1) && isLabelNotEmpty(label2) && isLabelNotEmpty(label3) && isLabelNotEmpty(label4)
                         && isLabelNotEmpty(label5) && isLabelNotEmpty(label6) && isLabelNotEmpty(label7) && isLabelNotEmpty(label8)) {
-                    isUserPressed = true;
+                    isUserPressed.set(false);
                 }
                 boolean isNextLabelValid = isNextLabelValid();
 
@@ -1175,7 +1178,7 @@ public class SearchBar {
                 //向上滚动
                 if (isLabelNotEmpty(label1) && isLabelNotEmpty(label2) && isLabelNotEmpty(label3) && isLabelNotEmpty(label4)
                         && isLabelNotEmpty(label5) && isLabelNotEmpty(label6) && isLabelNotEmpty(label7) && isLabelNotEmpty(label8)) {
-                    isUserPressed = true;
+                    isUserPressed.set(true);
                 }
                 if (!getTextFieldText().isEmpty()) {
                     currentResultCount.getAndDecrement();
@@ -1859,7 +1862,7 @@ public class SearchBar {
         firstResultStartShowingTime = 0;
         currentResultCount.set(0);
         currentLabelSelectedPosition.set(0);
-        isCacheAndPrioritySearched = false;
+        isCacheAndPrioritySearched.set(false);
     }
 
     //设置当前运行模式
@@ -1900,7 +1903,7 @@ public class SearchBar {
                 clearAllAndResetAll();
                 setRunningMode();
                 startTime = System.currentTimeMillis();
-                startSignal = true;
+                startSignal.set(true);
             }
 
             @Override
@@ -1912,22 +1915,22 @@ public class SearchBar {
                     tempResultNum.set(0);
                     currentResultCount.set(0);
                     startTime = System.currentTimeMillis();
-                    startSignal = false;
+                    startSignal.set(false);
                 } else {
                     startTime = System.currentTimeMillis();
-                    startSignal = true;
+                    startSignal.set(true);
                 }
             }
 
             @Override
             public void changedUpdate(DocumentEvent e) {
                 startTime = System.currentTimeMillis();
-                startSignal = false;
+                startSignal.set(false);
             }
         });
     }
 
-    private static boolean isAdmin() {
+    private boolean isAdmin() {
         try {
             ProcessBuilder processBuilder = new ProcessBuilder("cmd.exe");
             Process process = processBuilder.start();
@@ -1937,15 +1940,15 @@ public class SearchBar {
             printStream.println(">nul 2>&1 \"%SYSTEMROOT%\\system32\\cacls.exe\" \"%SYSTEMROOT%\\system32\\config\\system\"");
             printStream.println("echo %errorlevel%");
 
-            boolean printedErrorlevel = false;
+            boolean printedErrorLevel = false;
             while (true) {
                 String nextLine = scanner.nextLine();
-                if (printedErrorlevel) {
-                    int errorlevel = Integer.parseInt(nextLine);
+                if (printedErrorLevel) {
+                    int errorLevel = Integer.parseInt(nextLine);
                     scanner.close();
-                    return errorlevel == 0;
+                    return errorLevel == 0;
                 } else if ("echo %errorlevel%".equals(nextLine)) {
-                    printedErrorlevel = true;
+                    printedErrorLevel = true;
                 }
             }
         } catch (IOException e) {
@@ -1965,7 +1968,6 @@ public class SearchBar {
                     }
                 }
             } else {
-                System.out.println("Not administrator, file monitoring function is turned off");
                 EventUtil.getInstance().putEvent(new ShowTaskBarMessageEvent(
                         TranslateUtil.getInstance().getTranslation("Warning"),
                         TranslateUtil.getInstance().getTranslation("Not administrator, file monitoring function is turned off")));
@@ -1974,7 +1976,7 @@ public class SearchBar {
     }
 
     private void setLabelChosenOrNotChosenMouseMode(int labelNum, JLabel label) {
-        if (!isUserPressed && isLabelNotEmpty(label)) {
+        if (!isUserPressed.get() && isLabelNotEmpty(label)) {
             if (currentResultCount.get() == labelNum) {
                 setLabelChosen(label);
             } else {
@@ -1984,15 +1986,15 @@ public class SearchBar {
     }
 
     private void addSearchWaiter() {
-        if (!isWaiting) {
-            isWaiting = true;
+        if (!isWaiting.get()) {
+            isWaiting.set(true);
             CachedThreadPoolUtil.getInstance().executeTask(() -> {
                 try {
-                    while (isWaiting) {
+                    while (isWaiting.get()) {
                         if (databaseUtil.getStatus() == Enums.DatabaseStatus.NORMAL) {
                             startTime = System.currentTimeMillis() - 500;
-                            startSignal = true;
-                            isWaiting = false;
+                            startSignal.set(true);
+                            isWaiting.set(false);
                             break;
                         }
                         TimeUnit.MILLISECONDS.sleep(20);
@@ -2007,8 +2009,6 @@ public class SearchBar {
         mergeTempQueueAndListResultsThread();
 
         lockMouseMotionThread();
-
-        setForegroundOnLabelThread();
 
         tryToShowRecordsThread();
 
@@ -2140,7 +2140,7 @@ public class SearchBar {
             @Override
             public void todo(Event event) {
                 SetPreviewOrNormalMode mode = (SetPreviewOrNormalMode) event;
-                isPreviewMode = mode.isPreview;
+                isPreviewMode.set(mode.isPreview);
             }
         });
     }
@@ -2157,7 +2157,7 @@ public class SearchBar {
                             switchToNormalMode();
                         }
                     }
-                    TimeUnit.MILLISECONDS.sleep(400);
+                    TimeUnit.MILLISECONDS.sleep(150);
                 }
             } catch (InterruptedException ignored) {
             } finally {
@@ -2182,7 +2182,7 @@ public class SearchBar {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             try {
                 while (EventUtil.getInstance().isNotMainExit()) {
-                    if (isPreviewMode) {
+                    if (isPreviewMode.get()) {
                         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize(); // 获取屏幕大小
                         int width = screenSize.width;
                         int height = screenSize.height;
@@ -2287,7 +2287,7 @@ public class SearchBar {
             //合并搜索结果线程
             try {
                 while (EventUtil.getInstance().isNotMainExit()) {
-                    if (isCacheAndPrioritySearched) {
+                    if (isCacheAndPrioritySearched.get()) {
                         for (String record : tempResults) {
                             if (!listResults.contains(record)) {
                                 tempResultNum.decrementAndGet();
@@ -2310,100 +2310,11 @@ public class SearchBar {
             try {
                 while (EventUtil.getInstance().isNotMainExit()) {
                     if (System.currentTimeMillis() - mouseWheelTime > 500) {
-                        isLockMouseMotion = false;
+                        isLockMouseMotion.set(false);
                     }
                     TimeUnit.MILLISECONDS.sleep(20);
                 }
             } catch (InterruptedException ignored) {
-            }
-        });
-    }
-
-    private void setForegroundOnLabelThread() {
-        CachedThreadPoolUtil.getInstance().executeTask(() -> {
-            try {
-                while (EventUtil.getInstance().isNotMainExit()) {
-                    //字体染色线程
-                    //判定当前选定位置
-                    int position = getCurrentLabelPos();
-                    if (position == 0) {
-                        label1.setForeground(fontColorWithCoverage);
-                        label2.setForeground(labelFontColor);
-                        label3.setForeground(labelFontColor);
-                        label4.setForeground(labelFontColor);
-                        label5.setForeground(labelFontColor);
-                        label6.setForeground(labelFontColor);
-                        label7.setForeground(labelFontColor);
-                        label8.setForeground(labelFontColor);
-                    } else if (position == 1) {
-                        label1.setForeground(labelFontColor);
-                        label2.setForeground(fontColorWithCoverage);
-                        label3.setForeground(labelFontColor);
-                        label4.setForeground(labelFontColor);
-                        label5.setForeground(labelFontColor);
-                        label6.setForeground(labelFontColor);
-                        label7.setForeground(labelFontColor);
-                        label8.setForeground(labelFontColor);
-                    } else if (position == 2) {
-                        label1.setForeground(labelFontColor);
-                        label2.setForeground(labelFontColor);
-                        label3.setForeground(fontColorWithCoverage);
-                        label4.setForeground(labelFontColor);
-                        label5.setForeground(labelFontColor);
-                        label6.setForeground(labelFontColor);
-                        label7.setForeground(labelFontColor);
-                        label8.setForeground(labelFontColor);
-                    } else if (position == 3) {
-                        label1.setForeground(labelFontColor);
-                        label2.setForeground(labelFontColor);
-                        label3.setForeground(labelFontColor);
-                        label4.setForeground(fontColorWithCoverage);
-                        label5.setForeground(labelFontColor);
-                        label6.setForeground(labelFontColor);
-                        label7.setForeground(labelFontColor);
-                        label8.setForeground(labelFontColor);
-                    } else if (position == 4) {
-                        label1.setForeground(labelFontColor);
-                        label2.setForeground(labelFontColor);
-                        label3.setForeground(labelFontColor);
-                        label4.setForeground(labelFontColor);
-                        label5.setForeground(fontColorWithCoverage);
-                        label6.setForeground(labelFontColor);
-                        label7.setForeground(labelFontColor);
-                        label8.setForeground(labelFontColor);
-                    } else if (position == 5) {
-                        label1.setForeground(labelFontColor);
-                        label2.setForeground(labelFontColor);
-                        label3.setForeground(labelFontColor);
-                        label4.setForeground(labelFontColor);
-                        label5.setForeground(labelFontColor);
-                        label6.setForeground(fontColorWithCoverage);
-                        label7.setForeground(labelFontColor);
-                        label8.setForeground(labelFontColor);
-                    } else if (position == 6) {
-                        label1.setForeground(labelFontColor);
-                        label2.setForeground(labelFontColor);
-                        label3.setForeground(labelFontColor);
-                        label4.setForeground(labelFontColor);
-                        label5.setForeground(labelFontColor);
-                        label6.setForeground(labelFontColor);
-                        label7.setForeground(fontColorWithCoverage);
-                        label8.setForeground(labelFontColor);
-                    } else if (position >= 7) {
-                        label1.setForeground(labelFontColor);
-                        label2.setForeground(labelFontColor);
-                        label3.setForeground(labelFontColor);
-                        label4.setForeground(labelFontColor);
-                        label5.setForeground(labelFontColor);
-                        label6.setForeground(labelFontColor);
-                        label7.setForeground(labelFontColor);
-                        label8.setForeground(fontColorWithCoverage);
-                    }
-                    TimeUnit.MILLISECONDS.sleep(20);
-                }
-            } catch (InterruptedException ignored) {
-            } catch (Exception e) {
-                e.printStackTrace();
             }
         });
     }
@@ -2494,7 +2405,7 @@ public class SearchBar {
                 while (EventUtil.getInstance().isNotMainExit()) {
                     if (isVisible()) {
                         SwingUtilities.invokeLater(() -> {
-                            if (isPreviewMode) {
+                            if (isPreviewMode.get()) {
                                 SwingUtilities.updateComponentTreeUI(searchBar);
                             } else {
                                 searchBar.repaint();
@@ -2522,8 +2433,8 @@ public class SearchBar {
             int ascII;
             try {
                 while (EventUtil.getInstance().isNotMainExit()) {
-                    if (isStartSearchLocal) {
-                        isStartSearchLocal = false;
+                    if (isStartSearchLocal.get()) {
+                        isStartSearchLocal.set(false);
                         ascII = getAscIISum(keywords);
                         int asciiGroup = ascII / 100;
 
@@ -2708,13 +2619,14 @@ public class SearchBar {
             //缓存和常用文件夹搜索线程
             //停顿时间0.5s，每一次输入会更新一次startTime，该线程记录endTime
             try {
+                EventUtil eventUtil = EventUtil.getInstance();
                 if (AllConfigs.getInstance().isFirstRun()) {
                     runInternalCommand("help");
                 }
-                while (EventUtil.getInstance().isNotMainExit()) {
+                while (eventUtil.isNotMainExit()) {
                     long endTime = System.currentTimeMillis();
-                    if ((endTime - startTime > 500) && startSignal) {
-                        startSignal = false; //开始搜索 计时停止
+                    if ((endTime - startTime > 500) && startSignal.get()) {
+                        startSignal.set(false); //开始搜索 计时停止
                         currentResultCount.set(0);
                         currentLabelSelectedPosition.set(0);
                         clearAllLabels();
@@ -2764,11 +2676,11 @@ public class SearchBar {
                                 keywords = semicolon.split(searchText);
                                 searchCaseToLowerAndRemoveConflict();
 
-                                isStartSearchLocal = true;
-                                isCacheAndPrioritySearched = false;
+                                isStartSearchLocal.set(true);
+                                isCacheAndPrioritySearched.set(false);
                                 searchPriorityFolder();
                                 searchCache();
-                                isCacheAndPrioritySearched = true;
+                                isCacheAndPrioritySearched.set(true);
                             } else if (runningMode == Enums.RunningMode.PLUGIN_MODE) {
                                 String result;
                                 if (currentUsingPlugin != null) {
@@ -3467,16 +3379,16 @@ public class SearchBar {
         currentLabelSelectedPosition.set(0);
         clearListAndTempAndReset();
         commandQueue.clear();
-        isUserPressed = false;
-        isLockMouseMotion = false;
-        isOpenLastFolderPressed = false;
-        isRunAsAdminPressed = false;
-        isCopyPathPressed = false;
-        startSignal = false;
-        isCacheAndPrioritySearched = false;
-        isStartSearchLocal = false;
-        isWaiting = false;
-        isMouseDraggedInWindow = false;
+        isUserPressed.set(false);
+        isLockMouseMotion.set(false);
+        isOpenLastFolderPressed.set(false);
+        isRunAsAdminPressed.set(false);
+        isCopyPathPressed.set(false);
+        startSignal.set(false);
+        isCacheAndPrioritySearched.set(false);
+        isStartSearchLocal.set(false);
+        isWaiting.set(false);
+        isMouseDraggedInWindow.set(false);
         EventUtil.getInstance().putEvent(new SetPreviewOrNormalMode(false));
     }
 
