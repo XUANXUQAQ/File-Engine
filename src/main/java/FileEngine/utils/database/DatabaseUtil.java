@@ -795,29 +795,17 @@ public class DatabaseUtil {
                 getInstance().setStatus(Enums.DatabaseStatus.VACUUM);
                 //执行VACUUM命令
                 try (PreparedStatement stmt = SQLiteUtil.getPreparedStatement("VACUUM;")) {
-                    getInstance().clearDatabase();
                     stmt.execute();
                 } catch (Exception ex) {
-                    if (IsDebug.isDebug()) {
-                        ex.printStackTrace();
-                    }
+                    ex.printStackTrace();
                 } finally {
                     if (IsDebug.isDebug()) {
                         System.out.println("结束优化");
                     }
-                    System.gc();
                     getInstance().setStatus(Enums.DatabaseStatus.NORMAL);
                 }
             }
         });
-    }
-
-    private void clearDatabase() {
-        String column;
-        for (int i = 0; i <= 40; ++i) {
-            column = "list" + i;
-            clearDatabase(column);
-        }
     }
 
     private void clearDatabase(String column) {
