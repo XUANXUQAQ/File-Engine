@@ -17,17 +17,17 @@ import javax.swing.filechooser.FileSystemView;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.LinkedHashSet;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class DatabaseUtil {
     private final ConcurrentLinkedQueue<SQLWithTaskId> commandSet = new ConcurrentLinkedQueue<>();
     private volatile Enums.DatabaseStatus status = Enums.DatabaseStatus.NORMAL;
-    private volatile boolean isExecuteImmediately = false;
+    private final AtomicBoolean isExecuteImmediately = new AtomicBoolean(false);
 
     private static final int MAX_SQL_NUM = 5000;
 
@@ -39,8 +39,8 @@ public class DatabaseUtil {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             try (Statement statement = SQLiteUtil.getStatement()) {
                 while (EventUtil.getInstance().isNotMainExit()) {
-                    if (isExecuteImmediately) {
-                        isExecuteImmediately = false;
+                    if (isExecuteImmediately.get()) {
+                        isExecuteImmediately.set(false);
                         executeAllCommands(statement);
                     }
                     TimeUnit.MILLISECONDS.sleep(100);
@@ -463,7 +463,7 @@ public class DatabaseUtil {
     }
 
     private void executeImmediately() {
-        isExecuteImmediately = true;
+        isExecuteImmediately.set(true);
     }
 
     private void executeAllCommands(Statement stmt) {
@@ -806,29 +806,6 @@ public class DatabaseUtil {
                 }
             }
         });
-    }
-
-    private void clearDatabase(String column) {
-        File file;
-        String sql = "SELECT PATH FROM " + column + ";";
-        EventUtil eventUtil = EventUtil.getInstance();
-        LinkedHashSet<String> list = new LinkedHashSet<>();
-        try(PreparedStatement pStmt = SQLiteUtil.getPreparedStatement(sql);
-            ResultSet resultSet = pStmt.executeQuery()) {
-            while (resultSet.next()) {
-                String record = resultSet.getString("PATH");
-                file = new File(record);
-                if (!file.exists()) {
-                    if (IsDebug.isDebug()) {
-                        System.err.println("正在删除" + record);
-                    }
-                    list.add(record);
-                }
-            }
-            eventUtil.putEvent(new DeleteFromDatabaseEvent(list));
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
     }
 
     private static class SQLWithTaskId {
