@@ -57,40 +57,40 @@ public class AllConfigs {
     public static final int defaultSearchbarColor = 13421772;
     public static final int defaultSearchbarFontColor = 0;
 
-    private static volatile int cacheNumLimit;
-    private static volatile boolean isShowTipCreatingLnk;
-    private static volatile String hotkey;
-    private static volatile int updateTimeLimit;
-    private static volatile String ignorePath;
-    private static volatile String priorityFolder;
-    private static volatile int searchDepth;
-    private static volatile boolean isDefaultAdmin;
-    private static volatile boolean isLoseFocusClose;
-    private static volatile int openLastFolderKeyCode;
-    private static volatile int runAsAdminKeyCode;
-    private static volatile int copyPathKeyCode;
-    private static volatile float transparency;
-    private static volatile String proxyAddress;
-    private static volatile int proxyPort;
-    private static volatile String proxyUserName;
-    private static volatile String proxyPassword;
-    private static volatile int proxyType;
-    private static final File tmp = new File("tmp");
-    private static final File settings = new File("user/settings.json");
-    private static final LinkedHashSet<String> cmdSet = new LinkedHashSet<>();
-    private static volatile int labelColor;
-    private static volatile int defaultBackgroundColor;
-    private static volatile int fontColorWithCoverage;
-    private static volatile int fontColor;
-    private static volatile int searchBarColor;
-    private static volatile int searchBarFontColor;
-    private static volatile int borderColor;
-    private static String updateAddress;
-    private static int setterCount = 0;
-    private static boolean isAllowChangeSettings = false;
-    private static final AtomicInteger cacheNum = new AtomicInteger(0);
-    private static boolean isFirstRunApp = false;
-    private static Enums.SwingThemes swingTheme;
+    private volatile int cacheNumLimit;
+    private volatile boolean isShowTipCreatingLnk;
+    private volatile String hotkey;
+    private volatile int updateTimeLimit;
+    private volatile String ignorePath;
+    private volatile String priorityFolder;
+    private volatile int searchDepth;
+    private volatile boolean isDefaultAdmin;
+    private volatile boolean isLoseFocusClose;
+    private volatile int openLastFolderKeyCode;
+    private volatile int runAsAdminKeyCode;
+    private volatile int copyPathKeyCode;
+    private volatile float transparency;
+    private volatile String proxyAddress;
+    private volatile int proxyPort;
+    private volatile String proxyUserName;
+    private volatile String proxyPassword;
+    private volatile int proxyType;
+    private final File tmp = new File("tmp");
+    private final File settings = new File("user/settings.json");
+    private final LinkedHashSet<String> cmdSet = new LinkedHashSet<>();
+    private volatile int labelColor;
+    private volatile int defaultBackgroundColor;
+    private volatile int fontColorWithCoverage;
+    private volatile int fontColor;
+    private volatile int searchBarColor;
+    private volatile int searchBarFontColor;
+    private volatile int borderColor;
+    private String updateAddress;
+    private int setterCount = 0;
+    private boolean isAllowChangeSettings = false;
+    private final AtomicInteger cacheNum = new AtomicInteger(0);
+    private boolean isFirstRunApp = false;
+    private Enums.SwingThemes swingTheme;
 
     private static volatile AllConfigs instance = null;
 
@@ -130,7 +130,7 @@ public class AllConfigs {
     public void setSwingTheme(String swingTheme) {
         if (isAllowChangeSettings) {
             setterCount++;
-            AllConfigs.swingTheme = swingThemesMapper(swingTheme);
+            this.swingTheme = swingThemesMapper(swingTheme);
         } else {
             showError();
         }
@@ -189,7 +189,7 @@ public class AllConfigs {
     public void setCacheNumLimit(int cacheNumLimit) {
         if (isAllowChangeSettings) {
             setterCount++;
-            AllConfigs.cacheNumLimit = cacheNumLimit;
+            this.cacheNumLimit = cacheNumLimit;
         } else {
             showError();
         }
@@ -198,7 +198,7 @@ public class AllConfigs {
     public void setHotkey(String hotkey) {
         if (isAllowChangeSettings) {
             setterCount++;
-            AllConfigs.hotkey = hotkey;
+            this.hotkey = hotkey;
         } else {
             showError();
         }
@@ -207,7 +207,7 @@ public class AllConfigs {
     public void setUpdateTimeLimit(int updateTimeLimit) {
         if (isAllowChangeSettings) {
             setterCount++;
-            AllConfigs.updateTimeLimit = updateTimeLimit;
+            this.updateTimeLimit = updateTimeLimit;
         } else {
             showError();
         }
@@ -216,7 +216,7 @@ public class AllConfigs {
     public void setIgnorePath(String ignorePath) {
         if (isAllowChangeSettings) {
             setterCount++;
-            AllConfigs.ignorePath = ignorePath;
+            this.ignorePath = ignorePath;
         } else {
             showError();
         }
@@ -225,7 +225,7 @@ public class AllConfigs {
     public void setPriorityFolder(String priorityFolder) {
         if (isAllowChangeSettings) {
             setterCount++;
-            AllConfigs.priorityFolder = priorityFolder;
+            this.priorityFolder = priorityFolder;
         } else {
             showError();
         }
@@ -234,7 +234,7 @@ public class AllConfigs {
     public void setSearchDepth(int searchDepth) {
         if (isAllowChangeSettings) {
             setterCount++;
-            AllConfigs.searchDepth = searchDepth;
+            this.searchDepth = searchDepth;
         } else {
             showError();
         }
@@ -243,7 +243,7 @@ public class AllConfigs {
     public void setIsDefaultAdmin(boolean isDefaultAdmin) {
         if (isAllowChangeSettings) {
             setterCount++;
-            AllConfigs.isDefaultAdmin = isDefaultAdmin;
+            this.isDefaultAdmin = isDefaultAdmin;
         } else {
             showError();
         }
@@ -252,7 +252,7 @@ public class AllConfigs {
     public void setIsLoseFocusClose(boolean isLoseFocusClose) {
         if (isAllowChangeSettings) {
             setterCount++;
-            AllConfigs.isLoseFocusClose = isLoseFocusClose;
+            this.isLoseFocusClose = isLoseFocusClose;
         } else {
             showError();
         }
@@ -261,7 +261,7 @@ public class AllConfigs {
     public void setOpenLastFolderKeyCode(int openLastFolderKeyCode) {
         if (isAllowChangeSettings) {
             setterCount++;
-            AllConfigs.openLastFolderKeyCode = openLastFolderKeyCode;
+            this.openLastFolderKeyCode = openLastFolderKeyCode;
         } else {
             showError();
         }
@@ -270,7 +270,7 @@ public class AllConfigs {
     public void setRunAsAdminKeyCode(int runAsAdminKeyCode) {
         if (isAllowChangeSettings) {
             setterCount++;
-            AllConfigs.runAsAdminKeyCode = runAsAdminKeyCode;
+            this.runAsAdminKeyCode = runAsAdminKeyCode;
         } else {
             showError();
         }
@@ -279,7 +279,7 @@ public class AllConfigs {
     public void setCopyPathKeyCode(int copyPathKeyCode) {
         if (isAllowChangeSettings) {
             setterCount++;
-            AllConfigs.copyPathKeyCode = copyPathKeyCode;
+            this.copyPathKeyCode = copyPathKeyCode;
         } else {
             showError();
         }
@@ -288,7 +288,7 @@ public class AllConfigs {
     public void setTransparency(float transparency) {
         if (isAllowChangeSettings) {
             setterCount++;
-            AllConfigs.transparency = transparency;
+            this.transparency = transparency;
         } else {
             showError();
         }
@@ -297,7 +297,7 @@ public class AllConfigs {
     public void setProxyAddress(String proxyAddress) {
         if (isAllowChangeSettings) {
             setterCount++;
-            AllConfigs.proxyAddress = proxyAddress;
+            this.proxyAddress = proxyAddress;
         } else {
             showError();
         }
@@ -306,7 +306,7 @@ public class AllConfigs {
     public void setProxyPort(int proxyPort) {
         if (isAllowChangeSettings) {
             setterCount++;
-            AllConfigs.proxyPort = proxyPort;
+            this.proxyPort = proxyPort;
         } else {
             showError();
         }
@@ -315,7 +315,7 @@ public class AllConfigs {
     public void setProxyUserName(String proxyUserName) {
         if (isAllowChangeSettings) {
             setterCount++;
-            AllConfigs.proxyUserName = proxyUserName;
+            this.proxyUserName = proxyUserName;
         } else {
             showError();
         }
@@ -324,7 +324,7 @@ public class AllConfigs {
     public void setProxyPassword(String proxyPassword) {
         if (isAllowChangeSettings) {
             setterCount++;
-            AllConfigs.proxyPassword = proxyPassword;
+            this.proxyPassword = proxyPassword;
         } else {
             showError();
         }
@@ -333,7 +333,7 @@ public class AllConfigs {
     public void setProxyType(int proxyType) {
         if (isAllowChangeSettings) {
             setterCount++;
-            AllConfigs.proxyType = proxyType;
+            this.proxyType = proxyType;
         } else {
             showError();
         }
@@ -342,7 +342,7 @@ public class AllConfigs {
     public void setLabelColor(int labelColor) {
         if (isAllowChangeSettings) {
             setterCount++;
-            AllConfigs.labelColor = labelColor;
+            this.labelColor = labelColor;
         } else {
             showError();
         }
@@ -351,7 +351,7 @@ public class AllConfigs {
     public void setDefaultBackgroundColor(int defaultBackgroundColor) {
         if (isAllowChangeSettings) {
             setterCount++;
-            AllConfigs.defaultBackgroundColor = defaultBackgroundColor;
+            this.defaultBackgroundColor = defaultBackgroundColor;
         } else {
             showError();
         }
@@ -360,7 +360,7 @@ public class AllConfigs {
     public void setLabelFontColorWithCoverage(int fontColorWithCoverage) {
         if (isAllowChangeSettings) {
             setterCount++;
-            AllConfigs.fontColorWithCoverage = fontColorWithCoverage;
+            this.fontColorWithCoverage = fontColorWithCoverage;
         } else {
             showError();
         }
@@ -378,7 +378,7 @@ public class AllConfigs {
     public void setLabelFontColor(int fontColor) {
         if (isAllowChangeSettings) {
             setterCount++;
-            AllConfigs.fontColor = fontColor;
+            this.fontColor = fontColor;
         } else {
             showError();
         }
@@ -396,7 +396,7 @@ public class AllConfigs {
     public void setSearchBarColor(int searchBarColor) {
         if (isAllowChangeSettings) {
             setterCount++;
-            AllConfigs.searchBarColor = searchBarColor;
+            this.searchBarColor = searchBarColor;
         } else {
             showError();
         }
@@ -405,7 +405,7 @@ public class AllConfigs {
     public void setUpdateAddress(String updateAddress) {
         if (isAllowChangeSettings) {
             setterCount++;
-            AllConfigs.updateAddress = updateAddress;
+            this.updateAddress = updateAddress;
         } else {
             showError();
         }
@@ -839,7 +839,8 @@ public class AllConfigs {
             @Override
             public void todo(Event event) {
                 try {
-                    getInstance().setSwingLaf(swingTheme);
+                    AllConfigs allConfigs = AllConfigs.getInstance();
+                    allConfigs.setSwingLaf(allConfigs.swingTheme);
                 } catch (Exception ignored) {
                 }
             }
