@@ -775,7 +775,8 @@ public class SearchBar {
         //添加一个线程不断更新鼠标保存时间
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             try {
-                while (EventUtil.getInstance().isNotMainExit()) {
+                EventUtil eventUtil = EventUtil.getInstance();
+                while (eventUtil.isNotMainExit()) {
                     shouldSaveMousePos.set(true);
                     TimeUnit.MILLISECONDS.sleep(50);
                 }
@@ -2148,8 +2149,9 @@ public class SearchBar {
     private void switchSearchBarShowingMode() {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             try {
+                EventUtil eventUtil = EventUtil.getInstance();
                 GetHandle.INSTANCE.start();
-                while (EventUtil.getInstance().isNotMainExit()) {
+                while (eventUtil.isNotMainExit()) {
                     if (GetHandle.INSTANCE.isExplorerAtTop()) {
                         switchToExplorerAttachMode();
                     } else {
@@ -2181,7 +2183,8 @@ public class SearchBar {
     private void changeSearchBarSize() {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             try {
-                while (EventUtil.getInstance().isNotMainExit()) {
+                EventUtil eventUtil = EventUtil.getInstance();
+                while (eventUtil.isNotMainExit()) {
                     if (isPreviewMode.get()) {
                         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize(); // 获取屏幕大小
                         int width = screenSize.width;
@@ -2205,7 +2208,7 @@ public class SearchBar {
                             changeSearchBarSizeAndPos(positionX, positionY, searchBarWidth, searchBarHeight);
                         }
                     }
-                    TimeUnit.MILLISECONDS.sleep(50);
+                    TimeUnit.MILLISECONDS.sleep(5);
                 }
             } catch (InterruptedException ignored) {
             }
@@ -2213,20 +2216,25 @@ public class SearchBar {
     }
 
     private void changeSearchBarSizeAndPos(int positionX, int positionY, int searchBarWidth, int searchBarHeight, int labelHeight) {
-        //设置窗口大小
-        searchBar.setBounds(positionX, positionY, searchBarWidth, searchBarHeight);
-        //设置label大小
-        setLabelSize(searchBarWidth, labelHeight, labelHeight, label1);
-        setLabelSize(searchBarWidth, labelHeight, labelHeight * 2, label2);
-        setLabelSize(searchBarWidth, labelHeight, labelHeight * 3, label3);
-        setLabelSize(searchBarWidth, labelHeight, labelHeight * 4, label4);
-        setLabelSize(searchBarWidth, labelHeight, labelHeight * 5, label5);
-        setLabelSize(searchBarWidth, labelHeight, labelHeight * 6, label6);
-        setLabelSize(searchBarWidth, labelHeight, labelHeight * 7, label7);
-        setLabelSize(searchBarWidth, labelHeight, labelHeight * 8, label8);
-        //设置textField大小
-        textField.setSize(searchBarWidth - 6, labelHeight - 5);
-        textField.setLocation(3, 0);
+        if (positionX != searchBar.getX()
+                || positionY != searchBar.getY()
+                || searchBarWidth != searchBar.getWidth()
+                || searchBarHeight != searchBar.getHeight()) {
+            //设置窗口大小
+            searchBar.setBounds(positionX, positionY, searchBarWidth, searchBarHeight);
+            //设置label大小
+            setLabelSize(searchBarWidth, labelHeight, labelHeight, label1);
+            setLabelSize(searchBarWidth, labelHeight, labelHeight * 2, label2);
+            setLabelSize(searchBarWidth, labelHeight, labelHeight * 3, label3);
+            setLabelSize(searchBarWidth, labelHeight, labelHeight * 4, label4);
+            setLabelSize(searchBarWidth, labelHeight, labelHeight * 5, label5);
+            setLabelSize(searchBarWidth, labelHeight, labelHeight * 6, label6);
+            setLabelSize(searchBarWidth, labelHeight, labelHeight * 7, label7);
+            setLabelSize(searchBarWidth, labelHeight, labelHeight * 8, label8);
+            //设置textField大小
+            textField.setSize(searchBarWidth - 6, labelHeight - 5);
+            textField.setLocation(3, 0);
+        }
     }
 
     private void changeSearchBarSizeAndPos(int positionX, int positionY, int searchBarWidth, int searchBarHeight) {
@@ -2286,7 +2294,8 @@ public class SearchBar {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             //合并搜索结果线程
             try {
-                while (EventUtil.getInstance().isNotMainExit()) {
+                EventUtil eventUtil = EventUtil.getInstance();
+                while (eventUtil.isNotMainExit()) {
                     if (isCacheAndPrioritySearched.get()) {
                         for (String record : tempResults) {
                             if (!listResults.contains(record)) {
@@ -2308,7 +2317,8 @@ public class SearchBar {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             //锁住MouseMotion检测，阻止同时发出两个动作
             try {
-                while (EventUtil.getInstance().isNotMainExit()) {
+                EventUtil eventUtil = EventUtil.getInstance();
+                while (eventUtil.isNotMainExit()) {
                     if (System.currentTimeMillis() - mouseWheelTime > 500) {
                         isLockMouseMotion.set(false);
                     }
@@ -2323,9 +2333,10 @@ public class SearchBar {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             //显示结果线程
             try {
+                EventUtil eventUtil = EventUtil.getInstance();
                 boolean isLabel1Chosen, isLabel2Chosen, isLabel3Chosen, isLabel4Chosen,
                         isLabel5Chosen, isLabel6Chosen, isLabel7Chosen, isLabel8Chosen;
-                while (EventUtil.getInstance().isNotMainExit()) {
+                while (eventUtil.isNotMainExit()) {
                     isLabel1Chosen = false;
                     isLabel2Chosen = false;
                     isLabel3Chosen = false;
@@ -2402,7 +2413,8 @@ public class SearchBar {
     private void repaintFrameThread() {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             try {
-                while (EventUtil.getInstance().isNotMainExit()) {
+                EventUtil eventUtil = EventUtil.getInstance();
+                while (eventUtil.isNotMainExit()) {
                     if (isVisible()) {
                         SwingUtilities.invokeLater(() -> {
                             if (isPreviewMode.get()) {
@@ -2432,7 +2444,8 @@ public class SearchBar {
             //添加搜索路径线程
             int ascII;
             try {
-                while (EventUtil.getInstance().isNotMainExit()) {
+                EventUtil eventUtil = EventUtil.getInstance();
+                while (eventUtil.isNotMainExit()) {
                     if (isStartSearchLocal.get()) {
                         isStartSearchLocal.set(false);
                         ascII = getAscIISum(keywords);
@@ -2601,7 +2614,8 @@ public class SearchBar {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             try {
                 String column;
-                while (EventUtil.getInstance().isNotMainExit()) {
+                EventUtil eventUtil = EventUtil.getInstance();
+                while (eventUtil.isNotMainExit()) {
                     if (runningMode == Enums.RunningMode.NORMAL_MODE && DatabaseUtil.getInstance().getStatus() == Enums.DatabaseStatus.NORMAL) {
                         while ((column = commandQueue.poll()) != null) {
                             searchAndAddToTempResults(System.currentTimeMillis(), column);
@@ -3304,10 +3318,11 @@ public class SearchBar {
                 //等待所有线程完成
                 try {
                     int count = 0;
+                    EventUtil eventUtil = EventUtil.getInstance();
                     while (taskNum.get() != threadCount) {
-                        TimeUnit.MILLISECONDS.sleep(100);
+                        TimeUnit.MILLISECONDS.sleep(1);
                         count++;
-                        if (count >= 10 || (!EventUtil.getInstance().isNotMainExit())) {
+                        if (count >= 1000 || (!eventUtil.isNotMainExit())) {
                             break;
                         }
                     }
