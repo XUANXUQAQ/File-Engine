@@ -61,11 +61,6 @@ public class TaskBar {
     }
 
     public static TaskBar getInstance() {
-        initInstance();
-        return INSTANCE;
-    }
-
-    private static void initInstance() {
         if (INSTANCE == null) {
             synchronized (TaskBar.class) {
                 if (INSTANCE == null) {
@@ -73,6 +68,7 @@ public class TaskBar {
                 }
             }
         }
+        return INSTANCE;
     }
 
     private void showTaskBar() {
@@ -96,9 +92,7 @@ public class TaskBar {
             PopupMenu popupMenu = new PopupMenu();
 
             MenuItem settings = new MenuItem("Settings");
-            settings.addActionListener(e -> {
-                EventUtil.getInstance().putEvent(new ShowSettingsFrameEvent());
-            });
+            settings.addActionListener(e -> EventUtil.getInstance().putEvent(new ShowSettingsFrameEvent()));
             MenuItem restartProc = new MenuItem("Restart");
             restartProc.addActionListener(e -> restart());
             MenuItem close = new MenuItem("Exit");

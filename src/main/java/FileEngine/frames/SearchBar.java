@@ -4,8 +4,6 @@ package FileEngine.frames;
 import FileEngine.IsDebug;
 import FileEngine.configs.AllConfigs;
 import FileEngine.configs.Enums;
-import FileEngine.utils.database.DatabaseUtil;
-import FileEngine.utils.database.SQLiteUtil;
 import FileEngine.dllInterface.FileMonitor;
 import FileEngine.dllInterface.GetAscII;
 import FileEngine.dllInterface.GetHandle;
@@ -13,18 +11,22 @@ import FileEngine.dllInterface.IsLocalDisk;
 import FileEngine.eventHandler.Event;
 import FileEngine.eventHandler.EventHandler;
 import FileEngine.eventHandler.EventUtil;
-import FileEngine.eventHandler.impl.database.*;
+import FileEngine.eventHandler.impl.database.AddToCacheEvent;
+import FileEngine.eventHandler.impl.database.DeleteFromCacheEvent;
+import FileEngine.eventHandler.impl.database.UpdateDatabaseEvent;
 import FileEngine.eventHandler.impl.frame.searchBar.*;
 import FileEngine.eventHandler.impl.monitorDisk.StartMonitorDiskEvent;
 import FileEngine.eventHandler.impl.monitorDisk.StopMonitorDiskEvent;
 import FileEngine.eventHandler.impl.taskbar.ShowTaskBarMessageEvent;
+import FileEngine.utils.CachedThreadPoolUtil;
 import FileEngine.utils.GetIconUtil;
+import FileEngine.utils.RobotUtil;
+import FileEngine.utils.TranslateUtil;
+import FileEngine.utils.database.DatabaseUtil;
+import FileEngine.utils.database.SQLiteUtil;
 import FileEngine.utils.moveFiles.CopyFileUtil;
 import FileEngine.utils.pluginSystem.Plugin;
 import FileEngine.utils.pluginSystem.PluginUtil;
-import FileEngine.utils.RobotUtil;
-import FileEngine.utils.CachedThreadPoolUtil;
-import FileEngine.utils.TranslateUtil;
 
 import javax.swing.*;
 import javax.swing.border.Border;
@@ -139,12 +141,12 @@ public class SearchBar {
         int positionX = width / 2 - searchBarWidth / 2;
         int positionY = height / 2 - searchBarHeight / 2;
 
-
-        labelColor = new Color(AllConfigs.getInstance().getLabelColor());
-        fontColorWithCoverage = new Color(AllConfigs.getInstance().getLabelFontColorWithCoverage());
-        backgroundColor = new Color(AllConfigs.getInstance().getDefaultBackgroundColor());
-        labelFontColor = new Color(AllConfigs.getInstance().getLabelFontColor());
-        border = BorderFactory.createLineBorder(new Color(AllConfigs.getInstance().getBorderColor()));
+        AllConfigs allConfigs = AllConfigs.getInstance();
+        labelColor = new Color(allConfigs.getLabelColor());
+        fontColorWithCoverage = new Color(allConfigs.getLabelFontColorWithCoverage());
+        backgroundColor = new Color(allConfigs.getDefaultBackgroundColor());
+        labelFontColor = new Color(allConfigs.getLabelFontColor());
+        border = BorderFactory.createLineBorder(new Color(allConfigs.getBorderColor()));
 
         //frame
         searchBar.setBounds(positionX, positionY, searchBarWidth, searchBarHeight);
@@ -152,7 +154,7 @@ public class SearchBar {
         searchBar.setUndecorated(true);
         searchBar.getRootPane().setWindowDecorationStyle(JRootPane.NONE);
         searchBar.setBackground(transparentColor);
-        searchBar.setOpacity(AllConfigs.getInstance().getTransparency());
+        searchBar.setOpacity(allConfigs.getTransparency());
         searchBar.setContentPane(panel);
         searchBar.setType(JFrame.Type.UTILITY);
         searchBar.setAlwaysOnTop(true);
@@ -209,7 +211,7 @@ public class SearchBar {
             @Override
             public void focusLost(FocusEvent e) {
                 if (System.currentTimeMillis() - visibleStartTime > 500) {
-                    if (showingMode == Enums.ShowingSearchBarMode.NORMAL_SHOWING && AllConfigs.getInstance().isLoseFocusClose()) {
+                    if (showingMode == Enums.ShowingSearchBarMode.NORMAL_SHOWING && allConfigs.isLoseFocusClose()) {
                         if (!isPreviewMode.get()) {
                             closeSearchBar();
                         }
@@ -307,6 +309,8 @@ public class SearchBar {
      * @throws Exception 创建错误
      */
     private void createShortCut(String fileOrFolderPath, String writeShortCutPath, boolean isNotifyUser) throws Exception {
+        EventUtil eventUtil = EventUtil.getInstance();
+        TranslateUtil translateUtil = TranslateUtil.getInstance();
         String lower = fileOrFolderPath.toLowerCase();
         if (lower.endsWith(".lnk") || lower.endsWith(".url")) {
             //直接复制文件
@@ -320,9 +324,9 @@ public class SearchBar {
             Runtime.getRuntime().exec("cmd.exe " + commandToGenLnk);
         }
         if (isNotifyUser) {
-            EventUtil.getInstance().putEvent(new ShowTaskBarMessageEvent(
-                    TranslateUtil.getInstance().getTranslation("Info"),
-                    TranslateUtil.getInstance().getTranslation("Shortcut created")));
+            eventUtil.putEvent(new ShowTaskBarMessageEvent(
+                    translateUtil.getTranslation("Info"),
+                       translateUtil.getTranslation("Shortcut created")));
         }
     }
 
@@ -331,6 +335,7 @@ public class SearchBar {
      */
     private void addSearchBarMouseListener() {
         searchBar.addMouseListener(new MouseAdapter() {
+            private final AllConfigs allConfigs = AllConfigs.getInstance();
             @Override
             public void mousePressed(MouseEvent e) {
                 int count = e.getClickCount();
@@ -348,7 +353,7 @@ public class SearchBar {
                                     if (isOpenLastFolderPressed.get()) {
                                         //打开上级文件夹
                                         openFolderByExplorer(res);
-                                    } else if (AllConfigs.getInstance().isDefaultAdmin() || isRunAsAdminPressed.get()) {
+                                    } else if (allConfigs.isDefaultAdmin() || isRunAsAdminPressed.get()) {
                                         openWithAdmin(res);
                                     } else if (isCopyPathPressed.get()) {
                                         copyToClipBoard(res, true);
@@ -371,7 +376,7 @@ public class SearchBar {
                                 if (isOpenLastFolderPressed.get()) {
                                     //打开上级文件夹
                                     openFolderByExplorer(open.getAbsolutePath());
-                                } else if (AllConfigs.getInstance().isDefaultAdmin() || isRunAsAdminPressed.get()) {
+                                } else if (allConfigs.isDefaultAdmin() || isRunAsAdminPressed.get()) {
                                     openWithAdmin(open.getAbsolutePath());
                                 } else if (isCopyPathPressed.get()) {
                                     copyToClipBoard(open.getAbsolutePath(), true);
@@ -481,12 +486,13 @@ public class SearchBar {
     }
 
     private void copyToClipBoard(Transferable data, boolean isNotifyUser) {
+        TranslateUtil translateUtil = TranslateUtil.getInstance();
         Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
         clipboard.setContents(data, null);
         if (isNotifyUser) {
             EventUtil.getInstance().putEvent(new ShowTaskBarMessageEvent(
-                    TranslateUtil.getInstance().getTranslation("Info"),
-                    TranslateUtil.getInstance().getTranslation("The result has been copied to the clipboard")));
+                    translateUtil.getTranslation("Info"),
+                    translateUtil.getTranslation("The result has been copied to the clipboard")));
         }
     }
 
@@ -502,6 +508,7 @@ public class SearchBar {
             final int timeLimit = 50;
             long pressTime;
             boolean isFirstPress = true;
+            final AllConfigs allConfigs = AllConfigs.getInstance();
 
             @Override
             public void keyPressed(KeyEvent arg0) {
@@ -573,7 +580,7 @@ public class SearchBar {
                                         if (isOpenLastFolderPressed.get()) {
                                             //打开上级文件夹
                                             openFolderByExplorer(res);
-                                        } else if (AllConfigs.getInstance().isDefaultAdmin() || isRunAsAdminPressed.get()) {
+                                        } else if (allConfigs.isDefaultAdmin() || isRunAsAdminPressed.get()) {
                                             openWithAdmin(res);
                                         } else if (isCopyPathPressed.get()) {
                                             copyToClipBoard(res, true);
@@ -602,7 +609,7 @@ public class SearchBar {
                                     if (isOpenLastFolderPressed.get()) {
                                         //打开上级文件夹
                                         openFolderByExplorer(open.getAbsolutePath());
-                                    } else if (AllConfigs.getInstance().isDefaultAdmin() || isRunAsAdminPressed.get()) {
+                                    } else if (allConfigs.isDefaultAdmin() || isRunAsAdminPressed.get()) {
                                         openWithAdmin(open.getAbsolutePath());
                                     } else if (isCopyPathPressed.get()) {
                                         copyToClipBoard(open.getAbsolutePath(), true);
@@ -613,13 +620,13 @@ public class SearchBar {
                             }
                             detectShowingModeAndClose();
                         }
-                    } else if (AllConfigs.getInstance().getOpenLastFolderKeyCode() == key) {
+                    } else if (allConfigs.getOpenLastFolderKeyCode() == key) {
                         //打开上级文件夹热键被点击
                         isOpenLastFolderPressed.set(true);
-                    } else if (AllConfigs.getInstance().getRunAsAdminKeyCode() == key) {
+                    } else if (allConfigs.getRunAsAdminKeyCode() == key) {
                         //以管理员方式运行热键被点击
                         isRunAsAdminPressed.set(true);
-                    } else if (AllConfigs.getInstance().getCopyPathKeyCode() == key) {
+                    } else if (allConfigs.getCopyPathKeyCode() == key) {
                         isCopyPathPressed.set(true);
                     }
                 }
@@ -642,12 +649,12 @@ public class SearchBar {
             @Override
             public void keyReleased(KeyEvent arg0) {
                 int key = arg0.getKeyCode();
-                if (AllConfigs.getInstance().getOpenLastFolderKeyCode() == key) {
+                if (allConfigs.getOpenLastFolderKeyCode() == key) {
                     //复位按键状态
                     isOpenLastFolderPressed.set(false);
-                } else if (AllConfigs.getInstance().getRunAsAdminKeyCode() == key) {
+                } else if (allConfigs.getRunAsAdminKeyCode() == key) {
                     isRunAsAdminPressed.set(false);
-                } else if (AllConfigs.getInstance().getCopyPathKeyCode() == key) {
+                } else if (allConfigs.getCopyPathKeyCode() == key) {
                     isCopyPathPressed.set(false);
                 }
 
@@ -697,30 +704,32 @@ public class SearchBar {
      * return true only the internal command was executed. Otherwise false
      */
     private boolean runInternalCommand(String commandName) throws URISyntaxException, IOException {
+        TranslateUtil translateUtil = TranslateUtil.getInstance();
+        EventUtil eventUtil = EventUtil.getInstance();
         switch (commandName) {
             case "clearbin":
                 detectShowingModeAndClose();
-                if (JOptionPane.showConfirmDialog(null, TranslateUtil.getInstance().getTranslation(
+                if (JOptionPane.showConfirmDialog(null, translateUtil.getTranslation(
                     "Are you sure you want to empty the recycle bin")) == JOptionPane.OK_OPTION) {
                     try {
                         File[] roots = File.listRoots();
                         for (File root : roots) {
                             Runtime.getRuntime().exec("cmd.exe /c rd /s /q " + root.getAbsolutePath() + "$Recycle.Bin");
                         }
-                        JOptionPane.showMessageDialog(null, TranslateUtil.getInstance().getTranslation(
+                        JOptionPane.showMessageDialog(null, translateUtil.getTranslation(
                                 "Successfully empty the recycle bin"));
                     } catch (IOException e) {
-                        JOptionPane.showMessageDialog(null, TranslateUtil.getInstance().getTranslation(
+                        JOptionPane.showMessageDialog(null, translateUtil.getTranslation(
                                 "Failed to empty the recycle bin"));
                     }
                 }
                 return true;
             case "update":
                 detectShowingModeAndClose();
-                EventUtil.getInstance().putEvent(new ShowTaskBarMessageEvent(
-                        TranslateUtil.getInstance().getTranslation("Info"),
-                        TranslateUtil.getInstance().getTranslation("Updating file index")));
-                EventUtil.getInstance().putEvent(new UpdateDatabaseEvent());
+                eventUtil.putEvent(new ShowTaskBarMessageEvent(
+                        translateUtil.getTranslation("Info"),
+                        translateUtil.getTranslation("Updating file index")));
+                  eventUtil.putEvent(new UpdateDatabaseEvent());
                 startSignal.set(false);
                 return true;
             case "help":
@@ -734,7 +743,7 @@ public class SearchBar {
                 return true;
             case "version":
                 detectShowingModeAndClose();
-                JOptionPane.showMessageDialog(null, TranslateUtil.getInstance().getTranslation(
+                JOptionPane.showMessageDialog(null, translateUtil.getTranslation(
                         "Current Version:") + AllConfigs.version);
                 return true;
             default:
@@ -1959,6 +1968,8 @@ public class SearchBar {
 
     private void startMonitorDisk() {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
+            EventUtil eventUtil = EventUtil.getInstance();
+            TranslateUtil translateUtil = TranslateUtil.getInstance();
             File[] roots = File.listRoots();
             if (isAdmin()) {
                 FileMonitor.INSTANCE.set_output(AllConfigs.getInstance().getTmp().getAbsolutePath());
@@ -1969,9 +1980,9 @@ public class SearchBar {
                     }
                 }
             } else {
-                EventUtil.getInstance().putEvent(new ShowTaskBarMessageEvent(
-                        TranslateUtil.getInstance().getTranslation("Warning"),
-                        TranslateUtil.getInstance().getTranslation("Not administrator, file monitoring function is turned off")));
+                eventUtil.putEvent(new ShowTaskBarMessageEvent(
+                        translateUtil.getTranslation("Warning"),
+                        translateUtil.getTranslation("Not administrator, file monitoring function is turned off")));
             }
         });
     }
@@ -2634,6 +2645,7 @@ public class SearchBar {
             //停顿时间0.5s，每一次输入会更新一次startTime，该线程记录endTime
             try {
                 EventUtil eventUtil = EventUtil.getInstance();
+                TranslateUtil translateUtil = TranslateUtil.getInstance();
                 if (AllConfigs.getInstance().isFirstRun()) {
                     runInternalCommand("help");
                 }
@@ -2655,14 +2667,14 @@ public class SearchBar {
                                 boolean isExecuted = runInternalCommand(text.substring(1).toLowerCase());
                                 if (!isExecuted) {
                                     LinkedHashSet<String> cmdSet = new LinkedHashSet<>(AllConfigs.getInstance().getCmdSet());
-                                    cmdSet.add(":clearbin;" + TranslateUtil.getInstance().getTranslation("Clear the recycle bin"));
-                                    cmdSet.add(":update;" + TranslateUtil.getInstance().getTranslation("Update file index"));
-                                    cmdSet.add(":help;" + TranslateUtil.getInstance().getTranslation("View help"));
-                                    cmdSet.add(":version;" + TranslateUtil.getInstance().getTranslation("View Version"));
+                                    cmdSet.add(":clearbin;" + translateUtil.getTranslation("Clear the recycle bin"));
+                                    cmdSet.add(":update;" + translateUtil.getTranslation("Update file index"));
+                                    cmdSet.add(":help;" + translateUtil.getTranslation("View help"));
+                                    cmdSet.add(":version;" + translateUtil.getTranslation("View Version"));
                                     for (String i : cmdSet) {
                                         if (i.startsWith(text)) {
                                             listResultsNum.incrementAndGet();
-                                            String result = TranslateUtil.getInstance().getTranslation("Run command") + i;
+                                            String result = translateUtil.getTranslation("Run command") + i;
                                             listResults.add(result);
                                         }
                                         String[] cmdInfo = semicolon.split(i);
@@ -2717,10 +2729,10 @@ public class SearchBar {
 
                         } else if (databaseUtil.getStatus() == Enums.DatabaseStatus.VACUUM) {
                             setLabelChosen(label1);
-                            label1.setText(TranslateUtil.getInstance().getTranslation("Organizing database"));
+                            label1.setText(translateUtil.getTranslation("Organizing database"));
                         } else if (databaseUtil.getStatus() == Enums.DatabaseStatus.MANUAL_UPDATE) {
                             setLabelChosen(label1);
-                            label1.setText(TranslateUtil.getInstance().getTranslation("Updating file index") + "...");
+                            label1.setText(translateUtil.getTranslation("Updating file index") + "...");
                         }
 
                         if (databaseUtil.getStatus() != Enums.DatabaseStatus.NORMAL) {
@@ -2941,12 +2953,13 @@ public class SearchBar {
      * @param isChosen 是否当前被选中
      */
     private void showCommandOnLabel(String command, JLabel label, boolean isChosen) {
+        GetIconUtil getIconUtil = GetIconUtil.getInstance();
         String[] info = semicolon.split(command);
         String path = info[1];
         String name = info[0];
-        ImageIcon imageIcon = GetIconUtil.getInstance().getCommandIcon(colon.split(name)[1], iconSideLength, iconSideLength);
+        ImageIcon imageIcon = getIconUtil.getCommandIcon(colon.split(name)[1], iconSideLength, iconSideLength);
         if (imageIcon == null) {
-            imageIcon = GetIconUtil.getInstance().getBigIcon(path, iconSideLength, iconSideLength);
+            imageIcon = getIconUtil.getBigIcon(path, iconSideLength, iconSideLength);
         }
         label.setIcon(imageIcon);
         label.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>" + path + "</font></body></html>");
@@ -3088,6 +3101,7 @@ public class SearchBar {
      * @param path 文件路径
      */
     private void openWithAdmin(String path) {
+        TranslateUtil translateUtil = TranslateUtil.getInstance();
         File file = new File(path);
         if (file.exists()) {
             try {
@@ -3100,12 +3114,12 @@ public class SearchBar {
                 try {
                     openFolderByExplorerWithException(file.getAbsolutePath());
                 } catch (IOException e1) {
-                    JOptionPane.showMessageDialog(null, TranslateUtil.getInstance().getTranslation("Execute failed"));
+                    JOptionPane.showMessageDialog(null, translateUtil.getTranslation("Execute failed"));
                     e.printStackTrace();
                 }
             }
         } else {
-            JOptionPane.showMessageDialog(null, TranslateUtil.getInstance().getTranslation("File not exist"));
+            JOptionPane.showMessageDialog(null, translateUtil.getTranslation("File not exist"));
         }
     }
 
@@ -3212,11 +3226,14 @@ public class SearchBar {
      * @param content 文件路径
      */
     private void saveCache(String content) {
-        if (AllConfigs.getInstance().getCacheNum() < AllConfigs.getInstance().getCacheNumLimit()) {
-            if (!SettingsFrame.getInstance().isCacheExist(content)) {
-                EventUtil.getInstance().putEvent(new AddToCacheEvent(content));
-                SettingsFrame.getInstance().addCache(content);
-                AllConfigs.getInstance().incrementCacheNum();
+        AllConfigs allConfigs = AllConfigs.getInstance();
+        SettingsFrame settingsFrame = SettingsFrame.getInstance();
+        EventUtil eventUtil = EventUtil.getInstance();
+        if (allConfigs.getCacheNum() < allConfigs.getCacheNumLimit()) {
+            if (!settingsFrame.isCacheExist(content)) {
+                eventUtil.putEvent(new AddToCacheEvent(content));
+                settingsFrame.addCache(content);
+                allConfigs.incrementCacheNum();
             }
         }
     }
@@ -3231,10 +3248,8 @@ public class SearchBar {
                 String eachCache = resultSet.getString("PATH");
                 checkIsMatchedAndAddToList(eachCache, false, true);
             }
-        } catch (Exception throwables) {
-            if (IsDebug.isDebug()) {
-                throwables.printStackTrace();
-            }
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
         }
     }
 
@@ -3282,52 +3297,56 @@ public class SearchBar {
         if (isPriorityFolderExist) {
             ConcurrentLinkedQueue<String> listRemain = new ConcurrentLinkedQueue<>();
             File[] files = path.listFiles();
-            if (!(null == files || files.length == 0)) {
-                for (File each : files) {
-                    checkIsMatchedAndAddToList(each.getAbsolutePath(), false, false);
-                    if (each.isDirectory()) {
-                        listRemain.add(each.getAbsolutePath());
-                    }
+            if (null == files || files.length == 0) {
+                return;
+            }
+            for (File each : files) {
+                checkIsMatchedAndAddToList(each.getAbsolutePath(), false, false);
+                if (each.isDirectory()) {
+                    listRemain.add(each.getAbsolutePath());
                 }
-                int cpuCores = Runtime.getRuntime().availableProcessors();
-                final int threadCount = Math.min(cpuCores, 8);
-                for (int i = 0; i < threadCount; ++i) {
-                    CachedThreadPoolUtil.getInstance().executeTask(() -> {
-                        long startSearchTime = System.currentTimeMillis();
-                        while (!listRemain.isEmpty()) {
-                            String remain = listRemain.poll();
-                            if (remain != null) {
-                                File[] allFiles = new File(remain).listFiles();
-                                if (!(allFiles == null || allFiles.length == 0)) {
-                                    for (File each : allFiles) {
-                                        checkIsMatchedAndAddToList(each.getAbsolutePath(), false, false);
-                                        if (startTime > startSearchTime) {
-                                            listRemain.clear();
-                                            break;
-                                        }
-                                        if (each.isDirectory()) {
-                                            listRemain.add(each.getAbsolutePath());
-                                        }
-                                    }
-                                }
+            }
+
+            int cpuCores = Runtime.getRuntime().availableProcessors();
+            final int threadCount = Math.min(cpuCores, 8);
+            for (int i = 0; i < threadCount; ++i) {
+                CachedThreadPoolUtil.getInstance().executeTask(() -> {
+                    long startSearchTime = System.currentTimeMillis();
+                    while (!listRemain.isEmpty()) {
+                        String remain = listRemain.poll();
+                        if (remain == null || remain.isEmpty()) {
+                            continue;
+                        }
+                        File[] allFiles = new File(remain).listFiles();
+                        if (allFiles == null || allFiles.length == 0) {
+                            continue;
+                        }
+                        for (File each : allFiles) {
+                            checkIsMatchedAndAddToList(each.getAbsolutePath(), false, false);
+                            if (startTime > startSearchTime) {
+                                listRemain.clear();
+                                break;
+                            }
+                            if (each.isDirectory()) {
+                                listRemain.add(each.getAbsolutePath());
                             }
                         }
-                        taskNum.incrementAndGet();
-                    });
-                }
-                //等待所有线程完成
-                try {
-                    int count = 0;
-                    EventUtil eventUtil = EventUtil.getInstance();
-                    while (taskNum.get() != threadCount) {
-                        TimeUnit.MILLISECONDS.sleep(1);
-                        count++;
-                        if (count >= 1000 || (!eventUtil.isNotMainExit())) {
-                            break;
-                        }
                     }
-                } catch (InterruptedException ignored) {
+                    taskNum.incrementAndGet();
+                });
+            }
+            //等待所有线程完成
+            try {
+                int count = 0;
+                EventUtil eventUtil = EventUtil.getInstance();
+                while (taskNum.get() != threadCount) {
+                    TimeUnit.MILLISECONDS.sleep(1);
+                    count++;
+                    if (count >= 2000 || (!eventUtil.isNotMainExit())) {
+                        break;
+                    }
                 }
+            } catch (InterruptedException ignored) {
             }
         }
     }
@@ -3342,13 +3361,13 @@ public class SearchBar {
     }
 
     private void clearTextFieldText() {
-        Runnable clear = () -> {
+        SwingUtilities.invokeLater(() -> {
             try {
-                textField.setText(null);
-            } catch (Exception ignored) {
+                textField.setText("");
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-        };
-        SwingUtilities.invokeLater(clear);
+        });
     }
 
     /**
