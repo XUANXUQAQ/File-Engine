@@ -43,7 +43,8 @@ public class DownloadUtil {
     private DownloadUtil() {}
 
     public static void registerEventHandler() {
-        EventUtil.getInstance().register(StartDownloadEvent.class, new EventHandler() {
+        EventUtil eventUtil = EventUtil.getInstance();
+        eventUtil.register(StartDownloadEvent.class, new EventHandler() {
             @Override
             public void todo(Event event) {
                 StartDownloadEvent startDownloadTask = (StartDownloadEvent) event;
@@ -51,7 +52,7 @@ public class DownloadUtil {
             }
         });
 
-        EventUtil.getInstance().register(StopDownloadEvent.class, new EventHandler() {
+        eventUtil.register(StopDownloadEvent.class, new EventHandler() {
             @Override
             public void todo(Event event) {
                 StopDownloadEvent stopDownloadTask = (StopDownloadEvent) event;

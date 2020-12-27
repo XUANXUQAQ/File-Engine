@@ -462,7 +462,7 @@ public class SearchBar {
         copyToClipBoard(result, false);
         x = GetHandle.INSTANCE.getToolbarClickX();
         y = GetHandle.INSTANCE.getToolbarClickY();
-        robotUtil.mouseClicked(x, y, 1, InputEvent.BUTTON1_MASK);
+        robotUtil.mouseClicked(x, y, 1, InputEvent.BUTTON1_DOWN_MASK);
         robotUtil.keyTyped(KeyEvent.VK_CONTROL, KeyEvent.VK_V);
         robotUtil.keyTyped(KeyEvent.VK_ENTER);
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
@@ -2904,7 +2904,7 @@ public class SearchBar {
             //使用鼠标点击窗口以获得焦点
             int X = searchBar.getX() + (textField.getWidth() / 2);
             int Y = searchBar.getY() + (textField.getHeight() / 2);
-            RobotUtil.getInstance().mouseClicked(X, Y, 1, InputEvent.BUTTON1_MASK);
+            RobotUtil.getInstance().mouseClicked(X, Y, 1, InputEvent.BUTTON1_DOWN_MASK);
         }
         textField.setCaretPosition(0);
         startTime = System.currentTimeMillis();
