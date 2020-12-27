@@ -13,8 +13,6 @@ import FileEngine.eventHandler.impl.stop.CloseEvent;
 import FileEngine.eventHandler.impl.stop.RestartEvent;
 import FileEngine.eventHandler.impl.stop.StopEvent;
 import FileEngine.utils.CachedThreadPoolUtil;
-import com.sun.istack.internal.NotNull;
-
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
@@ -67,7 +65,7 @@ public class EventUtil {
      * @param event 任务实例
      * @return true如果任务正常执行失败， false如果执行正常完成
      */
-    public boolean waitForEvent(@NotNull Event event) {
+    public boolean waitForEvent(Event event) {
         try {
             int timeout = 200;
             int count = 0;
@@ -146,7 +144,7 @@ public class EventUtil {
      * @param eventType 需要监听的任务类型
      * @param handler 需要执行的操作
      */
-    public void register(@NotNull Class<? extends Event> eventType, @NotNull EventHandler handler) {
+    public void register(Class<? extends Event> eventType, EventHandler handler) {
         if (IsDebug.isDebug()) {
             System.err.println("注册监听器" + eventType.toString());
         }
