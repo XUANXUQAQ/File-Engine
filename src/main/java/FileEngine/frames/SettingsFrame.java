@@ -31,8 +31,6 @@ import FileEngine.utils.moveFiles.MoveDesktopFiles;
 import FileEngine.utils.pluginSystem.Plugin;
 import FileEngine.utils.pluginSystem.PluginUtil;
 import com.alibaba.fastjson.JSONObject;
-import com.sun.istack.internal.NotNull;
-
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
@@ -584,12 +582,12 @@ public class SettingsFrame {
         return false;
     }
 
-    private Color getColorFromTextFieldStr(@NotNull JTextField textField) {
+    private Color getColorFromTextFieldStr(JTextField textField) {
         String tmp;
         return canParseToRGB(tmp = textField.getText()) ? new Color(Integer.parseInt(tmp, 16)) : null;
     }
 
-    private void setColorChooserLabel(Color color, @NotNull JLabel label) {
+    private void setColorChooserLabel(Color color, JLabel label) {
         if (color != null) {
             label.setBackground(color);
             label.setForeground(color);

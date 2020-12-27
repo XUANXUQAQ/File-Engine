@@ -28,8 +28,6 @@ import com.formdev.flatlaf.FlatLightLaf;
 import com.formdev.flatlaf.intellijthemes.*;
 import com.formdev.flatlaf.intellijthemes.materialthemeuilite.FlatMaterialDarkerIJTheme;
 import com.formdev.flatlaf.intellijthemes.materialthemeuilite.FlatMaterialLighterIJTheme;
-import com.sun.istack.internal.NotNull;
-
 import javax.swing.*;
 import java.awt.*;
 import java.io.*;
@@ -653,7 +651,7 @@ public class AllConfigs {
         }
     }
 
-    private Object getFromJson(JSONObject json,String key, @NotNull Object defaultObj) {
+    private Object getFromJson(JSONObject json,String key, Object defaultObj) {
         if (json == null) {
             return defaultObj;
         }
