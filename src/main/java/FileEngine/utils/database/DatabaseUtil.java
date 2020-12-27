@@ -19,6 +19,7 @@ import java.nio.charset.StandardCharsets;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
@@ -34,8 +35,13 @@ public class DatabaseUtil {
     private static volatile DatabaseUtil INSTANCE = null;
 
     private DatabaseUtil() {
-        addOrDeleteRecordsToDatabaseThread();
-        checkTimeAndExecuteSqlCommandsThread();
+        addRecordsToDatabaseThread();
+        deleteRecordsToDatabaseThread();
+        checkTimeAndSendExecuteSqlSignalThread();
+        executeSqlCommandsThread();
+    }
+
+    private void executeSqlCommandsThread() {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             try (Statement statement = SQLiteUtil.getStatement()) {
                 while (EventUtil.getInstance().isNotMainExit()) {
@@ -63,62 +69,85 @@ public class DatabaseUtil {
         return INSTANCE;
     }
 
-    private void addOrDeleteRecordsToDatabaseThread() {
+    private void deleteRecordsToDatabaseThread() {
+        AllConfigs allConfigs = AllConfigs.getInstance();
+        EventUtil eventUtil = EventUtil.getInstance();
+
+        CachedThreadPoolUtil.getInstance().executeTask(() -> {
+            try (BufferedReader readerRemove =
+                         new BufferedReader(
+                                 new InputStreamReader(
+                                         new FileInputStream(
+                                                 allConfigs.getTmp().getAbsolutePath() + File.separator + "fileRemoved.txt"),
+                                         StandardCharsets.UTF_8
+                                 )
+                         )
+            ) {
+                String tmp;
+                int fileCount = 0;
+                LinkedHashSet<String> deletePaths = new LinkedHashSet<>();
+                while (eventUtil.isNotMainExit()) {
+                    if (status == Enums.DatabaseStatus.NORMAL) {
+                        while ((tmp = readerRemove.readLine()) != null) {
+                            fileCount++;
+                            deletePaths.add(tmp);
+                            if (fileCount > 3000) {
+                                fileCount = 0;
+                                break;
+                            }
+                        }
+                    }
+                    if (status == Enums.DatabaseStatus.NORMAL) {
+                        if (!deletePaths.isEmpty()) {
+                            eventUtil.putEvent(new DeleteFromDatabaseEvent(deletePaths));
+                            deletePaths = new LinkedHashSet<>();
+                        }
+                    }
+                    TimeUnit.MILLISECONDS.sleep(10);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (InterruptedException ignored) {
+            }
+        });
+    }
+
+    private void addRecordsToDatabaseThread() {
         AllConfigs allConfigs = AllConfigs.getInstance();
         EventUtil eventUtil = EventUtil.getInstance();
 
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             //检测文件添加线程
-            LinkedHashSet<String> addPaths = new LinkedHashSet<>();
-            LinkedHashSet<String> deletePaths = new LinkedHashSet<>();
-            try (BufferedReader readerAdd = new BufferedReader(
-                    new InputStreamReader(
-                    new FileInputStream(
-                            allConfigs.getTmp().getAbsolutePath() + File.separator + "fileAdded.txt"),
-                            StandardCharsets.UTF_8));
-                 BufferedReader readerRemove = new BufferedReader(
-                         new InputStreamReader(
-                         new FileInputStream(
-                                 allConfigs.getTmp().getAbsolutePath() + File.separator + "fileRemoved.txt"),
-                                 StandardCharsets.UTF_8))) {
+            try (BufferedReader readerAdd =
+                         new BufferedReader(
+                                 new InputStreamReader(
+                                         new FileInputStream(
+                                                 allConfigs.getTmp().getAbsolutePath() + File.separator + "fileAdded.txt"),
+                                         StandardCharsets.UTF_8
+                                 )
+                         )
+            ) {
                 String tmp;
-                final int maxWaitTimeMills = 1000;
-                boolean breakFlag = false;
                 int fileCount = 0;
-                long startTime = System.currentTimeMillis();
+                LinkedHashSet<String> addPaths = new LinkedHashSet<>();
                 while (eventUtil.isNotMainExit()) {
                     if (status == Enums.DatabaseStatus.NORMAL) {
                         while ((tmp = readerAdd.readLine()) != null) {
                             fileCount++;
                             addPaths.add(tmp);
                             if (fileCount > 3000) {
-                                breakFlag = true;
+                                fileCount = 0;
                                 break;
-                            }
-                        }
-                        while ((tmp = readerRemove.readLine()) != null) {
-                            fileCount++;
-                            deletePaths.add(tmp);
-                            if (fileCount > 3000) {
-                                breakFlag = true;
-                                break;
-                            }
-                        }
-                        if (System.currentTimeMillis() - startTime > maxWaitTimeMills || breakFlag) {
-                            //超出最大等待时间或者强制跳出
-                            startTime = System.currentTimeMillis();
-                            breakFlag = false;
-                            if (!addPaths.isEmpty()) {
-                                eventUtil.putEvent(new AddToDatabaseEvent(addPaths));
-                                addPaths = new LinkedHashSet<>();
-                            }
-                            if (!deletePaths.isEmpty()) {
-                                eventUtil.putEvent(new DeleteFromDatabaseEvent(deletePaths));
-                                deletePaths = new LinkedHashSet<>();
                             }
                         }
                     }
-                    TimeUnit.MILLISECONDS.sleep(50);
+                    if (status == Enums.DatabaseStatus.NORMAL) {
+                        if (!addPaths.isEmpty()) {
+                            eventUtil.putEvent(new AddToDatabaseEvent(addPaths));
+                            addPaths = new LinkedHashSet<>();
+                        }
+                    }
+                    TimeUnit.MILLISECONDS.sleep(10);
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -705,12 +734,38 @@ public class DatabaseUtil {
         return false;
     }
 
+    private boolean isTableExist(ArrayList<String> tableNames) {
+        try (Statement stmt = SQLiteUtil.getStatement()) {
+            for (String tableName : tableNames) {
+                String sql= String.format("SELECT ASCII, PATH FROM %s;", tableName);
+                stmt.executeQuery(sql);
+            }
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private boolean isDatabaseDamaged() {
+        ArrayList<String> list = new ArrayList<>();
+        for (int i = 0; i <= 40; i++) {
+            list.add("list" + i);
+        }
+        return !isTableExist(list);
+    }
+
     private void recreateDatabase() {
         commandSet.clear();
         //删除所有表和索引
 
+        boolean isDataDamaged = isDatabaseDamaged();
+
         for (int i = 0; i <= 40; i++) {
-            commandSet.add(new SQLWithTaskId(SqlTaskIds.DROP_TABLE, "DROP TABLE IF EXISTS list" + i + ";"));
+            if (isDataDamaged) {
+                commandSet.add(new SQLWithTaskId(SqlTaskIds.DROP_TABLE, "DROP TABLE IF EXISTS list" + i + ";"));
+            } else {
+                commandSet.add(new SQLWithTaskId(SqlTaskIds.DELETE_FROM_LIST, "DELETE FROM list" + i + ";"));
+            }
             commandSet.add(new SQLWithTaskId(SqlTaskIds.DROP_INDEX, "DROP INDEX IF EXISTS list" + i + "_index;"));
         }
         //创建新表
@@ -722,7 +777,7 @@ public class DatabaseUtil {
         executeImmediately();
     }
 
-    private void checkTimeAndExecuteSqlCommandsThread() {
+    private void checkTimeAndSendExecuteSqlSignalThread() {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             // 时间检测线程
             final long updateTimeLimit = AllConfigs.getInstance().getUpdateTimeLimit();

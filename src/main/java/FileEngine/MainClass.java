@@ -113,10 +113,13 @@ public class MainClass {
                 File temp = new File(file.getAbsolutePath(), name);
                 if (temp.isDirectory()) {//判断是否是目录
                     deleteDir(temp.getAbsolutePath());//递归调用，删除目录里的内容
-                    temp.delete();//删除空目录
+                    //删除空目录
+                    if (temp.delete()) {
+                        System.err.println("Failed to delete " + name);
+                    }
                 } else {
                     if (!temp.delete()) {//直接删除文件
-                        System.out.println("Failed to delete " + name);
+                        System.err.println("Failed to delete " + name);
                     }
                 }
             }
@@ -189,6 +192,27 @@ public class MainClass {
         }
     }
 
+    private static void initDatabase() throws SQLException {
+        SQLiteUtil.initConnection("jdbc:sqlite:data.db");
+        createCacheTable();
+    }
+
+    private static void checkPluginInfo() {
+        checkVersion();
+        checkOldPlugin();
+        checkRepeatPlugin();
+        checkErrorPlugin();
+    }
+
+    private static void checkRunningDirAtDiskC() {
+        EventUtil eventUtil = EventUtil.getInstance();
+        if (isAtDiskC()) {
+            eventUtil.putEvent(new ShowTaskBarMessageEvent(
+                    TranslateUtil.getInstance().getTranslation("Warning"),
+                    TranslateUtil.getInstance().getTranslation("Putting the software on the C drive may cause index failure issue")));
+        }
+    }
+
     public static void main(String[] args) {
         try {
             Class.forName("org.sqlite.JDBC");
@@ -198,10 +222,7 @@ public class MainClass {
                 return;
             }
 
-            SQLiteUtil.initConnection("jdbc:sqlite:data.db");
-
-            createCacheTable();
-
+            initDatabase();
             startOrIgnoreUpdateAndExit(isUpdateSignExist());
             updatePlugins();
 
@@ -215,26 +236,19 @@ public class MainClass {
 
             initializeDllInterface();
 
-            EventUtil eventUtil = EventUtil.getInstance();
-
             ClassScannerUtil.executeStaticMethodByName("registerEventHandler");
 
-            if (initAllFailed()) {
+            EventUtil eventUtil = EventUtil.getInstance();
+
+            if (sendStartSignalFailed()) {
                 System.err.println("初始化失败");
                 System.exit(0);
             }
 
             eventUtil.putEvent(new SetDefaultSwingLaf());
-
             eventUtil.putEvent(new SetConfigsEvent());
 
-            checkVersion();
-
-            checkOldPlugin();
-
-            checkRepeatPlugin();
-
-            checkErrorPlugin();
+            checkPluginInfo();
 
             eventUtil.putEvent(new ReleasePluginResourcesEvent());
 
@@ -247,12 +261,10 @@ public class MainClass {
                 checkIndex();
             }
 
-            if (isAtDiskC()) {
-                eventUtil.putEvent(new ShowTaskBarMessageEvent(
-                        TranslateUtil.getInstance().getTranslation("Warning"),
-                        TranslateUtil.getInstance().getTranslation("Putting the software on the C drive may cause index failure issue")));
-            }
+            checkRunningDirAtDiskC();
+
             mainLoop();
+
             //确保关闭所有资源
             TimeUnit.SECONDS.sleep(5);
             System.exit(0);
@@ -350,7 +362,7 @@ public class MainClass {
         }
     }
 
-    private static boolean initAllFailed() {
+    private static boolean sendStartSignalFailed() {
         EventUtil eventUtil = EventUtil.getInstance();
 
         Event event = new ReadConfigsAndBootSystemEvent();
@@ -396,7 +408,9 @@ public class MainClass {
     private static void startOrIgnoreUpdateAndExit(boolean isUpdate) throws InterruptedException, IOException {
         if (isUpdate) {
             File update = new File("user/update");
-            update.delete();
+            if (update.delete()) {
+                System.err.println("删除更新标志失败");
+            }
             File updaterBat = new File("updater.bat");
             copyOrIgnoreFile("updater.bat", "/updater.bat", UPDATER_BAT_64_MD_5);
             Desktop desktop;

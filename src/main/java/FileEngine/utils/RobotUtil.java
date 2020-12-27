@@ -3,7 +3,7 @@ package FileEngine.utils;
 import java.awt.*;
 
 public class RobotUtil {
-    private static Robot robot = null;
+    private static Robot robot;
 
     private static volatile RobotUtil INSTANCE = null;
 
@@ -24,14 +24,6 @@ public class RobotUtil {
             }
         }
         return INSTANCE;
-    }
-
-    public static void initInstance() {
-        try {
-            Class.forName("FileEngine.robotUtil.RobotUtil$MouseClickBuilder");
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        }
     }
 
     public void mouseClicked(int x, int y, int count, int mouseButtonNum) {
