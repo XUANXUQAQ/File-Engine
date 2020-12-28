@@ -43,8 +43,9 @@ public class DatabaseUtil {
 
     private void executeSqlCommandsThread() {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
+            EventUtil eventUtil = EventUtil.getInstance();
             try (Statement statement = SQLiteUtil.getStatement()) {
-                while (EventUtil.getInstance().isNotMainExit()) {
+                while (eventUtil.isNotMainExit()) {
                     if (isExecuteImmediately.get()) {
                         isExecuteImmediately.set(false);
                         executeAllCommands(statement);
@@ -71,7 +72,6 @@ public class DatabaseUtil {
 
     private void deleteRecordsToDatabaseThread() {
         AllConfigs allConfigs = AllConfigs.getInstance();
-        EventUtil eventUtil = EventUtil.getInstance();
 
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             try (BufferedReader readerRemove =
@@ -86,22 +86,21 @@ public class DatabaseUtil {
                 String tmp;
                 int fileCount = 0;
                 LinkedHashSet<String> deletePaths = new LinkedHashSet<>();
+                EventUtil eventUtil = EventUtil.getInstance();
                 while (eventUtil.isNotMainExit()) {
                     if (status == Enums.DatabaseStatus.NORMAL) {
                         while ((tmp = readerRemove.readLine()) != null) {
                             fileCount++;
                             deletePaths.add(tmp);
                             if (fileCount > 3000) {
-                                fileCount = 0;
                                 break;
                             }
                         }
                     }
-                    if (status == Enums.DatabaseStatus.NORMAL) {
-                        if (!deletePaths.isEmpty()) {
-                            eventUtil.putEvent(new DeleteFromDatabaseEvent(deletePaths));
-                            deletePaths = new LinkedHashSet<>();
-                        }
+                    if (status == Enums.DatabaseStatus.NORMAL && !deletePaths.isEmpty()) {
+                        eventUtil.putEvent(new DeleteFromDatabaseEvent(deletePaths));
+                        deletePaths = new LinkedHashSet<>();
+                        fileCount = 0;
                     }
                     TimeUnit.MILLISECONDS.sleep(10);
                 }
@@ -113,10 +112,8 @@ public class DatabaseUtil {
     }
 
     private void addRecordsToDatabaseThread() {
-        AllConfigs allConfigs = AllConfigs.getInstance();
-        EventUtil eventUtil = EventUtil.getInstance();
-
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
+            AllConfigs allConfigs = AllConfigs.getInstance();
             //检测文件添加线程
             try (BufferedReader readerAdd =
                          new BufferedReader(
@@ -130,22 +127,21 @@ public class DatabaseUtil {
                 String tmp;
                 int fileCount = 0;
                 LinkedHashSet<String> addPaths = new LinkedHashSet<>();
+                EventUtil eventUtil = EventUtil.getInstance();
                 while (eventUtil.isNotMainExit()) {
                     if (status == Enums.DatabaseStatus.NORMAL) {
                         while ((tmp = readerAdd.readLine()) != null) {
                             fileCount++;
                             addPaths.add(tmp);
                             if (fileCount > 3000) {
-                                fileCount = 0;
                                 break;
                             }
                         }
                     }
-                    if (status == Enums.DatabaseStatus.NORMAL) {
-                        if (!addPaths.isEmpty()) {
-                            eventUtil.putEvent(new AddToDatabaseEvent(addPaths));
-                            addPaths = new LinkedHashSet<>();
-                        }
+                    if (status == Enums.DatabaseStatus.NORMAL && !addPaths.isEmpty()) {
+                        eventUtil.putEvent(new AddToDatabaseEvent(addPaths));
+                        addPaths = new LinkedHashSet<>();
+                        fileCount = 0;
                     }
                     TimeUnit.MILLISECONDS.sleep(10);
                 }
@@ -783,7 +779,7 @@ public class DatabaseUtil {
             final long updateTimeLimit = AllConfigs.getInstance().getUpdateTimeLimit();
             try {
                 EventUtil eventUtil = EventUtil.getInstance();
-                while (EventUtil.getInstance().isNotMainExit()) {
+                while (eventUtil.isNotMainExit()) {
                     if (status == Enums.DatabaseStatus.NORMAL) {
                         eventUtil.putEvent(new ExecuteSQLEvent());
                     }
