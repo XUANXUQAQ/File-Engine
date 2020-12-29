@@ -451,11 +451,28 @@ public class DatabaseUtil {
         return 0;
     }
 
+    /**
+     * 检查要删除的文件是否还未添加
+     * 防止文件刚添加就被删除
+     * @param path 待删除文件路径
+     * @return true如果待删除文件已经在数据库中
+     */
+    private boolean isRemoveFileInDatabase(String path) {
+        for (SQLWithTaskId each : commandSet) {
+            if (each.taskId == SqlTaskIds.INSERT_TO_LIST && each.sql.contains(path)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     private void removeFileFromDatabase(String path) {
         int asciiSum = getAscIISum(getFileName(path));
-        addDeleteSqlCommandByAscii(asciiSum, path);
-        if (IsDebug.isDebug()) {
-            System.out.println("删除" + path + "," + "asciiSum为" + asciiSum);
+        if (isRemoveFileInDatabase(path)) {
+            addDeleteSqlCommandByAscii(asciiSum, path);
+            if (IsDebug.isDebug()) {
+                System.out.println("删除" + path + "," + "asciiSum为" + asciiSum);
+            }
         }
     }
 
@@ -818,7 +835,8 @@ public class DatabaseUtil {
         eventUtil.register(DeleteFromDatabaseEvent.class, new EventHandler() {
             @Override
             public void todo(Event event) {
-                for (Object each : ((DeleteFromDatabaseEvent) event).getPaths()) {
+                DeleteFromDatabaseEvent deleteFromDatabaseEvent = ((DeleteFromDatabaseEvent) event);
+                for (Object each : deleteFromDatabaseEvent.getPaths()) {
                     getInstance().removeFileFromDatabase((String) each);
                 }
             }
