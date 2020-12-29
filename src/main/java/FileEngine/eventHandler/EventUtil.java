@@ -23,7 +23,7 @@ public class EventUtil {
     private final AtomicBoolean exit = new AtomicBoolean(false);
     private final ConcurrentLinkedQueue<Event> eventQueue = new ConcurrentLinkedQueue<>();
     private final ConcurrentLinkedQueue<Event> asyncEventQueue = new ConcurrentLinkedQueue<>();
-    private final ConcurrentHashMap<Class<? extends Event>, EventHandler> TASK_HANDLER_MAP = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Class<? extends Event>, EventHandler> EVENT_HANDLER_MAP = new ConcurrentHashMap<>();
     private final AtomicBoolean isRejectTask = new AtomicBoolean(false);
 
     private final int MAX_TASK_RETRY_TIME = 20;
@@ -99,11 +99,10 @@ public class EventUtil {
             return false;
         }
         event.incrementExecuteTimes();
-        for (Class<? extends Event> eachTaskType : TASK_HANDLER_MAP.keySet()) {
-            if (eachTaskType.isInstance(event)) {
-                TASK_HANDLER_MAP.get(eachTaskType).doTask(event);
-                return false;
-            }
+        EventHandler eventHandler = EVENT_HANDLER_MAP.get(event.getClass());
+        if (eventHandler != null) {
+            eventHandler.doEvent(event);
+            return false;
         }
         //当前无可以接该任务的handler
         return true;
@@ -148,7 +147,7 @@ public class EventUtil {
         if (IsDebug.isDebug()) {
             System.err.println("注册监听器" + eventType.toString());
         }
-        TASK_HANDLER_MAP.put(eventType, handler);
+        EVENT_HANDLER_MAP.put(eventType, handler);
     }
 
     private void startAsyncEventHandler() {
