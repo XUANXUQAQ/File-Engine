@@ -14,35 +14,35 @@
 using namespace std;
 using namespace concurrency;
 
-typedef concurrent_unordered_set<string> fileSet;
+typedef concurrent_unordered_set<string> file_set;
 
 extern "C" __declspec(dllexport) void monitor(const char* path);
 extern "C" __declspec(dllexport) void stop_monitor();
 extern "C" __declspec(dllexport) void set_output(const char* path);
 
 void monitor_path(const char* path);
-std::string to_utf8(const std::wstring& str);
-std::string to_utf8(const wchar_t* buffer, int len);
-std::wstring StringToWString(const std::string& str);
-void write_to_file(std::string record, const char* file_path);
-void add_record(std::string record);
-void delete_record(std::string record);
+inline std::string to_utf8(const std::wstring& str);
+inline std::string to_utf8(const wchar_t* buffer, int len);
+inline std::wstring StringToWString(const std::string& str);
+inline void write_to_file(const std::string& record, const char* file_path);
+inline void add_record(const std::string& record);
+inline void delete_record(const std::string& record);
 void write_add_records_to_file();
 void write_del_records_to_file(); 
 void searchDir(std::string path, std::string output);
-bool isDir(const char* path);
+inline bool isDir(const char* path);
 
 
 wchar_t fileName[1000];
 wchar_t fileRename[1000];
-static volatile bool isRunning = true;
+static volatile bool is_running = true;
 char* output = new char[1000];
-fileSet add_set;
-fileSet del_set;
+file_set add_set;
+file_set del_set;
 char fileRemoved[1000];
 char fileAdded[1000];
 
-bool isDir(const char* path)
+inline bool isDir(const char* path)
 {
     struct stat s{};
     if (stat(path, &s) == 0) {
@@ -96,17 +96,17 @@ void searchDir(const string path, const string output_path)
     }
 }
 
-void add_record(string record)
+inline void add_record(const string& record)
 {
     add_set.insert(record);
 }
 
-void delete_record(string record)
+inline void delete_record(const string& record)
 {
     del_set.insert(record);
 }
 
-void write_to_file(string record, const char* file_path) 
+inline void write_to_file(const string& record, const char* file_path)
 {
     ofstream file(file_path, ios::app | ios::binary);
     file << record << endl;
@@ -115,13 +115,13 @@ void write_to_file(string record, const char* file_path)
 
 void write_add_records_to_file()
 {
-    while (isRunning)
+    while (is_running)
     {
         string record;
-        fileSet::iterator iter;
+        file_set::iterator iter;
         for (iter = add_set.begin(); iter != add_set.end(); ++iter) {
             record = *iter;
-            if (!isRunning)
+            if (!is_running)
                 break;
             if (!record.empty())
             {
@@ -139,13 +139,13 @@ void write_add_records_to_file()
 
 void write_del_records_to_file()
 {
-    while (isRunning)
+    while (is_running)
     {
         string record;
-        fileSet::iterator iter;
+        file_set::iterator iter;
         for (iter = del_set.begin(); iter != del_set.end(); ++iter) {
             record = *iter;
-            if (!isRunning)
+            if (!is_running)
                 break;
             if (!record.empty())
             {
@@ -157,9 +157,9 @@ void write_del_records_to_file()
     }
 }
 
-std::string to_utf8(const wchar_t* buffer, int len)
+inline std::string to_utf8(const wchar_t* buffer, int len)
 {
-    int nChars = ::WideCharToMultiByte(
+	const auto nChars = ::WideCharToMultiByte(
         CP_UTF8,
         0,
         buffer,
@@ -187,17 +187,17 @@ std::string to_utf8(const wchar_t* buffer, int len)
     return newbuffer;
 }
 
-std::string to_utf8(const std::wstring & str)
+inline std::string to_utf8(const std::wstring & str)
 {
     return to_utf8(str.c_str(), static_cast<int>(str.size()));
 }
 
-std::wstring StringToWString(const std::string & str)
+inline std::wstring StringToWString(const std::string & str)
 {
     setlocale(LC_ALL, "chs");
-    auto point_to_source = str.c_str();
-    size_t new_size = str.size() + 1;
-    wchar_t* point_to_destination = new wchar_t[new_size];
+    const auto* const point_to_source = str.c_str();
+    const auto new_size = str.size() + 1;
+    auto* const point_to_destination = new wchar_t[new_size];
     wmemset(point_to_destination, 0, new_size);
     mbstowcs(point_to_destination, point_to_source, new_size);
     std::wstring result = point_to_destination;
@@ -226,7 +226,7 @@ __declspec(dllexport) void set_output(const char* path)
 
 __declspec(dllexport) void monitor(const char* path)
 {
-    isRunning = true;
+    is_running = true;
     cout << "Monitoring " << path << endl;
     thread t(monitor_path, path);
     t.detach();
@@ -235,13 +235,13 @@ __declspec(dllexport) void monitor(const char* path)
 
 __declspec(dllexport) void stop_monitor()
 {
-    isRunning = false;
+    is_running = false;
     delete[] output;
 }
 
 void monitor_path(const char* path)
 {
-    DWORD cbBytes;
+    DWORD cb_bytes;
     char file_name[1000];   //设置文件名
     char file_rename[1000]; //设置文件重命名后的名字;
     char _path[1000];
@@ -271,11 +271,11 @@ void monitor_path(const char* path)
 
     auto* pnotify = reinterpret_cast<FILE_NOTIFY_INFORMATION*>(notify);
 
-    while (isRunning)
+    while (is_running)
     {
         if (ReadDirectoryChangesW(dirHandle, &notify, 1024, true,
             FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_DIR_NAME | FILE_NOTIFY_CHANGE_SIZE,
-            &cbBytes, nullptr, nullptr))
+            &cb_bytes, nullptr, nullptr))
         {
             //转换文件名为多字节字符串;
             if (pnotify->FileName)
@@ -289,7 +289,7 @@ void monitor_path(const char* path)
             //获取重命名的文件名;
             if (pnotify->NextEntryOffset != 0 && (pnotify->FileNameLength > 0 && pnotify->FileNameLength < 1000))
             {
-                PFILE_NOTIFY_INFORMATION p = reinterpret_cast<PFILE_NOTIFY_INFORMATION>(reinterpret_cast<char*>(pnotify) + pnotify->NextEntryOffset);
+	            auto p = reinterpret_cast<PFILE_NOTIFY_INFORMATION>(reinterpret_cast<char*>(pnotify) + pnotify->NextEntryOffset);
                 memset(file_rename, 0, 1000);
                 memset(fileRename, 0, 1000);
                 wcscpy_s(fileRename, pnotify->FileName);
