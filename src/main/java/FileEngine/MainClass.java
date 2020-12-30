@@ -36,7 +36,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 
 public class MainClass {
-    private static final String FILE_MONITOR_64_MD_5 = "f4ca7d02da7b1ef46a7e392365b6cf58";
+    private static final String FILE_MONITOR_64_MD_5 = "5a8c123397c8e89614d4f9b91c2fa8f9";
     private static final String FILE_SEARCHER_64_MD_5 = "fa6a144d3f7bf6363abd143ce777f417";
     private static final String GET_ASC_II_64_MD_5 = "eff607d2dd4a7e4c878948fe8f24b3ea";
     private static final String HOTKEY_LISTENER_64_MD_5 = "dca474d8385fd9bbd6a3ea3e7375bba0";
