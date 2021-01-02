@@ -1,5 +1,6 @@
 package FileEngine;
 
+import FileEngine.eventHandler.impl.stop.RestartEvent;
 import FileEngine.utils.classScan.ClassScannerUtil;
 import FileEngine.configs.AllConfigs;
 import FileEngine.configs.Enums;
@@ -280,6 +281,7 @@ public class MainClass {
         int checkTimeCount = 0;
         long timeDiff;
         long div = 24 * 60 * 60 * 1000;
+        int restartCount = 0;
 
         StringBuilder notLatestPluginsBuilder = new StringBuilder();
         AtomicBoolean isFinished = new AtomicBoolean(false);
@@ -308,12 +310,18 @@ public class MainClass {
                 timeDiff = endTime.getTime() - startTime.getTime();
                 long diffDays = timeDiff / div;
                 if (diffDays > 2) {
+                    restartCount++;
                     startTime = endTime;
                     //启动时间已经超过2天,更新索引
                     eventUtil.putEvent(new ShowTaskBarMessageEvent(
                             translateUtil.getTranslation("Info"),
                             translateUtil.getTranslation("Updating file index")));
                     eventUtil.putEvent(new UpdateDatabaseEvent());
+                }
+                if (restartCount > 3) {
+                    restartCount = 0;
+                    //超过6天未重启
+                    eventUtil.putEvent(new RestartEvent());
                 }
             }
             TimeUnit.MILLISECONDS.sleep(50);
