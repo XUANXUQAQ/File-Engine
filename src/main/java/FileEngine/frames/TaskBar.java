@@ -4,6 +4,7 @@ import FileEngine.IsDebug;
 import FileEngine.eventHandler.EventUtil;
 import FileEngine.eventHandler.Event;
 import FileEngine.eventHandler.EventHandler;
+import FileEngine.eventHandler.impl.taskbar.HideTrayIconEvent;
 import FileEngine.eventHandler.impl.taskbar.ShowTaskBarIconEvent;
 import FileEngine.eventHandler.impl.taskbar.ShowTaskBarMessageEvent;
 import FileEngine.eventHandler.impl.stop.CloseEvent;
@@ -124,13 +125,11 @@ public class TaskBar {
     private void closeAndExit() {
         EventUtil eventUtil = EventUtil.getInstance();
         eventUtil.putEvent(new CloseEvent());
-        systemTray.remove(trayIcon);
     }
 
     private void restart() {
         EventUtil eventUtil = EventUtil.getInstance();
         eventUtil.putEvent(new RestartEvent());
-        systemTray.remove(trayIcon);
     }
 
     private void showMessage(String caption, String message) {
@@ -144,7 +143,8 @@ public class TaskBar {
     }
 
     public static void registerEventHandler() {
-        EventUtil.getInstance().register(ShowTaskBarMessageEvent.class, new EventHandler() {
+        EventUtil eventUtil = EventUtil.getInstance();
+        eventUtil.register(ShowTaskBarMessageEvent.class, new EventHandler() {
             @Override
             public void todo(Event event) {
                 ShowTaskBarMessageEvent showTaskBarMessageTask = (ShowTaskBarMessageEvent) event;
@@ -152,10 +152,18 @@ public class TaskBar {
             }
         });
 
-        EventUtil.getInstance().register(ShowTaskBarIconEvent.class, new EventHandler() {
+        eventUtil.register(ShowTaskBarIconEvent.class, new EventHandler() {
             @Override
             public void todo(Event event) {
                 getInstance();
+            }
+        });
+
+        eventUtil.register(HideTrayIconEvent.class, new EventHandler() {
+            @Override
+            public void todo(Event event) {
+                TaskBar taskBar = getInstance();
+                taskBar.systemTray.remove(taskBar.trayIcon);
             }
         });
     }

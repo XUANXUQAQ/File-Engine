@@ -1,6 +1,7 @@
 package FileEngine.eventHandler;
 
 import FileEngine.IsDebug;
+import FileEngine.eventHandler.impl.taskbar.HideTrayIconEvent;
 import FileEngine.utils.database.SQLiteUtil;
 import FileEngine.eventHandler.impl.daemon.StopDaemonEvent;
 import FileEngine.eventHandler.impl.frame.pluginMarket.HidePluginMarketEvent;
@@ -56,6 +57,7 @@ public class EventUtil {
         putEvent(new StopListenHotkeyEvent());
         putEvent(new StopMonitorDiskEvent());
         putEvent(new UnloadAllPluginsEvent());
+        putEvent(new HideTrayIconEvent());
         SQLiteUtil.closeAll();
         exit.set(true);
     }
