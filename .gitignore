@@ -17,7 +17,7 @@ out/
 user/
 plugins/
 cmds.txt
-gc.log
+/gc
 TEST
 !version.json
 C++/isLocalDisk/Debug/

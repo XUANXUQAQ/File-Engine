@@ -1,11 +1,7 @@
 package FileEngine;
 
-import FileEngine.eventHandler.impl.stop.RestartEvent;
-import FileEngine.utils.classScan.ClassScannerUtil;
 import FileEngine.configs.AllConfigs;
 import FileEngine.configs.Enums;
-import FileEngine.utils.database.DatabaseUtil;
-import FileEngine.utils.database.SQLiteUtil;
 import FileEngine.eventHandler.Event;
 import FileEngine.eventHandler.EventUtil;
 import FileEngine.eventHandler.impl.ReadConfigsAndBootSystemEvent;
@@ -13,14 +9,17 @@ import FileEngine.eventHandler.impl.SetDefaultSwingLaf;
 import FileEngine.eventHandler.impl.configs.SetConfigsEvent;
 import FileEngine.eventHandler.impl.database.UpdateDatabaseEvent;
 import FileEngine.eventHandler.impl.plugin.ReleasePluginResourcesEvent;
-import FileEngine.eventHandler.impl.stop.CloseEvent;
+import FileEngine.eventHandler.impl.stop.RestartEvent;
 import FileEngine.eventHandler.impl.taskbar.ShowTaskBarMessageEvent;
 import FileEngine.frames.SettingsFrame;
+import FileEngine.utils.CachedThreadPoolUtil;
 import FileEngine.utils.Md5Util;
+import FileEngine.utils.TranslateUtil;
+import FileEngine.utils.classScan.ClassScannerUtil;
+import FileEngine.utils.database.DatabaseUtil;
+import FileEngine.utils.database.SQLiteUtil;
 import FileEngine.utils.moveFiles.CopyFileUtil;
 import FileEngine.utils.pluginSystem.PluginUtil;
-import FileEngine.utils.CachedThreadPoolUtil;
-import FileEngine.utils.TranslateUtil;
 import com.alibaba.fastjson.JSONObject;
 
 import javax.swing.*;
@@ -238,21 +237,20 @@ public class MainClass {
             Class.forName("org.sqlite.JDBC");
 
             if (!System.getProperty("os.arch").contains("64")) {
-                JOptionPane.showMessageDialog(null, "Not 64 Bit", "ERROR", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(null, "OS Not 64 Bit", "ERROR", JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
             initDatabase();
+
             startOrIgnoreUpdateAndExit(isUpdateSignExist());
+
             updatePlugins();
 
             //清空tmp
             deleteDir(new File("tmp"));
 
-            if (!initFoldersAndFiles()) {
-                System.err.println("initialize dependencies failed");
-                return;
-            }
+            initFoldersAndFiles();
 
             initializeDllInterface();
 
@@ -260,10 +258,7 @@ public class MainClass {
 
             EventUtil eventUtil = EventUtil.getInstance();
 
-            if (sendStartSignalFailed()) {
-                System.err.println("初始化失败");
-                System.exit(0);
-            }
+            sendStartSignalFailed();
 
             eventUtil.putEvent(new SetDefaultSwingLaf());
             eventUtil.putEvent(new SetConfigsEvent());
@@ -290,7 +285,7 @@ public class MainClass {
             System.exit(0);
         } catch (Exception e) {
             e.printStackTrace();
-            closeAndExit();
+            System.exit(-1);
         }
     }
 
@@ -389,17 +384,14 @@ public class MainClass {
         }
     }
 
-    private static boolean sendStartSignalFailed() {
+    private static void sendStartSignalFailed() {
         EventUtil eventUtil = EventUtil.getInstance();
 
         Event event = new ReadConfigsAndBootSystemEvent();
         eventUtil.putEvent(event);
-        return eventUtil.waitForEvent(event);
-    }
-
-    private static void closeAndExit() {
-        EventUtil eventUtil = EventUtil.getInstance();
-        eventUtil.putEvent(new CloseEvent());
+        if (eventUtil.waitForEvent(event)) {
+            throw new RuntimeException("初始化失败");
+        }
     }
 
     private static void releaseAllDependence() {
@@ -452,24 +444,26 @@ public class MainClass {
         }
     }
 
-    private static boolean initFoldersAndFiles() {
-        boolean isFailed;
+    private static void initFoldersAndFiles() {
+        boolean isSucceeded;
         //settings.json
         //isFailed = createFileOrFolder("user/settings.json", true, false);
         //user
-        isFailed = createFileOrFolder("user", false, false);
+        isSucceeded = createFileOrFolder("user", false, false);
         //plugins
-        isFailed &= createFileOrFolder("plugins", false, false);
+        isSucceeded &= createFileOrFolder("plugins", false, false);
         //tmp
         File tmp = new File("tmp");
         String tempPath = tmp.getAbsolutePath();
-        isFailed &= createFileOrFolder(tmp, false, false);
-        isFailed &= createFileOrFolder(tempPath + File.separator + "fileAdded.txt", true, true);
-        isFailed &= createFileOrFolder(tempPath + File.separator + "fileRemoved.txt", true, true);
+        isSucceeded &= createFileOrFolder(tmp, false, false);
+        isSucceeded &= createFileOrFolder(tempPath + File.separator + "fileAdded.txt", true, true);
+        isSucceeded &= createFileOrFolder(tempPath + File.separator + "fileRemoved.txt", true, true);
         //cmd.txt
-        isFailed &= createFileOrFolder("user/cmds.txt", true, false);
+        isSucceeded &= createFileOrFolder("user/cmds.txt", true, false);
         releaseAllDependence();
-        return isFailed;
+        if (!isSucceeded) {
+            throw new RuntimeException("初始化依赖项失败");
+        }
     }
 
     private static boolean createFileOrFolder(File file, boolean isFile, boolean isDeleteOnExit) {

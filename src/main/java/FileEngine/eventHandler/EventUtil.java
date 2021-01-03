@@ -65,7 +65,7 @@ public class EventUtil {
     /**
      * 等待任务
      * @param event 任务实例
-     * @return true如果任务正常执行失败， false如果执行正常完成
+     * @return true如果任务执行失败， false如果执行正常完成
      */
     public boolean waitForEvent(Event event) {
         try {
