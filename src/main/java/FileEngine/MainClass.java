@@ -214,8 +214,27 @@ public class MainClass {
         }
     }
 
+    /**
+     *  -Dfile.encoding=UTF-8
+     *  -Dsun.java2d.noddraw=true
+     *  -Djna.library.path=user
+     *  -Dswing.aatext=true
+     *  -Djna.debug_load=false
+     *  -DFile_Engine_Debug=true
+     */
+    private static void setSystemProperties() {
+        //todo Debug在发布时设置为false
+        System.setProperty("File_Engine_Debug", "false");
+        System.setProperty("file.encoding", "UTF-8");
+        System.setProperty("sun.java2d.noddraw", "true");
+        System.setProperty("jna.library.path", "user");
+        System.setProperty("swing.aatext", "true");
+        System.setProperty("jna.debug_load", "false");
+    }
+
     public static void main(String[] args) {
         try {
+            setSystemProperties();
             Class.forName("org.sqlite.JDBC");
 
             if (!System.getProperty("os.arch").contains("64")) {

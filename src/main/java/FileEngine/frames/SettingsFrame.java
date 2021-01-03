@@ -238,6 +238,7 @@ public class SettingsFrame {
     private JLabel placeholder2;
     private JTextField textFieldSearchCommands;
     private JLabel labelSearchCommand;
+    private JLabel placeholderN;
 
     private static volatile SettingsFrame instance = null;
 
