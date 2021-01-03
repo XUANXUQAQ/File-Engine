@@ -20,7 +20,6 @@ Or enter :help in the search bar. by default Ctrl + Alt + K to call out the sear
   * Simple UI, easy to set up.
   * Adaptive resolution display.   
 ### The software only support 64-bit operating system.
-[Download the latest stable 64-bit](https://github.com/XUANXUQAQ/File-Engine/releases/download/2.8/File-Engine-x64.V2.8.7z)   
 
 Thanks for the following project:   
 1.fastjson (https://github.com/alibaba/fastjson)   
