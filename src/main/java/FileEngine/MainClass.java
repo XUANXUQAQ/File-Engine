@@ -258,7 +258,7 @@ public class MainClass {
 
             EventUtil eventUtil = EventUtil.getInstance();
 
-            sendStartSignalFailed();
+            sendStartSignal();
 
             eventUtil.putEvent(new SetDefaultSwingLaf());
             eventUtil.putEvent(new SetConfigsEvent());
@@ -384,7 +384,7 @@ public class MainClass {
         }
     }
 
-    private static void sendStartSignalFailed() {
+    private static void sendStartSignal() {
         EventUtil eventUtil = EventUtil.getInstance();
 
         Event event = new ReadConfigsAndBootSystemEvent();
@@ -446,8 +446,6 @@ public class MainClass {
 
     private static void initFoldersAndFiles() {
         boolean isSucceeded;
-        //settings.json
-        //isFailed = createFileOrFolder("user/settings.json", true, false);
         //user
         isSucceeded = createFileOrFolder("user", false, false);
         //plugins
