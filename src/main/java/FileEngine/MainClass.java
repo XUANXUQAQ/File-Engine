@@ -206,10 +206,11 @@ public class MainClass {
 
     private static void checkRunningDirAtDiskC() {
         EventUtil eventUtil = EventUtil.getInstance();
+        TranslateUtil translateUtil = TranslateUtil.getInstance();
         if (isAtDiskC()) {
             eventUtil.putEvent(new ShowTaskBarMessageEvent(
-                    TranslateUtil.getInstance().getTranslation("Warning"),
-                    TranslateUtil.getInstance().getTranslation("Putting the software on the C drive may cause index failure issue")));
+                    translateUtil.getTranslation("Warning"),
+                    translateUtil.getTranslation("Putting the software on the C drive may cause index failure issue")));
         }
     }
 
@@ -267,10 +268,11 @@ public class MainClass {
 
             eventUtil.putEvent(new ReleasePluginResourcesEvent());
 
+            TranslateUtil translateUtil = TranslateUtil.getInstance();
             if (isDatabaseDamaged()) {
                 eventUtil.putEvent(new ShowTaskBarMessageEvent(
-                        TranslateUtil.getInstance().getTranslation("Info"),
-                        TranslateUtil.getInstance().getTranslation("Updating file index")));
+                        translateUtil.getTranslation("Info"),
+                        translateUtil.getTranslation("Updating file index")));
                 eventUtil.putEvent(new UpdateDatabaseEvent());
             } else {
                 checkIndex();
