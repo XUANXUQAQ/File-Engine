@@ -24,11 +24,6 @@ public class CheckHotKeyUtil {
     private static volatile CheckHotKeyUtil INSTANCE = null;
 
     public static CheckHotKeyUtil getInstance() {
-        initInstance();
-        return INSTANCE;
-    }
-
-    private static void initInstance() {
         if (INSTANCE == null) {
             synchronized (CheckHotKeyUtil.class) {
                 if (INSTANCE == null) {
@@ -36,6 +31,7 @@ public class CheckHotKeyUtil {
                 }
             }
         }
+        return INSTANCE;
     }
 
     //关闭对热键的检测，在程序彻底关闭时调用

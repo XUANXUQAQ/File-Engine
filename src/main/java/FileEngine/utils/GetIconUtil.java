@@ -26,11 +26,6 @@ public class GetIconUtil {
     private GetIconUtil() {}
 
     public static GetIconUtil getInstance() {
-        initInstance();
-        return INSTANCE;
-    }
-
-    private static void initInstance() {
         if (INSTANCE == null) {
             synchronized (GetIconUtil.class) {
                 if (INSTANCE == null) {
@@ -38,6 +33,7 @@ public class GetIconUtil {
                 }
             }
         }
+        return INSTANCE;
     }
 
     private ImageIcon changeIcon(ImageIcon icon, int width, int height) {

@@ -26,11 +26,6 @@ public class DownloadUtil {
     private static volatile DownloadUtil INSTANCE = null;
 
     public static DownloadUtil getInstance() {
-        initInstance();
-        return INSTANCE;
-    }
-
-    private static void initInstance() {
         if (INSTANCE == null) {
             synchronized (DownloadUtil.class) {
                 if (INSTANCE == null) {
@@ -38,6 +33,7 @@ public class DownloadUtil {
                 }
             }
         }
+        return INSTANCE;
     }
 
     private DownloadUtil() {}
