@@ -255,11 +255,6 @@ public class SearchBar {
     }
 
     public static SearchBar getInstance() {
-        initInstance();
-        return instance;
-    }
-
-    private static void initInstance() {
         if (instance == null) {
             synchronized (SearchBar.class) {
                 if (instance == null) {
@@ -267,6 +262,7 @@ public class SearchBar {
                 }
             }
         }
+        return instance;
     }
 
     /**
