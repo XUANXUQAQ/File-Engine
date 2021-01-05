@@ -20,8 +20,7 @@ public class ClassScannerUtil {
                 try {
                     method = c.getMethod(methodName);
                     method.invoke(null);
-                } catch (NoSuchMethodException e) {
-                    e.printStackTrace();
+                } catch (NoSuchMethodException ignored) {
                 }
             }
         }
