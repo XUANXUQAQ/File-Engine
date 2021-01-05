@@ -10,22 +10,19 @@ public class ClassScannerUtil {
         return ScannerExecutor.getInstance().search(packageName);
     }
 
-    public static void executeStaticMethodByName(String methodName) {
+    public static void executeStaticMethodByName(String methodName) throws InvocationTargetException, IllegalAccessException, ClassNotFoundException {
         String packageName = "FileEngine";
         Set<String> classNames = searchClasses(packageName);
         if (classNames != null) {
-            try {
-                for (String className : classNames) {
-                    Class<?> c = Class.forName(className);
-                    Method method;
-                    try {
-                        method = c.getMethod(methodName);
-                        method.invoke(null);
-                    } catch (NoSuchMethodException ignored) {
-                    }
+            for (String className : classNames) {
+                Class<?> c = Class.forName(className);
+                Method method;
+                try {
+                    method = c.getMethod(methodName);
+                    method.invoke(null);
+                } catch (NoSuchMethodException e) {
+                    e.printStackTrace();
                 }
-            } catch (ClassNotFoundException | IllegalAccessException | InvocationTargetException e) {
-                e.printStackTrace();
             }
         }
     }
