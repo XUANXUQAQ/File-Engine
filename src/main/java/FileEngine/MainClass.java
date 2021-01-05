@@ -339,6 +339,7 @@ public class MainClass {
         int startTimes = 0;
         File startTimeCount = new File("user/startTimeCount.dat");
         boolean isFileCreated;
+        boolean ret = false;
         if (startTimeCount.exists()) {
             isFileCreated = true;
         } else {
@@ -351,9 +352,7 @@ public class MainClass {
         }
         if (isFileCreated) {
             try (BufferedReader reader =
-                         new BufferedReader(
-                                 new InputStreamReader(
-                                         new FileInputStream(startTimeCount), StandardCharsets.UTF_8))) {
+                         new BufferedReader(new InputStreamReader(new FileInputStream(startTimeCount), StandardCharsets.UTF_8))) {
                 //读取启动次数
                 String times = reader.readLine();
                 if (!(times == null || times.isEmpty())) {
@@ -362,7 +361,7 @@ public class MainClass {
                     if (startTimes >= 3) {
                         startTimes = 0;
                         if (DatabaseUtil.getInstance().getStatus() == Enums.DatabaseStatus.NORMAL) {
-                            return true;
+                            ret = true;
                         }
                     }
                 }
@@ -376,7 +375,7 @@ public class MainClass {
                 throwables.printStackTrace();
             }
         }
-        return false;
+        return ret;
     }
 
     private static void sendStartSignal() {
