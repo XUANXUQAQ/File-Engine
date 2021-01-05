@@ -107,28 +107,20 @@ public class MainClass {
         if (!file.exists()) {
             return;
         }
-        String[] content = file.list();//取得当前目录下所有文件和文件夹
-        if (content != null) {
-            for (String name : content) {
-                File temp = new File(file.getAbsolutePath(), name);
-                if (temp.isDirectory()) {//判断是否是目录
-                    deleteDir(temp.getAbsolutePath());//递归调用，删除目录里的内容
-                    //删除空目录
-                    if (temp.delete()) {
-                        System.err.println("Failed to delete " + name);
-                    }
-                } else {
-                    if (!temp.delete()) {//直接删除文件
-                        System.err.println("Failed to delete " + name);
-                    }
-                }
+        File[] content = file.listFiles();//取得当前目录下所有文件和文件夹
+        if (content == null || content.length == 0) {
+            return;
+        }
+        for (File temp : content) {
+            //直接删除文件
+            if (temp.isDirectory()) {//判断是否是目录
+                deleteDir(temp);//递归调用，删除目录里的内容
+            }
+            //删除空目录
+            if (!temp.delete()) {
+                System.err.println("Failed to delete " + temp.getAbsolutePath());
             }
         }
-    }
-
-    private static void deleteDir(String path) {
-        File file = new File(path);
-        deleteDir(file);
     }
 
     private static void deleteUpdater() throws InterruptedException {
@@ -257,9 +249,9 @@ public class MainClass {
 
             ClassScannerUtil.executeStaticMethodByName("registerEventHandler");
 
-            EventUtil eventUtil = EventUtil.getInstance();
-
             sendStartSignal();
+
+            EventUtil eventUtil = EventUtil.getInstance();
 
             eventUtil.putEvent(new SetDefaultSwingLaf());
             eventUtil.putEvent(new SetConfigsEvent());
@@ -267,16 +259,6 @@ public class MainClass {
             checkPluginInfo();
 
             eventUtil.putEvent(new ReleasePluginResourcesEvent());
-
-            TranslateUtil translateUtil = TranslateUtil.getInstance();
-            if (isDatabaseDamaged()) {
-                eventUtil.putEvent(new ShowTaskBarMessageEvent(
-                        translateUtil.getTranslation("Info"),
-                        translateUtil.getTranslation("Updating file index")));
-                eventUtil.putEvent(new UpdateDatabaseEvent());
-            } else {
-                checkIndex();
-            }
 
             checkRunningDirAtDiskC();
 
@@ -305,13 +287,22 @@ public class MainClass {
 
         EventUtil eventUtil = EventUtil.getInstance();
         TranslateUtil translateUtil = TranslateUtil.getInstance();
+
+        if (isDatabaseDamaged() || checkIndex()) {
+            eventUtil.putEvent(new ShowTaskBarMessageEvent(
+                    translateUtil.getTranslation("Info"),
+                    translateUtil.getTranslation("Updating file index")));
+            eventUtil.putEvent(new UpdateDatabaseEvent());
+        }
+
         while (eventUtil.isNotMainExit()) {
             // 主循环开始
             if (isFinished.get()) {
                 isFinished.set(false);
                 String notLatestPlugins = notLatestPluginsBuilder.toString();
                 if (!notLatestPlugins.isEmpty()) {
-                    eventUtil.putEvent(new ShowTaskBarMessageEvent(
+                    eventUtil.putEvent(
+                            new ShowTaskBarMessageEvent(
                             translateUtil.getTranslation("Info"),
                             notLatestPlugins + "\n" +
                             translateUtil.getTranslation("New versions of these plugins can be updated")));
@@ -344,22 +335,25 @@ public class MainClass {
         }
     }
 
-    private static void checkIndex() {
+    private static boolean checkIndex() {
         int startTimes = 0;
         File startTimeCount = new File("user/startTimeCount.dat");
         boolean isFileCreated;
-        if (!startTimeCount.exists()) {
+        if (startTimeCount.exists()) {
+            isFileCreated = true;
+        } else {
             try {
                 isFileCreated = startTimeCount.createNewFile();
             } catch (IOException e) {
                 isFileCreated = false;
                 e.printStackTrace();
             }
-        } else {
-            isFileCreated = true;
         }
         if (isFileCreated) {
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(startTimeCount), StandardCharsets.UTF_8))) {
+            try (BufferedReader reader =
+                         new BufferedReader(
+                                 new InputStreamReader(
+                                         new FileInputStream(startTimeCount), StandardCharsets.UTF_8))) {
                 //读取启动次数
                 String times = reader.readLine();
                 if (!(times == null || times.isEmpty())) {
@@ -368,22 +362,21 @@ public class MainClass {
                     if (startTimes >= 3) {
                         startTimes = 0;
                         if (DatabaseUtil.getInstance().getStatus() == Enums.DatabaseStatus.NORMAL) {
-                            EventUtil.getInstance().putEvent(new ShowTaskBarMessageEvent(
-                                    TranslateUtil.getInstance().getTranslation("Info"),
-                                    TranslateUtil.getInstance().getTranslation("Updating file index")));
-                            EventUtil.getInstance().putEvent(new UpdateDatabaseEvent());
+                            return true;
                         }
                     }
                 }
                 //自增后写入
                 startTimes++;
-                try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(startTimeCount), StandardCharsets.UTF_8))) {
+                try (BufferedWriter writer = new BufferedWriter(
+                        new OutputStreamWriter(new FileOutputStream(startTimeCount), StandardCharsets.UTF_8))) {
                     writer.write(String.valueOf(startTimes));
                 }
             } catch (Exception throwables) {
                 throwables.printStackTrace();
             }
         }
+        return false;
     }
 
     private static void sendStartSignal() {
@@ -396,7 +389,7 @@ public class MainClass {
         }
     }
 
-    private static void releaseAllDependence() {
+    private static void releaseAllDependence() throws IOException {
         copyOrIgnoreFile("user/fileMonitor.dll", "/win32-x86-64/fileMonitor.dll", FILE_MONITOR_64_MD_5);
         copyOrIgnoreFile("user/getAscII.dll", "/win32-x86-64/getAscII.dll", GET_ASC_II_64_MD_5);
         copyOrIgnoreFile("user/hotkeyListener.dll", "/win32-x86-64/hotkeyListener.dll", HOTKEY_LISTENER_64_MD_5);
@@ -409,19 +402,15 @@ public class MainClass {
         copyOrIgnoreFile("user/shortcutGenerator.vbs", "/shortcutGenerator.vbs", SHORTCUT_GEN_MD_5);
     }
 
-    private static void copyOrIgnoreFile(String path, String rootPath, String md5) {
+    private static void copyOrIgnoreFile(String path, String rootPath, String md5) throws IOException {
         File target = new File(path);
         String fileMd5 = Md5Util.getMD5(target.getAbsolutePath());
         if (!target.exists() || !md5.equals(fileMd5)) {
             if (IsDebug.isDebug()) {
                 System.out.println("正在重新释放文件：" + path);
             }
-            InputStream resource = MainClass.class.getResourceAsStream(rootPath);
-            CopyFileUtil.copyFile(resource, target);
-            try {
-                resource.close();
-            } catch (IOException e) {
-                e.printStackTrace();
+            try (InputStream resource = MainClass.class.getResourceAsStream(rootPath)) {
+                CopyFileUtil.copyFile(resource, target);
             }
         }
     }
@@ -446,7 +435,7 @@ public class MainClass {
         }
     }
 
-    private static void initFoldersAndFiles() {
+    private static void initFoldersAndFiles() throws IOException {
         boolean isSucceeded;
         //user
         isSucceeded = createFileOrFolder("user", false, false);
