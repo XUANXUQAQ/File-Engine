@@ -1,5 +1,6 @@
 package FileEngine.utils.moveFiles;
 
+import javax.swing.*;
 import java.io.*;
 import java.util.ArrayList;
 
@@ -43,7 +44,16 @@ public class MoveFilesUtil {
     private boolean copyFolder(String oldPath, String newPath) {
         boolean isHasRepeatFiles = false;
         try {
-            (new File(newPath)).mkdirs();
+            boolean isDirCreated;
+            File newPathFile = new File(newPath);
+            if (newPathFile.exists()) {
+                isDirCreated = true;
+            }else {
+                isDirCreated=(new File(newPath)).mkdirs();
+            }
+            if (!isDirCreated) {
+                return false;
+            }
             // 读取整个文件夹的内容到file字符串数组，下面设置一个游标i，不停地向下移开始读这个数组
             File filelist = new File(oldPath);
             String[] file = filelist.list();
@@ -94,6 +104,17 @@ public class MoveFilesUtil {
      */
     protected boolean moveFolder(String oldPath, String newPath) {
         // 先复制文件
+        boolean isDirCreated;
+        File newPathFile = new File(newPath);
+        if (newPathFile.exists()) {
+            isDirCreated = true;
+        }else {
+            isDirCreated=(new File(newPath)).mkdirs();
+        }
+        if (!isDirCreated) {
+            JOptionPane.showMessageDialog(null, "Create " + newPath + " dir failed", "ERROR", JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
         boolean isHasRepeated = copyFolder(oldPath, newPath);
         deleteDir(new File(oldPath));
         return isHasRepeated;
