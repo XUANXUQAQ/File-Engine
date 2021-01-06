@@ -14,7 +14,7 @@ import java.util.regex.Pattern;
 public class TranslateUtil {
     private static volatile TranslateUtil INSTANCE = null;
 
-
+    private final Pattern blank = Pattern.compile(" ");
     private volatile static String language;
     private final HashSet<String> languageSet = new HashSet<>();
     private final ConcurrentHashMap<String, String> translationMap = new ConcurrentHashMap<>();
@@ -45,10 +45,29 @@ public class TranslateUtil {
             translated = translationMap.get(text);
         }
         if (translated != null) {
-            return translated;
+            return warpStringIfTooLong(translated);
         } else {
             return text;
         }
+    }
+
+    private String warpStringIfTooLong(String str) {
+        if (str.length() < 60) {
+            return str;
+        }
+        String[] split = blank.split(str);
+        int totalLength = split.length;
+        int splitCount = totalLength / 2;
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append("<html><body>");
+        for (int i = 0; i < totalLength; i++) {
+            if (i == splitCount) {
+                stringBuilder.append("<br>");
+            }
+            stringBuilder.append(split[i]).append(" ");
+        }
+        stringBuilder.append("<body><html>");
+        return stringBuilder.toString();
     }
 
     public String getDefaultLang() {

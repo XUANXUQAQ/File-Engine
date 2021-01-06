@@ -185,9 +185,7 @@ public class SettingsFrame {
     private JRadioButton radioButtonProxyTypeHttp;
     private JRadioButton radioButtonProxyTypeSocks5;
     private JLabel labelProxyTip;
-    private JLabel labelPlaceHolder6;
     private JLabel labelPlaceHolder8;
-    private JSeparator proxySeperater;
     private JLabel labelVacuumStatus;
     private JLabel labelApiVersion;
     private JLabel placeHolder1;
@@ -202,7 +200,7 @@ public class SettingsFrame {
     private JLabel labelCacheSettings;
     private JLabel labelCacheTip;
     private JList<Object> listCache;
-    private JLabel labelPlaceHolderWhatever3;
+    private JLabel placeholderCache0;
     private JButton buttonDeleteCache;
     private JScrollPane cacheScrollPane;
     private JLabel labelVacuumTip2;
@@ -237,6 +235,15 @@ public class SettingsFrame {
     private JTextField textFieldSearchCommands;
     private JLabel labelSearchCommand;
     private JLabel placeholderN;
+    private JLabel placeholderl;
+    private JLabel placeholderl2;
+    private JLabel placeholderGeneral0;
+    private JLabel placeholderPlugins0;
+    private JLabel placeholderLanguage0;
+    private JLabel placeholderColorSettings0;
+    private JLabel placeholdersearch0;
+    private JLabel placeholderSearch1;
+    private JLabel placeholderSearch2;
     private JScrollPane tabGeneralScrollpane;
     private JScrollPane tabGeneralScrollPane;
     private JPanel tabGeneralPane;
@@ -1291,7 +1298,10 @@ public class SettingsFrame {
                 label.setEnabled(false);
                 File updatePluginSign = new File("user/" + updateSignalFileName);
                 if (!updatePluginSign.exists()) {
-                    updatePluginSign.createNewFile();
+                    boolean isCreated = updatePluginSign.createNewFile();
+                    if (!isCreated) {
+                        System.err.println("创建更新插件标识符失败");
+                    }
                 }
             } else if (downloadingStatus == Enums.DownloadStatus.DOWNLOAD_ERROR) {
                 //下载错误，重置button

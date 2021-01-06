@@ -1,4 +1,4 @@
-#frame_width=1200
+#frame_width=1000
 #frame_height=600
 General=Общие положения
 Search settings=Параметры поиска

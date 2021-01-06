@@ -288,11 +288,13 @@ public class MainClass {
         EventUtil eventUtil = EventUtil.getInstance();
         TranslateUtil translateUtil = TranslateUtil.getInstance();
 
-        if (isDatabaseDamaged() || checkIndex()) {
-            eventUtil.putEvent(new ShowTaskBarMessageEvent(
-                    translateUtil.getTranslation("Info"),
-                    translateUtil.getTranslation("Updating file index")));
-            eventUtil.putEvent(new UpdateDatabaseEvent());
+        if (!IsDebug.isDebug()) {
+            if (isDatabaseDamaged() || checkIndex()) {
+                eventUtil.putEvent(new ShowTaskBarMessageEvent(
+                        translateUtil.getTranslation("Info"),
+                        translateUtil.getTranslation("Updating file index")));
+                eventUtil.putEvent(new UpdateDatabaseEvent());
+            }
         }
 
         while (eventUtil.isNotMainExit()) {
