@@ -2,9 +2,9 @@ package FileEngine.utils;
 
 import FileEngine.configs.Enums;
 import FileEngine.dllInterface.HotkeyListener;
-import FileEngine.eventHandler.EventUtil;
 import FileEngine.eventHandler.Event;
 import FileEngine.eventHandler.EventHandler;
+import FileEngine.eventHandler.EventUtil;
 import FileEngine.eventHandler.impl.frame.searchBar.HideSearchBarEvent;
 import FileEngine.eventHandler.impl.frame.searchBar.ShowSearchBarEvent;
 import FileEngine.eventHandler.impl.hotkey.RegisterHotKeyEvent;
@@ -115,28 +115,26 @@ public class CheckHotKeyUtil {
             long endVisibleTime = 0;
             SearchBar searchBar = SearchBar.getInstance();
             HotkeyListener instance = HotkeyListener.INSTANCE;
+            EventUtil eventUtil = EventUtil.getInstance();
             try {
                 //获取快捷键状态，检测是否被按下线程
-                while (EventUtil.getInstance().isNotMainExit()) {
+                while (eventUtil.isNotMainExit()) {
                     if (!isExecuted && instance.getKeyStatus()) {
-                        isExecuted = true;
-                        if (!searchBar.isVisible()) {
-                            if (System.currentTimeMillis() - endVisibleTime > 200) {
-                                EventUtil.getInstance().putEvent(new ShowSearchBarEvent(true));
-                                startVisibleTime = System.currentTimeMillis();
-                            }
-                        } else {
+                        if (searchBar.isVisible()) {
                             if (System.currentTimeMillis() - startVisibleTime > 200) {
                                 if (searchBar.getShowingMode() == Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
                                     EventUtil.getInstance().putEvent(new HideSearchBarEvent());
                                     endVisibleTime = System.currentTimeMillis();
                                 }
                             }
+                        } else {
+                            if (System.currentTimeMillis() - endVisibleTime > 200) {
+                                EventUtil.getInstance().putEvent(new ShowSearchBarEvent(true));
+                                startVisibleTime = System.currentTimeMillis();
+                            }
                         }
                     }
-                    if (!instance.getKeyStatus()) {
-                        isExecuted = false;
-                    }
+                    isExecuted = instance.getKeyStatus();
                     TimeUnit.MILLISECONDS.sleep(10);
                 }
             } catch (InterruptedException ignored) {

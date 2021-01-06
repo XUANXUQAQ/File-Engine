@@ -42,19 +42,19 @@ public class PluginUtil {
             try {
                 String[] message;
                 Plugin plugin;
-                while (EventUtil.getInstance().isNotMainExit()) {
+                EventUtil eventUtil = EventUtil.getInstance();
+                while (eventUtil.isNotMainExit()) {
                     Iterator<Plugin> iter = PluginUtil.getInstance().getPluginMapIter();
                     while (iter.hasNext()) {
                         plugin = iter.next();
                         message = plugin.getMessage();
                         if (message != null) {
-                            EventUtil.getInstance().putEvent(new ShowTaskBarMessageEvent(message[0], message[1]));
+                            eventUtil.putEvent(new ShowTaskBarMessageEvent(message[0], message[1]));
                         }
                     }
                     TimeUnit.MILLISECONDS.sleep(50);
                 }
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+            } catch (InterruptedException ignored) {
             }
         });
     }
@@ -261,7 +261,7 @@ public class PluginUtil {
         isFinished.set(true);
     }
 
-    private boolean isPluginLatest(Plugin plugin) throws Exception {
+    private boolean isPluginLatest(Plugin plugin) throws InterruptedException {
         AtomicLong startCheckTime = new AtomicLong();
         AtomicBoolean isVersionLatest = new AtomicBoolean();
         Thread checkUpdateThread = new Thread(() -> {
@@ -283,7 +283,7 @@ public class PluginUtil {
                 TimeUnit.MILLISECONDS.sleep(200);
                 if ((System.currentTimeMillis() - startCheckTime.get() > 5000L && startCheckTime.get() != 0x100L) || startCheckTime.get() == 0xFFFL) {
                     checkUpdateThread.interrupt();
-                    throw new Exception("check update failed.");
+                    throw new InterruptedException("check update failed.");
                 }
                 if (!EventUtil.getInstance().isNotMainExit()) {
                     break;
@@ -291,7 +291,7 @@ public class PluginUtil {
             }
             return isVersionLatest.get();
         } catch (InterruptedException e) {
-            throw new Exception("check update failed.");
+            throw new InterruptedException("check update failed.");
         }
     }
 

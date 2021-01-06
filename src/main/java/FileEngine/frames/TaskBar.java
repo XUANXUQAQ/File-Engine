@@ -47,14 +47,15 @@ public class TaskBar {
     private void startShowMessageThread() {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             try {
+                EventUtil eventUtil = EventUtil.getInstance();
                 MessageStruct message;
-                while (EventUtil.getInstance().isNotMainExit()) {
+                while (eventUtil.isNotMainExit()) {
                     message = messageQueue.poll();
                     if (message != null) {
                         showMessageOnTrayIcon(message.caption, message.message);
                         TimeUnit.SECONDS.sleep(5);
                     }
-                    TimeUnit.MILLISECONDS.sleep(200);
+                    TimeUnit.MILLISECONDS.sleep(50);
                 }
             } catch (InterruptedException ignored) {
             }

@@ -190,7 +190,6 @@ public class SettingsFrame {
     private JSeparator proxySeperater;
     private JLabel labelVacuumStatus;
     private JLabel labelApiVersion;
-    private JLabel labelPlaceHolder10;
     private JLabel placeHolder1;
     private JLabel placeHolder2;
     private JLabel placeHolder4;
@@ -223,7 +222,6 @@ public class SettingsFrame {
     private JCheckBox checkBoxIsShowTipOnCreatingLnk;
     private JLabel labelPlaceHolder15;
     private JLabel labelPlaceHolder12;
-    private JLabel labelPlaceHolder;
     private JList<Object> listSwingThemes;
     private JScrollPane paneSwingThemes;
     private JButton buttonChangeTheme;
@@ -239,6 +237,9 @@ public class SettingsFrame {
     private JTextField textFieldSearchCommands;
     private JLabel labelSearchCommand;
     private JLabel placeholderN;
+    private JScrollPane tabGeneralScrollpane;
+    private JScrollPane tabGeneralScrollPane;
+    private JPanel tabGeneralPane;
 
     private static volatile SettingsFrame instance = null;
 
@@ -856,46 +857,40 @@ public class SettingsFrame {
     }
 
     private void addTextFieldSearchCommandsListener() {
-        final String[] searchText = new String[1];
-        AtomicBoolean isStart = new AtomicBoolean(false);
+        class search {
+            final String searchText;
+            final CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
+            final HashSet<String> cmdSetTmp = new HashSet<>();
 
-        cachedThreadPoolUtil.executeTask(() -> {
-            try {
-                String tmp;
-                HashSet<String> cmdSetTmp = new HashSet<>();
-
-                while (eventUtil.isNotMainExit()) {
-                    if (isStart.get()) {
-                        isStart.set(false);
-                        if ((tmp = searchText[0]) == null || tmp.isEmpty()) {
-                            listCmds.setListData(allConfigs.getCmdSet().toArray());
-                        } else {
-                            cmdSetTmp.clear();
-                            for (String each : allConfigs.getCmdSet()) {
-                                if (each.toLowerCase().contains(tmp.toLowerCase())) {
-                                    cmdSetTmp.add(each);
-                                }
-                            }
-                            listCmds.setListData(cmdSetTmp.toArray());
-                        }
-                    }
-                    TimeUnit.MILLISECONDS.sleep(100);
-                }
-            } catch (InterruptedException ignored) {
+            search(String searchText) {
+                this.searchText = searchText;
             }
-        });
+            void doSearch() {
+                cachedThreadPoolUtil.executeTask(() -> {
+                    String tmp;
+                    if ((tmp = searchText) == null || tmp.isEmpty()) {
+                        listCmds.setListData(allConfigs.getCmdSet().toArray());
+                    } else {
+                        for (String each : allConfigs.getCmdSet()) {
+                            if (each.toLowerCase().contains(tmp.toLowerCase())) {
+                                cmdSetTmp.add(each);
+                            }
+                        }
+                        listCmds.setListData(cmdSetTmp.toArray());
+                    }
+                });
+            }
+        }
 
         textFieldSearchCommands.getDocument().addDocumentListener(new DocumentListener() {
             @Override
             public void insertUpdate(DocumentEvent e) {
-                searchText[0] = textFieldSearchCommands.getText();
-                isStart.set(true);
+                new search(textFieldSearchCommands.getText()).doSearch();
             }
 
             @Override
             public void removeUpdate(DocumentEvent e) {
-                searchText[0] = textFieldSearchCommands.getText();
-                isStart.set(true);
+                new search(textFieldSearchCommands.getText()).doSearch();
             }
 
             @Override
