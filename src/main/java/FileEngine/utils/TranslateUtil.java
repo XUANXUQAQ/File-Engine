@@ -6,8 +6,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.util.HashSet;
 import java.util.Locale;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
@@ -16,7 +16,6 @@ public class TranslateUtil {
 
     private final Pattern blank = Pattern.compile(" ");
     private volatile static String language;
-    private final HashSet<String> languageSet = new HashSet<>();
     private final ConcurrentHashMap<String, String> translationMap = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, String> fileMap = new ConcurrentHashMap<>();
     private static final Pattern EQUAL_SIGN = Pattern.compile("=");
@@ -107,19 +106,6 @@ public class TranslateUtil {
         }
     }
 
-    private void initLanguageSet() {
-        //TODO 添加语言
-        languageSet.add("简体中文");
-        languageSet.add("English(US)");
-        languageSet.add("日本語");
-        languageSet.add("繁體中文");
-        languageSet.add("русский");
-        languageSet.add("italiano");
-        languageSet.add("Deutsche");
-        languageSet.add("한국어");
-        languageSet.add("français");
-    }
-
     private void initLanguageFileMap() {
         //TODO 添加语言
         fileMap.put("简体中文", "/language/Chinese(Simplified).txt");
@@ -151,7 +137,6 @@ public class TranslateUtil {
 
     private void initAll() {
         initLanguageFileMap();
-        initLanguageSet();
         language = getDefaultLang();
         initTranslations();
         initFontList();
@@ -176,8 +161,8 @@ public class TranslateUtil {
         return language;
     }
 
-    public HashSet<String> getLanguageSet() {
-        return languageSet;
+    public Set<String> getLanguageSet() {
+        return fileMap.keySet();
     }
 
     public String getFrameWidth() {
