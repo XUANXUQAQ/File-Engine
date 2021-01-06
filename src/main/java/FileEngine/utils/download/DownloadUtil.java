@@ -215,12 +215,10 @@ public class DownloadUtil {
                 int len;
                 //文件保存位置
                 File saveDir = new File(localPath);
-
                 if (!saveDir.exists()) {
-                    saveDir.mkdirs();
-                }
-                if (!saveDir.exists()) {
-                    throw new IOException("Create dirs failed");
+                    if (!saveDir.mkdirs()) {
+                        throw new IOException("Create dirs failed");
+                    }
                 }
                 File fileFullPath = new File(saveDir + File.separator + fileName);
                 BufferedOutputStream bfos = new BufferedOutputStream(new FileOutputStream(fileFullPath));
@@ -239,7 +237,9 @@ public class DownloadUtil {
                 con.disconnect();
                 if (isUserInterrupted) {
                     //删除文件
-                    fileFullPath.delete();
+                    if (!fileFullPath.delete()) {
+                        System.err.println(fileName + "下载残余文件删除失败");
+                    }
                     throw new IOException("User Interrupted");
                 }
                 downloadStatus = Enums.DownloadStatus.DOWNLOAD_DONE;

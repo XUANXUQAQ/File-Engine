@@ -49,6 +49,7 @@ public class PluginMarket {
     private JLabel labelVersion;
     private JPanel panel;
     private JLabel labelProgress;
+    private JScrollPane scrollpanePlugins;
     private final JFrame frame = new JFrame("Plugin Market");
     private final HashMap<String, String> NAME_PLUGIN_INFO_URL_MAP = new HashMap<>();
 
@@ -105,7 +106,9 @@ public class PluginMarket {
                 button.setVisible(true);
                 File updatePluginSign = new File("user/updatePlugin");
                 if (!updatePluginSign.exists()) {
-                    updatePluginSign.createNewFile();
+                    if (!updatePluginSign.createNewFile()) {
+                        System.err.println("创建更新插件标识符失败");
+                    }
                 }
             } else if (downloadingStatus == Enums.DownloadStatus.DOWNLOAD_ERROR) {
                 //下载错误，重置button
