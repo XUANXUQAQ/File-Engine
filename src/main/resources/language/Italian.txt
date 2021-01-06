@@ -1,4 +1,4 @@
-#frame_width=1100
+#frame_width=1000
 #frame_height=600
 General=Generale
 Search settings=Impostazioni di ricerca
