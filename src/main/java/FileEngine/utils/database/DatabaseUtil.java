@@ -50,7 +50,7 @@ public class DatabaseUtil {
                         isExecuteImmediately.set(false);
                         executeAllCommands(statement);
                     }
-                    TimeUnit.MILLISECONDS.sleep(100);
+                    TimeUnit.MILLISECONDS.sleep(20);
                 }
             } catch (InterruptedException ignored) {
             } catch (Exception throwables) {
@@ -75,14 +75,9 @@ public class DatabaseUtil {
 
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             try (BufferedReader readerRemove =
-                         new BufferedReader(
-                                 new InputStreamReader(
-                                         new FileInputStream(
-                                                 allConfigs.getTmp().getAbsolutePath() + File.separator + "fileRemoved.txt"),
-                                         StandardCharsets.UTF_8
-                                 )
-                         )
-            ) {
+                         new BufferedReader(new InputStreamReader(
+                                 new FileInputStream(allConfigs.getTmp().getAbsolutePath() + File.separator + "fileRemoved.txt"),
+                                         StandardCharsets.UTF_8))) {
                 String tmp;
                 int fileCount = 0;
                 LinkedHashSet<String> deletePaths = new LinkedHashSet<>();
@@ -116,14 +111,9 @@ public class DatabaseUtil {
             AllConfigs allConfigs = AllConfigs.getInstance();
             //检测文件添加线程
             try (BufferedReader readerAdd =
-                         new BufferedReader(
-                                 new InputStreamReader(
-                                         new FileInputStream(
-                                                 allConfigs.getTmp().getAbsolutePath() + File.separator + "fileAdded.txt"),
-                                         StandardCharsets.UTF_8
-                                 )
-                         )
-            ) {
+                         new BufferedReader(new InputStreamReader(
+                                 new FileInputStream(allConfigs.getTmp().getAbsolutePath() + File.separator + "fileAdded.txt"),
+                                 StandardCharsets.UTF_8))) {
                 String tmp;
                 int fileCount = 0;
                 LinkedHashSet<String> addPaths = new LinkedHashSet<>();

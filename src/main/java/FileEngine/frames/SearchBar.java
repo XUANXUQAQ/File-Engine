@@ -162,7 +162,7 @@ public class SearchBar {
         searchBar.setTitle("File-Engine-SearchBar");
 
         //labels
-        Font labelFont = new Font(null, Font.BOLD, (int) ((searchBarHeight * 0.2) / 96 * 72) / 4);
+        Font labelFont = new Font(Font.SANS_SERIF, Font.BOLD, (int) ((searchBarHeight * 0.2) / 96 * 72) / 4);
         label1 = new JLabel();
         label2 = new JLabel();
         label3 = new JLabel();
@@ -191,7 +191,7 @@ public class SearchBar {
         //TextField
         textField = new JTextField(1000);
         textField.setSize(searchBarWidth - 6, labelHeight - 5);
-        Font textFieldFont = new Font(null, Font.PLAIN, (int) ((searchBarHeight * 0.4) / 96 * 72) / 4);
+        Font textFieldFont = new Font(Font.SANS_SERIF, Font.PLAIN, (int) ((searchBarHeight * 0.4) / 96 * 72) / 4);
         textField.setFont(textFieldFont);
         textField.setBorder(border);
         textField.setForeground(Color.BLACK);
@@ -464,7 +464,7 @@ public class SearchBar {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             try {
                 //保证在执行粘贴操作时不会被提前恢复数据
-                Thread.sleep(500);
+                TimeUnit.MILLISECONDS.sleep(500);
                 copyToClipBoard(originalData, false);
             } catch (InterruptedException ignored) {
             }
@@ -1902,10 +1902,36 @@ public class SearchBar {
         }
     }
 
+    private void changeFontOnDisplayFailed() {
+        String testStr = getTextFieldText();
+        Font origin = textField.getFont();
+        if (origin.canDisplayUpTo(testStr) == -1) {
+            return;
+        }
+        TranslateUtil translateUtil = TranslateUtil.getInstance();
+        if (IsDebug.isDebug()) {
+            System.out.println();
+            System.err.println("正在切换字体");
+            System.out.println();
+        }
+        Font labelFont = label1.getFont();
+        Font newFont = translateUtil.getFitFont(labelFont.getStyle(), labelFont.getSize(), testStr);
+        textField.setFont(translateUtil.getFitFont(origin.getStyle(), origin.getSize(), testStr));
+        label1.setFont(newFont);
+        label2.setFont(newFont);
+        label3.setFont(newFont);
+        label4.setFont(newFont);
+        label5.setFont(newFont);
+        label6.setFont(newFont);
+        label7.setFont(newFont);
+        label8.setFont(newFont);
+    }
+
     private void addTextFieldDocumentListener() {
         textField.getDocument().addDocumentListener(new DocumentListener() {
             @Override
             public void insertUpdate(DocumentEvent e) {
+                changeFontOnDisplayFailed();
                 clearAllAndResetAll();
                 setRunningMode();
                 startTime = System.currentTimeMillis();
@@ -1914,6 +1940,7 @@ public class SearchBar {
 
             @Override
             public void removeUpdate(DocumentEvent e) {
+                changeFontOnDisplayFailed();
                 clearAllAndResetAll();
                 setRunningMode();
                 if (getTextFieldText().isEmpty()) {

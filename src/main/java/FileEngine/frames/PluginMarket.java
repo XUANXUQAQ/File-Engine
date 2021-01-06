@@ -64,7 +64,8 @@ public class PluginMarket {
             try {
                 String pluginName;
                 String originString = buttonInstall.getText();
-                while (EventUtil.getInstance().isNotMainExit()) {
+                EventUtil eventUtil = EventUtil.getInstance();
+                while (eventUtil.isNotMainExit()) {
                     TimeUnit.MILLISECONDS.sleep(100);
                     pluginName = (String) listPlugins.getSelectedValue();
                     if (pluginName != null) {
@@ -212,47 +213,39 @@ public class PluginMarket {
     }
 
     private void addSearchPluginListener() {
-        AtomicBoolean isStartSearch = new AtomicBoolean(false);
-        final String[] searchKeywords = new String[1];
-
-        CachedThreadPoolUtil.getInstance().executeTask(() -> {
-            try {
-                String tmp;
-                HashSet<String> pluginSet = new HashSet<>();
-                EventUtil eventUtil = EventUtil.getInstance();
-
-                while (eventUtil.isNotMainExit()) {
-                    if (isStartSearch.get()) {
-                        isStartSearch.set(false);
-                        if ((tmp = searchKeywords[0]) == null || tmp.isEmpty()) {
-                            listPlugins.setListData(NAME_PLUGIN_INFO_URL_MAP.keySet().toArray());
-                        } else {
-                            pluginSet.clear();
-                            for (String each : NAME_PLUGIN_INFO_URL_MAP.keySet()) {
-                                if (each.toLowerCase().contains(tmp.toLowerCase())) {
-                                    pluginSet.add(each);
-                                }
-                            }
-                            listPlugins.setListData(pluginSet.toArray());
-                        }
-                    }
-                    TimeUnit.MILLISECONDS.sleep(100);
-                }
-            } catch (InterruptedException ignored) {
+        class search {
+            final String searchKeywords;
+            final CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
+            search(String searchKeywords) {
+                this.searchKeywords = searchKeywords;
             }
-        });
+            void doSearch() {
+                cachedThreadPoolUtil.executeTask(() -> {
+                    String tmp;
+                    HashSet<String> pluginSet = new HashSet<>();
+                    if ((tmp = searchKeywords) == null || tmp.isEmpty()) {
+                        listPlugins.setListData(NAME_PLUGIN_INFO_URL_MAP.keySet().toArray());
+                    } else {
+                        for (String each : NAME_PLUGIN_INFO_URL_MAP.keySet()) {
+                            if (each.toLowerCase().contains(tmp.toLowerCase())) {
+                                pluginSet.add(each);
+                            }
+                        }
+                        listPlugins.setListData(pluginSet.toArray());
+                    }
+                });
+            }
+        }
 
         textFieldSearchPlugin.getDocument().addDocumentListener(new DocumentListener() {
             @Override
             public void insertUpdate(DocumentEvent e) {
-                searchKeywords[0] = textFieldSearchPlugin.getText();
-                isStartSearch.set(true);
+                new search(textFieldSearchPlugin.getText()).doSearch();
             }
 
             @Override
             public void removeUpdate(DocumentEvent e) {
-                searchKeywords[0] = textFieldSearchPlugin.getText();
-                isStartSearch.set(true);
+                new search(textFieldSearchPlugin.getText()).doSearch();
             }
 
             @Override
@@ -286,7 +279,48 @@ public class PluginMarket {
     }
 
     private void addSelectPluginOnListListener() {
-        AtomicBoolean isStartGetPluginInfo = new AtomicBoolean(false);
+        final AtomicBoolean isStartGetPluginInfo = new AtomicBoolean(false);
+
+        class getPluginInfo {
+            final CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
+            void doGet() {
+                isStartGetPluginInfo.set(false);
+                cachedThreadPoolUtil.executeTask(() -> {
+                    String pluginName = (String) listPlugins.getSelectedValue();
+                    if (pluginName == null) {
+                        return;
+                    }
+                    if (isStartGetPluginInfo.get()) {
+                        //用户重新点击
+                        return;
+                    }
+                    JSONObject info = getPluginDetailInfo(pluginName);
+                    if (info == null){
+                        return;
+                    }
+                    String officialSite = info.getString("officialSite");
+                    String version = info.getString("version");
+                    String imageUrl = info.getString("icon");
+                    String description = info.getString("description");
+                    String author = info.getString("author");
+                    labelVersion.setText(TranslateUtil.getInstance().getTranslation("Version") + ":" + version);
+                    labelOfficialSite.setText("<html><a href='" + officialSite + "'><font size=\"4\">" + pluginName + "</font></a></html>");
+                    labelPluginName.setText("<html><body><font size=\"+1\">" + pluginName + "</body></html>");
+                    textAreaPluginDescription.setText(description);
+                    labelAuthor.setText(author);
+                    buttonInstall.setVisible(true);
+                    buttonInstall.setEnabled(true);
+                    if (!isStartGetPluginInfo.get()) {
+                        //用户重新点击
+                        try {
+                            ImageIcon icon = getImageByUrl(imageUrl, pluginName);
+                            labelIcon.setIcon(icon);
+                        } catch (IOException | InterruptedException ignored) {
+                        }
+                    }
+                });
+            }
+        }
         listPlugins.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
@@ -299,57 +333,7 @@ public class PluginMarket {
                 textAreaPluginDescription.setText("");
                 labelAuthor.setText("");
                 labelIcon.setIcon(null);
-            }
-        });
-        CachedThreadPoolUtil.getInstance().executeTask(() -> {
-            try {
-                while (EventUtil.getInstance().isNotMainExit()) {
-                    if (isStartGetPluginInfo.get()) {
-                        isStartGetPluginInfo.set(false);
-                        String officialSite;
-                        String version;
-                        ImageIcon icon;
-                        String author;
-                        String pluginName;
-                        String description;
-                        pluginName = (String) listPlugins.getSelectedValue();
-                        if (pluginName != null) {
-                            if (isStartGetPluginInfo.get()) {
-                                //用户重新点击
-                                continue;
-                            }
-                            JSONObject info = getPluginDetailInfo(pluginName);
-                            if (info != null) {
-                                officialSite = info.getString("officialSite");
-                                version = info.getString("version");
-                                String imageUrl = info.getString("icon");
-                                description = info.getString("description");
-                                author = info.getString("author");
-                                labelVersion.setText(TranslateUtil.getInstance().getTranslation("Version") + ":" + version);
-                                labelOfficialSite.setText("<html><a href='" + officialSite + "'><font size=\"4\">" + pluginName + "</font></a></html>");
-                                labelPluginName.setText("<html><body><font size=\"+1\">" + pluginName + "</body></html>");
-                                textAreaPluginDescription.setText(description);
-                                labelAuthor.setText(author);
-                                buttonInstall.setVisible(true);
-                                buttonInstall.setEnabled(true);
-                                if (isStartGetPluginInfo.get()) {
-                                    //用户重新点击
-                                    continue;
-                                } else {
-                                    try {
-                                        icon = getImageByUrl(imageUrl, pluginName);
-                                        labelIcon.setIcon(icon);
-                                    } catch (IOException ignored) {
-                                    }
-                                }
-                            } else {
-                                labelPluginName.setText(TranslateUtil.getInstance().getTranslation("Failed to obtain plugin information"));
-                            }
-                        }
-                    }
-                    TimeUnit.MILLISECONDS.sleep(100);
-                }
-            } catch (InterruptedException ignored) {
+                new getPluginInfo().doGet();
             }
         });
     }

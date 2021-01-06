@@ -1,5 +1,7 @@
 package FileEngine.utils;
 
+import javax.swing.*;
+import java.awt.*;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -18,6 +20,7 @@ public class TranslateUtil {
     private final ConcurrentHashMap<String, String> translationMap = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, String> fileMap = new ConcurrentHashMap<>();
     private static final Pattern EQUAL_SIGN = Pattern.compile("=");
+    private Font[] fList;
 
     private TranslateUtil() {
         initAll();
@@ -72,6 +75,14 @@ public class TranslateUtil {
             case "de-LU":
             case "de-CH":
                 return "German";
+            case "ko-KR":
+                return "한국어";
+            case "fr-BE":
+            case "fr-CA":
+            case "fr-FR":
+            case "fr-LU":
+            case "fr-CH":
+                return "français";
             default:
                 return "English(US)";
         }
@@ -86,6 +97,8 @@ public class TranslateUtil {
         languageSet.add("русский");
         languageSet.add("italiano");
         languageSet.add("Deutsche");
+        languageSet.add("한국어");
+        languageSet.add("français");
     }
 
     private void initLanguageFileMap() {
@@ -96,6 +109,8 @@ public class TranslateUtil {
         fileMap.put("русский", "/language/Russian.txt");
         fileMap.put("italiano", "/language/Italian.txt");
         fileMap.put("Deutsche", "/language/German.txt");
+        fileMap.put("한국어", "/language/Korean.txt");
+        fileMap.put("français", "/language/French.txt");
     }
 
     private void initTranslations() {
@@ -120,10 +135,21 @@ public class TranslateUtil {
         initLanguageSet();
         language = getDefaultLang();
         initTranslations();
+        initFontList();
+    }
+
+    private void initFontList() {
+        //初始化Font列表
+        String[] lstr = GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames();
+        fList = new Font[lstr.length];
+        for(int i = 0;i < lstr.length; i++) {
+            fList[i]=new Font(lstr[i], Font.PLAIN, 13);
+        }
     }
 
     public void setLanguage(String language) {
         TranslateUtil.language = language;
+        setUIFont();
         initTranslations();
     }
 
@@ -142,4 +168,32 @@ public class TranslateUtil {
     public String getFrameHeight() {
         return translationMap.get("#frame_height");
     }
+
+    public Font getFitFont(int fontStyle, int size, String testStr) {
+        Font defaultFont = new Font(Font.SANS_SERIF, fontStyle, size);
+        if (defaultFont.canDisplayUpTo(testStr) != -1) {
+            for (Font each : fList) {
+                if (each.canDisplayUpTo(testStr) == -1) {
+                    return each;
+                }
+            }
+        }
+        return defaultFont;
+    }
+
+    private void setUIFont() {
+        Font f = getFitFont(Font.PLAIN, 13, language);
+        String[] names ={ "Label", "CheckBox", "PopupMenu","MenuItem", "CheckBoxMenuItem",
+                "JRadioButtonMenuItem","ComboBox", "Button", "Tree", "ScrollPane",
+                "TabbedPane", "EditorPane", "TitledBorder", "Menu", "TextArea",
+                "OptionPane", "MenuBar", "ToolBar", "ToggleButton", "ToolTip",
+                "ProgressBar", "TableHeader", "Panel", "List", "ColorChooser",
+                "PasswordField","TextField", "Table", "Label", "Viewport",
+                "RadioButtonMenuItem","RadioButton", "DesktopPane", "InternalFrame"
+        };
+        for (String item : names) {
+            UIManager.put(item+ ".font",f);
+        }
+    }
 }
+
