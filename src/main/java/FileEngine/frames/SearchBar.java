@@ -774,7 +774,7 @@ public class SearchBar {
         JOptionPane.showMessageDialog(searchBar,
                 translateUtil.getTranslation("Add \":\" + suffix after the keyword to achieve a more precise search") + "\n" +
                         translateUtil.getTranslation("The program has the following four suffixes") + "\n" +
-                        ":d\t:f\t:full\t:case" + "\n" +
+                        ":d     :f     :full     :case" + "\n" +
                         translateUtil.getTranslation("not case sensitive"));
         textField.setText("test:d");
         JOptionPane.showMessageDialog(searchBar,
