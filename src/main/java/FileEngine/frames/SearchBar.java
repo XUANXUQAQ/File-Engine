@@ -15,6 +15,7 @@ import FileEngine.eventHandler.impl.database.AddToCacheEvent;
 import FileEngine.eventHandler.impl.database.DeleteFromCacheEvent;
 import FileEngine.eventHandler.impl.database.UpdateDatabaseEvent;
 import FileEngine.eventHandler.impl.frame.searchBar.*;
+import FileEngine.eventHandler.impl.frame.settingsFrame.ShowSettingsFrameEvent;
 import FileEngine.eventHandler.impl.monitorDisk.StartMonitorDiskEvent;
 import FileEngine.eventHandler.impl.monitorDisk.StopMonitorDiskEvent;
 import FileEngine.eventHandler.impl.taskbar.ShowTaskBarMessageEvent;
@@ -68,6 +69,7 @@ public class SearchBar {
     private final AtomicBoolean isUserPressed = new AtomicBoolean(false);
     private final AtomicBoolean isMouseDraggedInWindow = new AtomicBoolean(false);
     private static final AtomicBoolean isPreviewMode = new AtomicBoolean(false);
+    private final AtomicBoolean isTutorialMode = new AtomicBoolean(false);
     private Border border;
     private final JFrame searchBar;
     private final JLabel label1;
@@ -212,7 +214,7 @@ public class SearchBar {
             public void focusLost(FocusEvent e) {
                 if (System.currentTimeMillis() - visibleStartTime > 500) {
                     if (showingMode == Enums.ShowingSearchBarMode.NORMAL_SHOWING && allConfigs.isLoseFocusClose()) {
-                        if (!isPreviewMode.get()) {
+                        if (!(isPreviewMode.get() || isTutorialMode.get())) {
                             closeSearchBar();
                         }
                     } else if (showingMode == Enums.ShowingSearchBarMode.EXPLORER_ATTACH) {
@@ -729,12 +731,12 @@ public class SearchBar {
                 startSignal.set(false);
                 return true;
             case "help":
-                //todo 制作交互教程动画
                 detectShowingModeAndClose();
-                Desktop desktop;
-                if (Desktop.isDesktopSupported()) {
-                    desktop = Desktop.getDesktop();
-                    desktop.browse(new URI("https://github.com/XUANXUQAQ/File-Engine/wiki/Usage"));
+                if (JOptionPane.showConfirmDialog(null, translateUtil.getTranslation("Whether to view help"))
+                        == JOptionPane.OK_OPTION) {
+                    isTutorialMode.set(true);
+                    showTutorial();
+                    isTutorialMode.set(false);
                 }
                 return true;
             case "version":
@@ -744,6 +746,87 @@ public class SearchBar {
                 return true;
             default:
                 return false;
+        }
+    }
+
+    private void showTutorial() {
+        TranslateUtil translateUtil = TranslateUtil.getInstance();
+        EventUtil eventUtil = EventUtil.getInstance();
+        showSearchbar(false);
+        JOptionPane.showMessageDialog(searchBar, translateUtil.getTranslation("Welcome to the tutorial of File-Engine") + "\n" +
+                translateUtil.getTranslation("The default Ctrl + Alt + K calls out the search bar, which can be changed in the settings.") +
+                translateUtil.getTranslation("You can enter the keywords you want to search here"));
+        JOptionPane.showMessageDialog(searchBar, translateUtil.getTranslation("Let's see an example"));
+        textField.setText("test");
+        JOptionPane.showMessageDialog(searchBar,
+                translateUtil.getTranslation("When you enter \"test\" in the search bar") + ",\n" +
+                translateUtil.getTranslation("files with \"test\" in the name will be displayed below the search bar"));
+        textField.setText("test;file");
+        JOptionPane.showMessageDialog(searchBar,
+                translateUtil.getTranslation("If you know multiple keywords of a file") + "\n" +
+                translateUtil.getTranslation("(for example, the file name contains both \"file\" and \"test\")") + ",\n" +
+                translateUtil.getTranslation("you can separate them with \";\" (semicolon) to search together as keywords."));
+        textField.setText("/test");
+        JOptionPane.showMessageDialog(searchBar,
+                translateUtil.getTranslation("When entering \"/test\" in the search bar") + ", " +
+                translateUtil.getTranslation("the file containing \"test\" in the path will be displayed below the search bar"));
+        textField.setText("");
+        JOptionPane.showMessageDialog(searchBar,
+                translateUtil.getTranslation("Add \":\" + suffix after the keyword to achieve a more precise search") + "\n" +
+                        translateUtil.getTranslation("The program has the following four suffixes") + "\n" +
+                        ":d\t:f\t:full\t:case" + "\n" +
+                        translateUtil.getTranslation("not case sensitive"));
+        textField.setText("test:d");
+        JOptionPane.showMessageDialog(searchBar,
+                translateUtil.getTranslation("\":d\" is the suffix for searching only folders"));
+        textField.setText("test:f");
+        JOptionPane.showMessageDialog(searchBar,
+                translateUtil.getTranslation("\":f\" is the suffix to search only for files"));
+        textField.setText("test:full");
+        JOptionPane.showMessageDialog(searchBar,
+                translateUtil.getTranslation("\":full\" means full word matching, but case insensitive"));
+        textField.setText("test:case");
+        JOptionPane.showMessageDialog(searchBar,
+                translateUtil.getTranslation("\":case\" means case sensitive"));
+        textField.setText("test:d;full");
+        JOptionPane.showMessageDialog(searchBar,
+                translateUtil.getTranslation("You can also combine different suffixes to use") + "\n" +
+                translateUtil.getTranslation("you can separate them with \";\" (semicolon) to search together as keywords."));
+        textField.setText("test;/file:d;case");
+        JOptionPane.showMessageDialog(searchBar,
+                translateUtil.getTranslation("Different keywords are separated by \";\" (semicolon), suffix and keywords are separated by \":\" (colon)"));
+        JOptionPane.showMessageDialog(searchBar,
+                translateUtil.getTranslation("Click \"Enter\" to open the file directly") + "\n" +
+                        translateUtil.getTranslation("Click \"Ctrl + Enter\" to open the folder where the file is located") + "\n" +
+                        translateUtil.getTranslation("Click \"Shift + Enter\" to open the file as an administrator (use with caution)") + "\n" +
+                        translateUtil.getTranslation("Click \"Alt+ Enter\" to copy the file path") + "\n\n" +
+                        translateUtil.getTranslation("You can modify these hotkeys in the settings"));
+        textField.setText(":");
+        JOptionPane.showMessageDialog(searchBar,
+                translateUtil.getTranslation("Enter \":\" (colon) at the front of the search box to enter the command mode") + "\n" +
+                        translateUtil.getTranslation("There are built-in commands, you can also add custom commands in the settings"));
+        JOptionPane.showMessageDialog(searchBar,
+                translateUtil.getTranslation("If you find that some files cannot be searched, you can enter \":update\" in the search bar to rebuild the index."));
+        closeSearchBar();
+        eventUtil.putEvent(new ShowSettingsFrameEvent());
+        JOptionPane.showMessageDialog(null,
+                translateUtil.getTranslation("This is the settings window") + "\n" +
+                        translateUtil.getTranslation("You can modify many settings here") + "\n" +
+                        translateUtil.getTranslation("Including the color of the window, the hot key to call out the search box, the transparency of the window, custom commands and so on."));
+        if (JOptionPane.showConfirmDialog(null,
+                translateUtil.getTranslation("End of the tutorial") + "\n" +
+                translateUtil.getTranslation("You can enter \":help\" in the search bar at any time to enter the tutorial") + "\n" +
+                translateUtil.getTranslation("There are more detailed tutorials on the Github wiki. Would you like to check it out?"))
+        == JOptionPane.OK_OPTION) {
+            try {
+                Desktop desktop;
+                if (Desktop.isDesktopSupported()) {
+                    desktop = Desktop.getDesktop();
+                    desktop.browse(new URI("https://github.com/XUANXUQAQ/File-Engine/wiki/Usage"));
+                }
+            } catch (URISyntaxException | IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 

@@ -1,5 +1,7 @@
 package FileEngine.utils;
 
+import FileEngine.IsDebug;
+
 import javax.swing.*;
 import java.awt.*;
 import java.io.BufferedReader;
@@ -121,11 +123,19 @@ public class TranslateUtil {
     private void initTranslations() {
         if (!"English(US)".equals(language)) {
             String filePath = fileMap.get(language);
+            translationMap.clear();
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(TranslateUtil.class.getResourceAsStream(filePath), StandardCharsets.UTF_8))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
                     String[] record = TranslateUtil.EQUAL_SIGN.split(line);
-                    translationMap.put(record[0].trim(), record[1].trim());
+                    if (IsDebug.isDebug()) {
+                        if (translationMap.get(record[0]) != null) {
+                            System.err.println("警告：翻译重复   " + record[0]);
+                        }
+                    }
+                    if (record.length == 2) {
+                        translationMap.put(record[0].trim(), record[1].trim());
+                    }
                 }
             } catch (IOException ignored) {
             }
