@@ -2,7 +2,7 @@ package FileEngine.utils.pluginSystem;
 
 import FileEngine.IsDebug;
 import FileEngine.configs.AllConfigs;
-import FileEngine.eventHandler.EventUtil;
+import FileEngine.utils.EventUtil;
 import FileEngine.eventHandler.Event;
 import FileEngine.eventHandler.EventHandler;
 import FileEngine.eventHandler.impl.plugin.*;

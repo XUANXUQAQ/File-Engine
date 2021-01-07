@@ -10,7 +10,7 @@ import FileEngine.dllInterface.GetHandle;
 import FileEngine.dllInterface.IsLocalDisk;
 import FileEngine.eventHandler.Event;
 import FileEngine.eventHandler.EventHandler;
-import FileEngine.eventHandler.EventUtil;
+import FileEngine.utils.EventUtil;
 import FileEngine.eventHandler.impl.database.AddToCacheEvent;
 import FileEngine.eventHandler.impl.database.DeleteFromCacheEvent;
 import FileEngine.eventHandler.impl.database.UpdateDatabaseEvent;
@@ -362,11 +362,7 @@ public class SearchBar {
                                 }
                             } else if (runningMode == Enums.RunningMode.COMMAND_MODE) {
                                 String[] commandInfo = semicolon.split(res);
-                                boolean isExecuted = false;
-                                try {
-                                    isExecuted = runInternalCommand(colon.split(commandInfo[0])[1]);
-                                } catch (IOException | URISyntaxException ignored) {
-                                }
+                                boolean isExecuted = runInternalCommand(colon.split(commandInfo[0])[1]);
                                 if (isExecuted) {
                                     return;
                                 }
@@ -595,11 +591,7 @@ public class SearchBar {
                                     }
                                 } else if (runningMode == Enums.RunningMode.COMMAND_MODE) {
                                     String[] commandInfo = semicolon.split(res);
-                                    boolean isExecuted = false;
-                                    try {
-                                        isExecuted = runInternalCommand(colon.split(commandInfo[0])[1]);
-                                    } catch (IOException | URISyntaxException ignored) {
-                                    }
+                                    boolean isExecuted = runInternalCommand(colon.split(commandInfo[0])[1]);
                                     if (isExecuted) {
                                         return;
                                     }
@@ -701,7 +693,7 @@ public class SearchBar {
      * clearbin update help version
      * return true only the internal command was executed. Otherwise false
      */
-    private boolean runInternalCommand(String commandName) throws URISyntaxException, IOException {
+    private boolean runInternalCommand(String commandName) {
         TranslateUtil translateUtil = TranslateUtil.getInstance();
         EventUtil eventUtil = EventUtil.getInstance();
         switch (commandName) {
@@ -2078,7 +2070,7 @@ public class SearchBar {
             TranslateUtil translateUtil = TranslateUtil.getInstance();
             File[] roots = File.listRoots();
             if (isAdmin()) {
-                FileMonitor.INSTANCE.set_output(AllConfigs.getInstance().getTmp().getAbsolutePath());
+                FileMonitor.INSTANCE.set_output(new File("tmp").getAbsolutePath());
                 for (File root : roots) {
                     boolean isLocal = IsLocalDisk.INSTANCE.isLocalDisk(root.getAbsolutePath());
                     if (isLocal) {
@@ -2853,8 +2845,6 @@ public class SearchBar {
                     TimeUnit.MILLISECONDS.sleep(20);
                 }
             } catch (InterruptedException ignored) {
-            } catch (URISyntaxException | IOException e) {
-                e.printStackTrace();
             }
         });
     }

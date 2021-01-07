@@ -1,6 +1,8 @@
-package FileEngine.eventHandler;
+package FileEngine.utils;
 
 import FileEngine.IsDebug;
+import FileEngine.eventHandler.Event;
+import FileEngine.eventHandler.EventHandler;
 import FileEngine.eventHandler.impl.taskbar.HideTrayIconEvent;
 import FileEngine.utils.database.SQLiteUtil;
 import FileEngine.eventHandler.impl.daemon.StopDaemonEvent;
@@ -13,7 +15,7 @@ import FileEngine.eventHandler.impl.plugin.UnloadAllPluginsEvent;
 import FileEngine.eventHandler.impl.stop.CloseEvent;
 import FileEngine.eventHandler.impl.stop.RestartEvent;
 import FileEngine.eventHandler.impl.stop.StopEvent;
-import FileEngine.utils.CachedThreadPoolUtil;
+
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
@@ -110,6 +112,11 @@ public class EventUtil {
         return true;
     }
 
+    private StackTraceElement getStackTraceElement() {
+        StackTraceElement[] stacktrace = Thread.currentThread().getStackTrace();
+        return stacktrace[3];
+    }
+
     /**
      * 发送任务
      * @param event 任务
@@ -117,7 +124,7 @@ public class EventUtil {
     public void putEvent(Event event) {
         boolean isDebug = IsDebug.isDebug();
         if (isDebug) {
-            System.err.println("尝试放入任务---" + event.toString());
+            System.err.println("尝试放入任务" + event.toString() + "---来自" + getStackTraceElement().toString());
         }
         if (!isRejectTask.get()) {
             if (event.isBlock()) {

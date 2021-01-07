@@ -6,7 +6,7 @@ import FileEngine.configs.Enums;
 import FileEngine.configs.ProxyInfo;
 import FileEngine.eventHandler.Event;
 import FileEngine.eventHandler.EventHandler;
-import FileEngine.eventHandler.EventUtil;
+import FileEngine.utils.EventUtil;
 import FileEngine.eventHandler.impl.download.StartDownloadEvent;
 import FileEngine.eventHandler.impl.download.StopDownloadEvent;
 import FileEngine.utils.CachedThreadPoolUtil;

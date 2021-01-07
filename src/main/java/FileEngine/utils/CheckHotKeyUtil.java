@@ -4,7 +4,6 @@ import FileEngine.configs.Enums;
 import FileEngine.dllInterface.HotkeyListener;
 import FileEngine.eventHandler.Event;
 import FileEngine.eventHandler.EventHandler;
-import FileEngine.eventHandler.EventUtil;
 import FileEngine.eventHandler.impl.frame.searchBar.HideSearchBarEvent;
 import FileEngine.eventHandler.impl.frame.searchBar.ShowSearchBarEvent;
 import FileEngine.eventHandler.impl.hotkey.RegisterHotKeyEvent;
