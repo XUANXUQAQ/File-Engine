@@ -2990,23 +2990,25 @@ public class SearchBar {
         }
     }
 
-    /**
+    /**fil
      * 显示窗口
      *
      * @param isGrabFocus 是否强制抓取焦点
      */
     private void showSearchbar(boolean isGrabFocus) {
-        searchBar.setAutoRequestFocus(isGrabFocus);
-        setVisible(true);
-        if (isGrabFocus) {
-            //使用鼠标点击窗口以获得焦点
-            int X = searchBar.getX() + (textField.getWidth() / 2);
-            int Y = searchBar.getY() + (textField.getHeight() / 2);
-            RobotUtil.getInstance().mouseClicked(X, Y, 1, InputEvent.BUTTON1_DOWN_MASK);
-        }
-        textField.setCaretPosition(0);
-        startTime = System.currentTimeMillis();
-        visibleStartTime = startTime;
+        SwingUtilities.invokeLater(() -> {
+            searchBar.setAutoRequestFocus(isGrabFocus);
+            setVisible(true);
+            if (isGrabFocus) {
+                //使用鼠标点击窗口以获得焦点
+                int X = searchBar.getX() + (textField.getWidth() / 2);
+                int Y = searchBar.getY() + (textField.getHeight() / 2);
+                RobotUtil.getInstance().mouseClicked(X, Y, 1, InputEvent.BUTTON1_DOWN_MASK);
+            }
+            textField.setCaretPosition(0);
+            startTime = System.currentTimeMillis();
+            visibleStartTime = startTime;
+        });
     }
 
     /**
@@ -3459,13 +3461,7 @@ public class SearchBar {
     }
 
     private void clearTextFieldText() {
-        SwingUtilities.invokeLater(() -> {
-            try {
-                textField.setText("");
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
+        textField.setText("");
     }
 
     /**
@@ -3480,31 +3476,33 @@ public class SearchBar {
     }
 
     private void setVisible(boolean b) {
-        SwingUtilities.invokeLater(() -> {
-            searchBar.setVisible(b);
-            GetHandle.INSTANCE.setSearchBarUsingStatus(b);
-        });
+        searchBar.setVisible(b);
+        GetHandle.INSTANCE.setSearchBarUsingStatus(b);
     }
 
     /**
      * 重置所有状态并关闭窗口
      */
     private void closeSearchBar() {
-        if (isVisible()) {
-            clearAllLabels();
-            setVisible(false);
-        }
-        clearTextFieldText();
-        resetAllStatus();
+        SwingUtilities.invokeLater(() -> {
+            if (isVisible()) {
+                clearAllLabels();
+                setVisible(false);
+            }
+            clearTextFieldText();
+            resetAllStatus();
+        });
     }
 
     /**
      * 重置所有状态但不关闭窗口
      */
     private void closeWithoutHideSearchBar() {
-        clearAllLabels();
-        clearTextFieldText();
-        resetAllStatus();
+        SwingUtilities.invokeLater(() -> {
+            clearAllLabels();
+            clearTextFieldText();
+            resetAllStatus();
+        });
     }
 
     private void resetAllStatus() {
