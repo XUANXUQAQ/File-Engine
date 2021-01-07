@@ -1,16 +1,17 @@
 package FileEngine.frames;
 
 import FileEngine.IsDebug;
-import FileEngine.eventHandler.EventUtil;
 import FileEngine.eventHandler.Event;
 import FileEngine.eventHandler.EventHandler;
+import FileEngine.eventHandler.EventUtil;
+import FileEngine.eventHandler.impl.frame.settingsFrame.ShowSettingsFrameEvent;
+import FileEngine.eventHandler.impl.stop.CloseEvent;
+import FileEngine.eventHandler.impl.stop.RestartEvent;
 import FileEngine.eventHandler.impl.taskbar.HideTrayIconEvent;
 import FileEngine.eventHandler.impl.taskbar.ShowTaskBarIconEvent;
 import FileEngine.eventHandler.impl.taskbar.ShowTaskBarMessageEvent;
-import FileEngine.eventHandler.impl.stop.CloseEvent;
-import FileEngine.eventHandler.impl.stop.RestartEvent;
-import FileEngine.eventHandler.impl.frame.settingsFrame.ShowSettingsFrameEvent;
 import FileEngine.utils.CachedThreadPoolUtil;
+import FileEngine.utils.TranslateUtil;
 
 import javax.swing.*;
 import java.awt.*;
@@ -19,15 +20,16 @@ import java.awt.event.MouseEvent;
 import java.net.URL;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 
 public class TaskBar {
     private TrayIcon trayIcon = null;
     private SystemTray systemTray;
     private final ConcurrentLinkedQueue<MessageStruct> messageQueue = new ConcurrentLinkedQueue<>();
+    private final AtomicBoolean isMessageClear = new AtomicBoolean(true);
 
     private static volatile TaskBar INSTANCE = null;
-
 
     private static class MessageStruct {
         private final String caption;
@@ -42,6 +44,7 @@ public class TaskBar {
     private TaskBar() {
         startShowMessageThread();
         showTaskBar();
+        addActionListener();
     }
 
     private void startShowMessageThread() {
@@ -49,11 +52,20 @@ public class TaskBar {
             try {
                 EventUtil eventUtil = EventUtil.getInstance();
                 MessageStruct message;
+                int count = 0;
                 while (eventUtil.isNotMainExit()) {
-                    message = messageQueue.poll();
-                    if (message != null) {
-                        showMessageOnTrayIcon(message.caption, message.message);
-                        TimeUnit.SECONDS.sleep(5);
+                    if (isMessageClear.get()) {
+                        message = messageQueue.poll();
+                        if (message != null) {
+                            showMessageOnTrayIcon(message.caption, message.message);
+                            isMessageClear.set(false);
+                            count = 0;
+                        }
+                    } else {
+                        count++;
+                    }
+                    if (count > 100) {
+                        isMessageClear.set(true);
                     }
                     TimeUnit.MILLISECONDS.sleep(50);
                 }
@@ -73,13 +85,19 @@ public class TaskBar {
         return INSTANCE;
     }
 
+    private void addActionListener() {
+        if (trayIcon != null) {
+            trayIcon.addActionListener(e -> isMessageClear.set(true));
+        }
+    }
+
     private void showTaskBar() {
         SettingsFrame settingsFrame = SettingsFrame.getInstance();
         // 判断是否支持系统托盘
         if (SystemTray.isSupported()) {
             Image image;
             URL icon;
-            icon = getClass().getResource("/icons/taskbar.png");
+            icon = this.getClass().getResource("/icons/taskbar.png");
             image = new ImageIcon(icon).getImage();
             systemTray = SystemTray.getSystemTray();
             // 创建托盘图标
@@ -118,7 +136,8 @@ public class TaskBar {
             try {
                 // 为系统托盘加托盘图标
                 systemTray.add(trayIcon);
-            } catch (Exception ignored) {
+            } catch (AWTException e) {
+                e.printStackTrace();
             }
         }
     }
@@ -139,7 +158,12 @@ public class TaskBar {
 
     private void showMessageOnTrayIcon(String caption, String message) {
         if (trayIcon != null) {
-            trayIcon.displayMessage(caption, message, TrayIcon.MessageType.INFO);
+            TranslateUtil translateUtil = TranslateUtil.getInstance();
+            TrayIcon.MessageType type = TrayIcon.MessageType.INFO;
+            if (caption.equals(translateUtil.getTranslation("Warning"))) {
+                type = TrayIcon.MessageType.WARNING;
+            }
+            trayIcon.displayMessage(caption, message, type);
         }
     }
 
