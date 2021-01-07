@@ -5,8 +5,9 @@ A tool can make you work more efficiently.
  Improve work efficiency.
  This is a green software that does not have to be installed and can be used at any time.
 
-[阅读中文版](https://github.com/XUANXUQAQ/File-Engine/blob/master/README-cn.md)
-### It is recommended to use [File-Engine-UDisk-Plugin](https://github.com/XUANXUQAQ/File-Engine-UDisk-Plugin) to enable File-Engine to support U disk。
+[阅读中文版](https://github.com/XUANXUQAQ/File-Engine/blob/master/README-cn.md)   
+## [Downloads](https://github.com/XUANXUQAQ/File-Engine/releases/)
+### Use [File-Engine-UDisk-Plugin](https://github.com/XUANXUQAQ/File-Engine-UDisk-Plugin) to enable File-Engine to support non-NTFS disk。
 ### Make your own plugin[File-Engine-Plugin-Template](https://github.com/XUANXUQAQ/File-Engine-Plugin-Template)
 ## Usage
 ### [View help](https://github.com/XUANXUQAQ/File-Engine/wiki/Usage)   
