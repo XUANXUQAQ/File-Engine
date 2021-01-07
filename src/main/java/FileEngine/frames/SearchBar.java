@@ -2836,10 +2836,12 @@ public class SearchBar {
 
                         } else if (databaseUtil.getStatus() == Enums.DatabaseStatus.VACUUM) {
                             setLabelChosen(label1);
-                            label1.setText(translateUtil.getTranslation("Organizing database"));
+                            eventUtil.putEvent(new ShowTaskBarMessageEvent(translateUtil.getTranslation("Info"),
+                                    translateUtil.getTranslation("Organizing database")));
                         } else if (databaseUtil.getStatus() == Enums.DatabaseStatus.MANUAL_UPDATE) {
                             setLabelChosen(label1);
-                            label1.setText(translateUtil.getTranslation("Updating file index") + "...");
+                            eventUtil.putEvent(new ShowTaskBarMessageEvent(translateUtil.getTranslation("Info"),
+                                    translateUtil.getTranslation("Updating file index") + "..."));
                         }
 
                         if (databaseUtil.getStatus() != Enums.DatabaseStatus.NORMAL) {
@@ -2851,7 +2853,6 @@ public class SearchBar {
                     TimeUnit.MILLISECONDS.sleep(20);
                 }
             } catch (InterruptedException ignored) {
-
             } catch (URISyntaxException | IOException e) {
                 e.printStackTrace();
             }
