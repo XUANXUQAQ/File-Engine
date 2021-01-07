@@ -2251,6 +2251,7 @@ public class SearchBar {
                 eventUtil.putEvent(new SetSearchBarLabelColorEvent(preview.chosenLabelColor));
                 eventUtil.putEvent(new SetSearchBarLabelFontColorEvent(preview.unchosenLabelFontColor));
                 eventUtil.putEvent(new ShowSearchBarEvent(false));
+                getInstance().textField.setText("a");
             }
         });
 
