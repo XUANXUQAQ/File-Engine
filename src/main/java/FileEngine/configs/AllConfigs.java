@@ -820,6 +820,8 @@ public class AllConfigs {
                 eventUtil.putEvent(new LoadAllPluginsEvent("plugins"));
                 eventUtil.putEvent(new StartMonitorDiskEvent());
                 eventUtil.putEvent(new ShowTaskBarIconEvent());
+                eventUtil.putEvent(new SetDefaultSwingLaf());
+                eventUtil.putEvent(new SetConfigsEvent());
                 if (!IsDebug.isDebug()) {
                     eventUtil.putEvent(new StartDaemonEvent(new File("").getAbsolutePath()));
                 }

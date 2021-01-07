@@ -5,8 +5,6 @@ import FileEngine.configs.Enums;
 import FileEngine.eventHandler.Event;
 import FileEngine.eventHandler.EventUtil;
 import FileEngine.eventHandler.impl.ReadConfigsAndBootSystemEvent;
-import FileEngine.eventHandler.impl.SetDefaultSwingLaf;
-import FileEngine.eventHandler.impl.configs.SetConfigsEvent;
 import FileEngine.eventHandler.impl.database.UpdateDatabaseEvent;
 import FileEngine.eventHandler.impl.plugin.ReleasePluginResourcesEvent;
 import FileEngine.eventHandler.impl.stop.RestartEvent;
@@ -253,9 +251,6 @@ public class MainClass {
 
             EventUtil eventUtil = EventUtil.getInstance();
 
-            eventUtil.putEvent(new SetDefaultSwingLaf());
-            eventUtil.putEvent(new SetConfigsEvent());
-
             checkPluginInfo();
 
             eventUtil.putEvent(new ReleasePluginResourcesEvent());
@@ -327,9 +322,9 @@ public class MainClass {
                             translateUtil.getTranslation("Updating file index")));
                     eventUtil.putEvent(new UpdateDatabaseEvent());
                 }
-                if (restartCount > 3) {
+                if (restartCount > 2) {
                     restartCount = 0;
-                    //超过6天未重启
+                    //超过限定时间未重启
                     eventUtil.putEvent(new RestartEvent());
                 }
             }
