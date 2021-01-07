@@ -326,7 +326,7 @@ public class PluginMarket {
         }
         listPlugins.addMouseListener(new MouseAdapter() {
             @Override
-            public void mousePressed(MouseEvent e) {
+            public void mouseClicked(MouseEvent e) {
                 buttonInstall.setVisible(false);
                 buttonInstall.setEnabled(false);
                 isStartGetPluginInfo.set(true);
@@ -418,31 +418,26 @@ public class PluginMarket {
         switch (AllConfigs.getInstance().getUpdateAddress()) {
             case "jsdelivr CDN":
                 return "https://cdn.jsdelivr.net/gh/XUANXUQAQ/File-Engine-Version/plugins.json";
-            case "GitHub":
-                return "https://raw.githubusercontent.com/XUANXUQAQ/File-Engine-Version/master/plugins.json";
             case "GitHack":
                 return "https://raw.githack.com/XUANXUQAQ/File-Engine-Version/master/plugins.json";
             case "Gitee":
                 return "https://gitee.com/XUANXUQAQ/file-engine-version/raw/master/plugins.json";
+            case "GitHub":
             default:
-                return null;
+                return "https://raw.githubusercontent.com/XUANXUQAQ/File-Engine-Version/master/plugins.json";
         }
     }
 
     private void initPluginList() {
         try {
             String url = getPluginListUrl();
-            if (url != null) {
-                JSONObject allPlugins = getPluginInfo(
-                        url,
-                        "allPluginsList.json");
-                if (allPlugins != null) {
-                    Set<String> pluginSet = allPlugins.keySet();
-                    for (String each : pluginSet) {
-                        NAME_PLUGIN_INFO_URL_MAP.put(each, allPlugins.getString(each));
-                    }
-                    listPlugins.setListData(pluginSet.toArray());
+            JSONObject allPlugins = getPluginInfo(url, "allPluginsList.json");
+            if (allPlugins != null) {
+                Set<String> pluginSet = allPlugins.keySet();
+                for (String each : pluginSet) {
+                    NAME_PLUGIN_INFO_URL_MAP.put(each, allPlugins.getString(each));
                 }
+                listPlugins.setListData(pluginSet.toArray());
             }
             buttonInstall.setEnabled(false);
             buttonInstall.setVisible(false);
