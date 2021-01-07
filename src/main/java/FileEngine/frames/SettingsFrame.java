@@ -1765,6 +1765,7 @@ public class SettingsFrame {
         configEntity.setRunAsAdminKeyCode(tmp_runAsAdminKeyCode);
         configEntity.setCopyPathKeyCode(tmp_copyPathKeyCode);
         configEntity.setSwingTheme(swingTheme);
+        configEntity.setLanguage(translateUtil.getLanguage());
 
         SaveConfigsEvent event = new SaveConfigsEvent(configEntity);
         eventUtil.putEvent(event);
