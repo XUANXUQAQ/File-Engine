@@ -3480,8 +3480,10 @@ public class SearchBar {
     }
 
     private void setVisible(boolean b) {
-        searchBar.setVisible(b);
-        GetHandle.INSTANCE.setSearchBarUsingStatus(b);
+        SwingUtilities.invokeLater(() -> {
+            searchBar.setVisible(b);
+            GetHandle.INSTANCE.setSearchBarUsingStatus(b);
+        });
     }
 
     /**
