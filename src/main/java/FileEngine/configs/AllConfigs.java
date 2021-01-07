@@ -3,7 +3,6 @@ package FileEngine.configs;
 import FileEngine.IsDebug;
 import FileEngine.eventHandler.Event;
 import FileEngine.eventHandler.EventHandler;
-import FileEngine.utils.EventUtil;
 import FileEngine.eventHandler.impl.ReadConfigsAndBootSystemEvent;
 import FileEngine.eventHandler.impl.SetDefaultSwingLaf;
 import FileEngine.eventHandler.impl.SetSwingLaf;
@@ -16,6 +15,7 @@ import FileEngine.eventHandler.impl.monitorDisk.StartMonitorDiskEvent;
 import FileEngine.eventHandler.impl.plugin.LoadAllPluginsEvent;
 import FileEngine.eventHandler.impl.plugin.SetPluginsCurrentThemeEvent;
 import FileEngine.eventHandler.impl.taskbar.ShowTaskBarIconEvent;
+import FileEngine.utils.EventUtil;
 import FileEngine.utils.TranslateUtil;
 import FileEngine.utils.database.SQLiteUtil;
 import com.alibaba.fastjson.JSON;
@@ -32,6 +32,7 @@ import com.formdev.flatlaf.intellijthemes.materialthemeuilite.FlatMaterialLighte
 import javax.swing.*;
 import java.awt.*;
 import java.io.*;
+import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -498,6 +499,22 @@ public class AllConfigs {
         }
     }
 
+    private boolean noNullValue(ConfigEntity config) {
+        try {
+            for (Field field : config.getClass().getDeclaredFields()) {
+                field.setAccessible(true);
+                Object o = field.get(config);
+                if (o == null) {
+                    return false;
+                }
+            }
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+            return false;
+        }
+        return true;
+    }
+
     public static void registerEventHandler() {
         EventUtil eventUtil = EventUtil.getInstance();
         eventUtil.register(ReadConfigsAndBootSystemEvent.class, new EventHandler() {
@@ -550,8 +567,14 @@ public class AllConfigs {
         eventUtil.register(SaveConfigsEvent.class, new EventHandler() {
             @Override
             public void todo(Event event) {
-                getInstance().configEntity = ((SaveConfigsEvent) event).configEntity;
-                getInstance().saveAllSettings();
+                AllConfigs allConfigs = getInstance();
+                ConfigEntity tempConfigEntity = ((SaveConfigsEvent) event).configEntity;
+                if (allConfigs.noNullValue(tempConfigEntity)) {
+                    allConfigs.configEntity = tempConfigEntity;
+                    allConfigs.saveAllSettings();
+                } else {
+                    throw new NullPointerException("configEntity中有Null值");
+                }
             }
         });
     }
