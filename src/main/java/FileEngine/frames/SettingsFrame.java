@@ -1013,7 +1013,7 @@ public class SettingsFrame {
                     isSkipConfirm.set(true);
                 }
                 if (isVersionLatest.get()) {
-                    JOptionPane.showMessageDialog(frame, plugin.getVersion() +
+                    JOptionPane.showMessageDialog(frame, plugin.getVersion() + "\n" +
                             translateUtil.getTranslation("The current Version is the latest."));
                 } else {
                     if (isSkipConfirm.get()) {
