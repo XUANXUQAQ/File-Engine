@@ -7,7 +7,7 @@ import FileEngine.dllInterface.GetAscII;
 import FileEngine.dllInterface.IsLocalDisk;
 import FileEngine.eventHandler.Event;
 import FileEngine.eventHandler.EventHandler;
-import FileEngine.eventHandler.EventUtil;
+import FileEngine.utils.EventUtil;
 import FileEngine.eventHandler.impl.database.*;
 import FileEngine.eventHandler.impl.taskbar.ShowTaskBarMessageEvent;
 import FileEngine.utils.CachedThreadPoolUtil;
@@ -71,12 +71,10 @@ public class DatabaseUtil {
     }
 
     private void deleteRecordsToDatabaseThread() {
-        AllConfigs allConfigs = AllConfigs.getInstance();
-
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             try (BufferedReader readerRemove =
                          new BufferedReader(new InputStreamReader(
-                                 new FileInputStream(allConfigs.getTmp().getAbsolutePath() + File.separator + "fileRemoved.txt"),
+                                 new FileInputStream(new File("tmp").getAbsolutePath() + File.separator + "fileRemoved.txt"),
                                          StandardCharsets.UTF_8))) {
                 String tmp;
                 int fileCount = 0;
@@ -108,11 +106,10 @@ public class DatabaseUtil {
 
     private void addRecordsToDatabaseThread() {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
-            AllConfigs allConfigs = AllConfigs.getInstance();
             //检测文件添加线程
             try (BufferedReader readerAdd =
                          new BufferedReader(new InputStreamReader(
-                                 new FileInputStream(allConfigs.getTmp().getAbsolutePath() + File.separator + "fileAdded.txt"),
+                                 new FileInputStream(new File("tmp").getAbsolutePath() + File.separator + "fileAdded.txt"),
                                  StandardCharsets.UTF_8))) {
                 String tmp;
                 int fileCount = 0;

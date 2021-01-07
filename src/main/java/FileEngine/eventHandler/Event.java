@@ -9,11 +9,11 @@ public class Event {
     private final AtomicInteger executeTimes = new AtomicInteger(0);
     private final AtomicBoolean isBlock = new AtomicBoolean(false);
 
-    protected void incrementExecuteTimes() {
+    public void incrementExecuteTimes() {
         executeTimes.incrementAndGet();
     }
 
-    protected int getExecuteTimes() {
+    public int getExecuteTimes() {
         return executeTimes.get();
     }
 

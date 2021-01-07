@@ -4,7 +4,7 @@ import FileEngine.configs.AllConfigs;
 import FileEngine.configs.Enums;
 import FileEngine.eventHandler.Event;
 import FileEngine.eventHandler.EventHandler;
-import FileEngine.eventHandler.EventUtil;
+import FileEngine.utils.EventUtil;
 import FileEngine.eventHandler.impl.SetDefaultSwingLaf;
 import FileEngine.eventHandler.impl.download.StartDownloadEvent;
 import FileEngine.eventHandler.impl.download.StopDownloadEvent;
@@ -201,7 +201,7 @@ public class PluginMarket {
                     String downloadUrl = info.getString("url");
                     EventUtil.getInstance().putEvent(new StartDownloadEvent(
                             downloadUrl, pluginFullName,
-                            new File(AllConfigs.getInstance().getTmp(), "pluginsUpdate").getAbsolutePath()));
+                            new File("tmp", "pluginsUpdate").getAbsolutePath()));
 
                     buttonInstall.setText(TranslateUtil.getInstance().getTranslation("Cancel"));
                 }
@@ -383,7 +383,7 @@ public class PluginMarket {
         if (downloadStatus != Enums.DownloadStatus.DOWNLOAD_DOWNLOADING) {
             //判断是否已下载完成
             if (downloadStatus != Enums.DownloadStatus.DOWNLOAD_DONE) {
-                EventUtil.getInstance().putEvent(new StartDownloadEvent(url, saveFileName, AllConfigs.getInstance().getTmp().getAbsolutePath()));
+                EventUtil.getInstance().putEvent(new StartDownloadEvent(url, saveFileName, new File("tmp").getAbsolutePath()));
 
                 int count = 0;
                 boolean isError = false;

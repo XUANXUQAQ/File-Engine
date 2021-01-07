@@ -2,10 +2,11 @@ package FileEngine.frames;
 
 import FileEngine.IsDebug;
 import FileEngine.configs.AllConfigs;
+import FileEngine.configs.ConfigEntity;
 import FileEngine.configs.Enums;
 import FileEngine.eventHandler.Event;
 import FileEngine.eventHandler.EventHandler;
-import FileEngine.eventHandler.EventUtil;
+import FileEngine.utils.EventUtil;
 import FileEngine.eventHandler.impl.SetDefaultSwingLaf;
 import FileEngine.eventHandler.impl.SetSwingLaf;
 import FileEngine.eventHandler.impl.configs.SaveConfigsEvent;
@@ -537,7 +538,7 @@ public class SettingsFrame {
                         urlChoose = "url64";
                         fileName = AllConfigs.FILE_NAME;
                         eventUtil.putEvent(new StartDownloadEvent(
-                                updateInfo.getString(urlChoose), fileName, allConfigs.getTmp().getAbsolutePath()));
+                                updateInfo.getString(urlChoose), fileName, new File("tmp").getAbsolutePath()));
 
                         //更新button为取消
                         buttonCheckUpdate.setText(translateUtil.getTranslation("Cancel"));
@@ -1020,7 +1021,7 @@ public class SettingsFrame {
                         //直接开始下载
                         String url = plugin.getUpdateURL();
                         eventUtil.putEvent(new StartDownloadEvent(
-                                url, pluginFullName, new File(allConfigs.getTmp(), "pluginsUpdate").getAbsolutePath()));
+                                url, pluginFullName, new File("tmp", "pluginsUpdate").getAbsolutePath()));
                     } else {
                         eventUtil.putEvent(new AddPluginsCanUpdateEvent(pluginName));
                         int ret = JOptionPane.showConfirmDialog(frame, translateUtil.getTranslation("New version available, do you want to update?"));
@@ -1028,7 +1029,7 @@ public class SettingsFrame {
                             //开始下载
                             String url = plugin.getUpdateURL();
                             eventUtil.putEvent(new StartDownloadEvent(
-                                    url, pluginFullName, new File(allConfigs.getTmp(), "pluginsUpdate").getAbsolutePath()));
+                                    url, pluginFullName, new File("tmp", "pluginsUpdate").getAbsolutePath()));
                         }
                     }
                 }
@@ -1494,7 +1495,7 @@ public class SettingsFrame {
             String url = getUpdateUrl();
             if (url != null) {
                 eventUtil.putEvent(new StartDownloadEvent(
-                        url, "version.json", allConfigs.getTmp().getAbsolutePath()));
+                        url, "version.json", new File("tmp").getAbsolutePath()));
                 int count = 0;
                 boolean isError = false;
                 //wait for task
@@ -1728,46 +1729,44 @@ public class SettingsFrame {
         String tmp_proxyPassword = textFieldPassword.getText();
 
         setStartup(checkBoxAddToStartup.isSelected());
-        allConfigs.allowChangeSettings();
+        ConfigEntity configEntity = new ConfigEntity();
 
         if (radioButtonProxyTypeSocks5.isSelected()) {
-            allConfigs.setProxyType(Enums.ProxyType.PROXY_SOCKS);
+            configEntity.setProxyType(Enums.ProxyType.PROXY_SOCKS);
         } else if (radioButtonProxyTypeHttp.isSelected()) {
-            allConfigs.setProxyType(Enums.ProxyType.PROXY_HTTP);
+            configEntity.setProxyType(Enums.ProxyType.PROXY_HTTP);
         }
         if (radioButtonNoProxy.isSelected()) {
-            allConfigs.setProxyType(Enums.ProxyType.PROXY_DIRECT);
+            configEntity.setProxyType(Enums.ProxyType.PROXY_DIRECT);
         }
-        allConfigs.setUpdateAddress((String) chooseUpdateAddress.getSelectedItem());
-        allConfigs.setPriorityFolder(textFieldPriorityFolder.getText());
-        allConfigs.setHotkey(textFieldHotkey.getText());
-        allConfigs.setCacheNumLimit(Integer.parseInt(textFieldCacheNum.getText()));
-        allConfigs.setUpdateTimeLimit(Integer.parseInt(textFieldUpdateInterval.getText()));
-        allConfigs.setIgnorePath(ignorePathTemp);
-        allConfigs.setSearchDepth(Integer.parseInt(textFieldSearchDepth.getText()));
-        allConfigs.setIsDefaultAdmin(checkBoxAdmin.isSelected());
-        allConfigs.setIsLoseFocusClose(checkBoxLoseFocus.isSelected());
-        allConfigs.setIsShowTipCreatingLnk(checkBoxIsShowTipOnCreatingLnk.isSelected());
-        allConfigs.setTransparency(Float.parseFloat(textFieldTransparency.getText()));
-        allConfigs.setLabelColor(Integer.parseInt(textFieldLabelColor.getText(), 16));
-        allConfigs.setBorderColor(Integer.parseInt(textFieldBorderColor.getText(), 16));
-        allConfigs.setDefaultBackgroundColor(Integer.parseInt(textFieldBackgroundDefault.getText(), 16));
-        allConfigs.setSearchBarColor(Integer.parseInt(textFieldSearchBarColor.getText(), 16));
-        allConfigs.setLabelFontColorWithCoverage(Integer.parseInt(textFieldFontColorWithCoverage.getText(), 16));
-        allConfigs.setLabelFontColor(Integer.parseInt(textFieldFontColor.getText(), 16));
-        allConfigs.setSearchBarFontColor(Integer.parseInt(textFieldSearchBarFontColor.getText(), 16));
-        allConfigs.setProxyAddress(tmp_proxyAddress);
-        allConfigs.setProxyPort(Integer.parseInt(textFieldPort.getText()));
-        allConfigs.setProxyUserName(tmp_proxyUserName);
-        allConfigs.setProxyPassword(tmp_proxyPassword);
-        allConfigs.setOpenLastFolderKeyCode(tmp_openLastFolderKeyCode);
-        allConfigs.setRunAsAdminKeyCode(tmp_runAsAdminKeyCode);
-        allConfigs.setCopyPathKeyCode(tmp_copyPathKeyCode);
-        allConfigs.setSwingTheme(swingTheme);
+        configEntity.setUpdateAddress((String) chooseUpdateAddress.getSelectedItem());
+        configEntity.setPriorityFolder(textFieldPriorityFolder.getText());
+        configEntity.setHotkey(textFieldHotkey.getText());
+        configEntity.setCacheNumLimit(Integer.parseInt(textFieldCacheNum.getText()));
+        configEntity.setUpdateTimeLimit(Integer.parseInt(textFieldUpdateInterval.getText()));
+        configEntity.setIgnorePath(ignorePathTemp);
+        configEntity.setSearchDepth(Integer.parseInt(textFieldSearchDepth.getText()));
+        configEntity.setDefaultAdmin(checkBoxAdmin.isSelected());
+        configEntity.setLoseFocusClose(checkBoxLoseFocus.isSelected());
+        configEntity.setShowTipCreatingLnk(checkBoxIsShowTipOnCreatingLnk.isSelected());
+        configEntity.setTransparency(Float.parseFloat(textFieldTransparency.getText()));
+        configEntity.setLabelColor(Integer.parseInt(textFieldLabelColor.getText(), 16));
+        configEntity.setBorderColor(Integer.parseInt(textFieldBorderColor.getText(), 16));
+        configEntity.setDefaultBackgroundColor(Integer.parseInt(textFieldBackgroundDefault.getText(), 16));
+        configEntity.setSearchBarColor(Integer.parseInt(textFieldSearchBarColor.getText(), 16));
+        configEntity.setFontColorWithCoverage(Integer.parseInt(textFieldFontColorWithCoverage.getText(), 16));
+        configEntity.setFontColor(Integer.parseInt(textFieldFontColor.getText(), 16));
+        configEntity.setSearchBarFontColor(Integer.parseInt(textFieldSearchBarFontColor.getText(), 16));
+        configEntity.setProxyAddress(tmp_proxyAddress);
+        configEntity.setProxyPort(Integer.parseInt(textFieldPort.getText()));
+        configEntity.setProxyUserName(tmp_proxyUserName);
+        configEntity.setProxyPassword(tmp_proxyPassword);
+        configEntity.setOpenLastFolderKeyCode(tmp_openLastFolderKeyCode);
+        configEntity.setRunAsAdminKeyCode(tmp_runAsAdminKeyCode);
+        configEntity.setCopyPathKeyCode(tmp_copyPathKeyCode);
+        configEntity.setSwingTheme(swingTheme);
 
-        allConfigs.denyChangeSettings();
-
-        SaveConfigsEvent event = new SaveConfigsEvent();
+        SaveConfigsEvent event = new SaveConfigsEvent(configEntity);
         eventUtil.putEvent(event);
         eventUtil.waitForEvent(event);
         eventUtil.putEvent(new SetConfigsEvent());

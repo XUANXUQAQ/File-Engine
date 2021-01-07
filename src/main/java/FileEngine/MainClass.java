@@ -3,7 +3,7 @@ package FileEngine;
 import FileEngine.configs.AllConfigs;
 import FileEngine.configs.Enums;
 import FileEngine.eventHandler.Event;
-import FileEngine.eventHandler.EventUtil;
+import FileEngine.utils.EventUtil;
 import FileEngine.eventHandler.impl.ReadConfigsAndBootSystemEvent;
 import FileEngine.eventHandler.impl.database.UpdateDatabaseEvent;
 import FileEngine.eventHandler.impl.plugin.ReleasePluginResourcesEvent;

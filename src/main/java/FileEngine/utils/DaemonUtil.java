@@ -1,6 +1,5 @@
 package FileEngine.utils;
 
-import FileEngine.eventHandler.EventUtil;
 import FileEngine.eventHandler.Event;
 import FileEngine.eventHandler.EventHandler;
 import FileEngine.eventHandler.impl.daemon.StartDaemonEvent;
