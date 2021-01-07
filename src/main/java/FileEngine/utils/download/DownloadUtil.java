@@ -4,9 +4,9 @@ import FileEngine.IsDebug;
 import FileEngine.configs.AllConfigs;
 import FileEngine.configs.Enums;
 import FileEngine.configs.ProxyInfo;
-import FileEngine.eventHandler.EventUtil;
 import FileEngine.eventHandler.Event;
 import FileEngine.eventHandler.EventHandler;
+import FileEngine.eventHandler.EventUtil;
 import FileEngine.eventHandler.impl.download.StartDownloadEvent;
 import FileEngine.eventHandler.impl.download.StopDownloadEvent;
 import FileEngine.utils.CachedThreadPoolUtil;
@@ -14,6 +14,7 @@ import FileEngine.utils.CachedThreadPoolUtil;
 import javax.net.ssl.*;
 import java.io.*;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.net.*;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
@@ -147,7 +148,7 @@ public class DownloadUtil {
 
     private static class DownloadManager {
         private final String url;
-        private final String localPath;
+        private final String savePath;
         private final String fileName;
         private volatile double progress = 0.0;
         private volatile boolean isUserInterrupted = false;
@@ -158,7 +159,7 @@ public class DownloadUtil {
         private DownloadManager(String url, String fileName, String savePath, ProxyInfo proxyInfo) {
             this.url = url;
             this.fileName = fileName;
-            this.localPath = savePath;
+            this.savePath = savePath;
             this.downloadStatus = Enums.DownloadStatus.DOWNLOAD_DOWNLOADING;
             setProxy(proxyInfo.type, proxyInfo.address, proxyInfo.port, proxyInfo.userName, proxyInfo.password);
         }
@@ -209,31 +210,29 @@ public class DownloadUtil {
                 con.setConnectTimeout(3000);
                 //防止屏蔽程序抓取而返回403错误
                 con.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.83 Safari/537.36 Edg/85.0.564.44");
-                InputStream in = con.getInputStream();
                 byte[] buffer = new byte[1];
                 int currentProgress = 0;
                 int len;
                 //文件保存位置
-                File saveDir = new File(localPath);
+                File saveDir = new File(savePath);
                 if (!saveDir.exists()) {
                     if (!saveDir.mkdirs()) {
                         throw new IOException("Create dirs failed");
                     }
                 }
-                File fileFullPath = new File(saveDir + File.separator + fileName);
-                BufferedOutputStream bfos = new BufferedOutputStream(new FileOutputStream(fileFullPath));
-
-                int fileLength = con.getContentLength();
-                while ((len = in.read(buffer)) != -1) {
-                    if (isUserInterrupted) {
-                        break;
+                File fileFullPath = new File(saveDir, fileName);
+                try (InputStream in = con.getInputStream();
+                     BufferedOutputStream bfos = new BufferedOutputStream(new FileOutputStream(fileFullPath))) {
+                    int fileLength = con.getContentLength();
+                    while ((len = in.read(buffer)) != -1) {
+                        if (isUserInterrupted) {
+                            break;
+                        }
+                        bfos.write(buffer, 0, len);
+                        currentProgress += len;
+                        progress = div(currentProgress, fileLength);
                     }
-                    bfos.write(buffer, 0, len);
-                    currentProgress += len;
-                    progress = div(currentProgress, fileLength);
                 }
-                bfos.close();
-                in.close();
                 con.disconnect();
                 if (isUserInterrupted) {
                     //删除文件
@@ -256,7 +255,7 @@ public class DownloadUtil {
         private double div(double v1, double v2) {
             BigDecimal b1 = new BigDecimal(Double.toString(v1));
             BigDecimal b2 = new BigDecimal(Double.toString(v2));
-            return b1.divide(b2, 2, BigDecimal.ROUND_HALF_UP).doubleValue();
+            return b1.divide(b2, 2, RoundingMode.HALF_UP).doubleValue();
         }
 
         private void setInterrupt() {
@@ -269,7 +268,18 @@ public class DownloadUtil {
         }
 
         private Enums.DownloadStatus getDownloadStatus() {
-            return downloadStatus;
+            if (downloadStatus != Enums.DownloadStatus.DOWNLOAD_DONE) {
+                return downloadStatus;
+            } else {
+                if (!new File(savePath, fileName).exists()) {
+                    if (IsDebug.isDebug()) {
+                        System.err.println("文件不存在，重新下载");
+                    }
+                    return Enums.DownloadStatus.DOWNLOAD_NO_TASK;
+                } else {
+                    return downloadStatus;
+                }
+            }
         }
 
         private void setProxy(Proxy.Type proxyType, String address, int port, String userName, String password) {
