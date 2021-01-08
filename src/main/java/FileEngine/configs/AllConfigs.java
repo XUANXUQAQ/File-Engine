@@ -75,7 +75,7 @@ public class AllConfigs {
     }
 
     private Enums.SwingThemes swingThemesMapper(String swingTheme) {
-        if ("default".equals(swingTheme)) {
+        if ("current".equals(swingTheme)) {
             return swingThemesMapper(configEntity.getSwingTheme());
         }
         for (Enums.SwingThemes each : Enums.SwingThemes.values()) {
@@ -419,6 +419,7 @@ public class AllConfigs {
         eventUtil.putEvent(new SetSearchBarColorEvent(configEntity.getSearchBarColor()));
         eventUtil.putEvent(new SetSearchBarFontColorEvent(configEntity.getSearchBarFontColor()));
         eventUtil.putEvent(new SetBorderColorEvent(configEntity.getBorderColor()));
+        eventUtil.putEvent(new SetSwingLaf("current"));
     }
 
     private void setSwingLaf(Enums.SwingThemes theme) {
@@ -525,6 +526,7 @@ public class AllConfigs {
                 Event tmpEvent;
 
                 AllConfigs allConfigs = AllConfigs.getInstance();
+
                 allConfigs.readAllSettings();
                 allConfigs.saveAllSettings();
 
