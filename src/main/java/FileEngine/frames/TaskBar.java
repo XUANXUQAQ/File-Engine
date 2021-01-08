@@ -8,7 +8,7 @@ import FileEngine.eventHandler.impl.frame.settingsFrame.ShowSettingsFrameEvent;
 import FileEngine.eventHandler.impl.stop.CloseEvent;
 import FileEngine.eventHandler.impl.stop.RestartEvent;
 import FileEngine.eventHandler.impl.taskbar.HideTrayIconEvent;
-import FileEngine.eventHandler.impl.taskbar.ShowTaskBarIconEvent;
+import FileEngine.eventHandler.impl.taskbar.ShowTrayIconEvent;
 import FileEngine.eventHandler.impl.taskbar.ShowTaskBarMessageEvent;
 import FileEngine.utils.CachedThreadPoolUtil;
 import FileEngine.utils.TranslateUtil;
@@ -177,7 +177,7 @@ public class TaskBar {
             }
         });
 
-        eventUtil.register(ShowTaskBarIconEvent.class, new EventHandler() {
+        eventUtil.register(ShowTrayIconEvent.class, new EventHandler() {
             @Override
             public void todo(Event event) {
                 getInstance();

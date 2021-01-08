@@ -4,13 +4,14 @@ import FileEngine.configs.AllConfigs;
 import FileEngine.configs.Enums;
 import FileEngine.eventHandler.Event;
 import FileEngine.eventHandler.EventHandler;
-import FileEngine.utils.EventUtil;
-import FileEngine.eventHandler.impl.SetDefaultSwingLaf;
+import FileEngine.eventHandler.impl.SetSwingLaf;
 import FileEngine.eventHandler.impl.download.StartDownloadEvent;
 import FileEngine.eventHandler.impl.download.StopDownloadEvent;
 import FileEngine.eventHandler.impl.frame.pluginMarket.HidePluginMarketEvent;
+import FileEngine.eventHandler.impl.frame.pluginMarket.InitPluginList;
 import FileEngine.eventHandler.impl.frame.pluginMarket.ShowPluginMarket;
 import FileEngine.utils.CachedThreadPoolUtil;
+import FileEngine.utils.EventUtil;
 import FileEngine.utils.TranslateUtil;
 import FileEngine.utils.download.DownloadUtil;
 import FileEngine.utils.pluginSystem.PluginUtil;
@@ -144,6 +145,7 @@ public class PluginMarket {
 
     private void showWindow() {
         initPluginList();
+        CachedThreadPoolUtil.getInstance().executeTask(this::getAllPluginsDetailInfo);
         ImageIcon frameIcon = new ImageIcon(PluginMarket.class.getResource("/icons/frame.png"));
         labelIcon.setIcon(null);
         labelAuthor.setText("");
@@ -161,12 +163,28 @@ public class PluginMarket {
         frame.setResizable(false);
         frame.setLocationRelativeTo(null);
         frame.setTitle(TranslateUtil.getInstance().getTranslation("Plugin Market"));
+        Event event = new SetSwingLaf("default");
+        EventUtil eventUtil = EventUtil.getInstance();
+        eventUtil.putEvent(event);
+        eventUtil.waitForEvent(event);
         frame.setVisible(true);
-        EventUtil.getInstance().putEvent(new SetDefaultSwingLaf());
+    }
+
+    private void getAllPluginsDetailInfo() {
+        for (String each : NAME_PLUGIN_INFO_URL_MAP.keySet()) {
+            getPluginDetailInfo(each);
+        }
     }
 
     public static void registerEventHandler() {
         EventUtil eventUtil = EventUtil.getInstance();
+        eventUtil.register(InitPluginList.class, new EventHandler() {
+            @Override
+            public void todo(Event event) {
+                getInstance().initPluginList();
+            }
+        });
+
         eventUtil.register(ShowPluginMarket.class, new EventHandler() {
             @Override
             public void todo(Event event) {
@@ -252,8 +270,7 @@ public class PluginMarket {
             }
 
             @Override
-            public void changedUpdate(DocumentEvent e) {
-            }
+            public void changedUpdate(DocumentEvent e) {}
         });
     }
 
@@ -286,13 +303,13 @@ public class PluginMarket {
 
         class getPluginInfo {
             final CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
+            final String pluginName;
+            getPluginInfo(String pluginName) {
+                this.pluginName = pluginName;
+            }
             void doGet() {
                 isStartGetPluginInfo.set(false);
                 cachedThreadPoolUtil.executeTask(() -> {
-                    String pluginName = (String) listPlugins.getSelectedValue();
-                    if (pluginName == null) {
-                        return;
-                    }
                     if (isStartGetPluginInfo.get()) {
                         //用户重新点击
                         return;
@@ -336,7 +353,10 @@ public class PluginMarket {
                 textAreaPluginDescription.setText("");
                 labelAuthor.setText("");
                 labelIcon.setIcon(null);
-                new getPluginInfo().doGet();
+                String pluginName = (String) listPlugins.getSelectedValue();
+                if (pluginName != null) {
+                    new getPluginInfo(pluginName).doGet();
+                }
             }
         });
     }
@@ -344,11 +364,11 @@ public class PluginMarket {
     private ImageIcon getImageByUrl(String url, String pluginName) throws InterruptedException, IOException {
         File icon = new File("tmp/$$" + pluginName);
         int count = 0;
+        DownloadUtil downloadUtil = DownloadUtil.getInstance();
         if (!icon.exists()) {
             EventUtil.getInstance().putEvent(new StartDownloadEvent(url, icon.getName(), "tmp"));
-
-            while (DownloadUtil.getInstance().getDownloadStatus(icon.getName()) != Enums.DownloadStatus.DOWNLOAD_DONE) {
-                if (DownloadUtil.getInstance().getDownloadStatus(icon.getName()) == Enums.DownloadStatus.DOWNLOAD_ERROR) {
+            while (downloadUtil.getDownloadStatus(icon.getName()) != Enums.DownloadStatus.DOWNLOAD_DONE) {
+                if (downloadUtil.getDownloadStatus(icon.getName()) == Enums.DownloadStatus.DOWNLOAD_ERROR) {
                     return null;
                 }
                 if (count > 30) {
@@ -360,9 +380,10 @@ public class PluginMarket {
         }
 
         BufferedImage bitmap = ImageIO.read(icon);
-        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-        ImageIO.write(bitmap, "PNG", bytes);
-        return new ImageIcon(bytes.toByteArray());
+        try (ByteArrayOutputStream bytes = new ByteArrayOutputStream()) {
+            ImageIO.write(bitmap, "PNG", bytes);
+            return new ImageIcon(bytes.toByteArray());
+        }
     }
 
     private JSONObject getPluginDetailInfo(String pluginName) {
