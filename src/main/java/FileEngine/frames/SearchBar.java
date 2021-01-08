@@ -825,8 +825,10 @@ public class SearchBar {
      */
     private void setLabelChosen(JLabel label) {
         if (label != null) {
-            label.setBackground(labelColor);
-            label.setForeground(fontColorWithCoverage);
+            SwingUtilities.invokeLater(() -> {
+                label.setBackground(labelColor);
+                label.setForeground(fontColorWithCoverage);
+            });
         }
     }
 
@@ -837,8 +839,10 @@ public class SearchBar {
      */
     private void setLabelNotChosen(JLabel label) {
         if (label != null) {
-            label.setBackground(backgroundColor);
-            label.setForeground(labelFontColor);
+            SwingUtilities.invokeLater(() -> {
+                label.setBackground(backgroundColor);
+                label.setForeground(labelFontColor);
+            });
         }
     }
 
@@ -1202,13 +1206,7 @@ public class SearchBar {
         return isNextLabelValid;
     }
 
-    /**
-     * 检测当前窗口是否未显示任何结果
-     *
-     * @param label 判断的label
-     * @return true如果label上有显示 否则false
-     */
-    private boolean isLabelNotEmpty(JLabel label) {
+    private boolean isLabelEmpty(JLabel label) {
         boolean isEmpty = true;
         String text;
         if (label != null) {
@@ -1217,7 +1215,17 @@ public class SearchBar {
                 isEmpty = text.isEmpty();
             }
         }
-        return !isEmpty;
+        return isEmpty;
+    }
+
+    /**
+     * 检测当前窗口是否未显示任何结果
+     *
+     * @param label 判断的label
+     * @return true如果label上有显示 否则false
+     */
+    private boolean isLabelNotEmpty(JLabel label) {
+        return !isLabelEmpty(label);
     }
 
     //获取当前选中label的编号 从0-7
@@ -1235,13 +1243,10 @@ public class SearchBar {
                         && isLabelNotEmpty(label5) && isLabelNotEmpty(label6) && isLabelNotEmpty(label7) && isLabelNotEmpty(label8)) {
                     isUserPressed.set(false);
                 }
-                boolean isNextLabelValid = isNextLabelValid();
-
-                if (isNextLabelValid) {
+                if (isNextLabelValid()) {
                     if (!getTextFieldText().isEmpty()) {
                         currentResultCount.incrementAndGet();
 
-                        //System.out.println(labelCount);
                         if (currentResultCount.get() >= listResultsNum.get()) {
                             currentResultCount.set(listResultsNum.get() - 1);
                         }
@@ -2083,7 +2088,7 @@ public class SearchBar {
 
     private void setLabelChosenOrNotChosenMouseMode(int labelNum, JLabel label) {
         if (!isUserPressed.get() && isLabelNotEmpty(label)) {
-            if (currentResultCount.get() == labelNum) {
+            if (currentLabelSelectedPosition.get() == labelNum) {
                 setLabelChosen(label);
             } else {
                 setLabelNotChosen(label);
@@ -2435,62 +2440,77 @@ public class SearchBar {
         });
     }
 
+    private void tryToShowRecordsWhenHasLabelEmpty() {
+        boolean isLabel1Chosen = false;
+        boolean isLabel2Chosen = false;
+        boolean isLabel3Chosen = false;
+        boolean isLabel4Chosen = false;
+        boolean isLabel5Chosen = false;
+        boolean isLabel6Chosen = false;
+        boolean isLabel7Chosen = false;
+        boolean isLabel8Chosen = false;
+        if (currentResultCount.get() < listResultsNum.get()) {
+            int pos = getCurrentLabelPos();
+            switch (pos) {
+                case 0:
+                    isLabel1Chosen = true;
+                    break;
+                case 1:
+                    isLabel2Chosen = true;
+                    break;
+                case 2:
+                    isLabel3Chosen = true;
+                    break;
+                case 3:
+                    isLabel4Chosen = true;
+                    break;
+                case 4:
+                    isLabel5Chosen = true;
+                    break;
+                case 5:
+                    isLabel6Chosen = true;
+                    break;
+                case 6:
+                    isLabel7Chosen = true;
+                    break;
+                case 7:
+                    isLabel8Chosen = true;
+                    break;
+            }
+            //在结果不足8个的时候不断尝试显示
+            if (
+                    isLabelEmpty(label2) ||
+                    isLabelEmpty(label3) ||
+                    isLabelEmpty(label4) ||
+                    isLabelEmpty(label5) ||
+                    isLabelEmpty(label6) ||
+                    isLabelEmpty(label7) ||
+                    isLabelEmpty(label8)
+            ) {
+                //设置窗口上的文字和图片显示，键盘模式
+                boolean finalIsLabel1Chosen = isLabel1Chosen;
+                boolean finalIsLabel2Chosen = isLabel2Chosen;
+                boolean finalIsLabel3Chosen = isLabel3Chosen;
+                boolean finalIsLabel4Chosen = isLabel4Chosen;
+                boolean finalIsLabel5Chosen = isLabel5Chosen;
+                boolean finalIsLabel6Chosen = isLabel6Chosen;
+                boolean finalIsLabel7Chosen = isLabel7Chosen;
+                boolean finalIsLabel8Chosen = isLabel8Chosen;
+                SwingUtilities.invokeLater(() -> showResults(
+                        finalIsLabel1Chosen, finalIsLabel2Chosen, finalIsLabel3Chosen, finalIsLabel4Chosen,
+                        finalIsLabel5Chosen, finalIsLabel6Chosen, finalIsLabel7Chosen, finalIsLabel8Chosen
+                ));
+            }
+        }
+    }
+
     private void tryToShowRecordsThread() {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             //显示结果线程
             try {
                 EventUtil eventUtil = EventUtil.getInstance();
-                boolean isLabel1Chosen, isLabel2Chosen, isLabel3Chosen, isLabel4Chosen,
-                        isLabel5Chosen, isLabel6Chosen, isLabel7Chosen, isLabel8Chosen;
                 while (eventUtil.isNotMainExit()) {
-                    isLabel1Chosen = false;
-                    isLabel2Chosen = false;
-                    isLabel3Chosen = false;
-                    isLabel4Chosen = false;
-                    isLabel5Chosen = false;
-                    isLabel6Chosen = false;
-                    isLabel7Chosen = false;
-                    isLabel8Chosen = false;
-                    if (currentResultCount.get() < listResultsNum.get()) {
-                        int pos = getCurrentLabelPos();
-                        switch (pos) {
-                            case 0:
-                                isLabel1Chosen = true;
-                                break;
-                            case 1:
-                                isLabel2Chosen = true;
-                                break;
-                            case 2:
-                                isLabel3Chosen = true;
-                                break;
-                            case 3:
-                                isLabel4Chosen = true;
-                                break;
-                            case 4:
-                                isLabel5Chosen = true;
-                                break;
-                            case 5:
-                                isLabel6Chosen = true;
-                                break;
-                            case 6:
-                                isLabel7Chosen = true;
-                                break;
-                            case 7:
-                                isLabel8Chosen = true;
-                                break;
-                        }
-                        if (!isLabelNotEmpty(label2) ||
-                                !isLabelNotEmpty(label3) ||
-                                !isLabelNotEmpty(label4) ||
-                                !isLabelNotEmpty(label5) ||
-                                !isLabelNotEmpty(label6) ||
-                                !isLabelNotEmpty(label7) ||
-                                !isLabelNotEmpty(label8)) {
-                            //设置窗口上的文字和图片显示，键盘模式
-                            showResults(isLabel1Chosen, isLabel2Chosen, isLabel3Chosen, isLabel4Chosen,
-                                    isLabel5Chosen, isLabel6Chosen, isLabel7Chosen, isLabel8Chosen);
-                        }
-                    }
+                    tryToShowRecordsWhenHasLabelEmpty();
                     String text = getTextFieldText();
                     if (text.isEmpty()) {
                         clearAllLabels();
@@ -3543,6 +3563,9 @@ public class SearchBar {
      * @return true如果可见 否则false
      */
     public boolean isVisible() {
+        if (searchBar == null) {
+            return false;
+        }
         return searchBar.isVisible();
     }
 

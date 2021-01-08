@@ -6,7 +6,7 @@ public class CachedThreadPoolUtil {
     private final ExecutorService cachedThreadPool = new ThreadPoolExecutor(
             0,
             200,
-            60L,
+            15L,
             TimeUnit.SECONDS,
             new SynchronousQueue<>());
 
@@ -27,5 +27,9 @@ public class CachedThreadPoolUtil {
 
     public void executeTask(Runnable todo) {
         cachedThreadPool.execute(todo);
+    }
+
+    public void shutdown() {
+        cachedThreadPool.shutdown();
     }
 }
