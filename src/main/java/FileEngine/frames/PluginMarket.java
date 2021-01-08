@@ -163,7 +163,7 @@ public class PluginMarket {
         frame.setResizable(false);
         frame.setLocationRelativeTo(null);
         frame.setTitle(TranslateUtil.getInstance().getTranslation("Plugin Market"));
-        Event event = new SetSwingLaf("default");
+        Event event = new SetSwingLaf("current");
         EventUtil eventUtil = EventUtil.getInstance();
         eventUtil.putEvent(event);
         eventUtil.waitForEvent(event);

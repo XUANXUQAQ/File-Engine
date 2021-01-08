@@ -1607,7 +1607,7 @@ public class SettingsFrame {
         tabbedPane.setSelectedIndex(index);
         frame.setLocationRelativeTo(null);
 
-        Event setSwing = new SetSwingLaf("default");
+        Event setSwing = new SetSwingLaf("current");
         eventUtil.putEvent(setSwing);
         eventUtil.waitForEvent(setSwing);
         frame.setVisible(true);

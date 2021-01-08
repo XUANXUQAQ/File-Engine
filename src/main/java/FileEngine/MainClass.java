@@ -253,7 +253,7 @@ public class MainClass {
             setSystemProperties();
 
             if (!System.getProperty("os.arch").contains("64")) {
-                JOptionPane.showMessageDialog(null, "OS Not 64 Bit", "ERROR", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(null, "Not 64 Bit", "ERROR", JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
