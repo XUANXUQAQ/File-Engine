@@ -366,12 +366,18 @@ public class AllConfigs {
         }
     }
 
-    private Object getFromJson(JSONObject json,String key, Object defaultObj) {
+    private Object getFromJson(JSONObject json, String key, Object defaultObj) {
         if (json == null) {
             return defaultObj;
         }
-        Object tmp = json.getOrDefault(key, defaultObj);
-        return tmp != null ? tmp : defaultObj;
+        Object tmp = json.get(key);
+        if (tmp == null) {
+            if (IsDebug.isDebug()) {
+                System.err.println("配置文件读取到null值   key : " + key);
+            }
+            return defaultObj;
+        }
+        return tmp;
     }
 
     private void readAllSettings() {
