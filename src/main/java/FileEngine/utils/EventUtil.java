@@ -61,7 +61,6 @@ public class EventUtil {
         putEvent(new UnloadAllPluginsEvent());
         putEvent(new HideTrayIconEvent());
         SQLiteUtil.closeAll();
-        exit.set(true);
     }
 
     /**
@@ -99,6 +98,7 @@ public class EventUtil {
                 close();
             }
             event.setFinished();
+            exit.set(true);
             isRejectTask.set(true);
             return false;
         }
