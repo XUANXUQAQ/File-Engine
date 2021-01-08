@@ -24,7 +24,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class EventUtil {
     private static volatile EventUtil instance = null;
     private final AtomicBoolean exit = new AtomicBoolean(false);
-    private final ConcurrentLinkedQueue<Event> eventQueue = new ConcurrentLinkedQueue<>();
+    private final ConcurrentLinkedQueue<Event> blockEventQueue = new ConcurrentLinkedQueue<>();
     private final ConcurrentLinkedQueue<Event> asyncEventQueue = new ConcurrentLinkedQueue<>();
     private final ConcurrentHashMap<Class<? extends Event>, EventHandler> EVENT_HANDLER_MAP = new ConcurrentHashMap<>();
     private final AtomicBoolean isRejectTask = new AtomicBoolean(false);
@@ -128,8 +128,8 @@ public class EventUtil {
         }
         if (!isRejectTask.get()) {
             if (event.isBlock()) {
-                if (!eventQueue.contains(event)) {
-                    eventQueue.add(event);
+                if (!blockEventQueue.contains(event)) {
+                    blockEventQueue.add(event);
                 }
             } else {
                 if (!asyncEventQueue.contains(event)) {
@@ -168,24 +168,26 @@ public class EventUtil {
                     Event event;
                     while (isEventHandlerNotExit()) {
                         //取出任务
-                        if ((event = asyncEventQueue.poll()) != null) {
-                            //判断任务是否执行完成或者失败
-                            if (event.isFinished() || event.isFailed()) {
-                                continue;
-                            } else if (event.getExecuteTimes() < MAX_TASK_RETRY_TIME) {
-                                //判断是否超过最大次数
-                                if (isDebug) {
-                                    System.err.println("异步线程正在尝试执行任务---" + event.toString());
-                                }
-                                if (executeTaskFailed(event)) {
-                                    System.err.println("异步任务执行失败---" + event.toString());
-                                    asyncEventQueue.add(event);
-                                }
-                            } else {
-                                event.setFailed();
-                                if (isDebug) {
-                                    System.err.println("任务超时---" + event.toString());
-                                }
+                        if ((event = asyncEventQueue.poll()) == null) {
+                            TimeUnit.MILLISECONDS.sleep(5);
+                            continue;
+                        }
+                        //判断任务是否执行完成或者失败
+                        if (event.isFinished() || event.isFailed()) {
+                            continue;
+                        } else if (event.getExecuteTimes() < MAX_TASK_RETRY_TIME) {
+                            //判断是否超过最大次数
+                            if (isDebug) {
+                                System.err.println("异步线程正在尝试执行任务---" + event.toString());
+                            }
+                            if (executeTaskFailed(event)) {
+                                System.err.println("异步任务执行失败---" + event.toString());
+                                asyncEventQueue.add(event);
+                            }
+                        } else {
+                            event.setFailed();
+                            if (isDebug) {
+                                System.err.println("任务超时---" + event.toString());
                             }
                         }
                         TimeUnit.MILLISECONDS.sleep(5);
@@ -200,7 +202,7 @@ public class EventUtil {
     }
 
     private boolean isEventHandlerNotExit() {
-        return (!exit.get() || !eventQueue.isEmpty() || !asyncEventQueue.isEmpty());
+        return (!exit.get() || !blockEventQueue.isEmpty() || !asyncEventQueue.isEmpty());
     }
 
     private void startBlockEventHandler() {
@@ -210,24 +212,27 @@ public class EventUtil {
                 final boolean isDebug = IsDebug.isDebug();
                 while (isEventHandlerNotExit()) {
                     //取出任务
-                    if ((event = eventQueue.poll()) != null) {
-                        //判断任务是否已经被执行或者失败
-                        if (!event.isFinished() && !event.isFailed()) {
-                            //判断任务是否超过最大执行次数
-                            if (event.getExecuteTimes() < MAX_TASK_RETRY_TIME) {
-                                if (isDebug) {
-                                    System.err.println("同步线程正在尝试执行任务---" + event.toString());
-                                }
-                                if (executeTaskFailed(event)) {
-                                    System.err.println("当前任务执行失败---" + event.toString());
-                                    eventQueue.add(event);
-                                }
-                            } else {
-                                event.setFailed();
-                                if (isDebug) {
-                                    System.err.println("任务超时---" + event.toString());
-                                }
-                            }
+                    if ((event = blockEventQueue.poll()) == null) {
+                        TimeUnit.MILLISECONDS.sleep(5);
+                        continue;
+                    }
+                    //判断任务是否已经被执行或者失败
+                    if (event.isFinished() || event.isFailed()) {
+                        continue;
+                    }
+                    //判断任务是否超过最大执行次数
+                    if (event.getExecuteTimes() < MAX_TASK_RETRY_TIME) {
+                        if (isDebug) {
+                            System.err.println("同步线程正在尝试执行任务---" + event.toString());
+                        }
+                        if (executeTaskFailed(event)) {
+                            System.err.println("同步任务执行失败---" + event.toString());
+                            blockEventQueue.add(event);
+                        }
+                    } else {
+                        event.setFailed();
+                        if (isDebug) {
+                            System.err.println("任务超时---" + event.toString());
                         }
                     }
                     TimeUnit.MILLISECONDS.sleep(5);

@@ -3,14 +3,14 @@ package FileEngine;
 import FileEngine.configs.AllConfigs;
 import FileEngine.configs.Enums;
 import FileEngine.eventHandler.Event;
-import FileEngine.utils.EventUtil;
 import FileEngine.eventHandler.impl.ReadConfigsAndBootSystemEvent;
 import FileEngine.eventHandler.impl.database.UpdateDatabaseEvent;
-import FileEngine.eventHandler.impl.plugin.ReleasePluginResourcesEvent;
+import FileEngine.eventHandler.impl.frame.settingsFrame.ShowSettingsFrameEvent;
 import FileEngine.eventHandler.impl.stop.RestartEvent;
 import FileEngine.eventHandler.impl.taskbar.ShowTaskBarMessageEvent;
 import FileEngine.frames.SettingsFrame;
 import FileEngine.utils.CachedThreadPoolUtil;
+import FileEngine.utils.EventUtil;
 import FileEngine.utils.Md5Util;
 import FileEngine.utils.TranslateUtil;
 import FileEngine.utils.classScan.ClassScannerUtil;
@@ -30,7 +30,6 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 
 public class MainClass {
@@ -148,17 +147,21 @@ public class MainClass {
         TranslateUtil translateUtil = TranslateUtil.getInstance();
         if (!isLatest()) {
             eventUtil.putEvent(new ShowTaskBarMessageEvent(
-                    translateUtil.getTranslation("Info"), translateUtil.getTranslation("New version can be updated")));
+                    translateUtil.getTranslation("Info"),
+                    translateUtil.getTranslation("New version can be updated"),
+                    new ShowSettingsFrameEvent("tabAbout")));
         }
     }
 
-    private static void checkOldPlugin() {
+    private static void checkOldApiPlugin() {
         EventUtil eventUtil = EventUtil.getInstance();
         TranslateUtil translateUtil = TranslateUtil.getInstance();
         if (PluginUtil.getInstance().isPluginTooOld()) {
             String oldPlugins = PluginUtil.getInstance().getAllOldPluginsName();
             eventUtil.putEvent(new ShowTaskBarMessageEvent(
-                    translateUtil.getTranslation("Warning"), oldPlugins + "\n" + translateUtil.getTranslation("Plugin Api is too old")));
+                    translateUtil.getTranslation("Warning"),
+                    oldPlugins + "\n" + translateUtil.getTranslation("Plugin Api is too old"),
+                    new ShowSettingsFrameEvent("tabPlugin")));
         }
     }
 
@@ -168,7 +171,9 @@ public class MainClass {
         if (PluginUtil.getInstance().isPluginRepeat()) {
             String repeatPlugins = PluginUtil.getInstance().getRepeatPlugins();
             eventUtil.putEvent(new ShowTaskBarMessageEvent(
-                    translateUtil.getTranslation("Warning"), repeatPlugins + "\n" + translateUtil.getTranslation("Duplicate plugin, please delete it in plugins folder")));
+                    translateUtil.getTranslation("Warning"),
+                    repeatPlugins + "\n" + translateUtil.getTranslation("Duplicate plugin, please delete it in plugins folder"),
+                    new ShowSettingsFrameEvent("tabPlugin")));
         }
     }
 
@@ -178,7 +183,9 @@ public class MainClass {
         if (PluginUtil.getInstance().isPluginLoadError()) {
             String errorPlugins = PluginUtil.getInstance().getLoadingErrorPlugins();
             eventUtil.putEvent(new ShowTaskBarMessageEvent(
-                    translateUtil.getTranslation("Warning"), errorPlugins + "\n" + translateUtil.getTranslation("Loading plugins error")));
+                    translateUtil.getTranslation("Warning"),
+                    errorPlugins + "\n" + translateUtil.getTranslation("Loading plugins error"),
+                    new ShowSettingsFrameEvent("tabPlugin")));
         }
     }
 
@@ -188,10 +195,29 @@ public class MainClass {
     }
 
     private static void checkPluginInfo() {
-        checkVersion();
-        checkOldPlugin();
+        checkOldApiPlugin();
         checkRepeatPlugin();
         checkErrorPlugin();
+        checkPluginVersion();
+    }
+
+    private static void checkPluginVersion() {
+        CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
+        cachedThreadPoolUtil.executeTask(() -> {
+            StringBuilder notLatestPluginsBuilder = new StringBuilder();
+            PluginUtil pluginUtil = PluginUtil.getInstance();
+            pluginUtil.checkAllPluginsVersion(notLatestPluginsBuilder);
+            EventUtil eventUtil = EventUtil.getInstance();
+            TranslateUtil translateUtil = TranslateUtil.getInstance();
+            String notLatestPlugins = notLatestPluginsBuilder.toString();
+            if (!notLatestPlugins.isEmpty()) {
+                eventUtil.putEvent(
+                        new ShowTaskBarMessageEvent(translateUtil.getTranslation("Info"),
+                                notLatestPlugins + "\n" +
+                                        translateUtil.getTranslation("New versions of these plugins can be updated"),
+                                new ShowSettingsFrameEvent("tabPlugin")));
+            }
+        });
     }
 
     private static void checkRunningDirAtDiskC() {
@@ -249,13 +275,11 @@ public class MainClass {
 
             sendStartSignal();
 
-            EventUtil eventUtil = EventUtil.getInstance();
+            checkRunningDirAtDiskC();
+
+            checkVersion();
 
             checkPluginInfo();
-
-            eventUtil.putEvent(new ReleasePluginResourcesEvent());
-
-            checkRunningDirAtDiskC();
 
             mainLoop();
 
@@ -276,10 +300,6 @@ public class MainClass {
         long div = 24 * 60 * 60 * 1000;
         int restartCount = 0;
 
-        StringBuilder notLatestPluginsBuilder = new StringBuilder();
-        AtomicBoolean isFinished = new AtomicBoolean(false);
-        CachedThreadPoolUtil.getInstance().executeTask(() -> PluginUtil.getInstance().isAllPluginLatest(notLatestPluginsBuilder, isFinished));
-
         EventUtil eventUtil = EventUtil.getInstance();
         TranslateUtil translateUtil = TranslateUtil.getInstance();
 
@@ -294,17 +314,6 @@ public class MainClass {
 
         while (eventUtil.isNotMainExit()) {
             // 主循环开始
-            if (isFinished.get()) {
-                isFinished.set(false);
-                String notLatestPlugins = notLatestPluginsBuilder.toString();
-                if (!notLatestPlugins.isEmpty()) {
-                    eventUtil.putEvent(
-                            new ShowTaskBarMessageEvent(
-                            translateUtil.getTranslation("Info"),
-                            notLatestPlugins + "\n" +
-                            translateUtil.getTranslation("New versions of these plugins can be updated")));
-                }
-            }
             //检查已工作时间
             checkTimeCount++;
             if (checkTimeCount > 2000) {

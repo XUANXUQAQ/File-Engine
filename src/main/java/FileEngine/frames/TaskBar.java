@@ -28,16 +28,19 @@ public class TaskBar {
     private SystemTray systemTray;
     private final ConcurrentLinkedQueue<MessageStruct> messageQueue = new ConcurrentLinkedQueue<>();
     private final AtomicBoolean isMessageClear = new AtomicBoolean(true);
+    private volatile Event currentShowingMessageWithEvent = null;
 
     private static volatile TaskBar INSTANCE = null;
 
     private static class MessageStruct {
         private final String caption;
         private final String message;
+        private final Event event;
 
-        private MessageStruct(String caption, String message) {
+        private MessageStruct(String caption, String message, Event event) {
             this.caption = caption;
             this.message = message;
+            this.event = event;
         }
     }
 
@@ -55,8 +58,10 @@ public class TaskBar {
                 int count = 0;
                 while (eventUtil.isNotMainExit()) {
                     if (isMessageClear.get()) {
+                        currentShowingMessageWithEvent = null;
                         message = messageQueue.poll();
                         if (message != null) {
+                            currentShowingMessageWithEvent = message.event;
                             showMessageOnTrayIcon(message.caption, message.message);
                             isMessageClear.set(false);
                             count = 0;
@@ -86,9 +91,17 @@ public class TaskBar {
     }
 
     private void addActionListener() {
-        if (trayIcon != null) {
-            trayIcon.addActionListener(e -> isMessageClear.set(true));
+        if (trayIcon == null) {
+            return;
         }
+        EventUtil eventUtil = EventUtil.getInstance();
+        trayIcon.addActionListener(e -> {
+                    isMessageClear.set(true);
+                    if (currentShowingMessageWithEvent != null) {
+                        eventUtil.putEvent(currentShowingMessageWithEvent);
+                    }
+                }
+        );
     }
 
     private void showTaskBar() {
@@ -152,8 +165,8 @@ public class TaskBar {
         eventUtil.putEvent(new RestartEvent());
     }
 
-    private void showMessage(String caption, String message) {
-        messageQueue.add(new MessageStruct(caption, message));
+    private void showMessage(String caption, String message, Event event) {
+        messageQueue.add(new MessageStruct(caption, message, event));
     }
 
     private void showMessageOnTrayIcon(String caption, String message) {
@@ -173,7 +186,7 @@ public class TaskBar {
             @Override
             public void todo(Event event) {
                 ShowTaskBarMessageEvent showTaskBarMessageTask = (ShowTaskBarMessageEvent) event;
-                getInstance().showMessage(showTaskBarMessageTask.caption, showTaskBarMessageTask.message);
+                getInstance().showMessage(showTaskBarMessageTask.caption, showTaskBarMessageTask.message, showTaskBarMessageTask.event);
             }
         });
 
