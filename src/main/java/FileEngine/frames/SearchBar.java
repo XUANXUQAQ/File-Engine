@@ -10,7 +10,6 @@ import FileEngine.dllInterface.GetHandle;
 import FileEngine.dllInterface.IsLocalDisk;
 import FileEngine.eventHandler.Event;
 import FileEngine.eventHandler.EventHandler;
-import FileEngine.utils.EventUtil;
 import FileEngine.eventHandler.impl.database.AddToCacheEvent;
 import FileEngine.eventHandler.impl.database.DeleteFromCacheEvent;
 import FileEngine.eventHandler.impl.database.UpdateDatabaseEvent;
@@ -19,13 +18,11 @@ import FileEngine.eventHandler.impl.frame.settingsFrame.ShowSettingsFrameEvent;
 import FileEngine.eventHandler.impl.monitorDisk.StartMonitorDiskEvent;
 import FileEngine.eventHandler.impl.monitorDisk.StopMonitorDiskEvent;
 import FileEngine.eventHandler.impl.taskbar.ShowTaskBarMessageEvent;
-import FileEngine.utils.CachedThreadPoolUtil;
-import FileEngine.utils.GetIconUtil;
-import FileEngine.utils.RobotUtil;
-import FileEngine.utils.TranslateUtil;
+import FileEngine.utils.*;
 import FileEngine.utils.database.DatabaseUtil;
 import FileEngine.utils.database.SQLiteUtil;
 import FileEngine.utils.moveFiles.CopyFileUtil;
+import FileEngine.utils.pinyin.PinyinUtil;
 import FileEngine.utils.pluginSystem.Plugin;
 import FileEngine.utils.pluginSystem.PluginUtil;
 
@@ -126,10 +123,10 @@ public class SearchBar {
         runningMode = Enums.RunningMode.NORMAL_MODE;
         showingMode = Enums.ShowingSearchBarMode.NORMAL_SHOWING;
         currentLabelSelectedPosition = new AtomicInteger(0);
-        semicolon = Pattern.compile(";");
-        colon = Pattern.compile(":");
-        blank = Pattern.compile(" ");
-        slash = Pattern.compile("/");
+        semicolon = RegexUtil.semicolon;
+        colon = RegexUtil.colon;
+        slash = RegexUtil.slash;
+        blank = RegexUtil.blank;
         JPanel panel = new JPanel();
         Color transparentColor = new Color(0, 0, 0, 0);
 
@@ -3309,16 +3306,17 @@ public class SearchBar {
      */
     private int getAscIISum(String[] words) {
         StringBuilder stringBuilder = new StringBuilder();
-        if (words != null) {
-            for (String each : words) {
-                if (each.contains("/") || each.contains(File.separator)) {
-                    continue;
-                }
-                stringBuilder.append(each.toUpperCase());
-            }
-            return GetAscII.INSTANCE.getAscII(stringBuilder.toString());
+        if (words == null || words.length == 0) {
+            return 0;
         }
-        return 0;
+        for (String each : words) {
+            //如果是路径匹配或者是拼音，则不计入ascii总数(汉字为0)
+            if (each.contains("/") || each.contains(File.separator) || PinyinUtil.isPinyin(each)) {
+                continue;
+            }
+            stringBuilder.append(each.toUpperCase());
+        }
+        return GetAscII.INSTANCE.getAscII(stringBuilder.toString());
     }
 
     /**
@@ -3363,25 +3361,39 @@ public class SearchBar {
      * @see #check(String);
      */
     private boolean isMatched(String path, boolean isIgnoreCase) {
-        String matcherStr;
+        String matcherStrFromFilePath;
+        boolean isPath;
         for (String eachKeyword : keywords) {
-            if (eachKeyword.startsWith("/") || eachKeyword.startsWith(File.separator)) {
+            char start = eachKeyword.charAt(0);
+            if (start == '/' || start == File.pathSeparatorChar) {
                 //匹配路径
+                isPath = true;
                 Matcher matcher = slash.matcher(eachKeyword);
                 eachKeyword = matcher.replaceAll(Matcher.quoteReplacement(File.separator));
                 //获取父路径
-                matcherStr = getParentPath(path);
+                matcherStrFromFilePath = getParentPath(path);
             } else {
                 //获取名字
-                matcherStr = getFileName(path);
+                isPath = false;
+                matcherStrFromFilePath = getFileName(path);
             }
+            //转换大小写
             if (isIgnoreCase) {
-                if (!matcherStr.toLowerCase().contains(eachKeyword.toLowerCase())) {
+                matcherStrFromFilePath = matcherStrFromFilePath.toLowerCase();
+                eachKeyword = eachKeyword.toLowerCase();
+            }
+            //开始匹配
+            if (!matcherStrFromFilePath.contains(eachKeyword)) {
+                if (isPath) {
                     return false;
-                }
-            } else {
-                if (!matcherStr.contains(eachKeyword)) {
-                    return false;
+                } else {
+                    if (PinyinUtil.isContainChinese(matcherStrFromFilePath)) {
+                        if (!PinyinUtil.toPinyin(matcherStrFromFilePath, "").contains(eachKeyword)) {
+                            return false;
+                        }
+                    } else {
+                        return false;
+                    }
                 }
             }
         }

@@ -18,9 +18,9 @@ import java.util.regex.Pattern;
 public class CheckHotKeyUtil {
 
     private final HashMap<String, Integer> map;
-    private final Pattern plus;
     private boolean isRegistered = false;
     private static volatile CheckHotKeyUtil INSTANCE = null;
+    private final Pattern plus = RegexUtil.plus;
 
     public static CheckHotKeyUtil getInstance() {
         if (INSTANCE == null) {
@@ -162,7 +162,6 @@ public class CheckHotKeyUtil {
     }
 
     private CheckHotKeyUtil() {
-        plus = Pattern.compile(" \\+ ");
         map = new HashMap<>();
         map.put("Ctrl", KeyEvent.VK_CONTROL);
         map.put("Alt", KeyEvent.VK_ALT);

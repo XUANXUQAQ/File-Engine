@@ -11,16 +11,13 @@ import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.regex.Pattern;
 
 public class TranslateUtil {
     private static volatile TranslateUtil INSTANCE = null;
 
-    private final Pattern blank = Pattern.compile(" ");
     private volatile static String language;
     private final ConcurrentHashMap<String, String> translationMap = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, String> fileMap = new ConcurrentHashMap<>();
-    private static final Pattern EQUAL_SIGN = Pattern.compile("=");
     private Font[] fList;
 
     private TranslateUtil() {
@@ -56,7 +53,7 @@ public class TranslateUtil {
         if (str.length() < 60) {
             return str;
         }
-        String[] split = blank.split(str);
+        String[] split = RegexUtil.blank.split(str);
         int totalLength = split.length;
         int splitCount = totalLength / 2;
         StringBuilder stringBuilder = new StringBuilder();
@@ -127,7 +124,7 @@ public class TranslateUtil {
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(TranslateUtil.class.getResourceAsStream(filePath), StandardCharsets.UTF_8))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
-                    String[] record = TranslateUtil.EQUAL_SIGN.split(line);
+                    String[] record = RegexUtil.equalSign.split(line);
                     if (IsDebug.isDebug()) {
                         if (translationMap.get(record[0]) != null) {
                             System.err.println("警告：翻译重复   " + record[0]);

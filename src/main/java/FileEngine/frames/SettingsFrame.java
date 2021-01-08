@@ -21,10 +21,7 @@ import FileEngine.eventHandler.impl.frame.settingsFrame.HideSettingsFrameEvent;
 import FileEngine.eventHandler.impl.frame.settingsFrame.ShowSettingsFrameEvent;
 import FileEngine.eventHandler.impl.plugin.AddPluginsCanUpdateEvent;
 import FileEngine.eventHandler.impl.plugin.RemoveFromPluginsCanUpdateEvent;
-import FileEngine.utils.CachedThreadPoolUtil;
-import FileEngine.utils.CheckHotKeyUtil;
-import FileEngine.utils.EventUtil;
-import FileEngine.utils.TranslateUtil;
+import FileEngine.utils.*;
 import FileEngine.utils.database.DatabaseUtil;
 import FileEngine.utils.database.SQLiteUtil;
 import FileEngine.utils.download.DownloadUtil;
@@ -52,7 +49,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.regex.Pattern;
 
 
 public class SettingsFrame {
@@ -68,7 +64,6 @@ public class SettingsFrame {
     private static final EventUtil eventUtil = EventUtil.getInstance();
     private static final AllConfigs allConfigs = AllConfigs.getInstance();
     private static final CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
-    private static final Pattern rgbHexPattern = Pattern.compile("^[a-fA-F0-9]{6}$");
     private final HashMap<String, Integer> tabComponentIndexMap = new HashMap<>();
     private JTextField textFieldUpdateInterval;
     private JTextField textFieldCacheNum;
@@ -589,7 +584,7 @@ public class SettingsFrame {
     private boolean canParseToRGB(String str) {
         if (str != null) {
             if (!str.isEmpty()) {
-                return rgbHexPattern.matcher(str).matches();
+                return RegexUtil.rgbHexPattern.matcher(str).matches();
             }
         }
         return false;
