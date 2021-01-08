@@ -416,14 +416,13 @@ public class SearchBar {
                                 } else if (runningMode == Enums.RunningMode.COMMAND_MODE) {
                                     String[] commandInfo = semicolon.split(result);
                                     //获取命令后的文件路径
-                                    if (commandInfo != null) {
-                                        if (commandInfo.length > 1) {
-                                            File f = new File(commandInfo[1]);
-                                            if (f.exists()) {
-                                                createShortCut(f.getAbsolutePath(),
-                                                        writePath + File.separator + f.getName(), AllConfigs.getInstance().isShowTipOnCreatingLnk());
-                                            }
-                                        }
+                                    if (commandInfo == null || commandInfo.length <= 1) {
+                                        return;
+                                    }
+                                    File f = new File(commandInfo[1]);
+                                    if (f.exists()) {
+                                        createShortCut(f.getAbsolutePath(),
+                                                writePath + File.separator + f.getName(), AllConfigs.getInstance().isShowTipOnCreatingLnk());
                                     }
                                 }
                             }
@@ -3224,7 +3223,7 @@ public class SearchBar {
     }
 
     /**
-     * 在windows的temp目录中生成bat以及用于隐藏bat的vbs脚本
+     * 在windows的temp目录(或者该软件的tmp目录，如果路径中没有空格)中生成bat以及用于隐藏bat的vbs脚本
      * @param command 要运行的cmd命令
      * @param filePath 文件位置（必须传入文件夹）
      * @param workingDir 应用打开后的工作目录
@@ -3234,8 +3233,8 @@ public class SearchBar {
         char disk = workingDir.charAt(0);
         String start = workingDir.substring(0,2);
         String end = workingDir.substring(2);
-        String batFilePath = filePath + "openBat_File_Engine.bat";
-        String vbsFilePath = filePath + "openVbs_File_Engine.vbs";
+        File batFilePath = new File(filePath, "openBat_File_Engine.bat");
+        File vbsFilePath = new File(filePath, "openVbs_File_Engine.vbs");
         try (BufferedWriter batW = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(batFilePath), System.getProperty("sun.jnu.encoding")));
             BufferedWriter vbsW = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(vbsFilePath), System.getProperty("sun.jnu.encoding")))) {
             //生成bat
@@ -3251,7 +3250,7 @@ public class SearchBar {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return vbsFilePath;
+        return vbsFilePath.getAbsolutePath();
     }
 
     /**
@@ -3276,7 +3275,9 @@ public class SearchBar {
                     String command;
                     if (file.isFile()) {
                         command = "start " + path.substring(0, 2) + "\"" + path.substring(2) + "\"";
-                        String vbsFilePath = generateBatAndVbsFile(command, System.getProperty("java.io.tmpdir"), getParentPath(path));
+                        String tmpDir = new File("").getAbsolutePath().contains(" ") ?
+                                System.getProperty("java.io.tmpdir") : new File("tmp").getAbsolutePath();
+                        String vbsFilePath = generateBatAndVbsFile(command, tmpDir, getParentPath(path));
                         Runtime.getRuntime().exec("explorer.exe " + vbsFilePath.substring(0, 2) + "\"" + vbsFilePath.substring(2) + "\"");
                     } else {
                         Runtime.getRuntime().exec("explorer.exe \"" + path + "\"");

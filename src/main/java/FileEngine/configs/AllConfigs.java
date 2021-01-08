@@ -4,7 +4,6 @@ import FileEngine.IsDebug;
 import FileEngine.eventHandler.Event;
 import FileEngine.eventHandler.EventHandler;
 import FileEngine.eventHandler.impl.ReadConfigsAndBootSystemEvent;
-import FileEngine.eventHandler.impl.SetDefaultSwingLaf;
 import FileEngine.eventHandler.impl.SetSwingLaf;
 import FileEngine.eventHandler.impl.configs.SaveConfigsEvent;
 import FileEngine.eventHandler.impl.configs.SetConfigsEvent;
@@ -14,7 +13,7 @@ import FileEngine.eventHandler.impl.hotkey.RegisterHotKeyEvent;
 import FileEngine.eventHandler.impl.monitorDisk.StartMonitorDiskEvent;
 import FileEngine.eventHandler.impl.plugin.LoadAllPluginsEvent;
 import FileEngine.eventHandler.impl.plugin.SetPluginsCurrentThemeEvent;
-import FileEngine.eventHandler.impl.taskbar.ShowTaskBarIconEvent;
+import FileEngine.eventHandler.impl.taskbar.ShowTrayIconEvent;
 import FileEngine.utils.EventUtil;
 import FileEngine.utils.TranslateUtil;
 import FileEngine.utils.database.SQLiteUtil;
@@ -76,6 +75,9 @@ public class AllConfigs {
     }
 
     private Enums.SwingThemes swingThemesMapper(String swingTheme) {
+        if ("default".equals(swingTheme)) {
+            return swingThemesMapper(configEntity.getSwingTheme());
+        }
         for (Enums.SwingThemes each : Enums.SwingThemes.values()) {
             if (each.toString().equals(swingTheme)) {
                 return each;
@@ -525,8 +527,8 @@ public class AllConfigs {
 
                 eventUtil.putEvent(new LoadAllPluginsEvent("plugins"));
                 eventUtil.putEvent(new StartMonitorDiskEvent());
-                eventUtil.putEvent(new ShowTaskBarIconEvent());
-                eventUtil.putEvent(new SetDefaultSwingLaf());
+                eventUtil.putEvent(new ShowTrayIconEvent());
+                //eventUtil.putEvent(new SetSwingLaf("default"));
                 eventUtil.putEvent(new SetConfigsEvent());
                 if (!IsDebug.isDebug()) {
                     eventUtil.putEvent(new StartDaemonEvent(new File("").getAbsolutePath()));
@@ -538,17 +540,6 @@ public class AllConfigs {
             @Override
             public void todo(Event event) {
                 getInstance().setAllSettings();
-            }
-        });
-
-        eventUtil.register(SetDefaultSwingLaf.class, new EventHandler() {
-            @Override
-            public void todo(Event event) {
-                try {
-                    AllConfigs allConfigs = AllConfigs.getInstance();
-                    allConfigs.setSwingLaf(allConfigs.swingThemesMapper(allConfigs.configEntity.getSwingTheme()));
-                } catch (Exception ignored) {
-                }
             }
         });
 

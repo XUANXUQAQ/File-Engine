@@ -6,8 +6,6 @@ import FileEngine.configs.ConfigEntity;
 import FileEngine.configs.Enums;
 import FileEngine.eventHandler.Event;
 import FileEngine.eventHandler.EventHandler;
-import FileEngine.utils.EventUtil;
-import FileEngine.eventHandler.impl.SetDefaultSwingLaf;
 import FileEngine.eventHandler.impl.SetSwingLaf;
 import FileEngine.eventHandler.impl.configs.SaveConfigsEvent;
 import FileEngine.eventHandler.impl.configs.SetConfigsEvent;
@@ -15,6 +13,7 @@ import FileEngine.eventHandler.impl.database.DeleteFromCacheEvent;
 import FileEngine.eventHandler.impl.database.OptimiseDatabaseEvent;
 import FileEngine.eventHandler.impl.download.StartDownloadEvent;
 import FileEngine.eventHandler.impl.download.StopDownloadEvent;
+import FileEngine.eventHandler.impl.frame.pluginMarket.InitPluginList;
 import FileEngine.eventHandler.impl.frame.pluginMarket.ShowPluginMarket;
 import FileEngine.eventHandler.impl.frame.searchBar.HideSearchBarEvent;
 import FileEngine.eventHandler.impl.frame.searchBar.PreviewSearchBarEvent;
@@ -24,6 +23,7 @@ import FileEngine.eventHandler.impl.plugin.AddPluginsCanUpdateEvent;
 import FileEngine.eventHandler.impl.plugin.RemoveFromPluginsCanUpdateEvent;
 import FileEngine.utils.CachedThreadPoolUtil;
 import FileEngine.utils.CheckHotKeyUtil;
+import FileEngine.utils.EventUtil;
 import FileEngine.utils.TranslateUtil;
 import FileEngine.utils.database.DatabaseUtil;
 import FileEngine.utils.database.SQLiteUtil;
@@ -32,6 +32,7 @@ import FileEngine.utils.moveFiles.MoveDesktopFiles;
 import FileEngine.utils.pluginSystem.Plugin;
 import FileEngine.utils.pluginSystem.PluginUtil;
 import com.alibaba.fastjson.JSONObject;
+
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
@@ -1542,6 +1543,7 @@ public class SettingsFrame {
         eventUtil.register(ShowSettingsFrameEvent.class, new EventHandler() {
             @Override
             public void todo(Event event) {
+                eventUtil.putEvent(new InitPluginList());
                 getInstance().showWindow();
             }
         });
@@ -1572,7 +1574,7 @@ public class SettingsFrame {
         tabbedPane.setSelectedIndex(0);
         frame.setLocationRelativeTo(null);
 
-        Event setSwing = new SetDefaultSwingLaf();
+        Event setSwing = new SetSwingLaf("default");
         eventUtil.putEvent(setSwing);
         eventUtil.waitForEvent(setSwing);
         frame.setVisible(true);
