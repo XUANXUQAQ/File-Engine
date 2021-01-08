@@ -522,14 +522,23 @@ public class AllConfigs {
         eventUtil.register(ReadConfigsAndBootSystemEvent.class, new EventHandler() {
             @Override
             public void todo(Event event) {
-                getInstance().readAllSettings();
-                getInstance().saveAllSettings();
+                Event tmpEvent;
 
-                eventUtil.putEvent(new LoadAllPluginsEvent("plugins"));
+                AllConfigs allConfigs = AllConfigs.getInstance();
+                allConfigs.readAllSettings();
+                allConfigs.saveAllSettings();
+
+                tmpEvent = new LoadAllPluginsEvent("plugins");
+                eventUtil.putEvent(tmpEvent);
+                eventUtil.waitForEvent(tmpEvent);
+
                 eventUtil.putEvent(new StartMonitorDiskEvent());
                 eventUtil.putEvent(new ShowTrayIconEvent());
-                //eventUtil.putEvent(new SetSwingLaf("default"));
-                eventUtil.putEvent(new SetConfigsEvent());
+
+                tmpEvent = new SetConfigsEvent();
+                eventUtil.putEvent(tmpEvent);
+                eventUtil.waitForEvent(tmpEvent);
+
                 if (!IsDebug.isDebug()) {
                     eventUtil.putEvent(new StartDaemonEvent(new File("").getAbsolutePath()));
                 }

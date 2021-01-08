@@ -45,6 +45,7 @@ import java.nio.charset.StandardCharsets;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -68,6 +69,7 @@ public class SettingsFrame {
     private static final AllConfigs allConfigs = AllConfigs.getInstance();
     private static final CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
     private static final Pattern rgbHexPattern = Pattern.compile("^[a-fA-F0-9]{6}$");
+    private final HashMap<String, Integer> tabComponentIndexMap = new HashMap<>();
     private JTextField textFieldUpdateInterval;
     private JTextField textFieldCacheNum;
     private JTextArea textAreaIgnorePath;
@@ -1203,10 +1205,26 @@ public class SettingsFrame {
         }
     }
 
+    private void initTabIndexMap() {
+        tabComponentIndexMap.put("tabGeneral", 0);
+        tabComponentIndexMap.put("tabSearchSettings", 1);
+        tabComponentIndexMap.put("tabSearchBarSettings", 2);
+        tabComponentIndexMap.put("tabCache", 3);
+        tabComponentIndexMap.put("tabProxy", 4);
+        tabComponentIndexMap.put("tabPlugin", 5);
+        tabComponentIndexMap.put("tabHotKey", 6);
+        tabComponentIndexMap.put("tabLanguage", 7);
+        tabComponentIndexMap.put("tabCommands", 8);
+        tabComponentIndexMap.put("tabColorSettings", 9);
+        tabComponentIndexMap.put("tabAbout", 10);
+    }
+
     private SettingsFrame() {
         frame.setUndecorated(true);
         frame.getRootPane().setWindowDecorationStyle(JRootPane.FRAME);
         frame.setIconImage(frameIcon.getImage());
+
+        initTabIndexMap();
 
         tabbedPane.setBackground(new Color(0,0,0,0));
 
@@ -1360,18 +1378,23 @@ public class SettingsFrame {
         });
     }
 
+    private int getTabIndex(String componentName) {
+        Integer index = tabComponentIndexMap.get(componentName);
+        return  (index == null) ? 0 : index;
+    }
+
     private void translateTabbedPane() {
-        tabbedPane.setTitleAt(0, translateUtil.getTranslation("General"));
-        tabbedPane.setTitleAt(1, translateUtil.getTranslation("Search settings"));
-        tabbedPane.setTitleAt(2, translateUtil.getTranslation("Search bar settings"));
-        tabbedPane.setTitleAt(3, translateUtil.getTranslation("Cache"));
-        tabbedPane.setTitleAt(4, translateUtil.getTranslation("Proxy settings"));
-        tabbedPane.setTitleAt(5, translateUtil.getTranslation("Plugins"));
-        tabbedPane.setTitleAt(6, translateUtil.getTranslation("Hotkey settings"));
-        tabbedPane.setTitleAt(7, translateUtil.getTranslation("Language settings"));
-        tabbedPane.setTitleAt(8, translateUtil.getTranslation("My commands"));
-        tabbedPane.setTitleAt(9, translateUtil.getTranslation("Color settings"));
-        tabbedPane.setTitleAt(10, translateUtil.getTranslation("About"));
+        tabbedPane.setTitleAt(getTabIndex("tabGeneral"), translateUtil.getTranslation("General"));
+        tabbedPane.setTitleAt(getTabIndex("tabSearchSettings"), translateUtil.getTranslation("Search settings"));
+        tabbedPane.setTitleAt(getTabIndex("tabSearchBarSettings"), translateUtil.getTranslation("Search bar settings"));
+        tabbedPane.setTitleAt(getTabIndex("tabCache"), translateUtil.getTranslation("Cache"));
+        tabbedPane.setTitleAt(getTabIndex("tabProxy"), translateUtil.getTranslation("Proxy settings"));
+        tabbedPane.setTitleAt(getTabIndex("tabPlugin"), translateUtil.getTranslation("Plugins"));
+        tabbedPane.setTitleAt(getTabIndex("tabHotKey"), translateUtil.getTranslation("Hotkey settings"));
+        tabbedPane.setTitleAt(getTabIndex("tabLanguage"), translateUtil.getTranslation("Language settings"));
+        tabbedPane.setTitleAt(getTabIndex("tabCommands"), translateUtil.getTranslation("My commands"));
+        tabbedPane.setTitleAt(getTabIndex("tabColorSettings"), translateUtil.getTranslation("Color settings"));
+        tabbedPane.setTitleAt(getTabIndex("tabAbout"), translateUtil.getTranslation("About"));
     }
 
     private void translateLabels() {
@@ -1423,7 +1446,7 @@ public class SettingsFrame {
         labelSearchCommand.setText(translateUtil.getTranslation("Search"));
     }
 
-    private void translateCheckBoxs() {
+    private void translateCheckbox() {
         checkBoxAddToStartup.setText(translateUtil.getTranslation("Add to startup"));
         checkBoxLoseFocus.setText(translateUtil.getTranslation("Close search bar when focus lost"));
         checkBoxAdmin.setText(translateUtil.getTranslation("Open other programs as an administrator " +
@@ -1457,7 +1480,7 @@ public class SettingsFrame {
     private void translate() {
         translateTabbedPane();
         translateLabels();
-        translateCheckBoxs();
+        translateCheckbox();
         translateButtons();
         translateRadioButtons();
         frame.setTitle(translateUtil.getTranslation("Settings"));
@@ -1543,8 +1566,14 @@ public class SettingsFrame {
         eventUtil.register(ShowSettingsFrameEvent.class, new EventHandler() {
             @Override
             public void todo(Event event) {
+                ShowSettingsFrameEvent showSettingsFrameEvent = (ShowSettingsFrameEvent) event;
                 eventUtil.putEvent(new InitPluginList());
-                getInstance().showWindow();
+                SettingsFrame settingsFrame = getInstance();
+                if (showSettingsFrameEvent.showTabName == null) {
+                    settingsFrame.showWindow();
+                } else {
+                    settingsFrame.showWindow(settingsFrame.getTabIndex(showSettingsFrameEvent.showTabName));
+                }
             }
         });
         eventUtil.register(HideSettingsFrameEvent.class, new EventHandler() {
@@ -1560,6 +1589,10 @@ public class SettingsFrame {
     }
 
     private void showWindow() {
+        showWindow(0);
+    }
+
+    private void showWindow(int index) {
         initGUI();
         frame.setResizable(true);
         int width = Integer.parseInt(translateUtil.getFrameWidth());
@@ -1571,7 +1604,7 @@ public class SettingsFrame {
         frame.setSize(width, height);
         frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         frame.setResizable(false);
-        tabbedPane.setSelectedIndex(0);
+        tabbedPane.setSelectedIndex(index);
         frame.setLocationRelativeTo(null);
 
         Event setSwing = new SetSwingLaf("default");

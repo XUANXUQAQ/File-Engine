@@ -66,12 +66,12 @@ public class PluginUtil {
     private final ConcurrentHashMap<String, Plugin> IDENTIFIER_PLUGIN_MAP = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, String> NAME_IDENTIFIER_MAP = new ConcurrentHashMap<>();
     private final Set<String> NOT_LATEST_PLUGINS = ConcurrentHashMap.newKeySet();
-    private HashSet<String> OLD_PLUGINS = new HashSet<>();
-    private HashSet<String> REPEAT_PLUGINS = new HashSet<>();
-    private HashSet<String> LOAD_ERROR_PLUGINS = new HashSet<>();
+    private final HashSet<String> OLD_API_PLUGINS = new HashSet<>();
+    private final HashSet<String> REPEAT_PLUGINS = new HashSet<>();
+    private final HashSet<String> LOAD_ERROR_PLUGINS = new HashSet<>();
 
     public boolean isPluginTooOld() {
-        return !OLD_PLUGINS.isEmpty();
+        return !OLD_API_PLUGINS.isEmpty();
     }
 
     public boolean isPluginRepeat() {
@@ -110,12 +110,6 @@ public class PluginUtil {
         return strb.substring(0, strb.length() - 1);
     }
 
-    private void releaseAllResources() {
-        REPEAT_PLUGINS = null;
-        LOAD_ERROR_PLUGINS = null;
-        OLD_PLUGINS = null;
-    }
-
     public Iterator<Plugin> getPluginMapIter() {
         return IDENTIFIER_PLUGIN_MAP.values().iterator();
     }
@@ -130,7 +124,7 @@ public class PluginUtil {
 
     public String getAllOldPluginsName() {
         StringBuilder strb = new StringBuilder();
-        for (String oldPlugin : OLD_PLUGINS) {
+        for (String oldPlugin : OLD_API_PLUGINS) {
             strb.append(oldPlugin).append(",");
         }
         return strb.substring(0, strb.length() - 1);
@@ -219,7 +213,7 @@ public class PluginUtil {
                                 boolean isPluginApiTooOld= loadPlugin(jar, className, identifier);
                                 NAME_IDENTIFIER_MAP.put(pluginName, identifier);
                                 if (isPluginApiTooOld) {
-                                    OLD_PLUGINS.add(pluginName);
+                                    OLD_API_PLUGINS.add(pluginName);
                                 }
                             } catch (Exception e) {
                                 LOAD_ERROR_PLUGINS.add(pluginName);
@@ -236,7 +230,7 @@ public class PluginUtil {
         }
     }
 
-    public void isAllPluginLatest(StringBuilder oldPlugins, AtomicBoolean isFinished) {
+    public void checkAllPluginsVersion(StringBuilder oldPlugins) {
         boolean isLatest;
         for (String each : NAME_IDENTIFIER_MAP.keySet()) {
             try {
@@ -247,7 +241,7 @@ public class PluginUtil {
                     System.out.println("++++++++++++++++++++++++++++++++++++++++++++");
                 }
                 if (!isLatest) {
-                    oldPlugins.append(each).append(",");
+                    oldPlugins.append(each).append(" ");
                     NOT_LATEST_PLUGINS.add(each);
                 }
             } catch (Exception e) {
@@ -258,7 +252,6 @@ public class PluginUtil {
                 }
             }
         }
-        isFinished.set(true);
     }
 
     private boolean isPluginLatest(Plugin plugin) throws InterruptedException {
@@ -308,13 +301,6 @@ public class PluginUtil {
             @Override
             public void todo(Event event) {
                 getInstance().loadAllPlugins(((LoadAllPluginsEvent) event).pluginDirPath);
-            }
-        });
-
-        eventUtil.register(ReleasePluginResourcesEvent.class, new EventHandler() {
-            @Override
-            public void todo(Event event) {
-                getInstance().releaseAllResources();
             }
         });
 
