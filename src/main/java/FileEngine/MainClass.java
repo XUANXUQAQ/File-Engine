@@ -251,16 +251,17 @@ public class MainClass {
     public static void main(String[] args) {
         try {
             setSystemProperties();
-            Class.forName("org.sqlite.JDBC");
 
             if (!System.getProperty("os.arch").contains("64")) {
                 JOptionPane.showMessageDialog(null, "OS Not 64 Bit", "ERROR", JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
-            initDatabase();
-
             startOrIgnoreUpdateAndExit(isUpdateSignExist());
+
+            Class.forName("org.sqlite.JDBC");
+
+            initDatabase();
 
             updatePlugins();
 
