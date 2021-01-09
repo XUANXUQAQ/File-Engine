@@ -192,3 +192,5 @@ Including the color of the window, the hot key to call out the search box, the t
 End of the tutorial=Ende des Tutorials
 You can enter ":help" in the search bar at any time to enter the tutorial=Sie können ":help" jederzeit in die Suchleiste eingeben, um das Tutorial einzugeben
 There are more detailed tutorials on the Github wiki. Would you like to check it out?=Weitere ausführliche Anleitungen zum Github-Wiki finden Sie hier.Wollen Sie sich das mal ansehen?
+Please wait up to 10 seconds=Bitte warten Sie bis zu 10 Sekunden
+Waiting overtime=Wartezeit

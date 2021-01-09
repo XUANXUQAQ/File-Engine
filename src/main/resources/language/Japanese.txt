@@ -192,3 +192,5 @@ Including the color of the window, the hot key to call out the search box, the t
 End of the tutorial=チュートリアルの終わり
 You can enter ":help" in the search bar at any time to enter the tutorial=を入力することができます
 There are more detailed tutorials on the Github wiki. Would you like to check it out?=Github Wikiの詳細なチュートリアルがあります。それをチェックしますか。
+Please wait up to 10 seconds=10秒までお待ちください
+Waiting overtime=待機タイムアウト
