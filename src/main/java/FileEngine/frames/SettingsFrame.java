@@ -512,7 +512,7 @@ public class SettingsFrame {
                 JSONObject updateInfo;
                 String latestVersion;
                 try {
-                    updateInfo = getUpdateInfo();
+                    updateInfo = allConfigs.getUpdateInfo();
                     if (updateInfo != null) {
                         latestVersion = updateInfo.getString("version");
                     } else {
@@ -1293,11 +1293,10 @@ public class SettingsFrame {
     }
 
     private void addUpdateAddressToComboBox() {
-        //todo 添加更新服务器地址
-        chooseUpdateAddress.addItem("jsdelivr CDN");
-        chooseUpdateAddress.addItem("GitHub");
-        chooseUpdateAddress.addItem("GitHack");
-        chooseUpdateAddress.addItem("Gitee");
+        Set<String> updateAddresses = allConfigs.getAllUpdateAddress();
+        for (String each : updateAddresses) {
+            chooseUpdateAddress.addItem(each);
+        }
     }
 
     private void checkDownloadTask(JLabel label, JButton button, String fileName, String originButtonString, String updateSignalFileName) throws IOException {
@@ -1491,57 +1490,6 @@ public class SettingsFrame {
             }
         }
         return false;
-    }
-
-    private static String getUpdateUrl() {
-        //todo 添加更新服务器地址
-        switch (AllConfigs.getInstance().getUpdateAddress()) {
-            case "jsdelivr CDN":
-                return "https://cdn.jsdelivr.net/gh/XUANXUQAQ/File-Engine-Version/version.json";
-            case "GitHub":
-                return "https://raw.githubusercontent.com/XUANXUQAQ/File-Engine-Version/master/version.json";
-            case "GitHack":
-                return "https://raw.githack.com/XUANXUQAQ/File-Engine-Version/master/version.json";
-            case "Gitee":
-                return "https://gitee.com/XUANXUQAQ/file-engine-version/raw/master/version.json";
-            default:
-                return null;
-        }
-    }
-
-    public static JSONObject getUpdateInfo() throws IOException, InterruptedException {
-        DownloadUtil downloadUtil = DownloadUtil.getInstance();
-        Enums.DownloadStatus downloadStatus = downloadUtil.getDownloadStatus("version.json");
-        if (downloadStatus != Enums.DownloadStatus.DOWNLOAD_DOWNLOADING) {
-            String url = getUpdateUrl();
-            if (url != null) {
-                eventUtil.putEvent(new StartDownloadEvent(
-                        url, "version.json", new File("tmp").getAbsolutePath()));
-                int count = 0;
-                boolean isError = false;
-                //wait for task
-                while (downloadUtil.getDownloadStatus("version.json") != Enums.DownloadStatus.DOWNLOAD_DONE) {
-                    count++;
-                    if (count >= 3) {
-                        isError = true;
-                        break;
-                    }
-                    TimeUnit.SECONDS.sleep(1);
-                }
-                if (isError) {
-                    throw new IOException("Download failed.");
-                }
-                String eachLine;
-                StringBuilder strBuilder = new StringBuilder();
-                try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream("tmp/version.json"), StandardCharsets.UTF_8))) {
-                    while ((eachLine = br.readLine()) != null) {
-                        strBuilder.append(eachLine);
-                    }
-                }
-                return JSONObject.parseObject(strBuilder.toString());
-            }
-        }
-        return null;
     }
 
     private void initCmdSetSettings() {

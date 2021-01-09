@@ -8,7 +8,6 @@ import FileEngine.eventHandler.impl.database.UpdateDatabaseEvent;
 import FileEngine.eventHandler.impl.frame.settingsFrame.ShowSettingsFrameEvent;
 import FileEngine.eventHandler.impl.stop.RestartEvent;
 import FileEngine.eventHandler.impl.taskbar.ShowTaskBarMessageEvent;
-import FileEngine.frames.SettingsFrame;
 import FileEngine.utils.CachedThreadPoolUtil;
 import FileEngine.utils.EventUtil;
 import FileEngine.utils.Md5Util;
@@ -491,7 +490,7 @@ public class MainClass {
     private static boolean isLatest() {
         //检测是否为最新版本
         try {
-            JSONObject info = SettingsFrame.getUpdateInfo();
+            JSONObject info = AllConfigs.getInstance().getUpdateInfo();
             if (info != null) {
                 String latestVersion = info.getString("version");
                 if (Double.parseDouble(latestVersion) > Double.parseDouble(AllConfigs.version)) {
