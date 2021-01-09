@@ -1538,24 +1538,26 @@ public class SettingsFrame {
     }
 
     private void showWindow(int index) {
-        initGUI();
-        frame.setResizable(true);
-        int width = Integer.parseInt(translateUtil.getFrameWidth());
-        int height = Integer.parseInt(translateUtil.getFrameHeight());
+        SwingUtilities.invokeLater(() -> {
+            initGUI();
+            frame.setResizable(true);
+            int width = Integer.parseInt(translateUtil.getFrameWidth());
+            int height = Integer.parseInt(translateUtil.getFrameHeight());
 
-        frame.setContentPane(getInstance().panel);
+            frame.setContentPane(getInstance().panel);
 
-        panel.setSize(width, height);
-        frame.setSize(width, height);
-        frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-        frame.setResizable(false);
-        tabbedPane.setSelectedIndex(index);
-        frame.setLocationRelativeTo(null);
+            panel.setSize(width, height);
+            frame.setSize(width, height);
+            frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+            frame.setResizable(false);
+            tabbedPane.setSelectedIndex(index);
+            frame.setLocationRelativeTo(null);
 
-        Event setSwing = new SetSwingLaf("current");
-        eventUtil.putEvent(setSwing);
-        eventUtil.waitForEvent(setSwing);
-        frame.setVisible(true);
+            Event setSwing = new SetSwingLaf("current");
+            eventUtil.putEvent(setSwing);
+            eventUtil.waitForEvent(setSwing);
+            frame.setVisible(true);
+        });
     }
 
     private void checkUpdateTimeLimit(StringBuilder strBuilder) {

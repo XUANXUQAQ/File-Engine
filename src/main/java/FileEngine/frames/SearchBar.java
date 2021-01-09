@@ -723,8 +723,10 @@ public class SearchBar {
                 if (JOptionPane.showConfirmDialog(null, translateUtil.getTranslation("Whether to view help"))
                         == JOptionPane.OK_OPTION) {
                     isTutorialMode.set(true);
-                    showTutorial();
-                    isTutorialMode.set(false);
+                    CachedThreadPoolUtil.getInstance().executeTask(() -> {
+                        showTutorial();
+                        isTutorialMode.set(false);
+                    });
                 }
                 return true;
             case "version":
@@ -738,7 +740,47 @@ public class SearchBar {
     }
 
     private void showTutorial() {
+        int count = 0;
+        final int maxWaiting = 10;
+        AtomicBoolean isCanceled = new AtomicBoolean(false);
         TranslateUtil translateUtil = TranslateUtil.getInstance();
+        if (databaseUtil.getStatus() != Enums.DatabaseStatus.NORMAL) {
+            JFrame frame = new JFrame();
+            frame.setUndecorated(true);
+            frame.getRootPane().setWindowDecorationStyle(JRootPane.FRAME);
+            LoadingPanel glasspane = new LoadingPanel();
+            glasspane.setSize(600, 400);
+            frame.setGlassPane(glasspane);
+            glasspane.setText(translateUtil.getTranslation("Please wait up to 10 seconds"));
+            glasspane.start();//开始动画加载效果
+            frame.setSize(600, 400);
+            frame.setLocationRelativeTo(null);
+            frame.setResizable(false);
+            frame.setVisible(true);
+            frame.addWindowListener(new WindowAdapter() {
+                @Override
+                public void windowClosing(WindowEvent e) {
+                    isCanceled.set(true);
+                }
+            });
+            try {
+                while (databaseUtil.getStatus() != Enums.DatabaseStatus.NORMAL && count < maxWaiting) {
+                    count++;
+                    TimeUnit.SECONDS.sleep(1);
+                }
+            } catch (InterruptedException ignored) {
+            } finally {
+                glasspane.stop();
+                frame.setVisible(false);
+            }
+        }
+        if (isCanceled.get()) {
+            return;
+        }
+        if (count == maxWaiting) {
+            JOptionPane.showMessageDialog(null, translateUtil.getTranslation("Waiting overtime"));
+            return;
+        }
         EventUtil eventUtil = EventUtil.getInstance();
         showSearchbar(false);
         JOptionPane.showMessageDialog(searchBar, translateUtil.getTranslation("Welcome to the tutorial of File-Engine") + "\n" +
@@ -2766,7 +2808,8 @@ public class SearchBar {
             try {
                 EventUtil eventUtil = EventUtil.getInstance();
                 TranslateUtil translateUtil = TranslateUtil.getInstance();
-                if (AllConfigs.getInstance().isFirstRun()) {
+                AllConfigs allConfigs = AllConfigs.getInstance();
+                if (allConfigs.isFirstRun()) {
                     runInternalCommand("help");
                 }
                 while (eventUtil.isNotMainExit()) {
@@ -2786,7 +2829,7 @@ public class SearchBar {
                                 //去掉冒号
                                 boolean isExecuted = runInternalCommand(text.substring(1).toLowerCase());
                                 if (!isExecuted) {
-                                    LinkedHashSet<String> cmdSet = new LinkedHashSet<>(AllConfigs.getInstance().getCmdSet());
+                                    LinkedHashSet<String> cmdSet = new LinkedHashSet<>(allConfigs.getCmdSet());
                                     cmdSet.add(":clearbin;" + translateUtil.getTranslation("Clear the recycle bin"));
                                     cmdSet.add(":update;" + translateUtil.getTranslation("Update file index"));
                                     cmdSet.add(":help;" + translateUtil.getTranslation("View help"));

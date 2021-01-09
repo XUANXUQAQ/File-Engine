@@ -61,7 +61,6 @@ public class EventUtil {
         putEvent(new UnloadAllPluginsEvent());
         putEvent(new HideTrayIconEvent());
         SQLiteUtil.closeAll();
-        CachedThreadPoolUtil.getInstance().shutdown();
     }
 
     /**

@@ -283,8 +283,8 @@ public class MainClass {
 
             mainLoop();
 
-            //确保关闭所有资源
-            TimeUnit.SECONDS.sleep(5);
+            CachedThreadPoolUtil.getInstance().shutdown();
+
             System.exit(0);
         } catch (Exception e) {
             e.printStackTrace();
