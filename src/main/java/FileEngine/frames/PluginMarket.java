@@ -435,18 +435,8 @@ public class PluginMarket {
     }
 
     private String getPluginListUrl() {
-        //todo 添加更新服务器地址
-        switch (AllConfigs.getInstance().getUpdateAddress()) {
-            case "jsdelivr CDN":
-                return "https://cdn.jsdelivr.net/gh/XUANXUQAQ/File-Engine-Version/plugins.json";
-            case "GitHack":
-                return "https://raw.githack.com/XUANXUQAQ/File-Engine-Version/master/plugins.json";
-            case "Gitee":
-                return "https://gitee.com/XUANXUQAQ/file-engine-version/raw/master/plugins.json";
-            case "GitHub":
-            default:
-                return "https://raw.githubusercontent.com/XUANXUQAQ/File-Engine-Version/master/plugins.json";
-        }
+        AllConfigs allConfigs = AllConfigs.getInstance();
+        return allConfigs.getUpdateUrlFromMap().pluginListUrl;
     }
 
     private void initPluginList() {

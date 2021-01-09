@@ -79,7 +79,7 @@ public class TaskBar {
         });
     }
 
-    public static TaskBar getInstance() {
+    private static TaskBar getInstance() {
         if (INSTANCE == null) {
             synchronized (TaskBar.class) {
                 if (INSTANCE == null) {

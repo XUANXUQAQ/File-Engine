@@ -8,6 +8,7 @@ import FileEngine.eventHandler.impl.SetSwingLaf;
 import FileEngine.eventHandler.impl.configs.SaveConfigsEvent;
 import FileEngine.eventHandler.impl.configs.SetConfigsEvent;
 import FileEngine.eventHandler.impl.daemon.StartDaemonEvent;
+import FileEngine.eventHandler.impl.download.StartDownloadEvent;
 import FileEngine.eventHandler.impl.frame.searchBar.*;
 import FileEngine.eventHandler.impl.hotkey.RegisterHotKeyEvent;
 import FileEngine.eventHandler.impl.monitorDisk.StartMonitorDiskEvent;
@@ -17,6 +18,7 @@ import FileEngine.eventHandler.impl.taskbar.ShowTrayIconEvent;
 import FileEngine.utils.EventUtil;
 import FileEngine.utils.TranslateUtil;
 import FileEngine.utils.database.SQLiteUtil;
+import FileEngine.utils.download.DownloadUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.serializer.SerializerFeature;
@@ -35,7 +37,10 @@ import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -54,6 +59,7 @@ public class AllConfigs {
     public static final int defaultSearchbarColor = 13421772;
     public static final int defaultSearchbarFontColor = 0;
     private volatile ConfigEntity configEntity;
+    private final LinkedHashMap<String, AddressUrl> updateAddressMap = new LinkedHashMap<>();
     private final File settings = new File("user/settings.json");
     private final LinkedHashSet<String> cmdSet = new LinkedHashSet<>();
     private final AtomicInteger cacheNum = new AtomicInteger(0);
@@ -245,6 +251,42 @@ public class AllConfigs {
         }
     }
 
+    private void initUpdateAddress() {
+        //todo 添加更新服务器地址
+        updateAddressMap.put("jsdelivr CDN",
+                new AddressUrl(
+                        "https://cdn.jsdelivr.net/gh/XUANXUQAQ/File-Engine-Version/version.json",
+                        "https://cdn.jsdelivr.net/gh/XUANXUQAQ/File-Engine-Version/plugins.json"
+                ));
+        updateAddressMap.put("GitHub",
+                new AddressUrl(
+                        "https://raw.githubusercontent.com/XUANXUQAQ/File-Engine-Version/master/version.json",
+                        "https://raw.githubusercontent.com/XUANXUQAQ/File-Engine-Version/master/plugins.json"
+                ));
+        updateAddressMap.put("GitHack",
+                new AddressUrl(
+                        "https://raw.githack.com/XUANXUQAQ/File-Engine-Version/master/version.json",
+                        "https://raw.githack.com/XUANXUQAQ/File-Engine-Version/master/plugins.json"
+                ));
+        updateAddressMap.put("Gitee",
+                new AddressUrl(
+                        "https://gitee.com/XUANXUQAQ/file-engine-version/raw/master/version.json",
+                        "https://gitee.com/XUANXUQAQ/file-engine-version/raw/master/plugins.json"
+                ));
+    }
+
+    public AddressUrl getUpdateUrlFromMap() {
+        return getUpdateUrlFromMap(getUpdateAddress());
+    }
+
+    public Set<String> getAllUpdateAddress() {
+        return updateAddressMap.keySet();
+    }
+
+    public AddressUrl getUpdateUrlFromMap(String updateAddress) {
+        return updateAddressMap.get(updateAddress);
+    }
+
     private void readUpdateAddress(JSONObject settingsInJson) {
         configEntity.setUpdateAddress((String) getFromJson(settingsInJson, "updateAddress", "jsdelivr CDN"));
     }
@@ -408,6 +450,7 @@ public class AllConfigs {
         readShowTipOnCreatingLnk(settingsInJson);
         readSwingTheme(settingsInJson);
         initCacheNum();
+        initUpdateAddress();
     }
 
     private void setAllSettings() {
@@ -524,6 +567,46 @@ public class AllConfigs {
         return true;
     }
 
+    private String getUpdateUrl() {
+        return getUpdateUrlFromMap().fileEngineVersionUrl;
+    }
+
+    public JSONObject getUpdateInfo() throws IOException, InterruptedException {
+        DownloadUtil downloadUtil = DownloadUtil.getInstance();
+        Enums.DownloadStatus downloadStatus = downloadUtil.getDownloadStatus("version.json");
+        EventUtil eventUtil = EventUtil.getInstance();
+        if (downloadStatus != Enums.DownloadStatus.DOWNLOAD_DOWNLOADING) {
+            String url = getUpdateUrl();
+            if (url != null) {
+                eventUtil.putEvent(new StartDownloadEvent(
+                        url, "version.json", new File("tmp").getAbsolutePath()));
+                int count = 0;
+                boolean isError = false;
+                //wait for task
+                while (downloadUtil.getDownloadStatus("version.json") != Enums.DownloadStatus.DOWNLOAD_DONE) {
+                    count++;
+                    if (count >= 3) {
+                        isError = true;
+                        break;
+                    }
+                    TimeUnit.SECONDS.sleep(1);
+                }
+                if (isError) {
+                    throw new IOException("Download failed.");
+                }
+                String eachLine;
+                StringBuilder strBuilder = new StringBuilder();
+                try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream("tmp/version.json"), StandardCharsets.UTF_8))) {
+                    while ((eachLine = br.readLine()) != null) {
+                        strBuilder.append(eachLine);
+                    }
+                }
+                return JSONObject.parseObject(strBuilder.toString());
+            }
+        }
+        return null;
+    }
+
     public static void registerEventHandler() {
         EventUtil eventUtil = EventUtil.getInstance();
         eventUtil.register(ReadConfigsAndBootSystemEvent.class, new EventHandler() {
@@ -585,5 +668,15 @@ public class AllConfigs {
                 }
             }
         });
+    }
+
+    public static class AddressUrl {
+        public final String fileEngineVersionUrl;
+        public final String pluginListUrl;
+
+        private AddressUrl(String fileEngineVersionUrl, String pluginListUrl) {
+            this.fileEngineVersionUrl = fileEngineVersionUrl;
+            this.pluginListUrl = pluginListUrl;
+        }
     }
 }
