@@ -783,6 +783,11 @@ public class SearchBar {
         textField.setText("test;/file:d;case");
         JOptionPane.showMessageDialog(searchBar,
                 translateUtil.getTranslation("Different keywords are separated by \";\" (semicolon), suffix and keywords are separated by \":\" (colon)"));
+        //判断是否为中文
+        if ("简体中文".equals(translateUtil.getLanguage())) {
+            textField.setText("pinyin");
+            JOptionPane.showMessageDialog(searchBar, "你可以使用拼音来代替汉字，但拼音和英文单词之间需要用\";\"(分号)隔开（作为不同的关键字）");
+        }
         JOptionPane.showMessageDialog(searchBar,
                 translateUtil.getTranslation("Click \"Enter\" to open the file directly") + "\n" +
                         translateUtil.getTranslation("Click \"Ctrl + Enter\" to open the folder where the file is located") + "\n" +
