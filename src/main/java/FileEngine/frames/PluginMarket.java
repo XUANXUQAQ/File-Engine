@@ -4,11 +4,9 @@ import FileEngine.configs.AllConfigs;
 import FileEngine.configs.Enums;
 import FileEngine.eventHandler.Event;
 import FileEngine.eventHandler.EventHandler;
-import FileEngine.eventHandler.impl.SetSwingLaf;
 import FileEngine.eventHandler.impl.download.StartDownloadEvent;
 import FileEngine.eventHandler.impl.download.StopDownloadEvent;
 import FileEngine.eventHandler.impl.frame.pluginMarket.HidePluginMarketEvent;
-import FileEngine.eventHandler.impl.frame.pluginMarket.InitPluginList;
 import FileEngine.eventHandler.impl.frame.pluginMarket.ShowPluginMarket;
 import FileEngine.utils.CachedThreadPoolUtil;
 import FileEngine.utils.EventUtil;
@@ -144,8 +142,7 @@ public class PluginMarket {
     }
 
     private void showWindow() {
-        initPluginList();
-        CachedThreadPoolUtil.getInstance().executeTask(this::getAllPluginsDetailInfo);
+        CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
         ImageIcon frameIcon = new ImageIcon(PluginMarket.class.getResource("/icons/frame.png"));
         labelIcon.setIcon(null);
         labelAuthor.setText("");
@@ -163,11 +160,15 @@ public class PluginMarket {
         frame.setResizable(false);
         frame.setLocationRelativeTo(null);
         frame.setTitle(TranslateUtil.getInstance().getTranslation("Plugin Market"));
-        Event event = new SetSwingLaf("current");
-        EventUtil eventUtil = EventUtil.getInstance();
-        eventUtil.putEvent(event);
-        eventUtil.waitForEvent(event);
-        frame.setVisible(true);
+        SwingUtilities.invokeLater(() -> frame.setVisible(true));
+        cachedThreadPoolUtil.executeTask(() -> {
+            LoadingPanel loadingPanel = new LoadingPanel("loading...");
+            loadingPanel.setSize(800, 600);
+            frame.setGlassPane(loadingPanel);
+            loadingPanel.start();
+            initPluginList();
+            loadingPanel.stop();
+        });
     }
 
     private void getAllPluginsDetailInfo() {
@@ -178,12 +179,6 @@ public class PluginMarket {
 
     public static void registerEventHandler() {
         EventUtil eventUtil = EventUtil.getInstance();
-        eventUtil.register(InitPluginList.class, new EventHandler() {
-            @Override
-            public void todo(Event event) {
-                getInstance().initPluginList();
-            }
-        });
 
         eventUtil.register(ShowPluginMarket.class, new EventHandler() {
             @Override
@@ -201,11 +196,12 @@ public class PluginMarket {
     }
 
     private void hideWindow() {
-        frame.setVisible(false);
+        SwingUtilities.invokeLater(() -> frame.setVisible(false));
     }
 
     private void addButtonInstallListener() {
         DownloadUtil instance = DownloadUtil.getInstance();
+        EventUtil eventUtil = EventUtil.getInstance();
         buttonInstall.addActionListener(e -> {
             String pluginName = (String) listPlugins.getSelectedValue();
             String pluginFullName = pluginName + ".jar";
@@ -217,7 +213,7 @@ public class PluginMarket {
                 JSONObject info = getPluginDetailInfo(pluginName);
                 if (info != null) {
                     String downloadUrl = info.getString("url");
-                    EventUtil.getInstance().putEvent(new StartDownloadEvent(
+                    eventUtil.putEvent(new StartDownloadEvent(
                             downloadUrl, pluginFullName,
                             new File("tmp", "pluginsUpdate").getAbsolutePath()));
 
@@ -225,7 +221,7 @@ public class PluginMarket {
                 }
             } else if (downloadStatus == Enums.DownloadStatus.DOWNLOAD_DOWNLOADING) {
                 //取消下载
-                EventUtil.getInstance().putEvent(new StopDownloadEvent(pluginFullName));
+                eventUtil.putEvent(new StopDownloadEvent(pluginFullName));
                 //复位button
                 buttonInstall.setEnabled(true);
                 buttonInstall.setText(TranslateUtil.getInstance().getTranslation("Install"));
@@ -441,17 +437,22 @@ public class PluginMarket {
 
     private void initPluginList() {
         try {
-            String url = getPluginListUrl();
-            JSONObject allPlugins = getPluginInfo(url, "allPluginsList.json");
-            if (allPlugins != null) {
-                Set<String> pluginSet = allPlugins.keySet();
-                for (String each : pluginSet) {
-                    NAME_PLUGIN_INFO_URL_MAP.put(each, allPlugins.getString(each));
-                }
-                listPlugins.setListData(pluginSet.toArray());
-            }
             buttonInstall.setEnabled(false);
             buttonInstall.setVisible(false);
+            String url = getPluginListUrl();
+
+            JSONObject allPlugins = getPluginInfo(url, "allPluginsList.json");
+            if (allPlugins == null) {
+                return;
+            }
+            Set<String> pluginSet = allPlugins.keySet();
+            for (String each : pluginSet) {
+                NAME_PLUGIN_INFO_URL_MAP.put(each, allPlugins.getString(each));
+            }
+            listPlugins.setListData(pluginSet.toArray());
+            getAllPluginsDetailInfo();
+            //防止执行太快导致窗口无法正常关闭
+            TimeUnit.MILLISECONDS.sleep(10);
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }

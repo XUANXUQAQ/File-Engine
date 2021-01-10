@@ -10,4 +10,5 @@ public class RegexUtil {
     public static final Pattern rgbHexPattern = Pattern.compile("^[a-fA-F0-9]{6}$");
     public static final Pattern plus = Pattern.compile(" \\+ ");
     public static final Pattern equalSign = Pattern.compile("=");
+    public static final Pattern lineFeed = Pattern.compile("\n");
 }
