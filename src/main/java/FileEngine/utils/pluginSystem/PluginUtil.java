@@ -23,6 +23,12 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
 public class PluginUtil {
+    private final ConcurrentHashMap<String, Plugin> IDENTIFIER_PLUGIN_MAP = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, String> NAME_IDENTIFIER_MAP = new ConcurrentHashMap<>();
+    private final Set<String> NOT_LATEST_PLUGINS = ConcurrentHashMap.newKeySet();
+    private final HashSet<String> OLD_API_PLUGINS = new HashSet<>();
+    private final HashSet<String> REPEAT_PLUGINS = new HashSet<>();
+    private final HashSet<String> LOAD_ERROR_PLUGINS = new HashSet<>();
 
     private static volatile PluginUtil INSTANCE = null;
 
@@ -62,13 +68,6 @@ public class PluginUtil {
     private PluginUtil() {
         checkPluginMessageThread();
     }
-
-    private final ConcurrentHashMap<String, Plugin> IDENTIFIER_PLUGIN_MAP = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<String, String> NAME_IDENTIFIER_MAP = new ConcurrentHashMap<>();
-    private final Set<String> NOT_LATEST_PLUGINS = ConcurrentHashMap.newKeySet();
-    private final HashSet<String> OLD_API_PLUGINS = new HashSet<>();
-    private final HashSet<String> REPEAT_PLUGINS = new HashSet<>();
-    private final HashSet<String> LOAD_ERROR_PLUGINS = new HashSet<>();
 
     public boolean isPluginTooOld() {
         return !OLD_API_PLUGINS.isEmpty();
@@ -178,6 +177,10 @@ public class PluginUtil {
         for (Plugin each : IDENTIFIER_PLUGIN_MAP.values()) {
             each.setCurrentTheme(defaultColor, chosenLabelColor, borderColor);
         }
+    }
+
+    public boolean hasPlugin(String pluginName) {
+        return getIdentifierByName(pluginName) != null;
     }
 
     public String getIdentifierByName(String name) {

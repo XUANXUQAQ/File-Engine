@@ -1,16 +1,13 @@
 package FileEngine.eventHandler.impl.download;
 
 import FileEngine.eventHandler.Event;
+import FileEngine.utils.download.DownloadManager;
 
 public class DownloadEvent extends Event {
-    public final String url;
-    public final String fileName;
-    public final String savePath;
+    public final DownloadManager downloadManager;
 
-    protected DownloadEvent(String url, String fileName, String savePath) {
+    protected DownloadEvent(DownloadManager downloadManager) {
         super();
-        this.url = url;
-        this.fileName = fileName;
-        this.savePath = savePath;
+        this.downloadManager = downloadManager;
     }
 }
