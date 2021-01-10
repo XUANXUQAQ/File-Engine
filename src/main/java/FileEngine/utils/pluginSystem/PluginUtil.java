@@ -245,7 +245,7 @@ public class PluginUtil {
                 }
                 if (!isLatest) {
                     oldPlugins.append(each).append(" ");
-                    NOT_LATEST_PLUGINS.add(each);
+                    addPluginsCanUpdate(each);
                 }
             } catch (Exception e) {
                 if (IsDebug.isDebug()) {

@@ -1045,67 +1045,74 @@ public class SettingsFrame {
             if (isDownloadStarted.get()) {
                 eventUtil.putEvent(new StopDownloadEvent(context.downloadManager));
                 isDownloadStarted.set(!isDownloadStarted.get());
-            }
-            startCheckTime.set(0L);
-            String pluginName = (String) listPlugins.getSelectedValue();
-            String pluginIdentifier = PluginUtil.getInstance().getIdentifierByName(pluginName);
-            Plugin plugin = PluginUtil.getInstance().getPluginByIdentifier(pluginIdentifier);
-            String pluginFullName = pluginName + ".jar";
-
-            if (pluginUtil.isPluginsNotLatest(pluginName)) {
-                //已经检查过
-                isVersionLatest.set(false);
-                isSkipConfirm.set(true);
             } else {
-                Thread checkUpdateThread = new Thread(() -> {
-                    startCheckTime.set(System.currentTimeMillis());
+                startCheckTime.set(0L);
+                String pluginName = (String) listPlugins.getSelectedValue();
+                String pluginIdentifier = PluginUtil.getInstance().getIdentifierByName(pluginName);
+                Plugin plugin = PluginUtil.getInstance().getPluginByIdentifier(pluginIdentifier);
+                String pluginFullName = pluginName + ".jar";
+
+                if (pluginUtil.isPluginsNotLatest(pluginName)) {
+                    //已经检查过
+                    isVersionLatest.set(false);
+                    isSkipConfirm.set(true);
+                } else {
+                    Thread checkUpdateThread = new Thread(() -> {
+                        startCheckTime.set(System.currentTimeMillis());
+                        try {
+                            isVersionLatest.set(plugin.isLatest());
+                            if (!Thread.interrupted()) {
+                                startCheckTime.set(0x100L); //表示检查成功
+                            }
+                        } catch (Exception exception) {
+                            exception.printStackTrace();
+                            startCheckTime.set(0xFFFL);  //表示检查失败
+                        }
+                    });
+                    cachedThreadPoolUtil.executeTask(checkUpdateThread);
+                    //等待获取插件更新信息
                     try {
-                        isVersionLatest.set(plugin.isLatest());
-                        if (!Thread.interrupted()) {
-                            startCheckTime.set(0x100L); //表示检查成功
+                        while (startCheckTime.get() != 0x100L) {
+                            TimeUnit.MILLISECONDS.sleep(200);
+                            if ((System.currentTimeMillis() - startCheckTime.get() > 5000L &&
+                                    startCheckTime.get() != 0x100L) ||
+                                    startCheckTime.get() == 0xFFFL) {
+                                checkUpdateThread.interrupt();
+                                JOptionPane.showMessageDialog(frame, translateUtil.getTranslation("Check update failed"));
+                                return;
+                            }
+                            if (!eventUtil.isNotMainExit()) {
+                                return;
+                            }
                         }
-                    } catch (Exception exception) {
-                        exception.printStackTrace();
-                        startCheckTime.set(0xFFFL);  //表示检查失败
+                    } catch (InterruptedException e1) {
+                        e1.printStackTrace();
                     }
-                });
-                cachedThreadPoolUtil.executeTask(checkUpdateThread);
-                //等待获取插件更新信息
-                try {
-                    while (startCheckTime.get() != 0x100L) {
-                        TimeUnit.MILLISECONDS.sleep(200);
-                        if ((System.currentTimeMillis() - startCheckTime.get() > 5000L &&
-                                startCheckTime.get() != 0x100L) ||
-                                startCheckTime.get() == 0xFFFL) {
-                            checkUpdateThread.interrupt();
-                            JOptionPane.showMessageDialog(frame, translateUtil.getTranslation("Check update failed"));
-                            return;
-                        }
-                        if (!eventUtil.isNotMainExit()) {
-                            return;
-                        }
-                    }
-                } catch (InterruptedException e1) {
-                    e1.printStackTrace();
                 }
-            }
-            if (!isSkipConfirm.get()) {
-                eventUtil.putEvent(new AddPluginsCanUpdateEvent(pluginName));
-                int ret = JOptionPane.showConfirmDialog(frame, translateUtil.getTranslation("New version available, do you want to update?"));
-                if (ret != JOptionPane.YES_OPTION) {
+                if (isVersionLatest.get()) {
+                    JOptionPane.showMessageDialog(frame,
+                            translateUtil.getTranslation("Latest version:") + plugin.getVersion() + "\n" +
+                                    translateUtil.getTranslation("The current version is the latest"));
                     return;
                 }
+                if (!isSkipConfirm.get()) {
+                    eventUtil.putEvent(new AddPluginsCanUpdateEvent(pluginName));
+                    int ret = JOptionPane.showConfirmDialog(frame, translateUtil.getTranslation("New version available, do you want to update?"));
+                    if (ret != JOptionPane.YES_OPTION) {
+                        return;
+                    }
+                }
+                isDownloadStarted.set(!isDownloadStarted.get());
+                //开始下载
+                String url = plugin.getUpdateURL();
+                context.downloadManager = new DownloadManager(
+                        url,
+                        pluginFullName,
+                        new File("tmp", "pluginsUpdate").getAbsolutePath(),
+                        AllConfigs.getInstance().getProxy());
+                eventUtil.putEvent(new StartDownloadEvent(context.downloadManager));
+                cachedThreadPoolUtil.executeTask(getDownloadProgress);
             }
-            isDownloadStarted.set(!isDownloadStarted.get());
-            //开始下载
-            String url = plugin.getUpdateURL();
-            context.downloadManager = new DownloadManager(
-                    url,
-                    pluginFullName,
-                    new File("tmp", "pluginsUpdate").getAbsolutePath(),
-                    AllConfigs.getInstance().getProxy());
-            eventUtil.putEvent(new StartDownloadEvent(context.downloadManager));
-            cachedThreadPoolUtil.executeTask(getDownloadProgress);
         });
     }
 
