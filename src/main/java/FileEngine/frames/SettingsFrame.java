@@ -13,7 +13,6 @@ import FileEngine.eventHandler.impl.database.DeleteFromCacheEvent;
 import FileEngine.eventHandler.impl.database.OptimiseDatabaseEvent;
 import FileEngine.eventHandler.impl.download.StartDownloadEvent;
 import FileEngine.eventHandler.impl.download.StopDownloadEvent;
-import FileEngine.eventHandler.impl.frame.pluginMarket.InitPluginList;
 import FileEngine.eventHandler.impl.frame.pluginMarket.ShowPluginMarket;
 import FileEngine.eventHandler.impl.frame.searchBar.HideSearchBarEvent;
 import FileEngine.eventHandler.impl.frame.searchBar.PreviewSearchBarEvent;
@@ -1504,7 +1503,7 @@ public class SettingsFrame {
     }
 
     private void hideFrame() {
-        frame.setVisible(false);
+        SwingUtilities.invokeLater(() -> frame.setVisible(false));
     }
 
     public static void registerEventHandler() {
@@ -1512,7 +1511,6 @@ public class SettingsFrame {
             @Override
             public void todo(Event event) {
                 ShowSettingsFrameEvent showSettingsFrameEvent = (ShowSettingsFrameEvent) event;
-                eventUtil.putEvent(new InitPluginList());
                 SettingsFrame settingsFrame = getInstance();
                 if (showSettingsFrameEvent.showTabName == null) {
                     settingsFrame.showWindow();
@@ -1551,11 +1549,17 @@ public class SettingsFrame {
         frame.setResizable(false);
         tabbedPane.setSelectedIndex(index);
         frame.setLocationRelativeTo(null);
-
-        Event setSwing = new SetSwingLaf("current");
-        eventUtil.putEvent(setSwing);
-        eventUtil.waitForEvent(setSwing);
-        frame.setVisible(true);
+        SwingUtilities.invokeLater(() -> frame.setVisible(true));
+        cachedThreadPoolUtil.executeTask(() -> {
+            LoadingPanel loadingPanel = new LoadingPanel("loading...");
+            loadingPanel.setSize(width, height);
+            frame.setGlassPane(loadingPanel);
+            loadingPanel.start();
+            Event setSwing = new SetSwingLaf("current");
+            eventUtil.putEvent(setSwing);
+            eventUtil.waitForEvent(setSwing);
+            loadingPanel.stop();
+        });
     }
 
     private void checkUpdateTimeLimit(StringBuilder strBuilder) {
@@ -1687,7 +1691,7 @@ public class SettingsFrame {
         checkCacheNumLimit(errorsStrb);
         checkUpdateTimeLimit(errorsStrb);
 
-        String ignorePathTemp = textAreaIgnorePath.getText().replaceAll("\n", "");
+        String ignorePathTemp = RegexUtil.lineFeed.matcher(textAreaIgnorePath.getText()).replaceAll("");
 
         String swingTheme = (String) listSwingThemes.getSelectedValue();
 

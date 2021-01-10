@@ -748,10 +748,9 @@ public class SearchBar {
             JFrame frame = new JFrame();
             frame.setUndecorated(true);
             frame.getRootPane().setWindowDecorationStyle(JRootPane.FRAME);
-            LoadingPanel glasspane = new LoadingPanel();
+            LoadingPanel glasspane = new LoadingPanel(translateUtil.getTranslation("Please wait up to 10 seconds"));
             glasspane.setSize(600, 400);
             frame.setGlassPane(glasspane);
-            glasspane.setText(translateUtil.getTranslation("Please wait up to 10 seconds"));
             glasspane.start();//开始动画加载效果
             frame.setSize(600, 400);
             frame.setLocationRelativeTo(null);

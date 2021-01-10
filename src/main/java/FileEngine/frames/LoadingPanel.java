@@ -10,9 +10,6 @@ import java.awt.geom.*;
 import java.util.concurrent.TimeUnit;
 
 public class LoadingPanel extends JComponent implements MouseListener {
-    /**
-     *
-     */
     private static final long serialVersionUID = 1L;
     protected Area[] ticker = null;
     protected Thread animation = null;
@@ -23,12 +20,7 @@ public class LoadingPanel extends JComponent implements MouseListener {
     protected String text;
     protected int barsCount;
     protected float fps;
-
     protected RenderingHints hints;
-
-    public LoadingPanel() {
-        this("");
-    }
 
     public LoadingPanel(String text) {
         this(text, 14);
@@ -56,11 +48,6 @@ public class LoadingPanel extends JComponent implements MouseListener {
         this.hints = new RenderingHints(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
         this.hints.put(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         this.hints.put(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_ON);
-    }
-
-    public void setText(String text) {
-        repaint();
-        this.text = text;
     }
 
     public String getText() {
