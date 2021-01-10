@@ -18,6 +18,7 @@ import FileEngine.eventHandler.impl.taskbar.ShowTrayIconEvent;
 import FileEngine.utils.EventUtil;
 import FileEngine.utils.TranslateUtil;
 import FileEngine.utils.database.SQLiteUtil;
+import FileEngine.utils.download.DownloadManager;
 import FileEngine.utils.download.DownloadUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
@@ -40,7 +41,6 @@ import java.sql.ResultSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -573,38 +573,24 @@ public class AllConfigs {
 
     public JSONObject getUpdateInfo() throws IOException, InterruptedException {
         DownloadUtil downloadUtil = DownloadUtil.getInstance();
-        Enums.DownloadStatus downloadStatus = downloadUtil.getDownloadStatus("version.json");
+        String url = getUpdateUrl();
+        DownloadManager downloadManager = new DownloadManager(
+                url,
+                "version.json",
+                new File("tmp").getAbsolutePath(),
+                AllConfigs.getInstance().getProxy()
+        );
         EventUtil eventUtil = EventUtil.getInstance();
-        if (downloadStatus != Enums.DownloadStatus.DOWNLOAD_DOWNLOADING) {
-            String url = getUpdateUrl();
-            if (url != null) {
-                eventUtil.putEvent(new StartDownloadEvent(
-                        url, "version.json", new File("tmp").getAbsolutePath()));
-                int count = 0;
-                boolean isError = false;
-                //wait for task
-                while (downloadUtil.getDownloadStatus("version.json") != Enums.DownloadStatus.DOWNLOAD_DONE) {
-                    count++;
-                    if (count >= 3) {
-                        isError = true;
-                        break;
-                    }
-                    TimeUnit.SECONDS.sleep(1);
-                }
-                if (isError) {
-                    throw new IOException("Download failed.");
-                }
-                String eachLine;
-                StringBuilder strBuilder = new StringBuilder();
-                try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream("tmp/version.json"), StandardCharsets.UTF_8))) {
-                    while ((eachLine = br.readLine()) != null) {
-                        strBuilder.append(eachLine);
-                    }
-                }
-                return JSONObject.parseObject(strBuilder.toString());
+        eventUtil.putEvent(new StartDownloadEvent(downloadManager));
+        downloadUtil.waitForDownloadTask(downloadManager, 10000);
+        String eachLine;
+        StringBuilder strBuilder = new StringBuilder();
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream("tmp/version.json"), StandardCharsets.UTF_8))) {
+            while ((eachLine = br.readLine()) != null) {
+                strBuilder.append(eachLine);
             }
         }
-        return null;
+        return JSONObject.parseObject(strBuilder.toString());
     }
 
     public static void registerEventHandler() {
