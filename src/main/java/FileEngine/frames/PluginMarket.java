@@ -1,7 +1,6 @@
 package FileEngine.frames;
 
 import FileEngine.configs.AllConfigs;
-import FileEngine.configs.Enums;
 import FileEngine.eventHandler.Event;
 import FileEngine.eventHandler.EventHandler;
 import FileEngine.eventHandler.impl.download.StartDownloadEvent;
@@ -25,14 +24,15 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.*;
+import java.lang.reflect.Method;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
 
 public class PluginMarket {
 
@@ -51,6 +51,9 @@ public class PluginMarket {
     private JPanel panel;
     private JLabel labelProgress;
     private JScrollPane scrollpanePlugins;
+    private JLabel placeholder0;
+    private JLabel placeholder1;
+    private JLabel placeholder2;
     private final JFrame frame = new JFrame("Plugin Market");
     //保存插件名称和url的映射关系
     private final HashMap<String, String> NAME_PLUGIN_INFO_URL_MAP = new HashMap<>();
@@ -142,61 +145,6 @@ public class PluginMarket {
         });
     }
 
-    private void setProgressOnLabel(JLabel labelProgress,
-                                    JButton buttonInstall,
-                                    DownloadManager downloadManager,
-                                    String currentPluginName,
-                                    AtomicBoolean isDownloadStarted,
-                                    File successSign) {
-        try {
-            TranslateUtil translateUtil = TranslateUtil.getInstance();
-            DownloadUtil downloadUtil = DownloadUtil.getInstance();
-            boolean isStarted = true;
-            while (isStarted) {
-                if (currentPluginName.equals(listPlugins.getSelectedValue())) {
-                    isDownloadStarted.set(true);
-                    double progress = downloadUtil.getDownloadProgress(downloadManager);
-                    Enums.DownloadStatus downloadStatus = downloadUtil.getDownloadStatus(downloadManager);
-                    if (downloadStatus == Enums.DownloadStatus.DOWNLOAD_DONE) {
-                        //下载完成，禁用按钮
-                        labelProgress.setText("");
-                        buttonInstall.setText(translateUtil.getTranslation("Installed"));
-                        buttonInstall.setEnabled(false);
-                        isDownloadStarted.set(false);
-                        isStarted = false;
-                        if (!successSign.exists()) {
-                            if (!successSign.createNewFile()) {
-                                throw new RuntimeException("创建更新插件标识符失败");
-                            }
-                        }
-                    } else if (downloadStatus == Enums.DownloadStatus.DOWNLOAD_ERROR) {
-                        //下载错误，重置button
-                        labelProgress.setText(translateUtil.getTranslation("Download failed"));
-                        buttonInstall.setText(translateUtil.getTranslation("Install"));
-                        isDownloadStarted.set(false);
-                        isStarted = false;
-                    } else if (downloadStatus == Enums.DownloadStatus.DOWNLOAD_DOWNLOADING) {
-                        //正在下载
-                        labelProgress.setText(translateUtil.getTranslation("Downloading:") + (int) (progress * 100) + "%");
-                        buttonInstall.setText(translateUtil.getTranslation("Cancel"));
-                    } else if (downloadStatus == Enums.DownloadStatus.DOWNLOAD_INTERRUPTED) {
-                        //用户自行中断
-                        labelProgress.setText("");
-                        //复位button
-                        buttonInstall.setText(translateUtil.getTranslation("Install"));
-                        isDownloadStarted.set(false);
-                        isStarted = false;
-                    }
-                } else {
-                    isDownloadStarted.set(false);
-                }
-                TimeUnit.MILLISECONDS.sleep(50);
-            }
-        } catch (InterruptedException | IOException e) {
-            e.printStackTrace();
-        }
-    }
-
     private void hideWindow() {
         SwingUtilities.invokeLater(() -> frame.setVisible(false));
     }
@@ -204,37 +152,43 @@ public class PluginMarket {
     private void addButtonInstallListener() {
         EventUtil eventUtil = EventUtil.getInstance();
         AtomicBoolean isDownloadStarted = new AtomicBoolean(false);
-        AtomicReference<DownloadManager> downloadManager = new AtomicReference<>();
-        AtomicReference<String> currentPluginName = new AtomicReference<>();
+        ConcurrentHashMap<String, DownloadManager> downloadManagerConcurrentHashMap = new ConcurrentHashMap<>();
         buttonInstall.addActionListener(e -> {
+            String pluginName = (String) listPlugins.getSelectedValue();
             if (isDownloadStarted.get()) {
                 //取消下载
-                eventUtil.putEvent(new StopDownloadEvent(downloadManager.get()));
+                eventUtil.putEvent(new StopDownloadEvent(downloadManagerConcurrentHashMap.get(pluginName)));
             } else {
-                String pluginName = (String) listPlugins.getSelectedValue();
                 String pluginFullName = pluginName + ".jar";
                 JSONObject info = getPluginDetailInfo(pluginName);
                 if (info != null) {
-                    downloadManager.set(new DownloadManager(
+                    DownloadManager downloadManager = new DownloadManager(
                             info.getString("url"),
                             pluginFullName,
-                            new File("tmp", "pluginsUpdate").getAbsolutePath(),
-                            AllConfigs.getInstance().getProxy())
+                            new File("tmp", "pluginsUpdate").getAbsolutePath()
                     );
-                    eventUtil.putEvent(new StartDownloadEvent(downloadManager.get()));
-                    currentPluginName.set(pluginName);
+                    downloadManagerConcurrentHashMap.put(pluginName, downloadManager);
+                    eventUtil.putEvent(new StartDownloadEvent(downloadManager));
+                    var getStringMethod = new Object() {
+                        Method getString = null;
+                    };
+                    try {
+                        getStringMethod.getString = listPlugins.getClass().getDeclaredMethod("getSelectedValue");
+                    } catch (NoSuchMethodException noSuchMethodException) {
+                        noSuchMethodException.printStackTrace();
+                    }
                     CachedThreadPoolUtil.getInstance().executeTask(
-                            () -> setProgressOnLabel(
-                                    labelProgress,
+                            () -> SetDownloadProgress.setProgress(labelProgress,
                                     buttonInstall,
-                                    downloadManager.get(),
-                                    pluginName,
+                                    downloadManager,
                                     isDownloadStarted,
-                                    new File("user/updatePlugin"))
+                                    new File("user/updatePlugin"),
+                                    pluginName,
+                                    getStringMethod.getString,
+                                    listPlugins)
                     );
                 }
             }
-            isDownloadStarted.set(!isDownloadStarted.get());
         });
     }
 
@@ -340,8 +294,8 @@ public class PluginMarket {
                             new DownloadManager(
                                     null,
                                     pluginName + ".jar",
-                                    new File("tmp", "pluginsUpdate").getAbsolutePath(),
-                                    AllConfigs.getInstance().getProxy())
+                                    new File("tmp", "pluginsUpdate").getAbsolutePath()
+                            )
                     );
                     if (hasPlugin || downloaded) {
                         buttonInstall.setEnabled(false);
@@ -350,14 +304,16 @@ public class PluginMarket {
                         buttonInstall.setEnabled(true);
                         buttonInstall.setText(translateUtil.getTranslation("Install"));
                     }
-                    if (!isStartGetPluginInfo.get()) {
-                        //用户重新点击
-                        try {
-                            ImageIcon icon = getImageByUrl(imageUrl, pluginName);
-                            labelIcon.setIcon(icon);
-                        } catch (IOException | InterruptedException ignored) {
+                    //用户重新点击
+                    try {
+                        ImageIcon icon = getImageByUrl(imageUrl, pluginName);
+                        if (isStartGetPluginInfo.get()) {
+                            return;
                         }
+                        labelIcon.setIcon(icon);
+                    } catch (IOException | InterruptedException ignored) {
                     }
+
                 });
             }
         }
@@ -388,8 +344,8 @@ public class PluginMarket {
         DownloadManager downloadManager = new DownloadManager(
                 url,
                 icon.getName(),
-                "tmp",
-                AllConfigs.getInstance().getProxy());
+                "tmp"
+        );
         EventUtil.getInstance().putEvent(new StartDownloadEvent(downloadManager));
         downloadUtil.waitForDownloadTask(downloadManager, 10000);
 
@@ -417,8 +373,8 @@ public class PluginMarket {
         DownloadManager downloadManager = new DownloadManager(
                 url,
                 saveFileName,
-                new File("tmp").getAbsolutePath(),
-                AllConfigs.getInstance().getProxy());
+                new File("tmp").getAbsolutePath()
+        );
         EventUtil.getInstance().putEvent(new StartDownloadEvent(downloadManager));
         downloadUtil.waitForDownloadTask(downloadManager, 10000);
         //已下载完，返回json

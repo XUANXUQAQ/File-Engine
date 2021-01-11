@@ -1,6 +1,7 @@
 package FileEngine.utils.download;
 
 import FileEngine.IsDebug;
+import FileEngine.configs.AllConfigs;
 import FileEngine.configs.Enums;
 import FileEngine.configs.ProxyInfo;
 
@@ -24,11 +25,12 @@ public class DownloadManager {
     private Proxy proxy = null;
     private Authenticator authenticator = null;
 
-    public DownloadManager(String url, String fileName, String savePath, ProxyInfo proxyInfo) {
+    public DownloadManager(String url, String fileName, String savePath) {
         this.url = url;
         this.fileName = fileName;
         this.savePath = savePath;
         this.downloadStatus = Enums.DownloadStatus.DOWNLOAD_NO_TASK;
+        ProxyInfo proxyInfo = AllConfigs.getInstance().getProxy();
         setProxy(proxyInfo.type, proxyInfo.address, proxyInfo.port, proxyInfo.userName, proxyInfo.password);
     }
 

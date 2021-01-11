@@ -577,8 +577,7 @@ public class AllConfigs {
         DownloadManager downloadManager = new DownloadManager(
                 url,
                 "version.json",
-                new File("tmp").getAbsolutePath(),
-                AllConfigs.getInstance().getProxy()
+                new File("tmp").getAbsolutePath()
         );
         EventUtil eventUtil = EventUtil.getInstance();
         eventUtil.putEvent(new StartDownloadEvent(downloadManager));
