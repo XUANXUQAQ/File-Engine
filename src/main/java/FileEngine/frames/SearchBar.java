@@ -5,7 +5,6 @@ import FileEngine.IsDebug;
 import FileEngine.configs.AllConfigs;
 import FileEngine.configs.Enums;
 import FileEngine.dllInterface.FileMonitor;
-import FileEngine.dllInterface.GetAscII;
 import FileEngine.dllInterface.GetHandle;
 import FileEngine.dllInterface.IsLocalDisk;
 import FileEngine.eventHandler.Event;
@@ -42,13 +41,8 @@ import java.net.URL;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.Scanner;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ConcurrentSkipListSet;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.TimeUnit;
+import java.util.*;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
@@ -57,7 +51,6 @@ import java.util.regex.Pattern;
 
 public class SearchBar {
     private final AtomicBoolean isCacheAndPrioritySearched = new AtomicBoolean(false);
-    private final AtomicBoolean isStartSearchLocal = new AtomicBoolean(false);
     private final AtomicBoolean isLockMouseMotion = new AtomicBoolean(false);
     private final AtomicBoolean isOpenLastFolderPressed = new AtomicBoolean(false);
     private final AtomicBoolean isRunAsAdminPressed = new AtomicBoolean(false);
@@ -98,6 +91,7 @@ public class SearchBar {
     private final ConcurrentSkipListSet<String> tempResults;  //在优先文件夹和数据库cache未搜索完时暂时保存结果，搜索完后会立即被转移到listResults
     private final ConcurrentLinkedQueue<String> commandQueue;  //保存需要被执行的sql语句
     private final CopyOnWriteArrayList<String> listResults;  //保存从数据库中找出符合条件的记录（文件路径）
+    private final Set<TableNameWeightInfo> tableSet;    //保存从0-40数据库的表，使用频率和名字对应，使经常使用的表最快被搜索到
     private volatile String[] searchCase;
     private volatile String searchText;
     private volatile String[] keywords;
@@ -111,11 +105,21 @@ public class SearchBar {
 
     private static volatile SearchBar instance = null;
 
+    private static class TableNameWeightInfo {
+        private final String tableName;
+        private long weight;
+
+        private TableNameWeightInfo(String tableName, long weight) {
+            this.tableName = tableName;
+            this.weight = weight;
+        }
+    }
 
     private SearchBar() {
         listResults = new CopyOnWriteArrayList<>();
         tempResults = new ConcurrentSkipListSet<>();
         commandQueue = new ConcurrentLinkedQueue<>();
+        tableSet = ConcurrentHashMap.newKeySet();
         searchBar = new JFrame();
         currentResultCount = new AtomicInteger(0);
         listResultsNum = new AtomicInteger(0);
@@ -234,6 +238,8 @@ public class SearchBar {
         panel.add(label7);
         panel.add(label8);
 
+        initTableMap();
+
         //开启所有线程
         initThreadPool();
 
@@ -262,6 +268,32 @@ public class SearchBar {
             }
         }
         return instance;
+    }
+
+    private void initTableMap() {
+        for (int i = 0; i <= 40; i++) {
+            tableSet.add(new TableNameWeightInfo("list" + i, 0L));
+        }
+    }
+
+    private TableNameWeightInfo getInfoByName(String tableName) {
+        for (TableNameWeightInfo each : tableSet) {
+            if (each.tableName.equals(tableName)) {
+                return each;
+            }
+        }
+        return null;
+    }
+
+    private void updateTableWeight(String tableName, long weight) {
+        TableNameWeightInfo origin = getInfoByName(tableName);
+        if (origin == null) {
+            return;
+        }
+        origin.weight += weight;
+        if (IsDebug.isDebug()) {
+            System.err.println("已更新" + tableName + "权重, 之前为" + origin + "***增加了" + weight);
+        }
     }
 
     /**
@@ -2171,8 +2203,6 @@ public class SearchBar {
 
         repaintFrameThread();
 
-        addSqlCommandThread();
-
         pollCommandsAndSearchDatabaseThread();
 
         sendSignalAndShowCommandThread();
@@ -2603,183 +2633,15 @@ public class SearchBar {
         });
     }
 
-    private void addCommandsToCommandQueue(int startIndex) {
-        String command;
-        for (int i = startIndex; i <= 40; ++i) {
-            command = "list" + i;
-            commandQueue.add(command);
-        }
-    }
-
-    private void addSqlCommandThread() {
-        CachedThreadPoolUtil.getInstance().executeTask(() -> {
-            //添加搜索路径线程
-            int ascII;
-            try {
-                EventUtil eventUtil = EventUtil.getInstance();
-                while (eventUtil.isNotMainExit()) {
-                    if (isStartSearchLocal.get()) {
-                        isStartSearchLocal.set(false);
-                        ascII = getAscIISum(keywords);
-                        int asciiGroup = ascII / 100;
-
-                        switch (asciiGroup) {
-                            case 0:
-                                addCommandsToCommandQueue(0);
-                                break;
-
-                            case 1:
-                                addCommandsToCommandQueue(1);
-                                break;
-
-                            case 2:
-                                addCommandsToCommandQueue(2);
-                                break;
-
-                            case 3:
-                                addCommandsToCommandQueue(3);
-                                break;
-
-                            case 4:
-                                addCommandsToCommandQueue(4);
-                                break;
-
-                            case 5:
-                                addCommandsToCommandQueue(5);
-                                break;
-                            case 6:
-                                addCommandsToCommandQueue(6);
-                                break;
-
-                            case 7:
-                                addCommandsToCommandQueue(7);
-                                break;
-
-                            case 8:
-                                addCommandsToCommandQueue(8);
-                                break;
-
-                            case 9:
-                                addCommandsToCommandQueue(9);
-                                break;
-
-                            case 10:
-                                addCommandsToCommandQueue(10);
-                                break;
-
-                            case 11:
-                                addCommandsToCommandQueue(11);
-                                break;
-
-                            case 12:
-                                addCommandsToCommandQueue(12);
-                                break;
-
-                            case 13:
-                                addCommandsToCommandQueue(13);
-                                break;
-
-                            case 14:
-                                addCommandsToCommandQueue(14);
-                                break;
-
-                            case 15:
-                                addCommandsToCommandQueue(15);
-                                break;
-
-                            case 16:
-                                addCommandsToCommandQueue(16);
-                                break;
-
-                            case 17:
-                                addCommandsToCommandQueue(17);
-                                break;
-
-                            case 18:
-                                addCommandsToCommandQueue(18);
-                                break;
-
-                            case 19:
-                                addCommandsToCommandQueue(19);
-                                break;
-
-                            case 20:
-                                addCommandsToCommandQueue(20);
-                                break;
-
-                            case 21:
-                                addCommandsToCommandQueue(21);
-                                break;
-
-                            case 22:
-                                addCommandsToCommandQueue(22);
-                                break;
-
-                            case 23:
-                                addCommandsToCommandQueue(23);
-                                break;
-
-                            case 24:
-                                addCommandsToCommandQueue(24);
-                                break;
-
-                            case 25:
-                                addCommandsToCommandQueue(25);
-                                break;
-                            case 26:
-                                addCommandsToCommandQueue(26);
-                                break;
-                            case 27:
-                                addCommandsToCommandQueue(27);
-                                break;
-                            case 28:
-                                addCommandsToCommandQueue(28);
-                                break;
-                            case 29:
-                                addCommandsToCommandQueue(29);
-                                break;
-                            case 30:
-                                addCommandsToCommandQueue(30);
-                                break;
-                            case 31:
-                                addCommandsToCommandQueue(31);
-                                break;
-                            case 32:
-                                addCommandsToCommandQueue(32);
-                                break;
-                            case 33:
-                                addCommandsToCommandQueue(33);
-                                break;
-                            case 34:
-                                addCommandsToCommandQueue(34);
-                                break;
-                            case 35:
-                                addCommandsToCommandQueue(35);
-                                break;
-                            case 36:
-                                addCommandsToCommandQueue(36);
-                                break;
-                            case 37:
-                                addCommandsToCommandQueue(37);
-                                break;
-                            case 38:
-                                addCommandsToCommandQueue(38);
-                                break;
-                            case 39:
-                                addCommandsToCommandQueue(39);
-                                break;
-                            case 40:
-                                addCommandsToCommandQueue(40);
-                                break;
-                            default:
-                                break;
-                        }
-                    }
-                    TimeUnit.MILLISECONDS.sleep(10);
-                }
-            } catch (InterruptedException ignored) {
+    private void addSqlCommands() {
+        LinkedList<TableNameWeightInfo> tmpCommandList = new LinkedList<>(tableSet);
+        tmpCommandList.sort((o1, o2) -> Long.compare(o2.weight, o1.weight));
+        for (TableNameWeightInfo each : tmpCommandList) {
+            if (IsDebug.isDebug()) {
+                System.out.println("已添加表" + each.tableName + "----权重" + each.weight);
             }
-        });
+            commandQueue.add(each.tableName);
+        }
     }
 
     private void pollCommandsAndSearchDatabaseThread() {
@@ -2790,7 +2652,11 @@ public class SearchBar {
                 while (eventUtil.isNotMainExit()) {
                     if (runningMode == Enums.RunningMode.NORMAL_MODE && DatabaseUtil.getInstance().getStatus() == Enums.DatabaseStatus.NORMAL) {
                         while ((column = commandQueue.poll()) != null) {
-                            searchAndAddToTempResults(System.currentTimeMillis(), column);
+                            int matchedNum = searchAndAddToTempResults(System.currentTimeMillis(), column);
+                            long weight = Math.min(matchedNum, 5);
+                            if (weight != 0L) {
+                                updateTableWeight(column, weight);
+                            }
                         }
                     }
                     TimeUnit.MILLISECONDS.sleep(10);
@@ -2864,7 +2730,7 @@ public class SearchBar {
                                 keywords = semicolon.split(searchText);
                                 searchCaseToLowerAndRemoveConflict();
 
-                                isStartSearchLocal.set(true);
+                                addSqlCommands();
                                 isCacheAndPrioritySearched.set(false);
                                 searchPriorityFolder();
                                 searchCache();
@@ -2994,11 +2860,13 @@ public class SearchBar {
      * @param path        文件路径
      * @param isPutToTemp 是否放到临时容器，在搜索优先文件夹和cache时为false，其他为true
      */
-    private void checkIsMatchedAndAddToList(String path, boolean isPutToTemp, boolean isResultFromCache) {
+    private boolean checkIsMatchedAndAddToList(String path, boolean isPutToTemp, boolean isResultFromCache) {
+        boolean ret = false;
         if (check(path)) {
             if (isResultNotRepeat(path)) {
                 if (isExist(path)) {
                     //字符串匹配通过
+                    ret  = true;
                     if (isPutToTemp) {
                         tempResultNum.incrementAndGet();
                         tempResults.add(path);
@@ -3013,6 +2881,7 @@ public class SearchBar {
                 }
             }
         }
+        return ret;
     }
 
     /**
@@ -3021,11 +2890,12 @@ public class SearchBar {
      * @param time   开始搜索时间，用于检测用于重新输入匹配信息后快速停止
      * @param eachColumn 数据库表
      */
-    private void searchAndAddToTempResults(long time, String eachColumn) {
+    private int searchAndAddToTempResults(long time, String eachColumn) {
+        int count = 0;
         //结果太多则不再进行搜索
         if (listResultsNum.get() + tempResultNum.get() > MAX_RESULTS_COUNT || startTime > time) {
             commandQueue.clear();
-            return;
+            return count;
         }
         String sql;
         //为label添加结果
@@ -3040,20 +2910,23 @@ public class SearchBar {
                 //用户重新输入了信息
                 if (listResultsNum.get() + tempResultNum.get() > MAX_RESULTS_COUNT || startTime > time) {
                     commandQueue.clear();
-                    return;
+                    return count;
                 }
                 each = resultSet.getString("PATH");
                 if (databaseUtil.getStatus() == Enums.DatabaseStatus.NORMAL) {
-                    checkIsMatchedAndAddToList(each, true, false);
+                    if (checkIsMatchedAndAddToList(each, true, false)) {
+                        count++;
+                    }
                 }
             }
         } catch (SQLException throwables) {
             System.err.println("error sql : " + sql);
             throwables.printStackTrace();
         }
+        return count;
     }
 
-    /**fil
+    /**
      * 显示窗口
      *
      * @param isGrabFocus 是否强制抓取焦点
@@ -3366,27 +3239,6 @@ public class SearchBar {
     }
 
     /**
-     * 获取文件名对应的ascii总和
-     *
-     * @param words 关键字
-     * @return ascii总和
-     */
-    private int getAscIISum(String[] words) {
-        StringBuilder stringBuilder = new StringBuilder();
-        if (words == null || words.length == 0) {
-            return 0;
-        }
-        for (String each : words) {
-            //如果是路径匹配或者是拼音，则不计入ascii总数(汉字为0)
-            if (each.contains("/") || each.contains(File.separator) || PinyinUtil.isPinyin(each)) {
-                continue;
-            }
-            stringBuilder.append(each.toUpperCase());
-        }
-        return GetAscII.INSTANCE.getAscII(stringBuilder.toString());
-    }
-
-    /**
      * 保存当前文件路径到数据库缓存
      *
      * @param content 文件路径
@@ -3600,7 +3452,6 @@ public class SearchBar {
         isCopyPathPressed.set(false);
         startSignal.set(false);
         isCacheAndPrioritySearched.set(false);
-        isStartSearchLocal.set(false);
         isWaiting.set(false);
         isMouseDraggedInWindow.set(false);
         EventUtil.getInstance().putEvent(new SetPreviewOrNormalMode(false));
