@@ -41,7 +41,7 @@ public class CachedThreadPoolUtil {
 
     public void shutdown() throws InterruptedException {
         isShutdown.set(true);
-        cachedThreadPool.shutdownNow();
+        cachedThreadPool.shutdown();
         int count = 0;
         final int maxWaitTime = 100 * 5;   //最大等待5s
         while (!cachedThreadPool.isTerminated() && count < maxWaitTime) {
