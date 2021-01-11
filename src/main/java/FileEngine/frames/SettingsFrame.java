@@ -148,7 +148,7 @@ public class SettingsFrame {
     private JPanel tabPlugin;
     private JLabel labelInstalledPluginNum;
     private JLabel labelPluginNum;
-    private JPanel PluginPanel;
+    private JPanel PluginListPanel;
     private JPanel PluginSettingsPanel;
     private JList<Object> listPlugins;
     private JLabel PluginIconLabel;
