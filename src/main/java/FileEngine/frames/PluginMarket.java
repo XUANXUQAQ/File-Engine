@@ -297,9 +297,12 @@ public class PluginMarket {
                                     new File("tmp", "pluginsUpdate").getAbsolutePath()
                             )
                     );
-                    if (hasPlugin || downloaded) {
+                    if (hasPlugin) {
                         buttonInstall.setEnabled(false);
                         buttonInstall.setText(translateUtil.getTranslation("Installed"));
+                    } else if (downloaded) {
+                        buttonInstall.setEnabled(false);
+                        buttonInstall.setText(translateUtil.getTranslation("Downloaded"));
                     } else {
                         buttonInstall.setEnabled(true);
                         buttonInstall.setText(translateUtil.getTranslation("Install"));
