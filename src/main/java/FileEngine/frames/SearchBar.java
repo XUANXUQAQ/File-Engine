@@ -2007,7 +2007,7 @@ public class SearchBar {
                 runningMode = Enums.RunningMode.PLUGIN_MODE;
                 String subText = text.substring(1);
                 String[] s = blank.split(subText);
-                currentUsingPlugin = PluginUtil.getInstance().getPluginByIdentifier(s[0]);
+                currentUsingPlugin = PluginUtil.getInstance().getPluginInfoByIdentifier(s[0]).plugin;
                 int length = s.length;
                 if (currentUsingPlugin != null && length > 1) {
                     for (int i = 1; i < length - 1; ++i) {

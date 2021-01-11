@@ -720,8 +720,8 @@ public class SettingsFrame {
             public void mouseClicked(MouseEvent e) {
                 String pluginName = (String) listPlugins.getSelectedValue();
                 if (pluginName != null) {
-                    String pluginIdentifier = PluginUtil.getInstance().getIdentifierByName(pluginName);
-                    Plugin plugin = PluginUtil.getInstance().getPluginByIdentifier(pluginIdentifier);
+                    PluginUtil.PluginInfo pluginInfo = PluginUtil.getInstance().getPluginInfoByName(pluginName);
+                    Plugin plugin = pluginInfo.plugin;
                     int apiVersion;
                     ImageIcon icon = plugin.getPluginIcon();
                     String description = plugin.getDescription();
@@ -978,8 +978,7 @@ public class SettingsFrame {
             } else {
                 startCheckTime.set(0L);
                 String pluginName = (String) listPlugins.getSelectedValue();
-                String pluginIdentifier = PluginUtil.getInstance().getIdentifierByName(pluginName);
-                Plugin plugin = PluginUtil.getInstance().getPluginByIdentifier(pluginIdentifier);
+                Plugin plugin = PluginUtil.getInstance().getPluginInfoByName(pluginName).plugin;
                 String pluginFullName = pluginName + ".jar";
 
                 if (pluginUtil.isPluginsNotLatest(pluginName)) {

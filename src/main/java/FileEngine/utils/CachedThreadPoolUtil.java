@@ -12,7 +12,7 @@ public class CachedThreadPoolUtil {
     private final ExecutorService cachedThreadPool = new ThreadPoolExecutor(
             0,
             200,
-            15L,
+            60L,
             TimeUnit.SECONDS,
             new SynchronousQueue<>());
     private final AtomicBoolean isShutdown = new AtomicBoolean(false);
@@ -41,7 +41,7 @@ public class CachedThreadPoolUtil {
 
     public void shutdown() throws InterruptedException {
         isShutdown.set(true);
-        cachedThreadPool.shutdown();
+        cachedThreadPool.shutdownNow();
         int count = 0;
         final int maxWaitTime = 100 * 5;   //最大等待5s
         while (!cachedThreadPool.isTerminated() && count < maxWaitTime) {
