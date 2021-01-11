@@ -3431,8 +3431,10 @@ public class SearchBar {
         String matcherStrFromFilePath;
         boolean isPath;
         for (String eachKeyword : keywords) {
-            char start = eachKeyword.charAt(0);
-            if (start == '/' || start == File.pathSeparatorChar) {
+            if (eachKeyword == null || eachKeyword.isEmpty()) {
+                continue;
+            }
+            if (eachKeyword.startsWith("/") || eachKeyword.startsWith(File.separator)) {
                 //匹配路径
                 isPath = true;
                 Matcher matcher = slash.matcher(eachKeyword);
