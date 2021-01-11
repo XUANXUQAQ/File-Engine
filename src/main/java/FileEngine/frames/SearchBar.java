@@ -2203,8 +2203,6 @@ public class SearchBar {
 
         repaintFrameThread();
 
-        pollCommandsAndSearchDatabaseThread();
-
         sendSignalAndShowCommandThread();
 
         switchSearchBarShowingMode();
@@ -2642,26 +2640,21 @@ public class SearchBar {
             }
             commandQueue.add(each.tableName);
         }
-    }
-
-    private void pollCommandsAndSearchDatabaseThread() {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
-            try {
-                String column;
-                EventUtil eventUtil = EventUtil.getInstance();
-                while (eventUtil.isNotMainExit()) {
-                    if (runningMode == Enums.RunningMode.NORMAL_MODE && DatabaseUtil.getInstance().getStatus() == Enums.DatabaseStatus.NORMAL) {
-                        while ((column = commandQueue.poll()) != null) {
-                            int matchedNum = searchAndAddToTempResults(System.currentTimeMillis(), column);
-                            long weight = Math.min(matchedNum, 5);
-                            if (weight != 0L) {
-                                updateTableWeight(column, weight);
-                            }
-                        }
+            String column;
+            while (!commandQueue.isEmpty()) {
+                column = commandQueue.poll();
+                if (
+                        runningMode == Enums.RunningMode.NORMAL_MODE &&
+                        DatabaseUtil.getInstance().getStatus() == Enums.DatabaseStatus.NORMAL &&
+                        column != null
+                ) {
+                    int matchedNum = searchAndAddToTempResults(System.currentTimeMillis(), column);
+                    long weight = Math.min(matchedNum, 5);
+                    if (weight != 0L) {
+                        updateTableWeight(column, weight);
                     }
-                    TimeUnit.MILLISECONDS.sleep(10);
                 }
-            } catch (InterruptedException ignored) {
             }
         });
     }
