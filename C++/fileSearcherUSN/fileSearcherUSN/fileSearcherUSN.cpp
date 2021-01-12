@@ -19,7 +19,7 @@ void splitString(char* str, vector<string>& vec);
 
 
 void initUSN(parameter p) {
-	bool ret = (65 <= p.disk && p.disk <= 90) || (97 <= p.disk && p.disk <= 122);
+	const auto ret = (65 <= p.disk && p.disk <= 90) || (97 <= p.disk && p.disk <= 122);
 	if (ret) {
 		Volume volume(p.disk, db, p.ignorePath);
 		volume.initVolume();
@@ -39,13 +39,13 @@ void splitString(char* str, vector<string>& vec) {
 	strcpy_s(diskPath, str);
 	_diskPath = diskPath;
 	p = strtok_s(_diskPath, ",", &remainDisk);
-	if (p != NULL) {
-		vec.push_back(string(p));
+	if (p != nullptr) {
+		vec.emplace_back(p);
 	}
-	while (p != NULL) {
-		p = strtok_s(NULL, ",", &remainDisk);
-		if (p != NULL) {
-			vec.push_back(string(p));
+	while (p != nullptr) {
+		p = strtok_s(nullptr, ",", &remainDisk);
+		if (p != nullptr) {
+			vec.emplace_back(p);
 		}
 	}
 }
@@ -87,10 +87,8 @@ int main() {
 	splitString(diskPath, diskVec);
 	splitString(ignorePath, ignorePathsVec);
 
-	char disk;
-
 	for (vector<string>::iterator iter = diskVec.begin(); iter != diskVec.end(); iter++) {
-		disk = (*iter)[0];
+		const auto disk = (*iter)[0];
 		if (65 <= disk && disk <= 90 || 97 <= disk && disk <= 122) {
 			parameter p;
 			p.disk = disk;
@@ -104,7 +102,7 @@ int main() {
 	while (tasksFinished < totalTasks) {
 		Sleep(10);
 	}
-	sqlite3_exec(db, "COMMIT;", 0, 0, 0);
+	sqlite3_exec(db, "COMMIT;", nullptr, nullptr, nullptr);
 	sqlite3_close(db);
 	return 0;
 }

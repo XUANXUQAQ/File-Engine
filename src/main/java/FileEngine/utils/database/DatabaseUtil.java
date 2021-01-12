@@ -142,144 +142,137 @@ public class DatabaseUtil {
     private void addDeleteSqlCommandByAscii(int asciiSum, String path) {
         String command;
         int asciiGroup = asciiSum / 100;
-        int tempAscii;
-        for (int i = 0; i < 3; i++) {
-            //计算ascii可能有误差，因此需要在多个表中尝试删除
-            tempAscii = asciiGroup + i -1;
-            switch (tempAscii) {
-                case 0:
-                    command = "DELETE from list0 where PATH=" + "\"" + path + "\";";
-                    break;
-                case 1:
-                    command = "DELETE from list1 where PATH=" + "\"" + path + "\";";
-                    break;
-                case 2:
-                    command = "DELETE from list2 where PATH=" + "\"" + path + "\";";
-                    break;
-                case 3:
-                    command = "DELETE from list3 where PATH=" + "\"" + path + "\";";
-                    break;
-                case 4:
-                    command = "DELETE from list4 where PATH=" + "\"" + path + "\";";
-                    break;
-                case 5:
-                    command = "DELETE from list5 where PATH=" + "\"" + path + "\";";
-                    break;
-                case 6:
-                    command = "DELETE from list6 where PATH=" + "\"" + path + "\";";
-                    break;
-                case 7:
-                    command = "DELETE from list7 where PATH=" + "\"" + path + "\";";
-                    break;
-                case 8:
-                    command = "DELETE from list8 where PATH=" + "\"" + path + "\";";
-                    break;
-                case 9:
-                    command = "DELETE from list9 where PATH=" + "\"" + path + "\";";
-                    break;
-                case 10:
-                    command = "DELETE from list10 where PATH=" + "\"" + path + "\";";
-                    break;
-                case 11:
-                    command = "DELETE from list11 where PATH=" + "\"" + path + "\";";
-                    break;
-                case 12:
-                    command = "DELETE from list12 where PATH=" + "\"" + path + "\";";
-                    break;
-                case 13:
-                    command = "DELETE from list13 where PATH=" + "\"" + path + "\";";
-                    break;
-                case 14:
-                    command = "DELETE from list14 where PATH=" + "\"" + path + "\";";
-                    break;
-                case 15:
-                    command = "DELETE from list15 where PATH=" + "\"" + path + "\";";
-                    break;
-                case 16:
-                    command = "DELETE from list16 where PATH=" + "\"" + path + "\";";
-                    break;
-                case 17:
-                    command = "DELETE from list17 where PATH=" + "\"" + path + "\";";
-                    break;
-                case 18:
-                    command = "DELETE from list18 where PATH=" + "\"" + path + "\";";
-                    break;
-                case 19:
-                    command = "DELETE from list19 where PATH=" + "\"" + path + "\";";
-                    break;
-                case 20:
-                    command = "DELETE from list20 where PATH=" + "\"" + path + "\";";
-                    break;
-                case 21:
-                    command = "DELETE from list21 where PATH=" + "\"" + path + "\";";
-                    break;
-                case 22:
-                    command = "DELETE from list22 where PATH=" + "\"" + path + "\";";
-                    break;
-                case 23:
-                    command = "DELETE from list23 where PATH=" + "\"" + path + "\";";
-                    break;
-                case 24:
-                    command = "DELETE from list24 where PATH=" + "\"" + path + "\";";
-                    break;
-                case 25:
-                    command = "DELETE from list25 where PATH=" + "\"" + path + "\";";
-                    break;
-                case 26:
-                    command = "DELETE from list26 where PATH=" + "\"" + path + "\";";
-                    break;
-                case 27:
-                    command = "DELETE from list27 where PATH=" + "\"" + path + "\";";
-                    break;
-                case 28:
-                    command = "DELETE from list28 where PATH=" + "\"" + path + "\";";
-                    break;
-                case 29:
-                    command = "DELETE from list29 where PATH=" + "\"" + path + "\";";
-                    break;
-                case 30:
-                    command = "DELETE from list30 where PATH=" + "\"" + path + "\";";
-                    break;
-                case 31:
-                    command = "DELETE from list31 where PATH=" + "\"" + path + "\";";
-                    break;
-                case 32:
-                    command = "DELETE from list32 where PATH=" + "\"" + path + "\";";
-                    break;
-                case 33:
-                    command = "DELETE from list33 where PATH=" + "\"" + path + "\";";
-                    break;
-                case 34:
-                    command = "DELETE from list34 where PATH=" + "\"" + path + "\";";
-                    break;
-                case 35:
-                    command = "DELETE from list35 where PATH=" + "\"" + path + "\";";
-                    break;
-                case 36:
-                    command = "DELETE from list36 where PATH=" + "\"" + path + "\";";
-                    break;
-                case 37:
-                    command = "DELETE from list37 where PATH=" + "\"" + path + "\";";
-                    break;
-                case 38:
-                    command = "DELETE from list38 where PATH=" + "\"" + path + "\";";
-                    break;
-                case 39:
-                    command = "DELETE from list39 where PATH=" + "\"" + path + "\";";
-                    break;
-                case 40:
-                    command = "DELETE from list40 where PATH=" + "\"" + path + "\";";
-                    break;
-                default:
-                    command = null;
-                    break;
-            }
-            if (asciiGroup > 39) {
+
+        switch (asciiGroup) {
+            case 0:
+                command = "DELETE from list0 where PATH=" + "\"" + path + "\";";
                 break;
-            }
-            if (command != null && isCommandNotRepeat(command)) {
-                addToCommandSet(new SQLWithTaskId(SqlTaskIds.DELETE_FROM_LIST, command));
-            }
+            case 1:
+                command = "DELETE from list1 where PATH=" + "\"" + path + "\";";
+                break;
+            case 2:
+                command = "DELETE from list2 where PATH=" + "\"" + path + "\";";
+                break;
+            case 3:
+                command = "DELETE from list3 where PATH=" + "\"" + path + "\";";
+                break;
+            case 4:
+                command = "DELETE from list4 where PATH=" + "\"" + path + "\";";
+                break;
+            case 5:
+                command = "DELETE from list5 where PATH=" + "\"" + path + "\";";
+                break;
+            case 6:
+                command = "DELETE from list6 where PATH=" + "\"" + path + "\";";
+                break;
+            case 7:
+                command = "DELETE from list7 where PATH=" + "\"" + path + "\";";
+                break;
+            case 8:
+                command = "DELETE from list8 where PATH=" + "\"" + path + "\";";
+                break;
+            case 9:
+                command = "DELETE from list9 where PATH=" + "\"" + path + "\";";
+                break;
+            case 10:
+                command = "DELETE from list10 where PATH=" + "\"" + path + "\";";
+                break;
+            case 11:
+                command = "DELETE from list11 where PATH=" + "\"" + path + "\";";
+                break;
+            case 12:
+                command = "DELETE from list12 where PATH=" + "\"" + path + "\";";
+                break;
+            case 13:
+                command = "DELETE from list13 where PATH=" + "\"" + path + "\";";
+                break;
+            case 14:
+                command = "DELETE from list14 where PATH=" + "\"" + path + "\";";
+                break;
+            case 15:
+                command = "DELETE from list15 where PATH=" + "\"" + path + "\";";
+                break;
+            case 16:
+                command = "DELETE from list16 where PATH=" + "\"" + path + "\";";
+                break;
+            case 17:
+                command = "DELETE from list17 where PATH=" + "\"" + path + "\";";
+                break;
+            case 18:
+                command = "DELETE from list18 where PATH=" + "\"" + path + "\";";
+                break;
+            case 19:
+                command = "DELETE from list19 where PATH=" + "\"" + path + "\";";
+                break;
+            case 20:
+                command = "DELETE from list20 where PATH=" + "\"" + path + "\";";
+                break;
+            case 21:
+                command = "DELETE from list21 where PATH=" + "\"" + path + "\";";
+                break;
+            case 22:
+                command = "DELETE from list22 where PATH=" + "\"" + path + "\";";
+                break;
+            case 23:
+                command = "DELETE from list23 where PATH=" + "\"" + path + "\";";
+                break;
+            case 24:
+                command = "DELETE from list24 where PATH=" + "\"" + path + "\";";
+                break;
+            case 25:
+                command = "DELETE from list25 where PATH=" + "\"" + path + "\";";
+                break;
+            case 26:
+                command = "DELETE from list26 where PATH=" + "\"" + path + "\";";
+                break;
+            case 27:
+                command = "DELETE from list27 where PATH=" + "\"" + path + "\";";
+                break;
+            case 28:
+                command = "DELETE from list28 where PATH=" + "\"" + path + "\";";
+                break;
+            case 29:
+                command = "DELETE from list29 where PATH=" + "\"" + path + "\";";
+                break;
+            case 30:
+                command = "DELETE from list30 where PATH=" + "\"" + path + "\";";
+                break;
+            case 31:
+                command = "DELETE from list31 where PATH=" + "\"" + path + "\";";
+                break;
+            case 32:
+                command = "DELETE from list32 where PATH=" + "\"" + path + "\";";
+                break;
+            case 33:
+                command = "DELETE from list33 where PATH=" + "\"" + path + "\";";
+                break;
+            case 34:
+                command = "DELETE from list34 where PATH=" + "\"" + path + "\";";
+                break;
+            case 35:
+                command = "DELETE from list35 where PATH=" + "\"" + path + "\";";
+                break;
+            case 36:
+                command = "DELETE from list36 where PATH=" + "\"" + path + "\";";
+                break;
+            case 37:
+                command = "DELETE from list37 where PATH=" + "\"" + path + "\";";
+                break;
+            case 38:
+                command = "DELETE from list38 where PATH=" + "\"" + path + "\";";
+                break;
+            case 39:
+                command = "DELETE from list39 where PATH=" + "\"" + path + "\";";
+                break;
+            case 40:
+                command = "DELETE from list40 where PATH=" + "\"" + path + "\";";
+                break;
+            default:
+                command = null;
+                break;
+        }
+        if (command != null && isCommandNotRepeat(command)) {
+            addToCommandSet(new SQLWithTaskId(SqlTaskIds.DELETE_FROM_LIST, command));
         }
     }
 
@@ -428,14 +421,10 @@ public class DatabaseUtil {
     }
 
     private int getAscIISum(String path) {
-        if (path != null) {
-            path = path.toUpperCase();
-            if (path.contains(";")) {
-                path = path.replace(";", "");
-            }
-            return GetAscII.INSTANCE.getAscII(path);
+        if (path == null || path.isEmpty()) {
+            return 0;
         }
-        return 0;
+        return GetAscII.INSTANCE.getAscII(path);
     }
 
     /**

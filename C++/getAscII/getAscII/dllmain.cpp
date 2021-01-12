@@ -7,31 +7,14 @@
 using namespace std;
 extern "C" __declspec(dllexport) int getAscII(const char* str);
 
-
-BOOL APIENTRY DllMain( HMODULE hModule,
-                       DWORD  ul_reason_for_call,
-                       LPVOID lpReserved
-                     )
-{
-    switch (ul_reason_for_call)
-    {
-    case DLL_PROCESS_ATTACH:
-    case DLL_THREAD_ATTACH:
-    case DLL_THREAD_DETACH:
-    case DLL_PROCESS_DETACH:
-        break;
-    }
-    return TRUE;
-}
-
 __declspec(dllexport) int getAscII(const char* str)
 {
     char _str[260];
     strcpy_s(_str, str);
-    char* s = _str;
-    int sum = 0;
-    size_t length = strlen(_str);
-    for (int i = 0; i < length; i++)
+    auto* s = _str;
+    auto sum = 0;
+    const auto length = strlen(_str);
+    for (auto i = 0; i < length; i++)
     {
         if (s[i] > 0)
         {
