@@ -241,6 +241,7 @@ public class SettingsFrame {
     private JLabel placeholderSearch1;
     private JLabel placeholderSearch2;
     private JLabel labelTinyPinyin;
+    private JLabel labelLombok;
     private JScrollPane tabGeneralScrollpane;
     private JScrollPane tabGeneralScrollPane;
     private JPanel tabGeneralPane;
@@ -1059,6 +1060,7 @@ public class SettingsFrame {
         labelJna.setText("3.Java-Native-Access");
         labelSQLite.setText("4.SQLite-JDBC");
         labelTinyPinyin.setText("5.TinyPinyin");
+        labelLombok.setText("6.Lombok");
         labelPluginNum.setText(String.valueOf(PluginUtil.getInstance().getInstalledPluginNum()));
         ImageIcon imageIcon = new ImageIcon(SettingsFrame.class.getResource("/icons/frame.png"));
         labelIcon.setIcon(imageIcon);

@@ -1,6 +1,7 @@
 package FileEngine.utils;
 
 import FileEngine.IsDebug;
+import lombok.Getter;
 
 import javax.swing.*;
 import java.awt.*;
@@ -15,7 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class TranslateUtil {
     private static volatile TranslateUtil INSTANCE = null;
 
-    private volatile static String language;
+    private volatile static @Getter String language;
     private final ConcurrentHashMap<String, String> translationMap = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, String> fileMap = new ConcurrentHashMap<>();
     private Font[] fList;
@@ -162,10 +163,6 @@ public class TranslateUtil {
         TranslateUtil.language = language;
         setUIFont();
         initTranslations();
-    }
-
-    public String getLanguage() {
-        return language;
     }
 
     public Set<String> getLanguageSet() {

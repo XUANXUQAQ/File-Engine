@@ -6,20 +6,21 @@ import javax.swing.*;
 import javax.swing.filechooser.FileSystemView;
 import java.awt.*;
 import java.io.File;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @author XUANXU
  */
 public class GetIconUtil {
     private static final FileSystemView FILE_SYSTEM_VIEW = FileSystemView.getFileSystemView();
-    private ImageIcon dllImageIcon;
-    private ImageIcon folderImageIcon;
-    private ImageIcon txtImageIcon;
-    private ImageIcon helpIcon;
-    private ImageIcon updateIcon;
-    private ImageIcon blankIcon;
-    private ImageIcon recycleBin;
-    private volatile boolean isInitialized = false;
+    private volatile ImageIcon dllImageIcon;
+    private volatile ImageIcon folderImageIcon;
+    private volatile ImageIcon txtImageIcon;
+    private volatile ImageIcon helpIcon;
+    private volatile ImageIcon updateIcon;
+    private volatile ImageIcon blankIcon;
+    private volatile ImageIcon recycleBin;
+    private final AtomicBoolean isInitialized = new AtomicBoolean(false);
 
     private static volatile GetIconUtil INSTANCE = null;
 
@@ -58,9 +59,9 @@ public class GetIconUtil {
     }
 
     public ImageIcon getCommandIcon(String commandName, int width, int height) {
-        if (!isInitialized) {
+        if (!isInitialized.get()) {
             initIconCache(width, height);
-            isInitialized = true;
+            isInitialized.set(true);
         }
         if (commandName == null || commandName.isEmpty()) {
             if (IsDebug.isDebug()) {
@@ -83,9 +84,9 @@ public class GetIconUtil {
     }
 
     public ImageIcon getBigIcon(String path, int width, int height) {
-        if (!isInitialized) {
+        if (!isInitialized.get()) {
             initIconCache(width, height);
-            isInitialized = true;
+            isInitialized.set(true);
         }
         if (path == null || path.isEmpty()) {
             return blankIcon;
