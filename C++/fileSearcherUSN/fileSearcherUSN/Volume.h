@@ -65,7 +65,7 @@ inline std::string to_utf8(const std::wstring& str)
 
 class Volume {
 public:
-	Volume(char vol, sqlite3* database, vector<string> ignorePaths) {
+	Volume(const char vol, sqlite3* database, vector<string> ignorePaths) {
 		this->vol = vol;
 		hVol = nullptr;
 		path = "";
@@ -95,13 +95,12 @@ public:
 			initAllPrepareStatement();
 			int ascii;
 			wstring name;
-			CString path;
 			wstring record;
-			Frn_Pfrn_Name_Map::iterator endIter = frnPfrnNameMap.end();
-			for (Frn_Pfrn_Name_Map::iterator iter = frnPfrnNameMap.begin(); iter != endIter; ++iter) {
+			const auto endIter = frnPfrnNameMap.end();
+			for (auto iter = frnPfrnNameMap.begin(); iter != endIter; ++iter) {
 				name = iter->second.filename;
 				ascii = getAscIISum(to_utf8(name));
-				path = L"\0";
+				CString path = _T("\0");
 				getPath(iter->first, path);
 				record = vol + path;
 				string fullPath = to_utf8(record);
@@ -165,8 +164,8 @@ private:
 	sqlite3_stmt* stmt39 = nullptr;
 	sqlite3_stmt* stmt40 = nullptr;
 
-	USN_JOURNAL_DATA ujd;
-	CREATE_USN_JOURNAL_DATA cujd;
+	USN_JOURNAL_DATA ujd{};
+	CREATE_USN_JOURNAL_DATA cujd{};
 
 	vector<string> ignorePathVector;
 
@@ -175,7 +174,7 @@ private:
 	bool getUSNInfo();
 	bool getUSNJournal();
 	bool deleteUSN() const;
-	void saveResult(string path, int ascII) const;
+	inline void saveResult(const string& path, int ascII) const;
 	void getPath(DWORDLONG frn, CString& path);
 	static int getAscIISum(string name);
 	bool isIgnore(string path);
@@ -190,7 +189,7 @@ private:
 
 inline void Volume::initSinglePrepareStatement(sqlite3_stmt** statement, const char* init) const
 {
-	size_t ret = sqlite3_prepare_v2(db, init, strlen(init), statement, 0);
+	const size_t ret = sqlite3_prepare_v2(db, init, strlen(init), statement, nullptr);
 	if (SQLITE_OK != ret) {
 		cout << "error preparing stmt \"" << init << "\"" << endl;
 	}
@@ -298,8 +297,8 @@ inline bool Volume::isIgnore(string path) {
 		return true;
 	}
 	transform(path.begin(), path.end(), path.begin(), ::tolower);
-	size_t size = ignorePathVector.size();
-	for (int i = 0; i < size; i++)
+	const auto size = ignorePathVector.size();
+	for (auto i = 0; i < size; i++)
 	{
 		if (path.find(ignorePathVector[i]) != string::npos)
 		{
@@ -309,7 +308,7 @@ inline bool Volume::isIgnore(string path) {
 	return false;
 }
 
-inline void Volume::saveResult(string path, int ascII) const
+inline void Volume::saveResult(const string& path, const int ascII) const
 {
 #ifdef TEST
 	cout << "path = " << path << endl;
@@ -446,8 +445,8 @@ inline void Volume::saveResult(string path, int ascII) const
 }
 
 inline int Volume::getAscIISum(string name) {
-	int sum = 0;
-	size_t length = name.length();
+	auto sum = 0;
+	const auto length = name.length();
 	for (size_t i = 0; i < length; i++)
 	{
 		if (name[i] > 0)
