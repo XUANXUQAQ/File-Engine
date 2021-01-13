@@ -18,11 +18,11 @@ void initUSN(parameter p);
 void splitString(char* str, vector<string>& vec);
 
 
-void initUSN(parameter p) {
-	const auto ret = (65 <= p.disk && p.disk <= 90) || (97 <= p.disk && p.disk <= 122);
+void initUSN(const parameter p) {
+	const auto ret = 65 <= p.disk && p.disk <= 90 || 97 <= p.disk && p.disk <= 122;
 	if (ret) {
-		Volume volume(p.disk, db, p.ignorePath);
-		volume.initVolume();
+		volume volumeInstance(p.disk, db, p.ignorePath);
+		volumeInstance.initVolume();
 		tasksFinished++;
 #ifdef TEST
 		cout << "path : " << p.disk << endl;
@@ -33,7 +33,7 @@ void initUSN(parameter p) {
 
 void splitString(char* str, vector<string>& vec) {
 	char* _diskPath;
-	char* remainDisk;
+	char* remainDisk = nullptr;
 	char* p;
 	char diskPath[5000];
 	strcpy_s(diskPath, str);
@@ -87,8 +87,9 @@ int main() {
 	splitString(diskPath, diskVec);
 	splitString(ignorePath, ignorePathsVec);
 
-	for (vector<string>::iterator iter = diskVec.begin(); iter != diskVec.end(); iter++) {
-		const auto disk = (*iter)[0];
+	for (auto& iter : diskVec)
+	{
+		const auto disk = iter[0];
 		if (65 <= disk && disk <= 90 || 97 <= disk && disk <= 122) {
 			parameter p;
 			p.disk = disk;

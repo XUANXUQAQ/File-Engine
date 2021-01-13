@@ -22,9 +22,11 @@ std::string to_utf8(const wchar_t* buffer, int len);
 typedef struct _pfrn_name {
 	DWORDLONG pfrn = 0;
 	CString filename;
-}Pfrn_Name;
+}pfrn_name;
 
-typedef unordered_map<DWORDLONG, Pfrn_Name> Frn_Pfrn_Name_Map;
+typedef unordered_map<string, int> PriorityMap;
+
+typedef unordered_map<DWORDLONG, pfrn_name> Frn_Pfrn_Name_Map;
 
 
 inline std::string to_utf8(const wchar_t* buffer, int len)
@@ -42,37 +44,37 @@ inline std::string to_utf8(const wchar_t* buffer, int len)
 	{
 		return "";
 	}
-	string newbuffer;
-	newbuffer.resize(nChars);
+	string newBuffer;
+	newBuffer.resize(nChars);
 	::WideCharToMultiByte(
 		CP_UTF8,
 		0,
 		buffer,
 		len,
-		const_cast<char*>(newbuffer.c_str()),
+		const_cast<char*>(newBuffer.c_str()),
 		nChars,
 		nullptr,
 		nullptr);
 
-	return newbuffer;
+	return newBuffer;
 }
 
 inline std::string to_utf8(const std::wstring& str)
 {
-	return to_utf8(str.c_str(), (int)str.size());
+	return to_utf8(str.c_str(), static_cast<int>(str.size()));
 }
 
 
-class Volume {
+class volume {
 public:
-	Volume(const char vol, sqlite3* database, vector<string> ignorePaths) {
+	volume(const char vol, sqlite3* database, vector<string> ignorePaths) {
 		this->vol = vol;
 		hVol = nullptr;
 		path = "";
 		db = database;
 		addIgnorePath(ignorePaths);
 	}
-	~Volume() = default;
+	~volume() = default;
 
 	char getPath() const
 	{
@@ -92,19 +94,21 @@ public:
 			// 06. 删除 USN 日志文件 ( 也可以不删除 ) 
 			deleteUSN()) {
 			mutex_lock.lock();
+			if (!initPriorityMap(priorityMap))
+			{
+				return false;
+			}
 			initAllPrepareStatement();
-			int ascii;
-			wstring name;
-			wstring record;
+			
 			const auto endIter = frnPfrnNameMap.end();
 			for (auto iter = frnPfrnNameMap.begin(); iter != endIter; ++iter) {
-				name = iter->second.filename;
-				ascii = getAscIISum(to_utf8(name));
+				auto name = iter->second.filename;
+				const auto ascii = getAscIISum(to_utf8(wstring(name)));
 				CString path = _T("\0");
 				getPath(iter->first, path);
-				record = vol + path;
-				string fullPath = to_utf8(record);
-				if (!(isIgnore(fullPath))) {
+				CString record = vol + path;
+				auto fullPath = to_utf8(wstring(record));
+				if (!isIgnore(fullPath)) {
 					saveResult(fullPath, ascii);
 				}
 			}
@@ -118,7 +122,7 @@ public:
 private:
 	char vol;
 	HANDLE hVol;
-	Pfrn_Name pfrnName;
+	pfrn_name pfrnName;
 	Frn_Pfrn_Name_Map frnPfrnNameMap;
 	sqlite3* db;
 	CString path;
@@ -168,34 +172,83 @@ private:
 	CREATE_USN_JOURNAL_DATA cujd{};
 
 	vector<string> ignorePathVector;
-
+	PriorityMap priorityMap;
+	
 	bool getHandle();
 	bool createUSN();
 	bool getUSNInfo();
 	bool getUSNJournal();
 	bool deleteUSN() const;
-	inline void saveResult(const string& path, int ascII) const;
+	void saveResult(string path, int ascII);
 	void getPath(DWORDLONG frn, CString& path);
 	static int getAscIISum(string name);
 	bool isIgnore(string path);
 	void finalizeAllStatement() const;
-	static void saveSingleRecordToDB(sqlite3_stmt* stmt, string record, int ascii);
+	void saveSingleRecordToDB(sqlite3_stmt* stmt, string record, int ascii);
 	void addIgnorePath(vector<string> vec) {
 		ignorePathVector = vec;
 	}
+	int getPriorityBySuffix(const string& suffix);
+	int getPriorityByPath(const string& path);
+	bool initPriorityMap(PriorityMap& priority_map) const;
 	void initAllPrepareStatement();
 	void initSinglePrepareStatement(sqlite3_stmt** statement, const char* init) const;
 };
 
-inline void Volume::initSinglePrepareStatement(sqlite3_stmt** statement, const char* init) const
+inline int volume::getPriorityBySuffix(const string& suffix)
 {
-	const size_t ret = sqlite3_prepare_v2(db, init, strlen(init), statement, nullptr);
-	if (SQLITE_OK != ret) {
+	auto iter = priorityMap.find(suffix);
+	if (iter == priorityMap.end())
+	{
+		return getPriorityBySuffix("defaultPriority");
+	}
+	return iter->second;
+}
+
+
+inline int volume::getPriorityByPath(const string& path)
+{
+	const auto suffix = path.substr(path.find_last_not_of('.') + 1);
+	return getPriorityBySuffix(suffix);
+}
+
+inline bool volume::initPriorityMap(PriorityMap& priority_map) const
+{
+	char* error;
+	char** pResult;
+	int row, column;
+	const string sql = "select * from priority;";
+	const size_t ret = sqlite3_get_table(db, sql.c_str(), &pResult, &row, &column, &error);
+	if (ret != SQLITE_OK)
+	{
+		cerr << "error init priority map" << error << endl;
+		sqlite3_free(error);
+		return false;
+	}
+	//由File-Engine保证result不为空
+	for (auto i = 0; i < row; i++)
+	{
+		const auto offset = column * (i + 1);
+		const string suffix(pResult[i + offset]);
+		const string priorityVal(pResult[i + offset + 1]);
+		pair<string, int> pairPriority = pair<string, int>{ suffix, stoi(priorityVal) };
+		priority_map.insert(pairPriority);
+	}
+	sqlite3_free_table(pResult);
+	return true;
+}
+
+
+inline void volume::initSinglePrepareStatement(sqlite3_stmt** statement, const char* init) const
+{
+	const size_t ret = sqlite3_prepare_v2(db, init, static_cast<long>(strlen(init)), statement, nullptr);
+	if (SQLITE_OK != ret) 
+	{
 		cout << "error preparing stmt \"" << init << "\"" << endl;
 	}
 }
 
-inline void Volume::finalizeAllStatement() const
+inline void volume::finalizeAllStatement() const
 {
 	sqlite3_finalize(stmt0);
 	sqlite3_finalize(stmt1);
@@ -240,59 +293,60 @@ inline void Volume::finalizeAllStatement() const
 	sqlite3_finalize(stmt40);
 }
 
-inline void Volume::saveSingleRecordToDB(sqlite3_stmt* stmt, const string record, const int ascii) {
+inline void volume::saveSingleRecordToDB(sqlite3_stmt* stmt, const string record, const int ascii) {
 	sqlite3_reset(stmt);
 	sqlite3_bind_int(stmt, 1, ascii);
 	sqlite3_bind_text(stmt, 2, record.c_str(), -1, SQLITE_STATIC);
+	sqlite3_bind_int(stmt, 3, getPriorityByPath(record));
 	sqlite3_step(stmt);
 }
 
-inline void Volume::initAllPrepareStatement() {
-	initSinglePrepareStatement(&stmt0, "INSERT INTO list0 VALUES(?, ?);");
-	initSinglePrepareStatement(&stmt1, "INSERT INTO list1 VALUES(?, ?);");
-	initSinglePrepareStatement(&stmt2, "INSERT INTO list2 VALUES(?, ?);");
-	initSinglePrepareStatement(&stmt3, "INSERT INTO list3 VALUES(?, ?);");
-	initSinglePrepareStatement(&stmt4, "INSERT INTO list4 VALUES(?, ?);");
-	initSinglePrepareStatement(&stmt5, "INSERT INTO list5 VALUES(?, ?);");
-	initSinglePrepareStatement(&stmt6, "INSERT INTO list6 VALUES(?, ?);");
-	initSinglePrepareStatement(&stmt7, "INSERT INTO list7 VALUES(?, ?);");
-	initSinglePrepareStatement(&stmt8, "INSERT INTO list8 VALUES(?, ?);");
-	initSinglePrepareStatement(&stmt9, "INSERT INTO list9 VALUES(?, ?);");
-	initSinglePrepareStatement(&stmt10, "INSERT INTO list10 VALUES(?, ?);");
-	initSinglePrepareStatement(&stmt11, "INSERT INTO list11 VALUES(?, ?);");
-	initSinglePrepareStatement(&stmt12, "INSERT INTO list12 VALUES(?, ?);");
-	initSinglePrepareStatement(&stmt13, "INSERT INTO list13 VALUES(?, ?);");
-	initSinglePrepareStatement(&stmt14, "INSERT INTO list14 VALUES(?, ?);");
-	initSinglePrepareStatement(&stmt15, "INSERT INTO list15 VALUES(?, ?);");
-	initSinglePrepareStatement(&stmt16, "INSERT INTO list16 VALUES(?, ?);");
-	initSinglePrepareStatement(&stmt17, "INSERT INTO list17 VALUES(?, ?);");
-	initSinglePrepareStatement(&stmt18, "INSERT INTO list18 VALUES(?, ?);");
-	initSinglePrepareStatement(&stmt19, "INSERT INTO list19 VALUES(?, ?);");
-	initSinglePrepareStatement(&stmt20, "INSERT INTO list20 VALUES(?, ?);");
-	initSinglePrepareStatement(&stmt21, "INSERT INTO list21 VALUES(?, ?);");
-	initSinglePrepareStatement(&stmt22, "INSERT INTO list22 VALUES(?, ?);");
-	initSinglePrepareStatement(&stmt23, "INSERT INTO list23 VALUES(?, ?);");
-	initSinglePrepareStatement(&stmt24, "INSERT INTO list24 VALUES(?, ?);");
-	initSinglePrepareStatement(&stmt25, "INSERT INTO list25 VALUES(?, ?);");
-	initSinglePrepareStatement(&stmt26, "INSERT INTO list26 VALUES(?, ?);");
-	initSinglePrepareStatement(&stmt27, "INSERT INTO list27 VALUES(?, ?);");
-	initSinglePrepareStatement(&stmt28, "INSERT INTO list28 VALUES(?, ?);");
-	initSinglePrepareStatement(&stmt29, "INSERT INTO list29 VALUES(?, ?);");
-	initSinglePrepareStatement(&stmt30, "INSERT INTO list30 VALUES(?, ?);");
-	initSinglePrepareStatement(&stmt31, "INSERT INTO list31 VALUES(?, ?);");
-	initSinglePrepareStatement(&stmt32, "INSERT INTO list32 VALUES(?, ?);");
-	initSinglePrepareStatement(&stmt33, "INSERT INTO list33 VALUES(?, ?);");
-	initSinglePrepareStatement(&stmt34, "INSERT INTO list34 VALUES(?, ?);");
-	initSinglePrepareStatement(&stmt35, "INSERT INTO list35 VALUES(?, ?);");
-	initSinglePrepareStatement(&stmt36, "INSERT INTO list36 VALUES(?, ?);");
-	initSinglePrepareStatement(&stmt37, "INSERT INTO list37 VALUES(?, ?);");
-	initSinglePrepareStatement(&stmt38, "INSERT INTO list38 VALUES(?, ?);");
-	initSinglePrepareStatement(&stmt39, "INSERT INTO list39 VALUES(?, ?);");
-	initSinglePrepareStatement(&stmt40, "INSERT INTO list40 VALUES(?, ?);");
+inline void volume::initAllPrepareStatement() {
+	initSinglePrepareStatement(&stmt0, "INSERT INTO list0 VALUES(?, ?, ?);");
+	initSinglePrepareStatement(&stmt1, "INSERT INTO list1 VALUES(?, ?, ?);");
+	initSinglePrepareStatement(&stmt2, "INSERT INTO list2 VALUES(?, ?, ?);");
+	initSinglePrepareStatement(&stmt3, "INSERT INTO list3 VALUES(?, ?, ?);");
+	initSinglePrepareStatement(&stmt4, "INSERT INTO list4 VALUES(?, ?, ?);");
+	initSinglePrepareStatement(&stmt5, "INSERT INTO list5 VALUES(?, ?, ?);");
+	initSinglePrepareStatement(&stmt6, "INSERT INTO list6 VALUES(?, ?, ?);");
+	initSinglePrepareStatement(&stmt7, "INSERT INTO list7 VALUES(?, ?, ?);");
+	initSinglePrepareStatement(&stmt8, "INSERT INTO list8 VALUES(?, ?, ?);");
+	initSinglePrepareStatement(&stmt9, "INSERT INTO list9 VALUES(?, ?, ?);");
+	initSinglePrepareStatement(&stmt10, "INSERT INTO list10 VALUES(?, ?, ?);");
+	initSinglePrepareStatement(&stmt11, "INSERT INTO list11 VALUES(?, ?, ?);");
+	initSinglePrepareStatement(&stmt12, "INSERT INTO list12 VALUES(?, ?, ?);");
+	initSinglePrepareStatement(&stmt13, "INSERT INTO list13 VALUES(?, ?, ?);");
+	initSinglePrepareStatement(&stmt14, "INSERT INTO list14 VALUES(?, ?, ?);");
+	initSinglePrepareStatement(&stmt15, "INSERT INTO list15 VALUES(?, ?, ?);");
+	initSinglePrepareStatement(&stmt16, "INSERT INTO list16 VALUES(?, ?, ?);");
+	initSinglePrepareStatement(&stmt17, "INSERT INTO list17 VALUES(?, ?, ?);");
+	initSinglePrepareStatement(&stmt18, "INSERT INTO list18 VALUES(?, ?, ?);");
+	initSinglePrepareStatement(&stmt19, "INSERT INTO list19 VALUES(?, ?, ?);");
+	initSinglePrepareStatement(&stmt20, "INSERT INTO list20 VALUES(?, ?, ?);");
+	initSinglePrepareStatement(&stmt21, "INSERT INTO list21 VALUES(?, ?, ?);");
+	initSinglePrepareStatement(&stmt22, "INSERT INTO list22 VALUES(?, ?, ?);");
+	initSinglePrepareStatement(&stmt23, "INSERT INTO list23 VALUES(?, ?, ?);");
+	initSinglePrepareStatement(&stmt24, "INSERT INTO list24 VALUES(?, ?, ?);");
+	initSinglePrepareStatement(&stmt25, "INSERT INTO list25 VALUES(?, ?, ?);");
+	initSinglePrepareStatement(&stmt26, "INSERT INTO list26 VALUES(?, ?, ?);");
+	initSinglePrepareStatement(&stmt27, "INSERT INTO list27 VALUES(?, ?, ?);");
+	initSinglePrepareStatement(&stmt28, "INSERT INTO list28 VALUES(?, ?, ?);");
+	initSinglePrepareStatement(&stmt29, "INSERT INTO list29 VALUES(?, ?, ?);");
+	initSinglePrepareStatement(&stmt30, "INSERT INTO list30 VALUES(?, ?, ?);");
+	initSinglePrepareStatement(&stmt31, "INSERT INTO list31 VALUES(?, ?, ?);");
+	initSinglePrepareStatement(&stmt32, "INSERT INTO list32 VALUES(?, ?, ?);");
+	initSinglePrepareStatement(&stmt33, "INSERT INTO list33 VALUES(?, ?, ?);");
+	initSinglePrepareStatement(&stmt34, "INSERT INTO list34 VALUES(?, ?, ?);");
+	initSinglePrepareStatement(&stmt35, "INSERT INTO list35 VALUES(?, ?, ?);");
+	initSinglePrepareStatement(&stmt36, "INSERT INTO list36 VALUES(?, ?, ?);");
+	initSinglePrepareStatement(&stmt37, "INSERT INTO list37 VALUES(?, ?, ?);");
+	initSinglePrepareStatement(&stmt38, "INSERT INTO list38 VALUES(?, ?, ?);");
+	initSinglePrepareStatement(&stmt39, "INSERT INTO list39 VALUES(?, ?, ?);");
+	initSinglePrepareStatement(&stmt40, "INSERT INTO list40 VALUES(?, ?, ?);");
 }
 
-inline bool Volume::isIgnore(string path) {
-	if (path.find("$") != string::npos)
+inline bool volume::isIgnore(string path) {
+	if (path.find('$') != string::npos)
 	{
 		return true;
 	}
@@ -308,7 +362,7 @@ inline bool Volume::isIgnore(string path) {
 	return false;
 }
 
-inline void Volume::saveResult(const string& path, const int ascII) const
+inline void volume::saveResult(string path, const int ascII)
 {
 #ifdef TEST
 	cout << "path = " << path << endl;
@@ -444,7 +498,7 @@ inline void Volume::saveResult(const string& path, const int ascII) const
 	}
 }
 
-inline int Volume::getAscIISum(string name) {
+inline int volume::getAscIISum(string name) {
 	auto sum = 0;
 	const auto length = name.length();
 	for (size_t i = 0; i < length; i++)
@@ -457,7 +511,7 @@ inline int Volume::getAscIISum(string name) {
 	return sum;
 }
 
-inline void Volume::getPath(DWORDLONG frn, CString& path) {
+inline void volume::getPath(DWORDLONG frn, CString& path) {
 	Frn_Pfrn_Name_Map::iterator it;
 	const auto end = frnPfrnNameMap.end();
 	while (true) {
@@ -472,7 +526,7 @@ inline void Volume::getPath(DWORDLONG frn, CString& path) {
 	}
 }
 
-inline bool Volume::getHandle() {
+inline bool volume::getHandle() {
 	// 为\\.\C:的形式
 	CString lpFileName(_T("\\\\.\\c:"));
 	lpFileName.SetAt(4, vol);
@@ -494,7 +548,7 @@ inline bool Volume::getHandle() {
 	return false;
 }
 
-inline bool Volume::createUSN() {
+inline bool volume::createUSN() {
 	cujd.MaximumSize = 0; // 0表示使用默认值  
 	cujd.AllocationDelta = 0; // 0表示使用默认值
 
@@ -515,7 +569,7 @@ inline bool Volume::createUSN() {
 }
 
 
-inline bool Volume::getUSNInfo() {
+inline bool volume::getUSNInfo() {
 	DWORD br;
 	if (
 		DeviceIoControl(hVol, // handle to volume
@@ -534,7 +588,7 @@ inline bool Volume::getUSNInfo() {
 	}
 }
 
-inline bool Volume::getUSNJournal() {
+inline bool volume::getUSNJournal() {
 	MFT_ENUM_DATA med;
 	med.StartFileReferenceNumber = 0;
 	med.LowUsn = ujd.FirstUsn;
@@ -550,36 +604,33 @@ inline bool Volume::getUSNJournal() {
 
 	CHAR Buffer[BUF_LEN];
 	DWORD usnDataSize;
-	int USN_counter = 0;
-	wstring fileName;
 
 	while (0 != DeviceIoControl(hVol,
-		FSCTL_ENUM_USN_DATA,
-		&med,
-		sizeof(med),
-		Buffer,
-		BUF_LEN,
-		&usnDataSize,
-		NULL))
+	                            FSCTL_ENUM_USN_DATA,
+	                            &med,
+	                            sizeof(med),
+	                            Buffer,
+	                            BUF_LEN,
+	                            &usnDataSize,
+	                            NULL))
 	{
 
 		DWORD dwRetBytes = usnDataSize - sizeof(USN);
 		// 找到第一个 USN 记录  
-		PUSN_RECORD UsnRecord = reinterpret_cast<PUSN_RECORD>(static_cast<PCHAR>(Buffer) + sizeof(USN));
+		auto UsnRecord = reinterpret_cast<PUSN_RECORD>(static_cast<PCHAR>(Buffer) + sizeof(USN));
 
 		while (dwRetBytes > 0) {
 			// 获取到的信息  	
-			CString CfileName(UsnRecord->FileName, UsnRecord->FileNameLength / 2);
-			fileName = CfileName;
+			const CString CfileName(UsnRecord->FileName, UsnRecord->FileNameLength / 2);
 
 			pfrnName.filename = CfileName;
 			pfrnName.pfrn = UsnRecord->ParentFileReferenceNumber; 
 
 			frnPfrnNameMap[UsnRecord->FileReferenceNumber] = pfrnName;
 			// 获取下一个记录  
-			DWORD recordLen = UsnRecord->RecordLength;
+			auto recordLen = UsnRecord->RecordLength;
 			dwRetBytes -= recordLen;
-			UsnRecord = (PUSN_RECORD)(((PCHAR)UsnRecord) + recordLen);
+			UsnRecord = reinterpret_cast<PUSN_RECORD>(reinterpret_cast<PCHAR>(UsnRecord) + recordLen);
 		}
 		// 获取下一页数据 
 		med.StartFileReferenceNumber = *(USN*)&Buffer;
@@ -587,7 +638,7 @@ inline bool Volume::getUSNJournal() {
 	return true;
 }
 
-inline bool Volume::deleteUSN() const
+inline bool volume::deleteUSN() const
 {
 	DELETE_USN_JOURNAL_DATA dujd;
 	dujd.UsnJournalID = ujd.UsnJournalID;

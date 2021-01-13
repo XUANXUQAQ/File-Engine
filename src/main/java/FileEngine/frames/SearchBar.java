@@ -2895,7 +2895,7 @@ public class SearchBar {
         }
         String sql;
         //为label添加结果
-        sql = "SELECT PATH FROM " + eachColumn + " ORDER BY ASCII " + ";";
+        sql = "SELECT PATH FROM " + eachColumn + " ORDER BY PRIORITY " + ";";
 
         try (PreparedStatement stmt = SQLiteUtil.getPreparedStatement(sql);
              ResultSet resultSet = stmt.executeQuery()) {
