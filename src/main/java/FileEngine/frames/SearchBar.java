@@ -2849,31 +2849,42 @@ public class SearchBar {
         return !(tempResults.contains(result) || listResults.contains(result));
     }
 
-
     /**
      * 检查文件路径是否匹配然后加入到列表
      *
      * @param path        文件路径
+     */
+    private void matchOnCacheAndPriorityFolder(String path, boolean isResultFromCache) {
+        checkIsMatchedAndAddToList(path, false, isResultFromCache);
+    }
+
+    /**
+     * * 检查文件路径是否匹配然后加入到列表
+     * @param path  文件路径
      * @param isPutToTemp 是否放到临时容器，在搜索优先文件夹和cache时为false，其他为true
+     * @param isResultFromCache 是否来自缓存
+     * @return true如果匹配成功
      */
     private boolean checkIsMatchedAndAddToList(String path, boolean isPutToTemp, boolean isResultFromCache) {
         boolean ret = false;
         if (check(path)) {
-            if (isResultNotRepeat(path)) {
-                if (isExist(path)) {
-                    //字符串匹配通过
-                    ret  = true;
-                    if (isPutToTemp) {
+            if (isExist(path)) {
+                //字符串匹配通过
+                ret  = true;
+                if (isPutToTemp) {
+                    if (!tempResults.contains(path)) {
                         tempResultNum.incrementAndGet();
                         tempResults.add(path);
-                    } else {
+                    }
+                } else {
+                    if (!listResults.contains(path)) {
                         listResultsNum.incrementAndGet();
                         listResults.add(path);
                     }
-                } else {
-                    if (isResultFromCache) {
-                        EventUtil.getInstance().putEvent(new DeleteFromCacheEvent(path));
-                    }
+                }
+            } else {
+                if (isResultFromCache) {
+                    EventUtil.getInstance().putEvent(new DeleteFromCacheEvent(path));
                 }
             }
         }
@@ -2895,7 +2906,7 @@ public class SearchBar {
         }
         String sql;
         //为label添加结果
-        sql = "SELECT PATH FROM " + eachColumn + " ORDER BY PRIORITY " + ";";
+        sql = "SELECT PATH FROM " + eachColumn + " ORDER BY PRIORITY desc;";
 
         try (PreparedStatement stmt = SQLiteUtil.getPreparedStatement(sql);
              ResultSet resultSet = stmt.executeQuery()) {
@@ -3260,7 +3271,7 @@ public class SearchBar {
              ResultSet resultSet = statement.executeQuery()) {
             while (resultSet.next()) {
                 String eachCache = resultSet.getString("PATH");
-                checkIsMatchedAndAddToList(eachCache, false, true);
+                matchOnCacheAndPriorityFolder(eachCache, true);
             }
         } catch (SQLException throwables) {
             throwables.printStackTrace();
@@ -3331,7 +3342,7 @@ public class SearchBar {
                 return;
             }
             for (File each : files) {
-                checkIsMatchedAndAddToList(each.getAbsolutePath(), false, false);
+                matchOnCacheAndPriorityFolder(each.getAbsolutePath(), false);
                 if (each.isDirectory()) {
                     listRemain.add(each.getAbsolutePath());
                 }
@@ -3352,7 +3363,7 @@ public class SearchBar {
                             continue;
                         }
                         for (File each : allFiles) {
-                            checkIsMatchedAndAddToList(each.getAbsolutePath(), false, false);
+                            matchOnCacheAndPriorityFolder(each.getAbsolutePath(), false);
                             if (startTime > startSearchTime) {
                                 listRemain.clear();
                                 break;

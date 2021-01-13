@@ -7,10 +7,10 @@ import FileEngine.dllInterface.GetAscII;
 import FileEngine.dllInterface.IsLocalDisk;
 import FileEngine.eventHandler.Event;
 import FileEngine.eventHandler.EventHandler;
-import FileEngine.utils.EventUtil;
 import FileEngine.eventHandler.impl.database.*;
 import FileEngine.eventHandler.impl.taskbar.ShowTaskBarMessageEvent;
 import FileEngine.utils.CachedThreadPoolUtil;
+import FileEngine.utils.EventUtil;
 import FileEngine.utils.TranslateUtil;
 
 import javax.swing.filechooser.FileSystemView;
@@ -346,7 +346,7 @@ public class DatabaseUtil {
 
     private String getSuffixByPath(String path) {
         String name = getFileName(path);
-        return name.substring(name.lastIndexOf('.') + 1);
+        return name.substring(name.lastIndexOf('.') + 1).toLowerCase();
     }
 
     private void addFileToDatabase(String path) {
@@ -747,6 +747,51 @@ public class DatabaseUtil {
                 }
             }
         });
+
+        eventUtil.register(AddToSuffixPriorityMapEvent.class, new EventHandler() {
+            @Override
+            public void todo(Event event) {
+                AddToSuffixPriorityMapEvent event1 = (AddToSuffixPriorityMapEvent) event;
+                String suffix = event1.suffix;
+                int priority = event1.priority;
+                DatabaseUtil databaseUtil = getInstance();
+                databaseUtil.addToCommandSet(
+                        new SQLWithTaskId(SqlTaskIds.UPDATE_SUFFIX,
+                                String.format("INSERT INTO priority VALUES(\"%s\", %d);", suffix, priority)));
+            }
+        });
+
+        eventUtil.register(ClearSuffixPriorityMapEvent.class, new EventHandler() {
+            @Override
+            public void todo(Event event) {
+                DatabaseUtil databaseUtil = getInstance();
+                databaseUtil.addToCommandSet(new SQLWithTaskId(SqlTaskIds.UPDATE_SUFFIX, "DELETE FROM priority;"));
+                databaseUtil.addToCommandSet(
+                        new SQLWithTaskId(SqlTaskIds.UPDATE_SUFFIX, "INSERT INTO priority VALUES(\"defaultPriority\", 0);"));
+            }
+        });
+
+        eventUtil.register(DeleteFromSuffixPriorityMapEvent.class, new EventHandler() {
+            @Override
+            public void todo(Event event) {
+                DeleteFromSuffixPriorityMapEvent delete = (DeleteFromSuffixPriorityMapEvent) event;
+                DatabaseUtil databaseUtil = getInstance();
+                databaseUtil.addToCommandSet(new SQLWithTaskId(SqlTaskIds.UPDATE_SUFFIX,
+                        String.format("DELETE FROM priority where SUFFIX=\"%s\"", delete.suffix)));
+            }
+        });
+
+        eventUtil.register(UpdateSuffixPriorityEvent.class, new EventHandler() {
+            @Override
+            public void todo(Event event) {
+                UpdateSuffixPriorityEvent update = (UpdateSuffixPriorityEvent) event;
+                String origin = update.originSuffix;
+                String newSuffix = update.newSuffix;
+                int newNum = update.newPriority;
+                eventUtil.putEvent(new DeleteFromSuffixPriorityMapEvent(origin));
+                eventUtil.putEvent(new AddToSuffixPriorityMapEvent(newSuffix, newNum));
+            }
+        });
     }
 
     private static class SQLWithTaskId {
@@ -761,7 +806,7 @@ public class DatabaseUtil {
 
     private enum SqlTaskIds {
         DELETE_FROM_LIST, DELETE_FROM_CACHE, INSERT_TO_LIST, INSERT_TO_CACHE,
-        CREATE_INDEX, CREATE_TABLE, DROP_TABLE, DROP_INDEX
+        CREATE_INDEX, CREATE_TABLE, DROP_TABLE, DROP_INDEX, UPDATE_SUFFIX
     }
 }
 

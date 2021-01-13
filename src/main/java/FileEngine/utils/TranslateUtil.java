@@ -41,11 +41,12 @@ public class TranslateUtil {
         if ("English(US)".equals(language)) {
             translated = text;
         } else {
-            translated = translationMap.get(text);
+            translated = translationMap.get(text.toLowerCase());
         }
         if (translated != null) {
             return warpStringIfTooLong(translated);
         } else {
+            System.out.println("无翻译:" + text);
             return text;
         }
     }
@@ -127,12 +128,12 @@ public class TranslateUtil {
                 while ((line = reader.readLine()) != null) {
                     String[] record = RegexUtil.equalSign.split(line);
                     if (IsDebug.isDebug()) {
-                        if (translationMap.get(record[0]) != null) {
+                        if (translationMap.get(record[0].toLowerCase()) != null) {
                             System.err.println("警告：翻译重复   " + record[0]);
                         }
                     }
                     if (record.length == 2) {
-                        translationMap.put(record[0].trim(), record[1].trim());
+                        translationMap.put(record[0].trim().toLowerCase(), record[1].trim());
                     }
                 }
             } catch (IOException ignored) {

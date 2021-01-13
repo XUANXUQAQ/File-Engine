@@ -7,10 +7,8 @@ import FileEngine.configs.Enums;
 import FileEngine.eventHandler.Event;
 import FileEngine.eventHandler.EventHandler;
 import FileEngine.eventHandler.impl.SetSwingLaf;
-import FileEngine.eventHandler.impl.configs.SaveConfigsEvent;
-import FileEngine.eventHandler.impl.configs.SetConfigsEvent;
-import FileEngine.eventHandler.impl.database.DeleteFromCacheEvent;
-import FileEngine.eventHandler.impl.database.OptimiseDatabaseEvent;
+import FileEngine.eventHandler.impl.configs.*;
+import FileEngine.eventHandler.impl.database.*;
 import FileEngine.eventHandler.impl.download.StartDownloadEvent;
 import FileEngine.eventHandler.impl.download.StopDownloadEvent;
 import FileEngine.eventHandler.impl.frame.pluginMarket.ShowPluginMarket;
@@ -32,6 +30,7 @@ import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.filechooser.FileSystemView;
+import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
@@ -39,13 +38,12 @@ import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
+import java.sql.SQLException;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 
@@ -62,6 +60,7 @@ public class SettingsFrame {
     private static final AllConfigs allConfigs = AllConfigs.getInstance();
     private static final CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
     private final HashMap<String, Integer> tabComponentIndexMap = new HashMap<>();
+    private final HashMap<String, Integer> suffixMap = new HashMap<>();
     private JTextField textFieldUpdateInterval;
     private JTextField textFieldCacheNum;
     private JTextArea textAreaIgnorePath;
@@ -242,6 +241,12 @@ public class SettingsFrame {
     private JLabel placeholderSearch2;
     private JLabel labelTinyPinyin;
     private JLabel labelLombok;
+    private JPanel tabModifyPriority;
+    private JScrollPane suffixScrollpane;
+    private JButton buttonAddSuffix;
+    private JButton buttonDeleteSuffix;
+    private JTable tableSuffix;
+    private JButton buttonDeleteAllSuffix;
     private JScrollPane tabGeneralScrollpane;
     private JScrollPane tabGeneralScrollPane;
     private JPanel tabGeneralPane;
@@ -513,7 +518,7 @@ public class SettingsFrame {
                     } else {
                         throw new IOException("failed");
                     }
-                } catch (IOException | InterruptedException e1) {
+                } catch (IOException e1) {
                     JOptionPane.showMessageDialog(frame, translateUtil.getTranslation("Check update failed"));
                     return;
                 }
@@ -962,6 +967,234 @@ public class SettingsFrame {
         });
     }
 
+    private void addButtonDeleteAllSuffixListener() {
+        buttonDeleteAllSuffix.addActionListener(e -> {
+            int ret = JOptionPane.showConfirmDialog(
+                    frame,
+                    translateUtil.getTranslation("Are you sure to delete all the suffixes") + "?");
+            if (ret == JOptionPane.YES_OPTION) {
+                suffixMap.clear();
+                suffixMap.put("defaultPriority", 0);
+                eventUtil.putEvent(new ClearSuffixPriorityMapEvent());
+                refreshPriorityTable();
+            }
+        });
+    }
+
+    private void refreshPriorityTable() {
+        SwingUtilities.invokeLater(this::setTableGui);
+    }
+
+    private boolean isPriorityRepeat(int num) {
+        for (int each : suffixMap.values()) {
+            if (each == num) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isSuffixRepeat(String suffix) {
+        return suffixMap.containsKey(suffix);
+    }
+
+    private boolean checkSuffixAndPriority(String suffix, String priority, StringBuilder errMsg, boolean isSuffixChanged, boolean isPriorityChanged) {
+        if (isSuffixChanged) {
+            if (isSuffixRepeat(suffix)) {
+                errMsg.append(translateUtil.getTranslation("Duplicate suffix, please check")).append("\n");
+            }
+        }
+        if (isPriorityChanged){
+            try {
+                int _p = Integer.parseInt(priority);
+                if (_p <= 0) {
+                    errMsg.append(translateUtil.getTranslation("Priority num must be positive")).append("\n");
+                }
+                if (isPriorityRepeat(_p)) {
+                    errMsg.append(translateUtil.getTranslation("Duplicate priority num, please check")).append("\n");
+                }
+            } catch (NumberFormatException e) {
+                errMsg.append(translateUtil.getTranslation("What you entered is not a number, please try again")).append("\n");
+            }
+        }
+        return errMsg.toString().isEmpty();
+    }
+
+    private void addTableModifySuffixListener() {
+        final String[] lastSuffix = new String[1];
+        AtomicInteger lastNum = new AtomicInteger();
+        AtomicBoolean dontTrigger = new AtomicBoolean(false);
+
+        DefaultTableModel model = new DefaultTableModel() {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return row != 0;
+            }
+        };
+        tableSuffix.setModel(model);
+        tableSuffix.getTableHeader().setReorderingAllowed(false);
+
+        tableSuffix.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                //保存还未被修改之前的值
+                int row = tableSuffix.getSelectedRow();
+                int column = tableSuffix.getSelectedColumn();
+                if (row != -1 && column != -1) {
+                    lastSuffix[0] = String.valueOf(tableSuffix.getValueAt(row, 0));
+                    lastNum.set(Integer.parseInt(String.valueOf(tableSuffix.getValueAt(row, 1))));
+                }
+            }
+        });
+
+        tableSuffix.getModel().addTableModelListener(e -> {
+            if (dontTrigger.get()) {
+                return;
+            }
+            int currentRow = tableSuffix.getSelectedRow();
+            if (currentRow == -1) {
+                return;
+            }
+            class restoreUtil {
+                void doRestoreNum() {
+                    // 恢复
+                    SwingUtilities.invokeLater(() -> {
+                        dontTrigger.set(true);
+                        tableSuffix.setValueAt(lastNum.get(), currentRow, 1);
+                        dontTrigger.set(false);
+                    });
+                }
+                void doRestoreSuffix() {
+                    SwingUtilities.invokeLater(() -> {
+                        dontTrigger.set(true);
+                        tableSuffix.setValueAt(lastSuffix[0], currentRow, 0);
+                        dontTrigger.set(false);
+                    });
+                }
+            }
+            restoreUtil util = new restoreUtil();
+
+            int column = tableSuffix.getSelectedColumn();
+            if (column == 0) {
+                //当前修改的是后缀
+                String suffix = String.valueOf(tableSuffix.getValueAt(currentRow, 0));
+                if (lastSuffix[0].equals(suffix)) {
+                    return;
+                }
+                String priorityNum = String.valueOf(tableSuffix.getValueAt(currentRow, 1));
+                StringBuilder errMsg = new StringBuilder();
+                if (checkSuffixAndPriority(suffix, priorityNum, errMsg, true, false)) {
+                    int num = Integer.parseInt(priorityNum);
+                    eventUtil.putEvent(new UpdateSuffixPriorityEvent(
+                            lastSuffix[0],
+                            suffix,
+                            num
+                            )
+                    );
+                    suffixMap.remove(lastSuffix[0]);
+                    suffixMap.put(suffix, num);
+                    refreshPriorityTable();
+                } else {
+                    // 恢复
+                    util.doRestoreSuffix();
+                    JOptionPane.showMessageDialog(frame, errMsg.toString());
+                }
+            } else {
+                //当前修改的是优先级
+                String priorityNum = String.valueOf(tableSuffix.getValueAt(currentRow, 1));
+                if (String.valueOf(lastNum.get()).equals(priorityNum)) {
+                    return;
+                }
+                String suffix = String.valueOf(tableSuffix.getValueAt(currentRow, 0));
+                StringBuilder errMsg = new StringBuilder();
+                if (checkSuffixAndPriority(suffix, priorityNum, errMsg, false, true)) {
+                    int num = Integer.parseInt(priorityNum);
+                    eventUtil.putEvent(new UpdateSuffixPriorityEvent(
+                            lastSuffix[0],
+                            suffix,
+                            num
+                            )
+                    );
+                    suffixMap.remove(lastSuffix[0]);
+                    suffixMap.put(suffix, num);
+                    refreshPriorityTable();
+                } else {
+                    util.doRestoreNum();
+                    JOptionPane.showMessageDialog(frame, errMsg.toString());
+                }
+            }
+        });
+    }
+
+    private String getCurrentSelectedTableVal() {
+        int row = tableSuffix.getSelectedRow();
+        int column = tableSuffix.getSelectedColumn();
+        if (row == -1 || column == -1) {
+            return "";
+        }
+        return String.valueOf(tableSuffix.getValueAt(row, 0));
+    }
+
+    private void addButtonDeleteSuffixListener() {
+        buttonDeleteSuffix.addActionListener(e -> {
+            String current = getCurrentSelectedTableVal();
+            if (current.isEmpty() || "defaultPriority".equals(current)) {
+                return;
+            }
+            int ret = JOptionPane.showConfirmDialog(
+                    frame,
+                    translateUtil.getTranslation("Do you sure want to delete this suffix") + "  --  " + current + "?");
+            if (ret == JOptionPane.YES_OPTION) {
+                int rowNum = tableSuffix.getSelectedRow();
+                if (rowNum != -1) {
+                    String suffix = (String) tableSuffix.getValueAt(rowNum, 0);
+                    suffixMap.remove(suffix);
+                    eventUtil.putEvent(new DeleteFromSuffixPriorityMapEvent(suffix));
+                    refreshPriorityTable();
+                }
+            }
+        });
+    }
+
+    private void addButtonAddSuffixListener() {
+        JPanel panel = new JPanel();
+        JLabel labelSuffix = new JLabel(translateUtil.getTranslation("Suffix") + ":");
+        JLabel labelNum = new JLabel(translateUtil.getTranslation("Priority num") + ":");
+        JTextField suffixName = new JTextField();
+        JTextField priorityNum = new JTextField();
+
+        Box suffixBox = new Box(BoxLayout.X_AXIS);
+        suffixBox.add(labelSuffix);
+        suffixBox.add(suffixName);
+
+        Box numBox = new Box(BoxLayout.X_AXIS);
+        numBox.add(labelNum);
+        numBox.add(priorityNum);
+
+        panel.add(suffixBox);
+        panel.add(numBox);
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        buttonAddSuffix.addActionListener(e -> {
+            int ret = JOptionPane.showConfirmDialog(frame,
+                    panel,
+                    translateUtil.getTranslation("Add"),
+                    JOptionPane.YES_NO_OPTION);
+            if (ret == JOptionPane.YES_OPTION) {
+                String suffix = suffixName.getText();
+                String priorityNumTmp = priorityNum.getText();
+                StringBuilder err = new StringBuilder();
+                if (checkSuffixAndPriority(suffix, priorityNumTmp, err, true, true)) {
+                    int num = Integer.parseInt(priorityNumTmp);
+                    suffixMap.put(suffix, num);
+                    eventUtil.putEvent(new AddToSuffixPriorityMapEvent(suffix, num));
+                    refreshPriorityTable();
+                } else {
+                    JOptionPane.showMessageDialog(frame, err.toString());
+                }
+            }
+        });
+    }
+
     private void addButtonPluginUpdateCheckListener() {
         AtomicLong startCheckTime = new AtomicLong(0L);
         AtomicBoolean isVersionLatest = new AtomicBoolean(true);
@@ -1144,6 +1377,34 @@ public class SettingsFrame {
         borderColorChooser.setForeground(tmp_borderColor);
     }
 
+    private String getSuffixByValue(HashMap<String, Integer> suffixPriorityMap, int val) {
+        for (String each : suffixPriorityMap.keySet()) {
+            if (suffixPriorityMap.get(each) == val) {
+                return each;
+            }
+        }
+        return "";
+    }
+
+    private void setTableGui() {
+        tableSuffix.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        DefaultTableModel tableModel=(DefaultTableModel) tableSuffix.getModel();    //获得表格模型
+        tableModel.setRowCount(0);
+        tableModel.setColumnIdentifiers(new String[] {translateUtil.getTranslation("suffix"), translateUtil.getTranslation("priority")});
+        LinkedList<Integer> tmpKeySet = new LinkedList<>(suffixMap.values());
+        tmpKeySet.sort(Integer::compare);
+        for (int each : tmpKeySet) {
+            String suffix = getSuffixByValue(suffixMap, each);
+            if (suffix.isEmpty()) {
+                continue;
+            }
+            String[] data = new String[2];
+            data[0] = suffix;
+            data[1] = String.valueOf(each);
+            tableModel.addRow(data);
+        }
+    }
+
     private void setCheckBoxGui() {
         checkBoxLoseFocus.setSelected(allConfigs.isLoseFocusClose());
         checkBoxAddToStartup.setSelected(allConfigs.hasStartup());
@@ -1166,6 +1427,17 @@ public class SettingsFrame {
         listSwingThemes.setSelectedValue(allConfigs.getSwingTheme(), true);
     }
 
+    private void initSuffixMap() {
+        try (PreparedStatement pStmt = SQLiteUtil.getPreparedStatement("SELECT * FROM priority;")) {
+            ResultSet resultSet = pStmt.executeQuery();
+            while (resultSet.next()) {
+                suffixMap.put(resultSet.getString("SUFFIX"), resultSet.getInt("PRIORITY"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
     private void initGUI() {
         //设置窗口显示
         setLabelGui();
@@ -1173,6 +1445,7 @@ public class SettingsFrame {
         setColorChooserGui();
         setTextFieldAndTextAreaGui();
         setCheckBoxGui();
+        setTableGui();
 
         buttonUpdatePlugin.setVisible(false);
 
@@ -1221,17 +1494,31 @@ public class SettingsFrame {
     }
 
     private void initTabIndexMap() {
-        tabComponentIndexMap.put("tabGeneral", 0);
-        tabComponentIndexMap.put("tabSearchSettings", 1);
-        tabComponentIndexMap.put("tabSearchBarSettings", 2);
-        tabComponentIndexMap.put("tabCache", 3);
-        tabComponentIndexMap.put("tabProxy", 4);
-        tabComponentIndexMap.put("tabPlugin", 5);
-        tabComponentIndexMap.put("tabHotKey", 6);
-        tabComponentIndexMap.put("tabLanguage", 7);
-        tabComponentIndexMap.put("tabCommands", 8);
-        tabComponentIndexMap.put("tabColorSettings", 9);
-        tabComponentIndexMap.put("tabAbout", 10);
+        //todo 添加新tab后在这里修改index
+        int count = 0;
+        tabComponentIndexMap.put("tabGeneral", count);
+        count++;
+        tabComponentIndexMap.put("tabSearchSettings", count);
+        count++;
+        tabComponentIndexMap.put("tabSearchBarSettings", count);
+        count++;
+        tabComponentIndexMap.put("tabModifyPriority", count);
+        count++;
+        tabComponentIndexMap.put("tabCache", count);
+        count++;
+        tabComponentIndexMap.put("tabProxy", count);
+        count++;
+        tabComponentIndexMap.put("tabPlugin", count);
+        count++;
+        tabComponentIndexMap.put("tabHotKey", count);
+        count++;
+        tabComponentIndexMap.put("tabLanguage", count);
+        count++;
+        tabComponentIndexMap.put("tabCommands", count);
+        count++;
+        tabComponentIndexMap.put("tabColorSettings", count);
+        count++;
+        tabComponentIndexMap.put("tabAbout", count);
     }
 
     private SettingsFrame() {
@@ -1261,6 +1548,8 @@ public class SettingsFrame {
 
         initCacheArray();
 
+        initSuffixMap();
+
         translate();
 
         addListeners();
@@ -1289,6 +1578,10 @@ public class SettingsFrame {
         addButtonPluginUpdateCheckListener();
         addButtonViewPluginMarketListener();
         addSwingThemePreviewListener();
+        addButtonAddSuffixListener();
+        addButtonDeleteSuffixListener();
+        addTableModifySuffixListener();
+        addButtonDeleteAllSuffixListener();
         addPluginOfficialSiteListener();
         addButtonVacuumListener();
         addButtonProxyListener();
@@ -1331,6 +1624,7 @@ public class SettingsFrame {
         tabbedPane.setTitleAt(getTabIndex("tabLanguage"), translateUtil.getTranslation("Language settings"));
         tabbedPane.setTitleAt(getTabIndex("tabCommands"), translateUtil.getTranslation("My commands"));
         tabbedPane.setTitleAt(getTabIndex("tabColorSettings"), translateUtil.getTranslation("Color settings"));
+        tabbedPane.setTitleAt(getTabIndex("tabModifyPriority"), translateUtil.getTranslation("Modify suffix priority"));
         tabbedPane.setTitleAt(getTabIndex("tabAbout"), translateUtil.getTranslation("About"));
     }
 
@@ -1407,6 +1701,9 @@ public class SettingsFrame {
         buttonVacuum.setText(translateUtil.getTranslation("Optimize database"));
         buttonPreviewColor.setText(translateUtil.getTranslation("Preview"));
         buttonClosePreview.setText(translateUtil.getTranslation("Close preview window"));
+        buttonAddSuffix.setText(translateUtil.getTranslation("Add"));
+        buttonDeleteSuffix.setText(translateUtil.getTranslation("Delete"));
+        buttonDeleteAllSuffix.setText(translateUtil.getTranslation("Delete all"));
     }
 
     private void translateRadioButtons() {
@@ -1492,7 +1789,7 @@ public class SettingsFrame {
         tabbedPane.setSelectedIndex(index);
         frame.setLocationRelativeTo(null);
         SwingUtilities.invokeLater(() -> frame.setVisible(true));
-        cachedThreadPoolUtil.executeTask(() -> {
+        cachedThreadPoolUtil.executeTask(() -> SwingUtilities.invokeLater(() -> {
             LoadingPanel loadingPanel = new LoadingPanel("loading...");
             loadingPanel.setSize(width, height);
             frame.setGlassPane(loadingPanel);
@@ -1501,7 +1798,7 @@ public class SettingsFrame {
             eventUtil.putEvent(setSwing);
             eventUtil.waitForEvent(setSwing);
             loadingPanel.stop();
-        });
+        }));
     }
 
     private void checkUpdateTimeLimit(StringBuilder strBuilder) {

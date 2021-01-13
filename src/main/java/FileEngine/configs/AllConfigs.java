@@ -571,7 +571,7 @@ public class AllConfigs {
         return getUpdateUrlFromMap().fileEngineVersionUrl;
     }
 
-    public JSONObject getUpdateInfo() throws IOException, InterruptedException {
+    public JSONObject getUpdateInfo() throws IOException {
         DownloadUtil downloadUtil = DownloadUtil.getInstance();
         String url = getUpdateUrl();
         DownloadManager downloadManager = new DownloadManager(

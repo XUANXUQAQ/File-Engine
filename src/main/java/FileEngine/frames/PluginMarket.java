@@ -314,7 +314,7 @@ public class PluginMarket {
                             return;
                         }
                         labelIcon.setIcon(icon);
-                    } catch (IOException | InterruptedException ignored) {
+                    } catch (IOException ignored) {
                     }
 
                 });
@@ -341,7 +341,7 @@ public class PluginMarket {
         });
     }
 
-    private ImageIcon getImageByUrl(String url, String pluginName) throws InterruptedException, IOException {
+    private ImageIcon getImageByUrl(String url, String pluginName) throws IOException {
         File icon = new File("tmp/$$" + pluginName);
         DownloadUtil downloadUtil = DownloadUtil.getInstance();
         DownloadManager downloadManager = new DownloadManager(
@@ -364,14 +364,14 @@ public class PluginMarket {
         if (infoUrl != null) {
             try {
                 return getPluginInfo(infoUrl, pluginName + ".json");
-            } catch (IOException | InterruptedException e) {
+            } catch (IOException e) {
                 e.printStackTrace();
             }
         }
         return null;
     }
 
-    private static JSONObject getPluginInfo(String url, String saveFileName) throws IOException, InterruptedException {
+    private static JSONObject getPluginInfo(String url, String saveFileName) throws IOException {
         DownloadUtil downloadUtil = DownloadUtil.getInstance();
         DownloadManager downloadManager = new DownloadManager(
                 url,
