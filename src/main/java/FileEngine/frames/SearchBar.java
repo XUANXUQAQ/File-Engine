@@ -88,7 +88,7 @@ public class SearchBar {
     private final int iconSideLength;
     private volatile long visibleStartTime = 0;  //记录窗口开始可见的事件，窗口默认最短可见时间0.5秒，防止窗口快速闪烁
     private volatile long firstResultStartShowingTime = 0;  //记录开始显示结果的时间，用于防止刚开始移动到鼠标导致误触
-    private final ConcurrentSkipListSet<String> tempResults;  //在优先文件夹和数据库cache未搜索完时暂时保存结果，搜索完后会立即被转移到listResults
+    private final ConcurrentLinkedQueue<String> tempResults;  //在优先文件夹和数据库cache未搜索完时暂时保存结果，搜索完后会立即被转移到listResults
     private final ConcurrentLinkedQueue<String> commandQueue;  //保存需要被执行的sql语句
     private final CopyOnWriteArrayList<String> listResults;  //保存从数据库中找出符合条件的记录（文件路径）
     private final Set<TableNameWeightInfo> tableSet;    //保存从0-40数据库的表，使用频率和名字对应，使经常使用的表最快被搜索到
@@ -117,7 +117,7 @@ public class SearchBar {
 
     private SearchBar() {
         listResults = new CopyOnWriteArrayList<>();
-        tempResults = new ConcurrentSkipListSet<>();
+        tempResults = new ConcurrentLinkedQueue<>();
         commandQueue = new ConcurrentLinkedQueue<>();
         tableSet = ConcurrentHashMap.newKeySet();
         searchBar = new JFrame();
@@ -2477,16 +2477,16 @@ public class SearchBar {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             //合并搜索结果线程
             try {
+                String record;
                 while (isVisible()) {
                     if (isCacheAndPrioritySearched.get()) {
-                        for (String record : tempResults) {
+                        while ((record = tempResults.poll()) != null) {
                             if (!listResults.contains(record)) {
                                 tempResultNum.decrementAndGet();
                                 listResultsNum.incrementAndGet();
                                 listResults.add(record);
                             }
                         }
-                        tempResults.clear();
                     }
                     TimeUnit.MILLISECONDS.sleep(20);
                 }
