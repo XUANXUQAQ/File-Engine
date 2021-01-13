@@ -202,28 +202,6 @@ public class SearchBar {
         textField.setBackground(Color.WHITE);
         textField.setLocation(3, 0);
         textField.setOpaque(true);
-        textField.addFocusListener(new FocusListener() {
-            @Override
-            public void focusGained(FocusEvent e) {
-                if (System.currentTimeMillis() - visibleStartTime < 1000 && showingMode == Enums.ShowingSearchBarMode.EXPLORER_ATTACH) {
-                    //在explorer attach模式下 1s内窗口就获取到了焦点
-                    searchBar.transferFocusBackward();
-                }
-            }
-
-            @Override
-            public void focusLost(FocusEvent e) {
-                if (System.currentTimeMillis() - visibleStartTime > 500) {
-                    if (showingMode == Enums.ShowingSearchBarMode.NORMAL_SHOWING && allConfigs.isLoseFocusClose()) {
-                        if (!(isPreviewMode.get() || isTutorialMode.get())) {
-                            closeSearchBar();
-                        }
-                    } else if (showingMode == Enums.ShowingSearchBarMode.EXPLORER_ATTACH) {
-                        closeWithoutHideSearchBar();
-                    }
-                }
-            }
-        });
 
         //panel
         panel.setLayout(null);
@@ -257,6 +235,8 @@ public class SearchBar {
 
         //添加textfield对键盘的响应
         addTextFieldKeyListener();
+
+        addTextFieldFocusListener();
     }
 
     public static SearchBar getInstance() {
@@ -268,6 +248,32 @@ public class SearchBar {
             }
         }
         return instance;
+    }
+
+    private void addTextFieldFocusListener() {
+        AllConfigs allConfigs = AllConfigs.getInstance();
+        textField.addFocusListener(new FocusListener() {
+            @Override
+            public void focusGained(FocusEvent e) {
+                if (System.currentTimeMillis() - visibleStartTime < 1000 && showingMode == Enums.ShowingSearchBarMode.EXPLORER_ATTACH) {
+                    //在explorer attach模式下 1s内窗口就获取到了焦点
+                    searchBar.transferFocusBackward();
+                }
+            }
+
+            @Override
+            public void focusLost(FocusEvent e) {
+                if (System.currentTimeMillis() - visibleStartTime > 500) {
+                    if (showingMode == Enums.ShowingSearchBarMode.NORMAL_SHOWING && allConfigs.isLoseFocusClose()) {
+                        if (!(isPreviewMode.get() || isTutorialMode.get())) {
+                            closeSearchBar();
+                        }
+                    } else if (showingMode == Enums.ShowingSearchBarMode.EXPLORER_ATTACH) {
+                        closeWithoutHideSearchBar();
+                    }
+                }
+            }
+        });
     }
 
     private void initTableMap() {

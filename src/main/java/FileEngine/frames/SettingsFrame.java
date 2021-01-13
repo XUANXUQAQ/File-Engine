@@ -1788,17 +1788,11 @@ public class SettingsFrame {
         frame.setResizable(false);
         tabbedPane.setSelectedIndex(index);
         frame.setLocationRelativeTo(null);
+        //使swing风格生效
+        SetSwingLaf event = new SetSwingLaf("current");
+        eventUtil.putEvent(event);
+        eventUtil.waitForEvent(event);
         SwingUtilities.invokeLater(() -> frame.setVisible(true));
-        cachedThreadPoolUtil.executeTask(() -> SwingUtilities.invokeLater(() -> {
-            LoadingPanel loadingPanel = new LoadingPanel("loading...");
-            loadingPanel.setSize(width, height);
-            frame.setGlassPane(loadingPanel);
-            loadingPanel.start();
-            Event setSwing = new SetSwingLaf("current");
-            eventUtil.putEvent(setSwing);
-            eventUtil.waitForEvent(setSwing);
-            loadingPanel.stop();
-        }));
     }
 
     private void checkUpdateTimeLimit(StringBuilder strBuilder) {
