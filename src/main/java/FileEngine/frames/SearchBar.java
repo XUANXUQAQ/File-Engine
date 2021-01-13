@@ -2195,8 +2195,6 @@ public class SearchBar {
     }
 
     private void initThreadPool() {
-        mergeTempQueueAndListResultsThread();
-
         lockMouseMotionThread();
 
         tryToShowRecordsThread();
@@ -2475,12 +2473,11 @@ public class SearchBar {
         }
     }
 
-    private void mergeTempQueueAndListResultsThread() {
+    private void startMergeTempQueueAndListResultsThread(AtomicBoolean isCreated) {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             //合并搜索结果线程
             try {
-                EventUtil eventUtil = EventUtil.getInstance();
-                while (eventUtil.isNotMainExit()) {
+                while (isVisible()) {
                     if (isCacheAndPrioritySearched.get()) {
                         for (String record : tempResults) {
                             if (!listResults.contains(record)) {
@@ -2493,6 +2490,7 @@ public class SearchBar {
                     }
                     TimeUnit.MILLISECONDS.sleep(20);
                 }
+                isCreated.set(false);
             } catch (InterruptedException ignored) {
             }
         });
@@ -2642,7 +2640,12 @@ public class SearchBar {
         }
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             String column;
+            AtomicBoolean isMergeThreadCreated = new AtomicBoolean(false);
             while (!commandQueue.isEmpty()) {
+                if (!isMergeThreadCreated.get()) {
+                    isMergeThreadCreated.set(true);
+                    startMergeTempQueueAndListResultsThread(isMergeThreadCreated);
+                }
                 column = commandQueue.poll();
                 if (
                         runningMode == Enums.RunningMode.NORMAL_MODE &&

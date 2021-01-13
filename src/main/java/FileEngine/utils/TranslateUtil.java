@@ -16,7 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class TranslateUtil {
     private static volatile TranslateUtil INSTANCE = null;
 
-    private volatile static @Getter String language;
+    private volatile @Getter String language;
     private final ConcurrentHashMap<String, String> translationMap = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, String> fileMap = new ConcurrentHashMap<>();
     private Font[] fList;
@@ -160,7 +160,7 @@ public class TranslateUtil {
     }
 
     public void setLanguage(String language) {
-        TranslateUtil.language = language;
+        this.language = language;
         setUIFont();
         initTranslations();
     }
