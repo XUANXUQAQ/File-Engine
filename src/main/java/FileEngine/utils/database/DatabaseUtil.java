@@ -17,6 +17,7 @@ import javax.swing.filechooser.FileSystemView;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
@@ -276,139 +277,15 @@ public class DatabaseUtil {
         }
     }
 
-    private void addAddSqlCommandByAscii(int asciiSum, String path) {
-        String command;
+    private void addAddSqlCommandByAscii(int asciiSum, String path, int priority) {
+        String commandTemplate = "INSERT OR IGNORE INTO %s VALUES(%d, \"%s\", %d)";
         int asciiGroup = asciiSum / 100;
-        switch (asciiGroup) {
-            case 0:
-                command = "INSERT OR IGNORE INTO list0 VALUES(" + asciiSum + ",\"" + path + "\");";
-                break;
-            case 1:
-                command = "INSERT OR IGNORE INTO list1 VALUES(" + asciiSum + ",\"" + path + "\");";
-                break;
-            case 2:
-                command = "INSERT OR IGNORE INTO list2 VALUES(" + asciiSum + ",\"" + path + "\");";
-                break;
-            case 3:
-                command = "INSERT OR IGNORE INTO list3 VALUES(" + asciiSum + ",\"" + path + "\");";
-                break;
-            case 4:
-                command = "INSERT OR IGNORE INTO list4 VALUES(" + asciiSum + ",\"" + path + "\");";
-                break;
-            case 5:
-                command = "INSERT OR IGNORE INTO list5 VALUES(" + asciiSum + ",\"" + path + "\");";
-                break;
-            case 6:
-                command = "INSERT OR IGNORE INTO list6 VALUES(" + asciiSum + ",\"" + path + "\");";
-                break;
-            case 7:
-                command = "INSERT OR IGNORE INTO list7 VALUES(" + asciiSum + ",\"" + path + "\");";
-                break;
-            case 8:
-                command = "INSERT OR IGNORE INTO list8 VALUES(" + asciiSum + ",\"" + path + "\");";
-                break;
-            case 9:
-                command = "INSERT OR IGNORE INTO list9 VALUES(" + asciiSum + ",\"" + path + "\");";
-                break;
-            case 10:
-                command = "INSERT OR IGNORE INTO list10 VALUES(" + asciiSum + ",\"" + path + "\");";
-                break;
-            case 11:
-                command = "INSERT OR IGNORE INTO list11 VALUES(" + asciiSum + ",\"" + path + "\");";
-                break;
-            case 12:
-                command = "INSERT OR IGNORE INTO list12 VALUES(" + asciiSum + ",\"" + path + "\");";
-                break;
-            case 13:
-                command = "INSERT OR IGNORE INTO list13 VALUES(" + asciiSum + ",\"" + path + "\");";
-                break;
-            case 14:
-                command = "INSERT OR IGNORE INTO list14 VALUES(" + asciiSum + ",\"" + path + "\");";
-                break;
-            case 15:
-                command = "INSERT OR IGNORE INTO list15 VALUES(" + asciiSum + ",\"" + path + "\");";
-                break;
-            case 16:
-                command = "INSERT OR IGNORE INTO list16 VALUES(" + asciiSum + ",\"" + path + "\");";
-                break;
-            case 17:
-                command = "INSERT OR IGNORE INTO list17 VALUES(" + asciiSum + ",\"" + path + "\");";
-                break;
-            case 18:
-                command = "INSERT OR IGNORE INTO list18 VALUES(" + asciiSum + ",\"" + path + "\");";
-                break;
-            case 19:
-                command = "INSERT OR IGNORE INTO list19 VALUES(" + asciiSum + ",\"" + path + "\");";
-                break;
-            case 20:
-                command = "INSERT OR IGNORE INTO list20 VALUES(" + asciiSum + ",\"" + path + "\");";
-                break;
-            case 21:
-                command = "INSERT OR IGNORE INTO list21 VALUES(" + asciiSum + ",\"" + path + "\");";
-                break;
-            case 22:
-                command = "INSERT OR IGNORE INTO list22 VALUES(" + asciiSum + ",\"" + path + "\");";
-                break;
-            case 23:
-                command = "INSERT OR IGNORE INTO list23 VALUES(" + asciiSum + ",\"" + path + "\");";
-                break;
-            case 24:
-                command = "INSERT OR IGNORE INTO list24 VALUES(" + asciiSum + ",\"" + path + "\");";
-                break;
-            case 25:
-                command = "INSERT OR IGNORE INTO list25 VALUES(" + asciiSum + ",\"" + path + "\");";
-                break;
-            case 26:
-                command = "INSERT OR IGNORE INTO list26 VALUES(" + asciiSum + ",\"" + path + "\");";
-                break;
-            case 27:
-                command = "INSERT OR IGNORE INTO list27 VALUES(" + asciiSum + ",\"" + path + "\");";
-                break;
-            case 28:
-                command = "INSERT OR IGNORE INTO list28 VALUES(" + asciiSum + ",\"" + path + "\");";
-                break;
-            case 29:
-                command = "INSERT OR IGNORE INTO list29 VALUES(" + asciiSum + ",\"" + path + "\");";
-                break;
-            case 30:
-                command = "INSERT OR IGNORE INTO list30 VALUES(" + asciiSum + ",\"" + path + "\");";
-                break;
-            case 31:
-                command = "INSERT OR IGNORE INTO list31 VALUES(" + asciiSum + ",\"" + path + "\");";
-                break;
-            case 32:
-                command = "INSERT OR IGNORE INTO list32 VALUES(" + asciiSum + ",\"" + path + "\");";
-                break;
-            case 33:
-                command = "INSERT OR IGNORE INTO list33 VALUES(" + asciiSum + ",\"" + path + "\");";
-                break;
-            case 34:
-                command = "INSERT OR IGNORE INTO list34 VALUES(" + asciiSum + ",\"" + path + "\");";
-                break;
-            case 35:
-                command = "INSERT OR IGNORE INTO list35 VALUES(" + asciiSum + ",\"" + path + "\");";
-                break;
-            case 36:
-                command = "INSERT OR IGNORE INTO list36 VALUES(" + asciiSum + ",\"" + path + "\");";
-                break;
-            case 37:
-                command = "INSERT OR IGNORE INTO list37 VALUES(" + asciiSum + ",\"" + path + "\");";
-                break;
-            case 38:
-                command = "INSERT OR IGNORE INTO list38 VALUES(" + asciiSum + ",\"" + path + "\");";
-                break;
-            case 39:
-                command = "INSERT OR IGNORE INTO list39 VALUES(" + asciiSum + ",\"" + path + "\");";
-                break;
-            case 40:
-                command = "INSERT OR IGNORE INTO list40 VALUES(" + asciiSum + ",\"" + path + "\");";
-                break;
-            default:
-                command = null;
-                break;
-        }
-        if (command != null && isCommandNotRepeat(command)) {
-            addToCommandSet(new SQLWithTaskId(SqlTaskIds.INSERT_TO_LIST, command));
+        if (asciiGroup <= 40) {
+            String columnName = "list" + asciiGroup;
+            String command = String.format(commandTemplate, columnName, asciiSum, path, priority);
+            if (command != null && isCommandNotRepeat(command)) {
+                addToCommandSet(new SQLWithTaskId(SqlTaskIds.INSERT_TO_LIST, command));
+            }
         }
     }
 
@@ -452,9 +329,29 @@ public class DatabaseUtil {
         }
     }
 
+    private int getPriorityBySuffix(String suffix) {
+        String sqlTemplate = "select PRIORITY from priority where suffix=\"%s\"";
+        String sql = String.format(sqlTemplate, suffix);
+        try (PreparedStatement pStmt = SQLiteUtil.getPreparedStatement(sql)) {
+            ResultSet resultSet = pStmt.executeQuery();
+            if (resultSet.next()) {
+                String priority = resultSet.getString("PRIORITY");
+                return Integer.parseInt(priority);
+            }
+        } catch (Exception throwables) {
+            throwables.printStackTrace();
+        }
+        return getPriorityBySuffix("defaultPriority");
+    }
+
+    private String getSuffixByPath(String path) {
+        String name = getFileName(path);
+        return name.substring(name.lastIndexOf('.') + 1);
+    }
+
     private void addFileToDatabase(String path) {
         int asciiSum = getAscIISum(getFileName(path));
-        addAddSqlCommandByAscii(asciiSum, path);
+        addAddSqlCommandByAscii(asciiSum, path, getPriorityBySuffix(getSuffixByPath(path)));
         if (IsDebug.isDebug()) {
             System.out.println("添加" + path + "," + "asciiSum为" + asciiSum);
         }
@@ -487,7 +384,6 @@ public class DatabaseUtil {
     private void executeAllCommands(Statement stmt) {
         if (!commandSet.isEmpty()) {
             LinkedHashSet<SQLWithTaskId> tempCommandSet = new LinkedHashSet<>(commandSet);
-            commandSet.clear();
             try {
                 if (IsDebug.isDebug()) {
                     System.out.println("----------------------------------------------");
@@ -497,6 +393,7 @@ public class DatabaseUtil {
                 stmt.execute("BEGIN;");
                 for (SQLWithTaskId each : tempCommandSet) {
                     stmt.execute(each.sql);
+                    commandSet.remove(each);
                     if (IsDebug.isDebug()) {
                         System.err.println("当前执行SQL---" + each.sql + "----------------任务组：" + each.taskId);
                     }
@@ -508,8 +405,6 @@ public class DatabaseUtil {
                         System.err.println("执行失败：" + each.sql + "----------------任务组：" + each.taskId);
                     }
                 }
-                //不删除执行失败的记录
-                commandSet.addAll(tempCommandSet);
             } finally {
                 try {
                     stmt.execute("COMMIT;");
@@ -605,7 +500,7 @@ public class DatabaseUtil {
     private void createAllIndex() {
         commandSet.add(new SQLWithTaskId(SqlTaskIds.CREATE_INDEX, "CREATE INDEX IF NOT EXISTS cache_index ON cache(PATH);"));
         for (int i = 0; i <= 40; ++i) {
-            String createIndex = "CREATE INDEX IF NOT EXISTS list" + i + "_index ON list" + i + "(ASCII, PATH);";
+            String createIndex = "CREATE INDEX IF NOT EXISTS list" + i + "_index ON list" + i + "(PRIORITY);";
             commandSet.add(new SQLWithTaskId(SqlTaskIds.CREATE_INDEX, createIndex));
         }
         executeImmediately();
@@ -697,7 +592,8 @@ public class DatabaseUtil {
     private void waitForCommandSet(SqlTaskIds taskId) {
         try {
             int count = 0;
-            while (EventUtil.getInstance().isNotMainExit()) {
+            EventUtil eventUtil = EventUtil.getInstance();
+            while (eventUtil.isNotMainExit()) {
                 count++;
                 //等待10s
                 if (count > 1000) {
@@ -726,7 +622,7 @@ public class DatabaseUtil {
     private boolean isTableExist(ArrayList<String> tableNames) {
         try (Statement stmt = SQLiteUtil.getStatement()) {
             for (String tableName : tableNames) {
-                String sql= String.format("SELECT ASCII, PATH FROM %s;", tableName);
+                String sql= String.format("SELECT ASCII, PATH, PRIORITY FROM %s;", tableName);
                 stmt.executeQuery(sql);
             }
             return true;
@@ -760,7 +656,7 @@ public class DatabaseUtil {
         //创建新表
         String sql = "CREATE TABLE IF NOT EXISTS list";
         for (int i = 0; i <= 40; i++) {
-            String command = sql + i + " " + "(ASCII INT, PATH text unique)" + ";";
+            String command = sql + i + " " + "(ASCII INT, PATH text unique, PRIORITY INT)" + ";";
             commandSet.add(new SQLWithTaskId(SqlTaskIds.CREATE_TABLE, command));
         }
         executeImmediately();
