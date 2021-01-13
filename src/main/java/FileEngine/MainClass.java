@@ -37,7 +37,7 @@ public class MainClass {
     private static final String GET_ASC_II_64_MD_5 = "62a56c26e1afa7c4fa3f441aadb9d515";
     private static final String HOTKEY_LISTENER_64_MD_5 = "dca474d8385fd9bbd6a3ea3e7375bba0";
     private static final String IS_LOCAL_DISK_64_MD_5 = "f8a71d3496d8cc188713d521e6dfa2b2";
-    private static final String FILE_SEARCHER_USN_64_MD_5 = "a85ff400adacc763c724d40722ab3fb7";
+    private static final String FILE_SEARCHER_USN_64_MD_5 = "44e1d54765b7a7849c273dd132cbe2d1";
     private static final String SQLITE3_64_MD_5 = "658c71b8b93ba4eb5b4936f46a112449";
     private static final String UPDATER_BAT_64_MD_5 = "357d7cc1cf023cb6c90f73926c6f2f55";
     private static final String GET_HANDLE_64_MD_5 = "df48132c425c20ba65821bb73657a3fc";
@@ -137,8 +137,12 @@ public class MainClass {
 
     private static void createPriorityTable() throws SQLException {
         try (Statement statement = SQLiteUtil.getStatement()) {
-            statement.executeUpdate("CREATE TABLE IF NOT EXISTS priority(SUFFIX text unique, PRIORITY INT)");
-            statement.executeUpdate("INSERT OR IGNORE INTO priority VALUES(\"defaultPriority\", 0)");
+            int row = statement.executeUpdate("CREATE TABLE IF NOT EXISTS priority(SUFFIX text unique, PRIORITY INT)");
+            if (row == 0) {
+                statement.executeUpdate("INSERT OR IGNORE INTO priority VALUES(\"defaultPriority\", 0)");
+                statement.executeUpdate("INSERT OR IGNORE INTO priority VALUES(\"exe\", 1)");
+                statement.executeUpdate("INSERT OR IGNORE INTO priority VALUES(\"lnk\", 2)");
+            }
         }
     }
 
@@ -510,7 +514,7 @@ public class MainClass {
                     return false;
                 }
             }
-        } catch (IOException | InterruptedException e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
         return true;

@@ -16,9 +16,6 @@ using namespace std;
 constexpr auto MAXVOL = 3;
 static mutex mutex_lock;
 
-std::string to_utf8(const std::wstring& str);
-std::string to_utf8(const wchar_t* buffer, int len);
-
 typedef struct _pfrn_name {
 	DWORDLONG pfrn = 0;
 	CString filename;
@@ -27,43 +24,6 @@ typedef struct _pfrn_name {
 typedef unordered_map<string, int> PriorityMap;
 
 typedef unordered_map<DWORDLONG, pfrn_name> Frn_Pfrn_Name_Map;
-
-
-inline std::string to_utf8(const wchar_t* buffer, int len)
-{
-	int nChars = ::WideCharToMultiByte(
-		CP_UTF8,
-		0,
-		buffer,
-		len,
-		nullptr,
-		0,
-		nullptr,
-		nullptr);
-	if (nChars == 0)
-	{
-		return "";
-	}
-	string newBuffer;
-	newBuffer.resize(nChars);
-	::WideCharToMultiByte(
-		CP_UTF8,
-		0,
-		buffer,
-		len,
-		const_cast<char*>(newBuffer.c_str()),
-		nChars,
-		nullptr,
-		nullptr);
-
-	return newBuffer;
-}
-
-inline std::string to_utf8(const std::wstring& str)
-{
-	return to_utf8(str.c_str(), static_cast<int>(str.size()));
-}
-
 
 class volume {
 public:
@@ -81,7 +41,8 @@ public:
 		return vol;
 	}
 
-	bool initVolume() {
+	void initVolume()
+	{
 		if (
 			// 2.获取驱动盘句柄
 			getHandle() &&
@@ -92,33 +53,33 @@ public:
 			// 5.获取 USN Journal 文件的基本信息
 			getUSNJournal() &&
 			// 06. 删除 USN 日志文件 ( 也可以不删除 ) 
-			deleteUSN()) {
+			deleteUSN()
+			)
+		{
 			mutex_lock.lock();
-			if (!initPriorityMap(priorityMap))
+			if (initPriorityMap(priorityMap))
 			{
-				return false;
-			}
-			initAllPrepareStatement();
-			
-			const auto endIter = frnPfrnNameMap.end();
-			for (auto iter = frnPfrnNameMap.begin(); iter != endIter; ++iter) {
-				auto name = iter->second.filename;
-				const auto ascii = getAscIISum(to_utf8(wstring(name)));
-				CString path = _T("\0");
-				getPath(iter->first, path);
-				CString record = vol + path;
-				auto fullPath = to_utf8(wstring(record));
-				if (!isIgnore(fullPath)) {
-					saveResult(fullPath, ascii);
+				initAllPrepareStatement();
+
+				const auto endIter = frnPfrnNameMap.end();
+				for (auto iter = frnPfrnNameMap.begin(); iter != endIter; ++iter) {
+					auto name = iter->second.filename;
+					const auto ascii = getAscIISum(to_utf8(wstring(name)));
+					CString path = _T("\0");
+					getPath(iter->first, path);
+					CString record = vol + path;
+					auto fullPath = to_utf8(wstring(record));
+					if (!isIgnore(fullPath)) {
+						saveResult(fullPath, ascii);
+					}
 				}
+				finalizeAllStatement();
 			}
-			finalizeAllStatement();
 			mutex_lock.unlock();
-			return true;
 		}
-		return false;
 	}
 
+	
 private:
 	char vol;
 	HANDLE hVol;
@@ -173,6 +134,13 @@ private:
 
 	vector<string> ignorePathVector;
 	PriorityMap priorityMap;
+
+	static string to_utf8(const wchar_t* buffer, int len);
+
+	string to_utf8(const std::wstring& str) const
+	{
+		return to_utf8(str.c_str(), static_cast<int>(str.size()));
+	}
 	
 	bool getHandle();
 	bool createUSN();
@@ -185,7 +153,7 @@ private:
 	bool isIgnore(string path);
 	void finalizeAllStatement() const;
 	void saveSingleRecordToDB(sqlite3_stmt* stmt, string record, int ascii);
-	void addIgnorePath(vector<string> vec) {
+	void addIgnorePath(const vector<string>& vec) {
 		ignorePathVector = vec;
 	}
 	int getPriorityBySuffix(const string& suffix);
@@ -194,6 +162,37 @@ private:
 	void initAllPrepareStatement();
 	void initSinglePrepareStatement(sqlite3_stmt** statement, const char* init) const;
 };
+
+inline std::string volume::to_utf8(const wchar_t* buffer, int len)
+{
+	const auto nChars = ::WideCharToMultiByte(
+		CP_UTF8,
+		0,
+		buffer,
+		len,
+		nullptr,
+		0,
+		nullptr,
+		nullptr);
+	if (nChars == 0)
+	{
+		return "";
+	}
+	string newBuffer;
+	newBuffer.resize(nChars);
+	::WideCharToMultiByte(
+		CP_UTF8,
+		0,
+		buffer,
+		len,
+		const_cast<char*>(newBuffer.c_str()),
+		nChars,
+		nullptr,
+		nullptr);
+
+	return newBuffer;
+}
+
 
 inline int volume::getPriorityBySuffix(const string& suffix)
 {
@@ -208,7 +207,8 @@ inline int volume::getPriorityBySuffix(const string& suffix)
 
 inline int volume::getPriorityByPath(const string& path)
 {
-	const auto suffix = path.substr(path.find_last_not_of('.') + 1);
+	auto suffix = path.substr(path.find_last_of('.') + 1);
+	transform(suffix.begin(), suffix.end(), suffix.begin(), tolower);
 	return getPriorityBySuffix(suffix);
 }
 
@@ -226,12 +226,13 @@ inline bool volume::initPriorityMap(PriorityMap& priority_map) const
 		return false;
 	}
 	//由File-Engine保证result不为空
-	for (auto i = 0; i < row; i++)
+	auto i = 2;
+	const auto total = column * row + 2;
+	for (; i < total; i+=2)
 	{
-		const auto offset = column * (i + 1);
-		const string suffix(pResult[i + offset]);
-		const string priorityVal(pResult[i + offset + 1]);
-		pair<string, int> pairPriority = pair<string, int>{ suffix, stoi(priorityVal) };
+		const string suffix(pResult[i]);
+		const string priorityVal(pResult[i + 1]);
+		auto pairPriority = pair<string, int>{ suffix, stoi(priorityVal) };
 		priority_map.insert(pairPriority);
 	}
 	sqlite3_free_table(pResult);
@@ -517,7 +518,6 @@ inline void volume::getPath(DWORDLONG frn, CString& path) {
 	while (true) {
 		it = frnPfrnNameMap.find(frn);
 		if (it == end) {
-			//path = path.Right(path.GetLength() - 1);
 			path = L":" + path;
 			return;
 		}
