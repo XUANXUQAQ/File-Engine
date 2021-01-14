@@ -247,6 +247,7 @@ public class SettingsFrame {
     private JButton buttonDeleteSuffix;
     private JTable tableSuffix;
     private JButton buttonDeleteAllSuffix;
+    private JLabel labelSuffixTip;
     private JScrollPane tabGeneralScrollpane;
     private JScrollPane tabGeneralScrollPane;
     private JPanel tabGeneralPane;
@@ -1675,6 +1676,7 @@ public class SettingsFrame {
         chooseUpdateAddressLabel.setText(translateUtil.getTranslation("Choose update address"));
         labelRemoveDesktop.setText(translateUtil.getTranslation("Backup and remove all desktop files") + ":");
         labelSearchCommand.setText(translateUtil.getTranslation("Search"));
+        labelSuffixTip.setText(translateUtil.getTranslation("Modifying the suffix priority requires rebuilding the index (input \":update\") to take effect"));
     }
 
     private void translateCheckbox() {
