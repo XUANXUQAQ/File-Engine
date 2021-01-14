@@ -2654,13 +2654,16 @@ public class SearchBar {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             try {
                 String record;
-
+                long time = System.currentTimeMillis();
                 while (isVisible()) {
                     while ((record = tempResults.poll()) != null) {
+                        tempResultNum.decrementAndGet();
                         if (isNotContains(listResults, record)) {
                             listResults.add(record);
-                            tempResultNum.decrementAndGet();
                             listResultsNum.incrementAndGet();
+                        }
+                        if (startTime > time) {
+                            return;
                         }
                     }
                     TimeUnit.MILLISECONDS.sleep(5);
