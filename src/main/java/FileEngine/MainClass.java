@@ -439,6 +439,10 @@ public class MainClass {
 
     private static void startOrIgnoreUpdateAndExit(boolean isUpdate) throws InterruptedException, IOException {
         if (isUpdate) {
+            File closeSignal = new File("tmp/closeDaemon");
+            if (closeSignal.createNewFile()) {
+                System.err.println("添加退出守护进程标志失败");
+            }
             File update = new File("user/update");
             if (update.delete()) {
                 System.err.println("删除更新标志失败");
