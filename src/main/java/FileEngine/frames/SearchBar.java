@@ -1357,7 +1357,6 @@ public class SearchBar {
                     }
                     moveUpward(getCurrentLabelPos());
                 }
-
             }
         });
     }
@@ -2479,27 +2478,17 @@ public class SearchBar {
         }
     }
 
-    private void startMergeTempQueueAndListResultsThread(AtomicBoolean isCreated, AtomicBoolean isAllSearchDone) {
-        CachedThreadPoolUtil.getInstance().executeTask(() -> {
-            //合并搜索结果线程
-            try {
-                while (isVisible()) {
-                    if (isCacheAndPrioritySearched.get() && isAllSearchDone.get()) {
-                        for (String record : tempResults) {
-                            if (!listResults.contains(record)) {
-                                tempResultNum.decrementAndGet();
-                                listResultsNum.incrementAndGet();
-                                listResults.add(record);
-                            }
-                        }
-                        tempResults.clear();
-                    }
-                    TimeUnit.MILLISECONDS.sleep(20);
+    private boolean isNotContains(Collection<String> list, String record) {
+        if (list.contains(record)) {
+            return false;
+        } else {
+            synchronized (this) {
+                if (list.contains(record)) {
+                    return false;
                 }
-                isCreated.set(false);
-            } catch (InterruptedException ignored) {
             }
-        });
+            return true;
+        }
     }
 
     private void lockMouseMotionThread() {
@@ -2646,13 +2635,7 @@ public class SearchBar {
         }
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             String column;
-            AtomicBoolean isMergeThreadCreated = new AtomicBoolean(false);
-            AtomicBoolean isAllSearchDone = new AtomicBoolean(false);
             while (!commandQueue.isEmpty()) {
-                if (!isMergeThreadCreated.get()) {
-                    isMergeThreadCreated.set(true);
-                    startMergeTempQueueAndListResultsThread(isMergeThreadCreated, isAllSearchDone);
-                }
                 column = commandQueue.poll();
                 if (
                         runningMode == Enums.RunningMode.NORMAL_MODE &&
@@ -2667,8 +2650,12 @@ public class SearchBar {
                 } else {
                     commandQueue.add(column);
                 }
-                isAllSearchDone.set(true);
             }
+            //去重
+            listResults.addAll(new LinkedHashSet<>(tempResults));
+            tempResults.clear();
+            listResultsNum.addAndGet(tempResultNum.get());
+            tempResultNum.set(0);
         });
     }
 
@@ -2685,7 +2672,7 @@ public class SearchBar {
                 }
                 while (eventUtil.isNotMainExit()) {
                     long endTime = System.currentTimeMillis();
-                    if ((endTime - startTime > 500) && startSignal.get()) {
+                    if ((endTime - startTime > 250) && startSignal.get()) {
                         startSignal.set(false); //开始搜索 计时停止
                         currentResultCount.set(0);
                         currentLabelSelectedPosition.set(0);
@@ -2856,7 +2843,7 @@ public class SearchBar {
      * @return true如果还未被加入
      */
     private boolean isResultNotRepeat(String result) {
-        return !(tempResults.contains(result) || listResults.contains(result));
+        return isNotContains(tempResults, result) && isNotContains(listResults, result);
     }
 
     /**
@@ -2885,20 +2872,18 @@ public class SearchBar {
                 //字符串匹配通过
                 ret  = true;
                 if (isPutToTemp) {
-                    if (!tempResults.contains(path)) {
-                        if (priority == maxPriority) {
+                    if (priority == maxPriority) {
+                        tempResults.add(path);
+                    } else {
+                        try {
+                            tempResults.add(offset, path);
+                        } catch (IndexOutOfBoundsException e) {
                             tempResults.add(path);
-                        } else {
-                            try {
-                                tempResults.add(offset, path);
-                            } catch (IndexOutOfBoundsException e) {
-                                tempResults.add(path);
-                            }
                         }
-                        tempResultNum.incrementAndGet();
                     }
+                    tempResultNum.incrementAndGet();
                 } else {
-                    if (!listResults.contains(path)) {
+                    if (isNotContains(listResults, path)) {
                         listResultsNum.incrementAndGet();
                         listResults.add(path);
                     }
