@@ -2918,8 +2918,10 @@ public class SearchBar {
                 //字符串匹配通过
                 ret  = true;
                 if (isPutToTemp) {
-                    tempResults.add(path);
-                    tempResultNum.incrementAndGet();
+                    if (isNotContains(tempResults, path)) {
+                        tempResults.add(path);
+                        tempResultNum.incrementAndGet();
+                    }
                 } else {
                     if (isNotContains(listResults, path)) {
                         listResultsNum.incrementAndGet();
