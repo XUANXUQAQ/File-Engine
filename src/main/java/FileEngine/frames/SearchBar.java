@@ -57,6 +57,7 @@ public class SearchBar {
     private final AtomicBoolean isCopyPathPressed = new AtomicBoolean(false);
     private final AtomicBoolean startSignal = new AtomicBoolean(false);
     private final AtomicBoolean isUserPressed = new AtomicBoolean(false);
+    private final AtomicBoolean isDatabaseUpdated = new AtomicBoolean(false);
     private final AtomicBoolean isMouseDraggedInWindow = new AtomicBoolean(false);
     private static final AtomicBoolean isPreviewMode = new AtomicBoolean(false);
     private final AtomicBoolean isTutorialMode = new AtomicBoolean(false);
@@ -88,10 +89,11 @@ public class SearchBar {
     private final int iconSideLength;
     private volatile long visibleStartTime = 0;  //记录窗口开始可见的事件，窗口默认最短可见时间0.5秒，防止窗口快速闪烁
     private volatile long firstResultStartShowingTime = 0;  //记录开始显示结果的时间，用于防止刚开始移动到鼠标导致误触
-    private final CopyOnWriteArrayList<String> tempResults;  //在优先文件夹和数据库cache未搜索完时暂时保存结果，搜索完后会立即被转移到listResults
-    private final ConcurrentLinkedQueue<String> commandQueue;  //保存需要被执行的sql语句
+    private final ConcurrentLinkedQueue<String> tempResults;  //在优先文件夹和数据库cache未搜索完时暂时保存结果，搜索完后会立即被转移到listResults
+    private final ConcurrentLinkedQueue<String> tableQueue;  //保存哪些表需要被查
     private final CopyOnWriteArrayList<String> listResults;  //保存从数据库中找出符合条件的记录（文件路径）
     private final Set<TableNameWeightInfo> tableSet;    //保存从0-40数据库的表，使用频率和名字对应，使经常使用的表最快被搜索到
+    private final ConcurrentLinkedQueue<Integer> priorityQueue;
     private volatile String[] searchCase;
     private volatile String searchText;
     private volatile String[] keywords;
@@ -117,9 +119,10 @@ public class SearchBar {
 
     private SearchBar() {
         listResults = new CopyOnWriteArrayList<>();
-        tempResults = new CopyOnWriteArrayList<>();
-        commandQueue = new ConcurrentLinkedQueue<>();
+        tempResults = new ConcurrentLinkedQueue<>();
+        tableQueue = new ConcurrentLinkedQueue<>();
         tableSet = ConcurrentHashMap.newKeySet();
+        priorityQueue = new ConcurrentLinkedQueue<>();
         searchBar = new JFrame();
         currentResultCount = new AtomicInteger(0);
         listResultsNum = new AtomicInteger(0);
@@ -217,6 +220,10 @@ public class SearchBar {
         panel.add(label8);
 
         initTableMap();
+
+        initPriorityQueue();
+
+        registerUpdateDatabaseListener();
 
         //开启所有线程
         initThreadPool();
@@ -2023,7 +2030,7 @@ public class SearchBar {
     private void clearAllAndResetAll() {
         clearAllLabels();
         clearListAndTempAndReset();
-        commandQueue.clear();
+        tableQueue.clear();
         firstResultStartShowingTime = 0;
         currentResultCount.set(0);
         currentLabelSelectedPosition.set(0);
@@ -2624,38 +2631,80 @@ public class SearchBar {
         });
     }
 
+    private LinkedHashMap<String, String> getNonFormattedSqlFromTableQueue() {
+        if (isDatabaseUpdated.get()) {
+            isDatabaseUpdated.set(false);
+            initPriorityQueue();
+        }
+        LinkedHashMap<String, String> sqlColumnMap = new LinkedHashMap<>();
+        if (priorityQueue.isEmpty()) {
+            return sqlColumnMap;
+        }
+        for (Integer i : priorityQueue) {
+            for (String each : tableQueue) {
+                sqlColumnMap.put("SELECT %s FROM " + each + " WHERE priority=" + i, each);
+            }
+        }
+        tableQueue.clear();
+        return sqlColumnMap;
+    }
+
+    private void addMergeThread(AtomicBoolean isCreated) {
+        isCreated.set(true);
+        CachedThreadPoolUtil.getInstance().executeTask(() -> {
+            try {
+                String record;
+
+                while (isVisible()) {
+                    while ((record = tempResults.poll()) != null) {
+                        if (isNotContains(listResults, record)) {
+                            listResults.add(record);
+                            tempResultNum.decrementAndGet();
+                            listResultsNum.incrementAndGet();
+                        }
+                    }
+                    TimeUnit.MILLISECONDS.sleep(5);
+                }
+            } catch (InterruptedException ignored) {
+            } finally {
+                isCreated.set(false);
+            }
+        });
+    }
+
+    private void registerUpdateDatabaseListener() {
+        EventUtil eventUtil = EventUtil.getInstance();
+        eventUtil.registerListener(UpdateDatabaseEvent.class, isDatabaseUpdated);
+    }
+
     private void addSqlCommands() {
         LinkedList<TableNameWeightInfo> tmpCommandList = new LinkedList<>(tableSet);
+        //将tableSet通过权重排序
         tmpCommandList.sort((o1, o2) -> Long.compare(o2.weight, o1.weight));
         for (TableNameWeightInfo each : tmpCommandList) {
             if (IsDebug.isDebug()) {
                 System.out.println("已添加表" + each.tableName + "----权重" + each.weight);
             }
-            commandQueue.add(each.tableName);
+            tableQueue.add(each.tableName);
         }
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
-            String column;
-            while (!commandQueue.isEmpty()) {
-                column = commandQueue.poll();
+            AtomicBoolean isCreated = new AtomicBoolean(false);
+            if (!isCreated.get()) {
+                addMergeThread(isCreated);
+            }
+            LinkedHashMap<String, String> nonFormattedSql = getNonFormattedSqlFromTableQueue();
+            for (String each : nonFormattedSql.keySet()) {
                 if (
-                        runningMode == Enums.RunningMode.NORMAL_MODE &&
-                        DatabaseUtil.getInstance().getStatus() == Enums.DatabaseStatus.NORMAL &&
-                        column != null
+                        runningMode == Enums.RunningMode.NORMAL_MODE && DatabaseUtil.getInstance().getStatus() == Enums.DatabaseStatus.NORMAL
                 ) {
-                    int matchedNum = searchAndAddToTempResults(System.currentTimeMillis(), getMaxPriority(), column);
+                    each = String.format(each, "PATH");
+                    int matchedNum = searchAndAddToTempResults(System.currentTimeMillis(), each);
                     long weight = Math.min(matchedNum, 5);
                     if (weight != 0L) {
-                        updateTableWeight(column, weight);
+                        updateTableWeight(nonFormattedSql.get(each), weight);
                     }
-                } else {
-                    commandQueue.add(column);
                 }
             }
-            //去重
-            listResults.addAll(new LinkedHashSet<>(tempResults));
-            tempResults.clear();
-            listResultsNum.addAndGet(tempResultNum.get());
-            tempResultNum.set(0);
         });
     }
 
@@ -2852,35 +2901,24 @@ public class SearchBar {
      * @param path        文件路径
      */
     private void matchOnCacheAndPriorityFolder(String path, boolean isResultFromCache) {
-        checkIsMatchedAndAddToList(path, 0, 0, false, isResultFromCache);
+        checkIsMatchedAndAddToList(path,  false, isResultFromCache);
     }
 
     /**
      * * 检查文件路径是否匹配然后加入到列表
      * @param path  文件路径
-     * @param priority 根据后缀得出的优先级（如果isPutToTemp为false，该参数会被忽略）
-     * @param maxPriority 最大优先级
      * @param isPutToTemp 是否放到临时容器，在搜索优先文件夹和cache时为false，其他为true
      * @param isResultFromCache 是否来自缓存
      * @return true如果匹配成功
      */
-    private boolean checkIsMatchedAndAddToList(String path, int priority, int maxPriority, boolean isPutToTemp, boolean isResultFromCache) {
+    private boolean checkIsMatchedAndAddToList(String path, boolean isPutToTemp, boolean isResultFromCache) {
         boolean ret = false;
-        int offset = Math.max(maxPriority - priority, 0);
         if (check(path)) {
             if (isExist(path)) {
                 //字符串匹配通过
                 ret  = true;
                 if (isPutToTemp) {
-                    if (priority == maxPriority) {
-                        tempResults.add(path);
-                    } else {
-                        try {
-                            tempResults.add(offset, path);
-                        } catch (IndexOutOfBoundsException e) {
-                            tempResults.add(path);
-                        }
-                    }
+                    tempResults.add(path);
                     tempResultNum.incrementAndGet();
                 } else {
                     if (isNotContains(listResults, path)) {
@@ -2897,39 +2935,31 @@ public class SearchBar {
         return ret;
     }
 
-    private int getMaxPriority() {
-        int max = 0;
-        try (PreparedStatement pStmt = SQLiteUtil.getPreparedStatement("SELECT * FROM priority;")) {
+    private void initPriorityQueue() {
+        priorityQueue.clear();
+        try (PreparedStatement pStmt = SQLiteUtil.getPreparedStatement("SELECT PRIORITY FROM priority order by priority desc;")) {
             ResultSet resultSet = pStmt.executeQuery();
             while (resultSet.next()) {
-                int priority = resultSet.getInt("PRIORITY");
-                if (priority > max) {
-                    max = priority;
-                }
+                priorityQueue.add(resultSet.getInt("PRIORITY"));
             }
         } catch (SQLException throwables) {
             throwables.printStackTrace();
         }
-        return max;
     }
 
     /**
      * 搜索数据酷并加入到tempQueue中
      *
      * @param time   开始搜索时间，用于检测用于重新输入匹配信息后快速停止
-     * @param eachColumn 数据库表
+     * @param sql sql
      */
-    private int searchAndAddToTempResults(long time, int maxPriority, String eachColumn) {
+    private int searchAndAddToTempResults(long time, String sql) {
         int count = 0;
         //结果太多则不再进行搜索
         if (listResultsNum.get() + tempResultNum.get() > MAX_RESULTS_COUNT || startTime > time) {
-            commandQueue.clear();
+            tableQueue.clear();
             return count;
         }
-        String sql;
-        //为label添加结果
-        sql = "SELECT PRIORITY, PATH FROM " + eachColumn + " ORDER BY PRIORITY desc;";
-
         try (PreparedStatement stmt = SQLiteUtil.getPreparedStatement(sql);
              ResultSet resultSet = stmt.executeQuery()) {
 
@@ -2938,13 +2968,12 @@ public class SearchBar {
                 //结果太多则不再进行搜索
                 //用户重新输入了信息
                 if (listResultsNum.get() + tempResultNum.get() > MAX_RESULTS_COUNT || startTime > time) {
-                    commandQueue.clear();
+                    tableQueue.clear();
                     return count;
                 }
                 each = resultSet.getString("PATH");
-                int priority = resultSet.getInt("PRIORITY");
                 if (databaseUtil.getStatus() == Enums.DatabaseStatus.NORMAL) {
-                    if (checkIsMatchedAndAddToList(each, priority, maxPriority, true, false)) {
+                    if (checkIsMatchedAndAddToList(each, true, false)) {
                         count++;
                     }
                 }
@@ -3474,7 +3503,7 @@ public class SearchBar {
         currentResultCount.set(0);
         currentLabelSelectedPosition.set(0);
         clearListAndTempAndReset();
-        commandQueue.clear();
+        tableQueue.clear();
         isUserPressed.set(false);
         isLockMouseMotion.set(false);
         isOpenLastFolderPressed.set(false);
