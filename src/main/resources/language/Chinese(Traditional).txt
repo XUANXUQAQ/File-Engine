@@ -205,3 +205,4 @@ What you entered is not a number, please try again=您輸入的不是數字，�
 Priority num=優先級
 Do you sure want to delete this suffix=確定要刪除此後綴嗎
 Are you sure to delete all the suffixes=確定要刪除所有後綴嗎
+Modifying the suffix priority requires rebuilding the index (input ":update") to take effect=修改後綴優先級需要重建索引（輸入“:update”）才能生效

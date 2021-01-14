@@ -205,3 +205,4 @@ What you entered is not a number, please try again=Vous n'avez pas entré de num
 Priority num=Numéro de priorité
 Do you sure want to delete this suffix=Voulez-vous vraiment supprimer ce suffixe
 Are you sure to delete all the suffixes=Êtes-vous sûr de supprimer tous les suffixes
+Modifying the suffix priority requires rebuilding the index (input ":update") to take effect=La modification de la priorité du suffixe nécessite la reconstruction de l'index (entrée ": update") pour prendre effet
