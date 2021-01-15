@@ -11,16 +11,16 @@ import java.util.concurrent.TimeUnit;
 
 public class LoadingPanel extends JComponent implements MouseListener {
     private static final long serialVersionUID = 1L;
-    protected Area[] ticker = null;
-    protected Thread animation = null;
-    protected boolean started = false;
-    protected int alphaLevel = 0;
-    protected int rampDelay;
-    protected float shield;
-    protected String text;
-    protected int barsCount;
-    protected float fps;
-    protected RenderingHints hints;
+    private Area[] ticker = null;
+    private Thread animation = null;
+    private boolean started = false;
+    private int alphaLevel = 0;
+    private final int rampDelay;
+    private final float shield;
+    private final String text;
+    private final int barsCount;
+    private final float fps;
+    private final RenderingHints hints;
 
     public LoadingPanel(String text) {
         this(text, 14);
@@ -48,10 +48,6 @@ public class LoadingPanel extends JComponent implements MouseListener {
         this.hints = new RenderingHints(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
         this.hints.put(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         this.hints.put(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_ON);
-    }
-
-    public String getText() {
-        return text;
     }
 
     public void start() {

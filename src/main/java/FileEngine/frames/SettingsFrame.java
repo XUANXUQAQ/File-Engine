@@ -47,6 +47,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 
+@SuppressWarnings("unused")
 public class SettingsFrame {
     private final Set<String> cacheSet = ConcurrentHashMap.newKeySet();
     private static volatile int tmp_copyPathKeyCode;
