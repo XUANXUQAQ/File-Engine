@@ -3004,7 +3004,20 @@ public class SearchBar {
      */
     private void showResultOnLabel(String path, JLabel label, boolean isChosen) {
         String name = getFileName(path);
-        label.setText("<html><body><font size=\"-1\">" + name + "<br><font size=\"-2\">" + ">>" + getParentPath(path) + "</body></html>");
+        int fontSize = (int) ((label.getFont().getSize() / 96.0f * 72) / 2);
+        int maxShowingNum = label.getWidth() / fontSize;
+        boolean isContractFontSize = false;
+        //根据计算出的每个label可显示的最大字符数量来判断是否需要将font size减小
+        if (name.length() > maxShowingNum || path.length() > maxShowingNum) {
+            isContractFontSize = true;
+        }
+        String showHtml = "<html><body>%s" + name + "<br>%s" + ">>" + getParentPath(path) + "</body></html>";
+        if (isContractFontSize) {
+            showHtml = String.format(showHtml, "<font size=\"-1\">", "<font size=\"-2\">");
+        } else {
+            showHtml = String.format(showHtml, "", "<font size=\"-1\">");
+        }
+        label.setText(showHtml);
         ImageIcon icon = GetIconUtil.getInstance().getBigIcon(path, iconSideLength, iconSideLength);
         label.setIcon(icon);
         label.setBorder(border);
