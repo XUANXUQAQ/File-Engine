@@ -2724,7 +2724,7 @@ public class SearchBar {
                 }
                 while (eventUtil.isNotMainExit()) {
                     long endTime = System.currentTimeMillis();
-                    if ((endTime - startTime > 250) && startSignal.get()) {
+                    if ((endTime - startTime > 300) && startSignal.get()) {
                         startSignal.set(false); //开始搜索 计时停止
                         currentResultCount.set(0);
                         currentLabelSelectedPosition.set(0);
