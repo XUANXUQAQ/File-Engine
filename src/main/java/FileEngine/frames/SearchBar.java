@@ -2656,14 +2656,16 @@ public class SearchBar {
                 String record;
                 long time = System.currentTimeMillis();
                 while (isVisible()) {
-                    while ((record = tempResults.poll()) != null) {
-                        tempResultNum.decrementAndGet();
-                        if (isNotContains(listResults, record)) {
-                            listResults.add(record);
-                            listResultsNum.incrementAndGet();
-                        }
-                        if (startTime > time) {
-                            return;
+                    if (startTime > time) {
+                        return;
+                    }
+                    if (isCacheAndPrioritySearched.get()) {
+                        while ((record = tempResults.poll()) != null) {
+                            tempResultNum.decrementAndGet();
+                            if (isNotContains(listResults, record)) {
+                                listResults.add(record);
+                                listResultsNum.incrementAndGet();
+                            }
                         }
                     }
                     TimeUnit.MILLISECONDS.sleep(5);
