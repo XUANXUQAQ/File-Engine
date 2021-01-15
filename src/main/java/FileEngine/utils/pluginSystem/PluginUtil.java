@@ -256,7 +256,7 @@ public class PluginUtil {
                     System.out.println("++++++++++++++++++++++++++++++++++++++++++++");
                 }
                 if (!isLatest) {
-                    oldPlugins.append(each).append(" ");
+                    oldPlugins.append(each.name).append(" ");
                     addPluginsCanUpdate(each.name);
                 }
             } catch (Exception e) {
@@ -351,6 +351,11 @@ public class PluginUtil {
             this.plugin = plugin;
             this.name = name;
             this.identifier = identifier;
+        }
+
+        @Override
+        public String toString() {
+            return name;
         }
     }
 }
