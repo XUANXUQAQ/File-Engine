@@ -872,7 +872,7 @@ public class SearchBar {
         //判断是否为中文
         if ("简体中文".equals(translateUtil.getLanguage())) {
             textField.setText("pinyin");
-            JOptionPane.showMessageDialog(searchBar, "你可以使用拼音来代替汉字，但拼音和英文单词之间需要用\";\"(分号)隔开（作为不同的关键字）");
+            JOptionPane.showMessageDialog(searchBar, "你可以使用拼音来代替汉字");
         }
         JOptionPane.showMessageDialog(searchBar,
                 translateUtil.getTranslation("Click \"Enter\" to open the file directly") + "\n" +
