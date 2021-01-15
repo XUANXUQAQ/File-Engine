@@ -1622,10 +1622,7 @@ public class SearchBar {
 
                         path = listResults.get(currentResultCount.get());
                         showResultOnLabel(path, label8, true);
-                    } catch (ArrayIndexOutOfBoundsException e) {
-                        if (IsDebug.isDebug()) {
-                            e.printStackTrace();
-                        }
+                    } catch (ArrayIndexOutOfBoundsException ignored) {
                     }
                 } else if (runningMode == Enums.RunningMode.COMMAND_MODE) {
                     //到达了最下端，刷新显示
@@ -1653,10 +1650,7 @@ public class SearchBar {
 
                         command = listResults.get(currentResultCount.get());
                         showCommandOnLabel(command, label8, true);
-                    } catch (ArrayIndexOutOfBoundsException e) {
-                        if (IsDebug.isDebug()) {
-                            e.printStackTrace();
-                        }
+                    } catch (ArrayIndexOutOfBoundsException ignored) {
                     }
                 } else if (runningMode == Enums.RunningMode.PLUGIN_MODE) {
                     try {
@@ -1683,10 +1677,7 @@ public class SearchBar {
 
                         command = listResults.get(currentResultCount.get());
                         showPluginResultOnLabel(command, label8, true);
-                    } catch (ArrayIndexOutOfBoundsException e) {
-                        if (IsDebug.isDebug()) {
-                            e.printStackTrace();
-                        }
+                    } catch (ArrayIndexOutOfBoundsException ignored) {
                     }
                 }
                 break;
@@ -1727,10 +1718,7 @@ public class SearchBar {
 
                         path = listResults.get(currentResultCount.get() + 7);
                         showResultOnLabel(path, label8, false);
-                    } catch (ArrayIndexOutOfBoundsException e) {
-                        if (IsDebug.isDebug()) {
-                            e.printStackTrace();
-                        }
+                    } catch (ArrayIndexOutOfBoundsException ignored) {
                     }
                 } else if (runningMode == Enums.RunningMode.COMMAND_MODE) {
                     //到达了最上端，刷新显示
@@ -1758,10 +1746,7 @@ public class SearchBar {
 
                         command = listResults.get(currentResultCount.get() + 7);
                         showCommandOnLabel(command, label8, false);
-                    } catch (ArrayIndexOutOfBoundsException e) {
-                        if (IsDebug.isDebug()) {
-                            e.printStackTrace();
-                        }
+                    } catch (ArrayIndexOutOfBoundsException ignored) {
                     }
                 } else if (runningMode == Enums.RunningMode.PLUGIN_MODE) {
                     try {
@@ -1788,10 +1773,7 @@ public class SearchBar {
 
                         command = listResults.get(currentResultCount.get() + 7);
                         showPluginResultOnLabel(command, label8, false);
-                    } catch (ArrayIndexOutOfBoundsException e) {
-                        if (IsDebug.isDebug()) {
-                            e.printStackTrace();
-                        }
+                    } catch (ArrayIndexOutOfBoundsException ignored) {
                     }
                 }
                 break;
@@ -3022,10 +3004,7 @@ public class SearchBar {
      */
     private void showResultOnLabel(String path, JLabel label, boolean isChosen) {
         String name = getFileName(path);
-        if (name.length() >= 32) {
-            name = name.substring(0, 32) + "...";
-        }
-        label.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>" + getParentPath(path) + "</body></html>");
+        label.setText("<html><body><font size=\"-1\">" + name + "<br><font size=\"-2\">" + ">>" + getParentPath(path) + "</body></html>");
         ImageIcon icon = GetIconUtil.getInstance().getBigIcon(path, iconSideLength, iconSideLength);
         label.setIcon(icon);
         label.setBorder(border);
