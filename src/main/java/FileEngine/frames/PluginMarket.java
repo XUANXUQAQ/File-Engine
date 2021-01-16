@@ -1,5 +1,6 @@
 package FileEngine.frames;
 
+import FileEngine.annotation.EventRegister;
 import FileEngine.configs.AllConfigs;
 import FileEngine.eventHandler.Event;
 import FileEngine.eventHandler.EventHandler;
@@ -127,6 +128,7 @@ public class PluginMarket {
         }
     }
 
+    @EventRegister
     public static void registerEventHandler() {
         EventUtil eventUtil = EventUtil.getInstance();
 

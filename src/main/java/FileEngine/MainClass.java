@@ -1,5 +1,6 @@
 package FileEngine;
 
+import FileEngine.annotation.EventRegister;
 import FileEngine.configs.AllConfigs;
 import FileEngine.configs.Enums;
 import FileEngine.eventHandler.Event;
@@ -283,7 +284,7 @@ public class MainClass {
 
             initializeDllInterface();
 
-            ClassScannerUtil.executeStaticMethodByName("registerEventHandler");
+            ClassScannerUtil.executeMethodByAnnotation(EventRegister.class, null);
 
             sendStartSignal();
 

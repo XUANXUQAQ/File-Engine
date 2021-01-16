@@ -1,6 +1,7 @@
 package FileEngine.frames;
 
 import FileEngine.IsDebug;
+import FileEngine.annotation.EventRegister;
 import FileEngine.eventHandler.Event;
 import FileEngine.eventHandler.EventHandler;
 import FileEngine.utils.EventUtil;
@@ -180,6 +181,7 @@ public class TaskBar {
         }
     }
 
+    @EventRegister
     public static void registerEventHandler() {
         EventUtil eventUtil = EventUtil.getInstance();
         eventUtil.register(ShowTaskBarMessageEvent.class, new EventHandler() {

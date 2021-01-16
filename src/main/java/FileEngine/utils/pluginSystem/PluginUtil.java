@@ -1,6 +1,7 @@
 package FileEngine.utils.pluginSystem;
 
 import FileEngine.IsDebug;
+import FileEngine.annotation.EventRegister;
 import FileEngine.configs.AllConfigs;
 import FileEngine.utils.EventUtil;
 import FileEngine.eventHandler.Event;
@@ -303,6 +304,7 @@ public class PluginUtil {
         }
     }
 
+    @EventRegister
     public static void registerEventHandler() {
         EventUtil eventUtil = EventUtil.getInstance();
         eventUtil.register(AddPluginsCanUpdateEvent.class, new EventHandler() {

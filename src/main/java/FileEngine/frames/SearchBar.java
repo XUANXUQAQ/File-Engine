@@ -2,6 +2,7 @@ package FileEngine.frames;
 
 
 import FileEngine.IsDebug;
+import FileEngine.annotation.EventRegister;
 import FileEngine.configs.AllConfigs;
 import FileEngine.configs.Enums;
 import FileEngine.dllInterface.FileMonitor;
@@ -2202,6 +2203,7 @@ public class SearchBar {
         changeSearchBarSize();
     }
 
+    @EventRegister
     public static void registerEventHandler() {
         EventUtil eventUtil = EventUtil.getInstance();
         eventUtil.register(ShowSearchBarEvent.class, new EventHandler() {

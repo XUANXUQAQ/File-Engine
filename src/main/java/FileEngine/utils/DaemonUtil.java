@@ -1,5 +1,6 @@
 package FileEngine.utils;
 
+import FileEngine.annotation.EventRegister;
 import FileEngine.eventHandler.Event;
 import FileEngine.eventHandler.EventHandler;
 import FileEngine.eventHandler.impl.daemon.StartDaemonEvent;
@@ -26,6 +27,7 @@ public class DaemonUtil {
         return instance;
     }
 
+    @EventRegister
     public static void registerEventHandler() {
         EventUtil.getInstance().register(StartDaemonEvent.class, new EventHandler() {
             @Override
