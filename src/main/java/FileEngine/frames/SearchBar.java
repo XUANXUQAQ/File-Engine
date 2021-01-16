@@ -46,6 +46,7 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -60,6 +61,7 @@ public class SearchBar {
     private final AtomicBoolean isUserPressed = new AtomicBoolean(false);
     private final AtomicBoolean isDatabaseUpdated = new AtomicBoolean(false);
     private final AtomicBoolean isMouseDraggedInWindow = new AtomicBoolean(false);
+    private final AtomicBoolean isNotSqlInitialized = new AtomicBoolean(true);
     private static final AtomicBoolean isPreviewMode = new AtomicBoolean(false);
     private final AtomicBoolean isTutorialMode = new AtomicBoolean(false);
     private Border border;
@@ -110,11 +112,11 @@ public class SearchBar {
 
     private static class TableNameWeightInfo {
         private final String tableName;
-        private long weight;
+        private final AtomicLong weight;
 
-        private TableNameWeightInfo(String tableName, long weight) {
+        private TableNameWeightInfo(String tableName, long weightInit) {
             this.tableName = tableName;
-            this.weight = weight;
+            this.weight = new AtomicLong(weightInit);
         }
     }
 
@@ -304,7 +306,7 @@ public class SearchBar {
         if (origin == null) {
             return;
         }
-        origin.weight += weight;
+        origin.weight.addAndGet(weight);
         if (IsDebug.isDebug()) {
             System.err.println("已更新" + tableName + "权重, 之前为" + origin + "***增加了" + weight);
         }
@@ -532,8 +534,12 @@ public class SearchBar {
         }
     }
 
-    private String getTextFieldText() {
-        return textField.getText();
+    private String getSearchBarText() {
+        try {
+            return textField.getText();
+        } catch (Exception e) {
+            return "";
+        }
     }
 
     /**
@@ -549,7 +555,7 @@ public class SearchBar {
             @Override
             public void keyPressed(KeyEvent arg0) {
                 int key = arg0.getKeyCode();
-                if (key == 8 && getTextFieldText().isEmpty()) {
+                if (key == 8 && getSearchBarText().isEmpty()) {
                     //消除搜索框为空时按删除键发出的无效提示音
                     arg0.consume();
                 }
@@ -564,7 +570,7 @@ public class SearchBar {
                                 isUserPressed.set(true);
                             }
 
-                            if (!getTextFieldText().isEmpty()) {
+                            if (!getSearchBarText().isEmpty()) {
                                 currentResultCount.decrementAndGet();
 
                                 if (currentResultCount.get() >= listResultsNum.get()) {
@@ -587,7 +593,7 @@ public class SearchBar {
                             }
                             boolean isNextLabelValid = isNextLabelValid();
                             if (isNextLabelValid) {
-                                if (!getTextFieldText().isEmpty()) {
+                                if (!getSearchBarText().isEmpty()) {
                                     currentResultCount.incrementAndGet();
 
                                     if (currentResultCount.get() >= listResultsNum.get()) {
@@ -763,6 +769,7 @@ public class SearchBar {
                         translateUtil.getTranslation("Updating file index")));
                   eventUtil.putEvent(new UpdateDatabaseEvent());
                 startSignal.set(false);
+                isNotSqlInitialized.set(false);
                 return true;
             case "help":
                 detectShowingModeAndClose();
@@ -1336,7 +1343,7 @@ public class SearchBar {
                     isUserPressed.set(false);
                 }
                 if (isNextLabelValid()) {
-                    if (!getTextFieldText().isEmpty()) {
+                    if (!getSearchBarText().isEmpty()) {
                         currentResultCount.incrementAndGet();
 
                         if (currentResultCount.get() >= listResultsNum.get()) {
@@ -1354,7 +1361,7 @@ public class SearchBar {
                         && isLabelNotEmpty(label5) && isLabelNotEmpty(label6) && isLabelNotEmpty(label7) && isLabelNotEmpty(label8)) {
                     isUserPressed.set(true);
                 }
-                if (!getTextFieldText().isEmpty()) {
+                if (!getSearchBarText().isEmpty()) {
                     currentResultCount.getAndDecrement();
 
                     if (currentResultCount.get() >= listResultsNum.get()) {
@@ -2022,7 +2029,7 @@ public class SearchBar {
 
     //设置当前运行模式
     private void setRunningMode() {
-        String text = getTextFieldText();
+        String text = getSearchBarText();
         final StringBuilder strb = new StringBuilder();
         if (text == null || text.isEmpty()) {
             runningMode = Enums.RunningMode.NORMAL_MODE;
@@ -2052,7 +2059,7 @@ public class SearchBar {
     }
 
     private void changeFontOnDisplayFailed() {
-        String testStr = getTextFieldText();
+        String testStr = getSearchBarText();
         Font origin = textField.getFont();
         if (origin.canDisplayUpTo(testStr) == -1) {
             return;
@@ -2085,6 +2092,7 @@ public class SearchBar {
                 setRunningMode();
                 startTime = System.currentTimeMillis();
                 startSignal.set(true);
+                isNotSqlInitialized.set(true);
             }
 
             @Override
@@ -2092,15 +2100,17 @@ public class SearchBar {
                 changeFontOnDisplayFailed();
                 clearAllAndResetAll();
                 setRunningMode();
-                if (getTextFieldText().isEmpty()) {
+                if (getSearchBarText().isEmpty()) {
                     listResultsNum.set(0);
                     tempResultNum.set(0);
                     currentResultCount.set(0);
                     startTime = System.currentTimeMillis();
                     startSignal.set(false);
+                    isNotSqlInitialized.set(false);
                 } else {
                     startTime = System.currentTimeMillis();
                     startSignal.set(true);
+                    isNotSqlInitialized.set(true);
                 }
             }
 
@@ -2108,6 +2118,7 @@ public class SearchBar {
             public void changedUpdate(DocumentEvent e) {
                 startTime = System.currentTimeMillis();
                 startSignal.set(false);
+                isNotSqlInitialized.set(false);
             }
         });
     }
@@ -2178,6 +2189,7 @@ public class SearchBar {
                         if (databaseUtil.getStatus() == Enums.DatabaseStatus.NORMAL) {
                             startTime = System.currentTimeMillis() - 500;
                             startSignal.set(true);
+                            isNotSqlInitialized.set(true);
                             isWaiting.set(false);
                             break;
                         }
@@ -2569,7 +2581,7 @@ public class SearchBar {
                 EventUtil eventUtil = EventUtil.getInstance();
                 while (eventUtil.isNotMainExit()) {
                     tryToShowRecordsWhenHasLabelEmpty();
-                    String text = getTextFieldText();
+                    String text = getSearchBarText();
                     if (text.isEmpty()) {
                         clearAllLabels();
                         clearListAndTempAndReset();
@@ -2667,12 +2679,13 @@ public class SearchBar {
     }
 
     private void addSqlCommands() {
+        tableQueue.clear();
         LinkedList<TableNameWeightInfo> tmpCommandList = new LinkedList<>(tableSet);
         //将tableSet通过权重排序
-        tmpCommandList.sort((o1, o2) -> Long.compare(o2.weight, o1.weight));
+        tmpCommandList.sort((o1, o2) -> Long.compare(o2.weight.get(), o1.weight.get()));
         for (TableNameWeightInfo each : tmpCommandList) {
             if (IsDebug.isDebug()) {
-                System.out.println("已添加表" + each.tableName + "----权重" + each.weight);
+                System.out.println("已添加表" + each.tableName + "----权重" + each.weight.get());
             }
             tableQueue.add(each.tableName);
         }
@@ -2681,16 +2694,22 @@ public class SearchBar {
             if (!isCreated.get()) {
                 addMergeThread(isCreated);
             }
+            long time = System.currentTimeMillis();
             LinkedHashMap<String, String> nonFormattedSql = getNonFormattedSqlFromTableQueue();
+            AtomicBoolean isResultsFull = new AtomicBoolean(false);
+            String formattedSql;
             for (String each : nonFormattedSql.keySet()) {
                 if (
                         runningMode == Enums.RunningMode.NORMAL_MODE && DatabaseUtil.getInstance().getStatus() == Enums.DatabaseStatus.NORMAL
                 ) {
-                    each = String.format(each, "PATH");
-                    int matchedNum = searchAndAddToTempResults(System.currentTimeMillis(), each);
+                    formattedSql = String.format(each, "PATH");
+                    int matchedNum = searchAndAddToTempResults(System.currentTimeMillis(), formattedSql, isResultsFull);
                     long weight = Math.min(matchedNum, 5);
                     if (weight != 0L) {
                         updateTableWeight(nonFormattedSql.get(each), weight);
+                    }
+                    if (isResultsFull.get() || time < startTime) {
+                        return;
                     }
                 }
             }
@@ -2700,26 +2719,48 @@ public class SearchBar {
     private void sendSignalAndShowCommandThread() {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             //缓存和常用文件夹搜索线程
-            //停顿时间0.5s，每一次输入会更新一次startTime，该线程记录endTime
+            //每一次输入会更新一次startTime，该线程记录endTime
             try {
                 EventUtil eventUtil = EventUtil.getInstance();
                 TranslateUtil translateUtil = TranslateUtil.getInstance();
                 AllConfigs allConfigs = AllConfigs.getInstance();
+                String[] strings;
+                int length;
+                String text;
                 if (allConfigs.isFirstRun()) {
                     runInternalCommand("help");
                 }
                 while (eventUtil.isNotMainExit()) {
                     long endTime = System.currentTimeMillis();
+                    text = getSearchBarText();
+                    if ((endTime - startTime > 100) && isNotSqlInitialized.get() && startSignal.get()) {
+                        if (!getSearchBarText().isEmpty()) {
+                            isNotSqlInitialized.set(false);
+                            if (databaseUtil.getStatus() == Enums.DatabaseStatus.NORMAL && runningMode == Enums.RunningMode.NORMAL_MODE) {
+                                strings = colon.split(text);
+                                length = strings.length;
+                                if (length == 2) {
+                                    searchCase = semicolon.split(strings[1]);
+                                    searchText = strings[0];
+                                } else {
+                                    searchText = strings[0];
+                                    searchCase = null;
+                                }
+                                keywords = semicolon.split(searchText);
+                                searchCaseToLowerAndRemoveConflict();
+                                addSqlCommands();
+                            }
+                        }
+                    }
+
                     if ((endTime - startTime > 300) && startSignal.get()) {
                         startSignal.set(false); //开始搜索 计时停止
                         currentResultCount.set(0);
                         currentLabelSelectedPosition.set(0);
                         clearAllLabels();
-                        if (!getTextFieldText().isEmpty()) {
+                        if (!getSearchBarText().isEmpty()) {
                             setLabelChosen(label1);
                         }
-                        clearListAndTempAndReset();
-                        String text = getTextFieldText();
                         if (databaseUtil.getStatus() == Enums.DatabaseStatus.NORMAL) {
                             if (runningMode == Enums.RunningMode.COMMAND_MODE) {
                                 //去掉冒号
@@ -2747,39 +2788,19 @@ public class SearchBar {
                                 }
                             } else if (runningMode == Enums.RunningMode.NORMAL_MODE) {
                                 //对搜索关键字赋值
-                                String[] strings;
-                                int length;
-                                strings = colon.split(text);
-                                length = strings.length;
-                                if (length == 2) {
-                                    searchCase = semicolon.split(strings[1]);
-                                    searchText = strings[0];
-                                } else {
-                                    searchText = strings[0];
-                                    searchCase = null;
-                                }
-                                keywords = semicolon.split(searchText);
-                                searchCaseToLowerAndRemoveConflict();
-
-                                addSqlCommands();
-                                isCacheAndPrioritySearched.set(false);
                                 searchPriorityFolder();
                                 searchCache();
                                 isCacheAndPrioritySearched.set(true);
                             } else if (runningMode == Enums.RunningMode.PLUGIN_MODE) {
                                 String result;
-                                if (currentUsingPlugin != null) {
-                                    while (runningMode == Enums.RunningMode.PLUGIN_MODE) {
-                                        if (currentUsingPlugin != null) {
-                                            if ((result = currentUsingPlugin.pollFromResultQueue()) != null) {
-                                                if (isResultNotRepeat(result)) {
-                                                    listResults.add(result);
-                                                    listResultsNum.incrementAndGet();
-                                                }
-                                            }
+                                while (runningMode == Enums.RunningMode.PLUGIN_MODE) {
+                                    if (currentUsingPlugin != null && (result = currentUsingPlugin.pollFromResultQueue()) != null) {
+                                        if (isResultNotRepeat(result)) {
+                                            listResults.add(result);
+                                            listResultsNum.incrementAndGet();
                                         }
-                                        TimeUnit.MILLISECONDS.sleep(10);
                                     }
+                                    TimeUnit.MILLISECONDS.sleep(10);
                                 }
                             }
 
@@ -2802,7 +2823,7 @@ public class SearchBar {
                             clearAllLabels();
                         }
                     }
-                    TimeUnit.MILLISECONDS.sleep(20);
+                    TimeUnit.MILLISECONDS.sleep(25);
                 }
             } catch (InterruptedException ignored) {
             }
@@ -2944,16 +2965,15 @@ public class SearchBar {
      * @param time   开始搜索时间，用于检测用于重新输入匹配信息后快速停止
      * @param sql sql
      */
-    private int searchAndAddToTempResults(long time, String sql) {
+    private int searchAndAddToTempResults(long time, String sql, AtomicBoolean isResultsFull) {
         int count = 0;
         //结果太多则不再进行搜索
         if (listResultsNum.get() + tempResultNum.get() > MAX_RESULTS_COUNT || startTime > time) {
-            tableQueue.clear();
+            isResultsFull.set(true);
             return count;
         }
         try (PreparedStatement stmt = SQLiteUtil.getPreparedStatement(sql);
              ResultSet resultSet = stmt.executeQuery()) {
-
             String each;
             while (resultSet.next()) {
                 //结果太多则不再进行搜索
