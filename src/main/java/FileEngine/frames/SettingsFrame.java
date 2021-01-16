@@ -1,6 +1,7 @@
 package FileEngine.frames;
 
 import FileEngine.IsDebug;
+import FileEngine.annotation.EventRegister;
 import FileEngine.configs.AllConfigs;
 import FileEngine.configs.ConfigEntity;
 import FileEngine.configs.Enums;
@@ -1748,6 +1749,7 @@ public class SettingsFrame {
         SwingUtilities.invokeLater(() -> frame.setVisible(false));
     }
 
+    @EventRegister
     public static void registerEventHandler() {
         eventUtil.register(ShowSettingsFrameEvent.class, new EventHandler() {
             @Override

@@ -1,5 +1,6 @@
 package FileEngine.utils;
 
+import FileEngine.annotation.EventRegister;
 import FileEngine.configs.Enums;
 import FileEngine.dllInterface.HotkeyListener;
 import FileEngine.eventHandler.Event;
@@ -140,7 +141,8 @@ public class CheckHotKeyUtil {
             }
         });
     }
-    
+
+    @EventRegister
     public static void registerEventHandler() {
         EventUtil.getInstance().register(RegisterHotKeyEvent.class, new EventHandler() {
             @Override

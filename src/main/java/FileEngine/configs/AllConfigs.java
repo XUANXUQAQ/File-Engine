@@ -1,6 +1,7 @@
 package FileEngine.configs;
 
 import FileEngine.IsDebug;
+import FileEngine.annotation.EventRegister;
 import FileEngine.eventHandler.Event;
 import FileEngine.eventHandler.EventHandler;
 import FileEngine.eventHandler.impl.ReadConfigsAndBootSystemEvent;
@@ -592,6 +593,7 @@ public class AllConfigs {
         return JSONObject.parseObject(strBuilder.toString());
     }
 
+    @EventRegister
     public static void registerEventHandler() {
         EventUtil eventUtil = EventUtil.getInstance();
         eventUtil.register(ReadConfigsAndBootSystemEvent.class, new EventHandler() {

@@ -1,5 +1,6 @@
 package FileEngine.utils.download;
 
+import FileEngine.annotation.EventRegister;
 import FileEngine.configs.Enums;
 import FileEngine.eventHandler.Event;
 import FileEngine.eventHandler.EventHandler;
@@ -30,6 +31,7 @@ public class DownloadUtil {
 
     private DownloadUtil() {}
 
+    @EventRegister
     public static void registerEventHandler() {
         EventUtil eventUtil = EventUtil.getInstance();
         eventUtil.register(StartDownloadEvent.class, new EventHandler() {

@@ -1,6 +1,7 @@
 package FileEngine.utils.database;
 
 import FileEngine.IsDebug;
+import FileEngine.annotation.EventRegister;
 import FileEngine.configs.AllConfigs;
 import FileEngine.configs.Enums;
 import FileEngine.dllInterface.GetAscII;
@@ -679,6 +680,7 @@ public class DatabaseUtil {
         });
     }
 
+    @EventRegister
     public static void registerEventHandler() {
         EventUtil eventUtil = EventUtil.getInstance();
         eventUtil.register(AddToCacheEvent.class, new EventHandler() {
