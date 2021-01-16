@@ -26,11 +26,13 @@ import java.util.LinkedHashSet;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class DatabaseUtil {
     private final ConcurrentLinkedQueue<SQLWithTaskId> commandSet = new ConcurrentLinkedQueue<>();
     private volatile Enums.DatabaseStatus status = Enums.DatabaseStatus.NORMAL;
     private final AtomicBoolean isExecuteImmediately = new AtomicBoolean(false);
+    private final AtomicInteger cacheNum = new AtomicInteger(0);
 
     private static final int MAX_SQL_NUM = 5000;
 
@@ -611,6 +613,18 @@ public class DatabaseUtil {
         }
     }
 
+    /**
+     * 获取缓存数量
+     * @return cache num
+     */
+    public int getCacheNum() {
+        return cacheNum.get();
+    }
+
+    public void setCacheNum(int i) {
+        cacheNum.set(i);
+    }
+
     private boolean isTaskExistInCommandSet(SqlTaskIds taskId) {
         for (SQLWithTaskId tasks : commandSet) {
             if (tasks.taskId == taskId) {
@@ -686,14 +700,18 @@ public class DatabaseUtil {
         eventUtil.register(AddToCacheEvent.class, new EventHandler() {
             @Override
             public void todo(Event event) {
-                getInstance().addFileToCache(((AddToCacheEvent) event).path);
+                DatabaseUtil databaseUtil = getInstance();
+                databaseUtil.addFileToCache(((AddToCacheEvent) event).path);
+                databaseUtil.cacheNum.incrementAndGet();
             }
         });
 
         eventUtil.register(DeleteFromCacheEvent.class, new EventHandler() {
             @Override
             public void todo(Event event) {
-                getInstance().removeFileFromCache(((DeleteFromCacheEvent) event).path);
+                DatabaseUtil databaseUtil = getInstance();
+                databaseUtil.removeFileFromCache(((DeleteFromCacheEvent) event).path);
+                databaseUtil.cacheNum.decrementAndGet();
             }
         });
 

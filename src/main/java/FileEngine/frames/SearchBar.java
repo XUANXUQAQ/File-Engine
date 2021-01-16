@@ -161,7 +161,7 @@ public class SearchBar {
         searchBar.setUndecorated(true);
         searchBar.getRootPane().setWindowDecorationStyle(JRootPane.NONE);
         searchBar.setBackground(transparentColor);
-        searchBar.setOpacity(allConfigs.getTransparency());
+        searchBar.setOpacity(allConfigs.getOpacity());
         searchBar.setContentPane(panel);
         searchBar.setType(JFrame.Type.UTILITY);
         searchBar.setAlwaysOnTop(true);
@@ -2725,7 +2725,7 @@ public class SearchBar {
                                 //去掉冒号
                                 boolean isExecuted = runInternalCommand(text.substring(1).toLowerCase());
                                 if (!isExecuted) {
-                                    LinkedHashSet<String> cmdSet = new LinkedHashSet<>(allConfigs.getCmdSet());
+                                    LinkedHashSet<String> cmdSet = allConfigs.getCmdSet();
                                     cmdSet.add(":clearbin;" + translateUtil.getTranslation("Clear the recycle bin"));
                                     cmdSet.add(":update;" + translateUtil.getTranslation("Update file index"));
                                     cmdSet.add(":help;" + translateUtil.getTranslation("View help"));
@@ -3307,11 +3307,10 @@ public class SearchBar {
         AllConfigs allConfigs = AllConfigs.getInstance();
         SettingsFrame settingsFrame = SettingsFrame.getInstance();
         EventUtil eventUtil = EventUtil.getInstance();
-        if (allConfigs.getCacheNum() < allConfigs.getCacheNumLimit()) {
+        if (DatabaseUtil.getInstance().getCacheNum() < allConfigs.getCacheNumLimit()) {
             if (!settingsFrame.isCacheExist(content)) {
                 eventUtil.putEvent(new AddToCacheEvent(content));
                 settingsFrame.addCache(content);
-                allConfigs.incrementCacheNum();
             }
         }
     }

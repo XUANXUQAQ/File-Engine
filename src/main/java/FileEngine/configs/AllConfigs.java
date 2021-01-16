@@ -6,8 +6,7 @@ import FileEngine.eventHandler.Event;
 import FileEngine.eventHandler.EventHandler;
 import FileEngine.eventHandler.impl.ReadConfigsAndBootSystemEvent;
 import FileEngine.eventHandler.impl.SetSwingLaf;
-import FileEngine.eventHandler.impl.configs.SaveConfigsEvent;
-import FileEngine.eventHandler.impl.configs.SetConfigsEvent;
+import FileEngine.eventHandler.impl.configs.*;
 import FileEngine.eventHandler.impl.daemon.StartDaemonEvent;
 import FileEngine.eventHandler.impl.download.StartDownloadEvent;
 import FileEngine.eventHandler.impl.frame.searchBar.*;
@@ -18,6 +17,7 @@ import FileEngine.eventHandler.impl.plugin.SetPluginsCurrentThemeEvent;
 import FileEngine.eventHandler.impl.taskbar.ShowTrayIconEvent;
 import FileEngine.utils.EventUtil;
 import FileEngine.utils.TranslateUtil;
+import FileEngine.utils.database.DatabaseUtil;
 import FileEngine.utils.database.SQLiteUtil;
 import FileEngine.utils.download.DownloadManager;
 import FileEngine.utils.download.DownloadUtil;
@@ -42,7 +42,6 @@ import java.sql.ResultSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * 保存软件运行时的所有配置信息
@@ -63,7 +62,6 @@ public class AllConfigs {
     private final LinkedHashMap<String, AddressUrl> updateAddressMap = new LinkedHashMap<>();
     private final File settings = new File("user/settings.json");
     private final LinkedHashSet<String> cmdSet = new LinkedHashSet<>();
-    private final AtomicInteger cacheNum = new AtomicInteger(0);
     private boolean isFirstRunApp = false;
 
     private static volatile AllConfigs instance = null;
@@ -81,6 +79,11 @@ public class AllConfigs {
         return instance;
     }
 
+    /**
+     * 将swingTheme字符串映射到枚举类
+     * @param swingTheme swingTheme名称
+     * @return swingTheme枚举类实例
+     */
     private Enums.SwingThemes swingThemesMapper(String swingTheme) {
         if ("current".equals(swingTheme)) {
             return swingThemesMapper(configEntity.getSwingTheme());
@@ -93,126 +96,237 @@ public class AllConfigs {
         return Enums.SwingThemes.MaterialLighter;
     }
 
+    /**
+     * 是否在将文件拖出时提示已创建快捷方式
+     * @return boolean
+     */
     public boolean isShowTipOnCreatingLnk() {
         return configEntity.isShowTipCreatingLnk();
     }
 
+    /**
+     * 检测是不是第一次运行
+     * @return boolean
+     */
     public boolean isFirstRun() {
         return isFirstRunApp;
     }
 
-    public int getCacheNum() {
-        return cacheNum.get();
-    }
-
+    /**
+     * 获取网络代理端口
+     * @return proxy port
+     */
     public int getProxyPort() {
         return configEntity.getProxyPort();
     }
 
+    /**
+     * 获取网络代理用户名
+     * @return proxy username
+     */
     public String getProxyUserName() {
         return configEntity.getProxyUserName();
     }
 
+    /**
+     * 获取网络代理密码
+     * @return proxy password
+     */
     public String getProxyPassword() {
         return configEntity.getProxyPassword();
     }
 
+    /**
+     * 获取网络代理的类型
+     * @return proxyType int 返回值的类型由Enums.ProxyType中定义
+     * @see Enums.ProxyType
+     */
     public int getProxyType() {
         return configEntity.getProxyType();
     }
 
+    /**
+     * 获取网络代理地址
+     * @return proxy address
+     */
     public String getProxyAddress() {
         return configEntity.getProxyAddress();
     }
 
+    /**
+     * 获取搜索框默认字体颜色RGB值
+     * @return rgb hex
+     */
     public int getSearchBarFontColor() {
         return configEntity.getSearchBarFontColor();
     }
 
+    /**
+     * 获取搜索框显示颜色
+     * @return rgb hex
+     */
     public int getSearchBarColor() {
         return configEntity.getSearchBarColor();
     }
 
+    /**
+     * 获取热键
+     * @return hotkey 每个案件以 + 分开
+     */
     public String getHotkey() {
         return configEntity.getHotkey();
     }
 
+    /**
+     * 获取最大cache数量
+     * @return cache max size
+     */
     public int getCacheNumLimit() {
         return configEntity.getCacheNumLimit();
     }
 
+    /**
+     * 获取检测一次系统文件更改的时间
+     * @return int 单位 秒
+     */
     public int getUpdateTimeLimit() {
         return configEntity.getUpdateTimeLimit();
     }
 
+    /**
+     * 获取忽略的文件夹
+     * @return ignored path 由 ,（逗号）分开
+     */
     public String getIgnorePath() {
         return configEntity.getIgnorePath();
     }
 
+    /**
+     * 获取优先搜索文件夹
+     * @return priority dir
+     */
     public String getPriorityFolder() {
         return configEntity.getPriorityFolder();
     }
 
+    /**
+     * 获取搜索深度
+     * @return searchDepth
+     */
     public int getSearchDepth() {
         return configEntity.getSearchDepth();
     }
 
+    /**
+     * 是否在打开文件时默认以管理员身份运行，绕过UAC（危险）
+     * @return boolean
+     */
     public boolean isDefaultAdmin() {
         return configEntity.isDefaultAdmin();
     }
 
+    /**
+     * 是否在窗口失去焦点后自动关闭
+     * @return boolean
+     */
     public boolean isLoseFocusClose() {
         return configEntity.isLoseFocusClose();
     }
 
+    /**
+     * 获取swing皮肤包名称，可由swingThemesMapper转换为Enums.SwingThemes
+     * @return swing name
+     * @see Enums.SwingThemes
+     * @see #swingThemesMapper(String)
+     */
     public String getSwingTheme() {
         return configEntity.getSwingTheme();
     }
 
+    /**
+     * 获取打开上级文件夹的键盘快捷键code
+     * @return keycode
+     */
     public int getOpenLastFolderKeyCode() {
         return configEntity.getOpenLastFolderKeyCode();
     }
 
+    /**
+     * 获取以管理员身份运行程序快捷键code
+     * @return keycode
+     */
     public int getRunAsAdminKeyCode() {
         return configEntity.getRunAsAdminKeyCode();
     }
 
+    /**
+     * 获取复制文件路径code
+     * @return keycode
+     */
     public int getCopyPathKeyCode() {
         return configEntity.getCopyPathKeyCode();
     }
 
-    public float getTransparency() {
+    /**
+     * 获取不透明度
+     * @return opacity
+     */
+    public float getOpacity() {
         return configEntity.getTransparency();
     }
 
+    /**
+     * 获取cmdSet的一个复制
+     * @return cmdSet clone
+     */
     public LinkedHashSet<String> getCmdSet() {
-        return cmdSet;
+        return new LinkedHashSet<>(cmdSet);
     }
 
-    public void addToCmdSet(String cmd) {
-        cmdSet.add(cmd);
-    }
-
+    /**
+     * 获取搜索下拉框的默认颜色
+     * @return rgb hex
+     */
     public int getLabelColor() {
         return configEntity.getLabelColor();
     }
 
+    /**
+     * 获取更新地址
+     * @return url
+     */
     public String getUpdateAddress() {
         return configEntity.getUpdateAddress();
     }
 
+    /**
+     * 获取下拉框默认背景颜色
+     * @return rgb hex
+     */
     public int getDefaultBackgroundColor() {
         return configEntity.getDefaultBackgroundColor();
     }
 
+    /**
+     * 获取下拉框被选中的背景颜色
+     * @return rgb hex
+     */
     public int getLabelFontColorWithCoverage() {
         return configEntity.getFontColorWithCoverage();
     }
 
+    /**
+     * 获取下拉框被选中的字体颜色
+     * @return rgb hex
+     */
     public int getLabelFontColor() {
         return configEntity.getFontColor();
     }
 
+    /**
+     * 获取边框颜色
+     * @return rgb hex
+     */
     public int getBorderColor() {
         return configEntity.getBorderColor();
     }
@@ -226,16 +340,18 @@ public class AllConfigs {
                 configEntity.getProxyType());
     }
 
-    public void resetCacheNumToZero() {
-        cacheNum.set(0);
-    }
-
-    public void decrementCacheNum() {
-        cacheNum.decrementAndGet();
-    }
-
-    public void incrementCacheNum() {
-        cacheNum.incrementAndGet();
+    /**
+     * 初始化cmdSet
+     */
+    private void initCmdSetSettings() {
+        //获取所有自定义命令
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream("user/cmds.txt"), StandardCharsets.UTF_8))) {
+            String each;
+            while ((each = br.readLine()) != null) {
+                cmdSet.add(each);
+            }
+        } catch (IOException ignored) {
+        }
     }
 
     /**
@@ -244,7 +360,7 @@ public class AllConfigs {
     private void initCacheNum() {
         try (PreparedStatement stmt = SQLiteUtil.getPreparedStatement("SELECT COUNT(PATH) FROM cache;");
              ResultSet resultSet = stmt.executeQuery()) {
-            cacheNum.set(resultSet.getInt(1));
+            DatabaseUtil.getInstance().setCacheNum(resultSet.getInt(1));
         } catch (Exception throwables) {
             if (IsDebug.isDebug()) {
                 throwables.printStackTrace();
@@ -452,6 +568,7 @@ public class AllConfigs {
         readSwingTheme(settingsInJson);
         initCacheNum();
         initUpdateAddress();
+        initCmdSetSettings();
     }
 
     private void setAllSettings() {
@@ -596,6 +713,24 @@ public class AllConfigs {
     @EventRegister
     public static void registerEventHandler() {
         EventUtil eventUtil = EventUtil.getInstance();
+        eventUtil.register(AddCmdEvent.class, new EventHandler() {
+            @Override
+            public void todo(Event event) {
+                AllConfigs allConfigs = getInstance();
+                AddCmdEvent event1 = (AddCmdEvent) event;
+                allConfigs.cmdSet.add(event1.cmd);
+            }
+        });
+
+        eventUtil.register(DeleteCmdEvent.class, new EventHandler() {
+            @Override
+            public void todo(Event event) {
+                AllConfigs allConfigs = AllConfigs.getInstance();
+                DeleteCmdEvent deleteCmdEvent = (DeleteCmdEvent) event;
+                allConfigs.cmdSet.remove(deleteCmdEvent.cmd);
+            }
+        });
+
         eventUtil.register(ReadConfigsAndBootSystemEvent.class, new EventHandler() {
             @Override
             public void todo(Event event) {
