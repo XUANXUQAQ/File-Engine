@@ -466,7 +466,9 @@ public class SettingsFrame {
             int returnValue = fileChooser.showDialog(new Label(), translateUtil.getTranslation("Choose"));
             if (returnValue == JFileChooser.APPROVE_OPTION) {
                 cmd = fileChooser.getSelectedFile().getAbsolutePath();
-                allConfigs.getCmdSet().add(":" + name + ";" + cmd);
+                AddCmdEvent addCmdEvent = new AddCmdEvent(":" + name + ";" + cmd);
+                eventUtil.putEvent(addCmdEvent);
+                eventUtil.waitForEvent(addCmdEvent);
                 listCmds.setListData(allConfigs.getCmdSet().toArray());
             }
         });
@@ -476,7 +478,9 @@ public class SettingsFrame {
         buttonDelCmd.addActionListener(e -> {
             String del = (String) listCmds.getSelectedValue();
             if (del != null) {
-                allConfigs.getCmdSet().remove(del);
+                DeleteCmdEvent deleteCmdEvent = new DeleteCmdEvent(del);
+                eventUtil.putEvent(deleteCmdEvent);
+                eventUtil.waitForEvent(deleteCmdEvent);
                 listCmds.setListData(allConfigs.getCmdSet().toArray());
             }
 
@@ -816,7 +820,6 @@ public class SettingsFrame {
             if (cache != null) {
                 eventUtil.putEvent(new DeleteFromCacheEvent(cache));
                 cacheSet.remove(cache);
-                allConfigs.decrementCacheNum();
                 listCache.setListData(cacheSet.toArray());
             }
         });
@@ -950,7 +953,6 @@ public class SettingsFrame {
                     eventUtil.putEvent(new DeleteFromCacheEvent(each));
                 }
                 cacheSet.clear();
-                allConfigs.resetCacheNumToZero();
                 listCache.setListData(cacheSet.toArray());
             }
         });
@@ -1301,7 +1303,7 @@ public class SettingsFrame {
         ImageIcon imageIcon = new ImageIcon(SettingsFrame.class.getResource("/icons/frame.png"));
         labelIcon.setIcon(imageIcon);
         labelVersion.setText(translateUtil.getTranslation("Current Version:") + AllConfigs.version);
-        labelCurrentCacheNum.setText(translateUtil.getTranslation("Current Caches Num:") + allConfigs.getCacheNum());
+        labelCurrentCacheNum.setText(translateUtil.getTranslation("Current Caches Num:") + DatabaseUtil.getInstance().getCacheNum());
     }
 
     private String toRGBHexString(int colorRGB) {
@@ -1312,7 +1314,7 @@ public class SettingsFrame {
         textFieldBackgroundDefault.setText(toRGBHexString(allConfigs.getDefaultBackgroundColor()));
         textFieldLabelColor.setText(toRGBHexString(allConfigs.getLabelColor()));
         textFieldFontColorWithCoverage.setText(toRGBHexString(allConfigs.getLabelFontColorWithCoverage()));
-        textFieldTransparency.setText(String.valueOf(allConfigs.getTransparency()));
+        textFieldTransparency.setText(String.valueOf(allConfigs.getOpacity()));
         textFieldBorderColor.setText(toRGBHexString(allConfigs.getBorderColor()));
         textFieldFontColor.setText(toRGBHexString(allConfigs.getLabelFontColor()));
         textFieldSearchBarFontColor.setText(toRGBHexString(allConfigs.getSearchBarFontColor()));
@@ -1547,8 +1549,6 @@ public class SettingsFrame {
 
         addUpdateAddressToComboBox();
 
-        initCmdSetSettings();
-
         initCacheArray();
 
         initSuffixMap();
@@ -1672,7 +1672,7 @@ public class SettingsFrame {
                 "by the software and will be displayed first when searching."));
         labelSearchBarFontColor.setText(translateUtil.getTranslation("SearchBar Font Color:"));
         labelBorderColor.setText(translateUtil.getTranslation("Border Color:"));
-        labelCurrentCacheNum.setText(translateUtil.getTranslation("Current Caches Num:") + allConfigs.getCacheNum());
+        labelCurrentCacheNum.setText(translateUtil.getTranslation("Current Caches Num:") + DatabaseUtil.getInstance().getCacheNum());
         labelUninstallPluginTip.setText(translateUtil.getTranslation("If you need to delete a plug-in, just delete it under the \"plugins\" folder in the software directory."));
         labelUninstallPluginTip2.setText(translateUtil.getTranslation("Tip:"));
         chooseUpdateAddressLabel.setText(translateUtil.getTranslation("Choose update address"));
@@ -1732,17 +1732,6 @@ public class SettingsFrame {
             }
         }
         return false;
-    }
-
-    private void initCmdSetSettings() {
-        //获取所有自定义命令
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream("user/cmds.txt"), StandardCharsets.UTF_8))) {
-            String each;
-            while ((each = br.readLine()) != null) {
-                allConfigs.addToCmdSet(each);
-            }
-        } catch (IOException ignored) {
-        }
     }
 
     private void hideFrame() {
