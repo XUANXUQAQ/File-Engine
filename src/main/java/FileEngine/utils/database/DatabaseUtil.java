@@ -146,6 +146,7 @@ public class DatabaseUtil {
     private void addDeleteSqlCommandByAscii(int asciiSum, String path) {
         String command;
         int asciiGroup = asciiSum / 100;
+        asciiGroup = Math.min(asciiGroup, 40);
         String sql = "DELETE FROM %s where PATH=\"%s\";";
         command = String.format(sql, "list" + asciiGroup, path);
         if (command != null && isCommandNotRepeat(command)) {
@@ -156,12 +157,11 @@ public class DatabaseUtil {
     private void addAddSqlCommandByAscii(int asciiSum, String path, int priority) {
         String commandTemplate = "INSERT OR IGNORE INTO %s VALUES(%d, \"%s\", %d)";
         int asciiGroup = asciiSum / 100;
-        if (asciiGroup <= 40) {
-            String columnName = "list" + asciiGroup;
-            String command = String.format(commandTemplate, columnName, asciiSum, path, priority);
-            if (command != null && isCommandNotRepeat(command)) {
-                addToCommandSet(new SQLWithTaskId(SqlTaskIds.INSERT_TO_LIST, command));
-            }
+        asciiGroup = Math.min(asciiGroup, 40);
+        String columnName = "list" + asciiGroup;
+        String command = String.format(commandTemplate, columnName, asciiSum, path, priority);
+        if (command != null && isCommandNotRepeat(command)) {
+            addToCommandSet(new SQLWithTaskId(SqlTaskIds.INSERT_TO_LIST, command));
         }
     }
 
