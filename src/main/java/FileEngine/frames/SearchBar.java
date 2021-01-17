@@ -2733,7 +2733,7 @@ public class SearchBar {
                 while (eventUtil.isNotMainExit()) {
                     long endTime = System.currentTimeMillis();
                     text = getSearchBarText();
-                    if ((endTime - startTime > 100) && isNotSqlInitialized.get() && startSignal.get()) {
+                    if ((endTime - startTime > 150) && isNotSqlInitialized.get() && startSignal.get()) {
                         if (!getSearchBarText().isEmpty()) {
                             isNotSqlInitialized.set(false);
                             if (databaseUtil.getStatus() == Enums.DatabaseStatus.NORMAL && runningMode == Enums.RunningMode.NORMAL_MODE) {
