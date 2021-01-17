@@ -1786,6 +1786,7 @@ public class SettingsFrame {
         SetSwingLaf event = new SetSwingLaf("current");
         eventUtil.putEvent(event);
         eventUtil.waitForEvent(event);
+        textAreaDescription.setForeground(tabbedPane.getForeground());
         SwingUtilities.invokeLater(() -> frame.setVisible(true));
     }
 
