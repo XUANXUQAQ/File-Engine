@@ -19,6 +19,7 @@ A tool can make you work more efficiently.
  * 支持指定优先搜索文件夹，常用文件无需等待，立即打开。
  * 简洁UI，设置方便。
  * 自适应分辨率显示。    
+ * 多语言支持。   
 ### 该软件仅支持64位系统
 
 感谢以下项目：   
@@ -26,9 +27,17 @@ A tool can make you work more efficiently.
 2.FlatLaf (https://github.com/JFormDesigner/FlatLaf)   
 3.jna (https://github.com/java-native-access/jna)   
 4.sqlite_jdbc (https://github.com/xerial/sqlite-jdbc)   
+5.lombok (https://projectlombok.org/)
 
 ## Demos:
 ![8PPdxS.gif](https://github.com/XUANXUQAQ/File-Engine/raw/master/%E6%BC%94%E7%A4%BA.gif)
 
-![wyitln.png](https://s1.ax1x.com/2020/09/15/wyitln.png)
+![8PPdxS.gif](https://github.com/XUANXUQAQ/File-Engine/raw/master/%E6%BC%94%E7%A4%BA-attach.gif)
+
+[![s6JDN6.png](https://s3.ax1x.com/2021/01/18/s6JDN6.png)](https://imgchr.com/i/s6JDN6)
+
+[![s6Jr4K.png](https://s3.ax1x.com/2021/01/18/s6Jr4K.png)](https://imgchr.com/i/s6Jr4K)
+
+[![s68sVx.png](https://s3.ax1x.com/2021/01/18/s68sVx.png)](https://imgchr.com/i/s68sVx)
+
    
