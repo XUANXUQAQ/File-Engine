@@ -19,7 +19,8 @@ Or enter :help in the search bar. by default Ctrl + Alt + K to call out the sear
   * Update files in real time, automatically detect deleted and new files.
   * Support to specify the priority search folder, frequently used files can be opened immediately without waiting.
   * Simple UI, easy to set up.
-  * Adaptive resolution display.   
+  * Adaptive resolution display.    
+  * Multiple languages support    
 ### The software only support 64-bit operating system.
 
 Thanks for the following project:   
@@ -27,8 +28,15 @@ Thanks for the following project:
 2.FlatLaf (https://github.com/JFormDesigner/FlatLaf)   
 3.jna (https://github.com/java-native-access/jna)   
 4.sqlite_jdbc (https://github.com/xerial/sqlite-jdbc)   
+5.lombok (https://projectlombok.org/)
 
 ## Demos:
 ![8PPdxS.gif](https://github.com/XUANXUQAQ/File-Engine/raw/master/%E6%BC%94%E7%A4%BA.gif)
 
-![wyitln.png](https://s1.ax1x.com/2020/09/15/wyitln.png)
+![8PPdxS.gif](https://github.com/XUANXUQAQ/File-Engine/raw/master/%E6%BC%94%E7%A4%BA-attach.gif)
+
+[![s6JDN6.png](https://s3.ax1x.com/2021/01/18/s6JDN6.png)](https://imgchr.com/i/s6JDN6)
+
+[![s6Jr4K.png](https://s3.ax1x.com/2021/01/18/s6Jr4K.png)](https://imgchr.com/i/s6Jr4K)
+
+[![s68sVx.png](https://s3.ax1x.com/2021/01/18/s68sVx.png)](https://imgchr.com/i/s68sVx)
