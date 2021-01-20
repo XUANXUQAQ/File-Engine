@@ -13,4 +13,6 @@ public interface HotkeyListener extends Library {
     void startListen();
 
     void stopListen();
+
+    void setCtrlDoubleClick(boolean isResponse);
 }

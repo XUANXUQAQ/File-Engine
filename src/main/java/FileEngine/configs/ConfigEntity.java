@@ -84,4 +84,7 @@ public @Data class ConfigEntity {
 
     @JSONField(name = "language")
     private String language;
+
+    @JSONField(name = "doubleClickCtrlOpen")
+    private boolean doubleClickCtrlOpen;
 }

@@ -6,7 +6,10 @@ import FileEngine.eventHandler.Event;
 import FileEngine.eventHandler.EventHandler;
 import FileEngine.eventHandler.impl.ReadConfigsAndBootSystemEvent;
 import FileEngine.eventHandler.impl.SetSwingLaf;
-import FileEngine.eventHandler.impl.configs.*;
+import FileEngine.eventHandler.impl.configs.AddCmdEvent;
+import FileEngine.eventHandler.impl.configs.DeleteCmdEvent;
+import FileEngine.eventHandler.impl.configs.SaveConfigsEvent;
+import FileEngine.eventHandler.impl.configs.SetConfigsEvent;
 import FileEngine.eventHandler.impl.daemon.StartDaemonEvent;
 import FileEngine.eventHandler.impl.download.StartDownloadEvent;
 import FileEngine.eventHandler.impl.frame.searchBar.*;
@@ -332,6 +335,10 @@ public class AllConfigs {
                 configEntity.getProxyType());
     }
 
+    public boolean isResponseCtrl() {
+        return configEntity.isDoubleClickCtrlOpen();
+    }
+
     /**
      * 初始化cmdSet
      */
@@ -394,6 +401,10 @@ public class AllConfigs {
 
     public AddressUrl getUpdateUrlFromMap(String updateAddress) {
         return updateAddressMap.get(updateAddress);
+    }
+
+    private void readResponseCtrl(JSONObject settingsInJson) {
+        configEntity.setDoubleClickCtrlOpen((boolean) getFromJson(settingsInJson, "doubleClickCtrlOpen", true));
     }
 
     private void readUpdateAddress(JSONObject settingsInJson) {
@@ -551,6 +562,7 @@ public class AllConfigs {
         readCacheNumLimit(settingsInJson);
         readUpdateAddress(settingsInJson);
         readHotKey(settingsInJson);
+        readResponseCtrl(settingsInJson);
         readShowTipOnCreatingLnk(settingsInJson);
         readSwingTheme(settingsInJson);
         initCacheNum();

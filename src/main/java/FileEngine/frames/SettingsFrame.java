@@ -8,7 +8,10 @@ import FileEngine.configs.Enums;
 import FileEngine.eventHandler.Event;
 import FileEngine.eventHandler.EventHandler;
 import FileEngine.eventHandler.impl.SetSwingLaf;
-import FileEngine.eventHandler.impl.configs.*;
+import FileEngine.eventHandler.impl.configs.AddCmdEvent;
+import FileEngine.eventHandler.impl.configs.DeleteCmdEvent;
+import FileEngine.eventHandler.impl.configs.SaveConfigsEvent;
+import FileEngine.eventHandler.impl.configs.SetConfigsEvent;
 import FileEngine.eventHandler.impl.database.*;
 import FileEngine.eventHandler.impl.download.StartDownloadEvent;
 import FileEngine.eventHandler.impl.download.StopDownloadEvent;
@@ -17,6 +20,7 @@ import FileEngine.eventHandler.impl.frame.searchBar.HideSearchBarEvent;
 import FileEngine.eventHandler.impl.frame.searchBar.PreviewSearchBarEvent;
 import FileEngine.eventHandler.impl.frame.settingsFrame.HideSettingsFrameEvent;
 import FileEngine.eventHandler.impl.frame.settingsFrame.ShowSettingsFrameEvent;
+import FileEngine.eventHandler.impl.hotkey.ResponseCtrlEvent;
 import FileEngine.eventHandler.impl.plugin.AddPluginsCanUpdateEvent;
 import FileEngine.utils.*;
 import FileEngine.utils.database.DatabaseUtil;
@@ -247,6 +251,7 @@ public class SettingsFrame {
     private JButton buttonDeleteAllSuffix;
     private JLabel labelSuffixTip;
     private JLabel labelPlaceHolder;
+    private JCheckBox checkBoxResponseCtrl;
     private JScrollPane tabGeneralScrollpane;
     private JScrollPane tabGeneralScrollPane;
     private JPanel tabGeneralPane;
@@ -1411,6 +1416,7 @@ public class SettingsFrame {
         checkBoxAddToStartup.setSelected(allConfigs.hasStartup());
         checkBoxAdmin.setSelected(allConfigs.isDefaultAdmin());
         checkBoxIsShowTipOnCreatingLnk.setSelected(allConfigs.isShowTipOnCreatingLnk());
+        checkBoxResponseCtrl.setSelected(allConfigs.isResponseCtrl());
     }
 
     private void setListGui() {
@@ -1682,6 +1688,7 @@ public class SettingsFrame {
         checkBoxAdmin.setText(translateUtil.getTranslation("Open other programs as an administrator " +
                 "(provided that the software has privileges)"));
         checkBoxIsShowTipOnCreatingLnk.setText(translateUtil.getTranslation("Show tip on creating shortcut"));
+        checkBoxResponseCtrl.setText(translateUtil.getTranslation("Double-click \"Ctrl\" to open the search bar"));
     }
 
     private void translateButtons() {
@@ -1922,7 +1929,6 @@ public class SettingsFrame {
         String tmp_proxyUserName = textFieldUserName.getText();
         String tmp_proxyPassword = textFieldPassword.getText();
 
-        setStartup(checkBoxAddToStartup.isSelected());
         ConfigEntity configEntity = new ConfigEntity();
 
         if (radioButtonProxyTypeSocks5.isSelected()) {
@@ -1959,6 +1965,10 @@ public class SettingsFrame {
         configEntity.setCopyPathKeyCode(tmp_copyPathKeyCode);
         configEntity.setSwingTheme(swingTheme);
         configEntity.setLanguage(translateUtil.getLanguage());
+        configEntity.setDoubleClickCtrlOpen(checkBoxResponseCtrl.isSelected());
+
+        setStartup(checkBoxAddToStartup.isSelected());
+        eventUtil.putEvent(new ResponseCtrlEvent(checkBoxResponseCtrl.isSelected()));
 
         SaveConfigsEvent event = new SaveConfigsEvent(configEntity);
         eventUtil.putEvent(event);

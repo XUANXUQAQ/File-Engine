@@ -35,7 +35,7 @@ import java.util.concurrent.TimeUnit;
 public class MainClass {
     private static final String FILE_MONITOR_64_MD_5 = "5a8c123397c8e89614d4f9b91c2fa8f9";
     private static final String GET_ASC_II_64_MD_5 = "62a56c26e1afa7c4fa3f441aadb9d515";
-    private static final String HOTKEY_LISTENER_64_MD_5 = "dca474d8385fd9bbd6a3ea3e7375bba0";
+    private static final String HOTKEY_LISTENER_64_MD_5 = "a212cc427a89a614402e59897c82e50d";
     private static final String IS_LOCAL_DISK_64_MD_5 = "f8a71d3496d8cc188713d521e6dfa2b2";
     private static final String FILE_SEARCHER_USN_64_MD_5 = "44e1d54765b7a7849c273dd132cbe2d1";
     private static final String SQLITE3_64_MD_5 = "658c71b8b93ba4eb5b4936f46a112449";

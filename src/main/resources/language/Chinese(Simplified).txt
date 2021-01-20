@@ -204,3 +204,4 @@ Priority num=优先级
 Do you sure want to delete this suffix=确实要删除此后缀吗
 Are you sure to delete all the suffixes=确定要删除所有后缀吗
 Modifying the suffix priority requires rebuilding the index (input ":update") to take effect=修改后缀优先级需要重建索引（输入“:update”）才能生效
+Double-click "Ctrl" to open the search bar=双击"Ctrl"来打开搜索框

@@ -8,6 +8,7 @@ import FileEngine.eventHandler.EventHandler;
 import FileEngine.eventHandler.impl.frame.searchBar.HideSearchBarEvent;
 import FileEngine.eventHandler.impl.frame.searchBar.ShowSearchBarEvent;
 import FileEngine.eventHandler.impl.hotkey.RegisterHotKeyEvent;
+import FileEngine.eventHandler.impl.hotkey.ResponseCtrlEvent;
 import FileEngine.eventHandler.impl.hotkey.StopListenHotkeyEvent;
 import FileEngine.frames.SearchBar;
 
@@ -123,13 +124,13 @@ public class CheckHotKeyUtil {
                         if (searchBar.isVisible()) {
                             if (System.currentTimeMillis() - startVisibleTime > 200) {
                                 if (searchBar.getShowingMode() == Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
-                                    EventUtil.getInstance().putEvent(new HideSearchBarEvent());
+                                    eventUtil.putEvent(new HideSearchBarEvent());
                                     endVisibleTime = System.currentTimeMillis();
                                 }
                             }
                         } else {
                             if (System.currentTimeMillis() - endVisibleTime > 200) {
-                                EventUtil.getInstance().putEvent(new ShowSearchBarEvent(true));
+                                eventUtil.putEvent(new ShowSearchBarEvent(true));
                                 startVisibleTime = System.currentTimeMillis();
                             }
                         }
@@ -144,17 +145,27 @@ public class CheckHotKeyUtil {
 
     @EventRegister
     public static void registerEventHandler() {
-        EventUtil.getInstance().register(RegisterHotKeyEvent.class, new EventHandler() {
+        EventUtil eventUtil = EventUtil.getInstance();
+
+        eventUtil.register(RegisterHotKeyEvent.class, new EventHandler() {
             @Override
             public void todo(Event event) {
                 getInstance().registerHotkey(((RegisterHotKeyEvent) event).hotkey);
             }
         });
 
-        EventUtil.getInstance().register(StopListenHotkeyEvent.class, new EventHandler() {
+        eventUtil.register(StopListenHotkeyEvent.class, new EventHandler() {
             @Override
             public void todo(Event event) {
                 getInstance().stopListen();
+            }
+        });
+
+        eventUtil.register(ResponseCtrlEvent.class, new EventHandler() {
+            @Override
+            public void todo(Event event) {
+                ResponseCtrlEvent responseCtrlEvent = (ResponseCtrlEvent) event;
+                HotkeyListener.INSTANCE.setCtrlDoubleClick(responseCtrlEvent.isResponse);
             }
         });
     }

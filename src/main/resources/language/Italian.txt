@@ -204,3 +204,4 @@ Priority num=Numero prioritario
 Do you sure want to delete this suffix=Vuoi davvero eliminare questo suffisso
 Are you sure to delete all the suffixes=Sei sicuro di eliminare tutti i suffissi
 Modifying the suffix priority requires rebuilding the index (input ":update") to take effect=La modifica della priorità del suffisso richiede la ricostruzione dell'indice (input ": update") per avere effetto
+Double-click "Ctrl" to open the search bar=Fare doppio clic su "Ctrl" per aprire la casella di ricerca

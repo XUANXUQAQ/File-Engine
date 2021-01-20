@@ -1,16 +1,22 @@
 ﻿// dllmain.cpp : 定义 DLL 应用程序的入口点。
 #include "pch.h"
+
+#include <chrono>
 #include <Windows.h>
 #include <WinUser.h>
 #include <fstream>
 #pragma comment(lib, "User32.lib")
-//#define TEST
 
 using namespace std;
+
 extern "C" __declspec(dllexport) void registerHotKey(int key1, int key2, int key3, int key4, int key5);
 extern "C" __declspec(dllexport) bool getKeyStatus();
 extern "C" __declspec(dllexport) void startListen();
 extern "C" __declspec(dllexport) void stopListen();
+extern "C" __declspec(dllexport) void setCtrlDoubleClick(bool isResponse);
+
+inline time_t getCurrentMills();
+inline int isVirtualKeyPressed(int vk);
 
 static volatile bool isKeyPressed = false;
 static volatile bool isStop = false;
@@ -19,6 +25,19 @@ static volatile int hotkey2;
 static volatile int hotkey3;
 static volatile int hotkey4;
 static volatile int hotkey5;
+static volatile time_t ctrlPressedTime;
+
+bool isResponseCtrlDoubleClick = true;
+
+inline int isVirtualKeyPressed(int vk)
+{
+    return GetAsyncKeyState(vk) & 1;
+}
+
+void setCtrlDoubleClick(bool isResponse)
+{
+    isResponseCtrlDoubleClick = isResponse;
+}
 
 __declspec(dllexport) void stopListen()
 {
@@ -32,8 +51,27 @@ __declspec(dllexport) void startListen()
     short isKey3Pressed;
     short isKey4Pressed;
     short isKey5Pressed;
+    short isCtrlPressedDouble;
+
+    ctrlPressedTime = getCurrentMills();
+
     while (!isStop)
     {
+    	if (isVirtualKeyPressed(VK_CONTROL) && isResponseCtrlDoubleClick)
+    	{
+    		//ctrl 被点击
+    		if (getCurrentMills() - ctrlPressedTime < 300)
+    		{
+                isCtrlPressedDouble = true;
+    		} else
+    		{
+                isCtrlPressedDouble = false;
+    		}
+            ctrlPressedTime = getCurrentMills();
+    	} else
+    	{
+            isCtrlPressedDouble = false;
+    	}
         if (hotkey1 > 0)
         {
             isKey1Pressed = GetKeyState(hotkey1);
@@ -74,12 +112,9 @@ __declspec(dllexport) void startListen()
         {
             isKey5Pressed = -1;
         }
-        if (isKey1Pressed < 0 && isKey2Pressed < 0 && isKey3Pressed < 0 && isKey4Pressed < 0 && isKey5Pressed < 0) //如果某键被按下
+        if (isCtrlPressedDouble || isKey1Pressed < 0 && isKey2Pressed < 0 && isKey3Pressed < 0 && isKey4Pressed < 0 && isKey5Pressed < 0) //如果某键被按下
         {
             isKeyPressed = true;
-#ifdef TEST
-            cout << "key pressed" << endl;
-#endif
         }
         else
         {
@@ -102,11 +137,8 @@ __declspec(dllexport) void registerHotKey(int key1, int key2, int key3, int key4
     hotkey5 = key5;
 }
 
-#ifdef TEST
-int main()
+inline time_t getCurrentMills()
 {
-    registerHotKey(17, -1, 74);
-    startListen();
+	const auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(chrono::system_clock::now().time_since_epoch());
+    return ms.count();  
 }
-#endif
-
