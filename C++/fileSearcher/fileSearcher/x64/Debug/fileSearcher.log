@@ -1,3 +1,0 @@
-﻿  fileSearcher.cpp
-D:\Code\File-Engine\File-Engine\C++\fileSearcher\fileSearcher\Search.h(408,68): warning C4267: “参数”: 从“size_t”转换到“int”，可能丢失数据
-  fileSearcher.vcxproj -> D:\Code\File-Engine\File-Engine\C++\fileSearcher\x64\Debug\fileSearcher.exe
