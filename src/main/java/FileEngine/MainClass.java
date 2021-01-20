@@ -34,7 +34,6 @@ import java.util.concurrent.TimeUnit;
 
 public class MainClass {
     private static final String FILE_MONITOR_64_MD_5 = "5a8c123397c8e89614d4f9b91c2fa8f9";
-    private static final String FILE_SEARCHER_64_MD_5 = "fa6a144d3f7bf6363abd143ce777f417";
     private static final String GET_ASC_II_64_MD_5 = "62a56c26e1afa7c4fa3f441aadb9d515";
     private static final String HOTKEY_LISTENER_64_MD_5 = "dca474d8385fd9bbd6a3ea3e7375bba0";
     private static final String IS_LOCAL_DISK_64_MD_5 = "f8a71d3496d8cc188713d521e6dfa2b2";
@@ -417,7 +416,6 @@ public class MainClass {
         copyOrIgnoreFile("user/getAscII.dll", "/win32-native/getAscII.dll", GET_ASC_II_64_MD_5);
         copyOrIgnoreFile("user/hotkeyListener.dll", "/win32-native/hotkeyListener.dll", HOTKEY_LISTENER_64_MD_5);
         copyOrIgnoreFile("user/isLocalDisk.dll", "/win32-native/isLocalDisk.dll", IS_LOCAL_DISK_64_MD_5);
-        copyOrIgnoreFile("user/fileSearcher.exe", "/win32-native/fileSearcher.exe", FILE_SEARCHER_64_MD_5);
         copyOrIgnoreFile("user/fileSearcherUSN.exe", "/win32-native/fileSearcherUSN.exe", FILE_SEARCHER_USN_64_MD_5);
         copyOrIgnoreFile("user/sqlite3.dll", "/win32-native/sqlite3.dll", SQLITE3_64_MD_5);
         copyOrIgnoreFile("user/getHandle.dll", "/win32-native/getHandle.dll", GET_HANDLE_64_MD_5);
