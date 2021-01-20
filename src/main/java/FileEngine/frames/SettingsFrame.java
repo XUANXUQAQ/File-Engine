@@ -246,6 +246,7 @@ public class SettingsFrame {
     private JTable tableSuffix;
     private JButton buttonDeleteAllSuffix;
     private JLabel labelSuffixTip;
+    private JLabel labelPlaceHolder;
     private JScrollPane tabGeneralScrollpane;
     private JScrollPane tabGeneralScrollPane;
     private JPanel tabGeneralPane;
