@@ -14,7 +14,6 @@ import FileEngine.utils.CachedThreadPoolUtil;
 import FileEngine.utils.EventUtil;
 import FileEngine.utils.TranslateUtil;
 
-import javax.swing.filechooser.FileSystemView;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.sql.PreparedStatement;
@@ -320,18 +319,15 @@ public class DatabaseUtil {
         this.status = status;
     }
 
-    private void searchFile(String ignorePath, int searchDepth) {
+    private void searchFile(String ignorePath) {
         boolean canSearchByUsn = false;
         File[] roots = File.listRoots();
         StringBuilder ntfsDisk = new StringBuilder(50);
-        StringBuilder nonNtfsDisk = new StringBuilder(50);
         for (File root : roots) {
             if (IsLocalDisk.INSTANCE.isLocalDisk(root.getAbsolutePath())) {
                 if (IsLocalDisk.INSTANCE.isDiskNTFS(root.getAbsolutePath())) {
                     canSearchByUsn = true;
                     ntfsDisk.append(root.getAbsolutePath()).append(",");
-                } else {
-                    nonNtfsDisk.append(root.getAbsolutePath()).append(",");
                 }
             }
         }
@@ -341,31 +337,8 @@ public class DatabaseUtil {
             } catch (IOException | InterruptedException e) {
                 e.printStackTrace();
             }
-        } else {
-            nonNtfsDisk.append(ntfsDisk);
         }
 
-        String[] paths = nonNtfsDisk.toString().split(",");
-        for (String path : paths) {
-            if (!path.isEmpty()) {
-                path = path.substring(0, 2);
-                try {
-                    searchFile(path, searchDepth, ignorePath);
-                } catch (InterruptedException | IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-
-        String[] desktops = new String[]{getDesktop(), "C:\\Users\\Public\\Desktop"};
-        for (String eachDesktop : desktops) {
-            File[] desktopFiles = new File(eachDesktop).listFiles();
-            if (desktopFiles != null) {
-                if (desktopFiles.length != 0) {
-                    searchFileIgnoreSearchDepth(eachDesktop, ignorePath);
-                }
-            }
-        }
         createAllIndex();
         waitForCommandSet(SqlTaskIds.CREATE_INDEX);
         EventUtil.getInstance().putEvent(new ShowTaskBarMessageEvent(
@@ -403,11 +376,6 @@ public class DatabaseUtil {
         }
     }
 
-    private String getDesktop() {
-        FileSystemView fsv = FileSystemView.getFileSystemView();
-        return fsv.getHomeDirectory().getAbsolutePath();
-    }
-
     private boolean isTaskExist(String procName, StringBuilder strBuilder) throws IOException, InterruptedException {
         if (!procName.isEmpty()) {
             Process p = Runtime.getRuntime().exec("tasklist /FI \"IMAGENAME eq " + procName + "\"");
@@ -431,38 +399,10 @@ public class DatabaseUtil {
         }
     }
 
-    private void searchFileIgnoreSearchDepth(String path, String ignorePath) {
-        File fileSearcher = new File("user/fileSearcher.exe");
-        String absPath = fileSearcher.getAbsolutePath();
-        String start = absPath.substring(0, 2);
-        String end = "\"" + absPath.substring(2) + "\"";
-        File database = new File("data.db");
-        String command = "cmd.exe /c " + start + end + " \"" + path + "\"" + " \"1\" " + "\"" + ignorePath + "\" " + "\"" + database.getAbsolutePath() + "\" " + "\"" + "1" + "\"";
-        try {
-            Runtime.getRuntime().exec(command, null, new File("user"));
-            waitForProcess("fileSearcher.exe");
-        } catch (IOException | InterruptedException e) {
-            if (!(e instanceof InterruptedException) && IsDebug.isDebug()) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    private void searchFile(String path, int searchDepth, String ignorePath) throws InterruptedException, IOException {
-        File fileSearcher = new File("user/fileSearcher.exe");
-        String absPath = fileSearcher.getAbsolutePath();
-        String start = absPath.substring(0, 2);
-        String end = "\"" + absPath.substring(2) + "\"";
-        File database = new File("data.db");
-        String command = "cmd.exe /c " + start + end + " \"" + path + "\"" + " \"" + searchDepth + "\" " + "\"" + ignorePath + "\" " + "\"" + database.getAbsolutePath() + "\" " + "\"" + "0" + "\"";
-        Runtime.getRuntime().exec(command, null, new File("user"));
-        waitForProcess("fileSearcher.exe");
-    }
-
-    private void updateLists(String ignorePath, int searchDepth) {
+    private void updateLists(String ignorePath) {
         recreateDatabase();
         waitForCommandSet(SqlTaskIds.CREATE_TABLE);
-        searchFile(ignorePath, searchDepth);
+        searchFile(ignorePath);
     }
 
     private void waitForCommandSet(SqlTaskIds taskId) {
@@ -591,8 +531,9 @@ public class DatabaseUtil {
         eventUtil.register(AddToDatabaseEvent.class, new EventHandler() {
             @Override
             public void todo(Event event) {
+                DatabaseUtil databaseUtil = getInstance();
                 for (Object each : ((AddToDatabaseEvent) event).getPaths()) {
-                    getInstance().addFileToDatabase((String) each);
+                    databaseUtil.addFileToDatabase((String) each);
                 }
             }
         });
@@ -601,8 +542,9 @@ public class DatabaseUtil {
             @Override
             public void todo(Event event) {
                 DeleteFromDatabaseEvent deleteFromDatabaseEvent = ((DeleteFromDatabaseEvent) event);
+                DatabaseUtil databaseUtil = getInstance();
                 for (Object each : deleteFromDatabaseEvent.getPaths()) {
-                    getInstance().removeFileFromDatabase((String) each);
+                    databaseUtil.removeFileFromDatabase((String) each);
                 }
             }
         });
@@ -610,9 +552,10 @@ public class DatabaseUtil {
         eventUtil.register(UpdateDatabaseEvent.class, new EventHandler() {
             @Override
             public void todo(Event event) {
-                getInstance().setStatus(Enums.DatabaseStatus.MANUAL_UPDATE);
-                getInstance().updateLists(AllConfigs.getInstance().getIgnorePath(), AllConfigs.getInstance().getSearchDepth());
-                getInstance().setStatus(Enums.DatabaseStatus.NORMAL);
+                DatabaseUtil databaseUtil = getInstance();
+                databaseUtil.setStatus(Enums.DatabaseStatus.MANUAL_UPDATE);
+                databaseUtil.updateLists(AllConfigs.getInstance().getIgnorePath());
+                databaseUtil.setStatus(Enums.DatabaseStatus.NORMAL);
             }
         });
 
@@ -626,7 +569,8 @@ public class DatabaseUtil {
         eventUtil.register(OptimiseDatabaseEvent.class, new EventHandler() {
             @Override
             public void todo(Event event) {
-                getInstance().setStatus(Enums.DatabaseStatus.VACUUM);
+                DatabaseUtil databaseUtil = getInstance();
+                databaseUtil.setStatus(Enums.DatabaseStatus.VACUUM);
                 //执行VACUUM命令
                 try (PreparedStatement stmt = SQLiteUtil.getPreparedStatement("VACUUM;")) {
                     stmt.execute();
@@ -636,7 +580,7 @@ public class DatabaseUtil {
                     if (IsDebug.isDebug()) {
                         System.out.println("结束优化");
                     }
-                    getInstance().setStatus(Enums.DatabaseStatus.NORMAL);
+                    databaseUtil.setStatus(Enums.DatabaseStatus.NORMAL);
                 }
             }
         });

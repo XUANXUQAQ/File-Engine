@@ -47,7 +47,7 @@ import java.util.Set;
  * 保存软件运行时的所有配置信息
  */
 public class AllConfigs {
-    public static final String version = "3.0"; //TODO 更改版本号
+    public static final String version = "3.1"; //TODO 更改版本号
 
     public static final String FILE_NAME = "File-Engine-x64.exe";
 
@@ -207,14 +207,6 @@ public class AllConfigs {
      */
     public String getPriorityFolder() {
         return configEntity.getPriorityFolder();
-    }
-
-    /**
-     * 获取搜索深度
-     * @return searchDepth
-     */
-    public int getSearchDepth() {
-        return configEntity.getSearchDepth();
     }
 
     /**
@@ -420,10 +412,6 @@ public class AllConfigs {
         configEntity.setPriorityFolder((String) getFromJson(settingsInJson, "priorityFolder", ""));
     }
 
-    private void readSearchDepth(JSONObject settingsInJson) {
-        configEntity.setSearchDepth((int) getFromJson(settingsInJson, "searchDepth", 8));
-    }
-
     private void readIgnorePath(JSONObject settingsInJson) {
         configEntity.setIgnorePath((String) getFromJson(settingsInJson, "ignorePath", "C:\\Windows,"));
     }
@@ -559,7 +547,6 @@ public class AllConfigs {
         readIsDefaultAdmin(settingsInJson);
         readUpdateTimeLimit(settingsInJson);
         readIgnorePath(settingsInJson);
-        readSearchDepth(settingsInJson);
         readPriorityFolder(settingsInJson);
         readCacheNumLimit(settingsInJson);
         readUpdateAddress(settingsInJson);

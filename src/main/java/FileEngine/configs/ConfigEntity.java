@@ -3,8 +3,7 @@ package FileEngine.configs;
 import com.alibaba.fastjson.annotation.JSONField;
 import lombok.Data;
 
-public @Data
-class ConfigEntity {
+public @Data class ConfigEntity {
     @JSONField(name = "cacheNumLimit")
     private int cacheNumLimit;
 
@@ -22,9 +21,6 @@ class ConfigEntity {
 
     @JSONField(name = "priorityFolder")
     private String priorityFolder;
-
-    @JSONField(name = "searchDepth")
-    private int searchDepth;
 
     @JSONField(name = "isDefaultAdmin")
     private boolean isDefaultAdmin;

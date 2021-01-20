@@ -66,14 +66,12 @@ public class SettingsFrame {
     private JTextField textFieldUpdateInterval;
     private JTextField textFieldCacheNum;
     private JTextArea textAreaIgnorePath;
-    private JTextField textFieldSearchDepth;
     private JCheckBox checkBoxAddToStartup;
     private JLabel labelSetIgnorePathTip;
     private JLabel labelUpdateInterval;
     private JLabel labelOpenSearchBarHotKey;
     private JLabel labelMaxCacheNum;
     private JLabel labelSecond;
-    private JLabel labelSearchDepth;
     private JPanel panel;
     private JLabel labelConstIgnorePathTip;
     private JButton buttonSaveAndRemoveDesktop;
@@ -239,8 +237,6 @@ public class SettingsFrame {
     private JLabel placeholderLanguage0;
     private JLabel placeholderColorSettings0;
     private JLabel placeholdersearch0;
-    private JLabel placeholderSearch1;
-    private JLabel placeholderSearch2;
     private JLabel labelTinyPinyin;
     private JLabel labelLombok;
     private JPanel tabModifyPriority;
@@ -1319,7 +1315,6 @@ public class SettingsFrame {
         textFieldFontColor.setText(toRGBHexString(allConfigs.getLabelFontColor()));
         textFieldSearchBarFontColor.setText(toRGBHexString(allConfigs.getSearchBarFontColor()));
         textFieldCacheNum.setText(String.valueOf(allConfigs.getCacheNumLimit()));
-        textFieldSearchDepth.setText(String.valueOf(allConfigs.getSearchDepth()));
         textFieldHotkey.setText(allConfigs.getHotkey());
         textFieldPriorityFolder.setText(allConfigs.getPriorityFolder());
         textFieldUpdateInterval.setText(String.valueOf(allConfigs.getUpdateTimeLimit()));
@@ -1328,7 +1323,7 @@ public class SettingsFrame {
         textFieldPort.setText(String.valueOf(allConfigs.getProxyPort()));
         textFieldUserName.setText(allConfigs.getProxyUserName());
         textFieldPassword.setText(allConfigs.getProxyPassword());
-        textAreaIgnorePath.setText(allConfigs.getIgnorePath().replaceAll(",", ",\n"));
+        textAreaIgnorePath.setText(RegexUtil.comma.matcher(allConfigs.getIgnorePath()).replaceAll(",\n"));
         if (allConfigs.getRunAsAdminKeyCode() == 17) {
             textFieldRunAsAdminHotKey.setText("Ctrl + Enter");
         } else if (allConfigs.getRunAsAdminKeyCode() == 16) {
@@ -1635,7 +1630,6 @@ public class SettingsFrame {
         labelMaxCacheNum.setText(translateUtil.getTranslation("Set the maximum number of caches:"));
         labelUpdateInterval.setText(translateUtil.getTranslation("File update detection interval:"));
         labelSecond.setText(translateUtil.getTranslation("Seconds"));
-        labelSearchDepth.setText(translateUtil.getTranslation("Search depth (too large may affect performance):"));
         labeltipPriorityFolder.setText(translateUtil.getTranslation("Priority search folder location (double-click to clear):"));
         labelConstIgnorePathTip.setText(translateUtil.getTranslation("Separate different paths with commas, and ignore C:\\Windows by default"));
         labelSetIgnorePathTip.setText(translateUtil.getTranslation("Set ignore folder:"));
@@ -1814,18 +1808,6 @@ public class SettingsFrame {
         }
     }
 
-    private void checkSearchDepth(StringBuilder strBuilder) {
-        int searchDepthTemp;
-        try {
-            searchDepthTemp = Integer.parseInt(textFieldSearchDepth.getText());
-        } catch (Exception e1) {
-            searchDepthTemp = -1;
-        }
-        if (searchDepthTemp > 10 || searchDepthTemp <= 0) {
-            strBuilder.append(translateUtil.getTranslation("Search depth setting is wrong, please change")).append("\n");
-        }
-    }
-
     private void checkHotKey(StringBuilder strBuilder) {
         String tmp_hotkey = textFieldHotkey.getText();
         if (tmp_hotkey.length() < 5) {
@@ -1915,7 +1897,6 @@ public class SettingsFrame {
         checkDefaultBackgroundColor(errorsStrb);
         checkTransparency(errorsStrb);
         checkHotKey(errorsStrb);
-        checkSearchDepth(errorsStrb);
         checkCacheNumLimit(errorsStrb);
         checkUpdateTimeLimit(errorsStrb);
 
@@ -1957,7 +1938,6 @@ public class SettingsFrame {
         configEntity.setCacheNumLimit(Integer.parseInt(textFieldCacheNum.getText()));
         configEntity.setUpdateTimeLimit(Integer.parseInt(textFieldUpdateInterval.getText()));
         configEntity.setIgnorePath(ignorePathTemp);
-        configEntity.setSearchDepth(Integer.parseInt(textFieldSearchDepth.getText()));
         configEntity.setDefaultAdmin(checkBoxAdmin.isSelected());
         configEntity.setLoseFocusClose(checkBoxLoseFocus.isSelected());
         configEntity.setShowTipCreatingLnk(checkBoxIsShowTipOnCreatingLnk.isSelected());
