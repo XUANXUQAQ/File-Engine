@@ -205,3 +205,4 @@ Do you sure want to delete this suffix=この接尾辞を削除しますか
 Are you sure to delete all the suffixes=すべての接尾辞を削除しますか
 Modifying the suffix priority requires rebuilding the index (input ":update") to take effect=サフィックスの優先度を変更するには、インデックスを再構築する必要があります（「：update」を入力）。
 Double-click "Ctrl" to open the search bar=「Ctrl」をダブルクリックして検索ボックスを開きます
+Restart=再起動

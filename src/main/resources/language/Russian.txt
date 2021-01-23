@@ -205,3 +205,4 @@ Do you sure want to delete this suffix=Удалить этот суффикс
 Are you sure to delete all the suffixes=Удалить все суффиксы
 Modifying the suffix priority requires rebuilding the index (input ":update") to take effect=Чтобы изменить приоритет суффикса, необходимо перестроить индекс (ввод ": update").
 Double-click "Ctrl" to open the search bar=Дважды щелкните «Ctrl», чтобы открыть окно поиска.
+Restart=рестарт
