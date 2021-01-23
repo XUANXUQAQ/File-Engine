@@ -27,8 +27,6 @@ import java.nio.charset.StandardCharsets;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
@@ -304,45 +302,6 @@ public class MainClass {
         }
     }
 
-    private static Date readSystemBootTime() throws IOException, InterruptedException, ParseException {
-        Process process = Runtime.getRuntime().exec("cmd /c net statistics workstation");
-        process.waitFor();
-        try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-            int i = 0;
-            String timeWith;
-            while ((timeWith = bufferedReader.readLine()) != null) {
-                if (i == 3) {
-                    String[] strings = timeWith.split(" ");
-                    String parseStr = strings[1] + " " + strings[2];
-                    System.out.println();
-                    SimpleDateFormat sdf = new SimpleDateFormat();// 格式化时间
-                    sdf.applyPattern("yy/MM/dd HH:mm:ss");
-                    return sdf.parse(parseStr);
-                }
-                i++;
-            }
-        }
-        return null;
-    }
-
-    private static boolean isWindowsBootLessThan1Min() {
-        try {
-            Date bootTime = readSystemBootTime();
-            if (bootTime == null) {
-                return false;
-            }
-            long from3 = bootTime.getTime();
-            long to3 = new Date().getTime();
-            int minutes = (int) ((to3 - from3) / (1000 * 60));
-            if (minutes >= 1) {
-                return false;
-            }
-        } catch (IOException | InterruptedException | ParseException e) {
-            e.printStackTrace();
-        }
-        return true;
-    }
-
     private static void mainLoop() throws InterruptedException {
         Date startTime = new Date();
         Date endTime;
@@ -358,32 +317,16 @@ public class MainClass {
         if (!IsDebug.isDebug()) {
             isCheckIndex = checkIndex();
         }
-        boolean isNeedWait = isWindowsBootLessThan1Min();
 
-        if ((isDatabaseDamaged || isCheckIndex) && !isNeedWait) {
+        if (isDatabaseDamaged || isCheckIndex) {
             eventManagement.putEvent(new ShowTaskBarMessageEvent(
                     translateUtil.getTranslation("Info"),
                     translateUtil.getTranslation("Updating file index")));
             eventManagement.putEvent(new UpdateDatabaseEvent());
         }
 
-        boolean isSearched = false;
         while (eventManagement.isNotMainExit()) {
             // 主循环开始
-            if (isNeedWait) {
-                isNeedWait = isWindowsBootLessThan1Min();
-            } else {
-                if (!isSearched) {
-                    isSearched = true;
-                    if (isDatabaseDamaged || isCheckIndex) {
-                        eventManagement.putEvent(new ShowTaskBarMessageEvent(
-                                translateUtil.getTranslation("Info"),
-                                translateUtil.getTranslation("Updating file index")));
-                        eventManagement.putEvent(new UpdateDatabaseEvent());
-                    }
-                }
-            }
-
             //检查已工作时间
             endTime = new Date();
             timeDiff = endTime.getTime() - startTime.getTime();
