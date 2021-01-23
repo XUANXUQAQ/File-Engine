@@ -3,8 +3,6 @@ package FileEngine.utils;
 import FileEngine.IsDebug;
 import FileEngine.eventHandler.Event;
 import FileEngine.eventHandler.EventHandler;
-import FileEngine.eventHandler.impl.taskbar.HideTrayIconEvent;
-import FileEngine.utils.database.SQLiteUtil;
 import FileEngine.eventHandler.impl.daemon.StopDaemonEvent;
 import FileEngine.eventHandler.impl.frame.pluginMarket.HidePluginMarketEvent;
 import FileEngine.eventHandler.impl.frame.searchBar.HideSearchBarEvent;
@@ -15,6 +13,8 @@ import FileEngine.eventHandler.impl.plugin.UnloadAllPluginsEvent;
 import FileEngine.eventHandler.impl.stop.CloseEvent;
 import FileEngine.eventHandler.impl.stop.RestartEvent;
 import FileEngine.eventHandler.impl.stop.StopEvent;
+import FileEngine.eventHandler.impl.taskbar.HideTrayIconEvent;
+import FileEngine.utils.database.SQLiteUtil;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -27,7 +27,7 @@ public class EventUtil {
     private final ConcurrentLinkedQueue<Event> blockEventQueue = new ConcurrentLinkedQueue<>();
     private final ConcurrentLinkedQueue<Event> asyncEventQueue = new ConcurrentLinkedQueue<>();
     private final ConcurrentHashMap<Class<? extends Event>, EventHandler> EVENT_HANDLER_MAP = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<Class<? extends Event>, AtomicBoolean> EVENT_LISTENER_MAP = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Class<? extends Event>, ConcurrentLinkedQueue<Runnable>> EVENT_LISTENER_MAP = new ConcurrentHashMap<>();
     private final AtomicBoolean isRejectTask = new AtomicBoolean(false);
 
     private final int MAX_TASK_RETRY_TIME = 20;
@@ -118,6 +118,12 @@ public class EventUtil {
         return stacktrace[3];
     }
 
+    private void doAllMethod(ConcurrentLinkedQueue<Runnable> todo) {
+        for (Runnable each : todo) {
+            each.run();
+        }
+    }
+
     /**
      * 发送任务
      * @param event 任务
@@ -128,10 +134,7 @@ public class EventUtil {
             System.err.println("尝试放入任务" + event.toString() + "---来自" + getStackTraceElement().toString());
         }
         if (!isRejectTask.get()) {
-            AtomicBoolean b = EVENT_LISTENER_MAP.get(event.getClass());
-            if (b != null) {
-                b.set(true);
-            }
+            CachedThreadPoolUtil.getInstance().executeTask(() -> doAllMethod(EVENT_LISTENER_MAP.get(event.getClass())));
             if (event.isBlock()) {
                 if (!blockEventQueue.contains(event)) {
                     blockEventQueue.add(event);
@@ -168,8 +171,15 @@ public class EventUtil {
      * 监听某个任务被发出，并不是执行任务
      * @param eventType 需要监听的任务类型
      */
-    public void registerListener(Class<? extends Event> eventType, AtomicBoolean status) {
-        EVENT_LISTENER_MAP.put(eventType, status);
+    public void registerListener(Class<? extends Event> eventType, Runnable todo) {
+        ConcurrentLinkedQueue<Runnable> queue = EVENT_LISTENER_MAP.get(eventType);
+        if (queue == null) {
+            queue = new ConcurrentLinkedQueue<>();
+            queue.add(todo);
+            EVENT_LISTENER_MAP.put(eventType, queue);
+        } else {
+            queue.add(todo);
+        }
     }
 
     private void startAsyncEventHandler() {

@@ -2675,7 +2675,7 @@ public class SearchBar {
 
     private void registerUpdateDatabaseListener() {
         EventUtil eventUtil = EventUtil.getInstance();
-        eventUtil.registerListener(UpdateDatabaseEvent.class, isDatabaseUpdated);
+        eventUtil.registerListener(UpdateDatabaseEvent.class, () -> isDatabaseUpdated.set(true));
     }
 
     private void addSqlCommands() {
