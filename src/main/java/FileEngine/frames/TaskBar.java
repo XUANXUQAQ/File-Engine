@@ -113,6 +113,7 @@ public class TaskBar {
             icon = this.getClass().getResource("/icons/taskbar.png");
             image = new ImageIcon(icon).getImage();
             systemTray = SystemTray.getSystemTray();
+            EventManagement eventManagement = EventManagement.getInstance();
             // 创建托盘图标
             trayIcon = new TrayIcon(image);
             // 添加工具提示文本
@@ -121,27 +122,26 @@ public class TaskBar {
             } else {
                 trayIcon.setToolTip("File-Engine");
             }
-            // 创建弹出菜单
-            PopupMenu popupMenu = new PopupMenu();
-
-            MenuItem settings = new MenuItem("Settings");
-            settings.addActionListener(e -> EventManagement.getInstance().putEvent(new ShowSettingsFrameEvent()));
-            MenuItem restartProc = new MenuItem("Restart");
-            restartProc.addActionListener(e -> restart());
-            MenuItem close = new MenuItem("Exit");
-            close.addActionListener(e -> closeAndExit());
-
-            popupMenu.add(settings);
-            popupMenu.add(restartProc);
-            popupMenu.add(close);
 
             // 为托盘图标加弹出菜弹
-            trayIcon.setPopupMenu(popupMenu);
             trayIcon.addMouseListener(new MouseAdapter() {
+                JPopupMenu popupMenu;
+
                 @Override
                 public void mouseClicked(MouseEvent e) {
-                    if (MouseEvent.BUTTON1 == e.getButton()) {
-                        EventManagement.getInstance().putEvent(new ShowSettingsFrameEvent());
+                    if (MouseEvent.BUTTON1 == e.getButton() && e.getClickCount() == 2) {
+                        eventManagement.putEvent(new ShowSettingsFrameEvent());
+                    }
+                }
+
+                @Override
+                public void mouseReleased(MouseEvent e) {
+                    if (e.isPopupTrigger()) {
+                        popupMenu = new JPopupMenu();
+                        getPopupMenu(popupMenu);
+                        popupMenu.setInvoker(popupMenu);
+                        popupMenu.setVisible(true);
+                        popupMenu.setLocation(e.getX(), e.getY() - popupMenu.getHeight());
                     }
                 }
             });
@@ -153,6 +153,22 @@ public class TaskBar {
                 e.printStackTrace();
             }
         }
+    }
+
+    private void getPopupMenu(JPopupMenu popupMenu) {
+        // 创建弹出菜单
+        EventManagement eventManagement = EventManagement.getInstance();
+        TranslateUtil translateUtil = TranslateUtil.getInstance();
+        JMenuItem settings = new JMenuItem(translateUtil.getTranslation("Settings"));
+        settings.addActionListener(e -> eventManagement.putEvent(new ShowSettingsFrameEvent()));
+        JMenuItem restartProc = new JMenuItem(translateUtil.getTranslation("Restart"));
+        restartProc.addActionListener(e -> restart());
+        JMenuItem close = new JMenuItem(translateUtil.getTranslation("Exit"));
+        close.addActionListener(e -> closeAndExit());
+
+        popupMenu.add(settings);
+        popupMenu.add(restartProc);
+        popupMenu.add(close);
     }
 
     private void closeAndExit() {

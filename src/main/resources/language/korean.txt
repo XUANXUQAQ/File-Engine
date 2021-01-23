@@ -205,3 +205,4 @@ Do you sure want to delete this suffix=이 접미사를 삭제 하시겠습니�
 Are you sure to delete all the suffixes=모든 접미사를 삭제 하시겠습니까?
 Modifying the suffix priority requires rebuilding the index (input ":update") to take effect=접미사 우선 순위를 수정하려면 인덱스를 다시 작성해야합니다 ( ": update"입력).
 Double-click "Ctrl" to open the search bar="Ctrl"을 두 번 클릭하여 검색 창을 엽니 다.
+Restart=재시작
