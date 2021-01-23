@@ -3,14 +3,16 @@ package FileEngine.utils;
 import FileEngine.annotation.EventRegister;
 import FileEngine.eventHandler.Event;
 import FileEngine.eventHandler.EventHandler;
+import FileEngine.eventHandler.EventManagement;
 import FileEngine.eventHandler.impl.daemon.StartDaemonEvent;
-import FileEngine.eventHandler.impl.daemon.StopDaemonEvent;
+import FileEngine.eventHandler.impl.stop.CloseEvent;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
+@SuppressWarnings("unused")
 public class DaemonUtil {
     private static volatile DaemonUtil instance = null;
 
@@ -29,19 +31,14 @@ public class DaemonUtil {
 
     @EventRegister
     public static void registerEventHandler() {
-        EventUtil.getInstance().register(StartDaemonEvent.class, new EventHandler() {
+        EventManagement.getInstance().register(StartDaemonEvent.class, new EventHandler() {
             @Override
             public void todo(Event event) {
                 getInstance().startDaemon(((StartDaemonEvent) event).currentWorkingDir);
             }
         });
 
-        EventUtil.getInstance().register(StopDaemonEvent.class, new EventHandler() {
-            @Override
-            public void todo(Event event) {
-                getInstance().stopDaemon();
-            }
-        });
+        EventManagement.getInstance().registerListener(CloseEvent.class, () -> getInstance().stopDaemon());
     }
 
 

@@ -18,7 +18,7 @@ import FileEngine.eventHandler.impl.monitorDisk.StartMonitorDiskEvent;
 import FileEngine.eventHandler.impl.plugin.LoadAllPluginsEvent;
 import FileEngine.eventHandler.impl.plugin.SetPluginsCurrentThemeEvent;
 import FileEngine.eventHandler.impl.taskbar.ShowTrayIconEvent;
-import FileEngine.utils.EventUtil;
+import FileEngine.eventHandler.EventManagement;
 import FileEngine.utils.TranslateUtil;
 import FileEngine.utils.database.DatabaseUtil;
 import FileEngine.utils.database.SQLiteUtil;
@@ -571,21 +571,21 @@ public class AllConfigs {
     }
 
     private void setAllSettings() {
-        EventUtil eventUtil = EventUtil.getInstance();
-        eventUtil.putEvent(new SetPluginsCurrentThemeEvent(
+        EventManagement eventManagement = EventManagement.getInstance();
+        eventManagement.putEvent(new SetPluginsCurrentThemeEvent(
                 AllConfigs.getInstance().getDefaultBackgroundColor(),
                 AllConfigs.getInstance().getLabelColor(),
                 AllConfigs.getInstance().getBorderColor()));
-        eventUtil.putEvent(new RegisterHotKeyEvent(configEntity.getHotkey()));
-        eventUtil.putEvent(new SetSearchBarTransparencyEvent(configEntity.getTransparency()));
-        eventUtil.putEvent(new SetSearchBarDefaultBackgroundEvent(configEntity.getDefaultBackgroundColor()));
-        eventUtil.putEvent(new SetSearchBarLabelColorEvent(configEntity.getLabelColor()));
-        eventUtil.putEvent(new SetSearchBarFontColorWithCoverageEvent(configEntity.getFontColorWithCoverage()));
-        eventUtil.putEvent(new SetSearchBarLabelFontColorEvent(configEntity.getFontColor()));
-        eventUtil.putEvent(new SetSearchBarColorEvent(configEntity.getSearchBarColor()));
-        eventUtil.putEvent(new SetSearchBarFontColorEvent(configEntity.getSearchBarFontColor()));
-        eventUtil.putEvent(new SetBorderColorEvent(configEntity.getBorderColor()));
-        eventUtil.putEvent(new SetSwingLaf("current"));
+        eventManagement.putEvent(new RegisterHotKeyEvent(configEntity.getHotkey()));
+        eventManagement.putEvent(new SetSearchBarTransparencyEvent(configEntity.getTransparency()));
+        eventManagement.putEvent(new SetSearchBarDefaultBackgroundEvent(configEntity.getDefaultBackgroundColor()));
+        eventManagement.putEvent(new SetSearchBarLabelColorEvent(configEntity.getLabelColor()));
+        eventManagement.putEvent(new SetSearchBarFontColorWithCoverageEvent(configEntity.getFontColorWithCoverage()));
+        eventManagement.putEvent(new SetSearchBarLabelFontColorEvent(configEntity.getFontColor()));
+        eventManagement.putEvent(new SetSearchBarColorEvent(configEntity.getSearchBarColor()));
+        eventManagement.putEvent(new SetSearchBarFontColorEvent(configEntity.getSearchBarFontColor()));
+        eventManagement.putEvent(new SetBorderColorEvent(configEntity.getBorderColor()));
+        eventManagement.putEvent(new SetSwingLaf("current"));
     }
 
     private void setSwingLaf(Enums.SwingThemes theme) {
@@ -696,8 +696,8 @@ public class AllConfigs {
                 "version.json",
                 new File("tmp").getAbsolutePath()
         );
-        EventUtil eventUtil = EventUtil.getInstance();
-        eventUtil.putEvent(new StartDownloadEvent(downloadManager));
+        EventManagement eventManagement = EventManagement.getInstance();
+        eventManagement.putEvent(new StartDownloadEvent(downloadManager));
         downloadUtil.waitForDownloadTask(downloadManager, 10000);
         String eachLine;
         StringBuilder strBuilder = new StringBuilder();
@@ -710,9 +710,10 @@ public class AllConfigs {
     }
 
     @EventRegister
+    @SuppressWarnings("unused")
     public static void registerEventHandler() {
-        EventUtil eventUtil = EventUtil.getInstance();
-        eventUtil.register(AddCmdEvent.class, new EventHandler() {
+        EventManagement eventManagement = EventManagement.getInstance();
+        eventManagement.register(AddCmdEvent.class, new EventHandler() {
             @Override
             public void todo(Event event) {
                 AllConfigs allConfigs = getInstance();
@@ -721,7 +722,7 @@ public class AllConfigs {
             }
         });
 
-        eventUtil.register(DeleteCmdEvent.class, new EventHandler() {
+        eventManagement.register(DeleteCmdEvent.class, new EventHandler() {
             @Override
             public void todo(Event event) {
                 AllConfigs allConfigs = AllConfigs.getInstance();
@@ -730,7 +731,7 @@ public class AllConfigs {
             }
         });
 
-        eventUtil.register(ReadConfigsAndBootSystemEvent.class, new EventHandler() {
+        eventManagement.register(ReadConfigsAndBootSystemEvent.class, new EventHandler() {
             @Override
             public void todo(Event event) {
                 Event tmpEvent;
@@ -741,30 +742,30 @@ public class AllConfigs {
                 allConfigs.saveAllSettings();
 
                 tmpEvent = new LoadAllPluginsEvent("plugins");
-                eventUtil.putEvent(tmpEvent);
-                eventUtil.waitForEvent(tmpEvent);
+                eventManagement.putEvent(tmpEvent);
+                eventManagement.waitForEvent(tmpEvent);
 
-                eventUtil.putEvent(new StartMonitorDiskEvent());
-                eventUtil.putEvent(new ShowTrayIconEvent());
+                eventManagement.putEvent(new StartMonitorDiskEvent());
+                eventManagement.putEvent(new ShowTrayIconEvent());
 
                 tmpEvent = new SetConfigsEvent();
-                eventUtil.putEvent(tmpEvent);
-                eventUtil.waitForEvent(tmpEvent);
+                eventManagement.putEvent(tmpEvent);
+                eventManagement.waitForEvent(tmpEvent);
 
                 if (!IsDebug.isDebug()) {
-                    eventUtil.putEvent(new StartDaemonEvent(new File("").getAbsolutePath()));
+                    eventManagement.putEvent(new StartDaemonEvent(new File("").getAbsolutePath()));
                 }
             }
         });
 
-        eventUtil.register(SetConfigsEvent.class, new EventHandler() {
+        eventManagement.register(SetConfigsEvent.class, new EventHandler() {
             @Override
             public void todo(Event event) {
                 getInstance().setAllSettings();
             }
         });
 
-        eventUtil.register(SetSwingLaf.class, new EventHandler() {
+        eventManagement.register(SetSwingLaf.class, new EventHandler() {
             @Override
             public void todo(Event event) {
                 try {
@@ -776,7 +777,7 @@ public class AllConfigs {
             }
         });
 
-        eventUtil.register(SaveConfigsEvent.class, new EventHandler() {
+        eventManagement.register(SaveConfigsEvent.class, new EventHandler() {
             @Override
             public void todo(Event event) {
                 AllConfigs allConfigs = getInstance();

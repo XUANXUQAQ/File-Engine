@@ -1,28 +1,16 @@
-package FileEngine.utils;
+package FileEngine.eventHandler;
 
 import FileEngine.IsDebug;
-import FileEngine.eventHandler.Event;
-import FileEngine.eventHandler.EventHandler;
-import FileEngine.eventHandler.impl.daemon.StopDaemonEvent;
-import FileEngine.eventHandler.impl.frame.pluginMarket.HidePluginMarketEvent;
-import FileEngine.eventHandler.impl.frame.searchBar.HideSearchBarEvent;
-import FileEngine.eventHandler.impl.frame.settingsFrame.HideSettingsFrameEvent;
-import FileEngine.eventHandler.impl.hotkey.StopListenHotkeyEvent;
-import FileEngine.eventHandler.impl.monitorDisk.StopMonitorDiskEvent;
-import FileEngine.eventHandler.impl.plugin.UnloadAllPluginsEvent;
-import FileEngine.eventHandler.impl.stop.CloseEvent;
-import FileEngine.eventHandler.impl.stop.RestartEvent;
 import FileEngine.eventHandler.impl.stop.StopEvent;
-import FileEngine.eventHandler.impl.taskbar.HideTrayIconEvent;
-import FileEngine.utils.database.SQLiteUtil;
+import FileEngine.utils.CachedThreadPoolUtil;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class EventUtil {
-    private static volatile EventUtil instance = null;
+public class EventManagement {
+    private static volatile EventManagement instance = null;
     private final AtomicBoolean exit = new AtomicBoolean(false);
     private final ConcurrentLinkedQueue<Event> blockEventQueue = new ConcurrentLinkedQueue<>();
     private final ConcurrentLinkedQueue<Event> asyncEventQueue = new ConcurrentLinkedQueue<>();
@@ -32,36 +20,25 @@ public class EventUtil {
 
     private final int MAX_TASK_RETRY_TIME = 20;
 
-    private EventUtil() {
+    private EventManagement() {
         startBlockEventHandler();
         startAsyncEventHandler();
     }
 
-    public static EventUtil getInstance() {
+    public static EventManagement getInstance() {
         if (instance == null) {
-            synchronized (EventUtil.class) {
+            synchronized (EventManagement.class) {
                 if (instance == null) {
-                    instance = new EventUtil();
+                    instance = new EventManagement();
                 }
             }
         }
         return instance;
     }
 
-    private void close() {
-        restart();
-        putEvent(new StopDaemonEvent());
-    }
-
-    private void restart() {
-        putEvent(new HideSettingsFrameEvent());
-        putEvent(new HidePluginMarketEvent());
-        putEvent(new HideSearchBarEvent());
-        putEvent(new StopListenHotkeyEvent());
-        putEvent(new StopMonitorDiskEvent());
-        putEvent(new UnloadAllPluginsEvent());
-        putEvent(new HideTrayIconEvent());
-        SQLiteUtil.closeAll();
+    @SuppressWarnings("unchecked")
+    public <T> T getEventReturnValue(Event event) {
+        return (T) event.getReturnValue();
     }
 
     /**
@@ -92,25 +69,23 @@ public class EventUtil {
      * @return true如果执行失败，false执行成功
      */
     private boolean executeTaskFailed(Event event) {
+        event.incrementExecuteTimes();
         if (event instanceof StopEvent) {
-            if (event instanceof RestartEvent) {
-                restart();
-            } else if (event instanceof CloseEvent) {
-                close();
-            }
             event.setFinished();
             exit.set(true);
             isRejectTask.set(true);
+            CachedThreadPoolUtil.getInstance().executeTask(() -> doAllMethod(EVENT_LISTENER_MAP.get(event.getClass())));
             return false;
+        } else {
+            EventHandler eventHandler = EVENT_HANDLER_MAP.get(event.getClass());
+            if (eventHandler != null) {
+                eventHandler.doEvent(event);
+                CachedThreadPoolUtil.getInstance().executeTask(() -> doAllMethod(EVENT_LISTENER_MAP.get(event.getClass())));
+                return false;
+            }
+            //当前无可以接该任务的handler
+            return true;
         }
-        event.incrementExecuteTimes();
-        EventHandler eventHandler = EVENT_HANDLER_MAP.get(event.getClass());
-        if (eventHandler != null) {
-            eventHandler.doEvent(event);
-            return false;
-        }
-        //当前无可以接该任务的handler
-        return true;
     }
 
     private StackTraceElement getStackTraceElement() {
@@ -137,7 +112,6 @@ public class EventUtil {
             System.err.println("尝试放入任务" + event.toString() + "---来自" + getStackTraceElement().toString());
         }
         if (!isRejectTask.get()) {
-            CachedThreadPoolUtil.getInstance().executeTask(() -> doAllMethod(EVENT_LISTENER_MAP.get(event.getClass())));
             if (event.isBlock()) {
                 if (!blockEventQueue.contains(event)) {
                     blockEventQueue.add(event);
@@ -203,9 +177,6 @@ public class EventUtil {
                             continue;
                         } else if (event.getExecuteTimes() < MAX_TASK_RETRY_TIME) {
                             //判断是否超过最大次数
-                            if (isDebug) {
-                                System.err.println("异步线程正在尝试执行任务---" + event.toString());
-                            }
                             if (executeTaskFailed(event)) {
                                 System.err.println("异步任务执行失败---" + event.toString());
                                 asyncEventQueue.add(event);
@@ -248,9 +219,6 @@ public class EventUtil {
                     }
                     //判断任务是否超过最大执行次数
                     if (event.getExecuteTimes() < MAX_TASK_RETRY_TIME) {
-                        if (isDebug) {
-                            System.err.println("同步线程正在尝试执行任务---" + event.toString());
-                        }
                         if (executeTaskFailed(event)) {
                             System.err.println("同步任务执行失败---" + event.toString());
                             blockEventQueue.add(event);

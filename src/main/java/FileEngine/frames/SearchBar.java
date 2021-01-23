@@ -10,13 +10,16 @@ import FileEngine.dllInterface.GetHandle;
 import FileEngine.dllInterface.IsLocalDisk;
 import FileEngine.eventHandler.Event;
 import FileEngine.eventHandler.EventHandler;
+import FileEngine.eventHandler.EventManagement;
 import FileEngine.eventHandler.impl.database.AddToCacheEvent;
 import FileEngine.eventHandler.impl.database.DeleteFromCacheEvent;
 import FileEngine.eventHandler.impl.database.UpdateDatabaseEvent;
 import FileEngine.eventHandler.impl.frame.searchBar.*;
+import FileEngine.eventHandler.impl.frame.settingsFrame.AddCacheEvent;
+import FileEngine.eventHandler.impl.frame.settingsFrame.IsCacheExistEvent;
 import FileEngine.eventHandler.impl.frame.settingsFrame.ShowSettingsFrameEvent;
 import FileEngine.eventHandler.impl.monitorDisk.StartMonitorDiskEvent;
-import FileEngine.eventHandler.impl.monitorDisk.StopMonitorDiskEvent;
+import FileEngine.eventHandler.impl.stop.StopEvent;
 import FileEngine.eventHandler.impl.taskbar.ShowTaskBarMessageEvent;
 import FileEngine.utils.*;
 import FileEngine.utils.database.DatabaseUtil;
@@ -43,14 +46,17 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-
+@SuppressWarnings("unused")
 public class SearchBar {
     private final AtomicBoolean isCacheAndPrioritySearched = new AtomicBoolean(false);
     private final AtomicBoolean isLockMouseMotion = new AtomicBoolean(false);
@@ -193,7 +199,7 @@ public class SearchBar {
 
         iconSideLength = labelHeight / 3; //定义图标边长
 
-        URL icon = TaskBar.class.getResource("/icons/taskbar_32x32.png");
+        URL icon = this.getClass().getResource("/icons/taskbar_32x32.png");
         Image image = new ImageIcon(icon).getImage();
         searchBar.setIconImage(image);
 
@@ -249,7 +255,7 @@ public class SearchBar {
         addTextFieldFocusListener();
     }
 
-    public static SearchBar getInstance() {
+    private static SearchBar getInstance() {
         if (instance == null) {
             synchronized (SearchBar.class) {
                 if (instance == null) {
@@ -352,7 +358,7 @@ public class SearchBar {
      * @throws Exception 创建错误
      */
     private void createShortCut(String fileOrFolderPath, String writeShortCutPath, boolean isNotifyUser) throws Exception {
-        EventUtil eventUtil = EventUtil.getInstance();
+        EventManagement eventManagement = EventManagement.getInstance();
         TranslateUtil translateUtil = TranslateUtil.getInstance();
         String lower = fileOrFolderPath.toLowerCase();
         if (lower.endsWith(".lnk") || lower.endsWith(".url")) {
@@ -367,7 +373,7 @@ public class SearchBar {
             Runtime.getRuntime().exec("cmd.exe " + commandToGenLnk);
         }
         if (isNotifyUser) {
-            eventUtil.putEvent(new ShowTaskBarMessageEvent(
+            eventManagement.putEvent(new ShowTaskBarMessageEvent(
                     translateUtil.getTranslation("Info"),
                        translateUtil.getTranslation("Shortcut created")));
         }
@@ -528,7 +534,7 @@ public class SearchBar {
         Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
         clipboard.setContents(data, null);
         if (isNotifyUser) {
-            EventUtil.getInstance().putEvent(new ShowTaskBarMessageEvent(
+            EventManagement.getInstance().putEvent(new ShowTaskBarMessageEvent(
                     translateUtil.getTranslation("Info"),
                     translateUtil.getTranslation("The result has been copied to the clipboard")));
         }
@@ -743,7 +749,7 @@ public class SearchBar {
      */
     private boolean runInternalCommand(String commandName) {
         TranslateUtil translateUtil = TranslateUtil.getInstance();
-        EventUtil eventUtil = EventUtil.getInstance();
+        EventManagement eventManagement = EventManagement.getInstance();
         switch (commandName) {
             case "clearbin":
                 detectShowingModeAndClose();
@@ -764,10 +770,10 @@ public class SearchBar {
                 return true;
             case "update":
                 detectShowingModeAndClose();
-                eventUtil.putEvent(new ShowTaskBarMessageEvent(
+                eventManagement.putEvent(new ShowTaskBarMessageEvent(
                         translateUtil.getTranslation("Info"),
                         translateUtil.getTranslation("Updating file index")));
-                  eventUtil.putEvent(new UpdateDatabaseEvent());
+                  eventManagement.putEvent(new UpdateDatabaseEvent());
                 startSignal.set(false);
                 isNotSqlInitialized.set(false);
                 return true;
@@ -833,7 +839,7 @@ public class SearchBar {
             JOptionPane.showMessageDialog(null, translateUtil.getTranslation("Waiting overtime"));
             return;
         }
-        EventUtil eventUtil = EventUtil.getInstance();
+        EventManagement eventManagement = EventManagement.getInstance();
         showSearchbar(false);
         JOptionPane.showMessageDialog(searchBar, translateUtil.getTranslation("Welcome to the tutorial of File-Engine") + "\n" +
                 translateUtil.getTranslation("The default Ctrl + Alt + K calls out the search bar, which can be changed in the settings.") +
@@ -895,7 +901,7 @@ public class SearchBar {
         JOptionPane.showMessageDialog(searchBar,
                 translateUtil.getTranslation("If you find that some files cannot be searched, you can enter \":update\" in the search bar to rebuild the index."));
         closeSearchBar();
-        eventUtil.putEvent(new ShowSettingsFrameEvent());
+        eventManagement.putEvent(new ShowSettingsFrameEvent());
         JOptionPane.showMessageDialog(null,
                 translateUtil.getTranslation("This is the settings window") + "\n" +
                         translateUtil.getTranslation("You can modify many settings here") + "\n" +
@@ -954,8 +960,8 @@ public class SearchBar {
         //添加一个线程不断更新鼠标保存时间
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             try {
-                EventUtil eventUtil = EventUtil.getInstance();
-                while (eventUtil.isNotMainExit()) {
+                EventManagement eventManagement = EventManagement.getInstance();
+                while (eventManagement.isNotMainExit()) {
                     shouldSaveMousePos.set(true);
                     TimeUnit.MILLISECONDS.sleep(50);
                 }
@@ -2151,7 +2157,7 @@ public class SearchBar {
 
     private void startMonitorDisk() {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
-            EventUtil eventUtil = EventUtil.getInstance();
+            EventManagement eventManagement = EventManagement.getInstance();
             TranslateUtil translateUtil = TranslateUtil.getInstance();
             File[] roots = File.listRoots();
             if (isAdmin()) {
@@ -2163,7 +2169,7 @@ public class SearchBar {
                     }
                 }
             } else {
-                eventUtil.putEvent(new ShowTaskBarMessageEvent(
+                eventManagement.putEvent(new ShowTaskBarMessageEvent(
                         translateUtil.getTranslation("Warning"),
                         translateUtil.getTranslation("Not administrator, file monitoring function is turned off")));
             }
@@ -2215,10 +2221,11 @@ public class SearchBar {
         changeSearchBarSize();
     }
 
+    @SuppressWarnings("unused")
     @EventRegister
     public static void registerEventHandler() {
-        EventUtil eventUtil = EventUtil.getInstance();
-        eventUtil.register(ShowSearchBarEvent.class, new EventHandler() {
+        EventManagement eventManagement = EventManagement.getInstance();
+        eventManagement.register(ShowSearchBarEvent.class, new EventHandler() {
             @Override
             public void todo(Event event) {
                 ShowSearchBarEvent showSearchBarTask = (ShowSearchBarEvent) event;
@@ -2226,28 +2233,21 @@ public class SearchBar {
             }
         });
 
-        eventUtil.register(StartMonitorDiskEvent.class, new EventHandler() {
+        eventManagement.register(StartMonitorDiskEvent.class, new EventHandler() {
             @Override
             public void todo(Event event) {
                 getInstance().startMonitorDisk();
             }
         });
 
-        eventUtil.register(StopMonitorDiskEvent.class, new EventHandler() {
-            @Override
-            public void todo(Event event) {
-                FileMonitor.INSTANCE.stop_monitor();
-            }
-        });
-
-        eventUtil.register(HideSearchBarEvent.class, new EventHandler() {
+        eventManagement.register(HideSearchBarEvent.class, new EventHandler() {
             @Override
             public void todo(Event event) {
                 getInstance().closeSearchBar();
             }
         });
 
-        eventUtil.register(SetSearchBarTransparencyEvent.class, new EventHandler() {
+        eventManagement.register(SetSearchBarTransparencyEvent.class, new EventHandler() {
             @Override
             public void todo(Event event) {
                 SetSearchBarTransparencyEvent task1 = (SetSearchBarTransparencyEvent) event;
@@ -2255,7 +2255,7 @@ public class SearchBar {
             }
         });
 
-        eventUtil.register(SetBorderColorEvent.class, new EventHandler() {
+        eventManagement.register(SetBorderColorEvent.class, new EventHandler() {
             @Override
             public void todo(Event event) {
                 SetBorderColorEvent setBorderColorTask = (SetBorderColorEvent) event;
@@ -2263,7 +2263,7 @@ public class SearchBar {
             }
         });
 
-        eventUtil.register(SetSearchBarColorEvent.class, new EventHandler() {
+        eventManagement.register(SetSearchBarColorEvent.class, new EventHandler() {
             @Override
             public void todo(Event event) {
                 SetSearchBarColorEvent setSearchBarColorTask = (SetSearchBarColorEvent) event;
@@ -2271,7 +2271,7 @@ public class SearchBar {
             }
         });
 
-        eventUtil.register(SetSearchBarLabelColorEvent.class, new EventHandler() {
+        eventManagement.register(SetSearchBarLabelColorEvent.class, new EventHandler() {
             @Override
             public void todo(Event event) {
                 SetSearchBarLabelColorEvent setSearchBarLabelColorTask = (SetSearchBarLabelColorEvent) event;
@@ -2279,7 +2279,7 @@ public class SearchBar {
             }
         });
 
-        eventUtil.register(SetSearchBarDefaultBackgroundEvent.class, new EventHandler() {
+        eventManagement.register(SetSearchBarDefaultBackgroundEvent.class, new EventHandler() {
             @Override
             public void todo(Event event) {
                 SetSearchBarDefaultBackgroundEvent setSearchBarDefaultBackgroundTask = (SetSearchBarDefaultBackgroundEvent) event;
@@ -2287,7 +2287,7 @@ public class SearchBar {
             }
         });
 
-        eventUtil.register(SetSearchBarFontColorWithCoverageEvent.class, new EventHandler() {
+        eventManagement.register(SetSearchBarFontColorWithCoverageEvent.class, new EventHandler() {
             @Override
             public void todo(Event event) {
                 SetSearchBarFontColorWithCoverageEvent task1 = (SetSearchBarFontColorWithCoverageEvent) event;
@@ -2295,7 +2295,7 @@ public class SearchBar {
             }
         });
 
-        eventUtil.register(SetSearchBarLabelFontColorEvent.class, new EventHandler() {
+        eventManagement.register(SetSearchBarLabelFontColorEvent.class, new EventHandler() {
             @Override
             public void todo(Event event) {
                 SetSearchBarLabelFontColorEvent setSearchBarLabelFontColorTask = (SetSearchBarLabelFontColorEvent) event;
@@ -2303,7 +2303,7 @@ public class SearchBar {
             }
         });
 
-        eventUtil.register(SetSearchBarFontColorEvent.class, new EventHandler() {
+        eventManagement.register(SetSearchBarFontColorEvent.class, new EventHandler() {
             @Override
             public void todo(Event event) {
                 SetSearchBarFontColorEvent setSearchBarFontColorTask = (SetSearchBarFontColorEvent) event;
@@ -2311,38 +2311,54 @@ public class SearchBar {
             }
         });
 
-        eventUtil.register(PreviewSearchBarEvent.class, new EventHandler() {
+        eventManagement.register(PreviewSearchBarEvent.class, new EventHandler() {
             @Override
             public void todo(Event event) {
                 PreviewSearchBarEvent preview = (PreviewSearchBarEvent) event;
-                eventUtil.putEvent(new SetPreviewOrNormalMode(true));
-                eventUtil.putEvent(new SetBorderColorEvent(preview.borderColor));
-                eventUtil.putEvent(new SetSearchBarColorEvent(preview.searchBarColor));
-                eventUtil.putEvent(new SetSearchBarDefaultBackgroundEvent(preview.defaultBackgroundColor));
-                eventUtil.putEvent(new SetSearchBarFontColorEvent(preview.searchBarFontColor));
-                eventUtil.putEvent(new SetSearchBarFontColorWithCoverageEvent(preview.chosenLabelFontColor));
-                eventUtil.putEvent(new SetSearchBarLabelColorEvent(preview.chosenLabelColor));
-                eventUtil.putEvent(new SetSearchBarLabelFontColorEvent(preview.unchosenLabelFontColor));
-                eventUtil.putEvent(new ShowSearchBarEvent(false));
+                eventManagement.putEvent(new SetPreviewOrNormalMode(true));
+                eventManagement.putEvent(new SetBorderColorEvent(preview.borderColor));
+                eventManagement.putEvent(new SetSearchBarColorEvent(preview.searchBarColor));
+                eventManagement.putEvent(new SetSearchBarDefaultBackgroundEvent(preview.defaultBackgroundColor));
+                eventManagement.putEvent(new SetSearchBarFontColorEvent(preview.searchBarFontColor));
+                eventManagement.putEvent(new SetSearchBarFontColorWithCoverageEvent(preview.chosenLabelFontColor));
+                eventManagement.putEvent(new SetSearchBarLabelColorEvent(preview.chosenLabelColor));
+                eventManagement.putEvent(new SetSearchBarLabelFontColorEvent(preview.unchosenLabelFontColor));
+                eventManagement.putEvent(new ShowSearchBarEvent(false));
                 getInstance().textField.setText("a");
             }
         });
 
-        eventUtil.register(SetPreviewOrNormalMode.class, new EventHandler() {
+        eventManagement.register(SetPreviewOrNormalMode.class, new EventHandler() {
             @Override
             public void todo(Event event) {
                 SetPreviewOrNormalMode mode = (SetPreviewOrNormalMode) event;
                 isPreviewMode.set(mode.isPreview);
             }
         });
+
+        eventManagement.register(IsSearchBarVisibleEvent.class, new EventHandler() {
+            @Override
+            public void todo(Event event) {
+                event.setReturnValue(getInstance().isVisible());
+            }
+        });
+
+        eventManagement.register(GetShowingModeEvent.class, new EventHandler() {
+            @Override
+            public void todo(Event event) {
+                event.setReturnValue(getInstance().showingMode);
+            }
+        });
+
+        eventManagement.registerListener(StopEvent.class, FileMonitor.INSTANCE::stop_monitor);
     }
 
     private void switchSearchBarShowingMode() {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             try {
-                EventUtil eventUtil = EventUtil.getInstance();
+                EventManagement eventManagement = EventManagement.getInstance();
                 GetHandle.INSTANCE.start();
-                while (eventUtil.isNotMainExit()) {
+                while (eventManagement.isNotMainExit()) {
                     if (GetHandle.INSTANCE.isExplorerAtTop()) {
                         switchToExplorerAttachMode();
                     } else {
@@ -2374,8 +2390,8 @@ public class SearchBar {
     private void changeSearchBarSize() {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             try {
-                EventUtil eventUtil = EventUtil.getInstance();
-                while (eventUtil.isNotMainExit()) {
+                EventManagement eventManagement = EventManagement.getInstance();
+                while (eventManagement.isNotMainExit()) {
                     if (isPreviewMode.get()) {
                         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize(); // 获取屏幕大小
                         int width = screenSize.width;
@@ -2498,8 +2514,8 @@ public class SearchBar {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             //锁住MouseMotion检测，阻止同时发出两个动作
             try {
-                EventUtil eventUtil = EventUtil.getInstance();
-                while (eventUtil.isNotMainExit()) {
+                EventManagement eventManagement = EventManagement.getInstance();
+                while (eventManagement.isNotMainExit()) {
                     if (System.currentTimeMillis() - mouseWheelTime > 500) {
                         isLockMouseMotion.set(false);
                     }
@@ -2578,8 +2594,8 @@ public class SearchBar {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             //显示结果线程
             try {
-                EventUtil eventUtil = EventUtil.getInstance();
-                while (eventUtil.isNotMainExit()) {
+                EventManagement eventManagement = EventManagement.getInstance();
+                while (eventManagement.isNotMainExit()) {
                     tryToShowRecordsWhenHasLabelEmpty();
                     String text = getSearchBarText();
                     if (text.isEmpty()) {
@@ -2609,8 +2625,8 @@ public class SearchBar {
     private void repaintFrameThread() {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             try {
-                EventUtil eventUtil = EventUtil.getInstance();
-                while (eventUtil.isNotMainExit()) {
+                EventManagement eventManagement = EventManagement.getInstance();
+                while (eventManagement.isNotMainExit()) {
                     if (isVisible()) {
                         SwingUtilities.invokeLater(() -> {
                             if (isPreviewMode.get()) {
@@ -2674,8 +2690,8 @@ public class SearchBar {
     }
 
     private void registerUpdateDatabaseListener() {
-        EventUtil eventUtil = EventUtil.getInstance();
-        eventUtil.registerListener(UpdateDatabaseEvent.class, () -> isDatabaseUpdated.set(true));
+        EventManagement eventManagement = EventManagement.getInstance();
+        eventManagement.registerListener(UpdateDatabaseEvent.class, () -> isDatabaseUpdated.set(true));
     }
 
     private void addSqlCommands() {
@@ -2721,7 +2737,7 @@ public class SearchBar {
             //缓存和常用文件夹搜索线程
             //每一次输入会更新一次startTime，该线程记录endTime
             try {
-                EventUtil eventUtil = EventUtil.getInstance();
+                EventManagement eventManagement = EventManagement.getInstance();
                 TranslateUtil translateUtil = TranslateUtil.getInstance();
                 AllConfigs allConfigs = AllConfigs.getInstance();
                 String[] strings;
@@ -2730,7 +2746,7 @@ public class SearchBar {
                 if (allConfigs.isFirstRun()) {
                     runInternalCommand("help");
                 }
-                while (eventUtil.isNotMainExit()) {
+                while (eventManagement.isNotMainExit()) {
                     long endTime = System.currentTimeMillis();
                     text = getSearchBarText();
                     if ((endTime - startTime > 150) && isNotSqlInitialized.get() && startSignal.get()) {
@@ -2809,11 +2825,11 @@ public class SearchBar {
 
                         } else if (databaseUtil.getStatus() == Enums.DatabaseStatus.VACUUM) {
                             setLabelChosen(label1);
-                            eventUtil.putEvent(new ShowTaskBarMessageEvent(translateUtil.getTranslation("Info"),
+                            eventManagement.putEvent(new ShowTaskBarMessageEvent(translateUtil.getTranslation("Info"),
                                     translateUtil.getTranslation("Organizing database")));
                         } else if (databaseUtil.getStatus() == Enums.DatabaseStatus.MANUAL_UPDATE) {
                             setLabelChosen(label1);
-                            eventUtil.putEvent(new ShowTaskBarMessageEvent(translateUtil.getTranslation("Info"),
+                            eventManagement.putEvent(new ShowTaskBarMessageEvent(translateUtil.getTranslation("Info"),
                                     translateUtil.getTranslation("Updating file index") + "..."));
                         }
 
@@ -2940,7 +2956,7 @@ public class SearchBar {
                 }
             } else {
                 if (isResultFromCache) {
-                    EventUtil.getInstance().putEvent(new DeleteFromCacheEvent(path));
+                    EventManagement.getInstance().putEvent(new DeleteFromCacheEvent(path));
                 }
             }
         }
@@ -3325,12 +3341,17 @@ public class SearchBar {
      */
     private void saveCache(String content) {
         AllConfigs allConfigs = AllConfigs.getInstance();
-        SettingsFrame settingsFrame = SettingsFrame.getInstance();
-        EventUtil eventUtil = EventUtil.getInstance();
+        IsCacheExistEvent isCacheExistEvent = new IsCacheExistEvent(content);
+        EventManagement eventManagement = EventManagement.getInstance();
         if (DatabaseUtil.getInstance().getCacheNum() < allConfigs.getCacheNumLimit()) {
-            if (!settingsFrame.isCacheExist(content)) {
-                eventUtil.putEvent(new AddToCacheEvent(content));
-                settingsFrame.addCache(content);
+            //检查缓存是否已存在
+            eventManagement.putEvent(isCacheExistEvent);
+            if (!eventManagement.waitForEvent(isCacheExistEvent)) {
+                if (!(Boolean) eventManagement.getEventReturnValue(isCacheExistEvent)) {
+                    //不存在则添加
+                    eventManagement.putEvent(new AddToCacheEvent(content));
+                    eventManagement.putEvent(new AddCacheEvent(content));
+                }
             }
         }
     }
@@ -3451,11 +3472,11 @@ public class SearchBar {
             //等待所有线程完成
             try {
                 int count = 0;
-                EventUtil eventUtil = EventUtil.getInstance();
+                EventManagement eventManagement = EventManagement.getInstance();
                 while (taskNum.get() != threadCount) {
                     TimeUnit.MILLISECONDS.sleep(1);
                     count++;
-                    if (count >= 2000 || (!eventUtil.isNotMainExit())) {
+                    if (count >= 2000 || (!eventManagement.isNotMainExit())) {
                         break;
                     }
                 }
@@ -3533,7 +3554,7 @@ public class SearchBar {
         isCacheAndPrioritySearched.set(false);
         isWaiting.set(false);
         isMouseDraggedInWindow.set(false);
-        EventUtil.getInstance().putEvent(new SetPreviewOrNormalMode(false));
+        EventManagement.getInstance().putEvent(new SetPreviewOrNormalMode(false));
     }
 
     /**
@@ -3581,10 +3602,6 @@ public class SearchBar {
 
     private void setSearchBarColor(int colorNum) {
         textField.setBackground(new Color(colorNum));
-    }
-
-    public Enums.ShowingSearchBarMode getShowingMode() {
-        return showingMode;
     }
 
     private void setSearchBarFontColor(int colorNum) {

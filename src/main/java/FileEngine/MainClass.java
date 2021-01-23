@@ -4,13 +4,13 @@ import FileEngine.annotation.EventRegister;
 import FileEngine.configs.AllConfigs;
 import FileEngine.configs.Enums;
 import FileEngine.eventHandler.Event;
+import FileEngine.eventHandler.EventManagement;
 import FileEngine.eventHandler.impl.ReadConfigsAndBootSystemEvent;
 import FileEngine.eventHandler.impl.database.UpdateDatabaseEvent;
 import FileEngine.eventHandler.impl.frame.settingsFrame.ShowSettingsFrameEvent;
 import FileEngine.eventHandler.impl.stop.RestartEvent;
 import FileEngine.eventHandler.impl.taskbar.ShowTaskBarMessageEvent;
 import FileEngine.utils.CachedThreadPoolUtil;
-import FileEngine.utils.EventUtil;
 import FileEngine.utils.Md5Util;
 import FileEngine.utils.TranslateUtil;
 import FileEngine.utils.classScan.ClassScannerUtil;
@@ -155,10 +155,10 @@ public class MainClass {
     }
 
     private static void checkVersion() {
-        EventUtil eventUtil = EventUtil.getInstance();
+        EventManagement eventManagement = EventManagement.getInstance();
         TranslateUtil translateUtil = TranslateUtil.getInstance();
         if (!isLatest()) {
-            eventUtil.putEvent(new ShowTaskBarMessageEvent(
+            eventManagement.putEvent(new ShowTaskBarMessageEvent(
                     translateUtil.getTranslation("Info"),
                     translateUtil.getTranslation("New version can be updated"),
                     new ShowSettingsFrameEvent("tabAbout")));
@@ -166,11 +166,11 @@ public class MainClass {
     }
 
     private static void checkOldApiPlugin() {
-        EventUtil eventUtil = EventUtil.getInstance();
+        EventManagement eventManagement = EventManagement.getInstance();
         TranslateUtil translateUtil = TranslateUtil.getInstance();
         if (PluginUtil.getInstance().isPluginTooOld()) {
             String oldPlugins = PluginUtil.getInstance().getAllOldPluginsName();
-            eventUtil.putEvent(new ShowTaskBarMessageEvent(
+            eventManagement.putEvent(new ShowTaskBarMessageEvent(
                     translateUtil.getTranslation("Warning"),
                     oldPlugins + "\n" + translateUtil.getTranslation("Plugin Api is too old"),
                     new ShowSettingsFrameEvent("tabPlugin")));
@@ -178,11 +178,11 @@ public class MainClass {
     }
 
     private static void checkRepeatPlugin() {
-        EventUtil eventUtil = EventUtil.getInstance();
+        EventManagement eventManagement = EventManagement.getInstance();
         TranslateUtil translateUtil = TranslateUtil.getInstance();
         if (PluginUtil.getInstance().isPluginRepeat()) {
             String repeatPlugins = PluginUtil.getInstance().getRepeatPlugins();
-            eventUtil.putEvent(new ShowTaskBarMessageEvent(
+            eventManagement.putEvent(new ShowTaskBarMessageEvent(
                     translateUtil.getTranslation("Warning"),
                     repeatPlugins + "\n" + translateUtil.getTranslation("Duplicate plugin, please delete it in plugins folder"),
                     new ShowSettingsFrameEvent("tabPlugin")));
@@ -190,11 +190,11 @@ public class MainClass {
     }
 
     private static void checkErrorPlugin() {
-        EventUtil eventUtil = EventUtil.getInstance();
+        EventManagement eventManagement = EventManagement.getInstance();
         TranslateUtil translateUtil = TranslateUtil.getInstance();
         if (PluginUtil.getInstance().isPluginLoadError()) {
             String errorPlugins = PluginUtil.getInstance().getLoadingErrorPlugins();
-            eventUtil.putEvent(new ShowTaskBarMessageEvent(
+            eventManagement.putEvent(new ShowTaskBarMessageEvent(
                     translateUtil.getTranslation("Warning"),
                     errorPlugins + "\n" + translateUtil.getTranslation("Loading plugins error"),
                     new ShowSettingsFrameEvent("tabPlugin")));
@@ -220,11 +220,11 @@ public class MainClass {
             StringBuilder notLatestPluginsBuilder = new StringBuilder();
             PluginUtil pluginUtil = PluginUtil.getInstance();
             pluginUtil.checkAllPluginsVersion(notLatestPluginsBuilder);
-            EventUtil eventUtil = EventUtil.getInstance();
+            EventManagement eventManagement = EventManagement.getInstance();
             TranslateUtil translateUtil = TranslateUtil.getInstance();
             String notLatestPlugins = notLatestPluginsBuilder.toString();
             if (!notLatestPlugins.isEmpty()) {
-                eventUtil.putEvent(
+                eventManagement.putEvent(
                         new ShowTaskBarMessageEvent(translateUtil.getTranslation("Info"),
                                 notLatestPlugins + "\n" +
                                         translateUtil.getTranslation("New versions of these plugins can be updated"),
@@ -234,10 +234,10 @@ public class MainClass {
     }
 
     private static void checkRunningDirAtDiskC() {
-        EventUtil eventUtil = EventUtil.getInstance();
+        EventManagement eventManagement = EventManagement.getInstance();
         TranslateUtil translateUtil = TranslateUtil.getInstance();
         if (isAtDiskC()) {
-            eventUtil.putEvent(new ShowTaskBarMessageEvent(
+            eventManagement.putEvent(new ShowTaskBarMessageEvent(
                     translateUtil.getTranslation("Warning"),
                     translateUtil.getTranslation("Putting the software on the C drive may cause index failure issue")));
         }
@@ -297,8 +297,6 @@ public class MainClass {
 
             mainLoop();
 
-            CachedThreadPoolUtil.getInstance().shutdown();
-
             System.exit(0);
         } catch (Exception e) {
             e.printStackTrace();
@@ -352,7 +350,7 @@ public class MainClass {
         long div = 24 * 60 * 60 * 1000;
         int restartCount = 0;
 
-        EventUtil eventUtil = EventUtil.getInstance();
+        EventManagement eventManagement = EventManagement.getInstance();
         TranslateUtil translateUtil = TranslateUtil.getInstance();
 
         boolean isDatabaseDamaged = isDatabaseDamaged();
@@ -363,14 +361,14 @@ public class MainClass {
         boolean isNeedWait = isWindowsBootLessThan1Min();
 
         if ((isDatabaseDamaged || isCheckIndex) && !isNeedWait) {
-            eventUtil.putEvent(new ShowTaskBarMessageEvent(
+            eventManagement.putEvent(new ShowTaskBarMessageEvent(
                     translateUtil.getTranslation("Info"),
                     translateUtil.getTranslation("Updating file index")));
-            eventUtil.putEvent(new UpdateDatabaseEvent());
+            eventManagement.putEvent(new UpdateDatabaseEvent());
         }
 
         boolean isSearched = false;
-        while (eventUtil.isNotMainExit()) {
+        while (eventManagement.isNotMainExit()) {
             // 主循环开始
             if (isNeedWait) {
                 isNeedWait = isWindowsBootLessThan1Min();
@@ -378,10 +376,10 @@ public class MainClass {
                 if (!isSearched) {
                     isSearched = true;
                     if (isDatabaseDamaged || isCheckIndex) {
-                        eventUtil.putEvent(new ShowTaskBarMessageEvent(
+                        eventManagement.putEvent(new ShowTaskBarMessageEvent(
                                 translateUtil.getTranslation("Info"),
                                 translateUtil.getTranslation("Updating file index")));
-                        eventUtil.putEvent(new UpdateDatabaseEvent());
+                        eventManagement.putEvent(new UpdateDatabaseEvent());
                     }
                 }
             }
@@ -394,15 +392,15 @@ public class MainClass {
                 restartCount++;
                 startTime = endTime;
                 //启动时间已经超过2天,更新索引
-                eventUtil.putEvent(new ShowTaskBarMessageEvent(
+                eventManagement.putEvent(new ShowTaskBarMessageEvent(
                         translateUtil.getTranslation("Info"),
                         translateUtil.getTranslation("Updating file index")));
-                eventUtil.putEvent(new UpdateDatabaseEvent());
+                eventManagement.putEvent(new UpdateDatabaseEvent());
             }
             if (restartCount > 2) {
                 restartCount = 0;
                 //超过限定时间未重启
-                eventUtil.putEvent(new RestartEvent());
+                eventManagement.putEvent(new RestartEvent());
             }
             TimeUnit.SECONDS.sleep(1);
         }
@@ -452,11 +450,11 @@ public class MainClass {
     }
 
     private static void sendStartSignal() {
-        EventUtil eventUtil = EventUtil.getInstance();
+        EventManagement eventManagement = EventManagement.getInstance();
 
         Event event = new ReadConfigsAndBootSystemEvent();
-        eventUtil.putEvent(event);
-        if (eventUtil.waitForEvent(event)) {
+        eventManagement.putEvent(event);
+        if (eventManagement.waitForEvent(event)) {
             throw new RuntimeException("初始化失败");
         }
     }

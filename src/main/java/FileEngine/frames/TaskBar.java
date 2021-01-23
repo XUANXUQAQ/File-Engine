@@ -4,13 +4,13 @@ import FileEngine.IsDebug;
 import FileEngine.annotation.EventRegister;
 import FileEngine.eventHandler.Event;
 import FileEngine.eventHandler.EventHandler;
-import FileEngine.utils.EventUtil;
+import FileEngine.eventHandler.EventManagement;
 import FileEngine.eventHandler.impl.frame.settingsFrame.ShowSettingsFrameEvent;
 import FileEngine.eventHandler.impl.stop.CloseEvent;
 import FileEngine.eventHandler.impl.stop.RestartEvent;
-import FileEngine.eventHandler.impl.taskbar.HideTrayIconEvent;
-import FileEngine.eventHandler.impl.taskbar.ShowTrayIconEvent;
+import FileEngine.eventHandler.impl.stop.StopEvent;
 import FileEngine.eventHandler.impl.taskbar.ShowTaskBarMessageEvent;
+import FileEngine.eventHandler.impl.taskbar.ShowTrayIconEvent;
 import FileEngine.utils.CachedThreadPoolUtil;
 import FileEngine.utils.TranslateUtil;
 
@@ -23,7 +23,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-
+@SuppressWarnings("unused")
 public class TaskBar {
     private TrayIcon trayIcon = null;
     private SystemTray systemTray;
@@ -54,10 +54,10 @@ public class TaskBar {
     private void startShowMessageThread() {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             try {
-                EventUtil eventUtil = EventUtil.getInstance();
+                EventManagement eventManagement = EventManagement.getInstance();
                 MessageStruct message;
                 int count = 0;
-                while (eventUtil.isNotMainExit()) {
+                while (eventManagement.isNotMainExit()) {
                     if (isMessageClear.get()) {
                         currentShowingMessageWithEvent = null;
                         message = messageQueue.poll();
@@ -95,18 +95,17 @@ public class TaskBar {
         if (trayIcon == null) {
             return;
         }
-        EventUtil eventUtil = EventUtil.getInstance();
+        EventManagement eventManagement = EventManagement.getInstance();
         trayIcon.addActionListener(e -> {
                     isMessageClear.set(true);
                     if (currentShowingMessageWithEvent != null) {
-                        eventUtil.putEvent(currentShowingMessageWithEvent);
+                        eventManagement.putEvent(currentShowingMessageWithEvent);
                     }
                 }
         );
     }
 
     private void showTaskBar() {
-        SettingsFrame settingsFrame = SettingsFrame.getInstance();
         // 判断是否支持系统托盘
         if (SystemTray.isSupported()) {
             Image image;
@@ -126,7 +125,7 @@ public class TaskBar {
             PopupMenu popupMenu = new PopupMenu();
 
             MenuItem settings = new MenuItem("Settings");
-            settings.addActionListener(e -> EventUtil.getInstance().putEvent(new ShowSettingsFrameEvent()));
+            settings.addActionListener(e -> EventManagement.getInstance().putEvent(new ShowSettingsFrameEvent()));
             MenuItem restartProc = new MenuItem("Restart");
             restartProc.addActionListener(e -> restart());
             MenuItem close = new MenuItem("Exit");
@@ -141,8 +140,8 @@ public class TaskBar {
             trayIcon.addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseClicked(MouseEvent e) {
-                    if (MouseEvent.BUTTON1 == e.getButton() && !settingsFrame.isSettingsFrameVisible()) {
-                        EventUtil.getInstance().putEvent(new ShowSettingsFrameEvent());
+                    if (MouseEvent.BUTTON1 == e.getButton()) {
+                        EventManagement.getInstance().putEvent(new ShowSettingsFrameEvent());
                     }
                 }
             });
@@ -157,13 +156,13 @@ public class TaskBar {
     }
 
     private void closeAndExit() {
-        EventUtil eventUtil = EventUtil.getInstance();
-        eventUtil.putEvent(new CloseEvent());
+        EventManagement eventManagement = EventManagement.getInstance();
+        eventManagement.putEvent(new CloseEvent());
     }
 
     private void restart() {
-        EventUtil eventUtil = EventUtil.getInstance();
-        eventUtil.putEvent(new RestartEvent());
+        EventManagement eventManagement = EventManagement.getInstance();
+        eventManagement.putEvent(new RestartEvent());
     }
 
     private void showMessage(String caption, String message, Event event) {
@@ -182,9 +181,10 @@ public class TaskBar {
     }
 
     @EventRegister
+    @SuppressWarnings("unused")
     public static void registerEventHandler() {
-        EventUtil eventUtil = EventUtil.getInstance();
-        eventUtil.register(ShowTaskBarMessageEvent.class, new EventHandler() {
+        EventManagement eventManagement = EventManagement.getInstance();
+        eventManagement.register(ShowTaskBarMessageEvent.class, new EventHandler() {
             @Override
             public void todo(Event event) {
                 ShowTaskBarMessageEvent showTaskBarMessageTask = (ShowTaskBarMessageEvent) event;
@@ -192,19 +192,16 @@ public class TaskBar {
             }
         });
 
-        eventUtil.register(ShowTrayIconEvent.class, new EventHandler() {
+        eventManagement.register(ShowTrayIconEvent.class, new EventHandler() {
             @Override
             public void todo(Event event) {
                 getInstance();
             }
         });
 
-        eventUtil.register(HideTrayIconEvent.class, new EventHandler() {
-            @Override
-            public void todo(Event event) {
-                TaskBar taskBar = getInstance();
-                taskBar.systemTray.remove(taskBar.trayIcon);
-            }
+        eventManagement.registerListener(StopEvent.class, () -> {
+            TaskBar taskBar = getInstance();
+            taskBar.systemTray.remove(taskBar.trayIcon);
         });
     }
 }

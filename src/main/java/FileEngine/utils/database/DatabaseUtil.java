@@ -11,7 +11,7 @@ import FileEngine.eventHandler.EventHandler;
 import FileEngine.eventHandler.impl.database.*;
 import FileEngine.eventHandler.impl.taskbar.ShowTaskBarMessageEvent;
 import FileEngine.utils.CachedThreadPoolUtil;
-import FileEngine.utils.EventUtil;
+import FileEngine.eventHandler.EventManagement;
 import FileEngine.utils.TranslateUtil;
 
 import java.io.*;
@@ -46,9 +46,9 @@ public class DatabaseUtil {
 
     private void executeSqlCommandsThread() {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
-            EventUtil eventUtil = EventUtil.getInstance();
+            EventManagement eventManagement = EventManagement.getInstance();
             try (Statement statement = SQLiteUtil.getStatement()) {
-                while (eventUtil.isNotMainExit()) {
+                while (eventManagement.isNotMainExit()) {
                     if (isExecuteImmediately.get()) {
                         isExecuteImmediately.set(false);
                         executeAllCommands(statement);
@@ -82,8 +82,8 @@ public class DatabaseUtil {
                 String tmp;
                 int fileCount = 0;
                 LinkedHashSet<String> deletePaths = new LinkedHashSet<>();
-                EventUtil eventUtil = EventUtil.getInstance();
-                while (eventUtil.isNotMainExit()) {
+                EventManagement eventManagement = EventManagement.getInstance();
+                while (eventManagement.isNotMainExit()) {
                     if (status == Enums.DatabaseStatus.NORMAL) {
                         while ((tmp = readerRemove.readLine()) != null) {
                             fileCount++;
@@ -94,7 +94,7 @@ public class DatabaseUtil {
                         }
                     }
                     if (status == Enums.DatabaseStatus.NORMAL && !deletePaths.isEmpty()) {
-                        eventUtil.putEvent(new DeleteFromDatabaseEvent(deletePaths));
+                        eventManagement.putEvent(new DeleteFromDatabaseEvent(deletePaths));
                         deletePaths = new LinkedHashSet<>();
                         fileCount = 0;
                     }
@@ -117,8 +117,8 @@ public class DatabaseUtil {
                 String tmp;
                 int fileCount = 0;
                 LinkedHashSet<String> addPaths = new LinkedHashSet<>();
-                EventUtil eventUtil = EventUtil.getInstance();
-                while (eventUtil.isNotMainExit()) {
+                EventManagement eventManagement = EventManagement.getInstance();
+                while (eventManagement.isNotMainExit()) {
                     if (status == Enums.DatabaseStatus.NORMAL) {
                         while ((tmp = readerAdd.readLine()) != null) {
                             fileCount++;
@@ -129,7 +129,7 @@ public class DatabaseUtil {
                         }
                     }
                     if (status == Enums.DatabaseStatus.NORMAL && !addPaths.isEmpty()) {
-                        eventUtil.putEvent(new AddToDatabaseEvent(addPaths));
+                        eventManagement.putEvent(new AddToDatabaseEvent(addPaths));
                         addPaths = new LinkedHashSet<>();
                         fileCount = 0;
                     }
@@ -216,7 +216,10 @@ public class DatabaseUtil {
         } catch (Exception throwables) {
             throwables.printStackTrace();
         }
-        return getPriorityBySuffix("defaultPriority");
+        if (!"defaultPriority".equals(suffix)) {
+            return getPriorityBySuffix("defaultPriority");
+        }
+        return 0;
     }
 
     private String getSuffixByPath(String path) {
@@ -341,7 +344,7 @@ public class DatabaseUtil {
 
         createAllIndex();
         waitForCommandSet(SqlTaskIds.CREATE_INDEX);
-        EventUtil.getInstance().putEvent(new ShowTaskBarMessageEvent(
+        EventManagement.getInstance().putEvent(new ShowTaskBarMessageEvent(
                 TranslateUtil.getInstance().getTranslation("Info"),
                 TranslateUtil.getInstance().getTranslation("Search Done")));
     }
@@ -408,8 +411,8 @@ public class DatabaseUtil {
     private void waitForCommandSet(SqlTaskIds taskId) {
         try {
             int count = 0;
-            EventUtil eventUtil = EventUtil.getInstance();
-            while (eventUtil.isNotMainExit()) {
+            EventManagement eventManagement = EventManagement.getInstance();
+            while (eventManagement.isNotMainExit()) {
                 count++;
                 //等待10s
                 if (count > 1000) {
@@ -495,10 +498,10 @@ public class DatabaseUtil {
             // 时间检测线程
             final long updateTimeLimit = AllConfigs.getInstance().getUpdateTimeLimit();
             try {
-                EventUtil eventUtil = EventUtil.getInstance();
-                while (eventUtil.isNotMainExit()) {
+                EventManagement eventManagement = EventManagement.getInstance();
+                while (eventManagement.isNotMainExit()) {
                     if (status == Enums.DatabaseStatus.NORMAL) {
-                        eventUtil.putEvent(new ExecuteSQLEvent());
+                        eventManagement.putEvent(new ExecuteSQLEvent());
                     }
                     TimeUnit.SECONDS.sleep(updateTimeLimit);
                 }
@@ -508,9 +511,10 @@ public class DatabaseUtil {
     }
 
     @EventRegister
+    @SuppressWarnings("unused")
     public static void registerEventHandler() {
-        EventUtil eventUtil = EventUtil.getInstance();
-        eventUtil.register(AddToCacheEvent.class, new EventHandler() {
+        EventManagement eventManagement = EventManagement.getInstance();
+        eventManagement.register(AddToCacheEvent.class, new EventHandler() {
             @Override
             public void todo(Event event) {
                 DatabaseUtil databaseUtil = getInstance();
@@ -519,7 +523,7 @@ public class DatabaseUtil {
             }
         });
 
-        eventUtil.register(DeleteFromCacheEvent.class, new EventHandler() {
+        eventManagement.register(DeleteFromCacheEvent.class, new EventHandler() {
             @Override
             public void todo(Event event) {
                 DatabaseUtil databaseUtil = getInstance();
@@ -528,7 +532,7 @@ public class DatabaseUtil {
             }
         });
 
-        eventUtil.register(AddToDatabaseEvent.class, new EventHandler() {
+        eventManagement.register(AddToDatabaseEvent.class, new EventHandler() {
             @Override
             public void todo(Event event) {
                 DatabaseUtil databaseUtil = getInstance();
@@ -538,7 +542,7 @@ public class DatabaseUtil {
             }
         });
 
-        eventUtil.register(DeleteFromDatabaseEvent.class, new EventHandler() {
+        eventManagement.register(DeleteFromDatabaseEvent.class, new EventHandler() {
             @Override
             public void todo(Event event) {
                 DeleteFromDatabaseEvent deleteFromDatabaseEvent = ((DeleteFromDatabaseEvent) event);
@@ -549,7 +553,7 @@ public class DatabaseUtil {
             }
         });
 
-        eventUtil.register(UpdateDatabaseEvent.class, new EventHandler() {
+        eventManagement.register(UpdateDatabaseEvent.class, new EventHandler() {
             @Override
             public void todo(Event event) {
                 DatabaseUtil databaseUtil = getInstance();
@@ -559,14 +563,14 @@ public class DatabaseUtil {
             }
         });
 
-        eventUtil.register(ExecuteSQLEvent.class, new EventHandler() {
+        eventManagement.register(ExecuteSQLEvent.class, new EventHandler() {
             @Override
             public void todo(Event event) {
                 getInstance().executeImmediately();
             }
         });
 
-        eventUtil.register(OptimiseDatabaseEvent.class, new EventHandler() {
+        eventManagement.register(OptimiseDatabaseEvent.class, new EventHandler() {
             @Override
             public void todo(Event event) {
                 DatabaseUtil databaseUtil = getInstance();
@@ -585,7 +589,7 @@ public class DatabaseUtil {
             }
         });
 
-        eventUtil.register(AddToSuffixPriorityMapEvent.class, new EventHandler() {
+        eventManagement.register(AddToSuffixPriorityMapEvent.class, new EventHandler() {
             @Override
             public void todo(Event event) {
                 AddToSuffixPriorityMapEvent event1 = (AddToSuffixPriorityMapEvent) event;
@@ -598,7 +602,7 @@ public class DatabaseUtil {
             }
         });
 
-        eventUtil.register(ClearSuffixPriorityMapEvent.class, new EventHandler() {
+        eventManagement.register(ClearSuffixPriorityMapEvent.class, new EventHandler() {
             @Override
             public void todo(Event event) {
                 DatabaseUtil databaseUtil = getInstance();
@@ -608,7 +612,7 @@ public class DatabaseUtil {
             }
         });
 
-        eventUtil.register(DeleteFromSuffixPriorityMapEvent.class, new EventHandler() {
+        eventManagement.register(DeleteFromSuffixPriorityMapEvent.class, new EventHandler() {
             @Override
             public void todo(Event event) {
                 DeleteFromSuffixPriorityMapEvent delete = (DeleteFromSuffixPriorityMapEvent) event;
@@ -618,15 +622,15 @@ public class DatabaseUtil {
             }
         });
 
-        eventUtil.register(UpdateSuffixPriorityEvent.class, new EventHandler() {
+        eventManagement.register(UpdateSuffixPriorityEvent.class, new EventHandler() {
             @Override
             public void todo(Event event) {
                 UpdateSuffixPriorityEvent update = (UpdateSuffixPriorityEvent) event;
                 String origin = update.originSuffix;
                 String newSuffix = update.newSuffix;
                 int newNum = update.newPriority;
-                eventUtil.putEvent(new DeleteFromSuffixPriorityMapEvent(origin));
-                eventUtil.putEvent(new AddToSuffixPriorityMapEvent(newSuffix, newNum));
+                eventManagement.putEvent(new DeleteFromSuffixPriorityMapEvent(origin));
+                eventManagement.putEvent(new AddToSuffixPriorityMapEvent(newSuffix, newNum));
             }
         });
     }

@@ -7,7 +7,7 @@ import FileEngine.eventHandler.EventHandler;
 import FileEngine.eventHandler.impl.download.StartDownloadEvent;
 import FileEngine.eventHandler.impl.download.StopDownloadEvent;
 import FileEngine.utils.CachedThreadPoolUtil;
-import FileEngine.utils.EventUtil;
+import FileEngine.eventHandler.EventManagement;
 
 import java.io.IOException;
 import java.util.Set;
@@ -32,9 +32,10 @@ public class DownloadUtil {
     private DownloadUtil() {}
 
     @EventRegister
+    @SuppressWarnings("unused")
     public static void registerEventHandler() {
-        EventUtil eventUtil = EventUtil.getInstance();
-        eventUtil.register(StartDownloadEvent.class, new EventHandler() {
+        EventManagement eventManagement = EventManagement.getInstance();
+        eventManagement.register(StartDownloadEvent.class, new EventHandler() {
             @Override
             public void todo(Event event) {
                 StartDownloadEvent startDownloadTask = (StartDownloadEvent) event;
@@ -42,7 +43,7 @@ public class DownloadUtil {
             }
         });
 
-        eventUtil.register(StopDownloadEvent.class, new EventHandler() {
+        eventManagement.register(StopDownloadEvent.class, new EventHandler() {
             @Override
             public void todo(Event event) {
                 StopDownloadEvent stopDownloadTask = (StopDownloadEvent) event;
