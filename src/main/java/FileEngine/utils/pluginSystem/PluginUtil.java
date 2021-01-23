@@ -3,10 +3,11 @@ package FileEngine.utils.pluginSystem;
 import FileEngine.IsDebug;
 import FileEngine.annotation.EventRegister;
 import FileEngine.configs.AllConfigs;
-import FileEngine.utils.EventUtil;
+import FileEngine.eventHandler.EventManagement;
 import FileEngine.eventHandler.Event;
 import FileEngine.eventHandler.EventHandler;
 import FileEngine.eventHandler.impl.plugin.*;
+import FileEngine.eventHandler.impl.stop.StopEvent;
 import FileEngine.eventHandler.impl.taskbar.ShowTaskBarMessageEvent;
 import FileEngine.utils.CachedThreadPoolUtil;
 import com.alibaba.fastjson.JSONObject;
@@ -49,13 +50,13 @@ public class PluginUtil {
             try {
                 String[] message;
                 Plugin plugin;
-                EventUtil eventUtil = EventUtil.getInstance();
-                while (eventUtil.isNotMainExit()) {
+                EventManagement eventManagement = EventManagement.getInstance();
+                while (eventManagement.isNotMainExit()) {
                     for (PluginInfo each : pluginInfoSet) {
                         plugin = each.plugin;
                         message = plugin.getMessage();
                         if (message != null) {
-                            eventUtil.putEvent(new ShowTaskBarMessageEvent(message[0], message[1]));
+                            eventManagement.putEvent(new ShowTaskBarMessageEvent(message[0], message[1]));
                         }
                     }
                     TimeUnit.MILLISECONDS.sleep(50);
@@ -294,7 +295,7 @@ public class PluginUtil {
                     checkUpdateThread.interrupt();
                     throw new InterruptedException("check update failed.");
                 }
-                if (!EventUtil.getInstance().isNotMainExit()) {
+                if (!EventManagement.getInstance().isNotMainExit()) {
                     break;
                 }
             }
@@ -305,30 +306,31 @@ public class PluginUtil {
     }
 
     @EventRegister
+    @SuppressWarnings("unused")
     public static void registerEventHandler() {
-        EventUtil eventUtil = EventUtil.getInstance();
-        eventUtil.register(AddPluginsCanUpdateEvent.class, new EventHandler() {
+        EventManagement eventManagement = EventManagement.getInstance();
+        eventManagement.register(AddPluginsCanUpdateEvent.class, new EventHandler() {
             @Override
             public void todo(Event event) {
                 getInstance().addPluginsCanUpdate(((AddPluginsCanUpdateEvent) event).pluginName);
             }
         });
 
-        eventUtil.register(LoadAllPluginsEvent.class, new EventHandler() {
+        eventManagement.register(LoadAllPluginsEvent.class, new EventHandler() {
             @Override
             public void todo(Event event) {
                 getInstance().loadAllPlugins(((LoadAllPluginsEvent) event).pluginDirPath);
             }
         });
 
-        eventUtil.register(RemoveFromPluginsCanUpdateEvent.class, new EventHandler() {
+        eventManagement.register(RemoveFromPluginsCanUpdateEvent.class, new EventHandler() {
             @Override
             public void todo(Event event) {
                 getInstance().removeFromPluginsCanUpdate(((RemoveFromPluginsCanUpdateEvent) event).pluginName);
             }
         });
 
-        eventUtil.register(SetPluginsCurrentThemeEvent.class, new EventHandler() {
+        eventManagement.register(SetPluginsCurrentThemeEvent.class, new EventHandler() {
             @Override
             public void todo(Event event) {
                 SetPluginsCurrentThemeEvent task1 = (SetPluginsCurrentThemeEvent) event;
@@ -336,12 +338,7 @@ public class PluginUtil {
             }
         });
 
-        eventUtil.register(UnloadAllPluginsEvent.class, new EventHandler() {
-            @Override
-            public void todo(Event event) {
-                getInstance().unloadAllPlugins();
-            }
-        });
+        eventManagement.registerListener(StopEvent.class, () -> getInstance().unloadAllPlugins());
     }
 
     public static class PluginInfo {

@@ -5,12 +5,14 @@ import FileEngine.configs.Enums;
 import FileEngine.dllInterface.HotkeyListener;
 import FileEngine.eventHandler.Event;
 import FileEngine.eventHandler.EventHandler;
+import FileEngine.eventHandler.EventManagement;
+import FileEngine.eventHandler.impl.frame.searchBar.GetShowingModeEvent;
 import FileEngine.eventHandler.impl.frame.searchBar.HideSearchBarEvent;
+import FileEngine.eventHandler.impl.frame.searchBar.IsSearchBarVisibleEvent;
 import FileEngine.eventHandler.impl.frame.searchBar.ShowSearchBarEvent;
 import FileEngine.eventHandler.impl.hotkey.RegisterHotKeyEvent;
 import FileEngine.eventHandler.impl.hotkey.ResponseCtrlEvent;
-import FileEngine.eventHandler.impl.hotkey.StopListenHotkeyEvent;
-import FileEngine.frames.SearchBar;
+import FileEngine.eventHandler.impl.stop.StopEvent;
 
 import java.awt.event.KeyEvent;
 import java.util.HashMap;
@@ -111,27 +113,40 @@ public class CheckHotKeyUtil {
     
     private void startListenHotkeyThread() {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
-            boolean isExecuted = false;
+            boolean isExecuted = true;
             long startVisibleTime = 0;
-            long endVisibleTime = 0;
-            SearchBar searchBar = SearchBar.getInstance();
+            long endVisibleTime;
             HotkeyListener instance = HotkeyListener.INSTANCE;
-            EventUtil eventUtil = EventUtil.getInstance();
+            EventManagement eventManagement = EventManagement.getInstance();
             try {
+                endVisibleTime = System.currentTimeMillis();
                 //获取快捷键状态，检测是否被按下线程
-                while (eventUtil.isNotMainExit()) {
+                while (eventManagement.isNotMainExit()) {
                     if (!isExecuted && instance.getKeyStatus()) {
-                        if (searchBar.isVisible()) {
-                            if (System.currentTimeMillis() - startVisibleTime > 200) {
-                                if (searchBar.getShowingMode() == Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
-                                    eventUtil.putEvent(new HideSearchBarEvent());
-                                    endVisibleTime = System.currentTimeMillis();
+                        IsSearchBarVisibleEvent isSearchBarVisibleEvent = new IsSearchBarVisibleEvent();
+                        eventManagement.putEvent(isSearchBarVisibleEvent);
+                        //等待任务执行
+                        if (!eventManagement.waitForEvent(isSearchBarVisibleEvent)) {
+                            //是否搜索框可见
+                            if (eventManagement.getEventReturnValue(isSearchBarVisibleEvent)) {
+                                //搜索框最小可见时间为200ms，必须显示超过200ms后才响应关闭事件，防止闪屏
+                                if (System.currentTimeMillis() - startVisibleTime > 200) {
+                                    //获取当前显示模式
+                                    GetShowingModeEvent getShowingModeEvent = new GetShowingModeEvent();
+                                    eventManagement.putEvent(getShowingModeEvent);
+                                    if (!eventManagement.waitForEvent(getShowingModeEvent)) {
+                                        if (eventManagement.getEventReturnValue(getShowingModeEvent) ==
+                                                Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
+                                            eventManagement.putEvent(new HideSearchBarEvent());
+                                            endVisibleTime = System.currentTimeMillis();
+                                        }
+                                    }
                                 }
-                            }
-                        } else {
-                            if (System.currentTimeMillis() - endVisibleTime > 200) {
-                                eventUtil.putEvent(new ShowSearchBarEvent(true));
-                                startVisibleTime = System.currentTimeMillis();
+                            } else {
+                                if (System.currentTimeMillis() - endVisibleTime > 200) {
+                                    eventManagement.putEvent(new ShowSearchBarEvent(true));
+                                    startVisibleTime = System.currentTimeMillis();
+                                }
                             }
                         }
                     }
@@ -144,24 +159,20 @@ public class CheckHotKeyUtil {
     }
 
     @EventRegister
+    @SuppressWarnings("unused")
     public static void registerEventHandler() {
-        EventUtil eventUtil = EventUtil.getInstance();
+        EventManagement eventManagement = EventManagement.getInstance();
 
-        eventUtil.register(RegisterHotKeyEvent.class, new EventHandler() {
+        eventManagement.register(RegisterHotKeyEvent.class, new EventHandler() {
             @Override
             public void todo(Event event) {
                 getInstance().registerHotkey(((RegisterHotKeyEvent) event).hotkey);
             }
         });
 
-        eventUtil.register(StopListenHotkeyEvent.class, new EventHandler() {
-            @Override
-            public void todo(Event event) {
-                getInstance().stopListen();
-            }
-        });
+        eventManagement.registerListener(StopEvent.class, () -> getInstance().stopListen());
 
-        eventUtil.register(ResponseCtrlEvent.class, new EventHandler() {
+        eventManagement.register(ResponseCtrlEvent.class, new EventHandler() {
             @Override
             public void todo(Event event) {
                 ResponseCtrlEvent responseCtrlEvent = (ResponseCtrlEvent) event;

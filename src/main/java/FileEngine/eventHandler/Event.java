@@ -8,6 +8,7 @@ public class Event {
     private final AtomicBoolean isFailed = new AtomicBoolean(false);
     private final AtomicInteger executeTimes = new AtomicInteger(0);
     private final AtomicBoolean isBlock = new AtomicBoolean(false);
+    private Object returnValue;
 
     public void incrementExecuteTimes() {
         executeTimes.incrementAndGet();
@@ -39,6 +40,14 @@ public class Event {
 
     public void setFinished() {
         isFinished.set(true);
+    }
+
+    public void setReturnValue(Object obj) {
+        returnValue = obj;
+    }
+
+    protected Object getReturnValue() {
+        return returnValue;
     }
 
     @Override

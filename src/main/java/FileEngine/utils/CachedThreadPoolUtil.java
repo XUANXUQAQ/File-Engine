@@ -1,6 +1,9 @@
 package FileEngine.utils;
 
 import FileEngine.IsDebug;
+import FileEngine.annotation.EventRegister;
+import FileEngine.eventHandler.EventManagement;
+import FileEngine.eventHandler.impl.stop.StopEvent;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.SynchronousQueue;
@@ -39,7 +42,7 @@ public class CachedThreadPoolUtil {
         cachedThreadPool.execute(todo);
     }
 
-    public void shutdown() throws InterruptedException {
+    private void shutdown() throws InterruptedException {
         isShutdown.set(true);
         cachedThreadPool.shutdown();
         int count = 0;
@@ -51,5 +54,17 @@ public class CachedThreadPoolUtil {
         if (IsDebug.isDebug()) {
             System.err.println("线程池已关闭");
         }
+    }
+
+    @EventRegister
+    @SuppressWarnings("unused")
+    public static void registerShutdownEvent() {
+        EventManagement eventManagement = EventManagement.getInstance();
+        eventManagement.registerListener(StopEvent.class, () -> {
+            try {
+                getInstance().shutdown();
+            } catch (InterruptedException ignored) {
+            }
+        });
     }
 }

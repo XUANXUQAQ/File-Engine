@@ -1,7 +1,7 @@
 package FileEngine.frames;
 
 import FileEngine.configs.Enums;
-import FileEngine.utils.EventUtil;
+import FileEngine.eventHandler.EventManagement;
 import FileEngine.utils.TranslateUtil;
 import FileEngine.utils.download.DownloadManager;
 import FileEngine.utils.download.DownloadUtil;
@@ -34,7 +34,7 @@ public class SetDownloadProgress {
      * @param getSelectedMethod 线程需要从哪个方法获取字符串，当获取的字符串不等于currentTaskStr时，则会停止设置buttonInstall和labelProgress的值
      * @param invokeMethodObj 执行method需要的实例
      */
-    public static void setProgress(JLabel labelProgress,
+    protected static void setProgress(JLabel labelProgress,
                                    JButton buttonInstall,
                                    DownloadManager downloadManager,
                                    AtomicBoolean isDownloadStarted,
@@ -46,12 +46,12 @@ public class SetDownloadProgress {
             isDownloadStarted.set(true);
             TranslateUtil translateUtil = TranslateUtil.getInstance();
             DownloadUtil downloadUtil = DownloadUtil.getInstance();
-            EventUtil eventUtil = EventUtil.getInstance();
+            EventManagement eventManagement = EventManagement.getInstance();
             String buttonOriginalText = buttonInstall.getText();
             boolean isStarted = true;
             boolean isDownloadStartedSet = false;    //当getSelectedMethod获取到的字符串不等于currentTaskStr，让isDownloadStarted设置为false（只设置一次，之后会由其他线程托管）
             while (isStarted) {
-                if (!eventUtil.isNotMainExit()) {
+                if (!eventManagement.isNotMainExit()) {
                     return;
                 }
                 String taskStrFromMethod = currentTaskStr;

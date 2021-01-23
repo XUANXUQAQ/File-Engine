@@ -4,12 +4,12 @@ import FileEngine.annotation.EventRegister;
 import FileEngine.configs.AllConfigs;
 import FileEngine.eventHandler.Event;
 import FileEngine.eventHandler.EventHandler;
+import FileEngine.eventHandler.EventManagement;
 import FileEngine.eventHandler.impl.download.StartDownloadEvent;
 import FileEngine.eventHandler.impl.download.StopDownloadEvent;
-import FileEngine.eventHandler.impl.frame.pluginMarket.HidePluginMarketEvent;
 import FileEngine.eventHandler.impl.frame.pluginMarket.ShowPluginMarket;
+import FileEngine.eventHandler.impl.stop.StopEvent;
 import FileEngine.utils.CachedThreadPoolUtil;
-import FileEngine.utils.EventUtil;
 import FileEngine.utils.TranslateUtil;
 import FileEngine.utils.download.DownloadManager;
 import FileEngine.utils.download.DownloadUtil;
@@ -70,8 +70,8 @@ public class PluginMarket {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             try {
                 String pluginName;
-                EventUtil eventUtil = EventUtil.getInstance();
-                while (eventUtil.isNotMainExit()) {
+                EventManagement eventManagement = EventManagement.getInstance();
+                while (eventManagement.isNotMainExit()) {
                     TimeUnit.MILLISECONDS.sleep(100);
                     pluginName = (String) listPlugins.getSelectedValue();
                     if (pluginName == null) {
@@ -129,22 +129,18 @@ public class PluginMarket {
     }
 
     @EventRegister
+    @SuppressWarnings("unused")
     public static void registerEventHandler() {
-        EventUtil eventUtil = EventUtil.getInstance();
+        EventManagement eventManagement = EventManagement.getInstance();
 
-        eventUtil.register(ShowPluginMarket.class, new EventHandler() {
+        eventManagement.register(ShowPluginMarket.class, new EventHandler() {
             @Override
             public void todo(Event event) {
                 getInstance().showWindow();
             }
         });
 
-        eventUtil.register(HidePluginMarketEvent.class, new EventHandler() {
-            @Override
-            public void todo(Event event) {
-                getInstance().hideWindow();
-            }
-        });
+        eventManagement.registerListener(StopEvent.class, () -> getInstance().hideWindow());
     }
 
     private void hideWindow() {
@@ -152,14 +148,14 @@ public class PluginMarket {
     }
 
     private void addButtonInstallListener() {
-        EventUtil eventUtil = EventUtil.getInstance();
+        EventManagement eventManagement = EventManagement.getInstance();
         AtomicBoolean isDownloadStarted = new AtomicBoolean(false);
         ConcurrentHashMap<String, DownloadManager> downloadManagerConcurrentHashMap = new ConcurrentHashMap<>();
         buttonInstall.addActionListener(e -> {
             String pluginName = (String) listPlugins.getSelectedValue();
             if (isDownloadStarted.get()) {
                 //取消下载
-                eventUtil.putEvent(new StopDownloadEvent(downloadManagerConcurrentHashMap.get(pluginName)));
+                eventManagement.putEvent(new StopDownloadEvent(downloadManagerConcurrentHashMap.get(pluginName)));
             } else {
                 String pluginFullName = pluginName + ".jar";
                 JSONObject info = getPluginDetailInfo(pluginName);
@@ -170,7 +166,7 @@ public class PluginMarket {
                             new File("tmp", "pluginsUpdate").getAbsolutePath()
                     );
                     downloadManagerConcurrentHashMap.put(pluginName, downloadManager);
-                    eventUtil.putEvent(new StartDownloadEvent(downloadManager));
+                    eventManagement.putEvent(new StartDownloadEvent(downloadManager));
                     var getStringMethod = new Object() {
                         Method getString = null;
                     };
@@ -351,7 +347,7 @@ public class PluginMarket {
                 icon.getName(),
                 "tmp"
         );
-        EventUtil.getInstance().putEvent(new StartDownloadEvent(downloadManager));
+        EventManagement.getInstance().putEvent(new StartDownloadEvent(downloadManager));
         downloadUtil.waitForDownloadTask(downloadManager, 10000);
 
         BufferedImage bitmap = ImageIO.read(icon);
@@ -380,7 +376,7 @@ public class PluginMarket {
                 saveFileName,
                 new File("tmp").getAbsolutePath()
         );
-        EventUtil.getInstance().putEvent(new StartDownloadEvent(downloadManager));
+        EventManagement.getInstance().putEvent(new StartDownloadEvent(downloadManager));
         downloadUtil.waitForDownloadTask(downloadManager, 10000);
         //已下载完，返回json
         String eachLine;

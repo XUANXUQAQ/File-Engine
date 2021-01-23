@@ -7,6 +7,7 @@ import FileEngine.configs.ConfigEntity;
 import FileEngine.configs.Enums;
 import FileEngine.eventHandler.Event;
 import FileEngine.eventHandler.EventHandler;
+import FileEngine.eventHandler.EventManagement;
 import FileEngine.eventHandler.impl.SetSwingLaf;
 import FileEngine.eventHandler.impl.configs.AddCmdEvent;
 import FileEngine.eventHandler.impl.configs.DeleteCmdEvent;
@@ -18,10 +19,13 @@ import FileEngine.eventHandler.impl.download.StopDownloadEvent;
 import FileEngine.eventHandler.impl.frame.pluginMarket.ShowPluginMarket;
 import FileEngine.eventHandler.impl.frame.searchBar.HideSearchBarEvent;
 import FileEngine.eventHandler.impl.frame.searchBar.PreviewSearchBarEvent;
+import FileEngine.eventHandler.impl.frame.settingsFrame.AddCacheEvent;
 import FileEngine.eventHandler.impl.frame.settingsFrame.HideSettingsFrameEvent;
+import FileEngine.eventHandler.impl.frame.settingsFrame.IsCacheExistEvent;
 import FileEngine.eventHandler.impl.frame.settingsFrame.ShowSettingsFrameEvent;
 import FileEngine.eventHandler.impl.hotkey.ResponseCtrlEvent;
 import FileEngine.eventHandler.impl.plugin.AddPluginsCanUpdateEvent;
+import FileEngine.eventHandler.impl.stop.StopEvent;
 import FileEngine.utils.*;
 import FileEngine.utils.database.DatabaseUtil;
 import FileEngine.utils.database.SQLiteUtil;
@@ -52,7 +56,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 
-@SuppressWarnings("unused")
 public class SettingsFrame {
     private final Set<String> cacheSet = ConcurrentHashMap.newKeySet();
     private static volatile int tmp_copyPathKeyCode;
@@ -62,7 +65,7 @@ public class SettingsFrame {
     private static final ImageIcon frameIcon = new ImageIcon(SettingsFrame.class.getResource("/icons/frame.png"));
     private static final JFrame frame = new JFrame("Settings");
     private static final TranslateUtil translateUtil = TranslateUtil.getInstance();
-    private static final EventUtil eventUtil = EventUtil.getInstance();
+    private static final EventManagement eventManagement = EventManagement.getInstance();
     private static final AllConfigs allConfigs = AllConfigs.getInstance();
     private static final CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
     private final HashMap<String, Integer> tabComponentIndexMap = new HashMap<>();
@@ -252,14 +255,11 @@ public class SettingsFrame {
     private JLabel labelSuffixTip;
     private JLabel labelPlaceHolder;
     private JCheckBox checkBoxResponseCtrl;
-    private JScrollPane tabGeneralScrollpane;
-    private JScrollPane tabGeneralScrollPane;
-    private JPanel tabGeneralPane;
 
     private static volatile SettingsFrame instance = null;
 
 
-    public static SettingsFrame getInstance() {
+    private static SettingsFrame getInstance() {
         if (instance == null) {
             synchronized (SettingsFrame.class) {
                 if (instance == null) {
@@ -469,8 +469,8 @@ public class SettingsFrame {
             if (returnValue == JFileChooser.APPROVE_OPTION) {
                 cmd = fileChooser.getSelectedFile().getAbsolutePath();
                 AddCmdEvent addCmdEvent = new AddCmdEvent(":" + name + ";" + cmd);
-                eventUtil.putEvent(addCmdEvent);
-                eventUtil.waitForEvent(addCmdEvent);
+                eventManagement.putEvent(addCmdEvent);
+                eventManagement.waitForEvent(addCmdEvent);
                 listCmds.setListData(allConfigs.getCmdSet().toArray());
             }
         });
@@ -481,8 +481,8 @@ public class SettingsFrame {
             String del = (String) listCmds.getSelectedValue();
             if (del != null) {
                 DeleteCmdEvent deleteCmdEvent = new DeleteCmdEvent(del);
-                eventUtil.putEvent(deleteCmdEvent);
-                eventUtil.waitForEvent(deleteCmdEvent);
+                eventManagement.putEvent(deleteCmdEvent);
+                eventManagement.waitForEvent(deleteCmdEvent);
                 listCmds.setListData(allConfigs.getCmdSet().toArray());
             }
 
@@ -515,7 +515,7 @@ public class SettingsFrame {
 
         buttonCheckUpdate.addActionListener(e -> {
             if (isDownloadStarted.get()) {
-                eventUtil.putEvent(new StopDownloadEvent(downloadManager.downloadManager));
+                eventManagement.putEvent(new StopDownloadEvent(downloadManager.downloadManager));
             } else {
                 //开始下载
                 JSONObject updateInfo;
@@ -549,7 +549,7 @@ public class SettingsFrame {
                                 fileName,
                                 new File("tmp").getAbsolutePath()
                         );
-                        eventUtil.putEvent(new StartDownloadEvent(downloadManager.downloadManager));
+                        eventManagement.putEvent(new StartDownloadEvent(downloadManager.downloadManager));
                         cachedThreadPoolUtil.executeTask(
                                 () -> SetDownloadProgress.setProgress(labelDownloadProgress,
                                         buttonCheckUpdate,
@@ -633,7 +633,7 @@ public class SettingsFrame {
                 Color searchBarColor;
                 Color searchBarFontColor;
                 Color borderColor;
-                while (eventUtil.isNotMainExit()) {
+                while (eventManagement.isNotMainExit()) {
                     labelColor = getColorFromTextFieldStr(textFieldLabelColor);
                     fontColorWithCoverage = getColorFromTextFieldStr(textFieldFontColorWithCoverage);
                     defaultBackgroundColor = getColorFromTextFieldStr(textFieldBackgroundDefault);
@@ -820,7 +820,7 @@ public class SettingsFrame {
         buttonDeleteCache.addActionListener(e -> {
             String cache = (String) listCache.getSelectedValue();
             if (cache != null) {
-                eventUtil.putEvent(new DeleteFromCacheEvent(cache));
+                eventManagement.putEvent(new DeleteFromCacheEvent(cache));
                 cacheSet.remove(cache);
                 listCache.setListData(cacheSet.toArray());
             }
@@ -857,7 +857,7 @@ public class SettingsFrame {
                     if (IsDebug.isDebug()) {
                         System.out.println("开始优化");
                     }
-                    eventUtil.putEvent(new OptimiseDatabaseEvent());
+                    eventManagement.putEvent(new OptimiseDatabaseEvent());
                     cachedThreadPoolUtil.executeTask(() -> {
                         //实时显示VACUUM状态
                         try {
@@ -925,14 +925,14 @@ public class SettingsFrame {
     }
 
     private void addButtonClosePreviewListener() {
-        buttonClosePreview.addActionListener(e -> eventUtil.putEvent(
+        buttonClosePreview.addActionListener(e -> eventManagement.putEvent(
                 new HideSearchBarEvent()
         ));
     }
 
     private void addButtonPreviewListener() {
         buttonPreviewColor.addActionListener(e ->
-                eventUtil.putEvent(
+                eventManagement.putEvent(
                         new PreviewSearchBarEvent(
                                 textFieldBorderColor.getText(),
                                 textFieldSearchBarColor.getText(),
@@ -952,7 +952,7 @@ public class SettingsFrame {
                     translateUtil.getTranslation("The operation is irreversible. Are you sure you want to clear the cache?"));
             if (JOptionPane.YES_OPTION == ret) {
                 for (String each : cacheSet) {
-                    eventUtil.putEvent(new DeleteFromCacheEvent(each));
+                    eventManagement.putEvent(new DeleteFromCacheEvent(each));
                 }
                 cacheSet.clear();
                 listCache.setListData(cacheSet.toArray());
@@ -961,7 +961,7 @@ public class SettingsFrame {
     }
 
     private void addButtonViewPluginMarketListener() {
-        buttonPluginMarket.addActionListener(e -> eventUtil.putEvent(new ShowPluginMarket()));
+        buttonPluginMarket.addActionListener(e -> eventManagement.putEvent(new ShowPluginMarket()));
     }
 
     private void addSwingThemePreviewListener() {
@@ -969,7 +969,7 @@ public class SettingsFrame {
             @Override
             public void mouseClicked(MouseEvent e) {
                 String swingTheme = (String) listSwingThemes.getSelectedValue();
-                eventUtil.putEvent(new SetSwingLaf(swingTheme));
+                eventManagement.putEvent(new SetSwingLaf(swingTheme));
             }
         });
     }
@@ -982,7 +982,7 @@ public class SettingsFrame {
             if (ret == JOptionPane.YES_OPTION) {
                 suffixMap.clear();
                 suffixMap.put("defaultPriority", 0);
-                eventUtil.putEvent(new ClearSuffixPriorityMapEvent());
+                eventManagement.putEvent(new ClearSuffixPriorityMapEvent());
                 refreshPriorityTable();
             }
         });
@@ -1092,7 +1092,7 @@ public class SettingsFrame {
                 StringBuilder errMsg = new StringBuilder();
                 if (checkSuffixAndPriority(suffix, priorityNum, errMsg, true, false)) {
                     int num = Integer.parseInt(priorityNum);
-                    eventUtil.putEvent(new UpdateSuffixPriorityEvent(
+                    eventManagement.putEvent(new UpdateSuffixPriorityEvent(
                             lastSuffix[0],
                             suffix,
                             num
@@ -1116,7 +1116,7 @@ public class SettingsFrame {
                 StringBuilder errMsg = new StringBuilder();
                 if (checkSuffixAndPriority(suffix, priorityNum, errMsg, false, true)) {
                     int num = Integer.parseInt(priorityNum);
-                    eventUtil.putEvent(new UpdateSuffixPriorityEvent(
+                    eventManagement.putEvent(new UpdateSuffixPriorityEvent(
                             lastSuffix[0],
                             suffix,
                             num
@@ -1156,7 +1156,7 @@ public class SettingsFrame {
                 if (rowNum != -1) {
                     String suffix = (String) tableSuffix.getValueAt(rowNum, 0);
                     suffixMap.remove(suffix);
-                    eventUtil.putEvent(new DeleteFromSuffixPriorityMapEvent(suffix));
+                    eventManagement.putEvent(new DeleteFromSuffixPriorityMapEvent(suffix));
                     refreshPriorityTable();
                 }
             }
@@ -1193,7 +1193,7 @@ public class SettingsFrame {
                 if (checkSuffixAndPriority(suffix, priorityNumTmp, err, true, true)) {
                     int num = Integer.parseInt(priorityNumTmp);
                     suffixMap.put(suffix, num);
-                    eventUtil.putEvent(new AddToSuffixPriorityMapEvent(suffix, num));
+                    eventManagement.putEvent(new AddToSuffixPriorityMapEvent(suffix, num));
                     refreshPriorityTable();
                 } else {
                     JOptionPane.showMessageDialog(frame, err.toString());
@@ -1215,7 +1215,7 @@ public class SettingsFrame {
 
         buttonUpdatePlugin.addActionListener(e -> {
             if (isDownloadStarted.get()) {
-                eventUtil.putEvent(new StopDownloadEvent(context.downloadManager));
+                eventManagement.putEvent(new StopDownloadEvent(context.downloadManager));
             } else {
                 startCheckTime.set(0L);
                 String pluginName = (String) listPlugins.getSelectedValue();
@@ -1251,7 +1251,7 @@ public class SettingsFrame {
                                 JOptionPane.showMessageDialog(frame, translateUtil.getTranslation("Check update failed"));
                                 return;
                             }
-                            if (!eventUtil.isNotMainExit()) {
+                            if (!eventManagement.isNotMainExit()) {
                                 return;
                             }
                         }
@@ -1266,7 +1266,7 @@ public class SettingsFrame {
                     return;
                 }
                 if (!isSkipConfirm.get()) {
-                    eventUtil.putEvent(new AddPluginsCanUpdateEvent(pluginName));
+                    eventManagement.putEvent(new AddPluginsCanUpdateEvent(pluginName));
                     int ret = JOptionPane.showConfirmDialog(frame, translateUtil.getTranslation("New version available, do you want to update?"));
                     if (ret != JOptionPane.YES_OPTION) {
                         return;
@@ -1279,7 +1279,7 @@ public class SettingsFrame {
                         pluginFullName,
                         new File("tmp", "pluginsUpdate").getAbsolutePath()
                 );
-                eventUtil.putEvent(new StartDownloadEvent(context.downloadManager));
+                eventManagement.putEvent(new StartDownloadEvent(context.downloadManager));
                 cachedThreadPoolUtil.executeTask(
                         () -> SetDownloadProgress.setProgress(labelProgress,
                         buttonUpdatePlugin,
@@ -1598,11 +1598,11 @@ public class SettingsFrame {
         addTextFieldSearchCommandsListener();
     }
 
-    public boolean isCacheExist(String cache) {
+    private boolean isCacheExist(String cache) {
         return cacheSet.contains(cache);
     }
 
-    public void addCache(String cache) {
+    private void addCache(String cache) {
         cacheSet.add(cache);
     }
 
@@ -1741,8 +1741,9 @@ public class SettingsFrame {
     }
 
     @EventRegister
+    @SuppressWarnings("unused")
     public static void registerEventHandler() {
-        eventUtil.register(ShowSettingsFrameEvent.class, new EventHandler() {
+        eventManagement.register(ShowSettingsFrameEvent.class, new EventHandler() {
             @Override
             public void todo(Event event) {
                 ShowSettingsFrameEvent showSettingsFrameEvent = (ShowSettingsFrameEvent) event;
@@ -1754,16 +1755,30 @@ public class SettingsFrame {
                 }
             }
         });
-        eventUtil.register(HideSettingsFrameEvent.class, new EventHandler() {
+        eventManagement.register(HideSettingsFrameEvent.class, new EventHandler() {
             @Override
             public void todo(Event event) {
                 getInstance().hideFrame();
             }
         });
-    }
 
-    protected boolean isSettingsFrameVisible() {
-        return frame.isVisible();
+        eventManagement.register(IsCacheExistEvent.class, new EventHandler() {
+            @Override
+            public void todo(Event event) {
+                IsCacheExistEvent cacheExist = (IsCacheExistEvent) event;
+                event.setReturnValue(getInstance().isCacheExist(cacheExist.cache));
+            }
+        });
+
+        eventManagement.register(AddCacheEvent.class, new EventHandler() {
+            @Override
+            public void todo(Event event) {
+                AddCacheEvent addCacheEvent = (AddCacheEvent) event;
+                getInstance().addCache(addCacheEvent.cache);
+            }
+        });
+
+        eventManagement.registerListener(StopEvent.class, () -> getInstance().hideFrame());
     }
 
     private void showWindow() {
@@ -1771,6 +1786,9 @@ public class SettingsFrame {
     }
 
     private void showWindow(int index) {
+        if (frame.isVisible()) {
+            return;
+        }
         initGUI();
         frame.setResizable(true);
         int width = Integer.parseInt(translateUtil.getFrameWidth());
@@ -1786,8 +1804,8 @@ public class SettingsFrame {
         frame.setLocationRelativeTo(null);
         //使swing风格生效
         SetSwingLaf event = new SetSwingLaf("current");
-        eventUtil.putEvent(event);
-        eventUtil.waitForEvent(event);
+        eventManagement.putEvent(event);
+        eventManagement.waitForEvent(event);
         textAreaDescription.setForeground(tabbedPane.getForeground());
         SwingUtilities.invokeLater(() -> frame.setVisible(true));
     }
@@ -1968,12 +1986,12 @@ public class SettingsFrame {
         configEntity.setDoubleClickCtrlOpen(checkBoxResponseCtrl.isSelected());
 
         setStartup(checkBoxAddToStartup.isSelected());
-        eventUtil.putEvent(new ResponseCtrlEvent(checkBoxResponseCtrl.isSelected()));
+        eventManagement.putEvent(new ResponseCtrlEvent(checkBoxResponseCtrl.isSelected()));
 
         SaveConfigsEvent event = new SaveConfigsEvent(configEntity);
-        eventUtil.putEvent(event);
-        eventUtil.waitForEvent(event);
-        eventUtil.putEvent(new SetConfigsEvent());
+        eventManagement.putEvent(event);
+        eventManagement.waitForEvent(event);
+        eventManagement.putEvent(new SetConfigsEvent());
 
         Color tmp_color = new Color(allConfigs.getLabelColor());
         labelColorChooser.setBackground(tmp_color);
