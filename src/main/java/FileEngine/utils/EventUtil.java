@@ -119,6 +119,9 @@ public class EventUtil {
     }
 
     private void doAllMethod(ConcurrentLinkedQueue<Runnable> todo) {
+        if (todo == null) {
+            return;
+        }
         for (Runnable each : todo) {
             each.run();
         }
