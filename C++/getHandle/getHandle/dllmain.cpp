@@ -17,23 +17,25 @@
 
 constexpr auto EXPLORER_MIN_HEIGHT = 200;       //当窗口大小满足这些条件后才开始判断是否为explorer.exe
 constexpr auto EXPLORER_MIN_WIDTH = 200;
-constexpr auto EXPLORER_MIN_X_POS = 50;
-constexpr auto EXPLORER_MIN_Y_POS = 50;
+
+constexpr auto DIALOG = 0x01;
+constexpr auto EXPLORER = 0x02;
 
 using namespace std;
 
 volatile bool isExplorerWindowAtTop = false;
 volatile bool isRunning = false;
-int explorerX;
-int explorerY;
+volatile int explorerX;
+volatile int explorerY;
 volatile long explorerWidth;
 volatile long explorerHeight;
-int toolbar_click_x;
-int toolbar_click_y;
+volatile int toolbar_click_x;
+volatile int toolbar_click_y;
 volatile bool is_click_not_explorer_or_searchbar;
-HWND searchBarHWND;
+volatile HWND searchBarHWND;
 char explorer_path[1000];
 volatile bool isSearchBarUsing = false;
+volatile int topWindowStatus;
 
 void getTopWindow(HWND* hwnd);
 void getWindowRect(const HWND& hwnd, LPRECT lprect);
@@ -60,8 +62,14 @@ extern "C" __declspec(dllexport) bool isExplorerAndSearchbarNotFocused();
 extern "C" __declspec(dllexport) void setExplorerPath();
 extern "C" __declspec(dllexport) const char* getExplorerPath();
 extern "C" __declspec(dllexport) void setSearchBarUsingStatus(bool b);
+extern "C" __declspec(dllexport) int getTopWindowStatus();
 
-__declspec(dllexport) void setSearchBarUsingStatus(bool b)
+__declspec(dllexport) int getTopWindowStatus()
+{
+    return topWindowStatus;
+}
+
+__declspec(dllexport) void setSearchBarUsingStatus(const bool b)
 {
     isSearchBarUsing = b;
 }
@@ -70,9 +78,9 @@ __declspec(dllexport) void setExplorerPath()
 {
     POINT p;
     GetCursorPos(&p);
-    HWND hd = ::WindowFromPoint(p);
+    auto* hd = WindowFromPoint(p);
     hd = GetAncestor(hd, GA_ROOT);
-    string path_tmp = getPathByHWND(hd);
+    const auto path_tmp = getPathByHWND(hd);
 #ifdef TEST
     char windowClassName[200];
     GetClassNameA(hd, windowClassName, 200);
@@ -130,18 +138,16 @@ bool isMouseClickedOrSwitchTaskPressed()
 __declspec(dllexport) bool isDialogNotExist()
 {
     RECT windowRect;
-    HWND hd = GetDesktopWindow();        //得到桌面窗口
+    auto* hd = GetDesktopWindow();        //得到桌面窗口
     hd = GetWindow(hd, GW_CHILD);        //得到屏幕上第一个子窗口
     while (hd != nullptr)                    //循环得到所有的子窗口
     {
         if (IsWindowVisible(hd) && !IsIconic(hd))
         {
             getWindowRect(hd, &windowRect);
-            int tmp_explorerX = windowRect.left;
-            int tmp_explorerY = windowRect.top;
             int tmp_explorerWidth = windowRect.right - windowRect.left;
             int tmp_explorerHeight = windowRect.bottom - windowRect.top;
-            if (!(tmp_explorerHeight < EXPLORER_MIN_HEIGHT || tmp_explorerWidth < EXPLORER_MIN_WIDTH || tmp_explorerX < EXPLORER_MIN_X_POS || tmp_explorerY < EXPLORER_MIN_Y_POS))
+            if (!(tmp_explorerHeight < EXPLORER_MIN_HEIGHT || tmp_explorerWidth < EXPLORER_MIN_WIDTH))
             {
                 if (is_explorer_window_low_cost(hd) || is_file_chooser_window(hd))
                 {
@@ -269,18 +275,34 @@ void checkTopWindowThread()
     while (isRunning)
     {
         getTopWindow(&hwnd);
-        if (is_explorer_window_low_cost(hwnd) || is_file_chooser_window(hwnd))
+        const auto isExplorerWindow = is_explorer_window_low_cost(hwnd);
+        const auto isDialogWindow = is_file_chooser_window(hwnd);
+
+        if (isExplorerWindow || isDialogWindow)
         {
             getWindowRect(hwnd, &windowRect);
-            explorerX = windowRect.left;
-            explorerY = windowRect.top;
+            if (IsZoomed(hwnd)) {
+                explorerX = 0;
+                explorerY = 0;
+            } else {
+                explorerX = windowRect.left;
+                explorerY = windowRect.top;
+            }
             explorerWidth = windowRect.right - windowRect.left;
             explorerHeight = windowRect.bottom - windowRect.top;
-            if (explorerHeight < EXPLORER_MIN_HEIGHT || explorerWidth < EXPLORER_MIN_WIDTH || explorerX < EXPLORER_MIN_X_POS || explorerY < EXPLORER_MIN_Y_POS) {
+            if (explorerHeight < EXPLORER_MIN_HEIGHT || explorerWidth < EXPLORER_MIN_WIDTH) {
                 isExplorerWindowAtTop = false;
             }
             else
             {
+                if (isExplorerWindow)
+                {
+                    topWindowStatus = DIALOG;
+                }
+                else if (isDialogWindow)
+                {
+                    topWindowStatus = EXPLORER;
+                }
                 setClickPos(hwnd);
                 isExplorerWindowAtTop = true;
             }

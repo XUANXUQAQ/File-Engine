@@ -6,6 +6,9 @@ import com.sun.jna.Native;
 public interface GetHandle extends Library {
     GetHandle INSTANCE = Native.load("getHandle", GetHandle.class);
 
+    int EXPLORER = 0x01;
+    int DIALOG = 0x02;
+
     void start();
 
     void stop();
@@ -33,4 +36,6 @@ public interface GetHandle extends Library {
     String getExplorerPath();
 
     void setSearchBarUsingStatus(boolean b);
+
+    int getTopWindowStatus();
 }

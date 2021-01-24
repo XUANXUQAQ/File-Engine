@@ -164,7 +164,7 @@ std::string getPathByHWND(const HWND& hwnd)
         SHGetSpecialFolderPath(nullptr, path, CSIDL_DESKTOP, 0);
         return to_utf8(path);
     }
-    ::CoInitialize(nullptr);
+	CoInitialize(nullptr);
     try
     {
         for (const auto& info : GetCurrentExplorerFolders())
