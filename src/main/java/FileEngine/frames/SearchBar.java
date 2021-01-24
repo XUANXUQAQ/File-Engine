@@ -151,10 +151,10 @@ public class SearchBar {
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize(); // 获取屏幕大小
         int width = screenSize.width;
         int height = screenSize.height;
-        int searchBarWidth = (int) (width * 0.4);
-        int searchBarHeight = (int) (height * 0.5);
+        int searchBarWidth = (int) (width * 0.3);
+        int searchBarHeight = (int) (height * 0.4);
         int positionX = width / 2 - searchBarWidth / 2;
-        int positionY = height / 2 - searchBarHeight / 2;
+        int positionY = height / 2 - searchBarHeight / 3;
 
         AllConfigs allConfigs = AllConfigs.getInstance();
         labelColor = new Color(allConfigs.getLabelColor());
@@ -177,7 +177,7 @@ public class SearchBar {
         searchBar.setTitle("File-Engine-SearchBar");
 
         //labels
-        Font labelFont = new Font(Font.SANS_SERIF, Font.BOLD, (int) ((searchBarHeight * 0.2) / 96 * 72) / 4);
+        Font labelFont = new Font(Font.SANS_SERIF, Font.BOLD, getLabelFontSizeBySearchBarHeight(searchBarHeight));
         label1 = new JLabel();
         label2 = new JLabel();
         label3 = new JLabel();
@@ -205,14 +205,14 @@ public class SearchBar {
 
         //TextField
         textField = new JTextField(1000);
-        textField.setSize(searchBarWidth - 6, labelHeight - 5);
-        Font textFieldFont = new Font(Font.SANS_SERIF, Font.PLAIN, (int) ((searchBarHeight * 0.4) / 96 * 72) / 4);
+        textField.setSize(searchBarWidth, labelHeight);
+        Font textFieldFont = new Font(Font.SANS_SERIF, Font.PLAIN, getTextFieldFontSizeBySearchBarHeight(searchBarHeight));
         textField.setFont(textFieldFont);
         textField.setBorder(border);
         textField.setForeground(Color.BLACK);
         textField.setHorizontalAlignment(JTextField.LEFT);
         textField.setBackground(Color.WHITE);
-        textField.setLocation(3, 0);
+        textField.setLocation(0, 0);
         textField.setOpaque(true);
 
         //panel
@@ -342,7 +342,6 @@ public class SearchBar {
      *
      * @param width     宽
      * @param height    高
-     * @param positionY Y坐标
      * @param label     需要修改大小的label
      */
     private void setLabelSize(int width, int height, int positionY, JLabel label) {
@@ -923,6 +922,23 @@ public class SearchBar {
         }
     }
 
+    private String contractHtmlFontSize(String str) {
+        String ret;
+        if (str.contains("<font size=\"-1\">")) {
+            ret = str.replace("<font size=\"-1\">", "<font size=\"-2\">");
+        } else {
+            ret = str.replace("<body>", "<body><font size=\"-1\">");
+        }
+        return ret;
+    }
+
+    private String autoContractHtmlStr(String str, JLabel label) {
+        if (isContractFonSize(str, label)) {
+            return contractHtmlFontSize(str);
+        }
+        return str;
+    }
+
     /**
      * 设置当前label为选中状态
      *
@@ -931,6 +947,15 @@ public class SearchBar {
     private void setLabelChosen(JLabel label) {
         if (label != null) {
             SwingUtilities.invokeLater(() -> {
+                String name = label.getName();
+                if (!(name == null || name.isEmpty())) {
+                    String currentText = label.getText();
+                    if (!currentText.contains(":")) {
+                        //当前显示的不是路径
+                        label.setName(currentText);
+                        label.setText(autoContractHtmlStr(name, label));
+                    }
+                }
                 label.setBackground(labelColor);
                 label.setForeground(fontColorWithCoverage);
             });
@@ -945,6 +970,15 @@ public class SearchBar {
     private void setLabelNotChosen(JLabel label) {
         if (label != null) {
             SwingUtilities.invokeLater(() -> {
+                String name = label.getName();
+                if (!(name == null || name.isEmpty())) {
+                    String currentText = label.getText();
+                    if (currentText.contains(":")) {
+                        //当前显示的不是名称
+                        label.setName(currentText);
+                        label.setText(autoContractHtmlStr(name, label));
+                    }
+                }
                 label.setBackground(backgroundColor);
                 label.setForeground(labelFontColor);
             });
@@ -986,15 +1020,16 @@ public class SearchBar {
             @Override
             public void mouseMoved(MouseEvent e) {
                 //判断鼠标位置
+                int offset = label1.getHeight();
                 int labelPosition = label1.getY();
-                int labelPosition2 = labelPosition * 2;
-                int labelPosition3 = labelPosition * 3;
-                int labelPosition4 = labelPosition * 4;
-                int labelPosition5 = labelPosition * 5;
-                int labelPosition6 = labelPosition * 6;
-                int labelPosition7 = labelPosition * 7;
-                int labelPosition8 = labelPosition * 8;
-                int labelPosition9 = labelPosition * 9;
+                int labelPosition2 = labelPosition + offset;
+                int labelPosition3 = labelPosition + offset * 2;
+                int labelPosition4 = labelPosition + offset * 3;
+                int labelPosition5 = labelPosition + offset * 4;
+                int labelPosition6 = labelPosition + offset * 5;
+                int labelPosition7 = labelPosition + offset * 6;
+                int labelPosition8 = labelPosition + offset * 7;
+                int labelPosition9 = labelPosition + offset * 8;
 
                 //开始显示500ms后才开始响应鼠标移动事件
                 if (System.currentTimeMillis() - firstResultStartShowingTime > 500 && firstResultStartShowingTime != 0) {
@@ -2361,6 +2396,9 @@ public class SearchBar {
                 while (eventManagement.isNotMainExit()) {
                     if (GetHandle.INSTANCE.isExplorerAtTop()) {
                         switchToExplorerAttachMode();
+                        if (!isVisible()) {
+                            showSearchbar(false);
+                        }
                     } else {
                         if (GetHandle.INSTANCE.isDialogNotExist() || GetHandle.INSTANCE.isExplorerAndSearchbarNotFocused()) {
                             switchToNormalMode();
@@ -2376,15 +2414,63 @@ public class SearchBar {
     }
 
     private void getExplorerSizeAndChangeSearchBarSizeExplorerMode() {
-        int searchBarHeight = (int) (GetHandle.INSTANCE.getExplorerHeight() * 0.75);
+        double explorerWidth = GetHandle.INSTANCE.getExplorerWidth();
+        double explorerHeight = GetHandle.INSTANCE.getExplorerHeight();
+        double explorerX = GetHandle.INSTANCE.getExplorerX();
+        double explorerY = GetHandle.INSTANCE.getExplorerY();
+        int searchBarHeight = (int) (explorerHeight * 0.65);
         int labelHeight = searchBarHeight / 9;
         if (labelHeight > 20) {
-            int searchBarWidth = (int) (GetHandle.INSTANCE.getExplorerWidth() / 3);
-            int positionX = (int) (GetHandle.INSTANCE.getExplorerX());
-            int positionY = (int) (GetHandle.INSTANCE.getExplorerY() - labelHeight - 5);
+            int searchBarWidth = (int) (explorerWidth / 4);
+            int positionX;
+            int positionY;
+            int ret = GetHandle.INSTANCE.getTopWindowStatus();
+            if (GetHandle.EXPLORER == ret) {
+                positionX = (int) (explorerX + explorerWidth * 0.97 - searchBarWidth);
+                positionY = (int) (explorerY + explorerHeight * 0.95 - searchBarHeight);
+            } else {
+                searchBarWidth = (int) (explorerWidth * 0.52);
+                positionX = (int) (explorerX + (explorerWidth / 2 - searchBarWidth / 2));
+                positionY = (int) (explorerY + explorerHeight * 0.42);
+            }
             //设置窗口大小
             changeSearchBarSizeAndPos(positionX, positionY, searchBarWidth, searchBarHeight, labelHeight);
+            setLabelAtTop(searchBarHeight);
         }
+    }
+
+    private void setLabelAtTop(int searchBarHeight) {
+        int labelHeight = searchBarHeight / 9;
+        SwingUtilities.invokeLater(() -> {
+                textField.setLocation(0, labelHeight * 8);
+                label1.setLocation(0, 0);
+                label2.setLocation(0, labelHeight);
+                label3.setLocation(0, labelHeight * 2);
+                label4.setLocation(0, labelHeight * 3);
+                label5.setLocation(0, labelHeight * 4);
+                label6.setLocation(0, labelHeight * 5);
+                label7.setLocation(0, labelHeight * 6);
+                label8.setLocation(0, labelHeight * 7);
+        });
+    }
+
+    private void setTextFieldAtTop(int searchBarHeight) {
+        int labelHeight = searchBarHeight / 9;
+        SwingUtilities.invokeLater(() -> {
+            textField.setLocation(0, 0);
+            label1.setLocation(0, labelHeight);
+            label2.setLocation(0, labelHeight * 2);
+            label3.setLocation(0, labelHeight * 3);
+            label4.setLocation(0, labelHeight * 4);
+            label5.setLocation(0, labelHeight * 5);
+            label6.setLocation(0, labelHeight * 6);
+            label7.setLocation(0, labelHeight * 7);
+            label8.setLocation(0, labelHeight * 8);
+        });
+    }
+
+    private void setLabelLocationByOffset(int yOffset, JLabel label) {
+        label.setLocation(label.getX(), label.getY() - yOffset);
     }
 
     private void changeSearchBarSize() {
@@ -2392,28 +2478,24 @@ public class SearchBar {
             try {
                 EventManagement eventManagement = EventManagement.getInstance();
                 while (eventManagement.isNotMainExit()) {
-                    if (isPreviewMode.get()) {
+                    if (showingMode == Enums.ShowingSearchBarMode.EXPLORER_ATTACH) {
+                        getExplorerSizeAndChangeSearchBarSizeExplorerMode();
+                    } else if (showingMode == Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
                         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize(); // 获取屏幕大小
                         int width = screenSize.width;
                         int height = screenSize.height;
-                        int positionX = 50;
-                        int positionY = 50;
-                        int searchBarWidth = width / 4;
-                        int searchBarHeight = (int) (height * 0.5);
-                        changeSearchBarSizeAndPos(positionX, positionY, searchBarWidth, searchBarHeight);
-                    } else {
-                        if (showingMode == Enums.ShowingSearchBarMode.EXPLORER_ATTACH) {
-                            getExplorerSizeAndChangeSearchBarSizeExplorerMode();
-                        } else if (showingMode == Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
-                            Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize(); // 获取屏幕大小
-                            int width = screenSize.width;
-                            int height = screenSize.height;
-                            int searchBarWidth = (int) (width * 0.4);
-                            int searchBarHeight = (int) (height * 0.5);
-                            int positionX = width / 2 - searchBarWidth / 2;
-                            int positionY = height / 2 - searchBarHeight / 2;
-                            changeSearchBarSizeAndPos(positionX, positionY, searchBarWidth, searchBarHeight);
+                        int searchBarWidth = (int) (width * 0.3);
+                        int searchBarHeight = (int) (height * 0.4);
+                        int positionX, positionY;
+                        if (isPreviewMode.get()) {
+                            positionX = 50;
+                            positionY = 50;
+                        } else {
+                            positionX = width / 2 - searchBarWidth / 2;
+                            positionY = height / 2 - searchBarHeight / 3;
                         }
+                        changeSearchBarSizeAndPos(positionX, positionY, searchBarWidth, searchBarHeight);
+                        setTextFieldAtTop(searchBarHeight);
                     }
                     TimeUnit.MILLISECONDS.sleep(5);
                 }
@@ -2427,20 +2509,22 @@ public class SearchBar {
                 || positionY != searchBar.getY()
                 || searchBarWidth != searchBar.getWidth()
                 || searchBarHeight != searchBar.getHeight()) {
-            //设置窗口大小
-            searchBar.setBounds(positionX, positionY, searchBarWidth, searchBarHeight);
-            //设置label大小
-            setLabelSize(searchBarWidth, labelHeight, labelHeight, label1);
-            setLabelSize(searchBarWidth, labelHeight, labelHeight * 2, label2);
-            setLabelSize(searchBarWidth, labelHeight, labelHeight * 3, label3);
-            setLabelSize(searchBarWidth, labelHeight, labelHeight * 4, label4);
-            setLabelSize(searchBarWidth, labelHeight, labelHeight * 5, label5);
-            setLabelSize(searchBarWidth, labelHeight, labelHeight * 6, label6);
-            setLabelSize(searchBarWidth, labelHeight, labelHeight * 7, label7);
-            setLabelSize(searchBarWidth, labelHeight, labelHeight * 8, label8);
-            //设置textField大小
-            textField.setSize(searchBarWidth - 6, labelHeight - 5);
-            textField.setLocation(3, 0);
+            SwingUtilities.invokeLater(() -> {
+                //设置窗口大小
+                searchBar.setBounds(positionX, positionY, searchBarWidth, searchBarHeight);
+                //设置label大小
+                int firstLabelY = label1.getY();
+                setLabelSize(searchBarWidth, labelHeight, firstLabelY, label1);
+                setLabelSize(searchBarWidth, labelHeight, firstLabelY + labelHeight , label2);
+                setLabelSize(searchBarWidth, labelHeight, firstLabelY + labelHeight * 2, label3);
+                setLabelSize(searchBarWidth, labelHeight, firstLabelY + labelHeight * 3, label4);
+                setLabelSize(searchBarWidth, labelHeight, firstLabelY + labelHeight * 4, label5);
+                setLabelSize(searchBarWidth, labelHeight, firstLabelY + labelHeight * 5, label6);
+                setLabelSize(searchBarWidth, labelHeight, firstLabelY + labelHeight * 6, label7);
+                setLabelSize(searchBarWidth, labelHeight, firstLabelY + labelHeight * 7, label8);
+                //设置textField大小
+                textField.setSize(searchBarWidth, labelHeight);
+            });
         }
     }
 
@@ -2455,9 +2539,9 @@ public class SearchBar {
         if (labelHeight > 35) {
             if (showingMode != Enums.ShowingSearchBarMode.EXPLORER_ATTACH) {
                 //设置字体
-                Font textFieldFont = new Font(null, Font.PLAIN, (int) ((searchBarHeight * 0.4) / 96 * 72) / 4);
+                Font textFieldFont = new Font(null, Font.PLAIN, getTextFieldFontSizeBySearchBarHeight(searchBarHeight));
                 textField.setFont(textFieldFont);
-                Font labelFont = new Font(null, Font.BOLD, (int) ((searchBarHeight * 0.2) / 96 * 72) / 4);
+                Font labelFont = new Font(null, Font.BOLD, getLabelFontSizeBySearchBarHeight(searchBarHeight));
                 label1.setFont(labelFont);
                 label2.setFont(labelFont);
                 label3.setFont(labelFont);
@@ -2466,13 +2550,18 @@ public class SearchBar {
                 label6.setFont(labelFont);
                 label7.setFont(labelFont);
                 label8.setFont(labelFont);
+                getExplorerSizeAndChangeSearchBarSizeExplorerMode();    //不可见时先修改位置和大小，防止闪屏
                 showingMode = Enums.ShowingSearchBarMode.EXPLORER_ATTACH;
-                getExplorerSizeAndChangeSearchBarSizeExplorerMode();
-                if (!isVisible()) {
-                    showSearchbar(false);
-                }
             }
         }
+    }
+
+    private int getTextFieldFontSizeBySearchBarHeight(int searchBarHeight) {
+        return (int) ((searchBarHeight * 0.4) / 96 * 72) / 4;
+    }
+
+    private int getLabelFontSizeBySearchBarHeight(int searchBarHeight) {
+        return (int) ((searchBarHeight * 0.2) / 96 * 72) / 5;
     }
 
     private void switchToNormalMode() {
@@ -2482,8 +2571,8 @@ public class SearchBar {
             int height = screenSize.height;
             int searchBarHeight = (int) (height * 0.5);
             //设置字体
-            Font labelFont = new Font(null, Font.BOLD, (int) ((searchBarHeight * 0.2) / 96 * 72) / 4);
-            Font textFieldFont = new Font(null, Font.PLAIN, (int) ((searchBarHeight * 0.4) / 96 * 72) / 4);
+            Font labelFont = new Font(null, Font.BOLD, getLabelFontSizeBySearchBarHeight(searchBarHeight));
+            Font textFieldFont = new Font(null, Font.PLAIN, getTextFieldFontSizeBySearchBarHeight(searchBarHeight));
             textField.setFont(textFieldFont);
             label1.setFont(labelFont);
             label2.setFont(labelFont);
@@ -3033,6 +3122,14 @@ public class SearchBar {
         });
     }
 
+    private boolean isContractFonSize(String path, JLabel label) {
+        //根据计算出的每个label可显示的最大字符数量来判断是否需要将font size减小
+        String name = getFileName(path);
+        int fontSize = (int) ((label.getFont().getSize() / 96.0f * 72) / 2);
+        int maxShowingNum = label.getWidth() / fontSize;
+        return name.length() > maxShowingNum || path.length() > maxShowingNum;
+    }
+
     /**
      * 在label上显示当前文件路径对应文件的信息
      *
@@ -3041,21 +3138,24 @@ public class SearchBar {
      * @param isChosen 是否当前被选中
      */
     private void showResultOnLabel(String path, JLabel label, boolean isChosen) {
+        //将文件的路径信息存储在label的名称中，在未被选中时只显示文件名，选中后才显示文件路径
+        String showStr = "<html><body>%s</body></html>";
         String name = getFileName(path);
-        int fontSize = (int) ((label.getFont().getSize() / 96.0f * 72) / 2);
-        int maxShowingNum = label.getWidth() / fontSize;
-        boolean isContractFontSize = false;
-        //根据计算出的每个label可显示的最大字符数量来判断是否需要将font size减小
-        if (name.length() > maxShowingNum || path.length() > maxShowingNum) {
-            isContractFontSize = true;
-        }
-        String showHtml = "<html><body>%s" + name + "<br>%s" + ">>" + getParentPath(path) + "</body></html>";
-        if (isContractFontSize) {
-            showHtml = String.format(showHtml, "<font size=\"-1\">", "<font size=\"-2\">");
+        String allHtml = String.format(showStr, name + "<br><font size=\"-1\">" + ">>" + getParentPath(path));
+        if (isContractFonSize(path, label)) {
+            String nameHtml = String.format(showStr, name);
+            if (isChosen) {
+                showStr = allHtml;
+                label.setName(nameHtml);
+            } else {
+                showStr = nameHtml;
+                label.setName(allHtml);
+            }
         } else {
-            showHtml = String.format(showHtml, "", "<font size=\"-1\">");
+            showStr = allHtml;
+            label.setName("");
         }
-        label.setText(showHtml);
+        label.setText(autoContractHtmlStr(showStr, label));
         ImageIcon icon = GetIconUtil.getInstance().getBigIcon(path, iconSideLength, iconSideLength);
         label.setIcon(icon);
         label.setBorder(border);
