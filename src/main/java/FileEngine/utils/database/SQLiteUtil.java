@@ -1,5 +1,6 @@
 package FileEngine.utils.database;
 
+import FileEngine.IsDebug;
 import FileEngine.annotation.EventRegister;
 import FileEngine.eventHandler.EventManagement;
 import FileEngine.eventHandler.impl.stop.StopEvent;
@@ -54,6 +55,9 @@ public class SQLiteUtil {
     }
 
     public static void closeAll() {
+        if (IsDebug.isDebug()) {
+            System.out.println("正在关闭数据库连接");
+        }
         try {
             conn.close();
         } catch (SQLException throwables) {
