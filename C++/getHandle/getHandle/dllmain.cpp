@@ -11,7 +11,6 @@
 #pragma comment(lib, "dwmapi")
 #pragma comment(lib, "user32")
 #pragma comment(lib, "kernel32")
-#define IS_MOUSE_CLICKED_OR_KEY_PRESSED(VK_NONAME) ((GetAsyncKeyState(VK_NONAME) & 0x8000) ? 1:0)
 //#define TEST
 
 
@@ -32,7 +31,6 @@ volatile long explorerHeight;
 volatile int toolbar_click_x;
 volatile int toolbar_click_y;
 volatile bool is_click_not_explorer_or_searchbar;
-volatile HWND searchBarHWND;
 char explorer_path[1000];
 volatile bool isSearchBarUsing = false;
 volatile int topWindowStatus;
@@ -42,11 +40,9 @@ void getWindowRect(const HWND& hwnd, LPRECT lprect);
 void checkTopWindowThread();
 void setClickPos(const HWND& fileChooserHwnd);
 BOOL CALLBACK findToolbar(HWND hwndChild, LPARAM lParam);
-BOOL CALLBACK findSeachBar(HWND hwndChild, LPARAM lParam);
 bool isClickNotExplorerOrSearchBarOrSwitchTask();
 void checkMouseClickHWND();
 bool isMouseClickedOrSwitchTaskPressed();
-void grabSearchBarHWND();
 
 extern "C" __declspec(dllexport) bool isDialogNotExist();
 extern "C" __declspec(dllexport) void start();
@@ -99,9 +95,9 @@ __declspec(dllexport) bool isExplorerAndSearchbarNotFocused()
     return is_click_not_explorer_or_searchbar;
 }
 
-void grabSearchBarHWND()
+inline bool isKeyPressed(const int vk_key)
 {
-    EnumWindows(findSeachBar, NULL);
+    return GetAsyncKeyState(vk_key) & 0x8000 ? true : false;
 }
 
 bool isClickNotExplorerOrSearchBarOrSwitchTask()
@@ -131,8 +127,10 @@ bool isClickNotExplorerOrSearchBarOrSwitchTask()
 
 bool isMouseClickedOrSwitchTaskPressed()
 {
-    return IS_MOUSE_CLICKED_OR_KEY_PRESSED(VK_RBUTTON) || IS_MOUSE_CLICKED_OR_KEY_PRESSED(VK_MBUTTON) || IS_MOUSE_CLICKED_OR_KEY_PRESSED(VK_LBUTTON) ||
-        (IS_MOUSE_CLICKED_OR_KEY_PRESSED(VK_MENU) && IS_MOUSE_CLICKED_OR_KEY_PRESSED(VK_TAB));
+    return isKeyPressed(VK_RBUTTON) || 
+        isKeyPressed(VK_MBUTTON) || 
+        isKeyPressed(VK_LBUTTON) ||
+        isKeyPressed(VK_MENU) && isKeyPressed(VK_TAB);
 }
 
 __declspec(dllexport) bool isDialogNotExist()
@@ -173,16 +171,6 @@ void getWindowRect(const HWND& hwnd, LPRECT lprect)
 void setClickPos(const HWND& fileChooserHwnd)
 {
     EnumChildWindows(fileChooserHwnd, findToolbar, NULL);
-}
-
-BOOL CALLBACK findSeachBar(HWND hwndChild, LPARAM lParam)
-{
-    if (is_search_bar_window(hwndChild))
-    {
-        searchBarHWND = hwndChild;
-        return false;
-    }
-    return true;
 }
 
 BOOL CALLBACK findToolbar(HWND hwndChild, LPARAM lParam)

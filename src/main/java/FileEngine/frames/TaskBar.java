@@ -23,7 +23,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-@SuppressWarnings("unused")
 public class TaskBar {
     private TrayIcon trayIcon = null;
     private SystemTray systemTray;
@@ -120,7 +119,7 @@ public class TaskBar {
             if (IsDebug.isDebug()) {
                 trayIcon.setToolTip("File-Engine(Debug)");
             } else {
-                trayIcon.setToolTip("File-Engine");
+                trayIcon.setToolTip("File-Engine," + TranslateUtil.getInstance().getTranslation("Double click to open settings"));
             }
 
             // 为托盘图标加弹出菜弹

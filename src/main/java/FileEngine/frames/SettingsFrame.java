@@ -26,7 +26,10 @@ import FileEngine.eventHandler.impl.frame.settingsFrame.ShowSettingsFrameEvent;
 import FileEngine.eventHandler.impl.hotkey.ResponseCtrlEvent;
 import FileEngine.eventHandler.impl.plugin.AddPluginsCanUpdateEvent;
 import FileEngine.eventHandler.impl.stop.StopEvent;
-import FileEngine.utils.*;
+import FileEngine.utils.CachedThreadPoolUtil;
+import FileEngine.utils.CheckHotKeyUtil;
+import FileEngine.utils.RegexUtil;
+import FileEngine.utils.TranslateUtil;
 import FileEngine.utils.database.DatabaseUtil;
 import FileEngine.utils.database.SQLiteUtil;
 import FileEngine.utils.download.DownloadManager;
@@ -40,6 +43,10 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.filechooser.FileSystemView;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreeNode;
+import javax.swing.tree.TreePath;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
@@ -115,7 +122,6 @@ public class SettingsFrame {
     private JPanel tabCommands;
     private JTextField textFieldTransparency;
     private JLabel labelTransparency;
-    private JPanel tabColorSettings;
     private JLabel labelColorTip;
     private JTextField textFieldBackgroundDefault;
     private JTextField textFieldFontColorWithCoverage;
@@ -123,19 +129,14 @@ public class SettingsFrame {
     private JLabel labelLabelColor;
     private JLabel labelFontColor;
     private JLabel labelDefaultColor;
-    private JLabel labelSharpSign1;
-    private JLabel labelSharpSign2;
-    private JLabel labelSharp4;
     private JButton buttonResetColor;
     private JTextField textFieldFontColor;
-    private JLabel labelSharpSign5;
     private JLabel labelNotChosenFontColor;
     private JLabel labelColorChooser;
     private JLabel FontColorWithCoverageChooser;
     private JLabel defaultBackgroundChooser;
     private JLabel FontColorChooser;
     private JLabel labelSearchBarColor;
-    private JLabel labelSharp8;
     private JTextField textFieldSearchBarColor;
     private JLabel searchBarColorChooser;
     private JLabel labelCmdTip2;
@@ -148,9 +149,7 @@ public class SettingsFrame {
     private JLabel labelLanguageChooseTip;
     private JLabel labelPlaceHolder4;
     private JLabel labelTranslationTip;
-    private JLabel labelPlaceHolder1;
     private JLabel labelPlaceHolder5;
-    private JLabel labelPlaceHolderWhatever;
     private JPanel tabPlugin;
     private JLabel labelInstalledPluginNum;
     private JLabel labelPluginNum;
@@ -183,16 +182,12 @@ public class SettingsFrame {
     private JLabel labelPort;
     private JLabel labelUserName;
     private JLabel labelPassword;
-    private JLabel labelPlaceHolder7;
     private JRadioButton radioButtonProxyTypeHttp;
     private JRadioButton radioButtonProxyTypeSocks5;
     private JLabel labelProxyTip;
     private JLabel labelPlaceHolder8;
     private JLabel labelVacuumStatus;
     private JLabel labelApiVersion;
-    private JLabel placeHolder1;
-    private JLabel placeHolder2;
-    private JLabel placeHolder4;
     private JLabel placeHolder6;
     private JLabel placeHolder7;
     private JComboBox<String> chooseUpdateAddress;
@@ -202,14 +197,12 @@ public class SettingsFrame {
     private JLabel labelCacheSettings;
     private JLabel labelCacheTip;
     private JList<Object> listCache;
-    private JLabel placeholderCache0;
     private JButton buttonDeleteCache;
     private JScrollPane cacheScrollPane;
     private JLabel labelVacuumTip2;
     private JLabel labelCacheTip2;
     private JButton buttonDeleteAllCache;
     private JLabel labelSearchBarFontColor;
-    private JLabel labelSharp9;
     private JTextField textFieldSearchBarFontColor;
     private JLabel SearchBarFontColorChooser;
     private JLabel labelBorderColor;
@@ -225,24 +218,14 @@ public class SettingsFrame {
     private JList<Object> listSwingThemes;
     private JScrollPane paneSwingThemes;
     private JButton buttonChangeTheme;
-    private JLabel labelRemoveDesktop;
-    private JLabel labelPlaceHolder2;
-    private JLabel labelPlaceHolder3;
     private JScrollPane paneListPlugins;
     private JScrollPane paneListLanguage;
     private JButton buttonPreviewColor;
     private JButton buttonClosePreview;
-    private JLabel placeholder;
-    private JLabel placeholder2;
     private JTextField textFieldSearchCommands;
     private JLabel labelSearchCommand;
     private JLabel placeholderN;
     private JLabel placeholderl;
-    private JLabel placeholderl2;
-    private JLabel placeholderGeneral0;
-    private JLabel placeholderPlugins0;
-    private JLabel placeholderLanguage0;
-    private JLabel placeholderColorSettings0;
     private JLabel placeholdersearch0;
     private JLabel labelTinyPinyin;
     private JLabel labelLombok;
@@ -255,6 +238,32 @@ public class SettingsFrame {
     private JLabel labelSuffixTip;
     private JLabel labelPlaceHolder;
     private JCheckBox checkBoxResponseCtrl;
+    private JLabel labelSharp8;
+    private JLabel labelSharp9;
+    private JLabel labelSharpSign1;
+    private JLabel labelSharpSign2;
+    private JLabel labelSharpSign5;
+    private JLabel labelSharp4;
+    private JTree treeSettings;
+    private JLabel placeholder1;
+    private JLabel placeholder2;
+    private JLabel placeholder3;
+    private JLabel placeholderInterface1;
+    private JLabel placeholderInterface2;
+    private JLabel placeholderInterface3;
+    private JLabel placeholderInterface4;
+    private JLabel placeholderSuffix1;
+    private JLabel placeholderSuffix2;
+    private JLabel placeholderSuffix3;
+    private JLabel placeholderSuffix4;
+    private JLabel placeholderPlugin1;
+    private JLabel placeholderPlugin2;
+    private JLabel placeholderSearch1;
+    private JLabel placeholderSearch2;
+    private JLabel placeholderPlugins3;
+    private JLabel placeholderCommands;
+    private JLabel placeholderHotkey1;
+
 
     private static volatile SettingsFrame instance = null;
 
@@ -812,7 +821,6 @@ public class SettingsFrame {
 
     private void addButtonChangeThemeListener() {
         //移除显示theme框，改为弹出窗口
-        tabGeneral.remove(paneSwingThemes);
         buttonChangeTheme.addActionListener(e -> JOptionPane.showMessageDialog(null, paneSwingThemes, "Theme", JOptionPane.PLAIN_MESSAGE));
     }
 
@@ -984,6 +992,42 @@ public class SettingsFrame {
                 suffixMap.put("defaultPriority", 0);
                 eventManagement.putEvent(new ClearSuffixPriorityMapEvent());
                 refreshPriorityTable();
+            }
+        });
+    }
+
+    private void addTreeSettingsListener() {
+        treeSettings.addTreeSelectionListener(e -> {
+            DefaultMutableTreeNode note = (DefaultMutableTreeNode) treeSettings.getLastSelectedPathComponent();
+            if (note != null) {
+                String name = note.toString();
+                if (translateUtil.getTranslation("General").equals(name)) {
+                    tabbedPane.setSelectedIndex(getTabIndex("tabGeneral"));
+                } else if (translateUtil.getTranslation("Interface").equals(name)) {
+                    tabbedPane.setSelectedIndex(getTabIndex("tabSearchBarSettings"));
+                } else if (translateUtil.getTranslation("Language").equals(name)) {
+                    tabbedPane.setSelectedIndex(getTabIndex("tabLanguage"));
+                } else if (translateUtil.getTranslation("File suffix priority").equals(name)) {
+                    tabbedPane.setSelectedIndex(getTabIndex("tabModifyPriority"));
+                } else if (translateUtil.getTranslation("Search settings").equals(name)) {
+                    tabbedPane.setSelectedIndex(getTabIndex("tabSearchSettings"));
+                } else if (translateUtil.getTranslation("Proxy settings").equals(name)) {
+                    tabbedPane.setSelectedIndex(getTabIndex("tabProxy"));
+                } else if (translateUtil.getTranslation("Hotkey settings").equals(name)) {
+                    tabbedPane.setSelectedIndex(getTabIndex("tabHotKey"));
+                } else if (translateUtil.getTranslation("Cache").equals(name)) {
+                    tabbedPane.setSelectedIndex(getTabIndex("tabCache"));
+                } else if (translateUtil.getTranslation("My commands").equals(name)) {
+                    tabbedPane.setSelectedIndex(getTabIndex("tabCommands"));
+                } else if (translateUtil.getTranslation("Plugins").equals(name)) {
+                    tabbedPane.setSelectedIndex(getTabIndex("tabPlugin"));
+                } else if (translateUtil.getTranslation("About").equals(name)) {
+                    tabbedPane.setSelectedIndex(getTabIndex("tabAbout"));
+                } else {
+                    tabbedPane.setSelectedIndex(getTabIndex("tabGeneral"));
+                }
+            } else {
+                tabbedPane.setSelectedIndex(getTabIndex("tabGeneral"));
             }
         });
     }
@@ -1453,6 +1497,7 @@ public class SettingsFrame {
         setTextFieldAndTextAreaGui();
         setCheckBoxGui();
         setTableGui();
+        initTreeSettings();
 
         buttonUpdatePlugin.setVisible(false);
 
@@ -1523,9 +1568,49 @@ public class SettingsFrame {
         count++;
         tabComponentIndexMap.put("tabCommands", count);
         count++;
-        tabComponentIndexMap.put("tabColorSettings", count);
-        count++;
         tabComponentIndexMap.put("tabAbout", count);
+    }
+
+    private void initTreeSettings() {
+        DefaultMutableTreeNode groupGeneral = new DefaultMutableTreeNode(translateUtil.getTranslation("General"));
+        groupGeneral.add(new DefaultMutableTreeNode(translateUtil.getTranslation("Interface")));
+        groupGeneral.add(new DefaultMutableTreeNode(translateUtil.getTranslation("Language")));
+        groupGeneral.add(new DefaultMutableTreeNode(translateUtil.getTranslation("File suffix priority")));
+        groupGeneral.add(new DefaultMutableTreeNode(translateUtil.getTranslation("Search settings")));
+        groupGeneral.add(new DefaultMutableTreeNode(translateUtil.getTranslation("Proxy settings")));
+        groupGeneral.add(new DefaultMutableTreeNode(translateUtil.getTranslation("Hotkey settings")));
+        groupGeneral.add(new DefaultMutableTreeNode(translateUtil.getTranslation("Cache")));
+
+        DefaultMutableTreeNode groupCommands = new DefaultMutableTreeNode(translateUtil.getTranslation("My commands"));
+
+        DefaultMutableTreeNode groupPlugin = new DefaultMutableTreeNode(translateUtil.getTranslation("Plugins"));
+
+        DefaultMutableTreeNode groupAbout = new DefaultMutableTreeNode(translateUtil.getTranslation("About"));
+
+        DefaultMutableTreeNode root = new DefaultMutableTreeNode();
+        root.add(groupGeneral);
+        root.add(groupCommands);
+        root.add(groupPlugin);
+        root.add(groupAbout);
+        treeSettings.setModel(new DefaultTreeModel(root));
+        treeSettings.setRootVisible(false);
+        expandAll(treeSettings, new TreePath(root), true);
+    }
+
+    private void expandAll(JTree tree, TreePath parent, boolean expand) {
+        TreeNode node = (TreeNode) parent.getLastPathComponent();
+        if (node.getChildCount() >= 0) {
+            for (Enumeration<?> e = node.children(); e.hasMoreElements();) {
+                TreeNode n = (TreeNode) e.nextElement();
+                TreePath path = parent.pathByAddingChild(n);
+                expandAll(tree, path, expand);
+            }
+        }
+        if (expand) {
+            tree.expandPath(parent);
+        } else {
+            tree.collapsePath(parent);
+        }
     }
 
     private SettingsFrame() {
@@ -1535,7 +1620,7 @@ public class SettingsFrame {
 
         initTabIndexMap();
 
-        tabbedPane.setBackground(new Color(0,0,0,0));
+        panel.remove(paneSwingThemes);
 
         ButtonGroup proxyButtonGroup = new ButtonGroup();
         proxyButtonGroup.add(radioButtonNoProxy);
@@ -1596,6 +1681,7 @@ public class SettingsFrame {
         addButtonPreviewListener();
         addButtonClosePreviewListener();
         addTextFieldSearchCommandsListener();
+        addTreeSettingsListener();
     }
 
     private boolean isCacheExist(String cache) {
@@ -1616,21 +1702,6 @@ public class SettingsFrame {
     private int getTabIndex(String componentName) {
         Integer index = tabComponentIndexMap.get(componentName);
         return  (index == null) ? 0 : index;
-    }
-
-    private void translateTabbedPane() {
-        tabbedPane.setTitleAt(getTabIndex("tabGeneral"), translateUtil.getTranslation("General"));
-        tabbedPane.setTitleAt(getTabIndex("tabSearchSettings"), translateUtil.getTranslation("Search settings"));
-        tabbedPane.setTitleAt(getTabIndex("tabSearchBarSettings"), translateUtil.getTranslation("Search bar settings"));
-        tabbedPane.setTitleAt(getTabIndex("tabCache"), translateUtil.getTranslation("Cache"));
-        tabbedPane.setTitleAt(getTabIndex("tabProxy"), translateUtil.getTranslation("Proxy settings"));
-        tabbedPane.setTitleAt(getTabIndex("tabPlugin"), translateUtil.getTranslation("Plugins"));
-        tabbedPane.setTitleAt(getTabIndex("tabHotKey"), translateUtil.getTranslation("Hotkey settings"));
-        tabbedPane.setTitleAt(getTabIndex("tabLanguage"), translateUtil.getTranslation("Language settings"));
-        tabbedPane.setTitleAt(getTabIndex("tabCommands"), translateUtil.getTranslation("My commands"));
-        tabbedPane.setTitleAt(getTabIndex("tabColorSettings"), translateUtil.getTranslation("Color settings"));
-        tabbedPane.setTitleAt(getTabIndex("tabModifyPriority"), translateUtil.getTranslation("Modify suffix priority"));
-        tabbedPane.setTitleAt(getTabIndex("tabAbout"), translateUtil.getTranslation("About"));
     }
 
     private void translateLabels() {
@@ -1677,7 +1748,6 @@ public class SettingsFrame {
         labelUninstallPluginTip.setText(translateUtil.getTranslation("If you need to delete a plug-in, just delete it under the \"plugins\" folder in the software directory."));
         labelUninstallPluginTip2.setText(translateUtil.getTranslation("Tip:"));
         chooseUpdateAddressLabel.setText(translateUtil.getTranslation("Choose update address"));
-        labelRemoveDesktop.setText(translateUtil.getTranslation("Backup and remove all desktop files") + ":");
         labelSearchCommand.setText(translateUtil.getTranslation("Search"));
         labelSuffixTip.setText(translateUtil.getTranslation("Modifying the suffix priority requires rebuilding the index (input \":update\") to take effect"));
     }
@@ -1718,7 +1788,7 @@ public class SettingsFrame {
     }
 
     private void translate() {
-        translateTabbedPane();
+        /*translateTabbedPane();*/
         translateLabels();
         translateCheckbox();
         translateButtons();

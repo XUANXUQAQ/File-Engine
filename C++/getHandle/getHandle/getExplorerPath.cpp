@@ -13,7 +13,7 @@
 #pragma comment(lib, "OleAut32")
 // Throw a std::system_error if the HRESULT indicates failure.
 template< typename T >
-void ThrowIfFailed(HRESULT hr, T&& msg)
+void throw_if_failed(HRESULT hr, T&& msg)
 {
     if (FAILED(hr))
         throw std::system_error{ hr, std::system_category(), std::forward<T>(msg) };
@@ -39,12 +39,12 @@ struct ExplorerFolderInfo
 std::vector< ExplorerFolderInfo > GetCurrentExplorerFolders()
 {
     CComPtr< IShellWindows > pshWindows;
-    ThrowIfFailed(
+    throw_if_failed(
         pshWindows.CoCreateInstance(CLSID_ShellWindows),
         "Could not create instance of IShellWindows");
 
     long count = 0;
-    ThrowIfFailed(
+    throw_if_failed(
         pshWindows->get_Count(&count),
         "Could not get number of shell windows");
 
@@ -57,7 +57,7 @@ std::vector< ExplorerFolderInfo > GetCurrentExplorerFolders()
 
         CComVariant vi{ i };
         CComPtr< IDispatch > pDisp;
-        ThrowIfFailed(
+        throw_if_failed(
             pshWindows->Item(vi, &pDisp),
             "Could not get item from IShellWindows");
 
@@ -112,7 +112,7 @@ std::vector< ExplorerFolderInfo > GetCurrentExplorerFolders()
 
 std::string to_utf8(const wchar_t* buffer, int len)
 {
-	const auto nChars = ::WideCharToMultiByte(
+	const auto n_chars = WideCharToMultiByte(
         CP_UTF8,
         0,
         buffer,
@@ -121,23 +121,23 @@ std::string to_utf8(const wchar_t* buffer, int len)
         0,
         nullptr,
         nullptr);
-    if (nChars == 0)
+    if (n_chars == 0)
     {
         return "";
     }
-    std::string newbuffer;
-    newbuffer.resize(nChars);
+    std::string new_buffer;
+    new_buffer.resize(n_chars);
     ::WideCharToMultiByte(
         CP_UTF8,
         0,
         buffer,
         len,
-        const_cast<char*>(newbuffer.c_str()),
-        nChars,
+        const_cast<char*>(new_buffer.c_str()),
+        n_chars,
         nullptr,
         nullptr);
 
-    return newbuffer;
+    return new_buffer;
 }
 
 std::string to_utf8(const std::wstring& str)
@@ -155,16 +155,16 @@ std::string getPathByHWND(const HWND& hwnd)
 	//判断是否是桌面窗口句柄
     char windowClassName[260];
     GetClassNameA(hwnd, windowClassName, 260);
-    std::string windowClassName_str(windowClassName);
-    std::transform(windowClassName_str.begin(), windowClassName_str.end(), windowClassName_str.begin(), ::tolower);
-    if (windowClassName_str.find("workerw") != std::string::npos )
+    std::string window_class_name_str(windowClassName);
+    std::transform(window_class_name_str.begin(), window_class_name_str.end(), window_class_name_str.begin(), ::tolower);
+    if (window_class_name_str.find("workerw") != std::string::npos )
     {
 	    //返回桌面位置
         WCHAR path[260];
         SHGetSpecialFolderPath(nullptr, path, CSIDL_DESKTOP, 0);
         return to_utf8(path);
     }
-	CoInitialize(nullptr);
+    CoInitializeEx(nullptr, COINIT_MULTITHREADED);
     try
     {
         for (const auto& info : GetCurrentExplorerFolders())
@@ -172,20 +172,20 @@ std::string getPathByHWND(const HWND& hwnd)
             wchar_t path[1000];
             if (::SHGetPathFromIDListEx(info.pidl.get(), path, ARRAYSIZE(path), 0))
             {
-                //std::wcout <<  L"path: " << path << L"\n";
-            	if (info.hwnd == hwnd)
-            	{
-                    std::wstring path_wstr(path);
+                if (info.hwnd == hwnd)
+                {
+                    const std::wstring path_wstr(path);
                     return to_utf8(path_wstr);
-            	}
-                std::cout << "error, cannot find matched hwnd" << std::endl;            
+                }
+                std::cout << "error, cannot find matched hwnd" << std::endl;
             }
         }
     }
     catch (std::system_error& e)
     {
-        std::cout << "ERROR: " << e.what() << "\nError code: " << e.code() << "\n";
+        std::cerr << "ERROR: " << e.what() << "\nError code: " << e.code() << "\n";
     }
-    ::CoUninitialize();
+    CoUninitialize();
     return "";
 }
+

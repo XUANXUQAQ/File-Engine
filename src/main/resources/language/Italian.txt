@@ -206,3 +206,7 @@ Are you sure to delete all the suffixes=Sei sicuro di eliminare tutti i suffissi
 Modifying the suffix priority requires rebuilding the index (input ":update") to take effect=La modifica della priorità del suffisso richiede la ricostruzione dell'indice (input ": update") per avere effetto
 Double-click "Ctrl" to open the search bar=Fare doppio clic su "Ctrl" per aprire la casella di ricerca
 Restart=ricomincia
+Double click to open settings=Fare doppio clic per aprire le impostazioni
+Language=linguaggio
+File suffix priority=Priorità del suffisso del file
+Interface=interfaccia
