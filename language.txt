@@ -206,3 +206,7 @@ Are you sure to delete all the suffixes=
 Modifying the suffix priority requires rebuilding the index (input ":update") to take effect=
 Double-click "Ctrl" to open the search bar=
 Restart=
+Double click to open settings=
+Language=
+File suffix priority=
+Interface=

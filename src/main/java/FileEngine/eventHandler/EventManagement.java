@@ -1,6 +1,8 @@
 package FileEngine.eventHandler;
 
 import FileEngine.IsDebug;
+import FileEngine.eventHandler.impl.stop.CloseEvent;
+import FileEngine.eventHandler.impl.stop.RestartEvent;
 import FileEngine.eventHandler.impl.stop.StopEvent;
 import FileEngine.utils.CachedThreadPoolUtil;
 
@@ -73,8 +75,12 @@ public class EventManagement {
         if (event instanceof StopEvent) {
             event.setFinished();
             exit.set(true);
+            CachedThreadPoolUtil.getInstance().executeTask(() -> {
+                doAllMethod(EVENT_LISTENER_MAP.get(StopEvent.class));
+                doAllMethod(EVENT_LISTENER_MAP.get(CloseEvent.class));
+                doAllMethod(EVENT_LISTENER_MAP.get(RestartEvent.class));
+            });
             isRejectTask.set(true);
-            CachedThreadPoolUtil.getInstance().executeTask(() -> doAllMethod(EVENT_LISTENER_MAP.get(event.getClass())));
             return false;
         } else {
             EventHandler eventHandler = EVENT_HANDLER_MAP.get(event.getClass());

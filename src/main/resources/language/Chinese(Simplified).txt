@@ -206,3 +206,7 @@ Are you sure to delete all the suffixes=确定要删除所有后缀吗
 Modifying the suffix priority requires rebuilding the index (input ":update") to take effect=修改后缀优先级需要重建索引（输入“:update”）才能生效
 Double-click "Ctrl" to open the search bar=双击"Ctrl"来打开搜索框
 Restart=重启
+Double click to open settings=双击打开设置
+Language=语言
+File suffix priority=文件后缀优先级
+Interface=界面

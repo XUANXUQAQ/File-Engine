@@ -46,7 +46,6 @@ public class TranslateUtil {
         if (translated != null) {
             return warpStringIfTooLong(translated);
         } else {
-            System.out.println("无翻译:" + text);
             return text;
         }
     }
@@ -117,6 +116,7 @@ public class TranslateUtil {
         fileMap.put("Deutsche", "/language/German.txt");
         fileMap.put("한국어", "/language/Korean.txt");
         fileMap.put("français", "/language/French.txt");
+        fileMap.put("English(US)", "");
     }
 
     private void initTranslations() {

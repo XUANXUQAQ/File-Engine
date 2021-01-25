@@ -56,7 +56,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-@SuppressWarnings("unused")
+
 public class SearchBar {
     private final AtomicBoolean isCacheAndPrioritySearched = new AtomicBoolean(false);
     private final AtomicBoolean isLockMouseMotion = new AtomicBoolean(false);
@@ -950,7 +950,7 @@ public class SearchBar {
                 String name = label.getName();
                 if (!(name == null || name.isEmpty())) {
                     String currentText = label.getText();
-                    if (!currentText.contains(":")) {
+                    if (currentText == null || !currentText.contains(":")) {
                         //当前显示的不是路径
                         label.setName(currentText);
                         label.setText(autoContractHtmlStr(name, label));
@@ -973,7 +973,7 @@ public class SearchBar {
                 String name = label.getName();
                 if (!(name == null || name.isEmpty())) {
                     String currentText = label.getText();
-                    if (currentText.contains(":")) {
+                    if (currentText == null || currentText.contains(":")) {
                         //当前显示的不是名称
                         label.setName(currentText);
                         label.setText(autoContractHtmlStr(name, label));
@@ -2253,7 +2253,7 @@ public class SearchBar {
 
         switchSearchBarShowingMode();
 
-        changeSearchBarSize();
+        //changeSearchBarSize();
     }
 
     @SuppressWarnings("unused")
@@ -2396,9 +2396,6 @@ public class SearchBar {
                 while (eventManagement.isNotMainExit()) {
                     if (GetHandle.INSTANCE.isExplorerAtTop()) {
                         switchToExplorerAttachMode();
-                        if (!isVisible()) {
-                            showSearchbar(false);
-                        }
                     } else {
                         if (GetHandle.INSTANCE.isDialogNotExist() || GetHandle.INSTANCE.isExplorerAndSearchbarNotFocused()) {
                             switchToNormalMode();
@@ -2424,18 +2421,22 @@ public class SearchBar {
             int searchBarWidth = (int) (explorerWidth / 4);
             int positionX;
             int positionY;
+            boolean isGrabFocus;
             int ret = GetHandle.INSTANCE.getTopWindowStatus();
             if (GetHandle.EXPLORER == ret) {
                 positionX = (int) (explorerX + explorerWidth * 0.97 - searchBarWidth);
                 positionY = (int) (explorerY + explorerHeight * 0.95 - searchBarHeight);
+                isGrabFocus = false;
             } else {
                 searchBarWidth = (int) (explorerWidth * 0.52);
                 positionX = (int) (explorerX + (explorerWidth / 2 - searchBarWidth / 2));
                 positionY = (int) (explorerY + explorerHeight * 0.42);
+                isGrabFocus = true;
             }
             //设置窗口大小
             changeSearchBarSizeAndPos(positionX, positionY, searchBarWidth, searchBarHeight, labelHeight);
             setLabelAtTop(searchBarHeight);
+            showSearchbar(isGrabFocus);
         }
     }
 
@@ -2466,41 +2467,6 @@ public class SearchBar {
             label6.setLocation(0, labelHeight * 6);
             label7.setLocation(0, labelHeight * 7);
             label8.setLocation(0, labelHeight * 8);
-        });
-    }
-
-    private void setLabelLocationByOffset(int yOffset, JLabel label) {
-        label.setLocation(label.getX(), label.getY() - yOffset);
-    }
-
-    private void changeSearchBarSize() {
-        CachedThreadPoolUtil.getInstance().executeTask(() -> {
-            try {
-                EventManagement eventManagement = EventManagement.getInstance();
-                while (eventManagement.isNotMainExit()) {
-                    if (showingMode == Enums.ShowingSearchBarMode.EXPLORER_ATTACH) {
-                        getExplorerSizeAndChangeSearchBarSizeExplorerMode();
-                    } else if (showingMode == Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
-                        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize(); // 获取屏幕大小
-                        int width = screenSize.width;
-                        int height = screenSize.height;
-                        int searchBarWidth = (int) (width * 0.3);
-                        int searchBarHeight = (int) (height * 0.4);
-                        int positionX, positionY;
-                        if (isPreviewMode.get()) {
-                            positionX = 50;
-                            positionY = 50;
-                        } else {
-                            positionX = width / 2 - searchBarWidth / 2;
-                            positionY = height / 2 - searchBarHeight / 3;
-                        }
-                        changeSearchBarSizeAndPos(positionX, positionY, searchBarWidth, searchBarHeight);
-                        setTextFieldAtTop(searchBarHeight);
-                    }
-                    TimeUnit.MILLISECONDS.sleep(5);
-                }
-            } catch (InterruptedException ignored) {
-            }
         });
     }
 
@@ -2550,8 +2516,10 @@ public class SearchBar {
                 label6.setFont(labelFont);
                 label7.setFont(labelFont);
                 label8.setFont(labelFont);
-                getExplorerSizeAndChangeSearchBarSizeExplorerMode();    //不可见时先修改位置和大小，防止闪屏
+                //getExplorerSizeAndChangeSearchBarSizeExplorerMode();    //不可见时先修改位置和大小，防止闪屏
                 showingMode = Enums.ShowingSearchBarMode.EXPLORER_ATTACH;
+            } else {
+                getExplorerSizeAndChangeSearchBarSizeExplorerMode();
             }
         }
     }
@@ -2583,6 +2551,22 @@ public class SearchBar {
             label7.setFont(labelFont);
             label8.setFont(labelFont);
             showingMode= Enums.ShowingSearchBarMode.NORMAL_SHOWING;
+        } else {
+            Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize(); // 获取屏幕大小
+            int width = screenSize.width;
+            int height = screenSize.height;
+            int searchBarWidth = (int) (width * 0.3);
+            int searchBarHeight = (int) (height * 0.4);
+            int positionX, positionY;
+            if (isPreviewMode.get()) {
+                positionX = 50;
+                positionY = 50;
+            } else {
+                positionX = width / 2 - searchBarWidth / 2;
+                positionY = height / 2 - searchBarHeight / 3;
+            }
+            changeSearchBarSizeAndPos(positionX, positionY, searchBarWidth, searchBarHeight);
+            setTextFieldAtTop(searchBarHeight);
         }
     }
 
@@ -3108,17 +3092,19 @@ public class SearchBar {
      */
     private void showSearchbar(boolean isGrabFocus) {
         SwingUtilities.invokeLater(() -> {
-            searchBar.setAutoRequestFocus(isGrabFocus);
-            setVisible(true);
-            if (isGrabFocus) {
-                //使用鼠标点击窗口以获得焦点
-                int X = searchBar.getX() + (textField.getWidth() / 2);
-                int Y = searchBar.getY() + (textField.getHeight() / 2);
-                RobotUtil.getInstance().mouseClicked(X, Y, 1, InputEvent.BUTTON1_DOWN_MASK);
+            if (!isVisible()) {
+                searchBar.setAutoRequestFocus(isGrabFocus);
+                setVisible(true);
+                if (isGrabFocus) {
+                    //使用鼠标点击窗口以获得焦点
+                    int X = searchBar.getX() + (textField.getWidth() / 2);
+                    int Y = searchBar.getY() + (textField.getHeight() / 2) + textField.getY();
+                    RobotUtil.getInstance().mouseClicked(X, Y, 1, InputEvent.BUTTON1_DOWN_MASK);
+                }
+                textField.setCaretPosition(0);
+                startTime = System.currentTimeMillis();
+                visibleStartTime = startTime;
             }
-            textField.setCaretPosition(0);
-            startTime = System.currentTimeMillis();
-            visibleStartTime = startTime;
         });
     }
 
