@@ -13,6 +13,7 @@ import FileEngine.eventHandler.impl.configs.SetConfigsEvent;
 import FileEngine.eventHandler.impl.daemon.StartDaemonEvent;
 import FileEngine.eventHandler.impl.download.StartDownloadEvent;
 import FileEngine.eventHandler.impl.frame.searchBar.*;
+import FileEngine.eventHandler.impl.frame.settingsFrame.GetExcludeComponentEvent;
 import FileEngine.eventHandler.impl.hotkey.RegisterHotKeyEvent;
 import FileEngine.eventHandler.impl.monitorDisk.StartMonitorDiskEvent;
 import FileEngine.eventHandler.impl.plugin.LoadAllPluginsEvent;
@@ -42,9 +43,7 @@ import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.*;
 
 /**
  * 保存软件运行时的所有配置信息
@@ -631,7 +630,13 @@ public class AllConfigs {
             } else {
                 FlatDarculaLaf.install();
             }
-            for (Frame frame : JFrame.getFrames()) {
+            ArrayList<Component> components = new ArrayList<>(Arrays.asList(JFrame.getFrames()));
+            EventManagement eventManagement = EventManagement.getInstance();
+            GetExcludeComponentEvent event = new GetExcludeComponentEvent();
+            eventManagement.putEvent(event);
+            eventManagement.waitForEvent(event);
+            components.addAll(eventManagement.getEventReturnValue(event));
+            for (Component frame : components) {
                 SwingUtilities.updateComponentTreeUI(frame);
             }
         });
