@@ -75,7 +75,7 @@ public class SettingsFrame {
     private static final EventManagement eventManagement = EventManagement.getInstance();
     private static final AllConfigs allConfigs = AllConfigs.getInstance();
     private static final CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
-    private final HashMap<String, Integer> tabComponentIndexMap = new HashMap<>();
+    private final HashMap<TabNameAndTitle, Component> tabComponentNameMap = new HashMap<>();
     private final HashMap<String, Integer> suffixMap = new HashMap<>();
     private JTextField textFieldUpdateInterval;
     private JTextField textFieldCacheNum;
@@ -996,38 +996,58 @@ public class SettingsFrame {
         });
     }
 
+    private void showOnTabbedPane(String tabName) {
+        String title = translateUtil.getTranslation(getTabTitle(tabName));
+        showOnTabbedPane(tabName, title);
+    }
+
+    private void showOnTabbedPane(String tabName, String tabTitle) {
+        tabbedPane.addTab(tabTitle, getTabComponent(tabName));
+        tabbedPane.setSelectedIndex(0);
+    }
+
+    private String getTabTitle(String tabName) {
+        for (TabNameAndTitle each : tabComponentNameMap.keySet()) {
+            if (each.tabName.equals(tabName)) {
+                return each.title;
+            }
+        }
+        return "";
+    }
+
     private void addTreeSettingsListener() {
         treeSettings.addTreeSelectionListener(e -> {
+            tabbedPane.removeAll();
             DefaultMutableTreeNode note = (DefaultMutableTreeNode) treeSettings.getLastSelectedPathComponent();
             if (note != null) {
                 String name = note.toString();
                 if (translateUtil.getTranslation("General").equals(name)) {
-                    tabbedPane.setSelectedIndex(getTabIndex("tabGeneral"));
+                    showOnTabbedPane("tabGeneral");
                 } else if (translateUtil.getTranslation("Interface").equals(name)) {
-                    tabbedPane.setSelectedIndex(getTabIndex("tabSearchBarSettings"));
+                    showOnTabbedPane("tabSearchBarSettings");
                 } else if (translateUtil.getTranslation("Language").equals(name)) {
-                    tabbedPane.setSelectedIndex(getTabIndex("tabLanguage"));
+                    showOnTabbedPane("tabLanguage");
                 } else if (translateUtil.getTranslation("File suffix priority").equals(name)) {
-                    tabbedPane.setSelectedIndex(getTabIndex("tabModifyPriority"));
+                    showOnTabbedPane("tabModifyPriority");
                 } else if (translateUtil.getTranslation("Search settings").equals(name)) {
-                    tabbedPane.setSelectedIndex(getTabIndex("tabSearchSettings"));
+                    showOnTabbedPane("tabSearchSettings");
                 } else if (translateUtil.getTranslation("Proxy settings").equals(name)) {
-                    tabbedPane.setSelectedIndex(getTabIndex("tabProxy"));
+                    showOnTabbedPane("tabProxy");
                 } else if (translateUtil.getTranslation("Hotkey settings").equals(name)) {
-                    tabbedPane.setSelectedIndex(getTabIndex("tabHotKey"));
+                    showOnTabbedPane("tabHotKey");
                 } else if (translateUtil.getTranslation("Cache").equals(name)) {
-                    tabbedPane.setSelectedIndex(getTabIndex("tabCache"));
+                    showOnTabbedPane("tabCache");
                 } else if (translateUtil.getTranslation("My commands").equals(name)) {
-                    tabbedPane.setSelectedIndex(getTabIndex("tabCommands"));
+                    showOnTabbedPane("tabCommands");
                 } else if (translateUtil.getTranslation("Plugins").equals(name)) {
-                    tabbedPane.setSelectedIndex(getTabIndex("tabPlugin"));
+                    showOnTabbedPane("tabPlugin");
                 } else if (translateUtil.getTranslation("About").equals(name)) {
-                    tabbedPane.setSelectedIndex(getTabIndex("tabAbout"));
+                    showOnTabbedPane("tabAbout");
                 } else {
-                    tabbedPane.setSelectedIndex(getTabIndex("tabGeneral"));
+                    showOnTabbedPane("tabGeneral");
                 }
             } else {
-                tabbedPane.setSelectedIndex(getTabIndex("tabGeneral"));
+                showOnTabbedPane("tabGeneral", translateUtil.getTranslation("General"));
             }
         });
     }
@@ -1499,6 +1519,8 @@ public class SettingsFrame {
         setTableGui();
         initTreeSettings();
 
+        tabbedPane.removeAll();
+
         buttonUpdatePlugin.setVisible(false);
 
         if (allConfigs.getProxyType() == Enums.ProxyType.PROXY_DIRECT) {
@@ -1545,30 +1567,19 @@ public class SettingsFrame {
         }
     }
 
-    private void initTabIndexMap() {
-        //todo 添加新tab后在这里修改index
-        int count = 0;
-        tabComponentIndexMap.put("tabGeneral", count);
-        count++;
-        tabComponentIndexMap.put("tabSearchSettings", count);
-        count++;
-        tabComponentIndexMap.put("tabSearchBarSettings", count);
-        count++;
-        tabComponentIndexMap.put("tabModifyPriority", count);
-        count++;
-        tabComponentIndexMap.put("tabCache", count);
-        count++;
-        tabComponentIndexMap.put("tabProxy", count);
-        count++;
-        tabComponentIndexMap.put("tabPlugin", count);
-        count++;
-        tabComponentIndexMap.put("tabHotKey", count);
-        count++;
-        tabComponentIndexMap.put("tabLanguage", count);
-        count++;
-        tabComponentIndexMap.put("tabCommands", count);
-        count++;
-        tabComponentIndexMap.put("tabAbout", count);
+    private void initTabNameMap() {
+        //todo 添加新tab后在这里注册
+        tabComponentNameMap.put(new TabNameAndTitle("tabGeneral", "General"), tabGeneral);
+        tabComponentNameMap.put(new TabNameAndTitle("tabSearchSettings", "Search settings"), tabSearchSettings);
+        tabComponentNameMap.put(new TabNameAndTitle("tabSearchBarSettings", "Search bar settings"), tabSearchBarSettings);
+        tabComponentNameMap.put(new TabNameAndTitle("tabModifyPriority", "Modify suffix priority"), tabModifyPriority);
+        tabComponentNameMap.put(new TabNameAndTitle("tabCache", "Cache"), tabCache);
+        tabComponentNameMap.put(new TabNameAndTitle("tabProxy", "Proxy settings"), tabProxy);
+        tabComponentNameMap.put(new TabNameAndTitle("tabPlugin", "Plugins"), tabPlugin);
+        tabComponentNameMap.put(new TabNameAndTitle("tabHotKey", "Hotkey settings"), tabHotKey);
+        tabComponentNameMap.put(new TabNameAndTitle("tabLanguage", "language"), tabLanguage);
+        tabComponentNameMap.put(new TabNameAndTitle("tabCommands", "My commands"), tabCommands);
+        tabComponentNameMap.put(new TabNameAndTitle("tabAbout", "About"), tabAbout);
     }
 
     private void initTreeSettings() {
@@ -1618,7 +1629,7 @@ public class SettingsFrame {
         frame.getRootPane().setWindowDecorationStyle(JRootPane.FRAME);
         frame.setIconImage(frameIcon.getImage());
 
-        initTabIndexMap();
+        initTabNameMap();
 
         panel.remove(paneSwingThemes);
 
@@ -1699,9 +1710,13 @@ public class SettingsFrame {
         }
     }
 
-    private int getTabIndex(String componentName) {
-        Integer index = tabComponentIndexMap.get(componentName);
-        return  (index == null) ? 0 : index;
+    private Component getTabComponent(String componentName) {
+        for (TabNameAndTitle each : tabComponentNameMap.keySet()) {
+            if (each.tabName.equals(componentName)) {
+                return tabComponentNameMap.get(each);
+            }
+        }
+        return tabGeneral;
     }
 
     private void translateLabels() {
@@ -1821,7 +1836,7 @@ public class SettingsFrame {
                 if (showSettingsFrameEvent.showTabName == null) {
                     settingsFrame.showWindow();
                 } else {
-                    settingsFrame.showWindow(settingsFrame.getTabIndex(showSettingsFrameEvent.showTabName));
+                    settingsFrame.showWindow(showSettingsFrameEvent.showTabName);
                 }
             }
         });
@@ -1852,10 +1867,10 @@ public class SettingsFrame {
     }
 
     private void showWindow() {
-        showWindow(0);
+        showWindow("tabGeneral");
     }
 
-    private void showWindow(int index) {
+    private void showWindow(String tabName) {
         if (frame.isVisible()) {
             return;
         }
@@ -1870,7 +1885,7 @@ public class SettingsFrame {
         frame.setSize(width, height);
         frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         frame.setResizable(false);
-        tabbedPane.setSelectedIndex(index);
+        showOnTabbedPane(tabName);
         frame.setLocationRelativeTo(null);
         //使swing风格生效
         SetSwingLaf event = new SetSwingLaf("current");
@@ -2141,6 +2156,16 @@ public class SettingsFrame {
                 } catch (IOException | InterruptedException ignored) {
                 }
             }
+        }
+    }
+
+    private static class TabNameAndTitle {
+        private final String title;
+        private final String tabName;
+
+        private TabNameAndTitle(String tabName, String title) {
+            this.tabName =tabName;
+            this.title = title;
         }
     }
 }
