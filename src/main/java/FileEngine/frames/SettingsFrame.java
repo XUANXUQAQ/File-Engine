@@ -19,10 +19,7 @@ import FileEngine.eventHandler.impl.download.StopDownloadEvent;
 import FileEngine.eventHandler.impl.frame.pluginMarket.ShowPluginMarket;
 import FileEngine.eventHandler.impl.frame.searchBar.HideSearchBarEvent;
 import FileEngine.eventHandler.impl.frame.searchBar.PreviewSearchBarEvent;
-import FileEngine.eventHandler.impl.frame.settingsFrame.AddCacheEvent;
-import FileEngine.eventHandler.impl.frame.settingsFrame.HideSettingsFrameEvent;
-import FileEngine.eventHandler.impl.frame.settingsFrame.IsCacheExistEvent;
-import FileEngine.eventHandler.impl.frame.settingsFrame.ShowSettingsFrameEvent;
+import FileEngine.eventHandler.impl.frame.settingsFrame.*;
 import FileEngine.eventHandler.impl.hotkey.ResponseCtrlEvent;
 import FileEngine.eventHandler.impl.plugin.AddPluginsCanUpdateEvent;
 import FileEngine.eventHandler.impl.stop.StopEvent;
@@ -77,6 +74,7 @@ public class SettingsFrame {
     private static final CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
     private final HashMap<TabNameAndTitle, Component> tabComponentNameMap = new HashMap<>();
     private final HashMap<String, Integer> suffixMap = new HashMap<>();
+    private final Set<Component> excludeComponent = ConcurrentHashMap.newKeySet();
     private JTextField textFieldUpdateInterval;
     private JTextField textFieldCacheNum;
     private JTextArea textAreaIgnorePath;
@@ -252,17 +250,17 @@ public class SettingsFrame {
     private JLabel placeholderInterface2;
     private JLabel placeholderInterface3;
     private JLabel placeholderInterface4;
-    private JLabel placeholderSuffix1;
-    private JLabel placeholderSuffix2;
-    private JLabel placeholderSuffix3;
-    private JLabel placeholderSuffix4;
     private JLabel placeholderPlugin1;
     private JLabel placeholderPlugin2;
-    private JLabel placeholderSearch1;
-    private JLabel placeholderSearch2;
     private JLabel placeholderPlugins3;
     private JLabel placeholderCommands;
     private JLabel placeholderHotkey1;
+    private JLabel placeholderPlugin5;
+    private JLabel placeholderLanguage1;
+    private JLabel placeholderLanguage2;
+    private JLabel placeholderLanguage3;
+    private JLabel placeholderLanguage4;
+    private JLabel placeholderLanguage5;
 
 
     private static volatile SettingsFrame instance = null;
@@ -339,8 +337,7 @@ public class SettingsFrame {
             boolean reset = true;
 
             @Override
-            public void keyTyped(KeyEvent e) {
-            }
+            public void keyTyped(KeyEvent e) {}
 
             @Override
             public void keyPressed(KeyEvent e) {
@@ -494,7 +491,6 @@ public class SettingsFrame {
                 eventManagement.waitForEvent(deleteCmdEvent);
                 listCmds.setListData(allConfigs.getCmdSet().toArray());
             }
-
         });
     }
 
@@ -927,8 +923,7 @@ public class SettingsFrame {
             }
 
             @Override
-            public void changedUpdate(DocumentEvent e) {
-            }
+            public void changedUpdate(DocumentEvent e) {}
         });
     }
 
@@ -1520,6 +1515,7 @@ public class SettingsFrame {
         initTreeSettings();
 
         tabbedPane.removeAll();
+        tabbedPane.setBackground(new Color(0,0,0,0));
 
         buttonUpdatePlugin.setVisible(false);
 
@@ -1580,19 +1576,23 @@ public class SettingsFrame {
         tabComponentNameMap.put(new TabNameAndTitle("tabLanguage", "language"), tabLanguage);
         tabComponentNameMap.put(new TabNameAndTitle("tabCommands", "My commands"), tabCommands);
         tabComponentNameMap.put(new TabNameAndTitle("tabAbout", "About"), tabAbout);
+
+        excludeComponent.addAll(tabComponentNameMap.values());
     }
 
     private void initTreeSettings() {
         DefaultMutableTreeNode groupGeneral = new DefaultMutableTreeNode(translateUtil.getTranslation("General"));
         groupGeneral.add(new DefaultMutableTreeNode(translateUtil.getTranslation("Interface")));
         groupGeneral.add(new DefaultMutableTreeNode(translateUtil.getTranslation("Language")));
-        groupGeneral.add(new DefaultMutableTreeNode(translateUtil.getTranslation("File suffix priority")));
-        groupGeneral.add(new DefaultMutableTreeNode(translateUtil.getTranslation("Search settings")));
-        groupGeneral.add(new DefaultMutableTreeNode(translateUtil.getTranslation("Proxy settings")));
-        groupGeneral.add(new DefaultMutableTreeNode(translateUtil.getTranslation("Hotkey settings")));
         groupGeneral.add(new DefaultMutableTreeNode(translateUtil.getTranslation("Cache")));
 
-        DefaultMutableTreeNode groupCommands = new DefaultMutableTreeNode(translateUtil.getTranslation("My commands"));
+        DefaultMutableTreeNode groupSearchSettings = new DefaultMutableTreeNode(translateUtil.getTranslation("Search settings"));
+        groupSearchSettings.add(new DefaultMutableTreeNode(translateUtil.getTranslation("File suffix priority")));
+        groupSearchSettings.add(new DefaultMutableTreeNode(translateUtil.getTranslation("My commands")));
+
+        DefaultMutableTreeNode groupProxy = new DefaultMutableTreeNode(translateUtil.getTranslation("Proxy settings"));
+
+        DefaultMutableTreeNode groupHotkey = new DefaultMutableTreeNode(translateUtil.getTranslation("Hotkey settings"));
 
         DefaultMutableTreeNode groupPlugin = new DefaultMutableTreeNode(translateUtil.getTranslation("Plugins"));
 
@@ -1600,7 +1600,9 @@ public class SettingsFrame {
 
         DefaultMutableTreeNode root = new DefaultMutableTreeNode();
         root.add(groupGeneral);
-        root.add(groupCommands);
+        root.add(groupSearchSettings);
+        root.add(groupProxy);
+        root.add(groupHotkey);
         root.add(groupPlugin);
         root.add(groupAbout);
         treeSettings.setModel(new DefaultTreeModel(root));
@@ -1632,6 +1634,7 @@ public class SettingsFrame {
         initTabNameMap();
 
         panel.remove(paneSwingThemes);
+        excludeComponent.add(paneSwingThemes);
 
         ButtonGroup proxyButtonGroup = new ButtonGroup();
         proxyButtonGroup.add(radioButtonNoProxy);
@@ -1654,8 +1657,6 @@ public class SettingsFrame {
         translate();
 
         addListeners();
-
-        initGUI();
     }
 
     private void addListeners() {
@@ -1822,7 +1823,12 @@ public class SettingsFrame {
     }
 
     private void hideFrame() {
-        SwingUtilities.invokeLater(() -> frame.setVisible(false));
+        SwingUtilities.invokeLater(() -> {
+            frame.setVisible(false);
+            for (Component each : tabComponentNameMap.values()) {
+                tabbedPane.addTab("", each);
+            }
+        });
     }
 
     @EventRegister
@@ -1863,6 +1869,13 @@ public class SettingsFrame {
             }
         });
 
+        eventManagement.register(GetExcludeComponentEvent.class, new EventHandler() {
+            @Override
+            public void todo(Event event) {
+                event.setReturnValue(getInstance().excludeComponent);
+            }
+        });
+
         eventManagement.registerListener(StopEvent.class, () -> getInstance().hideFrame());
     }
 
@@ -1874,7 +1887,6 @@ public class SettingsFrame {
         if (frame.isVisible()) {
             return;
         }
-        initGUI();
         frame.setResizable(true);
         int width = Integer.parseInt(translateUtil.getFrameWidth());
         int height = Integer.parseInt(translateUtil.getFrameHeight());
@@ -1885,8 +1897,9 @@ public class SettingsFrame {
         frame.setSize(width, height);
         frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         frame.setResizable(false);
-        showOnTabbedPane(tabName);
         frame.setLocationRelativeTo(null);
+        initGUI();
+        showOnTabbedPane(tabName);
         //使swing风格生效
         SetSwingLaf event = new SetSwingLaf("current");
         eventManagement.putEvent(event);

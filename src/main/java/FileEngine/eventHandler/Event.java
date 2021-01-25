@@ -10,11 +10,11 @@ public class Event {
     private final AtomicBoolean isBlock = new AtomicBoolean(false);
     private Object returnValue;
 
-    public void incrementExecuteTimes() {
+    protected void incrementExecuteTimes() {
         executeTimes.incrementAndGet();
     }
 
-    public int getExecuteTimes() {
+    protected int getExecuteTimes() {
         return executeTimes.get();
     }
 
@@ -34,11 +34,11 @@ public class Event {
         return isFailed.get();
     }
 
-    public void setFailed() {
+    protected void setFailed() {
         isFailed.set(true);
     }
 
-    public void setFinished() {
+    protected void setFinished() {
         isFinished.set(true);
     }
 

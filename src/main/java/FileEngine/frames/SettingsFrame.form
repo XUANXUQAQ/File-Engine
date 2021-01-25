@@ -19,7 +19,7 @@
     <children>
       <component id="c1c40" class="javax.swing.JTree" binding="treeSettings">
         <constraints>
-          <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="6" hsize-policy="0" anchor="0" fill="3" indent="0" use-parent-layout="false">
+          <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="6" hsize-policy="6" anchor="0" fill="3" indent="0" use-parent-layout="false">
             <preferred-size width="150" height="50"/>
           </grid>
         </constraints>
@@ -190,7 +190,7 @@
               </component>
             </children>
           </grid>
-          <grid id="21c26" binding="tabSearchSettings" layout-manager="GridLayoutManager" row-count="8" column-count="6" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+          <grid id="21c26" binding="tabSearchSettings" layout-manager="GridLayoutManager" row-count="8" column-count="14" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
             <margin top="0" left="0" bottom="0" right="0"/>
             <constraints>
               <tabbedpane title="Search settings"/>
@@ -320,26 +320,59 @@
                   <text value="Choose"/>
                 </properties>
               </component>
-              <component id="73ebb" class="javax.swing.JLabel" binding="placeholderSearch2">
+              <hspacer id="3eedd">
                 <constraints>
-                  <grid row="5" column="5" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                  <grid row="6" column="13" row-span="1" col-span="1" vsize-policy="1" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
                 </constraints>
-                <properties>
-                  <requestFocusEnabled value="true"/>
-                  <text value="    "/>
-                </properties>
-              </component>
-              <component id="44936" class="javax.swing.JLabel" binding="placeholderSearch1">
+              </hspacer>
+              <hspacer id="4289e">
                 <constraints>
-                  <grid row="5" column="4" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                  <grid row="6" column="5" row-span="1" col-span="1" vsize-policy="1" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
                 </constraints>
-                <properties>
-                  <text value="    "/>
-                </properties>
-              </component>
+              </hspacer>
+              <hspacer id="787d">
+                <constraints>
+                  <grid row="6" column="4" row-span="1" col-span="1" vsize-policy="1" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                </constraints>
+              </hspacer>
+              <hspacer id="fabad">
+                <constraints>
+                  <grid row="6" column="6" row-span="1" col-span="1" vsize-policy="1" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                </constraints>
+              </hspacer>
+              <hspacer id="eb414">
+                <constraints>
+                  <grid row="6" column="7" row-span="1" col-span="1" vsize-policy="1" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                </constraints>
+              </hspacer>
+              <hspacer id="36e7d">
+                <constraints>
+                  <grid row="6" column="8" row-span="1" col-span="1" vsize-policy="1" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                </constraints>
+              </hspacer>
+              <hspacer id="7ba74">
+                <constraints>
+                  <grid row="6" column="9" row-span="1" col-span="1" vsize-policy="1" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                </constraints>
+              </hspacer>
+              <hspacer id="acfc">
+                <constraints>
+                  <grid row="6" column="10" row-span="1" col-span="1" vsize-policy="1" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                </constraints>
+              </hspacer>
+              <hspacer id="dcc81">
+                <constraints>
+                  <grid row="6" column="11" row-span="1" col-span="1" vsize-policy="1" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                </constraints>
+              </hspacer>
+              <hspacer id="5098d">
+                <constraints>
+                  <grid row="6" column="12" row-span="1" col-span="1" vsize-policy="1" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                </constraints>
+              </hspacer>
             </children>
           </grid>
-          <grid id="dcaba" binding="tabSearchBarSettings" layout-manager="GridLayoutManager" row-count="19" column-count="9" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+          <grid id="dcaba" binding="tabSearchBarSettings" layout-manager="GridLayoutManager" row-count="19" column-count="10" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
             <margin top="0" left="0" bottom="0" right="0"/>
             <constraints>
               <tabbedpane title="Search bar settings"/>
@@ -756,9 +789,14 @@
                   <grid row="10" column="4" row-span="1" col-span="5" vsize-policy="1" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
                 </constraints>
               </hspacer>
+              <hspacer id="67576">
+                <constraints>
+                  <grid row="10" column="9" row-span="1" col-span="1" vsize-policy="1" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                </constraints>
+              </hspacer>
             </children>
           </grid>
-          <grid id="d904a" binding="tabModifyPriority" layout-manager="GridLayoutManager" row-count="4" column-count="6" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+          <grid id="d904a" binding="tabModifyPriority" layout-manager="GridLayoutManager" row-count="4" column-count="3" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
             <margin top="0" left="0" bottom="0" right="0"/>
             <constraints>
               <tabbedpane title="Modify suffix priority"/>
@@ -811,38 +849,11 @@
                   <text value="Modifying the suffix priority requires rebuilding the index (input &quot;:update&quot;) to take effect"/>
                 </properties>
               </component>
-              <component id="73d4f" class="javax.swing.JLabel" binding="placeholderSuffix4">
+              <hspacer id="3897c">
                 <constraints>
-                  <grid row="1" column="5" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                  <grid row="1" column="2" row-span="1" col-span="1" vsize-policy="1" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
                 </constraints>
-                <properties>
-                  <text value="   "/>
-                </properties>
-              </component>
-              <component id="2d86d" class="javax.swing.JLabel" binding="placeholderSuffix3">
-                <constraints>
-                  <grid row="1" column="4" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
-                </constraints>
-                <properties>
-                  <text value="   "/>
-                </properties>
-              </component>
-              <component id="2900a" class="javax.swing.JLabel" binding="placeholderSuffix2">
-                <constraints>
-                  <grid row="1" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
-                </constraints>
-                <properties>
-                  <text value="   "/>
-                </properties>
-              </component>
-              <component id="4d189" class="javax.swing.JLabel" binding="placeholderSuffix1">
-                <constraints>
-                  <grid row="1" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
-                </constraints>
-                <properties>
-                  <text value="   "/>
-                </properties>
-              </component>
+              </hspacer>
             </children>
           </grid>
           <grid id="8b55c" binding="tabCache" layout-manager="GridLayoutManager" row-count="7" column-count="4" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
@@ -1133,14 +1144,9 @@
                       <text value=""/>
                     </properties>
                   </component>
-                  <hspacer id="ace52">
-                    <constraints>
-                      <grid row="2" column="5" row-span="1" col-span="1" vsize-policy="1" hsize-policy="6" anchor="4" fill="0" indent="0" use-parent-layout="false"/>
-                    </constraints>
-                  </hspacer>
                   <scrollpane id="2d49d" binding="scrollPane">
                     <constraints>
-                      <grid row="5" column="0" row-span="1" col-span="6" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+                      <grid row="5" column="0" row-span="1" col-span="5" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
                     </constraints>
                     <properties/>
                     <border type="none"/>
@@ -1174,14 +1180,6 @@
                       <text value=""/>
                     </properties>
                   </component>
-                  <component id="14dd7" class="javax.swing.JLabel" binding="labelProgress">
-                    <constraints>
-                      <grid row="3" column="6" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
-                    </constraints>
-                    <properties>
-                      <text value=""/>
-                    </properties>
-                  </component>
                   <component id="b7148" class="javax.swing.JLabel" binding="labelApiVersion">
                     <constraints>
                       <grid row="4" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
@@ -1200,7 +1198,7 @@
                   </component>
                   <component id="df106" class="javax.swing.JLabel" binding="labelUninstallPluginTip">
                     <constraints>
-                      <grid row="0" column="0" row-span="1" col-span="6" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                      <grid row="0" column="0" row-span="1" col-span="5" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                     </constraints>
                     <properties>
                       <text value="If you need to delete a plug-in, just delete it under the &quot;plugins&quot; folder in the software directory."/>
@@ -1216,7 +1214,7 @@
                   </component>
                   <component id="11bc0" class="javax.swing.JLabel" binding="placeholderPlugin1">
                     <constraints>
-                      <grid row="5" column="7" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                      <grid row="5" column="6" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                     </constraints>
                     <properties>
                       <text value="         "/>
@@ -1224,7 +1222,7 @@
                   </component>
                   <component id="64fee" class="javax.swing.JLabel" binding="placeholderPlugins3">
                     <constraints>
-                      <grid row="4" column="6" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                      <grid row="4" column="5" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                     </constraints>
                     <properties>
                       <text value="    "/>
@@ -1232,21 +1230,36 @@
                   </component>
                   <component id="84bbe" class="javax.swing.JButton" binding="buttonUpdatePlugin">
                     <constraints>
-                      <grid row="2" column="4" row-span="2" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                      <grid row="2" column="4" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                     </constraints>
                     <properties>
                       <text value="Check for Update"/>
                     </properties>
                   </component>
+                  <component id="14dd7" class="javax.swing.JLabel" binding="labelProgress">
+                    <constraints>
+                      <grid row="3" column="4" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                    </constraints>
+                    <properties>
+                      <text value="    "/>
+                    </properties>
+                  </component>
+                  <hspacer id="6d979">
+                    <constraints>
+                      <grid row="5" column="7" row-span="1" col-span="1" vsize-policy="1" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                    </constraints>
+                  </hspacer>
                 </children>
               </grid>
-              <grid id="1c394" binding="PluginListPanel" layout-manager="GridLayoutManager" row-count="2" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+              <grid id="1c394" binding="PluginListPanel" layout-manager="GridLayoutManager" row-count="3" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
                 <margin top="0" left="0" bottom="0" right="0"/>
                 <constraints>
                   <grid row="2" column="0" row-span="2" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
                   <gridbag weightx="0.0" weighty="1.0"/>
                 </constraints>
-                <properties/>
+                <properties>
+                  <opaque value="false"/>
+                </properties>
                 <border type="none"/>
                 <children>
                   <scrollpane id="867e2" binding="paneListPlugins">
@@ -1272,6 +1285,14 @@
                     </constraints>
                     <properties>
                       <text value="Plugin Market"/>
+                    </properties>
+                  </component>
+                  <component id="844c3" class="javax.swing.JLabel" binding="placeholderPlugin5">
+                    <constraints>
+                      <grid row="2" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                    </constraints>
+                    <properties>
+                      <text value="    "/>
                     </properties>
                   </component>
                 </children>
@@ -1424,7 +1445,7 @@
               </component>
             </children>
           </grid>
-          <grid id="74a0e" binding="tabLanguage" layout-manager="GridLayoutManager" row-count="3" column-count="4" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+          <grid id="74a0e" binding="tabLanguage" layout-manager="GridLayoutManager" row-count="3" column-count="9" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
             <margin top="0" left="0" bottom="0" right="0"/>
             <constraints>
               <tabbedpane title="Language settings"/>
@@ -1480,7 +1501,7 @@
               </component>
               <component id="c0548" class="javax.swing.JLabel" binding="placeholderl">
                 <constraints>
-                  <grid row="1" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                  <grid row="1" column="8" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
                   <text value="     "/>
@@ -1497,6 +1518,46 @@
                 </constraints>
                 <properties>
                   <text value="The translation might not be 100% correct"/>
+                </properties>
+              </component>
+              <component id="6bf38" class="javax.swing.JLabel" binding="placeholderLanguage1">
+                <constraints>
+                  <grid row="2" column="7" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                </constraints>
+                <properties>
+                  <text value="   "/>
+                </properties>
+              </component>
+              <component id="d4eb6" class="javax.swing.JLabel" binding="placeholderLanguage2">
+                <constraints>
+                  <grid row="2" column="6" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                </constraints>
+                <properties>
+                  <text value="   "/>
+                </properties>
+              </component>
+              <component id="89fb5" class="javax.swing.JLabel" binding="placeholderLanguage3">
+                <constraints>
+                  <grid row="2" column="5" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                </constraints>
+                <properties>
+                  <text value="  "/>
+                </properties>
+              </component>
+              <component id="bf81e" class="javax.swing.JLabel" binding="placeholderLanguage4">
+                <constraints>
+                  <grid row="2" column="4" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                </constraints>
+                <properties>
+                  <text value="  "/>
+                </properties>
+              </component>
+              <component id="ce65e" class="javax.swing.JLabel" binding="placeholderLanguage5">
+                <constraints>
+                  <grid row="2" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                </constraints>
+                <properties>
+                  <text value="    "/>
                 </properties>
               </component>
             </children>
