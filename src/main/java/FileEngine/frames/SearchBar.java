@@ -2252,8 +2252,6 @@ public class SearchBar {
         sendSignalAndShowCommandThread();
 
         switchSearchBarShowingMode();
-
-        //changeSearchBarSize();
     }
 
     @SuppressWarnings("unused")
@@ -2401,7 +2399,7 @@ public class SearchBar {
                             switchToNormalMode();
                         }
                     }
-                    TimeUnit.MILLISECONDS.sleep(150);
+                    TimeUnit.MILLISECONDS.sleep(10);
                 }
             } catch (InterruptedException ignored) {
             } finally {
@@ -2499,7 +2497,7 @@ public class SearchBar {
         changeSearchBarSizeAndPos(positionX, positionY, searchBarWidth, searchBarHeight, labelHeight);
     }
 
-    private void switchToExplorerAttachMode() {
+    private void switchToExplorerAttachMode() throws InterruptedException {
         int searchBarHeight = (int) (GetHandle.INSTANCE.getExplorerHeight() * 0.75);
         int labelHeight = searchBarHeight / 9;
         if (labelHeight > 35) {
@@ -2518,6 +2516,7 @@ public class SearchBar {
                 label8.setFont(labelFont);
                 //getExplorerSizeAndChangeSearchBarSizeExplorerMode();    //不可见时先修改位置和大小，防止闪屏
                 showingMode = Enums.ShowingSearchBarMode.EXPLORER_ATTACH;
+                TimeUnit.MILLISECONDS.sleep(150);
             } else {
                 getExplorerSizeAndChangeSearchBarSizeExplorerMode();
             }
@@ -2532,7 +2531,7 @@ public class SearchBar {
         return (int) ((searchBarHeight * 0.2) / 96 * 72) / 5;
     }
 
-    private void switchToNormalMode() {
+    private void switchToNormalMode() throws InterruptedException {
         if (showingMode != Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
             closeSearchBar();
             Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize(); // 获取屏幕大小
@@ -2551,6 +2550,7 @@ public class SearchBar {
             label7.setFont(labelFont);
             label8.setFont(labelFont);
             showingMode= Enums.ShowingSearchBarMode.NORMAL_SHOWING;
+            TimeUnit.MILLISECONDS.sleep(150);
         } else {
             Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize(); // 获取屏幕大小
             int width = screenSize.width;
