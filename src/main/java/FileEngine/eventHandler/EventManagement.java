@@ -71,7 +71,9 @@ public class EventManagement {
             exit.set(true);
             CachedThreadPoolUtil.getInstance().executeTask(() -> {
                 doAllMethod(EVENT_LISTENER_MAP.get(RestartEvent.class));
-                doAllMethod(EVENT_LISTENER_MAP.get(CloseEvent.class));
+                if (event instanceof CloseEvent) {
+                    doAllMethod(EVENT_LISTENER_MAP.get(CloseEvent.class));
+                }
             });
             isRejectTask.set(true);
             try {
