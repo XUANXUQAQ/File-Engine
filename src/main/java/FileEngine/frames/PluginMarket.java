@@ -8,7 +8,7 @@ import FileEngine.eventHandler.EventManagement;
 import FileEngine.eventHandler.impl.download.StartDownloadEvent;
 import FileEngine.eventHandler.impl.download.StopDownloadEvent;
 import FileEngine.eventHandler.impl.frame.pluginMarket.ShowPluginMarket;
-import FileEngine.eventHandler.impl.stop.StopEvent;
+import FileEngine.eventHandler.impl.stop.RestartEvent;
 import FileEngine.utils.CachedThreadPoolUtil;
 import FileEngine.utils.TranslateUtil;
 import FileEngine.utils.download.DownloadManager;
@@ -140,7 +140,7 @@ public class PluginMarket {
             }
         });
 
-        eventManagement.registerListener(StopEvent.class, () -> getInstance().hideWindow());
+        eventManagement.registerListener(RestartEvent.class, () -> getInstance().hideWindow());
     }
 
     private void hideWindow() {

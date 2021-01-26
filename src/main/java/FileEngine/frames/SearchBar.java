@@ -19,7 +19,7 @@ import FileEngine.eventHandler.impl.frame.settingsFrame.AddCacheEvent;
 import FileEngine.eventHandler.impl.frame.settingsFrame.IsCacheExistEvent;
 import FileEngine.eventHandler.impl.frame.settingsFrame.ShowSettingsFrameEvent;
 import FileEngine.eventHandler.impl.monitorDisk.StartMonitorDiskEvent;
-import FileEngine.eventHandler.impl.stop.StopEvent;
+import FileEngine.eventHandler.impl.stop.RestartEvent;
 import FileEngine.eventHandler.impl.taskbar.ShowTaskBarMessageEvent;
 import FileEngine.utils.*;
 import FileEngine.utils.database.DatabaseUtil;
@@ -922,23 +922,6 @@ public class SearchBar {
         }
     }
 
-    private String contractHtmlFontSize(String str) {
-        String ret;
-        if (str.contains("<font size=\"-1\">")) {
-            ret = str.replace("<font size=\"-1\">", "<font size=\"-2\">");
-        } else {
-            ret = str.replace("<body>", "<body><font size=\"-1\">");
-        }
-        return ret;
-    }
-
-    private String autoContractHtmlStr(String str, JLabel label) {
-        if (isContractFonSize(str, label)) {
-            return contractHtmlFontSize(str);
-        }
-        return str;
-    }
-
     /**
      * 设置当前label为选中状态
      *
@@ -953,7 +936,7 @@ public class SearchBar {
                     if (currentText == null || !currentText.contains(":")) {
                         //当前显示的不是路径
                         label.setName(currentText);
-                        label.setText(autoContractHtmlStr(name, label));
+                        label.setText(name);
                     }
                 }
                 label.setBackground(labelColor);
@@ -976,7 +959,7 @@ public class SearchBar {
                     if (currentText == null || currentText.contains(":")) {
                         //当前显示的不是名称
                         label.setName(currentText);
-                        label.setText(autoContractHtmlStr(name, label));
+                        label.setText(name);
                     }
                 }
                 label.setBackground(backgroundColor);
@@ -2383,7 +2366,7 @@ public class SearchBar {
             }
         });
 
-        eventManagement.registerListener(StopEvent.class, FileMonitor.INSTANCE::stop_monitor);
+        eventManagement.registerListener(RestartEvent.class, FileMonitor.INSTANCE::stop_monitor);
     }
 
     private void switchSearchBarShowingMode() {
@@ -3127,7 +3110,7 @@ public class SearchBar {
         //将文件的路径信息存储在label的名称中，在未被选中时只显示文件名，选中后才显示文件路径
         String showStr = "<html><body>%s</body></html>";
         String name = getFileName(path);
-        String allHtml = String.format(showStr, name + "<br><font size=\"-1\">" + ">>" + getParentPath(path));
+        String allHtml = String.format(showStr, name + "<br><font size=\"-2\">" + ">>" + getParentPath(path));
         if (isContractFonSize(path, label)) {
             String nameHtml = String.format(showStr, name);
             if (isChosen) {
@@ -3141,7 +3124,7 @@ public class SearchBar {
             showStr = allHtml;
             label.setName("");
         }
-        label.setText(autoContractHtmlStr(showStr, label));
+        label.setText(showStr);
         ImageIcon icon = GetIconUtil.getInstance().getBigIcon(path, iconSideLength, iconSideLength);
         label.setIcon(icon);
         label.setBorder(border);

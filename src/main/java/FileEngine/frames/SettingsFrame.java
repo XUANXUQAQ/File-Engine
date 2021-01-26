@@ -22,7 +22,7 @@ import FileEngine.eventHandler.impl.frame.searchBar.PreviewSearchBarEvent;
 import FileEngine.eventHandler.impl.frame.settingsFrame.*;
 import FileEngine.eventHandler.impl.hotkey.ResponseCtrlEvent;
 import FileEngine.eventHandler.impl.plugin.AddPluginsCanUpdateEvent;
-import FileEngine.eventHandler.impl.stop.StopEvent;
+import FileEngine.eventHandler.impl.stop.RestartEvent;
 import FileEngine.utils.CachedThreadPoolUtil;
 import FileEngine.utils.CheckHotKeyUtil;
 import FileEngine.utils.RegexUtil;
@@ -1891,7 +1891,7 @@ public class SettingsFrame {
             }
         });
 
-        eventManagement.registerListener(StopEvent.class, () -> getInstance().hideFrame());
+        eventManagement.registerListener(RestartEvent.class, () -> getInstance().hideFrame());
     }
 
     private void showWindow() {

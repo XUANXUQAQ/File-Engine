@@ -12,7 +12,7 @@ import FileEngine.eventHandler.impl.frame.searchBar.IsSearchBarVisibleEvent;
 import FileEngine.eventHandler.impl.frame.searchBar.ShowSearchBarEvent;
 import FileEngine.eventHandler.impl.hotkey.RegisterHotKeyEvent;
 import FileEngine.eventHandler.impl.hotkey.ResponseCtrlEvent;
-import FileEngine.eventHandler.impl.stop.StopEvent;
+import FileEngine.eventHandler.impl.stop.RestartEvent;
 
 import java.awt.event.KeyEvent;
 import java.util.HashMap;
@@ -170,7 +170,7 @@ public class CheckHotKeyUtil {
             }
         });
 
-        eventManagement.registerListener(StopEvent.class, () -> getInstance().stopListen());
+        eventManagement.registerListener(RestartEvent.class, () -> getInstance().stopListen());
 
         eventManagement.register(ResponseCtrlEvent.class, new EventHandler() {
             @Override

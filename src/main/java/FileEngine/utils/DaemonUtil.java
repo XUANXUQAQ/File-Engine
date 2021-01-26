@@ -31,14 +31,15 @@ public class DaemonUtil {
 
     @EventRegister
     public static void registerEventHandler() {
-        EventManagement.getInstance().register(StartDaemonEvent.class, new EventHandler() {
+        EventManagement eventManagement = EventManagement.getInstance();
+        eventManagement.register(StartDaemonEvent.class, new EventHandler() {
             @Override
             public void todo(Event event) {
                 getInstance().startDaemon(((StartDaemonEvent) event).currentWorkingDir);
             }
         });
 
-        EventManagement.getInstance().registerListener(CloseEvent.class, () -> getInstance().stopDaemon());
+        eventManagement.registerListener(CloseEvent.class, () -> getInstance().stopDaemon());
     }
 
 

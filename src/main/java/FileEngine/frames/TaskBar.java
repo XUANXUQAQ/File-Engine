@@ -8,7 +8,6 @@ import FileEngine.eventHandler.EventManagement;
 import FileEngine.eventHandler.impl.frame.settingsFrame.ShowSettingsFrameEvent;
 import FileEngine.eventHandler.impl.stop.CloseEvent;
 import FileEngine.eventHandler.impl.stop.RestartEvent;
-import FileEngine.eventHandler.impl.stop.StopEvent;
 import FileEngine.eventHandler.impl.taskbar.ShowTaskBarMessageEvent;
 import FileEngine.eventHandler.impl.taskbar.ShowTrayIconEvent;
 import FileEngine.utils.CachedThreadPoolUtil;
@@ -214,7 +213,7 @@ public class TaskBar {
             }
         });
 
-        eventManagement.registerListener(StopEvent.class, () -> {
+        eventManagement.registerListener(RestartEvent.class, () -> {
             TaskBar taskBar = getInstance();
             taskBar.systemTray.remove(taskBar.trayIcon);
         });
