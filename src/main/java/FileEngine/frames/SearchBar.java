@@ -933,7 +933,7 @@ public class SearchBar {
                 String name = label.getName();
                 if (!(name == null || name.isEmpty())) {
                     String currentText = label.getText();
-                    if (currentText == null || !currentText.contains(":")) {
+                    if (currentText == null || !currentText.contains(":\\")) {
                         //当前显示的不是路径
                         label.setName(currentText);
                         label.setText(name);
@@ -956,7 +956,7 @@ public class SearchBar {
                 String name = label.getName();
                 if (!(name == null || name.isEmpty())) {
                     String currentText = label.getText();
-                    if (currentText == null || currentText.contains(":")) {
+                    if (currentText == null || currentText.contains(":\\")) {
                         //当前显示的不是名称
                         label.setName(currentText);
                         label.setText(name);
@@ -3113,7 +3113,7 @@ public class SearchBar {
         //将文件的路径信息存储在label的名称中，在未被选中时只显示文件名，选中后才显示文件路径
         String showStr = "<html><body>%s</body></html>";
         String name = getFileName(path);
-        String allHtml = String.format(showStr, name + "<br><font size=\"-2\">" + ">>" + getParentPath(path));
+        String allHtml = String.format(showStr, name + "<br><font size=\"-2\">" + "&gt;&gt;" + getParentPath(path));
         if (isContractFonSize(path, label)) {
             String nameHtml = String.format(showStr, name);
             if (isChosen) {
@@ -3159,20 +3159,33 @@ public class SearchBar {
     private void showCommandOnLabel(String command, JLabel label, boolean isChosen) {
         GetIconUtil getIconUtil = GetIconUtil.getInstance();
         String[] info = semicolon.split(command);
+        String showStr = "<html><body>%s</body></html>";
         String path = info[1];
         String name = info[0];
-        ImageIcon imageIcon = getIconUtil.getCommandIcon(colon.split(name)[1], iconSideLength, iconSideLength);
-        if (imageIcon == null) {
-            imageIcon = getIconUtil.getBigIcon(path, iconSideLength, iconSideLength);
+        String allHtml = String.format(showStr, name + "<br><font size=\"-2\">" + "&gt;&gt;" + path);
+        if (isContractFonSize(path, label)) {
+            String nameHtml = String.format(showStr, name);
+            if (isChosen) {
+                showStr = allHtml;
+                label.setName(nameHtml);
+            } else {
+                showStr = nameHtml;
+                label.setName(allHtml);
+            }
+        } else {
+            showStr = allHtml;
+            label.setName("");
         }
+        label.setText(showStr);
+        ImageIcon imageIcon = getIconUtil.getCommandIcon(colon.split(name)[1], iconSideLength, iconSideLength);
+        imageIcon = imageIcon == null ? getIconUtil.getBigIcon(path, iconSideLength, iconSideLength) : imageIcon;
         label.setIcon(imageIcon);
-        label.setText("<html><body>" + name + "<br><font size=\"-1\">" + ">>" + path + "</font></body></html>");
+        label.setBorder(border);
         if (isChosen) {
             setLabelChosen(label);
         } else {
             setLabelNotChosen(label);
         }
-        label.setBorder(border);
     }
 
     /**
