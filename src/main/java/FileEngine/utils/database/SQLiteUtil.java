@@ -3,7 +3,7 @@ package FileEngine.utils.database;
 import FileEngine.IsDebug;
 import FileEngine.annotation.EventRegister;
 import FileEngine.eventHandler.EventManagement;
-import FileEngine.eventHandler.impl.stop.StopEvent;
+import FileEngine.eventHandler.impl.stop.RestartEvent;
 import org.sqlite.SQLiteConfig;
 
 import java.sql.*;
@@ -68,6 +68,6 @@ public class SQLiteUtil {
     @EventRegister
     @SuppressWarnings("unused")
     public static void registerCloseListener() {
-        EventManagement.getInstance().registerListener(StopEvent.class, SQLiteUtil::closeAll);
+        EventManagement.getInstance().registerListener(RestartEvent.class, SQLiteUtil::closeAll);
     }
 }

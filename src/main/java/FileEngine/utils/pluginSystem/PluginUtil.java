@@ -7,7 +7,7 @@ import FileEngine.eventHandler.EventManagement;
 import FileEngine.eventHandler.Event;
 import FileEngine.eventHandler.EventHandler;
 import FileEngine.eventHandler.impl.plugin.*;
-import FileEngine.eventHandler.impl.stop.StopEvent;
+import FileEngine.eventHandler.impl.stop.RestartEvent;
 import FileEngine.eventHandler.impl.taskbar.ShowTaskBarMessageEvent;
 import FileEngine.utils.CachedThreadPoolUtil;
 import com.alibaba.fastjson.JSONObject;
@@ -338,7 +338,7 @@ public class PluginUtil {
             }
         });
 
-        eventManagement.registerListener(StopEvent.class, () -> getInstance().unloadAllPlugins());
+        eventManagement.registerListener(RestartEvent.class, () -> getInstance().unloadAllPlugins());
     }
 
     public static class PluginInfo {

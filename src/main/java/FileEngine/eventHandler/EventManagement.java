@@ -3,7 +3,6 @@ package FileEngine.eventHandler;
 import FileEngine.IsDebug;
 import FileEngine.eventHandler.impl.stop.CloseEvent;
 import FileEngine.eventHandler.impl.stop.RestartEvent;
-import FileEngine.eventHandler.impl.stop.StopEvent;
 import FileEngine.utils.CachedThreadPoolUtil;
 
 import java.util.concurrent.ConcurrentHashMap;
@@ -67,15 +66,18 @@ public class EventManagement {
      */
     private boolean executeTaskFailed(Event event) {
         event.incrementExecuteTimes();
-        if (event instanceof StopEvent) {
+        if (event instanceof RestartEvent) {
             event.setFinished();
             exit.set(true);
             CachedThreadPoolUtil.getInstance().executeTask(() -> {
-                doAllMethod(EVENT_LISTENER_MAP.get(StopEvent.class));
-                doAllMethod(EVENT_LISTENER_MAP.get(CloseEvent.class));
                 doAllMethod(EVENT_LISTENER_MAP.get(RestartEvent.class));
+                doAllMethod(EVENT_LISTENER_MAP.get(CloseEvent.class));
             });
             isRejectTask.set(true);
+            try {
+                CachedThreadPoolUtil.getInstance().shutdown();
+            } catch (InterruptedException ignored) {
+            }
             return false;
         } else {
             EventHandler eventHandler = EVENT_HANDLER_MAP.get(event.getClass());

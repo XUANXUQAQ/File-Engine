@@ -1,6 +1,8 @@
 package FileEngine.eventHandler.impl.stop;
 
-public class RestartEvent extends StopEvent {
+import FileEngine.eventHandler.Event;
+
+public class RestartEvent extends Event {
     public RestartEvent() {
         super();
     }

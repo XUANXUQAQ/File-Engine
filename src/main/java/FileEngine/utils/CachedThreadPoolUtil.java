@@ -1,10 +1,5 @@
 package FileEngine.utils;
 
-import FileEngine.IsDebug;
-import FileEngine.annotation.EventRegister;
-import FileEngine.eventHandler.EventManagement;
-import FileEngine.eventHandler.impl.stop.StopEvent;
-
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -42,29 +37,11 @@ public class CachedThreadPoolUtil {
         cachedThreadPool.execute(todo);
     }
 
-    private void shutdown() throws InterruptedException {
+    public void shutdown() throws InterruptedException {
         isShutdown.set(true);
         cachedThreadPool.shutdown();
-        int count = 0;
-        final int maxWaitTime = 100 * 5;   //最大等待5s
-        while (!cachedThreadPool.isTerminated() && count < maxWaitTime) {
-            count++;
-            TimeUnit.MILLISECONDS.sleep(10);
+        if (!cachedThreadPool.awaitTermination(5, TimeUnit.SECONDS)) {
+            System.err.println("线程池等待超时");
         }
-        if (IsDebug.isDebug()) {
-            System.err.println("线程池已关闭");
-        }
-    }
-
-    @EventRegister
-    @SuppressWarnings("unused")
-    public static void registerShutdownEvent() {
-        EventManagement eventManagement = EventManagement.getInstance();
-        eventManagement.registerListener(StopEvent.class, () -> {
-            try {
-                getInstance().shutdown();
-            } catch (InterruptedException ignored) {
-            }
-        });
     }
 }
