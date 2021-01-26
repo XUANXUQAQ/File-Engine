@@ -2375,6 +2375,25 @@ public class SearchBar {
                 EventManagement eventManagement = EventManagement.getInstance();
                 GetHandle.INSTANCE.start();
                 while (eventManagement.isNotMainExit()) {
+                    if (showingMode == Enums.ShowingSearchBarMode.EXPLORER_ATTACH) {
+                        getExplorerSizeAndChangeSearchBarSizeExplorerMode();
+                    } else {
+                        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize(); // 获取屏幕大小
+                        int width = screenSize.width;
+                        int height = screenSize.height;
+                        int searchBarWidth = (int) (width * 0.3);
+                        int searchBarHeight = (int) (height * 0.4);
+                        int positionX, positionY;
+                        if (isPreviewMode.get()) {
+                            positionX = 50;
+                            positionY = 50;
+                        } else {
+                            positionX = width / 2 - searchBarWidth / 2;
+                            positionY = height / 2 - searchBarHeight / 3;
+                        }
+                        changeSearchBarSizeAndPos(positionX, positionY, searchBarWidth, searchBarHeight);
+                        setTextFieldAtTop(searchBarHeight);
+                    }
                     if (GetHandle.INSTANCE.isExplorerAtTop()) {
                         switchToExplorerAttachMode();
                     } else {
@@ -2424,15 +2443,18 @@ public class SearchBar {
     private void setLabelAtTop(int searchBarHeight) {
         int labelHeight = searchBarHeight / 9;
         SwingUtilities.invokeLater(() -> {
-                textField.setLocation(0, labelHeight * 8);
-                label1.setLocation(0, 0);
-                label2.setLocation(0, labelHeight);
-                label3.setLocation(0, labelHeight * 2);
-                label4.setLocation(0, labelHeight * 3);
-                label5.setLocation(0, labelHeight * 4);
-                label6.setLocation(0, labelHeight * 5);
-                label7.setLocation(0, labelHeight * 6);
-                label8.setLocation(0, labelHeight * 7);
+            textField.setLocation(0, labelHeight * 8);
+            int offset = 8 - listResultsNum.get();
+            offset = Math.max(0, offset);
+            offset = offset == 8 ? 0 : offset;
+            label1.setLocation(0, labelHeight * offset);
+            label2.setLocation(0, labelHeight * (offset + 1));
+            label3.setLocation(0, labelHeight * (offset + 2));
+            label4.setLocation(0, labelHeight * (offset + 3));
+            label5.setLocation(0, labelHeight * (offset + 4));
+            label6.setLocation(0, labelHeight * (offset + 5));
+            label7.setLocation(0, labelHeight * (offset + 6));
+            label8.setLocation(0, labelHeight * (offset + 7));
         });
     }
 
@@ -2497,11 +2519,8 @@ public class SearchBar {
                 label6.setFont(labelFont);
                 label7.setFont(labelFont);
                 label8.setFont(labelFont);
-                //getExplorerSizeAndChangeSearchBarSizeExplorerMode();    //不可见时先修改位置和大小，防止闪屏
                 showingMode = Enums.ShowingSearchBarMode.EXPLORER_ATTACH;
                 TimeUnit.MILLISECONDS.sleep(150);
-            } else {
-                getExplorerSizeAndChangeSearchBarSizeExplorerMode();
             }
         }
     }
@@ -2534,22 +2553,6 @@ public class SearchBar {
             label8.setFont(labelFont);
             showingMode= Enums.ShowingSearchBarMode.NORMAL_SHOWING;
             TimeUnit.MILLISECONDS.sleep(150);
-        } else {
-            Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize(); // 获取屏幕大小
-            int width = screenSize.width;
-            int height = screenSize.height;
-            int searchBarWidth = (int) (width * 0.3);
-            int searchBarHeight = (int) (height * 0.4);
-            int positionX, positionY;
-            if (isPreviewMode.get()) {
-                positionX = 50;
-                positionY = 50;
-            } else {
-                positionX = width / 2 - searchBarWidth / 2;
-                positionY = height / 2 - searchBarHeight / 3;
-            }
-            changeSearchBarSizeAndPos(positionX, positionY, searchBarWidth, searchBarHeight);
-            setTextFieldAtTop(searchBarHeight);
         }
     }
 
