@@ -208,5 +208,6 @@ Double-click "Ctrl" to open the search bar=「Ctrl」をダブルクリックし
 Restart=再起動
 Double click to open settings=ダブルクリックして設定を開きます
 Language=言語
-File suffix priority=ファイルサフィックスの優先度
+Suffix priority=サフィックスの優先度
 Interface=インターフェース
+Clear desktop=クリアデスクトップ

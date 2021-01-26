@@ -208,5 +208,6 @@ Double-click "Ctrl" to open the search bar=雙擊"Ctrl"來打開搜索框
 Restart=重啓
 Double click to open settings=雙擊打開設置
 Language=語言
-File suffix priority=文件後綴優先級
+Suffix priority=後綴優先級
 Interface=界面
+Clear desktop=清空桌面

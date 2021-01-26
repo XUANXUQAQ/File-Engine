@@ -208,5 +208,6 @@ Double-click "Ctrl" to open the search bar=Дважды щелкните «Ctrl�
 Restart=рестарт
 Double click to open settings=Дважды щелкните, чтобы открыть настройки
 Language=Язык
-File suffix priority=Приоритет суффикса файла
+Suffix priority=Приоритет суффикса
 Interface=интерфейс
+Clear desktop=Очистить рабочий стол

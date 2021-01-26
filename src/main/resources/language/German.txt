@@ -208,5 +208,6 @@ Double-click "Ctrl" to open the search bar=Doppelklicken Sie auf "Strg", um das 
 Restart=neu starten
 Double click to open settings=Doppelklicken Sie, um die Einstellungen zu öffnen
 Language=Sprache
-File suffix priority=Dateisuffix-Priorität
+Suffix priority=Suffix Priorität
 Interface=Schnittstelle
+Clear desktop=Desktop löschen

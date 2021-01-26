@@ -208,5 +208,6 @@ Double-click "Ctrl" to open the search bar=Double-cliquez sur "Ctrl" pour ouvrir
 Restart=redémarrer
 Double click to open settings=Double-cliquez pour ouvrir les paramètres
 Language=Langue
-File suffix priority=Priorité du suffixe de fichier
+Suffix priority=Priorité du suffixe
 Interface=interface
+Clear desktop=Bureau clair

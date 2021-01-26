@@ -46,8 +46,9 @@ public class Event {
         returnValue = obj;
     }
 
-    protected Object getReturnValue() {
-        return returnValue;
+    @SuppressWarnings("unchecked")
+    public <T> T getReturnValue() {
+        return (T) returnValue;
     }
 
     @Override
