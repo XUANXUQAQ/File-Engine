@@ -38,11 +38,6 @@ public class EventManagement {
         return instance;
     }
 
-    @SuppressWarnings("unchecked")
-    public <T> T getEventReturnValue(Event event) {
-        return (T) event.getReturnValue();
-    }
-
     /**
      * 等待任务
      * @param event 任务实例

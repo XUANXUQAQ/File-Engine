@@ -147,7 +147,6 @@ public class SettingsFrame {
     private JLabel labelLanguageChooseTip;
     private JLabel labelPlaceHolder4;
     private JLabel labelTranslationTip;
-    private JLabel labelPlaceHolder5;
     private JPanel tabPlugin;
     private JLabel labelInstalledPluginNum;
     private JLabel labelPluginNum;
@@ -186,8 +185,6 @@ public class SettingsFrame {
     private JLabel labelPlaceHolder8;
     private JLabel labelVacuumStatus;
     private JLabel labelApiVersion;
-    private JLabel placeHolder6;
-    private JLabel placeHolder7;
     private JComboBox<String> chooseUpdateAddress;
     private JLabel chooseUpdateAddressLabel;
     private JLabel labelPlaceHolderWhatever2;
@@ -204,14 +201,12 @@ public class SettingsFrame {
     private JTextField textFieldSearchBarFontColor;
     private JLabel SearchBarFontColorChooser;
     private JLabel labelBorderColor;
-    private JLabel labelSharp2;
     private JTextField textFieldBorderColor;
     private JLabel borderColorChooser;
     private JLabel labelCurrentCacheNum;
     private JLabel labelUninstallPluginTip;
     private JLabel labelUninstallPluginTip2;
     private JCheckBox checkBoxIsShowTipOnCreatingLnk;
-    private JLabel labelPlaceHolder15;
     private JLabel labelPlaceHolder12;
     private JList<Object> listSwingThemes;
     private JScrollPane paneSwingThemes;
@@ -236,12 +231,6 @@ public class SettingsFrame {
     private JLabel labelSuffixTip;
     private JLabel labelPlaceHolder;
     private JCheckBox checkBoxResponseCtrl;
-    private JLabel labelSharp8;
-    private JLabel labelSharp9;
-    private JLabel labelSharpSign1;
-    private JLabel labelSharpSign2;
-    private JLabel labelSharpSign5;
-    private JLabel labelSharp4;
     private JTree treeSettings;
     private JLabel placeholder1;
     private JLabel placeholder2;
@@ -253,14 +242,11 @@ public class SettingsFrame {
     private JLabel placeholderPlugin1;
     private JLabel placeholderPlugin2;
     private JLabel placeholderPlugins3;
-    private JLabel placeholderCommands;
     private JLabel placeholderHotkey1;
     private JLabel placeholderPlugin5;
-    private JLabel placeholderLanguage1;
-    private JLabel placeholderLanguage2;
-    private JLabel placeholderLanguage3;
-    private JLabel placeholderLanguage4;
-    private JLabel placeholderLanguage5;
+    private JLabel placeholderGeneral;
+    private JLabel placeholderSearch;
+    private JLabel placeholderGeneral1;
 
 
     private static volatile SettingsFrame instance = null;
@@ -1022,7 +1008,7 @@ public class SettingsFrame {
                     showOnTabbedPane("tabSearchBarSettings");
                 } else if (translateUtil.getTranslation("Language").equals(name)) {
                     showOnTabbedPane("tabLanguage");
-                } else if (translateUtil.getTranslation("File suffix priority").equals(name)) {
+                } else if (translateUtil.getTranslation("Suffix priority").equals(name)) {
                     showOnTabbedPane("tabModifyPriority");
                 } else if (translateUtil.getTranslation("Search settings").equals(name)) {
                     showOnTabbedPane("tabSearchSettings");
@@ -1504,6 +1490,33 @@ public class SettingsFrame {
         }
     }
 
+    private String getLongestTitle() {
+        String longest = "";
+        String realTitle;
+        for (TabNameAndTitle each : tabComponentNameMap.keySet()) {
+            realTitle = translateUtil.getTranslation(each.title);
+            if (longest.length() < realTitle.length()) {
+                longest = realTitle;
+            }
+        }
+        return longest;
+    }
+
+    private void resizeGUI() {
+        int fontSize = treeSettings.getFont().getSize() / 96 * 72;
+        String longestTitle = getLongestTitle();
+        int length = longestTitle.length();
+        int width = length * fontSize;
+        Dimension treeSize = new Dimension(width, -1);
+        treeSettings.setMaximumSize(treeSize);
+        treeSettings.setMinimumSize(treeSize);
+        treeSettings.setPreferredSize(treeSize);
+        Dimension tabbedPaneSize = new Dimension(Integer.parseInt(translateUtil.getFrameWidth()) - width, -1);
+        tabbedPane.setMaximumSize(tabbedPaneSize);
+        tabbedPane.setMinimumSize(tabbedPaneSize);
+        tabbedPane.setPreferredSize(tabbedPaneSize);
+    }
+
     private void initGUI() {
         //设置窗口显示
         setLabelGui();
@@ -1513,6 +1526,7 @@ public class SettingsFrame {
         setCheckBoxGui();
         setTableGui();
         initTreeSettings();
+        resizeGUI();
 
         tabbedPane.removeAll();
         tabbedPane.setBackground(new Color(0,0,0,0));
@@ -1567,7 +1581,7 @@ public class SettingsFrame {
         //todo 添加新tab后在这里注册
         tabComponentNameMap.put(new TabNameAndTitle("tabGeneral", "General"), tabGeneral);
         tabComponentNameMap.put(new TabNameAndTitle("tabSearchSettings", "Search settings"), tabSearchSettings);
-        tabComponentNameMap.put(new TabNameAndTitle("tabSearchBarSettings", "Search bar settings"), tabSearchBarSettings);
+        tabComponentNameMap.put(new TabNameAndTitle("tabSearchBarSettings", "Interface"), tabSearchBarSettings);
         tabComponentNameMap.put(new TabNameAndTitle("tabModifyPriority", "Modify suffix priority"), tabModifyPriority);
         tabComponentNameMap.put(new TabNameAndTitle("tabCache", "Cache"), tabCache);
         tabComponentNameMap.put(new TabNameAndTitle("tabProxy", "Proxy settings"), tabProxy);
@@ -1587,7 +1601,7 @@ public class SettingsFrame {
         groupGeneral.add(new DefaultMutableTreeNode(translateUtil.getTranslation("Cache")));
 
         DefaultMutableTreeNode groupSearchSettings = new DefaultMutableTreeNode(translateUtil.getTranslation("Search settings"));
-        groupSearchSettings.add(new DefaultMutableTreeNode(translateUtil.getTranslation("File suffix priority")));
+        groupSearchSettings.add(new DefaultMutableTreeNode(translateUtil.getTranslation("Suffix priority")));
         groupSearchSettings.add(new DefaultMutableTreeNode(translateUtil.getTranslation("My commands")));
 
         DefaultMutableTreeNode groupProxy = new DefaultMutableTreeNode(translateUtil.getTranslation("Proxy settings"));
@@ -1778,7 +1792,8 @@ public class SettingsFrame {
     }
 
     private void translateButtons() {
-        buttonSaveAndRemoveDesktop.setText(translateUtil.getTranslation("Backup and remove all desktop files"));
+        buttonSaveAndRemoveDesktop.setText(translateUtil.getTranslation("Clear desktop"));
+        buttonSaveAndRemoveDesktop.setToolTipText(translateUtil.getTranslation("Backup and remove all desktop files"));
         ButtonPriorityFolder.setText(translateUtil.getTranslation("Choose"));
         buttonChooseFile.setText(translateUtil.getTranslation("Choose"));
         buttonAddCMD.setText(translateUtil.getTranslation("Add"));
@@ -1890,9 +1905,7 @@ public class SettingsFrame {
         frame.setResizable(true);
         int width = Integer.parseInt(translateUtil.getFrameWidth());
         int height = Integer.parseInt(translateUtil.getFrameHeight());
-
         frame.setContentPane(getInstance().panel);
-
         panel.setSize(width, height);
         frame.setSize(width, height);
         frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
@@ -1900,12 +1913,14 @@ public class SettingsFrame {
         frame.setLocationRelativeTo(null);
         initGUI();
         showOnTabbedPane(tabName);
-        //使swing风格生效
-        SetSwingLaf event = new SetSwingLaf("current");
-        eventManagement.putEvent(event);
-        eventManagement.waitForEvent(event);
         textAreaDescription.setForeground(tabbedPane.getForeground());
-        SwingUtilities.invokeLater(() -> frame.setVisible(true));
+        SwingUtilities.invokeLater(() -> {
+            //使swing风格生效
+            SetSwingLaf event = new SetSwingLaf("current");
+            eventManagement.putEvent(event);
+            eventManagement.waitForEvent(event);
+            frame.setVisible(true);
+        });
     }
 
     private void checkUpdateTimeLimit(StringBuilder strBuilder) {

@@ -208,5 +208,6 @@ Double-click "Ctrl" to open the search bar=
 Restart=
 Double click to open settings=
 Language=
-File suffix priority=
+Suffix priority=
 Interface=
+Clear desktop=

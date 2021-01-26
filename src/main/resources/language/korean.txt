@@ -208,5 +208,6 @@ Double-click "Ctrl" to open the search bar="Ctrl"을 두 번 클릭하여 검색
 Restart=재시작
 Double click to open settings=설정을 열려면 두 번 클릭하십시오.
 Language=언어
-File suffix priority=파일 접미사 우선 순위
+Suffix priority=접미사 우선 순위
 Interface=상호 작용
+Clear desktop=데스크탑 지우기

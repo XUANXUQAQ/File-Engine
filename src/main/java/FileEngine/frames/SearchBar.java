@@ -3433,7 +3433,7 @@ public class SearchBar {
             //检查缓存是否已存在
             eventManagement.putEvent(isCacheExistEvent);
             if (!eventManagement.waitForEvent(isCacheExistEvent)) {
-                if (!(Boolean) eventManagement.getEventReturnValue(isCacheExistEvent)) {
+                if (!(Boolean) isCacheExistEvent.getReturnValue()) {
                     //不存在则添加
                     eventManagement.putEvent(new AddToCacheEvent(content));
                     eventManagement.putEvent(new AddCacheEvent(content));

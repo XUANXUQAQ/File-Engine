@@ -635,7 +635,7 @@ public class AllConfigs {
             GetExcludeComponentEvent event = new GetExcludeComponentEvent();
             eventManagement.putEvent(event);
             eventManagement.waitForEvent(event);
-            components.addAll(eventManagement.getEventReturnValue(event));
+            components.addAll(event.getReturnValue());
             for (Component frame : components) {
                 SwingUtilities.updateComponentTreeUI(frame);
             }

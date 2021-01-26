@@ -128,14 +128,14 @@ public class CheckHotKeyUtil {
                         //等待任务执行
                         if (!eventManagement.waitForEvent(isSearchBarVisibleEvent)) {
                             //是否搜索框可见
-                            if (eventManagement.getEventReturnValue(isSearchBarVisibleEvent)) {
+                            if (isSearchBarVisibleEvent.getReturnValue()) {
                                 //搜索框最小可见时间为200ms，必须显示超过200ms后才响应关闭事件，防止闪屏
                                 if (System.currentTimeMillis() - startVisibleTime > 200) {
                                     //获取当前显示模式
                                     GetShowingModeEvent getShowingModeEvent = new GetShowingModeEvent();
                                     eventManagement.putEvent(getShowingModeEvent);
                                     if (!eventManagement.waitForEvent(getShowingModeEvent)) {
-                                        if (eventManagement.getEventReturnValue(getShowingModeEvent) ==
+                                        if (getShowingModeEvent.getReturnValue() ==
                                                 Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
                                             eventManagement.putEvent(new HideSearchBarEvent());
                                             endVisibleTime = System.currentTimeMillis();
