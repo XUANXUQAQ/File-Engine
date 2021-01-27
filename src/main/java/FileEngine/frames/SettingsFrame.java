@@ -1861,6 +1861,10 @@ public class SettingsFrame {
         chooseUpdateAddressLabel.setText(translateUtil.getTranslation("Choose update address"));
         labelSearchCommand.setText(translateUtil.getTranslation("Search"));
         labelSuffixTip.setText(translateUtil.getTranslation("Modifying the suffix priority requires rebuilding the index (input \":update\") to take effect"));
+        labelIndexTip.setText(translateUtil.getTranslation("You can rebuild the disk index here"));
+        labelIndexChooseDisk.setText(translateUtil.getTranslation("The disks listed below will be indexed"));
+        labelTipNTFSTip.setText(translateUtil.getTranslation("Only supports NTFS format disks"));
+        labelLocalDiskTip.setText(translateUtil.getTranslation("Only the disks on this machine are listed below, click \"Add\" button to add a removable disk"));
     }
 
     private void translateCheckbox() {
@@ -1892,6 +1896,9 @@ public class SettingsFrame {
         buttonAddSuffix.setText(translateUtil.getTranslation("Add"));
         buttonDeleteSuffix.setText(translateUtil.getTranslation("Delete"));
         buttonDeleteAllSuffix.setText(translateUtil.getTranslation("Delete all"));
+        buttonRebuildIndex.setToolTipText(translateUtil.getTranslation("Rebuild"));
+        buttonAddNewDisk.setText(translateUtil.getTranslation("Add"));
+        buttonDeleteDisk.setText(translateUtil.getTranslation("Delete"));
     }
 
     private void translateRadioButtons() {
@@ -1900,7 +1907,6 @@ public class SettingsFrame {
     }
 
     private void translate() {
-        /*translateTabbedPane();*/
         translateLabels();
         translateCheckbox();
         translateButtons();

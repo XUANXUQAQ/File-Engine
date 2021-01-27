@@ -31,7 +31,7 @@ volatile long explorerHeight;
 volatile int toolbar_click_x;
 volatile int toolbar_click_y;
 volatile int topWindowType;
-volatile HWND currentAttachExplorer;
+HWND currentAttachExplorer;
 char dragExplorerPath[500];
 
 void checkTopWindowThread();
@@ -41,7 +41,6 @@ BOOL CALLBACK findToolbar(HWND hwndChild, LPARAM lParam);
 bool isMouseClicked();
 inline bool isKeyPressed(int vk_key);
 bool isDialogNotExist();
-
 extern "C" __declspec(dllexport) void start();
 extern "C" __declspec(dllexport) void stop();
 extern "C" __declspec(dllexport) bool changeToAttach();
@@ -77,7 +76,6 @@ int getToolBarY()
 {
     return toolbar_click_y;
 }
-
 
 bool changeToNormal()
 {
@@ -153,11 +151,6 @@ bool isDialogNotExist()
     return true;
 }
 
-void getWindowRect(const HWND& hwnd, LPRECT lprect)
-{
-    GetWindowRect(hwnd, lprect);
-}
-
 void setClickPos(const HWND& fileChooserHwnd)
 {
     EnumChildWindows(fileChooserHwnd, findToolbar, NULL);
@@ -169,7 +162,7 @@ BOOL CALLBACK findToolbar(HWND hwndChild, LPARAM lParam)
     if (IsWindow(hwd2))
     {
         RECT rect;
-        getWindowRect(hwd2, &rect);
+        GetWindowRect(hwd2, &rect);
         const int toolbar_x = rect.left;
         const int toolbar_y = rect.top;
         const int toolbar_width = rect.right - rect.left;
@@ -180,7 +173,6 @@ BOOL CALLBACK findToolbar(HWND hwndChild, LPARAM lParam)
     }
     return true;
 }
-
 
 void start()
 {
@@ -229,14 +221,25 @@ void checkMouseThread()
     POINT point;
     RECT explorerArea;
     RECT searchBarArea;
+    int count = 0;
+    constexpr int waitCountTimes = 50;
+    bool isMouseClickedFlag = false;
 	while (isRunning)
 	{
+		if (count <= waitCountTimes)
+		{
+            count++;
+		}
+		if (isMouseClickedFlag && count > waitCountTimes && !isMouseClickOutOfExplorer)
+		{
+            isMouseClickedFlag = false;
+            HWND topWindow = GetForegroundWindow();
+            isMouseClickOutOfExplorer = !(is_explorer_window_high_cost(topWindow) || is_file_chooser_window(topWindow) || is_search_bar_window(topWindow));
+		}
 		if (!IsWindow(currentAttachExplorer) || IsIconic(currentAttachExplorer))
 		{
             isMouseClickOutOfExplorer = true;
-		}
-        if (isMouseClicked())
-        {
+		} else if (isMouseClicked()) {
             if (GetCursorPos(&point))
             {
                 GetWindowRect(currentAttachExplorer, &explorerArea);
@@ -254,12 +257,12 @@ void checkMouseThread()
                 }
 #endif
             }
+            count = 0;
+            isMouseClickedFlag = true;
         }
-		if (IsWindowVisible(getSearchBarHWND()))
-		{
+		if (IsWindowVisible(getSearchBarHWND())) {
             Sleep(10);
-		} else
-		{
+		} else {
 #ifdef TEST
             cout << "search bar not visible" << endl;
 #endif
@@ -267,7 +270,6 @@ void checkMouseThread()
 		}
 	}
 }
-
 
 void checkTopWindowThread()
 {
@@ -280,7 +282,7 @@ void checkTopWindowThread()
 
         if (isExplorerWindow || isDialogWindow)
         {
-            getWindowRect(hwnd, &windowRect);
+            GetWindowRect(hwnd, &windowRect);
             if (IsZoomed(hwnd)) {
                 explorerX = 0;
                 explorerY = 0;
