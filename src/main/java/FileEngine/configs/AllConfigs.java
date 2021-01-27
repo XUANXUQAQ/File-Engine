@@ -21,6 +21,7 @@ import FileEngine.eventHandler.impl.plugin.LoadAllPluginsEvent;
 import FileEngine.eventHandler.impl.plugin.SetPluginsCurrentThemeEvent;
 import FileEngine.eventHandler.impl.taskbar.ShowTrayIconEvent;
 import FileEngine.eventHandler.EventManagement;
+import FileEngine.utils.RegexUtil;
 import FileEngine.utils.TranslateUtil;
 import FileEngine.utils.database.DatabaseUtil;
 import FileEngine.utils.database.SQLiteUtil;
@@ -424,7 +425,15 @@ public class AllConfigs {
     }
 
     private void readDisks(JSONObject settingsInJson) {
-        configEntity.setDisks((String) getFromJson(settingsInJson, "disks", getLocalDisks()));
+        String disks = (String) getFromJson(settingsInJson, "disks", getLocalDisks());
+        String[] stringDisk = RegexUtil.comma.split(disks);
+        StringBuilder stringBuilder = new StringBuilder();
+        for (String each : stringDisk) {
+            if (new File(each).exists()) {
+                stringBuilder.append(each).append(",");
+            }
+        }
+        configEntity.setDisks(stringBuilder.toString());
     }
 
     private void readResponseCtrl(JSONObject settingsInJson) {

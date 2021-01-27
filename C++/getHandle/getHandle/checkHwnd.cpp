@@ -33,12 +33,11 @@ bool is_explorer_window_low_cost(const HWND& hwnd)
     return false;
 }
 
-//不要在长时间循环中使用
-bool isExplorerWindowHighCost(const HWND& hwnd)
+bool is_explorer_window_high_cost(const HWND& hwnd)
 {
 	std::wstring proc_name = get_process_name_by_handle(hwnd);
-    transform(proc_name.begin(), proc_name.end(), proc_name.begin(), ::tolower);
-    return proc_name.find(_T("explorer.exe")) != std::wstring::npos;
+    transform(proc_name.begin(), proc_name.end(), proc_name.begin(), tolower);
+    return proc_name.find(_T("explorer")) != std::wstring::npos;
 }
 
 std::wstring get_process_name_by_handle(HWND nlHandle)
