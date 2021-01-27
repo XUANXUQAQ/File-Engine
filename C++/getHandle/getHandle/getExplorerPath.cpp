@@ -147,30 +147,30 @@ std::string to_utf8(const std::wstring& str)
 
 std::string getPathByHWND(const HWND& hwnd)
 {
-	if (!IsWindow(hwnd))
-	{
+    if (!IsWindow(hwnd))
+    {
         std::cout << "hwnd is not valid" << std::endl;
         return "";
-	}
-	//判断是否是桌面窗口句柄
+    }
+    //判断是否是桌面窗口句柄
     char windowClassName[260];
     GetClassNameA(hwnd, windowClassName, 260);
     std::string window_class_name_str(windowClassName);
     std::transform(window_class_name_str.begin(), window_class_name_str.end(), window_class_name_str.begin(), ::tolower);
-    if (window_class_name_str.find("workerw") != std::string::npos )
+    if (window_class_name_str.find("workerw") != std::string::npos)
     {
-	    //返回桌面位置
+        //返回桌面位置
         WCHAR path[260];
         SHGetSpecialFolderPath(nullptr, path, CSIDL_DESKTOP, 0);
         return to_utf8(path);
     }
-    CoInitializeEx(nullptr, COINIT_MULTITHREADED);
     try
     {
+        throw_if_failed(CoInitializeEx(nullptr, COINIT_MULTITHREADED), "failed to initialize com");
+        wchar_t path[1000];
         for (const auto& info : GetCurrentExplorerFolders())
         {
-            wchar_t path[1000];
-            if (::SHGetPathFromIDListEx(info.pidl.get(), path, ARRAYSIZE(path), 0))
+            if (SHGetPathFromIDListEx(info.pidl.get(), path, ARRAYSIZE(path), 0))
             {
                 if (info.hwnd == hwnd)
                 {
@@ -188,4 +188,3 @@ std::string getPathByHWND(const HWND& hwnd)
     CoUninitialize();
     return "";
 }
-

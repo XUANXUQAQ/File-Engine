@@ -3,6 +3,7 @@ package FileEngine.dllInterface;
 import com.sun.jna.Library;
 import com.sun.jna.Native;
 
+@SuppressWarnings("unused")
 public interface GetHandle extends Library {
     GetHandle INSTANCE = Native.load("getHandle", GetHandle.class);
 
@@ -13,9 +14,9 @@ public interface GetHandle extends Library {
 
     void stop();
 
-    boolean isExplorerAtTop();
+    boolean changeToAttach();
 
-    boolean isDialogNotExist();
+    boolean changeToNormal();
 
     long getExplorerX();
 
@@ -25,17 +26,13 @@ public interface GetHandle extends Library {
 
     long getExplorerHeight();
 
-    int getToolbarClickX();
-
-    int getToolbarClickY();
-
-    boolean isExplorerAndSearchbarNotFocused();
-
-    void setExplorerPath();
-
     String getExplorerPath();
 
-    void setSearchBarUsingStatus(boolean b);
+    int getTopWindowType();
 
-    int getTopWindowStatus();
+    void bringSearchBarToTop();
+
+    int getToolBarX();
+
+    int getToolBarY();
 }
