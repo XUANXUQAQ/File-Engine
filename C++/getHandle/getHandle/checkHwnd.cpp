@@ -14,6 +14,11 @@ bool is_search_bar_window(const HWND& hd)
     return strcmp(title, "File-Engine-SearchBar") == 0;
 }
 
+HWND getSearchBarHWND()
+{
+    return FindWindowExA(nullptr, nullptr, nullptr, "File-Engine-SearchBar");
+}
+
 bool is_explorer_window_low_cost(const HWND& hwnd)
 {
     if (IsWindowEnabled(hwnd) && !IsIconic(hwnd))
