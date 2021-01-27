@@ -87,4 +87,7 @@ public @Data class ConfigEntity {
 
     @JSONField(name = "doubleClickCtrlOpen")
     private boolean doubleClickCtrlOpen;
+
+    @JSONField(name = "disks")
+    private String disks;
 }
