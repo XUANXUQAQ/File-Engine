@@ -1896,7 +1896,7 @@ public class SettingsFrame {
         buttonAddSuffix.setText(translateUtil.getTranslation("Add"));
         buttonDeleteSuffix.setText(translateUtil.getTranslation("Delete"));
         buttonDeleteAllSuffix.setText(translateUtil.getTranslation("Delete all"));
-        buttonRebuildIndex.setToolTipText(translateUtil.getTranslation("Rebuild"));
+        buttonRebuildIndex.setText(translateUtil.getTranslation("Rebuild"));
         buttonAddNewDisk.setText(translateUtil.getTranslation("Add"));
         buttonDeleteDisk.setText(translateUtil.getTranslation("Delete"));
     }
