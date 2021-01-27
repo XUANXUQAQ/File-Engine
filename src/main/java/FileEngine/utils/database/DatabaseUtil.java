@@ -5,13 +5,12 @@ import FileEngine.annotation.EventRegister;
 import FileEngine.configs.AllConfigs;
 import FileEngine.configs.Enums;
 import FileEngine.dllInterface.GetAscII;
-import FileEngine.dllInterface.IsLocalDisk;
 import FileEngine.eventHandler.Event;
 import FileEngine.eventHandler.EventHandler;
+import FileEngine.eventHandler.EventManagement;
 import FileEngine.eventHandler.impl.database.*;
 import FileEngine.eventHandler.impl.taskbar.ShowTaskBarMessageEvent;
 import FileEngine.utils.CachedThreadPoolUtil;
-import FileEngine.eventHandler.EventManagement;
 import FileEngine.utils.TranslateUtil;
 
 import java.io.*;
@@ -322,26 +321,12 @@ public class DatabaseUtil {
         this.status = status;
     }
 
-    private void searchFile(String ignorePath) {
-        boolean canSearchByUsn = false;
-        File[] roots = File.listRoots();
-        StringBuilder ntfsDisk = new StringBuilder(50);
-        for (File root : roots) {
-            if (IsLocalDisk.INSTANCE.isLocalDisk(root.getAbsolutePath())) {
-                if (IsLocalDisk.INSTANCE.isDiskNTFS(root.getAbsolutePath())) {
-                    canSearchByUsn = true;
-                    ntfsDisk.append(root.getAbsolutePath()).append(",");
-                }
-            }
+    private void searchFile(String disks, String ignorePath) {
+        try {
+            searchByUSN(disks, ignorePath.toLowerCase());
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
         }
-        if (canSearchByUsn) {
-            try {
-                searchByUSN(ntfsDisk.toString(), ignorePath.toLowerCase());
-            } catch (IOException | InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-
         createAllIndex();
         waitForCommandSet(SqlTaskIds.CREATE_INDEX);
         EventManagement.getInstance().putEvent(new ShowTaskBarMessageEvent(
@@ -405,7 +390,7 @@ public class DatabaseUtil {
     private void updateLists(String ignorePath) {
         recreateDatabase();
         waitForCommandSet(SqlTaskIds.CREATE_TABLE);
-        searchFile(ignorePath);
+        searchFile(AllConfigs.getInstance().getDisks(), ignorePath);
     }
 
     private void waitForCommandSet(SqlTaskIds taskId) {

@@ -23,6 +23,7 @@ import FileEngine.eventHandler.impl.frame.settingsFrame.*;
 import FileEngine.eventHandler.impl.hotkey.ResponseCtrlEvent;
 import FileEngine.eventHandler.impl.plugin.AddPluginsCanUpdateEvent;
 import FileEngine.eventHandler.impl.stop.RestartEvent;
+import FileEngine.eventHandler.impl.taskbar.ShowTaskBarMessageEvent;
 import FileEngine.utils.CachedThreadPoolUtil;
 import FileEngine.utils.CheckHotKeyUtil;
 import FileEngine.utils.RegexUtil;
@@ -52,6 +53,7 @@ import java.nio.charset.StandardCharsets;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -75,6 +77,7 @@ public class SettingsFrame {
     private final HashMap<TabNameAndTitle, Component> tabComponentNameMap = new HashMap<>();
     private final HashMap<String, Integer> suffixMap = new HashMap<>();
     private final Set<Component> excludeComponent = ConcurrentHashMap.newKeySet();
+    private final HashSet<String> diskSet = new HashSet<>();
     private JTextField textFieldUpdateInterval;
     private JTextField textFieldCacheNum;
     private JTextArea textAreaIgnorePath;
@@ -247,6 +250,17 @@ public class SettingsFrame {
     private JLabel placeholderGeneral;
     private JLabel placeholderSearch;
     private JLabel placeholderGeneral1;
+    private JPanel tabIndex;
+    private JLabel labelIndexTip;
+    private JLabel labelIndexChooseDisk;
+    private JButton buttonAddNewDisk;
+    private JButton buttonRebuildIndex;
+    private JLabel placeholderIndex1;
+    private JButton buttonDeleteDisk;
+    private JScrollPane scrollPaneDisks;
+    private JList<Object> listDisks;
+    private JLabel labelTipNTFSTip;
+    private JLabel labelLocalDiskTip;
 
 
     private static volatile SettingsFrame instance = null;
@@ -803,7 +817,7 @@ public class SettingsFrame {
 
     private void addButtonChangeThemeListener() {
         //移除显示theme框，改为弹出窗口
-        buttonChangeTheme.addActionListener(e -> JOptionPane.showMessageDialog(null, paneSwingThemes, "Theme", JOptionPane.PLAIN_MESSAGE));
+        buttonChangeTheme.addActionListener(e -> JOptionPane.showMessageDialog(frame, paneSwingThemes, "Theme", JOptionPane.PLAIN_MESSAGE));
     }
 
     private void addButtonDeleteCacheListener() {
@@ -953,6 +967,56 @@ public class SettingsFrame {
         buttonPluginMarket.addActionListener(e -> eventManagement.putEvent(new ShowPluginMarket()));
     }
 
+    private String parseDisk() {
+        StringBuilder stringBuilder = new StringBuilder();
+        for (String eachDisk : diskSet) {
+            stringBuilder.append(eachDisk).append(",");
+        }
+        return stringBuilder.toString();
+    }
+
+    @SuppressWarnings("SuspiciousMethodCalls")
+    private void addButtonDeleteDiskListener() {
+        buttonDeleteDisk.addActionListener(e -> {
+            List<Object> selectedValuesList = listDisks.getSelectedValuesList();
+            for (Object obj : selectedValuesList) {
+                diskSet.remove(obj);
+            }
+            listDisks.setListData(diskSet.toArray());
+        });
+    }
+
+    private void addButtonRebuildListener() {
+        buttonRebuildIndex.addActionListener(e -> {
+            eventManagement.putEvent(new ShowTaskBarMessageEvent(
+                    translateUtil.getTranslation("Info"),
+                    translateUtil.getTranslation("Updating file index")));
+            eventManagement.putEvent(new UpdateDatabaseEvent());
+        });
+    }
+
+    private void addButtonAddDiskListener() {
+        buttonAddNewDisk.addActionListener(e -> {
+            File[] disks = File.listRoots();
+            ArrayList<String> arraylistDisks = new ArrayList<>();
+            for (File each : disks) {
+                arraylistDisks.add(each.getAbsolutePath());
+            }
+            JList<Object> listDisksTmp = new JList<>();
+            listDisksTmp.setListData(arraylistDisks.toArray());
+            JScrollPane pane = new JScrollPane(listDisksTmp);
+            Dimension dimension = new Dimension(400, 200);
+            pane.setPreferredSize(dimension);
+            if (JOptionPane.showConfirmDialog(frame, pane, translateUtil.getTranslation("Select disk"), JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
+                List<Object> selectedValuesList = listDisksTmp.getSelectedValuesList();
+                for (Object obj : selectedValuesList) {
+                    diskSet.add((String) obj);
+                }
+                listDisks.setListData(diskSet.toArray());
+            }
+        });
+    }
+
     private void addSwingThemePreviewListener() {
         listSwingThemes.addMouseListener(new MouseAdapter() {
             @Override
@@ -997,6 +1061,7 @@ public class SettingsFrame {
     }
 
     private void addTreeSettingsListener() {
+        //todo 注册tab后在这里添加响应
         treeSettings.addTreeSelectionListener(e -> {
             tabbedPane.removeAll();
             DefaultMutableTreeNode note = (DefaultMutableTreeNode) treeSettings.getLastSelectedPathComponent();
@@ -1024,6 +1089,8 @@ public class SettingsFrame {
                     showOnTabbedPane("tabPlugin");
                 } else if (translateUtil.getTranslation("About").equals(name)) {
                     showOnTabbedPane("tabAbout");
+                } else if (translateUtil.getTranslation("Index").equals(name)) {
+                    showOnTabbedPane("tabIndex");
                 } else {
                     showOnTabbedPane("tabGeneral");
                 }
@@ -1477,6 +1544,7 @@ public class SettingsFrame {
         }
         listSwingThemes.setListData(list.toArray());
         listSwingThemes.setSelectedValue(allConfigs.getSwingTheme(), true);
+        listDisks.setListData(diskSet.toArray());
     }
 
     private void initSuffixMap() {
@@ -1577,6 +1645,11 @@ public class SettingsFrame {
         }
     }
 
+    private void initDiskSet() {
+        String[] disks = RegexUtil.comma.split(allConfigs.getDisks());
+        diskSet.addAll(Arrays.asList(disks));
+    }
+
     private void initTabNameMap() {
         //todo 添加新tab后在这里注册
         tabComponentNameMap.put(new TabNameAndTitle("tabGeneral", "General"), tabGeneral);
@@ -1590,11 +1663,13 @@ public class SettingsFrame {
         tabComponentNameMap.put(new TabNameAndTitle("tabLanguage", "language"), tabLanguage);
         tabComponentNameMap.put(new TabNameAndTitle("tabCommands", "My commands"), tabCommands);
         tabComponentNameMap.put(new TabNameAndTitle("tabAbout", "About"), tabAbout);
+        tabComponentNameMap.put(new TabNameAndTitle("tabIndex", "Index"), tabIndex);
 
         excludeComponent.addAll(tabComponentNameMap.values());
     }
 
     private void initTreeSettings() {
+        //todo 添加新tab后在这里注册
         DefaultMutableTreeNode groupGeneral = new DefaultMutableTreeNode(translateUtil.getTranslation("General"));
         groupGeneral.add(new DefaultMutableTreeNode(translateUtil.getTranslation("Interface")));
         groupGeneral.add(new DefaultMutableTreeNode(translateUtil.getTranslation("Language")));
@@ -1603,6 +1678,7 @@ public class SettingsFrame {
         DefaultMutableTreeNode groupSearchSettings = new DefaultMutableTreeNode(translateUtil.getTranslation("Search settings"));
         groupSearchSettings.add(new DefaultMutableTreeNode(translateUtil.getTranslation("Suffix priority")));
         groupSearchSettings.add(new DefaultMutableTreeNode(translateUtil.getTranslation("My commands")));
+        groupSearchSettings.add(new DefaultMutableTreeNode(translateUtil.getTranslation("Index")));
 
         DefaultMutableTreeNode groupProxy = new DefaultMutableTreeNode(translateUtil.getTranslation("Proxy settings"));
 
@@ -1646,6 +1722,8 @@ public class SettingsFrame {
         frame.setIconImage(frameIcon.getImage());
 
         initTabNameMap();
+
+        initDiskSet();
 
         panel.remove(paneSwingThemes);
         excludeComponent.add(paneSwingThemes);
@@ -1693,6 +1771,9 @@ public class SettingsFrame {
         addListPluginMouseListener();
         addButtonPluginUpdateCheckListener();
         addButtonViewPluginMarketListener();
+        addButtonAddDiskListener();
+        addButtonDeleteDiskListener();
+        addButtonRebuildListener();
         addSwingThemePreviewListener();
         addButtonAddSuffixListener();
         addButtonDeleteSuffixListener();
@@ -2097,6 +2178,7 @@ public class SettingsFrame {
         configEntity.setSwingTheme(swingTheme);
         configEntity.setLanguage(translateUtil.getLanguage());
         configEntity.setDoubleClickCtrlOpen(checkBoxResponseCtrl.isSelected());
+        configEntity.setDisks(parseDisk());
 
         setStartup(checkBoxAddToStartup.isSelected());
         eventManagement.putEvent(new ResponseCtrlEvent(checkBoxResponseCtrl.isSelected()));

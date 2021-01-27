@@ -2,6 +2,7 @@ package FileEngine.configs;
 
 import FileEngine.IsDebug;
 import FileEngine.annotation.EventRegister;
+import FileEngine.dllInterface.IsLocalDisk;
 import FileEngine.eventHandler.Event;
 import FileEngine.eventHandler.EventHandler;
 import FileEngine.eventHandler.impl.ReadConfigsAndBootSystemEvent;
@@ -334,6 +335,10 @@ public class AllConfigs {
                 configEntity.getProxyType());
     }
 
+    public String getDisks() {
+        return configEntity.getDisks();
+    }
+
     public boolean isResponseCtrl() {
         return configEntity.isDoubleClickCtrlOpen();
     }
@@ -400,6 +405,26 @@ public class AllConfigs {
 
     public AddressUrl getUpdateUrlFromMap(String updateAddress) {
         return updateAddressMap.get(updateAddress);
+    }
+
+    private String getLocalDisks() {
+        File[] files = File.listRoots();
+        if (files == null || files.length == 0) {
+            return "";
+        }
+        String diskName;
+        StringBuilder stringBuilder = new StringBuilder();
+        for (File each : files) {
+            diskName = each.getAbsolutePath();
+            if (IsLocalDisk.INSTANCE.isDiskNTFS(diskName) && IsLocalDisk.INSTANCE.isLocalDisk(diskName)) {
+                stringBuilder.append(each.getAbsolutePath()).append(",");
+            }
+        }
+        return stringBuilder.toString();
+    }
+
+    private void readDisks(JSONObject settingsInJson) {
+        configEntity.setDisks((String) getFromJson(settingsInJson, "disks", getLocalDisks()));
     }
 
     private void readResponseCtrl(JSONObject settingsInJson) {
@@ -564,6 +589,7 @@ public class AllConfigs {
         readResponseCtrl(settingsInJson);
         readShowTipOnCreatingLnk(settingsInJson);
         readSwingTheme(settingsInJson);
+        readDisks(settingsInJson);
         initCacheNum();
         initUpdateAddress();
         initCmdSetSettings();
