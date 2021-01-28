@@ -1,4 +1,4 @@
-package FileEngine.utils;
+package FileEngine.services;
 
 import FileEngine.annotation.EventRegister;
 import FileEngine.eventHandler.Event;
@@ -13,16 +13,16 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 
 @SuppressWarnings("unused")
-public class DaemonUtil {
-    private static volatile DaemonUtil instance = null;
+public class DaemonService {
+    private static volatile DaemonService instance = null;
 
-    private DaemonUtil() {}
+    private DaemonService() {}
 
-    public static DaemonUtil getInstance() {
+    private static DaemonService getInstance() {
         if (instance == null) {
-            synchronized (DaemonUtil.class) {
+            synchronized (DaemonService.class) {
                 if (instance == null) {
-                    instance = new DaemonUtil();
+                    instance = new DaemonService();
                 }
             }
         }

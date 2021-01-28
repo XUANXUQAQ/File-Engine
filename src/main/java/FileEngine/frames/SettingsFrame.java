@@ -17,6 +17,8 @@ import FileEngine.eventHandler.impl.database.*;
 import FileEngine.eventHandler.impl.download.StartDownloadEvent;
 import FileEngine.eventHandler.impl.download.StopDownloadEvent;
 import FileEngine.eventHandler.impl.frame.pluginMarket.ShowPluginMarket;
+import FileEngine.eventHandler.impl.frame.searchBar.StartPreviewEvent;
+import FileEngine.eventHandler.impl.frame.searchBar.StopPreviewEvent;
 import FileEngine.eventHandler.impl.frame.searchBar.HideSearchBarEvent;
 import FileEngine.eventHandler.impl.frame.searchBar.PreviewSearchBarEvent;
 import FileEngine.eventHandler.impl.frame.settingsFrame.*;
@@ -24,16 +26,13 @@ import FileEngine.eventHandler.impl.hotkey.ResponseCtrlEvent;
 import FileEngine.eventHandler.impl.plugin.AddPluginsCanUpdateEvent;
 import FileEngine.eventHandler.impl.stop.RestartEvent;
 import FileEngine.eventHandler.impl.taskbar.ShowTaskBarMessageEvent;
-import FileEngine.utils.CachedThreadPoolUtil;
-import FileEngine.utils.CheckHotKeyUtil;
-import FileEngine.utils.RegexUtil;
-import FileEngine.utils.TranslateUtil;
+import FileEngine.services.CheckHotKeyService;
 import FileEngine.services.DatabaseService;
-import FileEngine.utils.SQLiteUtil;
 import FileEngine.services.download.DownloadManager;
-import FileEngine.utils.moveFiles.MoveDesktopFiles;
 import FileEngine.services.pluginSystem.Plugin;
 import FileEngine.services.pluginSystem.PluginService;
+import FileEngine.utils.*;
+import FileEngine.utils.moveFiles.MoveDesktopFiles;
 import com.alibaba.fastjson.JSONObject;
 
 import javax.swing.*;
@@ -817,7 +816,10 @@ public class SettingsFrame {
 
     private void addButtonChangeThemeListener() {
         //移除显示theme框，改为弹出窗口
-        buttonChangeTheme.addActionListener(e -> JOptionPane.showMessageDialog(frame, paneSwingThemes, "Theme", JOptionPane.PLAIN_MESSAGE));
+        buttonChangeTheme.addActionListener(e ->
+                JOptionPane.showMessageDialog(frame, paneSwingThemes,
+                        translateUtil.getTranslation("Change Theme"),
+                        JOptionPane.PLAIN_MESSAGE));
     }
 
     private void addButtonDeleteCacheListener() {
@@ -927,26 +929,63 @@ public class SettingsFrame {
         });
     }
 
+    private static class PreviewStatus {
+        private static boolean isPreview = false;
+    }
+
     private void addButtonClosePreviewListener() {
-        buttonClosePreview.addActionListener(e -> eventManagement.putEvent(
-                new HideSearchBarEvent()
-        ));
+        buttonClosePreview.addActionListener(e -> {
+            eventManagement.putEvent(new StopPreviewEvent());
+            eventManagement.putEvent(
+                    new HideSearchBarEvent()
+            );
+            PreviewStatus.isPreview = false;
+        });
     }
 
     private void addButtonPreviewListener() {
-        buttonPreviewColor.addActionListener(e ->
-                eventManagement.putEvent(
-                        new PreviewSearchBarEvent(
-                                textFieldBorderColor.getText(),
-                                textFieldSearchBarColor.getText(),
-                                textFieldSearchBarFontColor.getText(),
-                                textFieldLabelColor.getText(),
-                                textFieldFontColorWithCoverage.getText(),
-                                textFieldFontColor.getText(),
-                                textFieldBackgroundDefault.getText()
-                                )
-                )
-        );
+        buttonPreviewColor.addActionListener(e -> {
+            PreviewStatus.isPreview = true;
+            eventManagement.putEvent(new StartPreviewEvent());
+            cachedThreadPoolUtil.executeTask(() -> {
+                try {
+                    String borderColor;
+                    String searchBarColor;
+                    String searchBarFontColor;
+                    String labelColor;
+                    String fontColorCoverage;
+                    String fontColor;
+                    String defaultBackgroundColor;
+                    while (PreviewStatus.isPreview && eventManagement.isNotMainExit()) {
+                        borderColor = textFieldBorderColor.getText();
+                        searchBarColor = textFieldSearchBarColor.getText();
+                        searchBarFontColor = textFieldSearchBarFontColor.getText();
+                        labelColor = textFieldLabelColor.getText();
+                        fontColorCoverage = textFieldFontColorWithCoverage.getText();
+                        fontColor = textFieldFontColor.getText();
+                        defaultBackgroundColor = textFieldBackgroundDefault.getText();
+                        if (canParseToRGB(borderColor) && canParseToRGB(searchBarColor) &&
+                                canParseToRGB(searchBarFontColor) && canParseToRGB(labelColor) &&
+                                canParseToRGB(fontColorCoverage) && canParseToRGB(fontColor) &&
+                                canParseToRGB(defaultBackgroundColor)) {
+                            eventManagement.putEvent(
+                                    new PreviewSearchBarEvent(
+                                            borderColor,
+                                            searchBarColor,
+                                            searchBarFontColor,
+                                            labelColor,
+                                            fontColorCoverage,
+                                            fontColor,
+                                            defaultBackgroundColor
+                                    )
+                            );
+                        }
+                        TimeUnit.SECONDS.sleep(1);
+                    }
+                } catch (InterruptedException ignored) {
+                }
+            });
+        });
     }
 
     private void addButtonDeleteAllCacheListener() {
@@ -2041,7 +2080,7 @@ public class SettingsFrame {
         if (tmp_hotkey.length() < 5) {
             strBuilder.append(translateUtil.getTranslation("Hotkey setting is wrong, please change")).append("\n");
         } else {
-            if (!CheckHotKeyUtil.getInstance().isHotkeyAvailable(tmp_hotkey)) {
+            if (!CheckHotKeyService.getInstance().isHotkeyAvailable(tmp_hotkey)) {
                 strBuilder.append(translateUtil.getTranslation("Hotkey setting is wrong, please change")).append("\n");
             }
         }

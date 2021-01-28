@@ -281,9 +281,7 @@ public class SearchBar {
             public void focusLost(FocusEvent e) {
                 if (System.currentTimeMillis() - visibleStartTime > 500) {
                     if (showingMode == Enums.ShowingSearchBarMode.NORMAL_SHOWING && allConfigs.isLoseFocusClose()) {
-                        if (!(isPreviewMode.get() || isTutorialMode.get())) {
-                            closeSearchBar();
-                        }
+                        closeSearchBar();
                     } else if (showingMode == Enums.ShowingSearchBarMode.EXPLORER_ATTACH) {
                         closeWithoutHideSearchBar();
                     }
@@ -797,6 +795,9 @@ public class SearchBar {
     }
 
     private void showTutorial() {
+        if (isPreviewMode.get()) {
+            return;
+        }
         int count = 0;
         final int maxWaiting = 10;
         AtomicBoolean isCanceled = new AtomicBoolean(false);
@@ -2329,25 +2330,35 @@ public class SearchBar {
         eventManagement.register(PreviewSearchBarEvent.class, new EventHandler() {
             @Override
             public void todo(Event event) {
-                PreviewSearchBarEvent preview = (PreviewSearchBarEvent) event;
-                eventManagement.putEvent(new SetPreviewOrNormalMode(true));
-                eventManagement.putEvent(new SetBorderColorEvent(preview.borderColor));
-                eventManagement.putEvent(new SetSearchBarColorEvent(preview.searchBarColor));
-                eventManagement.putEvent(new SetSearchBarDefaultBackgroundEvent(preview.defaultBackgroundColor));
-                eventManagement.putEvent(new SetSearchBarFontColorEvent(preview.searchBarFontColor));
-                eventManagement.putEvent(new SetSearchBarFontColorWithCoverageEvent(preview.chosenLabelFontColor));
-                eventManagement.putEvent(new SetSearchBarLabelColorEvent(preview.chosenLabelColor));
-                eventManagement.putEvent(new SetSearchBarLabelFontColorEvent(preview.unchosenLabelFontColor));
-                eventManagement.putEvent(new ShowSearchBarEvent(false));
-                getInstance().textField.setText("a");
+                if (isPreviewMode.get()) {
+                    PreviewSearchBarEvent preview = (PreviewSearchBarEvent) event;
+                    SearchBar searchBar = getInstance();
+                    eventManagement.putEvent(new SetBorderColorEvent(preview.borderColor));
+                    eventManagement.putEvent(new SetSearchBarColorEvent(preview.searchBarColor));
+                    eventManagement.putEvent(new SetSearchBarDefaultBackgroundEvent(preview.defaultBackgroundColor));
+                    eventManagement.putEvent(new SetSearchBarFontColorEvent(preview.searchBarFontColor));
+                    eventManagement.putEvent(new SetSearchBarFontColorWithCoverageEvent(preview.chosenLabelFontColor));
+                    eventManagement.putEvent(new SetSearchBarLabelColorEvent(preview.chosenLabelColor));
+                    eventManagement.putEvent(new SetSearchBarLabelFontColorEvent(preview.unchosenLabelFontColor));
+                    eventManagement.putEvent(new ShowSearchBarEvent(false));
+                    if (searchBar.getSearchBarText() == null || searchBar.getSearchBarText().isEmpty()) {
+                        searchBar.textField.setText("a");
+                    }
+                }
             }
         });
 
-        eventManagement.register(SetPreviewOrNormalMode.class, new EventHandler() {
+        eventManagement.register(StartPreviewEvent.class, new EventHandler() {
             @Override
             public void todo(Event event) {
-                SetPreviewOrNormalMode mode = (SetPreviewOrNormalMode) event;
-                isPreviewMode.set(mode.isPreview);
+                isPreviewMode.set(true);
+            }
+        });
+
+        eventManagement.register(StopPreviewEvent.class, new EventHandler() {
+            @Override
+            public void todo(Event event) {
+                isPreviewMode.set(false);
             }
         });
 
@@ -3590,7 +3601,13 @@ public class SearchBar {
     }
 
     private void setVisible(boolean b) {
-        searchBar.setVisible(b);
+        if (!b) {
+            if (!(isPreviewMode.get() || isTutorialMode.get())) {
+                searchBar.setVisible(false);
+            }
+        } else {
+            searchBar.setVisible(true);
+        }
     }
 
     /**
@@ -3598,12 +3615,14 @@ public class SearchBar {
      */
     private void closeSearchBar() {
         SwingUtilities.invokeLater(() -> {
-            if (isVisible()) {
+            if (!(isPreviewMode.get() || isTutorialMode.get())) {
+                if (isVisible()) {
+                    setVisible(false);
+                }
                 clearAllLabels();
-                setVisible(false);
+                clearTextFieldText();
+                resetAllStatus();
             }
-            clearTextFieldText();
-            resetAllStatus();
         });
     }
 
@@ -3633,7 +3652,6 @@ public class SearchBar {
         isCacheAndPrioritySearched.set(false);
         isWaiting.set(false);
         isMouseDraggedInWindow.set(false);
-        EventManagement.getInstance().putEvent(new SetPreviewOrNormalMode(false));
     }
 
     /**

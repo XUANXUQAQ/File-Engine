@@ -9,6 +9,7 @@ import FileEngine.eventHandler.Event;
 import FileEngine.eventHandler.EventHandler;
 import FileEngine.eventHandler.EventManagement;
 import FileEngine.eventHandler.impl.database.*;
+import FileEngine.eventHandler.impl.stop.RestartEvent;
 import FileEngine.eventHandler.impl.taskbar.ShowTaskBarMessageEvent;
 import FileEngine.utils.CachedThreadPoolUtil;
 import FileEngine.utils.TranslateUtil;
@@ -630,6 +631,8 @@ public class DatabaseService {
                 eventManagement.putEvent(new AddToSuffixPriorityMapEvent(newSuffix, newNum));
             }
         });
+
+        eventManagement.registerListener(RestartEvent.class, SQLiteUtil::closeAll);
     }
 
     private static class SQLWithTaskId {
