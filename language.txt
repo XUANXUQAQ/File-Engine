@@ -217,3 +217,4 @@ The disks listed below will be indexed=
 Only supports NTFS format disks=
 Only the disks on this machine are listed below, click "Add" button to add a removable disk=
 Rebuild=
+Check for update at startup=

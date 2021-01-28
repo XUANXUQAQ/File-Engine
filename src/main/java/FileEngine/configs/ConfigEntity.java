@@ -90,4 +90,7 @@ public @Data class ConfigEntity {
 
     @JSONField(name = "disks")
     private String disks;
+
+    @JSONField(name = "isCheckUpdateStartup")
+    private boolean isCheckUpdateStartup;
 }

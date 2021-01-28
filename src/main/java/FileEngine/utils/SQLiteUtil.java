@@ -1,4 +1,4 @@
-package FileEngine.utils.database;
+package FileEngine.utils;
 
 import FileEngine.IsDebug;
 import FileEngine.annotation.EventRegister;

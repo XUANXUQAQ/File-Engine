@@ -1,6 +1,6 @@
 package FileEngine.eventHandler.impl.download;
 
-import FileEngine.utils.download.DownloadManager;
+import FileEngine.services.download.DownloadManager;
 
 public class StopDownloadEvent extends DownloadEvent {
 

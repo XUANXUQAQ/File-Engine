@@ -11,9 +11,9 @@ import FileEngine.eventHandler.impl.frame.pluginMarket.ShowPluginMarket;
 import FileEngine.eventHandler.impl.stop.RestartEvent;
 import FileEngine.utils.CachedThreadPoolUtil;
 import FileEngine.utils.TranslateUtil;
-import FileEngine.utils.download.DownloadManager;
-import FileEngine.utils.download.DownloadUtil;
-import FileEngine.utils.pluginSystem.PluginUtil;
+import FileEngine.services.download.DownloadManager;
+import FileEngine.services.download.DownloadService;
+import FileEngine.services.pluginSystem.PluginService;
 import com.alibaba.fastjson.JSONObject;
 
 import javax.imageio.ImageIO;
@@ -287,8 +287,8 @@ public class PluginMarket {
                     textAreaPluginDescription.setText(description);
                     labelAuthor.setText(author);
                     buttonInstall.setVisible(true);
-                    boolean hasPlugin = PluginUtil.getInstance().hasPlugin(pluginName);
-                    boolean downloaded = DownloadUtil.getInstance().isTaskDone(
+                    boolean hasPlugin = PluginService.getInstance().hasPlugin(pluginName);
+                    boolean downloaded = DownloadService.getInstance().isTaskDone(
                             new DownloadManager(
                                     null,
                                     pluginName + ".jar",
@@ -341,14 +341,14 @@ public class PluginMarket {
 
     private ImageIcon getImageByUrl(String url, String pluginName) throws IOException {
         File icon = new File("tmp/$$" + pluginName);
-        DownloadUtil downloadUtil = DownloadUtil.getInstance();
+        DownloadService downloadService = DownloadService.getInstance();
         DownloadManager downloadManager = new DownloadManager(
                 url,
                 icon.getName(),
                 "tmp"
         );
         EventManagement.getInstance().putEvent(new StartDownloadEvent(downloadManager));
-        downloadUtil.waitForDownloadTask(downloadManager, 10000);
+        downloadService.waitForDownloadTask(downloadManager, 10000);
 
         BufferedImage bitmap = ImageIO.read(icon);
         try (ByteArrayOutputStream bytes = new ByteArrayOutputStream()) {
@@ -370,14 +370,14 @@ public class PluginMarket {
     }
 
     private static JSONObject getPluginInfo(String url, String saveFileName) throws IOException {
-        DownloadUtil downloadUtil = DownloadUtil.getInstance();
+        DownloadService downloadService = DownloadService.getInstance();
         DownloadManager downloadManager = new DownloadManager(
                 url,
                 saveFileName,
                 new File("tmp").getAbsolutePath()
         );
         EventManagement.getInstance().putEvent(new StartDownloadEvent(downloadManager));
-        downloadUtil.waitForDownloadTask(downloadManager, 10000);
+        downloadService.waitForDownloadTask(downloadManager, 10000);
         //已下载完，返回json
         String eachLine;
         StringBuilder strBuilder = new StringBuilder();

@@ -217,3 +217,4 @@ The disks listed below will be indexed=I dischi elencati di seguito verranno ind
 Only supports NTFS format disks=Supporta solo dischi in formato NTFS
 Only the disks on this machine are listed below, click "Add" button to add a removable disk=Di seguito sono elencati solo i dischi su questo computer, fare clic sul pulsante "Aggiungi" per aggiungere un disco rimovibile
 Rebuild=Ricostruire
+Check for update at startup=Verifica la disponibilità di aggiornamenti all'avvio

@@ -1,4 +1,4 @@
-package FileEngine.utils.database;
+package FileEngine.services;
 
 import FileEngine.IsDebug;
 import FileEngine.annotation.EventRegister;
@@ -12,6 +12,7 @@ import FileEngine.eventHandler.impl.database.*;
 import FileEngine.eventHandler.impl.taskbar.ShowTaskBarMessageEvent;
 import FileEngine.utils.CachedThreadPoolUtil;
 import FileEngine.utils.TranslateUtil;
+import FileEngine.utils.SQLiteUtil;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -26,7 +27,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class DatabaseUtil {
+public class DatabaseService {
     private final ConcurrentLinkedQueue<SQLWithTaskId> commandSet = new ConcurrentLinkedQueue<>();
     private volatile Enums.DatabaseStatus status = Enums.DatabaseStatus.NORMAL;
     private final AtomicBoolean isExecuteImmediately = new AtomicBoolean(false);
@@ -34,13 +35,28 @@ public class DatabaseUtil {
 
     private static final int MAX_SQL_NUM = 5000;
 
-    private static volatile DatabaseUtil INSTANCE = null;
+    private static volatile DatabaseService INSTANCE = null;
 
-    private DatabaseUtil() {
+    private DatabaseService() {
         addRecordsToDatabaseThread();
         deleteRecordsToDatabaseThread();
         checkTimeAndSendExecuteSqlSignalThread();
         executeSqlCommandsThread();
+        initCacheNum();
+    }
+
+    /**
+     * 获取数据库缓存条目数量，用于判断软件是否还能继续写入缓存
+     */
+    private void initCacheNum() {
+        try (PreparedStatement stmt = SQLiteUtil.getPreparedStatement("SELECT COUNT(PATH) FROM cache;");
+             ResultSet resultSet = stmt.executeQuery()) {
+            cacheNum.set(resultSet.getInt(1));
+        } catch (Exception throwables) {
+            if (IsDebug.isDebug()) {
+                throwables.printStackTrace();
+            }
+        }
     }
 
     private void executeSqlCommandsThread() {
@@ -61,11 +77,11 @@ public class DatabaseUtil {
         });
     }
 
-    public static DatabaseUtil getInstance() {
+    public static DatabaseService getInstance() {
         if (INSTANCE == null) {
-            synchronized (DatabaseUtil.class) {
+            synchronized (DatabaseService.class) {
                 if (INSTANCE == null) {
-                    INSTANCE = new DatabaseUtil();
+                    INSTANCE = new DatabaseService();
                 }
             }
         }
@@ -422,10 +438,6 @@ public class DatabaseUtil {
         return cacheNum.get();
     }
 
-    public void setCacheNum(int i) {
-        cacheNum.set(i);
-    }
-
     private boolean isTaskExistInCommandSet(SqlTaskIds taskId) {
         for (SQLWithTaskId tasks : commandSet) {
             if (tasks.taskId == taskId) {
@@ -502,27 +514,27 @@ public class DatabaseUtil {
         eventManagement.register(AddToCacheEvent.class, new EventHandler() {
             @Override
             public void todo(Event event) {
-                DatabaseUtil databaseUtil = getInstance();
-                databaseUtil.addFileToCache(((AddToCacheEvent) event).path);
-                databaseUtil.cacheNum.incrementAndGet();
+                DatabaseService databaseService = getInstance();
+                databaseService.addFileToCache(((AddToCacheEvent) event).path);
+                databaseService.cacheNum.incrementAndGet();
             }
         });
 
         eventManagement.register(DeleteFromCacheEvent.class, new EventHandler() {
             @Override
             public void todo(Event event) {
-                DatabaseUtil databaseUtil = getInstance();
-                databaseUtil.removeFileFromCache(((DeleteFromCacheEvent) event).path);
-                databaseUtil.cacheNum.decrementAndGet();
+                DatabaseService databaseService = getInstance();
+                databaseService.removeFileFromCache(((DeleteFromCacheEvent) event).path);
+                databaseService.cacheNum.decrementAndGet();
             }
         });
 
         eventManagement.register(AddToDatabaseEvent.class, new EventHandler() {
             @Override
             public void todo(Event event) {
-                DatabaseUtil databaseUtil = getInstance();
+                DatabaseService databaseService = getInstance();
                 for (Object each : ((AddToDatabaseEvent) event).getPaths()) {
-                    databaseUtil.addFileToDatabase((String) each);
+                    databaseService.addFileToDatabase((String) each);
                 }
             }
         });
@@ -531,9 +543,9 @@ public class DatabaseUtil {
             @Override
             public void todo(Event event) {
                 DeleteFromDatabaseEvent deleteFromDatabaseEvent = ((DeleteFromDatabaseEvent) event);
-                DatabaseUtil databaseUtil = getInstance();
+                DatabaseService databaseService = getInstance();
                 for (Object each : deleteFromDatabaseEvent.getPaths()) {
-                    databaseUtil.removeFileFromDatabase((String) each);
+                    databaseService.removeFileFromDatabase((String) each);
                 }
             }
         });
@@ -541,10 +553,10 @@ public class DatabaseUtil {
         eventManagement.register(UpdateDatabaseEvent.class, new EventHandler() {
             @Override
             public void todo(Event event) {
-                DatabaseUtil databaseUtil = getInstance();
-                databaseUtil.setStatus(Enums.DatabaseStatus.MANUAL_UPDATE);
-                databaseUtil.updateLists(AllConfigs.getInstance().getIgnorePath());
-                databaseUtil.setStatus(Enums.DatabaseStatus.NORMAL);
+                DatabaseService databaseService = getInstance();
+                databaseService.setStatus(Enums.DatabaseStatus.MANUAL_UPDATE);
+                databaseService.updateLists(AllConfigs.getInstance().getIgnorePath());
+                databaseService.setStatus(Enums.DatabaseStatus.NORMAL);
             }
         });
 
@@ -558,8 +570,8 @@ public class DatabaseUtil {
         eventManagement.register(OptimiseDatabaseEvent.class, new EventHandler() {
             @Override
             public void todo(Event event) {
-                DatabaseUtil databaseUtil = getInstance();
-                databaseUtil.setStatus(Enums.DatabaseStatus.VACUUM);
+                DatabaseService databaseService = getInstance();
+                databaseService.setStatus(Enums.DatabaseStatus.VACUUM);
                 //执行VACUUM命令
                 try (PreparedStatement stmt = SQLiteUtil.getPreparedStatement("VACUUM;")) {
                     stmt.execute();
@@ -569,7 +581,7 @@ public class DatabaseUtil {
                     if (IsDebug.isDebug()) {
                         System.out.println("结束优化");
                     }
-                    databaseUtil.setStatus(Enums.DatabaseStatus.NORMAL);
+                    databaseService.setStatus(Enums.DatabaseStatus.NORMAL);
                 }
             }
         });
@@ -580,8 +592,8 @@ public class DatabaseUtil {
                 AddToSuffixPriorityMapEvent event1 = (AddToSuffixPriorityMapEvent) event;
                 String suffix = event1.suffix;
                 int priority = event1.priority;
-                DatabaseUtil databaseUtil = getInstance();
-                databaseUtil.addToCommandSet(
+                DatabaseService databaseService = getInstance();
+                databaseService.addToCommandSet(
                         new SQLWithTaskId(SqlTaskIds.UPDATE_SUFFIX,
                                 String.format("INSERT INTO priority VALUES(\"%s\", %d);", suffix, priority)));
             }
@@ -590,9 +602,9 @@ public class DatabaseUtil {
         eventManagement.register(ClearSuffixPriorityMapEvent.class, new EventHandler() {
             @Override
             public void todo(Event event) {
-                DatabaseUtil databaseUtil = getInstance();
-                databaseUtil.addToCommandSet(new SQLWithTaskId(SqlTaskIds.UPDATE_SUFFIX, "DELETE FROM priority;"));
-                databaseUtil.addToCommandSet(
+                DatabaseService databaseService = getInstance();
+                databaseService.addToCommandSet(new SQLWithTaskId(SqlTaskIds.UPDATE_SUFFIX, "DELETE FROM priority;"));
+                databaseService.addToCommandSet(
                         new SQLWithTaskId(SqlTaskIds.UPDATE_SUFFIX, "INSERT INTO priority VALUES(\"defaultPriority\", 0);"));
             }
         });
@@ -601,8 +613,8 @@ public class DatabaseUtil {
             @Override
             public void todo(Event event) {
                 DeleteFromSuffixPriorityMapEvent delete = (DeleteFromSuffixPriorityMapEvent) event;
-                DatabaseUtil databaseUtil = getInstance();
-                databaseUtil.addToCommandSet(new SQLWithTaskId(SqlTaskIds.UPDATE_SUFFIX,
+                DatabaseService databaseService = getInstance();
+                databaseService.addToCommandSet(new SQLWithTaskId(SqlTaskIds.UPDATE_SUFFIX,
                         String.format("DELETE FROM priority where SUFFIX=\"%s\"", delete.suffix)));
             }
         });

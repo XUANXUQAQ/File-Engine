@@ -22,12 +22,12 @@ import FileEngine.eventHandler.impl.monitorDisk.StartMonitorDiskEvent;
 import FileEngine.eventHandler.impl.stop.RestartEvent;
 import FileEngine.eventHandler.impl.taskbar.ShowTaskBarMessageEvent;
 import FileEngine.utils.*;
-import FileEngine.utils.database.DatabaseUtil;
-import FileEngine.utils.database.SQLiteUtil;
+import FileEngine.services.DatabaseService;
+import FileEngine.utils.SQLiteUtil;
 import FileEngine.utils.moveFiles.CopyFileUtil;
-import FileEngine.utils.pinyin.PinyinUtil;
-import FileEngine.utils.pluginSystem.Plugin;
-import FileEngine.utils.pluginSystem.PluginUtil;
+import FileEngine.utils.PinyinUtil;
+import FileEngine.services.pluginSystem.Plugin;
+import FileEngine.services.pluginSystem.PluginService;
 
 import javax.swing.*;
 import javax.swing.border.Border;
@@ -106,7 +106,7 @@ public class SearchBar {
     private volatile String[] searchCase;
     private volatile String searchText;
     private volatile String[] keywords;
-    private final DatabaseUtil databaseUtil;
+    private final DatabaseService databaseService;
     private final AtomicInteger listResultsNum;  //保存当前listResults中有多少个结果
     private final AtomicInteger tempResultNum;  //保存当前tempResults中有多少个结果
     private final AtomicInteger currentLabelSelectedPosition;   //保存当前是哪个label被选中 范围 0 - 7
@@ -146,7 +146,7 @@ public class SearchBar {
         JPanel panel = new JPanel();
         Color transparentColor = new Color(0, 0, 0, 0);
 
-        databaseUtil = DatabaseUtil.getInstance();
+        databaseService = DatabaseService.getInstance();
 
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize(); // 获取屏幕大小
         int width = screenSize.width;
@@ -801,7 +801,7 @@ public class SearchBar {
         final int maxWaiting = 10;
         AtomicBoolean isCanceled = new AtomicBoolean(false);
         TranslateUtil translateUtil = TranslateUtil.getInstance();
-        if (databaseUtil.getStatus() != Enums.DatabaseStatus.NORMAL) {
+        if (databaseService.getStatus() != Enums.DatabaseStatus.NORMAL) {
             JFrame frame = new JFrame();
             frame.setUndecorated(true);
             frame.getRootPane().setWindowDecorationStyle(JRootPane.FRAME);
@@ -820,7 +820,7 @@ public class SearchBar {
                 }
             });
             try {
-                while (databaseUtil.getStatus() != Enums.DatabaseStatus.NORMAL && count < maxWaiting) {
+                while (databaseService.getStatus() != Enums.DatabaseStatus.NORMAL && count < maxWaiting) {
                     count++;
                     TimeUnit.SECONDS.sleep(1);
                 }
@@ -2064,7 +2064,7 @@ public class SearchBar {
                 runningMode = Enums.RunningMode.PLUGIN_MODE;
                 String subText = text.substring(1);
                 String[] s = blank.split(subText);
-                currentUsingPlugin = PluginUtil.getInstance().getPluginInfoByIdentifier(s[0]).plugin;
+                currentUsingPlugin = PluginService.getInstance().getPluginInfoByIdentifier(s[0]).plugin;
                 int length = s.length;
                 if (currentUsingPlugin != null && length > 1) {
                     for (int i = 1; i < length - 1; ++i) {
@@ -2209,7 +2209,7 @@ public class SearchBar {
             CachedThreadPoolUtil.getInstance().executeTask(() -> {
                 try {
                     while (isWaiting.get()) {
-                        if (databaseUtil.getStatus() == Enums.DatabaseStatus.NORMAL) {
+                        if (databaseService.getStatus() == Enums.DatabaseStatus.NORMAL) {
                             startTime = System.currentTimeMillis() - 500;
                             startSignal.set(true);
                             isNotSqlInitialized.set(true);
@@ -2774,7 +2774,7 @@ public class SearchBar {
             String formattedSql;
             for (String each : nonFormattedSql.keySet()) {
                 if (
-                        runningMode == Enums.RunningMode.NORMAL_MODE && DatabaseUtil.getInstance().getStatus() == Enums.DatabaseStatus.NORMAL
+                        runningMode == Enums.RunningMode.NORMAL_MODE && DatabaseService.getInstance().getStatus() == Enums.DatabaseStatus.NORMAL
                 ) {
                     formattedSql = String.format(each, "PATH");
                     int matchedNum = searchAndAddToTempResults(System.currentTimeMillis(), formattedSql, isResultsFull);
@@ -2810,7 +2810,7 @@ public class SearchBar {
                     if ((endTime - startTime > 150) && isNotSqlInitialized.get() && startSignal.get()) {
                         if (!getSearchBarText().isEmpty()) {
                             isNotSqlInitialized.set(false);
-                            if (databaseUtil.getStatus() == Enums.DatabaseStatus.NORMAL && runningMode == Enums.RunningMode.NORMAL_MODE) {
+                            if (databaseService.getStatus() == Enums.DatabaseStatus.NORMAL && runningMode == Enums.RunningMode.NORMAL_MODE) {
                                 strings = colon.split(text);
                                 length = strings.length;
                                 if (length == 2) {
@@ -2835,7 +2835,7 @@ public class SearchBar {
                         if (!getSearchBarText().isEmpty()) {
                             setLabelChosen(label1);
                         }
-                        if (databaseUtil.getStatus() == Enums.DatabaseStatus.NORMAL) {
+                        if (databaseService.getStatus() == Enums.DatabaseStatus.NORMAL) {
                             if (runningMode == Enums.RunningMode.COMMAND_MODE) {
                                 //去掉冒号
                                 boolean isExecuted = runInternalCommand(text.substring(1).toLowerCase());
@@ -2881,17 +2881,17 @@ public class SearchBar {
                             showResults(true, false, false, false,
                                     false, false, false, false);
 
-                        } else if (databaseUtil.getStatus() == Enums.DatabaseStatus.VACUUM) {
+                        } else if (databaseService.getStatus() == Enums.DatabaseStatus.VACUUM) {
                             setLabelChosen(label1);
                             eventManagement.putEvent(new ShowTaskBarMessageEvent(translateUtil.getTranslation("Info"),
                                     translateUtil.getTranslation("Organizing database")));
-                        } else if (databaseUtil.getStatus() == Enums.DatabaseStatus.MANUAL_UPDATE) {
+                        } else if (databaseService.getStatus() == Enums.DatabaseStatus.MANUAL_UPDATE) {
                             setLabelChosen(label1);
                             eventManagement.putEvent(new ShowTaskBarMessageEvent(translateUtil.getTranslation("Info"),
                                     translateUtil.getTranslation("Updating file index") + "..."));
                         }
 
-                        if (databaseUtil.getStatus() != Enums.DatabaseStatus.NORMAL) {
+                        if (databaseService.getStatus() != Enums.DatabaseStatus.NORMAL) {
                             //开启线程等待搜索完成
                             addSearchWaiter();
                             clearAllLabels();
@@ -3057,7 +3057,7 @@ public class SearchBar {
                     return count;
                 }
                 each = resultSet.getString("PATH");
-                if (databaseUtil.getStatus() == Enums.DatabaseStatus.NORMAL) {
+                if (databaseService.getStatus() == Enums.DatabaseStatus.NORMAL) {
                     if (checkIsMatchedAndAddToList(each, true, false)) {
                         count++;
                     }
@@ -3423,7 +3423,7 @@ public class SearchBar {
         AllConfigs allConfigs = AllConfigs.getInstance();
         IsCacheExistEvent isCacheExistEvent = new IsCacheExistEvent(content);
         EventManagement eventManagement = EventManagement.getInstance();
-        if (DatabaseUtil.getInstance().getCacheNum() < allConfigs.getCacheNumLimit()) {
+        if (DatabaseService.getInstance().getCacheNum() < allConfigs.getCacheNumLimit()) {
             //检查缓存是否已存在
             eventManagement.putEvent(isCacheExistEvent);
             if (!eventManagement.waitForEvent(isCacheExistEvent)) {

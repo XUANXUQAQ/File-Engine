@@ -1,4 +1,4 @@
-package FileEngine.utils.download;
+package FileEngine.services.download;
 
 import FileEngine.annotation.EventRegister;
 import FileEngine.configs.Enums;
@@ -14,22 +14,22 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
-public class DownloadUtil {
+public class DownloadService {
     private final Set<DownloadManager> downloadManagerSet = ConcurrentHashMap.newKeySet();
-    private static volatile DownloadUtil INSTANCE = null;
+    private static volatile DownloadService INSTANCE = null;
 
-    public static DownloadUtil getInstance() {
+    public static DownloadService getInstance() {
         if (INSTANCE == null) {
-            synchronized (DownloadUtil.class) {
+            synchronized (DownloadService.class) {
                 if (INSTANCE == null) {
-                    INSTANCE = new DownloadUtil();
+                    INSTANCE = new DownloadService();
                 }
             }
         }
         return INSTANCE;
     }
 
-    private DownloadUtil() {}
+    private DownloadService() {}
 
     @EventRegister
     @SuppressWarnings("unused")

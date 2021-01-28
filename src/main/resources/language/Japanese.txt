@@ -217,3 +217,4 @@ The disks listed below will be indexed=以下にリストされているディ�
 Only supports NTFS format disks=NTFSフォーマットのディスクのみをサポート
 Only the disks on this machine are listed below, click "Add" button to add a removable disk=このコンピュータのディスクのみが以下にリストされています。「追加」ボタンをクリックして、リムーバブルディスクを追加します。
 Rebuild=再構築
+Check for update at startup=起動時に更新を確認する

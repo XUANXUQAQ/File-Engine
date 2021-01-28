@@ -1,4 +1,4 @@
-package FileEngine.utils.pluginSystem;
+package FileEngine.services.pluginSystem;
 
 import javax.swing.*;
 import java.awt.event.KeyEvent;
@@ -306,5 +306,15 @@ public class Plugin {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    protected static class PluginClassAndInstanceInfo {
+        protected PluginClassAndInstanceInfo(Class<?> cls, Object instance) {
+            this.cls = cls;
+            this.clsInstance = instance;
+        }
+
+        public final Class<?> cls;
+        public final Object clsInstance;
     }
 }

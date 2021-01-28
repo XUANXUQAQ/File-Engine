@@ -217,3 +217,4 @@ The disks listed below will be indexed=아래 나열된 디스크가 인덱싱�
 Only supports NTFS format disks=NTFS 형식 디스크 만 지원
 Only the disks on this machine are listed below, click "Add" button to add a removable disk=이 컴퓨터의 디스크 만 아래에 나열됩니다. "추가"버튼을 클릭하여 이동식 디스크를 추가하십시오
 Rebuild=재 구축
+Check for update at startup=시작시 업데이트 확인
