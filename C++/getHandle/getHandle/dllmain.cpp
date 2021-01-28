@@ -222,16 +222,18 @@ void checkMouseThread()
     RECT explorerArea;
     RECT searchBarArea;
     int count = 0;
-    constexpr int waitCountTimes = 50;
+    constexpr int waitCountTimes = 25;
+    constexpr int maxWaitCount = waitCountTimes * 2;
     bool isMouseClickedFlag = false;
 	while (isRunning)
 	{
-		if (count <= waitCountTimes)
+		if (count <= maxWaitCount)
 		{
             count++;
 		}
-		if (isMouseClickedFlag && count > waitCountTimes && !isMouseClickOutOfExplorer)
+		if (isMouseClickedFlag && count > waitCountTimes && !isMouseClickOutOfExplorer || count > maxWaitCount)
 		{
+            count = 0;
             isMouseClickedFlag = false;
             HWND topWindow = GetForegroundWindow();
             isMouseClickOutOfExplorer = !(is_explorer_window_high_cost(topWindow) || is_file_chooser_window(topWindow) || is_search_bar_window(topWindow));

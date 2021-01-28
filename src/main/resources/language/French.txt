@@ -217,3 +217,4 @@ The disks listed below will be indexed=Les disques répertoriés ci-dessous sero
 Only supports NTFS format disks=Prend uniquement en charge les disques au format NTFS
 Only the disks on this machine are listed below, click "Add" button to add a removable disk=Seuls les disques de cet ordinateur sont répertoriés ci-dessous, cliquez sur le bouton "Ajouter" pour ajouter un disque amovible
 Rebuild=Reconstruire
+Check for update at startup=Vérifier les mises à jour au démarrage

@@ -1,4 +1,4 @@
-package FileEngine.utils.pluginSystem;
+package FileEngine.services.pluginSystem;
 
 import FileEngine.IsDebug;
 import FileEngine.annotation.EventRegister;
@@ -24,7 +24,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
-public class PluginUtil {
+public class PluginService {
     private final Set<PluginInfo> pluginInfoSet = ConcurrentHashMap.newKeySet();
     private final Set<String> NOT_LATEST_PLUGINS = ConcurrentHashMap.newKeySet();
     private final HashSet<String> OLD_API_PLUGINS = new HashSet<>();
@@ -32,13 +32,13 @@ public class PluginUtil {
     private final HashSet<String> LOAD_ERROR_PLUGINS = new HashSet<>();
     private final PluginInfo nullPluginInfo = new PluginInfo(null, "", "");
 
-    private static volatile PluginUtil INSTANCE = null;
+    private static volatile PluginService INSTANCE = null;
 
-    public static PluginUtil getInstance() {
+    public static PluginService getInstance() {
         if (INSTANCE == null) {
-            synchronized (PluginUtil.class) {
+            synchronized (PluginService.class) {
                 if (INSTANCE == null) {
-                    INSTANCE = new PluginUtil();
+                    INSTANCE = new PluginService();
                 }
             }
         }
@@ -66,7 +66,7 @@ public class PluginUtil {
         });
     }
 
-    private PluginUtil() {
+    private PluginService() {
         checkPluginMessageThread();
     }
 
@@ -163,11 +163,11 @@ public class PluginUtil {
         boolean isTooOld = false;
         URLClassLoader classLoader = new URLClassLoader(
                 new URL[]{pluginFile.toURI().toURL()},
-                PluginUtil.class.getClassLoader()
+                PluginService.class.getClassLoader()
         );
         Class<?> c = Class.forName(className, true, classLoader);
         Object instance = c.getDeclaredConstructor().newInstance();
-        PluginClassAndInstanceInfo pluginClassAndInstanceInfo = new PluginClassAndInstanceInfo(c, instance);
+        Plugin.PluginClassAndInstanceInfo pluginClassAndInstanceInfo = new Plugin.PluginClassAndInstanceInfo(c, instance);
         Plugin plugin = new Plugin(pluginClassAndInstanceInfo);
         plugin.loadPlugin();
         plugin.setCurrentTheme(AllConfigs.getInstance().getDefaultBackgroundColor(), AllConfigs.getInstance().getLabelColor(), AllConfigs.getInstance().getBorderColor());

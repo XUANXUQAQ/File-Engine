@@ -47,7 +47,7 @@
         </properties>
         <border type="none"/>
         <children>
-          <grid id="3e563" binding="tabGeneral" layout-manager="GridLayoutManager" row-count="8" column-count="5" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+          <grid id="3e563" binding="tabGeneral" layout-manager="GridLayoutManager" row-count="9" column-count="5" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
             <margin top="0" left="0" bottom="0" right="0"/>
             <constraints>
               <tabbedpane title="General"/>
@@ -62,14 +62,14 @@
             <children>
               <vspacer id="67af2">
                 <constraints>
-                  <grid row="7" column="4" row-span="1" col-span="1" vsize-policy="6" hsize-policy="1" anchor="0" fill="2" indent="0" use-parent-layout="false">
+                  <grid row="8" column="4" row-span="1" col-span="1" vsize-policy="6" hsize-policy="1" anchor="0" fill="2" indent="0" use-parent-layout="false">
                     <preferred-size width="23" height="14"/>
                   </grid>
                 </constraints>
               </vspacer>
               <component id="b6ea" class="javax.swing.JLabel" binding="placeholder1">
                 <constraints>
-                  <grid row="1" column="4" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false">
+                  <grid row="2" column="4" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false">
                     <preferred-size width="23" height="17"/>
                   </grid>
                 </constraints>
@@ -79,7 +79,7 @@
               </component>
               <component id="de0f3" class="javax.swing.JLabel" binding="placeholder2">
                 <constraints>
-                  <grid row="4" column="4" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false">
+                  <grid row="5" column="4" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false">
                     <preferred-size width="23" height="17"/>
                   </grid>
                 </constraints>
@@ -89,7 +89,7 @@
               </component>
               <component id="9d10c" class="javax.swing.JLabel" binding="placeholder3">
                 <constraints>
-                  <grid row="5" column="4" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false">
+                  <grid row="6" column="4" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false">
                     <preferred-size width="23" height="17"/>
                   </grid>
                 </constraints>
@@ -99,7 +99,7 @@
               </component>
               <component id="f56d" class="javax.swing.JLabel" binding="labelMaxCacheNum">
                 <constraints>
-                  <grid row="3" column="0" row-span="1" col-span="2" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false">
+                  <grid row="4" column="0" row-span="1" col-span="2" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false">
                     <preferred-size width="100" height="17"/>
                   </grid>
                 </constraints>
@@ -110,7 +110,7 @@
               </component>
               <component id="4f60a" class="javax.swing.JLabel" binding="placeholderGeneral">
                 <constraints>
-                  <grid row="6" column="0" row-span="1" col-span="4" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false">
+                  <grid row="7" column="0" row-span="1" col-span="4" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false">
                     <preferred-size width="8" height="20"/>
                   </grid>
                 </constraints>
@@ -120,7 +120,7 @@
               </component>
               <component id="919a9" class="javax.swing.JLabel" binding="labelUpdateInterval">
                 <constraints>
-                  <grid row="4" column="0" row-span="1" col-span="2" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false">
+                  <grid row="5" column="0" row-span="1" col-span="2" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false">
                     <preferred-size width="114" height="17"/>
                   </grid>
                 </constraints>
@@ -141,7 +141,7 @@
               </component>
               <component id="37673" class="javax.swing.JLabel" binding="placeholderGeneral1">
                 <constraints>
-                  <grid row="2" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false">
+                  <grid row="3" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false">
                     <preferred-size width="12" height="32"/>
                   </grid>
                 </constraints>
@@ -151,7 +151,7 @@
               </component>
               <component id="7d342" class="javax.swing.JTextField" binding="textFieldUpdateInterval">
                 <constraints>
-                  <grid row="4" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false">
+                  <grid row="5" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false">
                     <preferred-size width="100" height="-1"/>
                   </grid>
                 </constraints>
@@ -161,7 +161,7 @@
               </component>
               <component id="b4758" class="javax.swing.JTextField" binding="textFieldCacheNum">
                 <constraints>
-                  <grid row="3" column="2" row-span="1" col-span="2" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false">
+                  <grid row="4" column="2" row-span="1" col-span="2" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false">
                     <preferred-size width="100" height="-1"/>
                   </grid>
                 </constraints>
@@ -171,7 +171,7 @@
               </component>
               <component id="ea22a" class="javax.swing.JButton" binding="buttonChangeTheme">
                 <constraints>
-                  <grid row="1" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                  <grid row="2" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
                   <text value="change theme"/>
@@ -179,7 +179,7 @@
               </component>
               <component id="e2152" class="javax.swing.JButton" binding="buttonSaveAndRemoveDesktop">
                 <constraints>
-                  <grid row="2" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                  <grid row="3" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
                   <text value="Clear desktop"/>
@@ -187,10 +187,20 @@
               </component>
               <component id="5bad1" class="javax.swing.JLabel" binding="labelSecond">
                 <constraints>
-                  <grid row="4" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="4" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                  <grid row="5" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="4" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
                   <text value="Seconds"/>
+                </properties>
+              </component>
+              <component id="c8282" class="javax.swing.JCheckBox" binding="checkBoxCheckUpdate">
+                <constraints>
+                  <grid row="1" column="0" row-span="1" col-span="2" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                </constraints>
+                <properties>
+                  <label value="Check for update at startup"/>
+                  <opaque value="false"/>
+                  <text value="Check for update at startup"/>
                 </properties>
               </component>
             </children>

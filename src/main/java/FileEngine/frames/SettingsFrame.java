@@ -28,12 +28,12 @@ import FileEngine.utils.CachedThreadPoolUtil;
 import FileEngine.utils.CheckHotKeyUtil;
 import FileEngine.utils.RegexUtil;
 import FileEngine.utils.TranslateUtil;
-import FileEngine.utils.database.DatabaseUtil;
-import FileEngine.utils.database.SQLiteUtil;
-import FileEngine.utils.download.DownloadManager;
+import FileEngine.services.DatabaseService;
+import FileEngine.utils.SQLiteUtil;
+import FileEngine.services.download.DownloadManager;
 import FileEngine.utils.moveFiles.MoveDesktopFiles;
-import FileEngine.utils.pluginSystem.Plugin;
-import FileEngine.utils.pluginSystem.PluginUtil;
+import FileEngine.services.pluginSystem.Plugin;
+import FileEngine.services.pluginSystem.PluginService;
 import com.alibaba.fastjson.JSONObject;
 
 import javax.swing.*;
@@ -261,6 +261,7 @@ public class SettingsFrame {
     private JList<Object> listDisks;
     private JLabel labelTipNTFSTip;
     private JLabel labelLocalDiskTip;
+    private JCheckBox checkBoxCheckUpdate;
 
 
     private static volatile SettingsFrame instance = null;
@@ -740,7 +741,7 @@ public class SettingsFrame {
             public void mouseClicked(MouseEvent e) {
                 String pluginName = (String) listPlugins.getSelectedValue();
                 if (pluginName != null) {
-                    PluginUtil.PluginInfo pluginInfo = PluginUtil.getInstance().getPluginInfoByName(pluginName);
+                    PluginService.PluginInfo pluginInfo = PluginService.getInstance().getPluginInfoByName(pluginName);
                     Plugin plugin = pluginInfo.plugin;
                     int apiVersion;
                     ImageIcon icon = plugin.getPluginIcon();
@@ -749,7 +750,6 @@ public class SettingsFrame {
                     String version = plugin.getVersion();
                     String author = plugin.getAuthor();
                     apiVersion = plugin.getApiVersion();
-
                     labelPluginVersion.setText(translateUtil.getTranslation("Version") + ":" + version);
                     labelApiVersion.setText("API " + translateUtil.getTranslation("Version") + ":" + apiVersion);
                     PluginIconLabel.setIcon(icon);
@@ -758,7 +758,7 @@ public class SettingsFrame {
                     labelAuthor.setText(translateUtil.getTranslation("Author") + ":" + author);
                     labelOfficialSite.setText("<html><a href='" + officialSite + "'><font size=\"4\">" + pluginName + "</font></a></html>");
                     buttonUpdatePlugin.setVisible(true);
-                    if (PluginUtil.getInstance().isPluginsNotLatest(pluginName)) {
+                    if (PluginService.getInstance().isPluginsNotLatest(pluginName)) {
                         Color color = new Color(51,122,183);
                         buttonUpdatePlugin.setText(translateUtil.getTranslation("Update"));
                         buttonUpdatePlugin.setBackground(color);
@@ -856,7 +856,7 @@ public class SettingsFrame {
         buttonVacuum.addActionListener(e -> {
             int ret = JOptionPane.showConfirmDialog(frame, translateUtil.getTranslation("Confirm whether to start optimizing the database?"));
             if (JOptionPane.YES_OPTION == ret) {
-                Enums.DatabaseStatus status = DatabaseUtil.getInstance().getStatus();
+                Enums.DatabaseStatus status = DatabaseService.getInstance().getStatus();
                 if (status == Enums.DatabaseStatus.NORMAL) {
                     if (IsDebug.isDebug()) {
                         System.out.println("开始优化");
@@ -865,7 +865,7 @@ public class SettingsFrame {
                     cachedThreadPoolUtil.executeTask(() -> {
                         //实时显示VACUUM状态
                         try {
-                            DatabaseUtil instance = DatabaseUtil.getInstance();
+                            DatabaseService instance = DatabaseService.getInstance();
                             while (instance.getStatus() == Enums.DatabaseStatus.VACUUM) {
                                 labelVacuumStatus.setText(translateUtil.getTranslation("Optimizing..."));
                                 TimeUnit.MILLISECONDS.sleep(50);
@@ -1320,7 +1320,7 @@ public class SettingsFrame {
         AtomicBoolean isSkipConfirm = new AtomicBoolean(false);
         AtomicBoolean isDownloadStarted = new AtomicBoolean(false);
 
-        PluginUtil pluginUtil = PluginUtil.getInstance();
+        PluginService pluginService = PluginService.getInstance();
         var context = new Object() {
             DownloadManager downloadManager;
         };
@@ -1331,10 +1331,10 @@ public class SettingsFrame {
             } else {
                 startCheckTime.set(0L);
                 String pluginName = (String) listPlugins.getSelectedValue();
-                Plugin plugin = PluginUtil.getInstance().getPluginInfoByName(pluginName).plugin;
+                Plugin plugin = PluginService.getInstance().getPluginInfoByName(pluginName).plugin;
                 String pluginFullName = pluginName + ".jar";
 
-                if (pluginUtil.isPluginsNotLatest(pluginName)) {
+                if (pluginService.isPluginsNotLatest(pluginName)) {
                     //已经检查过
                     isVersionLatest.set(false);
                     isSkipConfirm.set(true);
@@ -1413,11 +1413,11 @@ public class SettingsFrame {
         labelSQLite.setText("4.SQLite-JDBC");
         labelTinyPinyin.setText("5.TinyPinyin");
         labelLombok.setText("6.Lombok");
-        labelPluginNum.setText(String.valueOf(PluginUtil.getInstance().getInstalledPluginNum()));
+        labelPluginNum.setText(String.valueOf(PluginService.getInstance().getInstalledPluginNum()));
         ImageIcon imageIcon = new ImageIcon(SettingsFrame.class.getResource("/icons/frame.png"));
         labelIcon.setIcon(imageIcon);
         labelVersion.setText(translateUtil.getTranslation("Current Version:") + AllConfigs.version);
-        labelCurrentCacheNum.setText(translateUtil.getTranslation("Current Caches Num:") + DatabaseUtil.getInstance().getCacheNum());
+        labelCurrentCacheNum.setText(translateUtil.getTranslation("Current Caches Num:") + DatabaseService.getInstance().getCacheNum());
     }
 
     private String toRGBHexString(int colorRGB) {
@@ -1529,13 +1529,14 @@ public class SettingsFrame {
         checkBoxAdmin.setSelected(allConfigs.isDefaultAdmin());
         checkBoxIsShowTipOnCreatingLnk.setSelected(allConfigs.isShowTipOnCreatingLnk());
         checkBoxResponseCtrl.setSelected(allConfigs.isResponseCtrl());
+        checkBoxCheckUpdate.setSelected(allConfigs.isCheckUpdateStartup());
     }
 
     private void setListGui() {
         listCmds.setListData(allConfigs.getCmdSet().toArray());
         listLanguage.setListData(translateUtil.getLanguageSet().toArray());
         listLanguage.setSelectedValue(translateUtil.getLanguage(), true);
-        Object[] plugins = PluginUtil.getInstance().getPluginNameArray();
+        Object[] plugins = PluginService.getInstance().getPluginNameArray();
         listPlugins.setListData(plugins);
         listCache.setListData(cacheSet.toArray());
         ArrayList<String> list = new ArrayList<>();
@@ -1855,7 +1856,7 @@ public class SettingsFrame {
                 "by the software and will be displayed first when searching."));
         labelSearchBarFontColor.setText(translateUtil.getTranslation("SearchBar Font Color:"));
         labelBorderColor.setText(translateUtil.getTranslation("Border Color:"));
-        labelCurrentCacheNum.setText(translateUtil.getTranslation("Current Caches Num:") + DatabaseUtil.getInstance().getCacheNum());
+        labelCurrentCacheNum.setText(translateUtil.getTranslation("Current Caches Num:") + DatabaseService.getInstance().getCacheNum());
         labelUninstallPluginTip.setText(translateUtil.getTranslation("If you need to delete a plug-in, just delete it under the \"plugins\" folder in the software directory."));
         labelUninstallPluginTip2.setText(translateUtil.getTranslation("Tip:"));
         chooseUpdateAddressLabel.setText(translateUtil.getTranslation("Choose update address"));
@@ -1874,6 +1875,7 @@ public class SettingsFrame {
                 "(provided that the software has privileges)"));
         checkBoxIsShowTipOnCreatingLnk.setText(translateUtil.getTranslation("Show tip on creating shortcut"));
         checkBoxResponseCtrl.setText(translateUtil.getTranslation("Double-click \"Ctrl\" to open the search bar"));
+        checkBoxCheckUpdate.setText(translateUtil.getTranslation("Check for update at startup"));
     }
 
     private void translateButtons() {
@@ -2184,6 +2186,7 @@ public class SettingsFrame {
         configEntity.setSwingTheme(swingTheme);
         configEntity.setLanguage(translateUtil.getLanguage());
         configEntity.setDoubleClickCtrlOpen(checkBoxResponseCtrl.isSelected());
+        configEntity.setCheckUpdateStartup(checkBoxCheckUpdate.isSelected());
         configEntity.setDisks(parseDisk());
 
         setStartup(checkBoxAddToStartup.isSelected());

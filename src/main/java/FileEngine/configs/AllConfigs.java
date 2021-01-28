@@ -5,6 +5,7 @@ import FileEngine.annotation.EventRegister;
 import FileEngine.dllInterface.IsLocalDisk;
 import FileEngine.eventHandler.Event;
 import FileEngine.eventHandler.EventHandler;
+import FileEngine.eventHandler.EventManagement;
 import FileEngine.eventHandler.impl.ReadConfigsAndBootSystemEvent;
 import FileEngine.eventHandler.impl.SetSwingLaf;
 import FileEngine.eventHandler.impl.configs.AddCmdEvent;
@@ -20,13 +21,10 @@ import FileEngine.eventHandler.impl.monitorDisk.StartMonitorDiskEvent;
 import FileEngine.eventHandler.impl.plugin.LoadAllPluginsEvent;
 import FileEngine.eventHandler.impl.plugin.SetPluginsCurrentThemeEvent;
 import FileEngine.eventHandler.impl.taskbar.ShowTrayIconEvent;
-import FileEngine.eventHandler.EventManagement;
 import FileEngine.utils.RegexUtil;
 import FileEngine.utils.TranslateUtil;
-import FileEngine.utils.database.DatabaseUtil;
-import FileEngine.utils.database.SQLiteUtil;
-import FileEngine.utils.download.DownloadManager;
-import FileEngine.utils.download.DownloadUtil;
+import FileEngine.services.download.DownloadManager;
+import FileEngine.services.download.DownloadService;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.serializer.SerializerFeature;
@@ -43,8 +41,6 @@ import java.awt.*;
 import java.io.*;
 import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.util.*;
 
 /**
@@ -327,6 +323,10 @@ public class AllConfigs {
         return configEntity.getBorderColor();
     }
 
+    public boolean isCheckUpdateStartup() {
+        return configEntity.isCheckUpdateStartup();
+    }
+
     public ProxyInfo getProxy() {
         return new ProxyInfo(
                 configEntity.getProxyAddress(),
@@ -355,20 +355,6 @@ public class AllConfigs {
                 cmdSet.add(each);
             }
         } catch (IOException ignored) {
-        }
-    }
-
-    /**
-     * 获取数据库缓存条目数量，用于判断软件是否还能继续写入缓存
-     */
-    private void initCacheNum() {
-        try (PreparedStatement stmt = SQLiteUtil.getPreparedStatement("SELECT COUNT(PATH) FROM cache;");
-             ResultSet resultSet = stmt.executeQuery()) {
-            DatabaseUtil.getInstance().setCacheNum(resultSet.getInt(1));
-        } catch (Exception throwables) {
-            if (IsDebug.isDebug()) {
-                throwables.printStackTrace();
-            }
         }
     }
 
@@ -530,6 +516,10 @@ public class AllConfigs {
         configEntity.setProxyType((int) getFromJson(settingsInJson, "proxyType", Enums.ProxyType.PROXY_DIRECT));
     }
 
+    private void readCheckUpdateStartup(JSONObject settings) {
+        configEntity.setCheckUpdateStartup((Boolean) getFromJson(settings, "isCheckUpdateStartup", true));
+    }
+
     private void readSwingTheme(JSONObject settingsInJson) {
         configEntity.setSwingTheme((String) getFromJson(settingsInJson, "swingTheme", "CoreFlatDarculaLaf"));
     }
@@ -599,7 +589,7 @@ public class AllConfigs {
         readShowTipOnCreatingLnk(settingsInJson);
         readSwingTheme(settingsInJson);
         readDisks(settingsInJson);
-        initCacheNum();
+        readCheckUpdateStartup(settingsInJson);
         initUpdateAddress();
         initCmdSetSettings();
     }
@@ -729,7 +719,7 @@ public class AllConfigs {
     }
 
     public JSONObject getUpdateInfo() throws IOException {
-        DownloadUtil downloadUtil = DownloadUtil.getInstance();
+        DownloadService downloadService = DownloadService.getInstance();
         String url = getUpdateUrl();
         DownloadManager downloadManager = new DownloadManager(
                 url,
@@ -738,7 +728,7 @@ public class AllConfigs {
         );
         EventManagement eventManagement = EventManagement.getInstance();
         eventManagement.putEvent(new StartDownloadEvent(downloadManager));
-        downloadUtil.waitForDownloadTask(downloadManager, 10000);
+        downloadService.waitForDownloadTask(downloadManager, 10000);
         String eachLine;
         StringBuilder strBuilder = new StringBuilder();
         try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream("tmp/version.json"), StandardCharsets.UTF_8))) {

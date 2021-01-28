@@ -3,8 +3,8 @@ package FileEngine.frames;
 import FileEngine.configs.Enums;
 import FileEngine.eventHandler.EventManagement;
 import FileEngine.utils.TranslateUtil;
-import FileEngine.utils.download.DownloadManager;
-import FileEngine.utils.download.DownloadUtil;
+import FileEngine.services.download.DownloadManager;
+import FileEngine.services.download.DownloadService;
 
 import javax.swing.*;
 import java.io.File;
@@ -45,7 +45,7 @@ public class SetDownloadProgress {
         try {
             isDownloadStarted.set(true);
             TranslateUtil translateUtil = TranslateUtil.getInstance();
-            DownloadUtil downloadUtil = DownloadUtil.getInstance();
+            DownloadService downloadService = DownloadService.getInstance();
             EventManagement eventManagement = EventManagement.getInstance();
             String buttonOriginalText = buttonInstall.getText();
             boolean isStarted = true;
@@ -61,8 +61,8 @@ public class SetDownloadProgress {
                 if (currentTaskStr.equals(taskStrFromMethod)) {
                     isDownloadStarted.set(true);
                     isDownloadStartedSet = false;
-                    double progress = downloadUtil.getDownloadProgress(downloadManager);
-                    Enums.DownloadStatus downloadStatus = downloadUtil.getDownloadStatus(downloadManager);
+                    double progress = downloadService.getDownloadProgress(downloadManager);
+                    Enums.DownloadStatus downloadStatus = downloadService.getDownloadStatus(downloadManager);
                     if (downloadStatus == Enums.DownloadStatus.DOWNLOAD_DONE) {
                         //下载完成，禁用按钮
                         labelProgress.setText("");

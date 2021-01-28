@@ -1,4 +1,4 @@
-package FileEngine.utils.pinyin;
+package FileEngine.utils;
 
 import com.github.promeg.pinyinhelper.Pinyin;
 

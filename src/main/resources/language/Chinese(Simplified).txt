@@ -217,3 +217,4 @@ The disks listed below will be indexed=下面列出的磁盘将会被索引
 Only supports NTFS format disks=仅支持NTFS格式的磁盘
 Only the disks on this machine are listed below, click "Add" button to add a removable disk=下面仅列出了此计算机上的磁盘，单击“添加”按钮添加可移动磁盘
 Rebuild=重建
+Check for update at startup=启动时检查更新

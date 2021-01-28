@@ -10,14 +10,14 @@ import FileEngine.eventHandler.impl.database.UpdateDatabaseEvent;
 import FileEngine.eventHandler.impl.frame.settingsFrame.ShowSettingsFrameEvent;
 import FileEngine.eventHandler.impl.stop.RestartEvent;
 import FileEngine.eventHandler.impl.taskbar.ShowTaskBarMessageEvent;
+import FileEngine.services.DatabaseService;
 import FileEngine.utils.CachedThreadPoolUtil;
 import FileEngine.utils.Md5Util;
 import FileEngine.utils.TranslateUtil;
 import FileEngine.utils.classScan.ClassScannerUtil;
-import FileEngine.utils.database.DatabaseUtil;
-import FileEngine.utils.database.SQLiteUtil;
+import FileEngine.utils.SQLiteUtil;
 import FileEngine.utils.moveFiles.CopyFileUtil;
-import FileEngine.utils.pluginSystem.PluginUtil;
+import FileEngine.services.pluginSystem.PluginService;
 import com.alibaba.fastjson.JSONObject;
 
 import javax.swing.*;
@@ -40,7 +40,7 @@ public class MainClass {
     private static final String FILE_SEARCHER_USN_64_MD_5 = "44e1d54765b7a7849c273dd132cbe2d1";
     private static final String SQLITE3_64_MD_5 = "658c71b8b93ba4eb5b4936f46a112449";
     private static final String UPDATER_BAT_64_MD_5 = "357d7cc1cf023cb6c90f73926c6f2f55";
-    private static final String GET_HANDLE_64_MD_5 = "b547a31f4a23ee4094cbd9add4c6e2ea";
+    private static final String GET_HANDLE_64_MD_5 = "98fa9a6714f3037a4dd39ae9127b5372";
     private static final String DAEMON_PROCESS_64_MD_5 = "9a0529b3f8ee3961e0f9ed5f562cd0e1";
     private static final String SHORTCUT_GEN_MD_5="d2d3215c2a0741370851f2d4ed738b54";
 
@@ -153,21 +153,23 @@ public class MainClass {
     }
 
     private static void checkVersion() {
-        EventManagement eventManagement = EventManagement.getInstance();
-        TranslateUtil translateUtil = TranslateUtil.getInstance();
-        if (!isLatest()) {
-            eventManagement.putEvent(new ShowTaskBarMessageEvent(
-                    translateUtil.getTranslation("Info"),
-                    translateUtil.getTranslation("New version can be updated"),
-                    new ShowSettingsFrameEvent("tabAbout")));
+        if (AllConfigs.getInstance().isCheckUpdateStartup()) {
+            EventManagement eventManagement = EventManagement.getInstance();
+            TranslateUtil translateUtil = TranslateUtil.getInstance();
+            if (!isLatest()) {
+                eventManagement.putEvent(new ShowTaskBarMessageEvent(
+                        translateUtil.getTranslation("Info"),
+                        translateUtil.getTranslation("New version can be updated"),
+                        new ShowSettingsFrameEvent("tabAbout")));
+            }
         }
     }
 
     private static void checkOldApiPlugin() {
         EventManagement eventManagement = EventManagement.getInstance();
         TranslateUtil translateUtil = TranslateUtil.getInstance();
-        if (PluginUtil.getInstance().isPluginTooOld()) {
-            String oldPlugins = PluginUtil.getInstance().getAllOldPluginsName();
+        if (PluginService.getInstance().isPluginTooOld()) {
+            String oldPlugins = PluginService.getInstance().getAllOldPluginsName();
             eventManagement.putEvent(new ShowTaskBarMessageEvent(
                     translateUtil.getTranslation("Warning"),
                     oldPlugins + "\n" + translateUtil.getTranslation("Plugin Api is too old"),
@@ -178,8 +180,8 @@ public class MainClass {
     private static void checkRepeatPlugin() {
         EventManagement eventManagement = EventManagement.getInstance();
         TranslateUtil translateUtil = TranslateUtil.getInstance();
-        if (PluginUtil.getInstance().isPluginRepeat()) {
-            String repeatPlugins = PluginUtil.getInstance().getRepeatPlugins();
+        if (PluginService.getInstance().isPluginRepeat()) {
+            String repeatPlugins = PluginService.getInstance().getRepeatPlugins();
             eventManagement.putEvent(new ShowTaskBarMessageEvent(
                     translateUtil.getTranslation("Warning"),
                     repeatPlugins + "\n" + translateUtil.getTranslation("Duplicate plugin, please delete it in plugins folder"),
@@ -190,8 +192,8 @@ public class MainClass {
     private static void checkErrorPlugin() {
         EventManagement eventManagement = EventManagement.getInstance();
         TranslateUtil translateUtil = TranslateUtil.getInstance();
-        if (PluginUtil.getInstance().isPluginLoadError()) {
-            String errorPlugins = PluginUtil.getInstance().getLoadingErrorPlugins();
+        if (PluginService.getInstance().isPluginLoadError()) {
+            String errorPlugins = PluginService.getInstance().getLoadingErrorPlugins();
             eventManagement.putEvent(new ShowTaskBarMessageEvent(
                     translateUtil.getTranslation("Warning"),
                     errorPlugins + "\n" + translateUtil.getTranslation("Loading plugins error"),
@@ -213,22 +215,24 @@ public class MainClass {
     }
 
     private static void checkPluginVersion() {
-        CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
-        cachedThreadPoolUtil.executeTask(() -> {
-            StringBuilder notLatestPluginsBuilder = new StringBuilder();
-            PluginUtil pluginUtil = PluginUtil.getInstance();
-            pluginUtil.checkAllPluginsVersion(notLatestPluginsBuilder);
-            EventManagement eventManagement = EventManagement.getInstance();
-            TranslateUtil translateUtil = TranslateUtil.getInstance();
-            String notLatestPlugins = notLatestPluginsBuilder.toString();
-            if (!notLatestPlugins.isEmpty()) {
-                eventManagement.putEvent(
-                        new ShowTaskBarMessageEvent(translateUtil.getTranslation("Info"),
-                                notLatestPlugins + "\n" +
-                                        translateUtil.getTranslation("New versions of these plugins can be updated"),
-                                new ShowSettingsFrameEvent("tabPlugin")));
-            }
-        });
+        if (AllConfigs.getInstance().isCheckUpdateStartup()) {
+            CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
+            cachedThreadPoolUtil.executeTask(() -> {
+                StringBuilder notLatestPluginsBuilder = new StringBuilder();
+                PluginService pluginService = PluginService.getInstance();
+                pluginService.checkAllPluginsVersion(notLatestPluginsBuilder);
+                EventManagement eventManagement = EventManagement.getInstance();
+                TranslateUtil translateUtil = TranslateUtil.getInstance();
+                String notLatestPlugins = notLatestPluginsBuilder.toString();
+                if (!notLatestPlugins.isEmpty()) {
+                    eventManagement.putEvent(
+                            new ShowTaskBarMessageEvent(translateUtil.getTranslation("Info"),
+                                    notLatestPlugins + "\n" +
+                                            translateUtil.getTranslation("New versions of these plugins can be updated"),
+                                    new ShowSettingsFrameEvent("tabPlugin")));
+                }
+            });
+        }
     }
 
     private static void checkRunningDirAtDiskC() {
@@ -374,7 +378,7 @@ public class MainClass {
                     //使用次数大于3次，优化数据库
                     if (startTimes >= 3) {
                         startTimes = 0;
-                        if (DatabaseUtil.getInstance().getStatus() == Enums.DatabaseStatus.NORMAL) {
+                        if (DatabaseService.getInstance().getStatus() == Enums.DatabaseStatus.NORMAL) {
                             ret = true;
                         }
                     }

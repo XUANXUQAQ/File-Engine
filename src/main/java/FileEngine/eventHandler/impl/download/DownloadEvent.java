@@ -1,7 +1,7 @@
 package FileEngine.eventHandler.impl.download;
 
 import FileEngine.eventHandler.Event;
-import FileEngine.utils.download.DownloadManager;
+import FileEngine.services.download.DownloadManager;
 
 public class DownloadEvent extends Event {
     public final DownloadManager downloadManager;
