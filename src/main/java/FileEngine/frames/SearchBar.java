@@ -386,6 +386,9 @@ public class SearchBar {
             public void mousePressed(MouseEvent e) {
                 int count = e.getClickCount();
                 if (count == 2) {
+                    if (isPreviewMode.get() || isTutorialMode.get()) {
+                        return;
+                    }
                     if (listResultsNum.get() != 0) {
                         if (runningMode != Enums.RunningMode.PLUGIN_MODE) {
                             if (showingMode != Enums.ShowingSearchBarMode.EXPLORER_ATTACH) {
@@ -609,6 +612,9 @@ public class SearchBar {
                             }
                         }
                     } else if (10 == key) {
+                        if (isPreviewMode.get() || isTutorialMode.get()) {
+                            return;
+                        }
                         if (runningMode != Enums.RunningMode.PLUGIN_MODE) {
                             //enter被点击
                             clearAllLabels();
