@@ -281,7 +281,9 @@ public class SearchBar {
             public void focusLost(FocusEvent e) {
                 if (System.currentTimeMillis() - visibleStartTime > 500) {
                     if (showingMode == Enums.ShowingSearchBarMode.NORMAL_SHOWING && allConfigs.isLoseFocusClose()) {
-                        closeSearchBar();
+                        if (!isTutorialMode.get()) {
+                            closeSearchBar();
+                        }
                     } else if (showingMode == Enums.ShowingSearchBarMode.EXPLORER_ATTACH) {
                         closeWithoutHideSearchBar();
                     }
@@ -3608,7 +3610,7 @@ public class SearchBar {
 
     private void setVisible(boolean b) {
         if (!b) {
-            if (!(isPreviewMode.get() || isTutorialMode.get())) {
+            if (!isPreviewMode.get()) {
                 searchBar.setVisible(false);
             }
         } else {
@@ -3621,7 +3623,7 @@ public class SearchBar {
      */
     private void closeSearchBar() {
         SwingUtilities.invokeLater(() -> {
-            if (!(isPreviewMode.get() || isTutorialMode.get())) {
+            if (!isPreviewMode.get()) {
                 if (isVisible()) {
                     setVisible(false);
                 }

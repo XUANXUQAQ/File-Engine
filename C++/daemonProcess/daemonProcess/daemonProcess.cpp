@@ -3,7 +3,9 @@
 #include <direct.h>
 #include "Psapi.h"
 #include <TlHelp32.h>
+#include <objbase.h>
 #pragma comment(lib, "shell32.lib")
+#pragma comment(lib, "Ole32.lib")
 //#define TEST
 
 using namespace std;
@@ -66,14 +68,16 @@ int main(const int argc, char* argv[])
 #ifdef TEST
     else
     {
-        cout << "error arg" << endl;
+        cout << "error args" << endl;
     }
 #endif
 }
 
 void restart_file_engine()
 {
+    CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
     ShellExecuteA(nullptr, "open", fileEngineExeDir, nullptr, fileEngineDir, SW_SHOWNORMAL);
+    CoUninitialize();
 }
 
 

@@ -41,7 +41,7 @@ public class MainClass {
     private static final String SQLITE3_64_MD_5 = "658c71b8b93ba4eb5b4936f46a112449";
     private static final String UPDATER_BAT_64_MD_5 = "357d7cc1cf023cb6c90f73926c6f2f55";
     private static final String GET_HANDLE_64_MD_5 = "98fa9a6714f3037a4dd39ae9127b5372";
-    private static final String DAEMON_PROCESS_64_MD_5 = "9a0529b3f8ee3961e0f9ed5f562cd0e1";
+    private static final String DAEMON_PROCESS_64_MD_5 = "cf6052fa108b0d19a98d2422c1ea853f";
     private static final String SHORTCUT_GEN_MD_5="d2d3215c2a0741370851f2d4ed738b54";
 
     private static void initializeDllInterface() throws ClassNotFoundException {
