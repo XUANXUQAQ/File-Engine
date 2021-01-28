@@ -1,4 +1,4 @@
-package FileEngine.utils;
+package FileEngine.services;
 
 import FileEngine.annotation.EventRegister;
 import FileEngine.configs.Enums;
@@ -13,24 +13,26 @@ import FileEngine.eventHandler.impl.frame.searchBar.ShowSearchBarEvent;
 import FileEngine.eventHandler.impl.hotkey.RegisterHotKeyEvent;
 import FileEngine.eventHandler.impl.hotkey.ResponseCtrlEvent;
 import FileEngine.eventHandler.impl.stop.RestartEvent;
+import FileEngine.utils.CachedThreadPoolUtil;
+import FileEngine.utils.RegexUtil;
 
 import java.awt.event.KeyEvent;
 import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
-public class CheckHotKeyUtil {
+public class CheckHotKeyService {
 
     private final HashMap<String, Integer> map;
     private boolean isRegistered = false;
-    private static volatile CheckHotKeyUtil INSTANCE = null;
+    private static volatile CheckHotKeyService INSTANCE = null;
     private final Pattern plus = RegexUtil.plus;
 
-    public static CheckHotKeyUtil getInstance() {
+    public static CheckHotKeyService getInstance() {
         if (INSTANCE == null) {
-            synchronized (CheckHotKeyUtil.class) {
+            synchronized (CheckHotKeyService.class) {
                 if (INSTANCE == null) {
-                    INSTANCE = new CheckHotKeyUtil();
+                    INSTANCE = new CheckHotKeyService();
                 }
             }
         }
@@ -185,7 +187,7 @@ public class CheckHotKeyUtil {
         startListenHotkeyThread();
     }
 
-    private CheckHotKeyUtil() {
+    private CheckHotKeyService() {
         map = new HashMap<>();
         map.put("Ctrl", KeyEvent.VK_CONTROL);
         map.put("Alt", KeyEvent.VK_ALT);

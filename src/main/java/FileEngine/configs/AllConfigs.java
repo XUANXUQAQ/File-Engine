@@ -51,12 +51,12 @@ public class AllConfigs {
 
     public static final String FILE_NAME = "File-Engine-x64.exe";
 
-    public static final int defaultLabelColor = 16777215;
-    public static final int defaultWindowBackgroundColor = 13421772;
-    public static final int defaultBorderColor = 13421772;
+    public static final int defaultLabelColor = 0x9999ff;
+    public static final int defaultWindowBackgroundColor = 0xcccccc;
+    public static final int defaultBorderColor = 0xcccccc;
     public static final int defaultFontColor = 0;
-    public static final int defaultFontColorWithCoverage = 10066431;
-    public static final int defaultSearchbarColor = 13421772;
+    public static final int defaultFontColorWithCoverage = 0;
+    public static final int defaultSearchbarColor = 0xcccccc;
     public static final int defaultSearchbarFontColor = 0;
     private volatile ConfigEntity configEntity;
     private final LinkedHashMap<String, AddressUrl> updateAddressMap = new LinkedHashMap<>();
