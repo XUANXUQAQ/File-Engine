@@ -3117,6 +3117,7 @@ public class SearchBar {
                     GetHandle.INSTANCE.bringSearchBarToTop();
                 }
                 setVisible(true);
+                textField.requestFocusInWindow();
                 textField.setCaretPosition(0);
                 startTime = System.currentTimeMillis();
                 visibleStartTime = startTime;
