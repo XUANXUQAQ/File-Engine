@@ -2478,7 +2478,7 @@ public class SearchBar {
             textField.setLocation(0, labelHeight * 8);
             int offset = 8 - listResultsNum.get();
             offset = Math.max(0, offset);
-            offset = offset == 8 ? 0 : offset;
+            offset = offset == 8 ? 7 : offset;
             label1.setLocation(0, labelHeight * offset);
             label2.setLocation(0, labelHeight * (offset + 1));
             label3.setLocation(0, labelHeight * (offset + 2));
