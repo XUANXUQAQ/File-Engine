@@ -2455,7 +2455,7 @@ public class SearchBar {
             int positionY;
             boolean isGrabFocus;
             int ret = GetHandle.INSTANCE.getTopWindowType();
-            if (GetHandle.EXPLORER == ret) {
+            if (GetHandle.INSTANCE.getExplorerTypeNum() == ret) {
                 positionX = (int) (explorerX + explorerWidth * 0.97 - searchBarWidth);
                 positionY = (int) (explorerY + explorerHeight * 0.95 - searchBarHeight);
                 isGrabFocus = false;
@@ -2719,12 +2719,10 @@ public class SearchBar {
                 EventManagement eventManagement = EventManagement.getInstance();
                 while (eventManagement.isNotMainExit()) {
                     if (isVisible()) {
-                        SwingUtilities.invokeLater(() -> {
-                            if (isPreviewMode.get()) {
-                                SwingUtilities.updateComponentTreeUI(searchBar);
-                            }
-                            searchBar.repaint();
-                        });
+                        if (isPreviewMode.get()) {
+                            SwingUtilities.invokeLater(() -> SwingUtilities.updateComponentTreeUI(searchBar));
+                        }
+                        SwingUtilities.invokeLater(searchBar::repaint);
                     }
                     TimeUnit.MILLISECONDS.sleep(250);
                 }
@@ -3109,6 +3107,11 @@ public class SearchBar {
      */
     private void showSearchbar(boolean isGrabFocus) {
         SwingUtilities.invokeLater(() -> {
+            if (showingMode == Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
+                if (isGrabFocus) {
+                    GetHandle.INSTANCE.bringSearchBarToTop();
+                }
+            }
             if (!isVisible()) {
                 if (isGrabFocus) {
                     GetHandle.INSTANCE.bringSearchBarToTop();

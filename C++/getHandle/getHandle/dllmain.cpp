@@ -18,8 +18,8 @@ using namespace std;
 constexpr auto EXPLORER_MIN_HEIGHT = 200;       //当窗口大小满足这些条件后才开始判断是否为explorer.exe
 constexpr auto EXPLORER_MIN_WIDTH = 200;
 
-constexpr auto DIALOG = 0x01;
-constexpr auto EXPLORER = 0x02;
+constexpr auto G_DIALOG = 1;
+constexpr auto G_EXPLORER = 2;
 
 volatile bool isExplorerWindowAtTop = false;
 volatile bool isMouseClickOutOfExplorer = false;
@@ -36,9 +36,9 @@ char dragExplorerPath[500];
 
 void checkTopWindowThread();
 void checkMouseThread();
-void setClickPos(const HWND& fileChooserHwnd);
+inline void setClickPos(const HWND& fileChooserHwnd);
 BOOL CALLBACK findToolbar(HWND hwndChild, LPARAM lParam);
-bool isMouseClicked();
+inline bool isMouseClicked();
 inline bool isKeyPressed(int vk_key);
 bool isDialogNotExist();
 extern "C" __declspec(dllexport) void start();
@@ -54,6 +54,8 @@ extern "C" __declspec(dllexport) int getTopWindowType();
 extern "C" __declspec(dllexport) void bringSearchBarToTop();
 extern "C" __declspec(dllexport) int getToolBarX();
 extern "C" __declspec(dllexport) int getToolBarY();
+extern "C" __declspec(dllexport) int getExplorerTypeNum();
+extern "C" __declspec(dllexport) int getDialogTypeNum();
 
 #ifdef TEST
 void outputHwndInfo(HWND hwnd)
@@ -66,6 +68,16 @@ void outputHwndInfo(HWND hwnd)
     cout << "hwnd title: " << hwndTitle << endl;
 }
 #endif
+
+int getExplorerTypeNum()
+{
+    return G_EXPLORER;
+}
+
+int getDialogTypeNum()
+{
+    return G_DIALOG;
+}
 
 int getToolBarX()
 {
@@ -116,7 +128,7 @@ inline bool isKeyPressed(const int vk_key)
     return GetAsyncKeyState(vk_key) & 0x8000 ? true : false;
 }
 
-bool isMouseClicked()
+inline bool isMouseClicked()
 {
     return isKeyPressed(VK_RBUTTON) || 
         isKeyPressed(VK_MBUTTON) || 
@@ -151,7 +163,7 @@ bool isDialogNotExist()
     return true;
 }
 
-void setClickPos(const HWND& fileChooserHwnd)
+inline void setClickPos(const HWND& fileChooserHwnd)
 {
     EnumChildWindows(fileChooserHwnd, findToolbar, NULL);
 }
@@ -301,11 +313,11 @@ void checkTopWindowThread()
             {
                 if (isExplorerWindow)
                 {
-                    topWindowType = DIALOG;
+                    topWindowType = G_EXPLORER;
                 }
                 else if (isDialogWindow)
                 {
-                    topWindowType = EXPLORER;
+                    topWindowType = G_DIALOG;
                 }
                 currentAttachExplorer = hwnd;
                 setClickPos(hwnd);
