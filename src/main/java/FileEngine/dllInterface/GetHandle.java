@@ -3,12 +3,12 @@ package FileEngine.dllInterface;
 import com.sun.jna.Library;
 import com.sun.jna.Native;
 
-@SuppressWarnings("unused")
 public interface GetHandle extends Library {
     GetHandle INSTANCE = Native.load("getHandle", GetHandle.class);
 
-    int EXPLORER = 0x01;
-    int DIALOG = 0x02;
+    int getExplorerTypeNum();
+
+    int getDialogTypeNum();
 
     void start();
 
