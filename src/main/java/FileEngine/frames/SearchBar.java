@@ -270,12 +270,7 @@ public class SearchBar {
         AllConfigs allConfigs = AllConfigs.getInstance();
         textField.addFocusListener(new FocusListener() {
             @Override
-            public void focusGained(FocusEvent e) {
-                if (System.currentTimeMillis() - visibleStartTime < 1000 && showingMode == Enums.ShowingSearchBarMode.EXPLORER_ATTACH) {
-                    //在explorer attach模式下 1s内窗口就获取到了焦点
-                    searchBar.transferFocusBackward();
-                }
-            }
+            public void focusGained(FocusEvent e) {}
 
             @Override
             public void focusLost(FocusEvent e) {
@@ -2245,6 +2240,19 @@ public class SearchBar {
         switchSearchBarShowingMode();
     }
 
+    private boolean isDark(int rgbHex) {
+        Color color = new Color(rgbHex);
+        return isDark(color.getRed(), color.getGreen(), color.getBlue());
+    }
+
+    /**
+     * 根据RGB值判断 深色与浅色
+     * @return true if color is dark
+     */
+    private boolean isDark(int r,int g,int b){
+        return !(r * 0.299 + g * 0.578 + b * 0.114 >= 192);
+    }
+
     @SuppressWarnings("unused")
     @EventRegister
     public static void registerEventHandler() {
@@ -2291,7 +2299,13 @@ public class SearchBar {
             @Override
             public void todo(Event event) {
                 SetSearchBarColorEvent setSearchBarColorTask = (SetSearchBarColorEvent) event;
-                getInstance().setSearchBarColor(setSearchBarColorTask.color);
+                SearchBar searchBarInstance = getInstance();
+                searchBarInstance.setSearchBarColor(setSearchBarColorTask.color);
+                if (searchBarInstance.isDark(setSearchBarColorTask.color)) {
+                    searchBarInstance.textField.setCaretColor(Color.WHITE);
+                } else {
+                    searchBarInstance.textField.setCaretColor(Color.BLACK);
+                }
             }
         });
 
@@ -2708,9 +2722,8 @@ public class SearchBar {
                         SwingUtilities.invokeLater(() -> {
                             if (isPreviewMode.get()) {
                                 SwingUtilities.updateComponentTreeUI(searchBar);
-                            } else {
-                                searchBar.repaint();
                             }
+                            searchBar.repaint();
                         });
                     }
                     TimeUnit.MILLISECONDS.sleep(250);
@@ -3161,6 +3174,11 @@ public class SearchBar {
      */
     private void showPluginResultOnLabel(String result, JLabel label, boolean isChosen) {
         currentUsingPlugin.showResultOnLabel(result, label, isChosen);
+        if (isChosen) {
+            label.setForeground(fontColorWithCoverage);
+        } else {
+            label.setForeground(labelFontColor);
+        }
     }
 
     /**
