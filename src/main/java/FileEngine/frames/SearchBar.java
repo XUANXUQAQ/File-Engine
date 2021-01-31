@@ -68,6 +68,7 @@ public class SearchBar {
     private final AtomicBoolean isDatabaseUpdated = new AtomicBoolean(false);
     private final AtomicBoolean isMouseDraggedInWindow = new AtomicBoolean(false);
     private final AtomicBoolean isNotSqlInitialized = new AtomicBoolean(true);
+    private final AtomicBoolean isBorderThreadNotExist = new AtomicBoolean(true);
     private static final AtomicBoolean isPreviewMode = new AtomicBoolean(false);
     private final AtomicBoolean isTutorialMode = new AtomicBoolean(false);
     private Border fullBorder;
@@ -3012,7 +3013,7 @@ public class SearchBar {
                         }
                     }
                 }
-                TimeUnit.MILLISECONDS.sleep(10);
+                TimeUnit.MILLISECONDS.sleep(250);
             }
         } catch (InterruptedException ignored) {
         }finally {
@@ -3035,7 +3036,6 @@ public class SearchBar {
                 if (allConfigs.isFirstRun()) {
                     runInternalCommand("help");
                 }
-                AtomicBoolean isBorderThreadNotExist = new AtomicBoolean(true);
                 while (eventManagement.isNotMainExit()) {
                     long endTime = System.currentTimeMillis();
                     text = getSearchBarText();
@@ -3066,10 +3066,6 @@ public class SearchBar {
                         clearAllLabels();
                         if (!getSearchBarText().isEmpty()) {
                             setLabelChosen(label1);
-                        }
-                        if (isBorderThreadNotExist.get()) {
-                            isBorderThreadNotExist.set(false);
-                            CachedThreadPoolUtil.getInstance().executeTask(() -> setBorderOnVisible(isBorderThreadNotExist));
                         }
                         if (databaseService.getStatus() == Enums.DatabaseStatus.NORMAL) {
                             if (runningMode == Enums.RunningMode.COMMAND_MODE) {
@@ -3327,6 +3323,10 @@ public class SearchBar {
                 textField.setCaretPosition(0);
                 startTime = System.currentTimeMillis();
                 visibleStartTime = startTime;
+            }
+            if (isBorderThreadNotExist.get()) {
+                isBorderThreadNotExist.set(false);
+                CachedThreadPoolUtil.getInstance().executeTask(() -> setBorderOnVisible(isBorderThreadNotExist));
             }
         });
     }
