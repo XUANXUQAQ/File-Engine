@@ -70,7 +70,9 @@ public class SearchBar {
     private final AtomicBoolean isNotSqlInitialized = new AtomicBoolean(true);
     private static final AtomicBoolean isPreviewMode = new AtomicBoolean(false);
     private final AtomicBoolean isTutorialMode = new AtomicBoolean(false);
-    private Border border;
+    private Border topBorder;
+    private Border middleBorder;
+    private Border bottomBorder;
     private final JFrame searchBar;
     private final JLabel label1;
     private final JLabel label2;
@@ -161,7 +163,7 @@ public class SearchBar {
         fontColorWithCoverage = new Color(allConfigs.getLabelFontColorWithCoverage());
         backgroundColor = new Color(allConfigs.getDefaultBackgroundColor());
         labelFontColor = new Color(allConfigs.getLabelFontColor());
-        border = BorderFactory.createLineBorder(new Color(allConfigs.getBorderColor()));
+        initBorder(allConfigs.getBorderType(), new Color(allConfigs.getBorderColor()), allConfigs.getBorderThickness());
 
         //frame
         searchBar.setBounds(positionX, positionY, searchBarWidth, searchBarHeight);
@@ -208,7 +210,6 @@ public class SearchBar {
         textField.setSize(searchBarWidth, labelHeight);
         Font textFieldFont = new Font(Font.SANS_SERIF, Font.PLAIN, getTextFieldFontSizeBySearchBarHeight(searchBarHeight));
         textField.setFont(textFieldFont);
-        textField.setBorder(border);
         textField.setForeground(Color.BLACK);
         textField.setHorizontalAlignment(JTextField.LEFT);
         textField.setBackground(Color.WHITE);
@@ -253,6 +254,29 @@ public class SearchBar {
         addTextFieldKeyListener();
 
         addTextFieldFocusListener();
+    }
+
+    private void initBorder(Enums.BorderType borderType, Color borderColor, int borderThickness) {
+        if (Enums.BorderType.AROUND == borderType) {
+            topBorder = BorderFactory.createMatteBorder(borderThickness,borderThickness,0,borderThickness, borderColor);
+            middleBorder = BorderFactory.createMatteBorder(0,borderThickness,0,borderThickness, borderColor);
+            bottomBorder = BorderFactory.createMatteBorder(0,borderThickness,borderThickness,borderThickness,borderColor);
+        } else if (Enums.BorderType.EMPTY == borderType) {
+            Border emptyBorder = BorderFactory.createEmptyBorder();
+            topBorder = emptyBorder;
+            middleBorder = emptyBorder;
+            bottomBorder = emptyBorder;
+        } else {
+            Border lineBorder = BorderFactory.createMatteBorder(
+                    borderThickness,
+                    borderThickness,
+                    borderThickness,
+                    borderThickness,
+                    borderColor);
+            topBorder = lineBorder;
+            middleBorder = lineBorder;
+            bottomBorder = lineBorder;
+        }
     }
 
     private static SearchBar getInstance() {
@@ -2287,11 +2311,11 @@ public class SearchBar {
             }
         });
 
-        eventManagement.register(SetBorderColorEvent.class, new EventHandler() {
+        eventManagement.register(SetBorderEvent.class, new EventHandler() {
             @Override
             public void todo(Event event) {
-                SetBorderColorEvent setBorderColorTask = (SetBorderColorEvent) event;
-                getInstance().setBorderColor(setBorderColorTask.color);
+                SetBorderEvent setBorderEvent = (SetBorderEvent) event;
+                getInstance().setBorderColor(setBorderEvent.borderType, setBorderEvent.borderColor, setBorderEvent.borderThickness);
             }
         });
 
@@ -2355,7 +2379,7 @@ public class SearchBar {
                 if (isPreviewMode.get()) {
                     PreviewSearchBarEvent preview = (PreviewSearchBarEvent) event;
                     SearchBar searchBar = getInstance();
-                    eventManagement.putEvent(new SetBorderColorEvent(preview.borderColor));
+                    eventManagement.putEvent(new SetBorderEvent(preview.borderType, preview.borderColor, preview.borderThickness));
                     eventManagement.putEvent(new SetSearchBarColorEvent(preview.searchBarColor));
                     eventManagement.putEvent(new SetSearchBarDefaultBackgroundEvent(preview.defaultBackgroundColor));
                     eventManagement.putEvent(new SetSearchBarFontColorEvent(preview.searchBarFontColor));
@@ -2820,6 +2844,87 @@ public class SearchBar {
         });
     }
 
+    private void setBorderOnVisible(AtomicBoolean isCreated) {
+        try {
+            while (isVisible() && !getSearchBarText().isEmpty()) {
+                if (showingMode == Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
+                    textField.setBorder(topBorder);
+                    JLabel labelBottom;
+                    int resultNum = listResultsNum.get();
+                    if (resultNum == 0 || resultNum == 1) {
+                        labelBottom = label1;
+                    } else if (resultNum == 2) {
+                        label1.setBorder(middleBorder);
+                        labelBottom = label2;
+                    } else if (resultNum == 3){
+                        label1.setBorder(middleBorder);
+                        label2.setBorder(middleBorder);
+                        labelBottom = label3;
+                    } else if (resultNum == 4) {
+                        label1.setBorder(middleBorder);
+                        label2.setBorder(middleBorder);
+                        label3.setBorder(middleBorder);
+                        labelBottom = label4;
+                    } else if (resultNum == 5) {
+                        label1.setBorder(middleBorder);
+                        label2.setBorder(middleBorder);
+                        label3.setBorder(middleBorder);
+                        label4.setBorder(middleBorder);
+                        labelBottom = label5;
+                    } else if (resultNum == 6) {
+                        label1.setBorder(middleBorder);
+                        label2.setBorder(middleBorder);
+                        label3.setBorder(middleBorder);
+                        label4.setBorder(middleBorder);
+                        label5.setBorder(middleBorder);
+                        labelBottom = label6;
+                    } else if (resultNum == 7) {
+                        label1.setBorder(middleBorder);
+                        label2.setBorder(middleBorder);
+                        label3.setBorder(middleBorder);
+                        label4.setBorder(middleBorder);
+                        label5.setBorder(middleBorder);
+                        label6.setBorder(middleBorder);
+                        labelBottom = label7;
+                    } else {
+                        label1.setBorder(middleBorder);
+                        label2.setBorder(middleBorder);
+                        label3.setBorder(middleBorder);
+                        label4.setBorder(middleBorder);
+                        label5.setBorder(middleBorder);
+                        label6.setBorder(middleBorder);
+                        label7.setBorder(middleBorder);
+                        labelBottom = label8;
+                    }
+                    labelBottom.setBorder(bottomBorder);
+                } else {
+                    label1.setBorder(topBorder);
+                    label2.setBorder(middleBorder);
+                    label3.setBorder(middleBorder);
+                    label4.setBorder(middleBorder);
+                    label5.setBorder(middleBorder);
+                    label6.setBorder(middleBorder);
+                    label7.setBorder(middleBorder);
+                    label8.setBorder(middleBorder);
+                    textField.setBorder(bottomBorder);
+                }
+                TimeUnit.MILLISECONDS.sleep(10);
+            }
+            label1.setBorder(null);
+            label2.setBorder(null);
+            label3.setBorder(null);
+            label4.setBorder(null);
+            label5.setBorder(null);
+            label6.setBorder(null);
+            label7.setBorder(null);
+            label8.setBorder(null);
+
+        } catch (InterruptedException ignored) {
+        }finally {
+            isCreated.set(false);
+        }
+    }
+
     private void sendSignalAndShowCommandThread() {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             //缓存和常用文件夹搜索线程
@@ -2834,6 +2939,7 @@ public class SearchBar {
                 if (allConfigs.isFirstRun()) {
                     runInternalCommand("help");
                 }
+                AtomicBoolean isBorderThreadCreated = new AtomicBoolean(false);
                 while (eventManagement.isNotMainExit()) {
                     long endTime = System.currentTimeMillis();
                     text = getSearchBarText();
@@ -2864,6 +2970,9 @@ public class SearchBar {
                         clearAllLabels();
                         if (!getSearchBarText().isEmpty()) {
                             setLabelChosen(label1);
+                        }
+                        if (!isBorderThreadCreated.get()) {
+                            CachedThreadPoolUtil.getInstance().executeTask(() -> setBorderOnVisible(isBorderThreadCreated));
                         }
                         if (databaseService.getStatus() == Enums.DatabaseStatus.NORMAL) {
                             if (runningMode == Enums.RunningMode.COMMAND_MODE) {
@@ -3161,7 +3270,6 @@ public class SearchBar {
         label.setText(showStr);
         ImageIcon icon = GetIconUtil.getInstance().getBigIcon(path, iconSideLength, iconSideLength);
         label.setIcon(icon);
-        label.setBorder(border);
         if (isChosen) {
             setLabelChosen(label);
         } else {
@@ -3216,7 +3324,6 @@ public class SearchBar {
         ImageIcon imageIcon = getIconUtil.getCommandIcon(colon.split(name)[1], iconSideLength, iconSideLength);
         imageIcon = imageIcon == null ? getIconUtil.getBigIcon(path, iconSideLength, iconSideLength) : imageIcon;
         label.setIcon(imageIcon);
-        label.setBorder(border);
         if (isChosen) {
             setLabelChosen(label);
         } else {
@@ -3331,7 +3438,6 @@ public class SearchBar {
         label.setBackground(null);
         label.setText(null);
         label.setIcon(null);
-        label.setBorder(null);
     }
 
     /**
@@ -3735,9 +3841,9 @@ public class SearchBar {
         textField.setForeground(new Color(colorNum));
     }
 
-    private void setBorderColor(int colorNum) {
-        border = BorderFactory.createLineBorder(new Color(colorNum));
-        textField.setBorder(border);
+    private void setBorderColor(Enums.BorderType borderType, int colorNum, int borderThickness) {
+        initBorder(borderType, new Color(colorNum), borderThickness);
+        textField.setBorder(topBorder);
     }
 }
 

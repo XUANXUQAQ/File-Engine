@@ -31,4 +31,8 @@ public class Enums {
         Gray, LightFlat, MaterialDesignDark, Monocai,
         Nord, OneDark, MaterialDarker, MaterialLighter
     }
+
+    public enum BorderType {
+        EMPTY, AROUND, FULL
+    }
 }

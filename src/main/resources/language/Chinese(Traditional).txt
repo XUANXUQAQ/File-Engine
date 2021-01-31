@@ -218,3 +218,6 @@ Only supports NTFS format disks=僅支持NTFS格式的磁盤
 Only the disks on this machine are listed below, click "Add" button to add a removable disk=下面僅列出了此計算機上的磁盤，單擊“添加”按鈕添加可移動磁盤
 Rebuild=重建
 Check for update at startup=啟動時檢查更新
+Border Thickness=邊框厚度
+Border Type=邊框類型
+Border thickness is too large, please change=邊框厚度太大，請更改

@@ -218,3 +218,6 @@ Only supports NTFS format disks=Поддерживает только диски
 Only the disks on this machine are listed below, click "Add" button to add a removable disk=Ниже перечислены только диски на этом компьютере. Нажмите кнопку «Добавить», чтобы добавить съемный диск.
 Rebuild=Восстановить
 Check for update at startup=Проверять обновления при запуске
+Border Thickness=Толщина границы
+Border Type=Тип границы
+Border thickness is too large, please change=Слишком большая толщина границы, измените

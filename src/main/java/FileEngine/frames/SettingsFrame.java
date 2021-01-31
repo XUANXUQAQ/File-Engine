@@ -261,6 +261,10 @@ public class SettingsFrame {
     private JLabel labelTipNTFSTip;
     private JLabel labelLocalDiskTip;
     private JCheckBox checkBoxCheckUpdate;
+    private JLabel labelBorderType;
+    private JLabel labelBorderThickness;
+    private JTextField textFieldBorderThickness;
+    private JComboBox<Object> comboBoxBorderType;
 
 
     private static volatile SettingsFrame instance = null;
@@ -605,6 +609,19 @@ public class SettingsFrame {
             textFieldSearchBarFontColor.setText(toRGBHexString(AllConfigs.defaultSearchbarFontColor));
             textFieldBorderColor.setText(toRGBHexString(AllConfigs.defaultBorderColor));
         });
+    }
+
+    private boolean canParseInteger(String str, int min, int max) {
+        try {
+            int ret = Integer.parseInt(str);
+            if (min <= ret && ret <= max) {
+                return true;
+            } else {
+                throw new Exception("parse failed");
+            }
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     private boolean canParseToRGB(String str) {
@@ -956,6 +973,8 @@ public class SettingsFrame {
                     String fontColorCoverage;
                     String fontColor;
                     String defaultBackgroundColor;
+                    Enums.BorderType borderType;
+                    String borderThickness;
                     while (PreviewStatus.isPreview && eventManagement.isNotMainExit()) {
                         borderColor = textFieldBorderColor.getText();
                         searchBarColor = textFieldSearchBarColor.getText();
@@ -964,10 +983,12 @@ public class SettingsFrame {
                         fontColorCoverage = textFieldFontColorWithCoverage.getText();
                         fontColor = textFieldFontColor.getText();
                         defaultBackgroundColor = textFieldBackgroundDefault.getText();
+                        borderThickness = textFieldBorderThickness.getText();
+                        borderType = (Enums.BorderType) comboBoxBorderType.getSelectedItem();
                         if (canParseToRGB(borderColor) && canParseToRGB(searchBarColor) &&
                                 canParseToRGB(searchBarFontColor) && canParseToRGB(labelColor) &&
                                 canParseToRGB(fontColorCoverage) && canParseToRGB(fontColor) &&
-                                canParseToRGB(defaultBackgroundColor)) {
+                                canParseToRGB(defaultBackgroundColor) && canParseInteger(borderThickness, 1, 5)) {
                             eventManagement.putEvent(
                                     new PreviewSearchBarEvent(
                                             borderColor,
@@ -976,7 +997,9 @@ public class SettingsFrame {
                                             labelColor,
                                             fontColorCoverage,
                                             fontColor,
-                                            defaultBackgroundColor
+                                            defaultBackgroundColor,
+                                            borderType,
+                                            borderThickness
                                     )
                             );
                         }
@@ -1480,6 +1503,7 @@ public class SettingsFrame {
         textFieldPort.setText(String.valueOf(allConfigs.getProxyPort()));
         textFieldUserName.setText(allConfigs.getProxyUserName());
         textFieldPassword.setText(allConfigs.getProxyPassword());
+        textFieldBorderThickness.setText(String.valueOf(allConfigs.getBorderThickness()));
         textAreaIgnorePath.setText(RegexUtil.comma.matcher(allConfigs.getIgnorePath()).replaceAll(",\n"));
         if (allConfigs.getRunAsAdminKeyCode() == 17) {
             textFieldRunAsAdminHotKey.setText("Ctrl + Enter");
@@ -1662,6 +1686,7 @@ public class SettingsFrame {
             selectProxyType();
         }
         chooseUpdateAddress.setSelectedItem(allConfigs.getUpdateAddress());
+        comboBoxBorderType.setSelectedItem(allConfigs.getBorderType());
     }
 
     private void initCacheArray() {
@@ -1782,6 +1807,8 @@ public class SettingsFrame {
 
         addUpdateAddressToComboBox();
 
+        addBorderTypeToComboBox();
+
         initCacheArray();
 
         initSuffixMap();
@@ -1837,6 +1864,13 @@ public class SettingsFrame {
 
     private void addCache(String cache) {
         cacheSet.add(cache);
+    }
+
+    private void addBorderTypeToComboBox() {
+        Enums.BorderType[] borderTypes = Enums.BorderType.values();
+        for (Enums.BorderType each : borderTypes) {
+            comboBoxBorderType.addItem(each);
+        }
     }
 
     private void addUpdateAddressToComboBox() {
@@ -1905,6 +1939,8 @@ public class SettingsFrame {
         labelIndexChooseDisk.setText(translateUtil.getTranslation("The disks listed below will be indexed"));
         labelTipNTFSTip.setText(translateUtil.getTranslation("Only supports NTFS format disks"));
         labelLocalDiskTip.setText(translateUtil.getTranslation("Only the disks on this machine are listed below, click \"Add\" button to add a removable disk"));
+        labelBorderThickness.setText(translateUtil.getTranslation("Border Thickness"));
+        labelBorderType.setText(translateUtil.getTranslation("Border Type"));
     }
 
     private void translateCheckbox() {
@@ -2051,26 +2087,20 @@ public class SettingsFrame {
         });
     }
 
-    private void checkUpdateTimeLimit(StringBuilder strBuilder) {
-        int updateTimeLimitTemp;
-        try {
-            updateTimeLimitTemp = Integer.parseInt(textFieldUpdateInterval.getText());
-        } catch (Exception e1) {
-            updateTimeLimitTemp = -1; // 输入不正确
+    private void checkBorderThickness(StringBuilder stringBuilder) {
+        if (!canParseInteger(textFieldBorderThickness.getText(), 1, 4)) {
+            stringBuilder.append(translateUtil.getTranslation("Border thickness is too large, please change"));
         }
-        if (updateTimeLimitTemp > 3600 || updateTimeLimitTemp <= 0) {
+    }
+
+    private void checkUpdateTimeLimit(StringBuilder strBuilder) {
+        if (!canParseInteger(textFieldUpdateInterval.getText(), 1, 3600)) {
             strBuilder.append(translateUtil.getTranslation("The file index update setting is wrong, please change")).append("\n");
         }
     }
 
     private void checkCacheNumLimit(StringBuilder strBuilder) {
-        int cacheNumLimitTemp;
-        try {
-            cacheNumLimitTemp = Integer.parseInt(textFieldCacheNum.getText());
-        } catch (Exception e1) {
-            cacheNumLimitTemp = -1;
-        }
-        if (cacheNumLimitTemp > 10000 || cacheNumLimitTemp <= 0) {
+        if (!canParseInteger(textFieldCacheNum.getText(), 1, 3600)) {
             strBuilder.append(translateUtil.getTranslation("The cache capacity is set incorrectly, please change")).append("\n");
         }
     }
@@ -2144,9 +2174,7 @@ public class SettingsFrame {
     }
 
     private void checkProxy(StringBuilder strBuilder) {
-        try {
-            Integer.parseInt(textFieldPort.getText());
-        } catch (RuntimeException e) {
+        if (!canParseInteger(textFieldPort.getText(), 0, 65535)) {
             strBuilder.append(translateUtil.getTranslation("Proxy port is set incorrectly.")).append("\n");
         }
     }
@@ -2166,10 +2194,12 @@ public class SettingsFrame {
         checkHotKey(errorsStrb);
         checkCacheNumLimit(errorsStrb);
         checkUpdateTimeLimit(errorsStrb);
+        checkBorderThickness(errorsStrb);
 
         String ignorePathTemp = RegexUtil.lineFeed.matcher(textAreaIgnorePath.getText()).replaceAll("");
 
         String swingTheme = (String) listSwingThemes.getSelectedValue();
+        Enums.BorderType borderType = (Enums.BorderType) comboBoxBorderType.getSelectedItem();
 
         String errors = errorsStrb.toString();
         if (!errors.isEmpty()) {
@@ -2199,6 +2229,11 @@ public class SettingsFrame {
             configEntity.setProxyType(Enums.ProxyType.PROXY_DIRECT);
         }
         configEntity.setUpdateAddress((String) chooseUpdateAddress.getSelectedItem());
+        configEntity.setBorderThickness(Integer.parseInt(textFieldBorderThickness.getText()));
+        if (borderType == null) {
+            borderType = Enums.BorderType.AROUND;
+        }
+        configEntity.setBorderType(borderType.toString());
         configEntity.setPriorityFolder(textFieldPriorityFolder.getText());
         configEntity.setHotkey(textFieldHotkey.getText());
         configEntity.setCacheNumLimit(Integer.parseInt(textFieldCacheNum.getText()));

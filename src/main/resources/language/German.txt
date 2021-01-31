@@ -218,3 +218,6 @@ Only supports NTFS format disks=Unterstützt nur Festplatten im NTFS-Format
 Only the disks on this machine are listed below, click "Add" button to add a removable disk=Im Folgenden werden nur die Datenträger auf diesem Computer aufgeführt. Klicken Sie auf die Schaltfläche "Hinzufügen", um einen Wechseldatenträger hinzuzufügen
 Rebuild=Wiederaufbauen
 Check for update at startup=Suchen Sie beim Start nach Updates
+Border Thickness=Randdicke
+Border Type=Randtyp
+Border thickness is too large, please change=Randstärke ist zu groß, bitte ändern
