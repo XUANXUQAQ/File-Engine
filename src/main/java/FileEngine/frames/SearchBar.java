@@ -2867,70 +2867,150 @@ public class SearchBar {
     private void setBorderOnVisible(AtomicBoolean isNotExist) {
         try {
             while (isVisible()) {
-                clearAllLabelBorder();
-                if (getSearchBarText().isEmpty()) {
+                String text = getSearchBarText();
+                if (text == null || text.isEmpty()) {
+                    clearAllLabelBorder();
                     textField.setBorder(fullBorder);
-                }
-                if (showingMode == Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
-                    textField.setBorder(topBorder);
-                    JLabel labelBottom;
+                } else {
+                    if (showingMode == Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
+                        textField.setBorder(topBorder);
+                    } else {
+                        textField.setBorder(bottomBorder);
+                    }
                     int resultNum = listResultsNum.get();
                     if (resultNum == 0 || resultNum == 1) {
-                        labelBottom = label1;
+                        if (showingMode == Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
+                            label1.setBorder(bottomBorder);
+                        } else {
+                            label1.setBorder(topBorder);
+                        }
+                        label2.setBorder(null);
+                        label3.setBorder(null);
+                        label4.setBorder(null);
+                        label5.setBorder(null);
+                        label6.setBorder(null);
+                        label7.setBorder(null);
+                        label8.setBorder(null);
                     } else if (resultNum == 2) {
-                        label1.setBorder(middleBorder);
-                        labelBottom = label2;
-                    } else if (resultNum == 3){
-                        label1.setBorder(middleBorder);
-                        label2.setBorder(middleBorder);
-                        labelBottom = label3;
+                        if (showingMode == Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
+                            label1.setBorder(middleBorder);
+                            label2.setBorder(bottomBorder);
+                        } else {
+                            label1.setBorder(topBorder);
+                            label2.setBorder(middleBorder);
+                        }
+                        label3.setBorder(null);
+                        label4.setBorder(null);
+                        label5.setBorder(null);
+                        label6.setBorder(null);
+                        label7.setBorder(null);
+                        label8.setBorder(null);
+                    } else if (resultNum == 3) {
+                        if (showingMode == Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
+                            label1.setBorder(middleBorder);
+                            label2.setBorder(middleBorder);
+                            label3.setBorder(bottomBorder);
+                        } else {
+                            label1.setBorder(topBorder);
+                            label2.setBorder(middleBorder);
+                            label3.setBorder(middleBorder);
+                        }
+                        label4.setBorder(null);
+                        label5.setBorder(null);
+                        label6.setBorder(null);
+                        label7.setBorder(null);
+                        label8.setBorder(null);
                     } else if (resultNum == 4) {
-                        label1.setBorder(middleBorder);
-                        label2.setBorder(middleBorder);
-                        label3.setBorder(middleBorder);
-                        labelBottom = label4;
+                        if (showingMode == Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
+                            label1.setBorder(middleBorder);
+                            label2.setBorder(middleBorder);
+                            label3.setBorder(middleBorder);
+                            label4.setBorder(bottomBorder);
+                        } else {
+                            label1.setBorder(topBorder);
+                            label2.setBorder(middleBorder);
+                            label3.setBorder(middleBorder);
+                            label4.setBorder(middleBorder);
+                        }
+                        label5.setBorder(null);
+                        label6.setBorder(null);
+                        label7.setBorder(null);
+                        label8.setBorder(null);
                     } else if (resultNum == 5) {
-                        label1.setBorder(middleBorder);
-                        label2.setBorder(middleBorder);
-                        label3.setBorder(middleBorder);
-                        label4.setBorder(middleBorder);
-                        labelBottom = label5;
+                        if (showingMode == Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
+                            label1.setBorder(middleBorder);
+                            label2.setBorder(middleBorder);
+                            label3.setBorder(middleBorder);
+                            label4.setBorder(middleBorder);
+                            label5.setBorder(bottomBorder);
+                        } else {
+                            label1.setBorder(topBorder);
+                            label2.setBorder(middleBorder);
+                            label3.setBorder(middleBorder);
+                            label4.setBorder(middleBorder);
+                            label5.setBorder(middleBorder);
+                        }
+                        label6.setBorder(null);
+                        label7.setBorder(null);
+                        label8.setBorder(null);
                     } else if (resultNum == 6) {
-                        label1.setBorder(middleBorder);
-                        label2.setBorder(middleBorder);
-                        label3.setBorder(middleBorder);
-                        label4.setBorder(middleBorder);
-                        label5.setBorder(middleBorder);
-                        labelBottom = label6;
+                        if (showingMode == Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
+                            label1.setBorder(middleBorder);
+                            label2.setBorder(middleBorder);
+                            label3.setBorder(middleBorder);
+                            label4.setBorder(middleBorder);
+                            label5.setBorder(middleBorder);
+                            label6.setBorder(bottomBorder);
+                        } else {
+                            label1.setBorder(topBorder);
+                            label2.setBorder(middleBorder);
+                            label3.setBorder(middleBorder);
+                            label4.setBorder(middleBorder);
+                            label5.setBorder(middleBorder);
+                            label6.setBorder(middleBorder);
+                        }
+                        label7.setBorder(null);
+                        label8.setBorder(null);
                     } else if (resultNum == 7) {
-                        label1.setBorder(middleBorder);
-                        label2.setBorder(middleBorder);
-                        label3.setBorder(middleBorder);
-                        label4.setBorder(middleBorder);
-                        label5.setBorder(middleBorder);
-                        label6.setBorder(middleBorder);
-                        labelBottom = label7;
+                        if (showingMode == Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
+                            label1.setBorder(middleBorder);
+                            label2.setBorder(middleBorder);
+                            label3.setBorder(middleBorder);
+                            label4.setBorder(middleBorder);
+                            label5.setBorder(middleBorder);
+                            label6.setBorder(middleBorder);
+                            label7.setBorder(bottomBorder);
+                        } else {
+                            label1.setBorder(topBorder);
+                            label2.setBorder(middleBorder);
+                            label3.setBorder(middleBorder);
+                            label4.setBorder(middleBorder);
+                            label5.setBorder(middleBorder);
+                            label6.setBorder(middleBorder);
+                            label7.setBorder(middleBorder);
+                        }
+                        label8.setBorder(null);
                     } else {
-                        label1.setBorder(middleBorder);
-                        label2.setBorder(middleBorder);
-                        label3.setBorder(middleBorder);
-                        label4.setBorder(middleBorder);
-                        label5.setBorder(middleBorder);
-                        label6.setBorder(middleBorder);
-                        label7.setBorder(middleBorder);
-                        labelBottom = label8;
+                        if (showingMode == Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
+                            label1.setBorder(middleBorder);
+                            label2.setBorder(middleBorder);
+                            label3.setBorder(middleBorder);
+                            label4.setBorder(middleBorder);
+                            label5.setBorder(middleBorder);
+                            label6.setBorder(middleBorder);
+                            label7.setBorder(middleBorder);
+                            label8.setBorder(bottomBorder);
+                        } else {
+                            label1.setBorder(topBorder);
+                            label2.setBorder(middleBorder);
+                            label3.setBorder(middleBorder);
+                            label4.setBorder(middleBorder);
+                            label5.setBorder(middleBorder);
+                            label6.setBorder(middleBorder);
+                            label7.setBorder(middleBorder);
+                            label8.setBorder(middleBorder);
+                        }
                     }
-                    labelBottom.setBorder(bottomBorder);
-                } else {
-                    label1.setBorder(topBorder);
-                    label2.setBorder(middleBorder);
-                    label3.setBorder(middleBorder);
-                    label4.setBorder(middleBorder);
-                    label5.setBorder(middleBorder);
-                    label6.setBorder(middleBorder);
-                    label7.setBorder(middleBorder);
-                    label8.setBorder(middleBorder);
-                    textField.setBorder(bottomBorder);
                 }
                 TimeUnit.MILLISECONDS.sleep(10);
             }
@@ -3860,7 +3940,7 @@ public class SearchBar {
 
     private void setBorderColor(Enums.BorderType borderType, int colorNum, int borderThickness) {
         initBorder(borderType, new Color(colorNum), borderThickness);
-        textField.setBorder(topBorder);
+        textField.setBorder(fullBorder);
     }
 }
 

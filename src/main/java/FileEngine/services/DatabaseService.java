@@ -214,9 +214,6 @@ public class DatabaseService {
         int asciiSum = getAscIISum(getFileName(path));
         if (isRemoveFileInDatabase(path)) {
             addDeleteSqlCommandByAscii(asciiSum, path);
-            if (IsDebug.isDebug()) {
-                System.out.println("删除" + path + "," + "asciiSum为" + asciiSum);
-            }
         }
     }
 
@@ -246,9 +243,6 @@ public class DatabaseService {
     private void addFileToDatabase(String path) {
         int asciiSum = getAscIISum(getFileName(path));
         addAddSqlCommandByAscii(asciiSum, path, getPriorityBySuffix(getSuffixByPath(path)));
-        if (IsDebug.isDebug()) {
-            System.out.println("添加" + path + "," + "asciiSum为" + asciiSum);
-        }
     }
 
     private void addFileToCache(String path) {
@@ -288,9 +282,6 @@ public class DatabaseService {
                 for (SQLWithTaskId each : tempCommandSet) {
                     stmt.execute(each.sql);
                     commandSet.remove(each);
-                    if (IsDebug.isDebug()) {
-                        System.err.println("当前执行SQL---" + each.sql + "----------------任务组：" + each.taskId);
-                    }
                 }
             } catch (SQLException e) {
                 if (IsDebug.isDebug()) {
