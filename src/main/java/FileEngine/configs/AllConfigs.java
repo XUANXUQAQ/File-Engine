@@ -323,6 +323,29 @@ public class AllConfigs {
         return configEntity.getBorderColor();
     }
 
+    /**
+     * 获取边框类型
+     * @return 边框类型
+     * @see Enums.BorderType
+     */
+    public Enums.BorderType getBorderType() {
+        String borderType = configEntity.getBorderType();
+        for (Enums.BorderType each : Enums.BorderType.values()) {
+            if (each.toString().equals(borderType)) {
+                return each;
+            }
+        }
+        return Enums.BorderType.AROUND;
+    }
+
+    /**
+     * 获取边框厚度
+     * @return 厚度
+     */
+    public int getBorderThickness() {
+        return configEntity.getBorderThickness();
+    }
+
     public boolean isCheckUpdateStartup() {
         return configEntity.isCheckUpdateStartup();
     }
@@ -482,6 +505,10 @@ public class AllConfigs {
         configEntity.setDefaultBackgroundColor((int) getFromJson(settingsInJson, "defaultBackground", defaultWindowBackgroundColor));
     }
 
+    private void readBorderType(JSONObject settingsInJson) {
+        configEntity.setBorderType((String) getFromJson(settingsInJson, "borderType", Enums.BorderType.AROUND.toString()));
+    }
+
     private void readBorderColor(JSONObject settingsInJson) {
         configEntity.setBorderColor((int) getFromJson(settingsInJson, "borderColor", defaultBorderColor));
     }
@@ -502,10 +529,15 @@ public class AllConfigs {
         configEntity.setSearchBarFontColor((int) getFromJson(settingsInJson, "searchBarFontColor", defaultSearchbarFontColor));
     }
 
+    private void readBorderThickness(JSONObject settingsInJson) {
+        configEntity.setBorderThickness((int) getFromJson(settingsInJson, "borderThickness", 1));
+    }
+
     private void readLanguage(JSONObject settingsInJson) {
-        String language = (String) getFromJson(settingsInJson, "language", TranslateUtil.getInstance().getDefaultLang());
+        TranslateUtil translateUtil = TranslateUtil.getInstance();
+        String language = (String) getFromJson(settingsInJson, "language", translateUtil.getDefaultLang());
         configEntity.setLanguage(language);
-        TranslateUtil.getInstance().setLanguage(language);
+        translateUtil.setLanguage(language);
     }
 
     private void readProxy(JSONObject settingsInJson) {
@@ -568,6 +600,7 @@ public class AllConfigs {
         readLabelColor(settingsInJson);
         readLanguage(settingsInJson);
         readBorderColor(settingsInJson);
+        readBorderType(settingsInJson);
         readSearchBarColor(settingsInJson);
         readSearchBarFontColor(settingsInJson);
         readFontColor(settingsInJson);
@@ -590,16 +623,18 @@ public class AllConfigs {
         readSwingTheme(settingsInJson);
         readDisks(settingsInJson);
         readCheckUpdateStartup(settingsInJson);
+        readBorderThickness(settingsInJson);
         initUpdateAddress();
         initCmdSetSettings();
     }
 
     private void setAllSettings() {
         EventManagement eventManagement = EventManagement.getInstance();
+        AllConfigs allConfigs = AllConfigs.getInstance();
         eventManagement.putEvent(new SetPluginsCurrentThemeEvent(
-                AllConfigs.getInstance().getDefaultBackgroundColor(),
-                AllConfigs.getInstance().getLabelColor(),
-                AllConfigs.getInstance().getBorderColor()));
+                allConfigs.getDefaultBackgroundColor(),
+                allConfigs.getLabelColor(),
+                allConfigs.getBorderColor()));
         eventManagement.putEvent(new RegisterHotKeyEvent(configEntity.getHotkey()));
         eventManagement.putEvent(new SetSearchBarTransparencyEvent(configEntity.getTransparency()));
         eventManagement.putEvent(new SetSearchBarDefaultBackgroundEvent(configEntity.getDefaultBackgroundColor()));
@@ -608,7 +643,7 @@ public class AllConfigs {
         eventManagement.putEvent(new SetSearchBarLabelFontColorEvent(configEntity.getFontColor()));
         eventManagement.putEvent(new SetSearchBarColorEvent(configEntity.getSearchBarColor()));
         eventManagement.putEvent(new SetSearchBarFontColorEvent(configEntity.getSearchBarFontColor()));
-        eventManagement.putEvent(new SetBorderColorEvent(configEntity.getBorderColor()));
+        eventManagement.putEvent(new SetBorderEvent(allConfigs.getBorderType(), configEntity.getBorderColor(), configEntity.getBorderThickness()));
         eventManagement.putEvent(new SetSwingLaf("current"));
     }
 

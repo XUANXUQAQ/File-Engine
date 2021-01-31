@@ -93,4 +93,10 @@ public @Data class ConfigEntity {
 
     @JSONField(name = "isCheckUpdateStartup")
     private boolean isCheckUpdateStartup;
+
+    @JSONField(name = "borderType")
+    private String borderType;
+
+    @JSONField(name = "borderThickness")
+    private int borderThickness;
 }

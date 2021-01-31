@@ -218,3 +218,6 @@ Only supports NTFS format disks=NTFSフォーマットのディスクのみを�
 Only the disks on this machine are listed below, click "Add" button to add a removable disk=このコンピュータのディスクのみが以下にリストされています。「追加」ボタンをクリックして、リムーバブルディスクを追加します。
 Rebuild=再構築
 Check for update at startup=起動時に更新を確認する
+Border Thickness=境界線の厚さ
+Border Type=ボーダータイプ
+Border thickness is too large, please change=ボーダーの太さが大きすぎますので、変更してください

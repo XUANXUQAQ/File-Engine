@@ -1,5 +1,6 @@
 package FileEngine.eventHandler.impl.frame.searchBar;
 
+import FileEngine.configs.Enums;
 import FileEngine.eventHandler.Event;
 
 public class PreviewSearchBarEvent extends Event {
@@ -10,8 +11,17 @@ public class PreviewSearchBarEvent extends Event {
     public final int chosenLabelFontColor;
     public final int unchosenLabelFontColor;
     public final int defaultBackgroundColor;
-    public PreviewSearchBarEvent(String borderColor, String searchBarColor, String searchBarFontColor, String chosenLabelColor,
-                                 String chosenLabelFontColor, String unchosenLabelFontColor, String defaultBackgroundColor) {
+    public final Enums.BorderType borderType;
+    public final int borderThickness;
+    public PreviewSearchBarEvent(String borderColor,
+                                 String searchBarColor,
+                                 String searchBarFontColor,
+                                 String chosenLabelColor,
+                                 String chosenLabelFontColor,
+                                 String unchosenLabelFontColor,
+                                 String defaultBackgroundColor,
+                                 Enums.BorderType borderType,
+                                 String borderThickness) {
         super();
         this.borderColor = Integer.parseInt(borderColor, 16);
         this.searchBarColor = Integer.parseInt(searchBarColor, 16);
@@ -20,5 +30,7 @@ public class PreviewSearchBarEvent extends Event {
         this.chosenLabelFontColor = Integer.parseInt(chosenLabelFontColor, 16);
         this.unchosenLabelFontColor = Integer.parseInt(unchosenLabelFontColor, 16);
         this.defaultBackgroundColor = Integer.parseInt(defaultBackgroundColor, 16);
+        this.borderThickness = Integer.parseInt(borderThickness);
+        this.borderType = borderType;
     }
 }

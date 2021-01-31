@@ -218,3 +218,6 @@ Only supports NTFS format disks=Supporta solo dischi in formato NTFS
 Only the disks on this machine are listed below, click "Add" button to add a removable disk=Di seguito sono elencati solo i dischi su questo computer, fare clic sul pulsante "Aggiungi" per aggiungere un disco rimovibile
 Rebuild=Ricostruire
 Check for update at startup=Verifica la disponibilità di aggiornamenti all'avvio
+Border Thickness=Spessore del bordo
+Border Type=Tipo di bordo
+Border thickness is too large, please change=Lo spessore del bordo è troppo grande, cambiare

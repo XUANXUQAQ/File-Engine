@@ -218,3 +218,6 @@ Only supports NTFS format disks=NTFS 형식 디스크 만 지원
 Only the disks on this machine are listed below, click "Add" button to add a removable disk=이 컴퓨터의 디스크 만 아래에 나열됩니다. "추가"버튼을 클릭하여 이동식 디스크를 추가하십시오
 Rebuild=재 구축
 Check for update at startup=시작시 업데이트 확인
+Border Thickness=테두리 두께
+Border Type=테두리 유형
+Border thickness is too large, please change=테두리 두께가 너무 큽니다. 변경하십시오.
