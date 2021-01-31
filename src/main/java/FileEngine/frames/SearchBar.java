@@ -3013,7 +3013,7 @@ public class SearchBar {
                         }
                     }
                 }
-                TimeUnit.MILLISECONDS.sleep(250);
+                TimeUnit.MILLISECONDS.sleep(15);
             }
         } catch (InterruptedException ignored) {
         }finally {
