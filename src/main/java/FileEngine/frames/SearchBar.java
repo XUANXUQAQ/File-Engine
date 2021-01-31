@@ -70,6 +70,7 @@ public class SearchBar {
     private final AtomicBoolean isNotSqlInitialized = new AtomicBoolean(true);
     private static final AtomicBoolean isPreviewMode = new AtomicBoolean(false);
     private final AtomicBoolean isTutorialMode = new AtomicBoolean(false);
+    private Border fullBorder;
     private Border topBorder;
     private Border middleBorder;
     private Border bottomBorder;
@@ -261,11 +262,18 @@ public class SearchBar {
             topBorder = BorderFactory.createMatteBorder(borderThickness,borderThickness,0,borderThickness, borderColor);
             middleBorder = BorderFactory.createMatteBorder(0,borderThickness,0,borderThickness, borderColor);
             bottomBorder = BorderFactory.createMatteBorder(0,borderThickness,borderThickness,borderThickness,borderColor);
+            fullBorder = BorderFactory.createMatteBorder(
+                    borderThickness,
+                    borderThickness,
+                    borderThickness,
+                    borderThickness,
+                    borderColor);
         } else if (Enums.BorderType.EMPTY == borderType) {
             Border emptyBorder = BorderFactory.createEmptyBorder();
             topBorder = emptyBorder;
             middleBorder = emptyBorder;
             bottomBorder = emptyBorder;
+            fullBorder = emptyBorder;
         } else {
             Border lineBorder = BorderFactory.createMatteBorder(
                     borderThickness,
@@ -276,6 +284,7 @@ public class SearchBar {
             topBorder = lineBorder;
             middleBorder = lineBorder;
             bottomBorder = lineBorder;
+            fullBorder = lineBorder;
         }
     }
 
@@ -2844,9 +2853,24 @@ public class SearchBar {
         });
     }
 
-    private void setBorderOnVisible(AtomicBoolean isCreated) {
+    private void clearAllLabelBorder() {
+        label1.setBorder(null);
+        label2.setBorder(null);
+        label3.setBorder(null);
+        label4.setBorder(null);
+        label5.setBorder(null);
+        label6.setBorder(null);
+        label7.setBorder(null);
+        label8.setBorder(null);
+    }
+
+    private void setBorderOnVisible(AtomicBoolean isNotExist) {
         try {
-            while (isVisible() && !getSearchBarText().isEmpty()) {
+            while (isVisible()) {
+                clearAllLabelBorder();
+                if (getSearchBarText().isEmpty()) {
+                    textField.setBorder(fullBorder);
+                }
                 if (showingMode == Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
                     textField.setBorder(topBorder);
                     JLabel labelBottom;
@@ -2910,18 +2934,10 @@ public class SearchBar {
                 }
                 TimeUnit.MILLISECONDS.sleep(10);
             }
-            label1.setBorder(null);
-            label2.setBorder(null);
-            label3.setBorder(null);
-            label4.setBorder(null);
-            label5.setBorder(null);
-            label6.setBorder(null);
-            label7.setBorder(null);
-            label8.setBorder(null);
-
         } catch (InterruptedException ignored) {
         }finally {
-            isCreated.set(false);
+            clearAllLabelBorder();
+            isNotExist.set(true);
         }
     }
 
@@ -2939,7 +2955,7 @@ public class SearchBar {
                 if (allConfigs.isFirstRun()) {
                     runInternalCommand("help");
                 }
-                AtomicBoolean isBorderThreadCreated = new AtomicBoolean(false);
+                AtomicBoolean isBorderThreadNotExist = new AtomicBoolean(true);
                 while (eventManagement.isNotMainExit()) {
                     long endTime = System.currentTimeMillis();
                     text = getSearchBarText();
@@ -2971,8 +2987,9 @@ public class SearchBar {
                         if (!getSearchBarText().isEmpty()) {
                             setLabelChosen(label1);
                         }
-                        if (!isBorderThreadCreated.get()) {
-                            CachedThreadPoolUtil.getInstance().executeTask(() -> setBorderOnVisible(isBorderThreadCreated));
+                        if (isBorderThreadNotExist.get()) {
+                            isBorderThreadNotExist.set(false);
+                            CachedThreadPoolUtil.getInstance().executeTask(() -> setBorderOnVisible(isBorderThreadNotExist));
                         }
                         if (databaseService.getStatus() == Enums.DatabaseStatus.NORMAL) {
                             if (runningMode == Enums.RunningMode.COMMAND_MODE) {
