@@ -2267,8 +2267,6 @@ public class SearchBar {
 
         tryToShowRecordsThread();
 
-        repaintFrameThread();
-
         sendSignalAndShowCommandThread();
 
         switchSearchBarShowingMode();
@@ -2747,17 +2745,18 @@ public class SearchBar {
         });
     }
 
+    private void repaint() {
+        if (isPreviewMode.get()) {
+            SwingUtilities.invokeLater(() -> SwingUtilities.updateComponentTreeUI(searchBar));
+        }
+        SwingUtilities.invokeLater(searchBar::repaint);
+    }
+
     private void repaintFrameThread() {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             try {
-                EventManagement eventManagement = EventManagement.getInstance();
-                while (eventManagement.isNotMainExit()) {
-                    if (isVisible()) {
-                        if (isPreviewMode.get()) {
-                            SwingUtilities.invokeLater(() -> SwingUtilities.updateComponentTreeUI(searchBar));
-                        }
-                        SwingUtilities.invokeLater(searchBar::repaint);
-                    }
+                while (isVisible()) {
+                    repaint();
                     TimeUnit.MILLISECONDS.sleep(250);
                 }
             } catch (InterruptedException ignored) {
@@ -3328,6 +3327,7 @@ public class SearchBar {
                 isBorderThreadNotExist.set(false);
                 CachedThreadPoolUtil.getInstance().executeTask(() -> setBorderOnVisible(isBorderThreadNotExist));
             }
+            repaintFrameThread();
         });
     }
 
