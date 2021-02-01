@@ -8,8 +8,6 @@ import FileEngine.configs.Enums;
 import FileEngine.dllInterface.FileMonitor;
 import FileEngine.dllInterface.GetHandle;
 import FileEngine.dllInterface.IsLocalDisk;
-import FileEngine.eventHandler.Event;
-import FileEngine.eventHandler.EventHandler;
 import FileEngine.eventHandler.EventManagement;
 import FileEngine.eventHandler.impl.database.AddToCacheEvent;
 import FileEngine.eventHandler.impl.database.DeleteFromCacheEvent;
@@ -21,13 +19,11 @@ import FileEngine.eventHandler.impl.frame.settingsFrame.ShowSettingsFrameEvent;
 import FileEngine.eventHandler.impl.monitorDisk.StartMonitorDiskEvent;
 import FileEngine.eventHandler.impl.stop.RestartEvent;
 import FileEngine.eventHandler.impl.taskbar.ShowTaskBarMessageEvent;
-import FileEngine.utils.*;
 import FileEngine.services.DatabaseService;
-import FileEngine.utils.SQLiteUtil;
-import FileEngine.utils.moveFiles.CopyFileUtil;
-import FileEngine.utils.PinyinUtil;
 import FileEngine.services.pluginSystem.Plugin;
 import FileEngine.services.pluginSystem.PluginService;
+import FileEngine.utils.*;
+import FileEngine.utils.moveFiles.CopyFileUtil;
 
 import javax.swing.*;
 import javax.swing.border.Border;
@@ -125,9 +121,9 @@ public class SearchBar {
         private final String tableName;
         private final AtomicLong weight;
 
-        private TableNameWeightInfo(String tableName, long weightInit) {
+        private TableNameWeightInfo(String tableName) {
             this.tableName = tableName;
-            this.weight = new AtomicLong(weightInit);
+            this.weight = new AtomicLong(0);
         }
     }
 
@@ -324,7 +320,7 @@ public class SearchBar {
 
     private void initTableMap() {
         for (int i = 0; i <= 40; i++) {
-            tableSet.add(new TableNameWeightInfo("list" + i, 0L));
+            tableSet.add(new TableNameWeightInfo("list" + i));
         }
     }
 

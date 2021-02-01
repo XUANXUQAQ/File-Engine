@@ -385,7 +385,7 @@ public class DatabaseService {
         return false;
     }
 
-    private void waitForProcess(String procName) throws IOException, InterruptedException {
+    private void waitForProcess(@SuppressWarnings("SameParameterValue") String procName) throws IOException, InterruptedException {
         StringBuilder strBuilder = new StringBuilder();
         while (isTaskExist(procName, strBuilder)) {
             TimeUnit.MILLISECONDS.sleep(10);
