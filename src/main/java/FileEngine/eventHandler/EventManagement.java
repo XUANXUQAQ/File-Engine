@@ -69,12 +69,12 @@ public class EventManagement {
         if (event instanceof RestartEvent) {
             event.setFinished();
             exit.set(true);
-            CachedThreadPoolUtil.getInstance().executeTask(() -> {
+            CachedThreadPoolUtil.getInstance().executeTask(new Thread(() -> {
                 doAllMethod(EVENT_LISTENER_MAP.get(RestartEvent.class));
                 if (event instanceof CloseEvent) {
                     doAllMethod(EVENT_LISTENER_MAP.get(CloseEvent.class));
                 }
-            });
+            }, "close register func"));
             isRejectTask.set(true);
             try {
                 CachedThreadPoolUtil.getInstance().shutdown();
@@ -85,7 +85,8 @@ public class EventManagement {
             EventHandler eventHandler = EVENT_HANDLER_MAP.get(event.getClass());
             if (eventHandler != null) {
                 eventHandler.doEvent(event);
-                CachedThreadPoolUtil.getInstance().executeTask(() -> doAllMethod(EVENT_LISTENER_MAP.get(event.getClass())));
+                CachedThreadPoolUtil.getInstance().executeTask(new Thread(() ->
+                        doAllMethod(EVENT_LISTENER_MAP.get(event.getClass())), "do event listener func"));
                 return false;
             }
             //当前无可以接该任务的handler
@@ -167,7 +168,7 @@ public class EventManagement {
     private void startAsyncEventHandler() {
         CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
         for (int i = 0; i < 4; i++) {
-            cachedThreadPoolUtil.executeTask(() -> {
+            cachedThreadPoolUtil.executeTask(new Thread(() -> {
                 try {
                     final boolean isDebug = IsDebug.isDebug();
                     Event event;
@@ -199,7 +200,7 @@ public class EventManagement {
                     }
                 } catch (InterruptedException ignored) {
                 }
-            });
+            }, "async event handler"));
         }
     }
 
@@ -208,7 +209,7 @@ public class EventManagement {
     }
 
     private void startBlockEventHandler() {
-        CachedThreadPoolUtil.getInstance().executeTask(() -> {
+        CachedThreadPoolUtil.getInstance().executeTask(new Thread(() -> {
             try {
                 Event event;
                 final boolean isDebug = IsDebug.isDebug();
@@ -241,6 +242,6 @@ public class EventManagement {
                 }
             } catch (InterruptedException ignored) {
             }
-        });
+        }, "block event handler"));
     }
 }

@@ -540,14 +540,14 @@ public class SearchBar {
         robotUtil.mouseClicked(x, y, 1, InputEvent.BUTTON1_DOWN_MASK);
         robotUtil.keyTyped(KeyEvent.VK_CONTROL, KeyEvent.VK_V);
         robotUtil.keyTyped(KeyEvent.VK_ENTER);
-        CachedThreadPoolUtil.getInstance().executeTask(() -> {
+        CachedThreadPoolUtil.getInstance().executeTask(new Thread(() -> {
             try {
                 //保证在执行粘贴操作时不会被提前恢复数据
                 TimeUnit.MILLISECONDS.sleep(500);
                 copyToClipBoard(originalData, false);
             } catch (InterruptedException ignored) {
             }
-        });
+        }, "recover clipboard"));
     }
 
     /**
@@ -816,10 +816,10 @@ public class SearchBar {
                 if (JOptionPane.showConfirmDialog(null, translateUtil.getTranslation("Whether to view help"))
                         == JOptionPane.OK_OPTION) {
                     isTutorialMode.set(true);
-                    CachedThreadPoolUtil.getInstance().executeTask(() -> {
+                    CachedThreadPoolUtil.getInstance().executeTask(new Thread(() -> {
                         showTutorial();
                         isTutorialMode.set(false);
-                    });
+                    }, "show tutorial"));
                 }
                 return true;
             case "version":
@@ -1013,7 +1013,7 @@ public class SearchBar {
         AtomicBoolean shouldSaveMousePos = new AtomicBoolean(false);
         final int minMouseMoveDistance = label1.getHeight() / 6;
         //添加一个线程不断更新鼠标保存时间
-        CachedThreadPoolUtil.getInstance().executeTask(() -> {
+        CachedThreadPoolUtil.getInstance().executeTask(new Thread(() -> {
             try {
                 EventManagement eventManagement = EventManagement.getInstance();
                 while (eventManagement.isNotMainExit()) {
@@ -1022,7 +1022,7 @@ public class SearchBar {
                 }
             }catch (InterruptedException ignored) {
             }
-        });
+        }, "save mouse pos count"));
 
         searchBar.addMouseMotionListener(new MouseAdapter() {
             double absoluteDistance;
@@ -2212,7 +2212,7 @@ public class SearchBar {
     }
 
     private void startMonitorDisk() {
-        CachedThreadPoolUtil.getInstance().executeTask(() -> {
+        CachedThreadPoolUtil.getInstance().executeTask(new Thread(() -> {
             EventManagement eventManagement = EventManagement.getInstance();
             TranslateUtil translateUtil = TranslateUtil.getInstance();
             File[] roots = File.listRoots();
@@ -2229,7 +2229,7 @@ public class SearchBar {
                         translateUtil.getTranslation("Warning"),
                         translateUtil.getTranslation("Not administrator, file monitoring function is turned off")));
             }
-        });
+        }, "monitor disk"));
     }
 
     private void setLabelChosenOrNotChosenMouseMode(int labelNum, JLabel label) {
@@ -2245,7 +2245,7 @@ public class SearchBar {
     private void addSearchWaiter() {
         if (!isWaiting.get()) {
             isWaiting.set(true);
-            CachedThreadPoolUtil.getInstance().executeTask(() -> {
+            CachedThreadPoolUtil.getInstance().executeTask(new Thread(() -> {
                 try {
                     while (isWaiting.get()) {
                         if (databaseService.getStatus() == Enums.DatabaseStatus.NORMAL) {
@@ -2259,7 +2259,7 @@ public class SearchBar {
                     }
                 } catch (InterruptedException ignored) {
                 }
-            });
+            }, "send signal when database available"));
         }
     }
 
@@ -2435,7 +2435,7 @@ public class SearchBar {
     }
 
     private void switchSearchBarShowingMode() {
-        CachedThreadPoolUtil.getInstance().executeTask(() -> {
+        CachedThreadPoolUtil.getInstance().executeTask(new Thread(() -> {
             try {
                 EventManagement eventManagement = EventManagement.getInstance();
                 GetHandle.INSTANCE.start();
@@ -2472,7 +2472,7 @@ public class SearchBar {
             } finally {
                 GetHandle.INSTANCE.stop();
             }
-        });
+        }, "switch showing mode"));
     }
 
     private void getExplorerSizeAndChangeSearchBarSizeExplorerMode() {
@@ -2635,7 +2635,7 @@ public class SearchBar {
     }
 
     private void lockMouseMotionThread() {
-        CachedThreadPoolUtil.getInstance().executeTask(() -> {
+        CachedThreadPoolUtil.getInstance().executeTask(new Thread(() -> {
             //锁住MouseMotion检测，阻止同时发出两个动作
             try {
                 EventManagement eventManagement = EventManagement.getInstance();
@@ -2647,7 +2647,7 @@ public class SearchBar {
                 }
             } catch (InterruptedException ignored) {
             }
-        });
+        }, "lock mouse motion on mouse wheel"));
     }
 
     private void tryToShowRecordsWhenHasLabelEmpty() {
@@ -2715,7 +2715,7 @@ public class SearchBar {
     }
 
     private void tryToShowRecordsThread() {
-        CachedThreadPoolUtil.getInstance().executeTask(() -> {
+        CachedThreadPoolUtil.getInstance().executeTask(new Thread(() -> {
             //显示结果线程
             try {
                 EventManagement eventManagement = EventManagement.getInstance();
@@ -2743,7 +2743,7 @@ public class SearchBar {
                 }
             } catch (InterruptedException ignored) {
             }
-        });
+        }, "show results"));
     }
 
     private void repaint() {
@@ -2754,7 +2754,7 @@ public class SearchBar {
     }
 
     private void repaintFrameThread() {
-        CachedThreadPoolUtil.getInstance().executeTask(() -> {
+        CachedThreadPoolUtil.getInstance().executeTask(new Thread(() -> {
             try {
                 while (isVisible()) {
                     repaint();
@@ -2764,7 +2764,7 @@ public class SearchBar {
             }finally {
                 isRepaintFrameThreadNotExist.set(true);
             }
-        });
+        }, "repaint frame"));
     }
 
     private LinkedHashMap<String, String> getNonFormattedSqlFromTableQueue() {
@@ -2787,7 +2787,7 @@ public class SearchBar {
 
     private void addMergeThread(AtomicBoolean isCreated) {
         isCreated.set(true);
-        CachedThreadPoolUtil.getInstance().executeTask(() -> {
+        CachedThreadPoolUtil.getInstance().executeTask(new Thread(() -> {
             try {
                 String record;
                 long time = System.currentTimeMillis();
@@ -2810,7 +2810,7 @@ public class SearchBar {
             } finally {
                 isCreated.set(false);
             }
-        });
+        }, "merge result"));
     }
 
     private void registerUpdateDatabaseListener() {
@@ -2829,7 +2829,7 @@ public class SearchBar {
             }
             tableQueue.add(each.tableName);
         }
-        CachedThreadPoolUtil.getInstance().executeTask(() -> {
+        CachedThreadPoolUtil.getInstance().executeTask(new Thread(() -> {
             AtomicBoolean isCreated = new AtomicBoolean(false);
             if (!isCreated.get()) {
                 addMergeThread(isCreated);
@@ -2853,7 +2853,7 @@ public class SearchBar {
                     }
                 }
             }
-        });
+        }, "add sql"));
     }
 
     private void clearAllLabelBorder() {
@@ -3025,7 +3025,7 @@ public class SearchBar {
     }
 
     private void sendSignalAndShowCommandThread() {
-        CachedThreadPoolUtil.getInstance().executeTask(() -> {
+        CachedThreadPoolUtil.getInstance().executeTask(new Thread(() -> {
             //缓存和常用文件夹搜索线程
             //每一次输入会更新一次startTime，该线程记录endTime
             try {
@@ -3135,7 +3135,7 @@ public class SearchBar {
                 }
             } catch (InterruptedException ignored) {
             }
-        });
+        }, "send search signal"));
     }
 
     private void searchCaseToLowerAndRemoveConflict() {

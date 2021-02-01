@@ -9,11 +9,11 @@ import FileEngine.eventHandler.impl.download.StartDownloadEvent;
 import FileEngine.eventHandler.impl.download.StopDownloadEvent;
 import FileEngine.eventHandler.impl.frame.pluginMarket.ShowPluginMarket;
 import FileEngine.eventHandler.impl.stop.RestartEvent;
-import FileEngine.utils.CachedThreadPoolUtil;
-import FileEngine.utils.TranslateUtil;
 import FileEngine.services.download.DownloadManager;
 import FileEngine.services.download.DownloadService;
 import FileEngine.services.pluginSystem.PluginService;
+import FileEngine.utils.CachedThreadPoolUtil;
+import FileEngine.utils.TranslateUtil;
 import com.alibaba.fastjson.JSONObject;
 
 import javax.imageio.ImageIO;
@@ -67,7 +67,7 @@ public class PluginMarket {
         frame.dispose();
         frame.setUndecorated(true);
         frame.getRootPane().setWindowDecorationStyle(JRootPane.FRAME);
-        CachedThreadPoolUtil.getInstance().executeTask(() -> {
+        CachedThreadPoolUtil.getInstance().executeTask(new Thread(() -> {
             try {
                 String pluginName;
                 EventManagement eventManagement = EventManagement.getInstance();
@@ -88,7 +88,7 @@ public class PluginMarket {
                 }
             } catch (InterruptedException ignored) {
             }
-        });
+        }, "show plugin info on gui"));
     }
 
     private void showWindow() {
@@ -112,14 +112,12 @@ public class PluginMarket {
         frame.setLocationRelativeTo(null);
         frame.setTitle(translateUtil.getTranslation("Plugin Market"));
         SwingUtilities.invokeLater(() -> frame.setVisible(true));
-        cachedThreadPoolUtil.executeTask(() -> {
-            LoadingPanel loadingPanel = new LoadingPanel("loading...");
-            loadingPanel.setSize(800, 600);
-            frame.setGlassPane(loadingPanel);
-            loadingPanel.start();
-            initPluginList();
-            loadingPanel.stop();
-        });
+        LoadingPanel loadingPanel = new LoadingPanel("loading...");
+        loadingPanel.setSize(800, 600);
+        frame.setGlassPane(loadingPanel);
+        loadingPanel.start();
+        initPluginList();
+        loadingPanel.stop();
     }
 
     private void getAllPluginsDetailInfo() {
@@ -176,14 +174,14 @@ public class PluginMarket {
                         noSuchMethodException.printStackTrace();
                     }
                     CachedThreadPoolUtil.getInstance().executeTask(
-                            () -> SetDownloadProgress.setProgress(labelProgress,
+                            new Thread(() -> SetDownloadProgress.setProgress(labelProgress,
                                     buttonInstall,
                                     downloadManager,
                                     isDownloadStarted,
                                     new File("user/updatePlugin"),
                                     pluginName,
                                     getStringMethod.getString,
-                                    listPlugins)
+                                    listPlugins), "show plugin download progress")
                     );
                 }
             }
@@ -198,7 +196,7 @@ public class PluginMarket {
                 this.searchKeywords = searchKeywords;
             }
             void doSearch() {
-                cachedThreadPoolUtil.executeTask(() -> {
+                cachedThreadPoolUtil.executeTask(new Thread(() -> {
                     String tmp;
                     HashSet<String> pluginSet = new HashSet<>();
                     if ((tmp = searchKeywords) == null || tmp.isEmpty()) {
@@ -211,7 +209,7 @@ public class PluginMarket {
                         }
                         listPlugins.setListData(pluginSet.toArray());
                     }
-                });
+                }, "search plugin"));
             }
         }
 
@@ -267,7 +265,7 @@ public class PluginMarket {
             }
             void doGet() {
                 isStartGetPluginInfo.set(false);
-                cachedThreadPoolUtil.executeTask(() -> {
+                cachedThreadPoolUtil.executeTask(new Thread(() -> {
                     if (isStartGetPluginInfo.get()) {
                         //用户重新点击
                         return;
@@ -315,7 +313,7 @@ public class PluginMarket {
                     } catch (IOException ignored) {
                     }
 
-                });
+                }, "get plugin json info"));
             }
         }
         listPlugins.addMouseListener(new MouseAdapter() {

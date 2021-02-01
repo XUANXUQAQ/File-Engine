@@ -217,7 +217,7 @@ public class MainClass {
     private static void checkPluginVersion() {
         if (AllConfigs.getInstance().isCheckUpdateStartup()) {
             CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
-            cachedThreadPoolUtil.executeTask(() -> {
+            cachedThreadPoolUtil.executeTask(new Thread(() -> {
                 StringBuilder notLatestPluginsBuilder = new StringBuilder();
                 PluginService pluginService = PluginService.getInstance();
                 pluginService.checkAllPluginsVersion(notLatestPluginsBuilder);
@@ -231,7 +231,7 @@ public class MainClass {
                                             translateUtil.getTranslation("New versions of these plugins can be updated"),
                                     new ShowSettingsFrameEvent("tabPlugin")));
                 }
-            });
+            }, "check plugin version"));
         }
     }
 
