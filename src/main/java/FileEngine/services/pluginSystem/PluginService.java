@@ -4,9 +4,10 @@ import FileEngine.IsDebug;
 import FileEngine.annotation.EventRegister;
 import FileEngine.configs.AllConfigs;
 import FileEngine.eventHandler.EventManagement;
-import FileEngine.eventHandler.Event;
-import FileEngine.eventHandler.EventHandler;
-import FileEngine.eventHandler.impl.plugin.*;
+import FileEngine.eventHandler.impl.plugin.AddPluginsCanUpdateEvent;
+import FileEngine.eventHandler.impl.plugin.LoadAllPluginsEvent;
+import FileEngine.eventHandler.impl.plugin.RemoveFromPluginsCanUpdateEvent;
+import FileEngine.eventHandler.impl.plugin.SetPluginsCurrentThemeEvent;
 import FileEngine.eventHandler.impl.stop.RestartEvent;
 import FileEngine.eventHandler.impl.taskbar.ShowTaskBarMessageEvent;
 import FileEngine.utils.CachedThreadPoolUtil;
@@ -16,7 +17,10 @@ import java.io.*;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -309,33 +313,15 @@ public class PluginService {
     @SuppressWarnings("unused")
     public static void registerEventHandler() {
         EventManagement eventManagement = EventManagement.getInstance();
-        eventManagement.register(AddPluginsCanUpdateEvent.class, new EventHandler() {
-            @Override
-            public void todo(Event event) {
-                getInstance().addPluginsCanUpdate(((AddPluginsCanUpdateEvent) event).pluginName);
-            }
-        });
+        eventManagement.register(AddPluginsCanUpdateEvent.class, event -> getInstance().addPluginsCanUpdate(((AddPluginsCanUpdateEvent) event).pluginName));
 
-        eventManagement.register(LoadAllPluginsEvent.class, new EventHandler() {
-            @Override
-            public void todo(Event event) {
-                getInstance().loadAllPlugins(((LoadAllPluginsEvent) event).pluginDirPath);
-            }
-        });
+        eventManagement.register(LoadAllPluginsEvent.class, event -> getInstance().loadAllPlugins(((LoadAllPluginsEvent) event).pluginDirPath));
 
-        eventManagement.register(RemoveFromPluginsCanUpdateEvent.class, new EventHandler() {
-            @Override
-            public void todo(Event event) {
-                getInstance().removeFromPluginsCanUpdate(((RemoveFromPluginsCanUpdateEvent) event).pluginName);
-            }
-        });
+        eventManagement.register(RemoveFromPluginsCanUpdateEvent.class, event -> getInstance().removeFromPluginsCanUpdate(((RemoveFromPluginsCanUpdateEvent) event).pluginName));
 
-        eventManagement.register(SetPluginsCurrentThemeEvent.class, new EventHandler() {
-            @Override
-            public void todo(Event event) {
-                SetPluginsCurrentThemeEvent task1 = (SetPluginsCurrentThemeEvent) event;
-                getInstance().setCurrentTheme(task1.defaultColor, task1.chosenColor, task1.borderColor);
-            }
+        eventManagement.register(SetPluginsCurrentThemeEvent.class, event -> {
+            SetPluginsCurrentThemeEvent task1 = (SetPluginsCurrentThemeEvent) event;
+            getInstance().setCurrentTheme(task1.defaultColor, task1.chosenColor, task1.borderColor);
         });
 
         eventManagement.registerListener(RestartEvent.class, () -> getInstance().unloadAllPlugins());

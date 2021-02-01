@@ -3,7 +3,6 @@ package FileEngine.frames;
 import FileEngine.IsDebug;
 import FileEngine.annotation.EventRegister;
 import FileEngine.eventHandler.Event;
-import FileEngine.eventHandler.EventHandler;
 import FileEngine.eventHandler.EventManagement;
 import FileEngine.eventHandler.impl.frame.settingsFrame.ShowSettingsFrameEvent;
 import FileEngine.eventHandler.impl.stop.CloseEvent;
@@ -198,20 +197,12 @@ public class TaskBar {
     @SuppressWarnings("unused")
     public static void registerEventHandler() {
         EventManagement eventManagement = EventManagement.getInstance();
-        eventManagement.register(ShowTaskBarMessageEvent.class, new EventHandler() {
-            @Override
-            public void todo(Event event) {
-                ShowTaskBarMessageEvent showTaskBarMessageTask = (ShowTaskBarMessageEvent) event;
-                getInstance().showMessage(showTaskBarMessageTask.caption, showTaskBarMessageTask.message, showTaskBarMessageTask.event);
-            }
+        eventManagement.register(ShowTaskBarMessageEvent.class, event -> {
+            ShowTaskBarMessageEvent showTaskBarMessageTask = (ShowTaskBarMessageEvent) event;
+            getInstance().showMessage(showTaskBarMessageTask.caption, showTaskBarMessageTask.message, showTaskBarMessageTask.event);
         });
 
-        eventManagement.register(ShowTrayIconEvent.class, new EventHandler() {
-            @Override
-            public void todo(Event event) {
-                getInstance();
-            }
-        });
+        eventManagement.register(ShowTrayIconEvent.class, event -> getInstance());
 
         eventManagement.registerListener(RestartEvent.class, () -> {
             TaskBar taskBar = getInstance();

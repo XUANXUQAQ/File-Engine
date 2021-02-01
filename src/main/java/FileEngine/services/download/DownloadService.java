@@ -2,12 +2,10 @@ package FileEngine.services.download;
 
 import FileEngine.annotation.EventRegister;
 import FileEngine.configs.Enums;
-import FileEngine.eventHandler.Event;
-import FileEngine.eventHandler.EventHandler;
+import FileEngine.eventHandler.EventManagement;
 import FileEngine.eventHandler.impl.download.StartDownloadEvent;
 import FileEngine.eventHandler.impl.download.StopDownloadEvent;
 import FileEngine.utils.CachedThreadPoolUtil;
-import FileEngine.eventHandler.EventManagement;
 
 import java.io.IOException;
 import java.util.Set;
@@ -35,20 +33,14 @@ public class DownloadService {
     @SuppressWarnings("unused")
     public static void registerEventHandler() {
         EventManagement eventManagement = EventManagement.getInstance();
-        eventManagement.register(StartDownloadEvent.class, new EventHandler() {
-            @Override
-            public void todo(Event event) {
-                StartDownloadEvent startDownloadTask = (StartDownloadEvent) event;
-                getInstance().downLoadFromUrl(startDownloadTask.downloadManager);
-            }
+        eventManagement.register(StartDownloadEvent.class, event -> {
+            StartDownloadEvent startDownloadTask = (StartDownloadEvent) event;
+            getInstance().downLoadFromUrl(startDownloadTask.downloadManager);
         });
 
-        eventManagement.register(StopDownloadEvent.class, new EventHandler() {
-            @Override
-            public void todo(Event event) {
-                StopDownloadEvent stopDownloadTask = (StopDownloadEvent) event;
-                getInstance().cancelDownload(stopDownloadTask.downloadManager);
-            }
+        eventManagement.register(StopDownloadEvent.class, event -> {
+            StopDownloadEvent stopDownloadTask = (StopDownloadEvent) event;
+            getInstance().cancelDownload(stopDownloadTask.downloadManager);
         });
     }
 
