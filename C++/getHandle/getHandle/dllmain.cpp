@@ -50,12 +50,10 @@ extern "C" __declspec(dllexport) long getExplorerY();
 extern "C" __declspec(dllexport) long getExplorerWidth();
 extern "C" __declspec(dllexport) long getExplorerHeight();
 extern "C" __declspec(dllexport) const char* getExplorerPath();
-extern "C" __declspec(dllexport) int getTopWindowType();
+extern "C" __declspec(dllexport) bool isDialogWindow();
 extern "C" __declspec(dllexport) void bringSearchBarToTop();
 extern "C" __declspec(dllexport) int getToolBarX();
 extern "C" __declspec(dllexport) int getToolBarY();
-extern "C" __declspec(dllexport) int getExplorerTypeNum();
-extern "C" __declspec(dllexport) int getDialogTypeNum();
 
 #ifdef TEST
 void outputHwndInfo(HWND hwnd)
@@ -68,16 +66,6 @@ void outputHwndInfo(HWND hwnd)
     cout << "hwnd title: " << hwndTitle << endl;
 }
 #endif
-
-int getExplorerTypeNum()
-{
-    return G_EXPLORER;
-}
-
-int getDialogTypeNum()
-{
-    return G_DIALOG;
-}
 
 int getToolBarX()
 {
@@ -108,9 +96,9 @@ void bringSearchBarToTop()
     AttachThreadInput(dwCurID, dwForeID, FALSE);
 }
 
-int getTopWindowType()
+bool isDialogWindow()
 {
-    return topWindowType;
+    return topWindowType == G_DIALOG;
 }
 
 const char* getExplorerPath()
