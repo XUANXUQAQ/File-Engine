@@ -2423,16 +2423,15 @@ public class SearchBar {
             int positionX;
             int positionY;
             boolean isGrabFocus;
-            int ret = GetHandle.INSTANCE.getTopWindowType();
-            if (GetHandle.INSTANCE.getExplorerTypeNum() == ret) {
-                positionX = (int) (explorerX + explorerWidth * 0.97 - searchBarWidth);
-                positionY = (int) (explorerY + explorerHeight * 0.95 - searchBarHeight);
-                isGrabFocus = false;
-            } else {
+            if (GetHandle.INSTANCE.isDialogWindow()) {
                 searchBarWidth = (int) (explorerWidth * 0.52);
                 positionX = (int) (explorerX + (explorerWidth / 2 - searchBarWidth / 2));
                 positionY = (int) (explorerY + explorerHeight * 0.42);
                 isGrabFocus = true;
+            } else {
+                positionX = (int) (explorerX + explorerWidth * 0.97 - searchBarWidth);
+                positionY = (int) (explorerY + explorerHeight * 0.95 - searchBarHeight);
+                isGrabFocus = false;
             }
             //设置窗口大小
             changeSearchBarSizeAndPos(positionX, positionY, searchBarWidth, searchBarHeight, labelHeight);
