@@ -69,6 +69,7 @@ public class SearchBar {
     private final AtomicBoolean isMouseDraggedInWindow = new AtomicBoolean(false);
     private final AtomicBoolean isNotSqlInitialized = new AtomicBoolean(true);
     private final AtomicBoolean isBorderThreadNotExist = new AtomicBoolean(true);
+    private final AtomicBoolean isRepaintFrameThreadNotExist = new AtomicBoolean(true);
     private static final AtomicBoolean isPreviewMode = new AtomicBoolean(false);
     private final AtomicBoolean isTutorialMode = new AtomicBoolean(false);
     private Border fullBorder;
@@ -2760,6 +2761,8 @@ public class SearchBar {
                     TimeUnit.MILLISECONDS.sleep(250);
                 }
             } catch (InterruptedException ignored) {
+            }finally {
+                isRepaintFrameThreadNotExist.set(true);
             }
         });
     }
@@ -2864,7 +2867,7 @@ public class SearchBar {
         label8.setBorder(null);
     }
 
-    private void setBorderOnVisible(AtomicBoolean isNotExist) {
+    private void setBorderOnVisible() {
         try {
             while (isVisible()) {
                 String text = getSearchBarText();
@@ -3017,7 +3020,7 @@ public class SearchBar {
         } catch (InterruptedException ignored) {
         }finally {
             clearAllLabelBorder();
-            isNotExist.set(true);
+            isBorderThreadNotExist.set(true);
         }
     }
 
@@ -3325,9 +3328,12 @@ public class SearchBar {
             }
             if (isBorderThreadNotExist.get()) {
                 isBorderThreadNotExist.set(false);
-                CachedThreadPoolUtil.getInstance().executeTask(() -> setBorderOnVisible(isBorderThreadNotExist));
+                CachedThreadPoolUtil.getInstance().executeTask(this::setBorderOnVisible);
             }
-            repaintFrameThread();
+            if (isRepaintFrameThreadNotExist.get()) {
+                isRepaintFrameThreadNotExist.set(false);
+                repaintFrameThread();
+            }
         });
     }
 
