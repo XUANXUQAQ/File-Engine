@@ -4,7 +4,6 @@ import FileEngine.IsDebug;
 import FileEngine.annotation.EventRegister;
 import FileEngine.dllInterface.IsLocalDisk;
 import FileEngine.eventHandler.Event;
-import FileEngine.eventHandler.EventHandler;
 import FileEngine.eventHandler.EventManagement;
 import FileEngine.eventHandler.impl.ReadConfigsAndBootSystemEvent;
 import FileEngine.eventHandler.impl.SetSwingLaf;
@@ -21,10 +20,10 @@ import FileEngine.eventHandler.impl.monitorDisk.StartMonitorDiskEvent;
 import FileEngine.eventHandler.impl.plugin.LoadAllPluginsEvent;
 import FileEngine.eventHandler.impl.plugin.SetPluginsCurrentThemeEvent;
 import FileEngine.eventHandler.impl.taskbar.ShowTrayIconEvent;
-import FileEngine.utils.RegexUtil;
-import FileEngine.utils.TranslateUtil;
 import FileEngine.services.download.DownloadManager;
 import FileEngine.services.download.DownloadService;
+import FileEngine.utils.RegexUtil;
+import FileEngine.utils.TranslateUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.serializer.SerializerFeature;
@@ -778,81 +777,61 @@ public class AllConfigs {
     @SuppressWarnings("unused")
     public static void registerEventHandler() {
         EventManagement eventManagement = EventManagement.getInstance();
-        eventManagement.register(AddCmdEvent.class, new EventHandler() {
-            @Override
-            public void todo(Event event) {
-                AllConfigs allConfigs = getInstance();
-                AddCmdEvent event1 = (AddCmdEvent) event;
-                allConfigs.cmdSet.add(event1.cmd);
+        eventManagement.register(AddCmdEvent.class, event -> {
+            AllConfigs allConfigs = getInstance();
+            AddCmdEvent event1 = (AddCmdEvent) event;
+            allConfigs.cmdSet.add(event1.cmd);
+        });
+
+        eventManagement.register(DeleteCmdEvent.class, event -> {
+            AllConfigs allConfigs = AllConfigs.getInstance();
+            DeleteCmdEvent deleteCmdEvent = (DeleteCmdEvent) event;
+            allConfigs.cmdSet.remove(deleteCmdEvent.cmd);
+        });
+
+        eventManagement.register(ReadConfigsAndBootSystemEvent.class, event -> {
+            Event tmpEvent;
+
+            AllConfigs allConfigs = AllConfigs.getInstance();
+
+            allConfigs.readAllSettings();
+            allConfigs.saveAllSettings();
+
+            tmpEvent = new LoadAllPluginsEvent("plugins");
+            eventManagement.putEvent(tmpEvent);
+            eventManagement.waitForEvent(tmpEvent);
+
+            eventManagement.putEvent(new StartMonitorDiskEvent());
+            eventManagement.putEvent(new ShowTrayIconEvent());
+
+            tmpEvent = new SetConfigsEvent();
+            eventManagement.putEvent(tmpEvent);
+            eventManagement.waitForEvent(tmpEvent);
+
+            if (!IsDebug.isDebug()) {
+                eventManagement.putEvent(new StartDaemonEvent(new File("").getAbsolutePath()));
             }
         });
 
-        eventManagement.register(DeleteCmdEvent.class, new EventHandler() {
-            @Override
-            public void todo(Event event) {
-                AllConfigs allConfigs = AllConfigs.getInstance();
-                DeleteCmdEvent deleteCmdEvent = (DeleteCmdEvent) event;
-                allConfigs.cmdSet.remove(deleteCmdEvent.cmd);
+        eventManagement.register(SetConfigsEvent.class, event -> getInstance().setAllSettings());
+
+        eventManagement.register(SetSwingLaf.class, event -> {
+            try {
+                AllConfigs instance = getInstance();
+                String theme = ((SetSwingLaf) event).theme;
+                instance.setSwingLaf(instance.swingThemesMapper(theme));
+            } catch (Exception ignored) {
             }
         });
 
-        eventManagement.register(ReadConfigsAndBootSystemEvent.class, new EventHandler() {
-            @Override
-            public void todo(Event event) {
-                Event tmpEvent;
-
-                AllConfigs allConfigs = AllConfigs.getInstance();
-
-                allConfigs.readAllSettings();
+        eventManagement.register(SaveConfigsEvent.class, event -> {
+            AllConfigs allConfigs = getInstance();
+            ConfigEntity tempConfigEntity = ((SaveConfigsEvent) event).configEntity;
+            if (allConfigs.noNullValue(tempConfigEntity)) {
+                allConfigs.configEntity = tempConfigEntity;
                 allConfigs.saveAllSettings();
-
-                tmpEvent = new LoadAllPluginsEvent("plugins");
-                eventManagement.putEvent(tmpEvent);
-                eventManagement.waitForEvent(tmpEvent);
-
-                eventManagement.putEvent(new StartMonitorDiskEvent());
-                eventManagement.putEvent(new ShowTrayIconEvent());
-
-                tmpEvent = new SetConfigsEvent();
-                eventManagement.putEvent(tmpEvent);
-                eventManagement.waitForEvent(tmpEvent);
-
-                if (!IsDebug.isDebug()) {
-                    eventManagement.putEvent(new StartDaemonEvent(new File("").getAbsolutePath()));
-                }
-            }
-        });
-
-        eventManagement.register(SetConfigsEvent.class, new EventHandler() {
-            @Override
-            public void todo(Event event) {
-                getInstance().setAllSettings();
-            }
-        });
-
-        eventManagement.register(SetSwingLaf.class, new EventHandler() {
-            @Override
-            public void todo(Event event) {
-                try {
-                    AllConfigs instance = getInstance();
-                    String theme = ((SetSwingLaf) event).theme;
-                    instance.setSwingLaf(instance.swingThemesMapper(theme));
-                } catch (Exception ignored) {
-                }
-            }
-        });
-
-        eventManagement.register(SaveConfigsEvent.class, new EventHandler() {
-            @Override
-            public void todo(Event event) {
-                AllConfigs allConfigs = getInstance();
-                ConfigEntity tempConfigEntity = ((SaveConfigsEvent) event).configEntity;
-                if (allConfigs.noNullValue(tempConfigEntity)) {
-                    allConfigs.configEntity = tempConfigEntity;
-                    allConfigs.saveAllSettings();
-                } else {
-                    throw new NullPointerException("configEntity中有Null值");
-                }
+            } else {
+                throw new NullPointerException("configEntity中有Null值");
             }
         });
     }

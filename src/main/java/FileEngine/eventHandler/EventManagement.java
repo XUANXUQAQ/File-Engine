@@ -17,7 +17,6 @@ public class EventManagement {
     private final ConcurrentLinkedQueue<Event> asyncEventQueue = new ConcurrentLinkedQueue<>();
     private final ConcurrentHashMap<Class<? extends Event>, EventHandler> EVENT_HANDLER_MAP = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<Class<? extends Event>, ConcurrentLinkedQueue<Runnable>> EVENT_LISTENER_MAP = new ConcurrentHashMap<>();
-    private final AtomicBoolean isRejectTask = new AtomicBoolean(false);
 
     private final int MAX_TASK_RETRY_TIME = 20;
 
@@ -66,26 +65,27 @@ public class EventManagement {
      */
     private boolean executeTaskFailed(Event event) {
         event.incrementExecuteTimes();
+        CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
         if (event instanceof RestartEvent) {
-            event.setFinished();
             exit.set(true);
-            CachedThreadPoolUtil.getInstance().executeTask(new Thread(() -> {
+            cachedThreadPoolUtil.executeTask(new Thread(() -> {
                 doAllMethod(EVENT_LISTENER_MAP.get(RestartEvent.class));
                 if (event instanceof CloseEvent) {
                     doAllMethod(EVENT_LISTENER_MAP.get(CloseEvent.class));
                 }
             }, "close register func"));
-            isRejectTask.set(true);
+            event.setFinished();
             try {
-                CachedThreadPoolUtil.getInstance().shutdown();
+                cachedThreadPoolUtil.shutdown();
             } catch (InterruptedException ignored) {
             }
             return false;
         } else {
             EventHandler eventHandler = EVENT_HANDLER_MAP.get(event.getClass());
             if (eventHandler != null) {
-                eventHandler.doEvent(event);
-                CachedThreadPoolUtil.getInstance().executeTask(new Thread(() ->
+                eventHandler.todo(event);
+                event.setFinished();
+                cachedThreadPoolUtil.executeTask(new Thread(() ->
                         doAllMethod(EVENT_LISTENER_MAP.get(event.getClass())), "do event listener func"));
                 return false;
             }
@@ -117,7 +117,7 @@ public class EventManagement {
         if (isDebug) {
             System.err.println("尝试放入任务" + event.toString() + "---来自" + getStackTraceElement().toString());
         }
-        if (!isRejectTask.get()) {
+        if (!exit.get()) {
             if (event.isBlock()) {
                 if (!blockEventQueue.contains(event)) {
                     blockEventQueue.add(event);

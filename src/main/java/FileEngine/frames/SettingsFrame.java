@@ -2013,47 +2013,28 @@ public class SettingsFrame {
     @EventRegister
     @SuppressWarnings("unused")
     public static void registerEventHandler() {
-        eventManagement.register(ShowSettingsFrameEvent.class, new EventHandler() {
-            @Override
-            public void todo(Event event) {
-                ShowSettingsFrameEvent showSettingsFrameEvent = (ShowSettingsFrameEvent) event;
-                SettingsFrame settingsFrame = getInstance();
-                if (showSettingsFrameEvent.showTabName == null) {
-                    settingsFrame.showWindow();
-                } else {
-                    settingsFrame.showWindow(showSettingsFrameEvent.showTabName);
-                }
+        eventManagement.register(ShowSettingsFrameEvent.class, event -> {
+            ShowSettingsFrameEvent showSettingsFrameEvent = (ShowSettingsFrameEvent) event;
+            SettingsFrame settingsFrame = getInstance();
+            if (showSettingsFrameEvent.showTabName == null) {
+                settingsFrame.showWindow();
+            } else {
+                settingsFrame.showWindow(showSettingsFrameEvent.showTabName);
             }
         });
-        eventManagement.register(HideSettingsFrameEvent.class, new EventHandler() {
-            @Override
-            public void todo(Event event) {
-                getInstance().hideFrame();
-            }
+        eventManagement.register(HideSettingsFrameEvent.class, event -> getInstance().hideFrame());
+
+        eventManagement.register(IsCacheExistEvent.class, event -> {
+            IsCacheExistEvent cacheExist = (IsCacheExistEvent) event;
+            event.setReturnValue(getInstance().isCacheExist(cacheExist.cache));
         });
 
-        eventManagement.register(IsCacheExistEvent.class, new EventHandler() {
-            @Override
-            public void todo(Event event) {
-                IsCacheExistEvent cacheExist = (IsCacheExistEvent) event;
-                event.setReturnValue(getInstance().isCacheExist(cacheExist.cache));
-            }
+        eventManagement.register(AddCacheEvent.class, event -> {
+            AddCacheEvent addCacheEvent = (AddCacheEvent) event;
+            getInstance().addCache(addCacheEvent.cache);
         });
 
-        eventManagement.register(AddCacheEvent.class, new EventHandler() {
-            @Override
-            public void todo(Event event) {
-                AddCacheEvent addCacheEvent = (AddCacheEvent) event;
-                getInstance().addCache(addCacheEvent.cache);
-            }
-        });
-
-        eventManagement.register(GetExcludeComponentEvent.class, new EventHandler() {
-            @Override
-            public void todo(Event event) {
-                event.setReturnValue(getInstance().excludeComponent);
-            }
-        });
+        eventManagement.register(GetExcludeComponentEvent.class, event -> event.setReturnValue(getInstance().excludeComponent));
 
         eventManagement.registerListener(RestartEvent.class, () -> getInstance().hideFrame());
     }

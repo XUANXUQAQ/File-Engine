@@ -3,8 +3,6 @@ package FileEngine.services;
 import FileEngine.annotation.EventRegister;
 import FileEngine.configs.Enums;
 import FileEngine.dllInterface.HotkeyListener;
-import FileEngine.eventHandler.Event;
-import FileEngine.eventHandler.EventHandler;
 import FileEngine.eventHandler.EventManagement;
 import FileEngine.eventHandler.impl.frame.searchBar.GetShowingModeEvent;
 import FileEngine.eventHandler.impl.frame.searchBar.HideSearchBarEvent;
@@ -165,21 +163,13 @@ public class CheckHotKeyService {
     public static void registerEventHandler() {
         EventManagement eventManagement = EventManagement.getInstance();
 
-        eventManagement.register(RegisterHotKeyEvent.class, new EventHandler() {
-            @Override
-            public void todo(Event event) {
-                getInstance().registerHotkey(((RegisterHotKeyEvent) event).hotkey);
-            }
-        });
+        eventManagement.register(RegisterHotKeyEvent.class, event -> getInstance().registerHotkey(((RegisterHotKeyEvent) event).hotkey));
 
         eventManagement.registerListener(RestartEvent.class, () -> getInstance().stopListen());
 
-        eventManagement.register(ResponseCtrlEvent.class, new EventHandler() {
-            @Override
-            public void todo(Event event) {
-                ResponseCtrlEvent responseCtrlEvent = (ResponseCtrlEvent) event;
-                HotkeyListener.INSTANCE.setCtrlDoubleClick(responseCtrlEvent.isResponse);
-            }
+        eventManagement.register(ResponseCtrlEvent.class, event -> {
+            ResponseCtrlEvent responseCtrlEvent = (ResponseCtrlEvent) event;
+            HotkeyListener.INSTANCE.setCtrlDoubleClick(responseCtrlEvent.isResponse);
         });
     }
     

@@ -2,8 +2,6 @@ package FileEngine.frames;
 
 import FileEngine.annotation.EventRegister;
 import FileEngine.configs.AllConfigs;
-import FileEngine.eventHandler.Event;
-import FileEngine.eventHandler.EventHandler;
 import FileEngine.eventHandler.EventManagement;
 import FileEngine.eventHandler.impl.download.StartDownloadEvent;
 import FileEngine.eventHandler.impl.download.StopDownloadEvent;
@@ -92,7 +90,6 @@ public class PluginMarket {
     }
 
     private void showWindow() {
-        CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
         ImageIcon frameIcon = new ImageIcon(PluginMarket.class.getResource("/icons/frame.png"));
         TranslateUtil translateUtil = TranslateUtil.getInstance();
         labelIcon.setIcon(null);
@@ -131,12 +128,7 @@ public class PluginMarket {
     public static void registerEventHandler() {
         EventManagement eventManagement = EventManagement.getInstance();
 
-        eventManagement.register(ShowPluginMarket.class, new EventHandler() {
-            @Override
-            public void todo(Event event) {
-                getInstance().showWindow();
-            }
-        });
+        eventManagement.register(ShowPluginMarket.class, event -> getInstance().showWindow());
 
         eventManagement.registerListener(RestartEvent.class, () -> getInstance().hideWindow());
     }

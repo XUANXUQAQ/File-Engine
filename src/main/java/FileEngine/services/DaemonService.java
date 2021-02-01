@@ -1,8 +1,6 @@
 package FileEngine.services;
 
 import FileEngine.annotation.EventRegister;
-import FileEngine.eventHandler.Event;
-import FileEngine.eventHandler.EventHandler;
 import FileEngine.eventHandler.EventManagement;
 import FileEngine.eventHandler.impl.daemon.StartDaemonEvent;
 import FileEngine.eventHandler.impl.stop.CloseEvent;
@@ -32,12 +30,7 @@ public class DaemonService {
     @EventRegister
     public static void registerEventHandler() {
         EventManagement eventManagement = EventManagement.getInstance();
-        eventManagement.register(StartDaemonEvent.class, new EventHandler() {
-            @Override
-            public void todo(Event event) {
-                getInstance().startDaemon(((StartDaemonEvent) event).currentWorkingDir);
-            }
-        });
+        eventManagement.register(StartDaemonEvent.class, event -> getInstance().startDaemon(((StartDaemonEvent) event).currentWorkingDir));
 
         eventManagement.registerListener(CloseEvent.class, () -> getInstance().stopDaemon());
     }
