@@ -27,6 +27,7 @@ import FileEngine.eventHandler.impl.taskbar.ShowTaskBarMessageEvent;
 import FileEngine.services.CheckHotKeyService;
 import FileEngine.services.DatabaseService;
 import FileEngine.services.download.DownloadManager;
+import FileEngine.services.download.DownloadService;
 import FileEngine.services.pluginSystem.Plugin;
 import FileEngine.services.pluginSystem.PluginService;
 import FileEngine.utils.CachedThreadPoolUtil;
@@ -776,9 +777,19 @@ public class SettingsFrame {
                     labelOfficialSite.setText("<html><a href='" + officialSite + "'><font size=\"4\">" + pluginName + "</font></a></html>");
                     buttonUpdatePlugin.setVisible(true);
                     if (PluginService.getInstance().isPluginsNotLatest(pluginName)) {
-                        Color color = new Color(51,122,183);
-                        buttonUpdatePlugin.setText(translateUtil.getTranslation("Update"));
-                        buttonUpdatePlugin.setBackground(color);
+                        if (DownloadService.getInstance().isTaskDone(
+                                new DownloadManager(null, pluginName + ".jar", new File("tmp", "pluginsUpdate").getAbsolutePath()))) {
+                            buttonUpdatePlugin.setEnabled(false);
+                            buttonUpdatePlugin.setText(translateUtil.getTranslation("Downloaded"));
+                        } else {
+                            Color color = new Color(51, 122, 183);
+                            buttonUpdatePlugin.setText(translateUtil.getTranslation("Update"));
+                            buttonUpdatePlugin.setBackground(color);
+                            buttonUpdatePlugin.setEnabled(true);
+                        }
+                    } else {
+                        buttonUpdatePlugin.setText(translateUtil.getTranslation("Check for update"));
+                        buttonUpdatePlugin.setEnabled(true);
                     }
                 }
             }
