@@ -59,7 +59,6 @@ public class AllConfigs {
     public static final int defaultSearchbarFontColor = 0;
     private volatile ConfigEntity configEntity;
     private final LinkedHashMap<String, AddressUrl> updateAddressMap = new LinkedHashMap<>();
-    private final File settings = new File("user/settings.json");
     private final LinkedHashSet<String> cmdSet = new LinkedHashSet<>();
     private boolean isFirstRunApp = false;
 
@@ -702,7 +701,7 @@ public class AllConfigs {
     }
 
     private void saveAllSettings() {
-        try (BufferedWriter buffW = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(settings), StandardCharsets.UTF_8))) {
+        try (BufferedWriter buffW = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("user/settings.json"), StandardCharsets.UTF_8))) {
             String format = JSON.toJSONString(
                     configEntity,
                     SerializerFeature.PrettyFormat,
