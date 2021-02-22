@@ -46,7 +46,7 @@ import java.util.*;
  * 保存软件运行时的所有配置信息
  */
 public class AllConfigs {
-    public static final String version = "3.1"; //TODO 更改版本号
+    public static final String version = "3.2"; //TODO 更改版本号
 
     public static final String FILE_NAME = "File-Engine-x64.exe";
 
