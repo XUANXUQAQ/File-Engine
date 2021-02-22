@@ -2,6 +2,7 @@ package FileEngine.frames;
 
 import FileEngine.annotation.EventRegister;
 import FileEngine.configs.AllConfigs;
+import FileEngine.configs.Enums;
 import FileEngine.eventHandler.EventManagement;
 import FileEngine.eventHandler.impl.download.StartDownloadEvent;
 import FileEngine.eventHandler.impl.download.StopDownloadEvent;
@@ -139,18 +140,19 @@ public class PluginMarket {
 
     private void addButtonInstallListener() {
         EventManagement eventManagement = EventManagement.getInstance();
-        AtomicBoolean isDownloadStarted = new AtomicBoolean(false);
         ConcurrentHashMap<String, DownloadManager> downloadManagerConcurrentHashMap = new ConcurrentHashMap<>();
+        DownloadService downloadService = DownloadService.getInstance();
         buttonInstall.addActionListener(e -> {
             String pluginName = (String) listPlugins.getSelectedValue();
-            if (isDownloadStarted.get()) {
+            DownloadManager downloadManager = downloadManagerConcurrentHashMap.get(pluginName);
+            if (downloadManager != null && downloadService.getDownloadStatus(downloadManager) == Enums.DownloadStatus.DOWNLOAD_DOWNLOADING) {
                 //取消下载
-                eventManagement.putEvent(new StopDownloadEvent(downloadManagerConcurrentHashMap.get(pluginName)));
+                eventManagement.putEvent(new StopDownloadEvent(downloadManager));
             } else {
                 String pluginFullName = pluginName + ".jar";
                 JSONObject info = getPluginDetailInfo(pluginName);
                 if (info != null) {
-                    DownloadManager downloadManager = new DownloadManager(
+                    downloadManager = new DownloadManager(
                             info.getString("url"),
                             pluginFullName,
                             new File("tmp", "pluginsUpdate").getAbsolutePath()
@@ -165,11 +167,12 @@ public class PluginMarket {
                     } catch (NoSuchMethodException noSuchMethodException) {
                         noSuchMethodException.printStackTrace();
                     }
+                    DownloadManager finalDownloadManager = downloadManager;
                     CachedThreadPoolUtil.getInstance().executeTask(
                             new Thread(() -> SetDownloadProgress.setProgress(labelProgress,
                                     buttonInstall,
-                                    downloadManager,
-                                    isDownloadStarted,
+                                    finalDownloadManager,
+                                    () -> finalDownloadManager.fileName.equals(listPlugins.getSelectedValue() + ".jar"),
                                     new File("user/updatePlugin"),
                                     pluginName,
                                     getStringMethod.getString,

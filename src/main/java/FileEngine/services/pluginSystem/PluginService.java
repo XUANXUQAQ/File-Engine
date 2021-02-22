@@ -86,7 +86,7 @@ public class PluginService {
         return !LOAD_ERROR_PLUGINS.isEmpty();
     }
 
-    public boolean isPluginsNotLatest(String pluginName) {
+    public boolean isPluginNotLatest(String pluginName) {
         return NOT_LATEST_PLUGINS.contains(pluginName);
     }
 

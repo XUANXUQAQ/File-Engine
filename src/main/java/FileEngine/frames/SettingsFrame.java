@@ -519,13 +519,13 @@ public class SettingsFrame {
     }
 
     private void addCheckForUpdateButtonListener() {
-        AtomicBoolean isDownloadStarted = new AtomicBoolean(false);
         var downloadManager = new Object() {
             DownloadManager downloadManager;
         };
+        DownloadService downloadService = DownloadService.getInstance();
 
         buttonCheckUpdate.addActionListener(e -> {
-            if (isDownloadStarted.get()) {
+            if (downloadManager.downloadManager != null && downloadService.getDownloadStatus(downloadManager.downloadManager) == Enums.DownloadStatus.DOWNLOAD_DOWNLOADING) {
                 eventManagement.putEvent(new StopDownloadEvent(downloadManager.downloadManager));
             } else {
                 //开始下载
@@ -565,7 +565,7 @@ public class SettingsFrame {
                                 () -> SetDownloadProgress.setProgress(labelDownloadProgress,
                                         buttonCheckUpdate,
                                         downloadManager.downloadManager,
-                                        isDownloadStarted,
+                                        () -> AllConfigs.FILE_NAME.equals(downloadManager.downloadManager.fileName),
                                         new File("user/update"),
                                         "",
                                         null,
@@ -775,8 +775,9 @@ public class SettingsFrame {
                     textAreaDescription.setText(description);
                     labelAuthor.setText(translateUtil.getTranslation("Author") + ":" + author);
                     labelOfficialSite.setText("<html><a href='" + officialSite + "'><font size=\"4\">" + pluginName + "</font></a></html>");
+                    labelProgress.setText("");
                     buttonUpdatePlugin.setVisible(true);
-                    if (PluginService.getInstance().isPluginsNotLatest(pluginName)) {
+                    if (PluginService.getInstance().isPluginNotLatest(pluginName)) {
                         if (DownloadService.getInstance().isTaskDone(
                                 new DownloadManager(null, pluginName + ".jar", new File("tmp", "pluginsUpdate").getAbsolutePath()))) {
                             buttonUpdatePlugin.setEnabled(false);
@@ -1388,27 +1389,46 @@ public class SettingsFrame {
         });
     }
 
+    private void waitForCheckUpdateResult(AtomicLong startCheckTime, Thread checkUpdateThread) {
+        try {
+            while (startCheckTime.get() != 0x100L) {
+                TimeUnit.MILLISECONDS.sleep(200);
+                if ((System.currentTimeMillis() - startCheckTime.get() > 5000L &&
+                        startCheckTime.get() != 0x100L) ||
+                        startCheckTime.get() == 0xFFFL) {
+                    checkUpdateThread.interrupt();
+                    JOptionPane.showMessageDialog(frame, translateUtil.getTranslation("Check update failed"));
+                    return;
+                }
+                if (!eventManagement.isNotMainExit()) {
+                    return;
+                }
+            }
+        } catch (InterruptedException e1) {
+            e1.printStackTrace();
+        }
+    }
+
     private void addButtonPluginUpdateCheckListener() {
         AtomicLong startCheckTime = new AtomicLong(0L);
         AtomicBoolean isVersionLatest = new AtomicBoolean(true);
         AtomicBoolean isSkipConfirm = new AtomicBoolean(false);
-        AtomicBoolean isDownloadStarted = new AtomicBoolean(false);
 
+        HashMap<String, DownloadManager> pluginInfoMap = new HashMap<>();
+        DownloadService downloadService = DownloadService.getInstance();
         PluginService pluginService = PluginService.getInstance();
-        var context = new Object() {
-            DownloadManager downloadManager;
-        };
 
         buttonUpdatePlugin.addActionListener(e -> {
-            if (isDownloadStarted.get()) {
-                eventManagement.putEvent(new StopDownloadEvent(context.downloadManager));
+            String pluginName = (String) listPlugins.getSelectedValue();
+            DownloadManager downloadManager = pluginInfoMap.get(pluginName);
+            if (downloadManager != null && downloadService.getDownloadStatus(downloadManager) == Enums.DownloadStatus.DOWNLOAD_DOWNLOADING) {
+                eventManagement.putEvent(new StopDownloadEvent(downloadManager));
             } else {
                 startCheckTime.set(0L);
-                String pluginName = (String) listPlugins.getSelectedValue();
                 Plugin plugin = pluginService.getPluginInfoByName(pluginName).plugin;
                 String pluginFullName = pluginName + ".jar";
 
-                if (pluginService.isPluginsNotLatest(pluginName)) {
+                if (pluginService.isPluginNotLatest(pluginName)) {
                     //已经检查过
                     isVersionLatest.set(false);
                     isSkipConfirm.set(true);
@@ -1427,23 +1447,7 @@ public class SettingsFrame {
                     });
                     cachedThreadPoolUtil.executeTask(checkUpdateThread);
                     //等待获取插件更新信息
-                    try {
-                        while (startCheckTime.get() != 0x100L) {
-                            TimeUnit.MILLISECONDS.sleep(200);
-                            if ((System.currentTimeMillis() - startCheckTime.get() > 5000L &&
-                                    startCheckTime.get() != 0x100L) ||
-                                    startCheckTime.get() == 0xFFFL) {
-                                checkUpdateThread.interrupt();
-                                JOptionPane.showMessageDialog(frame, translateUtil.getTranslation("Check update failed"));
-                                return;
-                            }
-                            if (!eventManagement.isNotMainExit()) {
-                                return;
-                            }
-                        }
-                    } catch (InterruptedException e1) {
-                        e1.printStackTrace();
-                    }
+                    waitForCheckUpdateResult(startCheckTime, checkUpdateThread);
                 }
                 if (isVersionLatest.get()) {
                     JOptionPane.showMessageDialog(frame,
@@ -1460,17 +1464,19 @@ public class SettingsFrame {
                 }
                 //开始下载
                 String url = plugin.getUpdateURL();
-                context.downloadManager = new DownloadManager(
+                downloadManager = new DownloadManager(
                         url,
                         pluginFullName,
                         new File("tmp", "pluginsUpdate").getAbsolutePath()
                 );
-                eventManagement.putEvent(new StartDownloadEvent(context.downloadManager));
+                eventManagement.putEvent(new StartDownloadEvent(downloadManager));
+                pluginInfoMap.put(pluginName, downloadManager);
+                DownloadManager finalDownloadManager = downloadManager;
                 cachedThreadPoolUtil.executeTask(
                         () -> SetDownloadProgress.setProgress(labelProgress,
                         buttonUpdatePlugin,
-                        context.downloadManager,
-                        isDownloadStarted,
+                                finalDownloadManager,
+                                () -> finalDownloadManager.fileName.equals(listPlugins.getSelectedValue() + ".jar"),
                         new File("user/updatePlugin"),
                         "",
                         null,
