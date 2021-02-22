@@ -1405,7 +1405,7 @@ public class SettingsFrame {
             } else {
                 startCheckTime.set(0L);
                 String pluginName = (String) listPlugins.getSelectedValue();
-                Plugin plugin = PluginService.getInstance().getPluginInfoByName(pluginName).plugin;
+                Plugin plugin = pluginService.getPluginInfoByName(pluginName).plugin;
                 String pluginFullName = pluginName + ".jar";
 
                 if (pluginService.isPluginsNotLatest(pluginName)) {

@@ -30,6 +30,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 
 public class MainClass {
@@ -306,6 +307,10 @@ public class MainClass {
         }
     }
 
+    static class CursorCount {
+        private static final AtomicInteger count = new AtomicInteger();
+    }
+
     private static void mainLoop() throws InterruptedException {
         Date startTime = new Date();
         Date endTime;
@@ -313,14 +318,16 @@ public class MainClass {
         long div = 24 * 60 * 60 * 1000;
         int restartCount = 0;
 
-        EventManagement eventManagement = EventManagement.getInstance();
-        TranslateUtil translateUtil = TranslateUtil.getInstance();
-
         boolean isDatabaseDamaged = isDatabaseDamaged();
         boolean isCheckIndex = false;
+        boolean isNeedUpdate = false;
+
         if (!IsDebug.isDebug()) {
             isCheckIndex = checkIndex();
         }
+
+        EventManagement eventManagement = EventManagement.getInstance();
+        TranslateUtil translateUtil = TranslateUtil.getInstance();
 
         if (isDatabaseDamaged || isCheckIndex) {
             eventManagement.putEvent(new ShowTaskBarMessageEvent(
@@ -329,8 +336,13 @@ public class MainClass {
             eventManagement.putEvent(new UpdateDatabaseEvent());
         }
 
+        startGetCursorPosTimer();
+
         while (eventManagement.isNotMainExit()) {
             // 主循环开始
+            if (CursorCount.count.get() < 200) {
+                CursorCount.count.incrementAndGet();
+            }
             //检查已工作时间
             endTime = new Date();
             timeDiff = endTime.getTime() - startTime.getTime();
@@ -339,6 +351,18 @@ public class MainClass {
                 restartCount++;
                 startTime = endTime;
                 //启动时间已经超过2天,更新索引
+                isNeedUpdate = true;
+            }
+            if (IsDebug.isDebug()) {
+                if (isCursorLongTimeNotMove()) {
+                    if (IsDebug.isDebug()) {
+                        System.out.println("长时间未移动鼠标");
+                    }
+                }
+            }
+            //开始检测鼠标移动，若鼠标长时间未移动，且更新标志isNeedUpdate为true，则更新
+            if (isNeedUpdate && isCursorLongTimeNotMove()) {
+                isNeedUpdate = false;
                 eventManagement.putEvent(new ShowTaskBarMessageEvent(
                         translateUtil.getTranslation("Info"),
                         translateUtil.getTranslation("Updating file index")));
@@ -351,6 +375,33 @@ public class MainClass {
             }
             TimeUnit.SECONDS.sleep(1);
         }
+    }
+
+    /**
+     * 检测鼠标是否在两分钟内都未移动
+     * @return true if cursor not move in 2 minutes
+     */
+    private static boolean isCursorLongTimeNotMove() {
+        return CursorCount.count.get() > 120;
+    }
+
+    /**
+     * 持续检测鼠标位置，如果在一秒内移动过，则重置CursorCount.count
+     */
+    private static void startGetCursorPosTimer() {
+        Point lastPoint = new Point();
+        Timer timer = new Timer(1000, (event) -> {
+            Point point = getCursorPoint();
+            if (!point.equals(lastPoint)) {
+                CursorCount.count.set(0);
+            }
+            lastPoint.setLocation(point);
+        });
+        timer.start();
+    }
+
+    private static Point getCursorPoint() {
+        return java.awt.MouseInfo.getPointerInfo().getLocation();
     }
 
     private static boolean checkIndex() {
