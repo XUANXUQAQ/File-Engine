@@ -728,9 +728,10 @@ public class AllConfigs {
     }
 
     public boolean hasStartup() {
+        String command = "cmd.exe /c chcp 65001 & schtasks /query /tn \"File-Engine\"";
+        Process p = null;
         try {
-            String command = "cmd.exe /c chcp 65001 & schtasks /query /tn \"File-Engine\"";
-            Process p = Runtime.getRuntime().exec(command);
+            p = Runtime.getRuntime().exec(command);
             StringBuilder strBuilder = new StringBuilder();
             String line;
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
@@ -741,6 +742,10 @@ public class AllConfigs {
             return strBuilder.toString().contains("File-Engine");
         } catch (IOException e) {
             return false;
+        } finally {
+            if (p != null) {
+                p.destroy();
+            }
         }
     }
 
