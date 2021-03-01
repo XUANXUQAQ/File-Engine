@@ -8,6 +8,7 @@
 #include <dwmapi.h>
 #include "checkHwnd.h"
 #include "getExplorerPath.h"
+#pragma comment(lib, "Gdi32.lib")
 #pragma comment(lib, "dwmapi")
 #pragma comment(lib, "user32")
 #pragma comment(lib, "kernel32")
@@ -54,6 +55,8 @@ extern "C" __declspec(dllexport) bool isDialogWindow();
 extern "C" __declspec(dllexport) void bringSearchBarToTop();
 extern "C" __declspec(dllexport) int getToolBarX();
 extern "C" __declspec(dllexport) int getToolBarY();
+extern "C" __declspec(dllexport) double getDpi();
+
 
 #ifdef TEST
 void outputHwndInfo(HWND hwnd)
@@ -70,6 +73,23 @@ void outputHwndInfo(HWND hwnd)
 int getToolBarX()
 {
     return toolbar_click_x;
+}
+
+double getDpi()
+{
+    SetProcessDPIAware();
+    // Get desktop dc
+    HDC desktopDc = GetDC(nullptr);
+    // Get native resolution
+    const int dpi = GetDeviceCaps(desktopDc, LOGPIXELSX);
+    auto ret = 1 + static_cast<double>((dpi - 96) / 24) * 0.25;
+    if (ret < 1)
+    {
+        ret = 1;
+    }
+
+    ReleaseDC(nullptr, desktopDc);
+    return ret;
 }
 
 int getToolBarY()

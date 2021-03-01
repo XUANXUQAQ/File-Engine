@@ -2,6 +2,7 @@ package FileEngine.frames;
 
 import FileEngine.IsDebug;
 import FileEngine.annotation.EventRegister;
+import FileEngine.dllInterface.GetHandle;
 import FileEngine.eventHandler.Event;
 import FileEngine.eventHandler.EventManagement;
 import FileEngine.eventHandler.impl.frame.settingsFrame.ShowSettingsFrameEvent;
@@ -138,7 +139,8 @@ public class TaskBar {
                         getPopupMenu(popupMenu);
                         popupMenu.setInvoker(popupMenu);
                         popupMenu.setVisible(true);
-                        popupMenu.setLocation(e.getX(), e.getY() - popupMenu.getHeight());
+                        double dpi = GetHandle.INSTANCE.getDpi();
+                        popupMenu.setLocation((int) (e.getX() / dpi), (int) ((e.getY() - popupMenu.getHeight()) / dpi));
                     }
                 }
             });

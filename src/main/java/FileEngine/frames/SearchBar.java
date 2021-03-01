@@ -531,8 +531,9 @@ public class SearchBar {
             result = getParentPath(result);
         }
         copyToClipBoard(result, false);
-        x = GetHandle.INSTANCE.getToolBarX();
-        y = GetHandle.INSTANCE.getToolBarY();
+        double dpi = GetHandle.INSTANCE.getDpi();
+        x = (int) (GetHandle.INSTANCE.getToolBarX() / dpi);
+        y = (int) (GetHandle.INSTANCE.getToolBarY() / dpi);
         robotUtil.mouseClicked(x, y, 1, InputEvent.BUTTON1_DOWN_MASK);
         robotUtil.keyTyped(KeyEvent.VK_CONTROL, KeyEvent.VK_V);
         robotUtil.keyTyped(KeyEvent.VK_ENTER);
@@ -2396,7 +2397,9 @@ public class SearchBar {
                         changeSearchBarSizeAndPos(positionX, positionY, searchBarWidth, searchBarHeight);
                         setTextFieldAtTop(searchBarHeight);
                     }
-                    if (GetHandle.INSTANCE.changeToAttach() && allConfigs.isAttachExplorer()) {
+                    boolean isChangeToAttach =  GetHandle.INSTANCE.changeToAttach();
+                    boolean attachExplorer = allConfigs.isAttachExplorer();
+                    if (isChangeToAttach && attachExplorer) {
                         switchToExplorerAttachMode();
                     } else {
                         if (showingMode != Enums.ShowingSearchBarMode.NORMAL_SHOWING && GetHandle.INSTANCE.changeToNormal()) {
@@ -2413,25 +2416,27 @@ public class SearchBar {
     }
 
     private void getExplorerSizeAndChangeSearchBarSizeExplorerMode() {
-        double explorerWidth = GetHandle.INSTANCE.getExplorerWidth();
-        double explorerHeight = GetHandle.INSTANCE.getExplorerHeight();
-        double explorerX = GetHandle.INSTANCE.getExplorerX();
-        double explorerY = GetHandle.INSTANCE.getExplorerY();
-        int searchBarHeight = (int) (explorerHeight * 0.65);
+        double dpi = GetHandle.INSTANCE.getDpi();
+        long explorerWidth = (long) (GetHandle.INSTANCE.getExplorerWidth() / dpi);
+        long explorerHeight = (long) (GetHandle.INSTANCE.getExplorerHeight() / dpi);
+        long explorerX = (long) (GetHandle.INSTANCE.getExplorerX() / dpi);
+        long explorerY = (long) (GetHandle.INSTANCE.getExplorerY() / dpi);
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        int searchBarWidth = (int) (explorerWidth * 0.3);
+        int searchBarHeight = (int) (screenSize.height * 0.4);
+
         int labelHeight = searchBarHeight / 9;
         if (labelHeight > 20) {
-            int searchBarWidth = (int) (explorerWidth / 4);
             int positionX;
             int positionY;
             boolean isGrabFocus;
             if (GetHandle.INSTANCE.isDialogWindow()) {
-                searchBarWidth = (int) (explorerWidth * 0.52);
                 positionX = (int) (explorerX + (explorerWidth / 2 - searchBarWidth / 2));
-                positionY = (int) (explorerY + explorerHeight * 0.42);
+                positionY = (int) (explorerY + explorerHeight - searchBarHeight + labelHeight);
                 isGrabFocus = true;
             } else {
-                positionX = (int) (explorerX + explorerWidth * 0.97 - searchBarWidth);
-                positionY = (int) (explorerY + explorerHeight * 0.95 - searchBarHeight);
+                positionX = (int) (explorerX + explorerWidth - searchBarWidth - 25);
+                positionY = (int) (explorerY + explorerHeight - searchBarHeight - 20);
                 isGrabFocus = false;
             }
             //设置窗口大小
