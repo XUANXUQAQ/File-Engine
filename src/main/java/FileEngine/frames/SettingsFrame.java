@@ -2328,7 +2328,9 @@ public class SettingsFrame {
                     outPut.close();
                     if (!result.toString().isEmpty()) {
                         checkBoxAddToStartup.setSelected(false);
-                        JOptionPane.showMessageDialog(frame, translateUtil.getTranslation("Add to startup failed, please try to run as administrator"));
+                        JOptionPane.showMessageDialog(frame,
+                                translateUtil.getTranslation("Add to startup failed, please try to run as administrator") +
+                                        "\n" + result.toString());
                     }
                 } catch (IOException | InterruptedException ignored) {
                 }
