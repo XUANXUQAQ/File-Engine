@@ -221,3 +221,4 @@ Check for update at startup=
 Border Thickness=
 Border Type=
 Border thickness is too large, please change=
+Attach to explorer=

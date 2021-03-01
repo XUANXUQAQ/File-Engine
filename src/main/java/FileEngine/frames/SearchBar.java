@@ -2375,6 +2375,7 @@ public class SearchBar {
             try {
                 EventManagement eventManagement = EventManagement.getInstance();
                 GetHandle.INSTANCE.start();
+                AllConfigs allConfigs = AllConfigs.getInstance();
                 while (eventManagement.isNotMainExit()) {
                     if (showingMode == Enums.ShowingSearchBarMode.EXPLORER_ATTACH) {
                         getExplorerSizeAndChangeSearchBarSizeExplorerMode();
@@ -2395,7 +2396,7 @@ public class SearchBar {
                         changeSearchBarSizeAndPos(positionX, positionY, searchBarWidth, searchBarHeight);
                         setTextFieldAtTop(searchBarHeight);
                     }
-                    if (GetHandle.INSTANCE.changeToAttach()) {
+                    if (GetHandle.INSTANCE.changeToAttach() && allConfigs.isAttachExplorer()) {
                         switchToExplorerAttachMode();
                     } else {
                         if (showingMode != Enums.ShowingSearchBarMode.NORMAL_SHOWING && GetHandle.INSTANCE.changeToNormal()) {

@@ -337,6 +337,14 @@ public class AllConfigs {
     }
 
     /**
+     * 是否贴靠在explorer窗口
+     * @return true or false
+     */
+    public boolean isAttachExplorer() {
+        return configEntity.isAttachExplorer();
+    }
+
+    /**
      * 获取边框厚度
      * @return 厚度
      */
@@ -441,6 +449,10 @@ public class AllConfigs {
             }
         }
         configEntity.setDisks(stringBuilder.toString());
+    }
+
+    private void readIsAttachExplorer(JSONObject settingsInJson) {
+        configEntity.setAttachExplorer((boolean) getFromJson(settingsInJson, "isAttachExplorer", true));
     }
 
     private void readResponseCtrl(JSONObject settingsInJson) {
@@ -617,6 +629,7 @@ public class AllConfigs {
         readUpdateAddress(settingsInJson);
         readHotKey(settingsInJson);
         readResponseCtrl(settingsInJson);
+        readIsAttachExplorer(settingsInJson);
         readShowTipOnCreatingLnk(settingsInJson);
         readSwingTheme(settingsInJson);
         readDisks(settingsInJson);
