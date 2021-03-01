@@ -31,4 +31,6 @@ public interface GetHandle extends Library {
     int getToolBarX();
 
     int getToolBarY();
+
+    double getDpi();
 }
