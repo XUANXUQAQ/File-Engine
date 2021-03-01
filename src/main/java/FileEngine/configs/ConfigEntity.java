@@ -99,4 +99,7 @@ public @Data class ConfigEntity {
 
     @JSONField(name = "borderThickness")
     private int borderThickness;
+
+    @JSONField(name = "isAttachExplorer")
+    private boolean isAttachExplorer;
 }

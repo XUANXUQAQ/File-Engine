@@ -345,7 +345,7 @@
               </component>
             </children>
           </grid>
-          <grid id="dcaba" binding="tabSearchBarSettings" layout-manager="GridLayoutManager" row-count="16" column-count="9" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+          <grid id="dcaba" binding="tabSearchBarSettings" layout-manager="GridLayoutManager" row-count="17" column-count="9" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
             <margin top="0" left="0" bottom="0" right="0"/>
             <constraints>
               <tabbedpane title="Search bar settings"/>
@@ -395,7 +395,7 @@
               </component>
               <component id="e6f42" class="javax.swing.JLabel" binding="labelColorTip">
                 <constraints>
-                  <grid row="5" column="0" row-span="1" col-span="6" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                  <grid row="6" column="0" row-span="1" col-span="6" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
                   <text value="Please enter the hexadecimal value of RGB color"/>
@@ -403,7 +403,7 @@
               </component>
               <component id="1ce19" class="javax.swing.JLabel" binding="labelSearchBarFontColor">
                 <constraints>
-                  <grid row="10" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                  <grid row="11" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
                   <text value="SearchBar Font Color:"/>
@@ -411,7 +411,7 @@
               </component>
               <component id="f0baa" class="javax.swing.JLabel" binding="placeholderInterface4">
                 <constraints>
-                  <grid row="8" column="5" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                  <grid row="9" column="5" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
                   <text value="   "/>
@@ -419,7 +419,7 @@
               </component>
               <component id="27f8f" class="javax.swing.JLabel" binding="placeholderInterface3">
                 <constraints>
-                  <grid row="8" column="6" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                  <grid row="9" column="6" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
                   <text value="   "/>
@@ -427,7 +427,7 @@
               </component>
               <component id="dc0e5" class="javax.swing.JLabel" binding="placeholderInterface2">
                 <constraints>
-                  <grid row="8" column="7" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                  <grid row="9" column="7" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
                   <text value="   "/>
@@ -435,7 +435,7 @@
               </component>
               <component id="b577c" class="javax.swing.JLabel" binding="placeholderInterface1">
                 <constraints>
-                  <grid row="8" column="8" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                  <grid row="9" column="8" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
                   <text value="   "/>
@@ -443,7 +443,7 @@
               </component>
               <component id="2062a" class="javax.swing.JLabel" binding="labelTransparency">
                 <constraints>
-                  <grid row="4" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                  <grid row="5" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
                   <text value="Search bar transparency : "/>
@@ -451,7 +451,7 @@
               </component>
               <component id="967de" class="javax.swing.JLabel" binding="labelBorderColor">
                 <constraints>
-                  <grid row="8" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                  <grid row="9" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
                   <text value="Border Color:"/>
@@ -459,7 +459,7 @@
               </component>
               <component id="dac3d" class="javax.swing.JLabel" binding="labelSearchBarColor">
                 <constraints>
-                  <grid row="9" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                  <grid row="10" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
                   <text value="Search bar Color:"/>
@@ -467,7 +467,7 @@
               </component>
               <component id="fae47" class="javax.swing.JLabel" binding="labelLabelColor">
                 <constraints>
-                  <grid row="11" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                  <grid row="12" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
                   <text value="Chosen label color:"/>
@@ -475,7 +475,7 @@
               </component>
               <component id="c29f8" class="javax.swing.JLabel" binding="labelFontColor">
                 <constraints>
-                  <grid row="12" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                  <grid row="13" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
                   <text value="Chosen label font Color:"/>
@@ -483,7 +483,7 @@
               </component>
               <component id="60f68" class="javax.swing.JLabel" binding="labelNotChosenFontColor">
                 <constraints>
-                  <grid row="13" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                  <grid row="14" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
                   <text value="Unchosen label font Color:"/>
@@ -491,23 +491,13 @@
               </component>
               <component id="110a5" class="javax.swing.JLabel" binding="labelDefaultColor">
                 <constraints>
-                  <grid row="14" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                  <grid row="15" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
                   <text value="Default background Color:"/>
                 </properties>
               </component>
               <component id="7c94d" class="javax.swing.JTextField" binding="textFieldBorderColor">
-                <constraints>
-                  <grid row="8" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="0" fill="0" indent="0" use-parent-layout="false">
-                    <preferred-size width="150" height="-1"/>
-                  </grid>
-                </constraints>
-                <properties>
-                  <opaque value="false"/>
-                </properties>
-              </component>
-              <component id="dbc59" class="javax.swing.JTextField" binding="textFieldSearchBarColor">
                 <constraints>
                   <grid row="9" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="0" fill="0" indent="0" use-parent-layout="false">
                     <preferred-size width="150" height="-1"/>
@@ -517,7 +507,7 @@
                   <opaque value="false"/>
                 </properties>
               </component>
-              <component id="cf7e1" class="javax.swing.JTextField" binding="textFieldSearchBarFontColor">
+              <component id="dbc59" class="javax.swing.JTextField" binding="textFieldSearchBarColor">
                 <constraints>
                   <grid row="10" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="0" fill="0" indent="0" use-parent-layout="false">
                     <preferred-size width="150" height="-1"/>
@@ -527,7 +517,7 @@
                   <opaque value="false"/>
                 </properties>
               </component>
-              <component id="40c90" class="javax.swing.JTextField" binding="textFieldLabelColor">
+              <component id="cf7e1" class="javax.swing.JTextField" binding="textFieldSearchBarFontColor">
                 <constraints>
                   <grid row="11" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="0" fill="0" indent="0" use-parent-layout="false">
                     <preferred-size width="150" height="-1"/>
@@ -537,7 +527,7 @@
                   <opaque value="false"/>
                 </properties>
               </component>
-              <component id="e0cbc" class="javax.swing.JTextField" binding="textFieldFontColorWithCoverage">
+              <component id="40c90" class="javax.swing.JTextField" binding="textFieldLabelColor">
                 <constraints>
                   <grid row="12" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="0" fill="0" indent="0" use-parent-layout="false">
                     <preferred-size width="150" height="-1"/>
@@ -547,7 +537,7 @@
                   <opaque value="false"/>
                 </properties>
               </component>
-              <component id="6b332" class="javax.swing.JTextField" binding="textFieldFontColor">
+              <component id="e0cbc" class="javax.swing.JTextField" binding="textFieldFontColorWithCoverage">
                 <constraints>
                   <grid row="13" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="0" fill="0" indent="0" use-parent-layout="false">
                     <preferred-size width="150" height="-1"/>
@@ -557,7 +547,7 @@
                   <opaque value="false"/>
                 </properties>
               </component>
-              <component id="1c04e" class="javax.swing.JTextField" binding="textFieldBackgroundDefault">
+              <component id="6b332" class="javax.swing.JTextField" binding="textFieldFontColor">
                 <constraints>
                   <grid row="14" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="0" fill="0" indent="0" use-parent-layout="false">
                     <preferred-size width="150" height="-1"/>
@@ -567,9 +557,19 @@
                   <opaque value="false"/>
                 </properties>
               </component>
+              <component id="1c04e" class="javax.swing.JTextField" binding="textFieldBackgroundDefault">
+                <constraints>
+                  <grid row="15" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="0" fill="0" indent="0" use-parent-layout="false">
+                    <preferred-size width="150" height="-1"/>
+                  </grid>
+                </constraints>
+                <properties>
+                  <opaque value="false"/>
+                </properties>
+              </component>
               <component id="cffae" class="javax.swing.JLabel" binding="labelColorChooser">
                 <constraints>
-                  <grid row="11" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="4" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                  <grid row="12" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="4" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
                   <opaque value="true"/>
@@ -578,7 +578,7 @@
               </component>
               <component id="9379e" class="javax.swing.JLabel" binding="FontColorWithCoverageChooser">
                 <constraints>
-                  <grid row="12" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                  <grid row="13" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
                   <opaque value="true"/>
@@ -587,7 +587,7 @@
               </component>
               <component id="d72ef" class="javax.swing.JLabel" binding="FontColorChooser">
                 <constraints>
-                  <grid row="13" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                  <grid row="14" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
                   <opaque value="true"/>
@@ -596,7 +596,7 @@
               </component>
               <component id="8727c" class="javax.swing.JLabel" binding="defaultBackgroundChooser">
                 <constraints>
-                  <grid row="14" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                  <grid row="15" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
                   <opaque value="true"/>
@@ -605,7 +605,7 @@
               </component>
               <component id="925d" class="javax.swing.JButton" binding="buttonPreviewColor">
                 <constraints>
-                  <grid row="12" column="4" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                  <grid row="13" column="4" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
                   <text value="Preview"/>
@@ -613,7 +613,7 @@
               </component>
               <component id="cd5a9" class="javax.swing.JButton" binding="buttonClosePreview">
                 <constraints>
-                  <grid row="13" column="4" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                  <grid row="14" column="4" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
                   <text value="Close preview window"/>
@@ -621,7 +621,7 @@
               </component>
               <component id="1be36" class="javax.swing.JButton" binding="buttonResetColor">
                 <constraints>
-                  <grid row="14" column="4" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                  <grid row="15" column="4" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
                   <text value="Reset to default"/>
@@ -629,7 +629,7 @@
               </component>
               <component id="fe189" class="javax.swing.JLabel" binding="SearchBarFontColorChooser">
                 <constraints>
-                  <grid row="10" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                  <grid row="11" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
                   <opaque value="true"/>
@@ -638,7 +638,7 @@
               </component>
               <component id="54837" class="javax.swing.JLabel" binding="searchBarColorChooser">
                 <constraints>
-                  <grid row="9" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                  <grid row="10" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
                   <opaque value="true"/>
@@ -647,7 +647,7 @@
               </component>
               <component id="6683e" class="javax.swing.JLabel" binding="borderColorChooser">
                 <constraints>
-                  <grid row="8" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                  <grid row="9" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
                   <opaque value="true"/>
@@ -656,22 +656,22 @@
               </component>
               <hspacer id="eb0c9">
                 <constraints>
-                  <grid row="11" column="4" row-span="1" col-span="1" vsize-policy="1" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                  <grid row="12" column="4" row-span="1" col-span="1" vsize-policy="1" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
                 </constraints>
               </hspacer>
               <hspacer id="cb20b">
                 <constraints>
-                  <grid row="11" column="3" row-span="1" col-span="1" vsize-policy="1" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                  <grid row="12" column="3" row-span="1" col-span="1" vsize-policy="1" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
                 </constraints>
               </hspacer>
               <hspacer id="58ae9">
                 <constraints>
-                  <grid row="11" column="5" row-span="1" col-span="4" vsize-policy="1" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                  <grid row="12" column="5" row-span="1" col-span="4" vsize-policy="1" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
                 </constraints>
               </hspacer>
               <component id="c7dad" class="javax.swing.JTextField" binding="textFieldTransparency">
                 <constraints>
-                  <grid row="4" column="1" row-span="1" col-span="4" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false">
+                  <grid row="5" column="1" row-span="1" col-span="4" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false">
                     <preferred-size width="150" height="-1"/>
                   </grid>
                 </constraints>
@@ -681,12 +681,12 @@
               </component>
               <vspacer id="c7f55">
                 <constraints>
-                  <grid row="15" column="1" row-span="1" col-span="1" vsize-policy="6" hsize-policy="1" anchor="0" fill="2" indent="0" use-parent-layout="false"/>
+                  <grid row="16" column="1" row-span="1" col-span="1" vsize-policy="6" hsize-policy="1" anchor="0" fill="2" indent="0" use-parent-layout="false"/>
                 </constraints>
               </vspacer>
               <component id="25040" class="javax.swing.JLabel" binding="labelBorderType">
                 <constraints>
-                  <grid row="6" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                  <grid row="7" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
                   <text value="Border Type"/>
@@ -694,7 +694,7 @@
               </component>
               <component id="eb2a8" class="javax.swing.JLabel" binding="labelBorderThickness">
                 <constraints>
-                  <grid row="7" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                  <grid row="8" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
                   <text value="Border Thickness"/>
@@ -702,7 +702,7 @@
               </component>
               <component id="64653" class="javax.swing.JTextField" binding="textFieldBorderThickness">
                 <constraints>
-                  <grid row="7" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="0" fill="0" indent="0" use-parent-layout="false">
+                  <grid row="8" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="0" fill="0" indent="0" use-parent-layout="false">
                     <preferred-size width="150" height="-1"/>
                   </grid>
                 </constraints>
@@ -712,9 +712,18 @@
               </component>
               <component id="ff41b" class="javax.swing.JComboBox" binding="comboBoxBorderType">
                 <constraints>
-                  <grid row="6" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="2" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
+                  <grid row="7" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="2" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties/>
+              </component>
+              <component id="a0618" class="javax.swing.JCheckBox" binding="checkBoxIsAttachExplorer">
+                <constraints>
+                  <grid row="4" column="0" row-span="1" col-span="2" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                </constraints>
+                <properties>
+                  <opaque value="false"/>
+                  <text value="Attach explorer"/>
+                </properties>
               </component>
             </children>
           </grid>

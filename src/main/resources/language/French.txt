@@ -221,3 +221,4 @@ Check for update at startup=Vérifier les mises à jour au démarrage
 Border Thickness=Épaisseur de la bordure
 Border Type=Type de bordure
 Border thickness is too large, please change=L'épaisseur de la bordure est trop grande, veuillez changer
+Attach to explorer=attacher à l'explorateur

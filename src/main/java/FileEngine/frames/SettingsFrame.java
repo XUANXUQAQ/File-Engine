@@ -267,6 +267,7 @@ public class SettingsFrame {
     private JLabel labelBorderThickness;
     private JTextField textFieldBorderThickness;
     private JComboBox<Object> comboBoxBorderType;
+    private JCheckBox checkBoxIsAttachExplorer;
 
 
     private static volatile SettingsFrame instance = null;
@@ -1611,6 +1612,7 @@ public class SettingsFrame {
         checkBoxIsShowTipOnCreatingLnk.setSelected(allConfigs.isShowTipOnCreatingLnk());
         checkBoxResponseCtrl.setSelected(allConfigs.isResponseCtrl());
         checkBoxCheckUpdate.setSelected(allConfigs.isCheckUpdateStartup());
+        checkBoxIsAttachExplorer.setSelected(allConfigs.isAttachExplorer());
     }
 
     private void setListGui() {
@@ -1969,6 +1971,7 @@ public class SettingsFrame {
         checkBoxIsShowTipOnCreatingLnk.setText(translateUtil.getTranslation("Show tip on creating shortcut"));
         checkBoxResponseCtrl.setText(translateUtil.getTranslation("Double-click \"Ctrl\" to open the search bar"));
         checkBoxCheckUpdate.setText(translateUtil.getTranslation("Check for update at startup"));
+        checkBoxIsAttachExplorer.setText(translateUtil.getTranslation("Attach to explorer"));
     }
 
     private void translateButtons() {
@@ -2261,6 +2264,7 @@ public class SettingsFrame {
         configEntity.setDoubleClickCtrlOpen(checkBoxResponseCtrl.isSelected());
         configEntity.setCheckUpdateStartup(checkBoxCheckUpdate.isSelected());
         configEntity.setDisks(parseDisk());
+        configEntity.setAttachExplorer(checkBoxIsAttachExplorer.isSelected());
 
         setStartup(checkBoxAddToStartup.isSelected());
         eventManagement.putEvent(new ResponseCtrlEvent(checkBoxResponseCtrl.isSelected()));

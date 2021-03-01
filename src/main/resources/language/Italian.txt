@@ -221,3 +221,4 @@ Check for update at startup=Verifica la disponibilità di aggiornamenti all'avvi
 Border Thickness=Spessore del bordo
 Border Type=Tipo di bordo
 Border thickness is too large, please change=Lo spessore del bordo è troppo grande, cambiare
+Attach to explorer=allegare a explorer

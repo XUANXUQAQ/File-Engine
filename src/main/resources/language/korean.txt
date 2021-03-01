@@ -221,3 +221,4 @@ Check for update at startup=시작시 업데이트 확인
 Border Thickness=테두리 두께
 Border Type=테두리 유형
 Border thickness is too large, please change=테두리 두께가 너무 큽니다. 변경하십시오.
+Attach to explorer=탐험가에 첨부

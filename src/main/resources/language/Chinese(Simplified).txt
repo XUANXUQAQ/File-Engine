@@ -221,3 +221,4 @@ Check for update at startup=启动时检查更新
 Border Thickness=边框厚度
 Border Type=边框类型
 Border thickness is too large, please change=边框厚度太大，请修改
+Attach to explorer=贴靠资源管理器

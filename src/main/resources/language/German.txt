@@ -221,3 +221,4 @@ Check for update at startup=Suchen Sie beim Start nach Updates
 Border Thickness=Randdicke
 Border Type=Randtyp
 Border thickness is too large, please change=Randstärke ist zu groß, bitte ändern
+Attach to explorer=an den Explorer anhängen

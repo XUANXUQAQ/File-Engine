@@ -221,3 +221,4 @@ Check for update at startup=起動時に更新を確認する
 Border Thickness=境界線の厚さ
 Border Type=ボーダータイプ
 Border thickness is too large, please change=ボーダーの太さが大きすぎますので、変更してください
+Attach to explorer=エクスプローラーに添付
