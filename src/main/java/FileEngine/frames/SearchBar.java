@@ -2436,7 +2436,7 @@ public class SearchBar {
                 isGrabFocus = true;
             } else {
                 positionX = (int) (explorerX + explorerWidth - searchBarWidth - 25);
-                positionY = (int) (explorerY + explorerHeight - searchBarHeight - 20);
+                positionY = (int) (explorerY + explorerHeight - searchBarHeight - labelHeight);
                 isGrabFocus = false;
             }
             //设置窗口大小
