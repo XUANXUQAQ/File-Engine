@@ -222,3 +222,7 @@ Border Thickness=Randdicke
 Border Type=Randtyp
 Border thickness is too large, please change=Randstärke ist zu groß, bitte ändern
 Attach to explorer=an den Explorer anhängen
+Open=anmachen
+Open as administrator=Als Administrator öffnen
+Copy file path=Dateipfad kopieren
+Open parent folder=Öffnen Sie den übergeordneten Ordner

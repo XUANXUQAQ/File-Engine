@@ -222,3 +222,7 @@ Border Thickness=
 Border Type=
 Border thickness is too large, please change=
 Attach to explorer=
+Open=
+Open as administrator=
+Copy file path=
+Open parent folder=

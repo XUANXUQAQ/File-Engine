@@ -222,3 +222,7 @@ Border Thickness=邊框厚度
 Border Type=邊框類型
 Border thickness is too large, please change=邊框厚度太大，請更改
 Attach to explorer=附加到資源管理器
+Open=打開
+Open as administrator=以管理員方式打開
+Copy file path=複製文件路徑
+Open parent folder=打開父文件夾
