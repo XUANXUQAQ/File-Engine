@@ -222,3 +222,7 @@ Border Thickness=Толщина границы
 Border Type=Тип границы
 Border thickness is too large, please change=Слишком большая толщина границы, измените
 Attach to explorer=прикрепить к проводнику
+Open=открыто
+Open as administrator=открыть как администратор
+Copy file path=копировать путь к файлу
+Open parent folder=открыть родительскую папку

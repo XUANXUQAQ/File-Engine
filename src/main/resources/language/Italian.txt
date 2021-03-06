@@ -222,3 +222,7 @@ Border Thickness=Spessore del bordo
 Border Type=Tipo di bordo
 Border thickness is too large, please change=Lo spessore del bordo è troppo grande, cambiare
 Attach to explorer=allegare a explorer
+Open=Aperto
+Open as administrator=Apri come amministratore
+Copy file path=copia il percorso del file
+Open parent folder=percorso padre aperto
