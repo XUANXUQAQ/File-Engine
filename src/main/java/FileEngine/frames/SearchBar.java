@@ -145,7 +145,7 @@ public class SearchBar {
         TranslateUtil translateUtil = TranslateUtil.getInstance();
         open = new JMenuItem(translateUtil.getTranslation("Open"));
         openAsAdmin = new JMenuItem(translateUtil.getTranslation("Open as administrator"));
-        copyDir = new JMenuItem(translateUtil.getTranslation("Copy parent path"));
+        copyDir = new JMenuItem(translateUtil.getTranslation("Copy file path"));
         openLast = new JMenuItem(translateUtil.getTranslation("Open parent folder"));
         menu.add(open);
         menu.add(openAsAdmin);
