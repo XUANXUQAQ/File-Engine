@@ -33,4 +33,6 @@ public interface GetHandle extends Library {
     int getToolBarY();
 
     double getDpi();
+
+    boolean isMousePressed();
 }

@@ -56,7 +56,7 @@ extern "C" __declspec(dllexport) void bringSearchBarToTop();
 extern "C" __declspec(dllexport) int getToolBarX();
 extern "C" __declspec(dllexport) int getToolBarY();
 extern "C" __declspec(dllexport) double getDpi();
-
+extern "C" __declspec(dllexport) bool isMousePressed();
 
 #ifdef TEST
 void outputHwndInfo(HWND hwnd)
@@ -73,6 +73,15 @@ void outputHwndInfo(HWND hwnd)
 int getToolBarX()
 {
     return toolbar_click_x;
+}
+
+bool isMousePressed()
+{
+	if (isKeyPressed(VK_LBUTTON) || isKeyPressed(VK_RBUTTON))
+	{
+        return true;
+	}
+    return false;
 }
 
 double getDpi()
