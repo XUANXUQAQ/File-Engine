@@ -28,6 +28,7 @@ public class TaskBar {
     private final ConcurrentLinkedQueue<MessageStruct> messageQueue = new ConcurrentLinkedQueue<>();
     private final AtomicBoolean isMessageClear = new AtomicBoolean(true);
     private volatile Event currentShowingMessageWithEvent = null;
+    private volatile JPopupMenu popupMenu = null;
 
     private static volatile TaskBar INSTANCE = null;
 
@@ -47,6 +48,27 @@ public class TaskBar {
         startShowMessageThread();
         showTaskBar();
         addActionListener();
+
+        CachedThreadPoolUtil.getInstance().executeTask(() -> {
+            EventManagement instance = EventManagement.getInstance();
+            try {
+                while (instance.isNotMainExit()) {
+                    if (popupMenu != null && popupMenu.isVisible() && GetHandle.INSTANCE.isMousePressed()) {
+                        Point point = java.awt.MouseInfo.getPointerInfo().getLocation();
+                        Point location = popupMenu.getLocationOnScreen();
+                        int X = location.x;
+                        int Y = location.y;
+                        int width = popupMenu.getWidth();
+                        int height = popupMenu.getHeight();
+                        if (!(X <= point.x && point.x <= X + width && Y < point.y && point.y <= Y + height)) {
+                            SwingUtilities.invokeLater(() -> popupMenu.setVisible(false));
+                        }
+                    }
+                    TimeUnit.MILLISECONDS.sleep(100);
+                }
+            } catch (InterruptedException ignored) {
+            }
+        });
     }
 
     private void startShowMessageThread() {
@@ -120,10 +142,9 @@ public class TaskBar {
             } else {
                 trayIcon.setToolTip("File-Engine," + TranslateUtil.getInstance().getTranslation("Double click to open settings"));
             }
+            // 为托盘图标加弹出菜单
 
-            // 为托盘图标加弹出菜弹
             trayIcon.addMouseListener(new MouseAdapter() {
-                JPopupMenu popupMenu;
 
                 @Override
                 public void mouseClicked(MouseEvent e) {
@@ -135,8 +156,9 @@ public class TaskBar {
                 @Override
                 public void mouseReleased(MouseEvent e) {
                     if (e.isPopupTrigger()) {
-                        popupMenu = new JPopupMenu();
-                        getPopupMenu(popupMenu);
+                        if (popupMenu == null) {
+                            popupMenu = getPopupMenu();
+                        }
                         popupMenu.setInvoker(popupMenu);
                         popupMenu.setVisible(true);
                         double dpi = GetHandle.INSTANCE.getDpi();
@@ -154,20 +176,26 @@ public class TaskBar {
         }
     }
 
-    private void getPopupMenu(JPopupMenu popupMenu) {
+    private JPopupMenu getPopupMenu() {
         // 创建弹出菜单
+        JPopupMenu popupMenu = new JPopupMenu();
         EventManagement eventManagement = EventManagement.getInstance();
         TranslateUtil translateUtil = TranslateUtil.getInstance();
         JMenuItem settings = new JMenuItem(translateUtil.getTranslation("Settings"));
         settings.addActionListener(e -> eventManagement.putEvent(new ShowSettingsFrameEvent()));
+
+        JSeparator separator = new JSeparator();
+
         JMenuItem restartProc = new JMenuItem(translateUtil.getTranslation("Restart"));
         restartProc.addActionListener(e -> restart());
         JMenuItem close = new JMenuItem(translateUtil.getTranslation("Exit"));
         close.addActionListener(e -> closeAndExit());
 
         popupMenu.add(settings);
+        popupMenu.add(separator);
         popupMenu.add(restartProc);
         popupMenu.add(close);
+        return popupMenu;
     }
 
     private void closeAndExit() {

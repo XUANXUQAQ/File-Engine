@@ -112,6 +112,11 @@ public class SearchBar {
     private final AtomicInteger tempResultNum;  //保存当前tempResults中有多少个结果
     private final AtomicInteger currentLabelSelectedPosition;   //保存当前是哪个label被选中 范围 0 - 7
     private volatile Plugin currentUsingPlugin;
+    private final JPopupMenu menu = new JPopupMenu();
+    private final JMenuItem open;
+    private final JMenuItem openAsAdmin;
+    private final JMenuItem copyDir;
+    private final JMenuItem openLast;
 
     private static final int MAX_RESULTS_COUNT = 200;
 
@@ -137,6 +142,16 @@ public class SearchBar {
         currentResultCount = new AtomicInteger(0);
         listResultsNum = new AtomicInteger(0);
         tempResultNum = new AtomicInteger(0);
+        TranslateUtil translateUtil = TranslateUtil.getInstance();
+        open = new JMenuItem(translateUtil.getTranslation("Open"));
+        openAsAdmin = new JMenuItem(translateUtil.getTranslation("Open as administrator"));
+        copyDir = new JMenuItem(translateUtil.getTranslation("Copy parent path"));
+        openLast = new JMenuItem(translateUtil.getTranslation("Open parent folder"));
+        menu.add(open);
+        menu.add(openAsAdmin);
+        menu.add(copyDir);
+        menu.add(openLast);
+
         runningMode = Enums.RunningMode.NORMAL_MODE;
         showingMode = Enums.ShowingSearchBarMode.NORMAL_SHOWING;
         currentLabelSelectedPosition = new AtomicInteger(0);
@@ -234,13 +249,15 @@ public class SearchBar {
 
         registerUpdateDatabaseListener();
 
+        initMenuItems();
+
         //开启所有线程
         initThreadPool();
 
         //添加textField搜索变更检测
         addTextFieldDocumentListener();
 
-        //添加结果的鼠标双击事件响应
+        //添加结果的鼠标事件响应
         addSearchBarMouseListener();
 
         //添加结果的鼠标滚轮响应
@@ -253,6 +270,104 @@ public class SearchBar {
         addTextFieldKeyListener();
 
         addTextFieldFocusListener();
+    }
+
+    private void initMenuItems() {
+        open.addActionListener(e -> {
+            if (isPreviewMode.get() || isTutorialMode.get()) {
+                return;
+            }
+            if (listResultsNum.get() != 0) {
+                if (showingMode == Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
+                    setVisible(false);
+                }
+                String res = listResults.get(currentResultCount.get());
+                if (runningMode == Enums.RunningMode.NORMAL_MODE) {
+                    openWithoutAdmin(res);
+                } else {
+                    String[] commandInfo = semicolon.split(res);
+                    boolean isExecuted = runInternalCommand(colon.split(commandInfo[0])[1]);
+                    if (isExecuted) {
+                        return;
+                    }
+                    File open = new File(commandInfo[1]);
+                    openWithoutAdmin(open.getAbsolutePath());
+                }
+            }
+            detectShowingModeAndClose();
+        });
+
+        openAsAdmin.addActionListener(e -> {
+            if (isPreviewMode.get() || isTutorialMode.get()) {
+                return;
+            }
+            if (listResultsNum.get() != 0) {
+                if (showingMode == Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
+                    setVisible(false);
+                }
+                String res = listResults.get(currentResultCount.get());
+                if (runningMode == Enums.RunningMode.NORMAL_MODE) {
+                    openWithAdmin(res);
+                } else {
+                    String[] commandInfo = semicolon.split(res);
+                    boolean isExecuted = runInternalCommand(colon.split(commandInfo[0])[1]);
+                    if (isExecuted) {
+                        return;
+                    }
+                    File open = new File(commandInfo[1]);
+                    openWithAdmin(open.getAbsolutePath());
+                }
+            }
+            detectShowingModeAndClose();
+        });
+
+        copyDir.addActionListener(e -> {
+            if (isPreviewMode.get() || isTutorialMode.get()) {
+                return;
+            }
+            if (listResultsNum.get() != 0) {
+                if (showingMode == Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
+                    setVisible(false);
+                }
+                String res = listResults.get(currentResultCount.get());
+                if (runningMode == Enums.RunningMode.NORMAL_MODE) {
+                    copyToClipBoard(res, true);
+                } else {
+                    String[] commandInfo = semicolon.split(res);
+                    boolean isExecuted = runInternalCommand(colon.split(commandInfo[0])[1]);
+                    if (isExecuted) {
+                        return;
+                    }
+                    File open = new File(commandInfo[1]);
+                    copyToClipBoard(open.getAbsolutePath(), true);
+                }
+            }
+            detectShowingModeAndClose();
+        });
+
+        openLast.addActionListener(e -> {
+            if (isPreviewMode.get() || isTutorialMode.get()) {
+                return;
+            }
+            if (listResultsNum.get() != 0) {
+                if (showingMode == Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
+                    setVisible(false);
+                }
+                String res = listResults.get(currentResultCount.get());
+                if (runningMode == Enums.RunningMode.NORMAL_MODE) {
+                    openFolderByExplorer(res);
+                } else {
+                    String[] commandInfo = semicolon.split(res);
+                    boolean isExecuted = runInternalCommand(colon.split(commandInfo[0])[1]);
+                    if (isExecuted) {
+                        return;
+                    }
+                    File open = new File(commandInfo[1]);
+                    openFolderByExplorer(open.getAbsolutePath());
+                }
+            }
+            detectShowingModeAndClose();
+        });
     }
 
     private void initBorder(Enums.BorderType borderType, Color borderColor, int borderThickness) {
@@ -306,6 +421,9 @@ public class SearchBar {
             @Override
             public void focusLost(FocusEvent e) {
                 if (System.currentTimeMillis() - visibleStartTime > 500) {
+                    if (menu.isVisible()) {
+                        return;
+                    }
                     if (showingMode == Enums.ShowingSearchBarMode.NORMAL_SHOWING && allConfigs.isLoseFocusClose()) {
                         if (!isTutorialMode.get()) {
                             closeSearchBar();
@@ -437,7 +555,6 @@ public class SearchBar {
                                     } else {
                                         openWithoutAdmin(res);
                                     }
-                                    saveCache(res);
                                 }
                             } else if (runningMode == Enums.RunningMode.COMMAND_MODE) {
                                 String[] commandInfo = semicolon.split(res);
@@ -468,6 +585,14 @@ public class SearchBar {
                         }
                     }
                     detectShowingModeAndClose();
+                }
+
+                if (e.getButton() == MouseEvent.BUTTON3 && runningMode != Enums.RunningMode.PLUGIN_MODE) {
+                    //右键被点击
+                    double dpi = GetHandle.INSTANCE.getDpi();
+                    menu.show(searchBar, (int) (e.getX() / dpi), (int) (e.getY() / dpi));
+                } else if (e.getButton() == MouseEvent.BUTTON1) {
+                    menu.setVisible(false);
                 }
             }
 
@@ -666,7 +791,6 @@ public class SearchBar {
                                         } else {
                                             openWithoutAdmin(res);
                                         }
-                                        saveCache(res);
                                     } else if (showingMode == Enums.ShowingSearchBarMode.EXPLORER_ATTACH) {
                                         if (isCopyPathPressed.get()) {
                                             copyToClipBoard(res, true);
@@ -766,6 +890,7 @@ public class SearchBar {
 
     private void openFolderByExplorer(String dir) {
         try {
+            saveCache(dir);
             openFolderByExplorerWithException(dir);
         } catch (IOException e) {
             e.printStackTrace();
@@ -1037,6 +1162,9 @@ public class SearchBar {
 
             @Override
             public void mouseMoved(MouseEvent e) {
+                if (menu.isVisible()) {
+                    return;
+                }
                 //判断鼠标位置
                 int offset = label1.getHeight();
                 int labelPosition = label1.getY();
@@ -1436,6 +1564,9 @@ public class SearchBar {
     }
 
     private void moveDownward(int position) {
+        if (menu.isVisible()) {
+            return;
+        }
         currentLabelSelectedPosition.incrementAndGet();
         if (currentLabelSelectedPosition.get() > 7) {
             currentLabelSelectedPosition.set(7);
@@ -1752,6 +1883,9 @@ public class SearchBar {
     }
 
     private void moveUpward(int position) {
+        if (menu.isVisible()) {
+            return;
+        }
         currentLabelSelectedPosition.decrementAndGet();
         if (currentLabelSelectedPosition.get() < 0) {
             currentLabelSelectedPosition.set(0);
@@ -3504,6 +3638,7 @@ public class SearchBar {
      * @param path 文件路径
      */
     private void openWithAdmin(String path) {
+        saveCache(path);
         TranslateUtil translateUtil = TranslateUtil.getInstance();
         File file = new File(path);
         if (file.exists()) {
@@ -3563,6 +3698,7 @@ public class SearchBar {
      * @param path 文件路径
      */
     private void openWithoutAdmin(String path) {
+        saveCache(path);
         File file = new File(path);
         String pathLower = path.toLowerCase();
         Desktop desktop;
@@ -3803,6 +3939,7 @@ public class SearchBar {
                 clearTextFieldText();
                 resetAllStatus();
             }
+            menu.setVisible(false);
         });
     }
 
@@ -3814,6 +3951,7 @@ public class SearchBar {
             clearAllLabels();
             clearTextFieldText();
             resetAllStatus();
+            menu.setVisible(false);
         });
     }
 
