@@ -655,6 +655,7 @@ public class SearchBar {
         if (isFile(result)) {
             result = getParentPath(result);
         }
+        saveCache(result);
         copyToClipBoard(result, false);
         double dpi = GetHandle.INSTANCE.getDpi();
         x = (int) (GetHandle.INSTANCE.getToolBarX() / dpi);
