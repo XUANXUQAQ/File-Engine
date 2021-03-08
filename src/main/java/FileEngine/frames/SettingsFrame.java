@@ -50,6 +50,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -541,6 +542,7 @@ public class SettingsFrame {
                     }
                 } catch (IOException e1) {
                     JOptionPane.showMessageDialog(frame, translateUtil.getTranslation("Check update failed"));
+                    showManualDownloadDialog();
                     return;
                 }
                 if (Double.parseDouble(latestVersion) > Double.parseDouble(AllConfigs.version)) {
@@ -563,14 +565,19 @@ public class SettingsFrame {
                         );
                         eventManagement.putEvent(new StartDownloadEvent(downloadManager.downloadManager));
                         cachedThreadPoolUtil.executeTask(
-                                () -> SetDownloadProgress.setProgress(labelDownloadProgress,
-                                        buttonCheckUpdate,
-                                        downloadManager.downloadManager,
-                                        () -> AllConfigs.FILE_NAME.equals(downloadManager.downloadManager.fileName),
-                                        new File("user/update"),
-                                        "",
-                                        null,
-                                        null));
+                                () -> {
+                                    boolean ret = SetDownloadProgress.setProgress(labelDownloadProgress,
+                                            buttonCheckUpdate,
+                                            downloadManager.downloadManager,
+                                            () -> AllConfigs.FILE_NAME.equals(downloadManager.downloadManager.fileName),
+                                            new File("user/update"),
+                                            "",
+                                            null,
+                                            null);
+                                    if (!ret) {
+                                        showManualDownloadDialog();
+                                    }
+                                });
                         //更新button为取消
                         buttonCheckUpdate.setText(translateUtil.getTranslation("Cancel"));
                     }
@@ -581,6 +588,23 @@ public class SettingsFrame {
                 }
             }
         });
+    }
+
+    private void showManualDownloadDialog() {
+        int ret = JOptionPane.showConfirmDialog(frame, translateUtil.getTranslation("Do you want to download it manually"));
+        if (ret == JOptionPane.YES_OPTION) {
+            Desktop desktop;
+            if (Desktop.isDesktopSupported()) {
+                desktop = Desktop.getDesktop();
+                try {
+                    EventManagement.getInstance().putEvent(new ShowTaskBarMessageEvent(translateUtil.getTranslation("Info"),
+                            translateUtil.getTranslation("Password") + ": fxzj"));
+                    desktop.browse(new URI("https://file-engine.lanzous.com/b00z9337i"));
+                } catch (IOException | URISyntaxException ioException) {
+                    ioException.printStackTrace();
+                }
+            }
+        }
     }
 
     private void addTextFieldCopyPathListener() {

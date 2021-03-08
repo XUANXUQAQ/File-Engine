@@ -34,7 +34,7 @@ public class SetDownloadProgress {
      * @param getSelectedMethod 线程需要从哪个方法获取字符串，当获取的字符串不等于currentTaskStr时，则会停止设置buttonInstall和labelProgress的值
      * @param invokeMethodObj 执行method需要的实例
      */
-    protected static void setProgress(JLabel labelProgress,
+    protected static boolean setProgress(JLabel labelProgress,
                                    JButton buttonInstall,
                                    DownloadManager downloadManager,
                                    Supplier<Boolean> func,
@@ -42,6 +42,7 @@ public class SetDownloadProgress {
                                    String currentTaskStr,
                                    Method getSelectedMethod,
                                    Object invokeMethodObj) {
+        boolean retVal = false;
         try {
             TranslateUtil translateUtil = TranslateUtil.getInstance();
             DownloadService downloadService = DownloadService.getInstance();
@@ -52,7 +53,7 @@ public class SetDownloadProgress {
             while (isStarted) {
                 if (func.get()) {
                     if (!eventManagement.isNotMainExit()) {
-                        return;
+                        return true;
                     }
                     String taskStrFromMethod = currentTaskStr;
                     if (getSelectedMethod != null) {
@@ -73,12 +74,14 @@ public class SetDownloadProgress {
                                     throw new RuntimeException("创建更新标识符失败");
                                 }
                             }
+                            retVal = true;
                         } else if (downloadStatus == Enums.DownloadStatus.DOWNLOAD_ERROR) {
                             //下载错误，重置button
                             labelProgress.setText(translateUtil.getTranslation("Download failed"));
                             buttonInstall.setText(buttonOriginalText);
                             buttonInstall.setEnabled(true);
                             isStarted = false;
+                            retVal = false;
                         } else if (downloadStatus == Enums.DownloadStatus.DOWNLOAD_DOWNLOADING) {
                             //正在下载
                             labelProgress.setText(translateUtil.getTranslation("Downloading:") + (int) (progress * 100) + "%");
@@ -90,6 +93,7 @@ public class SetDownloadProgress {
                             buttonInstall.setText(buttonOriginalText);
                             buttonInstall.setEnabled(true);
                             isStarted = false;
+                            retVal = true;
                         }
                     } else {
                         if (!isDownloadStartedSet) {
@@ -102,5 +106,6 @@ public class SetDownloadProgress {
         } catch (InterruptedException | IOException | InvocationTargetException | IllegalAccessException e) {
             e.printStackTrace();
         }
+        return retVal;
     }
 }
