@@ -226,3 +226,4 @@ Open=打开
 Open as administrator=以管理员方式打开
 Copy file path=复制文件路径
 Open parent folder=打开父文件夹
+Do you want to download it manually=您要手动下载吗
