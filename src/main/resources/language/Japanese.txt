@@ -226,3 +226,4 @@ Open=開いた
 Open as administrator=管理者として開く
 Copy file path=コピーファイルパス
 Open parent folder=親パスを開く
+Do you want to download it manually=手動でダウンロードしますか

@@ -591,7 +591,7 @@ public class SettingsFrame {
     }
 
     private void showManualDownloadDialog() {
-        int ret = JOptionPane.showConfirmDialog(frame, translateUtil.getTranslation("Do you want to download it manually"));
+        int ret = JOptionPane.showConfirmDialog(frame, translateUtil.getTranslation("Do you want to download it manually") + "?");
         if (ret == JOptionPane.YES_OPTION) {
             Desktop desktop;
             if (Desktop.isDesktopSupported()) {
