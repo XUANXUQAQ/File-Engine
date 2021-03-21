@@ -14,7 +14,8 @@ import java.io.InputStreamReader;
 public class DaemonService {
     private static volatile DaemonService instance = null;
 
-    private DaemonService() {}
+    private DaemonService() {
+    }
 
     private static DaemonService getInstance() {
         if (instance == null) {
@@ -38,6 +39,7 @@ public class DaemonService {
 
     /**
      * 开启守护进程
+     *
      * @param currentWorkingDir 当前进程工作环境位置
      */
     private void startDaemon(String currentWorkingDir) {
@@ -77,6 +79,7 @@ public class DaemonService {
 
     /**
      * 检测进程是否存在
+     *
      * @return true如果进程以存在
      */
     private boolean isDaemonExist() throws IOException, InterruptedException {

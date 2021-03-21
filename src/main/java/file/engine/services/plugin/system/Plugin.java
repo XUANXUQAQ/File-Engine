@@ -141,7 +141,7 @@ public class Plugin {
     public void setCurrentTheme(int defaultColor, int chosenLabelColor, int borderColor) {
         try {
             pluginSetCurrentTheme.invoke(instance, defaultColor, chosenLabelColor, borderColor);
-        }catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }

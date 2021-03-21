@@ -27,7 +27,8 @@ public class DownloadService {
         return INSTANCE;
     }
 
-    private DownloadService() {}
+    private DownloadService() {
+    }
 
     @EventRegister
     @SuppressWarnings("unused")
@@ -60,7 +61,7 @@ public class DownloadService {
         for (DownloadManager each : downloadManagerSet) {
             if (
                     each.fileName.equals(downloadManager.fileName) &&
-                    each.savePath.equals(downloadManager.savePath)
+                            each.savePath.equals(downloadManager.savePath)
             ) {
                 return each;
             }

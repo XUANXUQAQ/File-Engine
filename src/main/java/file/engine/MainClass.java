@@ -1,5 +1,6 @@
 package file.engine;
 
+import com.alibaba.fastjson.JSONObject;
 import file.engine.annotation.EventRegister;
 import file.engine.configs.AllConfigs;
 import file.engine.configs.Enums;
@@ -12,14 +13,13 @@ import file.engine.event.handler.impl.frame.settingsFrame.ShowSettingsFrameEvent
 import file.engine.event.handler.impl.stop.RestartEvent;
 import file.engine.event.handler.impl.taskbar.ShowTaskBarMessageEvent;
 import file.engine.services.DatabaseService;
+import file.engine.services.plugin.system.PluginService;
 import file.engine.utils.CachedThreadPoolUtil;
 import file.engine.utils.Md5Util;
+import file.engine.utils.SQLiteUtil;
 import file.engine.utils.TranslateUtil;
 import file.engine.utils.clazz.scan.ClassScannerUtil;
-import file.engine.utils.SQLiteUtil;
 import file.engine.utils.file.CopyFileUtil;
-import file.engine.services.plugin.system.PluginService;
-import com.alibaba.fastjson.JSONObject;
 
 import javax.swing.*;
 import java.awt.*;
@@ -44,7 +44,7 @@ public class MainClass {
     private static final String UPDATER_BAT_64_MD_5 = "357d7cc1cf023cb6c90f73926c6f2f55";
     private static final String GET_HANDLE_64_MD_5 = "ffad87f434bde3b48bd5b7f226de9eae";
     private static final String DAEMON_PROCESS_64_MD_5 = "cf6052fa108b0d19a98d2422c1ea853f";
-    private static final String SHORTCUT_GEN_MD_5="d2d3215c2a0741370851f2d4ed738b54";
+    private static final String SHORTCUT_GEN_MD_5 = "d2d3215c2a0741370851f2d4ed738b54";
 
     private static void initializeDllInterface() throws ClassNotFoundException {
         Class.forName("file.engine.dllInterface.FileMonitor");
@@ -80,7 +80,7 @@ public class MainClass {
     private static boolean isTableExist(ArrayList<String> tableNames) {
         try (Statement stmt = SQLiteUtil.getStatement()) {
             for (String tableName : tableNames) {
-                String sql= String.format("SELECT ASCII, PATH FROM %s;", tableName);
+                String sql = String.format("SELECT ASCII, PATH FROM %s;", tableName);
                 stmt.executeQuery(sql);
             }
             return true;
@@ -248,12 +248,12 @@ public class MainClass {
     }
 
     /**
-     *  -Dfile.encoding=UTF-8
-     *  -Dsun.java2d.noddraw=true
-     *  -Djna.library.path=user
-     *  -Dswing.aatext=true
-     *  -Djna.debug_load=false
-     *  -DFile_Engine_Debug=true
+     * -Dfile.encoding=UTF-8
+     * -Dsun.java2d.noddraw=true
+     * -Djna.library.path=user
+     * -Dswing.aatext=true
+     * -Djna.debug_load=false
+     * -DFile_Engine_Debug=true
      */
     private static void setSystemProperties() {
         //todo Debug在发布时设置为false
@@ -380,6 +380,7 @@ public class MainClass {
 
     /**
      * 检测鼠标是否在两分钟内都未移动
+     *
      * @return true if cursor not move in 2 minutes
      */
     private static boolean isCursorLongTimeNotMove() {

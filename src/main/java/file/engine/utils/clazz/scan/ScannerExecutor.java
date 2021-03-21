@@ -15,12 +15,13 @@ public class ScannerExecutor implements Scan {
         return fileSearch;
     }
 
-    private ScannerExecutor(){}
+    private ScannerExecutor() {
+    }
 
-    public static ScannerExecutor getInstance(){
-        if(instance == null){
-            synchronized (ScannerExecutor.class){
-                if(instance == null){
+    public static ScannerExecutor getInstance() {
+        if (instance == null) {
+            synchronized (ScannerExecutor.class) {
+                if (instance == null) {
                     instance = new ScannerExecutor();
                 }
             }

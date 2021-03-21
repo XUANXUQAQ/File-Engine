@@ -110,7 +110,7 @@ public class CheckHotKeyService {
         hotkey5 = hotkeys[length - 1].charAt(0);
         HotkeyListener.INSTANCE.registerHotKey(hotkey1, hotkey2, hotkey3, hotkey4, hotkey5);
     }
-    
+
     private void startListenHotkeyThread() {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             boolean isExecuted = true;
@@ -172,7 +172,7 @@ public class CheckHotKeyService {
             HotkeyListener.INSTANCE.setCtrlDoubleClick(responseCtrlEvent.isResponse);
         });
     }
-    
+
     private void initThreadPool() {
         startListenHotkeyThread();
     }

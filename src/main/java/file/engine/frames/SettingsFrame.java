@@ -1,5 +1,6 @@
 package file.engine.frames;
 
+import com.alibaba.fastjson.JSONObject;
 import file.engine.IsDebug;
 import file.engine.annotation.EventRegister;
 import file.engine.configs.AllConfigs;
@@ -35,7 +36,6 @@ import file.engine.utils.RegexUtil;
 import file.engine.utils.SQLiteUtil;
 import file.engine.utils.TranslateUtil;
 import file.engine.utils.file.MoveDesktopFiles;
-import com.alibaba.fastjson.JSONObject;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -58,6 +58,8 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -293,7 +295,7 @@ public class SettingsFrame {
                 if (!errors.isEmpty()) {
                     int ret = JOptionPane.showConfirmDialog(null,
                             translateUtil.getTranslation("Errors") + ":\n" + errors + "\n" +
-                            translateUtil.getTranslation("Failed to save settings, do you still close the window"));
+                                    translateUtil.getTranslation("Failed to save settings, do you still close the window"));
                     if (ret == JOptionPane.YES_OPTION) {
                         hideFrame();
                     }
@@ -323,7 +325,15 @@ public class SettingsFrame {
             int isConfirmed = JOptionPane.showConfirmDialog(frame, translateUtil.getTranslation("Whether to remove and backup all files on the desktop," +
                     "they will be in the program's Files folder, which may take a few minutes"));
             if (isConfirmed == JOptionPane.YES_OPTION) {
-                cachedThreadPoolUtil.executeTask(MoveDesktopFiles::start);
+                Future<Boolean> future = cachedThreadPoolUtil.executeTask(MoveDesktopFiles::start);
+                try {
+                    if (!future.get()) {
+                        JOptionPane.showMessageDialog(null,
+                                translateUtil.getTranslation("Files with the same name are detected, please move them by yourself"));
+                    }
+                } catch (InterruptedException | ExecutionException interruptedException) {
+                    interruptedException.printStackTrace();
+                }
             }
         });
     }
@@ -345,7 +355,8 @@ public class SettingsFrame {
             boolean reset = true;
 
             @Override
-            public void keyTyped(KeyEvent e) {}
+            public void keyTyped(KeyEvent e) {
+            }
 
             @Override
             public void keyPressed(KeyEvent e) {
@@ -951,6 +962,7 @@ public class SettingsFrame {
             search(String searchText) {
                 this.searchText = searchText;
             }
+
             void doSearch() {
                 cachedThreadPoolUtil.executeTask(() -> {
                     String tmp;
@@ -980,7 +992,8 @@ public class SettingsFrame {
             }
 
             @Override
-            public void changedUpdate(DocumentEvent e) {}
+            public void changedUpdate(DocumentEvent e) {
+            }
         });
     }
 
@@ -1223,7 +1236,7 @@ public class SettingsFrame {
                 errMsg.append(translateUtil.getTranslation("Duplicate suffix, please check")).append("\n");
             }
         }
-        if (isPriorityChanged){
+        if (isPriorityChanged) {
             try {
                 int _p = Integer.parseInt(priority);
                 if (_p <= 0) {
@@ -1283,6 +1296,7 @@ public class SettingsFrame {
                         dontTrigger.set(false);
                     });
                 }
+
                 void doRestoreSuffix() {
                     SwingUtilities.invokeLater(() -> {
                         dontTrigger.set(true);
@@ -1305,9 +1319,9 @@ public class SettingsFrame {
                 if (checkSuffixAndPriority(suffix, priorityNum, errMsg, true, false)) {
                     int num = Integer.parseInt(priorityNum);
                     eventManagement.putEvent(new UpdateSuffixPriorityEvent(
-                            lastSuffix[0],
-                            suffix,
-                            num
+                                    lastSuffix[0],
+                                    suffix,
+                                    num
                             )
                     );
                     suffixMap.remove(lastSuffix[0]);
@@ -1329,9 +1343,9 @@ public class SettingsFrame {
                 if (checkSuffixAndPriority(suffix, priorityNum, errMsg, false, true)) {
                     int num = Integer.parseInt(priorityNum);
                     eventManagement.putEvent(new UpdateSuffixPriorityEvent(
-                            lastSuffix[0],
-                            suffix,
-                            num
+                                    lastSuffix[0],
+                                    suffix,
+                                    num
                             )
                     );
                     suffixMap.remove(lastSuffix[0]);
@@ -1499,13 +1513,13 @@ public class SettingsFrame {
                 DownloadManager finalDownloadManager = downloadManager;
                 cachedThreadPoolUtil.executeTask(
                         () -> SetDownloadProgress.setProgress(labelProgress,
-                        buttonUpdatePlugin,
+                                buttonUpdatePlugin,
                                 finalDownloadManager,
                                 () -> finalDownloadManager.fileName.equals(listPlugins.getSelectedValue() + ".jar"),
-                        new File("user/updatePlugin"),
-                        "",
-                        null,
-                        null));
+                                new File("user/updatePlugin"),
+                                "",
+                                null,
+                                null));
             }
         });
     }
@@ -1612,9 +1626,9 @@ public class SettingsFrame {
 
     private void setTableGui() {
         tableSuffix.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        DefaultTableModel tableModel=(DefaultTableModel) tableSuffix.getModel();    //获得表格模型
+        DefaultTableModel tableModel = (DefaultTableModel) tableSuffix.getModel();    //获得表格模型
         tableModel.setRowCount(0);
-        tableModel.setColumnIdentifiers(new String[] {translateUtil.getTranslation("suffix"), translateUtil.getTranslation("priority")});
+        tableModel.setColumnIdentifiers(new String[]{translateUtil.getTranslation("suffix"), translateUtil.getTranslation("priority")});
         LinkedList<Integer> tmpKeySet = new LinkedList<>(suffixMap.values());
         tmpKeySet.sort(Integer::compare);
         for (int each : tmpKeySet) {
@@ -1705,7 +1719,7 @@ public class SettingsFrame {
         resizeGUI();
 
         tabbedPane.removeAll();
-        tabbedPane.setBackground(new Color(0,0,0,0));
+        tabbedPane.setBackground(new Color(0, 0, 0, 0));
 
         buttonUpdatePlugin.setVisible(false);
 
@@ -1812,7 +1826,7 @@ public class SettingsFrame {
     private void expandAll(JTree tree, TreePath parent, boolean expand) {
         TreeNode node = (TreeNode) parent.getLastPathComponent();
         if (node.getChildCount() >= 0) {
-            for (Enumeration<?> e = node.children(); e.hasMoreElements();) {
+            for (Enumeration<?> e = node.children(); e.hasMoreElements(); ) {
                 TreeNode n = (TreeNode) e.nextElement();
                 TreePath path = parent.pathByAddingChild(n);
                 expandAll(tree, path, expand);
@@ -2386,7 +2400,7 @@ public class SettingsFrame {
         private final String tabName;
 
         private TabNameAndTitle(String tabName, String title) {
-            this.tabName =tabName;
+            this.tabName = tabName;
             this.title = title;
         }
     }

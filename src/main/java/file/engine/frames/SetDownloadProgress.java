@@ -18,30 +18,31 @@ import java.util.function.Supplier;
  * 使用方法：给点击下载的button添加actionListener，用一个AtomicBoolean isDownloadStarted判断当前按钮是点击下载，还是点击取消下载
  * 如果是点击取消下载（isDownloadStarted = true）则发送一个cancel请求
  * 如果是点击下载，则通过判断后发送一个start下载请求，然后开启一个线程运行该方法即可
- *
+ * <p>
  * 不要自己设置isDownloadStarted
  */
 public class SetDownloadProgress {
 
     /**
      * 当你点击下载按钮时使用，此时isDownloadStarted必须设为true
-     * @param labelProgress 显示进度的label
-     * @param buttonInstall 设置文字为下载还是取消的下载点击按钮
-     * @param downloadManager 下载管理类的实例
-     * @param func 判断是否需要显示label和button的状态
-     * @param successSign 下载成功后创建文件
-     * @param currentTaskStr 当前任务的标志
+     *
+     * @param labelProgress     显示进度的label
+     * @param buttonInstall     设置文字为下载还是取消的下载点击按钮
+     * @param downloadManager   下载管理类的实例
+     * @param func              判断是否需要显示label和button的状态
+     * @param successSign       下载成功后创建文件
+     * @param currentTaskStr    当前任务的标志
      * @param getSelectedMethod 线程需要从哪个方法获取字符串，当获取的字符串不等于currentTaskStr时，则会停止设置buttonInstall和labelProgress的值
-     * @param invokeMethodObj 执行method需要的实例
+     * @param invokeMethodObj   执行method需要的实例
      */
     protected static boolean setProgress(JLabel labelProgress,
-                                   JButton buttonInstall,
-                                   DownloadManager downloadManager,
-                                   Supplier<Boolean> func,
-                                   File successSign,
-                                   String currentTaskStr,
-                                   Method getSelectedMethod,
-                                   Object invokeMethodObj) {
+                                         JButton buttonInstall,
+                                         DownloadManager downloadManager,
+                                         Supplier<Boolean> func,
+                                         File successSign,
+                                         String currentTaskStr,
+                                         Method getSelectedMethod,
+                                         Object invokeMethodObj) {
         boolean retVal = false;
         try {
             TranslateUtil translateUtil = TranslateUtil.getInstance();

@@ -38,6 +38,7 @@ public class EventManagement {
 
     /**
      * 等待任务
+     *
      * @param event 任务实例
      * @return true如果任务执行失败， false如果执行正常完成
      */
@@ -47,19 +48,20 @@ public class EventManagement {
             int count = 0;
             while (!event.isFailed() && !event.isFinished()) {
                 count++;
-                if (count > timeout){
+                if (count > timeout) {
                     System.err.println("等待" + event.toString() + "超时");
                     break;
                 }
                 TimeUnit.MILLISECONDS.sleep(50);
             }
-        }catch (InterruptedException ignored){
+        } catch (InterruptedException ignored) {
         }
         return event.isFailed();
     }
 
     /**
      * 执行任务
+     *
      * @param event 任务
      * @return true如果执行失败，false执行成功
      */
@@ -110,6 +112,7 @@ public class EventManagement {
 
     /**
      * 发送任务
+     *
      * @param event 任务
      */
     public void putEvent(Event event) {
@@ -140,8 +143,9 @@ public class EventManagement {
 
     /**
      * 注册任务监听器
+     *
      * @param eventType 需要监听的任务类型
-     * @param handler 需要执行的操作
+     * @param handler   需要执行的操作
      */
     public void register(Class<? extends Event> eventType, EventHandler handler) {
         if (IsDebug.isDebug()) {
@@ -152,6 +156,7 @@ public class EventManagement {
 
     /**
      * 监听某个任务被发出，并不是执行任务
+     *
      * @param eventType 需要监听的任务类型
      */
     public void registerListener(Class<? extends Event> eventType, Runnable todo) {

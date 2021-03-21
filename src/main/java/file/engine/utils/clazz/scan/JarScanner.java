@@ -40,14 +40,14 @@ public class JarScanner implements Scan {
                             }
                         }
                     }
-                }else if("file".equalsIgnoreCase(protocol)){
+                } else if ("file".equalsIgnoreCase(protocol)) {
                     //从maven子项目中扫描
                     FileScanner fileScanner = new FileScanner();
-                    fileScanner.setDefaultClassPath(url.getPath().replace(packageName.replace(".", "/"),""));
+                    fileScanner.setDefaultClassPath(url.getPath().replace(packageName.replace(".", "/"), ""));
                     classes.addAll(fileScanner.search(packageName));
                 }
             }
-        }catch (IOException e){
+        } catch (IOException e) {
             e.printStackTrace();
         }
         return classes;
