@@ -48,8 +48,8 @@ public class MoveFilesUtil {
             File newPathFile = new File(newPath);
             if (newPathFile.exists()) {
                 isDirCreated = true;
-            }else {
-                isDirCreated=(new File(newPath)).mkdirs();
+            } else {
+                isDirCreated = (new File(newPath)).mkdirs();
             }
             if (!isDirCreated) {
                 return false;
@@ -98,6 +98,7 @@ public class MoveFilesUtil {
 
     /**
      * 移动一个文件夹中的所有文件到另一个文件夹
+     *
      * @param oldPath 需要移动的文件夹
      * @param newPath 移动到的文件夹
      * @return 是否含有冲突文件
@@ -108,8 +109,8 @@ public class MoveFilesUtil {
         File newPathFile = new File(newPath);
         if (newPathFile.exists()) {
             isDirCreated = true;
-        }else {
-            isDirCreated=(new File(newPath)).mkdirs();
+        } else {
+            isDirCreated = (new File(newPath)).mkdirs();
         }
         if (!isDirCreated) {
             JOptionPane.showMessageDialog(null, "Create " + newPath + " dir failed", "ERROR", JOptionPane.ERROR_MESSAGE);

@@ -24,7 +24,8 @@ public class GetIconUtil {
 
     private static volatile GetIconUtil INSTANCE = null;
 
-    private GetIconUtil() {}
+    private GetIconUtil() {
+    }
 
     public static GetIconUtil getInstance() {
         if (INSTANCE == null) {

@@ -373,9 +373,9 @@ public class SearchBar {
 
     private void initBorder(Enums.BorderType borderType, Color borderColor, int borderThickness) {
         if (Enums.BorderType.AROUND == borderType) {
-            topBorder = BorderFactory.createMatteBorder(borderThickness,borderThickness,0,borderThickness, borderColor);
-            middleBorder = BorderFactory.createMatteBorder(0,borderThickness,0,borderThickness, borderColor);
-            bottomBorder = BorderFactory.createMatteBorder(0,borderThickness,borderThickness,borderThickness,borderColor);
+            topBorder = BorderFactory.createMatteBorder(borderThickness, borderThickness, 0, borderThickness, borderColor);
+            middleBorder = BorderFactory.createMatteBorder(0, borderThickness, 0, borderThickness, borderColor);
+            bottomBorder = BorderFactory.createMatteBorder(0, borderThickness, borderThickness, borderThickness, borderColor);
             fullBorder = BorderFactory.createMatteBorder(
                     borderThickness,
                     borderThickness,
@@ -417,7 +417,8 @@ public class SearchBar {
         AllConfigs allConfigs = AllConfigs.getInstance();
         textField.addFocusListener(new FocusListener() {
             @Override
-            public void focusGained(FocusEvent e) {}
+            public void focusGained(FocusEvent e) {
+            }
 
             @Override
             public void focusLost(FocusEvent e) {
@@ -485,9 +486,9 @@ public class SearchBar {
     /**
      * 用于模式切换时实时修改label大小
      *
-     * @param width     宽
-     * @param height    高
-     * @param label     需要修改大小的label
+     * @param width  宽
+     * @param height 高
+     * @param label  需要修改大小的label
      */
     private void setLabelSize(int width, int height, int positionY, JLabel label) {
         label.setSize(width, height);
@@ -508,7 +509,7 @@ public class SearchBar {
         if (lower.endsWith(".lnk") || lower.endsWith(".url")) {
             //直接复制文件
             CopyFileUtil.copyFile(new File(fileOrFolderPath), new File(writeShortCutPath));
-        }else {
+        } else {
             File shortcutGen = new File("user/shortcutGenerator.vbs");
             String shortcutGenPath = shortcutGen.getAbsolutePath();
             String start = "cmd.exe /c start " + shortcutGenPath.substring(0, 2);
@@ -519,7 +520,7 @@ public class SearchBar {
         if (isNotifyUser) {
             eventManagement.putEvent(new ShowTaskBarMessageEvent(
                     translateUtil.getTranslation("Info"),
-                       translateUtil.getTranslation("Shortcut created")));
+                    translateUtil.getTranslation("Shortcut created")));
         }
     }
 
@@ -529,6 +530,7 @@ public class SearchBar {
     private void addSearchBarMouseListener() {
         searchBar.addMouseListener(new MouseAdapter() {
             private final AllConfigs allConfigs = AllConfigs.getInstance();
+
             @Override
             public void mousePressed(MouseEvent e) {
                 int count = e.getClickCount();
@@ -912,7 +914,7 @@ public class SearchBar {
             case "clearbin":
                 detectShowingModeAndClose();
                 if (JOptionPane.showConfirmDialog(null, translateUtil.getTranslation(
-                    "Are you sure you want to empty the recycle bin")) == JOptionPane.OK_OPTION) {
+                        "Are you sure you want to empty the recycle bin")) == JOptionPane.OK_OPTION) {
                     try {
                         File[] roots = File.listRoots();
                         for (File root : roots) {
@@ -931,7 +933,7 @@ public class SearchBar {
                 eventManagement.putEvent(new ShowTaskBarMessageEvent(
                         translateUtil.getTranslation("Info"),
                         translateUtil.getTranslation("Updating file index")));
-                  eventManagement.putEvent(new UpdateDatabaseEvent());
+                eventManagement.putEvent(new UpdateDatabaseEvent());
                 startSignal.set(false);
                 isNotSqlInitialized.set(false);
                 return true;
@@ -1009,16 +1011,16 @@ public class SearchBar {
         textField.setText("test");
         JOptionPane.showMessageDialog(searchBar,
                 translateUtil.getTranslation("When you enter \"test\" in the search bar") + ",\n" +
-                translateUtil.getTranslation("files with \"test\" in the name will be displayed below the search bar"));
+                        translateUtil.getTranslation("files with \"test\" in the name will be displayed below the search bar"));
         textField.setText("test;file");
         JOptionPane.showMessageDialog(searchBar,
                 translateUtil.getTranslation("If you know multiple keywords of a file") + "\n" +
-                translateUtil.getTranslation("(for example, the file name contains both \"file\" and \"test\")") + ",\n" +
-                translateUtil.getTranslation("you can separate them with \";\" (semicolon) to search together as keywords."));
+                        translateUtil.getTranslation("(for example, the file name contains both \"file\" and \"test\")") + ",\n" +
+                        translateUtil.getTranslation("you can separate them with \";\" (semicolon) to search together as keywords."));
         textField.setText("/test");
         JOptionPane.showMessageDialog(searchBar,
                 translateUtil.getTranslation("When entering \"/test\" in the search bar") + ", " +
-                translateUtil.getTranslation("the file containing \"test\" in the path will be displayed below the search bar"));
+                        translateUtil.getTranslation("the file containing \"test\" in the path will be displayed below the search bar"));
         textField.setText("");
         JOptionPane.showMessageDialog(searchBar,
                 translateUtil.getTranslation("Add \":\" + suffix after the keyword to achieve a more precise search") + "\n" +
@@ -1040,7 +1042,7 @@ public class SearchBar {
         textField.setText("test:d;full");
         JOptionPane.showMessageDialog(searchBar,
                 translateUtil.getTranslation("You can also combine different suffixes to use") + "\n" +
-                translateUtil.getTranslation("you can separate them with \";\" (semicolon) to search together as keywords."));
+                        translateUtil.getTranslation("you can separate them with \";\" (semicolon) to search together as keywords."));
         textField.setText("test;/file:d;case");
         JOptionPane.showMessageDialog(searchBar,
                 translateUtil.getTranslation("Different keywords are separated by \";\" (semicolon), suffix and keywords are separated by \":\" (colon)"));
@@ -1069,9 +1071,9 @@ public class SearchBar {
                         translateUtil.getTranslation("Including the color of the window, the hot key to call out the search box, the transparency of the window, custom commands and so on."));
         if (JOptionPane.showConfirmDialog(null,
                 translateUtil.getTranslation("End of the tutorial") + "\n" +
-                translateUtil.getTranslation("You can enter \":help\" in the search bar at any time to enter the tutorial") + "\n" +
-                translateUtil.getTranslation("There are more detailed tutorials on the Github wiki. Would you like to check it out?"))
-        == JOptionPane.OK_OPTION) {
+                        translateUtil.getTranslation("You can enter \":help\" in the search bar at any time to enter the tutorial") + "\n" +
+                        translateUtil.getTranslation("There are more detailed tutorials on the Github wiki. Would you like to check it out?"))
+                == JOptionPane.OK_OPTION) {
             try {
                 Desktop desktop;
                 if (Desktop.isDesktopSupported()) {
@@ -1144,7 +1146,7 @@ public class SearchBar {
                     shouldSaveMousePos.set(true);
                     TimeUnit.MILLISECONDS.sleep(50);
                 }
-            }catch (InterruptedException ignored) {
+            } catch (InterruptedException ignored) {
             }
         });
 
@@ -1158,7 +1160,7 @@ public class SearchBar {
                 Enums.RunningMode mode = runningMode;
                 isMouseDraggedInWindow.set(
                         mode == Enums.RunningMode.NORMAL_MODE ||
-                        mode == Enums.RunningMode.COMMAND_MODE
+                                mode == Enums.RunningMode.COMMAND_MODE
                 );
             }
 
@@ -2386,7 +2388,7 @@ public class SearchBar {
                             startSignal.set(true);
                             isNotSqlInitialized.set(true);
                             isWaiting.set(false);
-                            break;
+                            return;
                         }
                         TimeUnit.MILLISECONDS.sleep(20);
                     }
@@ -2413,9 +2415,10 @@ public class SearchBar {
 
     /**
      * 根据RGB值判断 深色与浅色
+     *
      * @return true if color is dark
      */
-    private boolean isDark(int r,int g,int b){
+    private boolean isDark(int r, int g, int b) {
         return !(r * 0.299 + g * 0.578 + b * 0.114 >= 192);
     }
 
@@ -2533,7 +2536,7 @@ public class SearchBar {
                         changeSearchBarSizeAndPos(positionX, positionY, searchBarWidth, searchBarHeight);
                         setTextFieldAtTop(searchBarHeight);
                     }
-                    boolean isChangeToAttach =  GetHandle.INSTANCE.changeToAttach();
+                    boolean isChangeToAttach = GetHandle.INSTANCE.changeToAttach();
                     boolean attachExplorer = allConfigs.isAttachExplorer();
                     if (isChangeToAttach && attachExplorer) {
                         switchToExplorerAttachMode();
@@ -2626,7 +2629,7 @@ public class SearchBar {
                 //设置label大小
                 int firstLabelY = label1.getY();
                 setLabelSize(searchBarWidth, labelHeight, firstLabelY, label1);
-                setLabelSize(searchBarWidth, labelHeight, firstLabelY + labelHeight , label2);
+                setLabelSize(searchBarWidth, labelHeight, firstLabelY + labelHeight, label2);
                 setLabelSize(searchBarWidth, labelHeight, firstLabelY + labelHeight * 2, label3);
                 setLabelSize(searchBarWidth, labelHeight, firstLabelY + labelHeight * 3, label4);
                 setLabelSize(searchBarWidth, labelHeight, firstLabelY + labelHeight * 4, label5);
@@ -2693,7 +2696,7 @@ public class SearchBar {
         label6.setFont(labelFont);
         label7.setFont(labelFont);
         label8.setFont(labelFont);
-        showingMode= Enums.ShowingSearchBarMode.NORMAL_SHOWING;
+        showingMode = Enums.ShowingSearchBarMode.NORMAL_SHOWING;
         searchBar.setOpacity(AllConfigs.getInstance().getOpacity());
         TimeUnit.MILLISECONDS.sleep(150);
     }
@@ -2767,12 +2770,12 @@ public class SearchBar {
             //在结果不足8个的时候不断尝试显示
             if (
                     isLabelEmpty(label2) ||
-                    isLabelEmpty(label3) ||
-                    isLabelEmpty(label4) ||
-                    isLabelEmpty(label5) ||
-                    isLabelEmpty(label6) ||
-                    isLabelEmpty(label7) ||
-                    isLabelEmpty(label8)
+                            isLabelEmpty(label3) ||
+                            isLabelEmpty(label4) ||
+                            isLabelEmpty(label5) ||
+                            isLabelEmpty(label6) ||
+                            isLabelEmpty(label7) ||
+                            isLabelEmpty(label8)
             ) {
                 //设置窗口上的文字和图片显示，键盘模式
                 boolean finalIsLabel1Chosen = isLabel1Chosen;
@@ -2838,7 +2841,7 @@ public class SearchBar {
                     TimeUnit.MILLISECONDS.sleep(250);
                 }
             } catch (InterruptedException ignored) {
-            }finally {
+            } finally {
                 isRepaintFrameThreadNotExist.set(true);
             }
         });
@@ -3095,7 +3098,7 @@ public class SearchBar {
                 TimeUnit.MILLISECONDS.sleep(15);
             }
         } catch (InterruptedException ignored) {
-        }finally {
+        } finally {
             clearAllLabelBorder();
             isBorderThreadNotExist.set(true);
         }
@@ -3293,16 +3296,17 @@ public class SearchBar {
     /**
      * 检查文件路径是否匹配然后加入到列表
      *
-     * @param path        文件路径
+     * @param path 文件路径
      */
     private void matchOnCacheAndPriorityFolder(String path, boolean isResultFromCache) {
-        checkIsMatchedAndAddToList(path,  false, isResultFromCache);
+        checkIsMatchedAndAddToList(path, false, isResultFromCache);
     }
 
     /**
      * * 检查文件路径是否匹配然后加入到列表
-     * @param path  文件路径
-     * @param isPutToTemp 是否放到临时容器，在搜索优先文件夹和cache时为false，其他为true
+     *
+     * @param path              文件路径
+     * @param isPutToTemp       是否放到临时容器，在搜索优先文件夹和cache时为false，其他为true
      * @param isResultFromCache 是否来自缓存
      * @return true如果匹配成功
      */
@@ -3311,7 +3315,7 @@ public class SearchBar {
         if (check(path)) {
             if (isExist(path)) {
                 //字符串匹配通过
-                ret  = true;
+                ret = true;
                 if (isPutToTemp) {
                     if (isNotContains(tempResults, path)) {
                         tempResults.add(path);
@@ -3347,8 +3351,8 @@ public class SearchBar {
     /**
      * 搜索数据酷并加入到tempQueue中
      *
-     * @param time   开始搜索时间，用于检测用于重新输入匹配信息后快速停止
-     * @param sql sql
+     * @param time 开始搜索时间，用于检测用于重新输入匹配信息后快速停止
+     * @param sql  sql
      */
     private int searchAndAddToTempResults(long time, String sql, AtomicBoolean isResultsFull) {
         int count = 0;
@@ -3665,19 +3669,20 @@ public class SearchBar {
 
     /**
      * 在windows的temp目录(或者该软件的tmp目录，如果路径中没有空格)中生成bat以及用于隐藏bat的vbs脚本
-     * @param command 要运行的cmd命令
-     * @param filePath 文件位置（必须传入文件夹）
+     *
+     * @param command    要运行的cmd命令
+     * @param filePath   文件位置（必须传入文件夹）
      * @param workingDir 应用打开后的工作目录
      * @return vbs的路径
      */
     private String generateBatAndVbsFile(String command, String filePath, String workingDir) {
         char disk = workingDir.charAt(0);
-        String start = workingDir.substring(0,2);
+        String start = workingDir.substring(0, 2);
         String end = workingDir.substring(2);
         File batFilePath = new File(filePath, "openBat_File_Engine.bat");
         File vbsFilePath = new File(filePath, "openVbs_File_Engine.vbs");
         try (BufferedWriter batW = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(batFilePath), System.getProperty("sun.jnu.encoding")));
-            BufferedWriter vbsW = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(vbsFilePath), System.getProperty("sun.jnu.encoding")))) {
+             BufferedWriter vbsW = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(vbsFilePath), System.getProperty("sun.jnu.encoding")))) {
             //生成bat
             batW.write(disk + ":");
             batW.newLine();

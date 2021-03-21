@@ -13,6 +13,7 @@ public class PreviewSearchBarEvent extends Event {
     public final int defaultBackgroundColor;
     public final Enums.BorderType borderType;
     public final int borderThickness;
+
     public PreviewSearchBarEvent(String borderColor,
                                  String searchBarColor,
                                  String searchBarFontColor,

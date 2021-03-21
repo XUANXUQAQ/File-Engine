@@ -1,5 +1,6 @@
 package file.engine.services.plugin.system;
 
+import com.alibaba.fastjson.JSONObject;
 import file.engine.IsDebug;
 import file.engine.annotation.EventRegister;
 import file.engine.configs.AllConfigs;
@@ -12,7 +13,6 @@ import file.engine.event.handler.impl.plugin.SetPluginsCurrentThemeEvent;
 import file.engine.event.handler.impl.stop.RestartEvent;
 import file.engine.event.handler.impl.taskbar.ShowTaskBarMessageEvent;
 import file.engine.utils.CachedThreadPoolUtil;
-import com.alibaba.fastjson.JSONObject;
 
 import java.io.*;
 import java.net.URL;

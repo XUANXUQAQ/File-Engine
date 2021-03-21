@@ -169,14 +169,14 @@ public class PluginMarket {
                     }
                     DownloadManager finalDownloadManager = downloadManager;
                     CachedThreadPoolUtil.getInstance().executeTask(
-                            new Thread(() -> SetDownloadProgress.setProgress(labelProgress,
+                            () -> SetDownloadProgress.setProgress(labelProgress,
                                     buttonInstall,
                                     finalDownloadManager,
                                     () -> finalDownloadManager.fileName.equals(listPlugins.getSelectedValue() + ".jar"),
                                     new File("user/updatePlugin"),
                                     pluginName,
                                     getStringMethod.getString,
-                                    listPlugins), "show plugin download progress")
+                                    listPlugins)
                     );
                 }
             }
@@ -187,9 +187,11 @@ public class PluginMarket {
         class search {
             final String searchKeywords;
             final CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
+
             search(String searchKeywords) {
                 this.searchKeywords = searchKeywords;
             }
+
             void doSearch() {
                 cachedThreadPoolUtil.executeTask(() -> {
                     String tmp;
@@ -220,7 +222,8 @@ public class PluginMarket {
             }
 
             @Override
-            public void changedUpdate(DocumentEvent e) {}
+            public void changedUpdate(DocumentEvent e) {
+            }
         });
     }
 
@@ -255,9 +258,11 @@ public class PluginMarket {
             final CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
             final String pluginName;
             final TranslateUtil translateUtil = TranslateUtil.getInstance();
+
             getPluginInfo(String pluginName) {
                 this.pluginName = pluginName;
             }
+
             void doGet() {
                 isStartGetPluginInfo.set(false);
                 cachedThreadPoolUtil.executeTask(() -> {
@@ -266,7 +271,7 @@ public class PluginMarket {
                         return;
                     }
                     JSONObject info = getPluginDetailInfo(pluginName);
-                    if (info == null){
+                    if (info == null) {
                         return;
                     }
                     String officialSite = info.getString("officialSite");

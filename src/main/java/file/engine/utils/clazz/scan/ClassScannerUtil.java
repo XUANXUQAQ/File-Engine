@@ -7,7 +7,7 @@ import java.util.Set;
 
 public class ClassScannerUtil {
 
-    private static Set<String> searchClasses(String packageName){
+    private static Set<String> searchClasses(String packageName) {
         return ScannerExecutor.getInstance().search(packageName);
     }
 

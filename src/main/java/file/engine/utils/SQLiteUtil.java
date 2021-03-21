@@ -16,13 +16,14 @@ public class SQLiteUtil {
         sqLiteConfig.setTempStore(SQLiteConfig.TempStore.MEMORY);
         sqLiteConfig.setJournalMode(SQLiteConfig.JournalMode.OFF);
         sqLiteConfig.setPageSize(65535);
-        sqLiteConfig.setDefaultCacheSize(256*1024);
+        sqLiteConfig.setDefaultCacheSize(256 * 1024);
         sqLiteConfig.setSynchronous(SQLiteConfig.SynchronousMode.OFF);
         sqLiteConfig.setLockingMode(SQLiteConfig.LockingMode.NORMAL);
     }
 
     /**
      * 仅用于select语句，以及需要及时生效的SQL语句
+     *
      * @param sql select语句
      * @return 已编译的PreparedStatement
      * @throws SQLException 失败
@@ -36,6 +37,7 @@ public class SQLiteUtil {
 
     /**
      * 用于需要重复运行多次指令的地方
+     *
      * @return Statement
      * @throws SQLException 失败
      */

@@ -6,6 +6,7 @@ public class PinyinUtil {
 
     /**
      * 判断字符串是否存在汉字
+     *
      * @param str 字符串
      * @return true如果存在
      */
@@ -21,7 +22,8 @@ public class PinyinUtil {
 
     /**
      * 将汉字转为拼音，不同拼音用separator分开
-     * @param str 待转换的字符串
+     *
+     * @param str       待转换的字符串
      * @param separator 分隔符
      * @return 转换后的字符串
      */

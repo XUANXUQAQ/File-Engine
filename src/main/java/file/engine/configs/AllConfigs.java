@@ -1,5 +1,15 @@
 package file.engine.configs;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.serializer.SerializerFeature;
+import com.formdev.flatlaf.FlatDarculaLaf;
+import com.formdev.flatlaf.FlatDarkLaf;
+import com.formdev.flatlaf.FlatIntelliJLaf;
+import com.formdev.flatlaf.FlatLightLaf;
+import com.formdev.flatlaf.intellijthemes.*;
+import com.formdev.flatlaf.intellijthemes.materialthemeuilite.FlatMaterialDarkerIJTheme;
+import com.formdev.flatlaf.intellijthemes.materialthemeuilite.FlatMaterialLighterIJTheme;
 import file.engine.IsDebug;
 import file.engine.annotation.EventRegister;
 import file.engine.dllInterface.IsLocalDisk;
@@ -24,16 +34,6 @@ import file.engine.services.download.DownloadManager;
 import file.engine.services.download.DownloadService;
 import file.engine.utils.RegexUtil;
 import file.engine.utils.TranslateUtil;
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
-import com.alibaba.fastjson.serializer.SerializerFeature;
-import com.formdev.flatlaf.FlatDarculaLaf;
-import com.formdev.flatlaf.FlatDarkLaf;
-import com.formdev.flatlaf.FlatIntelliJLaf;
-import com.formdev.flatlaf.FlatLightLaf;
-import com.formdev.flatlaf.intellijthemes.*;
-import com.formdev.flatlaf.intellijthemes.materialthemeuilite.FlatMaterialDarkerIJTheme;
-import com.formdev.flatlaf.intellijthemes.materialthemeuilite.FlatMaterialLighterIJTheme;
 
 import javax.swing.*;
 import java.awt.*;
@@ -64,7 +64,8 @@ public class AllConfigs {
 
     private static volatile AllConfigs instance = null;
 
-    private AllConfigs() {}
+    private AllConfigs() {
+    }
 
     public static AllConfigs getInstance() {
         if (instance == null) {
@@ -79,6 +80,7 @@ public class AllConfigs {
 
     /**
      * 将swingTheme字符串映射到枚举类
+     *
      * @param swingTheme swingTheme名称
      * @return swingTheme枚举类实例
      */
@@ -96,6 +98,7 @@ public class AllConfigs {
 
     /**
      * 是否在将文件拖出时提示已创建快捷方式
+     *
      * @return boolean
      */
     public boolean isShowTipOnCreatingLnk() {
@@ -104,6 +107,7 @@ public class AllConfigs {
 
     /**
      * 检测是不是第一次运行
+     *
      * @return boolean
      */
     public boolean isFirstRun() {
@@ -112,6 +116,7 @@ public class AllConfigs {
 
     /**
      * 获取网络代理端口
+     *
      * @return proxy port
      */
     public int getProxyPort() {
@@ -120,6 +125,7 @@ public class AllConfigs {
 
     /**
      * 获取网络代理用户名
+     *
      * @return proxy username
      */
     public String getProxyUserName() {
@@ -128,6 +134,7 @@ public class AllConfigs {
 
     /**
      * 获取网络代理密码
+     *
      * @return proxy password
      */
     public String getProxyPassword() {
@@ -136,6 +143,7 @@ public class AllConfigs {
 
     /**
      * 获取网络代理的类型
+     *
      * @return proxyType int 返回值的类型由Enums.ProxyType中定义
      * @see Enums.ProxyType
      */
@@ -145,6 +153,7 @@ public class AllConfigs {
 
     /**
      * 获取网络代理地址
+     *
      * @return proxy address
      */
     public String getProxyAddress() {
@@ -153,6 +162,7 @@ public class AllConfigs {
 
     /**
      * 获取搜索框默认字体颜色RGB值
+     *
      * @return rgb hex
      */
     public int getSearchBarFontColor() {
@@ -161,6 +171,7 @@ public class AllConfigs {
 
     /**
      * 获取搜索框显示颜色
+     *
      * @return rgb hex
      */
     public int getSearchBarColor() {
@@ -169,6 +180,7 @@ public class AllConfigs {
 
     /**
      * 获取热键
+     *
      * @return hotkey 每个案件以 + 分开
      */
     public String getHotkey() {
@@ -177,6 +189,7 @@ public class AllConfigs {
 
     /**
      * 获取最大cache数量
+     *
      * @return cache max size
      */
     public int getCacheNumLimit() {
@@ -185,6 +198,7 @@ public class AllConfigs {
 
     /**
      * 获取检测一次系统文件更改的时间
+     *
      * @return int 单位 秒
      */
     public int getUpdateTimeLimit() {
@@ -193,6 +207,7 @@ public class AllConfigs {
 
     /**
      * 获取忽略的文件夹
+     *
      * @return ignored path 由 ,（逗号）分开
      */
     public String getIgnorePath() {
@@ -201,6 +216,7 @@ public class AllConfigs {
 
     /**
      * 获取优先搜索文件夹
+     *
      * @return priority dir
      */
     public String getPriorityFolder() {
@@ -209,6 +225,7 @@ public class AllConfigs {
 
     /**
      * 是否在打开文件时默认以管理员身份运行，绕过UAC（危险）
+     *
      * @return boolean
      */
     public boolean isDefaultAdmin() {
@@ -217,6 +234,7 @@ public class AllConfigs {
 
     /**
      * 是否在窗口失去焦点后自动关闭
+     *
      * @return boolean
      */
     public boolean isLoseFocusClose() {
@@ -225,6 +243,7 @@ public class AllConfigs {
 
     /**
      * 获取swing皮肤包名称，可由swingThemesMapper转换为Enums.SwingThemes
+     *
      * @return swing name
      * @see Enums.SwingThemes
      * @see #swingThemesMapper(String)
@@ -235,6 +254,7 @@ public class AllConfigs {
 
     /**
      * 获取打开上级文件夹的键盘快捷键code
+     *
      * @return keycode
      */
     public int getOpenLastFolderKeyCode() {
@@ -243,6 +263,7 @@ public class AllConfigs {
 
     /**
      * 获取以管理员身份运行程序快捷键code
+     *
      * @return keycode
      */
     public int getRunAsAdminKeyCode() {
@@ -251,6 +272,7 @@ public class AllConfigs {
 
     /**
      * 获取复制文件路径code
+     *
      * @return keycode
      */
     public int getCopyPathKeyCode() {
@@ -259,6 +281,7 @@ public class AllConfigs {
 
     /**
      * 获取不透明度
+     *
      * @return opacity
      */
     public float getOpacity() {
@@ -267,6 +290,7 @@ public class AllConfigs {
 
     /**
      * 获取cmdSet的一个复制
+     *
      * @return cmdSet clone
      */
     public LinkedHashSet<String> getCmdSet() {
@@ -275,6 +299,7 @@ public class AllConfigs {
 
     /**
      * 获取搜索下拉框的默认颜色
+     *
      * @return rgb hex
      */
     public int getLabelColor() {
@@ -283,6 +308,7 @@ public class AllConfigs {
 
     /**
      * 获取更新地址
+     *
      * @return url
      */
     public String getUpdateAddress() {
@@ -291,6 +317,7 @@ public class AllConfigs {
 
     /**
      * 获取下拉框默认背景颜色
+     *
      * @return rgb hex
      */
     public int getDefaultBackgroundColor() {
@@ -299,6 +326,7 @@ public class AllConfigs {
 
     /**
      * 获取下拉框被选中的背景颜色
+     *
      * @return rgb hex
      */
     public int getLabelFontColorWithCoverage() {
@@ -307,6 +335,7 @@ public class AllConfigs {
 
     /**
      * 获取下拉框被选中的字体颜色
+     *
      * @return rgb hex
      */
     public int getLabelFontColor() {
@@ -315,6 +344,7 @@ public class AllConfigs {
 
     /**
      * 获取边框颜色
+     *
      * @return rgb hex
      */
     public int getBorderColor() {
@@ -323,6 +353,7 @@ public class AllConfigs {
 
     /**
      * 获取边框类型
+     *
      * @return 边框类型
      * @see Enums.BorderType
      */
@@ -338,6 +369,7 @@ public class AllConfigs {
 
     /**
      * 是否贴靠在explorer窗口
+     *
      * @return true or false
      */
     public boolean isAttachExplorer() {
@@ -346,6 +378,7 @@ public class AllConfigs {
 
     /**
      * 获取边框厚度
+     *
      * @return 厚度
      */
     public int getBorderThickness() {

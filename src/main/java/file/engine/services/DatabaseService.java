@@ -93,7 +93,7 @@ public class DatabaseService {
             try (BufferedReader readerRemove =
                          new BufferedReader(new InputStreamReader(
                                  new FileInputStream(new File("tmp").getAbsolutePath() + File.separator + "fileRemoved.txt"),
-                                         StandardCharsets.UTF_8))) {
+                                 StandardCharsets.UTF_8))) {
                 String tmp;
                 int fileCount = 0;
                 LinkedHashSet<String> deletePaths = new LinkedHashSet<>();
@@ -197,6 +197,7 @@ public class DatabaseService {
     /**
      * 检查要删除的文件是否还未添加
      * 防止文件刚添加就被删除
+     *
      * @param path 待删除文件路径
      * @return true如果待删除文件已经在数据库中
      */
@@ -417,12 +418,13 @@ public class DatabaseService {
                 }
                 TimeUnit.MILLISECONDS.sleep(10);
             }
-        }catch (InterruptedException ignored) {
+        } catch (InterruptedException ignored) {
         }
     }
 
     /**
      * 获取缓存数量
+     *
      * @return cache num
      */
     public int getCacheNum() {
@@ -441,7 +443,7 @@ public class DatabaseService {
     private boolean isTableExist(ArrayList<String> tableNames) {
         try (Statement stmt = SQLiteUtil.getStatement()) {
             for (String tableName : tableNames) {
-                String sql= String.format("SELECT ASCII, PATH, PRIORITY FROM %s;", tableName);
+                String sql = String.format("SELECT ASCII, PATH, PRIORITY FROM %s;", tableName);
                 stmt.executeQuery(sql);
             }
             return true;

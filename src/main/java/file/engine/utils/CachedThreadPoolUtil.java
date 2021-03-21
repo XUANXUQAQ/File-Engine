@@ -17,7 +17,8 @@ public class CachedThreadPoolUtil {
 
     private static volatile CachedThreadPoolUtil INSTANCE = null;
 
-    private CachedThreadPoolUtil() {}
+    private CachedThreadPoolUtil() {
+    }
 
     public static CachedThreadPoolUtil getInstance() {
         if (INSTANCE == null) {
@@ -30,11 +31,18 @@ public class CachedThreadPoolUtil {
         return INSTANCE;
     }
 
-    public void executeTask(Runnable todo) {
+    public <T> Future<T> executeTask(Callable<T> todo) {
         if (isShutdown.get()) {
-            return;
+            return null;
         }
-        cachedThreadPool.execute(todo);
+        return cachedThreadPool.submit(todo);
+    }
+
+    public Future<?> executeTask(Runnable todo) {
+        if (isShutdown.get()) {
+            return null;
+        }
+        return cachedThreadPool.submit(todo);
     }
 
     public void shutdown() throws InterruptedException {

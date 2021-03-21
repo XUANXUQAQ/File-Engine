@@ -3,7 +3,8 @@ package file.engine.configs;
 import com.alibaba.fastjson.annotation.JSONField;
 import lombok.Data;
 
-public @Data class ConfigEntity {
+public @Data
+class ConfigEntity {
     @JSONField(name = "cacheNumLimit")
     private int cacheNumLimit;
 

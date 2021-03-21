@@ -16,7 +16,8 @@ import java.util.concurrent.ConcurrentHashMap;
 public class TranslateUtil {
     private static volatile TranslateUtil INSTANCE = null;
 
-    private volatile @Getter String language;
+    private volatile @Getter
+    String language;
     private final ConcurrentHashMap<String, String> translationMap = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, String> fileMap = new ConcurrentHashMap<>();
     private Font[] fList;
@@ -155,8 +156,8 @@ public class TranslateUtil {
         //初始化Font列表
         String[] lstr = GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames();
         fList = new Font[lstr.length];
-        for(int i = 0;i < lstr.length; i++) {
-            fList[i]=new Font(lstr[i], Font.PLAIN, 13);
+        for (int i = 0; i < lstr.length; i++) {
+            fList[i] = new Font(lstr[i], Font.PLAIN, 13);
         }
     }
 
@@ -192,16 +193,16 @@ public class TranslateUtil {
 
     private void setUIFont() {
         Font f = getFitFont(Font.PLAIN, 13, language);
-        String[] names ={ "Label", "CheckBox", "PopupMenu","MenuItem", "CheckBoxMenuItem",
-                "JRadioButtonMenuItem","ComboBox", "Button", "Tree", "ScrollPane",
+        String[] names = {"Label", "CheckBox", "PopupMenu", "MenuItem", "CheckBoxMenuItem",
+                "JRadioButtonMenuItem", "ComboBox", "Button", "Tree", "ScrollPane",
                 "TabbedPane", "EditorPane", "TitledBorder", "Menu", "TextArea",
                 "OptionPane", "MenuBar", "ToolBar", "ToggleButton", "ToolTip",
                 "ProgressBar", "TableHeader", "Panel", "List", "ColorChooser",
-                "PasswordField","TextField", "Table", "Label", "Viewport",
-                "RadioButtonMenuItem","RadioButton", "DesktopPane", "InternalFrame"
+                "PasswordField", "TextField", "Table", "Label", "Viewport",
+                "RadioButtonMenuItem", "RadioButton", "DesktopPane", "InternalFrame"
         };
         for (String item : names) {
-            UIManager.put(item+ ".font",f);
+            UIManager.put(item + ".font", f);
         }
     }
 }
