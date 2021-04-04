@@ -2914,7 +2914,8 @@ public class SearchBar {
             LinkedHashMap<String, String> nonFormattedSql = getNonFormattedSqlFromTableQueue();
             AtomicBoolean isResultsFull = new AtomicBoolean(false);
             Set<String> sqls = nonFormattedSql.keySet();
-            sqls.forEach(each -> {
+            AtomicBoolean forEachContinueFlag = new AtomicBoolean(true);
+            sqls.stream().filter(each -> forEachContinueFlag.get()).forEach(each -> {
                 String formattedSql;
                 if (
                         runningMode == Enums.RunningMode.NORMAL_MODE && DatabaseService.getInstance().getStatus() == Enums.DatabaseStatus.NORMAL
@@ -2926,7 +2927,7 @@ public class SearchBar {
                         updateTableWeight(nonFormattedSql.get(each), weight);
                     }
                     if (isResultsFull.get() || time < startTime) {
-                        throw new RuntimeException("结果已满或用户重新输入");
+                        forEachContinueFlag.set(false);
                     }
                 }
             });
