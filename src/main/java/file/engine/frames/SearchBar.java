@@ -2856,11 +2856,7 @@ public class SearchBar {
         if (priorityQueue.isEmpty()) {
             return sqlColumnMap;
         }
-        for (Integer i : priorityQueue) {
-            for (String each : tableQueue) {
-                sqlColumnMap.put("SELECT %s FROM " + each + " WHERE priority=" + i, each);
-            }
-        }
+        priorityQueue.forEach(i -> tableQueue.forEach(each -> sqlColumnMap.put("SELECT %s FROM " + each + " WHERE priority=" + i, each)));
         tableQueue.clear();
         return sqlColumnMap;
     }
@@ -2903,12 +2899,12 @@ public class SearchBar {
         LinkedList<TableNameWeightInfo> tmpCommandList = new LinkedList<>(tableSet);
         //将tableSet通过权重排序
         tmpCommandList.sort((o1, o2) -> Long.compare(o2.weight.get(), o1.weight.get()));
-        for (TableNameWeightInfo each : tmpCommandList) {
+        tmpCommandList.forEach(each -> {
             if (IsDebug.isDebug()) {
                 System.out.println("已添加表" + each.tableName + "----权重" + each.weight.get());
             }
             tableQueue.add(each.tableName);
-        }
+        });
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             AtomicBoolean isCreated = new AtomicBoolean(false);
             if (!isCreated.get()) {
@@ -2917,8 +2913,9 @@ public class SearchBar {
             long time = System.currentTimeMillis();
             LinkedHashMap<String, String> nonFormattedSql = getNonFormattedSqlFromTableQueue();
             AtomicBoolean isResultsFull = new AtomicBoolean(false);
-            String formattedSql;
-            for (String each : nonFormattedSql.keySet()) {
+            Set<String> sqls = nonFormattedSql.keySet();
+            sqls.forEach(each -> {
+                String formattedSql;
                 if (
                         runningMode == Enums.RunningMode.NORMAL_MODE && DatabaseService.getInstance().getStatus() == Enums.DatabaseStatus.NORMAL
                 ) {
@@ -2929,10 +2926,10 @@ public class SearchBar {
                         updateTableWeight(nonFormattedSql.get(each), weight);
                     }
                     if (isResultsFull.get() || time < startTime) {
-                        return;
+                        throw new RuntimeException("结果已满或用户重新输入");
                     }
                 }
-            }
+            });
         });
     }
 
@@ -3159,18 +3156,19 @@ public class SearchBar {
                                     cmdSet.add(":update;" + translateUtil.getTranslation("Update file index"));
                                     cmdSet.add(":help;" + translateUtil.getTranslation("View help"));
                                     cmdSet.add(":version;" + translateUtil.getTranslation("View Version"));
-                                    for (String i : cmdSet) {
-                                        if (i.startsWith(text)) {
+                                    String finalText = text;
+                                    cmdSet.forEach(i -> {
+                                        if (i.startsWith(finalText)) {
                                             listResultsNum.incrementAndGet();
                                             String result = translateUtil.getTranslation("Run command") + i;
                                             listResults.add(result);
                                         }
                                         String[] cmdInfo = semicolon.split(i);
-                                        if (cmdInfo[0].equals(text)) {
+                                        if (cmdInfo[0].equals(finalText)) {
                                             detectShowingModeAndClose();
                                             openWithoutAdmin(cmdInfo[1]);
                                         }
-                                    }
+                                    });
                                     showResults(true, false, false, false,
                                             false, false, false, false);
                                 }
@@ -3857,8 +3855,9 @@ public class SearchBar {
 
             int cpuCores = Runtime.getRuntime().availableProcessors();
             final int threadCount = Math.min(cpuCores, 8);
+            CachedThreadPoolUtil instance = CachedThreadPoolUtil.getInstance();
             for (int i = 0; i < threadCount; ++i) {
-                CachedThreadPoolUtil.getInstance().executeTask(() -> {
+                instance.executeTask(() -> {
                     long startSearchTime = System.currentTimeMillis();
                     while (!listRemain.isEmpty()) {
                         String remain = listRemain.poll();
