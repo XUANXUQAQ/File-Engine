@@ -39,6 +39,8 @@ import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -217,8 +219,10 @@ public class SearchBar {
         iconSideLength = labelHeight / 3; //定义图标边长
 
         URL icon = this.getClass().getResource("/icons/taskbar_32x32.png");
-        Image image = new ImageIcon(icon).getImage();
-        searchBar.setIconImage(image);
+        if (icon != null) {
+            Image image = new ImageIcon(icon).getImage();
+            searchBar.setIconImage(image);
+        }
 
         //TextField
         textField = new JTextField(1000);
@@ -3239,8 +3243,7 @@ public class SearchBar {
     }
 
     private boolean isExist(String path) {
-        File f = new File(path);
-        return f.exists();
+        return Files.exists(Path.of(path));
     }
 
 
@@ -3251,35 +3254,37 @@ public class SearchBar {
      * @return true如果满足所有条件 否则false
      */
     private boolean check(String path) {
+        if (notMatched(path, true)) {
+            return false;
+        }
         if (searchCase == null || searchCase.length == 0) {
-            return isMatched(path, true);
-        } else {
-            for (String eachCase : searchCase) {
-                switch (eachCase) {
-                    case "f":
-                        if (!isMatched(path, true) || !isFile(path)) {
-                            return false;
-                        }
-                        break;
-                    case "d":
-                        if (!isMatched(path, true) || !isDirectory(path)) {
-                            return false;
-                        }
-                        break;
-                    case "full":
-                        if (!isMatched(path, true) || !getFileName(path).equalsIgnoreCase(searchText)) {
-                            return false;
-                        }
-                        break;
-                    case "case":
-                        if (!isMatched(path, false)) {
-                            return false;
-                        }
-                }
-            }
-            //所有规则均已匹配
             return true;
         }
+        for (String eachCase : searchCase) {
+            switch (eachCase) {
+                case "f":
+                    if (!Files.isRegularFile(Path.of(path))) {
+                        return false;
+                    }
+                    break;
+                case "d":
+                    if (!Files.isDirectory(Path.of(path))) {
+                        return false;
+                    }
+                    break;
+                case "full":
+                    if (!searchText.equalsIgnoreCase(getFileName(path))) {
+                        return false;
+                    }
+                    break;
+                case "case":
+                    if (notMatched(path, false)) {
+                        return false;
+                    }
+            }
+        }
+        //所有规则均已匹配
+        return true;
     }
 
     /**
@@ -3792,7 +3797,7 @@ public class SearchBar {
      * @return true如果匹配成功
      * @see #check(String);
      */
-    private boolean isMatched(String path, boolean isIgnoreCase) {
+    private boolean notMatched(String path, boolean isIgnoreCase) {
         String matcherStrFromFilePath;
         boolean isPath;
         for (String eachKeyword : keywords) {
@@ -3819,19 +3824,19 @@ public class SearchBar {
             //开始匹配
             if (!matcherStrFromFilePath.contains(eachKeyword)) {
                 if (isPath) {
-                    return false;
+                    return true;
                 } else {
                     if (PinyinUtil.isContainChinese(matcherStrFromFilePath)) {
                         if (!PinyinUtil.toPinyin(matcherStrFromFilePath, "").contains(eachKeyword)) {
-                            return false;
+                            return true;
                         }
                     } else {
-                        return false;
+                        return true;
                     }
                 }
             }
         }
-        return true;
+        return false;
     }
 
     /**
@@ -3999,11 +4004,6 @@ public class SearchBar {
     private boolean isFile(String text) {
         File file = new File(text);
         return file.isFile();
-    }
-
-    private boolean isDirectory(String text) {
-        File file = new File(text);
-        return file.isDirectory();
     }
 
     private void setFontColorWithCoverage(int colorNum) {
