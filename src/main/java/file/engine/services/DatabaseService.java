@@ -1,11 +1,13 @@
 package file.engine.services;
 
 import file.engine.IsDebug;
+import file.engine.annotation.EventListener;
 import file.engine.annotation.EventRegister;
 import file.engine.configs.AllConfigs;
 import file.engine.configs.Enums;
 import file.engine.constant.Constants;
 import file.engine.dllInterface.GetAscII;
+import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
 import file.engine.event.handler.impl.database.*;
 import file.engine.event.handler.impl.stop.RestartEvent;
@@ -500,96 +502,108 @@ public class DatabaseService {
         });
     }
 
-    @EventRegister
-    @SuppressWarnings("unused")
-    public static void registerEventHandler() {
-        EventManagement eventManagement = EventManagement.getInstance();
-        eventManagement.register(AddToCacheEvent.class, event -> {
-            DatabaseService databaseService = getInstance();
-            databaseService.addFileToCache(((AddToCacheEvent) event).path);
-            databaseService.cacheNum.incrementAndGet();
-        });
+    @EventRegister(registerClass = AddToCacheEvent.class)
+    private static void addToCacheEvent(Event event) {
+        DatabaseService databaseService = getInstance();
+        databaseService.addFileToCache(((AddToCacheEvent) event).path);
+        databaseService.cacheNum.incrementAndGet();
+    }
 
-        eventManagement.register(DeleteFromCacheEvent.class, event -> {
-            DatabaseService databaseService = getInstance();
-            databaseService.removeFileFromCache(((DeleteFromCacheEvent) event).path);
-            databaseService.cacheNum.decrementAndGet();
-        });
+    @EventRegister(registerClass = DeleteFromCacheEvent.class)
+    private static void deleteFromCacheEvent(Event event) {
+        DatabaseService databaseService = getInstance();
+        databaseService.removeFileFromCache(((DeleteFromCacheEvent) event).path);
+        databaseService.cacheNum.decrementAndGet();
+    }
 
-        eventManagement.register(AddToDatabaseEvent.class, event -> {
-            DatabaseService databaseService = getInstance();
-            for (Object each : ((AddToDatabaseEvent) event).getPaths()) {
-                databaseService.addFileToDatabase((String) each);
+    @EventRegister(registerClass = AddToDatabaseEvent.class)
+    private static void addToDatabaseEvent(Event event) {
+        DatabaseService databaseService = getInstance();
+        for (Object each : ((AddToDatabaseEvent) event).getPaths()) {
+            databaseService.addFileToDatabase((String) each);
+        }
+    }
+
+    @EventRegister(registerClass = DeleteFromDatabaseEvent.class)
+    private static void deleteFromDatabaseEvent(Event event) {
+        DeleteFromDatabaseEvent deleteFromDatabaseEvent = ((DeleteFromDatabaseEvent) event);
+        DatabaseService databaseService = getInstance();
+        for (Object each : deleteFromDatabaseEvent.getPaths()) {
+            databaseService.removeFileFromDatabase((String) each);
+        }
+    }
+
+    @EventRegister(registerClass = UpdateDatabaseEvent.class)
+    private static void updateDatabaseEvent(Event event) {
+        DatabaseService databaseService = getInstance();
+        databaseService.setStatus(Enums.DatabaseStatus.MANUAL_UPDATE);
+        databaseService.updateLists(AllConfigs.getInstance().getIgnorePath());
+        databaseService.setStatus(Enums.DatabaseStatus.NORMAL);
+    }
+
+    @EventRegister(registerClass = ExecuteSQLEvent.class)
+    private static void executeSQLEvent(Event event) {
+        getInstance().executeImmediately();
+    }
+
+    @EventRegister(registerClass = OptimiseDatabaseEvent.class)
+    private static void optimiseDatabaseEvent(Event event) {
+        DatabaseService databaseService = getInstance();
+        databaseService.setStatus(Enums.DatabaseStatus.VACUUM);
+        //执行VACUUM命令
+        try (PreparedStatement stmt = SQLiteUtil.getPreparedStatement("VACUUM;")) {
+            stmt.execute();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        } finally {
+            if (IsDebug.isDebug()) {
+                System.out.println("结束优化");
             }
-        });
-
-        eventManagement.register(DeleteFromDatabaseEvent.class, event -> {
-            DeleteFromDatabaseEvent deleteFromDatabaseEvent = ((DeleteFromDatabaseEvent) event);
-            DatabaseService databaseService = getInstance();
-            for (Object each : deleteFromDatabaseEvent.getPaths()) {
-                databaseService.removeFileFromDatabase((String) each);
-            }
-        });
-
-        eventManagement.register(UpdateDatabaseEvent.class, event -> {
-            DatabaseService databaseService = getInstance();
-            databaseService.setStatus(Enums.DatabaseStatus.MANUAL_UPDATE);
-            databaseService.updateLists(AllConfigs.getInstance().getIgnorePath());
             databaseService.setStatus(Enums.DatabaseStatus.NORMAL);
-        });
+        }
+    }
 
-        eventManagement.register(ExecuteSQLEvent.class, event -> getInstance().executeImmediately());
+    @EventRegister(registerClass = AddToSuffixPriorityMapEvent.class)
+    private static void addToSuffixPriorityMapEvent(Event event) {
+        AddToSuffixPriorityMapEvent event1 = (AddToSuffixPriorityMapEvent) event;
+        String suffix = event1.suffix;
+        int priority = event1.priority;
+        DatabaseService databaseService = getInstance();
+        databaseService.addToCommandSet(
+                new SQLWithTaskId(SqlTaskIds.UPDATE_SUFFIX,
+                        String.format("INSERT INTO priority VALUES(\"%s\", %d);", suffix, priority)));
+    }
 
-        eventManagement.register(OptimiseDatabaseEvent.class, event -> {
-            DatabaseService databaseService = getInstance();
-            databaseService.setStatus(Enums.DatabaseStatus.VACUUM);
-            //执行VACUUM命令
-            try (PreparedStatement stmt = SQLiteUtil.getPreparedStatement("VACUUM;")) {
-                stmt.execute();
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            } finally {
-                if (IsDebug.isDebug()) {
-                    System.out.println("结束优化");
-                }
-                databaseService.setStatus(Enums.DatabaseStatus.NORMAL);
-            }
-        });
+    @EventRegister(registerClass = ClearSuffixPriorityMapEvent.class)
+    private static void clearSuffixPriorityMapEvent(Event event) {
+        DatabaseService databaseService = getInstance();
+        databaseService.addToCommandSet(new SQLWithTaskId(SqlTaskIds.UPDATE_SUFFIX, "DELETE FROM priority;"));
+        databaseService.addToCommandSet(
+                new SQLWithTaskId(SqlTaskIds.UPDATE_SUFFIX, "INSERT INTO priority VALUES(\"defaultPriority\", 0);"));
+    }
 
-        eventManagement.register(AddToSuffixPriorityMapEvent.class, event -> {
-            AddToSuffixPriorityMapEvent event1 = (AddToSuffixPriorityMapEvent) event;
-            String suffix = event1.suffix;
-            int priority = event1.priority;
-            DatabaseService databaseService = getInstance();
-            databaseService.addToCommandSet(
-                    new SQLWithTaskId(SqlTaskIds.UPDATE_SUFFIX,
-                            String.format("INSERT INTO priority VALUES(\"%s\", %d);", suffix, priority)));
-        });
+    @EventRegister(registerClass = DeleteFromSuffixPriorityMapEvent.class)
+    private static void deleteFromSuffixPriorityMapEvent(Event event) {
+        DeleteFromSuffixPriorityMapEvent delete = (DeleteFromSuffixPriorityMapEvent) event;
+        DatabaseService databaseService = getInstance();
+        databaseService.addToCommandSet(new SQLWithTaskId(SqlTaskIds.UPDATE_SUFFIX,
+                String.format("DELETE FROM priority where SUFFIX=\"%s\"", delete.suffix)));
+    }
 
-        eventManagement.register(ClearSuffixPriorityMapEvent.class, event -> {
-            DatabaseService databaseService = getInstance();
-            databaseService.addToCommandSet(new SQLWithTaskId(SqlTaskIds.UPDATE_SUFFIX, "DELETE FROM priority;"));
-            databaseService.addToCommandSet(
-                    new SQLWithTaskId(SqlTaskIds.UPDATE_SUFFIX, "INSERT INTO priority VALUES(\"defaultPriority\", 0);"));
-        });
+    @EventRegister(registerClass = UpdateSuffixPriorityEvent.class)
+    private static void updateSuffixPriorityEvent(Event event) {
+        EventManagement eventManagement = EventManagement.getInstance();
+        UpdateSuffixPriorityEvent update = (UpdateSuffixPriorityEvent) event;
+        String origin = update.originSuffix;
+        String newSuffix = update.newSuffix;
+        int newNum = update.newPriority;
+        eventManagement.putEvent(new DeleteFromSuffixPriorityMapEvent(origin));
+        eventManagement.putEvent(new AddToSuffixPriorityMapEvent(newSuffix, newNum));
+    }
 
-        eventManagement.register(DeleteFromSuffixPriorityMapEvent.class, event -> {
-            DeleteFromSuffixPriorityMapEvent delete = (DeleteFromSuffixPriorityMapEvent) event;
-            DatabaseService databaseService = getInstance();
-            databaseService.addToCommandSet(new SQLWithTaskId(SqlTaskIds.UPDATE_SUFFIX,
-                    String.format("DELETE FROM priority where SUFFIX=\"%s\"", delete.suffix)));
-        });
-
-        eventManagement.register(UpdateSuffixPriorityEvent.class, event -> {
-            UpdateSuffixPriorityEvent update = (UpdateSuffixPriorityEvent) event;
-            String origin = update.originSuffix;
-            String newSuffix = update.newSuffix;
-            int newNum = update.newPriority;
-            eventManagement.putEvent(new DeleteFromSuffixPriorityMapEvent(origin));
-            eventManagement.putEvent(new AddToSuffixPriorityMapEvent(newSuffix, newNum));
-        });
-
-        eventManagement.registerListener(RestartEvent.class, SQLiteUtil::closeAll);
+    @EventListener(registerClass = RestartEvent.class)
+    private static void restartEvent() {
+        SQLiteUtil.closeAll();
     }
 
     private static class SQLWithTaskId {

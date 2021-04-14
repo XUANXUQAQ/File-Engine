@@ -823,67 +823,71 @@ public class AllConfigs {
         return JSONObject.parseObject(strBuilder.toString());
     }
 
-    @EventRegister
-    @SuppressWarnings("unused")
-    public static void registerEventHandler() {
+    @EventRegister(registerClass = AddCmdEvent.class)
+    private static void addCmdEvent(Event event) {
+        AllConfigs allConfigs = getInstance();
+        AddCmdEvent event1 = (AddCmdEvent) event;
+        allConfigs.cmdSet.add(event1.cmd);
+    }
+
+    @EventRegister(registerClass = DeleteCmdEvent.class)
+    private static void DeleteCmdEvent(Event event) {
+        AllConfigs allConfigs = AllConfigs.getInstance();
+        DeleteCmdEvent deleteCmdEvent = (DeleteCmdEvent) event;
+        allConfigs.cmdSet.remove(deleteCmdEvent.cmd);
+    }
+
+    @EventRegister(registerClass = ReadConfigsAndBootSystemEvent.class)
+    private static void ReadConfigsAndBootSystemEvent(Event event) {
+        Event tmpEvent;
         EventManagement eventManagement = EventManagement.getInstance();
-        eventManagement.register(AddCmdEvent.class, event -> {
-            AllConfigs allConfigs = getInstance();
-            AddCmdEvent event1 = (AddCmdEvent) event;
-            allConfigs.cmdSet.add(event1.cmd);
-        });
+        AllConfigs allConfigs = AllConfigs.getInstance();
 
-        eventManagement.register(DeleteCmdEvent.class, event -> {
-            AllConfigs allConfigs = AllConfigs.getInstance();
-            DeleteCmdEvent deleteCmdEvent = (DeleteCmdEvent) event;
-            allConfigs.cmdSet.remove(deleteCmdEvent.cmd);
-        });
+        allConfigs.readAllSettings();
+        allConfigs.saveAllSettings();
 
-        eventManagement.register(ReadConfigsAndBootSystemEvent.class, event -> {
-            Event tmpEvent;
+        tmpEvent = new LoadAllPluginsEvent("plugins");
+        eventManagement.putEvent(tmpEvent);
+        eventManagement.waitForEvent(tmpEvent);
 
-            AllConfigs allConfigs = AllConfigs.getInstance();
+        eventManagement.putEvent(new StartMonitorDiskEvent());
+        eventManagement.putEvent(new ShowTrayIconEvent());
 
-            allConfigs.readAllSettings();
+        tmpEvent = new SetConfigsEvent();
+        eventManagement.putEvent(tmpEvent);
+        eventManagement.waitForEvent(tmpEvent);
+
+        if (!IsDebug.isDebug()) {
+            eventManagement.putEvent(new StartDaemonEvent(new File("").getAbsolutePath()));
+        }
+    }
+
+    @EventRegister(registerClass = SetConfigsEvent.class)
+    public static void SetAllConfigsEvent(Event event) {
+        getInstance().setAllSettings();
+    }
+
+    @EventRegister(registerClass = SetSwingLaf.class)
+    public static void setSwingLafEvent(Event event) {
+        try {
+            AllConfigs instance = getInstance();
+            String theme = ((SetSwingLaf) event).theme;
+            instance.setSwingLaf(instance.swingThemesMapper(theme));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @EventRegister(registerClass = SaveConfigsEvent.class)
+    public static void saveConfigsEvent(Event event) {
+        AllConfigs allConfigs = getInstance();
+        ConfigEntity tempConfigEntity = ((SaveConfigsEvent) event).configEntity;
+        if (allConfigs.noNullValue(tempConfigEntity)) {
+            allConfigs.configEntity = tempConfigEntity;
             allConfigs.saveAllSettings();
-
-            tmpEvent = new LoadAllPluginsEvent("plugins");
-            eventManagement.putEvent(tmpEvent);
-            eventManagement.waitForEvent(tmpEvent);
-
-            eventManagement.putEvent(new StartMonitorDiskEvent());
-            eventManagement.putEvent(new ShowTrayIconEvent());
-
-            tmpEvent = new SetConfigsEvent();
-            eventManagement.putEvent(tmpEvent);
-            eventManagement.waitForEvent(tmpEvent);
-
-            if (!IsDebug.isDebug()) {
-                eventManagement.putEvent(new StartDaemonEvent(new File("").getAbsolutePath()));
-            }
-        });
-
-        eventManagement.register(SetConfigsEvent.class, event -> getInstance().setAllSettings());
-
-        eventManagement.register(SetSwingLaf.class, event -> {
-            try {
-                AllConfigs instance = getInstance();
-                String theme = ((SetSwingLaf) event).theme;
-                instance.setSwingLaf(instance.swingThemesMapper(theme));
-            } catch (Exception ignored) {
-            }
-        });
-
-        eventManagement.register(SaveConfigsEvent.class, event -> {
-            AllConfigs allConfigs = getInstance();
-            ConfigEntity tempConfigEntity = ((SaveConfigsEvent) event).configEntity;
-            if (allConfigs.noNullValue(tempConfigEntity)) {
-                allConfigs.configEntity = tempConfigEntity;
-                allConfigs.saveAllSettings();
-            } else {
-                throw new NullPointerException("configEntity中有Null值");
-            }
-        });
+        } else {
+            throw new NullPointerException("configEntity中有Null值");
+        }
     }
 
     public static class AddressUrl {

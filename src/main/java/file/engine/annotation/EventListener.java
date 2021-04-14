@@ -9,6 +9,6 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface EventRegister {
+public @interface EventListener {
     Class<? extends Event> registerClass();
 }

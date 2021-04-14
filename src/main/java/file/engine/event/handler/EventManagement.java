@@ -1,10 +1,16 @@
 package file.engine.event.handler;
 
 import file.engine.IsDebug;
+import file.engine.annotation.EventListener;
+import file.engine.annotation.EventRegister;
 import file.engine.event.handler.impl.stop.CloseEvent;
 import file.engine.event.handler.impl.stop.RestartEvent;
 import file.engine.utils.CachedThreadPoolUtil;
+import file.engine.utils.clazz.scan.ClassScannerUtil;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
@@ -15,8 +21,8 @@ public class EventManagement {
     private final AtomicBoolean exit = new AtomicBoolean(false);
     private final ConcurrentLinkedQueue<Event> blockEventQueue = new ConcurrentLinkedQueue<>();
     private final ConcurrentLinkedQueue<Event> asyncEventQueue = new ConcurrentLinkedQueue<>();
-    private final ConcurrentHashMap<Class<? extends Event>, EventHandler> EVENT_HANDLER_MAP = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<Class<? extends Event>, ConcurrentLinkedQueue<Runnable>> EVENT_LISTENER_MAP = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Class<? extends Event>, Method> EVENT_HANDLER_MAP = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Class<? extends Event>, ConcurrentLinkedQueue<Method>> EVENT_LISTENER_MAP = new ConcurrentHashMap<>();
 
     private final int MAX_TASK_RETRY_TIME = 20;
 
@@ -49,7 +55,7 @@ public class EventManagement {
             while (!event.isFailed() && !event.isFinished()) {
                 count++;
                 if (count > timeout) {
-                    System.err.println("等待" + event.toString() + "超时");
+                    System.err.println("等待" + event + "超时");
                     break;
                 }
                 TimeUnit.MILLISECONDS.sleep(50);
@@ -83,9 +89,13 @@ public class EventManagement {
             }
             return false;
         } else {
-            EventHandler eventHandler = EVENT_HANDLER_MAP.get(event.getClass());
+            Method eventHandler = EVENT_HANDLER_MAP.get(event.getClass());
             if (eventHandler != null) {
-                eventHandler.todo(event);
+                try {
+                    eventHandler.invoke(null, event);
+                } catch (IllegalAccessException | InvocationTargetException e) {
+                    e.printStackTrace();
+                }
                 event.setFinished();
                 cachedThreadPoolUtil.executeTask(() ->
                         doAllMethod(EVENT_LISTENER_MAP.get(event.getClass())));
@@ -101,12 +111,16 @@ public class EventManagement {
         return stacktrace[3];
     }
 
-    private void doAllMethod(ConcurrentLinkedQueue<Runnable> todo) {
+    private void doAllMethod(ConcurrentLinkedQueue<Method> todo) {
         if (todo == null) {
             return;
         }
-        for (Runnable each : todo) {
-            each.run();
+        for (Method each : todo) {
+            try {
+                each.invoke(null);
+            } catch (IllegalAccessException | InvocationTargetException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -132,7 +146,7 @@ public class EventManagement {
             }
         } else {
             if (isDebug) {
-                System.err.println("任务已被拒绝---" + event.toString());
+                System.err.println("任务已被拒绝---" + event);
             }
         }
     }
@@ -141,13 +155,48 @@ public class EventManagement {
         return !exit.get();
     }
 
+    public void registerAllHandler() {
+        try {
+            ClassScannerUtil.searchAndRun(EventRegister.class, (annotationClass, method) -> {
+                EventRegister annotation = (EventRegister) method.getAnnotation(annotationClass);
+                if (IsDebug.isDebug()) {
+                    Class<?>[] parameterTypes = method.getParameterTypes();
+                    int parameterCount = method.getParameterCount();
+                    if (Arrays.stream(parameterTypes).noneMatch(each -> each.equals(Event.class)) || parameterCount != 1) {
+                        throw new RuntimeException("注册handler方法参数错误" + method);
+                    }
+                }
+                register(annotation.registerClass(), method);
+            });
+        } catch (ClassNotFoundException | InvocationTargetException | IllegalAccessException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void registerAllListener() {
+        try {
+            ClassScannerUtil.searchAndRun(EventListener.class, (annotationClass, method) -> {
+                EventListener annotation = (EventListener) method.getAnnotation(annotationClass);
+                if (IsDebug.isDebug()) {
+                    int parameterCount = method.getParameterCount();
+                    if (parameterCount != 0) {
+                        throw new RuntimeException("注册Listener方法参数错误" + method);
+                    }
+                }
+                registerListener(annotation.registerClass(), method);
+            });
+        } catch (ClassNotFoundException | InvocationTargetException | IllegalAccessException e) {
+            e.printStackTrace();
+        }
+    }
+
     /**
      * 注册任务监听器
      *
      * @param eventType 需要监听的任务类型
      * @param handler   需要执行的操作
      */
-    public void register(Class<? extends Event> eventType, EventHandler handler) {
+    private void register(Class<? extends Event> eventType, Method handler) {
         if (IsDebug.isDebug()) {
             System.err.println("注册监听器" + eventType.toString());
         }
@@ -159,8 +208,8 @@ public class EventManagement {
      *
      * @param eventType 需要监听的任务类型
      */
-    public void registerListener(Class<? extends Event> eventType, Runnable todo) {
-        ConcurrentLinkedQueue<Runnable> queue = EVENT_LISTENER_MAP.get(eventType);
+    private void registerListener(Class<? extends Event> eventType, Method todo) {
+        ConcurrentLinkedQueue<Method> queue = EVENT_LISTENER_MAP.get(eventType);
         if (queue == null) {
             queue = new ConcurrentLinkedQueue<>();
             queue.add(todo);
@@ -189,13 +238,13 @@ public class EventManagement {
                         } else if (event.getExecuteTimes() < MAX_TASK_RETRY_TIME) {
                             //判断是否超过最大次数
                             if (executeTaskFailed(event)) {
-                                System.err.println("异步任务执行失败---" + event.toString());
+                                System.err.println("异步任务执行失败---" + event);
                                 asyncEventQueue.add(event);
                             }
                         } else {
                             event.setFailed();
                             if (isDebug) {
-                                System.err.println("任务超时---" + event.toString());
+                                System.err.println("任务超时---" + event);
                             }
                         }
                         TimeUnit.MILLISECONDS.sleep(5);
@@ -231,13 +280,13 @@ public class EventManagement {
                     //判断任务是否超过最大执行次数
                     if (event.getExecuteTimes() < MAX_TASK_RETRY_TIME) {
                         if (executeTaskFailed(event)) {
-                            System.err.println("同步任务执行失败---" + event.toString());
+                            System.err.println("同步任务执行失败---" + event);
                             blockEventQueue.add(event);
                         }
                     } else {
                         event.setFailed();
                         if (isDebug) {
-                            System.err.println("任务超时---" + event.toString());
+                            System.err.println("任务超时---" + event);
                         }
                     }
                     TimeUnit.MILLISECONDS.sleep(5);
