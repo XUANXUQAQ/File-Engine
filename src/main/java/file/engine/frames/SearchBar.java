@@ -45,10 +45,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -2851,12 +2848,12 @@ public class SearchBar {
         });
     }
 
-    private LinkedHashMap<LinkedHashMap<String, String>, LinkedHashSet<String>> getNonFormattedSqlFromTableQueue() {
+    private LinkedHashMap<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>> getNonFormattedSqlFromTableQueue() {
         if (isDatabaseUpdated.get()) {
             isDatabaseUpdated.set(false);
             initPriorityQueue();
         }
-        LinkedHashMap<LinkedHashMap<String, String>, LinkedHashSet<String>> sqlColumnMap = new LinkedHashMap<>();
+        LinkedHashMap<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>> sqlColumnMap = new LinkedHashMap<>();
         if (priorityQueue.isEmpty()) {
             return sqlColumnMap;
         }
@@ -2866,11 +2863,7 @@ public class SearchBar {
                 String sql = "SELECT %s FROM " + each + " WHERE priority=" + i;
                 eachPriorityMap.put(sql, each);
             });
-            if (i == 0) {
-                sqlColumnMap.put(eachPriorityMap, null);
-            } else {
-                sqlColumnMap.put(eachPriorityMap, new LinkedHashSet<>());
-            }
+            sqlColumnMap.put(eachPriorityMap, new ConcurrentSkipListSet<>());
         });
         tableQueue.clear();
         return sqlColumnMap;
@@ -2927,14 +2920,14 @@ public class SearchBar {
         }
         //每个priority用一个线程
         //按照优先级排列，key是sql和表名的对应，value是容器
-        LinkedHashMap<LinkedHashMap<String, String>, LinkedHashSet<String>>
+        LinkedHashMap<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>>
                 nonFormattedSql = getNonFormattedSqlFromTableQueue();
         AtomicBoolean isResultsFull = new AtomicBoolean(false);
         AtomicInteger threadStatus = new AtomicInteger(0);
         AtomicInteger allThreadStatus = new AtomicInteger();
 
         AtomicInteger number = new AtomicInteger(1);
-        LinkedHashMap<Integer, LinkedHashSet<String>> containerMap = new LinkedHashMap<>();
+        LinkedHashMap<Integer, ConcurrentSkipListSet<String>> containerMap = new LinkedHashMap<>();
         nonFormattedSql.forEach((commandsMap, container) -> cachedThreadPoolUtil.executeTask(() -> {
             int currentThreadNum = number.get() << 1;
             allThreadStatus.set(allThreadStatus.get() | currentThreadNum);
@@ -2973,13 +2966,14 @@ public class SearchBar {
                 while (threadStatus.get() != allThreadStatus.get()) {
                     TimeUnit.MILLISECONDS.sleep(5);
                     if (((threadStatus.get() & start) >> loopCount) == 1) {
-                        LinkedHashSet<String> results = containerMap.get(start);
-                        if (results != null) {
-                            tempResults.addAll(results);
-                            tempResultNum.addAndGet(results.size());
-                            start = start << 1;
-                            loopCount++;
-                        }
+                        start = start << 1;
+                        loopCount++;
+                    }
+                    ConcurrentSkipListSet<String> results = containerMap.get(start);
+                    if (results != null) {
+                        tempResults.addAll(results);
+                        tempResultNum.addAndGet(results.size());
+                        results.clear();
                     }
                 }
             } catch (InterruptedException ignored) {
@@ -3363,7 +3357,7 @@ public class SearchBar {
      * @param isResultFromCache 是否来自缓存
      * @return true如果匹配成功
      */
-    private boolean checkIsMatchedAndAddToList(String path, boolean isPutToTemp, boolean isResultFromCache, LinkedHashSet<String> container) {
+    private boolean checkIsMatchedAndAddToList(String path, boolean isPutToTemp, boolean isResultFromCache, ConcurrentSkipListSet<String> container) {
         boolean ret = false;
         if (check(path)) {
             if (isExist(path)) {
@@ -3415,7 +3409,7 @@ public class SearchBar {
      * @param time 开始搜索时间，用于检测用于重新输入匹配信息后快速停止
      * @param sql  sql
      */
-    private int searchAndAddToTempResults(long time, String sql, AtomicBoolean isResultsFull, LinkedHashSet<String> container) {
+    private int searchAndAddToTempResults(long time, String sql, AtomicBoolean isResultsFull, ConcurrentSkipListSet<String> container) {
         int count = 0;
         //结果太多则不再进行搜索
         if (listResultsNum.get() + tempResultNum.get() > MAX_RESULTS_COUNT || startTime > time) {
