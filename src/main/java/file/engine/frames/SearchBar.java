@@ -2866,7 +2866,11 @@ public class SearchBar {
                 String sql = "SELECT %s FROM " + each + " WHERE priority=" + i;
                 eachPriorityMap.put(sql, each);
             });
-            sqlColumnMap.put(eachPriorityMap, new LinkedHashSet<>());
+            if (i == 0) {
+                sqlColumnMap.put(eachPriorityMap, null);
+            } else {
+                sqlColumnMap.put(eachPriorityMap, new LinkedHashSet<>());
+            }
         });
         tableQueue.clear();
         return sqlColumnMap;
@@ -2970,10 +2974,12 @@ public class SearchBar {
                     TimeUnit.MILLISECONDS.sleep(5);
                     if (((threadStatus.get() & start) >> loopCount) == 1) {
                         LinkedHashSet<String> results = containerMap.get(start);
-                        tempResults.addAll(results);
-                        tempResultNum.addAndGet(results.size());
-                        start = start << 1;
-                        loopCount++;
+                        if (results != null) {
+                            tempResults.addAll(results);
+                            tempResultNum.addAndGet(results.size());
+                            start = start << 1;
+                            loopCount++;
+                        }
                     }
                 }
             } catch (InterruptedException ignored) {
