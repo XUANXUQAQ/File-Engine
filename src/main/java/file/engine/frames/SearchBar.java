@@ -2851,16 +2851,23 @@ public class SearchBar {
         });
     }
 
-    private LinkedHashMap<String, String> getNonFormattedSqlFromTableQueue() {
+    private LinkedHashMap<LinkedHashMap<String, String>, LinkedHashSet<String>> getNonFormattedSqlFromTableQueue() {
         if (isDatabaseUpdated.get()) {
             isDatabaseUpdated.set(false);
             initPriorityQueue();
         }
-        LinkedHashMap<String, String> sqlColumnMap = new LinkedHashMap<>();
+        LinkedHashMap<LinkedHashMap<String, String>, LinkedHashSet<String>> sqlColumnMap = new LinkedHashMap<>();
         if (priorityQueue.isEmpty()) {
             return sqlColumnMap;
         }
-        priorityQueue.forEach(i -> tableQueue.forEach(each -> sqlColumnMap.put("SELECT %s FROM " + each + " WHERE priority=" + i, each)));
+        priorityQueue.forEach(i -> {
+            LinkedHashMap<String, String> eachPriorityMap = new LinkedHashMap<>();
+            tableQueue.forEach(each -> {
+                String sql = "SELECT %s FROM " + each + " WHERE priority=" + i;
+                eachPriorityMap.put(sql, each);
+            });
+            sqlColumnMap.put(eachPriorityMap, new LinkedHashSet<>());
+        });
         tableQueue.clear();
         return sqlColumnMap;
     }
@@ -2909,32 +2916,68 @@ public class SearchBar {
             }
             tableQueue.add(each.tableName);
         });
-        CachedThreadPoolUtil.getInstance().executeTask(() -> {
-            AtomicBoolean isCreated = new AtomicBoolean(false);
-            if (!isCreated.get()) {
-                addMergeThread(isCreated);
-            }
+        AtomicBoolean isMergeTempResultThreadCreated = new AtomicBoolean(false);
+        CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
+        if (!isMergeTempResultThreadCreated.get()) {
+            addMergeThread(isMergeTempResultThreadCreated);
+        }
+        //每个priority用一个线程
+        //按照优先级排列，key是sql和表名的对应，value是容器
+        LinkedHashMap<LinkedHashMap<String, String>, LinkedHashSet<String>>
+                nonFormattedSql = getNonFormattedSqlFromTableQueue();
+        AtomicBoolean isResultsFull = new AtomicBoolean(false);
+        AtomicInteger threadStatus = new AtomicInteger(0);
+        AtomicInteger allThreadStatus = new AtomicInteger();
+
+        AtomicInteger number = new AtomicInteger(1);
+        LinkedHashMap<Integer, LinkedHashSet<String>> containerMap = new LinkedHashMap<>();
+        nonFormattedSql.forEach((commandsMap, container) -> cachedThreadPoolUtil.executeTask(() -> {
+            int currentThreadNum = number.get() << 1;
+            allThreadStatus.set(allThreadStatus.get() | currentThreadNum);
+            number.set(number.get() << 1);
+            containerMap.put(currentThreadNum, container);
             long time = System.currentTimeMillis();
-            LinkedHashMap<String, String> nonFormattedSql = getNonFormattedSqlFromTableQueue();
-            AtomicBoolean isResultsFull = new AtomicBoolean(false);
-            Set<String> sqls = nonFormattedSql.keySet();
-            AtomicBoolean forEachContinueFlag = new AtomicBoolean(true);
-            sqls.stream().filter(each -> forEachContinueFlag.get()).forEach(each -> {
-                String formattedSql;
-                if (
-                        runningMode == Enums.RunningMode.NORMAL_MODE && DatabaseService.getInstance().getStatus() == Enums.DatabaseStatus.NORMAL
-                ) {
-                    formattedSql = String.format(each, "PATH");
-                    int matchedNum = searchAndAddToTempResults(System.currentTimeMillis(), formattedSql, isResultsFull);
-                    long weight = Math.min(matchedNum, 5);
-                    if (weight != 0L) {
-                        updateTableWeight(nonFormattedSql.get(each), weight);
+            try {
+                Set<String> sqls = commandsMap.keySet();
+                DatabaseService databaseService = DatabaseService.getInstance();
+                sqls.forEach(each -> {
+                    String formattedSql;
+                    if (
+                            runningMode == Enums.RunningMode.NORMAL_MODE && databaseService.getStatus() == Enums.DatabaseStatus.NORMAL
+                    ) {
+                        formattedSql = String.format(each, "PATH");
+                        int matchedNum = searchAndAddToTempResults(System.currentTimeMillis(), formattedSql, isResultsFull, container);
+                        long weight = Math.min(matchedNum, 5);
+                        if (weight != 0L) {
+                            updateTableWeight(commandsMap.get(each), weight);
+                        }
+                        if (isResultsFull.get() || time < startTime) {
+                            throw new RuntimeException("stopped");
+                        }
                     }
-                    if (isResultsFull.get() || time < startTime) {
-                        forEachContinueFlag.set(false);
+                });
+            } finally {
+                //执行完后将对应的线程flag设为1
+                threadStatus.set(threadStatus.get() | currentThreadNum);
+            }
+        }));
+
+        cachedThreadPoolUtil.executeTask(() -> {
+            try {
+                int start = 2;
+                int loopCount = 1;
+                while (threadStatus.get() != allThreadStatus.get()) {
+                    TimeUnit.MILLISECONDS.sleep(5);
+                    if (((threadStatus.get() & start) >> loopCount) == 1) {
+                        LinkedHashSet<String> results = containerMap.get(start);
+                        tempResults.addAll(results);
+                        tempResultNum.addAndGet(results.size());
+                        start = start << 1;
+                        loopCount++;
                     }
                 }
-            });
+            } catch (InterruptedException ignored) {
+            }
         });
     }
 
@@ -3303,7 +3346,7 @@ public class SearchBar {
      * @param path 文件路径
      */
     private void matchOnCacheAndPriorityFolder(String path, boolean isResultFromCache) {
-        checkIsMatchedAndAddToList(path, false, isResultFromCache);
+        checkIsMatchedAndAddToList(path, false, isResultFromCache, null);
     }
 
     /**
@@ -3314,7 +3357,7 @@ public class SearchBar {
      * @param isResultFromCache 是否来自缓存
      * @return true如果匹配成功
      */
-    private boolean checkIsMatchedAndAddToList(String path, boolean isPutToTemp, boolean isResultFromCache) {
+    private boolean checkIsMatchedAndAddToList(String path, boolean isPutToTemp, boolean isResultFromCache, LinkedHashSet<String> container) {
         boolean ret = false;
         if (check(path)) {
             if (isExist(path)) {
@@ -3322,13 +3365,21 @@ public class SearchBar {
                 ret = true;
                 if (isPutToTemp) {
                     if (isNotContains(tempResults, path)) {
-                        tempResults.add(path);
-                        tempResultNum.incrementAndGet();
+                        if (container == null) {
+                            tempResults.add(path);
+                            tempResultNum.incrementAndGet();
+                        } else {
+                            container.add(path);
+                        }
                     }
                 } else {
                     if (isNotContains(listResults, path)) {
-                        listResultsNum.incrementAndGet();
-                        listResults.add(path);
+                        if (container == null) {
+                            listResultsNum.incrementAndGet();
+                            listResults.add(path);
+                        } else {
+                            container.add(path);
+                        }
                     }
                 }
             } else {
@@ -3358,7 +3409,7 @@ public class SearchBar {
      * @param time 开始搜索时间，用于检测用于重新输入匹配信息后快速停止
      * @param sql  sql
      */
-    private int searchAndAddToTempResults(long time, String sql, AtomicBoolean isResultsFull) {
+    private int searchAndAddToTempResults(long time, String sql, AtomicBoolean isResultsFull, LinkedHashSet<String> container) {
         int count = 0;
         //结果太多则不再进行搜索
         if (listResultsNum.get() + tempResultNum.get() > MAX_RESULTS_COUNT || startTime > time) {
@@ -3377,7 +3428,7 @@ public class SearchBar {
                 }
                 each = resultSet.getString("PATH");
                 if (databaseService.getStatus() == Enums.DatabaseStatus.NORMAL) {
-                    if (checkIsMatchedAndAddToList(each, true, false)) {
+                    if (checkIsMatchedAndAddToList(each, true, false, container)) {
                         count++;
                     }
                 }
@@ -3852,18 +3903,18 @@ public class SearchBar {
             if (null == files || files.length == 0) {
                 return;
             }
-            for (File each : files) {
+            Arrays.stream(files).forEach(each -> {
                 matchOnCacheAndPriorityFolder(each.getAbsolutePath(), false);
                 if (each.isDirectory()) {
                     listRemain.add(each.getAbsolutePath());
                 }
-            }
+            });
 
             int cpuCores = Runtime.getRuntime().availableProcessors();
             final int threadCount = Math.min(cpuCores, 8);
-            CachedThreadPoolUtil instance = CachedThreadPoolUtil.getInstance();
+            CachedThreadPoolUtil threadPoolUtil = CachedThreadPoolUtil.getInstance();
             for (int i = 0; i < threadCount; ++i) {
-                instance.executeTask(() -> {
+                threadPoolUtil.executeTask(() -> {
                     long startSearchTime = System.currentTimeMillis();
                     while (!listRemain.isEmpty()) {
                         String remain = listRemain.poll();
@@ -3874,16 +3925,17 @@ public class SearchBar {
                         if (allFiles == null || allFiles.length == 0) {
                             continue;
                         }
-                        for (File each : allFiles) {
+
+                        Arrays.stream(allFiles).forEach(each -> {
                             matchOnCacheAndPriorityFolder(each.getAbsolutePath(), false);
                             if (startTime > startSearchTime) {
                                 listRemain.clear();
-                                break;
+                                throw new RuntimeException("stopped");
                             }
                             if (each.isDirectory()) {
                                 listRemain.add(each.getAbsolutePath());
                             }
-                        }
+                        });
                     }
                     taskNum.incrementAndGet();
                 });
