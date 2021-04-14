@@ -1,7 +1,6 @@
 package file.engine;
 
 import com.alibaba.fastjson.JSONObject;
-import file.engine.annotation.EventRegister;
 import file.engine.configs.AllConfigs;
 import file.engine.configs.Enums;
 import file.engine.constant.Constants;
@@ -18,7 +17,6 @@ import file.engine.utils.CachedThreadPoolUtil;
 import file.engine.utils.Md5Util;
 import file.engine.utils.SQLiteUtil;
 import file.engine.utils.TranslateUtil;
-import file.engine.utils.clazz.scan.ClassScannerUtil;
 import file.engine.utils.file.CopyFileUtil;
 
 import javax.swing.*;
@@ -289,7 +287,11 @@ public class MainClass {
 
             initializeDllInterface();
 
-            ClassScannerUtil.executeMethodByAnnotation(EventRegister.class, null);
+            EventManagement eventManagement = EventManagement.getInstance();
+
+            eventManagement.registerAllHandler();
+
+            eventManagement.registerAllListener();
 
             sendStartSignal();
 

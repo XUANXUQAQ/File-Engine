@@ -1,6 +1,7 @@
 package file.engine.frames;
 
 import file.engine.IsDebug;
+import file.engine.annotation.EventListener;
 import file.engine.annotation.EventRegister;
 import file.engine.dllInterface.GetHandle;
 import file.engine.event.handler.Event;
@@ -130,12 +131,16 @@ public class TaskBar {
         if (SystemTray.isSupported()) {
             Image image;
             URL icon;
-            icon = this.getClass().getResource("/icons/taskbar.png");
-            image = new ImageIcon(icon).getImage();
             systemTray = SystemTray.getSystemTray();
             EventManagement eventManagement = EventManagement.getInstance();
             // 创建托盘图标
-            trayIcon = new TrayIcon(image);
+            icon = this.getClass().getResource("/icons/taskbar.png");
+            if (icon != null) {
+                image = new ImageIcon(icon).getImage();
+                trayIcon = new TrayIcon(image);
+            } else {
+                throw new RuntimeException("初始化图片失败/icons/taskbar.png");
+            }
             // 添加工具提示文本
             if (IsDebug.isDebug()) {
                 trayIcon.setToolTip("File-Engine(Debug)");
@@ -223,20 +228,20 @@ public class TaskBar {
         }
     }
 
-    @EventRegister
-    @SuppressWarnings("unused")
-    public static void registerEventHandler() {
-        EventManagement eventManagement = EventManagement.getInstance();
-        eventManagement.register(ShowTaskBarMessageEvent.class, event -> {
-            ShowTaskBarMessageEvent showTaskBarMessageTask = (ShowTaskBarMessageEvent) event;
-            getInstance().showMessage(showTaskBarMessageTask.caption, showTaskBarMessageTask.message, showTaskBarMessageTask.event);
-        });
+    @EventRegister(registerClass = ShowTaskBarMessageEvent.class)
+    private static void showTaskBarMessageEvent(Event event) {
+        ShowTaskBarMessageEvent showTaskBarMessageTask = (ShowTaskBarMessageEvent) event;
+        getInstance().showMessage(showTaskBarMessageTask.caption, showTaskBarMessageTask.message, showTaskBarMessageTask.event);
+    }
 
-        eventManagement.register(ShowTrayIconEvent.class, event -> getInstance());
+    @EventRegister(registerClass = ShowTrayIconEvent.class)
+    private static void showTrayIconEvent(Event event) {
+        getInstance();
+    }
 
-        eventManagement.registerListener(RestartEvent.class, () -> {
-            TaskBar taskBar = getInstance();
-            taskBar.systemTray.remove(taskBar.trayIcon);
-        });
+    @EventListener(registerClass = RestartEvent.class)
+    private static void restartEvent() {
+        TaskBar taskBar = getInstance();
+        taskBar.systemTray.remove(taskBar.trayIcon);
     }
 }

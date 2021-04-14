@@ -2,9 +2,11 @@ package file.engine.services.plugin.system;
 
 import com.alibaba.fastjson.JSONObject;
 import file.engine.IsDebug;
+import file.engine.annotation.EventListener;
 import file.engine.annotation.EventRegister;
 import file.engine.configs.AllConfigs;
 import file.engine.constant.Constants;
+import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
 import file.engine.event.handler.impl.plugin.AddPluginsCanUpdateEvent;
 import file.engine.event.handler.impl.plugin.LoadAllPluginsEvent;
@@ -311,22 +313,30 @@ public class PluginService {
         }
     }
 
-    @EventRegister
-    @SuppressWarnings("unused")
-    public static void registerEventHandler() {
-        EventManagement eventManagement = EventManagement.getInstance();
-        eventManagement.register(AddPluginsCanUpdateEvent.class, event -> getInstance().addPluginsCanUpdate(((AddPluginsCanUpdateEvent) event).pluginName));
+    @EventRegister(registerClass = AddPluginsCanUpdateEvent.class)
+    private static void addPluginsCanUpdateEvent(Event event) {
+        getInstance().addPluginsCanUpdate(((AddPluginsCanUpdateEvent) event).pluginName);
+    }
 
-        eventManagement.register(LoadAllPluginsEvent.class, event -> getInstance().loadAllPlugins(((LoadAllPluginsEvent) event).pluginDirPath));
+    @EventRegister(registerClass = LoadAllPluginsEvent.class)
+    private static void loadAllPluginsEvent(Event event) {
+        getInstance().loadAllPlugins(((LoadAllPluginsEvent) event).pluginDirPath);
+    }
 
-        eventManagement.register(RemoveFromPluginsCanUpdateEvent.class, event -> getInstance().removeFromPluginsCanUpdate(((RemoveFromPluginsCanUpdateEvent) event).pluginName));
+    @EventRegister(registerClass = RemoveFromPluginsCanUpdateEvent.class)
+    private static void removeFromPluginsCanUpdateEvent(Event event) {
+        getInstance().removeFromPluginsCanUpdate(((RemoveFromPluginsCanUpdateEvent) event).pluginName);
+    }
 
-        eventManagement.register(SetPluginsCurrentThemeEvent.class, event -> {
-            SetPluginsCurrentThemeEvent task1 = (SetPluginsCurrentThemeEvent) event;
-            getInstance().setCurrentTheme(task1.defaultColor, task1.chosenColor, task1.borderColor);
-        });
+    @EventRegister(registerClass = SetPluginsCurrentThemeEvent.class)
+    private static void setPluginsCurrentThemeEvent(Event event) {
+        SetPluginsCurrentThemeEvent task1 = (SetPluginsCurrentThemeEvent) event;
+        getInstance().setCurrentTheme(task1.defaultColor, task1.chosenColor, task1.borderColor);
+    }
 
-        eventManagement.registerListener(RestartEvent.class, () -> getInstance().unloadAllPlugins());
+    @EventListener(registerClass = RestartEvent.class)
+    private static void restartEvent() {
+        getInstance().unloadAllPlugins();
     }
 
     public static class PluginInfo {

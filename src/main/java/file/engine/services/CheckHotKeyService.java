@@ -1,8 +1,10 @@
 package file.engine.services;
 
+import file.engine.annotation.EventListener;
 import file.engine.annotation.EventRegister;
 import file.engine.configs.Enums;
 import file.engine.dllInterface.HotkeyListener;
+import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
 import file.engine.event.handler.impl.frame.searchBar.GetShowingModeEvent;
 import file.engine.event.handler.impl.frame.searchBar.HideSearchBarEvent;
@@ -158,19 +160,20 @@ public class CheckHotKeyService {
         });
     }
 
-    @EventRegister
-    @SuppressWarnings("unused")
-    public static void registerEventHandler() {
-        EventManagement eventManagement = EventManagement.getInstance();
+    @EventRegister(registerClass = RegisterHotKeyEvent.class)
+    private static void registerHotKeyEvent(Event event) {
+        getInstance().registerHotkey(((RegisterHotKeyEvent) event).hotkey);
+    }
 
-        eventManagement.register(RegisterHotKeyEvent.class, event -> getInstance().registerHotkey(((RegisterHotKeyEvent) event).hotkey));
+    @EventRegister(registerClass = ResponseCtrlEvent.class)
+    private static void responseCtrlEvent(Event event) {
+        ResponseCtrlEvent responseCtrlEvent = (ResponseCtrlEvent) event;
+        HotkeyListener.INSTANCE.setCtrlDoubleClick(responseCtrlEvent.isResponse);
+    }
 
-        eventManagement.registerListener(RestartEvent.class, () -> getInstance().stopListen());
-
-        eventManagement.register(ResponseCtrlEvent.class, event -> {
-            ResponseCtrlEvent responseCtrlEvent = (ResponseCtrlEvent) event;
-            HotkeyListener.INSTANCE.setCtrlDoubleClick(responseCtrlEvent.isResponse);
-        });
+    @EventListener(registerClass = RestartEvent.class)
+    private static void restartEvent() {
+        getInstance().stopListen();
     }
 
     private void initThreadPool() {

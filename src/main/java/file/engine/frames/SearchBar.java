@@ -2,6 +2,7 @@ package file.engine.frames;
 
 
 import file.engine.IsDebug;
+import file.engine.annotation.EventListener;
 import file.engine.annotation.EventRegister;
 import file.engine.configs.AllConfigs;
 import file.engine.configs.Enums;
@@ -9,6 +10,7 @@ import file.engine.constant.Constants;
 import file.engine.dllInterface.FileMonitor;
 import file.engine.dllInterface.GetHandle;
 import file.engine.dllInterface.IsLocalDisk;
+import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
 import file.engine.event.handler.impl.database.AddToCacheEvent;
 import file.engine.event.handler.impl.database.DeleteFromCacheEvent;
@@ -248,8 +250,6 @@ public class SearchBar {
         initTableMap();
 
         initPriorityQueue();
-
-        registerUpdateDatabaseListener();
 
         initMenuItems();
 
@@ -2423,92 +2423,119 @@ public class SearchBar {
         return !(r * 0.299 + g * 0.578 + b * 0.114 >= 192);
     }
 
-    @SuppressWarnings("unused")
-    @EventRegister
-    public static void registerEventHandler() {
-        EventManagement eventManagement = EventManagement.getInstance();
-        eventManagement.register(ShowSearchBarEvent.class, event -> {
-            ShowSearchBarEvent showSearchBarTask = (ShowSearchBarEvent) event;
-            getInstance().showSearchbar(showSearchBarTask.isGrabFocus);
-        });
+    @EventRegister(registerClass = ShowSearchBarEvent.class)
+    private static void showSearchBarEvent(Event event) {
+        ShowSearchBarEvent showSearchBarTask = (ShowSearchBarEvent) event;
+        getInstance().showSearchbar(showSearchBarTask.isGrabFocus);
+    }
 
-        eventManagement.register(StartMonitorDiskEvent.class, event -> getInstance().startMonitorDisk());
+    @EventRegister(registerClass = StartMonitorDiskEvent.class)
+    private static void startMonitorDiskEvent(Event event) {
+        getInstance().startMonitorDisk();
+    }
 
-        eventManagement.register(HideSearchBarEvent.class, event -> getInstance().closeSearchBar());
+    @EventRegister(registerClass = HideSearchBarEvent.class)
+    private static void hideSearchBarEvent(Event event) {
+        getInstance().closeSearchBar();
+    }
 
-        eventManagement.register(SetSearchBarTransparencyEvent.class, event -> {
-            SetSearchBarTransparencyEvent task1 = (SetSearchBarTransparencyEvent) event;
-            getInstance().setTransparency(task1.trans);
-        });
+    @EventRegister(registerClass = SetSearchBarTransparencyEvent.class)
+    private static void setSearchBarTransparencyEvent(Event event) {
+        SetSearchBarTransparencyEvent task1 = (SetSearchBarTransparencyEvent) event;
+        getInstance().setTransparency(task1.trans);
+    }
 
-        eventManagement.register(SetBorderEvent.class, event -> {
-            SetBorderEvent setBorderEvent = (SetBorderEvent) event;
-            getInstance().setBorderColor(setBorderEvent.borderType, setBorderEvent.borderColor, setBorderEvent.borderThickness);
-        });
+    @EventRegister(registerClass = SetBorderEvent.class)
+    private static void setBorderEvent(Event event) {
+        SetBorderEvent setBorderEvent = (SetBorderEvent) event;
+        getInstance().setBorderColor(setBorderEvent.borderType, setBorderEvent.borderColor, setBorderEvent.borderThickness);
+    }
 
-        eventManagement.register(SetSearchBarColorEvent.class, event -> {
-            SetSearchBarColorEvent setSearchBarColorTask = (SetSearchBarColorEvent) event;
-            SearchBar searchBarInstance = getInstance();
-            searchBarInstance.setSearchBarColor(setSearchBarColorTask.color);
-            if (searchBarInstance.isDark(setSearchBarColorTask.color)) {
-                searchBarInstance.textField.setCaretColor(Color.WHITE);
-            } else {
-                searchBarInstance.textField.setCaretColor(Color.BLACK);
+    @EventRegister(registerClass = SetSearchBarColorEvent.class)
+    private static void setSearchBarColorEvent(Event event) {
+        SetSearchBarColorEvent setSearchBarColorTask = (SetSearchBarColorEvent) event;
+        SearchBar searchBarInstance = getInstance();
+        searchBarInstance.setSearchBarColor(setSearchBarColorTask.color);
+        if (searchBarInstance.isDark(setSearchBarColorTask.color)) {
+            searchBarInstance.textField.setCaretColor(Color.WHITE);
+        } else {
+            searchBarInstance.textField.setCaretColor(Color.BLACK);
+        }
+    }
+
+    @EventRegister(registerClass = SetSearchBarLabelColorEvent.class)
+    private static void setSearchBarLabelColorEvent(Event event) {
+        SetSearchBarLabelColorEvent setSearchBarLabelColorTask = (SetSearchBarLabelColorEvent) event;
+        getInstance().setLabelColor(setSearchBarLabelColorTask.color);
+    }
+
+    @EventRegister(registerClass = SetSearchBarDefaultBackgroundEvent.class)
+    private static void setSearchBarDefaultBackgroundEvent(Event event) {
+        SetSearchBarDefaultBackgroundEvent setSearchBarDefaultBackgroundTask = (SetSearchBarDefaultBackgroundEvent) event;
+        getInstance().setDefaultBackgroundColor(setSearchBarDefaultBackgroundTask.color);
+    }
+
+    @EventRegister(registerClass = SetSearchBarFontColorWithCoverageEvent.class)
+    private static void setSearchBarFontColorWithCoverageEvent(Event event) {
+        SetSearchBarFontColorWithCoverageEvent task1 = (SetSearchBarFontColorWithCoverageEvent) event;
+        getInstance().setFontColorWithCoverage(task1.color);
+    }
+
+    @EventRegister(registerClass = SetSearchBarLabelFontColorEvent.class)
+    private static void setSearchBarLabelFontColorEvent(Event event) {
+        SetSearchBarLabelFontColorEvent setSearchBarLabelFontColorTask = (SetSearchBarLabelFontColorEvent) event;
+        getInstance().setLabelFontColor(setSearchBarLabelFontColorTask.color);
+    }
+
+    @EventRegister(registerClass = SetSearchBarFontColorEvent.class)
+    private static void setSearchBarFontColorEvent(Event event) {
+        SetSearchBarFontColorEvent setSearchBarFontColorTask = (SetSearchBarFontColorEvent) event;
+        getInstance().setSearchBarFontColor(setSearchBarFontColorTask.color);
+    }
+
+    @EventRegister(registerClass = PreviewSearchBarEvent.class)
+    private static void previewSearchBarEvent(Event event) {
+        if (isPreviewMode.get()) {
+            EventManagement eventManagement = EventManagement.getInstance();
+            PreviewSearchBarEvent preview = (PreviewSearchBarEvent) event;
+            SearchBar searchBar = getInstance();
+            eventManagement.putEvent(new SetBorderEvent(preview.borderType, preview.borderColor, preview.borderThickness));
+            eventManagement.putEvent(new SetSearchBarColorEvent(preview.searchBarColor));
+            eventManagement.putEvent(new SetSearchBarDefaultBackgroundEvent(preview.defaultBackgroundColor));
+            eventManagement.putEvent(new SetSearchBarFontColorEvent(preview.searchBarFontColor));
+            eventManagement.putEvent(new SetSearchBarFontColorWithCoverageEvent(preview.chosenLabelFontColor));
+            eventManagement.putEvent(new SetSearchBarLabelColorEvent(preview.chosenLabelColor));
+            eventManagement.putEvent(new SetSearchBarLabelFontColorEvent(preview.unchosenLabelFontColor));
+            eventManagement.putEvent(new ShowSearchBarEvent(false));
+            if (searchBar.getSearchBarText() == null || searchBar.getSearchBarText().isEmpty()) {
+                searchBar.textField.setText("a");
             }
-        });
+        }
+    }
 
-        eventManagement.register(SetSearchBarLabelColorEvent.class, event -> {
-            SetSearchBarLabelColorEvent setSearchBarLabelColorTask = (SetSearchBarLabelColorEvent) event;
-            getInstance().setLabelColor(setSearchBarLabelColorTask.color);
-        });
+    @EventRegister(registerClass = StartPreviewEvent.class)
+    private static void startPreviewEvent(Event event) {
+        isPreviewMode.set(true);
+    }
 
-        eventManagement.register(SetSearchBarDefaultBackgroundEvent.class, event -> {
-            SetSearchBarDefaultBackgroundEvent setSearchBarDefaultBackgroundTask = (SetSearchBarDefaultBackgroundEvent) event;
-            getInstance().setDefaultBackgroundColor(setSearchBarDefaultBackgroundTask.color);
-        });
+    @EventRegister(registerClass = StopPreviewEvent.class)
+    private static void stopPreviewEvent(Event event) {
+        isPreviewMode.set(false);
+    }
 
-        eventManagement.register(SetSearchBarFontColorWithCoverageEvent.class, event -> {
-            SetSearchBarFontColorWithCoverageEvent task1 = (SetSearchBarFontColorWithCoverageEvent) event;
-            getInstance().setFontColorWithCoverage(task1.color);
-        });
+    @EventRegister(registerClass = IsSearchBarVisibleEvent.class)
+    private static void isSearchBarVisibleEvent(Event event) {
+        event.setReturnValue(getInstance().isVisible());
+    }
 
-        eventManagement.register(SetSearchBarLabelFontColorEvent.class, event -> {
-            SetSearchBarLabelFontColorEvent setSearchBarLabelFontColorTask = (SetSearchBarLabelFontColorEvent) event;
-            getInstance().setLabelFontColor(setSearchBarLabelFontColorTask.color);
-        });
+    @EventRegister(registerClass = GetShowingModeEvent.class)
+    private static void getShowingModeEvent(Event event) {
+        event.setReturnValue(getInstance().showingMode);
+    }
 
-        eventManagement.register(SetSearchBarFontColorEvent.class, event -> {
-            SetSearchBarFontColorEvent setSearchBarFontColorTask = (SetSearchBarFontColorEvent) event;
-            getInstance().setSearchBarFontColor(setSearchBarFontColorTask.color);
-        });
-
-        eventManagement.register(PreviewSearchBarEvent.class, event -> {
-            if (isPreviewMode.get()) {
-                PreviewSearchBarEvent preview = (PreviewSearchBarEvent) event;
-                SearchBar searchBar = getInstance();
-                eventManagement.putEvent(new SetBorderEvent(preview.borderType, preview.borderColor, preview.borderThickness));
-                eventManagement.putEvent(new SetSearchBarColorEvent(preview.searchBarColor));
-                eventManagement.putEvent(new SetSearchBarDefaultBackgroundEvent(preview.defaultBackgroundColor));
-                eventManagement.putEvent(new SetSearchBarFontColorEvent(preview.searchBarFontColor));
-                eventManagement.putEvent(new SetSearchBarFontColorWithCoverageEvent(preview.chosenLabelFontColor));
-                eventManagement.putEvent(new SetSearchBarLabelColorEvent(preview.chosenLabelColor));
-                eventManagement.putEvent(new SetSearchBarLabelFontColorEvent(preview.unchosenLabelFontColor));
-                eventManagement.putEvent(new ShowSearchBarEvent(false));
-                if (searchBar.getSearchBarText() == null || searchBar.getSearchBarText().isEmpty()) {
-                    searchBar.textField.setText("a");
-                }
-            }
-        });
-
-        eventManagement.register(StartPreviewEvent.class, event -> isPreviewMode.set(true));
-
-        eventManagement.register(StopPreviewEvent.class, event -> isPreviewMode.set(false));
-
-        eventManagement.register(IsSearchBarVisibleEvent.class, event -> event.setReturnValue(getInstance().isVisible()));
-
-        eventManagement.register(GetShowingModeEvent.class, event -> event.setReturnValue(getInstance().showingMode));
-
-        eventManagement.registerListener(RestartEvent.class, FileMonitor.INSTANCE::stop_monitor);
+    @EventListener(registerClass = RestartEvent.class)
+    private static void restartEvent() {
+        FileMonitor.INSTANCE.stop_monitor();
     }
 
     private void switchSearchBarShowingMode() {
@@ -2897,9 +2924,9 @@ public class SearchBar {
         });
     }
 
-    private void registerUpdateDatabaseListener() {
-        EventManagement eventManagement = EventManagement.getInstance();
-        eventManagement.registerListener(UpdateDatabaseEvent.class, () -> isDatabaseUpdated.set(true));
+    @EventListener(registerClass = UpdateDatabaseEvent.class)
+    private static void updateDatabaseEvent() {
+        getInstance().isDatabaseUpdated.set(true);
     }
 
     private void addSqlCommands() {

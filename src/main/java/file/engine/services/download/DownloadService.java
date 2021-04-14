@@ -2,7 +2,7 @@ package file.engine.services.download;
 
 import file.engine.annotation.EventRegister;
 import file.engine.configs.Enums;
-import file.engine.event.handler.EventManagement;
+import file.engine.event.handler.Event;
 import file.engine.event.handler.impl.download.StartDownloadEvent;
 import file.engine.event.handler.impl.download.StopDownloadEvent;
 import file.engine.utils.CachedThreadPoolUtil;
@@ -30,19 +30,16 @@ public class DownloadService {
     private DownloadService() {
     }
 
-    @EventRegister
-    @SuppressWarnings("unused")
-    public static void registerEventHandler() {
-        EventManagement eventManagement = EventManagement.getInstance();
-        eventManagement.register(StartDownloadEvent.class, event -> {
-            StartDownloadEvent startDownloadTask = (StartDownloadEvent) event;
-            getInstance().downLoadFromUrl(startDownloadTask.downloadManager);
-        });
+    @EventRegister(registerClass = StartDownloadEvent.class)
+    private static void startDownloadEvent(Event event) {
+        StartDownloadEvent startDownloadTask = (StartDownloadEvent) event;
+        getInstance().downLoadFromUrl(startDownloadTask.downloadManager);
+    }
 
-        eventManagement.register(StopDownloadEvent.class, event -> {
-            StopDownloadEvent stopDownloadTask = (StopDownloadEvent) event;
-            getInstance().cancelDownload(stopDownloadTask.downloadManager);
-        });
+    @EventRegister(registerClass = StopDownloadEvent.class)
+    private static void stopDownloadEvent(Event event) {
+        StopDownloadEvent stopDownloadTask = (StopDownloadEvent) event;
+        getInstance().cancelDownload(stopDownloadTask.downloadManager);
     }
 
     /**

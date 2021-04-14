@@ -2,10 +2,12 @@ package file.engine.frames;
 
 import com.alibaba.fastjson.JSONObject;
 import file.engine.IsDebug;
+import file.engine.annotation.EventListener;
 import file.engine.annotation.EventRegister;
 import file.engine.configs.AllConfigs;
 import file.engine.configs.ConfigEntity;
 import file.engine.configs.Enums;
+import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
 import file.engine.event.handler.impl.SetSwingLaf;
 import file.engine.event.handler.impl.configs.AddCmdEvent;
@@ -72,7 +74,7 @@ public class SettingsFrame {
     private static volatile int tmp_runAsAdminKeyCode;
     private static volatile int tmp_openLastFolderKeyCode;
     private static volatile boolean isStartupChanged = false;
-    private static final ImageIcon frameIcon = new ImageIcon(SettingsFrame.class.getResource("/icons/frame.png"));
+    private static final ImageIcon frameIcon = new ImageIcon(Objects.requireNonNull(SettingsFrame.class.getResource("/icons/frame.png")));
     private static final JFrame frame = new JFrame("Settings");
     private static final TranslateUtil translateUtil = TranslateUtil.getInstance();
     private static final EventManagement eventManagement = EventManagement.getInstance();
@@ -1533,7 +1535,7 @@ public class SettingsFrame {
         labelTinyPinyin.setText("5.TinyPinyin");
         labelLombok.setText("6.Lombok");
         labelPluginNum.setText(String.valueOf(PluginService.getInstance().getInstalledPluginNum()));
-        ImageIcon imageIcon = new ImageIcon(SettingsFrame.class.getResource("/icons/frame.png"));
+        ImageIcon imageIcon = new ImageIcon(Objects.requireNonNull(SettingsFrame.class.getResource("/icons/frame.png")));
         labelIcon.setIcon(imageIcon);
         labelVersion.setText(translateUtil.getTranslation("Current Version:") + AllConfigs.version);
         labelCurrentCacheNum.setText(translateUtil.getTranslation("Current Caches Num:") + DatabaseService.getInstance().getCacheNum());
@@ -2069,33 +2071,42 @@ public class SettingsFrame {
         });
     }
 
-    @EventRegister
-    @SuppressWarnings("unused")
-    public static void registerEventHandler() {
-        eventManagement.register(ShowSettingsFrameEvent.class, event -> {
-            ShowSettingsFrameEvent showSettingsFrameEvent = (ShowSettingsFrameEvent) event;
-            SettingsFrame settingsFrame = getInstance();
-            if (showSettingsFrameEvent.showTabName == null) {
-                settingsFrame.showWindow();
-            } else {
-                settingsFrame.showWindow(showSettingsFrameEvent.showTabName);
-            }
-        });
-        eventManagement.register(HideSettingsFrameEvent.class, event -> getInstance().hideFrame());
+    @EventRegister(registerClass = ShowSettingsFrameEvent.class)
+    private static void showSettingsFrameEvent(Event event) {
+        ShowSettingsFrameEvent showSettingsFrameEvent = (ShowSettingsFrameEvent) event;
+        SettingsFrame settingsFrame = getInstance();
+        if (showSettingsFrameEvent.showTabName == null) {
+            settingsFrame.showWindow();
+        } else {
+            settingsFrame.showWindow(showSettingsFrameEvent.showTabName);
+        }
+    }
 
-        eventManagement.register(IsCacheExistEvent.class, event -> {
-            IsCacheExistEvent cacheExist = (IsCacheExistEvent) event;
-            event.setReturnValue(getInstance().isCacheExist(cacheExist.cache));
-        });
+    @EventRegister(registerClass = HideSettingsFrameEvent.class)
+    private static void hideSettingsFrameEvent(Event event) {
+        getInstance().hideFrame();
+    }
 
-        eventManagement.register(AddCacheEvent.class, event -> {
-            AddCacheEvent addCacheEvent = (AddCacheEvent) event;
-            getInstance().addCache(addCacheEvent.cache);
-        });
+    @EventRegister(registerClass = IsCacheExistEvent.class)
+    private static void isCacheExistEvent(Event event) {
+        IsCacheExistEvent cacheExist = (IsCacheExistEvent) event;
+        event.setReturnValue(getInstance().isCacheExist(cacheExist.cache));
+    }
 
-        eventManagement.register(GetExcludeComponentEvent.class, event -> event.setReturnValue(getInstance().excludeComponent));
+    @EventRegister(registerClass = AddCacheEvent.class)
+    private static void addCacheEvent(Event event) {
+        AddCacheEvent addCacheEvent = (AddCacheEvent) event;
+        getInstance().addCache(addCacheEvent.cache);
+    }
 
-        eventManagement.registerListener(RestartEvent.class, () -> getInstance().hideFrame());
+    @EventRegister(registerClass = GetExcludeComponentEvent.class)
+    private static void getExcludeComponentEvent(Event event) {
+        event.setReturnValue(getInstance().excludeComponent);
+    }
+
+    @EventListener(registerClass = RestartEvent.class)
+    private static void restartEvent() {
+        getInstance().hideFrame();
     }
 
     private void showWindow() {
@@ -2368,7 +2379,7 @@ public class SettingsFrame {
                         checkBoxAddToStartup.setSelected(false);
                         JOptionPane.showMessageDialog(frame,
                                 translateUtil.getTranslation("Add to startup failed, please try to run as administrator") +
-                                        "\n" + result.toString());
+                                        "\n" + result);
                     }
                 } catch (IOException | InterruptedException ignored) {
                 }

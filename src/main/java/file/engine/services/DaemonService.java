@@ -1,7 +1,8 @@
 package file.engine.services;
 
+import file.engine.annotation.EventListener;
 import file.engine.annotation.EventRegister;
-import file.engine.event.handler.EventManagement;
+import file.engine.event.handler.Event;
 import file.engine.event.handler.impl.daemon.StartDaemonEvent;
 import file.engine.event.handler.impl.stop.CloseEvent;
 
@@ -28,14 +29,15 @@ public class DaemonService {
         return instance;
     }
 
-    @EventRegister
-    public static void registerEventHandler() {
-        EventManagement eventManagement = EventManagement.getInstance();
-        eventManagement.register(StartDaemonEvent.class, event -> getInstance().startDaemon(((StartDaemonEvent) event).currentWorkingDir));
-
-        eventManagement.registerListener(CloseEvent.class, () -> getInstance().stopDaemon());
+    @EventRegister(registerClass = StartDaemonEvent.class)
+    private static void startDaemonEvent(Event event) {
+        getInstance().startDaemon(((StartDaemonEvent) event).currentWorkingDir);
     }
 
+    @EventListener(registerClass = CloseEvent.class)
+    private static void closeEvent() {
+        getInstance().stopDaemon();
+    }
 
     /**
      * 开启守护进程

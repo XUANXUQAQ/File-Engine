@@ -1,9 +1,11 @@
 package file.engine.frames;
 
 import com.alibaba.fastjson.JSONObject;
+import file.engine.annotation.EventListener;
 import file.engine.annotation.EventRegister;
 import file.engine.configs.AllConfigs;
 import file.engine.configs.Enums;
+import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
 import file.engine.event.handler.impl.download.StartDownloadEvent;
 import file.engine.event.handler.impl.download.StopDownloadEvent;
@@ -29,6 +31,7 @@ import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -91,7 +94,7 @@ public class PluginMarket {
     }
 
     private void showWindow() {
-        ImageIcon frameIcon = new ImageIcon(PluginMarket.class.getResource("/icons/frame.png"));
+        ImageIcon frameIcon = new ImageIcon(Objects.requireNonNull(PluginMarket.class.getResource("/icons/frame.png")));
         TranslateUtil translateUtil = TranslateUtil.getInstance();
         labelIcon.setIcon(null);
         labelAuthor.setText("");
@@ -124,14 +127,14 @@ public class PluginMarket {
         }
     }
 
-    @EventRegister
-    @SuppressWarnings("unused")
-    public static void registerEventHandler() {
-        EventManagement eventManagement = EventManagement.getInstance();
+    @EventRegister(registerClass = ShowPluginMarket.class)
+    private static void showPluginMarketEvent(Event event) {
+        getInstance().showWindow();
+    }
 
-        eventManagement.register(ShowPluginMarket.class, event -> getInstance().showWindow());
-
-        eventManagement.registerListener(RestartEvent.class, () -> getInstance().hideWindow());
+    @EventListener(registerClass = RestartEvent.class)
+    private static void hideWindowListener() {
+        getInstance().hideWindow();
     }
 
     private void hideWindow() {
