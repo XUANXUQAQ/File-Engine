@@ -1098,7 +1098,7 @@ public class SearchBar {
                 String name = label.getName();
                 if (!(name == null || name.isEmpty())) {
                     String currentText = label.getText();
-                    if (currentText == null || !currentText.contains(":\\")) {
+                    if (currentText == null || currentText.indexOf(":\\") != -1) {
                         //当前显示的不是路径
                         label.setName(currentText);
                         label.setText(name);
@@ -1121,7 +1121,7 @@ public class SearchBar {
                 String name = label.getName();
                 if (!(name == null || name.isEmpty())) {
                     String currentText = label.getText();
-                    if (currentText == null || currentText.contains(":\\")) {
+                    if (currentText == null || currentText.indexOf(":\\") != -1) {
                         //当前显示的不是名称
                         label.setName(currentText);
                         label.setText(name);
@@ -3299,7 +3299,7 @@ public class SearchBar {
         for (String each : searchCase) {
             list.add(each.toLowerCase());
         }
-        if (list.contains("f") && list.contains("d")) {
+        if (list.indexOf("f") != -1 && list.indexOf("d") != -1) {
             list.remove("f");
             list.remove("d");
         }
@@ -3804,7 +3804,7 @@ public class SearchBar {
                     String command;
                     if (file.isFile()) {
                         command = "start " + path.substring(0, 2) + "\"" + path.substring(2) + "\"";
-                        String tmpDir = new File("").getAbsolutePath().contains(" ") ?
+                        String tmpDir = new File("").getAbsolutePath().indexOf(" ") != -1 ?
                                 System.getProperty("java.io.tmpdir") : new File("tmp").getAbsolutePath();
                         String vbsFilePath = generateBatAndVbsFile(command, tmpDir, getParentPath(path));
                         Runtime.getRuntime().exec("explorer.exe " + vbsFilePath.substring(0, 2) + "\"" + vbsFilePath.substring(2) + "\"");
@@ -3900,12 +3900,12 @@ public class SearchBar {
                 eachKeyword = eachKeyword.toLowerCase();
             }
             //开始匹配
-            if (!matcherStrFromFilePath.contains(eachKeyword)) {
+            if (matcherStrFromFilePath.indexOf(eachKeyword) == -1) {
                 if (isPath) {
                     return true;
                 } else {
                     if (PinyinUtil.isContainChinese(matcherStrFromFilePath)) {
-                        if (!PinyinUtil.toPinyin(matcherStrFromFilePath, "").contains(eachKeyword)) {
+                        if (PinyinUtil.toPinyin(matcherStrFromFilePath, "").indexOf(eachKeyword) == -1) {
                             return true;
                         }
                     } else {
