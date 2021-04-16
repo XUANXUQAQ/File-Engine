@@ -1,9 +1,5 @@
 package file.engine.constant;
 
-/**
- * @author
- * @date 2021-03-19 22:35
- */
 public class Constants {
     public static final int ALL_TABLE_NUM = 40;
 
