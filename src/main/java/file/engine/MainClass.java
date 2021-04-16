@@ -28,6 +28,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -135,13 +136,50 @@ public class MainClass {
         }
     }
 
+    private static String generateFormattedSql(String suffix, int priority) {
+        return String.format("INSERT OR IGNORE INTO priority VALUES(\"%s\", %d)", suffix, priority);
+    }
+
+    private static void insertAllSuffixPriority(HashMap<String, Integer> suffixMap, Statement statement) {
+        try {
+            statement.execute("BEGIN;");
+            suffixMap.forEach((suffix, priority) -> {
+                String generateFormattedSql = generateFormattedSql(suffix, priority);
+                try {
+                    statement.execute(generateFormattedSql);
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            });
+        } catch (SQLException throwable) {
+            throwable.printStackTrace();
+        } finally {
+            try {
+                statement.execute("COMMIT;");
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
     private static void createPriorityTable() throws SQLException {
         try (Statement statement = SQLiteUtil.getStatement()) {
             int row = statement.executeUpdate("CREATE TABLE IF NOT EXISTS priority(SUFFIX text unique, PRIORITY INT)");
             if (row == 0) {
-                statement.executeUpdate("INSERT OR IGNORE INTO priority VALUES(\"defaultPriority\", 0)");
-                statement.executeUpdate("INSERT OR IGNORE INTO priority VALUES(\"exe\", 1)");
-                statement.executeUpdate("INSERT OR IGNORE INTO priority VALUES(\"lnk\", 2)");
+                int count = 10;
+                HashMap<String, Integer> map = new HashMap<>();
+                map.put("lnk", count--);
+                map.put("exe", count--);
+                map.put("bat", count--);
+                map.put("cmd", count--);
+                map.put("txt", count--);
+                map.put("docx", count--);
+                map.put("zip", count--);
+                map.put("rar", count--);
+                map.put("7z", count--);
+                map.put("html", count);
+                map.put("defaultPriority", 0);
+                insertAllSuffixPriority(map, statement);
             }
         }
     }
