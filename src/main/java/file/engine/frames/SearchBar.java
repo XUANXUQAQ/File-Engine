@@ -1098,7 +1098,7 @@ public class SearchBar {
                 String name = label.getName();
                 if (!(name == null || name.isEmpty())) {
                     String currentText = label.getText();
-                    if (currentText == null || currentText.indexOf(":\\") != -1) {
+                    if (currentText == null || currentText.indexOf(":\\") == -1) {
                         //当前显示的不是路径
                         label.setName(currentText);
                         label.setText(name);
@@ -2955,7 +2955,11 @@ public class SearchBar {
 
         AtomicInteger number = new AtomicInteger(1);
         LinkedHashMap<Integer, ConcurrentSkipListSet<String>> containerMap = new LinkedHashMap<>();
-        nonFormattedSql.forEach((commandsMap, container) -> cachedThreadPoolUtil.executeTask(() -> {
+
+        ConcurrentLinkedQueue<Runnable> taskQueue = new ConcurrentLinkedQueue<>();
+
+        //添加搜索任务
+        nonFormattedSql.forEach((commandsMap, container) -> taskQueue.add(() -> {
             int currentThreadNum = number.get() << 1;
             allThreadStatus.set(allThreadStatus.get() | currentThreadNum);
             number.set(number.get() << 1);
@@ -2986,11 +2990,21 @@ public class SearchBar {
             }
         }));
 
+        //添加消费者线程
+        for (int i = 0; i < 4; i++) {
+            cachedThreadPoolUtil.executeTask(() -> {
+                Runnable todo;
+                while ((todo = taskQueue.poll()) != null) {
+                    todo.run();
+                }
+            });
+        }
+
         cachedThreadPoolUtil.executeTask(() -> {
             try {
                 int start = 2;
                 int loopCount = 1;
-                while (threadStatus.get() != allThreadStatus.get()) {
+                while (threadStatus.get() != allThreadStatus.get() || threadStatus.get() == 0) {
                     TimeUnit.MILLISECONDS.sleep(5);
                     if (((threadStatus.get() & start) >> loopCount) == 1) {
                         start = start << 1;
@@ -3193,7 +3207,7 @@ public class SearchBar {
                 while (eventManagement.isNotMainExit()) {
                     long endTime = System.currentTimeMillis();
                     text = getSearchBarText();
-                    if ((endTime - startTime > 150) && isNotSqlInitialized.get() && startSignal.get()) {
+                    if ((endTime - startTime > 300) && isNotSqlInitialized.get() && startSignal.get()) {
                         if (!getSearchBarText().isEmpty()) {
                             isNotSqlInitialized.set(false);
                             if (databaseService.getStatus() == Enums.DatabaseStatus.NORMAL && runningMode == Enums.RunningMode.NORMAL_MODE) {
