@@ -2959,39 +2959,43 @@ public class SearchBar {
         ConcurrentLinkedQueue<Runnable> taskQueue = new ConcurrentLinkedQueue<>();
 
         //添加搜索任务
-        nonFormattedSql.forEach((commandsMap, container) -> taskQueue.add(() -> {
+        nonFormattedSql.forEach((commandsMap, container) -> {
             int currentThreadNum = number.get() << 1;
             allThreadStatus.set(allThreadStatus.get() | currentThreadNum);
-            number.set(number.get() << 1);
             containerMap.put(currentThreadNum, container);
-            long time = System.currentTimeMillis();
-            try {
-                Set<String> sqls = commandsMap.keySet();
-                DatabaseService databaseService = DatabaseService.getInstance();
-                sqls.forEach(each -> {
-                    String formattedSql;
-                    if (
-                            runningMode == Enums.RunningMode.NORMAL_MODE && databaseService.getStatus() == Enums.DatabaseStatus.NORMAL
-                    ) {
-                        formattedSql = String.format(each, "PATH");
-                        int matchedNum = searchAndAddToTempResults(System.currentTimeMillis(), formattedSql, isResultsFull, container);
-                        long weight = Math.min(matchedNum, 5);
-                        if (weight != 0L) {
-                            updateTableWeight(commandsMap.get(each), weight);
+            number.set(number.get() << 1);
+            taskQueue.add(() -> {
+                long time = System.currentTimeMillis();
+                try {
+                    Set<String> sqls = commandsMap.keySet();
+                    DatabaseService databaseService = DatabaseService.getInstance();
+                    sqls.forEach(each -> {
+                        String formattedSql;
+                        if (
+                                runningMode == Enums.RunningMode.NORMAL_MODE && databaseService.getStatus() == Enums.DatabaseStatus.NORMAL
+                        ) {
+                            formattedSql = String.format(each, "PATH");
+                            int matchedNum = searchAndAddToTempResults(System.currentTimeMillis(), formattedSql, isResultsFull, container);
+                            long weight = Math.min(matchedNum, 5);
+                            if (weight != 0L) {
+                                updateTableWeight(commandsMap.get(each), weight);
+                            }
+                            if (isResultsFull.get() || time < startTime) {
+                                throw new RuntimeException("stopped");
+                            }
                         }
-                        if (isResultsFull.get() || time < startTime) {
-                            throw new RuntimeException("stopped");
-                        }
-                    }
-                });
-            } finally {
-                //执行完后将对应的线程flag设为1
-                threadStatus.set(threadStatus.get() | currentThreadNum);
-            }
-        }));
+                    });
+                } finally {
+                    //执行完后将对应的线程flag设为1
+                    threadStatus.set(threadStatus.get() | currentThreadNum);
+                }
+            });
+        });
 
         //添加消费者线程
-        for (int i = 0; i < 4; i++) {
+        int processors = Runtime.getRuntime().availableProcessors();
+        processors = Math.min(processors, 8);
+        for (int i = 0; i < processors; i++) {
             cachedThreadPoolUtil.executeTask(() -> {
                 Runnable todo;
                 while ((todo = taskQueue.poll()) != null) {
@@ -3004,8 +3008,12 @@ public class SearchBar {
             try {
                 int start = 2;
                 int loopCount = 1;
+                long startSearchTime = System.currentTimeMillis();
                 while (threadStatus.get() != allThreadStatus.get() || threadStatus.get() == 0) {
                     TimeUnit.MILLISECONDS.sleep(5);
+                    if (startTime > startSearchTime) {
+                        break;
+                    }
                     if (((threadStatus.get() & start) >> loopCount) == 1) {
                         start = start << 1;
                         loopCount++;
@@ -3014,7 +3022,6 @@ public class SearchBar {
                     if (results != null) {
                         tempResults.addAll(results);
                         tempResultNum.addAndGet(results.size());
-                        results.clear();
                     }
                 }
             } catch (InterruptedException ignored) {
