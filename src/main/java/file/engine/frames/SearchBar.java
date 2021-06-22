@@ -756,6 +756,7 @@ public class SearchBar {
                                 isUserPressed.set(true);
                             }
                             boolean isNextLabelValid = isNextLabelValid();
+                            //当下一个label有数据时才移动到下一个
                             if (isNextLabelValid) {
                                 if (!getSearchBarText().isEmpty()) {
                                     currentResultCount.incrementAndGet();
@@ -967,6 +968,7 @@ public class SearchBar {
         final int maxWaiting = 10;
         AtomicBoolean isCanceled = new AtomicBoolean(false);
         TranslateUtil translateUtil = TranslateUtil.getInstance();
+        //检查数据库是否正常
         if (databaseService.getStatus() != Enums.DatabaseStatus.NORMAL) {
             JFrame frame = new JFrame();
             frame.setUndecorated(true);
@@ -986,6 +988,7 @@ public class SearchBar {
                 }
             });
             try {
+                //二次检查并尝试等待
                 while (databaseService.getStatus() != Enums.DatabaseStatus.NORMAL && count < maxWaiting) {
                     count++;
                     TimeUnit.SECONDS.sleep(1);
@@ -1077,6 +1080,7 @@ public class SearchBar {
                 == JOptionPane.OK_OPTION) {
             try {
                 Desktop desktop;
+                //打开wiki页面
                 if (Desktop.isDesktopSupported()) {
                     desktop = Desktop.getDesktop();
                     desktop.browse(new URI("https://github.com/XUANXUQAQ/File-Engine/wiki/Usage"));
@@ -1098,6 +1102,7 @@ public class SearchBar {
                 String name = label.getName();
                 if (!(name == null || name.isEmpty())) {
                     String currentText = label.getText();
+                    //indexOf效率更高
                     if (currentText == null || currentText.indexOf(":\\") == -1) {
                         //当前显示的不是路径
                         label.setName(currentText);
@@ -1121,6 +1126,7 @@ public class SearchBar {
                 String name = label.getName();
                 if (!(name == null || name.isEmpty())) {
                     String currentText = label.getText();
+                    //indexOf效率更高
                     if (currentText == null || currentText.indexOf(":\\") != -1) {
                         //当前显示的不是名称
                         label.setName(currentText);
@@ -2256,6 +2262,9 @@ public class SearchBar {
         }
     }
 
+    /**
+     * 当窗口太小时自动缩小字体
+     */
     private void changeFontOnDisplayFailed() {
         String testStr = getSearchBarText();
         Font origin = textField.getFont();
@@ -2347,6 +2356,9 @@ public class SearchBar {
         }
     }
 
+    /**
+     * 开始监控磁盘文件变化
+     */
     private void startMonitorDisk() {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             EventManagement eventManagement = EventManagement.getInstance();
@@ -2378,6 +2390,9 @@ public class SearchBar {
         }
     }
 
+    /**
+     * 在搜索磁盘，创建索引时，添加当完成搜索时自动发出开始信号的线程
+     */
     private void addSearchWaiter() {
         if (!isWaiting.get()) {
             isWaiting.set(true);
@@ -2399,6 +2414,9 @@ public class SearchBar {
         }
     }
 
+    /**
+     * 初始化线程池
+     */
     private void initThreadPool() {
         lockMouseMotionThread();
 
@@ -2538,6 +2556,9 @@ public class SearchBar {
         FileMonitor.INSTANCE.stop_monitor();
     }
 
+    /**
+     * 自动切换显示模式线程
+     */
     private void switchSearchBarShowingMode() {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             try {
@@ -2582,6 +2603,9 @@ public class SearchBar {
         });
     }
 
+    /**
+     * 获取explorer窗口大小，并修改显示模式和大小
+     */
     private void getExplorerSizeAndChangeSearchBarSizeExplorerMode() {
         double dpi = GetHandle.INSTANCE.getDpi();
         long explorerWidth = (long) (GetHandle.INSTANCE.getExplorerWidth() / dpi);
@@ -2593,6 +2617,7 @@ public class SearchBar {
         int searchBarHeight = (int) (screenSize.height * 0.4);
 
         int labelHeight = searchBarHeight / 9;
+        //explorer窗口大于20像素才开始显示，防止误判其他系统窗口
         if (labelHeight > 20) {
             int positionX;
             int positionY;
@@ -2613,6 +2638,10 @@ public class SearchBar {
         }
     }
 
+    /**
+     * 将label置于上方，输入框位于下方，用于贴靠模式
+     * @param searchBarHeight 搜索框大小，用于计算坐标偏移
+     */
     private void setLabelAtTop(int searchBarHeight) {
         int labelHeight = searchBarHeight / 9;
         SwingUtilities.invokeLater(() -> {
@@ -2631,6 +2660,10 @@ public class SearchBar {
         });
     }
 
+    /**
+     * 将输入框置于label的上方
+     * @param searchBarHeight 搜索框大小，用于计算坐标偏移
+     */
     private void setTextFieldAtTop(int searchBarHeight) {
         int labelHeight = searchBarHeight / 9;
         SwingUtilities.invokeLater(() -> {
@@ -2646,6 +2679,14 @@ public class SearchBar {
         });
     }
 
+    /**
+     * 修改搜索框的大小和位置
+     * @param positionX X
+     * @param positionY Y
+     * @param searchBarWidth 宽度
+     * @param searchBarHeight 高度
+     * @param labelHeight 每个label的高度
+     */
     private void changeSearchBarSizeAndPos(int positionX, int positionY, int searchBarWidth, int searchBarHeight, int labelHeight) {
         if (positionX != searchBar.getX()
                 || positionY != searchBar.getY()
@@ -2670,6 +2711,13 @@ public class SearchBar {
         }
     }
 
+    /**
+     * 修改搜索框的大小和位置
+     * @param positionX X
+     * @param positionY Y
+     * @param searchBarWidth 宽度
+     * @param searchBarHeight 高度
+     */
     private void changeSearchBarSizeAndPos(int positionX, int positionY, int searchBarWidth, int searchBarHeight) {
         int labelHeight = searchBarHeight / 9;
         changeSearchBarSizeAndPos(positionX, positionY, searchBarWidth, searchBarHeight, labelHeight);
@@ -2742,6 +2790,9 @@ public class SearchBar {
         }
     }
 
+    /**
+     * 在鼠标滚轮往下滑的过程中，不检测鼠标指针的移动事件
+     */
     private void lockMouseMotionThread() {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             //锁住MouseMotion检测，阻止同时发出两个动作
@@ -2822,6 +2873,9 @@ public class SearchBar {
         }
     }
 
+    /**
+     * 不断尝试显示结果
+     */
     private void tryToShowRecordsThread() {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             //显示结果线程
@@ -2861,6 +2915,9 @@ public class SearchBar {
         SwingUtilities.invokeLater(searchBar::repaint);
     }
 
+    /**
+     * 更新画面线程
+     */
     private void repaintFrameThread() {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             try {
@@ -2875,6 +2932,11 @@ public class SearchBar {
         });
     }
 
+    /**
+     * 生成未格式化的sql
+     * 第一个map中key保存未格式化的sql，value保存表名称，第二个map为搜索结果的暂时存储容器
+     * @return map
+     */
     private LinkedHashMap<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>> getNonFormattedSqlFromTableQueue() {
         if (isDatabaseUpdated.get()) {
             isDatabaseUpdated.set(false);
@@ -2929,6 +2991,9 @@ public class SearchBar {
         getInstance().isDatabaseUpdated.set(true);
     }
 
+    /**
+     * 添加sql语句，并开始搜索
+     */
     private void addSqlCommands() {
         tableQueue.clear();
         LinkedList<TableNameWeightInfo> tmpCommandList = new LinkedList<>(tableSet);
@@ -3006,6 +3071,7 @@ public class SearchBar {
 
         cachedThreadPoolUtil.executeTask(() -> {
             try {
+                //线程状态的记录从第二个位开始，所以初始值位2
                 int start = 2;
                 int loopCount = 1;
                 long startSearchTime = System.currentTimeMillis();
@@ -3014,6 +3080,8 @@ public class SearchBar {
                     if (startTime > startSearchTime) {
                         break;
                     }
+                    //当线程完成，threadStatus中的位会被设置为1
+                    //这时，将threadStatus和start做与运算，然后向左移到第一位，如果为1，则线程已完成搜索
                     if (((threadStatus.get() & start) >> loopCount) == 1) {
                         start = start << 1;
                         loopCount++;
