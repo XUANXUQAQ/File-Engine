@@ -26,6 +26,7 @@ import file.engine.event.handler.impl.download.StartDownloadEvent;
 import file.engine.event.handler.impl.frame.searchBar.*;
 import file.engine.event.handler.impl.frame.settingsFrame.GetExcludeComponentEvent;
 import file.engine.event.handler.impl.hotkey.RegisterHotKeyEvent;
+import file.engine.event.handler.impl.hotkey.ResponseCtrlEvent;
 import file.engine.event.handler.impl.monitor.disk.StartMonitorDiskEvent;
 import file.engine.event.handler.impl.plugin.LoadAllPluginsEvent;
 import file.engine.event.handler.impl.plugin.SetPluginsCurrentThemeEvent;
@@ -680,6 +681,7 @@ public class AllConfigs {
                 allConfigs.getLabelColor(),
                 allConfigs.getBorderColor()));
         eventManagement.putEvent(new RegisterHotKeyEvent(configEntity.getHotkey()));
+        eventManagement.putEvent(new ResponseCtrlEvent(configEntity.isDoubleClickCtrlOpen()));
         eventManagement.putEvent(new SetSearchBarTransparencyEvent(configEntity.getTransparency()));
         eventManagement.putEvent(new SetSearchBarDefaultBackgroundEvent(configEntity.getDefaultBackgroundColor()));
         eventManagement.putEvent(new SetSearchBarLabelColorEvent(configEntity.getLabelColor()));
