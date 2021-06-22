@@ -409,8 +409,8 @@ public class DatabaseService {
             EventManagement eventManagement = EventManagement.getInstance();
             while (eventManagement.isNotMainExit()) {
                 count++;
-                //等待10s
-                if (count > 1000) {
+                //等待30s
+                if (count > 30) {
                     System.err.println("等待SQL语句任务" + taskId + "处理超时");
                     break;
                 }
