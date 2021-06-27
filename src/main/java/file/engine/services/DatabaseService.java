@@ -405,12 +405,11 @@ public class DatabaseService {
 
     private void waitForCommandSet(SqlTaskIds taskId) {
         try {
-            int count = 0;
             EventManagement eventManagement = EventManagement.getInstance();
+            long tmpStartTime = System.currentTimeMillis();
             while (eventManagement.isNotMainExit()) {
-                count++;
                 //等待30s
-                if (count > 30) {
+                if (System.currentTimeMillis() - tmpStartTime > 30 * 1000) {
                     System.err.println("等待SQL语句任务" + taskId + "处理超时");
                     break;
                 }
