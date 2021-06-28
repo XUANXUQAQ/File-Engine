@@ -3059,7 +3059,7 @@ public class SearchBar {
 
         //添加消费者线程
         int processors = Runtime.getRuntime().availableProcessors();
-        processors = Math.min(processors, 8);
+        processors = Math.min(processors, 2);
         for (int i = 0; i < processors; i++) {
             cachedThreadPoolUtil.executeTask(() -> {
                 Runnable todo;
