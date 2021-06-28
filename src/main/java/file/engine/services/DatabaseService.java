@@ -22,7 +22,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
@@ -441,39 +440,40 @@ public class DatabaseService {
         return false;
     }
 
-    private boolean isTableExist(ArrayList<String> tableNames) {
-        try (Statement stmt = SQLiteUtil.getStatement()) {
-            for (String tableName : tableNames) {
-                String sql = String.format("SELECT ASCII, PATH, PRIORITY FROM %s;", tableName);
-                stmt.executeQuery(sql);
-            }
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
-    }
+//    private boolean isTableExist(ArrayList<String> tableNames) {
+//        try (Statement stmt = SQLiteUtil.getStatement()) {
+//            for (String tableName : tableNames) {
+//                String sql = String.format("SELECT ASCII, PATH, PRIORITY FROM %s;", tableName);
+//                stmt.executeQuery(sql);
+//            }
+//            return true;
+//        } catch (Exception e) {
+//            return false;
+//        }
+//    }
 
-    private boolean isDatabaseDamaged() {
-        ArrayList<String> list = new ArrayList<>();
-        for (int i = 0; i <= Constants.ALL_TABLE_NUM; i++) {
-            list.add("list" + i);
-        }
-        return !isTableExist(list);
-    }
+//    private boolean isDatabaseDamaged() {
+//        ArrayList<String> list = new ArrayList<>();
+//        for (int i = 0; i <= Constants.ALL_TABLE_NUM; i++) {
+//            list.add("list" + i);
+//        }
+//        return !isTableExist(list);
+//    }
 
     private void recreateDatabase() {
         commandSet.clear();
         //删除所有表和索引
 
-        boolean isDataDamaged = isDatabaseDamaged();
+//        boolean isDataDamaged = isDatabaseDamaged();
 
         for (int i = 0; i <= Constants.ALL_TABLE_NUM; i++) {
-            if (isDataDamaged) {
-                commandSet.add(new SQLWithTaskId(SqlTaskIds.DROP_TABLE, "DROP TABLE IF EXISTS list" + i + ";"));
-            } else {
-                commandSet.add(new SQLWithTaskId(SqlTaskIds.DELETE_FROM_LIST, "DELETE FROM list" + i + ";"));
-            }
             commandSet.add(new SQLWithTaskId(SqlTaskIds.DROP_INDEX, "DROP INDEX IF EXISTS list" + i + "_index;"));
+            commandSet.add(new SQLWithTaskId(SqlTaskIds.DROP_TABLE, "DROP TABLE IF EXISTS list" + i + ";"));
+//            if (isDataDamaged) {
+//                commandSet.add(new SQLWithTaskId(SqlTaskIds.DROP_TABLE, "DROP TABLE IF EXISTS list" + i + ";"));
+//            } else {
+//                commandSet.add(new SQLWithTaskId(SqlTaskIds.DELETE_FROM_LIST, "DELETE FROM list" + i + ";"));
+//            }
         }
         //创建新表
         String sql = "CREATE TABLE IF NOT EXISTS list";
