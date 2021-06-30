@@ -18,10 +18,7 @@ import file.engine.utils.TranslateUtil;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.LinkedHashSet;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
@@ -63,17 +60,15 @@ public class DatabaseService {
     private void executeSqlCommandsThread() {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             EventManagement eventManagement = EventManagement.getInstance();
-            try (Statement statement = SQLiteUtil.getStatement()) {
+            try {
                 while (eventManagement.isNotMainExit()) {
                     if (isExecuteImmediately.get()) {
                         isExecuteImmediately.set(false);
-                        executeAllCommands(statement);
+                        executeAllCommands();
                     }
                     TimeUnit.MILLISECONDS.sleep(20);
                 }
             } catch (InterruptedException ignored) {
-            } catch (Exception throwables) {
-                throwables.printStackTrace();
             }
         });
     }
@@ -270,20 +265,25 @@ public class DatabaseService {
         isExecuteImmediately.set(true);
     }
 
-    private void executeAllCommands(Statement stmt) {
+    private void executeAllCommands() {
         if (!commandSet.isEmpty()) {
             LinkedHashSet<SQLWithTaskId> tempCommandSet = new LinkedHashSet<>(commandSet);
+            Connection connection = SQLiteUtil.getConnection();
             try {
-                if (IsDebug.isDebug()) {
-                    System.out.println("----------------------------------------------");
-                    System.out.println("执行SQL命令");
-                    System.out.println("----------------------------------------------");
-                }
-                stmt.execute("BEGIN;");
-                for (SQLWithTaskId each : tempCommandSet) {
-                    stmt.execute(each.sql);
-                    commandSet.remove(each);
-                }
+                connection.setAutoCommit(false);
+                tempCommandSet.forEach(each -> {
+                    try (PreparedStatement pStmt = SQLiteUtil.getPreparedStatement(each.sql)) {
+                        if (IsDebug.isDebug()) {
+                            System.out.println("----------------------------------------------");
+                            System.out.println("执行SQL命令--" + each.sql);
+                            System.out.println("----------------------------------------------");
+                        }
+                        pStmt.execute();
+                    } catch (SQLException throwables) {
+                        throwables.printStackTrace();
+                    }
+                });
+                commandSet.removeAll(tempCommandSet);
             } catch (SQLException e) {
                 if (IsDebug.isDebug()) {
                     e.printStackTrace();
@@ -293,7 +293,8 @@ public class DatabaseService {
                 }
             } finally {
                 try {
-                    stmt.execute("COMMIT;");
+                    connection.commit();
+                    connection.setAutoCommit(true);
                 } catch (SQLException throwables) {
                     throwables.printStackTrace();
                 }
@@ -440,41 +441,13 @@ public class DatabaseService {
         return false;
     }
 
-//    private boolean isTableExist(ArrayList<String> tableNames) {
-//        try (Statement stmt = SQLiteUtil.getStatement()) {
-//            for (String tableName : tableNames) {
-//                String sql = String.format("SELECT ASCII, PATH, PRIORITY FROM %s;", tableName);
-//                stmt.executeQuery(sql);
-//            }
-//            return true;
-//        } catch (Exception e) {
-//            return false;
-//        }
-//    }
-
-//    private boolean isDatabaseDamaged() {
-//        ArrayList<String> list = new ArrayList<>();
-//        for (int i = 0; i <= Constants.ALL_TABLE_NUM; i++) {
-//            list.add("list" + i);
-//        }
-//        return !isTableExist(list);
-//    }
-
     private void recreateDatabase() {
         commandSet.clear();
         //删除所有表和索引
-
-//        boolean isDataDamaged = isDatabaseDamaged();
-
-        for (int i = 0; i <= Constants.ALL_TABLE_NUM; i++) {
-            commandSet.add(new SQLWithTaskId(SqlTaskIds.DROP_INDEX, "DROP INDEX IF EXISTS list" + i + "_index;"));
-            commandSet.add(new SQLWithTaskId(SqlTaskIds.DROP_TABLE, "DROP TABLE IF EXISTS list" + i + ";"));
-//            if (isDataDamaged) {
-//                commandSet.add(new SQLWithTaskId(SqlTaskIds.DROP_TABLE, "DROP TABLE IF EXISTS list" + i + ";"));
-//            } else {
-//                commandSet.add(new SQLWithTaskId(SqlTaskIds.DELETE_FROM_LIST, "DELETE FROM list" + i + ";"));
-//            }
-        }
+//        for (int i = 0; i <= Constants.ALL_TABLE_NUM; i++) {
+//            commandSet.add(new SQLWithTaskId(SqlTaskIds.DROP_INDEX, "DROP INDEX IF EXISTS list" + i + "_index;"));
+//            commandSet.add(new SQLWithTaskId(SqlTaskIds.DROP_TABLE, "DROP TABLE IF EXISTS list" + i + ";"));
+//        }
         //创建新表
         String sql = "CREATE TABLE IF NOT EXISTS list";
         for (int i = 0; i <= Constants.ALL_TABLE_NUM; i++) {

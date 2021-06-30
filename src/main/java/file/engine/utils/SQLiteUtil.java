@@ -48,6 +48,17 @@ public class SQLiteUtil {
         return conn.createStatement();
     }
 
+    /**
+     * 获得数据库连接
+     * @return connection
+     */
+    public static Connection getConnection() {
+        if (conn == null) {
+            throw new RuntimeException("The connection must be initialized first, call initConnection(String url)");
+        }
+        return conn;
+    }
+
     public static void initConnection(String url) throws SQLException {
         initSqliteConfig();
         conn = DriverManager.getConnection(url, sqLiteConfig.toProperties());
