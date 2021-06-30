@@ -443,11 +443,10 @@ public class DatabaseService {
 
     private void recreateDatabase() {
         commandSet.clear();
-        //删除所有表和索引
-//        for (int i = 0; i <= Constants.ALL_TABLE_NUM; i++) {
-//            commandSet.add(new SQLWithTaskId(SqlTaskIds.DROP_INDEX, "DROP INDEX IF EXISTS list" + i + "_index;"));
-//            commandSet.add(new SQLWithTaskId(SqlTaskIds.DROP_TABLE, "DROP TABLE IF EXISTS list" + i + ";"));
-//        }
+        //删除所有索引
+        for (int i = 0; i <= Constants.ALL_TABLE_NUM; i++) {
+            commandSet.add(new SQLWithTaskId(SqlTaskIds.DROP_INDEX, "DROP INDEX IF EXISTS list" + i + "_index;"));
+        }
         //创建新表
         String sql = "CREATE TABLE IF NOT EXISTS list";
         for (int i = 0; i <= Constants.ALL_TABLE_NUM; i++) {
