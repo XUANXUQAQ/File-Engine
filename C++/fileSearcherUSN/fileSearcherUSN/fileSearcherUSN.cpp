@@ -2,7 +2,6 @@
 #include "stdafx.h"
 #include "Volume.h"
 #include <fstream>
-#include <thread>
 //#define TEST
 
 typedef struct{
@@ -11,8 +10,6 @@ typedef struct{
 } parameter;
 
 sqlite3* db;
-static volatile UINT tasksFinished = 0;
-static volatile UINT totalTasks = 0;
 
 void initUSN(parameter p);
 void splitString(char* str, vector<string>& vec);
@@ -23,7 +20,6 @@ void initUSN(const parameter p) {
 	if (ret) {
 		volume volumeInstance(p.disk, db, p.ignorePath);
 		volumeInstance.initVolume();
-		tasksFinished++;
 #ifdef TEST
 		cout << "path : " << p.disk << endl;
 		cout << "Initialize done " << p.disk << endl;
@@ -94,15 +90,10 @@ int main() {
 			parameter p;
 			p.disk = disk;
 			p.ignorePath = ignorePathsVec;
-			thread t(initUSN, p);
-			totalTasks++;
-			t.detach();
+			initUSN(p);
 		}
 	}
 
-	while (tasksFinished < totalTasks) {
-		Sleep(10);
-	}
 	sqlite3_exec(db, "COMMIT;", nullptr, nullptr, nullptr);
 	sqlite3_close(db);
 	return 0;
