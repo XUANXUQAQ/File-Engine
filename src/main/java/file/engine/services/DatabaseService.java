@@ -403,13 +403,13 @@ public class DatabaseService {
         searchFile(AllConfigs.getInstance().getDisks(), ignorePath);
     }
 
-    private void waitForCommandSet(SqlTaskIds taskId) {
+    private void waitForCommandSet(@SuppressWarnings("SameParameterValue") SqlTaskIds taskId) {
         try {
             EventManagement eventManagement = EventManagement.getInstance();
             long tmpStartTime = System.currentTimeMillis();
             while (eventManagement.isNotMainExit()) {
-                //等待30s
-                if (System.currentTimeMillis() - tmpStartTime > 30 * 1000) {
+                //等待
+                if (System.currentTimeMillis() - tmpStartTime > 60 * 1000) {
                     System.err.println("等待SQL语句任务" + taskId + "处理超时");
                     break;
                 }
