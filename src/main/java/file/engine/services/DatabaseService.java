@@ -18,7 +18,10 @@ import file.engine.utils.TranslateUtil;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.LinkedHashSet;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
@@ -337,11 +340,6 @@ public class DatabaseService {
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
-        createAllIndex();
-        waitForCommandSet(SqlTaskIds.CREATE_INDEX);
-        EventManagement.getInstance().putEvent(new ShowTaskBarMessageEvent(
-                TranslateUtil.getInstance().getTranslation("Info"),
-                TranslateUtil.getInstance().getTranslation("Search Done")));
     }
 
     private void createAllIndex() {
@@ -350,7 +348,6 @@ public class DatabaseService {
             String createIndex = "CREATE INDEX IF NOT EXISTS list" + i + "_index ON list" + i + "(PRIORITY);";
             commandSet.add(new SQLWithTaskId(SqlTaskIds.CREATE_INDEX, createIndex));
         }
-        executeImmediately();
     }
 
     private void searchByUSN(String paths, String ignorePath) throws IOException, InterruptedException {
@@ -401,6 +398,11 @@ public class DatabaseService {
         recreateDatabase();
         waitForCommandSet(SqlTaskIds.CREATE_TABLE);
         searchFile(AllConfigs.getInstance().getDisks(), ignorePath);
+        createAllIndex();
+//        waitForCommandSet(SqlTaskIds.CREATE_INDEX);
+        EventManagement.getInstance().putEvent(new ShowTaskBarMessageEvent(
+                TranslateUtil.getInstance().getTranslation("Info"),
+                TranslateUtil.getInstance().getTranslation("Search Done")));
     }
 
     private void waitForCommandSet(@SuppressWarnings("SameParameterValue") SqlTaskIds taskId) {
@@ -444,9 +446,9 @@ public class DatabaseService {
     private void recreateDatabase() {
         commandSet.clear();
         //删除所有索引
-        for (int i = 0; i <= Constants.ALL_TABLE_NUM; i++) {
-            commandSet.add(new SQLWithTaskId(SqlTaskIds.DROP_INDEX, "DROP INDEX IF EXISTS list" + i + "_index;"));
-        }
+//        for (int i = 0; i <= Constants.ALL_TABLE_NUM; i++) {
+//            commandSet.add(new SQLWithTaskId(SqlTaskIds.DROP_INDEX, "DROP INDEX IF EXISTS list" + i + "_index;"));
+//        }
         //创建新表
         String sql = "CREATE TABLE IF NOT EXISTS list";
         for (int i = 0; i <= Constants.ALL_TABLE_NUM; i++) {
