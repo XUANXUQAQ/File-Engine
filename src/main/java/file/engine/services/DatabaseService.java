@@ -305,6 +305,10 @@ public class DatabaseService {
 
     private void addToCommandSet(SQLWithTaskId sql) {
         if (commandSet.size() < MAX_SQL_NUM) {
+            if (status == Enums.DatabaseStatus.MANUAL_UPDATE) {
+                System.err.println("正在搜索中");
+                return;
+            }
             commandSet.add(sql);
         } else {
             if (IsDebug.isDebug()) {
@@ -361,12 +365,9 @@ public class DatabaseService {
             buffW.newLine();
             buffW.write(ignorePath);
         }
-        String command = "cmd.exe /c " + start + end + " >> \"error.log\"";
+        String command = "cmd.exe /c " + start + end;
         Runtime.getRuntime().exec(command, null, new File("user"));
         waitForProcess("fileSearcherUSN.exe");
-        try (BufferedWriter buffW = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("user/MFTSearchInfo.dat"), StandardCharsets.UTF_8))) {
-            buffW.write("");
-        }
     }
 
     private boolean isTaskExist(String procName, StringBuilder strBuilder) throws IOException, InterruptedException {
@@ -402,9 +403,15 @@ public class DatabaseService {
     private void updateLists(String ignorePath) {
         recreateDatabase();
         waitForCommandSet(SqlTaskIds.CREATE_TABLE);
+        SQLiteUtil.closeAll();
         searchFile(AllConfigs.getInstance().getDisks(), ignorePath);
         createAllIndex();
 //        waitForCommandSet(SqlTaskIds.CREATE_INDEX);
+        try {
+            SQLiteUtil.initConnection("jdbc:sqlite:data.db");
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
         EventManagement.getInstance().putEvent(new ShowTaskBarMessageEvent(
                 TranslateUtil.getInstance().getTranslation("Info"),
                 TranslateUtil.getInstance().getTranslation("Search Done")));

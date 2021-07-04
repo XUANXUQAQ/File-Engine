@@ -66,7 +66,7 @@ public class SQLiteUtil {
 
     public static void closeAll() {
         if (IsDebug.isDebug()) {
-            System.out.println("正在关闭数据库连接");
+            System.err.println("正在关闭数据库连接");
         }
         try {
             conn.close();
