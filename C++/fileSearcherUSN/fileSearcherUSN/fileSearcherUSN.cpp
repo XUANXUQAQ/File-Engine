@@ -4,7 +4,7 @@
 #include <fstream>
 //#define TEST
 
-typedef struct{
+typedef struct {
 	char disk;
 	vector<string> ignorePath;
 } parameter;
@@ -16,15 +16,14 @@ void splitString(char* str, vector<string>& vec);
 
 
 void initUSN(const parameter p) {
-	const auto ret = 65 <= p.disk && p.disk <= 90 || 97 <= p.disk && p.disk <= 122;
-	if (ret) {
-		volume volumeInstance(p.disk, db, p.ignorePath);
-		volumeInstance.initVolume();
+	sqlite3_exec(db, "BEGIN;", nullptr, nullptr, nullptr);
+	volume volumeInstance(p.disk, db, p.ignorePath);
+	volumeInstance.initVolume();
+	sqlite3_exec(db, "COMMIT;", nullptr, nullptr, nullptr);
 #ifdef TEST
-		cout << "path : " << p.disk << endl;
-		cout << "Initialize done " << p.disk << endl;
+	cout << "path : " << p.disk << endl;
+	cout << "Initialize done " << p.disk << endl;
 #endif
-	}
 }
 
 void splitString(char* str, vector<string>& vec) {
@@ -61,7 +60,7 @@ int main() {
 	input.close();
 
 	diskVec.reserve(26);
-	
+
 	sqlite3_config(SQLITE_CONFIG_MULTITHREAD);
 	sqlite3_config(SQLITE_CONFIG_MEMSTATUS, 0);
 
@@ -78,8 +77,6 @@ int main() {
 	sqlite3_exec(db, "PRAGMA auto_vacuum=0;", nullptr, nullptr, nullptr);
 	sqlite3_exec(db, "PRAGMA mmap_size=4096;", nullptr, nullptr, nullptr);
 
-	sqlite3_exec(db, "BEGIN;", nullptr, nullptr, nullptr);
-
 	splitString(diskPath, diskVec);
 	splitString(ignorePath, ignorePathsVec);
 
@@ -94,7 +91,6 @@ int main() {
 		}
 	}
 
-	sqlite3_exec(db, "COMMIT;", nullptr, nullptr, nullptr);
 	sqlite3_close(db);
 	return 0;
 }

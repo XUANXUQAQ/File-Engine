@@ -14,7 +14,6 @@
 using namespace std;
 
 constexpr auto MAXVOL = 3;
-static mutex mutex_lock;
 
 typedef struct _pfrn_name {
 	DWORDLONG pfrn = 0;
@@ -56,30 +55,35 @@ public:
 			deleteUSN()
 			)
 		{
-			mutex_lock.lock();
-			if (initPriorityMap(priorityMap))
-			{
-				initAllPrepareStatement();
+			try {
 
-				const auto endIter = frnPfrnNameMap.end();
-				for (auto iter = frnPfrnNameMap.begin(); iter != endIter; ++iter) {
-					auto name = iter->second.filename;
-					const auto ascii = getAscIISum(to_utf8(wstring(name)));
-					CString path = _T("\0");
-					getPath(iter->first, path);
-					CString record = vol + path;
-					auto fullPath = to_utf8(wstring(record));
-					if (!isIgnore(fullPath)) {
-						saveResult(fullPath, ascii);
+				if (initPriorityMap(priorityMap))
+				{
+					initAllPrepareStatement();
+
+					const auto endIter = frnPfrnNameMap.end();
+					for (auto iter = frnPfrnNameMap.begin(); iter != endIter; ++iter) {
+						auto name = iter->second.filename;
+						const auto ascii = getAscIISum(to_utf8(wstring(name)));
+						CString path = _T("\0");
+						getPath(iter->first, path);
+						CString record = vol + path;
+						auto fullPath = to_utf8(wstring(record));
+						if (!isIgnore(fullPath)) {
+							saveResult(fullPath, ascii);
+						}
 					}
+					finalizeAllStatement();
 				}
-				finalizeAllStatement();
 			}
-			mutex_lock.unlock();
+			catch (exception& e)
+			{
+				cerr << e.what() << endl;
+			}
 		}
 	}
 
-	
+
 private:
 	char vol;
 	HANDLE hVol;
@@ -141,7 +145,7 @@ private:
 	{
 		return to_utf8(str.c_str(), static_cast<int>(str.size()));
 	}
-	
+
 	bool getHandle();
 	bool createUSN();
 	bool getUSNInfo();
@@ -228,7 +232,7 @@ inline bool volume::initPriorityMap(PriorityMap& priority_map) const
 	//由File-Engine保证result不为空
 	auto i = 2;
 	const auto total = column * row + 2;
-	for (; i < total; i+=2)
+	for (; i < total; i += 2)
 	{
 		const string suffix(pResult[i]);
 		const string priorityVal(pResult[i + 1]);
@@ -243,7 +247,7 @@ inline bool volume::initPriorityMap(PriorityMap& priority_map) const
 inline void volume::initSinglePrepareStatement(sqlite3_stmt** statement, const char* init) const
 {
 	const size_t ret = sqlite3_prepare_v2(db, init, static_cast<long>(strlen(init)), statement, nullptr);
-	if (SQLITE_OK != ret) 
+	if (SQLITE_OK != ret)
 	{
 		cout << "error preparing stmt \"" << init << "\"" << endl;
 	}
@@ -544,7 +548,7 @@ inline bool volume::getHandle() {
 	if (INVALID_HANDLE_VALUE != hVol) {
 		return true;
 	}
-	
+
 	return false;
 }
 
@@ -606,13 +610,13 @@ inline bool volume::getUSNJournal() {
 	DWORD usnDataSize;
 
 	while (0 != DeviceIoControl(hVol,
-	                            FSCTL_ENUM_USN_DATA,
-	                            &med,
-	                            sizeof(med),
-	                            Buffer,
-	                            BUF_LEN,
-	                            &usnDataSize,
-	                            NULL))
+		FSCTL_ENUM_USN_DATA,
+		&med,
+		sizeof(med),
+		Buffer,
+		BUF_LEN,
+		&usnDataSize,
+		NULL))
 	{
 
 		DWORD dwRetBytes = usnDataSize - sizeof(USN);
@@ -624,7 +628,7 @@ inline bool volume::getUSNJournal() {
 			const CString CfileName(UsnRecord->FileName, UsnRecord->FileNameLength / 2);
 
 			pfrnName.filename = CfileName;
-			pfrnName.pfrn = UsnRecord->ParentFileReferenceNumber; 
+			pfrnName.pfrn = UsnRecord->ParentFileReferenceNumber;
 
 			frnPfrnNameMap[UsnRecord->FileReferenceNumber] = pfrnName;
 			// 获取下一个记录  

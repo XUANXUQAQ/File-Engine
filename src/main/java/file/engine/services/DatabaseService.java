@@ -274,7 +274,7 @@ public class DatabaseService {
             Connection connection = SQLiteUtil.getConnection();
             try {
                 connection.setAutoCommit(false);
-                tempCommandSet.forEach(each -> {
+                for (SQLWithTaskId each : tempCommandSet) {
                     try (PreparedStatement pStmt = SQLiteUtil.getPreparedStatement(each.sql)) {
                         if (IsDebug.isDebug()) {
                             System.out.println("----------------------------------------------");
@@ -282,10 +282,8 @@ public class DatabaseService {
                             System.out.println("----------------------------------------------");
                         }
                         pStmt.execute();
-                    } catch (SQLException throwables) {
-                        throwables.printStackTrace();
                     }
-                });
+                }
                 commandSet.removeAll(tempCommandSet);
             } catch (SQLException e) {
                 if (IsDebug.isDebug()) {
@@ -363,7 +361,7 @@ public class DatabaseService {
             buffW.newLine();
             buffW.write(ignorePath);
         }
-        String command = "cmd.exe /c " + start + end;
+        String command = "cmd.exe /c " + start + end + " >> \"error.log\"";
         Runtime.getRuntime().exec(command, null, new File("user"));
         waitForProcess("fileSearcherUSN.exe");
         try (BufferedWriter buffW = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("user/MFTSearchInfo.dat"), StandardCharsets.UTF_8))) {
@@ -388,8 +386,15 @@ public class DatabaseService {
 
     private void waitForProcess(@SuppressWarnings("SameParameterValue") String procName) throws IOException, InterruptedException {
         StringBuilder strBuilder = new StringBuilder();
+        long start = System.currentTimeMillis();
         while (isTaskExist(procName, strBuilder)) {
             TimeUnit.MILLISECONDS.sleep(10);
+            if (System.currentTimeMillis() - start > 3 * 60 * 1000) {
+                System.err.printf("等待进程%s超时\n", procName);
+                String command = String.format("taskkill /im %s /f", procName);
+                Runtime.getRuntime().exec(command);
+                break;
+            }
             strBuilder.delete(0, strBuilder.length());
         }
     }
