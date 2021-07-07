@@ -2,7 +2,9 @@
 #include "stdafx.h"
 #include "Volume.h"
 #include <fstream>
+#include <thread>
 //#define TEST
+
 
 typedef struct {
 	char disk;
@@ -16,10 +18,9 @@ void splitString(char* str, vector<string>& vec);
 
 
 void initUSN(const parameter p) {
-	sqlite3_exec(db, "BEGIN;", nullptr, nullptr, nullptr);
 	volume volumeInstance(p.disk, db, p.ignorePath);
 	volumeInstance.initVolume();
-	sqlite3_exec(db, "COMMIT;", nullptr, nullptr, nullptr);
+	tasksFinished++;
 #ifdef TEST
 	cout << "path : " << p.disk << endl;
 	cout << "Initialize done " << p.disk << endl;
@@ -80,6 +81,8 @@ int main() {
 	splitString(diskPath, diskVec);
 	splitString(ignorePath, ignorePathsVec);
 
+	sqlite3_exec(db, "BEGIN;", nullptr, nullptr, nullptr);
+
 	for (auto& iter : diskVec)
 	{
 		const auto disk = iter[0];
@@ -87,10 +90,16 @@ int main() {
 			parameter p;
 			p.disk = disk;
 			p.ignorePath = ignorePathsVec;
-			initUSN(p);
+			totalTasks++;
+			thread t(initUSN, p);
+			t.detach();
 		}
 	}
-
+	//等待搜索任务执行
+	while (tasksFinished < totalTasks) {
+		Sleep(10);
+	}
+	sqlite3_exec(db, "COMMIT;", nullptr, nullptr, nullptr);
 	sqlite3_close(db);
 	return 0;
 }

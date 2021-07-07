@@ -15,6 +15,12 @@ using namespace std;
 
 constexpr auto MAXVOL = 3;
 
+//数据库锁，保证只有一条线程写入数据库
+static mutex mutex_lock;
+
+static volatile UINT tasksFinished = 0;
+static volatile UINT totalTasks = 0;
+
 typedef struct _pfrn_name {
 	DWORDLONG pfrn = 0;
 	CString filename;
@@ -56,7 +62,7 @@ public:
 			)
 		{
 			try {
-
+				mutex_lock.lock();
 				if (initPriorityMap(priorityMap))
 				{
 					initAllPrepareStatement();
@@ -79,7 +85,8 @@ public:
 			catch (exception& e)
 			{
 				cerr << e.what() << endl;
-			}
+			}		
+			mutex_lock.unlock();			
 		}
 	}
 
