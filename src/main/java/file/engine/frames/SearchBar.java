@@ -2640,6 +2640,7 @@ public class SearchBar {
 
     /**
      * 将label置于上方，输入框位于下方，用于贴靠模式
+     *
      * @param searchBarHeight 搜索框大小，用于计算坐标偏移
      */
     private void setLabelAtTop(int searchBarHeight) {
@@ -2662,6 +2663,7 @@ public class SearchBar {
 
     /**
      * 将输入框置于label的上方
+     *
      * @param searchBarHeight 搜索框大小，用于计算坐标偏移
      */
     private void setTextFieldAtTop(int searchBarHeight) {
@@ -2681,11 +2683,12 @@ public class SearchBar {
 
     /**
      * 修改搜索框的大小和位置
-     * @param positionX X
-     * @param positionY Y
-     * @param searchBarWidth 宽度
+     *
+     * @param positionX       X
+     * @param positionY       Y
+     * @param searchBarWidth  宽度
      * @param searchBarHeight 高度
-     * @param labelHeight 每个label的高度
+     * @param labelHeight     每个label的高度
      */
     private void changeSearchBarSizeAndPos(int positionX, int positionY, int searchBarWidth, int searchBarHeight, int labelHeight) {
         if (positionX != searchBar.getX()
@@ -2713,9 +2716,10 @@ public class SearchBar {
 
     /**
      * 修改搜索框的大小和位置
-     * @param positionX X
-     * @param positionY Y
-     * @param searchBarWidth 宽度
+     *
+     * @param positionX       X
+     * @param positionY       Y
+     * @param searchBarWidth  宽度
      * @param searchBarHeight 高度
      */
     private void changeSearchBarSizeAndPos(int positionX, int positionY, int searchBarWidth, int searchBarHeight) {
@@ -2935,6 +2939,7 @@ public class SearchBar {
     /**
      * 生成未格式化的sql
      * 第一个map中key保存未格式化的sql，value保存表名称，第二个map为搜索结果的暂时存储容器
+     *
      * @return map
      */
     private LinkedHashMap<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>> getNonFormattedSqlFromTableQueue() {
@@ -3702,83 +3707,133 @@ public class SearchBar {
                              boolean isLabel5Chosen, boolean isLabel6Chosen, boolean isLabel7Chosen, boolean isLabel8Chosen) {
         if (runningMode == Enums.RunningMode.NORMAL_MODE) {
             try {
-                String path = listResults.get(0);
-                showResultOnLabel(path, label1, isLabel1Chosen);
+                String path;
+                if (!listResults.isEmpty()) {
+                    path = listResults.get(0);
+                    showResultOnLabel(path, label1, isLabel1Chosen);
+                }
+                if (listResults.size() >= 1) {
+                    path = listResults.get(1);
+                    showResultOnLabel(path, label2, isLabel2Chosen);
+                }
 
-                path = listResults.get(1);
-                showResultOnLabel(path, label2, isLabel2Chosen);
+                if (listResults.size() >= 2) {
+                    path = listResults.get(2);
+                    showResultOnLabel(path, label3, isLabel3Chosen);
+                }
 
-                path = listResults.get(2);
-                showResultOnLabel(path, label3, isLabel3Chosen);
+                if (listResults.size() >= 3) {
+                    path = listResults.get(3);
+                    showResultOnLabel(path, label4, isLabel4Chosen);
+                }
 
-                path = listResults.get(3);
-                showResultOnLabel(path, label4, isLabel4Chosen);
+                if (listResults.size() >= 4) {
+                    path = listResults.get(4);
+                    showResultOnLabel(path, label5, isLabel5Chosen);
+                }
 
-                path = listResults.get(4);
-                showResultOnLabel(path, label5, isLabel5Chosen);
+                if (listResults.size() >= 5) {
+                    path = listResults.get(5);
+                    showResultOnLabel(path, label6, isLabel6Chosen);
+                }
 
-                path = listResults.get(5);
-                showResultOnLabel(path, label6, isLabel6Chosen);
+                if (listResults.size() >= 6) {
+                    path = listResults.get(6);
+                    showResultOnLabel(path, label7, isLabel7Chosen);
+                }
 
-                path = listResults.get(6);
-                showResultOnLabel(path, label7, isLabel7Chosen);
-
-                path = listResults.get(7);
-                showResultOnLabel(path, label8, isLabel8Chosen);
+                if (listResults.size() >= 7) {
+                    path = listResults.get(7);
+                    showResultOnLabel(path, label8, isLabel8Chosen);
+                }
             } catch (IndexOutOfBoundsException ignored) {
             }
         } else if (runningMode == Enums.RunningMode.COMMAND_MODE) {
             try {
-                String command = listResults.get(0);
-                showCommandOnLabel(command, label1, isLabel1Chosen);
+                String command;
+                if (!listResults.isEmpty()) {
+                    command = listResults.get(0);
+                    showCommandOnLabel(command, label1, isLabel1Chosen);
+                }
 
-                command = listResults.get(1);
-                showCommandOnLabel(command, label2, isLabel2Chosen);
+                if (listResults.size() >= 1) {
+                    command = listResults.get(1);
+                    showCommandOnLabel(command, label2, isLabel2Chosen);
+                }
 
-                command = listResults.get(2);
-                showCommandOnLabel(command, label3, isLabel3Chosen);
+                if (listResults.size() >= 2) {
+                    command = listResults.get(2);
+                    showCommandOnLabel(command, label3, isLabel3Chosen);
+                }
 
-                command = listResults.get(3);
-                showCommandOnLabel(command, label4, isLabel4Chosen);
+                if (listResults.size() >= 3) {
+                    command = listResults.get(3);
+                    showCommandOnLabel(command, label4, isLabel4Chosen);
+                }
 
-                command = listResults.get(4);
-                showCommandOnLabel(command, label5, isLabel5Chosen);
+                if (listResults.size() >= 4) {
+                    command = listResults.get(4);
+                    showCommandOnLabel(command, label5, isLabel5Chosen);
+                }
 
-                command = listResults.get(5);
-                showCommandOnLabel(command, label6, isLabel6Chosen);
+                if (listResults.size() >= 5) {
+                    command = listResults.get(5);
+                    showCommandOnLabel(command, label6, isLabel6Chosen);
+                }
 
-                command = listResults.get(6);
-                showCommandOnLabel(command, label7, isLabel7Chosen);
+                if (listResults.size() >= 6) {
+                    command = listResults.get(6);
+                    showCommandOnLabel(command, label7, isLabel7Chosen);
+                }
 
-                command = listResults.get(7);
-                showCommandOnLabel(command, label8, isLabel8Chosen);
+                if (listResults.size() >= 7) {
+                    command = listResults.get(7);
+                    showCommandOnLabel(command, label8, isLabel8Chosen);
+                }
             } catch (IndexOutOfBoundsException ignored) {
             }
         } else if (runningMode == Enums.RunningMode.PLUGIN_MODE) {
             try {
-                String command = listResults.get(0);
-                showPluginResultOnLabel(command, label1, isLabel1Chosen);
+                String command;
+                if (!listResults.isEmpty()) {
+                    command = listResults.get(0);
+                    showPluginResultOnLabel(command, label1, isLabel1Chosen);
+                }
 
-                command = listResults.get(1);
-                showPluginResultOnLabel(command, label2, isLabel2Chosen);
+                if (listResults.size() >= 1) {
+                    command = listResults.get(1);
+                    showPluginResultOnLabel(command, label2, isLabel2Chosen);
+                }
 
-                command = listResults.get(2);
-                showPluginResultOnLabel(command, label3, isLabel3Chosen);
+                if (listResults.size() >= 2) {
+                    command = listResults.get(2);
+                    showPluginResultOnLabel(command, label3, isLabel3Chosen);
+                }
 
-                command = listResults.get(3);
-                showPluginResultOnLabel(command, label4, isLabel4Chosen);
+                if (listResults.size() >= 3) {
+                    command = listResults.get(3);
+                    showPluginResultOnLabel(command, label4, isLabel4Chosen);
+                }
 
-                command = listResults.get(4);
-                showPluginResultOnLabel(command, label5, isLabel5Chosen);
+                if (listResults.size() >= 4) {
+                    command = listResults.get(4);
+                    showPluginResultOnLabel(command, label5, isLabel5Chosen);
+                }
 
-                command = listResults.get(5);
-                showPluginResultOnLabel(command, label6, isLabel6Chosen);
+                if (listResults.size() >= 5) {
+                    command = listResults.get(5);
+                    showPluginResultOnLabel(command, label6, isLabel6Chosen);
+                }
 
-                command = listResults.get(6);
-                showPluginResultOnLabel(command, label7, isLabel7Chosen);
+                if (listResults.size() >= 7) {
+                    command = listResults.get(6);
+                    showPluginResultOnLabel(command, label7, isLabel7Chosen);
+                }
 
-                command = listResults.get(7);
-                showPluginResultOnLabel(command, label8, isLabel8Chosen);
+                if (listResults.size() >= 8) {
+                    command = listResults.get(7);
+                    showPluginResultOnLabel(command, label8, isLabel8Chosen);
+                }
             } catch (IndexOutOfBoundsException ignored) {
             }
         }
