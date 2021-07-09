@@ -227,3 +227,4 @@ Open as administrator=открыть как администратор
 Copy file path=копировать путь к файлу
 Open parent folder=открыть родительскую папку
 Do you want to download it manually=Вы хотите скачать его вручную
+Select disk=Выбрать диск

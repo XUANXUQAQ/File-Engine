@@ -227,3 +227,4 @@ Open as administrator=Ouvrir en tant qu'administrateur
 Copy file path=Copier le chemin du fichier
 Open parent folder=Copier le dossier parent
 Do you want to download it manually=Voulez-vous le télécharger manuellement
+Select disk=Sélectionnez le disque
