@@ -91,7 +91,8 @@ public class MoveFilesUtil {
                     }
                 }
             }
-        } catch (Exception ignored) {
+        } catch (Exception e) {
+            e.printStackTrace();
         }
         return isHasRepeatFiles;
     }

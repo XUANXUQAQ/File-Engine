@@ -227,3 +227,4 @@ Open as administrator=
 Copy file path=
 Open parent folder=
 Do you want to download it manually=
+Select disk=

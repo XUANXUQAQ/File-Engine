@@ -227,3 +227,4 @@ Open as administrator=관리자로 열기
 Copy file path=파일 경로 복사
 Open parent folder=상위 폴더 열기
 Do you want to download it manually=수동으로 다운로드 하시겠습니까
+Select disk=디스크 선택
