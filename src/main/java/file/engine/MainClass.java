@@ -467,13 +467,17 @@ public class MainClass {
                 //读取启动次数
                 String times = reader.readLine();
                 if (!(times == null || times.isEmpty())) {
-                    startTimes = Integer.parseInt(times);
-                    //使用次数大于3次，优化数据库
-                    if (startTimes >= Constants.UPDATE_DATABASE_THRESHOLD) {
-                        startTimes = 0;
-                        if (DatabaseService.getInstance().getStatus() == Enums.DatabaseStatus.NORMAL) {
-                            ret = true;
+                    try {
+                        startTimes = Integer.parseInt(times);
+                        //使用次数大于3次，优化数据库
+                        if (startTimes >= Constants.UPDATE_DATABASE_THRESHOLD) {
+                            startTimes = 0;
+                            if (DatabaseService.getInstance().getStatus() == Enums.DatabaseStatus.NORMAL) {
+                                ret = true;
+                            }
                         }
+                    } catch (NumberFormatException e) {
+                        ret = true;
                     }
                 }
                 //自增后写入
