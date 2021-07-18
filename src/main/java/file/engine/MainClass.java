@@ -41,7 +41,7 @@ public class MainClass {
     private static final String FILE_SEARCHER_USN_64_MD_5 = "1fef7fdf8ebde3846afe0e442f47f6ef";
     private static final String SQLITE3_64_MD_5 = "703bd51c19755db49c9070ceb255dfe5";
     private static final String UPDATER_BAT_64_MD_5 = "357d7cc1cf023cb6c90f73926c6f2f55";
-    private static final String GET_HANDLE_64_MD_5 = "ffad87f434bde3b48bd5b7f226de9eae";
+    private static final String GET_HANDLE_64_MD_5 = "ee14698d5c8c8b55110d53012f8b7739";
     private static final String DAEMON_PROCESS_64_MD_5 = "cf6052fa108b0d19a98d2422c1ea853f";
     private static final String SHORTCUT_GEN_MD_5 = "fa4e26f99f3dcd58d827828c411ea5d7";
 
