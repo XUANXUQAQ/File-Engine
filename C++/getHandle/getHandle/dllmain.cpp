@@ -91,7 +91,7 @@ double getDpi()
     HDC desktopDc = GetDC(nullptr);
     // Get native resolution
     const int dpi = GetDeviceCaps(desktopDc, LOGPIXELSX);
-    auto ret = 1 + static_cast<double>((dpi - 96) / 24) * 0.25;
+    auto ret = 1 + (dpi - 96.0) / 24.0 * 0.25;
     if (ret < 1)
     {
         ret = 1;
