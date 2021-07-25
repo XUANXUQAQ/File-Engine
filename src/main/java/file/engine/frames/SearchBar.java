@@ -2886,26 +2886,28 @@ public class SearchBar {
             try {
                 EventManagement eventManagement = EventManagement.getInstance();
                 while (eventManagement.isNotMainExit()) {
-                    tryToShowRecordsWhenHasLabelEmpty();
-                    String text = getSearchBarText();
-                    if (text.isEmpty()) {
-                        clearAllLabels();
-                        clearListAndTempAndReset();
-                    }
-                    //设置窗口是被选中还是未被选中，鼠标模式
-                    setLabelChosenOrNotChosenMouseMode(0, label1);
-                    setLabelChosenOrNotChosenMouseMode(1, label2);
-                    setLabelChosenOrNotChosenMouseMode(2, label3);
-                    setLabelChosenOrNotChosenMouseMode(3, label4);
-                    setLabelChosenOrNotChosenMouseMode(4, label5);
-                    setLabelChosenOrNotChosenMouseMode(5, label6);
-                    setLabelChosenOrNotChosenMouseMode(6, label7);
-                    setLabelChosenOrNotChosenMouseMode(7, label8);
+                    if (listResultsNum.get() != 0) {
+                        tryToShowRecordsWhenHasLabelEmpty();
+                        String text = getSearchBarText();
+                        if (text.isEmpty()) {
+                            clearAllLabels();
+                            clearListAndTempAndReset();
+                        }
+                        //设置窗口是被选中还是未被选中，鼠标模式
+                        setLabelChosenOrNotChosenMouseMode(0, label1);
+                        setLabelChosenOrNotChosenMouseMode(1, label2);
+                        setLabelChosenOrNotChosenMouseMode(2, label3);
+                        setLabelChosenOrNotChosenMouseMode(3, label4);
+                        setLabelChosenOrNotChosenMouseMode(4, label5);
+                        setLabelChosenOrNotChosenMouseMode(5, label6);
+                        setLabelChosenOrNotChosenMouseMode(6, label7);
+                        setLabelChosenOrNotChosenMouseMode(7, label8);
 
-                    if (!listResults.isEmpty() && firstResultStartShowingTime == 0) {
-                        firstResultStartShowingTime = System.currentTimeMillis();
+                        if (!listResults.isEmpty() && firstResultStartShowingTime == 0) {
+                            firstResultStartShowingTime = System.currentTimeMillis();
+                        }
+                        TimeUnit.MILLISECONDS.sleep(150);
                     }
-                    TimeUnit.MILLISECONDS.sleep(50);
                 }
             } catch (InterruptedException ignored) {
             }
@@ -3286,7 +3288,7 @@ public class SearchBar {
                 while (eventManagement.isNotMainExit()) {
                     long endTime = System.currentTimeMillis();
                     text = getSearchBarText();
-                    if ((endTime - startTime > 300) && isNotSqlInitialized.get() && startSignal.get()) {
+                    if ((endTime - startTime > 200) && isNotSqlInitialized.get() && startSignal.get()) {
                         if (!getSearchBarText().isEmpty()) {
                             isNotSqlInitialized.set(false);
                             if (databaseService.getStatus() == Enums.DatabaseStatus.NORMAL && runningMode == Enums.RunningMode.NORMAL_MODE) {

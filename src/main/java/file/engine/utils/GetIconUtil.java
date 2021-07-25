@@ -6,6 +6,7 @@ import javax.swing.*;
 import javax.swing.filechooser.FileSystemView;
 import java.awt.*;
 import java.io.File;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -53,10 +54,10 @@ public class GetIconUtil {
         dllImageIcon = changeIcon((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(new File("C:\\Windows\\System32\\sysmain.dll")), width, height);
         folderImageIcon = changeIcon((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(new File("C:\\Windows")), width, height);
         txtImageIcon = changeIcon((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(new File("user\\cmds.txt")), width, height);
-        blankIcon = changeIcon(new ImageIcon(GetIconUtil.class.getResource("/icons/blank.png")), width, height);
-        recycleBin = changeIcon(new ImageIcon(GetIconUtil.class.getResource("/icons/recyclebin.png")), width, height);
-        updateIcon = changeIcon(new ImageIcon(GetIconUtil.class.getResource("/icons/update.png")), width, height);
-        helpIcon = changeIcon(new ImageIcon(GetIconUtil.class.getResource("/icons/help.png")), width, height);
+        blankIcon = changeIcon(new ImageIcon(Objects.requireNonNull(GetIconUtil.class.getResource("/icons/blank.png"))), width, height);
+        recycleBin = changeIcon(new ImageIcon(Objects.requireNonNull(GetIconUtil.class.getResource("/icons/recyclebin.png"))), width, height);
+        updateIcon = changeIcon(new ImageIcon(Objects.requireNonNull(GetIconUtil.class.getResource("/icons/update.png"))), width, height);
+        helpIcon = changeIcon(new ImageIcon(Objects.requireNonNull(GetIconUtil.class.getResource("/icons/help.png"))), width, height);
     }
 
     public ImageIcon getCommandIcon(String commandName, int width, int height) {
