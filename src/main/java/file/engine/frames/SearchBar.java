@@ -2906,8 +2906,8 @@ public class SearchBar {
                         if (!listResults.isEmpty() && firstResultStartShowingTime == 0) {
                             firstResultStartShowingTime = System.currentTimeMillis();
                         }
-                        TimeUnit.MILLISECONDS.sleep(150);
                     }
+                    TimeUnit.MILLISECONDS.sleep(150);
                 }
             } catch (InterruptedException ignored) {
             }
