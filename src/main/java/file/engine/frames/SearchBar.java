@@ -3065,7 +3065,7 @@ public class SearchBar {
 
         //添加消费者线程
         int processors = Runtime.getRuntime().availableProcessors();
-        processors = Math.min(processors, 2);
+        processors = Math.min(processors, 4);
         for (int i = 0; i < processors; i++) {
             cachedThreadPoolUtil.executeTask(() -> {
                 Runnable todo;
@@ -3568,6 +3568,7 @@ public class SearchBar {
      * @param isGrabFocus 是否强制抓取焦点
      */
     private void showSearchbar(boolean isGrabFocus) {
+        clearAllAndResetAll();
         SwingUtilities.invokeLater(() -> {
             if (showingMode == Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
                 if (isGrabFocus) {
