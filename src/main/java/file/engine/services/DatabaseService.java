@@ -393,7 +393,8 @@ public class DatabaseService {
             if (System.currentTimeMillis() - start > 3 * 60 * 1000) {
                 System.err.printf("等待进程%s超时\n", procName);
                 String command = String.format("taskkill /im %s /f", procName);
-                Runtime.getRuntime().exec(command);
+                Process exec = Runtime.getRuntime().exec(command);
+                exec.waitFor();
                 break;
             }
             strBuilder.delete(0, strBuilder.length());
@@ -409,8 +410,8 @@ public class DatabaseService {
 //        waitForCommandSet(SqlTaskIds.CREATE_INDEX);
         try {
             SQLiteUtil.initConnection("jdbc:sqlite:data.db");
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
+        } catch (SQLException throwable) {
+            throwable.printStackTrace();
         }
         EventManagement.getInstance().putEvent(new ShowTaskBarMessageEvent(
                 TranslateUtil.getInstance().getTranslation("Info"),

@@ -419,6 +419,7 @@ public class SearchBar {
         textField.addFocusListener(new FocusListener() {
             @Override
             public void focusGained(FocusEvent e) {
+                clearAllAndResetAll();
             }
 
             @Override
@@ -3568,7 +3569,6 @@ public class SearchBar {
      * @param isGrabFocus 是否强制抓取焦点
      */
     private void showSearchbar(boolean isGrabFocus) {
-        clearAllAndResetAll();
         SwingUtilities.invokeLater(() -> {
             if (showingMode == Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
                 if (isGrabFocus) {

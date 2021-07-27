@@ -15,6 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class EventManagement {
     private static volatile EventManagement instance = null;
@@ -23,6 +24,7 @@ public class EventManagement {
     private final ConcurrentLinkedQueue<Event> asyncEventQueue = new ConcurrentLinkedQueue<>();
     private final ConcurrentHashMap<Class<? extends Event>, Method> EVENT_HANDLER_MAP = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<Class<? extends Event>, ConcurrentLinkedQueue<Method>> EVENT_LISTENER_MAP = new ConcurrentHashMap<>();
+    private final AtomicInteger failureEventNum = new AtomicInteger(0);
 
     private final int MAX_TASK_RETRY_TIME = 20;
 
@@ -243,6 +245,7 @@ public class EventManagement {
                             }
                         } else {
                             event.setFailed();
+                            failureEventNum.incrementAndGet();
                             if (isDebug) {
                                 System.err.println("任务超时---" + event);
                             }
@@ -280,11 +283,16 @@ public class EventManagement {
                     //判断任务是否超过最大执行次数
                     if (event.getExecuteTimes() < MAX_TASK_RETRY_TIME) {
                         if (executeTaskFailed(event)) {
+                            if (failureEventNum.get() > 20) {
+                                System.err.println("超过20个任务失败，自动重启");
+                                putEvent(new RestartEvent());
+                            }
                             System.err.println("同步任务执行失败---" + event);
                             blockEventQueue.add(event);
                         }
                     } else {
                         event.setFailed();
+                        failureEventNum.incrementAndGet();
                         if (isDebug) {
                             System.err.println("任务超时---" + event);
                         }
