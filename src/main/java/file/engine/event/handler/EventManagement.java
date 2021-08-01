@@ -78,7 +78,7 @@ public class EventManagement {
         CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
         if (event instanceof RestartEvent) {
             exit.set(true);
-            cachedThreadPoolUtil.executeTask(() -> {
+            cachedThreadPoolUtil.executeTaskNoRejection(() -> {
                 doAllMethod(EVENT_LISTENER_MAP.get(RestartEvent.class));
                 if (event instanceof CloseEvent) {
                     doAllMethod(EVENT_LISTENER_MAP.get(CloseEvent.class));
@@ -99,7 +99,7 @@ public class EventManagement {
                     e.printStackTrace();
                 }
                 event.setFinished();
-                cachedThreadPoolUtil.executeTask(() ->
+                cachedThreadPoolUtil.executeTaskNoRejection(() ->
                         doAllMethod(EVENT_LISTENER_MAP.get(event.getClass())));
                 return false;
             }
@@ -224,7 +224,7 @@ public class EventManagement {
     private void startAsyncEventHandler() {
         CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
         for (int i = 0; i < 4; i++) {
-            cachedThreadPoolUtil.executeTask(() -> {
+            cachedThreadPoolUtil.executeTaskNoRejection(() -> {
                 try {
                     final boolean isDebug = IsDebug.isDebug();
                     Event event;
@@ -266,7 +266,7 @@ public class EventManagement {
     }
 
     private void startBlockEventHandler() {
-        CachedThreadPoolUtil.getInstance().executeTask(() -> {
+        CachedThreadPoolUtil.getInstance().executeTaskNoRejection(() -> {
             try {
                 Event event;
                 final boolean isDebug = IsDebug.isDebug();
