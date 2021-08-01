@@ -2887,7 +2887,7 @@ public class SearchBar {
             try {
                 EventManagement eventManagement = EventManagement.getInstance();
                 while (eventManagement.isNotMainExit()) {
-                    if (listResultsNum.get() != 0) {
+                    if (!listResults.isEmpty()) {
                         tryToShowRecordsWhenHasLabelEmpty();
                         String text = getSearchBarText();
                         if (text.isEmpty()) {
@@ -2907,8 +2907,15 @@ public class SearchBar {
                         if (!listResults.isEmpty() && firstResultStartShowingTime == 0) {
                             firstResultStartShowingTime = System.currentTimeMillis();
                         }
+                    } else {
+                        clearAllLabels();
+                        clearListAndTempAndReset();
                     }
-                    TimeUnit.MILLISECONDS.sleep(150);
+                    if (isVisible()) {
+                        TimeUnit.MILLISECONDS.sleep(50);
+                    } else {
+                        TimeUnit.MILLISECONDS.sleep(250);
+                    }
                 }
             } catch (InterruptedException ignored) {
             }
