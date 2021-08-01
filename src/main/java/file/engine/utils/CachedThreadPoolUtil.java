@@ -45,6 +45,10 @@ public class CachedThreadPoolUtil {
         return cachedThreadPool.submit(todo);
     }
 
+    public void executeTaskNoRejection(Runnable todo){
+        cachedThreadPool.submit(todo);
+    }
+
     public void shutdown() throws InterruptedException {
         isShutdown.set(true);
         cachedThreadPool.shutdown();

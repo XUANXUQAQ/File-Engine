@@ -419,7 +419,7 @@ public class SearchBar {
         textField.addFocusListener(new FocusListener() {
             @Override
             public void focusGained(FocusEvent e) {
-                clearAllAndResetAll();
+                resetAllStatus();
             }
 
             @Override
@@ -3535,7 +3535,7 @@ public class SearchBar {
     private int searchAndAddToTempResults(long time, String sql, AtomicBoolean isResultsFull, ConcurrentSkipListSet<String> container) {
         int count = 0;
         //结果太多则不再进行搜索
-        if (listResultsNum.get() + tempResultNum.get() > MAX_RESULTS_COUNT || startTime > time) {
+        if (isResultsFull.get() || listResultsNum.get() + tempResultNum.get() > MAX_RESULTS_COUNT || startTime > time || !isVisible()) {
             isResultsFull.set(true);
             return count;
         }
@@ -3545,7 +3545,7 @@ public class SearchBar {
             while (resultSet.next()) {
                 //结果太多则不再进行搜索
                 //用户重新输入了信息
-                if (listResultsNum.get() + tempResultNum.get() > MAX_RESULTS_COUNT || startTime > time) {
+                if (isResultsFull.get() || listResultsNum.get() + tempResultNum.get() > MAX_RESULTS_COUNT || startTime > time || !isVisible()) {
                     tableQueue.clear();
                     return count;
                 }
