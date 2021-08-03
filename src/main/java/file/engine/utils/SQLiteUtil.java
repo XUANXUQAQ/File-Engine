@@ -6,11 +6,12 @@ import file.engine.event.handler.EventManagement;
 import file.engine.event.handler.impl.stop.RestartEvent;
 import org.sqlite.SQLiteConfig;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -71,6 +72,22 @@ public class SQLiteUtil {
         connectionPool.put(key, conn);
     }
 
+    /**
+     * 关闭指定数据库连接
+     * @param key key
+     */
+    private static void closeConnection(String key) {
+        try {
+            connectionPool.get(key).close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        connectionPool.remove(key);
+    }
+
+    /**
+     * 关闭所有数据库连接
+     */
     public static void closeAll() {
         if (IsDebug.isDebug()) {
             System.err.println("正在关闭数据库连接");
@@ -86,6 +103,24 @@ public class SQLiteUtil {
     }
 
     public static void initAllConnections() {
+        if (Files.exists(Path.of("user/malformedDB"))) {
+            String line;
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream("user/malformedDB"), StandardCharsets.UTF_8))) {
+                while ((line = reader.readLine()) != null) {
+                    if (line.isEmpty() || line.isBlank()) {
+                        continue;
+                    }
+                    Files.delete(Path.of(line));
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            try {
+                Files.delete(Path.of("user/malformedDB"));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
         if (!Files.exists(Path.of("data"))) {
             try {
                 Files.createDirectories(Path.of("data"));
@@ -98,31 +133,34 @@ public class SQLiteUtil {
             throw new RuntimeException("initialize failed");
         }
         String[] split = RegexUtil.comma.split(disks);
+        ArrayList<File> malformedFiles = new ArrayList<>();
         for (String eachDisk : split) {
             File data = new File("data", eachDisk.charAt(0) + ".db");
             try {
-                SQLiteUtil.initConnection("jdbc:sqlite:" + data.getAbsolutePath(), String.valueOf(eachDisk.charAt(0)));
+                initConnection("jdbc:sqlite:" + data.getAbsolutePath(), String.valueOf(eachDisk.charAt(0)));
             } catch (Exception e) {
-                //noinspection ResultOfMethodCallIgnored
-                data.delete();
-                try {
-                    SQLiteUtil.initConnection("jdbc:sqlite:" + data.getAbsolutePath(), String.valueOf(eachDisk.charAt(0)));
-                } catch (SQLException ex) {
-                    //noinspection ResultOfMethodCallIgnored
-                    data.delete();
-                    EventManagement.getInstance().putEvent(new RestartEvent());
-                    break;
-                }
+                malformedFiles.add(data);
             }
         }
 
         File cache = new File("data", "cache.db");
         try {
-            SQLiteUtil.initConnection("jdbc:sqlite:" + cache.getAbsolutePath(), "cache");
+            initConnection("jdbc:sqlite:" + cache.getAbsolutePath(), "cache");
             createCacheTable();
             createPriorityTable();
         } catch (SQLException e) {
-            e.printStackTrace();
+            malformedFiles.add(cache);
+        }
+        if (!malformedFiles.isEmpty()) {
+            try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("user/malformedDB"), StandardCharsets.UTF_8))) {
+                for (File file : malformedFiles) {
+                    writer.write(file.getAbsolutePath());
+                    writer.newLine();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            EventManagement.getInstance().putEvent(new RestartEvent());
         }
     }
 

@@ -8,6 +8,7 @@ import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
 import file.engine.event.handler.impl.BootSystemEvent;
 import file.engine.event.handler.impl.ReadConfigsEvent;
+import file.engine.event.handler.impl.daemon.StartDaemonEvent;
 import file.engine.event.handler.impl.database.UpdateDatabaseEvent;
 import file.engine.event.handler.impl.frame.settingsFrame.ShowSettingsFrameEvent;
 import file.engine.event.handler.impl.stop.RestartEvent;
@@ -266,6 +267,9 @@ public class MainClass {
             ReadConfigsEvent readConfigsEvent = new ReadConfigsEvent();
             eventManagement.putEvent(readConfigsEvent);
             eventManagement.waitForEvent(readConfigsEvent);
+            if (!IsDebug.isDebug()) {
+                eventManagement.putEvent(new StartDaemonEvent(new File("").getAbsolutePath()));
+            }
 
             initDatabase();
 
