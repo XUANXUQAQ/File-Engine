@@ -5,6 +5,7 @@
 #include <winioctl.h>
 #include <fstream>
 #include <string>
+#include <utility>
 #include <vector>
 #include <algorithm>
 #include <mutex>
@@ -12,11 +13,6 @@
 //#define TEST
 
 using namespace std;
-
-constexpr auto MAXVOL = 3;
-
-static volatile UINT tasksFinished = 0;
-static volatile UINT totalTasks = 0;
 
 typedef struct _pfrn_name {
 	DWORDLONG pfrn = 0;
@@ -29,11 +25,11 @@ typedef unordered_map<DWORDLONG, pfrn_name> Frn_Pfrn_Name_Map;
 
 class volume {
 public:
-	volume(const char vol, sqlite3* database, vector<string> ignorePaths, const char* priorityDbPath) {
+	volume(const char vol, sqlite3* database, vector<string> ignorePaths, PriorityMap priorityMap) {
 		this->vol = vol;
+		this->priorityMap = std::move(priorityMap);
 		hVol = nullptr;
 		path = "";
-		strcpy_s(this->priorityDbPath, priorityDbPath);
 		db = database;
 		addIgnorePath(ignorePaths);
 	}
@@ -60,24 +56,21 @@ public:
 			)
 		{
 			try {
-				if (initPriorityMap(priorityMap))
-				{
-					initAllPrepareStatement();
+				initAllPrepareStatement();
 
-					const auto endIter = frnPfrnNameMap.end();
-					for (auto iter = frnPfrnNameMap.begin(); iter != endIter; ++iter) {
-						auto name = iter->second.filename;
-						const auto ascii = getAscIISum(to_utf8(wstring(name)));
-						CString path = _T("\0");
-						getPath(iter->first, path);
-						CString record = vol + path;
-						auto fullPath = to_utf8(wstring(record));
-						if (!isIgnore(fullPath)) {
-							saveResult(fullPath, ascii);
-						}
+				const auto endIter = frnPfrnNameMap.end();
+				for (auto iter = frnPfrnNameMap.begin(); iter != endIter; ++iter) {
+					auto name = iter->second.filename;
+					const auto ascii = getAscIISum(to_utf8(wstring(name)));
+					CString path = _T("\0");
+					getPath(iter->first, path);
+					CString record = vol + path;
+					const auto fullPath = to_utf8(wstring(record));
+					if (!isIgnore(fullPath)) {
+						saveResult(fullPath, ascii);
 					}
-					finalizeAllStatement();
 				}
+				finalizeAllStatement();
 			}
 			catch (exception& e)
 			{
@@ -94,7 +87,6 @@ private:
 	Frn_Pfrn_Name_Map frnPfrnNameMap;
 	sqlite3* db;
 	CString path;
-	char priorityDbPath[500];
 	sqlite3_stmt* stmt0 = nullptr;
 	sqlite3_stmt* stmt1 = nullptr;
 	sqlite3_stmt* stmt2 = nullptr;
@@ -166,7 +158,6 @@ private:
 	}
 	int getPriorityBySuffix(const string& suffix);
 	int getPriorityByPath(const string& path);
-	bool initPriorityMap(PriorityMap& priority_map) const;
 	void initAllPrepareStatement();
 	void initSinglePrepareStatement(sqlite3_stmt** statement, const char* init) const;
 };
@@ -220,36 +211,6 @@ inline int volume::getPriorityByPath(const string& path)
 	return getPriorityBySuffix(suffix);
 }
 
-inline bool volume::initPriorityMap(PriorityMap& priority_map) const
-{
-	char* error;
-	char** pResult;
-	int row, column;
-	sqlite3* cacheDb;
-	const string sql = "select * from priority;";
-	sqlite3_open(priorityDbPath, &cacheDb);
-	const size_t ret = sqlite3_get_table(cacheDb, sql.c_str(), &pResult, &row, &column, &error);
-	if (ret != SQLITE_OK)
-	{
-		cerr << "error init priority map" << error << endl;
-		sqlite3_free(error);
-		return false;
-	}
-	//由File-Engine保证result不为空
-	auto i = 2;
-	const auto total = column * row + 2;
-	for (; i < total; i += 2)
-	{
-		const string suffix(pResult[i]);
-		const string priorityVal(pResult[i + 1]);
-		auto pairPriority = pair<string, int>{ suffix, stoi(priorityVal) };
-		priority_map.insert(pairPriority);
-	}
-	sqlite3_free_table(pResult);
-	sqlite3_close(cacheDb);
-	return true;
-}
-
 
 inline void volume::initSinglePrepareStatement(sqlite3_stmt** statement, const char* init) const
 {
@@ -257,6 +218,7 @@ inline void volume::initSinglePrepareStatement(sqlite3_stmt** statement, const c
 	if (SQLITE_OK != ret)
 	{
 		cout << "error preparing stmt \"" << init << "\"" << endl;
+		cout << "disk: " << this->getPath() << endl;
 	}
 }
 

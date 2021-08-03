@@ -400,13 +400,11 @@ public class DatabaseService {
         waitForCommandSet(SqlTaskIds.CREATE_TABLE);
         SQLiteUtil.closeAll();
         searchFile(AllConfigs.getInstance().getDisks(), ignorePath);
+        SQLiteUtil.initAllConnections();
+        // 可能会出错
+        recreateDatabase();
         createAllIndex();
 //        waitForCommandSet(SqlTaskIds.CREATE_INDEX);
-        try {
-            SQLiteUtil.initAllConnections();
-        } catch (SQLException | IOException throwable) {
-            throwable.printStackTrace();
-        }
         EventManagement.getInstance().putEvent(new ShowTaskBarMessageEvent(
                 TranslateUtil.getInstance().getTranslation("Info"),
                 TranslateUtil.getInstance().getTranslation("Search Done")));
