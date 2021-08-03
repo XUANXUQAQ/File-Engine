@@ -15,7 +15,8 @@ import file.engine.annotation.EventRegister;
 import file.engine.dllInterface.IsLocalDisk;
 import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
-import file.engine.event.handler.impl.ReadConfigsAndBootSystemEvent;
+import file.engine.event.handler.impl.BootSystemEvent;
+import file.engine.event.handler.impl.ReadConfigsEvent;
 import file.engine.event.handler.impl.SetSwingLaf;
 import file.engine.event.handler.impl.configs.AddCmdEvent;
 import file.engine.event.handler.impl.configs.DeleteCmdEvent;
@@ -839,14 +840,17 @@ public class AllConfigs {
         allConfigs.cmdSet.remove(deleteCmdEvent.cmd);
     }
 
-    @EventRegister(registerClass = ReadConfigsAndBootSystemEvent.class)
-    private static void ReadConfigsAndBootSystemEvent(Event event) {
-        Event tmpEvent;
-        EventManagement eventManagement = EventManagement.getInstance();
+    @EventRegister(registerClass = ReadConfigsEvent.class)
+    private static void ReadConfigsEvent(Event event) {
         AllConfigs allConfigs = AllConfigs.getInstance();
-
         allConfigs.readAllSettings();
         allConfigs.saveAllSettings();
+    }
+
+    @EventRegister(registerClass = BootSystemEvent.class)
+    private static void BootSystemEvent(Event event) {
+        Event tmpEvent;
+        EventManagement eventManagement = EventManagement.getInstance();
 
         tmpEvent = new LoadAllPluginsEvent("plugins");
         eventManagement.putEvent(tmpEvent);

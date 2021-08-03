@@ -1672,7 +1672,7 @@ public class SettingsFrame {
     }
 
     private void initSuffixMap() {
-        try (PreparedStatement pStmt = SQLiteUtil.getPreparedStatement("SELECT * FROM priority;")) {
+        try (PreparedStatement pStmt = SQLiteUtil.getPreparedStatement("SELECT * FROM priority;", "cache")) {
             ResultSet resultSet = pStmt.executeQuery();
             while (resultSet.next()) {
                 suffixMap.put(resultSet.getString("SUFFIX"), resultSet.getInt("PRIORITY"));
@@ -1751,7 +1751,7 @@ public class SettingsFrame {
 
     private void initCacheArray() {
         String eachLine;
-        try (PreparedStatement statement = SQLiteUtil.getPreparedStatement("SELECT PATH FROM cache;");
+        try (PreparedStatement statement = SQLiteUtil.getPreparedStatement("SELECT PATH FROM cache;", "cache");
              ResultSet resultSet = statement.executeQuery()) {
             while (resultSet.next()) {
                 eachLine = resultSet.getString("PATH");

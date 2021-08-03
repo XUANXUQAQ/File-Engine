@@ -14,6 +14,7 @@ import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
 import file.engine.event.handler.impl.database.AddToCacheEvent;
 import file.engine.event.handler.impl.database.DeleteFromCacheEvent;
+import file.engine.event.handler.impl.database.DeleteFromDatabaseEvent;
 import file.engine.event.handler.impl.database.UpdateDatabaseEvent;
 import file.engine.event.handler.impl.frame.searchBar.*;
 import file.engine.event.handler.impl.frame.settingsFrame.AddCacheEvent;
@@ -47,6 +48,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.List;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -2909,7 +2911,6 @@ public class SearchBar {
                         }
                     } else {
                         clearAllLabels();
-                        clearListAndTempAndReset();
                     }
                     if (isVisible()) {
                         TimeUnit.MILLISECONDS.sleep(50);
@@ -3030,7 +3031,7 @@ public class SearchBar {
                 nonFormattedSql = getNonFormattedSqlFromTableQueue();
         AtomicBoolean isResultsFull = new AtomicBoolean(false);
         AtomicInteger threadStatus = new AtomicInteger(0);
-        AtomicInteger allThreadStatus = new AtomicInteger();
+        AtomicInteger allThreadStatus = new AtomicInteger(0);
 
         AtomicInteger number = new AtomicInteger(1);
         LinkedHashMap<Integer, ConcurrentSkipListSet<String>> containerMap = new LinkedHashMap<>();
@@ -3039,36 +3040,40 @@ public class SearchBar {
 
         //添加搜索任务
         nonFormattedSql.forEach((commandsMap, container) -> {
-            int currentThreadNum = number.get() << 1;
-            allThreadStatus.set(allThreadStatus.get() | currentThreadNum);
-            containerMap.put(currentThreadNum, container);
-            number.set(number.get() << 1);
-            taskQueue.add(() -> {
-                long time = System.currentTimeMillis();
-                try {
-                    Set<String> sqls = commandsMap.keySet();
-                    DatabaseService databaseService = DatabaseService.getInstance();
-                    sqls.forEach(each -> {
-                        String formattedSql;
-                        if (
-                                runningMode == Enums.RunningMode.NORMAL_MODE && databaseService.getStatus() == Enums.DatabaseStatus.NORMAL
-                        ) {
-                            formattedSql = String.format(each, "PATH");
-                            int matchedNum = searchAndAddToTempResults(System.currentTimeMillis(), formattedSql, isResultsFull, container);
-                            long weight = Math.min(matchedNum, 5);
-                            if (weight != 0L) {
-                                updateTableWeight(commandsMap.get(each), weight);
+            for (String eachDisk : RegexUtil.comma.split(AllConfigs.getInstance().getDisks())) {
+                int currentThreadNum = number.get() << 1;
+                allThreadStatus.set(allThreadStatus.get() | currentThreadNum);
+                containerMap.put(currentThreadNum, container);
+                number.set(number.get() << 1);
+                taskQueue.add(() -> {
+                    long time = System.currentTimeMillis();
+                    try {
+                        Set<String> sqls = commandsMap.keySet();
+                        DatabaseService databaseService = DatabaseService.getInstance();
+                        sqls.forEach(each -> {
+                            String formattedSql;
+                            if (runningMode == Enums.RunningMode.NORMAL_MODE && databaseService.getStatus() == Enums.DatabaseStatus.NORMAL) {
+                                formattedSql = String.format(each, "PATH");
+                                int matchedNum = searchAndAddToTempResults(System.currentTimeMillis(),
+                                        formattedSql,
+                                        isResultsFull,
+                                        container,
+                                        String.valueOf(eachDisk.charAt(0)));
+                                long weight = Math.min(matchedNum, 5);
+                                if (weight != 0L) {
+                                    updateTableWeight(commandsMap.get(each), weight);
+                                }
+                                if (isResultsFull.get() || time < startTime) {
+                                    throw new RuntimeException("stopped");
+                                }
                             }
-                            if (isResultsFull.get() || time < startTime) {
-                                throw new RuntimeException("stopped");
-                            }
-                        }
-                    });
-                } finally {
-                    //执行完后将对应的线程flag设为1
-                    threadStatus.set(threadStatus.get() | currentThreadNum);
-                }
-            });
+                        });
+                    } finally {
+                        //执行完后将对应的线程flag设为1
+                        threadStatus.set(threadStatus.get() | currentThreadNum);
+                    }
+                });
+            }
         });
 
         //添加消费者线程
@@ -3085,26 +3090,35 @@ public class SearchBar {
 
         cachedThreadPoolUtil.executeTask(() -> {
             try {
-                //线程状态的记录从第二个位开始，所以初始值位2
+                int tmpThreadStatus = 0;
+                //线程状态的记录从第二个位开始，所以初始值为2
                 int start = 2;
                 int loopCount = 1;
                 long startSearchTime = System.currentTimeMillis();
-                while (threadStatus.get() != allThreadStatus.get() || threadStatus.get() == 0) {
+                while (tmpThreadStatus != allThreadStatus.get() || threadStatus.get() == 0) {
                     TimeUnit.MILLISECONDS.sleep(5);
                     if (startTime > startSearchTime) {
                         break;
-                    }
-                    //当线程完成，threadStatus中的位会被设置为1
-                    //这时，将threadStatus和start做与运算，然后向左移到第一位，如果为1，则线程已完成搜索
-                    if (((threadStatus.get() & start) >> loopCount) == 1) {
-                        start = start << 1;
-                        loopCount++;
                     }
                     ConcurrentSkipListSet<String> results = containerMap.get(start);
                     if (results != null) {
                         tempResults.addAll(results);
                         tempResultNum.set(tempResults.size());
                     }
+                    //当线程完成，threadStatus中的位会被设置为1
+                    //这时，将threadStatus和start做与运算，然后向左移到第一位，如果为1，则线程已完成搜索
+                    if (((threadStatus.get() & start) >> loopCount) == 1) {
+                        tmpThreadStatus = tmpThreadStatus | start;
+                        start = start << 1;
+                        loopCount++;
+                    }
+                }
+                if (IsDebug.isDebug()) {
+                    System.out.println(tempResultNum.get());
+                    System.out.println(tempResults);
+                    System.out.println("thread status: " + threadStatus.get());
+                    System.out.println("tmp thread status: " + tmpThreadStatus);
+                    System.out.println("all thread status: " + allThreadStatus.get());
                 }
             } catch (InterruptedException ignored) {
             }
@@ -3515,6 +3529,8 @@ public class SearchBar {
             } else {
                 if (isResultFromCache) {
                     EventManagement.getInstance().putEvent(new DeleteFromCacheEvent(path));
+                } else {
+                    EventManagement.getInstance().putEvent(new DeleteFromDatabaseEvent(new LinkedHashSet<>(List.of(path))));
                 }
             }
         }
@@ -3523,7 +3539,7 @@ public class SearchBar {
 
     private void initPriorityQueue() {
         priorityQueue.clear();
-        try (PreparedStatement pStmt = SQLiteUtil.getPreparedStatement("SELECT PRIORITY FROM priority order by priority desc;")) {
+        try (PreparedStatement pStmt = SQLiteUtil.getPreparedStatement("SELECT PRIORITY FROM priority order by priority desc;", "cache")) {
             ResultSet resultSet = pStmt.executeQuery();
             while (resultSet.next()) {
                 priorityQueue.add(resultSet.getInt("PRIORITY"));
@@ -3539,14 +3555,14 @@ public class SearchBar {
      * @param time 开始搜索时间，用于检测用于重新输入匹配信息后快速停止
      * @param sql  sql
      */
-    private int searchAndAddToTempResults(long time, String sql, AtomicBoolean isResultsFull, ConcurrentSkipListSet<String> container) {
+    private int searchAndAddToTempResults(long time, String sql, AtomicBoolean isResultsFull, ConcurrentSkipListSet<String> container, String disk) {
         int count = 0;
         //结果太多则不再进行搜索
         if (isResultsFull.get() || listResultsNum.get() + tempResultNum.get() > MAX_RESULTS_COUNT || startTime > time || !isVisible()) {
             isResultsFull.set(true);
             return count;
         }
-        try (PreparedStatement stmt = SQLiteUtil.getPreparedStatement(sql);
+        try (PreparedStatement stmt = SQLiteUtil.getPreparedStatement(sql, disk);
              ResultSet resultSet = stmt.executeQuery()) {
             String each;
             while (resultSet.next()) {
@@ -4009,7 +4025,7 @@ public class SearchBar {
      * 从缓存中搜索结果并将匹配的放入listResults
      */
     private void searchCache() {
-        try (PreparedStatement statement = SQLiteUtil.getPreparedStatement("SELECT PATH FROM cache;");
+        try (PreparedStatement statement = SQLiteUtil.getPreparedStatement("SELECT PATH FROM cache;", "cache");
              ResultSet resultSet = statement.executeQuery()) {
             while (resultSet.next()) {
                 String eachCache = resultSet.getString("PATH");

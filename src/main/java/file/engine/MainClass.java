@@ -6,29 +6,25 @@ import file.engine.configs.Enums;
 import file.engine.constant.Constants;
 import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
-import file.engine.event.handler.impl.ReadConfigsAndBootSystemEvent;
+import file.engine.event.handler.impl.BootSystemEvent;
+import file.engine.event.handler.impl.ReadConfigsEvent;
 import file.engine.event.handler.impl.database.UpdateDatabaseEvent;
 import file.engine.event.handler.impl.frame.settingsFrame.ShowSettingsFrameEvent;
 import file.engine.event.handler.impl.stop.RestartEvent;
 import file.engine.event.handler.impl.taskbar.ShowTaskBarMessageEvent;
 import file.engine.services.DatabaseService;
 import file.engine.services.plugin.system.PluginService;
-import file.engine.utils.CachedThreadPoolUtil;
-import file.engine.utils.Md5Util;
-import file.engine.utils.SQLiteUtil;
-import file.engine.utils.TranslateUtil;
+import file.engine.utils.*;
 import file.engine.utils.file.CopyFileUtil;
 
 import javax.swing.*;
 import java.awt.*;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -38,7 +34,7 @@ public class MainClass {
     private static final String GET_ASC_II_64_MD_5 = "62a56c26e1afa7c4fa3f441aadb9d515";
     private static final String HOTKEY_LISTENER_64_MD_5 = "a212cc427a89a614402e59897c82e50d";
     private static final String IS_LOCAL_DISK_64_MD_5 = "f8a71d3496d8cc188713d521e6dfa2b2";
-    private static final String FILE_SEARCHER_USN_64_MD_5 = "1fef7fdf8ebde3846afe0e442f47f6ef";
+    private static final String FILE_SEARCHER_USN_64_MD_5 = "c2606457e91117ff1b4ee47de1ed5a86";
     private static final String SQLITE3_64_MD_5 = "703bd51c19755db49c9070ceb255dfe5";
     private static final String UPDATER_BAT_64_MD_5 = "357d7cc1cf023cb6c90f73926c6f2f55";
     private static final String GET_HANDLE_64_MD_5 = "ee14698d5c8c8b55110d53012f8b7739";
@@ -77,15 +73,18 @@ public class MainClass {
     }
 
     private static boolean isTableExist(ArrayList<String> tableNames) {
-        try (Statement stmt = SQLiteUtil.getStatement()) {
-            for (String tableName : tableNames) {
-                String sql = String.format("SELECT ASCII, PATH FROM %s;", tableName);
-                stmt.executeQuery(sql);
+        for (String each : RegexUtil.comma.split(AllConfigs.getInstance().getDisks())) {
+            try (Statement stmt = SQLiteUtil.getStatement(String.valueOf(each.charAt(0)))) {
+                for (String tableName : tableNames) {
+                    String sql = String.format("SELECT ASCII, PATH FROM %s;", tableName);
+                    stmt.executeQuery(sql);
+                }
+                return true;
+            } catch (Exception e) {
+                return false;
             }
-            return true;
-        } catch (Exception e) {
-            return false;
         }
+        return false;
     }
 
     private static boolean isAtDiskC() {
@@ -133,60 +132,6 @@ public class MainClass {
                     break;
                 }
             }
-        }
-    }
-
-    private static String generateFormattedSql(String suffix, int priority) {
-        return String.format("INSERT OR IGNORE INTO priority VALUES(\"%s\", %d)", suffix, priority);
-    }
-
-    private static void insertAllSuffixPriority(HashMap<String, Integer> suffixMap, Statement statement) {
-        try {
-            statement.execute("BEGIN;");
-            suffixMap.forEach((suffix, priority) -> {
-                String generateFormattedSql = generateFormattedSql(suffix, priority);
-                try {
-                    statement.execute(generateFormattedSql);
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
-            });
-        } catch (SQLException throwable) {
-            throwable.printStackTrace();
-        } finally {
-            try {
-                statement.execute("COMMIT;");
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    private static void createPriorityTable() throws SQLException {
-        try (Statement statement = SQLiteUtil.getStatement()) {
-            int row = statement.executeUpdate("CREATE TABLE IF NOT EXISTS priority(SUFFIX text unique, PRIORITY INT)");
-            if (row == 0) {
-                int count = 10;
-                HashMap<String, Integer> map = new HashMap<>();
-                map.put("lnk", count--);
-                map.put("exe", count--);
-                map.put("bat", count--);
-                map.put("cmd", count--);
-                map.put("txt", count--);
-                map.put("docx", count--);
-                map.put("zip", count--);
-                map.put("rar", count--);
-                map.put("7z", count--);
-                map.put("html", count);
-                map.put("defaultPriority", 0);
-                insertAllSuffixPriority(map, statement);
-            }
-        }
-    }
-
-    private static void createCacheTable() throws SQLException {
-        try (PreparedStatement pStmt = SQLiteUtil.getPreparedStatement("CREATE TABLE IF NOT EXISTS cache(PATH text unique);")) {
-            pStmt.executeUpdate();
         }
     }
 
@@ -239,10 +184,8 @@ public class MainClass {
         }
     }
 
-    private static void initDatabase() throws SQLException {
-        SQLiteUtil.initConnection("jdbc:sqlite:data.db");
-        createCacheTable();
-        createPriorityTable();
+    private static void initDatabase() throws SQLException, IOException {
+        SQLiteUtil.initAllConnections();
     }
 
     private static void checkPluginInfo() {
@@ -309,29 +252,26 @@ public class MainClass {
                 JOptionPane.showMessageDialog(null, "Not 64 Bit", "ERROR", JOptionPane.ERROR_MESSAGE);
                 return;
             }
-
             startOrIgnoreUpdateAndExit(isUpdateSignExist());
-
             Class.forName("org.sqlite.JDBC");
-
-            initDatabase();
-
             updatePlugins();
 
             //清空tmp
             deleteDir(new File("tmp"));
-
             initFoldersAndFiles();
 
             initializeDllInterface();
 
             EventManagement eventManagement = EventManagement.getInstance();
-
             eventManagement.registerAllHandler();
-
             eventManagement.registerAllListener();
+            ReadConfigsEvent readConfigsEvent = new ReadConfigsEvent();
+            eventManagement.putEvent(readConfigsEvent);
+            eventManagement.waitForEvent(readConfigsEvent);
 
-            sendStartSignal();
+            initDatabase();
+
+            sendBootSystemSignal();
 
             checkRunningDirAtDiskC();
 
@@ -493,10 +433,10 @@ public class MainClass {
         return ret;
     }
 
-    private static void sendStartSignal() {
+    private static void sendBootSystemSignal() {
         EventManagement eventManagement = EventManagement.getInstance();
 
-        Event event = new ReadConfigsAndBootSystemEvent();
+        Event event = new BootSystemEvent();
         eventManagement.putEvent(event);
         if (eventManagement.waitForEvent(event)) {
             throw new RuntimeException("初始化失败");
