@@ -21,7 +21,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Date;
@@ -34,7 +33,7 @@ public class MainClass {
     private static final String GET_ASC_II_64_MD_5 = "62a56c26e1afa7c4fa3f441aadb9d515";
     private static final String HOTKEY_LISTENER_64_MD_5 = "a212cc427a89a614402e59897c82e50d";
     private static final String IS_LOCAL_DISK_64_MD_5 = "f8a71d3496d8cc188713d521e6dfa2b2";
-    private static final String FILE_SEARCHER_USN_64_MD_5 = "c2606457e91117ff1b4ee47de1ed5a86";
+    private static final String FILE_SEARCHER_USN_64_MD_5 = "d18ec43b6ee6a35201c5521cc623fe75";
     private static final String SQLITE3_64_MD_5 = "703bd51c19755db49c9070ceb255dfe5";
     private static final String UPDATER_BAT_64_MD_5 = "357d7cc1cf023cb6c90f73926c6f2f55";
     private static final String GET_HANDLE_64_MD_5 = "ee14698d5c8c8b55110d53012f8b7739";
@@ -79,12 +78,11 @@ public class MainClass {
                     String sql = String.format("SELECT ASCII, PATH FROM %s;", tableName);
                     stmt.executeQuery(sql);
                 }
-                return true;
             } catch (Exception e) {
                 return false;
             }
         }
-        return false;
+        return true;
     }
 
     private static boolean isAtDiskC() {
@@ -184,7 +182,7 @@ public class MainClass {
         }
     }
 
-    private static void initDatabase() throws SQLException, IOException {
+    private static void initDatabase() {
         SQLiteUtil.initAllConnections();
     }
 

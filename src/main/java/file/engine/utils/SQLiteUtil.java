@@ -2,6 +2,8 @@ package file.engine.utils;
 
 import file.engine.IsDebug;
 import file.engine.configs.AllConfigs;
+import file.engine.event.handler.EventManagement;
+import file.engine.event.handler.impl.stop.RestartEvent;
 import org.sqlite.SQLiteConfig;
 
 import java.io.File;
@@ -57,16 +59,6 @@ public class SQLiteUtil {
         return connectionPool.get(key).createStatement();
     }
 
-    /**
-     * 获得数据库连接
-     *
-     * @return connection
-     */
-    public static Connection getConnection(String key) {
-        checkEmpty(key);
-        return connectionPool.get(key);
-    }
-
     private static void checkEmpty(String key) {
         if (connectionPool.isEmpty() || !connectionPool.containsKey(key)) {
             throw new RuntimeException("The connection must be initialized first, call initConnection(String url)");
@@ -93,23 +85,45 @@ public class SQLiteUtil {
         connectionPool.clear();
     }
 
-    public static void initAllConnections() throws IOException, SQLException {
+    public static void initAllConnections() {
         if (!Files.exists(Path.of("data"))) {
-            Files.createDirectories(Path.of("data"));
+            try {
+                Files.createDirectories(Path.of("data"));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
         String disks = AllConfigs.getInstance().getDisks();
         if (disks == null || disks.isEmpty() || disks.isBlank()) {
             throw new RuntimeException("initialize failed");
         }
-        for (String eachDisk : RegexUtil.comma.split(disks)) {
+        String[] split = RegexUtil.comma.split(disks);
+        for (String eachDisk : split) {
             File data = new File("data", eachDisk.charAt(0) + ".db");
-            SQLiteUtil.initConnection("jdbc:sqlite:" + data.getAbsolutePath(), String.valueOf(eachDisk.charAt(0)));
+            try {
+                SQLiteUtil.initConnection("jdbc:sqlite:" + data.getAbsolutePath(), String.valueOf(eachDisk.charAt(0)));
+            } catch (Exception e) {
+                //noinspection ResultOfMethodCallIgnored
+                data.delete();
+                try {
+                    SQLiteUtil.initConnection("jdbc:sqlite:" + data.getAbsolutePath(), String.valueOf(eachDisk.charAt(0)));
+                } catch (SQLException ex) {
+                    //noinspection ResultOfMethodCallIgnored
+                    data.delete();
+                    EventManagement.getInstance().putEvent(new RestartEvent());
+                    break;
+                }
+            }
         }
 
         File cache = new File("data", "cache.db");
-        SQLiteUtil.initConnection("jdbc:sqlite:" + cache.getAbsolutePath(), "cache");
-        createCacheTable();
-        createPriorityTable();
+        try {
+            SQLiteUtil.initConnection("jdbc:sqlite:" + cache.getAbsolutePath(), "cache");
+            createCacheTable();
+            createPriorityTable();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     private static void createPriorityTable() throws SQLException {

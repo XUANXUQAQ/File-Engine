@@ -70,6 +70,8 @@ public class DaemonService {
             boolean isCreated = false;
             try {
                 isCreated = closeSignal.createNewFile();
+                String command = String.format("taskkill /im %s /f", "daemonProcess.exe");
+                Runtime.getRuntime().exec(command);
             } catch (IOException e) {
                 e.printStackTrace();
             }
