@@ -22,7 +22,6 @@ import file.engine.event.handler.impl.configs.AddCmdEvent;
 import file.engine.event.handler.impl.configs.DeleteCmdEvent;
 import file.engine.event.handler.impl.configs.SaveConfigsEvent;
 import file.engine.event.handler.impl.configs.SetConfigsEvent;
-import file.engine.event.handler.impl.daemon.StartDaemonEvent;
 import file.engine.event.handler.impl.download.StartDownloadEvent;
 import file.engine.event.handler.impl.frame.searchBar.*;
 import file.engine.event.handler.impl.frame.settingsFrame.GetExcludeComponentEvent;
@@ -862,10 +861,6 @@ public class AllConfigs {
         tmpEvent = new SetConfigsEvent();
         eventManagement.putEvent(tmpEvent);
         eventManagement.waitForEvent(tmpEvent);
-
-        if (!IsDebug.isDebug()) {
-            eventManagement.putEvent(new StartDaemonEvent(new File("").getAbsolutePath()));
-        }
     }
 
     @EventRegister(registerClass = SetConfigsEvent.class)
