@@ -15,9 +15,6 @@ using namespace std;
 
 constexpr auto MAXVOL = 3;
 
-//数据库锁，保证只有一条线程写入数据库
-static mutex mutex_lock;
-
 static volatile UINT tasksFinished = 0;
 static volatile UINT totalTasks = 0;
 
@@ -32,10 +29,11 @@ typedef unordered_map<DWORDLONG, pfrn_name> Frn_Pfrn_Name_Map;
 
 class volume {
 public:
-	volume(const char vol, sqlite3* database, vector<string> ignorePaths) {
+	volume(const char vol, sqlite3* database, vector<string> ignorePaths, const char* priorityDbPath) {
 		this->vol = vol;
 		hVol = nullptr;
 		path = "";
+		strcpy_s(this->priorityDbPath, priorityDbPath);
 		db = database;
 		addIgnorePath(ignorePaths);
 	}
@@ -62,7 +60,6 @@ public:
 			)
 		{
 			try {
-				mutex_lock.lock();
 				if (initPriorityMap(priorityMap))
 				{
 					initAllPrepareStatement();
@@ -85,8 +82,7 @@ public:
 			catch (exception& e)
 			{
 				cerr << e.what() << endl;
-			}		
-			mutex_lock.unlock();			
+			}
 		}
 	}
 
@@ -98,6 +94,7 @@ private:
 	Frn_Pfrn_Name_Map frnPfrnNameMap;
 	sqlite3* db;
 	CString path;
+	char priorityDbPath[500];
 	sqlite3_stmt* stmt0 = nullptr;
 	sqlite3_stmt* stmt1 = nullptr;
 	sqlite3_stmt* stmt2 = nullptr;
@@ -228,8 +225,10 @@ inline bool volume::initPriorityMap(PriorityMap& priority_map) const
 	char* error;
 	char** pResult;
 	int row, column;
+	sqlite3* cacheDb;
 	const string sql = "select * from priority;";
-	const size_t ret = sqlite3_get_table(db, sql.c_str(), &pResult, &row, &column, &error);
+	sqlite3_open(priorityDbPath, &cacheDb);
+	const size_t ret = sqlite3_get_table(cacheDb, sql.c_str(), &pResult, &row, &column, &error);
 	if (ret != SQLITE_OK)
 	{
 		cerr << "error init priority map" << error << endl;
@@ -247,6 +246,7 @@ inline bool volume::initPriorityMap(PriorityMap& priority_map) const
 		priority_map.insert(pairPriority);
 	}
 	sqlite3_free_table(pResult);
+	sqlite3_close(cacheDb);
 	return true;
 }
 

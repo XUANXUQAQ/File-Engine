@@ -13,12 +13,13 @@ import file.engine.event.handler.impl.database.*;
 import file.engine.event.handler.impl.stop.RestartEvent;
 import file.engine.event.handler.impl.taskbar.ShowTaskBarMessageEvent;
 import file.engine.utils.CachedThreadPoolUtil;
+import file.engine.utils.RegexUtil;
 import file.engine.utils.SQLiteUtil;
 import file.engine.utils.TranslateUtil;
+import lombok.Data;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -50,7 +51,7 @@ public class DatabaseService {
      * 获取数据库缓存条目数量，用于判断软件是否还能继续写入缓存
      */
     private void initCacheNum() {
-        try (PreparedStatement stmt = SQLiteUtil.getPreparedStatement("SELECT COUNT(PATH) FROM cache;");
+        try (PreparedStatement stmt = SQLiteUtil.getPreparedStatement("SELECT COUNT(PATH) FROM cache;", "cache");
              ResultSet resultSet = stmt.executeQuery()) {
             cacheNum.set(resultSet.getInt(1));
         } catch (Exception throwables) {
@@ -163,7 +164,7 @@ public class DatabaseService {
         String sql = "DELETE FROM %s where PATH=\"%s\";";
         command = String.format(sql, "list" + asciiGroup, path);
         if (command != null && isCommandNotRepeat(command)) {
-            addToCommandSet(new SQLWithTaskId(SqlTaskIds.DELETE_FROM_LIST, command));
+            addToCommandSet(new SQLWithTaskId(command, SqlTaskIds.DELETE_FROM_LIST, String.valueOf(path.charAt(0))));
         }
     }
 
@@ -174,7 +175,7 @@ public class DatabaseService {
         String columnName = "list" + asciiGroup;
         String command = String.format(commandTemplate, columnName, asciiSum, path, priority);
         if (command != null && isCommandNotRepeat(command)) {
-            addToCommandSet(new SQLWithTaskId(SqlTaskIds.INSERT_TO_LIST, command));
+            addToCommandSet(new SQLWithTaskId(command, SqlTaskIds.INSERT_TO_LIST, String.valueOf(path.charAt(0))));
         }
     }
 
@@ -219,7 +220,7 @@ public class DatabaseService {
     private int getPriorityBySuffix(String suffix) {
         String sqlTemplate = "select PRIORITY from priority where suffix=\"%s\"";
         String sql = String.format(sqlTemplate, suffix);
-        try (PreparedStatement pStmt = SQLiteUtil.getPreparedStatement(sql)) {
+        try (PreparedStatement pStmt = SQLiteUtil.getPreparedStatement(sql, "cache")) {
             ResultSet resultSet = pStmt.executeQuery();
             if (resultSet.next()) {
                 String priority = resultSet.getString("PRIORITY");
@@ -247,7 +248,7 @@ public class DatabaseService {
     private void addFileToCache(String path) {
         String command = "INSERT OR IGNORE INTO cache(PATH) VALUES(\"" + path + "\");";
         if (isCommandNotRepeat(command)) {
-            addToCommandSet(new SQLWithTaskId(SqlTaskIds.INSERT_TO_CACHE, command));
+            addToCommandSet(new SQLWithTaskId(command, SqlTaskIds.INSERT_TO_CACHE, "cache"));
             if (IsDebug.isDebug()) {
                 System.out.println("添加" + path + "到缓存");
             }
@@ -257,7 +258,7 @@ public class DatabaseService {
     private void removeFileFromCache(String path) {
         String command = "DELETE from cache where PATH=" + "\"" + path + "\";";
         if (isCommandNotRepeat(command)) {
-            addToCommandSet(new SQLWithTaskId(SqlTaskIds.DELETE_FROM_CACHE, command));
+            addToCommandSet(new SQLWithTaskId(command, SqlTaskIds.DELETE_FROM_CACHE, "cache"));
             if (IsDebug.isDebug()) {
                 System.out.println("删除" + path + "到缓存");
             }
@@ -271,11 +272,9 @@ public class DatabaseService {
     private void executeAllCommands() {
         if (!commandSet.isEmpty()) {
             LinkedHashSet<SQLWithTaskId> tempCommandSet = new LinkedHashSet<>(commandSet);
-            Connection connection = SQLiteUtil.getConnection();
             try {
-                connection.setAutoCommit(false);
                 for (SQLWithTaskId each : tempCommandSet) {
-                    try (PreparedStatement pStmt = SQLiteUtil.getPreparedStatement(each.sql)) {
+                    try (PreparedStatement pStmt = SQLiteUtil.getPreparedStatement(each.sql, each.key)) {
                         if (IsDebug.isDebug()) {
                             System.out.println("----------------------------------------------");
                             System.out.println("执行SQL命令--" + each.sql);
@@ -291,13 +290,6 @@ public class DatabaseService {
                     for (SQLWithTaskId each : tempCommandSet) {
                         System.err.println("执行失败：" + each.sql + "----------------任务组：" + each.taskId);
                     }
-                }
-            } finally {
-                try {
-                    connection.commit();
-                    connection.setAutoCommit(true);
-                } catch (SQLException throwables) {
-                    throwables.printStackTrace();
                 }
             }
         }
@@ -345,10 +337,12 @@ public class DatabaseService {
     }
 
     private void createAllIndex() {
-        commandSet.add(new SQLWithTaskId(SqlTaskIds.CREATE_INDEX, "CREATE INDEX IF NOT EXISTS cache_index ON cache(PATH);"));
-        for (int i = 0; i <= Constants.ALL_TABLE_NUM; ++i) {
-            String createIndex = "CREATE INDEX IF NOT EXISTS list" + i + "_index ON list" + i + "(PRIORITY);";
-            commandSet.add(new SQLWithTaskId(SqlTaskIds.CREATE_INDEX, createIndex));
+        commandSet.add(new SQLWithTaskId("CREATE INDEX IF NOT EXISTS cache_index ON cache(PATH);", SqlTaskIds.CREATE_INDEX, "cache"));
+        for (String each : RegexUtil.comma.split(AllConfigs.getInstance().getDisks())) {
+            for (int i = 0; i <= Constants.ALL_TABLE_NUM; ++i) {
+                String createIndex = "CREATE INDEX IF NOT EXISTS list" + i + "_index ON list" + i + "(PRIORITY);";
+                commandSet.add(new SQLWithTaskId(createIndex, SqlTaskIds.CREATE_INDEX, String.valueOf(each.charAt(0))));
+            }
         }
     }
 
@@ -357,7 +351,7 @@ public class DatabaseService {
         String absPath = usnSearcher.getAbsolutePath();
         String start = absPath.substring(0, 2);
         String end = "\"" + absPath.substring(2) + "\"";
-        File database = new File("data.db");
+        File database = new File("data");
         try (BufferedWriter buffW = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("user/MFTSearchInfo.dat"), StandardCharsets.UTF_8))) {
             buffW.write(paths);
             buffW.newLine();
@@ -409,8 +403,8 @@ public class DatabaseService {
         createAllIndex();
 //        waitForCommandSet(SqlTaskIds.CREATE_INDEX);
         try {
-            SQLiteUtil.initConnection("jdbc:sqlite:data.db");
-        } catch (SQLException throwable) {
+            SQLiteUtil.initAllConnections();
+        } catch (SQLException | IOException throwable) {
             throwable.printStackTrace();
         }
         EventManagement.getInstance().putEvent(new ShowTaskBarMessageEvent(
@@ -463,10 +457,13 @@ public class DatabaseService {
 //            commandSet.add(new SQLWithTaskId(SqlTaskIds.DROP_INDEX, "DROP INDEX IF EXISTS list" + i + "_index;"));
 //        }
         //创建新表
+        String[] disks = RegexUtil.comma.split(AllConfigs.getInstance().getDisks());
         String sql = "CREATE TABLE IF NOT EXISTS list";
         for (int i = 0; i <= Constants.ALL_TABLE_NUM; i++) {
             String command = sql + i + " " + "(ASCII INT, PATH text unique, PRIORITY INT)" + ";";
-            commandSet.add(new SQLWithTaskId(SqlTaskIds.CREATE_TABLE, command));
+            for (String disk : disks) {
+                commandSet.add(new SQLWithTaskId(command, SqlTaskIds.CREATE_TABLE, String.valueOf(disk.charAt(0))));
+            }
         }
         executeImmediately();
     }
@@ -537,15 +534,17 @@ public class DatabaseService {
         DatabaseService databaseService = getInstance();
         databaseService.setStatus(Enums.DatabaseStatus.VACUUM);
         //执行VACUUM命令
-        try (PreparedStatement stmt = SQLiteUtil.getPreparedStatement("VACUUM;")) {
-            stmt.execute();
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        } finally {
-            if (IsDebug.isDebug()) {
-                System.out.println("结束优化");
+        for (String eachDisk : RegexUtil.comma.split(AllConfigs.getInstance().getDisks())) {
+            try (PreparedStatement stmt = SQLiteUtil.getPreparedStatement("VACUUM;", String.valueOf(eachDisk.charAt(0)))) {
+                stmt.execute();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            } finally {
+                if (IsDebug.isDebug()) {
+                    System.out.println("结束优化");
+                }
+                databaseService.setStatus(Enums.DatabaseStatus.NORMAL);
             }
-            databaseService.setStatus(Enums.DatabaseStatus.NORMAL);
         }
     }
 
@@ -556,24 +555,22 @@ public class DatabaseService {
         int priority = event1.priority;
         DatabaseService databaseService = getInstance();
         databaseService.addToCommandSet(
-                new SQLWithTaskId(SqlTaskIds.UPDATE_SUFFIX,
-                        String.format("INSERT INTO priority VALUES(\"%s\", %d);", suffix, priority)));
+                new SQLWithTaskId(String.format("INSERT INTO priority VALUES(\"%s\", %d);", suffix, priority), SqlTaskIds.UPDATE_SUFFIX, "cache"));
     }
 
     @EventRegister(registerClass = ClearSuffixPriorityMapEvent.class)
     private static void clearSuffixPriorityMapEvent(Event event) {
         DatabaseService databaseService = getInstance();
-        databaseService.addToCommandSet(new SQLWithTaskId(SqlTaskIds.UPDATE_SUFFIX, "DELETE FROM priority;"));
+        databaseService.addToCommandSet(new SQLWithTaskId("DELETE FROM priority;", SqlTaskIds.UPDATE_SUFFIX, "cache"));
         databaseService.addToCommandSet(
-                new SQLWithTaskId(SqlTaskIds.UPDATE_SUFFIX, "INSERT INTO priority VALUES(\"defaultPriority\", 0);"));
+                new SQLWithTaskId("INSERT INTO priority VALUES(\"defaultPriority\", 0);", SqlTaskIds.UPDATE_SUFFIX, "cache"));
     }
 
     @EventRegister(registerClass = DeleteFromSuffixPriorityMapEvent.class)
     private static void deleteFromSuffixPriorityMapEvent(Event event) {
         DeleteFromSuffixPriorityMapEvent delete = (DeleteFromSuffixPriorityMapEvent) event;
         DatabaseService databaseService = getInstance();
-        databaseService.addToCommandSet(new SQLWithTaskId(SqlTaskIds.UPDATE_SUFFIX,
-                String.format("DELETE FROM priority where SUFFIX=\"%s\"", delete.suffix)));
+        databaseService.addToCommandSet(new SQLWithTaskId(String.format("DELETE FROM priority where SUFFIX=\"%s\"", delete.suffix), SqlTaskIds.UPDATE_SUFFIX, "cache"));
     }
 
     @EventRegister(registerClass = UpdateSuffixPriorityEvent.class)
@@ -592,14 +589,11 @@ public class DatabaseService {
         SQLiteUtil.closeAll();
     }
 
+    @Data
     private static class SQLWithTaskId {
         private final String sql;
         private final SqlTaskIds taskId;
-
-        private SQLWithTaskId(SqlTaskIds taskId, String sql) {
-            this.sql = sql;
-            this.taskId = taskId;
-        }
+        private final String key;
     }
 
     private enum SqlTaskIds {

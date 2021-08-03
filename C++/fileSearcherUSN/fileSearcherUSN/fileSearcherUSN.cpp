@@ -9,18 +9,21 @@
 typedef struct {
 	char disk;
 	vector<string> ignorePath;
+	sqlite3* db;
+	char priorityMapDbPath[1000];
 } parameter;
-
-sqlite3* db;
 
 void initUSN(parameter p);
 void splitString(char* str, vector<string>& vec);
 
 
 void initUSN(const parameter p) {
-	volume volumeInstance(p.disk, db, p.ignorePath);
+	sqlite3_exec(p.db, "BEGIN;", nullptr, nullptr, nullptr);
+	volume volumeInstance(p.disk, p.db, p.ignorePath, p.priorityMapDbPath);
 	volumeInstance.initVolume();
 	tasksFinished++;
+	sqlite3_exec(p.db, "COMMIT;", nullptr, nullptr, nullptr);
+	sqlite3_close(p.db);
 #ifdef TEST
 	cout << "path : " << p.disk << endl;
 	cout << "Initialize done " << p.disk << endl;
@@ -65,23 +68,8 @@ int main() {
 	sqlite3_config(SQLITE_CONFIG_MULTITHREAD);
 	sqlite3_config(SQLITE_CONFIG_MEMSTATUS, 0);
 
-	size_t ret = sqlite3_open(output, &db);
-	if (SQLITE_OK != ret) {
-		cout << "error opening database" << endl;
-		return 0;
-	}
-
-	sqlite3_exec(db, "PRAGMA TEMP_STORE=MEMORY;", nullptr, nullptr, nullptr);
-	sqlite3_exec(db, "PRAGMA journal_mode=OFF;", nullptr, nullptr, nullptr);
-	sqlite3_exec(db, "PRAGMA cache_size=262144;", nullptr, nullptr, nullptr);
-	sqlite3_exec(db, "PRAGMA page_size=65535;", nullptr, nullptr, nullptr);
-	sqlite3_exec(db, "PRAGMA auto_vacuum=0;", nullptr, nullptr, nullptr);
-	sqlite3_exec(db, "PRAGMA mmap_size=4096;", nullptr, nullptr, nullptr);
-
 	splitString(diskPath, diskVec);
 	splitString(ignorePath, ignorePathsVec);
-
-	sqlite3_exec(db, "BEGIN;", nullptr, nullptr, nullptr);
 
 	for (auto& iter : diskVec)
 	{
@@ -90,6 +78,27 @@ int main() {
 			parameter p;
 			p.disk = disk;
 			p.ignorePath = ignorePathsVec;
+			char tmpDbPath[1000];
+			strcpy_s(tmpDbPath, output);
+			strcat_s(tmpDbPath, "\\");
+			int length = strlen(tmpDbPath);
+			tmpDbPath[length] = disk;
+			tmpDbPath[length + 1] = '\0';
+			strcat_s(tmpDbPath, ".db");
+			size_t ret = sqlite3_open(tmpDbPath, &p.db);
+			if (SQLITE_OK != ret) {
+				cout << "error opening database" << endl;
+				return 0;
+			}
+			tmpDbPath[strlen(tmpDbPath) - 4] = '\0';
+			strcat_s(tmpDbPath, "cache.db");
+			strcpy_s(p.priorityMapDbPath, tmpDbPath);
+			sqlite3_exec(p.db, "PRAGMA TEMP_STORE=MEMORY;", nullptr, nullptr, nullptr);
+			sqlite3_exec(p.db, "PRAGMA journal_mode=OFF;", nullptr, nullptr, nullptr);
+			sqlite3_exec(p.db, "PRAGMA cache_size=262144;", nullptr, nullptr, nullptr);
+			sqlite3_exec(p.db, "PRAGMA page_size=65535;", nullptr, nullptr, nullptr);
+			sqlite3_exec(p.db, "PRAGMA auto_vacuum=0;", nullptr, nullptr, nullptr);
+			sqlite3_exec(p.db, "PRAGMA mmap_size=4096;", nullptr, nullptr, nullptr);
 			totalTasks++;
 			thread t(initUSN, p);
 			t.detach();
@@ -99,8 +108,6 @@ int main() {
 	while (tasksFinished < totalTasks) {
 		Sleep(10);
 	}
-	sqlite3_exec(db, "COMMIT;", nullptr, nullptr, nullptr);
-	sqlite3_close(db);
 	return 0;
 }
 
