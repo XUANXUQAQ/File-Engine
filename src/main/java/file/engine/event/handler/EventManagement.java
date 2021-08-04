@@ -113,11 +113,15 @@ public class EventManagement {
         return stacktrace[3];
     }
 
-    private void doAllMethod(ConcurrentLinkedQueue<Method> todo) {
-        if (todo == null) {
+    /**
+     * 执行所有监听了该Event的任务链
+     * @param methodChains 任务链
+     */
+    private void doAllMethod(ConcurrentLinkedQueue<Method> methodChains) {
+        if (methodChains == null) {
             return;
         }
-        for (Method each : todo) {
+        for (Method each : methodChains) {
             try {
                 each.invoke(null);
             } catch (IllegalAccessException | InvocationTargetException e) {
@@ -157,6 +161,9 @@ public class EventManagement {
         return !exit.get();
     }
 
+    /**
+     * 注册所有事件处理器
+     */
     public void registerAllHandler() {
         try {
             ClassScannerUtil.searchAndRun(EventRegister.class, (annotationClass, method) -> {
@@ -175,6 +182,9 @@ public class EventManagement {
         }
     }
 
+    /**
+     * 注册所有时间监听器
+     */
     public void registerAllListener() {
         try {
             ClassScannerUtil.searchAndRun(EventListener.class, (annotationClass, method) -> {
@@ -221,6 +231,9 @@ public class EventManagement {
         }
     }
 
+    /**
+     * 开启异步任务处理中心
+     */
     private void startAsyncEventHandler() {
         CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
         for (int i = 0; i < 4; i++) {
@@ -261,10 +274,17 @@ public class EventManagement {
         }
     }
 
+    /**
+     * 检查是否所有任务执行完毕再推出
+     * @return boolean
+     */
     private boolean isEventHandlerNotExit() {
         return (!exit.get() || !blockEventQueue.isEmpty() || !asyncEventQueue.isEmpty());
     }
 
+    /**
+     * 开启同步任务事件处理中心
+     */
     private void startBlockEventHandler() {
         CachedThreadPoolUtil.getInstance().executeTaskNoRejection(() -> {
             try {

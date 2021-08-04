@@ -41,6 +41,10 @@ public class MainClass {
     private static final String DAEMON_PROCESS_64_MD_5 = "c00ca7ad707a9feca4f4486c2df92127";
     private static final String SHORTCUT_GEN_MD_5 = "fa4e26f99f3dcd58d827828c411ea5d7";
 
+    /**
+     * 加载本地释放的dll
+     * @throws ClassNotFoundException 加载失败
+     */
     private static void initializeDllInterface() throws ClassNotFoundException {
         Class.forName("file.engine.dllInterface.FileMonitor");
         Class.forName("file.engine.dllInterface.IsLocalDisk");
@@ -49,6 +53,10 @@ public class MainClass {
         Class.forName("file.engine.dllInterface.GetHandle");
     }
 
+    /**
+     * 如果有更新标志，更新插件
+     * @throws FileNotFoundException 找不到文件更新失败
+     */
     private static void updatePlugins() throws FileNotFoundException {
         File sign = new File("user/updatePlugin");
         File tmpPlugins = new File("tmp/pluginsUpdate");
@@ -72,6 +80,11 @@ public class MainClass {
         }
     }
 
+    /**
+     * 检查数据库中表是否存在
+     * @param tableNames 所有待检测的表名
+     * @return true如果所有都存在
+     */
     private static boolean isTableExist(ArrayList<String> tableNames) {
         for (String each : RegexUtil.comma.split(AllConfigs.getInstance().getDisks())) {
             try (Statement stmt = SQLiteUtil.getStatement(String.valueOf(each.charAt(0)))) {
@@ -86,10 +99,18 @@ public class MainClass {
         return true;
     }
 
+    /**
+     * 检查是否安装在C盘
+     * @return Boolean
+     */
     private static boolean isAtDiskC() {
         return new File("").getAbsolutePath().startsWith("C:");
     }
 
+    /**
+     * 检查数据库是否损坏
+     * @return boolean
+     */
     private static boolean isDatabaseDamaged() {
         ArrayList<String> list = new ArrayList<>();
         for (int i = 0; i <= Constants.ALL_TABLE_NUM; i++) {
@@ -98,6 +119,10 @@ public class MainClass {
         return !isTableExist(list);
     }
 
+    /**
+     * 清空一个目录，不删除目录本身
+     * @param file 目录文件
+     */
     private static void deleteDir(File file) {
         if (!file.exists()) {
             return;
@@ -118,6 +143,10 @@ public class MainClass {
         }
     }
 
+    /**
+     * 删除文件更新标志
+     * @throws InterruptedException exception
+     */
     private static void deleteUpdater() throws InterruptedException {
         boolean ret = false;
         int count = 0;
@@ -134,6 +163,9 @@ public class MainClass {
         }
     }
 
+    /**
+     * 检查当前版本
+     */
     private static void checkVersion() {
         if (AllConfigs.getInstance().isCheckUpdateStartup()) {
             EventManagement eventManagement = EventManagement.getInstance();
@@ -147,6 +179,9 @@ public class MainClass {
         }
     }
 
+    /**
+     * 检查API过旧的插件
+     */
     private static void checkOldApiPlugin() {
         EventManagement eventManagement = EventManagement.getInstance();
         TranslateUtil translateUtil = TranslateUtil.getInstance();
@@ -159,6 +194,9 @@ public class MainClass {
         }
     }
 
+    /**
+     * 检查重复加载的插件
+     */
     private static void checkRepeatPlugin() {
         EventManagement eventManagement = EventManagement.getInstance();
         TranslateUtil translateUtil = TranslateUtil.getInstance();
@@ -171,6 +209,9 @@ public class MainClass {
         }
     }
 
+    /**
+     * 检查加载失败的插件
+     */
     private static void checkErrorPlugin() {
         EventManagement eventManagement = EventManagement.getInstance();
         TranslateUtil translateUtil = TranslateUtil.getInstance();
@@ -183,10 +224,16 @@ public class MainClass {
         }
     }
 
+    /**
+     * 初始化数据库
+     */
     private static void initDatabase() {
         SQLiteUtil.initAllConnections();
     }
 
+    /**
+     * 检查所有插件信息
+     */
     private static void checkPluginInfo() {
         checkOldApiPlugin();
         checkRepeatPlugin();
@@ -194,6 +241,9 @@ public class MainClass {
         checkPluginVersion();
     }
 
+    /**
+     * 检查插件的版本信息
+     */
     private static void checkPluginVersion() {
         if (AllConfigs.getInstance().isCheckUpdateStartup()) {
             CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
@@ -215,6 +265,9 @@ public class MainClass {
         }
     }
 
+    /**
+     * 检查软件是否运行在C盘
+     */
     private static void checkRunningDirAtDiskC() {
         EventManagement eventManagement = EventManagement.getInstance();
         TranslateUtil translateUtil = TranslateUtil.getInstance();
@@ -261,18 +314,22 @@ public class MainClass {
 
             initializeDllInterface();
 
+            // 初始化事件注册中心，注册所有事件
             EventManagement eventManagement = EventManagement.getInstance();
             eventManagement.registerAllHandler();
             eventManagement.registerAllListener();
+            // 发送读取所有配置时间，初始化配置
             ReadConfigsEvent readConfigsEvent = new ReadConfigsEvent();
             eventManagement.putEvent(readConfigsEvent);
             eventManagement.waitForEvent(readConfigsEvent);
             if (!IsDebug.isDebug()) {
+                // 发送启动守护进程时间，启动守护进程
                 eventManagement.putEvent(new StartDaemonEvent(new File("").getAbsolutePath()));
             }
 
             initDatabase();
 
+            // 初始化全部完成，发出启动系统事件
             sendBootSystemSignal();
 
             checkRunningDirAtDiskC();
@@ -294,6 +351,10 @@ public class MainClass {
         private static final AtomicInteger count = new AtomicInteger();
     }
 
+    /**
+     * 主循环
+     * @throws InterruptedException sleep exception
+     */
     private static void mainLoop() throws InterruptedException {
         Date startTime = new Date();
         Date endTime;
@@ -312,6 +373,7 @@ public class MainClass {
         EventManagement eventManagement = EventManagement.getInstance();
         TranslateUtil translateUtil = TranslateUtil.getInstance();
 
+        // 数据库损坏或者重启次数超过3次，需要重建索引
         if (isDatabaseDamaged || isCheckIndex) {
             eventManagement.putEvent(new ShowTaskBarMessageEvent(
                     translateUtil.getTranslation("Info"),
@@ -388,6 +450,10 @@ public class MainClass {
         return java.awt.MouseInfo.getPointerInfo().getLocation();
     }
 
+    /**
+     * 检查启动次数，若已超过三次则发出重新更新索引信号
+     * @return true如果启动超过三次
+     */
     private static boolean checkIndex() {
         int startTimes = 0;
         File startTimeCount = new File("user/startTimeCount.dat");
@@ -435,6 +501,9 @@ public class MainClass {
         return ret;
     }
 
+    /**
+     * 初始化全部完成，发出启动系统事件
+     */
     private static void sendBootSystemSignal() {
         EventManagement eventManagement = EventManagement.getInstance();
 
@@ -470,6 +539,12 @@ public class MainClass {
         }
     }
 
+    /**
+     * 检查更新标志并尝试重启更新
+     * @param isUpdate 是否更新
+     * @throws InterruptedException exception
+     * @throws IOException 文件不存在
+     */
     private static void startOrIgnoreUpdateAndExit(boolean isUpdate) throws InterruptedException, IOException {
         if (isUpdate) {
             File closeSignal = new File("tmp/closeDaemon");
@@ -494,6 +569,10 @@ public class MainClass {
         }
     }
 
+    /**
+     * 释放所有文件
+     * @throws IOException 释放失败
+     */
     private static void initFoldersAndFiles() throws IOException {
         boolean isSucceeded;
         //user
