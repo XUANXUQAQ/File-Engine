@@ -739,7 +739,6 @@ public class SearchBar {
                         currentUsingPlugin = null;
                         String substring = ">" + currentPluginIdentifier.substring(0, currentPluginIdentifier.length() - 1);
                         SwingUtilities.invokeLater(() -> {
-//                            todo:隐藏插件图片
                             textField.setText(substring);
                         });
                     }
@@ -2275,7 +2274,6 @@ public class SearchBar {
                 if (currentUsingPlugin != null) {
                     currentPluginIdentifier = s[0];
                     SwingUtilities.invokeLater(() -> {
-//                        todo:显示插件的图片
                         textField.setText("");
                     });
                     return false;
@@ -4297,7 +4295,6 @@ public class SearchBar {
         isWaiting.set(false);
         isMouseDraggedInWindow.set(false);
         currentUsingPlugin = null;
-        // todo:隐藏插件图片
     }
 
     /**
