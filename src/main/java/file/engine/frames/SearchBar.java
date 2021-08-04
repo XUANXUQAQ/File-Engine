@@ -76,6 +76,10 @@ public class SearchBar {
     private Border topBorder;
     private Border middleBorder;
     private Border bottomBorder;
+    private Border pluginFullBorder;
+    private Border pluginTopBorder;
+    private Border pluginMiddleBorder;
+    private Border pluginBottomBorder;
     private final JFrame searchBar;
     private final JLabel label1;
     private final JLabel label2;
@@ -116,6 +120,7 @@ public class SearchBar {
     private final AtomicInteger tempResultNum;  //保存当前tempResults中有多少个结果
     private final AtomicInteger currentLabelSelectedPosition;   //保存当前是哪个label被选中 范围 0 - 7
     private volatile Plugin currentUsingPlugin;
+    private volatile String currentPluginIdentifier;
     private final JPopupMenu menu = new JPopupMenu();
     private final JMenuItem open;
     private final JMenuItem openAsAdmin;
@@ -403,6 +408,11 @@ public class SearchBar {
             bottomBorder = lineBorder;
             fullBorder = lineBorder;
         }
+        Color highContrast = Color.RED;
+        pluginTopBorder = BorderFactory.createMatteBorder(2, 2, 0, 2, highContrast);
+        pluginBottomBorder = BorderFactory.createMatteBorder(0, 2, 2, 2, highContrast);
+        pluginFullBorder = BorderFactory.createMatteBorder(2, 2, 2, 2, highContrast);
+        pluginMiddleBorder = BorderFactory.createMatteBorder(0, 2, 0, 2, highContrast);
     }
 
     private static SearchBar getInstance() {
@@ -725,6 +735,14 @@ public class SearchBar {
                 if (key == 8 && getSearchBarText().isEmpty()) {
                     //消除搜索框为空时按删除键发出的无效提示音
                     arg0.consume();
+                    if (currentUsingPlugin != null) {
+                        currentUsingPlugin = null;
+                        String substring = ">" + currentPluginIdentifier.substring(0, currentPluginIdentifier.length() - 1);
+                        SwingUtilities.invokeLater(() -> {
+//                            todo:隐藏插件图片
+                            textField.setText(substring);
+                        });
+                    }
                 }
                 if (listResultsNum.get() != 0) {
                     if (38 == key) {
@@ -2234,10 +2252,15 @@ public class SearchBar {
         isCacheAndPrioritySearched.set(false);
     }
 
-    //设置当前运行模式
-    private void setRunningMode() {
+    /**
+     * 设置当前运行模式
+     * @return 是否发送startTime以及开始信号
+     */
+    private boolean setRunningMode() {
+        if (currentUsingPlugin != null) {
+            return true;
+        }
         String text = getSearchBarText();
-        final StringBuilder strb = new StringBuilder();
         if (text == null || text.isEmpty()) {
             runningMode = Enums.RunningMode.NORMAL_MODE;
         } else {
@@ -2249,20 +2272,19 @@ public class SearchBar {
                 String subText = text.substring(1);
                 String[] s = blank.split(subText);
                 currentUsingPlugin = PluginService.getInstance().getPluginInfoByIdentifier(s[0]).plugin;
-                int length = s.length;
-                if (currentUsingPlugin != null && length > 1) {
-                    for (int i = 1; i < length - 1; ++i) {
-                        strb.append(s[i]).append(" ");
-                    }
-                    strb.append(s[length - 1]);
-                    currentUsingPlugin.textChanged(strb.toString());
-                    currentUsingPlugin.clearResultQueue();
-                    strb.delete(0, strb.length());
+                if (currentUsingPlugin != null) {
+                    currentPluginIdentifier = s[0];
+                    SwingUtilities.invokeLater(() -> {
+//                        todo:显示插件的图片
+                        textField.setText("");
+                    });
+                    return false;
                 }
             } else {
                 runningMode = Enums.RunningMode.NORMAL_MODE;
             }
         }
+        return true;
     }
 
     /**
@@ -2295,21 +2317,29 @@ public class SearchBar {
 
     private void addTextFieldDocumentListener() {
         textField.getDocument().addDocumentListener(new DocumentListener() {
+            private boolean isSendSignal;
+
             @Override
             public void insertUpdate(DocumentEvent e) {
                 changeFontOnDisplayFailed();
                 clearAllAndResetAll();
-                setRunningMode();
-                startTime = System.currentTimeMillis();
-                startSignal.set(true);
-                isNotSqlInitialized.set(true);
+                isSendSignal = setRunningMode();
+                if (isSendSignal) {
+                    startTime = System.currentTimeMillis();
+                    startSignal.set(true);
+                    isNotSqlInitialized.set(true);
+                }
+                if (runningMode == Enums.RunningMode.PLUGIN_MODE && currentUsingPlugin != null) {
+                    currentUsingPlugin.textChanged(getSearchBarText());
+                    currentUsingPlugin.clearResultQueue();
+                }
             }
 
             @Override
             public void removeUpdate(DocumentEvent e) {
                 changeFontOnDisplayFailed();
                 clearAllAndResetAll();
-                setRunningMode();
+                isSendSignal = setRunningMode();
                 if (getSearchBarText().isEmpty()) {
                     listResultsNum.set(0);
                     tempResultNum.set(0);
@@ -2318,9 +2348,15 @@ public class SearchBar {
                     startSignal.set(false);
                     isNotSqlInitialized.set(false);
                 } else {
-                    startTime = System.currentTimeMillis();
-                    startSignal.set(true);
-                    isNotSqlInitialized.set(true);
+                    if (isSendSignal) {
+                        startTime = System.currentTimeMillis();
+                        startSignal.set(true);
+                        isNotSqlInitialized.set(true);
+                    }
+                    if (runningMode == Enums.RunningMode.PLUGIN_MODE && currentUsingPlugin != null) {
+                        currentUsingPlugin.textChanged(getSearchBarText());
+                        currentUsingPlugin.clearResultQueue();
+                    }
                 }
             }
 
@@ -3136,25 +3172,54 @@ public class SearchBar {
         label8.setBorder(null);
     }
 
+    private void setBorder0(JComponent component, int type, Border topBorder, Border bottomBorder, Border middleBorder, Border fullBorder) {
+        switch (type) {
+            case 1:
+                // 顶部
+                component.setBorder(topBorder);
+                break;
+            case 2:
+                // 底部
+                component.setBorder(bottomBorder);
+                break;
+            case 3:
+                // 左右
+                component.setBorder(middleBorder);
+                break;
+            case 4:
+                // 全部
+                component.setBorder(fullBorder);
+                break;
+        }
+    }
+
+    private void chooseAndSetBorder(JComponent component, int type) {
+        if (currentUsingPlugin != null && runningMode == Enums.RunningMode.PLUGIN_MODE) {
+            setBorder0(component, type, pluginTopBorder, pluginBottomBorder, pluginMiddleBorder, pluginFullBorder);
+        } else {
+            setBorder0(component, type, topBorder, bottomBorder, middleBorder, fullBorder);
+        }
+    }
+
     private void setBorderOnVisible() {
         try {
             while (isVisible()) {
                 String text = getSearchBarText();
                 if (text == null || text.isEmpty()) {
                     clearAllLabelBorder();
-                    textField.setBorder(fullBorder);
+                    chooseAndSetBorder(textField, 4);
                 } else {
                     if (showingMode == Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
-                        textField.setBorder(topBorder);
+                        chooseAndSetBorder(textField, 1);
                     } else {
-                        textField.setBorder(bottomBorder);
+                        chooseAndSetBorder(textField, 2);
                     }
                     int resultNum = listResultsNum.get();
                     if (resultNum == 0 || resultNum == 1) {
                         if (showingMode == Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
-                            label1.setBorder(bottomBorder);
+                            chooseAndSetBorder(label1, 2);
                         } else {
-                            label1.setBorder(topBorder);
+                            chooseAndSetBorder(label1, 1);
                         }
                         label2.setBorder(null);
                         label3.setBorder(null);
@@ -3165,11 +3230,11 @@ public class SearchBar {
                         label8.setBorder(null);
                     } else if (resultNum == 2) {
                         if (showingMode == Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
-                            label1.setBorder(middleBorder);
-                            label2.setBorder(bottomBorder);
+                            chooseAndSetBorder(label1, 3);
+                            chooseAndSetBorder(label2, 2);
                         } else {
-                            label1.setBorder(topBorder);
-                            label2.setBorder(middleBorder);
+                            chooseAndSetBorder(label1, 1);
+                            chooseAndSetBorder(label2, 3);
                         }
                         label3.setBorder(null);
                         label4.setBorder(null);
@@ -3179,13 +3244,13 @@ public class SearchBar {
                         label8.setBorder(null);
                     } else if (resultNum == 3) {
                         if (showingMode == Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
-                            label1.setBorder(middleBorder);
-                            label2.setBorder(middleBorder);
-                            label3.setBorder(bottomBorder);
+                            chooseAndSetBorder(label1, 3);
+                            chooseAndSetBorder(label2, 3);
+                            chooseAndSetBorder(label3, 2);
                         } else {
-                            label1.setBorder(topBorder);
-                            label2.setBorder(middleBorder);
-                            label3.setBorder(middleBorder);
+                            chooseAndSetBorder(label1, 1);
+                            chooseAndSetBorder(label2, 3);
+                            chooseAndSetBorder(label3, 3);
                         }
                         label4.setBorder(null);
                         label5.setBorder(null);
@@ -3194,14 +3259,15 @@ public class SearchBar {
                         label8.setBorder(null);
                     } else if (resultNum == 4) {
                         if (showingMode == Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
-                            label1.setBorder(middleBorder);
-                            label2.setBorder(middleBorder);
-                            label3.setBorder(middleBorder);
-                            label4.setBorder(bottomBorder);
+                            chooseAndSetBorder(label1, 3);
+                            chooseAndSetBorder(label2, 3);
+                            chooseAndSetBorder(label3, 3);
+                            chooseAndSetBorder(label4, 2);
                         } else {
-                            label1.setBorder(topBorder);
-                            label2.setBorder(middleBorder);
-                            label3.setBorder(middleBorder);
+                            chooseAndSetBorder(label1, 1);
+                            chooseAndSetBorder(label2, 3);
+                            chooseAndSetBorder(label3, 3);
+
                             label4.setBorder(middleBorder);
                         }
                         label5.setBorder(null);
@@ -3210,81 +3276,81 @@ public class SearchBar {
                         label8.setBorder(null);
                     } else if (resultNum == 5) {
                         if (showingMode == Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
-                            label1.setBorder(middleBorder);
-                            label2.setBorder(middleBorder);
-                            label3.setBorder(middleBorder);
-                            label4.setBorder(middleBorder);
-                            label5.setBorder(bottomBorder);
+                            chooseAndSetBorder(label1, 3);
+                            chooseAndSetBorder(label2, 3);
+                            chooseAndSetBorder(label3, 3);
+                            chooseAndSetBorder(label4, 3);
+                            chooseAndSetBorder(label5, 2);
                         } else {
-                            label1.setBorder(topBorder);
-                            label2.setBorder(middleBorder);
-                            label3.setBorder(middleBorder);
-                            label4.setBorder(middleBorder);
-                            label5.setBorder(middleBorder);
+                            chooseAndSetBorder(label1, 1);
+                            chooseAndSetBorder(label2, 3);
+                            chooseAndSetBorder(label3, 3);
+                            chooseAndSetBorder(label4, 3);
+                            chooseAndSetBorder(label5, 3);
                         }
                         label6.setBorder(null);
                         label7.setBorder(null);
                         label8.setBorder(null);
                     } else if (resultNum == 6) {
                         if (showingMode == Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
-                            label1.setBorder(middleBorder);
-                            label2.setBorder(middleBorder);
-                            label3.setBorder(middleBorder);
-                            label4.setBorder(middleBorder);
-                            label5.setBorder(middleBorder);
-                            label6.setBorder(bottomBorder);
+                            chooseAndSetBorder(label1, 3);
+                            chooseAndSetBorder(label2, 3);
+                            chooseAndSetBorder(label3, 3);
+                            chooseAndSetBorder(label4, 3);
+                            chooseAndSetBorder(label5, 3);
+                            chooseAndSetBorder(label6, 2);
                         } else {
-                            label1.setBorder(topBorder);
-                            label2.setBorder(middleBorder);
-                            label3.setBorder(middleBorder);
-                            label4.setBorder(middleBorder);
-                            label5.setBorder(middleBorder);
-                            label6.setBorder(middleBorder);
+                            chooseAndSetBorder(label1, 1);
+                            chooseAndSetBorder(label2, 3);
+                            chooseAndSetBorder(label3, 3);
+                            chooseAndSetBorder(label4, 3);
+                            chooseAndSetBorder(label5, 3);
+                            chooseAndSetBorder(label6, 3);
                         }
                         label7.setBorder(null);
                         label8.setBorder(null);
                     } else if (resultNum == 7) {
                         if (showingMode == Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
-                            label1.setBorder(middleBorder);
-                            label2.setBorder(middleBorder);
-                            label3.setBorder(middleBorder);
-                            label4.setBorder(middleBorder);
-                            label5.setBorder(middleBorder);
-                            label6.setBorder(middleBorder);
-                            label7.setBorder(bottomBorder);
+                            chooseAndSetBorder(label1, 3);
+                            chooseAndSetBorder(label2, 3);
+                            chooseAndSetBorder(label3, 3);
+                            chooseAndSetBorder(label4, 3);
+                            chooseAndSetBorder(label5, 3);
+                            chooseAndSetBorder(label6, 3);
+                            chooseAndSetBorder(label7, 2);
                         } else {
-                            label1.setBorder(topBorder);
-                            label2.setBorder(middleBorder);
-                            label3.setBorder(middleBorder);
-                            label4.setBorder(middleBorder);
-                            label5.setBorder(middleBorder);
-                            label6.setBorder(middleBorder);
-                            label7.setBorder(middleBorder);
+                            chooseAndSetBorder(label1, 1);
+                            chooseAndSetBorder(label2, 3);
+                            chooseAndSetBorder(label3, 3);
+                            chooseAndSetBorder(label4, 3);
+                            chooseAndSetBorder(label5, 3);
+                            chooseAndSetBorder(label6, 3);
+                            chooseAndSetBorder(label7, 3);
                         }
                         label8.setBorder(null);
                     } else {
                         if (showingMode == Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
-                            label1.setBorder(middleBorder);
-                            label2.setBorder(middleBorder);
-                            label3.setBorder(middleBorder);
-                            label4.setBorder(middleBorder);
-                            label5.setBorder(middleBorder);
-                            label6.setBorder(middleBorder);
-                            label7.setBorder(middleBorder);
-                            label8.setBorder(bottomBorder);
+                            chooseAndSetBorder(label1, 3);
+                            chooseAndSetBorder(label2, 3);
+                            chooseAndSetBorder(label3, 3);
+                            chooseAndSetBorder(label4, 3);
+                            chooseAndSetBorder(label5, 3);
+                            chooseAndSetBorder(label6, 3);
+                            chooseAndSetBorder(label7, 3);
+                            chooseAndSetBorder(label8, 2);
                         } else {
-                            label1.setBorder(topBorder);
-                            label2.setBorder(middleBorder);
-                            label3.setBorder(middleBorder);
-                            label4.setBorder(middleBorder);
-                            label5.setBorder(middleBorder);
-                            label6.setBorder(middleBorder);
-                            label7.setBorder(middleBorder);
-                            label8.setBorder(middleBorder);
+                            chooseAndSetBorder(label1, 1);
+                            chooseAndSetBorder(label2, 3);
+                            chooseAndSetBorder(label3, 3);
+                            chooseAndSetBorder(label4, 3);
+                            chooseAndSetBorder(label5, 3);
+                            chooseAndSetBorder(label6, 3);
+                            chooseAndSetBorder(label7, 3);
+                            chooseAndSetBorder(label8, 2);
                         }
                     }
                 }
-                TimeUnit.MILLISECONDS.sleep(15);
+                TimeUnit.MILLISECONDS.sleep(150);
             }
         } catch (InterruptedException ignored) {
         } finally {
@@ -4230,6 +4296,8 @@ public class SearchBar {
         isCacheAndPrioritySearched.set(false);
         isWaiting.set(false);
         isMouseDraggedInWindow.set(false);
+        currentUsingPlugin = null;
+        // todo:隐藏插件图片
     }
 
     /**
