@@ -20,6 +20,8 @@ import lombok.Data;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -395,7 +397,28 @@ public class DatabaseService {
         }
     }
 
+    private void checkFileSize() {
+        SQLiteUtil.closeAll();
+        for (String eachDisk : RegexUtil.comma.split(AllConfigs.getInstance().getDisks())) {
+            try {
+                String name = eachDisk.charAt(0) + ".db";
+                long length = Files.size(Path.of("data/" + name));
+                if (length > 6L * 1024 * 1024 * 100) {
+                    // 大小超过600M
+                    if (IsDebug.isDebug()) {
+                        System.out.println("当前文件" + name + "大小超过600M，已删除");
+                    }
+                    Files.delete(Path.of("data/" + name));
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        SQLiteUtil.initAllConnections();
+    }
+
     private void updateLists(String ignorePath) {
+        checkFileSize();
         recreateDatabase();
         waitForCommandSet(SqlTaskIds.CREATE_TABLE);
         SQLiteUtil.closeAll();

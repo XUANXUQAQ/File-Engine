@@ -66,23 +66,10 @@ public class SQLiteUtil {
         }
     }
 
-    private static void initConnection(String url, String key) throws SQLException {
+    public static void initConnection(String url, String key) throws SQLException {
         initSqliteConfig();
         Connection conn = DriverManager.getConnection(url, sqLiteConfig.toProperties());
         connectionPool.put(key, conn);
-    }
-
-    /**
-     * 关闭指定数据库连接
-     * @param key key
-     */
-    private static void closeConnection(String key) {
-        try {
-            connectionPool.get(key).close();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        connectionPool.remove(key);
     }
 
     /**
@@ -102,7 +89,7 @@ public class SQLiteUtil {
         connectionPool.clear();
     }
 
-    public static void initAllConnections() {
+    private static void deleteMalFormedFile() {
         if (Files.exists(Path.of("user/malformedDB"))) {
             String line;
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream("user/malformedDB"), StandardCharsets.UTF_8))) {
@@ -121,6 +108,9 @@ public class SQLiteUtil {
                 e.printStackTrace();
             }
         }
+    }
+
+    private static String initialize() {
         if (!Files.exists(Path.of("data"))) {
             try {
                 Files.createDirectories(Path.of("data"));
@@ -132,7 +122,12 @@ public class SQLiteUtil {
         if (disks == null || disks.isEmpty() || disks.isBlank()) {
             throw new RuntimeException("initialize failed");
         }
-        String[] split = RegexUtil.comma.split(disks);
+        return disks;
+    }
+
+    public static void initAllConnections() {
+        deleteMalFormedFile();
+        String[] split = RegexUtil.comma.split(initialize());
         ArrayList<File> malformedFiles = new ArrayList<>();
         for (String eachDisk : split) {
             File data = new File("data", eachDisk.charAt(0) + ".db");
