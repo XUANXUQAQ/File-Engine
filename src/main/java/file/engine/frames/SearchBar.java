@@ -3115,7 +3115,7 @@ public class SearchBar {
                 }
                 if (IsDebug.isDebug()) {
                     System.out.println(tempResultNum.get());
-                    System.out.println(tempResults);
+//                    System.out.println(tempResults);
                     System.out.println("thread status: " + threadStatus.get());
                     System.out.println("tmp thread status: " + tmpThreadStatus);
                     System.out.println("all thread status: " + allThreadStatus.get());

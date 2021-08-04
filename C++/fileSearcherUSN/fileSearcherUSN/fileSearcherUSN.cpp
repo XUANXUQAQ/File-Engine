@@ -2,6 +2,7 @@
 #include "stdafx.h"
 #include "Volume.h"
 #include <fstream>
+#include <thread>
 // #define TEST
 
 
@@ -59,13 +60,11 @@ inline bool initPriorityMap(PriorityMap& priority_map, const char* priorityDbPat
 }
 
 void splitString(char* str, vector<string>& vec) {
-	char* _diskPath;
 	char* remainDisk = nullptr;
-	char* p;
 	char diskPath[5000];
 	strcpy_s(diskPath, str);
-	_diskPath = diskPath;
-	p = strtok_s(_diskPath, ",", &remainDisk);
+	char* _diskPath = diskPath;
+	char* p = strtok_s(_diskPath, ",", &remainDisk);
 	if (p != nullptr) {
 		vec.emplace_back(p);
 	}
@@ -100,6 +99,8 @@ int main() {
 	splitString(ignorePath, ignorePathsVec);
 
 	bool isPriorityMapInitialized = false;
+	vector<thread> threads;
+	// 创建线程
 	for (auto& iter : diskVec)
 	{
 		const auto disk = iter[0];
@@ -136,8 +137,14 @@ int main() {
 			sqlite3_exec(p.db, "PRAGMA page_size=65535;", nullptr, nullptr, nullptr);
 			sqlite3_exec(p.db, "PRAGMA auto_vacuum=0;", nullptr, nullptr, nullptr);
 			sqlite3_exec(p.db, "PRAGMA mmap_size=4096;", nullptr, nullptr, nullptr);
-			initUSN(p);
+			// initUSN(p);
+			threads.emplace_back(thread(initUSN, p));
 		}
+	}
+
+	for (auto& each_thread : threads)
+	{
+		each_thread.join();
 	}
 	return 0;
 }

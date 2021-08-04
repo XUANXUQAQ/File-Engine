@@ -5,10 +5,10 @@
 #include <winioctl.h>
 #include <fstream>
 #include <string>
-#include <utility>
+// #include <utility>
 #include <vector>
 #include <algorithm>
-#include <mutex>
+// #include <mutex>
 #include "sqlite3.h"
 //#define TEST
 
@@ -486,10 +486,9 @@ inline int volume::getAscIISum(string name) {
 }
 
 inline void volume::getPath(DWORDLONG frn, CString& path) {
-	Frn_Pfrn_Name_Map::iterator it;
 	const auto end = frnPfrnNameMap.end();
 	while (true) {
-		it = frnPfrnNameMap.find(frn);
+		auto it = frnPfrnNameMap.find(frn);
 		if (it == end) {
 			path = L":" + path;
 			return;
@@ -556,9 +555,7 @@ inline bool volume::getUSNInfo() {
 		) {
 		return true;
 	}
-	else {
-		return false;
-	}
+	return false;
 }
 
 inline bool volume::getUSNJournal() {
@@ -585,7 +582,7 @@ inline bool volume::getUSNJournal() {
 		Buffer,
 		BUF_LEN,
 		&usnDataSize,
-		NULL))
+		nullptr))
 	{
 
 		DWORD dwRetBytes = usnDataSize - sizeof(USN);
@@ -601,7 +598,7 @@ inline bool volume::getUSNJournal() {
 
 			frnPfrnNameMap[UsnRecord->FileReferenceNumber] = pfrnName;
 			// 获取下一个记录  
-			auto recordLen = UsnRecord->RecordLength;
+			const auto recordLen = UsnRecord->RecordLength;
 			dwRetBytes -= recordLen;
 			UsnRecord = reinterpret_cast<PUSN_RECORD>(reinterpret_cast<PCHAR>(UsnRecord) + recordLen);
 		}
@@ -630,8 +627,6 @@ inline bool volume::deleteUSN() const
 		CloseHandle(hVol);
 		return true;
 	}
-	else {
-		CloseHandle(hVol);
-		return false;
-	}
+	CloseHandle(hVol);
+	return false;
 }
