@@ -13,6 +13,7 @@ import file.engine.event.handler.impl.taskbar.ShowTaskBarMessageEvent;
 import file.engine.event.handler.impl.taskbar.ShowTrayIconEvent;
 import file.engine.utils.CachedThreadPoolUtil;
 import file.engine.utils.TranslateUtil;
+import lombok.Data;
 
 import javax.swing.*;
 import java.awt.*;
@@ -33,16 +34,11 @@ public class TaskBar {
 
     private static volatile TaskBar INSTANCE = null;
 
+    @Data
     private static class MessageStruct {
         private final String caption;
         private final String message;
         private final Event event;
-
-        private MessageStruct(String caption, String message, Event event) {
-            this.caption = caption;
-            this.message = message;
-            this.event = event;
-        }
     }
 
     private TaskBar() {

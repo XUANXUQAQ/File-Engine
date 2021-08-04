@@ -35,6 +35,7 @@ import file.engine.services.download.DownloadManager;
 import file.engine.services.download.DownloadService;
 import file.engine.utils.RegexUtil;
 import file.engine.utils.TranslateUtil;
+import lombok.Data;
 
 import javax.swing.*;
 import java.awt.*;
@@ -891,13 +892,9 @@ public class AllConfigs {
         }
     }
 
+    @Data
     public static class AddressUrl {
         public final String fileEngineVersionUrl;
         public final String pluginListUrl;
-
-        private AddressUrl(String fileEngineVersionUrl, String pluginListUrl) {
-            this.fileEngineVersionUrl = fileEngineVersionUrl;
-            this.pluginListUrl = pluginListUrl;
-        }
     }
 }
