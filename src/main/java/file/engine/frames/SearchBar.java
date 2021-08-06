@@ -14,7 +14,6 @@ import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
 import file.engine.event.handler.impl.database.AddToCacheEvent;
 import file.engine.event.handler.impl.database.DeleteFromCacheEvent;
-import file.engine.event.handler.impl.database.DeleteFromDatabaseEvent;
 import file.engine.event.handler.impl.database.UpdateDatabaseEvent;
 import file.engine.event.handler.impl.frame.searchBar.*;
 import file.engine.event.handler.impl.frame.settingsFrame.AddCacheEvent;
@@ -27,6 +26,7 @@ import file.engine.services.DatabaseService;
 import file.engine.services.plugin.system.Plugin;
 import file.engine.services.plugin.system.PluginService;
 import file.engine.utils.*;
+import file.engine.utils.bit.Bit;
 import file.engine.utils.file.CopyFileUtil;
 
 import javax.swing.*;
@@ -48,7 +48,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
-import java.util.List;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -2251,6 +2250,7 @@ public class SearchBar {
 
     /**
      * 设置当前运行模式
+     *
      * @return 是否发送startTime以及开始信号
      */
     private boolean setRunningMode() {
@@ -3078,21 +3078,21 @@ public class SearchBar {
         LinkedHashMap<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>>
                 nonFormattedSql = getNonFormattedSqlFromTableQueue();
         AtomicBoolean isResultsFull = new AtomicBoolean(false);
-        AtomicLong threadStatus = new AtomicLong(0);
-        AtomicLong allThreadStatus = new AtomicLong(0);
+        Bit threadStatus = new Bit(new byte[]{0});
+        Bit allThreadStatus = new Bit(new byte[]{0});
+        Bit number = new Bit(new byte[]{1});
 
-        AtomicLong number = new AtomicLong(1);
-        LinkedHashMap<Long, ConcurrentSkipListSet<String>> containerMap = new LinkedHashMap<>();
+        LinkedHashMap<String, ConcurrentSkipListSet<String>> containerMap = new LinkedHashMap<>();
 
         ConcurrentLinkedQueue<Runnable> taskQueue = new ConcurrentLinkedQueue<>();
 
         //添加搜索任务
         nonFormattedSql.forEach((commandsMap, container) -> {
             for (String eachDisk : RegexUtil.comma.split(AllConfigs.getInstance().getDisks())) {
-                long currentThreadNum = number.get() << 1;
-                allThreadStatus.set(allThreadStatus.get() | currentThreadNum);
-                containerMap.put(currentThreadNum, container);
-                number.set(number.get() << 1);
+                number.shiftLeft();
+                Bit currentThreadNum = new Bit(number);
+                allThreadStatus.set(allThreadStatus.or(currentThreadNum));
+                containerMap.put(currentThreadNum.toString(), container);
                 taskQueue.add(() -> {
                     long time = System.currentTimeMillis();
                     try {
@@ -3118,7 +3118,7 @@ public class SearchBar {
                         });
                     } finally {
                         //执行完后将对应的线程flag设为1
-                        threadStatus.set(threadStatus.get() | currentThreadNum);
+                        threadStatus.set(threadStatus.or(currentThreadNum));
                     }
                 });
             }
@@ -3138,35 +3138,36 @@ public class SearchBar {
 
         cachedThreadPoolUtil.executeTask(() -> {
             try {
-                long tmpThreadStatus = 0;
+                Bit tmpThreadStatus = new Bit(new byte[]{0});
                 //线程状态的记录从第二个位开始，所以初始值为2
-                long start = 2;
-                long loopCount = 1;
+                Bit start = new Bit(new byte[]{1, 0});
+                int loopCount = 1;
                 long startSearchTime = System.currentTimeMillis();
-                while (tmpThreadStatus != allThreadStatus.get() || threadStatus.get() == 0) {
+                Bit zero = new Bit(new byte[]{0});
+                Bit one = new Bit(new byte[]{1});
+                while (!tmpThreadStatus.equals(allThreadStatus) || threadStatus.or(zero).equals(zero)) {
                     TimeUnit.MILLISECONDS.sleep(5);
                     if (startTime > startSearchTime) {
                         break;
                     }
-                    ConcurrentSkipListSet<String> results = containerMap.get(start);
+                    ConcurrentSkipListSet<String> results = containerMap.get(start.toString());
                     if (results != null) {
                         tempResults.addAll(results);
                         tempResultNum.set(tempResults.size());
                     }
                     //当线程完成，threadStatus中的位会被设置为1
                     //这时，将threadStatus和start做与运算，然后向左移到第一位，如果为1，则线程已完成搜索
-                    if (((threadStatus.get() & start) >> loopCount) == 1) {
-                        tmpThreadStatus = tmpThreadStatus | start;
-                        start = start << 1;
+                    if (((threadStatus.and(start)).shiftRight(loopCount)).equals(one)) {
+                        tmpThreadStatus = tmpThreadStatus.or(start);
+                        start.shiftLeft();
                         loopCount++;
                     }
                 }
                 if (IsDebug.isDebug()) {
                     System.out.println(tempResultNum.get());
-//                    System.out.println(tempResults);
-                    System.out.println("thread status: " + threadStatus.get());
+                    System.out.println("thread status: " + threadStatus);
                     System.out.println("tmp thread status: " + tmpThreadStatus);
-                    System.out.println("all thread status: " + allThreadStatus.get());
+                    System.out.println("all thread status: " + allThreadStatus);
                 }
             } catch (InterruptedException ignored) {
             }
@@ -3607,8 +3608,6 @@ public class SearchBar {
             } else {
                 if (isResultFromCache) {
                     EventManagement.getInstance().putEvent(new DeleteFromCacheEvent(path));
-                } else {
-                    EventManagement.getInstance().putEvent(new DeleteFromDatabaseEvent(new LinkedHashSet<>(List.of(path))));
                 }
             }
         }
@@ -3708,9 +3707,11 @@ public class SearchBar {
 
     /**
      * 在路径中添加省略号
-     * @param path path
-     * @param fileName fileName
+     *
+     * @param path           path
+     * @param fileName       fileName
      * @param maxShowCharNum 最多显示的字符数量
+     * @param addOffset      需要增加的偏移，如前方已经有字符串占位
      * @return 生成后的字符串
      */
     private String getContractPath(String path, String fileName, int maxShowCharNum, int addOffset) {
@@ -3719,7 +3720,7 @@ public class SearchBar {
         StringBuilder lastTmpPath = new StringBuilder();
         int contractLimit = 35;
         for (int i = 0; i < split.length / 2; i++) {
-            if (tmpPath.length() + lastTmpPath.length() + split[i].length() + split[split.length - i - 1].length() + addOffset + fileName.length() + "...".length() < maxShowCharNum) {
+            if (tmpPath.length() + lastTmpPath.length() + contractLimit * 2 + addOffset + fileName.length() + "...".length() < maxShowCharNum) {
                 tmpPath.append(split[i]).append("\\");
                 if (split[i].length() > contractLimit) {
                     tmpPath.append(split[i], 0, contractLimit).append("\\");
@@ -3727,12 +3728,11 @@ public class SearchBar {
                 if (split[split.length - i - 1].length() > contractLimit) {
                     lastTmpPath.append("\\").append(split[split.length - i - 1], 0, contractLimit);
                 }
-            } else if (tmpPath.length() + lastTmpPath.length() + split[i].length() + fileName.length() + "...".length() + addOffset < maxShowCharNum) {
-                if (split[i].length() > contractLimit) {
+            } else if (tmpPath.length() + lastTmpPath.length() + contractLimit + fileName.length() + "...".length() + addOffset < maxShowCharNum) {
+                if (split[i].length() > contractLimit && split[split.length - i - 1].length() > contractLimit ||
+                        split[i].length() > contractLimit && split[split.length - i - 1].length() <= contractLimit) {
                     tmpPath.append(split[i], 0, contractLimit).append("\\");
-                }
-            } else if (tmpPath.length() + lastTmpPath.length() + split[split.length - 1 - i].length() + fileName.length() + "...".length() + addOffset < maxShowCharNum) {
-                if (split[split.length - i - 1].length() > contractLimit) {
+                } else if (split[split.length - i - 1].length() > contractLimit) {
                     lastTmpPath.append("\\").append(split[split.length - i - 1], 0, contractLimit);
                 }
             } else {
@@ -3755,7 +3755,8 @@ public class SearchBar {
 
     /**
      * 高亮显示
-     * @param html 待处理的html
+     *
+     * @param html     待处理的html
      * @param keywords 高亮关键字
      * @return 处理后带html
      */
@@ -3776,10 +3777,10 @@ public class SearchBar {
     }
 
 
-
     /**
      * 根据path或command生成显示html
-     * @param path path
+     *
+     * @param path    path
      * @param command command
      * @return html
      */
@@ -3793,16 +3794,16 @@ public class SearchBar {
             String commandName = info[0];
             int maxShowCharNum = getMaxShowCharsNum(label1);
             if (commandPath.length() + ">>".length() > maxShowCharNum) {
-                commandPath = getContractPath(commandPath, "", maxShowCharNum, 20);
+                commandPath = getContractPath(commandPath, "", maxShowCharNum, 10);
                 if (commandPath.isEmpty()) {
                     commandPath = commandPath.substring(0, maxShowCharNum - 10) + "...";
                 }
             }
             return String.format(template,
                     "<div>" +
-                        highLight(commandName, new String[]{getSearchBarText()}) +
-                        "<br><font size=\"-2\">" + "&gt;&gt;" + commandPath +
-                    "</div>");
+                            highLight(commandName, new String[]{getSearchBarText()}) +
+                            "<br><font size=\"-2\">" + "&gt;&gt;" + commandPath +
+                            "</div>");
         } else if (command == null) {
             // 普通模式
             int maxShowCharNum = getMaxShowCharsNum(label1);
@@ -3818,11 +3819,11 @@ public class SearchBar {
             }
             return String.format(template,
                     "<div>" +
-                        highLight(fileName, keywords) +
-                        "<font size=\"-2\">" +
+                            highLight(fileName, keywords) +
+                            "<font size=\"-2\">" +
                             getBlank(blankNUm) + parentPath +
-                        "</font>" +
-                    "</div>");
+                            "</font>" +
+                            "</div>");
         }
         return template.replace("%s", "");
     }
@@ -3830,7 +3831,7 @@ public class SearchBar {
     private String getBlank(int num) {
         return "&nbsp;".repeat(Math.max(0, num));
     }
-    
+
     /**
      * 在label上显示当前文件路径对应文件的信息
      *
@@ -3843,7 +3844,11 @@ public class SearchBar {
         boolean[] isEmpty = new boolean[1];
         String allHtml = getHtml(path, null, isEmpty);
         if (isEmpty[0]) {
-            label.setName("<html><body><font size=\"-2\">" + path.substring(0, getMaxShowCharsNum(label1) - "...".length()) + "..." + "</font></body></html>");
+            int maxShowCharsNum = getMaxShowCharsNum(label1);
+            boolean isContract = path.length() > maxShowCharsNum;
+            String showPath = isContract ? path.substring(0, maxShowCharsNum - "...".length()) : path;
+            String add = isContract ? "..." : "";
+            label.setName("<html><body><font size=\"-2\">" + showPath + add + "</font></body></html>");
         } else {
             label.setName("");
         }

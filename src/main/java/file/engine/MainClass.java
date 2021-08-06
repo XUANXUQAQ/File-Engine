@@ -1,6 +1,8 @@
 package file.engine;
 
 import com.alibaba.fastjson.JSONObject;
+import com.github.promeg.pinyinhelper.Pinyin;
+import com.github.promeg.tinypinyin.lexicons.java.cncity.CnCityDict;
 import file.engine.configs.AllConfigs;
 import file.engine.configs.Enums;
 import file.engine.constant.Constants;
@@ -329,6 +331,8 @@ public class MainClass {
 
             initDatabase();
 
+            initPinyin();
+
             // 初始化全部完成，发出启动系统事件
             sendBootSystemSignal();
 
@@ -349,6 +353,10 @@ public class MainClass {
 
     static class CursorCount {
         private static final AtomicInteger count = new AtomicInteger();
+    }
+
+    private static void initPinyin() {
+        Pinyin.init(Pinyin.newConfig().with(CnCityDict.getInstance()));
     }
 
     /**
