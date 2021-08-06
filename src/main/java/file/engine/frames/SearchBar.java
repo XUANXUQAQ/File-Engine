@@ -3078,18 +3078,18 @@ public class SearchBar {
         LinkedHashMap<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>>
                 nonFormattedSql = getNonFormattedSqlFromTableQueue();
         AtomicBoolean isResultsFull = new AtomicBoolean(false);
-        AtomicInteger threadStatus = new AtomicInteger(0);
-        AtomicInteger allThreadStatus = new AtomicInteger(0);
+        AtomicLong threadStatus = new AtomicLong(0);
+        AtomicLong allThreadStatus = new AtomicLong(0);
 
-        AtomicInteger number = new AtomicInteger(1);
-        LinkedHashMap<Integer, ConcurrentSkipListSet<String>> containerMap = new LinkedHashMap<>();
+        AtomicLong number = new AtomicLong(1);
+        LinkedHashMap<Long, ConcurrentSkipListSet<String>> containerMap = new LinkedHashMap<>();
 
         ConcurrentLinkedQueue<Runnable> taskQueue = new ConcurrentLinkedQueue<>();
 
         //添加搜索任务
         nonFormattedSql.forEach((commandsMap, container) -> {
             for (String eachDisk : RegexUtil.comma.split(AllConfigs.getInstance().getDisks())) {
-                int currentThreadNum = number.get() << 1;
+                long currentThreadNum = number.get() << 1;
                 allThreadStatus.set(allThreadStatus.get() | currentThreadNum);
                 containerMap.put(currentThreadNum, container);
                 number.set(number.get() << 1);
@@ -3138,10 +3138,10 @@ public class SearchBar {
 
         cachedThreadPoolUtil.executeTask(() -> {
             try {
-                int tmpThreadStatus = 0;
+                long tmpThreadStatus = 0;
                 //线程状态的记录从第二个位开始，所以初始值为2
-                int start = 2;
-                int loopCount = 1;
+                long start = 2;
+                long loopCount = 1;
                 long startSearchTime = System.currentTimeMillis();
                 while (tmpThreadStatus != allThreadStatus.get() || threadStatus.get() == 0) {
                     TimeUnit.MILLISECONDS.sleep(5);
