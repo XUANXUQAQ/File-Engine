@@ -3846,9 +3846,9 @@ public class SearchBar {
         if (isEmpty[0]) {
             int maxShowCharsNum = getMaxShowCharsNum(label1);
             boolean isContract = path.length() > maxShowCharsNum;
-            String showPath = isContract ? path.substring(0, maxShowCharsNum - "...".length()) : path;
+            String showPath = isContract ? path.substring(0, maxShowCharsNum - "...".length() - 20) : path;
             String add = isContract ? "..." : "";
-            label.setName("<html><body><font size=\"-2\">" + showPath + add + "</font></body></html>");
+            label.setName("<html><body>" + highLight(getFileName(path), keywords) + getBlank(20) + "<font size=\"-2\">" + showPath + add + "</font></body></html>");
         } else {
             label.setName("");
         }
