@@ -2960,11 +2960,7 @@ public class SearchBar {
                     } else {
                         clearAllLabels();
                     }
-                    if (isVisible()) {
-                        TimeUnit.MILLISECONDS.sleep(15);
-                    } else {
-                        TimeUnit.MILLISECONDS.sleep(250);
-                    }
+                    TimeUnit.MILLISECONDS.sleep(250);
                 }
             } catch (InterruptedException ignored) {
             }
@@ -3794,9 +3790,10 @@ public class SearchBar {
             String commandName = info[0];
             int maxShowCharNum = getMaxShowCharsNum(label1);
             if (commandPath.length() + ">>".length() > maxShowCharNum) {
-                commandPath = getContractPath(commandPath, "", maxShowCharNum, 10);
-                if (commandPath.isEmpty()) {
-                    commandPath = commandPath.substring(0, maxShowCharNum - 10) + "...";
+                String show = getContractPath(commandPath, "", maxShowCharNum, 0);
+                if (show.isEmpty()) {
+                    show = commandPath.substring(0, maxShowCharNum - 10) + "...";
+                    commandPath = show;
                 }
             }
             return String.format(template,
@@ -3812,7 +3809,7 @@ public class SearchBar {
             int blankNUm = 20;
             int charNumbers = fileName.length() + parentPath.length() + 20;
             if (charNumbers > maxShowCharNum) {
-                parentPath = getContractPath(parentPath, fileName, maxShowCharNum, 0);
+                parentPath = getContractPath(parentPath, fileName, maxShowCharNum, 20);
                 isParentPathEmpty[0] = parentPath.isEmpty();
             } else {
                 blankNUm = Math.max(maxShowCharNum - fileName.length() - parentPath.length() - 20, 20);
