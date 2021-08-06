@@ -1,6 +1,0 @@
-﻿  pch.cpp
-  dllmain.cpp
-D:\Code\C++\isLocalDisk\isLocalDisk\dllmain.cpp(31,42): error C2664: “UINT GetDriveTypeW(LPCWSTR)”: 无法将参数 1 从“LPCSTR”转换为“LPCWSTR”
-D:\Code\C++\isLocalDisk\isLocalDisk\dllmain.cpp(31,38): message : 与指向的类型无关；强制转换要求 reinterpret_cast、C 样式强制转换或函数样式强制转换
-D:\Windows Kits\10\Include\10.0.18362.0\um\fileapi.h(566,1): message : 参见“GetDriveTypeW”的声明
-D:\Code\C++\isLocalDisk\isLocalDisk\dllmain.cpp(30,5): error C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
