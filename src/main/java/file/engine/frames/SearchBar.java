@@ -2544,6 +2544,10 @@ public class SearchBar {
         getInstance().setSearchBarFontColor(setSearchBarFontColorTask.color);
     }
 
+    static class IsStartTimeSet {
+        static AtomicBoolean isStartTimeSet = new AtomicBoolean(false);
+    }
+
     @EventRegister(registerClass = PreviewSearchBarEvent.class)
     private static void previewSearchBarEvent(Event event) {
         if (isPreviewMode.get()) {
@@ -2559,7 +2563,20 @@ public class SearchBar {
             eventManagement.putEvent(new SetSearchBarLabelFontColorEvent(preview.unchosenLabelFontColor));
             eventManagement.putEvent(new ShowSearchBarEvent(false));
             if (searchBar.getSearchBarText() == null || searchBar.getSearchBarText().isEmpty()) {
-                SwingUtilities.invokeLater(() -> searchBar.textField.setText("a"));
+                CachedThreadPoolUtil.getInstance().executeTask(() -> {
+                    try {
+                        TimeUnit.MILLISECONDS.sleep(50);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    searchBar.textField.setText("a");
+                    if (!IsStartTimeSet.isStartTimeSet.get()) {
+                        IsStartTimeSet.isStartTimeSet.set(true);
+                        searchBar.startTime = System.currentTimeMillis();
+                        searchBar.startSignal.set(true);
+                        searchBar.isNotSqlInitialized.set(true);
+                    }
+                });
             }
         }
     }
@@ -2572,6 +2589,7 @@ public class SearchBar {
     @EventRegister(registerClass = StopPreviewEvent.class)
     private static void stopPreviewEvent(Event event) {
         isPreviewMode.set(false);
+        IsStartTimeSet.isStartTimeSet.set(false);
     }
 
     @EventRegister(registerClass = IsSearchBarVisibleEvent.class)
