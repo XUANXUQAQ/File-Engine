@@ -67,6 +67,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
+import static file.engine.utils.ColorUtils.*;
+
 
 public class SettingsFrame {
     private final Set<String> cacheSet = ConcurrentHashMap.newKeySet();
@@ -664,15 +666,6 @@ public class SettingsFrame {
         }
     }
 
-    private boolean canParseToRGB(String str) {
-        if (str != null) {
-            if (!str.isEmpty()) {
-                return RegexUtil.rgbHexPattern.matcher(str).matches();
-            }
-        }
-        return false;
-    }
-
     private Color getColorFromTextFieldStr(JTextField textField) {
         String tmp;
         return canParseToRGB(tmp = textField.getText()) ? new Color(Integer.parseInt(tmp, 16)) : null;
@@ -833,29 +826,6 @@ public class SettingsFrame {
                 }
             }
         });
-    }
-
-    private String parseColorHex(Color color) {
-        int r = color.getRed();
-        int g = color.getGreen();
-        int b = color.getBlue();
-        StringBuilder rgb = new StringBuilder();
-        if (r == 0) {
-            rgb.append("00");
-        } else {
-            rgb.append(Integer.toHexString(r));
-        }
-        if (g == 0) {
-            rgb.append("00");
-        } else {
-            rgb.append(Integer.toHexString(g));
-        }
-        if (b == 0) {
-            rgb.append("00");
-        } else {
-            rgb.append(Integer.toHexString(b));
-        }
-        return rgb.toString();
     }
 
     private void addPluginOfficialSiteListener() {
@@ -1539,10 +1509,6 @@ public class SettingsFrame {
         labelIcon.setIcon(imageIcon);
         labelVersion.setText(translateUtil.getTranslation("Current Version:") + AllConfigs.version);
         labelCurrentCacheNum.setText(translateUtil.getTranslation("Current Caches Num:") + DatabaseService.getInstance().getCacheNum());
-    }
-
-    private String toRGBHexString(int colorRGB) {
-        return String.format("%06x", colorRGB);
     }
 
     private void setTextFieldAndTextAreaGui() {
