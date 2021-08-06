@@ -56,7 +56,7 @@ public class AllConfigs {
     public static final int defaultWindowBackgroundColor = 0xffffff;
     public static final int defaultBorderColor = 0;
     public static final int defaultFontColor = 0;
-    public static final int defaultFontColorWithCoverage = 0;
+    public static final int defaultFontColorWithCoverage = 0xff3333;
     public static final int defaultSearchbarColor = 0xffffff;
     public static final int defaultSearchbarFontColor = 0;
     private volatile ConfigEntity configEntity;
