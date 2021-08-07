@@ -14,6 +14,8 @@
 #pragma comment(lib, "Ole32.lib")
 #pragma comment( linker, "/subsystem:windows /entry:mainCRTStartup" )
 
+// #define TEST
+
 char g_close_signal_file[1000];
 char g_file_engine_exe_path[1000];
 char g_file_engine_working_dir[1000];
@@ -25,6 +27,7 @@ int checkTimeCount = 100;
 
 static int restart_count = 0;
 static std::time_t restart_time = std::time(nullptr);
+static bool is_restart_on_release_file = false;
 
 bool is_close_exist();
 BOOL find_process(const WCHAR* procName);
@@ -164,10 +167,18 @@ void restart_file_engine(bool isIgnoreCloseFile)
 	if (tmp > 600)
 	{
 		restart_count = 0;
+		is_restart_on_release_file = false;
+	}
+	if (is_restart_on_release_file && restart_count >= 1)
+	{
+		MessageBoxA(nullptr, "Launch failed after 3 retries", "Error", MB_OK);
+		exit(-1);
 	}
 	if (restart_count > 3 || !is_file_exist(g_file_engine_exe_path))
 	{
 		release_all();
+		is_restart_on_release_file = true;
+		restart_count = 0;
 	}
 	restart_count++;
 	CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
