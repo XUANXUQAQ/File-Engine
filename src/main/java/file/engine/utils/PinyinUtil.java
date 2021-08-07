@@ -2,6 +2,8 @@ package file.engine.utils;
 
 import com.github.promeg.pinyinhelper.Pinyin;
 
+import java.util.HashMap;
+
 public class PinyinUtil {
 
     /**
@@ -18,6 +20,23 @@ public class PinyinUtil {
             }
         }
         return false;
+    }
+
+    /**
+     * 挑出字符串中所有的中文，转换成拼音然后返回hash表
+     * @param str 字符串
+     * @return hashMap
+     */
+    public static HashMap<String, String> getChinesePinyinMap(String str) {
+        HashMap<String, String> ret = new HashMap<>();
+        final int length = str.length();
+        for (int i = 0; i < length; i++) {
+            char c = str.charAt(i);
+            if (Pinyin.isChinese(c)) {
+                ret.put(String.valueOf(c), Pinyin.toPinyin(c));
+            }
+        }
+        return ret;
     }
 
     /**

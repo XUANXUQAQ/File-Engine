@@ -54,8 +54,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 
+@SuppressWarnings({"IndexOfReplaceableByContains", "ListIndexOfReplaceableByContains"})
 public class SearchBar {
     private final AtomicBoolean isCacheAndPrioritySearched = new AtomicBoolean(false);
     private final AtomicBoolean isLockMouseMotion = new AtomicBoolean(false);
@@ -3761,8 +3763,17 @@ public class SearchBar {
         for (String keyword : keywords) {
             builder.append(keyword).append("|");
         }
+        // 挑出所有的中文字符
+        Map<String, String> chinesePinyinMap = PinyinUtil.getChinesePinyinMap(html);
+        // 转换成拼音后和keywords匹配，如果发现匹配出成功，则添加到正则表达式中
+        chinesePinyinMap.entrySet()
+                .stream()
+                .filter(pair -> Arrays.stream(keywords)
+                        .anyMatch(each -> each.toLowerCase(Locale.ROOT).indexOf(pair.getValue().toLowerCase(Locale.ROOT)) != -1))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue))
+                .forEach((k, v) -> builder.append(k).append("|"));
         String pattern = builder.substring(0, builder.length() - 1);
-        Pattern compile = Pattern.compile(pattern, Pattern.CASE_INSENSITIVE);
+        Pattern compile = RegexUtil.getPatter(pattern, Pattern.CASE_INSENSITIVE);
         Matcher matcher = compile.matcher(html);
         html = matcher.replaceAll((matchResult) -> {
             String group = matchResult.group();
@@ -3809,7 +3820,7 @@ public class SearchBar {
             int blankNUm = 20;
             int charNumbers = fileName.length() + parentPath.length() + 20;
             if (charNumbers > maxShowCharNum) {
-                parentPath = getContractPath(parentPath, fileName, maxShowCharNum, 20);
+                parentPath = getContractPath(parentPath, fileName, maxShowCharNum, 10);
                 isParentPathEmpty[0] = parentPath.isEmpty();
             } else {
                 blankNUm = Math.max(maxShowCharNum - fileName.length() - parentPath.length() - 20, 20);

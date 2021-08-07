@@ -10,4 +10,6 @@ public class Constants {
     public static final int MAX_SUPPORT_API_DIFFERENCE = 2;
 
     public static final int MIN_FRAME_VISIBLE_TIME = 500;
+
+    public static final int MAX_PATTERN_CACHE_NUM = 20;
 }
