@@ -15,8 +15,35 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="daemonProcess.cpp">
+    <ClCompile Include="launcherWrap.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="zip\zip.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="resource.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="zip\miniz.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="zip\zip.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="launcherWrap.rc">
+      <Filter>资源文件</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="File-Engine.zip" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="file-engine.ico">
+      <Filter>资源文件</Filter>
+    </Image>
   </ItemGroup>
 </Project>
