@@ -686,7 +686,8 @@ public class SearchBar {
                 //保证在执行粘贴操作时不会被提前恢复数据
                 TimeUnit.MILLISECONDS.sleep(500);
                 copyToClipBoard(originalData, false);
-            } catch (InterruptedException ignored) {
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
         });
     }
@@ -1012,7 +1013,8 @@ public class SearchBar {
                     count++;
                     TimeUnit.SECONDS.sleep(1);
                 }
-            } catch (InterruptedException ignored) {
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             } finally {
                 glasspane.stop();
                 frame.setVisible(false);
@@ -1119,7 +1121,7 @@ public class SearchBar {
         if (label != null) {
             SwingUtilities.invokeLater(() -> {
                 String name = label.getName();
-                if (!(name == null || name.isEmpty())) {
+                if (!(name == null || name.isEmpty() || "filled".equals(name))) {
                     String currentText = label.getText();
                     //indexOf效率更高
                     if (currentText == null || currentText.indexOf(":\\") == -1) {
@@ -1143,7 +1145,7 @@ public class SearchBar {
         if (label != null) {
             SwingUtilities.invokeLater(() -> {
                 String name = label.getName();
-                if (!(name == null || name.isEmpty())) {
+                if (!(name == null || name.isEmpty() || "filled".equals(name))) {
                     String currentText = label.getText();
                     //indexOf效率更高
                     if (currentText == null || currentText.indexOf(":\\") != -1) {
@@ -1172,7 +1174,8 @@ public class SearchBar {
                     shouldSaveMousePos.set(true);
                     TimeUnit.MILLISECONDS.sleep(50);
                 }
-            } catch (InterruptedException ignored) {
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
         });
 
@@ -1525,10 +1528,12 @@ public class SearchBar {
     private boolean isLabelEmpty(JLabel label) {
         boolean isEmpty = true;
         String text;
+        String name;
         if (label != null) {
             text = label.getText();
-            if (text != null) {
-                isEmpty = text.isEmpty();
+            name = label.getText();
+            if (text != null && name != null) {
+                isEmpty = text.isEmpty() && name.isEmpty();
             }
         }
         return isEmpty;
@@ -1850,7 +1855,8 @@ public class SearchBar {
 
                         path = listResults.get(currentResultCount.get());
                         showResultOnLabel(path, label8, true);
-                    } catch (ArrayIndexOutOfBoundsException ignored) {
+                    } catch (ArrayIndexOutOfBoundsException e) {
+                        e.printStackTrace();
                     }
                 } else if (runningMode == Enums.RunningMode.COMMAND_MODE) {
                     //到达了最下端，刷新显示
@@ -1878,7 +1884,8 @@ public class SearchBar {
 
                         command = listResults.get(currentResultCount.get());
                         showCommandOnLabel(command, label8, true);
-                    } catch (ArrayIndexOutOfBoundsException ignored) {
+                    } catch (ArrayIndexOutOfBoundsException e) {
+                        e.printStackTrace();
                     }
                 } else if (runningMode == Enums.RunningMode.PLUGIN_MODE) {
                     try {
@@ -1905,7 +1912,8 @@ public class SearchBar {
 
                         command = listResults.get(currentResultCount.get());
                         showPluginResultOnLabel(command, label8, true);
-                    } catch (ArrayIndexOutOfBoundsException ignored) {
+                    } catch (ArrayIndexOutOfBoundsException e) {
+                        e.printStackTrace();
                     }
                 }
                 break;
@@ -1949,7 +1957,8 @@ public class SearchBar {
 
                         path = listResults.get(currentResultCount.get() + 7);
                         showResultOnLabel(path, label8, false);
-                    } catch (ArrayIndexOutOfBoundsException ignored) {
+                    } catch (ArrayIndexOutOfBoundsException e) {
+                        e.printStackTrace();
                     }
                 } else if (runningMode == Enums.RunningMode.COMMAND_MODE) {
                     //到达了最上端，刷新显示
@@ -1977,7 +1986,8 @@ public class SearchBar {
 
                         command = listResults.get(currentResultCount.get() + 7);
                         showCommandOnLabel(command, label8, false);
-                    } catch (ArrayIndexOutOfBoundsException ignored) {
+                    } catch (ArrayIndexOutOfBoundsException e) {
+                        e.printStackTrace();
                     }
                 } else if (runningMode == Enums.RunningMode.PLUGIN_MODE) {
                     try {
@@ -2004,7 +2014,8 @@ public class SearchBar {
 
                         command = listResults.get(currentResultCount.get() + 7);
                         showPluginResultOnLabel(command, label8, false);
-                    } catch (ArrayIndexOutOfBoundsException ignored) {
+                    } catch (ArrayIndexOutOfBoundsException e) {
+                        e.printStackTrace();
                     }
                 }
                 break;
@@ -2267,13 +2278,15 @@ public class SearchBar {
             if (first == ':') {
                 runningMode = Enums.RunningMode.COMMAND_MODE;
             } else if (first == '>') {
-                runningMode = Enums.RunningMode.PLUGIN_MODE;
                 String subText = text.substring(1);
                 String[] s = blank.split(subText);
-                currentUsingPlugin = PluginService.getInstance().getPluginInfoByIdentifier(s[0]).plugin;
-                if (currentUsingPlugin != null) {
-                    currentPluginIdentifier = s[0];
-                    SwingUtilities.invokeLater(() -> textField.setText(""));
+                if (text.charAt(text.length() - 1) == ' ') {
+                    currentUsingPlugin = PluginService.getInstance().getPluginInfoByIdentifier(s[0]).plugin;
+                    if (currentUsingPlugin != null) {
+                        runningMode = Enums.RunningMode.PLUGIN_MODE;
+                        currentPluginIdentifier = s[0];
+                        SwingUtilities.invokeLater(() -> textField.setText(""));
+                    }
                     return false;
                 }
             } else {
@@ -2443,7 +2456,8 @@ public class SearchBar {
                         }
                         TimeUnit.MILLISECONDS.sleep(20);
                     }
-                } catch (InterruptedException ignored) {
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
                 }
             });
         }
@@ -2649,7 +2663,8 @@ public class SearchBar {
                     }
                     TimeUnit.MILLISECONDS.sleep(10);
                 }
-            } catch (InterruptedException ignored) {
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             } finally {
                 GetHandle.INSTANCE.stop();
             }
@@ -2861,49 +2876,14 @@ public class SearchBar {
                     }
                     TimeUnit.MILLISECONDS.sleep(20);
                 }
-            } catch (InterruptedException ignored) {
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
         });
     }
 
     private void tryToShowRecordsWhenHasLabelEmpty() {
-        boolean isLabel1Chosen = false;
-        boolean isLabel2Chosen = false;
-        boolean isLabel3Chosen = false;
-        boolean isLabel4Chosen = false;
-        boolean isLabel5Chosen = false;
-        boolean isLabel6Chosen = false;
-        boolean isLabel7Chosen = false;
-        boolean isLabel8Chosen = false;
         if (currentResultCount.get() < listResultsNum.get()) {
-            int pos = getCurrentLabelPos();
-            switch (pos) {
-                case 0:
-                    isLabel1Chosen = true;
-                    break;
-                case 1:
-                    isLabel2Chosen = true;
-                    break;
-                case 2:
-                    isLabel3Chosen = true;
-                    break;
-                case 3:
-                    isLabel4Chosen = true;
-                    break;
-                case 4:
-                    isLabel5Chosen = true;
-                    break;
-                case 5:
-                    isLabel6Chosen = true;
-                    break;
-                case 6:
-                    isLabel7Chosen = true;
-                    break;
-                case 7:
-                    isLabel8Chosen = true;
-                    break;
-            }
-            //在结果不足8个的时候不断尝试显示
             if (
                     isLabelEmpty(label2) ||
                             isLabelEmpty(label3) ||
@@ -2914,17 +2894,46 @@ public class SearchBar {
                             isLabelEmpty(label8)
             ) {
                 //设置窗口上的文字和图片显示，键盘模式
-                boolean finalIsLabel1Chosen = isLabel1Chosen;
-                boolean finalIsLabel2Chosen = isLabel2Chosen;
-                boolean finalIsLabel3Chosen = isLabel3Chosen;
-                boolean finalIsLabel4Chosen = isLabel4Chosen;
-                boolean finalIsLabel5Chosen = isLabel5Chosen;
-                boolean finalIsLabel6Chosen = isLabel6Chosen;
-                boolean finalIsLabel7Chosen = isLabel7Chosen;
-                boolean finalIsLabel8Chosen = isLabel8Chosen;
+                int pos = getCurrentLabelPos();
+                var ref = new Object() {
+                    boolean isLabel1Chosen = false;
+                    boolean isLabel2Chosen = false;
+                    boolean isLabel3Chosen = false;
+                    boolean isLabel4Chosen = false;
+                    boolean isLabel5Chosen = false;
+                    boolean isLabel6Chosen = false;
+                    boolean isLabel7Chosen = false;
+                    boolean isLabel8Chosen = false;
+                };
+                switch (pos) {
+                    case 0:
+                        ref.isLabel1Chosen = true;
+                        break;
+                    case 1:
+                        ref.isLabel2Chosen = true;
+                        break;
+                    case 2:
+                        ref.isLabel3Chosen = true;
+                        break;
+                    case 3:
+                        ref.isLabel4Chosen = true;
+                        break;
+                    case 4:
+                        ref.isLabel5Chosen = true;
+                        break;
+                    case 5:
+                        ref.isLabel6Chosen = true;
+                        break;
+                    case 6:
+                        ref.isLabel7Chosen = true;
+                        break;
+                    case 7:
+                        ref.isLabel8Chosen = true;
+                        break;
+                }
                 SwingUtilities.invokeLater(() -> showResults(
-                        finalIsLabel1Chosen, finalIsLabel2Chosen, finalIsLabel3Chosen, finalIsLabel4Chosen,
-                        finalIsLabel5Chosen, finalIsLabel6Chosen, finalIsLabel7Chosen, finalIsLabel8Chosen
+                        ref.isLabel1Chosen, ref.isLabel2Chosen, ref.isLabel3Chosen, ref.isLabel4Chosen,
+                        ref.isLabel5Chosen, ref.isLabel6Chosen, ref.isLabel7Chosen, ref.isLabel8Chosen
                 ));
             }
         }
@@ -2940,6 +2949,7 @@ public class SearchBar {
                 EventManagement eventManagement = EventManagement.getInstance();
                 while (eventManagement.isNotMainExit()) {
                     if (!listResults.isEmpty()) {
+                        //在结果不足8个的时候不断尝试显示
                         tryToShowRecordsWhenHasLabelEmpty();
                         String text = getSearchBarText();
                         if (text.isEmpty()) {
@@ -2962,14 +2972,10 @@ public class SearchBar {
                     } else {
                         clearAllLabels();
                     }
-                    // 若不添加，则会导致更新时间太慢而出现有结果但不显示的问题
-                    if (isVisible()) {
-                        TimeUnit.MILLISECONDS.sleep(25);
-                    } else {
-                        TimeUnit.MILLISECONDS.sleep(250);
-                    }
+                    TimeUnit.MILLISECONDS.sleep(250);
                 }
-            } catch (InterruptedException ignored) {
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
         });
     }
@@ -2991,7 +2997,8 @@ public class SearchBar {
                     repaint();
                     TimeUnit.MILLISECONDS.sleep(250);
                 }
-            } catch (InterruptedException ignored) {
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             } finally {
                 isRepaintFrameThreadNotExist.set(true);
             }
@@ -3045,7 +3052,8 @@ public class SearchBar {
                     }
                     TimeUnit.MILLISECONDS.sleep(5);
                 }
-            } catch (InterruptedException ignored) {
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             } finally {
                 isCreated.set(false);
             }
@@ -3172,7 +3180,8 @@ public class SearchBar {
                     System.out.println("tmp thread status: " + tmpThreadStatus);
                     System.out.println("all thread status: " + allThreadStatus);
                 }
-            } catch (InterruptedException ignored) {
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
         });
     }
@@ -3368,7 +3377,8 @@ public class SearchBar {
                 }
                 TimeUnit.MILLISECONDS.sleep(150);
             }
-        } catch (InterruptedException ignored) {
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         } finally {
             clearAllLabelBorder();
             isBorderThreadNotExist.set(true);
@@ -3485,7 +3495,8 @@ public class SearchBar {
                     }
                     TimeUnit.MILLISECONDS.sleep(25);
                 }
-            } catch (InterruptedException ignored) {
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
         });
     }
@@ -3808,7 +3819,9 @@ public class SearchBar {
             if (commandPath.length() + ">>".length() > maxShowCharNum) {
                 String show = getContractPath(commandPath, "", maxShowCharNum, 0);
                 if (show.isEmpty()) {
-                    show = commandPath.substring(0, maxShowCharNum - 10) + "...";
+                    int subNum = Math.max(0, maxShowCharNum - 10);
+                    subNum = Math.min(commandPath.length(), subNum);
+                    show = commandPath.substring(0,subNum) + "...";
                     commandPath = show;
                 }
             }
@@ -3859,11 +3872,13 @@ public class SearchBar {
         if (isEmpty[0]) {
             int maxShowCharsNum = getMaxShowCharsNum(label1);
             boolean isContract = path.length() > maxShowCharsNum;
-            String showPath = isContract ? path.substring(0, maxShowCharsNum - "...".length() - 20) : path;
+            int subNum = Math.max(0, maxShowCharsNum - "...".length() - 20);
+            subNum = Math.min(path.length(), subNum);
+            String showPath = isContract ? path.substring(0, subNum) : path;
             String add = isContract ? "..." : "";
             label.setName("<html><body>" + highLight(getFileName(path), keywords) + getBlank(20) + "<font size=\"-2\">" + showPath + add + "</font></body></html>");
         } else {
-            label.setName("");
+            label.setName("filled");
         }
         label.setText(allHtml);
         ImageIcon icon = GetIconUtil.getInstance().getBigIcon(path, iconSideLength, iconSideLength);
@@ -3905,6 +3920,7 @@ public class SearchBar {
         String name = info[0];
         String showStr = getHtml(null, command, new boolean[1]);
         label.setText(showStr);
+        label.setText("filled");
         ImageIcon imageIcon = getIconUtil.getCommandIcon(colon.split(name)[1], iconSideLength, iconSideLength);
         imageIcon = imageIcon == null ? getIconUtil.getBigIcon(path, iconSideLength, iconSideLength) : imageIcon;
         label.setIcon(imageIcon);
@@ -3966,7 +3982,8 @@ public class SearchBar {
                     path = listResults.get(7);
                     showResultOnLabel(path, label8, isLabel8Chosen);
                 }
-            } catch (IndexOutOfBoundsException ignored) {
+            } catch (IndexOutOfBoundsException e) {
+                e.printStackTrace();
             }
         } else if (runningMode == Enums.RunningMode.COMMAND_MODE) {
             try {
@@ -4004,7 +4021,8 @@ public class SearchBar {
                     command = listResults.get(7);
                     showCommandOnLabel(command, label8, isLabel8Chosen);
                 }
-            } catch (IndexOutOfBoundsException ignored) {
+            } catch (IndexOutOfBoundsException e) {
+                    e.printStackTrace();
             }
         } else if (runningMode == Enums.RunningMode.PLUGIN_MODE) {
             try {
@@ -4042,7 +4060,8 @@ public class SearchBar {
                     command = listResults.get(7);
                     showPluginResultOnLabel(command, label8, isLabel8Chosen);
                 }
-            } catch (IndexOutOfBoundsException ignored) {
+            } catch (IndexOutOfBoundsException e) {
+                    e.printStackTrace();
             }
         }
     }
@@ -4055,6 +4074,7 @@ public class SearchBar {
     private void clearALabel(JLabel label) {
         label.setBackground(null);
         label.setText(null);
+        label.setName(null);
         label.setIcon(null);
     }
 
@@ -4330,7 +4350,8 @@ public class SearchBar {
                         break;
                     }
                 }
-            } catch (InterruptedException ignored) {
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
         }
     }
