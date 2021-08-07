@@ -45,6 +45,9 @@ public class Plugin {
         }
     }
 
+    /**
+     * 所有插件名
+     */
     private void initMethodList() {
         methodList.add("textChanged");
         methodList.add("loadPlugin");
@@ -69,6 +72,12 @@ public class Plugin {
         methodList.add("setCurrentTheme");
     }
 
+    /**
+     * 初始化方法
+     * @param methodName 方法名
+     * @param aClass 插件类名
+     * @throws Exception exception
+     */
     private void loadMethod(String methodName, Class<?> aClass) throws Exception {
         switch (methodName) {
             case "textChanged":
@@ -138,7 +147,7 @@ public class Plugin {
         }
     }
 
-    public void setCurrentTheme(int defaultColor, int chosenLabelColor, int borderColor) {
+    public void setCurrentTheme(int defaultColor, int chosenLabelColor, @Deprecated int borderColor) {
         try {
             pluginSetCurrentTheme.invoke(instance, defaultColor, chosenLabelColor, borderColor);
         } catch (Exception e) {
@@ -308,6 +317,9 @@ public class Plugin {
         }
     }
 
+    /**
+     * 插件的类和实例的基本信息
+     */
     protected static class PluginClassAndInstanceInfo {
         protected PluginClassAndInstanceInfo(Class<?> cls, Object instance) {
             this.cls = cls;

@@ -3899,11 +3899,6 @@ public class SearchBar {
      */
     private void showPluginResultOnLabel(String result, JLabel label, boolean isChosen) {
         currentUsingPlugin.showResultOnLabel(result, label, isChosen);
-        if (isChosen) {
-            label.setForeground(fontColorWithCoverage);
-        } else {
-            label.setForeground(labelFontColor);
-        }
     }
 
     /**
