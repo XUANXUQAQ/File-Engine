@@ -3920,7 +3920,7 @@ public class SearchBar {
         String name = info[0];
         String showStr = getHtml(null, command, new boolean[1]);
         label.setText(showStr);
-        label.setText("filled");
+        label.setName("filled");
         ImageIcon imageIcon = getIconUtil.getCommandIcon(colon.split(name)[1], iconSideLength, iconSideLength);
         imageIcon = imageIcon == null ? getIconUtil.getBigIcon(path, iconSideLength, iconSideLength) : imageIcon;
         label.setIcon(imageIcon);
