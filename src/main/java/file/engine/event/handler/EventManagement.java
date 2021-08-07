@@ -8,6 +8,8 @@ import file.engine.event.handler.impl.stop.RestartEvent;
 import file.engine.utils.CachedThreadPoolUtil;
 import file.engine.utils.clazz.scan.ClassScannerUtil;
 
+import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -68,6 +70,24 @@ public class EventManagement {
     }
 
     /**
+     * 关闭守护进程
+     */
+    private void stopDaemon() {
+        File closeSignal = new File("tmp/closeDaemon");
+        if (!closeSignal.exists()) {
+            boolean isCreated = false;
+            try {
+                isCreated = closeSignal.createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            if (!isCreated) {
+                System.err.println("创建守护进程关闭标志文件失败");
+            }
+        }
+    }
+
+    /**
      * 执行任务
      *
      * @param event 任务
@@ -81,7 +101,7 @@ public class EventManagement {
             cachedThreadPoolUtil.executeTaskNoRejection(() -> {
                 doAllMethod(EVENT_LISTENER_MAP.get(RestartEvent.class));
                 if (event instanceof CloseEvent) {
-                    doAllMethod(EVENT_LISTENER_MAP.get(CloseEvent.class));
+                    stopDaemon();
                 }
             });
             event.setFinished();

@@ -10,7 +10,6 @@ import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
 import file.engine.event.handler.impl.BootSystemEvent;
 import file.engine.event.handler.impl.ReadConfigsEvent;
-import file.engine.event.handler.impl.daemon.StartDaemonEvent;
 import file.engine.event.handler.impl.database.UpdateDatabaseEvent;
 import file.engine.event.handler.impl.frame.settingsFrame.ShowSettingsFrameEvent;
 import file.engine.event.handler.impl.stop.RestartEvent;
@@ -40,7 +39,6 @@ public class MainClass {
     private static final String SQLITE3_64_MD_5 = "703bd51c19755db49c9070ceb255dfe5";
     private static final String UPDATER_BAT_64_MD_5 = "357d7cc1cf023cb6c90f73926c6f2f55";
     private static final String GET_HANDLE_64_MD_5 = "ee14698d5c8c8b55110d53012f8b7739";
-    private static final String DAEMON_PROCESS_64_MD_5 = "c00ca7ad707a9feca4f4486c2df92127";
     private static final String SHORTCUT_GEN_MD_5 = "fa4e26f99f3dcd58d827828c411ea5d7";
 
     /**
@@ -324,10 +322,6 @@ public class MainClass {
             ReadConfigsEvent readConfigsEvent = new ReadConfigsEvent();
             eventManagement.putEvent(readConfigsEvent);
             eventManagement.waitForEvent(readConfigsEvent);
-            if (!IsDebug.isDebug()) {
-                // 发送启动守护进程时间，启动守护进程
-                eventManagement.putEvent(new StartDaemonEvent(new File("").getAbsolutePath()));
-            }
 
             initDatabase();
 
@@ -530,7 +524,6 @@ public class MainClass {
         copyOrIgnoreFile("user/fileSearcherUSN.exe", "/win32-native/fileSearcherUSN.exe", FILE_SEARCHER_USN_64_MD_5);
         copyOrIgnoreFile("user/sqlite3.dll", "/win32-native/sqlite3.dll", SQLITE3_64_MD_5);
         copyOrIgnoreFile("user/getHandle.dll", "/win32-native/getHandle.dll", GET_HANDLE_64_MD_5);
-        copyOrIgnoreFile("user/daemonProcess.exe", "/win32-native/daemonProcess.exe", DAEMON_PROCESS_64_MD_5);
         copyOrIgnoreFile("user/shortcutGenerator.vbs", "/shortcutGenerator.vbs", SHORTCUT_GEN_MD_5);
     }
 
