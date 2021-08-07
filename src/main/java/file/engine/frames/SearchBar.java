@@ -2962,7 +2962,12 @@ public class SearchBar {
                     } else {
                         clearAllLabels();
                     }
-                    TimeUnit.MILLISECONDS.sleep(250);
+                    // 若不添加，则会导致更新时间太慢而出现有结果但不显示的问题
+                    if (isVisible()) {
+                        TimeUnit.MILLISECONDS.sleep(25);
+                    } else {
+                        TimeUnit.MILLISECONDS.sleep(250);
+                    }
                 }
             } catch (InterruptedException ignored) {
             }
@@ -3924,6 +3929,7 @@ public class SearchBar {
      */
     private void showResults(boolean isLabel1Chosen, boolean isLabel2Chosen, boolean isLabel3Chosen, boolean isLabel4Chosen,
                              boolean isLabel5Chosen, boolean isLabel6Chosen, boolean isLabel7Chosen, boolean isLabel8Chosen) {
+        int size;
         if (runningMode == Enums.RunningMode.NORMAL_MODE) {
             try {
                 String path;
@@ -3931,37 +3937,32 @@ public class SearchBar {
                     path = listResults.get(0);
                     showResultOnLabel(path, label1, isLabel1Chosen);
                 }
-                if (listResults.size() >= 1) {
+                size = listResults.size();
+                if (size >= 1) {
                     path = listResults.get(1);
                     showResultOnLabel(path, label2, isLabel2Chosen);
                 }
-
-                if (listResults.size() >= 2) {
+                if (size >= 2) {
                     path = listResults.get(2);
                     showResultOnLabel(path, label3, isLabel3Chosen);
                 }
-
-                if (listResults.size() >= 3) {
+                if (size >= 3) {
                     path = listResults.get(3);
                     showResultOnLabel(path, label4, isLabel4Chosen);
                 }
-
-                if (listResults.size() >= 4) {
+                if (size >= 4) {
                     path = listResults.get(4);
                     showResultOnLabel(path, label5, isLabel5Chosen);
                 }
-
-                if (listResults.size() >= 5) {
+                if (size >= 5) {
                     path = listResults.get(5);
                     showResultOnLabel(path, label6, isLabel6Chosen);
                 }
-
-                if (listResults.size() >= 6) {
+                if (size >= 6) {
                     path = listResults.get(6);
                     showResultOnLabel(path, label7, isLabel7Chosen);
                 }
-
-                if (listResults.size() >= 7) {
+                if (size >= 7) {
                     path = listResults.get(7);
                     showResultOnLabel(path, label8, isLabel8Chosen);
                 }
@@ -3974,38 +3975,32 @@ public class SearchBar {
                     command = listResults.get(0);
                     showCommandOnLabel(command, label1, isLabel1Chosen);
                 }
-
-                if (listResults.size() >= 1) {
+                size = listResults.size();
+                if (size >= 1) {
                     command = listResults.get(1);
                     showCommandOnLabel(command, label2, isLabel2Chosen);
                 }
-
-                if (listResults.size() >= 2) {
+                if (size >= 2) {
                     command = listResults.get(2);
                     showCommandOnLabel(command, label3, isLabel3Chosen);
                 }
-
-                if (listResults.size() >= 3) {
+                if (size >= 3) {
                     command = listResults.get(3);
                     showCommandOnLabel(command, label4, isLabel4Chosen);
                 }
-
-                if (listResults.size() >= 4) {
+                if (size >= 4) {
                     command = listResults.get(4);
                     showCommandOnLabel(command, label5, isLabel5Chosen);
                 }
-
-                if (listResults.size() >= 5) {
+                if (size >= 5) {
                     command = listResults.get(5);
                     showCommandOnLabel(command, label6, isLabel6Chosen);
                 }
-
-                if (listResults.size() >= 6) {
+                if (size >= 6) {
                     command = listResults.get(6);
                     showCommandOnLabel(command, label7, isLabel7Chosen);
                 }
-
-                if (listResults.size() >= 7) {
+                if (size >= 7) {
                     command = listResults.get(7);
                     showCommandOnLabel(command, label8, isLabel8Chosen);
                 }
@@ -4018,38 +4013,32 @@ public class SearchBar {
                     command = listResults.get(0);
                     showPluginResultOnLabel(command, label1, isLabel1Chosen);
                 }
-
-                if (listResults.size() >= 1) {
+                size = listResults.size();
+                if (size >= 1) {
                     command = listResults.get(1);
                     showPluginResultOnLabel(command, label2, isLabel2Chosen);
                 }
-
-                if (listResults.size() >= 2) {
+                if (size >= 2) {
                     command = listResults.get(2);
                     showPluginResultOnLabel(command, label3, isLabel3Chosen);
                 }
-
-                if (listResults.size() >= 3) {
+                if (size >= 3) {
                     command = listResults.get(3);
                     showPluginResultOnLabel(command, label4, isLabel4Chosen);
                 }
-
-                if (listResults.size() >= 4) {
+                if (size >= 4) {
                     command = listResults.get(4);
                     showPluginResultOnLabel(command, label5, isLabel5Chosen);
                 }
-
-                if (listResults.size() >= 5) {
+                if (size >= 5) {
                     command = listResults.get(5);
                     showPluginResultOnLabel(command, label6, isLabel6Chosen);
                 }
-
-                if (listResults.size() >= 7) {
+                if (size >= 7) {
                     command = listResults.get(6);
                     showPluginResultOnLabel(command, label7, isLabel7Chosen);
                 }
-
-                if (listResults.size() >= 8) {
+                if (size >= 8) {
                     command = listResults.get(7);
                     showPluginResultOnLabel(command, label8, isLabel8Chosen);
                 }
