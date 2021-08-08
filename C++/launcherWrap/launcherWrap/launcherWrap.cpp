@@ -19,6 +19,8 @@
 char g_close_signal_file[1000];
 char g_file_engine_exe_path[1000];
 char g_file_engine_working_dir[1000];
+char g_update_signal_file[1000];
+char g_new_file_engine_exe_path[1000];
 #ifdef TEST
 int checkTimeCount = 10;
 #else
@@ -37,6 +39,7 @@ void extract_zip();
 bool is_file_exist(const char* file_path);
 void release_all();
 bool is_dir_not_exist(const char* path);
+void update();
 
 int main()
 {
@@ -55,7 +58,18 @@ int main()
 		file_engine_directory += "tmp\\closeDaemon";
 		strcpy_s(g_close_signal_file, file_engine_directory.c_str());
 
-		std::cout << "file-engine-x64.exe path : " << g_file_engine_exe_path << std::endl;
+		std::string new_file_engine_path(g_file_engine_working_dir);
+		new_file_engine_path += "tmp\\File-Engine-x64.exe";
+		strcpy_s(g_new_file_engine_exe_path, new_file_engine_path.c_str());
+
+		std::string update_signal_file(g_file_engine_working_dir);
+		update_signal_file += "user\\update";
+		strcpy_s(g_update_signal_file, update_signal_file.c_str());
+
+		std::cout << "file-engine-x64.exe path :  " << g_file_engine_exe_path << std::endl;
+		std::cout << "file-engine working dir: " << g_file_engine_working_dir << std::endl;
+		std::cout << "new file-engine-x64.exe path: " << g_new_file_engine_exe_path << std::endl;
+		std::cout << "update signal file: " << g_update_signal_file << std::endl;
 		std::cout << "close signal file : " << g_close_signal_file << std::endl;
 
 		auto count = 0;
@@ -161,6 +175,10 @@ void restart_file_engine(bool isIgnoreCloseFile)
 			return;
 		}
 	}
+	if (is_file_exist(g_update_signal_file))
+	{
+		update();
+	}
 	std::time_t tmp_restart_time = std::time(nullptr);
 	// 这次重启距离上次时间超过了10分钟，视为正常重启
 	const std::time_t tmp = tmp_restart_time - restart_time;
@@ -184,6 +202,11 @@ void restart_file_engine(bool isIgnoreCloseFile)
 	CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
 	ShellExecuteA(nullptr, "open", g_file_engine_exe_path, nullptr, g_file_engine_working_dir, SW_SHOWNORMAL);
 	CoUninitialize();
+}
+
+void update()
+{
+	CopyFileA(g_file_engine_exe_path, g_new_file_engine_exe_path, false);
 }
 
 /**

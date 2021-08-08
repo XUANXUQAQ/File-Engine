@@ -71,10 +71,22 @@ public class Bit {
      * @return 结果
      */
     public Bit and(Bit bit) {
-        int length = Math.min(this.bytes.get().length, bit.bytes.get().length);
-        byte[] res = new byte[length];
-        for (int i = length - 1; i >= 0; i--) {
-            res[i] = (byte) (this.bytes.get()[i] & bit.bytes.get()[i]);
+        boolean isThisBigger = this.bytes.get().length > bit.bytes.get().length;
+        byte[] bigger = isThisBigger ? this.bytes.get() : bit.bytes.get();
+        byte[] smaller = isThisBigger ? bit.bytes.get() : this.bytes.get();
+        int offset = Math.abs(this.bytes.get().length - bit.bytes.get().length);
+        int minLength = smaller.length;
+        byte[] res = new byte[minLength];
+        for (int i = minLength - 1; i >= 0; i--) {
+            byte b1, b2;
+            int index;
+            b1 = smaller[i];
+            if ((index = i + offset) >= 0) {
+                b2 = bigger[index];
+            } else {
+                b2 = 0;
+            }
+            res[i] = (byte) (b1 & b2);
         }
         return new Bit(res);
     }
@@ -149,8 +161,12 @@ public class Bit {
     public static void main(String[] args) {
         Bit bit = new Bit(new byte[] {1, 0, 1, 0});
         Bit or = bit.or(new Bit(new byte[]{0, 1, 1}));
-        System.out.println(or);
-        System.out.println(bit);
-        System.out.println(bit.and(or).not().or(bit));
+        assert or.equals(new Bit(new byte[] {1, 0, 1, 1}));
+
+        Bit and = bit.and(new Bit(new byte[] {1, 0, 0}));
+        assert and.equals(new Bit(new byte[]{0}));
+
+        Bit not = bit.not();
+        assert not.equals(new Bit(new byte[] {0, 1, 0, 1}));
     }
 }

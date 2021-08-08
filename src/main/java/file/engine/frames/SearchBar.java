@@ -1931,61 +1931,81 @@ public class SearchBar {
         int size;
         switch (position) {
             case 0:
+                size = listResultsNum.get();
                 if (runningMode == Enums.RunningMode.NORMAL_MODE) {
                     //到达了最上端，刷新显示
                     try {
                         String path = listResults.get(currentResultCount.get());
                         showResultOnLabel(path, label1, true);
-
-                        path = listResults.get(currentResultCount.get() + 1);
-                        showResultOnLabel(path, label2, false);
-
-                        path = listResults.get(currentResultCount.get() + 2);
-                        showResultOnLabel(path, label3, false);
-
-                        path = listResults.get(currentResultCount.get() + 3);
-                        showResultOnLabel(path, label4, false);
-
-                        path = listResults.get(currentResultCount.get() + 4);
-                        showResultOnLabel(path, label5, false);
-
-                        path = listResults.get(currentResultCount.get() + 5);
-                        showResultOnLabel(path, label6, false);
-
-                        path = listResults.get(currentResultCount.get() + 6);
-                        showResultOnLabel(path, label7, false);
-
-                        path = listResults.get(currentResultCount.get() + 7);
-                        showResultOnLabel(path, label8, false);
+                        if (size > currentResultCount.get() + 1) {
+                            path = listResults.get(currentResultCount.get() + 1);
+                            showResultOnLabel(path, label2, false);
+                        }
+                        if (size > currentResultCount.get() + 2) {
+                            path = listResults.get(currentResultCount.get() + 2);
+                            showResultOnLabel(path, label3, false);
+                        }
+                        if (size > currentResultCount.get() + 3) {
+                            path = listResults.get(currentResultCount.get() + 3);
+                            showResultOnLabel(path, label4, false);
+                        }
+                        if (size > currentResultCount.get() + 4) {
+                            path = listResults.get(currentResultCount.get() + 4);
+                            showResultOnLabel(path, label5, false);
+                        }
+                        if (size > currentResultCount.get() + 5) {
+                            path = listResults.get(currentResultCount.get() + 5);
+                            showResultOnLabel(path, label6, false);
+                        }
+                        if (size > currentResultCount.get() + 6) {
+                            path = listResults.get(currentResultCount.get() + 6);
+                            showResultOnLabel(path, label7, false);
+                        }
+                        if (size > currentResultCount.get() + 7) {
+                            path = listResults.get(currentResultCount.get() + 7);
+                            showResultOnLabel(path, label8, false);
+                        }
                     } catch (ArrayIndexOutOfBoundsException e) {
                         e.printStackTrace();
                     }
                 } else if (runningMode == Enums.RunningMode.COMMAND_MODE) {
                     //到达了最上端，刷新显示
                     try {
+
                         String command = listResults.get(currentResultCount.get());
                         showCommandOnLabel(command, label1, true);
+                        if (size > currentResultCount.get() + 1) {
+                            command = listResults.get(currentResultCount.get() + 1);
+                            showCommandOnLabel(command, label2, false);
+                        }
+                        if (size > currentResultCount.get() + 2) {
 
-                        command = listResults.get(currentResultCount.get() + 1);
-                        showCommandOnLabel(command, label2, false);
+                            command = listResults.get(currentResultCount.get() + 2);
+                            showCommandOnLabel(command, label3, false);
+                        }
+                        if (size > currentResultCount.get() + 3) {
 
-                        command = listResults.get(currentResultCount.get() + 2);
-                        showCommandOnLabel(command, label3, false);
+                            command = listResults.get(currentResultCount.get() + 3);
+                            showCommandOnLabel(command, label4, false);
+                        }
+                        if (size > currentResultCount.get() + 4) {
 
-                        command = listResults.get(currentResultCount.get() + 3);
-                        showCommandOnLabel(command, label4, false);
+                            command = listResults.get(currentResultCount.get() + 4);
+                            showCommandOnLabel(command, label5, false);
+                        }
+                        if (size > currentResultCount.get() + 5) {
 
-                        command = listResults.get(currentResultCount.get() + 4);
-                        showCommandOnLabel(command, label5, false);
-
-                        command = listResults.get(currentResultCount.get() + 5);
-                        showCommandOnLabel(command, label6, false);
-
-                        command = listResults.get(currentResultCount.get() + 6);
-                        showCommandOnLabel(command, label7, false);
-
-                        command = listResults.get(currentResultCount.get() + 7);
-                        showCommandOnLabel(command, label8, false);
+                            command = listResults.get(currentResultCount.get() + 5);
+                            showCommandOnLabel(command, label6, false);
+                        }
+                        if (size > currentResultCount.get() + 6) {
+                            command = listResults.get(currentResultCount.get() + 6);
+                            showCommandOnLabel(command, label7, false);
+                        }
+                        if (size > currentResultCount.get() + 7) {
+                            command = listResults.get(currentResultCount.get() + 7);
+                            showCommandOnLabel(command, label8, false);
+                        }
                     } catch (ArrayIndexOutOfBoundsException e) {
                         e.printStackTrace();
                     }
@@ -1994,26 +2014,34 @@ public class SearchBar {
                         String command = listResults.get(currentResultCount.get());
                         showPluginResultOnLabel(command, label1, true);
 
-                        command = listResults.get(currentResultCount.get() + 1);
-                        showPluginResultOnLabel(command, label2, false);
-
-                        command = listResults.get(currentResultCount.get() + 2);
-                        showPluginResultOnLabel(command, label3, false);
-
-                        command = listResults.get(currentResultCount.get() + 3);
-                        showPluginResultOnLabel(command, label4, false);
-
-                        command = listResults.get(currentResultCount.get() + 4);
-                        showPluginResultOnLabel(command, label5, false);
-
-                        command = listResults.get(currentResultCount.get() + 5);
-                        showPluginResultOnLabel(command, label6, false);
-
-                        command = listResults.get(currentResultCount.get() + 6);
-                        showPluginResultOnLabel(command, label7, false);
-
-                        command = listResults.get(currentResultCount.get() + 7);
-                        showPluginResultOnLabel(command, label8, false);
+                        if (size > currentResultCount.get() + 1) {
+                            command = listResults.get(currentResultCount.get() + 1);
+                            showPluginResultOnLabel(command, label2, false);
+                        }
+                        if (size > currentResultCount.get() + 2) {
+                            command = listResults.get(currentResultCount.get() + 2);
+                            showPluginResultOnLabel(command, label3, false);
+                        }
+                        if (size > currentResultCount.get() + 3) {
+                            command = listResults.get(currentResultCount.get() + 3);
+                            showPluginResultOnLabel(command, label4, false);
+                        }
+                        if (size > currentResultCount.get() + 4) {
+                            command = listResults.get(currentResultCount.get() + 4);
+                            showPluginResultOnLabel(command, label5, false);
+                        }
+                        if (size > currentResultCount.get() + 5) {
+                            command = listResults.get(currentResultCount.get() + 5);
+                            showPluginResultOnLabel(command, label6, false);
+                        }
+                        if (size > currentResultCount.get() + 6) {
+                            command = listResults.get(currentResultCount.get() + 6);
+                            showPluginResultOnLabel(command, label7, false);
+                        }
+                        if (size > currentResultCount.get() + 7) {
+                            command = listResults.get(currentResultCount.get() + 7);
+                            showPluginResultOnLabel(command, label8, false);
+                        }
                     } catch (ArrayIndexOutOfBoundsException e) {
                         e.printStackTrace();
                     }
@@ -3089,8 +3117,8 @@ public class SearchBar {
         LinkedHashMap<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>>
                 nonFormattedSql = getNonFormattedSqlFromTableQueue();
         AtomicBoolean isResultsFull = new AtomicBoolean(false);
-        Bit threadStatus = new Bit(new byte[]{0});
-        Bit allThreadStatus = new Bit(new byte[]{0});
+        Bit taskStatus = new Bit(new byte[]{0});
+        Bit allTaskStatus = new Bit(new byte[]{0});
         Bit number = new Bit(new byte[]{1});
 
         LinkedHashMap<String, ConcurrentSkipListSet<String>> containerMap = new LinkedHashMap<>();
@@ -3101,9 +3129,9 @@ public class SearchBar {
         nonFormattedSql.forEach((commandsMap, container) -> {
             for (String eachDisk : RegexUtil.comma.split(AllConfigs.getInstance().getDisks())) {
                 number.shiftLeft();
-                Bit currentThreadNum = new Bit(number);
-                allThreadStatus.set(allThreadStatus.or(currentThreadNum));
-                containerMap.put(currentThreadNum.toString(), container);
+                Bit currentTaskNum = new Bit(number);
+                allTaskStatus.set(allTaskStatus.or(currentTaskNum));
+                containerMap.put(currentTaskNum.toString(), container);
                 taskQueue.add(() -> {
                     long time = System.currentTimeMillis();
                     try {
@@ -3129,7 +3157,7 @@ public class SearchBar {
                         });
                     } finally {
                         //执行完后将对应的线程flag设为1
-                        threadStatus.set(threadStatus.or(currentThreadNum));
+                        taskStatus.set(taskStatus.or(currentTaskNum));
                     }
                 });
             }
@@ -3156,7 +3184,7 @@ public class SearchBar {
                 long startSearchTime = System.currentTimeMillis();
                 Bit zero = new Bit(new byte[]{0});
                 Bit one = new Bit(new byte[]{1});
-                while (!tmpThreadStatus.equals(allThreadStatus) || threadStatus.or(zero).equals(zero)) {
+                while (!tmpThreadStatus.equals(taskStatus) || taskStatus.or(zero).equals(zero)) {
                     TimeUnit.MILLISECONDS.sleep(5);
                     if (startTime > startSearchTime) {
                         break;
@@ -3167,8 +3195,9 @@ public class SearchBar {
                         tempResultNum.set(tempResults.size());
                     }
                     //当线程完成，threadStatus中的位会被设置为1
-                    //这时，将threadStatus和start做与运算，然后向左移到第一位，如果为1，则线程已完成搜索
-                    if (((threadStatus.and(start)).shiftRight(loopCount)).equals(one)) {
+                    //这时，将threadStatus和start做与运算，然后移到第一位，如果为1，则线程已完成搜索
+                    Bit and = taskStatus.and(start);
+                    if (((and).shiftRight(loopCount)).equals(one)) {
                         tmpThreadStatus = tmpThreadStatus.or(start);
                         start.shiftLeft();
                         loopCount++;
@@ -3176,9 +3205,9 @@ public class SearchBar {
                 }
                 if (IsDebug.isDebug()) {
                     System.out.println(tempResultNum.get());
-                    System.out.println("thread status: " + threadStatus);
+                    System.out.println("thread status: " + taskStatus);
                     System.out.println("tmp thread status: " + tmpThreadStatus);
-                    System.out.println("all thread status: " + allThreadStatus);
+                    System.out.println("all thread status: " + allTaskStatus);
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -3821,7 +3850,7 @@ public class SearchBar {
                 if (show.isEmpty()) {
                     int subNum = Math.max(0, maxShowCharNum - 10);
                     subNum = Math.min(commandPath.length(), subNum);
-                    show = commandPath.substring(0,subNum) + "...";
+                    show = commandPath.substring(0, subNum) + "...";
                     commandPath = show;
                 }
             }
@@ -3949,31 +3978,31 @@ public class SearchBar {
                     showResultOnLabel(path, label1, isLabel1Chosen);
                 }
                 size = listResults.size();
-                if (size >= 1) {
+                if (size > 1) {
                     path = listResults.get(1);
                     showResultOnLabel(path, label2, isLabel2Chosen);
                 }
-                if (size >= 2) {
+                if (size > 2) {
                     path = listResults.get(2);
                     showResultOnLabel(path, label3, isLabel3Chosen);
                 }
-                if (size >= 3) {
+                if (size > 3) {
                     path = listResults.get(3);
                     showResultOnLabel(path, label4, isLabel4Chosen);
                 }
-                if (size >= 4) {
+                if (size > 4) {
                     path = listResults.get(4);
                     showResultOnLabel(path, label5, isLabel5Chosen);
                 }
-                if (size >= 5) {
+                if (size > 5) {
                     path = listResults.get(5);
                     showResultOnLabel(path, label6, isLabel6Chosen);
                 }
-                if (size >= 6) {
+                if (size > 6) {
                     path = listResults.get(6);
                     showResultOnLabel(path, label7, isLabel7Chosen);
                 }
-                if (size >= 7) {
+                if (size > 7) {
                     path = listResults.get(7);
                     showResultOnLabel(path, label8, isLabel8Chosen);
                 }
@@ -3988,36 +4017,36 @@ public class SearchBar {
                     showCommandOnLabel(command, label1, isLabel1Chosen);
                 }
                 size = listResults.size();
-                if (size >= 1) {
+                if (size > 1) {
                     command = listResults.get(1);
                     showCommandOnLabel(command, label2, isLabel2Chosen);
                 }
-                if (size >= 2) {
+                if (size > 2) {
                     command = listResults.get(2);
                     showCommandOnLabel(command, label3, isLabel3Chosen);
                 }
-                if (size >= 3) {
+                if (size > 3) {
                     command = listResults.get(3);
                     showCommandOnLabel(command, label4, isLabel4Chosen);
                 }
-                if (size >= 4) {
+                if (size > 4) {
                     command = listResults.get(4);
                     showCommandOnLabel(command, label5, isLabel5Chosen);
                 }
-                if (size >= 5) {
+                if (size > 5) {
                     command = listResults.get(5);
                     showCommandOnLabel(command, label6, isLabel6Chosen);
                 }
-                if (size >= 6) {
+                if (size > 6) {
                     command = listResults.get(6);
                     showCommandOnLabel(command, label7, isLabel7Chosen);
                 }
-                if (size >= 7) {
+                if (size > 7) {
                     command = listResults.get(7);
                     showCommandOnLabel(command, label8, isLabel8Chosen);
                 }
             } catch (IndexOutOfBoundsException e) {
-                    e.printStackTrace();
+                e.printStackTrace();
             }
         } else if (runningMode == Enums.RunningMode.PLUGIN_MODE) {
             try {
@@ -4027,36 +4056,36 @@ public class SearchBar {
                     showPluginResultOnLabel(command, label1, isLabel1Chosen);
                 }
                 size = listResults.size();
-                if (size >= 1) {
+                if (size > 1) {
                     command = listResults.get(1);
                     showPluginResultOnLabel(command, label2, isLabel2Chosen);
                 }
-                if (size >= 2) {
+                if (size > 2) {
                     command = listResults.get(2);
                     showPluginResultOnLabel(command, label3, isLabel3Chosen);
                 }
-                if (size >= 3) {
+                if (size > 3) {
                     command = listResults.get(3);
                     showPluginResultOnLabel(command, label4, isLabel4Chosen);
                 }
-                if (size >= 4) {
+                if (size > 4) {
                     command = listResults.get(4);
                     showPluginResultOnLabel(command, label5, isLabel5Chosen);
                 }
-                if (size >= 5) {
+                if (size > 5) {
                     command = listResults.get(5);
                     showPluginResultOnLabel(command, label6, isLabel6Chosen);
                 }
-                if (size >= 7) {
+                if (size > 6) {
                     command = listResults.get(6);
                     showPluginResultOnLabel(command, label7, isLabel7Chosen);
                 }
-                if (size >= 8) {
+                if (size > 7) {
                     command = listResults.get(7);
                     showPluginResultOnLabel(command, label8, isLabel8Chosen);
                 }
             } catch (IndexOutOfBoundsException e) {
-                    e.printStackTrace();
+                e.printStackTrace();
             }
         }
     }

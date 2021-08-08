@@ -37,7 +37,6 @@ public class MainClass {
     private static final String IS_LOCAL_DISK_64_MD_5 = "f8a71d3496d8cc188713d521e6dfa2b2";
     private static final String FILE_SEARCHER_USN_64_MD_5 = "aa46804507af9fd2152ef8aa2ba9bf44";
     private static final String SQLITE3_64_MD_5 = "703bd51c19755db49c9070ceb255dfe5";
-    private static final String UPDATER_BAT_64_MD_5 = "357d7cc1cf023cb6c90f73926c6f2f55";
     private static final String GET_HANDLE_64_MD_5 = "ee14698d5c8c8b55110d53012f8b7739";
     private static final String SHORTCUT_GEN_MD_5 = "fa4e26f99f3dcd58d827828c411ea5d7";
 
@@ -139,26 +138,6 @@ public class MainClass {
             //删除空目录
             if (!temp.delete()) {
                 System.err.println("Failed to delete " + temp.getAbsolutePath());
-            }
-        }
-    }
-
-    /**
-     * 删除文件更新标志
-     * @throws InterruptedException exception
-     */
-    private static void deleteUpdater() throws InterruptedException {
-        boolean ret = false;
-        int count = 0;
-        File updater = new File("updater.bat");
-        if (updater.exists()) {
-            while (!ret) {
-                ret = updater.delete();
-                Thread.sleep(1000);
-                count++;
-                if (count > 3) {
-                    break;
-                }
             }
         }
     }
@@ -304,7 +283,6 @@ public class MainClass {
                 JOptionPane.showMessageDialog(null, "Not 64 Bit", "ERROR", JOptionPane.ERROR_MESSAGE);
                 return;
             }
-            startOrIgnoreUpdateAndExit(isUpdateSignExist());
             Class.forName("org.sqlite.JDBC");
             updatePlugins();
 
@@ -541,36 +519,6 @@ public class MainClass {
     }
 
     /**
-     * 检查更新标志并尝试重启更新
-     * @param isUpdate 是否更新
-     * @throws InterruptedException exception
-     * @throws IOException 文件不存在
-     */
-    private static void startOrIgnoreUpdateAndExit(boolean isUpdate) throws InterruptedException, IOException {
-        if (isUpdate) {
-            File closeSignal = new File("tmp/closeDaemon");
-            if (closeSignal.createNewFile()) {
-                System.err.println("添加退出守护进程标志失败");
-            }
-            File update = new File("user/update");
-            if (update.delete()) {
-                System.err.println("删除更新标志失败");
-            }
-            File updaterBat = new File("updater.bat");
-            copyOrIgnoreFile("updater.bat", "/updater.bat", UPDATER_BAT_64_MD_5);
-            Desktop desktop;
-            if (Desktop.isDesktopSupported()) {
-                desktop = Desktop.getDesktop();
-                desktop.open(updaterBat);
-                Thread.sleep(500);
-                System.exit(0);
-            }
-        } else {
-            deleteUpdater();
-        }
-    }
-
-    /**
      * 释放所有文件
      * @throws IOException 释放失败
      */
@@ -635,10 +583,5 @@ public class MainClass {
             e.printStackTrace();
         }
         return true;
-    }
-
-    private static boolean isUpdateSignExist() {
-        File user = new File("user/update");
-        return user.exists();
     }
 }
