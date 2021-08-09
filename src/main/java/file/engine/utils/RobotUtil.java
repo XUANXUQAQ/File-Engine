@@ -28,6 +28,14 @@ public class RobotUtil {
         return INSTANCE;
     }
 
+    /**
+     * 移动鼠标点击
+     * @param x x坐标
+     * @param y y坐标
+     * @param count 次数
+     * @param mouseButtonNum 需要点击的案件
+     * @see java.awt.event.InputEvent
+     */
     public void mouseClicked(int x, int y, int count, int mouseButtonNum) {
         if (robot != null) {
             double originX, originY;
@@ -45,6 +53,11 @@ public class RobotUtil {
         }
     }
 
+    /**
+     * 键盘点击
+     * @param keyCodes 键盘案件
+     * @see java.awt.event.KeyEvent
+     */
     public void keyTyped(int... keyCodes) {
         if (robot != null) {
             //全部点击

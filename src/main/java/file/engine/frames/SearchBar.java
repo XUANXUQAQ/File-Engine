@@ -71,6 +71,7 @@ public class SearchBar {
     private final AtomicBoolean isNotSqlInitialized = new AtomicBoolean(true);
     private final AtomicBoolean isBorderThreadNotExist = new AtomicBoolean(true);
     private final AtomicBoolean isRepaintFrameThreadNotExist = new AtomicBoolean(true);
+    private final AtomicBoolean isTryToShowResultThreadNotExist = new AtomicBoolean(true);
     private static final AtomicBoolean isPreviewMode = new AtomicBoolean(false);
     private final AtomicBoolean isTutorialMode = new AtomicBoolean(false);
     private Border fullBorder;
@@ -2499,8 +2500,6 @@ public class SearchBar {
     private void initThreadPool() {
         lockMouseMotionThread();
 
-        tryToShowRecordsThread();
-
         sendSignalAndShowCommandThread();
 
         switchSearchBarShowingMode();
@@ -2976,8 +2975,8 @@ public class SearchBar {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             //显示结果线程
             try {
-                EventManagement eventManagement = EventManagement.getInstance();
-                while (eventManagement.isNotMainExit()) {
+                clearAllLabels();
+                while (isVisible()) {
                     if (!listResults.isEmpty()) {
                         //在结果不足8个的时候不断尝试显示
                         tryToShowRecordsWhenHasLabelEmpty();
@@ -3015,6 +3014,8 @@ public class SearchBar {
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();
+            } finally {
+                isTryToShowResultThreadNotExist.set(true);
             }
         });
     }
@@ -3071,6 +3072,11 @@ public class SearchBar {
         return sqlColumnMap;
     }
 
+    /**
+     * 将tempResults中的结果转移到listResults中来显示
+     *
+     * @param isCreated 是否已经创建，防止并发时重复创建
+     */
     private void addMergeThread(AtomicBoolean isCreated) {
         isCreated.set(true);
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
@@ -3123,58 +3129,21 @@ public class SearchBar {
         if (!isMergeTempResultThreadCreated.get()) {
             addMergeThread(isMergeTempResultThreadCreated);
         }
-        //每个priority用一个线程
+        //每个priority用一个线程，每一个后缀名对应一个优先级
         //按照优先级排列，key是sql和表名的对应，value是容器
         LinkedHashMap<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>>
                 nonFormattedSql = getNonFormattedSqlFromTableQueue();
         AtomicBoolean isResultsFull = new AtomicBoolean(false);
         Bit taskStatus = new Bit(new byte[]{0});
         Bit allTaskStatus = new Bit(new byte[]{0});
-        Bit number = new Bit(new byte[]{1});
 
         LinkedHashMap<String, ConcurrentSkipListSet<String>> containerMap = new LinkedHashMap<>();
-
+        //任务队列
         ConcurrentLinkedQueue<Runnable> taskQueue = new ConcurrentLinkedQueue<>();
+        //添加搜索任务到队列
+        addSearchTasks(nonFormattedSql, isResultsFull, taskStatus, allTaskStatus, containerMap, taskQueue);
 
-        //添加搜索任务
-        nonFormattedSql.forEach((commandsMap, container) -> {
-            for (String eachDisk : RegexUtil.comma.split(AllConfigs.getInstance().getDisks())) {
-                number.shiftLeft();
-                Bit currentTaskNum = new Bit(number);
-                allTaskStatus.set(allTaskStatus.or(currentTaskNum));
-                containerMap.put(currentTaskNum.toString(), container);
-                taskQueue.add(() -> {
-                    long time = System.currentTimeMillis();
-                    try {
-                        Set<String> sqls = commandsMap.keySet();
-                        DatabaseService databaseService = DatabaseService.getInstance();
-                        sqls.forEach(each -> {
-                            String formattedSql;
-                            if (runningMode == Enums.RunningMode.NORMAL_MODE && databaseService.getStatus() == Enums.DatabaseStatus.NORMAL) {
-                                formattedSql = String.format(each, "PATH");
-                                int matchedNum = searchAndAddToTempResults(System.currentTimeMillis(),
-                                        formattedSql,
-                                        isResultsFull,
-                                        container,
-                                        String.valueOf(eachDisk.charAt(0)));
-                                long weight = Math.min(matchedNum, 5);
-                                if (weight != 0L) {
-                                    updateTableWeight(commandsMap.get(each), weight);
-                                }
-                                if (isResultsFull.get() || time < startTime) {
-                                    throw new RuntimeException("stopped");
-                                }
-                            }
-                        });
-                    } finally {
-                        //执行完后将对应的线程flag设为1
-                        taskStatus.set(taskStatus.or(currentTaskNum));
-                    }
-                });
-            }
-        });
-
-        //添加消费者线程
+        //添加消费者线程，接受任务进行处理，最高4线程
         int processors = Runtime.getRuntime().availableProcessors();
         processors = Math.min(processors, 4);
         for (int i = 0; i < processors; i++) {
@@ -3185,22 +3154,93 @@ public class SearchBar {
                 }
             });
         }
+        waitForTaskAndMergeResults(containerMap, allTaskStatus, taskStatus);
+    }
 
-        cachedThreadPoolUtil.executeTask(() -> {
+    /**
+     * 添加搜索任务到队列
+     *
+     * @param nonFormattedSql sql未被格式化的所有任务
+     * @param isResultsFull   是否结果已满，超过MAX_RESULTS_COUNT
+     * @param taskStatus      用于保存任务信息，这是一个通用变量，从第二个位开始，每一个位代表一个任务，当任务完成，该位将被置为1，否则为0，
+     *                        例如第一个和第三个任务完成，第二个未完成，则为1010
+     * @param allTaskStatus   所有的任务信息，从第二位开始，只要有任务被创建，该为就为1，例如三个任务被创建，则为1110
+     * @param containerMap    每个任务搜索出来的结果都会被放到一个属于它自己的一个容器中，该容器保存任务与容器的映射关系
+     * @param taskQueue       任务栈
+     */
+    private void addSearchTasks(LinkedHashMap<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>> nonFormattedSql,
+                                AtomicBoolean isResultsFull,
+                                Bit taskStatus,
+                                Bit allTaskStatus,
+                                LinkedHashMap<String, ConcurrentSkipListSet<String>> containerMap,
+                                ConcurrentLinkedQueue<Runnable> taskQueue) {
+        Bit number = new Bit(new byte[]{1});
+        nonFormattedSql.forEach((commandsMap, container) -> Arrays.stream(RegexUtil.comma.split(AllConfigs.getInstance().getDisks())).forEach(eachDisk -> {
+            //为每个任务分配的位，不断左移以不断进行分配
+            number.shiftLeft();
+            Bit currentTaskNum = new Bit(number);
+            allTaskStatus.set(allTaskStatus.or(currentTaskNum));
+            containerMap.put(currentTaskNum.toString(), container);
+            taskQueue.add(() -> {
+                long time = System.currentTimeMillis();
+                try {
+                    Set<String> sqls = commandsMap.keySet();
+                    DatabaseService databaseService = DatabaseService.getInstance();
+                    sqls.forEach(each -> {
+                        String formattedSql;
+                        if (runningMode == Enums.RunningMode.NORMAL_MODE && databaseService.getStatus() == Enums.DatabaseStatus.NORMAL) {
+                            //格式化是为了以后的拓展性
+                            formattedSql = String.format(each, "PATH");
+                            //当前数据库表中有多少个结果匹配成功
+                            int matchedNum = searchAndAddToTempResults(System.currentTimeMillis(),
+                                    formattedSql,
+                                    isResultsFull,
+                                    container,
+                                    String.valueOf(eachDisk.charAt(0)));
+                            long weight = Math.min(matchedNum, 5);
+                            if (weight != 0L) {
+                                //更新表的权重，每次搜索将会按照各个表的权重排序
+                                updateTableWeight(commandsMap.get(each), weight);
+                            }
+                            if (isResultsFull.get() || time < startTime) {
+                                throw new RuntimeException("stopped");
+                            }
+                        }
+                    });
+                } finally {
+                    //执行完后将对应的线程flag设为1
+                    taskStatus.set(taskStatus.or(currentTaskNum));
+                }
+            });
+        }));
+    }
+
+    /**
+     * 根据上面分配的位信息，从第二位开始，与taskStatus做与运算，并向右偏移，若结果为1，则表示该任务完成
+     *
+     * @param containerMap  任务搜索结果存放容器
+     * @param allTaskStatus 所有的任务信息
+     * @param taskStatus    实时更新的任务完成信息
+     */
+    private void waitForTaskAndMergeResults(LinkedHashMap<String, ConcurrentSkipListSet<String>> containerMap, Bit allTaskStatus, Bit taskStatus) {
+        CachedThreadPoolUtil.getInstance().executeTask(() -> {
             final long startSearchTime = System.currentTimeMillis();
-            while (isVisible()) {
+            while (isVisible() && startTime < startSearchTime) {
                 try {
                     Bit tmpTaskStatus = new Bit(new byte[]{0});
                     //线程状态的记录从第二个位开始，所以初始值为2
                     Bit start = new Bit(new byte[]{1, 0});
+                    //循环次数，也是下方与运算结束后需要向右偏移的位数
                     int loopCount = 1;
+                    //失败阻塞次数，由于任务的耗时不同，如果在超过300次获取，也就是0.3s后仍然阻塞，则跳过该任务，在下次循环中重新拿取结果
                     int failCount = 0;
                     Bit zero = new Bit(new byte[]{0});
                     Bit one = new Bit(new byte[]{1});
                     ConcurrentSkipListSet<String> results;
-                    while (tmpTaskStatus.length() != allTaskStatus.length() || !tmpTaskStatus.equals(taskStatus) || taskStatus.or(zero).equals(zero)) {
+                    while (start.length() != allTaskStatus.length() || !tmpTaskStatus.equals(allTaskStatus) || taskStatus.or(zero).equals(zero)) {
                         TimeUnit.MILLISECONDS.sleep(1);
                         if (startTime > startSearchTime) {
+                            //用户重新输入，结束当前任务
                             break;
                         }
                         results = containerMap.get(start.toString());
@@ -3212,7 +3252,7 @@ public class SearchBar {
                         //这时，将taskStatus和start做与运算，然后移到第一位，如果为1，则线程已完成搜索
                         Bit and = taskStatus.and(start);
                         if (((and).shiftRight(loopCount)).equals(one) || failCount > 300) {
-                            // 阻塞超过100次(搜索时间超过0.3s)则跳过
+                            // 阻塞超过300次(搜索时间超过0.3s)则跳过
                             failCount = 0;
                             results = containerMap.get(start.toString());
                             if (results != null) {
@@ -3220,6 +3260,7 @@ public class SearchBar {
                                 tempResultNum.set(tempResults.size());
                             }
                             tmpTaskStatus = tmpTaskStatus.or(start);
+                            //将start左移，代表当前任务结束，继续拿下一个任务的结果
                             start.shiftLeft();
                             loopCount++;
                         } else {
@@ -3736,11 +3777,6 @@ public class SearchBar {
      */
     private void showSearchbar(boolean isGrabFocus) {
         SwingUtilities.invokeLater(() -> {
-            if (showingMode == Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
-                if (isGrabFocus) {
-                    GetHandle.INSTANCE.bringSearchBarToTop();
-                }
-            }
             if (!isVisible()) {
                 if (isGrabFocus) {
                     GetHandle.INSTANCE.bringSearchBarToTop();
@@ -3750,6 +3786,11 @@ public class SearchBar {
                 textField.setCaretPosition(0);
                 startTime = System.currentTimeMillis();
                 visibleStartTime = startTime;
+                RobotUtil.getInstance().mouseClicked(
+                        searchBar.getX() + textField.getWidth() / 2,
+                        searchBar.getY() + textField.getHeight() / 2,
+                        1,
+                        InputEvent.BUTTON1_DOWN_MASK);
             }
             if (isBorderThreadNotExist.get()) {
                 isBorderThreadNotExist.set(false);
@@ -3758,6 +3799,10 @@ public class SearchBar {
             if (isRepaintFrameThreadNotExist.get()) {
                 isRepaintFrameThreadNotExist.set(false);
                 repaintFrameThread();
+            }
+            if (isTryToShowResultThreadNotExist.get()) {
+                isTryToShowResultThreadNotExist.set(false);
+                tryToShowRecordsThread();
             }
         });
     }
