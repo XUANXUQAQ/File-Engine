@@ -9,6 +9,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public class Bit {
 
     private final AtomicReference<byte[]> bytes = new AtomicReference<>();
+    private final byte[] zero = new byte[] {0};
 
     public Bit(byte[] init) {
         if (init != null && init.length > 0) {
@@ -60,8 +61,12 @@ public class Bit {
      * @return 当前bit对象
      */
     public Bit shiftRight(int count) {
-        byte[] newBytes = Arrays.copyOfRange(bytes.get(), 0, bytes.get().length - count);
-        bytes.set(newBytes);
+        if (bytes.get().length <= count) {
+            bytes.set(zero);
+        } else {
+            byte[] newBytes = Arrays.copyOfRange(bytes.get(), 0, bytes.get().length - count);
+            bytes.set(newBytes);
+        }
         return this;
     }
 
@@ -156,6 +161,10 @@ public class Bit {
             return Arrays.equals(this.bytes.get(), tmp.bytes.get());
         }
         return false;
+    }
+
+    public int length() {
+        return this.bytes.get().length;
     }
 
     public static void main(String[] args) {
