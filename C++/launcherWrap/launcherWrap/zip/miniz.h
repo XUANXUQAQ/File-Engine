@@ -4823,7 +4823,7 @@ extern "C" {
 static wchar_t *str2wstr(const char *str) {
   size_t len = strlen(str) + 1;
   wchar_t *wstr = (wchar_t *)malloc(len * sizeof(wchar_t));
-  MultiByteToWideChar(CP_UTF8, 0, str, (int)(len * sizeof(char)), wstr,
+  MultiByteToWideChar(CP_ACP, 0, str, (int)(len * sizeof(char)), wstr,
                       (int)len);
   return wstr;
 }
