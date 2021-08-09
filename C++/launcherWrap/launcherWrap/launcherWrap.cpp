@@ -12,6 +12,7 @@
 #include "zip/zip.h"
 #pragma comment(lib, "shell32.lib")
 #pragma comment(lib, "Ole32.lib")
+#pragma comment(lib, "User32.lib")
 #pragma comment( linker, "/subsystem:windows /entry:mainCRTStartup" )
 
 // #define TEST
