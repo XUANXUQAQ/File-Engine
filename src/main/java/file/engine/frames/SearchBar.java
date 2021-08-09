@@ -432,7 +432,9 @@ public class SearchBar {
         textField.addFocusListener(new FocusListener() {
             @Override
             public void focusGained(FocusEvent e) {
-                resetAllStatus();
+                if (!IsDebug.isDebug()) {
+                    resetAllStatus();
+                }
             }
 
             @Override
@@ -2998,7 +3000,16 @@ public class SearchBar {
                             firstResultStartShowingTime = System.currentTimeMillis();
                         }
                     } else {
-                        clearAllLabels();
+                        label1.setText(null);
+                        label1.setName(null);
+                        label1.setIcon(null);
+                        clearALabel(label2);
+                        clearALabel(label3);
+                        clearALabel(label4);
+                        clearALabel(label5);
+                        clearALabel(label6);
+                        clearALabel(label7);
+                        clearALabel(label8);
                     }
                     TimeUnit.MILLISECONDS.sleep(250);
                 }
@@ -3176,41 +3187,53 @@ public class SearchBar {
         }
 
         cachedThreadPoolUtil.executeTask(() -> {
-            try {
-                Bit tmpThreadStatus = new Bit(new byte[]{0});
-                //线程状态的记录从第二个位开始，所以初始值为2
-                Bit start = new Bit(new byte[]{1, 0});
-                int loopCount = 1;
-                long startSearchTime = System.currentTimeMillis();
-                Bit zero = new Bit(new byte[]{0});
-                Bit one = new Bit(new byte[]{1});
-                while (!tmpThreadStatus.equals(taskStatus) || taskStatus.or(zero).equals(zero)) {
-                    TimeUnit.MILLISECONDS.sleep(5);
-                    if (startTime > startSearchTime) {
-                        break;
+            final long startSearchTime = System.currentTimeMillis();
+            while (isVisible()) {
+                try {
+                    Bit tmpTaskStatus = new Bit(new byte[]{0});
+                    //线程状态的记录从第二个位开始，所以初始值为2
+                    Bit start = new Bit(new byte[]{1, 0});
+                    int loopCount = 1;
+                    int failCount = 0;
+                    Bit zero = new Bit(new byte[]{0});
+                    Bit one = new Bit(new byte[]{1});
+                    ConcurrentSkipListSet<String> results;
+                    while (tmpTaskStatus.length() != allTaskStatus.length() || !tmpTaskStatus.equals(taskStatus) || taskStatus.or(zero).equals(zero)) {
+                        TimeUnit.MILLISECONDS.sleep(1);
+                        if (startTime > startSearchTime) {
+                            break;
+                        }
+                        results = containerMap.get(start.toString());
+                        if (results != null) {
+                            tempResults.addAll(results);
+                            tempResultNum.set(tempResults.size());
+                        }
+                        //当线程完成，taskStatus中的位会被设置为1
+                        //这时，将taskStatus和start做与运算，然后移到第一位，如果为1，则线程已完成搜索
+                        Bit and = taskStatus.and(start);
+                        if (((and).shiftRight(loopCount)).equals(one) || failCount > 300) {
+                            // 阻塞超过100次(搜索时间超过0.3s)则跳过
+                            failCount = 0;
+                            results = containerMap.get(start.toString());
+                            if (results != null) {
+                                tempResults.addAll(results);
+                                tempResultNum.set(tempResults.size());
+                            }
+                            tmpTaskStatus = tmpTaskStatus.or(start);
+                            start.shiftLeft();
+                            loopCount++;
+                        } else {
+                            failCount++;
+                        }
                     }
-                    ConcurrentSkipListSet<String> results = containerMap.get(start.toString());
-                    if (results != null) {
-                        tempResults.addAll(results);
-                        tempResultNum.set(tempResults.size());
-                    }
-                    //当线程完成，threadStatus中的位会被设置为1
-                    //这时，将threadStatus和start做与运算，然后移到第一位，如果为1，则线程已完成搜索
-                    Bit and = taskStatus.and(start);
-                    if (((and).shiftRight(loopCount)).equals(one)) {
-                        tmpThreadStatus = tmpThreadStatus.or(start);
-                        start.shiftLeft();
-                        loopCount++;
-                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
-                if (IsDebug.isDebug()) {
-                    System.out.println(tempResultNum.get());
-                    System.out.println("thread status: " + taskStatus);
-                    System.out.println("tmp thread status: " + tmpThreadStatus);
-                    System.out.println("all thread status: " + allTaskStatus);
+                try {
+                    TimeUnit.MILLISECONDS.sleep(1);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
                 }
-            } catch (InterruptedException e) {
-                e.printStackTrace();
             }
         });
     }
