@@ -3778,19 +3778,19 @@ public class SearchBar {
     private void showSearchbar(boolean isGrabFocus) {
         SwingUtilities.invokeLater(() -> {
             if (!isVisible()) {
-                if (isGrabFocus) {
-                    GetHandle.INSTANCE.bringSearchBarToTop();
-                }
                 setVisible(true);
                 textField.requestFocusInWindow();
                 textField.setCaretPosition(0);
                 startTime = System.currentTimeMillis();
                 visibleStartTime = startTime;
-                RobotUtil.getInstance().mouseClicked(
-                        searchBar.getX() + textField.getWidth() / 2,
-                        searchBar.getY() + textField.getHeight() / 2,
-                        1,
-                        InputEvent.BUTTON1_DOWN_MASK);
+                if (isGrabFocus) {
+                    GetHandle.INSTANCE.bringSearchBarToTop();
+                    RobotUtil.getInstance().mouseClicked(
+                            searchBar.getX() + textField.getWidth() / 2,
+                            searchBar.getY() + textField.getHeight() / 2,
+                            1,
+                            InputEvent.BUTTON1_DOWN_MASK);
+                }
             }
             if (isBorderThreadNotExist.get()) {
                 isBorderThreadNotExist.set(false);
