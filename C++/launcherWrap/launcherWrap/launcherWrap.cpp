@@ -6,7 +6,6 @@
 #include <ShlObj.h>
 #include "resource.h"
 #include <TlHelp32.h>
-#include <objbase.h>
 #include <iostream>
 #include <string>
 #include "zip/zip.h"
@@ -27,7 +26,7 @@ char g_new_file_engine_exe_path[1000];
 #ifdef TEST
 int g_check_time_count = 10;
 #else
-int g_check_time_count = 100;
+int g_check_time_count = 50;
 #endif
 
 int g_restart_count = 0;
@@ -205,9 +204,7 @@ void restart_file_engine(bool isIgnoreCloseFile)
 		g_restart_count = 0;
 	}
 	g_restart_count++;
-	CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
 	ShellExecuteA(nullptr, "open", g_file_engine_exe_path, nullptr, g_file_engine_working_dir, SW_SHOWNORMAL);
-	CoUninitialize();
 }
 
 void update()
