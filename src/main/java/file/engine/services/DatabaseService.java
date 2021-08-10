@@ -64,6 +64,9 @@ public class DatabaseService {
         }
     }
 
+    /**
+     * 处理所有sql线程
+     */
     private void executeSqlCommandsThread() {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             EventManagement eventManagement = EventManagement.getInstance();
@@ -91,6 +94,9 @@ public class DatabaseService {
         return INSTANCE;
     }
 
+    /**
+     * 读取磁盘监控信息并发送删除sql线程
+     */
     private void deleteRecordsToDatabaseThread() {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             try (BufferedReader readerRemove =
@@ -125,6 +131,9 @@ public class DatabaseService {
         });
     }
 
+    /**
+     * 读取磁盘监控信息并发送添加sql线程
+     */
     private void addRecordsToDatabaseThread() {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             //检测文件添加线程
@@ -160,6 +169,11 @@ public class DatabaseService {
         });
     }
 
+    /**
+     * 生成删除记录sql
+     * @param asciiSum ascii
+     * @param path 文件路径
+     */
     private void addDeleteSqlCommandByAscii(int asciiSum, String path) {
         String command;
         int asciiGroup = asciiSum / 100;
@@ -171,6 +185,12 @@ public class DatabaseService {
         }
     }
 
+    /**
+     * 生成添加记录sql
+     * @param asciiSum ascii
+     * @param path 文件路径
+     * @param priority 优先级
+     */
     private void addAddSqlCommandByAscii(int asciiSum, String path, int priority) {
         String commandTemplate = "INSERT OR IGNORE INTO %s VALUES(%d, \"%s\", %d)";
         int asciiGroup = asciiSum / 100;
@@ -182,6 +202,11 @@ public class DatabaseService {
         }
     }
 
+    /**
+     * 获得文件名
+     * @param path 文件路径
+     * @return 文件名
+     */
     private String getFileName(String path) {
         if (path != null) {
             int index = path.lastIndexOf(File.separator);
@@ -213,6 +238,10 @@ public class DatabaseService {
         return true;
     }
 
+    /**
+     * 从数据库中删除记录
+     * @param path 文件路径
+     */
     private void removeFileFromDatabase(String path) {
         int asciiSum = getAscIISum(getFileName(path));
         if (isRemoveFileInDatabase(path)) {
@@ -220,6 +249,11 @@ public class DatabaseService {
         }
     }
 
+    /**
+     * 根据文件后缀获取优先级信息
+     * @param suffix 文件后缀名
+     * @return 优先级
+     */
     private int getPriorityBySuffix(String suffix) {
         String sqlTemplate = "select PRIORITY from priority where suffix=\"%s\"";
         String sql = String.format(sqlTemplate, suffix);
@@ -238,6 +272,11 @@ public class DatabaseService {
         return 0;
     }
 
+    /**
+     * 获取文件后缀
+     * @param path 文件路径
+     * @return 后缀名
+     */
     private String getSuffixByPath(String path) {
         String name = getFileName(path);
         return name.substring(name.lastIndexOf('.') + 1).toLowerCase();
@@ -268,6 +307,9 @@ public class DatabaseService {
         }
     }
 
+    /**
+     * 发送立即执行所有sql信号
+     */
     private void executeImmediately() {
         isExecuteImmediately.set(true);
     }
@@ -316,6 +358,10 @@ public class DatabaseService {
         }
     }
 
+    /**
+     * 添加任务到任务列表
+     * @param sql 任务
+     */
     private void addToCommandSet(SQLWithTaskId sql) {
         if (commandSet.size() < MAX_SQL_NUM) {
             if (status == Enums.DatabaseStatus.MANUAL_UPDATE) {
@@ -332,6 +378,11 @@ public class DatabaseService {
         }
     }
 
+    /**
+     * 检查任务是否重复
+     * @param sql 任务
+     * @return boolean
+     */
     private boolean isCommandNotRepeat(String sql) {
         for (SQLWithTaskId each : commandSet) {
             if (each.sql.equals(sql)) {
@@ -341,14 +392,27 @@ public class DatabaseService {
         return true;
     }
 
+    /**
+     * 获取数据库状态
+     * @return 装填
+     */
     public Enums.DatabaseStatus getStatus() {
         return status;
     }
 
+    /**
+     * 设置数据库状态
+     * @param status 状态
+     */
     private void setStatus(Enums.DatabaseStatus status) {
         this.status = status;
     }
 
+    /**
+     * 更新文件索引
+     * @param disks 磁盘
+     * @param ignorePath 忽略文件夹
+     */
     private void searchFile(String disks, String ignorePath) {
         try {
             searchByUSN(disks, ignorePath.toLowerCase());
@@ -357,6 +421,9 @@ public class DatabaseService {
         }
     }
 
+    /**
+     * 创建索引
+     */
     private void createAllIndex() {
         commandSet.add(new SQLWithTaskId("CREATE INDEX IF NOT EXISTS cache_index ON cache(PATH);", SqlTaskIds.CREATE_INDEX, "cache"));
         for (String each : RegexUtil.comma.split(AllConfigs.getInstance().getDisks())) {
@@ -367,6 +434,13 @@ public class DatabaseService {
         }
     }
 
+    /**
+     * 调用C程序搜索并等待执行完毕
+     * @param paths 磁盘信息
+     * @param ignorePath 忽略文件夹
+     * @throws IOException exception
+     * @throws InterruptedException exception
+     */
     private void searchByUSN(String paths, String ignorePath) throws IOException, InterruptedException {
         File usnSearcher = new File("user/fileSearcherUSN.exe");
         String absPath = usnSearcher.getAbsolutePath();
@@ -385,6 +459,14 @@ public class DatabaseService {
         waitForProcess("fileSearcherUSN.exe");
     }
 
+    /**
+     * 进程是否存在
+     * @param procName 进程名
+     * @param strBuilder 用于获取cmd执行tasklist后返回的信息
+     * @return boolean
+     * @throws IOException 失败
+     * @throws InterruptedException 失败
+     */
     private boolean isTaskExist(String procName, StringBuilder strBuilder) throws IOException, InterruptedException {
         if (!procName.isEmpty()) {
             Process p = Runtime.getRuntime().exec("tasklist /FI \"IMAGENAME eq " + procName + "\"");
@@ -400,6 +482,12 @@ public class DatabaseService {
         return false;
     }
 
+    /**
+     * 等待进程
+     * @param procName 进程名
+     * @throws IOException 失败
+     * @throws InterruptedException 失败
+     */
     private void waitForProcess(@SuppressWarnings("SameParameterValue") String procName) throws IOException, InterruptedException {
         StringBuilder strBuilder = new StringBuilder();
         long start = System.currentTimeMillis();
@@ -416,6 +504,9 @@ public class DatabaseService {
         }
     }
 
+    /**
+     * 检查索引数据库大小
+     */
     private void checkFileSize() {
         SQLiteUtil.closeAll();
         for (String eachDisk : RegexUtil.comma.split(AllConfigs.getInstance().getDisks())) {
@@ -436,6 +527,10 @@ public class DatabaseService {
         SQLiteUtil.initAllConnections();
     }
 
+    /**
+     * 关闭数据库连接并更新数据库
+     * @param ignorePath 忽略文件夹
+     */
     private void updateLists(String ignorePath) {
         checkFileSize();
         recreateDatabase();
@@ -452,6 +547,10 @@ public class DatabaseService {
                 TranslateUtil.getInstance().getTranslation("Search Done")));
     }
 
+    /**
+     * 等待sql任务执行
+     * @param taskId 任务id
+     */
     private void waitForCommandSet(@SuppressWarnings("SameParameterValue") SqlTaskIds taskId) {
         try {
             EventManagement eventManagement = EventManagement.getInstance();
@@ -490,6 +589,11 @@ public class DatabaseService {
         return false;
     }
 
+    /**
+     * 更新表权重
+     * @param tableName 表名
+     * @param weight 权重
+     */
     private void updateTableWeight(String tableName, long weight) {
         String format = String.format("UPDATE weight SET TABLE_WEIGHT=%d WHERE TABLE_NAME=\"%s\"", weight, tableName);
         commandSet.add(new SQLWithTaskId(format, SqlTaskIds.UPDATE_WEIGHT, "weight"));
