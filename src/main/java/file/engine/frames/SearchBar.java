@@ -2752,20 +2752,17 @@ public class SearchBar {
         if (labelHeight > 20) {
             int positionX;
             int positionY;
-            boolean isGrabFocus;
             if (GetHandle.INSTANCE.isDialogWindow()) {
                 positionX = (int) (explorerX + (explorerWidth / 2 - searchBarWidth / 2));
                 positionY = (int) (explorerY + explorerHeight - searchBarHeight + labelHeight);
-                isGrabFocus = true;
             } else {
                 positionX = (int) (explorerX + explorerWidth - searchBarWidth - 25);
                 positionY = (int) (explorerY + explorerHeight - searchBarHeight - labelHeight);
-                isGrabFocus = false;
             }
             //设置窗口大小
             changeSearchBarSizeAndPos(positionX, positionY, searchBarWidth, searchBarHeight, labelHeight);
             setLabelAtTop(searchBarHeight);
-            showSearchbar(isGrabFocus);
+            showSearchbar(false);
         }
     }
 
@@ -3806,7 +3803,6 @@ public class SearchBar {
 
     /**
      * 显示窗口
-     *
      * @param isGrabFocus 是否强制抓取焦点
      */
     private void showSearchbar(boolean isGrabFocus) {
@@ -3820,11 +3816,15 @@ public class SearchBar {
                 visibleStartTime = startTime;
                 if (isGrabFocus) {
                     GetHandle.INSTANCE.bringSearchBarToTop();
-                    RobotUtil.getInstance().mouseClicked(
-                            searchBar.getX() + textField.getWidth() / 2,
-                            searchBar.getY() + textField.getHeight() / 2,
-                            1,
-                            InputEvent.BUTTON1_DOWN_MASK);
+                    int x = 0, y = 0;
+                    if (showingMode == Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
+                        x = searchBar.getX() + textField.getWidth() / 2;
+                        y = searchBar.getY() + textField.getHeight() / 2;
+                    } else if (showingMode == Enums.ShowingSearchBarMode.EXPLORER_ATTACH) {
+                        x = searchBar.getX() + textField.getWidth() / 2;
+                        y = (int) (searchBar.getY() + textField.getHeight() * 8.5);
+                    }
+                    RobotUtil.getInstance().mouseClicked(x, y, 1, InputEvent.BUTTON1_DOWN_MASK);
                 }
             }
             if (isBorderThreadNotExist.get()) {

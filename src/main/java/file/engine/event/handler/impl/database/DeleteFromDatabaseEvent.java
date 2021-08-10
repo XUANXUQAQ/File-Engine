@@ -1,8 +1,10 @@
 package file.engine.event.handler.impl.database;
 
+import file.engine.event.handler.Event;
+
 import java.util.LinkedHashSet;
 
-public class DeleteFromDatabaseEvent extends DatabaseEvent {
+public class DeleteFromDatabaseEvent extends Event {
     private final LinkedHashSet<String> paths;
 
     public Object[] getPaths() {
@@ -10,8 +12,6 @@ public class DeleteFromDatabaseEvent extends DatabaseEvent {
     }
 
     public DeleteFromDatabaseEvent(LinkedHashSet<String> paths) {
-        super(null);
         this.paths = paths;
-        this.setBlock();
     }
 }

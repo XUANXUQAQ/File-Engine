@@ -1,9 +1,11 @@
 package file.engine.event.handler.impl.database;
 
-public class DeleteFromCacheEvent extends DatabaseEvent {
+import file.engine.event.handler.Event;
+
+public class DeleteFromCacheEvent extends Event {
+    public final String path;
 
     public DeleteFromCacheEvent(String path) {
-        super(path);
-        this.setBlock();
+        this.path = path;
     }
 }
