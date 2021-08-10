@@ -207,9 +207,13 @@ void restart_file_engine(bool isIgnoreCloseFile)
 	ShellExecuteA(nullptr, "open", g_file_engine_exe_path, nullptr, g_file_engine_working_dir, SW_SHOWNORMAL);
 }
 
+/**
+ * 更新File-Engine
+ */
 void update()
 {
-	CopyFileA(g_file_engine_exe_path, g_new_file_engine_exe_path, false);
+	CopyFileA(g_new_file_engine_exe_path, g_file_engine_exe_path, false);
+	remove(g_update_signal_file);
 }
 
 /**
