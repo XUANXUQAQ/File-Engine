@@ -12,9 +12,7 @@ import file.engine.dllInterface.GetHandle;
 import file.engine.dllInterface.IsLocalDisk;
 import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
-import file.engine.event.handler.impl.database.AddToCacheEvent;
-import file.engine.event.handler.impl.database.DeleteFromCacheEvent;
-import file.engine.event.handler.impl.database.UpdateDatabaseEvent;
+import file.engine.event.handler.impl.database.*;
 import file.engine.event.handler.impl.frame.searchBar.*;
 import file.engine.event.handler.impl.frame.settingsFrame.AddCacheEvent;
 import file.engine.event.handler.impl.frame.settingsFrame.IsCacheExistEvent;
@@ -72,6 +70,7 @@ public class SearchBar {
     private final AtomicBoolean isBorderThreadNotExist = new AtomicBoolean(true);
     private final AtomicBoolean isRepaintFrameThreadNotExist = new AtomicBoolean(true);
     private final AtomicBoolean isTryToShowResultThreadNotExist = new AtomicBoolean(true);
+    private final AtomicBoolean isTableWeightInitialized = new AtomicBoolean(false);
     private static final AtomicBoolean isPreviewMode = new AtomicBoolean(false);
     private final AtomicBoolean isTutorialMode = new AtomicBoolean(false);
     private Border fullBorder;
@@ -137,9 +136,9 @@ public class SearchBar {
         private final String tableName;
         private final AtomicLong weight;
 
-        private TableNameWeightInfo(String tableName) {
+        private TableNameWeightInfo(String tableName, int weight) {
             this.tableName = tableName;
-            this.weight = new AtomicLong(0);
+            this.weight = new AtomicLong(weight);
         }
     }
 
@@ -256,8 +255,6 @@ public class SearchBar {
         panel.add(label7);
         panel.add(label8);
 
-        initTableMap();
-
         initPriorityQueue();
 
         initMenuItems();
@@ -283,6 +280,9 @@ public class SearchBar {
         addTextFieldFocusListener();
     }
 
+    /**
+     * 添加对右键菜单的相应
+     */
     private void initMenuItems() {
         open.addActionListener(e -> {
             if (isPreviewMode.get() || isTutorialMode.get()) {
@@ -381,6 +381,12 @@ public class SearchBar {
         });
     }
 
+    /**
+     * 初始化所有边框
+     * @param borderType 边框类型
+     * @param borderColor 边框颜色
+     * @param borderThickness 边框厚度
+     */
     private void initBorder(Enums.BorderType borderType, Color borderColor, int borderThickness) {
         if (Enums.BorderType.AROUND == borderType) {
             topBorder = BorderFactory.createMatteBorder(borderThickness, borderThickness, 0, borderThickness, borderColor);
@@ -456,12 +462,34 @@ public class SearchBar {
         });
     }
 
+    /**
+     * 初始化所有表名和权重信息，不要移动到构造函数中，否则会造成死锁
+     * 在该任务前可能会有设置搜索框颜色等各种任务，这些任务被设置为异步，若在构造函数未执行完成时，会造成无法构造实例
+     */
     private void initTableMap() {
+        if (isTableWeightInitialized.get()) {
+            return;
+        }
+        isTableWeightInitialized.set(true);
+        EventManagement eventManagement = EventManagement.getInstance();
+        QueryAllWeightsEvent queryAllWeightsEvent = new QueryAllWeightsEvent();
+        eventManagement.putEvent(queryAllWeightsEvent);
+        eventManagement.waitForEvent(queryAllWeightsEvent);
+        HashMap<String, Integer> returnValue = queryAllWeightsEvent.getReturnValue();
         for (int i = 0; i <= Constants.ALL_TABLE_NUM; i++) {
-            tableSet.add(new TableNameWeightInfo("list" + i));
+            Integer integer = returnValue.get("list" + i);
+            if (integer == null) {
+                integer = 0;
+            }
+            tableSet.add(new TableNameWeightInfo("list" + i, integer));
         }
     }
 
+    /**
+     * 通过表名获得表的权重信息
+     * @param tableName 表名
+     * @return 权重信息
+     */
     private TableNameWeightInfo getInfoByName(String tableName) {
         for (TableNameWeightInfo each : tableSet) {
             if (each.tableName.equals(tableName)) {
@@ -471,12 +499,18 @@ public class SearchBar {
         return null;
     }
 
+    /**
+     * 更新权重信息
+     * @param tableName 表名
+     * @param weight 权重
+     */
     private void updateTableWeight(String tableName, long weight) {
         TableNameWeightInfo origin = getInfoByName(tableName);
         if (origin == null) {
             return;
         }
         origin.weight.addAndGet(weight);
+        EventManagement.getInstance().putEvent(new UpdateTableWeightEvent(tableName, weight));
         if (IsDebug.isDebug()) {
             System.err.println("已更新" + tableName + "权重, 之前为" + origin + "***增加了" + weight);
         }
@@ -3776,6 +3810,7 @@ public class SearchBar {
      * @param isGrabFocus 是否强制抓取焦点
      */
     private void showSearchbar(boolean isGrabFocus) {
+        initTableMap();
         SwingUtilities.invokeLater(() -> {
             if (!isVisible()) {
                 setVisible(true);
