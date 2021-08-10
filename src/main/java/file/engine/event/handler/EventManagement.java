@@ -54,7 +54,7 @@ public class EventManagement {
      */
     public boolean waitForEvent(Event event) {
         try {
-            int timeout = 200;
+            int timeout = 400;
             int count = 0;
             while (!event.isFailed() && !event.isFinished()) {
                 count++;
@@ -152,7 +152,7 @@ public class EventManagement {
 
     /**
      * 发送任务
-     *
+     * 不要在构造函数中执行，可能会导致死锁
      * @param event 任务
      */
     public void putEvent(Event event) {

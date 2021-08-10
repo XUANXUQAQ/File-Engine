@@ -1,5 +1,7 @@
 package file.engine.event.handler;
 
+import lombok.Setter;
+
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -8,7 +10,7 @@ public class Event {
     private final AtomicBoolean isFailed = new AtomicBoolean(false);
     private final AtomicInteger executeTimes = new AtomicInteger(0);
     private final AtomicBoolean isBlock = new AtomicBoolean(false);
-    private Object returnValue;
+    private @Setter Object returnValue;
 
     protected void incrementExecuteTimes() {
         executeTimes.incrementAndGet();
@@ -40,10 +42,6 @@ public class Event {
 
     protected void setFinished() {
         isFinished.set(true);
-    }
-
-    public void setReturnValue(Object obj) {
-        returnValue = obj;
     }
 
     @SuppressWarnings("unchecked")

@@ -146,6 +146,13 @@ public class SQLiteUtil {
         } catch (SQLException e) {
             malformedFiles.add(cache);
         }
+        File weight = new File("data", "weight.db");
+        try {
+            initConnection("jdbc:sqlite:" + weight.getAbsolutePath(), "weight");
+            createWeightTable();
+        } catch (SQLException exception) {
+            malformedFiles.add(weight);
+        }
         if (!malformedFiles.isEmpty()) {
             try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("user/malformedDB"), StandardCharsets.UTF_8))) {
                 for (File file : malformedFiles) {
@@ -159,8 +166,38 @@ public class SQLiteUtil {
         }
     }
 
+    /**
+     * 检查表是否存在
+     * @return true or false
+     */
+    @SuppressWarnings("SameParameterValue")
+    private static boolean isTableExist(String tableName, String key) {
+        try (Statement p = getStatement(key)) {
+            p.execute(String.format("SELECT * FROM %s", tableName));
+            return true;
+        } catch (SQLException exception) {
+            return false;
+        }
+    }
+
+    private static void createWeightTable() throws SQLException {
+        try (PreparedStatement pStmt = getPreparedStatement("CREATE TABLE IF NOT EXISTS weight(TABLE_NAME text unique, TABLE_WEIGHT INT)", "weight")) {
+            pStmt.executeUpdate();
+        }
+        try (Statement stmt = getStatement("weight")) {
+            for (int i = 0; i < 41; i++) {
+                String tableName = "list" + i;
+                String format = String.format("INSERT OR IGNORE INTO weight values(\"%s\", %d)", tableName, 0);
+                stmt.executeUpdate(format);
+            }
+        }
+    }
+
     private static void createPriorityTable() throws SQLException {
-        try (Statement statement = SQLiteUtil.getStatement("cache")) {
+        if (isTableExist("priority", "cache")) {
+            return;
+        }
+        try (Statement statement = getStatement("cache")) {
             int row = statement.executeUpdate("CREATE TABLE IF NOT EXISTS priority(SUFFIX text unique, PRIORITY INT)");
             if (row == 0) {
                 int count = 10;
@@ -182,7 +219,7 @@ public class SQLiteUtil {
     }
 
     private static void createCacheTable() throws SQLException {
-        try (PreparedStatement pStmt = SQLiteUtil.getPreparedStatement("CREATE TABLE IF NOT EXISTS cache(PATH text unique);", "cache")) {
+        try (PreparedStatement pStmt = getPreparedStatement("CREATE TABLE IF NOT EXISTS cache(PATH text unique);", "cache")) {
             pStmt.executeUpdate();
         }
     }

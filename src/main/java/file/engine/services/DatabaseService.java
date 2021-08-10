@@ -25,6 +25,7 @@ import java.nio.file.Path;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
@@ -274,6 +275,7 @@ public class DatabaseService {
     private void executeAllCommands() {
         if (!commandSet.isEmpty()) {
             LinkedHashSet<SQLWithTaskId> tempCommandSet = new LinkedHashSet<>(commandSet);
+            // TODO 为每一个数据库开启事务
             try {
                 for (SQLWithTaskId each : tempCommandSet) {
                     try (PreparedStatement pStmt = SQLiteUtil.getPreparedStatement(each.sql, each.key)) {
@@ -471,6 +473,26 @@ public class DatabaseService {
         return false;
     }
 
+    private void updateTableWeight(String tableName, long weight) {
+        String format = String.format("UPDATE weight SET TABLE_WEIGHT=%d WHERE TABLE_NAME=\"%s\"", weight, tableName);
+        commandSet.add(new SQLWithTaskId(format, SqlTaskIds.UPDATE_WEIGHT, "weight"));
+    }
+
+    private HashMap<String, Integer> queryAllWeights() {
+        HashMap<String, Integer> stringIntegerHashMap = new HashMap<>();
+        try (PreparedStatement pStmt = SQLiteUtil.getPreparedStatement("SELECT TABLE_NAME, TABLE_WEIGHT FROM weight", "weight")) {
+            ResultSet resultSet = pStmt.executeQuery();
+            while (resultSet.next()) {
+                String tableName = resultSet.getString("TABLE_NAME");
+                int weight = resultSet.getInt("TABLE_WEIGHT");
+                stringIntegerHashMap.put(tableName, weight);
+            }
+        } catch (SQLException exception) {
+            exception.printStackTrace();
+        }
+        return stringIntegerHashMap;
+    }
+
     private void recreateDatabase() {
         commandSet.clear();
         //删除所有索引
@@ -504,6 +526,18 @@ public class DatabaseService {
             } catch (InterruptedException ignored) {
             }
         });
+    }
+
+    @EventRegister(registerClass = QueryAllWeightsEvent.class)
+    private static void queryAllWeights(Event event) {
+        HashMap<String, Integer> weightsMap = getInstance().queryAllWeights();
+        event.setReturnValue(weightsMap);
+    }
+
+    @EventRegister(registerClass = UpdateTableWeightEvent.class)
+    private static void updateWeight(Event event) {
+        UpdateTableWeightEvent updateTableWeightEvent = (UpdateTableWeightEvent) event;
+        getInstance().updateTableWeight(updateTableWeightEvent.tableName, updateTableWeightEvent.tableWeight);
     }
 
     @EventRegister(registerClass = AddToCacheEvent.class)
@@ -619,7 +653,7 @@ public class DatabaseService {
 
     private enum SqlTaskIds {
         DELETE_FROM_LIST, DELETE_FROM_CACHE, INSERT_TO_LIST, INSERT_TO_CACHE,
-        CREATE_INDEX, CREATE_TABLE, DROP_TABLE, DROP_INDEX, UPDATE_SUFFIX
+        CREATE_INDEX, CREATE_TABLE, DROP_TABLE, DROP_INDEX, UPDATE_SUFFIX,UPDATE_WEIGHT
     }
 }
 
