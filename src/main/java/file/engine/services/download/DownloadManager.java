@@ -1,6 +1,6 @@
 package file.engine.services.download;
 
-import file.engine.IsDebug;
+import file.engine.utils.system.properties.IsDebug;
 import file.engine.configs.AllConfigs;
 import file.engine.configs.Enums;
 import file.engine.configs.ProxyInfo;

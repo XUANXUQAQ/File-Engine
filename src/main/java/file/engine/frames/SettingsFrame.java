@@ -1,7 +1,7 @@
 package file.engine.frames;
 
 import com.alibaba.fastjson.JSONObject;
-import file.engine.IsDebug;
+import file.engine.utils.system.properties.IsDebug;
 import file.engine.annotation.EventListener;
 import file.engine.annotation.EventRegister;
 import file.engine.configs.AllConfigs;
@@ -39,6 +39,7 @@ import file.engine.utils.RegexUtil;
 import file.engine.utils.SQLiteUtil;
 import file.engine.utils.TranslateUtil;
 import file.engine.utils.file.MoveDesktopFiles;
+import file.engine.utils.system.properties.IsPreview;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -592,7 +593,7 @@ public class SettingsFrame {
                     showManualDownloadDialog();
                     return;
                 }
-                if (Double.parseDouble(latestVersion) > Double.parseDouble(AllConfigs.version)) {
+                if (Double.parseDouble(latestVersion) > Double.parseDouble(AllConfigs.version) || IsPreview.isPreview()) {
                     String description = updateInfo.getString("description");
                     int result = JOptionPane.showConfirmDialog(frame,
                             translateUtil.getTranslation(

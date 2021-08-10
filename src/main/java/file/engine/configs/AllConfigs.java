@@ -10,7 +10,7 @@ import com.formdev.flatlaf.FlatLightLaf;
 import com.formdev.flatlaf.intellijthemes.*;
 import com.formdev.flatlaf.intellijthemes.materialthemeuilite.FlatMaterialDarkerIJTheme;
 import com.formdev.flatlaf.intellijthemes.materialthemeuilite.FlatMaterialLighterIJTheme;
-import file.engine.IsDebug;
+import file.engine.utils.system.properties.IsDebug;
 import file.engine.annotation.EventRegister;
 import file.engine.dllInterface.IsLocalDisk;
 import file.engine.event.handler.Event;

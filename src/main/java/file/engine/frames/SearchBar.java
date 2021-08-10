@@ -1,7 +1,7 @@
 package file.engine.frames;
 
 
-import file.engine.IsDebug;
+import file.engine.utils.system.properties.IsDebug;
 import file.engine.annotation.EventListener;
 import file.engine.annotation.EventRegister;
 import file.engine.configs.AllConfigs;

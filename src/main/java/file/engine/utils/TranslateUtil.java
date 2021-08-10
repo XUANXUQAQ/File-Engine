@@ -1,6 +1,6 @@
 package file.engine.utils;
 
-import file.engine.IsDebug;
+import file.engine.utils.system.properties.IsDebug;
 import lombok.Getter;
 
 import javax.swing.*;
@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -124,7 +125,7 @@ public class TranslateUtil {
         if (!"English(US)".equals(language)) {
             String filePath = fileMap.get(language);
             translationMap.clear();
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(TranslateUtil.class.getResourceAsStream(filePath), StandardCharsets.UTF_8))) {
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(Objects.requireNonNull(TranslateUtil.class.getResourceAsStream(filePath)), StandardCharsets.UTF_8))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
                     String[] record = RegexUtil.equalSign.split(line);
