@@ -719,9 +719,9 @@ public class DatabaseService {
                 if (IsDebug.isDebug()) {
                     System.out.println("结束优化");
                 }
-                databaseService.setStatus(Enums.DatabaseStatus.NORMAL);
             }
         }
+        databaseService.setStatus(Enums.DatabaseStatus.NORMAL);
     }
 
     @EventRegister(registerClass = AddToSuffixPriorityMapEvent.class)

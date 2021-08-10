@@ -7,6 +7,7 @@ import file.engine.annotation.EventRegister;
 import file.engine.configs.AllConfigs;
 import file.engine.configs.ConfigEntity;
 import file.engine.configs.Enums;
+import file.engine.dllInterface.IsLocalDisk;
 import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
 import file.engine.event.handler.impl.SetSwingLaf;
@@ -275,6 +276,7 @@ public class SettingsFrame {
     private JTextField textFieldBorderThickness;
     private JComboBox<Object> comboBoxBorderType;
     private JCheckBox checkBoxIsAttachExplorer;
+    private JLabel labelZip;
 
 
     private static volatile SettingsFrame instance = null;
@@ -310,6 +312,9 @@ public class SettingsFrame {
         });
     }
 
+    /**
+     * 添加到开机启动监听器
+     */
     private void addCheckBoxStartupListener() {
         checkBoxAddToStartup.addMouseListener(new MouseAdapter() {
             @Override
@@ -319,6 +324,9 @@ public class SettingsFrame {
         });
     }
 
+    /**
+     * 清空桌面按钮监听器
+     */
     private void addButtonRemoveDesktopListener() {
         buttonSaveAndRemoveDesktop.addActionListener(e -> {
             String currentFolder = new File("").getAbsolutePath();
@@ -354,6 +362,9 @@ public class SettingsFrame {
         });
     }
 
+    /**
+     * 快捷键响应
+     */
     private void addTextFieldListener() {
         textFieldHotkey.addKeyListener(new KeyListener() {
             boolean reset = true;
@@ -429,6 +440,9 @@ public class SettingsFrame {
         });
     }
 
+    /**
+     * 选择优先文件夹
+     */
     private void addPriorityFileChooserListener() {
         ButtonPriorityFolder.addActionListener(e -> {
             JFileChooser fileChooser = new JFileChooser();
@@ -441,6 +455,9 @@ public class SettingsFrame {
         });
     }
 
+    /**
+     * 双击有限文件夹显示textField后清空
+     */
     private void addPriorityTextFieldListener() {
         textFieldPriorityFolder.addMouseListener(new MouseAdapter() {
             @Override
@@ -452,6 +469,9 @@ public class SettingsFrame {
         });
     }
 
+    /**
+     * 打开所在文件夹监听器
+     */
     private void addTextFieldOpenLastFolderListener() {
         textFieldOpenLastFolder.addKeyListener(new KeyAdapter() {
             @Override
@@ -471,6 +491,9 @@ public class SettingsFrame {
         });
     }
 
+    /**
+     * 添加自定义命令监听器
+     */
     private void addButtonCMDListener() {
         buttonAddCMD.addActionListener(e -> {
             String name = JOptionPane.showInputDialog(translateUtil.getTranslation("Please enter the ID of the command, then you can enter \": identifier\" in the search box to execute the command directly"));
@@ -505,6 +528,9 @@ public class SettingsFrame {
         });
     }
 
+    /**
+     * 删除自定义命令监听器
+     */
     private void addButtonDelCMDListener() {
         buttonDelCmd.addActionListener(e -> {
             String del = (String) listCmds.getSelectedValue();
@@ -517,6 +543,9 @@ public class SettingsFrame {
         });
     }
 
+    /**
+     * 点击打开github
+     */
     private void addGitHubLabelListener() {
         labelAboutGithub.addMouseListener(new MouseAdapter() {
             @Override
@@ -535,6 +564,9 @@ public class SettingsFrame {
         });
     }
 
+    /**
+     * 点击检查更新
+     */
     private void addCheckForUpdateButtonListener() {
         var downloadManager = new Object() {
             DownloadManager downloadManager;
@@ -605,6 +637,9 @@ public class SettingsFrame {
         });
     }
 
+    /**
+     * 显示手动下载弹窗
+     */
     private void showManualDownloadDialog() {
         int ret = JOptionPane.showConfirmDialog(frame, translateUtil.getTranslation("Do you want to download it manually") + "?");
         if (ret == JOptionPane.YES_OPTION) {
@@ -641,6 +676,9 @@ public class SettingsFrame {
         });
     }
 
+    /**
+     * 重置颜色设置
+     */
     private void addResetColorButtonListener() {
         buttonResetColor.addActionListener(e -> {
             textFieldFontColorWithCoverage.setText(toRGBHexString(AllConfigs.defaultFontColorWithCoverage));
@@ -653,6 +691,13 @@ public class SettingsFrame {
         });
     }
 
+    /**
+     * 检查字符串是否可以解析成指定范围的数字
+     * @param str 字符串
+     * @param min 最小值
+     * @param max 最大值
+     * @return boolean
+     */
     private boolean canParseInteger(String str, int min, int max) {
         try {
             int ret = Integer.parseInt(str);
@@ -666,11 +711,21 @@ public class SettingsFrame {
         }
     }
 
+    /**
+     * 获取保存颜色信息的textField的信息，失败为null
+     * @param textField textField
+     * @return Color
+     */
     private Color getColorFromTextFieldStr(JTextField textField) {
         String tmp;
         return canParseToRGB(tmp = textField.getText()) ? new Color(Integer.parseInt(tmp, 16)) : null;
     }
 
+    /**
+     * 在label上显示颜色
+     * @param color color
+     * @param label JLabel
+     */
     private void setColorChooserLabel(Color color, JLabel label) {
         if (color != null) {
             label.setBackground(color);
@@ -678,6 +733,9 @@ public class SettingsFrame {
         }
     }
 
+    /**
+     * 实时监测textField中保存的颜色信息，并尝试更新label
+     */
     private void addColorChooserLabelListener() {
         cachedThreadPoolUtil.executeTask(() -> {
             try {
@@ -784,6 +842,9 @@ public class SettingsFrame {
         });
     }
 
+    /**
+     * 点击插件在右方显示详细信息
+     */
     private void addListPluginMouseListener() {
         listPlugins.addMouseListener(new MouseAdapter() {
             @Override
@@ -828,6 +889,9 @@ public class SettingsFrame {
         });
     }
 
+    /**
+     * 点击插件名打开浏览器到插件首页
+     */
     private void addPluginOfficialSiteListener() {
         labelOfficialSite.addMouseListener(new MouseAdapter() {
             @Override
@@ -852,6 +916,9 @@ public class SettingsFrame {
         });
     }
 
+    /**
+     * 显示更新主题弹窗
+     */
     private void addButtonChangeThemeListener() {
         //移除显示theme框，改为弹出窗口
         buttonChangeTheme.addActionListener(e ->
@@ -892,6 +959,9 @@ public class SettingsFrame {
         });
     }
 
+    /**
+     * 点击执行数据库VACUUM
+     */
     private void addButtonVacuumListener() {
         buttonVacuum.addActionListener(e -> {
             int ret = JOptionPane.showConfirmDialog(frame, translateUtil.getTranslation("Confirm whether to start optimizing the database?"));
@@ -925,6 +995,9 @@ public class SettingsFrame {
         });
     }
 
+    /**
+     * 搜索自定义命令
+     */
     private void addTextFieldSearchCommandsListener() {
         class search {
             final String searchText;
@@ -1034,6 +1107,9 @@ public class SettingsFrame {
         });
     }
 
+    /**
+     * 删除所有缓存
+     */
     private void addButtonDeleteAllCacheListener() {
         buttonDeleteAllCache.addActionListener(e -> {
             int ret = JOptionPane.showConfirmDialog(frame,
@@ -1052,12 +1128,12 @@ public class SettingsFrame {
         buttonPluginMarket.addActionListener(e -> eventManagement.putEvent(new ShowPluginMarket()));
     }
 
+    /**
+     * 将diskSet中的字符串转为用逗号隔开的字符串
+     * @return string
+     */
     private String parseDisk() {
-        StringBuilder stringBuilder = new StringBuilder();
-        for (String eachDisk : diskSet) {
-            stringBuilder.append(eachDisk).append(",");
-        }
-        return stringBuilder.toString();
+        return String.join(",", diskSet);
     }
 
     @SuppressWarnings("SuspiciousMethodCalls")
@@ -1071,6 +1147,9 @@ public class SettingsFrame {
         });
     }
 
+    /**
+     * 点击重建索引
+     */
     private void addButtonRebuildListener() {
         buttonRebuildIndex.addActionListener(e -> {
             eventManagement.putEvent(new ShowTaskBarMessageEvent(
@@ -1080,12 +1159,17 @@ public class SettingsFrame {
         });
     }
 
+    /**
+     * 点击添加硬盘
+     */
     private void addButtonAddDiskListener() {
         buttonAddNewDisk.addActionListener(e -> {
             File[] disks = File.listRoots();
             ArrayList<String> arraylistDisks = new ArrayList<>();
             for (File each : disks) {
-                arraylistDisks.add(each.getAbsolutePath());
+                if (IsLocalDisk.INSTANCE.isDiskNTFS(each.getAbsolutePath())) {
+                    arraylistDisks.add(each.getAbsolutePath());
+                }
             }
             JList<Object> listDisksTmp = new JList<>();
             listDisksTmp.setListData(arraylistDisks.toArray());
@@ -1185,6 +1269,9 @@ public class SettingsFrame {
         });
     }
 
+    /**
+     * 刷新后缀优先级显示
+     */
     private void refreshPriorityTable() {
         SwingUtilities.invokeLater(this::setTableGui);
     }
@@ -1202,6 +1289,15 @@ public class SettingsFrame {
         return suffixMap.containsKey(suffix);
     }
 
+    /**
+     * 检查后缀优先级的设置
+     * @param suffix 后缀
+     * @param priority 优先级
+     * @param errMsg 存储错误信息
+     * @param isSuffixChanged 是否后缀修改
+     * @param isPriorityChanged 是否优先级修改
+     * @return true检查成功
+     */
     private boolean checkSuffixAndPriority(String suffix, String priority, StringBuilder errMsg, boolean isSuffixChanged, boolean isPriorityChanged) {
         if (isSuffixChanged) {
             if (isSuffixRepeat(suffix)) {
@@ -1400,6 +1496,13 @@ public class SettingsFrame {
         });
     }
 
+    /**
+     * 等待检查更新
+     * @param startCheckTime 开始检查时间
+     * @param checkUpdateThread 检查线程
+     * 0x100L 表示检查成功
+     * 0xFFFL 表示检查失败
+     */
     private void waitForCheckUpdateResult(AtomicLong startCheckTime, Thread checkUpdateThread) {
         try {
             while (startCheckTime.get() != 0x100L) {
@@ -1498,12 +1601,13 @@ public class SettingsFrame {
 
     private void setLabelGui() {
         labelAboutGithub.setText("<html><a href='https://github.com/XUANXUQAQ/File-Engine'><font size=\"4\">File-Engine</font></a></html>");
-        labelWebLookAndFeel.setText("1.FlatLaf");
-        labelFastJson.setText("2.FastJson");
-        labelJna.setText("3.Java-Native-Access");
-        labelSQLite.setText("4.SQLite-JDBC");
-        labelTinyPinyin.setText("5.TinyPinyin");
-        labelLombok.setText("6.Lombok");
+        labelWebLookAndFeel.setText("1.JFormDesigner/FlatLaf");
+        labelFastJson.setText("2.alibaba/FastJson");
+        labelJna.setText("3.java-native-access/jna");
+        labelSQLite.setText("4.xerial/sqlite-jdbc");
+        labelTinyPinyin.setText("5.promeG/TinyPinyin");
+        labelLombok.setText("6.projectlombok/Lombok");
+        labelZip.setText("7.kuba--/zip");
         labelPluginNum.setText(String.valueOf(PluginService.getInstance().getInstalledPluginNum()));
         ImageIcon imageIcon = new ImageIcon(Objects.requireNonNull(SettingsFrame.class.getResource("/icons/frame.png")));
         labelIcon.setIcon(imageIcon);
@@ -1511,6 +1615,9 @@ public class SettingsFrame {
         labelCurrentCacheNum.setText(translateUtil.getTranslation("Current Caches Num:") + DatabaseService.getInstance().getCacheNum());
     }
 
+    /**
+     * 初始化textField的显示
+     */
     private void setTextFieldAndTextAreaGui() {
         textFieldBackgroundDefault.setText(toRGBHexString(allConfigs.getDefaultBackgroundColor()));
         textFieldLabelColor.setText(toRGBHexString(allConfigs.getLabelColor()));
@@ -1553,6 +1660,9 @@ public class SettingsFrame {
         }
     }
 
+    /**
+     * 初始化颜色选择器的显示
+     */
     private void setColorChooserGui() {
         Color tmp_searchBarColor = new Color(allConfigs.getSearchBarColor());
         searchBarColorChooser.setBackground(tmp_searchBarColor);
@@ -1583,6 +1693,12 @@ public class SettingsFrame {
         borderColorChooser.setForeground(tmp_borderColor);
     }
 
+    /**
+     * 根据后缀优先级获取后缀
+     * @param suffixPriorityMap 优先级表
+     * @param val val
+     * @return key
+     */
     private String getSuffixByValue(HashMap<String, Integer> suffixPriorityMap, int val) {
         for (String each : suffixPriorityMap.keySet()) {
             if (suffixPriorityMap.get(each) == val) {
@@ -1592,6 +1708,9 @@ public class SettingsFrame {
         return "";
     }
 
+    /**
+     * 设置所有表的显示
+     */
     private void setTableGui() {
         tableSuffix.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         DefaultTableModel tableModel = (DefaultTableModel) tableSuffix.getModel();    //获得表格模型
@@ -1611,6 +1730,9 @@ public class SettingsFrame {
         }
     }
 
+    /**
+     * 初始化所有选择栏的显示
+     */
     private void setCheckBoxGui() {
         checkBoxLoseFocus.setSelected(allConfigs.isLoseFocusClose());
         checkBoxAddToStartup.setSelected(allConfigs.hasStartup());
@@ -1621,6 +1743,9 @@ public class SettingsFrame {
         checkBoxIsAttachExplorer.setSelected(allConfigs.isAttachExplorer());
     }
 
+    /**
+     * 初始化所有列表的显示
+     */
     private void setListGui() {
         listCmds.setListData(allConfigs.getCmdSet().toArray());
         listLanguage.setListData(translateUtil.getLanguageSet().toArray());
@@ -1637,6 +1762,9 @@ public class SettingsFrame {
         listDisks.setListData(diskSet.toArray());
     }
 
+    /**
+     * 初始化后缀名map
+     */
     private void initSuffixMap() {
         try (PreparedStatement pStmt = SQLiteUtil.getPreparedStatement("SELECT * FROM priority;", "cache")) {
             ResultSet resultSet = pStmt.executeQuery();
@@ -1648,6 +1776,10 @@ public class SettingsFrame {
         }
     }
 
+    /**
+     * 获取tab中最长的字符串
+     * @return 最长的字符串
+     */
     private String getLongestTitle() {
         String longest = "";
         String realTitle;
@@ -1660,6 +1792,9 @@ public class SettingsFrame {
         return longest;
     }
 
+    /**
+     * 重设gui大小
+     */
     private void resizeGUI() {
         int fontSize = treeSettings.getFont().getSize() / 96 * 72;
         String longestTitle = getLongestTitle();
@@ -1675,6 +1810,9 @@ public class SettingsFrame {
         tabbedPane.setPreferredSize(tabbedPaneSize);
     }
 
+    /**
+     * 初始化所有UI
+     */
     private void initGUI() {
         //设置窗口显示
         setLabelGui();
@@ -1715,6 +1853,9 @@ public class SettingsFrame {
         comboBoxBorderType.setSelectedItem(allConfigs.getBorderType());
     }
 
+    /**
+     * 初始化cache
+     */
     private void initCacheArray() {
         String eachLine;
         try (PreparedStatement statement = SQLiteUtil.getPreparedStatement("SELECT PATH FROM cache;", "cache");
@@ -1728,6 +1869,9 @@ public class SettingsFrame {
         }
     }
 
+    /**
+     * 初始化代理选择框
+     */
     private void selectProxyType() {
         if (allConfigs.getProxyType() == Enums.ProxyType.PROXY_SOCKS) {
             radioButtonProxyTypeSocks5.setSelected(true);
@@ -1791,6 +1935,12 @@ public class SettingsFrame {
         expandAll(treeSettings, new TreePath(root), true);
     }
 
+    /**
+     * 展开所有设置
+     * @param tree tree
+     * @param parent parent
+     * @param expand 是否展开
+     */
     private void expandAll(JTree tree, TreePath parent, boolean expand) {
         TreeNode node = (TreeNode) parent.getLastPathComponent();
         if (node.getChildCount() >= 0) {
@@ -1844,6 +1994,9 @@ public class SettingsFrame {
         addListeners();
     }
 
+    /**
+     * 添加所有监听器
+     */
     private void addListeners() {
         addWindowCloseListener();
         addCheckBoxStartupListener();
@@ -1884,10 +2037,19 @@ public class SettingsFrame {
         addTreeSettingsListener();
     }
 
+    /**
+     * 检查缓存是否存在
+     * @param cache cache
+     * @return boolean
+     */
     private boolean isCacheExist(String cache) {
         return cacheSet.contains(cache);
     }
 
+    /**
+     * 添加缓存到cacheSet
+     * @param cache cache
+     */
     private void addCache(String cache) {
         cacheSet.add(cache);
     }

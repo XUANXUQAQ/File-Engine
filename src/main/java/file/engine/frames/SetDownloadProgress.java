@@ -15,11 +15,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 /**
- * 使用方法：给点击下载的button添加actionListener，用一个AtomicBoolean isDownloadStarted判断当前按钮是点击下载，还是点击取消下载
- * 如果是点击取消下载（isDownloadStarted = true）则发送一个cancel请求
+ * 使用方法：给点击下载的button添加actionListener，判断当前按钮是点击下载，还是点击取消下载
+ * 如果是点击取消下载则发送一个cancel请求
  * 如果是点击下载，则通过判断后发送一个start下载请求，然后开启一个线程运行该方法即可
- * <p>
- * 不要自己设置isDownloadStarted
+ *
  */
 public class SetDownloadProgress {
 
@@ -50,7 +49,6 @@ public class SetDownloadProgress {
             EventManagement eventManagement = EventManagement.getInstance();
             String buttonOriginalText = buttonInstall.getText();
             boolean isStarted = true;
-            boolean isDownloadStartedSet = false;    //当getSelectedMethod获取到的字符串不等于currentTaskStr，让isDownloadStarted设置为false（只设置一次，之后会由其他线程托管）
             while (isStarted) {
                 if (func.get()) {
                     if (!eventManagement.isNotMainExit()) {
@@ -61,7 +59,6 @@ public class SetDownloadProgress {
                         taskStrFromMethod = (String) getSelectedMethod.invoke(invokeMethodObj);
                     }
                     if (currentTaskStr.equals(taskStrFromMethod)) {
-                        isDownloadStartedSet = false;
                         double progress = downloadService.getDownloadProgress(downloadManager);
                         Enums.DownloadStatus downloadStatus = downloadService.getDownloadStatus(downloadManager);
                         if (downloadStatus == Enums.DownloadStatus.DOWNLOAD_DONE) {
@@ -82,7 +79,6 @@ public class SetDownloadProgress {
                             buttonInstall.setText(buttonOriginalText);
                             buttonInstall.setEnabled(true);
                             isStarted = false;
-                            retVal = false;
                         } else if (downloadStatus == Enums.DownloadStatus.DOWNLOAD_DOWNLOADING) {
                             //正在下载
                             labelProgress.setText(translateUtil.getTranslation("Downloading:") + (int) (progress * 100) + "%");
@@ -95,10 +91,6 @@ public class SetDownloadProgress {
                             buttonInstall.setEnabled(true);
                             isStarted = false;
                             retVal = true;
-                        }
-                    } else {
-                        if (!isDownloadStartedSet) {
-                            isDownloadStartedSet = true;
                         }
                     }
                 }

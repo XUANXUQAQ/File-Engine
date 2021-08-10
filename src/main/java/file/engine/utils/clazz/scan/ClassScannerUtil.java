@@ -12,6 +12,14 @@ public class ClassScannerUtil {
         return ScannerExecutor.getInstance().search(packageName);
     }
 
+    /**
+     * 查找所有含有注解的方法，每找到一个就调用一次doFunction
+     * @param cl 注解类
+     * @param doFunction 方法
+     * @throws ClassNotFoundException 未找到类
+     * @throws InvocationTargetException exception
+     * @throws IllegalAccessException exception
+     */
     public static void searchAndRun(Class<? extends Annotation> cl, BiConsumer<Class<? extends Annotation>, Method> doFunction) throws ClassNotFoundException, InvocationTargetException, IllegalAccessException {
         String packageName = "file.engine";
         Set<String> classNames = searchClasses(packageName);
