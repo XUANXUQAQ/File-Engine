@@ -3271,7 +3271,7 @@ public class SearchBar {
                     Bit zero = new Bit(new byte[]{0});
                     Bit one = new Bit(new byte[]{1});
                     ConcurrentSkipListSet<String> results;
-                    while (start.length() != allTaskStatus.length() || !tmpTaskStatus.equals(allTaskStatus) || taskStatus.or(zero).equals(zero)) {
+                    while (start.length() <= allTaskStatus.length() || !tmpTaskStatus.equals(allTaskStatus) || taskStatus.or(zero).equals(zero)) {
                         TimeUnit.MILLISECONDS.sleep(1);
                         if (startTime > startSearchTime) {
                             //用户重新输入，结束当前任务

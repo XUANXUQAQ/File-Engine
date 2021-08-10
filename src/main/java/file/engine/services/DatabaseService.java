@@ -25,8 +25,8 @@ import java.nio.file.Path;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.LinkedHashSet;
+import java.sql.Statement;
+import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -275,27 +275,44 @@ public class DatabaseService {
     private void executeAllCommands() {
         if (!commandSet.isEmpty()) {
             LinkedHashSet<SQLWithTaskId> tempCommandSet = new LinkedHashSet<>(commandSet);
-            // TODO 为每一个数据库开启事务
-            try {
-                for (SQLWithTaskId each : tempCommandSet) {
-                    try (PreparedStatement pStmt = SQLiteUtil.getPreparedStatement(each.sql, each.key)) {
+            HashMap<String, LinkedList<String>> commandMap = new HashMap<>();
+            tempCommandSet.forEach(sqlWithTaskId -> {
+                if (commandMap.containsKey(sqlWithTaskId.key)) {
+                    commandMap.get(sqlWithTaskId.key).add(sqlWithTaskId.sql);
+                } else {
+                    LinkedList<String> sqls = new LinkedList<>();
+                    sqls.add(sqlWithTaskId.sql);
+                    commandMap.put(sqlWithTaskId.key, sqls);
+                }
+            });
+            commandMap.forEach((k, v) -> {
+                Statement stmt = null;
+                try {
+                    stmt = SQLiteUtil.getStatement(k);
+                    stmt.execute("BEGIN;");
+                    for (String sql : v) {
                         if (IsDebug.isDebug()) {
                             System.out.println("----------------------------------------------");
-                            System.out.println("执行SQL命令--" + each.sql);
+                            System.out.println("执行SQL命令--" + sql);
                             System.out.println("----------------------------------------------");
                         }
-                        pStmt.execute();
+                        stmt.execute(sql);
+                    }
+                } catch (SQLException exception) {
+                    exception.printStackTrace();
+                    System.err.println("执行失败：" + v);
+                } finally {
+                    if (stmt != null) {
+                        try {
+                            stmt.execute("COMMIT;");
+                            stmt.close();
+                        } catch (SQLException e) {
+                            e.printStackTrace();
+                        }
                     }
                 }
-                commandSet.removeAll(tempCommandSet);
-            } catch (SQLException e) {
-                if (IsDebug.isDebug()) {
-                    e.printStackTrace();
-                    for (SQLWithTaskId each : tempCommandSet) {
-                        System.err.println("执行失败：" + each.sql + "----------------任务组：" + each.taskId);
-                    }
-                }
-            }
+            });
+            commandSet.removeAll(tempCommandSet);
         }
     }
 
