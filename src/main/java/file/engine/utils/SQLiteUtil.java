@@ -1,6 +1,6 @@
 package file.engine.utils;
 
-import file.engine.IsDebug;
+import file.engine.utils.system.properties.IsDebug;
 import file.engine.configs.AllConfigs;
 import file.engine.event.handler.EventManagement;
 import file.engine.event.handler.impl.stop.RestartEvent;

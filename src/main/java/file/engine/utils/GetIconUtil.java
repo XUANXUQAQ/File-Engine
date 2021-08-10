@@ -1,6 +1,6 @@
 package file.engine.utils;
 
-import file.engine.IsDebug;
+import file.engine.utils.system.properties.IsDebug;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileSystemView;

@@ -18,6 +18,8 @@ import file.engine.services.DatabaseService;
 import file.engine.services.plugin.system.PluginService;
 import file.engine.utils.*;
 import file.engine.utils.file.CopyFileUtil;
+import file.engine.utils.system.properties.IsDebug;
+import file.engine.utils.system.properties.IsPreview;
 
 import javax.swing.*;
 import java.awt.*;
@@ -267,7 +269,8 @@ public class MainClass {
      */
     private static void setSystemProperties() {
         //todo Debug在发布时设置为false
-        System.setProperty("File_Engine_Debug", "true");
+        System.setProperty("File_Engine_Debug", "false");
+        System.setProperty("File_Engine_Preview", "false");
         System.setProperty("file.encoding", "UTF-8");
         System.setProperty("sun.java2d.noddraw", "true");
         System.setProperty("jna.library.path", "user");
@@ -575,7 +578,7 @@ public class MainClass {
             JSONObject info = AllConfigs.getInstance().getUpdateInfo();
             if (info != null) {
                 String latestVersion = info.getString("version");
-                if (Double.parseDouble(latestVersion) > Double.parseDouble(AllConfigs.version)) {
+                if (Double.parseDouble(latestVersion) > Double.parseDouble(AllConfigs.version) || IsPreview.isPreview()) {
                     return false;
                 }
             }
