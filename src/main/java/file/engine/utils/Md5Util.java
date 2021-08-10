@@ -6,6 +6,12 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 public class Md5Util {
+
+    /**
+     * 获取文件MD5值，固定为32位
+     * @param filePath 文件路径
+     * @return MD5字符串
+     */
     public static String getMD5(String filePath) {
         byte[] buffer = new byte[8192];
         int len;

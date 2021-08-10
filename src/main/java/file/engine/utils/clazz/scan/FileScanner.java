@@ -16,9 +16,8 @@ public class FileScanner implements Scan {
         private final Set<String> classPaths = new HashSet<>();
 
         private Set<String> doPath(File file, String packageName, boolean flag) {
-
             if (file.isDirectory()) {
-                //文件夹我们就递归
+                //递归
                 File[] files = file.listFiles();
                 if (!flag) {
                     packageName = packageName + "." + file.getName();
@@ -30,9 +29,8 @@ public class FileScanner implements Scan {
                 }
             } else {
                 //标准文件
-                //标准文件我们就判断是否是class文件
                 if (file.getName().endsWith(CLASS_SUFFIX)) {
-                    //如果是class文件我们就放入我们的集合中。
+                    //如果是class文件放入集合。
                     classPaths.add(packageName + "." + file.getName().substring(0, file.getName().lastIndexOf(".")));
                 }
             }

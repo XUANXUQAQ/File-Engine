@@ -1,6 +1,8 @@
 package file.engine.event.handler.impl.monitor.disk;
 
-public class StartMonitorDiskEvent extends MonitorDiskEvent {
+import file.engine.event.handler.Event;
+
+public class StartMonitorDiskEvent extends Event {
 
     public StartMonitorDiskEvent() {
         super();

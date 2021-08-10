@@ -68,6 +68,9 @@ public class TaskBar {
         });
     }
 
+    /**
+     * 显示托盘消息线程
+     */
     private void startShowMessageThread() {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             try {
@@ -108,6 +111,9 @@ public class TaskBar {
         return INSTANCE;
     }
 
+    /**
+     * 响应托盘点击事件
+     */
     private void addActionListener() {
         if (trayIcon == null) {
             return;
@@ -177,8 +183,11 @@ public class TaskBar {
         }
     }
 
+    /**
+     * 创建弹出菜单
+     * @return 菜单
+     */
     private JPopupMenu getPopupMenu() {
-        // 创建弹出菜单
         JPopupMenu popupMenu = new JPopupMenu();
         EventManagement eventManagement = EventManagement.getInstance();
         TranslateUtil translateUtil = TranslateUtil.getInstance();
@@ -199,20 +208,37 @@ public class TaskBar {
         return popupMenu;
     }
 
+    /**
+     * 点击退出
+     */
     private void closeAndExit() {
         EventManagement eventManagement = EventManagement.getInstance();
         eventManagement.putEvent(new CloseEvent());
     }
 
+    /**
+     * 点击重启
+     */
     private void restart() {
         EventManagement eventManagement = EventManagement.getInstance();
         eventManagement.putEvent(new RestartEvent());
     }
 
+    /**
+     * 将消息放入队列中
+     * @param caption 标题
+     * @param message 消息
+     * @param event 携带的事件
+     */
     private void showMessage(String caption, String message, Event event) {
         messageQueue.add(new MessageStruct(caption, message, event));
     }
 
+    /**
+     * 显示消息
+     * @param caption 标题
+     * @param message 消息
+     */
     private void showMessageOnTrayIcon(String caption, String message) {
         if (trayIcon != null) {
             TranslateUtil translateUtil = TranslateUtil.getInstance();
