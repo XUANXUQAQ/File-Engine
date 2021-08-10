@@ -1,9 +1,11 @@
 package file.engine.event.handler.impl.database;
 
-public class AddToCacheEvent extends DatabaseEvent {
+import file.engine.event.handler.Event;
+
+public class AddToCacheEvent extends Event {
+    public final String path;
 
     public AddToCacheEvent(String path) {
-        super(path);
-        this.setBlock();
+        this.path = path;
     }
 }

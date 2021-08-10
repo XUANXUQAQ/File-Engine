@@ -1,8 +1,9 @@
 package file.engine.event.handler.impl.database;
 
-public class ExecuteSQLEvent extends DatabaseEvent {
+import file.engine.event.handler.Event;
+
+public class ExecuteSQLEvent extends Event {
     public ExecuteSQLEvent() {
-        super(null);
         this.setBlock();
     }
 }

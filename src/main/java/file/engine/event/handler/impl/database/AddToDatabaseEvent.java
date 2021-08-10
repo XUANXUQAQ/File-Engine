@@ -1,8 +1,10 @@
 package file.engine.event.handler.impl.database;
 
+import file.engine.event.handler.Event;
+
 import java.util.LinkedHashSet;
 
-public class AddToDatabaseEvent extends DatabaseEvent {
+public class AddToDatabaseEvent extends Event {
     private final LinkedHashSet<String> paths;
 
     public Object[] getPaths() {
@@ -10,8 +12,6 @@ public class AddToDatabaseEvent extends DatabaseEvent {
     }
 
     public AddToDatabaseEvent(LinkedHashSet<String> paths) {
-        super(null);
         this.paths = paths;
-        this.setBlock();
     }
 }
