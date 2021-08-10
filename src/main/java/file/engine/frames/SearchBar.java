@@ -1070,47 +1070,47 @@ public class SearchBar {
                 translateUtil.getTranslation("The default Ctrl + Alt + K calls out the search bar, which can be changed in the settings.") +
                 translateUtil.getTranslation("You can enter the keywords you want to search here"));
         JOptionPane.showMessageDialog(searchBar, translateUtil.getTranslation("Let's see an example"));
-        textField.setText("test");
+        SwingUtilities.invokeLater(() -> textField.setText("test"));
         JOptionPane.showMessageDialog(searchBar,
                 translateUtil.getTranslation("When you enter \"test\" in the search bar") + ",\n" +
                         translateUtil.getTranslation("files with \"test\" in the name will be displayed below the search bar"));
-        textField.setText("test;file");
+        SwingUtilities.invokeLater(() -> textField.setText("test;file"));
         JOptionPane.showMessageDialog(searchBar,
                 translateUtil.getTranslation("If you know multiple keywords of a file") + "\n" +
                         translateUtil.getTranslation("(for example, the file name contains both \"file\" and \"test\")") + ",\n" +
                         translateUtil.getTranslation("you can separate them with \";\" (semicolon) to search together as keywords."));
-        textField.setText("/test");
+        SwingUtilities.invokeLater(() -> textField.setText("/test"));
         JOptionPane.showMessageDialog(searchBar,
                 translateUtil.getTranslation("When entering \"/test\" in the search bar") + ", " +
                         translateUtil.getTranslation("the file containing \"test\" in the path will be displayed below the search bar"));
-        textField.setText("");
+        SwingUtilities.invokeLater(() -> textField.setText(""));
         JOptionPane.showMessageDialog(searchBar,
                 translateUtil.getTranslation("Add \":\" + suffix after the keyword to achieve a more precise search") + "\n" +
                         translateUtil.getTranslation("The program has the following four suffixes") + "\n" +
                         ":d     :f     :full     :case" + "\n" +
                         translateUtil.getTranslation("not case sensitive"));
-        textField.setText("test:d");
+        SwingUtilities.invokeLater(() -> textField.setText("test:d"));
         JOptionPane.showMessageDialog(searchBar,
                 translateUtil.getTranslation("\":d\" is the suffix for searching only folders"));
-        textField.setText("test:f");
+        SwingUtilities.invokeLater(() -> textField.setText("test:f"));
         JOptionPane.showMessageDialog(searchBar,
                 translateUtil.getTranslation("\":f\" is the suffix to search only for files"));
-        textField.setText("test:full");
+        SwingUtilities.invokeLater(() -> textField.setText("test:full"));
         JOptionPane.showMessageDialog(searchBar,
                 translateUtil.getTranslation("\":full\" means full word matching, but case insensitive"));
-        textField.setText("test:case");
+        SwingUtilities.invokeLater(() -> textField.setText("test:case"));
         JOptionPane.showMessageDialog(searchBar,
                 translateUtil.getTranslation("\":case\" means case sensitive"));
-        textField.setText("test:d;full");
+        SwingUtilities.invokeLater(() -> textField.setText("test:d;full"));
         JOptionPane.showMessageDialog(searchBar,
                 translateUtil.getTranslation("You can also combine different suffixes to use") + "\n" +
                         translateUtil.getTranslation("you can separate them with \";\" (semicolon) to search together as keywords."));
-        textField.setText("test;/file:d;case");
+        SwingUtilities.invokeLater(() -> textField.setText("test;/file:d;case"));
         JOptionPane.showMessageDialog(searchBar,
                 translateUtil.getTranslation("Different keywords are separated by \";\" (semicolon), suffix and keywords are separated by \":\" (colon)"));
         //判断是否为中文
         if ("简体中文".equals(translateUtil.getLanguage())) {
-            textField.setText("pinyin");
+            SwingUtilities.invokeLater(() -> textField.setText("pinyin"));
             JOptionPane.showMessageDialog(searchBar, "你可以使用拼音来代替汉字");
         }
         JOptionPane.showMessageDialog(searchBar,
@@ -1119,7 +1119,7 @@ public class SearchBar {
                         translateUtil.getTranslation("Click \"Shift + Enter\" to open the file as an administrator (use with caution)") + "\n" +
                         translateUtil.getTranslation("Click \"Alt+ Enter\" to copy the file path") + "\n\n" +
                         translateUtil.getTranslation("You can modify these hotkeys in the settings"));
-        textField.setText(":");
+        SwingUtilities.invokeLater(() -> textField.setText(":"));
         JOptionPane.showMessageDialog(searchBar,
                 translateUtil.getTranslation("Enter \":\" (colon) at the front of the search box to enter the command mode") + "\n" +
                         translateUtil.getTranslation("There are built-in commands, you can also add custom commands in the settings"));
