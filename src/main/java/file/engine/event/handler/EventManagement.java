@@ -1,12 +1,12 @@
 package file.engine.event.handler;
 
-import file.engine.utils.system.properties.IsDebug;
 import file.engine.annotation.EventListener;
 import file.engine.annotation.EventRegister;
 import file.engine.event.handler.impl.stop.CloseEvent;
 import file.engine.event.handler.impl.stop.RestartEvent;
 import file.engine.utils.CachedThreadPoolUtil;
 import file.engine.utils.clazz.scan.ClassScannerUtil;
+import file.engine.utils.system.properties.IsDebug;
 
 import java.io.File;
 import java.io.IOException;
@@ -18,6 +18,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 
 public class EventManagement {
     private static volatile EventManagement instance = null;
@@ -152,7 +153,7 @@ public class EventManagement {
 
     /**
      * 发送任务
-     * 不要在构造函数中执行，可能会导致死锁
+     * 不要在构造函数中执行，单例模式下可能会导致死锁
      * @param event 任务
      */
     public void putEvent(Event event) {
@@ -175,6 +176,19 @@ public class EventManagement {
                 System.err.println("任务已被拒绝---" + event);
             }
         }
+    }
+
+    /**
+     * 异步回调方法发送任务
+     * 不要在构造函数中执行，单例模式下可能会导致死锁
+     * @param event 任务
+     * @param callback 回调函数
+     * @param errorHandler 错误处理
+     */
+    public void putEvent(Event event, Consumer<Event> callback, Consumer<Event> errorHandler) {
+        event.setCallback(callback);
+        event.setErrorHandler(errorHandler);
+        putEvent(event);
     }
 
     public boolean isNotMainExit() {

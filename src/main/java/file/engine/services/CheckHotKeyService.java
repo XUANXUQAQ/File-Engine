@@ -48,6 +48,7 @@ public class CheckHotKeyService {
     private void registerHotkey(String hotkey) {
         if (!isRegistered) {
             isRegistered = true;
+            //noinspection DuplicatedCode
             int hotkey1 = -1, hotkey2 = -1, hotkey3 = -1, hotkey4 = -1, hotkey5;
             String[] hotkeys = plus.split(hotkey);
             int length = hotkeys.length;
@@ -87,7 +88,7 @@ public class CheckHotKeyService {
                 return false;
             }
         }
-        return 64 < hotkey.charAt(hotkey.length() - 1) && hotkey.charAt(hotkey.length() - 1) < 91;
+        return 'A' <= hotkey.charAt(hotkey.length() - 1) && hotkey.charAt(hotkey.length() - 1) <= 'Z';
     }
 
     //更改快捷键,必须在register后才可用
@@ -95,6 +96,7 @@ public class CheckHotKeyService {
         if (!isRegistered) {
             throw new NullPointerException();
         }
+        //noinspection DuplicatedCode
         int hotkey1 = -1, hotkey2 = -1, hotkey3 = -1, hotkey4 = -1, hotkey5;
         String[] hotkeys = plus.split(hotkey);
         int length = hotkeys.length;
@@ -116,41 +118,37 @@ public class CheckHotKeyService {
     private void startListenHotkeyThread() {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             boolean isExecuted = true;
-            long startVisibleTime = 0;
-            long endVisibleTime;
+            var ref = new Object() {
+                long startVisibleTime = 0;
+                long endVisibleTime;
+            };
             HotkeyListener instance = HotkeyListener.INSTANCE;
             EventManagement eventManagement = EventManagement.getInstance();
             try {
-                endVisibleTime = System.currentTimeMillis();
+                ref.endVisibleTime = System.currentTimeMillis();
                 //获取快捷键状态，检测是否被按下线程
                 while (eventManagement.isNotMainExit()) {
                     if (!isExecuted && instance.getKeyStatus()) {
-                        IsSearchBarVisibleEvent isSearchBarVisibleEvent = new IsSearchBarVisibleEvent();
-                        eventManagement.putEvent(isSearchBarVisibleEvent);
-                        //等待任务执行
-                        if (!eventManagement.waitForEvent(isSearchBarVisibleEvent)) {
+                        eventManagement.putEvent(new IsSearchBarVisibleEvent(), event -> {
                             //是否搜索框可见
-                            if (isSearchBarVisibleEvent.getReturnValue()) {
+                            if (event.getReturnValue()) {
                                 //搜索框最小可见时间为200ms，必须显示超过200ms后才响应关闭事件，防止闪屏
-                                if (System.currentTimeMillis() - startVisibleTime > 200) {
+                                if (System.currentTimeMillis() - ref.startVisibleTime > 200) {
                                     //获取当前显示模式
-                                    GetShowingModeEvent getShowingModeEvent = new GetShowingModeEvent();
-                                    eventManagement.putEvent(getShowingModeEvent);
-                                    if (!eventManagement.waitForEvent(getShowingModeEvent)) {
-                                        if (getShowingModeEvent.getReturnValue() ==
-                                                Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
+                                    eventManagement.putEvent(new GetShowingModeEvent(), getShowingModeEvent -> {
+                                        if (getShowingModeEvent.getReturnValue() == Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
                                             eventManagement.putEvent(new HideSearchBarEvent());
-                                            endVisibleTime = System.currentTimeMillis();
+                                            ref.endVisibleTime = System.currentTimeMillis();
                                         }
-                                    }
+                                    }, event1 -> System.err.println("获取当前显示模式任务执行失败"));
                                 }
                             } else {
-                                if (System.currentTimeMillis() - endVisibleTime > 200) {
+                                if (System.currentTimeMillis() - ref.endVisibleTime > 200) {
                                     eventManagement.putEvent(new ShowSearchBarEvent(true));
-                                    startVisibleTime = System.currentTimeMillis();
+                                    ref.startVisibleTime = System.currentTimeMillis();
                                 }
                             }
-                        }
+                        }, event -> System.err.println("获取搜索框可见状态任务执行失败"));
                     }
                     isExecuted = instance.getKeyStatus();
                     TimeUnit.MILLISECONDS.sleep(10);

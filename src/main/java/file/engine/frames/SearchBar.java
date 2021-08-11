@@ -474,14 +474,19 @@ public class SearchBar {
         EventManagement eventManagement = EventManagement.getInstance();
         QueryAllWeightsEvent queryAllWeightsEvent = new QueryAllWeightsEvent();
         eventManagement.putEvent(queryAllWeightsEvent);
-        eventManagement.waitForEvent(queryAllWeightsEvent);
-        HashMap<String, Integer> returnValue = queryAllWeightsEvent.getReturnValue();
-        for (int i = 0; i <= Constants.ALL_TABLE_NUM; i++) {
-            Integer integer = returnValue.get("list" + i);
-            if (integer == null) {
-                integer = 0;
+        if (!eventManagement.waitForEvent(queryAllWeightsEvent)) {
+            HashMap<String, Integer> returnValue = queryAllWeightsEvent.getReturnValue();
+            for (int i = 0; i <= Constants.ALL_TABLE_NUM; i++) {
+                Integer integer = returnValue.get("list" + i);
+                if (integer == null) {
+                    integer = 0;
+                }
+                tableSet.add(new TableNameWeightInfo("list" + i, integer));
             }
-            tableSet.add(new TableNameWeightInfo("list" + i, integer));
+        } else {
+            for (int i = 0; i <= Constants.ALL_TABLE_NUM; i++) {
+                tableSet.add(new TableNameWeightInfo("list" + i, 0));
+            }
         }
     }
 
@@ -4328,18 +4333,16 @@ public class SearchBar {
      */
     private void saveCache(String content) {
         AllConfigs allConfigs = AllConfigs.getInstance();
-        IsCacheExistEvent isCacheExistEvent = new IsCacheExistEvent(content);
         EventManagement eventManagement = EventManagement.getInstance();
         if (DatabaseService.getInstance().getCacheNum() < allConfigs.getCacheNumLimit()) {
             //检查缓存是否已存在
-            eventManagement.putEvent(isCacheExistEvent);
-            if (!eventManagement.waitForEvent(isCacheExistEvent)) {
-                if (!(Boolean) isCacheExistEvent.getReturnValue()) {
+            eventManagement.putEvent(new IsCacheExistEvent(content), event -> {
+                if (!(Boolean) event.getReturnValue()) {
                     //不存在则添加
                     eventManagement.putEvent(new AddToCacheEvent(content));
                     eventManagement.putEvent(new AddCacheEvent(content));
                 }
-            }
+            }, event -> {});
         }
     }
 
