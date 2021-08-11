@@ -635,7 +635,7 @@ public class AllConfigs {
      */
     private String checkSettings(ConfigEntity configEntity) {
         String priorityFolder = configEntity.getPriorityFolder();
-        if (!priorityFolder.isEmpty() && Files.exists(Path.of(priorityFolder))) {
+        if (!priorityFolder.isEmpty() && !Files.exists(Path.of(priorityFolder))) {
             return "Priority folder does not exist";
         }
         return "";
