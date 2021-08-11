@@ -34,10 +34,7 @@ import file.engine.services.download.DownloadManager;
 import file.engine.services.download.DownloadService;
 import file.engine.services.plugin.system.Plugin;
 import file.engine.services.plugin.system.PluginService;
-import file.engine.utils.CachedThreadPoolUtil;
-import file.engine.utils.RegexUtil;
-import file.engine.utils.SQLiteUtil;
-import file.engine.utils.TranslateUtil;
+import file.engine.utils.*;
 import file.engine.utils.file.MoveDesktopFiles;
 import file.engine.utils.system.properties.IsDebug;
 import file.engine.utils.system.properties.IsPreview;
@@ -71,6 +68,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static file.engine.utils.ColorUtils.*;
+import static file.engine.utils.StartupUtil.hasStartup;
 
 
 public class SettingsFrame {
@@ -320,7 +318,7 @@ public class SettingsFrame {
         checkBoxAddToStartup.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
-                setStartup(checkBoxAddToStartup.isSelected());
+                setStartup(!checkBoxAddToStartup.isSelected());
             }
         });
     }
@@ -694,6 +692,7 @@ public class SettingsFrame {
 
     /**
      * 检查字符串是否可以解析成指定范围的数字
+     *
      * @param str 字符串
      * @param min 最小值
      * @param max 最大值
@@ -714,6 +713,7 @@ public class SettingsFrame {
 
     /**
      * 获取保存颜色信息的textField的信息，失败为null
+     *
      * @param textField textField
      * @return Color
      */
@@ -724,6 +724,7 @@ public class SettingsFrame {
 
     /**
      * 在label上显示颜色
+     *
      * @param color color
      * @param label JLabel
      */
@@ -1131,6 +1132,7 @@ public class SettingsFrame {
 
     /**
      * 将diskSet中的字符串转为用逗号隔开的字符串
+     *
      * @return string
      */
     private String parseDisk() {
@@ -1292,10 +1294,11 @@ public class SettingsFrame {
 
     /**
      * 检查后缀优先级的设置
-     * @param suffix 后缀
-     * @param priority 优先级
-     * @param errMsg 存储错误信息
-     * @param isSuffixChanged 是否后缀修改
+     *
+     * @param suffix            后缀
+     * @param priority          优先级
+     * @param errMsg            存储错误信息
+     * @param isSuffixChanged   是否后缀修改
      * @param isPriorityChanged 是否优先级修改
      * @return true检查成功
      */
@@ -1499,10 +1502,11 @@ public class SettingsFrame {
 
     /**
      * 等待检查更新
-     * @param startCheckTime 开始检查时间
+     *
+     * @param startCheckTime    开始检查时间
      * @param checkUpdateThread 检查线程
-     * 0x100L 表示检查成功
-     * 0xFFFL 表示检查失败
+     *                          0x100L 表示检查成功
+     *                          0xFFFL 表示检查失败
      */
     private void waitForCheckUpdateResult(AtomicLong startCheckTime, Thread checkUpdateThread) {
         try {
@@ -1696,8 +1700,9 @@ public class SettingsFrame {
 
     /**
      * 根据后缀优先级获取后缀
+     *
      * @param suffixPriorityMap 优先级表
-     * @param val val
+     * @param val               val
      * @return key
      */
     private String getSuffixByValue(HashMap<String, Integer> suffixPriorityMap, int val) {
@@ -1736,7 +1741,7 @@ public class SettingsFrame {
      */
     private void setCheckBoxGui() {
         checkBoxLoseFocus.setSelected(allConfigs.isLoseFocusClose());
-        checkBoxAddToStartup.setSelected(allConfigs.hasStartup());
+        checkBoxAddToStartup.setSelected(hasStartup());
         checkBoxAdmin.setSelected(allConfigs.isDefaultAdmin());
         checkBoxIsShowTipOnCreatingLnk.setSelected(allConfigs.isShowTipOnCreatingLnk());
         checkBoxResponseCtrl.setSelected(allConfigs.isResponseCtrl());
@@ -1779,6 +1784,7 @@ public class SettingsFrame {
 
     /**
      * 获取tab中最长的字符串
+     *
      * @return 最长的字符串
      */
     private String getLongestTitle() {
@@ -1938,7 +1944,8 @@ public class SettingsFrame {
 
     /**
      * 展开所有设置
-     * @param tree tree
+     *
+     * @param tree   tree
      * @param parent parent
      * @param expand 是否展开
      */
@@ -2040,6 +2047,7 @@ public class SettingsFrame {
 
     /**
      * 检查缓存是否存在
+     *
      * @param cache cache
      * @return boolean
      */
@@ -2049,6 +2057,7 @@ public class SettingsFrame {
 
     /**
      * 添加缓存到cacheSet
+     *
      * @param cache cache
      */
     private void addCache(String cache) {
@@ -2361,6 +2370,7 @@ public class SettingsFrame {
 
     /**
      * 生成configuration
+     *
      * @return ConfigEntity
      */
     private ConfigEntity getConfigEntity() {
@@ -2419,7 +2429,8 @@ public class SettingsFrame {
 
     /**
      * 保存所有设置
-     * @return
+     *
+     * @return 出现的错误信息，若成功则为空
      */
     private String saveChanges() {
         StringBuilder errorsStrb = new StringBuilder();
@@ -2495,14 +2506,9 @@ public class SettingsFrame {
 
     private void setStartup(boolean b) {
         if (b) {
-            String command = "cmd.exe /c schtasks /create /ru \"administrators\" /rl HIGHEST /sc ONLOGON /tn \"File-Engine\" /tr ";
-            File FileEngine = new File(Constants.FILE_NAME);
-            String absolutePath = "\"\"" + FileEngine.getAbsolutePath() + "\"\" /f";
-            command += absolutePath;
-            Process p;
             try {
-                p = Runtime.getRuntime().exec(command);
-                p.waitFor();
+                StartupUtil.deleteStartup();
+                Process p = StartupUtil.addStartup();
                 BufferedReader outPut = new BufferedReader(new InputStreamReader(p.getErrorStream()));
                 String line;
                 StringBuilder result = new StringBuilder();
@@ -2516,26 +2522,27 @@ public class SettingsFrame {
                             translateUtil.getTranslation("Add to startup failed, please try to run as administrator") +
                                     "\n" + result);
                 }
-            } catch (IOException | InterruptedException ignored) {
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         } else {
-            String command = "cmd.exe /c schtasks /delete /tn \"File-Engine\" /f";
-            Process p;
-            try {
-                p = Runtime.getRuntime().exec(command);
-                p.waitFor();
-                StringBuilder result = new StringBuilder();
-                try (BufferedReader outPut = new BufferedReader(new InputStreamReader(p.getErrorStream()))) {
-                    String line;
-                    while ((line = outPut.readLine()) != null) {
-                        result.append(line);
+            if (hasStartup()) {
+                try {
+                    Process p = StartupUtil.deleteStartup();
+                    StringBuilder result = new StringBuilder();
+                    try (BufferedReader outPut = new BufferedReader(new InputStreamReader(p.getErrorStream()))) {
+                        String line;
+                        while ((line = outPut.readLine()) != null) {
+                            result.append(line);
+                        }
                     }
+                    if (!result.toString().isEmpty()) {
+                        checkBoxAddToStartup.setSelected(true);
+                        JOptionPane.showMessageDialog(frame, translateUtil.getTranslation("Delete startup failed, please try to run as administrator"));
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
-                if (!result.toString().isEmpty()) {
-                    checkBoxAddToStartup.setSelected(true);
-                    JOptionPane.showMessageDialog(frame, translateUtil.getTranslation("Delete startup failed, please try to run as administrator"));
-                }
-            } catch (IOException | InterruptedException ignored) {
             }
         }
     }
