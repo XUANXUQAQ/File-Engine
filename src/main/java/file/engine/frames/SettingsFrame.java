@@ -6,7 +6,7 @@ import file.engine.annotation.EventRegister;
 import file.engine.configs.AllConfigs;
 import file.engine.configs.ConfigEntity;
 import file.engine.configs.Enums;
-import file.engine.constant.Constants;
+import file.engine.configs.Constants;
 import file.engine.dllInterface.IsLocalDisk;
 import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
@@ -2273,8 +2273,7 @@ public class SettingsFrame {
         textAreaDescription.setForeground(tabbedPane.getForeground());
         SwingUtilities.invokeLater(() -> {
             //使swing风格生效
-            SetSwingLaf event = new SetSwingLaf("current");
-            eventManagement.putEvent(event, event1 -> frame.setVisible(true), event1 -> frame.setVisible(true));
+            eventManagement.putEvent(new SetSwingLaf("current"), event -> frame.setVisible(true), event -> frame.setVisible(true));
         });
     }
 

@@ -1,4 +1,4 @@
-package file.engine.constant;
+package file.engine.configs;
 
 public class Constants {
     public static final String version = "3.3"; //TODO 更改版本号
@@ -27,4 +27,6 @@ public class Constants {
     public static final int defaultFontColorWithCoverage = 0xff3333;
     public static final int defaultSearchbarColor = 0xffffff;
     public static final int defaultSearchbarFontColor = 0;
+
+    public static final String defaultSwingTheme = "Arc";
 }

@@ -229,3 +229,4 @@ Open parent folder=percorso padre aperto
 Do you want to download it manually=Vuoi scaricarlo manualmente
 Select disk=Seleziona disco
 Search Failed=Ricerca non riuscita
+Priority folder does not exist=La cartella di ricerca prioritaria non esiste

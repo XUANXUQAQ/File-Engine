@@ -289,7 +289,8 @@ public class EventManagement {
                         //判断任务是否执行完成或者失败
                         if (event.isFinished() || event.isFailed()) {
                             continue;
-                        } else if (event.getExecuteTimes() < MAX_TASK_RETRY_TIME) {
+                        }
+                        if (event.getExecuteTimes() < MAX_TASK_RETRY_TIME) {
                             //判断是否超过最大次数
                             if (executeTaskFailed(event)) {
                                 System.err.println("异步任务执行失败---" + event);
@@ -302,7 +303,6 @@ public class EventManagement {
                                 System.err.println("任务超时---" + event);
                             }
                         }
-                        TimeUnit.MILLISECONDS.sleep(5);
                     }
                     if (isDebug) {
                         System.err.println("******异步任务执行线程退出******");
@@ -356,7 +356,6 @@ public class EventManagement {
                             System.err.println("任务超时---" + event);
                         }
                     }
-                    TimeUnit.MILLISECONDS.sleep(5);
                 }
                 if (isDebug) {
                     System.err.println("******同步任务执行线程退出******");

@@ -10,7 +10,6 @@ import com.formdev.flatlaf.FlatLightLaf;
 import com.formdev.flatlaf.intellijthemes.*;
 import com.formdev.flatlaf.intellijthemes.materialthemeuilite.FlatMaterialDarkerIJTheme;
 import com.formdev.flatlaf.intellijthemes.materialthemeuilite.FlatMaterialLighterIJTheme;
-import file.engine.utils.system.properties.IsDebug;
 import file.engine.annotation.EventRegister;
 import file.engine.dllInterface.IsLocalDisk;
 import file.engine.event.handler.Event;
@@ -18,10 +17,7 @@ import file.engine.event.handler.EventManagement;
 import file.engine.event.handler.impl.BootSystemEvent;
 import file.engine.event.handler.impl.ReadConfigsEvent;
 import file.engine.event.handler.impl.SetSwingLaf;
-import file.engine.event.handler.impl.configs.AddCmdEvent;
-import file.engine.event.handler.impl.configs.DeleteCmdEvent;
-import file.engine.event.handler.impl.configs.SaveConfigsEvent;
-import file.engine.event.handler.impl.configs.SetConfigsEvent;
+import file.engine.event.handler.impl.configs.*;
 import file.engine.event.handler.impl.download.StartDownloadEvent;
 import file.engine.event.handler.impl.frame.searchBar.*;
 import file.engine.event.handler.impl.frame.settingsFrame.GetExcludeComponentEvent;
@@ -35,6 +31,7 @@ import file.engine.services.download.DownloadManager;
 import file.engine.services.download.DownloadService;
 import file.engine.utils.RegexUtil;
 import file.engine.utils.TranslateUtil;
+import file.engine.utils.system.properties.IsDebug;
 import lombok.Data;
 
 import javax.swing.*;
@@ -42,9 +39,11 @@ import java.awt.*;
 import java.io.*;
 import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 
-import static file.engine.constant.Constants.*;
+import static file.engine.configs.Constants.*;
 
 /**
  * 保存软件运行时的所有配置信息
@@ -589,7 +588,7 @@ public class AllConfigs {
     }
 
     private void readSwingTheme(JSONObject settingsInJson) {
-        configEntity.setSwingTheme((String) getFromJson(settingsInJson, "swingTheme", "CoreFlatDarculaLaf"));
+        configEntity.setSwingTheme((String) getFromJson(settingsInJson, "swingTheme", defaultSwingTheme));
     }
 
     private void readShowTipOnCreatingLnk(JSONObject settingsInJson) {
@@ -627,6 +626,19 @@ public class AllConfigs {
             return defaultObj;
         }
         return tmp;
+    }
+
+    /**
+     * 检查配置并发出警告
+     * @param configEntity 配置
+     * @return 错误信息
+     */
+    private String checkSettings(ConfigEntity configEntity) {
+        String priorityFolder = configEntity.getPriorityFolder();
+        if (!priorityFolder.isEmpty() && Files.exists(Path.of(priorityFolder))) {
+            return "Priority folder does not exist";
+        }
+        return "";
     }
 
     private void readAllSettings() {
@@ -815,6 +827,11 @@ public class AllConfigs {
         AllConfigs allConfigs = AllConfigs.getInstance();
         allConfigs.readAllSettings();
         allConfigs.saveAllSettings();
+    }
+
+    @EventRegister(registerClass = CheckConfigsEvent.class)
+    private static void checkConfigsEvent(Event event) {
+        event.setReturnValue(getInstance().checkSettings(getInstance().configEntity));
     }
 
     @EventRegister(registerClass = BootSystemEvent.class)

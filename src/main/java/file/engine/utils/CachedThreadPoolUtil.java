@@ -1,6 +1,6 @@
 package file.engine.utils;
 
-import file.engine.constant.Constants;
+import file.engine.configs.Constants;
 
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;

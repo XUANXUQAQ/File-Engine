@@ -5,11 +5,12 @@ import com.github.promeg.pinyinhelper.Pinyin;
 import com.github.promeg.tinypinyin.lexicons.java.cncity.CnCityDict;
 import file.engine.configs.AllConfigs;
 import file.engine.configs.Enums;
-import file.engine.constant.Constants;
+import file.engine.configs.Constants;
 import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
 import file.engine.event.handler.impl.BootSystemEvent;
 import file.engine.event.handler.impl.ReadConfigsEvent;
+import file.engine.event.handler.impl.configs.CheckConfigsEvent;
 import file.engine.event.handler.impl.database.UpdateDatabaseEvent;
 import file.engine.event.handler.impl.frame.settingsFrame.ShowSettingsFrameEvent;
 import file.engine.event.handler.impl.stop.RestartEvent;
@@ -310,6 +311,14 @@ public class MainClass {
 
             // 初始化全部完成，发出启动系统事件
             sendBootSystemSignal();
+
+            eventManagement.putEvent(new CheckConfigsEvent(), event -> {
+                String errorInfo = event.getReturnValue();
+                if (!errorInfo.isEmpty()) {
+                    EventManagement.getInstance().putEvent(new ShowTaskBarMessageEvent(TranslateUtil.getInstance().getTranslation("Warning"),
+                            TranslateUtil.getInstance().getTranslation(errorInfo), new ShowSettingsFrameEvent("tabSearchSettings")));
+                }
+            }, null);
 
             checkRunningDirAtDiskC();
 
