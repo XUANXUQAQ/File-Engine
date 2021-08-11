@@ -77,7 +77,6 @@ public class SettingsFrame {
     private static volatile int tmp_copyPathKeyCode;
     private static volatile int tmp_runAsAdminKeyCode;
     private static volatile int tmp_openLastFolderKeyCode;
-    private static volatile boolean isStartupChanged = false;
     private static final ImageIcon frameIcon = new ImageIcon(Objects.requireNonNull(SettingsFrame.class.getResource("/icons/frame.png")));
     private static final JFrame frame = new JFrame("Settings");
     private static final TranslateUtil translateUtil = TranslateUtil.getInstance();
@@ -320,7 +319,7 @@ public class SettingsFrame {
         checkBoxAddToStartup.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
-                isStartupChanged = true;
+                setStartup(checkBoxAddToStartup.isSelected());
             }
         });
     }
@@ -2359,47 +2358,18 @@ public class SettingsFrame {
         }
     }
 
-    private String saveChanges() {
-        StringBuilder errorsStrb = new StringBuilder();
-
-        checkProxy(errorsStrb);
-        checkSearchBarColor(errorsStrb);
-        checkSearchBarFontColor(errorsStrb);
-        checkLabelColor(errorsStrb);
-        checkLabelFontColor(errorsStrb);
-        checkLabelFontColorWithCoverage(errorsStrb);
-        checkBorderColor(errorsStrb);
-        checkDefaultBackgroundColor(errorsStrb);
-        checkTransparency(errorsStrb);
-        checkHotKey(errorsStrb);
-        checkCacheNumLimit(errorsStrb);
-        checkUpdateTimeLimit(errorsStrb);
-        checkBorderThickness(errorsStrb);
-
+    /**
+     * 生成configuration
+     * @return ConfigEntity
+     */
+    private ConfigEntity getConfigEntity() {
+        ConfigEntity configEntity = new ConfigEntity();
         String ignorePathTemp = RegexUtil.lineFeed.matcher(textAreaIgnorePath.getText()).replaceAll("");
-
         String swingTheme = (String) listSwingThemes.getSelectedValue();
         Enums.BorderType borderType = (Enums.BorderType) comboBoxBorderType.getSelectedItem();
-
-        String errors = errorsStrb.toString();
-        if (!errors.isEmpty()) {
-            return errors;
-        }
-
-        //重新显示翻译GUI
-        if (!listLanguage.getSelectedValue().equals(translateUtil.getLanguage())) {
-            translateUtil.setLanguage((String) listLanguage.getSelectedValue());
-            translate();
-        }
-
-        //所有配置均正确
-        //使所有配置生效
         String tmp_proxyAddress = textFieldAddress.getText();
         String tmp_proxyUserName = textFieldUserName.getText();
         String tmp_proxyPassword = textFieldPassword.getText();
-
-        ConfigEntity configEntity = new ConfigEntity();
-
         if (radioButtonProxyTypeSocks5.isSelected()) {
             configEntity.setProxyType(Enums.ProxyType.PROXY_SOCKS);
         } else if (radioButtonProxyTypeHttp.isSelected()) {
@@ -2443,8 +2413,45 @@ public class SettingsFrame {
         configEntity.setCheckUpdateStartup(checkBoxCheckUpdate.isSelected());
         configEntity.setDisks(parseDisk());
         configEntity.setAttachExplorer(checkBoxIsAttachExplorer.isSelected());
+        return configEntity;
+    }
 
-        setStartup(checkBoxAddToStartup.isSelected());
+    /**
+     * 保存所有设置
+     * @return
+     */
+    private String saveChanges() {
+        StringBuilder errorsStrb = new StringBuilder();
+
+        checkProxy(errorsStrb);
+        checkSearchBarColor(errorsStrb);
+        checkSearchBarFontColor(errorsStrb);
+        checkLabelColor(errorsStrb);
+        checkLabelFontColor(errorsStrb);
+        checkLabelFontColorWithCoverage(errorsStrb);
+        checkBorderColor(errorsStrb);
+        checkDefaultBackgroundColor(errorsStrb);
+        checkTransparency(errorsStrb);
+        checkHotKey(errorsStrb);
+        checkCacheNumLimit(errorsStrb);
+        checkUpdateTimeLimit(errorsStrb);
+        checkBorderThickness(errorsStrb);
+
+        String errors = errorsStrb.toString();
+        if (!errors.isEmpty()) {
+            return errors;
+        }
+
+        //重新显示翻译GUI
+        if (!listLanguage.getSelectedValue().equals(translateUtil.getLanguage())) {
+            translateUtil.setLanguage((String) listLanguage.getSelectedValue());
+            translate();
+        }
+
+        //所有配置均正确
+        //使所有配置生效
+        ConfigEntity configEntity = getConfigEntity();
+
         eventManagement.putEvent(new ResponseCtrlEvent(checkBoxResponseCtrl.isSelected()));
 
         SaveConfigsEvent event = new SaveConfigsEvent(configEntity);
@@ -2486,51 +2493,48 @@ public class SettingsFrame {
     }
 
     private void setStartup(boolean b) {
-        if (isStartupChanged) {
-            isStartupChanged = false;
-            if (b) {
-                String command = "cmd.exe /c schtasks /create /ru \"administrators\" /rl HIGHEST /sc ONLOGON /tn \"File-Engine\" /tr ";
-                File FileEngine = new File(AllConfigs.FILE_NAME);
-                String absolutePath = "\"\"" + FileEngine.getAbsolutePath() + "\"\" /f";
-                command += absolutePath;
-                Process p;
-                try {
-                    p = Runtime.getRuntime().exec(command);
-                    p.waitFor();
-                    BufferedReader outPut = new BufferedReader(new InputStreamReader(p.getErrorStream()));
+        if (b) {
+            String command = "cmd.exe /c schtasks /create /ru \"administrators\" /rl HIGHEST /sc ONLOGON /tn \"File-Engine\" /tr ";
+            File FileEngine = new File(AllConfigs.FILE_NAME);
+            String absolutePath = "\"\"" + FileEngine.getAbsolutePath() + "\"\" /f";
+            command += absolutePath;
+            Process p;
+            try {
+                p = Runtime.getRuntime().exec(command);
+                p.waitFor();
+                BufferedReader outPut = new BufferedReader(new InputStreamReader(p.getErrorStream()));
+                String line;
+                StringBuilder result = new StringBuilder();
+                while ((line = outPut.readLine()) != null) {
+                    result.append(line);
+                }
+                outPut.close();
+                if (!result.toString().isEmpty()) {
+                    checkBoxAddToStartup.setSelected(false);
+                    JOptionPane.showMessageDialog(frame,
+                            translateUtil.getTranslation("Add to startup failed, please try to run as administrator") +
+                                    "\n" + result);
+                }
+            } catch (IOException | InterruptedException ignored) {
+            }
+        } else {
+            String command = "cmd.exe /c schtasks /delete /tn \"File-Engine\" /f";
+            Process p;
+            try {
+                p = Runtime.getRuntime().exec(command);
+                p.waitFor();
+                StringBuilder result = new StringBuilder();
+                try (BufferedReader outPut = new BufferedReader(new InputStreamReader(p.getErrorStream()))) {
                     String line;
-                    StringBuilder result = new StringBuilder();
                     while ((line = outPut.readLine()) != null) {
                         result.append(line);
                     }
-                    outPut.close();
-                    if (!result.toString().isEmpty()) {
-                        checkBoxAddToStartup.setSelected(false);
-                        JOptionPane.showMessageDialog(frame,
-                                translateUtil.getTranslation("Add to startup failed, please try to run as administrator") +
-                                        "\n" + result);
-                    }
-                } catch (IOException | InterruptedException ignored) {
                 }
-            } else {
-                String command = "cmd.exe /c schtasks /delete /tn \"File-Engine\" /f";
-                Process p;
-                try {
-                    p = Runtime.getRuntime().exec(command);
-                    p.waitFor();
-                    StringBuilder result = new StringBuilder();
-                    try (BufferedReader outPut = new BufferedReader(new InputStreamReader(p.getErrorStream()))) {
-                        String line;
-                        while ((line = outPut.readLine()) != null) {
-                            result.append(line);
-                        }
-                    }
-                    if (!result.toString().isEmpty()) {
-                        checkBoxAddToStartup.setSelected(true);
-                        JOptionPane.showMessageDialog(frame, translateUtil.getTranslation("Delete startup failed, please try to run as administrator"));
-                    }
-                } catch (IOException | InterruptedException ignored) {
+                if (!result.toString().isEmpty()) {
+                    checkBoxAddToStartup.setSelected(true);
+                    JOptionPane.showMessageDialog(frame, translateUtil.getTranslation("Delete startup failed, please try to run as administrator"));
                 }
+            } catch (IOException | InterruptedException ignored) {
             }
         }
     }

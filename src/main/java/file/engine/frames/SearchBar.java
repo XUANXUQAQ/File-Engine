@@ -108,7 +108,7 @@ public class SearchBar {
     private final int iconSideLength;
     private volatile long visibleStartTime = 0;  //记录窗口开始可见的事件，窗口默认最短可见时间0.5秒，防止窗口快速闪烁
     private volatile long firstResultStartShowingTime = 0;  //记录开始显示结果的时间，用于防止刚开始移动到鼠标导致误触
-    private final Set<String> tempResults;  //在优先文件夹和数据库cache未搜索完时暂时保存结果，搜索完后会立即被转移到listResults
+    private final ConcurrentLinkedQueue<String> tempResults;  //在优先文件夹和数据库cache未搜索完时暂时保存结果，搜索完后会立即被转移到listResults
     private final ConcurrentLinkedQueue<String> tableQueue;  //保存哪些表需要被查
     private final CopyOnWriteArrayList<String> listResults;  //保存从数据库中找出符合条件的记录（文件路径）
     private final Set<TableNameWeightInfo> tableSet;    //保存从0-40数据库的表，使用频率和名字对应，使经常使用的表最快被搜索到
@@ -144,7 +144,7 @@ public class SearchBar {
 
     private SearchBar() {
         listResults = new CopyOnWriteArrayList<>();
-        tempResults = ConcurrentHashMap.newKeySet();
+        tempResults = new ConcurrentLinkedQueue<>();
         tableQueue = new ConcurrentLinkedQueue<>();
         tableSet = ConcurrentHashMap.newKeySet();
         priorityQueue = new ConcurrentLinkedQueue<>();
@@ -2910,16 +2910,7 @@ public class SearchBar {
     }
 
     private static boolean isNotContains(Collection<String> list, String record) {
-        if (list.contains(record)) {
-            return false;
-        } else {
-            synchronized (SearchBar.class) {
-                if (list.contains(record)) {
-                    return false;
-                }
-            }
-            return true;
-        }
+        return !list.contains(record);
     }
 
     /**
@@ -3118,13 +3109,14 @@ public class SearchBar {
                         return;
                     }
                     if (isCacheAndPrioritySearched.get()) {
-                        tempResults.forEach(each -> {
+                        String each;
+                        while ((each = tempResults.poll()) != null) {
                             tempResultNum.decrementAndGet();
                             if (isNotContains(listResults, each)) {
                                 listResults.add(each);
                                 listResultsNum.incrementAndGet();
                             }
-                        });
+                        }
                     }
                     TimeUnit.MILLISECONDS.sleep(5);
                 }
@@ -3263,14 +3255,14 @@ public class SearchBar {
                     Bit start = new Bit(new byte[]{1, 0});
                     //循环次数，也是下方与运算结束后需要向右偏移的位数
                     int loopCount = 1;
-                    //失败阻塞次数，由于任务的耗时不同，如果在超过300次获取，也就是0.3s后仍然阻塞，则跳过该任务，在下次循环中重新拿取结果
+                    //失败阻塞次数，由于任务的耗时不同，如果阻塞时间过长，则跳过该任务，在下次循环中重新拿取结果
                     int failCount = 0;
                     Bit zero = new Bit(new byte[]{0});
                     Bit one = new Bit(new byte[]{1});
                     ConcurrentSkipListSet<String> results;
-                    while (start.length() <= allTaskStatus.length() || !tmpTaskStatus.equals(allTaskStatus) || taskStatus.or(zero).equals(zero)) {
+                    while (start.length() <= allTaskStatus.length() || taskStatus.or(zero).equals(zero)) {
                         TimeUnit.MILLISECONDS.sleep(1);
-                        if (startTime > startSearchTime) {
+                        if (startTime > startSearchTime || !isVisible()) {
                             //用户重新输入，结束当前任务
                             break;
                         }
@@ -3282,8 +3274,8 @@ public class SearchBar {
                         //当线程完成，taskStatus中的位会被设置为1
                         //这时，将taskStatus和start做与运算，然后移到第一位，如果为1，则线程已完成搜索
                         Bit and = taskStatus.and(start);
-                        if (((and).shiftRight(loopCount)).equals(one) || failCount > 300) {
-                            // 阻塞超过300次(搜索时间超过0.3s)则跳过
+                        if (((and).shiftRight(loopCount)).equals(one) || failCount > 500) {
+                            // failCount过大，阻塞时间过长则跳过
                             failCount = 0;
                             results = containerMap.get(start.toString());
                             if (results != null) {
