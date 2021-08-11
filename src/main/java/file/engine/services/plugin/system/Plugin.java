@@ -6,8 +6,9 @@ import java.awt.event.MouseEvent;
 import java.lang.reflect.Method;
 import java.util.LinkedList;
 
+import static file.engine.constant.Constants.PLUGIN_API_VERSION;
+
 public class Plugin {
-    private static final int API_VERSION = 4;
     private final Object instance;
     private final LinkedList<String> methodList = new LinkedList<>();
     private Method pluginTextChanged;
@@ -164,7 +165,7 @@ public class Plugin {
     }
 
     public static int getLatestApiVersion() {
-        return API_VERSION;
+        return PLUGIN_API_VERSION;
     }
 
     public int getApiVersion() {
