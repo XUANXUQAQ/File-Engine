@@ -1010,7 +1010,7 @@ public class SearchBar {
             case "version":
                 detectShowingModeAndClose();
                 JOptionPane.showMessageDialog(null, translateUtil.getTranslation(
-                        "Current Version:") + AllConfigs.version);
+                        "Current Version:") + Constants.version);
                 return true;
             default:
                 return false;

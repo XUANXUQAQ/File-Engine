@@ -1,12 +1,12 @@
 package file.engine.frames;
 
 import com.alibaba.fastjson.JSONObject;
-import file.engine.utils.system.properties.IsDebug;
 import file.engine.annotation.EventListener;
 import file.engine.annotation.EventRegister;
 import file.engine.configs.AllConfigs;
 import file.engine.configs.ConfigEntity;
 import file.engine.configs.Enums;
+import file.engine.constant.Constants;
 import file.engine.dllInterface.IsLocalDisk;
 import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
@@ -39,6 +39,7 @@ import file.engine.utils.RegexUtil;
 import file.engine.utils.SQLiteUtil;
 import file.engine.utils.TranslateUtil;
 import file.engine.utils.file.MoveDesktopFiles;
+import file.engine.utils.system.properties.IsDebug;
 import file.engine.utils.system.properties.IsPreview;
 
 import javax.swing.*;
@@ -592,7 +593,7 @@ public class SettingsFrame {
                     showManualDownloadDialog();
                     return;
                 }
-                if (Double.parseDouble(latestVersion) > Double.parseDouble(AllConfigs.version) || IsPreview.isPreview()) {
+                if (Double.parseDouble(latestVersion) > Double.parseDouble(Constants.version) || IsPreview.isPreview()) {
                     String description = updateInfo.getString("description");
                     int result = JOptionPane.showConfirmDialog(frame,
                             translateUtil.getTranslation(
@@ -604,7 +605,7 @@ public class SettingsFrame {
                         String urlChoose;
                         String fileName;
                         urlChoose = "url64";
-                        fileName = AllConfigs.FILE_NAME;
+                        fileName = Constants.FILE_NAME;
                         downloadManager.downloadManager = new DownloadManager(
                                 updateInfo.getString(urlChoose),
                                 fileName,
@@ -616,7 +617,7 @@ public class SettingsFrame {
                                     boolean ret = SetDownloadProgress.setProgress(labelDownloadProgress,
                                             buttonCheckUpdate,
                                             downloadManager.downloadManager,
-                                            () -> AllConfigs.FILE_NAME.equals(downloadManager.downloadManager.fileName),
+                                            () -> Constants.FILE_NAME.equals(downloadManager.downloadManager.fileName),
                                             new File("user/update"),
                                             "",
                                             null,
@@ -681,13 +682,13 @@ public class SettingsFrame {
      */
     private void addResetColorButtonListener() {
         buttonResetColor.addActionListener(e -> {
-            textFieldFontColorWithCoverage.setText(toRGBHexString(AllConfigs.defaultFontColorWithCoverage));
-            textFieldSearchBarColor.setText(toRGBHexString(AllConfigs.defaultSearchbarColor));
-            textFieldLabelColor.setText(toRGBHexString(AllConfigs.defaultLabelColor));
-            textFieldBackgroundDefault.setText(toRGBHexString(AllConfigs.defaultWindowBackgroundColor));
-            textFieldFontColor.setText(toRGBHexString(AllConfigs.defaultFontColor));
-            textFieldSearchBarFontColor.setText(toRGBHexString(AllConfigs.defaultSearchbarFontColor));
-            textFieldBorderColor.setText(toRGBHexString(AllConfigs.defaultBorderColor));
+            textFieldFontColorWithCoverage.setText(toRGBHexString(Constants.defaultFontColorWithCoverage));
+            textFieldSearchBarColor.setText(toRGBHexString(Constants.defaultSearchbarColor));
+            textFieldLabelColor.setText(toRGBHexString(Constants.defaultLabelColor));
+            textFieldBackgroundDefault.setText(toRGBHexString(Constants.defaultWindowBackgroundColor));
+            textFieldFontColor.setText(toRGBHexString(Constants.defaultFontColor));
+            textFieldSearchBarFontColor.setText(toRGBHexString(Constants.defaultSearchbarFontColor));
+            textFieldBorderColor.setText(toRGBHexString(Constants.defaultBorderColor));
         });
     }
 
@@ -1611,7 +1612,7 @@ public class SettingsFrame {
         labelPluginNum.setText(String.valueOf(PluginService.getInstance().getInstalledPluginNum()));
         ImageIcon imageIcon = new ImageIcon(Objects.requireNonNull(SettingsFrame.class.getResource("/icons/frame.png")));
         labelIcon.setIcon(imageIcon);
-        labelVersion.setText(translateUtil.getTranslation("Current Version:") + AllConfigs.version);
+        labelVersion.setText(translateUtil.getTranslation("Current Version:") + Constants.version);
         labelCurrentCacheNum.setText(translateUtil.getTranslation("Current Caches Num:") + DatabaseService.getInstance().getCacheNum());
     }
 
@@ -2102,7 +2103,7 @@ public class SettingsFrame {
         labelDescription.setText(translateUtil.getTranslation("Thanks for the following project"));
         labelTranslationTip.setText(translateUtil.getTranslation("The translation might not be 100% accurate"));
         labelLanguageChooseTip.setText(translateUtil.getTranslation("Choose a language"));
-        labelVersion.setText(translateUtil.getTranslation("Current Version:") + AllConfigs.version);
+        labelVersion.setText(translateUtil.getTranslation("Current Version:") + Constants.version);
         labelInstalledPluginNum.setText(translateUtil.getTranslation("Installed plugins num:"));
         labelVacuumTip.setText(translateUtil.getTranslation("Click to organize the database and reduce the size of the database"));
         labelVacuumTip2.setText(translateUtil.getTranslation("but it will consume a lot of time."));
@@ -2495,7 +2496,7 @@ public class SettingsFrame {
     private void setStartup(boolean b) {
         if (b) {
             String command = "cmd.exe /c schtasks /create /ru \"administrators\" /rl HIGHEST /sc ONLOGON /tn \"File-Engine\" /tr ";
-            File FileEngine = new File(AllConfigs.FILE_NAME);
+            File FileEngine = new File(Constants.FILE_NAME);
             String absolutePath = "\"\"" + FileEngine.getAbsolutePath() + "\"\" /f";
             command += absolutePath;
             Process p;

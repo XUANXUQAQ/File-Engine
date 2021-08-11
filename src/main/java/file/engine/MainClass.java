@@ -578,7 +578,7 @@ public class MainClass {
             JSONObject info = AllConfigs.getInstance().getUpdateInfo();
             if (info != null) {
                 String latestVersion = info.getString("version");
-                if (Double.parseDouble(latestVersion) > Double.parseDouble(AllConfigs.version) || IsPreview.isPreview()) {
+                if (Double.parseDouble(latestVersion) > Double.parseDouble(Constants.version) || IsPreview.isPreview()) {
                     return false;
                 }
             }

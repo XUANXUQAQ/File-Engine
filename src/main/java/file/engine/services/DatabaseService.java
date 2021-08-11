@@ -38,8 +38,6 @@ public class DatabaseService {
     private final AtomicBoolean isExecuteImmediately = new AtomicBoolean(false);
     private final AtomicInteger cacheNum = new AtomicInteger(0);
 
-    private static final int MAX_SQL_NUM = 5000;
-
     private static volatile DatabaseService INSTANCE = null;
 
     private DatabaseService() {
@@ -363,7 +361,7 @@ public class DatabaseService {
      * @param sql 任务
      */
     private void addToCommandSet(SQLWithTaskId sql) {
-        if (commandSet.size() < MAX_SQL_NUM) {
+        if (commandSet.size() < Constants.MAX_SQL_NUM) {
             if (status == Enums.DatabaseStatus.MANUAL_UPDATE) {
                 System.err.println("正在搜索中");
                 return;

@@ -44,21 +44,12 @@ import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
+import static file.engine.constant.Constants.*;
+
 /**
  * 保存软件运行时的所有配置信息
  */
 public class AllConfigs {
-    public static final String version = "3.3"; //TODO 更改版本号
-
-    public static final String FILE_NAME = "File-Engine-x64.exe";
-
-    public static final int defaultLabelColor = 0xff9933;
-    public static final int defaultWindowBackgroundColor = 0xffffff;
-    public static final int defaultBorderColor = 0;
-    public static final int defaultFontColor = 0;
-    public static final int defaultFontColorWithCoverage = 0xff3333;
-    public static final int defaultSearchbarColor = 0xffffff;
-    public static final int defaultSearchbarFontColor = 0;
     private volatile ConfigEntity configEntity;
     private final LinkedHashMap<String, AddressUrl> updateAddressMap = new LinkedHashMap<>();
     private final LinkedHashSet<String> cmdSet = new LinkedHashSet<>();
