@@ -6,7 +6,7 @@ import java.awt.event.MouseEvent;
 import java.lang.reflect.Method;
 import java.util.LinkedList;
 
-import static file.engine.constant.Constants.PLUGIN_API_VERSION;
+import static file.engine.configs.Constants.PLUGIN_API_VERSION;
 
 public class Plugin {
     private final Object instance;

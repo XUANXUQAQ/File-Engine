@@ -1,6 +1,6 @@
 package file.engine.utils;
 
-import file.engine.constant.Constants;
+import file.engine.configs.Constants;
 
 import java.io.BufferedReader;
 import java.io.File;

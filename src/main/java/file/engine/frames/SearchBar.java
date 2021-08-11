@@ -6,7 +6,7 @@ import file.engine.annotation.EventListener;
 import file.engine.annotation.EventRegister;
 import file.engine.configs.AllConfigs;
 import file.engine.configs.Enums;
-import file.engine.constant.Constants;
+import file.engine.configs.Constants;
 import file.engine.dllInterface.FileMonitor;
 import file.engine.dllInterface.GetHandle;
 import file.engine.dllInterface.IsLocalDisk;
@@ -4348,7 +4348,7 @@ public class SearchBar {
                     eventManagement.putEvent(new AddToCacheEvent(content));
                     eventManagement.putEvent(new AddCacheEvent(content));
                 }
-            }, event -> {});
+            }, null);
         }
     }
 
