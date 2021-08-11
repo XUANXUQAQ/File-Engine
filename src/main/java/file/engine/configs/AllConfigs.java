@@ -732,10 +732,11 @@ public class AllConfigs {
             EventManagement eventManagement = EventManagement.getInstance();
             GetExcludeComponentEvent event = new GetExcludeComponentEvent();
             eventManagement.putEvent(event);
-            eventManagement.waitForEvent(event);
-            components.addAll(event.getReturnValue());
-            for (Component frame : components) {
-                SwingUtilities.updateComponentTreeUI(frame);
+            if (!eventManagement.waitForEvent(event)) {
+                components.addAll(event.getReturnValue());
+                for (Component frame : components) {
+                    SwingUtilities.updateComponentTreeUI(frame);
+                }
             }
         });
     }

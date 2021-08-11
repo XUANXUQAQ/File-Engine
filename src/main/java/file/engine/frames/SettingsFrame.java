@@ -519,10 +519,9 @@ public class SettingsFrame {
             int returnValue = fileChooser.showDialog(new Label(), translateUtil.getTranslation("Choose"));
             if (returnValue == JFileChooser.APPROVE_OPTION) {
                 cmd = fileChooser.getSelectedFile().getAbsolutePath();
-                AddCmdEvent addCmdEvent = new AddCmdEvent(":" + name + ";" + cmd);
-                eventManagement.putEvent(addCmdEvent);
-                eventManagement.waitForEvent(addCmdEvent);
-                listCmds.setListData(allConfigs.getCmdSet().toArray());
+                eventManagement.putEvent(new AddCmdEvent(":" + name + ";" + cmd), event ->
+                        listCmds.setListData(allConfigs.getCmdSet().toArray()), event ->
+                    listCmds.setListData(allConfigs.getCmdSet().toArray()));
             }
         });
     }
@@ -534,10 +533,9 @@ public class SettingsFrame {
         buttonDelCmd.addActionListener(e -> {
             String del = (String) listCmds.getSelectedValue();
             if (del != null) {
-                DeleteCmdEvent deleteCmdEvent = new DeleteCmdEvent(del);
-                eventManagement.putEvent(deleteCmdEvent);
-                eventManagement.waitForEvent(deleteCmdEvent);
-                listCmds.setListData(allConfigs.getCmdSet().toArray());
+                eventManagement.putEvent(new DeleteCmdEvent(del), event ->
+                        listCmds.setListData(allConfigs.getCmdSet().toArray()), event ->
+                        listCmds.setListData(allConfigs.getCmdSet().toArray()));
             }
         });
     }
@@ -2270,9 +2268,7 @@ public class SettingsFrame {
         SwingUtilities.invokeLater(() -> {
             //使swing风格生效
             SetSwingLaf event = new SetSwingLaf("current");
-            eventManagement.putEvent(event);
-            eventManagement.waitForEvent(event);
-            frame.setVisible(true);
+            eventManagement.putEvent(event, event1 -> frame.setVisible(true), event1 -> frame.setVisible(true));
         });
     }
 

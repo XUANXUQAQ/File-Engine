@@ -4,6 +4,7 @@ import lombok.Setter;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 
 public class Event {
     private final AtomicBoolean isFinished = new AtomicBoolean(false);
@@ -11,6 +12,8 @@ public class Event {
     private final AtomicInteger executeTimes = new AtomicInteger(0);
     private final AtomicBoolean isBlock = new AtomicBoolean(false);
     private @Setter Object returnValue;
+    private Consumer<Event> callback;
+    private Consumer<Event> errorHandler;
 
     protected void incrementExecuteTimes() {
         executeTimes.incrementAndGet();
@@ -37,16 +40,30 @@ public class Event {
     }
 
     protected void setFailed() {
+        if (this.errorHandler != null) {
+            this.errorHandler.accept(this);
+        }
         isFailed.set(true);
     }
 
     protected void setFinished() {
+        if (this.callback != null) {
+            this.callback.accept(this);
+        }
         isFinished.set(true);
     }
 
     @SuppressWarnings("unchecked")
     public <T> T getReturnValue() {
         return (T) returnValue;
+    }
+
+    protected void setCallback(Consumer<Event> callback) {
+        this.callback = callback;
+    }
+
+    protected void setErrorHandler(Consumer<Event> errorHandler) {
+        this.errorHandler = errorHandler;
     }
 
     @Override
