@@ -1,12 +1,14 @@
 package file.engine.utils.clazz.scan;
 
 import java.io.File;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.Set;
 
 public class FileScanner implements Scan {
 
-    private String defaultClassPath;
+    private String defaultClassPath = "";
 
     public void setDefaultClassPath(String defaultClassPath) {
         this.defaultClassPath = defaultClassPath;
@@ -41,7 +43,7 @@ public class FileScanner implements Scan {
     @Override
     public Set<String> search(String packageName) {
         //先把包名转换为路径,首先得到项目的classpath
-        String classpath = defaultClassPath;
+        String classpath = URLDecoder.decode(defaultClassPath, StandardCharsets.UTF_8);
         //然后把我们的包名basPack转换为路径名
         String basePackPath = packageName.replace(".", File.separator);
         String searchPath = classpath + basePackPath;
