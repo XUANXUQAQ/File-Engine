@@ -228,3 +228,4 @@ Copy file path=コピーファイルパス
 Open parent folder=親パスを開く
 Do you want to download it manually=手動でダウンロードしますか
 Select disk=ディスクを選択
+Search Failed=検索に失敗しました

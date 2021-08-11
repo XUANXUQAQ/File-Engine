@@ -1,6 +1,5 @@
 package file.engine.services;
 
-import file.engine.utils.system.properties.IsDebug;
 import file.engine.annotation.EventListener;
 import file.engine.annotation.EventRegister;
 import file.engine.configs.AllConfigs;
@@ -11,11 +10,10 @@ import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
 import file.engine.event.handler.impl.database.*;
 import file.engine.event.handler.impl.stop.RestartEvent;
-import file.engine.event.handler.impl.taskbar.ShowTaskBarMessageEvent;
 import file.engine.utils.CachedThreadPoolUtil;
 import file.engine.utils.RegexUtil;
 import file.engine.utils.SQLiteUtil;
-import file.engine.utils.TranslateUtil;
+import file.engine.utils.system.properties.IsDebug;
 import lombok.Data;
 
 import java.io.*;
@@ -26,7 +24,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.*;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -411,12 +411,8 @@ public class DatabaseService {
      * @param disks 磁盘
      * @param ignorePath 忽略文件夹
      */
-    private void searchFile(String disks, String ignorePath) {
-        try {
-            searchByUSN(disks, ignorePath.toLowerCase());
-        } catch (IOException | InterruptedException e) {
-            e.printStackTrace();
-        }
+    private void searchFile(String disks, String ignorePath) throws IOException, InterruptedException {
+        searchByUSN(disks, ignorePath.toLowerCase());
     }
 
     /**
@@ -505,21 +501,17 @@ public class DatabaseService {
     /**
      * 检查索引数据库大小
      */
-    private void checkFileSize() {
+    private void checkFileSize() throws IOException {
         SQLiteUtil.closeAll();
         for (String eachDisk : RegexUtil.comma.split(AllConfigs.getInstance().getDisks())) {
-            try {
-                String name = eachDisk.charAt(0) + ".db";
-                long length = Files.size(Path.of("data/" + name));
-                if (length > 6L * 1024 * 1024 * 100) {
-                    // 大小超过600M
-                    if (IsDebug.isDebug()) {
-                        System.out.println("当前文件" + name + "大小超过600M，已删除");
-                    }
-                    Files.delete(Path.of("data/" + name));
+            String name = eachDisk.charAt(0) + ".db";
+            long length = Files.size(Path.of("data/" + name));
+            if (length > 6L * 1024 * 1024 * 100) {
+                // 大小超过600M
+                if (IsDebug.isDebug()) {
+                    System.out.println("当前文件" + name + "大小超过600M，已删除");
                 }
-            } catch (IOException e) {
-                e.printStackTrace();
+                Files.delete(Path.of("data/" + name));
             }
         }
         SQLiteUtil.initAllConnections();
@@ -529,20 +521,19 @@ public class DatabaseService {
      * 关闭数据库连接并更新数据库
      * @param ignorePath 忽略文件夹
      */
-    private void updateLists(String ignorePath) {
+    private void updateLists(String ignorePath) throws IOException, InterruptedException {
         checkFileSize();
         recreateDatabase();
         waitForCommandSet(SqlTaskIds.CREATE_TABLE);
         SQLiteUtil.closeAll();
-        searchFile(AllConfigs.getInstance().getDisks(), ignorePath);
-        SQLiteUtil.initAllConnections();
-        // 可能会出错
-        recreateDatabase();
-        createAllIndex();
-//        waitForCommandSet(SqlTaskIds.CREATE_INDEX);
-        EventManagement.getInstance().putEvent(new ShowTaskBarMessageEvent(
-                TranslateUtil.getInstance().getTranslation("Info"),
-                TranslateUtil.getInstance().getTranslation("Search Done")));
+        try {
+            searchFile(AllConfigs.getInstance().getDisks(), ignorePath);
+        } finally {
+            SQLiteUtil.initAllConnections();
+            // 可能会出错
+            recreateDatabase();
+            createAllIndex();
+        }
     }
 
     /**
@@ -691,7 +682,7 @@ public class DatabaseService {
     }
 
     @EventRegister(registerClass = UpdateDatabaseEvent.class)
-    private static void updateDatabaseEvent(Event event) {
+    private static void updateDatabaseEvent(Event event) throws IOException, InterruptedException {
         DatabaseService databaseService = getInstance();
         databaseService.setStatus(Enums.DatabaseStatus.MANUAL_UPDATE);
         databaseService.updateLists(AllConfigs.getInstance().getIgnorePath());

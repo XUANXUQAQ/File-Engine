@@ -228,3 +228,4 @@ Copy file path=複製文件路徑
 Open parent folder=打開父文件夾
 Do you want to download it manually=您要手動下載嗎
 Select disk=選擇磁盤
+Search Failed=搜索失敗

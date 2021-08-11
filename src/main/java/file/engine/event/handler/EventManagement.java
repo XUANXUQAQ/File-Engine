@@ -116,19 +116,24 @@ public class EventManagement {
             if (eventHandler != null) {
                 try {
                     eventHandler.invoke(null, event);
-                } catch (IllegalAccessException | InvocationTargetException e) {
+                    event.setFinished();
+                    cachedThreadPoolUtil.executeTaskNoRejection(() ->
+                            doAllMethod(EVENT_LISTENER_MAP.get(event.getClass())));
+                    return false;
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
-                event.setFinished();
-                cachedThreadPoolUtil.executeTaskNoRejection(() ->
-                        doAllMethod(EVENT_LISTENER_MAP.get(event.getClass())));
-                return false;
             }
             //当前无可以接该任务的handler
             return true;
         }
     }
 
+    /**
+     * 用于在debug时查看在哪个位置发出的任务
+     * 由于执行任务的调用栈长度超过3，所以不会出现数组越界
+     * @return stackTraceElement
+     */
     private StackTraceElement getStackTraceElement() {
         StackTraceElement[] stacktrace = Thread.currentThread().getStackTrace();
         return stacktrace[3];
