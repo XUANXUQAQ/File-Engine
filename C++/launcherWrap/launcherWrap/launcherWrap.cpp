@@ -29,6 +29,8 @@ int g_check_time_count = 10;
 int g_check_time_count = 50;
 #endif
 
+constexpr auto* const g_proc_name = TEXT("File-Engine-x64.exe");
+
 int g_restart_count = 0;
 std::time_t g_restart_time = std::time(nullptr);
 bool g_is_restart_on_release_file = false;
@@ -46,6 +48,10 @@ void init_path();
 
 int main()
 {
+	if (find_process(g_proc_name))
+	{
+		return 0;
+	}
 	init_path();
 
 	std::cout << "file-engine-x64.exe path :  " << g_file_engine_exe_path << std::endl;
@@ -65,8 +71,7 @@ int main()
 		loop_count++;
 		if (loop_count > g_check_time_count)
 		{
-			constexpr auto* const proc_name = TEXT("File-Engine-x64.exe");
-			if (!find_process(proc_name))
+			if (!find_process(g_proc_name))
 			{
 				std::cout << "File-Engine process not exist" << std::endl;
 				restart_file_engine(false);
