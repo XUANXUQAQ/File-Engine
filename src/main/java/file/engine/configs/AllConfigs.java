@@ -841,13 +841,9 @@ public class AllConfigs {
 
     @EventRegister(registerClass = SetSwingLaf.class)
     public static void setSwingLafEvent(Event event) {
-        try {
-            AllConfigs instance = getInstance();
-            String theme = ((SetSwingLaf) event).theme;
-            instance.setSwingLaf(instance.swingThemesMapper(theme));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        AllConfigs instance = getInstance();
+        String theme = ((SetSwingLaf) event).theme;
+        instance.setSwingLaf(instance.swingThemesMapper(theme));
     }
 
     @EventRegister(registerClass = SaveConfigsEvent.class)

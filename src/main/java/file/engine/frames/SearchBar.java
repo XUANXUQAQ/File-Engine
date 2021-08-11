@@ -997,7 +997,13 @@ public class SearchBar {
                 eventManagement.putEvent(new ShowTaskBarMessageEvent(
                         translateUtil.getTranslation("Info"),
                         translateUtil.getTranslation("Updating file index")));
-                eventManagement.putEvent(new UpdateDatabaseEvent());
+                eventManagement.putEvent(new UpdateDatabaseEvent(),
+                        event -> eventManagement.putEvent(new ShowTaskBarMessageEvent(
+                                TranslateUtil.getInstance().getTranslation("Info"),
+                                TranslateUtil.getInstance().getTranslation("Search Done"))),
+                        event -> eventManagement.putEvent(new ShowTaskBarMessageEvent(
+                                TranslateUtil.getInstance().getTranslation("Warning"),
+                                TranslateUtil.getInstance().getTranslation("Search Failed"))));
                 startSignal.set(false);
                 isNotSqlInitialized.set(false);
                 return true;
