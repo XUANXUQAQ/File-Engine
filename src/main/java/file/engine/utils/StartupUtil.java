@@ -43,7 +43,8 @@ public class StartupUtil {
      */
     public static Process addStartup() throws IOException, InterruptedException {
         String command = "cmd.exe /c schtasks /create /ru \"administrators\" /rl HIGHEST /sc ONLOGON /tn \"File-Engine\" /tr ";
-        File FileEngine = new File(Constants.FILE_NAME);
+        String parentPath = getParentPath(new File("").getAbsolutePath());
+        File FileEngine = new File(parentPath + File.separator + Constants.LAUNCH_WRAPPER_NAME);
         String absolutePath = "\"\"" + FileEngine.getAbsolutePath() + "\"\" /f";
         command += absolutePath;
         Process p;
@@ -64,5 +65,10 @@ public class StartupUtil {
         p = Runtime.getRuntime().exec(command);
         p.waitFor();
         return p;
+    }
+
+    private static String getParentPath(String path) {
+        File f = new File(path);
+        return f.getParentFile().getAbsolutePath();
     }
 }

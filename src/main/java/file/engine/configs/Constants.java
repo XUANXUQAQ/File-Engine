@@ -14,6 +14,7 @@ public class Constants {
     public static final int MAX_PATTERN_CACHE_NUM = 20;
 
     public static final String FILE_NAME = "File-Engine-x64.exe";
+    public static final String LAUNCH_WRAPPER_NAME = "File-Engine.exe";
 
     public static final int MAX_SQL_NUM = 5000;
 
