@@ -12,9 +12,12 @@
 #pragma comment(lib, "shell32.lib")
 #pragma comment(lib, "Ole32.lib")
 #pragma comment(lib, "User32.lib")
-#pragma comment( linker, "/subsystem:windows /entry:mainCRTStartup" )
 
-// #define TEST
+//#define TEST
+
+#ifndef TEST
+#pragma comment( linker, "/subsystem:windows /entry:mainCRTStartup" )
+#endif
 
 constexpr auto* g_file_engine_zip_name = "File-Engine.zip";
 
@@ -59,7 +62,6 @@ int main()
 	std::cout << "new file-engine-x64.exe path: " << g_new_file_engine_exe_path << std::endl;
 	std::cout << "update signal file: " << g_update_signal_file << std::endl;
 	std::cout << "close signal file : " << g_close_signal_file << std::endl;
-
 	auto loop_count = 0;
 	if (is_dir_not_exist(g_file_engine_working_dir))
 	{
@@ -85,7 +87,10 @@ int main()
 void init_path()
 {
 	char current_dir[MAX_PATH];
-	_getcwd(current_dir, sizeof current_dir);
+	GetModuleFileNameA(nullptr, current_dir, sizeof current_dir);
+	std::string tmp_current_dir(current_dir);
+	strcpy_s(current_dir, tmp_current_dir.substr(0, tmp_current_dir.find_last_of('\\')).c_str());
+
 	std::string file_engine_exe_dir_string(current_dir);
 	file_engine_exe_dir_string += "\\data\\";
 	strcpy_s(g_file_engine_working_dir, file_engine_exe_dir_string.c_str());
