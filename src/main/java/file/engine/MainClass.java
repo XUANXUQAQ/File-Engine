@@ -267,6 +267,7 @@ public class MainClass {
      * -Dswing.aatext=true
      * -Djna.debug_load=false
      * -DFile_Engine_Debug=true
+     * -DFile_Engine_Preview=true
      */
     private static void setSystemProperties() {
         //todo Debug在发布时设置为false
@@ -320,7 +321,9 @@ public class MainClass {
                 }
             }, null);
 
-            checkRunningDirAtDiskC();
+            if (AllConfigs.getInstance().isFirstRun()) {
+                checkRunningDirAtDiskC();
+            }
 
             checkVersion();
 
