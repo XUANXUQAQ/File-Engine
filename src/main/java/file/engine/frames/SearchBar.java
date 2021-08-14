@@ -474,14 +474,21 @@ public class SearchBar {
         EventManagement eventManagement = EventManagement.getInstance();
         QueryAllWeightsEvent queryAllWeightsEvent = new QueryAllWeightsEvent();
         eventManagement.putEvent(queryAllWeightsEvent);
+        boolean isNeedSubtract = false;
         if (!eventManagement.waitForEvent(queryAllWeightsEvent)) {
             HashMap<String, Integer> returnValue = queryAllWeightsEvent.getReturnValue();
             for (int i = 0; i <= Constants.ALL_TABLE_NUM; i++) {
-                Integer integer = returnValue.get("list" + i);
-                if (integer == null) {
-                    integer = 0;
+                Integer weight = returnValue.get("list" + i);
+                if (weight == null) {
+                    weight = 0;
                 }
-                tableSet.add(new TableNameWeightInfo("list" + i, integer));
+                if (weight > 100000000) {
+                    isNeedSubtract = true;
+                }
+                if (isNeedSubtract) {
+                    weight = weight / 2;
+                }
+                tableSet.add(new TableNameWeightInfo("list" + i, weight));
             }
         } else {
             for (int i = 0; i <= Constants.ALL_TABLE_NUM; i++) {
