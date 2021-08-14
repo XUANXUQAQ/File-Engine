@@ -381,6 +381,10 @@ public class AllConfigs {
         return configEntity.isCheckUpdateStartup();
     }
 
+    /**
+     * 获取网络代理信息
+     * @return ProxyInfo
+     */
     public ProxyInfo getProxy() {
         return new ProxyInfo(
                 configEntity.getProxyAddress(),
@@ -394,6 +398,10 @@ public class AllConfigs {
         return configEntity.getDisks();
     }
 
+    /**
+     * 是否响应双击Ctrl键
+     * @return boolean
+     */
     public boolean isResponseCtrl() {
         return configEntity.isDoubleClickCtrlOpen();
     }
@@ -412,6 +420,9 @@ public class AllConfigs {
         }
     }
 
+    /**
+     * 更新服务器地址
+     */
     private void initUpdateAddress() {
         //todo 添加更新服务器地址
         updateAddressMap.put("jsdelivr CDN",
@@ -436,10 +447,18 @@ public class AllConfigs {
                 ));
     }
 
+    /**
+     * 根据用户选择的更新服务器获取地址
+     * @return addressUrl
+     */
     public AddressUrl getUpdateUrlFromMap() {
         return getUpdateUrlFromMap(getUpdateAddress());
     }
 
+    /**
+     * 获取所有更新服务器
+     * @return Set
+     */
     public Set<String> getAllUpdateAddress() {
         return updateAddressMap.keySet();
     }
@@ -448,6 +467,10 @@ public class AllConfigs {
         return updateAddressMap.get(updateAddress);
     }
 
+    /**
+     * 获取所有可用的本地磁盘
+     * @return String，用逗号隔开
+     */
     private String getLocalDisks() {
         File[] files = File.listRoots();
         if (files == null || files.length == 0) {
@@ -464,6 +487,10 @@ public class AllConfigs {
         return stringBuilder.toString();
     }
 
+    /**
+     * 获取用户配置的磁盘信息
+     * @param settingsInJson 用户配置json
+     */
     private void readDisks(JSONObject settingsInJson) {
         String disks = (String) getFromJson(settingsInJson, "disks", getLocalDisks());
         String[] stringDisk = RegexUtil.comma.split(disks);
@@ -595,6 +622,10 @@ public class AllConfigs {
         configEntity.setShowTipCreatingLnk((boolean) getFromJson(settingsInJson, "isShowTipOnCreatingLnk", true));
     }
 
+    /**
+     * 打开配置文件，解析为json
+     * @return JSON
+     */
     private JSONObject getSettingsJSON() {
         File settings = new File("user/settings.json");
         if (settings.exists()) {
@@ -614,6 +645,13 @@ public class AllConfigs {
         }
     }
 
+    /**
+     * 尝试从json中读取，若失败则返回默认值
+     * @param json json数据
+     * @param key key
+     * @param defaultObj 默认值
+     * @return 读取值或默认值
+     */
     private Object getFromJson(JSONObject json, String key, Object defaultObj) {
         if (json == null) {
             return defaultObj;
@@ -641,6 +679,9 @@ public class AllConfigs {
         return "";
     }
 
+    /**
+     * 读取所有配置
+     */
     private void readAllSettings() {
         configEntity = new ConfigEntity();
         JSONObject settingsInJson = getSettingsJSON();
@@ -677,6 +718,9 @@ public class AllConfigs {
         initCmdSetSettings();
     }
 
+    /**
+     * 使所有配置生效
+     */
     private void setAllSettings() {
         EventManagement eventManagement = EventManagement.getInstance();
         AllConfigs allConfigs = AllConfigs.getInstance();
@@ -697,6 +741,10 @@ public class AllConfigs {
         eventManagement.putEvent(new SetSwingLaf("current"));
     }
 
+    /**
+     * 设置swing的主题
+     * @param theme theme
+     */
     private void setSwingLaf(Enums.SwingThemes theme) {
         SwingUtilities.invokeLater(() -> {
             if (theme == Enums.SwingThemes.CoreFlatIntelliJLaf) {
@@ -744,8 +792,12 @@ public class AllConfigs {
             EventManagement eventManagement = EventManagement.getInstance();
             GetExcludeComponentEvent event = new GetExcludeComponentEvent();
             eventManagement.putEvent(event);
+            /*
+             * 由于此时更新会导致nullPointerException，获取暂时不需要更新主题的组件
+             */
             if (!eventManagement.waitForEvent(event)) {
                 components.addAll(event.getReturnValue());
+                // 更新组件主题
                 for (Component frame : components) {
                     SwingUtilities.updateComponentTreeUI(frame);
                 }
@@ -753,6 +805,9 @@ public class AllConfigs {
         });
     }
 
+    /**
+     * 讲配置保存到文件
+     */
     private void saveAllSettings() {
         try (BufferedWriter buffW = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("user/settings.json"), StandardCharsets.UTF_8))) {
             String format = JSON.toJSONString(
@@ -767,6 +822,11 @@ public class AllConfigs {
         }
     }
 
+    /**
+     * 检查configEntity中有没有null值，在debug时使用
+     * @param config configEntity
+     * @return boolean
+     */
     private boolean noNullValue(ConfigEntity config) {
         try {
             for (Field field : config.getClass().getDeclaredFields()) {
@@ -783,10 +843,19 @@ public class AllConfigs {
         return true;
     }
 
+    /**
+     * 获取更新地址
+     * @return url
+     */
     private String getUpdateUrl() {
         return getUpdateUrlFromMap().fileEngineVersionUrl;
     }
 
+    /**
+     * 从服务器获取最新信息
+     * @return JSON
+     * @throws IOException 获取失败
+     */
     public JSONObject getUpdateInfo() throws IOException {
         DownloadService downloadService = DownloadService.getInstance();
         String url = getUpdateUrl();

@@ -153,7 +153,8 @@ public class CheckHotKeyService {
                     isExecuted = instance.getKeyStatus();
                     TimeUnit.MILLISECONDS.sleep(10);
                 }
-            } catch (InterruptedException ignored) {
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
         });
     }
