@@ -3265,22 +3265,23 @@ public class SearchBar {
     private void waitForTaskAndMergeResults(LinkedHashMap<String, ConcurrentSkipListSet<String>> containerMap, Bit allTaskStatus, Bit taskStatus) {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             final long startSearchTime = System.currentTimeMillis();
-            while (isVisible() && startTime < startSearchTime) {
-                try {
+            try {
+                out:
+                while (isVisible() && startTime < startSearchTime) {
                     Bit tmpTaskStatus = new Bit(new byte[]{0});
                     //线程状态的记录从第二个位开始，所以初始值为2
                     Bit start = new Bit(new byte[]{1, 0});
                     //循环次数，也是下方与运算结束后需要向右偏移的位数
                     int loopCount = 1;
-                    //失败阻塞次数，由于任务的耗时不同，如果阻塞时间过长，则跳过该任务，在下次循环中重新拿取结果
-                    int failCount = 0;
+                    //由于任务的耗时不同，如果阻塞时间过长，则跳过该任务，在下次循环中重新拿取结果
+                    long waitTime = 0;
                     Bit zero = new Bit(new byte[]{0});
                     Bit one = new Bit(new byte[]{1});
                     ConcurrentSkipListSet<String> results;
                     while (start.length() <= allTaskStatus.length() || taskStatus.or(zero).equals(zero)) {
                         if (startTime > startSearchTime || !isVisible()) {
                             //用户重新输入，结束当前任务
-                            break;
+                            break out;
                         }
                         results = containerMap.get(start.toString());
                         if (results != null) {
@@ -3290,31 +3291,32 @@ public class SearchBar {
                         //当线程完成，taskStatus中的位会被设置为1
                         //这时，将taskStatus和start做与运算，然后移到第一位，如果为1，则线程已完成搜索
                         Bit and = taskStatus.and(start);
-                        if (((and).shiftRight(loopCount)).equals(one) || failCount > 500) {
+                        boolean isFailed = System.currentTimeMillis() - waitTime > 300 && waitTime != 0;
+                        if (((and).shiftRight(loopCount)).equals(one) || isFailed) {
                             // failCount过大，阻塞时间过长则跳过
-                            failCount = 0;
+                            waitTime = 0;
                             results = containerMap.get(start.toString());
                             if (results != null) {
                                 tempResults.addAll(results);
                                 tempResultNum.set(tempResults.size());
-                                results.clear();
+                                if (!isFailed) {
+                                    results.clear();
+                                }
                             }
                             tmpTaskStatus = tmpTaskStatus.or(start);
                             //将start左移，代表当前任务结束，继续拿下一个任务的结果
                             start.shiftLeft();
                             loopCount++;
                         } else {
-                            failCount++;
+                            if (waitTime == 0) {
+                                waitTime = System.currentTimeMillis();
+                            }
                         }
                     }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-                try {
                     TimeUnit.MILLISECONDS.sleep(1);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
                 }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         });
     }
