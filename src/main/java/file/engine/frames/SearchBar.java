@@ -3583,8 +3583,6 @@ public class SearchBar {
                                             openWithoutAdmin(cmdInfo[1]);
                                         }
                                     });
-                                    showResults(true, false, false, false,
-                                            false, false, false, false);
                                 }
                             } else if (runningMode == Enums.RunningMode.NORMAL_MODE) {
                                 //对搜索关键字赋值
@@ -3600,7 +3598,7 @@ public class SearchBar {
                                             listResultsNum.incrementAndGet();
                                         }
                                     }
-                                    TimeUnit.MILLISECONDS.sleep(10);
+                                    TimeUnit.MILLISECONDS.sleep(1);
                                 }
                             }
 
