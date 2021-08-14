@@ -3170,7 +3170,6 @@ public class SearchBar {
         //按照优先级排列，key是sql和表名的对应，value是容器
         LinkedHashMap<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>>
                 nonFormattedSql = getNonFormattedSqlFromTableQueue();
-        AtomicBoolean isResultsFull = new AtomicBoolean(false);
         Bit taskStatus = new Bit(new byte[]{0});
         Bit allTaskStatus = new Bit(new byte[]{0});
 
@@ -3178,7 +3177,7 @@ public class SearchBar {
         //任务队列
         ConcurrentLinkedQueue<Runnable> taskQueue = new ConcurrentLinkedQueue<>();
         //添加搜索任务到队列
-        addSearchTasks(nonFormattedSql, isResultsFull, taskStatus, allTaskStatus, containerMap, taskQueue);
+        addSearchTasks(nonFormattedSql, taskStatus, allTaskStatus, containerMap, taskQueue);
 
         //添加消费者线程，接受任务进行处理，最高4线程
         int processors = Runtime.getRuntime().availableProcessors();
@@ -3198,7 +3197,6 @@ public class SearchBar {
      * 添加搜索任务到队列
      *
      * @param nonFormattedSql sql未被格式化的所有任务
-     * @param isResultsFull   是否结果已满，超过MAX_RESULTS_COUNT
      * @param taskStatus      用于保存任务信息，这是一个通用变量，从第二个位开始，每一个位代表一个任务，当任务完成，该位将被置为1，否则为0，
      *                        例如第一个和第三个任务完成，第二个未完成，则为1010
      * @param allTaskStatus   所有的任务信息，从第二位开始，只要有任务被创建，该为就为1，例如三个任务被创建，则为1110
@@ -3206,7 +3204,6 @@ public class SearchBar {
      * @param taskQueue       任务栈
      */
     private void addSearchTasks(LinkedHashMap<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>> nonFormattedSql,
-                                AtomicBoolean isResultsFull,
                                 Bit taskStatus,
                                 Bit allTaskStatus,
                                 LinkedHashMap<String, ConcurrentSkipListSet<String>> containerMap,
@@ -3231,7 +3228,6 @@ public class SearchBar {
                             //当前数据库表中有多少个结果匹配成功
                             int matchedNum = searchAndAddToTempResults(System.currentTimeMillis(),
                                     formattedSql,
-                                    isResultsFull,
                                     container,
                                     String.valueOf(eachDisk.charAt(0)));
                             long weight = Math.min(matchedNum, 5);
@@ -3239,8 +3235,8 @@ public class SearchBar {
                                 //更新表的权重，每次搜索将会按照各个表的权重排序
                                 updateTableWeight(commandsMap.get(each), weight);
                             }
-                            if (isResultsFull.get() || time < startTime) {
-                                throw new RuntimeException("stopped");
+                            if (listResultsNum.get() > MAX_RESULTS_COUNT || time < startTime) {
+                                break;
                             }
                         }
                     }
@@ -3275,7 +3271,6 @@ public class SearchBar {
                     Bit one = new Bit(new byte[]{1});
                     ConcurrentSkipListSet<String> results;
                     while (start.length() <= allTaskStatus.length() || taskStatus.or(zero).equals(zero)) {
-                        TimeUnit.MILLISECONDS.sleep(1);
                         if (startTime > startSearchTime || !isVisible()) {
                             //用户重新输入，结束当前任务
                             break;
@@ -3295,6 +3290,7 @@ public class SearchBar {
                             if (results != null) {
                                 tempResults.addAll(results);
                                 tempResultNum.set(tempResults.size());
+                                results.clear();
                             }
                             tmpTaskStatus = tmpTaskStatus.or(start);
                             //将start左移，代表当前任务结束，继续拿下一个任务的结果
@@ -3756,6 +3752,9 @@ public class SearchBar {
         return ret;
     }
 
+    /**
+     * 初始化优先级队列
+     */
     private void initPriorityQueue() {
         priorityQueue.clear();
         try (PreparedStatement pStmt = SQLiteUtil.getPreparedStatement("SELECT PRIORITY FROM priority order by priority desc;", "cache")) {
@@ -3774,11 +3773,10 @@ public class SearchBar {
      * @param time 开始搜索时间，用于检测用于重新输入匹配信息后快速停止
      * @param sql  sql
      */
-    private int searchAndAddToTempResults(long time, String sql, AtomicBoolean isResultsFull, ConcurrentSkipListSet<String> container, String disk) {
+    private int searchAndAddToTempResults(long time, String sql, ConcurrentSkipListSet<String> container, String disk) {
         int count = 0;
         //结果太多则不再进行搜索
-        if (isResultsFull.get() || listResultsNum.get() + tempResultNum.get() > MAX_RESULTS_COUNT || startTime > time || !isVisible()) {
-            isResultsFull.set(true);
+        if (startTime > time || !isVisible() || listResultsNum.get() > MAX_RESULTS_COUNT) {
             return count;
         }
         try (PreparedStatement stmt = SQLiteUtil.getPreparedStatement(sql, disk);
@@ -3787,7 +3785,7 @@ public class SearchBar {
             while (resultSet.next()) {
                 //结果太多则不再进行搜索
                 //用户重新输入了信息
-                if (isResultsFull.get() || listResultsNum.get() + tempResultNum.get() > MAX_RESULTS_COUNT || startTime > time || !isVisible()) {
+                if (startTime > time || !isVisible() || listResultsNum.get() > MAX_RESULTS_COUNT) {
                     tableQueue.clear();
                     return count;
                 }
