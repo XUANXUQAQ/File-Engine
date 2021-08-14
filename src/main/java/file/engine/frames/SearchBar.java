@@ -515,7 +515,7 @@ public class SearchBar {
             return;
         }
         origin.weight.addAndGet(weight);
-        EventManagement.getInstance().putEvent(new UpdateTableWeightEvent(tableName, weight));
+        EventManagement.getInstance().putEvent(new UpdateTableWeightEvent(tableName, origin.weight.get()));
         if (IsDebug.isDebug()) {
             System.err.println("已更新" + tableName + "权重, 之前为" + origin + "***增加了" + weight);
         }
