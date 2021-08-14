@@ -3053,6 +3053,9 @@ public class SearchBar {
         });
     }
 
+    /**
+     * 重绘Frame
+     */
     private void repaint() {
         if (isPreviewMode.get()) {
             SwingUtilities.invokeLater(() -> SwingUtilities.updateComponentTreeUI(searchBar));
@@ -3152,12 +3155,12 @@ public class SearchBar {
         LinkedList<TableNameWeightInfo> tmpCommandList = new LinkedList<>(tableSet);
         //将tableSet通过权重排序
         tmpCommandList.sort((o1, o2) -> Long.compare(o2.weight.get(), o1.weight.get()));
-        tmpCommandList.forEach(each -> {
+        for (TableNameWeightInfo each : tmpCommandList) {
             if (IsDebug.isDebug()) {
                 System.out.println("已添加表" + each.tableName + "----权重" + each.weight.get());
             }
             tableQueue.add(each.tableName);
-        });
+        }
         AtomicBoolean isMergeTempResultThreadCreated = new AtomicBoolean(false);
         CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
         if (!isMergeTempResultThreadCreated.get()) {
@@ -3220,7 +3223,7 @@ public class SearchBar {
                 try {
                     Set<String> sqls = commandsMap.keySet();
                     DatabaseService databaseService = DatabaseService.getInstance();
-                    sqls.forEach(each -> {
+                    for (String each : sqls) {
                         String formattedSql;
                         if (runningMode == Enums.RunningMode.NORMAL_MODE && databaseService.getStatus() == Enums.DatabaseStatus.NORMAL) {
                             //格式化是为了以后的拓展性
@@ -3240,7 +3243,7 @@ public class SearchBar {
                                 throw new RuntimeException("stopped");
                             }
                         }
-                    });
+                    }
                 } finally {
                     //执行完后将对应的线程flag设为1
                     taskStatus.set(taskStatus.or(currentTaskNum));
@@ -3529,7 +3532,7 @@ public class SearchBar {
                 while (eventManagement.isNotMainExit()) {
                     long endTime = System.currentTimeMillis();
                     text = getSearchBarText();
-                    if ((endTime - startTime > 200) && isNotSqlInitialized.get() && startSignal.get()) {
+                    if ((endTime - startTime > 50) && isNotSqlInitialized.get() && startSignal.get()) {
                         if (!getSearchBarText().isEmpty()) {
                             isNotSqlInitialized.set(false);
                             if (databaseService.getStatus() == Enums.DatabaseStatus.NORMAL && runningMode == Enums.RunningMode.NORMAL_MODE) {
