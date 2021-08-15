@@ -29,22 +29,6 @@ public class Bit {
     }
 
     /**
-     * 左移1位
-     * @return 当前bit对象
-     */
-    public Bit shiftLeft() {
-        return shiftLeft(1);
-    }
-
-    /**
-     * 右移一位
-     * @return 当前bit对象
-     */
-    public Bit shiftRight() {
-        return shiftRight(1);
-    }
-
-    /**
      * 左移count位
      * @param count 次数
      * @return 当前bit对象
@@ -165,17 +149,5 @@ public class Bit {
 
     public int length() {
         return this.bytes.get().length;
-    }
-
-    public static void main(String[] args) {
-        Bit bit = new Bit(new byte[] {1, 0, 1, 0});
-        Bit or = bit.or(new Bit(new byte[]{0, 1, 1}));
-        assert or.equals(new Bit(new byte[] {1, 0, 1, 1}));
-
-        Bit and = bit.and(new Bit(new byte[] {1, 0, 0}));
-        assert and.equals(new Bit(new byte[]{0}));
-
-        Bit not = bit.not();
-        assert not.equals(new Bit(new byte[] {0, 1, 0, 1}));
     }
 }
