@@ -3218,7 +3218,7 @@ public class SearchBar {
         Bit number = new Bit(new byte[]{1});
         nonFormattedSql.forEach((commandsMap, container) -> Arrays.stream(RegexUtil.comma.split(AllConfigs.getInstance().getDisks())).forEach(eachDisk -> {
             //为每个任务分配的位，不断左移以不断进行分配
-            number.shiftLeft();
+            number.shiftLeft(1);
             Bit currentTaskNum = new Bit(number);
             allTaskStatus.set(allTaskStatus.or(currentTaskNum));
             containerMap.put(currentTaskNum.toString(), container);
@@ -3305,7 +3305,7 @@ public class SearchBar {
                             }
                             tmpTaskStatus = tmpTaskStatus.or(start);
                             //将start左移，代表当前任务结束，继续拿下一个任务的结果
-                            start.shiftLeft();
+                            start.shiftLeft(1);
                             loopCount++;
                         } else {
                             if (waitTime == 0) {
@@ -3537,7 +3537,7 @@ public class SearchBar {
                 while (eventManagement.isNotMainExit()) {
                     long endTime = System.currentTimeMillis();
                     text = getSearchBarText();
-                    if ((endTime - startTime > 50) && isNotSqlInitialized.get() && startSignal.get()) {
+                    if ((endTime - startTime > 250) && isNotSqlInitialized.get() && startSignal.get()) {
                         if (!getSearchBarText().isEmpty()) {
                             isNotSqlInitialized.set(false);
                             if (databaseService.getStatus() == Enums.DatabaseStatus.NORMAL && runningMode == Enums.RunningMode.NORMAL_MODE) {
