@@ -61,17 +61,17 @@ public class Bit {
      */
     public Bit and(Bit bit) {
         boolean isThisBigger = this.bytes.get().length > bit.bytes.get().length;
-        byte[] bigger = isThisBigger ? this.bytes.get() : bit.bytes.get();
-        byte[] smaller = isThisBigger ? bit.bytes.get() : this.bytes.get();
+        AtomicReference<byte[]> bigger = isThisBigger ? this.bytes : bit.bytes;
+        AtomicReference<byte[]> smaller = isThisBigger ? bit.bytes : this.bytes;
         int offset = Math.abs(this.bytes.get().length - bit.bytes.get().length);
-        int minLength = smaller.length;
+        int minLength = smaller.get().length;
         byte[] res = new byte[minLength];
         for (int i = minLength - 1; i >= 0; i--) {
             byte b1, b2;
             int index;
-            b1 = smaller[i];
+            b1 = smaller.get()[i];
             if ((index = i + offset) >= 0) {
-                b2 = bigger[index];
+                b2 = bigger.get()[index];
             } else {
                 b2 = 0;
             }
@@ -87,17 +87,17 @@ public class Bit {
      */
     public Bit or(Bit bit) {
         boolean isThisBigger = this.bytes.get().length > bit.bytes.get().length;
-        byte[] bigger = isThisBigger ? this.bytes.get() : bit.bytes.get();
-        byte[] smaller = isThisBigger ? bit.bytes.get() : this.bytes.get();
+        AtomicReference<byte[]> bigger = isThisBigger ? this.bytes : bit.bytes;
+        AtomicReference<byte[]> smaller = isThisBigger ? bit.bytes : this.bytes;
         int offset = Math.abs(this.bytes.get().length - bit.bytes.get().length);
-        int maxLength = bigger.length;
+        int maxLength = bigger.get().length;
         byte[] res = new byte[maxLength];
         for (int i = maxLength - 1; i >= 0 ; i--) {
             byte b1, b2;
             int index;
-            b1 = bigger[i];
+            b1 = bigger.get()[i];
             if ((index = i - offset) >= 0) {
-                b2 = smaller[index];
+                b2 = smaller.get()[index];
             } else {
                 b2 = 0;
             }
