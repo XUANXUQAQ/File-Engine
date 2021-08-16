@@ -4,8 +4,8 @@ import com.alibaba.fastjson.JSONObject;
 import com.github.promeg.pinyinhelper.Pinyin;
 import com.github.promeg.tinypinyin.lexicons.java.cncity.CnCityDict;
 import file.engine.configs.AllConfigs;
-import file.engine.configs.Enums;
 import file.engine.configs.Constants;
+import file.engine.configs.Enums;
 import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
 import file.engine.event.handler.impl.BootSystemEvent;
@@ -13,7 +13,6 @@ import file.engine.event.handler.impl.ReadConfigsEvent;
 import file.engine.event.handler.impl.configs.CheckConfigsEvent;
 import file.engine.event.handler.impl.database.UpdateDatabaseEvent;
 import file.engine.event.handler.impl.frame.settingsFrame.ShowSettingsFrameEvent;
-import file.engine.event.handler.impl.stop.RestartEvent;
 import file.engine.event.handler.impl.taskbar.ShowTaskBarMessageEvent;
 import file.engine.services.DatabaseService;
 import file.engine.services.plugin.system.PluginService;
@@ -304,14 +303,20 @@ public class MainClass {
             // 发送读取所有配置时间，初始化配置
             ReadConfigsEvent readConfigsEvent = new ReadConfigsEvent();
             eventManagement.putEvent(readConfigsEvent);
-            eventManagement.waitForEvent(readConfigsEvent);
+            if (eventManagement.waitForEvent(readConfigsEvent)) {
+                JOptionPane.showMessageDialog(null, "Read configs failed", "ERROR", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
 
             initDatabase();
 
             initPinyin();
 
             // 初始化全部完成，发出启动系统事件
-            sendBootSystemSignal();
+            if (sendBootSystemSignal()) {
+                JOptionPane.showMessageDialog(null, "Boot system failed", "ERROR", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
 
             eventManagement.putEvent(new CheckConfigsEvent(), event -> {
                 String errorInfo = event.getReturnValue();
@@ -330,8 +335,6 @@ public class MainClass {
             checkPluginInfo();
 
             mainLoop();
-
-            System.exit(0);
         } catch (Exception e) {
             e.printStackTrace();
             System.exit(-1);
@@ -355,11 +358,9 @@ public class MainClass {
         Date endTime;
         long timeDiff;
         long div = 24 * 60 * 60 * 1000;
-        int restartCount = 0;
-
         boolean isDatabaseDamaged = isDatabaseDamaged();
         boolean isCheckIndex = false;
-        boolean isNeedUpdate = false;
+        boolean isDatabaseOutDated = false;
 
         if (!IsDebug.isDebug()) {
             isCheckIndex = checkIndex();
@@ -367,20 +368,6 @@ public class MainClass {
 
         EventManagement eventManagement = EventManagement.getInstance();
         TranslateUtil translateUtil = TranslateUtil.getInstance();
-
-        // 数据库损坏或者重启次数超过3次，需要重建索引
-        if (isDatabaseDamaged || isCheckIndex) {
-            eventManagement.putEvent(new ShowTaskBarMessageEvent(
-                    translateUtil.getTranslation("Info"),
-                    translateUtil.getTranslation("Updating file index")));
-            eventManagement.putEvent(new UpdateDatabaseEvent(),
-                    event -> eventManagement.putEvent(new ShowTaskBarMessageEvent(
-                    TranslateUtil.getInstance().getTranslation("Info"),
-                    TranslateUtil.getInstance().getTranslation("Search Done"))),
-                    event -> eventManagement.putEvent(new ShowTaskBarMessageEvent(
-                    TranslateUtil.getInstance().getTranslation("Warning"),
-                    TranslateUtil.getInstance().getTranslation("Search Failed"))));
-        }
 
         startGetCursorPosTimer();
 
@@ -394,10 +381,9 @@ public class MainClass {
             timeDiff = endTime.getTime() - startTime.getTime();
             long diffDays = timeDiff / div;
             if (diffDays > 2) {
-                restartCount++;
                 startTime = endTime;
                 //启动时间已经超过2天,更新索引
-                isNeedUpdate = true;
+                isDatabaseOutDated = true;
             }
             if (IsDebug.isDebug()) {
                 if (isCursorLongTimeNotMove()) {
@@ -407,25 +393,21 @@ public class MainClass {
                 }
             }
             //开始检测鼠标移动，若鼠标长时间未移动，且更新标志isNeedUpdate为true，则更新
-            if (isNeedUpdate && isCursorLongTimeNotMove()) {
-                isNeedUpdate = false;
+            // 数据库损坏或者重启次数超过3次，需要重建索引
+            if (isDatabaseOutDated && isCursorLongTimeNotMove() || isDatabaseDamaged || isCheckIndex) {
+                isDatabaseOutDated = false;
                 eventManagement.putEvent(new ShowTaskBarMessageEvent(
                         translateUtil.getTranslation("Info"),
                         translateUtil.getTranslation("Updating file index")));
                 eventManagement.putEvent(new UpdateDatabaseEvent(),
                         event -> eventManagement.putEvent(new ShowTaskBarMessageEvent(
-                                TranslateUtil.getInstance().getTranslation("Info"),
-                                TranslateUtil.getInstance().getTranslation("Search Done"))),
+                                translateUtil.getTranslation("Info"),
+                                translateUtil.getTranslation("Search Done"))),
                         event -> eventManagement.putEvent(new ShowTaskBarMessageEvent(
-                                TranslateUtil.getInstance().getTranslation("Warning"),
-                                TranslateUtil.getInstance().getTranslation("Search Failed"))));
+                                translateUtil.getTranslation("Warning"),
+                                translateUtil.getTranslation("Search Failed"))));
             }
-            if (restartCount > 2) {
-                restartCount = 0;
-                //超过限定时间未重启
-                eventManagement.putEvent(new RestartEvent());
-            }
-            TimeUnit.SECONDS.sleep(1);
+            TimeUnit.SECONDS.sleep(10);
         }
     }
 
@@ -443,14 +425,21 @@ public class MainClass {
      */
     private static void startGetCursorPosTimer() {
         Point lastPoint = new Point();
-        Timer timer = new Timer(1000, (event) -> {
-            Point point = getCursorPoint();
-            if (!point.equals(lastPoint)) {
-                CursorCount.count.set(0);
+        CachedThreadPoolUtil.getInstance().executeTask(() -> {
+            EventManagement eventManagement = EventManagement.getInstance();
+            try {
+                while (eventManagement.isNotMainExit()) {
+                    Point point = getCursorPoint();
+                    if (!point.equals(lastPoint)) {
+                        CursorCount.count.set(0);
+                    }
+                    lastPoint.setLocation(point);
+                    TimeUnit.SECONDS.sleep(1);
+                }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
-            lastPoint.setLocation(point);
         });
-        timer.start();
     }
 
     private static Point getCursorPoint() {
@@ -511,14 +500,12 @@ public class MainClass {
     /**
      * 初始化全部完成，发出启动系统事件
      */
-    private static void sendBootSystemSignal() {
+    private static boolean sendBootSystemSignal() {
         EventManagement eventManagement = EventManagement.getInstance();
 
         Event event = new BootSystemEvent();
         eventManagement.putEvent(event);
-        if (eventManagement.waitForEvent(event)) {
-            throw new RuntimeException("初始化失败");
-        }
+        return eventManagement.waitForEvent(event);
     }
 
     private static void releaseAllDependence() throws IOException {
