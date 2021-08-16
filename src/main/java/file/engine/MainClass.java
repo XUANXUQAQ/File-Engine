@@ -285,7 +285,7 @@ public class MainClass {
 
             if (!System.getProperty("os.arch").contains("64")) {
                 JOptionPane.showMessageDialog(null, "Not 64 Bit", "ERROR", JOptionPane.ERROR_MESSAGE);
-                return;
+                throw new RuntimeException("Not 64 Bit");
             }
             Class.forName("org.sqlite.JDBC");
             updatePlugins();
@@ -305,7 +305,7 @@ public class MainClass {
             eventManagement.putEvent(readConfigsEvent);
             if (eventManagement.waitForEvent(readConfigsEvent)) {
                 JOptionPane.showMessageDialog(null, "Read configs failed", "ERROR", JOptionPane.ERROR_MESSAGE);
-                return;
+                throw new RuntimeException("Read Configs Failed");
             }
 
             initDatabase();
@@ -315,7 +315,7 @@ public class MainClass {
             // 初始化全部完成，发出启动系统事件
             if (sendBootSystemSignal()) {
                 JOptionPane.showMessageDialog(null, "Boot system failed", "ERROR", JOptionPane.ERROR_MESSAGE);
-                return;
+                throw new RuntimeException("Boot System Failed");
             }
 
             eventManagement.putEvent(new CheckConfigsEvent(), event -> {
