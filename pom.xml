@@ -44,18 +44,18 @@
         <dependency>
             <groupId>org.xerial</groupId>
             <artifactId>sqlite-jdbc</artifactId>
-            <version>3.36.0</version>
+            <version>3.36.0.1</version>
         </dependency>
         <dependency>
             <groupId>com.formdev</groupId>
             <artifactId>flatlaf</artifactId>
-            <version>0.46</version>
+            <version>1.5</version>
         </dependency>
 
         <dependency>
             <groupId>com.formdev</groupId>
             <artifactId>flatlaf-intellij-themes</artifactId>
-            <version>0.46</version>
+            <version>1.5</version>
         </dependency>
         <dependency>
             <groupId>io.github.biezhi</groupId>
