@@ -132,7 +132,6 @@ int main() {
 				initPriorityMap(suffixPriorityMap, tmpDbPath);
 			}
 			sqlite3_exec(p.db, "PRAGMA TEMP_STORE=MEMORY;", nullptr, nullptr, nullptr);
-			sqlite3_exec(p.db, "PRAGMA journal_mode=OFF;", nullptr, nullptr, nullptr);
 			sqlite3_exec(p.db, "PRAGMA cache_size=262144;", nullptr, nullptr, nullptr);
 			sqlite3_exec(p.db, "PRAGMA page_size=65535;", nullptr, nullptr, nullptr);
 			sqlite3_exec(p.db, "PRAGMA auto_vacuum=0;", nullptr, nullptr, nullptr);

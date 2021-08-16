@@ -276,9 +276,10 @@ public class EventManagement {
     private void startAsyncEventHandler() {
         CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
         for (int i = 0; i < 4; i++) {
+            int finalI = i;
             cachedThreadPoolUtil.executeTaskNoRejection(() -> {
+                final boolean isDebug = IsDebug.isDebug();
                 try {
-                    final boolean isDebug = IsDebug.isDebug();
                     Event event;
                     while (isEventHandlerNotExit()) {
                         //取出任务
@@ -304,10 +305,11 @@ public class EventManagement {
                             }
                         }
                     }
-                    if (isDebug) {
-                        System.err.println("******异步任务执行线程退出******");
-                    }
                 } catch (InterruptedException ignored) {
+                } finally {
+                    if (isDebug) {
+                        System.err.println("******异步任务执行线程" + finalI + "退出******");
+                    }
                 }
             });
         }
@@ -326,9 +328,9 @@ public class EventManagement {
      */
     private void startBlockEventHandler() {
         CachedThreadPoolUtil.getInstance().executeTaskNoRejection(() -> {
+            final boolean isDebug = IsDebug.isDebug();
             try {
                 Event event;
-                final boolean isDebug = IsDebug.isDebug();
                 while (isEventHandlerNotExit()) {
                     //取出任务
                     if ((event = blockEventQueue.poll()) == null) {
@@ -357,10 +359,11 @@ public class EventManagement {
                         }
                     }
                 }
+            } catch (InterruptedException ignored) {
+            } finally {
                 if (isDebug) {
                     System.err.println("******同步任务执行线程退出******");
                 }
-            } catch (InterruptedException ignored) {
             }
         });
     }

@@ -5,6 +5,7 @@ import file.engine.configs.AllConfigs;
 import file.engine.event.handler.EventManagement;
 import file.engine.event.handler.impl.stop.RestartEvent;
 import org.sqlite.SQLiteConfig;
+import org.sqlite.SQLiteOpenMode;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -26,6 +27,7 @@ public class SQLiteUtil {
         sqLiteConfig.setTempStore(SQLiteConfig.TempStore.MEMORY);
         sqLiteConfig.setJournalMode(SQLiteConfig.JournalMode.WAL);
         sqLiteConfig.setPageSize(65535);
+        sqLiteConfig.setOpenMode(SQLiteOpenMode.NOMUTEX);
         sqLiteConfig.setDefaultCacheSize(256 * 1024);
         sqLiteConfig.setSynchronous(SQLiteConfig.SynchronousMode.OFF);
         sqLiteConfig.setLockingMode(SQLiteConfig.LockingMode.NORMAL);
