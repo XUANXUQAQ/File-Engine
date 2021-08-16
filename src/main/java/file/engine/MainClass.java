@@ -358,12 +358,11 @@ public class MainClass {
         Date endTime;
         long timeDiff;
         long div = 24 * 60 * 60 * 1000;
-        boolean isDatabaseDamaged = isDatabaseDamaged();
-        boolean isCheckIndex = false;
+        boolean isNeedUpdate = isDatabaseDamaged();
         boolean isDatabaseOutDated = false;
 
         if (!IsDebug.isDebug()) {
-            isCheckIndex = checkIndex();
+            isNeedUpdate |= checkIndex();
         }
 
         EventManagement eventManagement = EventManagement.getInstance();
@@ -394,8 +393,9 @@ public class MainClass {
             }
             //开始检测鼠标移动，若鼠标长时间未移动，且更新标志isNeedUpdate为true，则更新
             // 数据库损坏或者重启次数超过3次，需要重建索引
-            if (isDatabaseOutDated && isCursorLongTimeNotMove() || isDatabaseDamaged || isCheckIndex) {
+            if (isDatabaseOutDated && isCursorLongTimeNotMove() || isNeedUpdate) {
                 isDatabaseOutDated = false;
+                isNeedUpdate = false;
                 eventManagement.putEvent(new ShowTaskBarMessageEvent(
                         translateUtil.getTranslation("Info"),
                         translateUtil.getTranslation("Updating file index")));
