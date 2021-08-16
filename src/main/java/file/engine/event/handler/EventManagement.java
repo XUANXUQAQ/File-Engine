@@ -13,9 +13,7 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
@@ -28,6 +26,13 @@ public class EventManagement {
     private final ConcurrentHashMap<Class<? extends Event>, Method> EVENT_HANDLER_MAP = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<Class<? extends Event>, ConcurrentLinkedQueue<Method>> EVENT_LISTENER_MAP = new ConcurrentHashMap<>();
     private final AtomicInteger failureEventNum = new AtomicInteger(0);
+    private final ExecutorService eventHandleThreadPool = new ThreadPoolExecutor(
+            0,
+            200,
+            60L,
+            TimeUnit.SECONDS,
+            new SynchronousQueue<>(),
+            Executors.defaultThreadFactory());
 
     private final int MAX_TASK_RETRY_TIME = 20;
 
@@ -55,15 +60,14 @@ public class EventManagement {
      */
     public boolean waitForEvent(Event event) {
         try {
-            int timeout = 400;
-            int count = 0;
+            final long timeout = 20000; // 20s
+            long startTime = System.currentTimeMillis();
             while (!event.isFailed() && !event.isFinished()) {
-                count++;
-                if (count > timeout) {
+                if (System.currentTimeMillis() - startTime > timeout) {
                     System.err.println("等待" + event + "超时");
                     break;
                 }
-                TimeUnit.MILLISECONDS.sleep(50);
+                TimeUnit.MILLISECONDS.sleep(5);
             }
         } catch (InterruptedException ignored) {
         }
@@ -99,34 +103,31 @@ public class EventManagement {
         CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
         if (event instanceof RestartEvent) {
             exit.set(true);
-            cachedThreadPoolUtil.executeTaskNoRejection(() -> {
+            cachedThreadPoolUtil.executeTask(() -> {
                 doAllMethod(EVENT_LISTENER_MAP.get(RestartEvent.class));
                 if (event instanceof CloseEvent) {
                     stopDaemon();
                 }
             });
             event.setFinished();
-            try {
-                cachedThreadPoolUtil.shutdown();
-            } catch (InterruptedException ignored) {
-            }
-            return false;
+            CachedThreadPoolUtil.getInstance().shutdown();
+            System.exit(0);
         } else {
             Method eventHandler = EVENT_HANDLER_MAP.get(event.getClass());
             if (eventHandler != null) {
                 try {
                     eventHandler.invoke(null, event);
                     event.setFinished();
-                    cachedThreadPoolUtil.executeTaskNoRejection(() ->
+                    cachedThreadPoolUtil.executeTask(() ->
                             doAllMethod(EVENT_LISTENER_MAP.get(event.getClass())));
                     return false;
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
-            //当前无可以接该任务的handler
-            return true;
         }
+        //当前无可以接该任务的handler
+        return true;
     }
 
     /**
@@ -274,10 +275,9 @@ public class EventManagement {
      * 开启异步任务处理中心
      */
     private void startAsyncEventHandler() {
-        CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
         for (int i = 0; i < 4; i++) {
             int finalI = i;
-            cachedThreadPoolUtil.executeTaskNoRejection(() -> {
+            eventHandleThreadPool.submit(() -> {
                 final boolean isDebug = IsDebug.isDebug();
                 try {
                     Event event;
@@ -327,7 +327,7 @@ public class EventManagement {
      * 开启同步任务事件处理中心
      */
     private void startBlockEventHandler() {
-        CachedThreadPoolUtil.getInstance().executeTaskNoRejection(() -> {
+        eventHandleThreadPool.submit(() -> {
             final boolean isDebug = IsDebug.isDebug();
             try {
                 Event event;

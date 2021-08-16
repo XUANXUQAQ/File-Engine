@@ -45,15 +45,27 @@ public class CachedThreadPoolUtil {
         return cachedThreadPool.submit(todo);
     }
 
-    public void executeTaskNoRejection(Runnable todo){
-        cachedThreadPool.submit(todo);
-    }
-
-    public void shutdown() throws InterruptedException {
+    public void shutdown() {
         isShutdown.set(true);
         cachedThreadPool.shutdown();
-        if (!cachedThreadPool.awaitTermination(Constants.THREAD_POOL_AWAIT_TIMEOUT, TimeUnit.SECONDS)) {
-            System.err.println("线程池等待超时");
+        try {
+            if (!cachedThreadPool.awaitTermination(Constants.THREAD_POOL_AWAIT_TIMEOUT, TimeUnit.SECONDS)) {
+                System.err.println("线程池等待超时");
+                ThreadPoolExecutor tpe = (ThreadPoolExecutor) cachedThreadPool;
+                int queueSize = tpe.getQueue().size();
+                System.err.println("当前排队线程数："+ queueSize);
+
+                int activeCount = tpe.getActiveCount();
+                System.err.println("当前活动线程数："+ activeCount);
+
+                long completedTaskCount = tpe.getCompletedTaskCount();
+                System.err.println("执行完成线程数："+ completedTaskCount);
+
+                long taskCount = tpe.getTaskCount();
+                System.err.println("总线程数："+ taskCount);
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
     }
 }

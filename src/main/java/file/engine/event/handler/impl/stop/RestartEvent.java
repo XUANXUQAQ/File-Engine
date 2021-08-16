@@ -5,5 +5,6 @@ import file.engine.event.handler.Event;
 public class RestartEvent extends Event {
     public RestartEvent() {
         super();
+        this.setBlock();
     }
 }
