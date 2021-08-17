@@ -35,4 +35,6 @@ public interface GetHandle extends Library {
     double getDpi();
 
     boolean isMousePressed();
+
+    boolean isForegroundFullscreen();
 }

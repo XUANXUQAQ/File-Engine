@@ -6,6 +6,7 @@ import com.github.promeg.tinypinyin.lexicons.java.cncity.CnCityDict;
 import file.engine.configs.AllConfigs;
 import file.engine.configs.Constants;
 import file.engine.configs.Enums;
+import file.engine.dllInterface.GetHandle;
 import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
 import file.engine.event.handler.impl.BootSystemEvent;
@@ -39,7 +40,7 @@ public class MainClass {
     private static final String IS_LOCAL_DISK_64_MD_5 = "f8a71d3496d8cc188713d521e6dfa2b2";
     private static final String FILE_SEARCHER_USN_64_MD_5 = "865f7f667fc61c09249739fbeaf1c58f";
     private static final String SQLITE3_64_MD_5 = "703bd51c19755db49c9070ceb255dfe5";
-    private static final String GET_HANDLE_64_MD_5 = "ee14698d5c8c8b55110d53012f8b7739";
+    private static final String GET_HANDLE_64_MD_5 = "0d4b4c74e29642e2fbfddcbdf9030d0f";
     private static final String SHORTCUT_GEN_MD_5 = "fa4e26f99f3dcd58d827828c411ea5d7";
 
     /**
@@ -393,7 +394,7 @@ public class MainClass {
             }
             //开始检测鼠标移动，若鼠标长时间未移动，且更新标志isNeedUpdate为true，则更新
             // 数据库损坏或者重启次数超过3次，需要重建索引
-            if (isDatabaseOutDated && isCursorLongTimeNotMove() || isNeedUpdate) {
+            if ((isDatabaseOutDated && isCursorLongTimeNotMove() && !GetHandle.INSTANCE.isForegroundFullscreen()) || isNeedUpdate) {
                 isDatabaseOutDated = false;
                 isNeedUpdate = false;
                 eventManagement.putEvent(new ShowTaskBarMessageEvent(
