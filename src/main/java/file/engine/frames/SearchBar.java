@@ -1,18 +1,17 @@
 package file.engine.frames;
 
 
-import file.engine.event.handler.impl.BootSystemEvent;
-import file.engine.utils.system.properties.IsDebug;
 import file.engine.annotation.EventListener;
 import file.engine.annotation.EventRegister;
 import file.engine.configs.AllConfigs;
-import file.engine.configs.Enums;
 import file.engine.configs.Constants;
+import file.engine.configs.Enums;
 import file.engine.dllInterface.FileMonitor;
 import file.engine.dllInterface.GetHandle;
 import file.engine.dllInterface.IsLocalDisk;
 import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
+import file.engine.event.handler.impl.BootSystemEvent;
 import file.engine.event.handler.impl.database.*;
 import file.engine.event.handler.impl.frame.searchBar.*;
 import file.engine.event.handler.impl.frame.settingsFrame.AddCacheEvent;
@@ -21,12 +20,14 @@ import file.engine.event.handler.impl.frame.settingsFrame.ShowSettingsFrameEvent
 import file.engine.event.handler.impl.monitor.disk.StartMonitorDiskEvent;
 import file.engine.event.handler.impl.stop.RestartEvent;
 import file.engine.event.handler.impl.taskbar.ShowTaskBarMessageEvent;
+import file.engine.frames.components.LoadingPanel;
 import file.engine.services.DatabaseService;
 import file.engine.services.plugin.system.Plugin;
 import file.engine.services.plugin.system.PluginService;
 import file.engine.utils.*;
 import file.engine.utils.bit.Bit;
 import file.engine.utils.file.CopyFileUtil;
+import file.engine.utils.system.properties.IsDebug;
 
 import javax.swing.*;
 import javax.swing.border.Border;
@@ -47,7 +48,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -83,16 +86,16 @@ public class SearchBar {
     private Border pluginMiddleBorder;
     private Border pluginBottomBorder;
     private final JFrame searchBar;
-    private final JLabel label1;
-    private final JLabel label2;
-    private final JLabel label3;
-    private final JLabel label4;
-    private final JLabel label5;
-    private final JLabel label6;
-    private final JLabel label7;
-    private final JLabel label8;
+    private JLabel label1;
+    private JLabel label2;
+    private JLabel label3;
+    private JLabel label4;
+    private JLabel label5;
+    private JLabel label6;
+    private JLabel label7;
+    private JLabel label8;
     private final AtomicInteger currentResultCount;  //保存当前选中的结果是在listResults中的第几个 范围 0 - listResults.size()
-    private final JTextField textField;
+    private JTextField textField;
     private Color labelColor;
     private Color backgroundColor;
     private Color fontColorWithCoverage;
@@ -106,13 +109,13 @@ public class SearchBar {
     private volatile Enums.RunningMode runningMode;
     private volatile Enums.ShowingSearchBarMode showingMode;
     private long mouseWheelTime = 0;
-    private final int iconSideLength;
+    private int iconSideLength;
     private volatile long visibleStartTime = 0;  //记录窗口开始可见的事件，窗口默认最短可见时间0.5秒，防止窗口快速闪烁
     private volatile long firstResultStartShowingTime = 0;  //记录开始显示结果的时间，用于防止刚开始移动到鼠标导致误触
     private final ConcurrentLinkedQueue<String> tempResults;  //在优先文件夹和数据库cache未搜索完时暂时保存结果，搜索完后会立即被转移到listResults
     private final ConcurrentLinkedQueue<String> tableQueue;  //保存哪些表需要被查
-    private final CopyOnWriteArrayList<String> listResults;  //保存从数据库中找出符合条件的记录（文件路径）
-    private final Set<TableNameWeightInfo> tableSet;    //保存从0-40数据库的表，使用频率和名字对应，使经常使用的表最快被搜索到
+    private final LinkedList<String> listResults;  //保存从数据库中找出符合条件的记录（文件路径）
+    private final HashSet<TableNameWeightInfo> tableSet;    //保存从0-40数据库的表，使用频率和名字对应，使经常使用的表最快被搜索到
     private final ConcurrentLinkedQueue<Integer> priorityQueue;
     private volatile String[] searchCase;
     private volatile String searchText;
@@ -144,10 +147,10 @@ public class SearchBar {
     }
 
     private SearchBar() {
-        listResults = new CopyOnWriteArrayList<>();
+        listResults = new LinkedList<>();
         tempResults = new ConcurrentLinkedQueue<>();
         tableQueue = new ConcurrentLinkedQueue<>();
-        tableSet = ConcurrentHashMap.newKeySet();
+        tableSet = new HashSet<>();
         priorityQueue = new ConcurrentLinkedQueue<>();
         searchBar = new JFrame();
         currentResultCount = new AtomicInteger(0);
@@ -170,11 +173,61 @@ public class SearchBar {
         colon = RegexUtil.colon;
         slash = RegexUtil.slash;
         blank = RegexUtil.blank;
-        JPanel panel = new JPanel();
-        Color transparentColor = new Color(0, 0, 0, 0);
 
         databaseService = DatabaseService.getInstance();
 
+        initGUI();
+
+        initPriorityQueue();
+
+        initMenuItems();
+
+        //开启所有线程
+        initThreadPool();
+
+        //添加textField搜索变更检测
+        addTextFieldDocumentListener();
+
+        //添加结果的鼠标事件响应
+        addSearchBarMouseListener();
+
+        //添加结果的鼠标滚轮响应
+        addSearchBarMouseWheelListener();
+
+        //添加结果的鼠标移动事件响应
+        addSearchBarMouseMotionListener();
+
+        //添加textfield对键盘的响应
+        addTextFieldKeyListener();
+
+        addTextFieldFocusListener();
+    }
+
+    /**
+     * 初始化窗口
+     * @param positionX X坐标
+     * @param positionY Y坐标
+     * @param searchBarWidth 宽度
+     * @param searchBarHeight 高度
+     * @param transparentColor 透明的背景颜色
+     * @param contentPanel 内容面板
+     */
+    private void initFrame(int positionX, int positionY, int searchBarWidth, int searchBarHeight, Color transparentColor, JPanel contentPanel) {
+        //frame
+        searchBar.setBounds(positionX, positionY, searchBarWidth, searchBarHeight);
+        searchBar.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
+        searchBar.setUndecorated(true);
+        searchBar.getRootPane().setWindowDecorationStyle(JRootPane.NONE);
+        searchBar.setBackground(transparentColor);
+        searchBar.setOpacity(AllConfigs.getInstance().getOpacity());
+        searchBar.setContentPane(contentPanel);
+        searchBar.setType(JFrame.Type.UTILITY);
+        searchBar.setAlwaysOnTop(true);
+        //用于C++判断是否点击了当前窗口
+        searchBar.setTitle("File-Engine-SearchBar");
+    }
+
+    private void initGUI() {
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize(); // 获取屏幕大小
         int width = screenSize.width;
         int height = screenSize.height;
@@ -182,7 +235,8 @@ public class SearchBar {
         int searchBarHeight = (int) (height * 0.4);
         int positionX = width / 2 - searchBarWidth / 2;
         int positionY = height / 2 - searchBarHeight / 3;
-
+        JPanel panel = new JPanel();
+        Color transparentColor = new Color(0, 0, 0, 0);
         AllConfigs allConfigs = AllConfigs.getInstance();
         labelColor = new Color(allConfigs.getLabelColor());
         fontColorWithCoverage = new Color(allConfigs.getLabelFontColorWithCoverage());
@@ -190,18 +244,7 @@ public class SearchBar {
         labelFontColor = new Color(allConfigs.getLabelFontColor());
         initBorder(allConfigs.getBorderType(), new Color(allConfigs.getBorderColor()), allConfigs.getBorderThickness());
 
-        //frame
-        searchBar.setBounds(positionX, positionY, searchBarWidth, searchBarHeight);
-        searchBar.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
-        searchBar.setUndecorated(true);
-        searchBar.getRootPane().setWindowDecorationStyle(JRootPane.NONE);
-        searchBar.setBackground(transparentColor);
-        searchBar.setOpacity(allConfigs.getOpacity());
-        searchBar.setContentPane(panel);
-        searchBar.setType(JFrame.Type.UTILITY);
-        searchBar.setAlwaysOnTop(true);
-        //用于C++判断是否点击了当前窗口
-        searchBar.setTitle("File-Engine-SearchBar");
+        initFrame(positionX, positionY, searchBarWidth, searchBarHeight, transparentColor, panel);
 
         //labels
         Font labelFont = new Font(Font.SANS_SERIF, Font.BOLD, getLabelFontSizeBySearchBarHeight(searchBarHeight));
@@ -255,30 +298,6 @@ public class SearchBar {
         panel.add(label6);
         panel.add(label7);
         panel.add(label8);
-
-        initPriorityQueue();
-
-        initMenuItems();
-
-        //开启所有线程
-        initThreadPool();
-
-        //添加textField搜索变更检测
-        addTextFieldDocumentListener();
-
-        //添加结果的鼠标事件响应
-        addSearchBarMouseListener();
-
-        //添加结果的鼠标滚轮响应
-        addSearchBarMouseWheelListener();
-
-        //添加结果的鼠标移动事件响应
-        addSearchBarMouseMotionListener();
-
-        //添加textfield对键盘的响应
-        addTextFieldKeyListener();
-
-        addTextFieldFocusListener();
     }
 
     /**

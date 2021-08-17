@@ -39,4 +39,6 @@ module File.Engine {
     opens file.engine.utils.bit;
     opens file.engine.utils.clazz.scan;
     opens file.engine.utils.system.properties;
+    exports file.engine.frames.components;
+    opens file.engine.frames.components;
 }

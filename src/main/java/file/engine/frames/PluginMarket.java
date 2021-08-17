@@ -11,6 +11,7 @@ import file.engine.event.handler.impl.download.StartDownloadEvent;
 import file.engine.event.handler.impl.download.StopDownloadEvent;
 import file.engine.event.handler.impl.frame.pluginMarket.ShowPluginMarket;
 import file.engine.event.handler.impl.stop.RestartEvent;
+import file.engine.frames.components.LoadingPanel;
 import file.engine.services.download.DownloadManager;
 import file.engine.services.download.DownloadService;
 import file.engine.services.plugin.system.PluginService;
