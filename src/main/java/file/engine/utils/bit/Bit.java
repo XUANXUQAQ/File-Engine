@@ -68,9 +68,9 @@ public class Bit {
         byte[] res = new byte[minLength];
         for (int i = minLength - 1; i >= 0; i--) {
             byte b1, b2;
-            int index;
             b1 = smaller.get()[i];
-            if ((index = i + offset) >= 0) {
+            int index = i + offset;
+            if (index < bigger.get().length) {
                 b2 = bigger.get()[index];
             } else {
                 b2 = 0;
@@ -96,7 +96,7 @@ public class Bit {
             byte b1, b2;
             int index;
             b1 = bigger.get()[i];
-            if ((index = i - offset) >= 0) {
+            if ((index = i - offset) >= 0 && index < bigger.get().length) {
                 b2 = smaller.get()[index];
             } else {
                 b2 = 0;
