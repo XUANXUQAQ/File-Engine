@@ -1,4 +1,4 @@
-package file.engine.frames;
+package file.engine.frames.components;
 
 import javax.swing.*;
 import java.awt.*;
