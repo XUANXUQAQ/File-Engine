@@ -12,8 +12,11 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.Arrays;
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
@@ -23,16 +26,9 @@ public class EventManagement {
     private final AtomicBoolean exit = new AtomicBoolean(false);
     private final ConcurrentLinkedQueue<Event> blockEventQueue = new ConcurrentLinkedQueue<>();
     private final ConcurrentLinkedQueue<Event> asyncEventQueue = new ConcurrentLinkedQueue<>();
-    private final ConcurrentHashMap<Class<? extends Event>, Method> EVENT_HANDLER_MAP = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<Class<? extends Event>, ConcurrentLinkedQueue<Method>> EVENT_LISTENER_MAP = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Method> EVENT_HANDLER_MAP = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, ConcurrentLinkedQueue<Method>> EVENT_LISTENER_MAP = new ConcurrentHashMap<>();
     private final AtomicInteger failureEventNum = new AtomicInteger(0);
-    private final ExecutorService eventHandleThreadPool = new ThreadPoolExecutor(
-            0,
-            200,
-            60L,
-            TimeUnit.SECONDS,
-            new SynchronousQueue<>(),
-            Executors.defaultThreadFactory());
 
     private final int MAX_TASK_RETRY_TIME = 20;
 
@@ -100,26 +96,23 @@ public class EventManagement {
      */
     private boolean executeTaskFailed(Event event) {
         event.incrementExecuteTimes();
-        CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
         if (event instanceof RestartEvent) {
             exit.set(true);
-            cachedThreadPoolUtil.executeTask(() -> {
-                doAllMethod(EVENT_LISTENER_MAP.get(RestartEvent.class));
-                if (event instanceof CloseEvent) {
-                    stopDaemon();
-                }
-            });
+            doAllMethod(RestartEvent.class.toString());
+            if (event instanceof CloseEvent) {
+                stopDaemon();
+            }
             event.setFinished();
             CachedThreadPoolUtil.getInstance().shutdown();
             System.exit(0);
         } else {
-            Method eventHandler = EVENT_HANDLER_MAP.get(event.getClass());
+            String eventClassName = event.getClass().toString();
+            Method eventHandler = EVENT_HANDLER_MAP.get(eventClassName);
             if (eventHandler != null) {
                 try {
                     eventHandler.invoke(null, event);
                     event.setFinished();
-                    cachedThreadPoolUtil.executeTask(() ->
-                            doAllMethod(EVENT_LISTENER_MAP.get(event.getClass())));
+                    doAllMethod(eventClassName);
                     return false;
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -142,19 +135,22 @@ public class EventManagement {
 
     /**
      * 执行所有监听了该Event的任务链
-     * @param methodChains 任务链
+     * @param eventType 任务
      */
-    private void doAllMethod(ConcurrentLinkedQueue<Method> methodChains) {
+    private void doAllMethod(String eventType) {
+        ConcurrentLinkedQueue<Method> methodChains = EVENT_LISTENER_MAP.get(eventType);
         if (methodChains == null) {
             return;
         }
-        for (Method each : methodChains) {
-            try {
-                each.invoke(null);
-            } catch (IllegalAccessException | InvocationTargetException e) {
-                e.printStackTrace();
+        CachedThreadPoolUtil.getInstance().executeTask(() -> {
+            for (Method each : methodChains) {
+                try {
+                    each.invoke(null);
+                } catch (IllegalAccessException | InvocationTargetException e) {
+                    e.printStackTrace();
+                }
             }
-        }
+        });
     }
 
     /**
@@ -210,14 +206,16 @@ public class EventManagement {
                 EventRegister annotation = (EventRegister) method.getAnnotation(annotationClass);
                 if (IsDebug.isDebug()) {
                     Class<?>[] parameterTypes = method.getParameterTypes();
-                    int parameterCount = method.getParameterCount();
-                    if (Arrays.stream(parameterTypes).noneMatch(each -> each.equals(Event.class)) || parameterCount != 1) {
+                    if (!Modifier.isStatic(method.getModifiers())) {
+                        throw new RuntimeException("方法不是static" + method);
+                    }
+                    if (Arrays.stream(parameterTypes).noneMatch(each -> each.equals(Event.class)) || method.getParameterCount() != 1) {
                         throw new RuntimeException("注册handler方法参数错误" + method);
                     }
                 }
-                register(annotation.registerClass(), method);
+                register(annotation.registerClass().toString(), method);
             });
-        } catch (ClassNotFoundException | InvocationTargetException | IllegalAccessException e) {
+        } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
     }
@@ -230,14 +228,16 @@ public class EventManagement {
             ClassScannerUtil.searchAndRun(EventListener.class, (annotationClass, method) -> {
                 EventListener annotation = (EventListener) method.getAnnotation(annotationClass);
                 if (IsDebug.isDebug()) {
-                    int parameterCount = method.getParameterCount();
-                    if (parameterCount != 0) {
-                        throw new RuntimeException("注册Listener方法参数错误" + method);
+                    if (!Modifier.isStatic(method.getModifiers())) {
+                        throw new RuntimeException("方法不是static" + method);
+                    }
+                    if (method.getParameterCount() != 0) {
+                        throw new RuntimeException("注册Listener方法不能有参数" + method);
                     }
                 }
-                registerListener(annotation.registerClass(), method);
+                registerListener(annotation.listenClass().toString(), method);
             });
-        } catch (ClassNotFoundException | InvocationTargetException | IllegalAccessException e) {
+        } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
     }
@@ -248,9 +248,9 @@ public class EventManagement {
      * @param eventType 需要监听的任务类型
      * @param handler   需要执行的操作
      */
-    private void register(Class<? extends Event> eventType, Method handler) {
+    private void register(String eventType, Method handler) {
         if (IsDebug.isDebug()) {
-            System.err.println("注册监听器" + eventType.toString());
+            System.err.println("注册监听器" + eventType);
         }
         EVENT_HANDLER_MAP.put(eventType, handler);
     }
@@ -260,7 +260,7 @@ public class EventManagement {
      *
      * @param eventType 需要监听的任务类型
      */
-    private void registerListener(Class<? extends Event> eventType, Method todo) {
+    private void registerListener(String eventType, Method todo) {
         ConcurrentLinkedQueue<Method> queue = EVENT_LISTENER_MAP.get(eventType);
         if (queue == null) {
             queue = new ConcurrentLinkedQueue<>();
@@ -275,9 +275,10 @@ public class EventManagement {
      * 开启异步任务处理中心
      */
     private void startAsyncEventHandler() {
+        CachedThreadPoolUtil threadPoolUtil = CachedThreadPoolUtil.getInstance();
         for (int i = 0; i < 4; i++) {
             int finalI = i;
-            eventHandleThreadPool.submit(() -> {
+            threadPoolUtil.executeTask(() -> {
                 final boolean isDebug = IsDebug.isDebug();
                 try {
                     Event event;
@@ -327,7 +328,7 @@ public class EventManagement {
      * 开启同步任务事件处理中心
      */
     private void startBlockEventHandler() {
-        eventHandleThreadPool.submit(() -> {
+        new Thread(() -> {
             final boolean isDebug = IsDebug.isDebug();
             try {
                 Event event;
@@ -365,6 +366,6 @@ public class EventManagement {
                     System.err.println("******同步任务执行线程退出******");
                 }
             }
-        });
+        }).start();
     }
 }

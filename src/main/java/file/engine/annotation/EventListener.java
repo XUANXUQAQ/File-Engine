@@ -10,5 +10,5 @@ import java.lang.annotation.Target;
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface EventListener {
-    Class<? extends Event> registerClass();
+    Class<? extends Event> listenClass();
 }

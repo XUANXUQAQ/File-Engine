@@ -1,7 +1,6 @@
 package file.engine.utils.clazz.scan;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Set;
 import java.util.function.BiConsumer;
@@ -17,10 +16,8 @@ public class ClassScannerUtil {
      * @param cl 注解类
      * @param doFunction 方法
      * @throws ClassNotFoundException 未找到类
-     * @throws InvocationTargetException exception
-     * @throws IllegalAccessException exception
      */
-    public static void searchAndRun(Class<? extends Annotation> cl, BiConsumer<Class<? extends Annotation>, Method> doFunction) throws ClassNotFoundException, InvocationTargetException, IllegalAccessException {
+    public static void searchAndRun(Class<? extends Annotation> cl, BiConsumer<Class<? extends Annotation>, Method> doFunction) throws ClassNotFoundException {
         String packageName = "file.engine";
         Set<String> classNames = searchClasses(packageName);
         Class<?> c;

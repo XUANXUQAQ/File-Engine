@@ -749,7 +749,7 @@ public class DatabaseService {
         eventManagement.putEvent(new AddToSuffixPriorityMapEvent(newSuffix, newNum));
     }
 
-    @EventListener(registerClass = RestartEvent.class)
+    @EventListener(listenClass = RestartEvent.class)
     private static void restartEvent() {
         SQLiteUtil.closeAll();
     }

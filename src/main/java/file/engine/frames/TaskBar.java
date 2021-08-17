@@ -212,6 +212,7 @@ public class TaskBar {
      * 点击退出
      */
     private void closeAndExit() {
+        systemTray.remove(trayIcon);
         EventManagement eventManagement = EventManagement.getInstance();
         eventManagement.putEvent(new CloseEvent());
     }
@@ -220,6 +221,7 @@ public class TaskBar {
      * 点击重启
      */
     private void restart() {
+        systemTray.remove(trayIcon);
         EventManagement eventManagement = EventManagement.getInstance();
         eventManagement.putEvent(new RestartEvent());
     }
@@ -261,7 +263,7 @@ public class TaskBar {
         getInstance();
     }
 
-    @EventListener(registerClass = RestartEvent.class)
+    @EventListener(listenClass = RestartEvent.class)
     private static void restartEvent() {
         TaskBar taskBar = getInstance();
         taskBar.systemTray.remove(taskBar.trayIcon);

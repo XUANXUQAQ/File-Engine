@@ -334,7 +334,7 @@ public class PluginService {
         getInstance().setCurrentTheme(task1.defaultColor, task1.chosenColor, task1.borderColor);
     }
 
-    @EventListener(registerClass = RestartEvent.class)
+    @EventListener(listenClass = RestartEvent.class)
     private static void restartEvent() {
         getInstance().unloadAllPlugins();
     }
