@@ -10,6 +10,7 @@ import com.formdev.flatlaf.FlatLightLaf;
 import com.formdev.flatlaf.intellijthemes.*;
 import com.formdev.flatlaf.intellijthemes.materialthemeuilite.FlatMaterialDarkerIJTheme;
 import com.formdev.flatlaf.intellijthemes.materialthemeuilite.FlatMaterialLighterIJTheme;
+import file.engine.annotation.EventListener;
 import file.engine.annotation.EventRegister;
 import file.engine.dllInterface.IsLocalDisk;
 import file.engine.event.handler.Event;
@@ -26,6 +27,7 @@ import file.engine.event.handler.impl.hotkey.ResponseCtrlEvent;
 import file.engine.event.handler.impl.monitor.disk.StartMonitorDiskEvent;
 import file.engine.event.handler.impl.plugin.LoadAllPluginsEvent;
 import file.engine.event.handler.impl.plugin.SetPluginsCurrentThemeEvent;
+import file.engine.event.handler.impl.stop.CloseEvent;
 import file.engine.event.handler.impl.taskbar.ShowTrayIconEvent;
 import file.engine.services.download.DownloadManager;
 import file.engine.services.download.DownloadService;
@@ -748,45 +750,45 @@ public class AllConfigs {
     private void setSwingLaf(Enums.SwingThemes theme) {
         SwingUtilities.invokeLater(() -> {
             if (theme == Enums.SwingThemes.CoreFlatIntelliJLaf) {
-                FlatIntelliJLaf.install();
+                FlatIntelliJLaf.setup();
             } else if (theme == Enums.SwingThemes.CoreFlatLightLaf) {
-                FlatLightLaf.install();
+                FlatLightLaf.setup();
             } else if (theme == Enums.SwingThemes.CoreFlatDarkLaf) {
-                FlatDarkLaf.install();
+                FlatDarkLaf.setup();
             } else if (theme == Enums.SwingThemes.Arc) {
-                FlatArcIJTheme.install();
+                FlatArcIJTheme.setup();
             } else if (theme == Enums.SwingThemes.ArcDark) {
-                FlatArcDarkIJTheme.install();
+                FlatArcDarkIJTheme.setup();
             } else if (theme == Enums.SwingThemes.DarkFlat) {
-                FlatDarkFlatIJTheme.install();
+                FlatDarkFlatIJTheme.setup();
             } else if (theme == Enums.SwingThemes.Carbon) {
-                FlatCarbonIJTheme.install();
+                FlatCarbonIJTheme.setup();
             } else if (theme == Enums.SwingThemes.CyanLight) {
-                FlatCyanLightIJTheme.install();
+                FlatCyanLightIJTheme.setup();
             } else if (theme == Enums.SwingThemes.DarkPurple) {
-                FlatDarkPurpleIJTheme.install();
+                FlatDarkPurpleIJTheme.setup();
             } else if (theme == Enums.SwingThemes.LightFlat) {
-                FlatLightFlatIJTheme.install();
+                FlatLightFlatIJTheme.setup();
             } else if (theme == Enums.SwingThemes.Monocai) {
-                FlatMonocaiIJTheme.install();
+                FlatMonocaiIJTheme.setup();
             } else if (theme == Enums.SwingThemes.OneDark) {
-                FlatOneDarkIJTheme.install();
+                FlatOneDarkIJTheme.setup();
             } else if (theme == Enums.SwingThemes.Gray) {
-                FlatGrayIJTheme.install();
+                FlatGrayIJTheme.setup();
             } else if (theme == Enums.SwingThemes.MaterialDesignDark) {
-                FlatMaterialDesignDarkIJTheme.install();
+                FlatMaterialDesignDarkIJTheme.setup();
             } else if (theme == Enums.SwingThemes.MaterialLighter) {
-                FlatMaterialLighterIJTheme.install();
+                FlatMaterialLighterIJTheme.setup();
             } else if (theme == Enums.SwingThemes.MaterialDarker) {
-                FlatMaterialDarkerIJTheme.install();
+                FlatMaterialDarkerIJTheme.setup();
             } else if (theme == Enums.SwingThemes.ArcDarkOrange) {
-                FlatArcDarkOrangeIJTheme.install();
+                FlatArcDarkOrangeIJTheme.setup();
             } else if (theme == Enums.SwingThemes.Dracula) {
-                FlatDraculaIJTheme.install();
+                FlatDraculaIJTheme.setup();
             } else if (theme == Enums.SwingThemes.Nord) {
-                FlatNordIJTheme.install();
+                FlatNordIJTheme.setup();
             } else {
-                FlatDarculaLaf.install();
+                FlatDarculaLaf.setup();
             }
             ArrayList<Component> components = new ArrayList<>(Arrays.asList(JFrame.getFrames()));
             EventManagement eventManagement = EventManagement.getInstance();
@@ -921,19 +923,19 @@ public class AllConfigs {
     }
 
     @EventRegister(registerClass = SetConfigsEvent.class)
-    public static void SetAllConfigsEvent(Event event) {
+    private static void SetAllConfigsEvent(Event event) {
         getInstance().setAllSettings();
     }
 
     @EventRegister(registerClass = SetSwingLaf.class)
-    public static void setSwingLafEvent(Event event) {
+    private static void setSwingLafEvent(Event event) {
         AllConfigs instance = getInstance();
         String theme = ((SetSwingLaf) event).theme;
         instance.setSwingLaf(instance.swingThemesMapper(theme));
     }
 
     @EventRegister(registerClass = SaveConfigsEvent.class)
-    public static void saveConfigsEvent(Event event) {
+    private static void saveConfigsEvent(Event event) {
         AllConfigs allConfigs = getInstance();
         ConfigEntity tempConfigEntity = ((SaveConfigsEvent) event).configEntity;
         if (allConfigs.noNullValue(tempConfigEntity)) {
@@ -942,6 +944,11 @@ public class AllConfigs {
         } else {
             throw new NullPointerException("configEntity中有Null值");
         }
+    }
+
+    @EventListener(listenClass = BootSystemEvent.class)
+    private static void shutdownListener() {
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> EventManagement.getInstance().putEvent(new CloseEvent())));
     }
 
     @Data

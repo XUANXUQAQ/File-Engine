@@ -10,7 +10,11 @@ module File.Engine {
 
     requires static lombok;
 
+    exports file.engine.annotation;
     exports file.engine.configs;
+    exports file.engine.dllInterface;
+    exports file.engine.event.handler;
+    exports file.engine.event.handler.impl;
     exports file.engine.frames;
     exports file.engine.services;
     exports file.engine.services.plugin.system;
@@ -21,7 +25,11 @@ module File.Engine {
     exports file.engine.utils.clazz.scan;
     exports file.engine.utils.system.properties;
 
+    opens file.engine.annotation;
     opens file.engine.configs;
+    opens file.engine.dllInterface;
+    opens file.engine.event.handler;
+    opens file.engine.event.handler.impl;
     opens file.engine.frames;
     opens file.engine.services;
     opens file.engine.services.plugin.system;

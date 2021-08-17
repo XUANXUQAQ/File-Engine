@@ -170,7 +170,7 @@ public class CheckHotKeyService {
         HotkeyListener.INSTANCE.setCtrlDoubleClick(responseCtrlEvent.isResponse);
     }
 
-    @EventListener(registerClass = RestartEvent.class)
+    @EventListener(listenClass = RestartEvent.class)
     private static void restartEvent() {
         getInstance().stopListen();
     }

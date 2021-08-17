@@ -1,9 +1,11 @@
 package file.engine.utils;
 
 import file.engine.configs.Constants;
+import file.engine.utils.system.properties.IsDebug;
 
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class CachedThreadPoolUtil {
     private final ExecutorService cachedThreadPool = new ThreadPoolExecutor(
@@ -12,7 +14,7 @@ public class CachedThreadPoolUtil {
             60L,
             TimeUnit.SECONDS,
             new SynchronousQueue<>(),
-            Executors.defaultThreadFactory());
+            new NamedThreadFactory());
     private final AtomicBoolean isShutdown = new AtomicBoolean(false);
 
     private static volatile CachedThreadPoolUtil INSTANCE = null;
@@ -66,6 +68,40 @@ public class CachedThreadPoolUtil {
             }
         } catch (InterruptedException e) {
             e.printStackTrace();
+        }
+    }
+
+    private static class NamedThreadFactory implements ThreadFactory {
+        private final ThreadGroup group;
+        private static final AtomicInteger poolNumber = new AtomicInteger(1);
+        private final AtomicInteger threadNumber = new AtomicInteger(1);
+
+        NamedThreadFactory() {
+            SecurityManager s = System.getSecurityManager();
+            group = (s != null) ? s.getThreadGroup() : Thread.currentThread().getThreadGroup();
+        }
+        @Override
+        public Thread newThread(Runnable r) {
+            String name = "pool-" + poolNumber.incrementAndGet() + "-thread-" + threadNumber.getAndIncrement();
+            if (IsDebug.isDebug()) {
+                name = getStackTraceElement().toString() + threadNumber.getAndIncrement();
+            }
+            Thread t = new Thread(group, r, name, 0);
+            if (t.isDaemon())
+                t.setDaemon(false);
+            if (t.getPriority() != Thread.NORM_PRIORITY)
+                t.setPriority(Thread.NORM_PRIORITY);
+            return t;
+        }
+
+        /**
+         * 用于在debug时查看在哪个位置发出的任务
+         * 由于执行任务的调用栈长度超过3，所以不会出现数组越界
+         * @return stackTraceElement
+         */
+        private StackTraceElement getStackTraceElement() {
+            StackTraceElement[] stacktrace = Thread.currentThread().getStackTrace();
+            return stacktrace[8];
         }
     }
 }

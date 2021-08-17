@@ -132,7 +132,7 @@ public class PluginMarket {
         getInstance().showWindow();
     }
 
-    @EventListener(registerClass = RestartEvent.class)
+    @EventListener(listenClass = RestartEvent.class)
     private static void hideWindowListener() {
         getInstance().hideWindow();
     }

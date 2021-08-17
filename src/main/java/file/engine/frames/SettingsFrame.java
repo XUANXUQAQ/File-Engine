@@ -2246,7 +2246,7 @@ public class SettingsFrame {
         event.setReturnValue(getInstance().excludeComponent);
     }
 
-    @EventListener(registerClass = RestartEvent.class)
+    @EventListener(listenClass = RestartEvent.class)
     private static void restartEvent() {
         getInstance().hideFrame();
     }
@@ -2273,7 +2273,9 @@ public class SettingsFrame {
         textAreaDescription.setForeground(tabbedPane.getForeground());
         SwingUtilities.invokeLater(() -> {
             //使swing风格生效
-            eventManagement.putEvent(new SetSwingLaf("current"), event -> frame.setVisible(true), event -> frame.setVisible(true));
+            eventManagement.putEvent(new SetSwingLaf("current"),
+                    event -> SwingUtilities.invokeLater(() -> frame.setVisible(true)),
+                    event -> SwingUtilities.invokeLater(() -> frame.setVisible(true)));
         });
     }
 

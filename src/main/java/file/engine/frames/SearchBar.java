@@ -1,6 +1,7 @@
 package file.engine.frames;
 
 
+import file.engine.event.handler.impl.BootSystemEvent;
 import file.engine.utils.system.properties.IsDebug;
 import file.engine.annotation.EventListener;
 import file.engine.annotation.EventRegister;
@@ -383,8 +384,9 @@ public class SearchBar {
 
     /**
      * 初始化所有边框
-     * @param borderType 边框类型
-     * @param borderColor 边框颜色
+     *
+     * @param borderType      边框类型
+     * @param borderColor     边框颜色
      * @param borderThickness 边框厚度
      */
     private void initBorder(Enums.BorderType borderType, Color borderColor, int borderThickness) {
@@ -499,6 +501,7 @@ public class SearchBar {
 
     /**
      * 通过表名获得表的权重信息
+     *
      * @param tableName 表名
      * @return 权重信息
      */
@@ -513,8 +516,9 @@ public class SearchBar {
 
     /**
      * 更新权重信息
+     *
      * @param tableName 表名
-     * @param weight 权重
+     * @param weight    权重
      */
     private void updateTableWeight(String tableName, long weight) {
         TableNameWeightInfo origin = getInfoByName(tableName);
@@ -2577,6 +2581,16 @@ public class SearchBar {
         getInstance().showSearchbar(showSearchBarTask.isGrabFocus);
     }
 
+    @EventListener(listenClass = UpdateDatabaseEvent.class)
+    private static void updateDatabaseEvent() {
+        getInstance().isDatabaseUpdated.set(true);
+    }
+
+    @EventListener(listenClass = BootSystemEvent.class)
+    private static void warmupDatabase() {
+        getInstance().warmup();
+    }
+
     @EventRegister(registerClass = StartMonitorDiskEvent.class)
     private static void startMonitorDiskEvent(Event event) {
         getInstance().startMonitorDisk();
@@ -2642,7 +2656,7 @@ public class SearchBar {
     }
 
     static class IsStartTimeSet {
-        static AtomicBoolean isStartTimeSet = new AtomicBoolean(false);
+        static final AtomicBoolean isStartTimeSet = new AtomicBoolean(false);
     }
 
     @EventRegister(registerClass = PreviewSearchBarEvent.class)
@@ -2699,7 +2713,7 @@ public class SearchBar {
         event.setReturnValue(getInstance().showingMode);
     }
 
-    @EventListener(registerClass = RestartEvent.class)
+    @EventListener(listenClass = RestartEvent.class)
     private static void restartEvent() {
         FileMonitor.INSTANCE.stop_monitor();
     }
@@ -3094,7 +3108,7 @@ public class SearchBar {
      *
      * @return map
      */
-    private LinkedHashMap<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>> getNonFormattedSqlFromTableQueue() {
+    private LinkedHashMap<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>> getNonFormattedSqlFromTableQueue(boolean isNeedContainer) {
         if (isDatabaseUpdated.get()) {
             isDatabaseUpdated.set(false);
             initPriorityQueue();
@@ -3109,7 +3123,11 @@ public class SearchBar {
                 String sql = "SELECT %s FROM " + each + " WHERE priority=" + i;
                 eachPriorityMap.put(sql, each);
             });
-            sqlColumnMap.put(eachPriorityMap, new ConcurrentSkipListSet<>());
+            ConcurrentSkipListSet<String> container = null;
+            if (isNeedContainer) {
+                container = new ConcurrentSkipListSet<>();
+            }
+            sqlColumnMap.put(eachPriorityMap, container);
         });
         tableQueue.clear();
         return sqlColumnMap;
@@ -3149,15 +3167,33 @@ public class SearchBar {
         });
     }
 
-    @EventListener(registerClass = UpdateDatabaseEvent.class)
-    private static void updateDatabaseEvent() {
-        getInstance().isDatabaseUpdated.set(true);
+    private void warmup() {
+        initTableMap();
+        initTableQueueByPriority();
+        LinkedHashMap<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>> nonFormattedSql = getNonFormattedSqlFromTableQueue(false);
+        nonFormattedSql.forEach((commandsMap, container) -> Arrays.stream(RegexUtil.comma.split(AllConfigs.getInstance().getDisks())).forEach(eachDisk -> {
+            Set<String> sqls = commandsMap.keySet();
+            String formattedSql;
+            for (String each : sqls) {
+                formattedSql = String.format(each, "PATH");
+                String disk = String.valueOf(eachDisk.charAt(0));
+                try (PreparedStatement pStmt = SQLiteUtil.getPreparedStatement(formattedSql, disk)) {
+                    pStmt.execute();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                } finally {
+                    if (IsDebug.isDebug()) {
+                        System.out.println("初始化：" + formattedSql + " 完成");
+                    }
+                }
+            }
+        }));
     }
 
     /**
-     * 添加sql语句，并开始搜索
+     * 根据优先级将表排序放入tableQueue
      */
-    private void addSqlCommands() {
+    private void initTableQueueByPriority() {
         tableQueue.clear();
         LinkedList<TableNameWeightInfo> tmpCommandList = new LinkedList<>(tableSet);
         //将tableSet通过权重排序
@@ -3168,6 +3204,13 @@ public class SearchBar {
             }
             tableQueue.add(each.tableName);
         }
+    }
+
+    /**
+     * 添加sql语句，并开始搜索
+     */
+    private void addSqlCommands() {
+        initTableQueueByPriority();
         AtomicBoolean isMergeTempResultThreadCreated = new AtomicBoolean(false);
         CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
         if (!isMergeTempResultThreadCreated.get()) {
@@ -3176,7 +3219,7 @@ public class SearchBar {
         //每个priority用一个线程，每一个后缀名对应一个优先级
         //按照优先级排列，key是sql和表名的对应，value是容器
         LinkedHashMap<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>>
-                nonFormattedSql = getNonFormattedSqlFromTableQueue();
+                nonFormattedSql = getNonFormattedSqlFromTableQueue(true);
         Bit taskStatus = new Bit(new byte[]{0});
         Bit allTaskStatus = new Bit(new byte[]{0});
 
@@ -3814,10 +3857,10 @@ public class SearchBar {
 
     /**
      * 显示窗口
+     *
      * @param isGrabFocus 是否强制抓取焦点
      */
     private void showSearchbar(boolean isGrabFocus) {
-        initTableMap();
         SwingUtilities.invokeLater(() -> {
             if (!isVisible()) {
                 setVisible(true);
