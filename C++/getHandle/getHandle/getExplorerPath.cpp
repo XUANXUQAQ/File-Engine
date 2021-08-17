@@ -127,7 +127,7 @@ std::string to_utf8(const wchar_t* buffer, int len)
     }
     std::string new_buffer;
     new_buffer.resize(n_chars);
-    ::WideCharToMultiByte(
+    WideCharToMultiByte(
         CP_UTF8,
         0,
         buffer,

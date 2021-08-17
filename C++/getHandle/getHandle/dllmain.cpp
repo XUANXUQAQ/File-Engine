@@ -57,6 +57,7 @@ extern "C" __declspec(dllexport) int getToolBarX();
 extern "C" __declspec(dllexport) int getToolBarY();
 extern "C" __declspec(dllexport) double getDpi();
 extern "C" __declspec(dllexport) bool isMousePressed();
+extern "C" __declspec(dllexport) bool isForegroundFullscreen();
 
 #ifdef TEST
 void outputHwndInfo(HWND hwnd)
@@ -73,6 +74,42 @@ void outputHwndInfo(HWND hwnd)
 int getToolBarX()
 {
     return toolbar_click_x;
+}
+
+bool isForegroundFullscreen()
+{
+    bool b_fullscreen = false;//存放当前激活窗口是否是全屏的，true表示是，false表示不是
+    RECT rc_app;
+    RECT rc_desk;
+
+    const HWND hWnd = GetForegroundWindow();//获取当前正在与用户交互的当前激活窗口句柄
+
+    if ((hWnd != GetDesktopWindow()) && (hWnd != GetShellWindow()))//如果当前激活窗口不是桌面窗口，也不是控制台窗口
+    {
+        GetWindowRect(hWnd, &rc_app);//获取当前激活窗口的坐标
+        GetWindowRect(GetDesktopWindow(), &rc_desk);//根据桌面窗口句柄，获取整个屏幕的坐标
+
+        if (rc_app.left <= rc_desk.left && //如果当前激活窗口的坐标完全覆盖住桌面窗口，就表示当前激活窗口是全屏的
+            rc_app.top <= rc_desk.top &&
+            rc_app.right >= rc_desk.right &&
+            rc_app.bottom >= rc_desk.bottom)
+        {
+
+            char szTemp[100];
+
+            if (GetClassNameA(hWnd, szTemp, sizeof(szTemp)) > 0)//如果获取当前激活窗口的类名成功
+            {
+                if (strcmp(szTemp, "WorkerW") != 0)//如果不是桌面窗口的类名，就认为当前激活窗口是全屏窗口
+                    b_fullscreen = true;
+            }
+            else
+            {
+                b_fullscreen = true;//如果获取失败，就认为当前激活窗口是全屏窗口
+            }
+        }
+    }//如果当前激活窗口是桌面窗口，或者是控制台窗口，就直接返回不是全屏
+
+    return b_fullscreen;
 }
 
 bool isMousePressed()
