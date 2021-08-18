@@ -177,7 +177,8 @@ public class PluginService {
         Plugin.PluginClassAndInstanceInfo pluginClassAndInstanceInfo = new Plugin.PluginClassAndInstanceInfo(c, instance);
         Plugin plugin = new Plugin(pluginClassAndInstanceInfo);
         plugin.loadPlugin();
-        plugin.setCurrentTheme(AllConfigs.getInstance().getDefaultBackgroundColor(), AllConfigs.getInstance().getLabelColor(), AllConfigs.getInstance().getBorderColor());
+        AllConfigs allConfigs = AllConfigs.getInstance();
+        plugin.setCurrentTheme(allConfigs.getDefaultBackgroundColor(), allConfigs.getLabelColor(), allConfigs.getBorderColor());
         if (Plugin.getLatestApiVersion() - plugin.getApiVersion() >= Constants.MAX_SUPPORT_API_DIFFERENCE) {
             isTooOld = true;
         }
