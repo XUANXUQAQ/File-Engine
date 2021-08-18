@@ -3592,19 +3592,15 @@ public class SearchBar {
                             } else if (runningMode == Constants.Enums.RunningMode.PLUGIN_MODE) {
                                 String result;
                                 while (runningMode == Constants.Enums.RunningMode.PLUGIN_MODE) {
-                                    if (currentUsingPlugin != null && (result = currentUsingPlugin.pollFromResultQueue()) != null) {
-                                        if (isResultNotRepeat(result)) {
+                                    while  (currentUsingPlugin != null && (result = currentUsingPlugin.pollFromResultQueue()) != null) {
+                                        if (isNotContains(listResults, result)) {
                                             listResults.add(result);
                                             listResultsNum.incrementAndGet();
                                         }
                                     }
-                                    TimeUnit.MILLISECONDS.sleep(1);
+                                    TimeUnit.MILLISECONDS.sleep(10);
                                 }
                             }
-
-                            showResults(true, false, false, false,
-                                    false, false, false, false);
-
                         } else if (databaseService.getStatus() == Constants.Enums.DatabaseStatus.VACUUM) {
                             setLabelChosen(label1);
                             eventManagement.putEvent(new ShowTaskBarMessageEvent(translateUtil.getTranslation("Info"),
