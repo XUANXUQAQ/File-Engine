@@ -5,14 +5,19 @@ import file.engine.annotation.EventRegister;
 import file.engine.configs.AllConfigs;
 import file.engine.configs.Enums;
 import file.engine.configs.Constants;
+import file.engine.dllInterface.FileMonitor;
 import file.engine.dllInterface.GetAscII;
+import file.engine.dllInterface.IsLocalDisk;
 import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
 import file.engine.event.handler.impl.database.*;
+import file.engine.event.handler.impl.monitor.disk.StartMonitorDiskEvent;
 import file.engine.event.handler.impl.stop.RestartEvent;
+import file.engine.event.handler.impl.taskbar.ShowTaskBarMessageEvent;
 import file.engine.utils.CachedThreadPoolUtil;
 import file.engine.utils.RegexUtil;
 import file.engine.utils.SQLiteUtil;
+import file.engine.utils.TranslateUtil;
 import file.engine.utils.system.properties.IsDebug;
 import lombok.Data;
 
@@ -27,6 +32,7 @@ import java.sql.Statement;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
+import java.util.Scanner;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -122,9 +128,32 @@ public class DatabaseService {
                     }
                     TimeUnit.MILLISECONDS.sleep(10);
                 }
-            } catch (IOException e) {
+            } catch (IOException | InterruptedException e) {
                 e.printStackTrace();
-            } catch (InterruptedException ignored) {
+            }
+        });
+    }
+
+    /**
+     * 开始监控磁盘文件变化
+     */
+    private void startMonitorDisk() {
+        CachedThreadPoolUtil.getInstance().executeTask(() -> {
+            EventManagement eventManagement = EventManagement.getInstance();
+            TranslateUtil translateUtil = TranslateUtil.getInstance();
+            String disks = AllConfigs.getInstance().getDisks();
+            String[] splitDisks = RegexUtil.comma.split(disks);
+            if (isAdmin()) {
+                FileMonitor.INSTANCE.set_output(new File("tmp").getAbsolutePath());
+                for (String root : splitDisks) {
+                    if (IsLocalDisk.INSTANCE.isLocalDisk(root)) {
+                        FileMonitor.INSTANCE.monitor(root);
+                    }
+                }
+            } else {
+                eventManagement.putEvent(new ShowTaskBarMessageEvent(
+                        translateUtil.getTranslation("Warning"),
+                        translateUtil.getTranslation("Not administrator, file monitoring function is turned off")));
             }
         });
     }
@@ -160,9 +189,8 @@ public class DatabaseService {
                     }
                     TimeUnit.MILLISECONDS.sleep(10);
                 }
-            } catch (IOException e) {
+            } catch (IOException | InterruptedException e) {
                 e.printStackTrace();
-            } catch (InterruptedException ignored) {
             }
         });
     }
@@ -636,6 +664,37 @@ public class DatabaseService {
             } catch (InterruptedException ignored) {
             }
         });
+    }
+
+    private boolean isAdmin() {
+        try {
+            ProcessBuilder processBuilder = new ProcessBuilder("cmd.exe");
+            Process process = processBuilder.start();
+            PrintStream printStream = new PrintStream(process.getOutputStream(), true);
+            Scanner scanner = new Scanner(process.getInputStream());
+            printStream.println("@echo off");
+            printStream.println(">nul 2>&1 \"%SYSTEMROOT%\\system32\\cacls.exe\" \"%SYSTEMROOT%\\system32\\config\\system\"");
+            printStream.println("echo %errorlevel%");
+
+            boolean printedErrorLevel = false;
+            while (true) {
+                String nextLine = scanner.nextLine();
+                if (printedErrorLevel) {
+                    int errorLevel = Integer.parseInt(nextLine);
+                    scanner.close();
+                    return errorLevel == 0;
+                } else if ("echo %errorlevel%".equals(nextLine)) {
+                    printedErrorLevel = true;
+                }
+            }
+        } catch (IOException e) {
+            return false;
+        }
+    }
+
+    @EventRegister(registerClass = StartMonitorDiskEvent.class)
+    private static void startMonitorDiskEvent(Event event) {
+        getInstance().startMonitorDisk();
     }
 
     @EventRegister(registerClass = QueryAllWeightsEvent.class)
