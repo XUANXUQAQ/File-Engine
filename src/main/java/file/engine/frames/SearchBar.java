@@ -3083,7 +3083,7 @@ public class SearchBar {
                         clearALabel(label7);
                         clearALabel(label8);
                     }
-                    TimeUnit.MILLISECONDS.sleep(250);
+                    TimeUnit.MILLISECONDS.sleep(16);
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -3111,7 +3111,7 @@ public class SearchBar {
             try {
                 while (isVisible()) {
                     repaint();
-                    TimeUnit.MILLISECONDS.sleep(250);
+                    TimeUnit.MILLISECONDS.sleep(16);
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -4071,6 +4071,9 @@ public class SearchBar {
      * @param isChosen 是否当前被选中
      */
     private void showResultOnLabel(String path, JLabel label, boolean isChosen) {
+        if (isLabelNotEmpty(label)) {
+            return;
+        }
         //将文件的路径信息存储在label的名称中，在未被选中时只显示文件名，选中后才显示文件路径
         boolean[] isEmpty = new boolean[1];
         String allHtml = getHtml(path, null, isEmpty);
@@ -4114,6 +4117,9 @@ public class SearchBar {
      * @param isChosen 是否当前被选中
      */
     private void showCommandOnLabel(String command, JLabel label, boolean isChosen) {
+        if (isLabelNotEmpty(label)) {
+            return;
+        }
         GetIconUtil getIconUtil = GetIconUtil.getInstance();
         String[] info = semicolon.split(command);
         String path = info[1];
