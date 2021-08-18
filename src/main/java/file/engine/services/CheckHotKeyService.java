@@ -139,6 +139,9 @@ public class CheckHotKeyService {
                                         if (getShowingModeEvent.getReturnValue() == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
                                             eventManagement.putEvent(new HideSearchBarEvent());
                                             ref.endVisibleTime = System.currentTimeMillis();
+                                        } else {
+                                            eventManagement.putEvent(new ShowSearchBarEvent(true, true));
+                                            ref.startVisibleTime = System.currentTimeMillis();
                                         }
                                     }, event1 -> System.err.println("获取当前显示模式任务执行失败"));
                                 }
