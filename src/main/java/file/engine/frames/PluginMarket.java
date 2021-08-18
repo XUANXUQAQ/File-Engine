@@ -134,7 +134,7 @@ public class PluginMarket {
     }
 
     @EventListener(listenClass = RestartEvent.class)
-    private static void hideWindowListener() {
+    private static void hideWindowListener(Event event) {
         getInstance().hideWindow();
     }
 

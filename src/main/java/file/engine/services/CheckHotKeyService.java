@@ -174,7 +174,7 @@ public class CheckHotKeyService {
     }
 
     @EventListener(listenClass = RestartEvent.class)
-    private static void restartEvent() {
+    private static void restartEvent(Event event) {
         getInstance().stopListen();
     }
 

@@ -2536,12 +2536,12 @@ public class SearchBar {
     }
 
     @EventListener(listenClass = UpdateDatabaseEvent.class)
-    private static void updateDatabaseEvent() {
+    private static void updateDatabaseEvent(Event event) {
         getInstance().isDatabaseUpdated.set(true);
     }
 
     @EventListener(listenClass = BootSystemEvent.class)
-    private static void warmupDatabase() {
+    private static void warmupDatabase(Event event) {
         getInstance().warmup();
     }
 
@@ -2663,7 +2663,7 @@ public class SearchBar {
     }
 
     @EventListener(listenClass = RestartEvent.class)
-    private static void restartEvent() {
+    private static void restartEvent(Event event) {
         FileMonitor.INSTANCE.stop_monitor();
     }
 
@@ -3134,10 +3134,6 @@ public class SearchBar {
                     pStmt.execute();
                 } catch (SQLException e) {
                     e.printStackTrace();
-                } finally {
-                    if (IsDebug.isDebug()) {
-                        System.out.println("初始化：" + formattedSql + " 完成");
-                    }
                 }
             }
         }));
@@ -3844,11 +3840,13 @@ public class SearchBar {
                 if (isGrabFocus) {
                     grabFocus();
                 }
+                EventManagement.getInstance().putEvent(new SearchBarReadyEvent(showingMode.toString()));
             } else {
                 if (isSwitchToNormal) {
                     try {
                         grabFocus();
                         switchToNormalMode(false);
+                        EventManagement.getInstance().putEvent(new SearchBarReadyEvent(showingMode.toString()));
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }

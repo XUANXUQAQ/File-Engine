@@ -98,7 +98,7 @@ public class EventManagement {
         event.incrementExecuteTimes();
         if (event instanceof RestartEvent) {
             exit.set(true);
-            doAllMethod(RestartEvent.class.toString());
+            doAllMethod(RestartEvent.class.toString(), event);
             if (event instanceof CloseEvent) {
                 stopDaemon();
             }
@@ -112,14 +112,18 @@ public class EventManagement {
                 try {
                     eventHandler.invoke(null, event);
                     event.setFinished();
-                    doAllMethod(eventClassName);
+                    doAllMethod(eventClassName, event);
                     return false;
                 } catch (Exception e) {
                     e.printStackTrace();
+                    return true;
                 }
+            } else {
+                event.setFinished();
+                doAllMethod(eventClassName, event);
             }
+            return false;
         }
-        //当前无可以接该任务的handler
         return true;
     }
 
@@ -135,9 +139,10 @@ public class EventManagement {
 
     /**
      * 执行所有监听了该Event的任务链
-     * @param eventType 任务
+     * @param eventType 任务类型
+     * @param event 任务
      */
-    private void doAllMethod(String eventType) {
+    private void doAllMethod(String eventType, Event event) {
         ConcurrentLinkedQueue<Method> methodChains = EVENT_LISTENER_MAP.get(eventType);
         if (methodChains == null) {
             return;
@@ -145,7 +150,7 @@ public class EventManagement {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             for (Method each : methodChains) {
                 try {
-                    each.invoke(null);
+                    each.invoke(null, event);
                 } catch (IllegalAccessException | InvocationTargetException e) {
                     e.printStackTrace();
                 }
@@ -228,11 +233,12 @@ public class EventManagement {
             ClassScannerUtil.searchAndRun(EventListener.class, (annotationClass, method) -> {
                 EventListener annotation = (EventListener) method.getAnnotation(annotationClass);
                 if (IsDebug.isDebug()) {
+                    Class<?>[] parameterTypes = method.getParameterTypes();
                     if (!Modifier.isStatic(method.getModifiers())) {
                         throw new RuntimeException("方法不是static" + method);
                     }
-                    if (method.getParameterCount() != 0) {
-                        throw new RuntimeException("注册Listener方法不能有参数" + method);
+                    if (Arrays.stream(parameterTypes).noneMatch(each -> each.equals(Event.class)) || method.getParameterCount() != 1) {
+                        throw new RuntimeException("注册Listener方法参数错误" + method);
                     }
                 }
                 registerListener(annotation.listenClass().toString(), method);

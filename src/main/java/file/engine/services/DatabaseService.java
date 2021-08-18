@@ -808,7 +808,7 @@ public class DatabaseService {
     }
 
     @EventListener(listenClass = RestartEvent.class)
-    private static void restartEvent() {
+    private static void restartEvent(Event event) {
         SQLiteUtil.closeAll();
     }
 

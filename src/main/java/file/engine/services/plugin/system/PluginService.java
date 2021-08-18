@@ -1,13 +1,13 @@
 package file.engine.services.plugin.system;
 
 import com.alibaba.fastjson.JSONObject;
-import file.engine.utils.system.properties.IsDebug;
 import file.engine.annotation.EventListener;
 import file.engine.annotation.EventRegister;
 import file.engine.configs.AllConfigs;
 import file.engine.configs.Constants;
 import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
+import file.engine.event.handler.impl.frame.searchBar.SearchBarReadyEvent;
 import file.engine.event.handler.impl.plugin.AddPluginsCanUpdateEvent;
 import file.engine.event.handler.impl.plugin.LoadAllPluginsEvent;
 import file.engine.event.handler.impl.plugin.RemoveFromPluginsCanUpdateEvent;
@@ -15,15 +15,13 @@ import file.engine.event.handler.impl.plugin.SetPluginsCurrentThemeEvent;
 import file.engine.event.handler.impl.stop.RestartEvent;
 import file.engine.event.handler.impl.taskbar.ShowTaskBarMessageEvent;
 import file.engine.utils.CachedThreadPoolUtil;
+import file.engine.utils.system.properties.IsDebug;
 
 import java.io.*;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -166,7 +164,7 @@ public class PluginService {
         }
     }
 
-    private boolean loadPlugin(File pluginFile, String className, String identifier, String pluginName) throws Exception {
+    private boolean loadPlugin(File pluginFile, String className, String identifier, String pluginName, Map<String, Object> configs) throws Exception {
         boolean isTooOld = false;
         URLClassLoader classLoader = new URLClassLoader(
                 new URL[]{pluginFile.toURI().toURL()},
@@ -177,6 +175,7 @@ public class PluginService {
         Plugin.PluginClassAndInstanceInfo pluginClassAndInstanceInfo = new Plugin.PluginClassAndInstanceInfo(c, instance);
         Plugin plugin = new Plugin(pluginClassAndInstanceInfo);
         plugin.loadPlugin();
+        plugin.loadPlugin(configs);
         AllConfigs allConfigs = AllConfigs.getInstance();
         plugin.setCurrentTheme(allConfigs.getDefaultBackgroundColor(), allConfigs.getLabelColor(), allConfigs.getBorderColor());
         if (Plugin.getLatestApiVersion() - plugin.getApiVersion() >= Constants.MAX_SUPPORT_API_DIFFERENCE) {
@@ -236,7 +235,7 @@ public class PluginService {
                         String pluginName = json.getString("name");
                         if (!hasPlugin(pluginName)) {
                             try {
-                                boolean isPluginApiTooOld = loadPlugin(jar, className, identifier, pluginName);
+                                boolean isPluginApiTooOld = loadPlugin(jar, className, identifier, pluginName, AllConfigs.getInstance().getConfigMap());
                                 if (isPluginApiTooOld) {
                                     OLD_API_PLUGINS.add(pluginName);
                                 }
@@ -276,6 +275,12 @@ public class PluginService {
                     System.err.println("++++++++++++++++++++++++++++++++++++++++++++");
                 }
             }
+        }
+    }
+
+    private void onSearchBarVisible(String showingType) {
+        for (PluginInfo pluginInfo : pluginInfoSet) {
+            pluginInfo.plugin.searchBarVisible(showingType);
         }
     }
 
@@ -335,8 +340,14 @@ public class PluginService {
         getInstance().setCurrentTheme(task1.defaultColor, task1.chosenColor, task1.borderColor);
     }
 
+    @EventListener(listenClass = SearchBarReadyEvent.class)
+    private static void onSearchBarReady(Event event) {
+        SearchBarReadyEvent searchBarReadyEvent = (SearchBarReadyEvent) event;
+        getInstance().onSearchBarVisible(searchBarReadyEvent.showingType);
+    }
+
     @EventListener(listenClass = RestartEvent.class)
-    private static void restartEvent() {
+    private static void restartEvent(Event event) {
         getInstance().unloadAllPlugins();
     }
 

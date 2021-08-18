@@ -2246,7 +2246,7 @@ public class SettingsFrame {
     }
 
     @EventListener(listenClass = RestartEvent.class)
-    private static void restartEvent() {
+    private static void restartEvent(Event event) {
         getInstance().hideFrame();
     }
 

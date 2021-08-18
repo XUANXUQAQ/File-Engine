@@ -5,6 +5,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.lang.reflect.Method;
 import java.util.LinkedList;
+import java.util.Map;
 
 import static file.engine.configs.Constants.PLUGIN_API_VERSION;
 
@@ -13,6 +14,7 @@ public class Plugin {
     private final LinkedList<String> methodList = new LinkedList<>();
     private Method pluginTextChanged;
     private Method pluginLoadPlugin;
+    private Method pluginLoadPluginWithConfigs;
     private Method pluginUnloadPlugin;
     private Method pluginKeyReleased;
     private Method pluginKeyPressed;
@@ -32,6 +34,7 @@ public class Plugin {
     private Method pluginGetAuthor;
     private Method pluginClearResultQueue;
     private Method pluginSetCurrentTheme;
+    private Method pluginSearchBarVisible;
 
     public Plugin(PluginClassAndInstanceInfo pluginClassAndInstanceInfo) {
         Class<?> aClass = pluginClassAndInstanceInfo.cls;
@@ -71,6 +74,7 @@ public class Plugin {
         methodList.add("getAuthor");
         methodList.add("clearResultQueue");
         methodList.add("setCurrentTheme");
+        methodList.add("searchBarVisible");
     }
 
     /**
@@ -86,6 +90,7 @@ public class Plugin {
                 break;
             case "loadPlugin":
                 pluginLoadPlugin = aClass.getDeclaredMethod("loadPlugin");
+                pluginLoadPluginWithConfigs = aClass.getDeclaredMethod("loadPlugin", Map.class);
                 break;
             case "unloadPlugin":
                 pluginUnloadPlugin = aClass.getDeclaredMethod("unloadPlugin");
@@ -143,12 +148,30 @@ public class Plugin {
                 break;
             case "setCurrentTheme":
                 pluginSetCurrentTheme = aClass.getDeclaredMethod("setCurrentTheme", int.class, int.class, int.class);
+            case "searchBarVisible":
+                pluginSearchBarVisible = aClass.getDeclaredMethod("searchBarVisible", String.class);
             default:
                 break;
         }
     }
 
-    public void setCurrentTheme(int defaultColor, int chosenLabelColor, @Deprecated int borderColor) {
+    public void loadPlugin(Map<String, Object> configs) {
+        try {
+            pluginLoadPluginWithConfigs.invoke(instance, configs);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void searchBarVisible(String showingMode) {
+        try {
+            pluginSearchBarVisible.invoke(instance, showingMode);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void setCurrentTheme(int defaultColor, int chosenLabelColor, int borderColor) {
         try {
             pluginSetCurrentTheme.invoke(instance, defaultColor, chosenLabelColor, borderColor);
         } catch (Exception e) {
