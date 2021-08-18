@@ -26,7 +26,7 @@ import file.engine.event.handler.impl.hotkey.RegisterHotKeyEvent;
 import file.engine.event.handler.impl.hotkey.ResponseCtrlEvent;
 import file.engine.event.handler.impl.monitor.disk.StartMonitorDiskEvent;
 import file.engine.event.handler.impl.plugin.LoadAllPluginsEvent;
-import file.engine.event.handler.impl.plugin.SetPluginsCurrentThemeEvent;
+import file.engine.event.handler.impl.plugin.ConfigsChangedEvent;
 import file.engine.event.handler.impl.stop.CloseEvent;
 import file.engine.event.handler.impl.taskbar.ShowTrayIconEvent;
 import file.engine.services.download.DownloadManager;
@@ -732,7 +732,7 @@ public class AllConfigs {
     private void setAllSettings() {
         EventManagement eventManagement = EventManagement.getInstance();
         AllConfigs allConfigs = AllConfigs.getInstance();
-        eventManagement.putEvent(new SetPluginsCurrentThemeEvent(
+        eventManagement.putEvent(new ConfigsChangedEvent(
                 allConfigs.getDefaultBackgroundColor(),
                 allConfigs.getLabelColor(),
                 allConfigs.getBorderColor()));
