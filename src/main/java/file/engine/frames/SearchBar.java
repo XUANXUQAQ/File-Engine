@@ -8,7 +8,6 @@ import file.engine.configs.Constants;
 import file.engine.configs.Enums;
 import file.engine.dllInterface.FileMonitor;
 import file.engine.dllInterface.GetHandle;
-import file.engine.dllInterface.IsLocalDisk;
 import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
 import file.engine.event.handler.impl.BootSystemEvent;
@@ -17,7 +16,6 @@ import file.engine.event.handler.impl.frame.searchBar.*;
 import file.engine.event.handler.impl.frame.settingsFrame.AddCacheEvent;
 import file.engine.event.handler.impl.frame.settingsFrame.IsCacheExistEvent;
 import file.engine.event.handler.impl.frame.settingsFrame.ShowSettingsFrameEvent;
-import file.engine.event.handler.impl.monitor.disk.StartMonitorDiskEvent;
 import file.engine.event.handler.impl.stop.RestartEvent;
 import file.engine.event.handler.impl.taskbar.ShowTaskBarMessageEvent;
 import file.engine.frames.components.LoadingPanel;
@@ -957,12 +955,8 @@ public class SearchBar {
                 }
 
                 if (runningMode == Enums.RunningMode.PLUGIN_MODE) {
-                    if (key != 38 && key != 40) {
-                        if (currentUsingPlugin != null) {
-                            if (listResultsNum.get() != 0) {
-                                currentUsingPlugin.keyReleased(arg0, listResults.get(currentResultCount.get()));
-                            }
-                        }
+                    if (key != 38 && key != 40 && currentUsingPlugin != null && listResultsNum.get() != 0) {
+                        currentUsingPlugin.keyReleased(arg0, listResults.get(currentResultCount.get()));
                     }
                 }
             }
@@ -971,12 +965,8 @@ public class SearchBar {
             public void keyTyped(KeyEvent arg0) {
                 if (runningMode == Enums.RunningMode.PLUGIN_MODE) {
                     int key = arg0.getKeyCode();
-                    if (key != 38 && key != 40) {
-                        if (currentUsingPlugin != null) {
-                            if (listResultsNum.get() != 0) {
-                                currentUsingPlugin.keyTyped(arg0, listResults.get(currentResultCount.get()));
-                            }
-                        }
+                    if (key != 38 && key != 40 && currentUsingPlugin != null && listResultsNum.get() != 0) {
+                        currentUsingPlugin.keyTyped(arg0, listResults.get(currentResultCount.get()));
                     }
                 }
             }
@@ -2485,56 +2475,6 @@ public class SearchBar {
         });
     }
 
-    private boolean isAdmin() {
-        try {
-            ProcessBuilder processBuilder = new ProcessBuilder("cmd.exe");
-            Process process = processBuilder.start();
-            PrintStream printStream = new PrintStream(process.getOutputStream(), true);
-            Scanner scanner = new Scanner(process.getInputStream());
-            printStream.println("@echo off");
-            printStream.println(">nul 2>&1 \"%SYSTEMROOT%\\system32\\cacls.exe\" \"%SYSTEMROOT%\\system32\\config\\system\"");
-            printStream.println("echo %errorlevel%");
-
-            boolean printedErrorLevel = false;
-            while (true) {
-                String nextLine = scanner.nextLine();
-                if (printedErrorLevel) {
-                    int errorLevel = Integer.parseInt(nextLine);
-                    scanner.close();
-                    return errorLevel == 0;
-                } else if ("echo %errorlevel%".equals(nextLine)) {
-                    printedErrorLevel = true;
-                }
-            }
-        } catch (IOException e) {
-            return false;
-        }
-    }
-
-    /**
-     * 开始监控磁盘文件变化
-     */
-    private void startMonitorDisk() {
-        CachedThreadPoolUtil.getInstance().executeTask(() -> {
-            EventManagement eventManagement = EventManagement.getInstance();
-            TranslateUtil translateUtil = TranslateUtil.getInstance();
-            File[] roots = File.listRoots();
-            if (isAdmin()) {
-                FileMonitor.INSTANCE.set_output(new File("tmp").getAbsolutePath());
-                for (File root : roots) {
-                    boolean isLocal = IsLocalDisk.INSTANCE.isLocalDisk(root.getAbsolutePath());
-                    if (isLocal) {
-                        FileMonitor.INSTANCE.monitor(root.getAbsolutePath());
-                    }
-                }
-            } else {
-                eventManagement.putEvent(new ShowTaskBarMessageEvent(
-                        translateUtil.getTranslation("Warning"),
-                        translateUtil.getTranslation("Not administrator, file monitoring function is turned off")));
-            }
-        });
-    }
-
     private void setLabelChosenOrNotChosenMouseMode(int labelNum, JLabel label) {
         if (!isUserPressed.get() && isLabelNotEmpty(label)) {
             if (currentLabelSelectedPosition.get() == labelNum) {
@@ -2609,11 +2549,6 @@ public class SearchBar {
     @EventListener(listenClass = BootSystemEvent.class)
     private static void warmupDatabase() {
         getInstance().warmup();
-    }
-
-    @EventRegister(registerClass = StartMonitorDiskEvent.class)
-    private static void startMonitorDiskEvent(Event event) {
-        getInstance().startMonitorDisk();
     }
 
     @EventRegister(registerClass = HideSearchBarEvent.class)

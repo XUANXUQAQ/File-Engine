@@ -42,9 +42,6 @@ public class SQLiteUtil {
      */
     public static PreparedStatement getPreparedStatement(String sql, String key) throws SQLException {
         checkEmpty(key);
-        if (!connectionPool.containsKey(key)) {
-            throw new RuntimeException("key doesn't exist");
-        }
         return connectionPool.get(key).prepareStatement(sql);
     }
 
@@ -56,15 +53,15 @@ public class SQLiteUtil {
      */
     public static Statement getStatement(String key) throws SQLException {
         checkEmpty(key);
-        if (!connectionPool.containsKey(key)) {
-            throw new RuntimeException("key doesn't exist");
-        }
         return connectionPool.get(key).createStatement();
     }
 
     private static void checkEmpty(String key) {
-        if (connectionPool.isEmpty() || !connectionPool.containsKey(key)) {
+        if (connectionPool.isEmpty()) {
             throw new RuntimeException("The connection must be initialized first, call initConnection(String url)");
+        }
+        if (!connectionPool.containsKey(key)) {
+            throw new RuntimeException("key doesn't exist");
         }
     }
 
