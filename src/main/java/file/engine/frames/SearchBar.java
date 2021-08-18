@@ -205,12 +205,13 @@ public class SearchBar {
 
     /**
      * 初始化窗口
-     * @param positionX X坐标
-     * @param positionY Y坐标
-     * @param searchBarWidth 宽度
-     * @param searchBarHeight 高度
+     *
+     * @param positionX        X坐标
+     * @param positionY        Y坐标
+     * @param searchBarWidth   宽度
+     * @param searchBarHeight  高度
      * @param transparentColor 透明的背景颜色
-     * @param contentPanel 内容面板
+     * @param contentPanel     内容面板
      */
     private void initFrame(int positionX, int positionY, int searchBarWidth, int searchBarHeight, Color transparentColor, JPanel contentPanel) {
         //frame
@@ -4071,9 +4072,6 @@ public class SearchBar {
      * @param isChosen 是否当前被选中
      */
     private void showResultOnLabel(String path, JLabel label, boolean isChosen) {
-        if (isLabelNotEmpty(label)) {
-            return;
-        }
         //将文件的路径信息存储在label的名称中，在未被选中时只显示文件名，选中后才显示文件路径
         boolean[] isEmpty = new boolean[1];
         String allHtml = getHtml(path, null, isEmpty);
@@ -4117,9 +4115,6 @@ public class SearchBar {
      * @param isChosen 是否当前被选中
      */
     private void showCommandOnLabel(String command, JLabel label, boolean isChosen) {
-        if (isLabelNotEmpty(label)) {
-            return;
-        }
         GetIconUtil getIconUtil = GetIconUtil.getInstance();
         String[] info = semicolon.split(command);
         String path = info[1];
@@ -4155,36 +4150,36 @@ public class SearchBar {
         if (runningMode == Enums.RunningMode.NORMAL_MODE) {
             try {
                 String path;
-                if (!listResults.isEmpty()) {
+                if (!listResults.isEmpty() && isLabelEmpty(label1)) {
                     path = listResults.get(0);
                     showResultOnLabel(path, label1, isLabel1Chosen);
                 }
                 size = listResults.size();
-                if (size > 1) {
+                if (size > 1 && isLabelEmpty(label2)) {
                     path = listResults.get(1);
                     showResultOnLabel(path, label2, isLabel2Chosen);
                 }
-                if (size > 2) {
+                if (size > 2 && isLabelEmpty(label3)) {
                     path = listResults.get(2);
                     showResultOnLabel(path, label3, isLabel3Chosen);
                 }
-                if (size > 3) {
+                if (size > 3 && isLabelEmpty(label4)) {
                     path = listResults.get(3);
                     showResultOnLabel(path, label4, isLabel4Chosen);
                 }
-                if (size > 4) {
+                if (size > 4 && isLabelEmpty(label5)) {
                     path = listResults.get(4);
                     showResultOnLabel(path, label5, isLabel5Chosen);
                 }
-                if (size > 5) {
+                if (size > 5 && isLabelEmpty(label6)) {
                     path = listResults.get(5);
                     showResultOnLabel(path, label6, isLabel6Chosen);
                 }
-                if (size > 6) {
+                if (size > 6 && isLabelEmpty(label7)) {
                     path = listResults.get(6);
                     showResultOnLabel(path, label7, isLabel7Chosen);
                 }
-                if (size > 7) {
+                if (size > 7 && isLabelEmpty(label8)) {
                     path = listResults.get(7);
                     showResultOnLabel(path, label8, isLabel8Chosen);
                 }
@@ -4194,36 +4189,36 @@ public class SearchBar {
         } else if (runningMode == Enums.RunningMode.COMMAND_MODE) {
             try {
                 String command;
-                if (!listResults.isEmpty()) {
+                if (!listResults.isEmpty() && isLabelEmpty(label1)) {
                     command = listResults.get(0);
                     showCommandOnLabel(command, label1, isLabel1Chosen);
                 }
                 size = listResults.size();
-                if (size > 1) {
+                if (size > 1 && isLabelEmpty(label2)) {
                     command = listResults.get(1);
                     showCommandOnLabel(command, label2, isLabel2Chosen);
                 }
-                if (size > 2) {
+                if (size > 2 && isLabelEmpty(label3)) {
                     command = listResults.get(2);
                     showCommandOnLabel(command, label3, isLabel3Chosen);
                 }
-                if (size > 3) {
+                if (size > 3 && isLabelEmpty(label4)) {
                     command = listResults.get(3);
                     showCommandOnLabel(command, label4, isLabel4Chosen);
                 }
-                if (size > 4) {
+                if (size > 4 && isLabelEmpty(label5)) {
                     command = listResults.get(4);
                     showCommandOnLabel(command, label5, isLabel5Chosen);
                 }
-                if (size > 5) {
+                if (size > 5 && isLabelEmpty(label6)) {
                     command = listResults.get(5);
                     showCommandOnLabel(command, label6, isLabel6Chosen);
                 }
-                if (size > 6) {
+                if (size > 6 && isLabelEmpty(label7)) {
                     command = listResults.get(6);
                     showCommandOnLabel(command, label7, isLabel7Chosen);
                 }
-                if (size > 7) {
+                if (size > 7 && isLabelEmpty(label8)) {
                     command = listResults.get(7);
                     showCommandOnLabel(command, label8, isLabel8Chosen);
                 }
