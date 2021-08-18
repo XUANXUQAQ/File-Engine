@@ -5,7 +5,6 @@ import com.github.promeg.pinyinhelper.Pinyin;
 import com.github.promeg.tinypinyin.lexicons.java.cncity.CnCityDict;
 import file.engine.configs.AllConfigs;
 import file.engine.configs.Constants;
-import file.engine.configs.Enums;
 import file.engine.dllInterface.GetHandle;
 import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
@@ -478,7 +477,7 @@ public class MainClass {
                         //使用次数大于3次，优化数据库
                         if (startTimes >= Constants.UPDATE_DATABASE_THRESHOLD) {
                             startTimes = 0;
-                            if (DatabaseService.getInstance().getStatus() == Enums.DatabaseStatus.NORMAL) {
+                            if (DatabaseService.getInstance().getStatus() == Constants.Enums.DatabaseStatus.NORMAL) {
                                 ret = true;
                             }
                         }

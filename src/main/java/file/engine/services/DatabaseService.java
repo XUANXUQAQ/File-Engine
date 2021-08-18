@@ -3,7 +3,6 @@ package file.engine.services;
 import file.engine.annotation.EventListener;
 import file.engine.annotation.EventRegister;
 import file.engine.configs.AllConfigs;
-import file.engine.configs.Enums;
 import file.engine.configs.Constants;
 import file.engine.dllInterface.FileMonitor;
 import file.engine.dllInterface.GetAscII;
@@ -40,7 +39,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class DatabaseService {
     private final ConcurrentLinkedQueue<SQLWithTaskId> commandSet = new ConcurrentLinkedQueue<>();
-    private volatile Enums.DatabaseStatus status = Enums.DatabaseStatus.NORMAL;
+    private volatile Constants.Enums.DatabaseStatus status = Constants.Enums.DatabaseStatus.NORMAL;
     private final AtomicBoolean isExecuteImmediately = new AtomicBoolean(false);
     private final AtomicInteger cacheNum = new AtomicInteger(0);
 
@@ -112,7 +111,7 @@ public class DatabaseService {
                 LinkedHashSet<String> deletePaths = new LinkedHashSet<>();
                 EventManagement eventManagement = EventManagement.getInstance();
                 while (eventManagement.isNotMainExit()) {
-                    if (status == Enums.DatabaseStatus.NORMAL) {
+                    if (status == Constants.Enums.DatabaseStatus.NORMAL) {
                         while ((tmp = readerRemove.readLine()) != null) {
                             fileCount++;
                             deletePaths.add(tmp);
@@ -121,7 +120,7 @@ public class DatabaseService {
                             }
                         }
                     }
-                    if (status == Enums.DatabaseStatus.NORMAL && !deletePaths.isEmpty()) {
+                    if (status == Constants.Enums.DatabaseStatus.NORMAL && !deletePaths.isEmpty()) {
                         eventManagement.putEvent(new DeleteFromDatabaseEvent(deletePaths));
                         deletePaths = new LinkedHashSet<>();
                         fileCount = 0;
@@ -173,7 +172,7 @@ public class DatabaseService {
                 LinkedHashSet<String> addPaths = new LinkedHashSet<>();
                 EventManagement eventManagement = EventManagement.getInstance();
                 while (eventManagement.isNotMainExit()) {
-                    if (status == Enums.DatabaseStatus.NORMAL) {
+                    if (status == Constants.Enums.DatabaseStatus.NORMAL) {
                         while ((tmp = readerAdd.readLine()) != null) {
                             fileCount++;
                             addPaths.add(tmp);
@@ -182,7 +181,7 @@ public class DatabaseService {
                             }
                         }
                     }
-                    if (status == Enums.DatabaseStatus.NORMAL && !addPaths.isEmpty()) {
+                    if (status == Constants.Enums.DatabaseStatus.NORMAL && !addPaths.isEmpty()) {
                         eventManagement.putEvent(new AddToDatabaseEvent(addPaths));
                         addPaths = new LinkedHashSet<>();
                         fileCount = 0;
@@ -390,7 +389,7 @@ public class DatabaseService {
      */
     private void addToCommandSet(SQLWithTaskId sql) {
         if (commandSet.size() < Constants.MAX_SQL_NUM) {
-            if (status == Enums.DatabaseStatus.MANUAL_UPDATE) {
+            if (status == Constants.Enums.DatabaseStatus.MANUAL_UPDATE) {
                 System.err.println("正在搜索中");
                 return;
             }
@@ -422,7 +421,7 @@ public class DatabaseService {
      * 获取数据库状态
      * @return 装填
      */
-    public Enums.DatabaseStatus getStatus() {
+    public Constants.Enums.DatabaseStatus getStatus() {
         return status;
     }
 
@@ -430,7 +429,7 @@ public class DatabaseService {
      * 设置数据库状态
      * @param status 状态
      */
-    private void setStatus(Enums.DatabaseStatus status) {
+    private void setStatus(Constants.Enums.DatabaseStatus status) {
         this.status = status;
     }
 
@@ -656,7 +655,7 @@ public class DatabaseService {
             try {
                 EventManagement eventManagement = EventManagement.getInstance();
                 while (eventManagement.isNotMainExit()) {
-                    if (status == Enums.DatabaseStatus.NORMAL) {
+                    if (status == Constants.Enums.DatabaseStatus.NORMAL) {
                         eventManagement.putEvent(new ExecuteSQLEvent());
                     }
                     TimeUnit.SECONDS.sleep(updateTimeLimit);
@@ -743,9 +742,9 @@ public class DatabaseService {
     @EventRegister(registerClass = UpdateDatabaseEvent.class)
     private static void updateDatabaseEvent(Event event) throws IOException, InterruptedException {
         DatabaseService databaseService = getInstance();
-        databaseService.setStatus(Enums.DatabaseStatus.MANUAL_UPDATE);
+        databaseService.setStatus(Constants.Enums.DatabaseStatus.MANUAL_UPDATE);
         databaseService.updateLists(AllConfigs.getInstance().getIgnorePath());
-        databaseService.setStatus(Enums.DatabaseStatus.NORMAL);
+        databaseService.setStatus(Constants.Enums.DatabaseStatus.NORMAL);
     }
 
     @EventRegister(registerClass = ExecuteSQLEvent.class)
@@ -756,7 +755,7 @@ public class DatabaseService {
     @EventRegister(registerClass = OptimiseDatabaseEvent.class)
     private static void optimiseDatabaseEvent(Event event) {
         DatabaseService databaseService = getInstance();
-        databaseService.setStatus(Enums.DatabaseStatus.VACUUM);
+        databaseService.setStatus(Constants.Enums.DatabaseStatus.VACUUM);
         //执行VACUUM命令
         for (String eachDisk : RegexUtil.comma.split(AllConfigs.getInstance().getDisks())) {
             try (PreparedStatement stmt = SQLiteUtil.getPreparedStatement("VACUUM;", String.valueOf(eachDisk.charAt(0)))) {
@@ -769,7 +768,7 @@ public class DatabaseService {
                 }
             }
         }
-        databaseService.setStatus(Enums.DatabaseStatus.NORMAL);
+        databaseService.setStatus(Constants.Enums.DatabaseStatus.NORMAL);
     }
 
     @EventRegister(registerClass = AddToSuffixPriorityMapEvent.class)

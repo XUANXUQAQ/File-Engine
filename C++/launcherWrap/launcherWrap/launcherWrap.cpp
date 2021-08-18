@@ -39,7 +39,7 @@ std::time_t g_restart_time = std::time(nullptr);
 bool g_is_restart_on_release_file = false;
 
 bool is_close_exist();
-BOOL find_process(const wchar_t* procName);
+bool find_process(const WCHAR* procName);
 void restart_file_engine(bool);
 bool release_resources();
 void extract_zip();
@@ -65,7 +65,13 @@ int main()
 	auto loop_count = 0;
 	if (is_dir_not_exist(g_file_engine_working_dir))
 	{
-		_mkdir(g_file_engine_working_dir);
+		if (_mkdir(g_file_engine_working_dir))
+		{
+			std::string msg;
+			msg.append("Create dir ").append(g_file_engine_working_dir).append(" failed");
+			MessageBoxA(nullptr, msg.c_str(), "Error", MB_OK);
+			return 0;
+		}
 	}
 	restart_file_engine(true);
 	while (!is_close_exist())
@@ -76,17 +82,23 @@ int main()
 			if (!find_process(g_proc_name))
 			{
 				std::cout << "File-Engine process not exist" << std::endl;
+				if (is_close_exist())
+				{
+					// 再次检测，防止已经关闭后重启
+					break;
+				}
 				restart_file_engine(false);
 			}
 			loop_count = 0;
 		}
 		Sleep(100);
 	}
+	return 0;
 }
 
-void init_path()
+inline void init_path()
 {
-	char current_dir[MAX_PATH];
+	char current_dir[1000];
 	GetModuleFileNameA(nullptr, current_dir, sizeof current_dir);
 	std::string tmp_current_dir(current_dir);
 	strcpy_s(current_dir, tmp_current_dir.substr(0, tmp_current_dir.find_last_of('\\')).c_str());
@@ -169,7 +181,7 @@ bool release_resources()
 /**
  * 解压File-Engine.zip
  */
-void extract_zip()
+inline void extract_zip()
 {
 	zip_extract(g_file_engine_zip_name, g_file_engine_working_dir, nullptr, nullptr);
 }
@@ -253,7 +265,7 @@ bool is_file_exist(const char* file_path)
 /**
  * 查找File-Engine进程是否存在
  */
-BOOL find_process(const wchar_t* procName)
+bool find_process(const WCHAR* procName)
 {
 	PROCESSENTRY32 pe;
 	DWORD id = 0;

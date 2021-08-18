@@ -4,7 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import file.engine.annotation.EventListener;
 import file.engine.annotation.EventRegister;
 import file.engine.configs.AllConfigs;
-import file.engine.configs.Enums;
+import file.engine.configs.Constants;
 import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
 import file.engine.event.handler.impl.download.StartDownloadEvent;
@@ -149,7 +149,7 @@ public class PluginMarket {
         buttonInstall.addActionListener(e -> {
             String pluginName = (String) listPlugins.getSelectedValue();
             DownloadManager downloadManager = downloadManagerConcurrentHashMap.get(pluginName);
-            if (downloadManager != null && downloadService.getDownloadStatus(downloadManager) == Enums.DownloadStatus.DOWNLOAD_DOWNLOADING) {
+            if (downloadManager != null && downloadService.getDownloadStatus(downloadManager) == Constants.Enums.DownloadStatus.DOWNLOAD_DOWNLOADING) {
                 //取消下载
                 eventManagement.putEvent(new StopDownloadEvent(downloadManager));
             } else {

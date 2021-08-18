@@ -1,8 +1,8 @@
 package file.engine.services.download;
 
+import file.engine.configs.Constants;
 import file.engine.utils.system.properties.IsDebug;
 import file.engine.configs.AllConfigs;
-import file.engine.configs.Enums;
 import file.engine.configs.ProxyInfo;
 
 import javax.net.ssl.*;
@@ -21,7 +21,7 @@ public class DownloadManager {
     public final String fileName;
     private volatile double progress = 0.0;
     private volatile boolean isUserInterrupted = false;
-    private volatile Enums.DownloadStatus downloadStatus;
+    private volatile Constants.Enums.DownloadStatus downloadStatus;
     private Proxy proxy = null;
     private Authenticator authenticator = null;
 
@@ -29,7 +29,7 @@ public class DownloadManager {
         this.url = url;
         this.fileName = fileName;
         this.savePath = savePath;
-        this.downloadStatus = Enums.DownloadStatus.DOWNLOAD_NO_TASK;
+        this.downloadStatus = Constants.Enums.DownloadStatus.DOWNLOAD_NO_TASK;
         ProxyInfo proxyInfo = AllConfigs.getInstance().getProxy();
         setProxy(proxyInfo.type, proxyInfo.address, proxyInfo.port, proxyInfo.userName, proxyInfo.password);
     }
@@ -65,7 +65,7 @@ public class DownloadManager {
 
     protected void download() {
         try {
-            this.downloadStatus = Enums.DownloadStatus.DOWNLOAD_DOWNLOADING;
+            this.downloadStatus = Constants.Enums.DownloadStatus.DOWNLOAD_DOWNLOADING;
             System.setProperty("http.keepAlive", "false");
             URL urlAddress = new URL(url);
             HttpURLConnection con;
@@ -112,11 +112,11 @@ public class DownloadManager {
                 }
                 throw new IOException("User Interrupted");
             }
-            downloadStatus = Enums.DownloadStatus.DOWNLOAD_DONE;
+            downloadStatus = Constants.Enums.DownloadStatus.DOWNLOAD_DONE;
         } catch (IOException | NoSuchAlgorithmException | KeyManagementException e) {
             e.printStackTrace();
             if (!"User Interrupted".equals(e.getMessage())) {
-                downloadStatus = Enums.DownloadStatus.DOWNLOAD_ERROR;
+                downloadStatus = Constants.Enums.DownloadStatus.DOWNLOAD_ERROR;
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -130,11 +130,11 @@ public class DownloadManager {
     }
 
     protected void setDownloadDone() {
-        this.downloadStatus = Enums.DownloadStatus.DOWNLOAD_DONE;
+        this.downloadStatus = Constants.Enums.DownloadStatus.DOWNLOAD_DONE;
     }
 
     protected void setInterrupt() {
-        downloadStatus = Enums.DownloadStatus.DOWNLOAD_INTERRUPTED;
+        downloadStatus = Constants.Enums.DownloadStatus.DOWNLOAD_INTERRUPTED;
         isUserInterrupted = true;
     }
 
@@ -142,15 +142,15 @@ public class DownloadManager {
         return progress;
     }
 
-    protected Enums.DownloadStatus getDownloadStatus() {
-        if (downloadStatus != Enums.DownloadStatus.DOWNLOAD_DONE) {
+    protected Constants.Enums.DownloadStatus getDownloadStatus() {
+        if (downloadStatus != Constants.Enums.DownloadStatus.DOWNLOAD_DONE) {
             return downloadStatus;
         } else {
             if (!new File(savePath, fileName).exists()) {
                 if (IsDebug.isDebug()) {
                     System.err.println("文件不存在，重新下载");
                 }
-                return Enums.DownloadStatus.DOWNLOAD_NO_TASK;
+                return Constants.Enums.DownloadStatus.DOWNLOAD_NO_TASK;
             } else {
                 return downloadStatus;
             }
