@@ -264,7 +264,7 @@ public class TaskBar {
     }
 
     @EventListener(listenClass = RestartEvent.class)
-    private static void restartEvent() {
+    private static void restartEvent(Event event) {
         TaskBar taskBar = getInstance();
         taskBar.systemTray.remove(taskBar.trayIcon);
     }

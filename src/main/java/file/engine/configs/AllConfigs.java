@@ -647,6 +647,12 @@ public class AllConfigs {
         }
     }
 
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> getConfigMap() {
+        String jsonString = JSON.toJSONString(configEntity);
+        return JSON.parseObject(jsonString, Map.class);
+    }
+
     /**
      * 尝试从json中读取，若失败则返回默认值
      * @param json json数据
@@ -947,7 +953,7 @@ public class AllConfigs {
     }
 
     @EventListener(listenClass = BootSystemEvent.class)
-    private static void shutdownListener() {
+    private static void shutdownListener(Event event) {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> EventManagement.getInstance().putEvent(new CloseEvent())));
     }
 

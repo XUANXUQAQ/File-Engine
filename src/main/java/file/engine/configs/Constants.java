@@ -18,7 +18,7 @@ public class Constants {
 
     public static final int MAX_SQL_NUM = 5000;
 
-    public static final int PLUGIN_API_VERSION = 4;
+    public static final int PLUGIN_API_VERSION = 5;
     public static final int MAX_SUPPORT_API_DIFFERENCE = 2;
 
     public static final int defaultLabelColor = 0xff9933;
