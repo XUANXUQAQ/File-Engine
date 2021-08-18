@@ -35,6 +35,7 @@ public class Plugin {
     private Method pluginClearResultQueue;
     private Method pluginSetCurrentTheme;
     private Method pluginSearchBarVisible;
+    private Method pluginConfigsChanged;
 
     public Plugin(PluginClassAndInstanceInfo pluginClassAndInstanceInfo) {
         Class<?> aClass = pluginClassAndInstanceInfo.cls;
@@ -75,6 +76,7 @@ public class Plugin {
         methodList.add("clearResultQueue");
         methodList.add("setCurrentTheme");
         methodList.add("searchBarVisible");
+        methodList.add("configsChanged");
     }
 
     /**
@@ -87,6 +89,9 @@ public class Plugin {
         switch (methodName) {
             case "textChanged":
                 pluginTextChanged = aClass.getDeclaredMethod("textChanged", String.class);
+                break;
+            case "configsChanged":
+                pluginConfigsChanged = aClass.getDeclaredMethod("configsChanged", Map.class);
                 break;
             case "loadPlugin":
                 pluginLoadPlugin = aClass.getDeclaredMethod("loadPlugin");
@@ -152,6 +157,14 @@ public class Plugin {
                 pluginSearchBarVisible = aClass.getDeclaredMethod("searchBarVisible", String.class);
             default:
                 break;
+        }
+    }
+
+    public void configsChanged(Map<String, Object> configs) {
+        try {
+            pluginConfigsChanged.invoke(instance, configs);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 

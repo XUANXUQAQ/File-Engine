@@ -11,7 +11,7 @@ import file.engine.event.handler.impl.frame.searchBar.SearchBarReadyEvent;
 import file.engine.event.handler.impl.plugin.AddPluginsCanUpdateEvent;
 import file.engine.event.handler.impl.plugin.LoadAllPluginsEvent;
 import file.engine.event.handler.impl.plugin.RemoveFromPluginsCanUpdateEvent;
-import file.engine.event.handler.impl.plugin.SetPluginsCurrentThemeEvent;
+import file.engine.event.handler.impl.plugin.ConfigsChangedEvent;
 import file.engine.event.handler.impl.stop.RestartEvent;
 import file.engine.event.handler.impl.taskbar.ShowTaskBarMessageEvent;
 import file.engine.utils.CachedThreadPoolUtil;
@@ -50,6 +50,9 @@ public class PluginService {
         return INSTANCE;
     }
 
+    /**
+     * 检查所有的插件，若有任务栏信息则显示
+     */
     private void checkPluginMessageThread() {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             try {
@@ -75,18 +78,35 @@ public class PluginService {
         checkPluginMessageThread();
     }
 
+    /**
+     * 检查是否有过旧的插件
+     * @return boolean
+     */
     public boolean isPluginTooOld() {
         return !OLD_API_PLUGINS.isEmpty();
     }
 
+    /**
+     * 检查是否有重复插件
+     * @return boolean
+     */
     public boolean isPluginRepeat() {
         return !REPEAT_PLUGINS.isEmpty();
     }
 
+    /**
+     * 检查是否有加载失败的插件
+     * @return boolean
+     */
     public boolean isPluginLoadError() {
         return !LOAD_ERROR_PLUGINS.isEmpty();
     }
 
+    /**
+     * 检查是否含有可更新的插件
+     * @param pluginName 插件名
+     * @return boolean
+     */
     public boolean isPluginNotLatest(String pluginName) {
         return NOT_LATEST_PLUGINS.contains(pluginName);
     }
@@ -99,6 +119,10 @@ public class PluginService {
         NOT_LATEST_PLUGINS.add(pluginName);
     }
 
+    /**
+     * 获取所有加载失败的插件
+     * @return 插件名称，以逗号隔开
+     */
     public String getLoadingErrorPlugins() {
         StringBuilder strb = new StringBuilder();
         for (String each : LOAD_ERROR_PLUGINS) {
@@ -107,6 +131,10 @@ public class PluginService {
         return strb.substring(0, strb.length() - 1);
     }
 
+    /**
+     * 获取所有重复插件
+     * @return 插件名称，以逗号隔开
+     */
     public String getRepeatPlugins() {
         StringBuilder strb = new StringBuilder();
         for (String repeatPlugins : REPEAT_PLUGINS) {
@@ -115,6 +143,11 @@ public class PluginService {
         return strb.substring(0, strb.length() - 1);
     }
 
+    /**
+     * 根据插件名获取插件实例
+     * @param name 插件名
+     * @return 插件实例
+     */
     public PluginInfo getPluginInfoByName(String name) {
         for (PluginInfo each : pluginInfoSet) {
             if (each.name.equals(name)) {
@@ -124,6 +157,11 @@ public class PluginService {
         return nullPluginInfo;
     }
 
+    /**
+     * 根据插件出发关键字获取插件
+     * @param identifier 触发关键字
+     * @return 插件实例
+     */
     public PluginInfo getPluginInfoByIdentifier(String identifier) {
         for (PluginInfo each : pluginInfoSet) {
             if (each.identifier.equals(identifier)) {
@@ -133,6 +171,10 @@ public class PluginService {
         return nullPluginInfo;
     }
 
+    /**
+     * 获取插件数量
+     * @return 插件数量
+     */
     public int getInstalledPluginNum() {
         return pluginInfoSet.size();
     }
@@ -145,6 +187,11 @@ public class PluginService {
         return strb.substring(0, strb.length() - 1);
     }
 
+    /**
+     * 读取插件中的配置信息
+     * @param inputStream inputStream
+     * @return 插件信息
+     */
     private String readAll(InputStream inputStream) {
         StringBuilder strb = new StringBuilder();
         String line;
@@ -158,12 +205,26 @@ public class PluginService {
         return strb.toString();
     }
 
+    /**
+     * 卸载插件
+     * @param plugin 插件
+     */
     private void unloadPlugin(Plugin plugin) {
         if (plugin != null) {
             plugin.unloadPlugin();
         }
     }
 
+    /**
+     * 加载插件
+     * @param pluginFile 插件jar文件路径
+     * @param className 插件全类名
+     * @param identifier 触发关键字
+     * @param pluginName 插件名
+     * @param configs File-Engine配置信息
+     * @return 是否有过旧的插件
+     * @throws Exception 加载失败
+     */
     private boolean loadPlugin(File pluginFile, String className, String identifier, String pluginName, Map<String, Object> configs) throws Exception {
         boolean isTooOld = false;
         URLClassLoader classLoader = new URLClassLoader(
@@ -174,7 +235,7 @@ public class PluginService {
         Object instance = c.getDeclaredConstructor().newInstance();
         Plugin.PluginClassAndInstanceInfo pluginClassAndInstanceInfo = new Plugin.PluginClassAndInstanceInfo(c, instance);
         Plugin plugin = new Plugin(pluginClassAndInstanceInfo);
-        plugin.loadPlugin();
+        plugin.loadPlugin(); // 兼容以前版本
         plugin.loadPlugin(configs);
         AllConfigs allConfigs = AllConfigs.getInstance();
         plugin.setCurrentTheme(allConfigs.getDefaultBackgroundColor(), allConfigs.getLabelColor(), allConfigs.getBorderColor());
@@ -185,18 +246,34 @@ public class PluginService {
         return isTooOld;
     }
 
+    /**
+     * 卸载所有插件
+     */
     private void unloadAllPlugins() {
         for (PluginInfo each : pluginInfoSet) {
             unloadPlugin(each.plugin);
         }
     }
 
-    private void setCurrentTheme(int defaultColor, int chosenLabelColor, int borderColor) {
+    /**
+     * 向所有插件发出配置更改事件
+     * @param defaultColor 背景颜色，兼容老API
+     * @param chosenLabelColor 选中框颜色，兼容老API
+     * @param borderColor 边框颜色，兼容老API
+     * @param configs 配置信息
+     */
+    private void configsChanged(int defaultColor, int chosenLabelColor, int borderColor, Map<String, Object> configs) {
         for (PluginInfo each : pluginInfoSet) {
-            each.plugin.setCurrentTheme(defaultColor, chosenLabelColor, borderColor);
+            each.plugin.setCurrentTheme(defaultColor, chosenLabelColor, borderColor); // 兼容以前版本
+            each.plugin.configsChanged(configs);
         }
     }
 
+    /**
+     * 检查该插件名所对应的插件是否存在
+     * @param pluginName 插件名
+     * @return boolean
+     */
     public boolean hasPlugin(String pluginName) {
         for (PluginInfo each : pluginInfoSet) {
             if (each.name.equals(pluginName)) {
@@ -214,6 +291,10 @@ public class PluginService {
         return list.toArray();
     }
 
+    /**
+     * 加载所有插件
+     * @param pluginPath 插件目录
+     */
     private void loadAllPlugins(String pluginPath) {
         FilenameFilter filter = (dir, name) -> name.endsWith(".jar");
         File[] files = new File(pluginPath).listFiles(filter);
@@ -278,6 +359,10 @@ public class PluginService {
         }
     }
 
+    /**
+     * 向所有插件发出窗口已打开事件
+     * @param showingType 显示模式
+     */
     private void onSearchBarVisible(String showingType) {
         for (PluginInfo pluginInfo : pluginInfoSet) {
             pluginInfo.plugin.searchBarVisible(showingType);
@@ -334,10 +419,10 @@ public class PluginService {
         getInstance().removeFromPluginsCanUpdate(((RemoveFromPluginsCanUpdateEvent) event).pluginName);
     }
 
-    @EventRegister(registerClass = SetPluginsCurrentThemeEvent.class)
+    @EventRegister(registerClass = ConfigsChangedEvent.class)
     private static void setPluginsCurrentThemeEvent(Event event) {
-        SetPluginsCurrentThemeEvent task1 = (SetPluginsCurrentThemeEvent) event;
-        getInstance().setCurrentTheme(task1.defaultColor, task1.chosenColor, task1.borderColor);
+        ConfigsChangedEvent task1 = (ConfigsChangedEvent) event;
+        getInstance().configsChanged(task1.defaultColor, task1.chosenColor, task1.borderColor, AllConfigs.getInstance().getConfigMap());
     }
 
     @EventListener(listenClass = SearchBarReadyEvent.class)
