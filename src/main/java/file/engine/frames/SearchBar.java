@@ -3692,16 +3692,6 @@ public class SearchBar {
     }
 
     /**
-     * 检查当前文件路径是否已被加入到listResults中
-     *
-     * @param result 文件路径
-     * @return true如果还未被加入
-     */
-    private boolean isResultNotRepeat(String result) {
-        return isNotContains(tempResults, result) && isNotContains(listResults, result);
-    }
-
-    /**
      * 检查文件路径是否匹配然后加入到列表
      *
      * @param path 文件路径
