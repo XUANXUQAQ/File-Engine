@@ -6,7 +6,6 @@ import file.engine.annotation.EventRegister;
 import file.engine.configs.AllConfigs;
 import file.engine.configs.ConfigEntity;
 import file.engine.configs.Constants;
-import file.engine.configs.Enums;
 import file.engine.dllInterface.IsLocalDisk;
 import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
@@ -571,7 +570,7 @@ public class SettingsFrame {
         DownloadService downloadService = DownloadService.getInstance();
 
         buttonCheckUpdate.addActionListener(e -> {
-            if (downloadManager.downloadManager != null && downloadService.getDownloadStatus(downloadManager.downloadManager) == Enums.DownloadStatus.DOWNLOAD_DOWNLOADING) {
+            if (downloadManager.downloadManager != null && downloadService.getDownloadStatus(downloadManager.downloadManager) == Constants.Enums.DownloadStatus.DOWNLOAD_DOWNLOADING) {
                 eventManagement.putEvent(new StopDownloadEvent(downloadManager.downloadManager));
             } else {
                 //开始下载
@@ -966,8 +965,8 @@ public class SettingsFrame {
         buttonVacuum.addActionListener(e -> {
             int ret = JOptionPane.showConfirmDialog(frame, translateUtil.getTranslation("Confirm whether to start optimizing the database?"));
             if (JOptionPane.YES_OPTION == ret) {
-                Enums.DatabaseStatus status = DatabaseService.getInstance().getStatus();
-                if (status == Enums.DatabaseStatus.NORMAL) {
+                Constants.Enums.DatabaseStatus status = DatabaseService.getInstance().getStatus();
+                if (status == Constants.Enums.DatabaseStatus.NORMAL) {
                     if (IsDebug.isDebug()) {
                         System.out.println("开始优化");
                     }
@@ -976,7 +975,7 @@ public class SettingsFrame {
                         //实时显示VACUUM状态
                         try {
                             DatabaseService instance = DatabaseService.getInstance();
-                            while (instance.getStatus() == Enums.DatabaseStatus.VACUUM) {
+                            while (instance.getStatus() == Constants.Enums.DatabaseStatus.VACUUM) {
                                 labelVacuumStatus.setText(translateUtil.getTranslation("Optimizing..."));
                                 TimeUnit.MILLISECONDS.sleep(50);
                             }
@@ -986,9 +985,9 @@ public class SettingsFrame {
                         } catch (InterruptedException ignored) {
                         }
                     });
-                } else if (status == Enums.DatabaseStatus.MANUAL_UPDATE) {
+                } else if (status == Constants.Enums.DatabaseStatus.MANUAL_UPDATE) {
                     JOptionPane.showMessageDialog(frame, translateUtil.getTranslation("Database is not usable yet, please wait..."));
-                } else if (status == Enums.DatabaseStatus.VACUUM) {
+                } else if (status == Constants.Enums.DatabaseStatus.VACUUM) {
                     JOptionPane.showMessageDialog(frame, translateUtil.getTranslation("Task is still running."));
                 }
             }
@@ -1069,7 +1068,7 @@ public class SettingsFrame {
                     String fontColorCoverage;
                     String fontColor;
                     String defaultBackgroundColor;
-                    Enums.BorderType borderType;
+                    Constants.Enums.BorderType borderType;
                     String borderThickness;
                     while (PreviewStatus.isPreview && eventManagement.isNotMainExit()) {
                         borderColor = textFieldBorderColor.getText();
@@ -1080,7 +1079,7 @@ public class SettingsFrame {
                         fontColor = textFieldFontColor.getText();
                         defaultBackgroundColor = textFieldBackgroundDefault.getText();
                         borderThickness = textFieldBorderThickness.getText();
-                        borderType = (Enums.BorderType) comboBoxBorderType.getSelectedItem();
+                        borderType = (Constants.Enums.BorderType) comboBoxBorderType.getSelectedItem();
                         if (canParseToRGB(borderColor) && canParseToRGB(searchBarColor) &&
                                 canParseToRGB(searchBarFontColor) && canParseToRGB(labelColor) &&
                                 canParseToRGB(fontColorCoverage) && canParseToRGB(fontColor) &&
@@ -1544,7 +1543,7 @@ public class SettingsFrame {
         buttonUpdatePlugin.addActionListener(e -> {
             String pluginName = (String) listPlugins.getSelectedValue();
             DownloadManager downloadManager = pluginInfoMap.get(pluginName);
-            if (downloadManager != null && downloadService.getDownloadStatus(downloadManager) == Enums.DownloadStatus.DOWNLOAD_DOWNLOADING) {
+            if (downloadManager != null && downloadService.getDownloadStatus(downloadManager) == Constants.Enums.DownloadStatus.DOWNLOAD_DOWNLOADING) {
                 eventManagement.putEvent(new StopDownloadEvent(downloadManager));
             } else {
                 startCheckTime.set(0L);
@@ -1764,7 +1763,7 @@ public class SettingsFrame {
         listPlugins.setListData(plugins);
         listCache.setListData(cacheSet.toArray());
         ArrayList<String> list = new ArrayList<>();
-        for (Enums.SwingThemes each : Enums.SwingThemes.values()) {
+        for (Constants.Enums.SwingThemes each : Constants.Enums.SwingThemes.values()) {
             list.add(each.toString());
         }
         listSwingThemes.setListData(list.toArray());
@@ -1840,7 +1839,7 @@ public class SettingsFrame {
 
         buttonUpdatePlugin.setVisible(false);
 
-        if (allConfigs.getProxyType() == Enums.ProxyType.PROXY_DIRECT) {
+        if (allConfigs.getProxyType() == Constants.Enums.ProxyType.PROXY_DIRECT) {
             radioButtonNoProxy.setSelected(true);
             radioButtonUseProxy.setSelected(false);
             radioButtonProxyTypeHttp.setEnabled(false);
@@ -1884,7 +1883,7 @@ public class SettingsFrame {
      * 初始化代理选择框
      */
     private void selectProxyType() {
-        if (allConfigs.getProxyType() == Enums.ProxyType.PROXY_SOCKS) {
+        if (allConfigs.getProxyType() == Constants.Enums.ProxyType.PROXY_SOCKS) {
             radioButtonProxyTypeSocks5.setSelected(true);
         } else {
             radioButtonProxyTypeHttp.setSelected(true);
@@ -2069,8 +2068,8 @@ public class SettingsFrame {
     }
 
     private void addBorderTypeToComboBox() {
-        Enums.BorderType[] borderTypes = Enums.BorderType.values();
-        for (Enums.BorderType each : borderTypes) {
+        Constants.Enums.BorderType[] borderTypes = Constants.Enums.BorderType.values();
+        for (Constants.Enums.BorderType each : borderTypes) {
             comboBoxBorderType.addItem(each);
         }
     }
@@ -2380,22 +2379,22 @@ public class SettingsFrame {
         ConfigEntity configEntity = new ConfigEntity();
         String ignorePathTemp = RegexUtil.lineFeed.matcher(textAreaIgnorePath.getText()).replaceAll("");
         String swingTheme = (String) listSwingThemes.getSelectedValue();
-        Enums.BorderType borderType = (Enums.BorderType) comboBoxBorderType.getSelectedItem();
+        Constants.Enums.BorderType borderType = (Constants.Enums.BorderType) comboBoxBorderType.getSelectedItem();
         String tmp_proxyAddress = textFieldAddress.getText();
         String tmp_proxyUserName = textFieldUserName.getText();
         String tmp_proxyPassword = textFieldPassword.getText();
         if (radioButtonProxyTypeSocks5.isSelected()) {
-            configEntity.setProxyType(Enums.ProxyType.PROXY_SOCKS);
+            configEntity.setProxyType(Constants.Enums.ProxyType.PROXY_SOCKS);
         } else if (radioButtonProxyTypeHttp.isSelected()) {
-            configEntity.setProxyType(Enums.ProxyType.PROXY_HTTP);
+            configEntity.setProxyType(Constants.Enums.ProxyType.PROXY_HTTP);
         }
         if (radioButtonNoProxy.isSelected()) {
-            configEntity.setProxyType(Enums.ProxyType.PROXY_DIRECT);
+            configEntity.setProxyType(Constants.Enums.ProxyType.PROXY_DIRECT);
         }
         configEntity.setUpdateAddress((String) chooseUpdateAddress.getSelectedItem());
         configEntity.setBorderThickness(Integer.parseInt(textFieldBorderThickness.getText()));
         if (borderType == null) {
-            borderType = Enums.BorderType.AROUND;
+            borderType = Constants.Enums.BorderType.AROUND;
         }
         configEntity.setBorderType(borderType.toString());
         configEntity.setPriorityFolder(textFieldPriorityFolder.getText());

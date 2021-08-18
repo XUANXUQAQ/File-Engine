@@ -14,9 +14,9 @@ public class ProxyInfo {
         this.port = proxyPort;
         this.userName = proxyUserName;
         this.password = proxyPassword;
-        if (Enums.ProxyType.PROXY_HTTP == proxyType) {
+        if (Constants.Enums.ProxyType.PROXY_HTTP == proxyType) {
             this.type = Proxy.Type.HTTP;
-        } else if (Enums.ProxyType.PROXY_SOCKS == proxyType) {
+        } else if (Constants.Enums.ProxyType.PROXY_SOCKS == proxyType) {
             this.type = Proxy.Type.SOCKS;
         } else {
             this.type = Proxy.Type.DIRECT;

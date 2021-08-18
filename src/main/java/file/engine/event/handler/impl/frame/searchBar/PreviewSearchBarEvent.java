@@ -1,6 +1,6 @@
 package file.engine.event.handler.impl.frame.searchBar;
 
-import file.engine.configs.Enums;
+import file.engine.configs.Constants;
 import file.engine.event.handler.Event;
 
 public class PreviewSearchBarEvent extends Event {
@@ -11,7 +11,7 @@ public class PreviewSearchBarEvent extends Event {
     public final int chosenLabelFontColor;
     public final int unchosenLabelFontColor;
     public final int defaultBackgroundColor;
-    public final Enums.BorderType borderType;
+    public final Constants.Enums.BorderType borderType;
     public final int borderThickness;
 
     public PreviewSearchBarEvent(String borderColor,
@@ -21,7 +21,7 @@ public class PreviewSearchBarEvent extends Event {
                                  String chosenLabelFontColor,
                                  String unchosenLabelFontColor,
                                  String defaultBackgroundColor,
-                                 Enums.BorderType borderType,
+                                 Constants.Enums.BorderType borderType,
                                  String borderThickness) {
         super();
         this.borderColor = Integer.parseInt(borderColor, 16);

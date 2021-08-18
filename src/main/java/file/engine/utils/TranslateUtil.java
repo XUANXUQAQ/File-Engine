@@ -17,8 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class TranslateUtil {
     private static volatile TranslateUtil INSTANCE = null;
 
-    private volatile @Getter
-    String language;
+    private volatile @Getter String language;
     private final ConcurrentHashMap<String, String> translationMap = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, String> fileMap = new ConcurrentHashMap<>();
     private Font[] fList;
@@ -38,6 +37,11 @@ public class TranslateUtil {
         return INSTANCE;
     }
 
+    /**
+     * 获取翻译
+     * @param text 原文
+     * @return 翻译
+     */
     public String getTranslation(String text) {
         String translated;
         if ("English(US)".equals(language)) {
@@ -52,6 +56,11 @@ public class TranslateUtil {
         }
     }
 
+    /**
+     * 如果翻译太长则换行
+     * @param str 翻译
+     * @return html包裹的翻译
+     */
     private String warpStringIfTooLong(String str) {
         if (str.length() < 60) {
             return str;
@@ -71,6 +80,10 @@ public class TranslateUtil {
         return stringBuilder.toString();
     }
 
+    /**
+     * 获取系统默认语言
+     * @return 系统区域语言信息
+     */
     public String getDefaultLang() {
         //TODO 添加语言
         Locale l = Locale.getDefault();
@@ -146,6 +159,9 @@ public class TranslateUtil {
         }
     }
 
+    /**
+     * 初始化
+     */
     private void initAll() {
         initLanguageFileMap();
         language = getDefaultLang();
@@ -153,8 +169,10 @@ public class TranslateUtil {
         initFontList();
     }
 
+    /**
+     * 初始化Font列表
+     */
     private void initFontList() {
-        //初始化Font列表
         String[] lstr = GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames();
         fList = new Font[lstr.length];
         for (int i = 0; i < lstr.length; i++) {
@@ -162,6 +180,10 @@ public class TranslateUtil {
         }
     }
 
+    /**
+     * 设置语言
+     * @param language 语言
+     */
     public void setLanguage(String language) {
         this.language = language;
         setUIFont();
@@ -172,14 +194,29 @@ public class TranslateUtil {
         return fileMap.keySet();
     }
 
+    /**
+     * 获取当前语言下定义的窗口宽度
+     * @return width
+     */
     public String getFrameWidth() {
         return translationMap.get("#frame_width");
     }
 
+    /**
+     * 获取当前语言下定义的窗口高度
+     * @return height
+     */
     public String getFrameHeight() {
         return translationMap.get("#frame_height");
     }
 
+    /**
+     * 自动寻找可以显示的字体并加载
+     * @param fontStyle 字体风格
+     * @param size 大小
+     * @param testStr 测试字符串，用于系统检测是否可以显示该字符串
+     * @return 字体
+     */
     public Font getFitFont(int fontStyle, int size, String testStr) {
         Font defaultFont = new Font(Font.SANS_SERIF, fontStyle, size);
         if (defaultFont.canDisplayUpTo(testStr) != -1) {
@@ -192,6 +229,9 @@ public class TranslateUtil {
         return defaultFont;
     }
 
+    /**
+     * 加载字体
+     */
     private void setUIFont() {
         Font f = getFitFont(Font.PLAIN, 13, language);
         String[] names = {"Label", "CheckBox", "PopupMenu", "MenuItem", "CheckBoxMenuItem",

@@ -78,16 +78,16 @@ public class AllConfigs {
      * @param swingTheme swingTheme名称
      * @return swingTheme枚举类实例
      */
-    private Enums.SwingThemes swingThemesMapper(String swingTheme) {
+    private Constants.Enums.SwingThemes swingThemesMapper(String swingTheme) {
         if ("current".equals(swingTheme)) {
             return swingThemesMapper(configEntity.getSwingTheme());
         }
-        for (Enums.SwingThemes each : Enums.SwingThemes.values()) {
+        for (Constants.Enums.SwingThemes each : Constants.Enums.SwingThemes.values()) {
             if (each.toString().equals(swingTheme)) {
                 return each;
             }
         }
-        return Enums.SwingThemes.MaterialLighter;
+        return Constants.Enums.SwingThemes.MaterialLighter;
     }
 
     /**
@@ -139,7 +139,7 @@ public class AllConfigs {
      * 获取网络代理的类型
      *
      * @return proxyType int 返回值的类型由Enums.ProxyType中定义
-     * @see Enums.ProxyType
+     * @see Constants.Enums.ProxyType
      */
     public int getProxyType() {
         return configEntity.getProxyType();
@@ -239,7 +239,7 @@ public class AllConfigs {
      * 获取swing皮肤包名称，可由swingThemesMapper转换为Enums.SwingThemes
      *
      * @return swing name
-     * @see Enums.SwingThemes
+     * @see Constants.Enums.SwingThemes
      * @see #swingThemesMapper(String)
      */
     public String getSwingTheme() {
@@ -349,16 +349,16 @@ public class AllConfigs {
      * 获取边框类型
      *
      * @return 边框类型
-     * @see Enums.BorderType
+     * @see Constants.Enums.BorderType
      */
-    public Enums.BorderType getBorderType() {
+    public Constants.Enums.BorderType getBorderType() {
         String borderType = configEntity.getBorderType();
-        for (Enums.BorderType each : Enums.BorderType.values()) {
+        for (Constants.Enums.BorderType each : Constants.Enums.BorderType.values()) {
             if (each.toString().equals(borderType)) {
                 return each;
             }
         }
-        return Enums.BorderType.AROUND;
+        return Constants.Enums.BorderType.AROUND;
     }
 
     /**
@@ -570,7 +570,7 @@ public class AllConfigs {
     }
 
     private void readBorderType(JSONObject settingsInJson) {
-        configEntity.setBorderType((String) getFromJson(settingsInJson, "borderType", Enums.BorderType.AROUND.toString()));
+        configEntity.setBorderType((String) getFromJson(settingsInJson, "borderType", Constants.Enums.BorderType.AROUND.toString()));
     }
 
     private void readBorderColor(JSONObject settingsInJson) {
@@ -609,7 +609,7 @@ public class AllConfigs {
         configEntity.setProxyPort((int) getFromJson(settingsInJson, "proxyPort", 0));
         configEntity.setProxyUserName((String) getFromJson(settingsInJson, "proxyUserName", ""));
         configEntity.setProxyPassword((String) getFromJson(settingsInJson, "proxyPassword", ""));
-        configEntity.setProxyType((int) getFromJson(settingsInJson, "proxyType", Enums.ProxyType.PROXY_DIRECT));
+        configEntity.setProxyType((int) getFromJson(settingsInJson, "proxyType", Constants.Enums.ProxyType.PROXY_DIRECT));
     }
 
     private void readCheckUpdateStartup(JSONObject settings) {
@@ -747,45 +747,45 @@ public class AllConfigs {
      * 设置swing的主题
      * @param theme theme
      */
-    private void setSwingLaf(Enums.SwingThemes theme) {
+    private void setSwingLaf(Constants.Enums.SwingThemes theme) {
         SwingUtilities.invokeLater(() -> {
-            if (theme == Enums.SwingThemes.CoreFlatIntelliJLaf) {
+            if (theme == Constants.Enums.SwingThemes.CoreFlatIntelliJLaf) {
                 FlatIntelliJLaf.setup();
-            } else if (theme == Enums.SwingThemes.CoreFlatLightLaf) {
+            } else if (theme == Constants.Enums.SwingThemes.CoreFlatLightLaf) {
                 FlatLightLaf.setup();
-            } else if (theme == Enums.SwingThemes.CoreFlatDarkLaf) {
+            } else if (theme == Constants.Enums.SwingThemes.CoreFlatDarkLaf) {
                 FlatDarkLaf.setup();
-            } else if (theme == Enums.SwingThemes.Arc) {
+            } else if (theme == Constants.Enums.SwingThemes.Arc) {
                 FlatArcIJTheme.setup();
-            } else if (theme == Enums.SwingThemes.ArcDark) {
+            } else if (theme == Constants.Enums.SwingThemes.ArcDark) {
                 FlatArcDarkIJTheme.setup();
-            } else if (theme == Enums.SwingThemes.DarkFlat) {
+            } else if (theme == Constants.Enums.SwingThemes.DarkFlat) {
                 FlatDarkFlatIJTheme.setup();
-            } else if (theme == Enums.SwingThemes.Carbon) {
+            } else if (theme == Constants.Enums.SwingThemes.Carbon) {
                 FlatCarbonIJTheme.setup();
-            } else if (theme == Enums.SwingThemes.CyanLight) {
+            } else if (theme == Constants.Enums.SwingThemes.CyanLight) {
                 FlatCyanLightIJTheme.setup();
-            } else if (theme == Enums.SwingThemes.DarkPurple) {
+            } else if (theme == Constants.Enums.SwingThemes.DarkPurple) {
                 FlatDarkPurpleIJTheme.setup();
-            } else if (theme == Enums.SwingThemes.LightFlat) {
+            } else if (theme == Constants.Enums.SwingThemes.LightFlat) {
                 FlatLightFlatIJTheme.setup();
-            } else if (theme == Enums.SwingThemes.Monocai) {
+            } else if (theme == Constants.Enums.SwingThemes.Monocai) {
                 FlatMonocaiIJTheme.setup();
-            } else if (theme == Enums.SwingThemes.OneDark) {
+            } else if (theme == Constants.Enums.SwingThemes.OneDark) {
                 FlatOneDarkIJTheme.setup();
-            } else if (theme == Enums.SwingThemes.Gray) {
+            } else if (theme == Constants.Enums.SwingThemes.Gray) {
                 FlatGrayIJTheme.setup();
-            } else if (theme == Enums.SwingThemes.MaterialDesignDark) {
+            } else if (theme == Constants.Enums.SwingThemes.MaterialDesignDark) {
                 FlatMaterialDesignDarkIJTheme.setup();
-            } else if (theme == Enums.SwingThemes.MaterialLighter) {
+            } else if (theme == Constants.Enums.SwingThemes.MaterialLighter) {
                 FlatMaterialLighterIJTheme.setup();
-            } else if (theme == Enums.SwingThemes.MaterialDarker) {
+            } else if (theme == Constants.Enums.SwingThemes.MaterialDarker) {
                 FlatMaterialDarkerIJTheme.setup();
-            } else if (theme == Enums.SwingThemes.ArcDarkOrange) {
+            } else if (theme == Constants.Enums.SwingThemes.ArcDarkOrange) {
                 FlatArcDarkOrangeIJTheme.setup();
-            } else if (theme == Enums.SwingThemes.Dracula) {
+            } else if (theme == Constants.Enums.SwingThemes.Dracula) {
                 FlatDraculaIJTheme.setup();
-            } else if (theme == Enums.SwingThemes.Nord) {
+            } else if (theme == Constants.Enums.SwingThemes.Nord) {
                 FlatNordIJTheme.setup();
             } else {
                 FlatDarculaLaf.setup();

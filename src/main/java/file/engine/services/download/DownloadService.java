@@ -1,7 +1,7 @@
 package file.engine.services.download;
 
 import file.engine.annotation.EventRegister;
-import file.engine.configs.Enums;
+import file.engine.configs.Constants;
 import file.engine.event.handler.Event;
 import file.engine.event.handler.impl.download.StartDownloadEvent;
 import file.engine.event.handler.impl.download.StopDownloadEvent;
@@ -46,7 +46,7 @@ public class DownloadService {
      * 从网络Url中下载文件
      */
     private void downLoadFromUrl(DownloadManager downloadManager) {
-        if (getFromSet(downloadManager).getDownloadStatus() == Enums.DownloadStatus.DOWNLOAD_DONE) {
+        if (getFromSet(downloadManager).getDownloadStatus() == Constants.Enums.DownloadStatus.DOWNLOAD_DONE) {
             downloadManager.setDownloadDone();
             return;
         }
@@ -81,12 +81,12 @@ public class DownloadService {
                 if (System.currentTimeMillis() - startTime > maxWaitingMills) {
                     throw new IOException("download failed");
                 }
-                Enums.DownloadStatus downloadStatus = downloadManager.getDownloadStatus();
-                if (downloadStatus == Enums.DownloadStatus.DOWNLOAD_DONE) {
+                Constants.Enums.DownloadStatus downloadStatus = downloadManager.getDownloadStatus();
+                if (downloadStatus == Constants.Enums.DownloadStatus.DOWNLOAD_DONE) {
                     return;
-                } else if (downloadStatus == Enums.DownloadStatus.DOWNLOAD_ERROR) {
+                } else if (downloadStatus == Constants.Enums.DownloadStatus.DOWNLOAD_ERROR) {
                     throw new IOException("download failed");
-                } else if (downloadStatus == Enums.DownloadStatus.DOWNLOAD_INTERRUPTED) {
+                } else if (downloadStatus == Constants.Enums.DownloadStatus.DOWNLOAD_INTERRUPTED) {
                     return;
                 }
                 TimeUnit.MILLISECONDS.sleep(sleepMills);
@@ -96,7 +96,7 @@ public class DownloadService {
     }
 
     public boolean isTaskDone(DownloadManager downloadManager) {
-        return getFromSet(downloadManager).getDownloadStatus() == Enums.DownloadStatus.DOWNLOAD_DONE;
+        return getFromSet(downloadManager).getDownloadStatus() == Constants.Enums.DownloadStatus.DOWNLOAD_DONE;
     }
 
     /**
@@ -109,7 +109,7 @@ public class DownloadService {
     /**
      * 获取当前任务的下载状态， 已完成 无任务 下载错误 已取消
      */
-    public Enums.DownloadStatus getDownloadStatus(DownloadManager downloadManager) {
+    public Constants.Enums.DownloadStatus getDownloadStatus(DownloadManager downloadManager) {
         return downloadManager.getDownloadStatus();
     }
 }
