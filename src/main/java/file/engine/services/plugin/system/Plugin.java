@@ -86,82 +86,61 @@ public class Plugin {
      * @throws Exception exception
      */
     private void loadMethod(String methodName, Class<?> aClass) throws Exception {
-        switch (methodName) {
-            case "textChanged":
-                pluginTextChanged = aClass.getDeclaredMethod("textChanged", String.class);
-                break;
-            case "configsChanged":
-                pluginConfigsChanged = aClass.getDeclaredMethod("configsChanged", Map.class);
-                break;
-            case "loadPlugin":
-                pluginLoadPlugin = aClass.getDeclaredMethod("loadPlugin");
-                pluginLoadPluginWithConfigs = aClass.getDeclaredMethod("loadPlugin", Map.class);
-                break;
-            case "unloadPlugin":
-                pluginUnloadPlugin = aClass.getDeclaredMethod("unloadPlugin");
-                break;
-            case "keyPressed":
-                pluginKeyPressed = aClass.getDeclaredMethod("keyPressed", KeyEvent.class, String.class);
-                break;
-            case "keyReleased":
-                pluginKeyReleased = aClass.getDeclaredMethod("keyReleased", KeyEvent.class, String.class);
-                break;
-            case "keyTyped":
-                pluginKeyTyped = aClass.getDeclaredMethod("keyTyped", KeyEvent.class, String.class);
-                break;
-            case "mousePressed":
-                pluginMousePressed = aClass.getDeclaredMethod("mousePressed", MouseEvent.class, String.class);
-                break;
-            case "mouseReleased":
-                pluginMouseReleased = aClass.getDeclaredMethod("mouseReleased", MouseEvent.class, String.class);
-                break;
-            case "getPluginIcon":
-                pluginGetPluginIcon = aClass.getDeclaredMethod("getPluginIcon");
-                break;
-            case "getOfficialSite":
-                pluginGetOfficialSite = aClass.getDeclaredMethod("getOfficialSite");
-                break;
-            case "getVersion":
-                pluginGetVersion = aClass.getDeclaredMethod("getVersion");
-                break;
-            case "getDescription":
-                pluginGetDescription = aClass.getDeclaredMethod("getDescription");
-                break;
-            case "isLatest":
-                pluginIsLatest = aClass.getDeclaredMethod("isLatest");
-                break;
-            case "getUpdateURL":
-                pluginGetUpdateURL = aClass.getDeclaredMethod("getUpdateURL");
-                break;
-            case "showResultOnLabel":
-                pluginShowResultOnLabel = aClass.getDeclaredMethod("showResultOnLabel", String.class, JLabel.class, boolean.class);
-                break;
-            case "getMessage":
-                pluginGetMessage = aClass.getDeclaredMethod("getMessage");
-                break;
-            case "pollFromResultQueue":
-                pluginPollFromResultQueue = aClass.getDeclaredMethod("pollFromResultQueue");
-                break;
-            case "getApiVersion":
-                pluginGetApiVersion = aClass.getDeclaredMethod("getApiVersion");
-                break;
-            case "getAuthor":
-                pluginGetAuthor = aClass.getDeclaredMethod("getAuthor");
-                break;
-            case "clearResultQueue":
-                pluginClearResultQueue = aClass.getDeclaredMethod("clearResultQueue");
-                break;
-            case "setCurrentTheme":
-                pluginSetCurrentTheme = aClass.getDeclaredMethod("setCurrentTheme", int.class, int.class, int.class);
-            case "searchBarVisible":
-                pluginSearchBarVisible = aClass.getDeclaredMethod("searchBarVisible", String.class);
-            default:
-                break;
+        if ("textChanged".equals(methodName)) {
+            pluginTextChanged = aClass.getDeclaredMethod("textChanged", String.class);
+        } else if ("configsChanged".equals(methodName)) {
+            pluginConfigsChanged = aClass.getDeclaredMethod("configsChanged", Map.class);
+        } else if ("loadPlugin".equals(methodName)) {
+            pluginLoadPlugin = aClass.getDeclaredMethod("loadPlugin");
+            pluginLoadPluginWithConfigs = aClass.getDeclaredMethod("loadPlugin", Map.class);
+        } else if ("unloadPlugin".equals(methodName)) {
+            pluginUnloadPlugin = aClass.getDeclaredMethod("unloadPlugin");
+        } else if ("keyPressed".equals(methodName)) {
+            pluginKeyPressed = aClass.getDeclaredMethod("keyPressed", KeyEvent.class, String.class);
+        } else if ("keyReleased".equals(methodName)) {
+            pluginKeyReleased = aClass.getDeclaredMethod("keyReleased", KeyEvent.class, String.class);
+        } else if ("keyTyped".equals(methodName)) {
+            pluginKeyTyped = aClass.getDeclaredMethod("keyTyped", KeyEvent.class, String.class);
+        } else if ("mousePressed".equals(methodName)) {
+            pluginMousePressed = aClass.getDeclaredMethod("mousePressed", MouseEvent.class, String.class);
+        } else if ("mouseReleased".equals(methodName)) {
+            pluginMouseReleased = aClass.getDeclaredMethod("mouseReleased", MouseEvent.class, String.class);
+        } else if ("getPluginIcon".equals(methodName)) {
+            pluginGetPluginIcon = aClass.getDeclaredMethod("getPluginIcon");
+        } else if ("getOfficialSite".equals(methodName)) {
+            pluginGetOfficialSite = aClass.getDeclaredMethod("getOfficialSite");
+        } else if ("getVersion".equals(methodName)) {
+            pluginGetVersion = aClass.getDeclaredMethod("getVersion");
+        } else if ("getDescription".equals(methodName)) {
+            pluginGetDescription = aClass.getDeclaredMethod("getDescription");
+        } else if ("isLatest".equals(methodName)) {
+            pluginIsLatest = aClass.getDeclaredMethod("isLatest");
+        } else if ("getUpdateURL".equals(methodName)) {
+            pluginGetUpdateURL = aClass.getDeclaredMethod("getUpdateURL");
+        } else if ("showResultOnLabel".equals(methodName)) {
+            pluginShowResultOnLabel = aClass.getDeclaredMethod("showResultOnLabel", String.class, JLabel.class, boolean.class);
+        } else if ("getMessage".equals(methodName)) {
+            pluginGetMessage = aClass.getDeclaredMethod("getMessage");
+        } else if ("pollFromResultQueue".equals(methodName)) {
+            pluginPollFromResultQueue = aClass.getDeclaredMethod("pollFromResultQueue");
+        } else if ("getApiVersion".equals(methodName)) {
+            pluginGetApiVersion = aClass.getDeclaredMethod("getApiVersion");
+        } else if ("getAuthor".equals(methodName)) {
+            pluginGetAuthor = aClass.getDeclaredMethod("getAuthor");
+        } else if ("clearResultQueue".equals(methodName)) {
+            pluginClearResultQueue = aClass.getDeclaredMethod("clearResultQueue");
+        } else if ("setCurrentTheme".equals(methodName)) {
+            pluginSetCurrentTheme = aClass.getDeclaredMethod("setCurrentTheme", int.class, int.class, int.class);
+        } else if ("searchBarVisible".equals(methodName)) {
+            pluginSearchBarVisible = aClass.getDeclaredMethod("searchBarVisible", String.class);
         }
     }
 
     public void configsChanged(Map<String, Object> configs) {
         try {
+            if (pluginConfigsChanged == null) {
+                return;
+            }
             pluginConfigsChanged.invoke(instance, configs);
         } catch (Exception e) {
             e.printStackTrace();
@@ -170,6 +149,9 @@ public class Plugin {
 
     public void loadPlugin(Map<String, Object> configs) {
         try {
+            if (pluginLoadPluginWithConfigs == null) {
+                return;
+            }
             pluginLoadPluginWithConfigs.invoke(instance, configs);
         } catch (Exception e) {
             e.printStackTrace();
@@ -178,6 +160,9 @@ public class Plugin {
 
     public void searchBarVisible(String showingMode) {
         try {
+            if (pluginSearchBarVisible == null) {
+                return;
+            }
             pluginSearchBarVisible.invoke(instance, showingMode);
         } catch (Exception e) {
             e.printStackTrace();
@@ -186,6 +171,9 @@ public class Plugin {
 
     public void setCurrentTheme(int defaultColor, int chosenLabelColor, int borderColor) {
         try {
+            if (pluginSetCurrentTheme == null) {
+                return;
+            }
             pluginSetCurrentTheme.invoke(instance, defaultColor, chosenLabelColor, borderColor);
         } catch (Exception e) {
             e.printStackTrace();
