@@ -63,6 +63,7 @@ public class SearchBar {
     private final AtomicBoolean isLockMouseMotion = new AtomicBoolean(false);
     private final AtomicBoolean isOpenLastFolderPressed = new AtomicBoolean(false);
     private final AtomicBoolean isRunAsAdminPressed = new AtomicBoolean(false);
+    private final AtomicBoolean isFocusGrabbed = new AtomicBoolean(false);
     private final AtomicBoolean isCopyPathPressed = new AtomicBoolean(false);
     private final AtomicBoolean startSignal = new AtomicBoolean(false);
     private final AtomicBoolean isUserPressed = new AtomicBoolean(false);
@@ -467,7 +468,7 @@ public class SearchBar {
                     if (menu.isVisible()) {
                         return;
                     }
-                    if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING && allConfigs.isLoseFocusClose()) {
+                    if ((showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING && allConfigs.isLoseFocusClose()) || isFocusGrabbed.get()) {
                         if (!isTutorialMode.get()) {
                             closeSearchBar();
                         }
@@ -1094,7 +1095,7 @@ public class SearchBar {
             return;
         }
         EventManagement eventManagement = EventManagement.getInstance();
-        showSearchbar(false);
+        showSearchbar();
         JOptionPane.showMessageDialog(searchBar, translateUtil.getTranslation("Welcome to the tutorial of File-Engine") + "\n" +
                 translateUtil.getTranslation("The default Ctrl + Alt + K calls out the search bar, which can be changed in the settings.") +
                 translateUtil.getTranslation("You can enter the keywords you want to search here"));
@@ -2531,7 +2532,7 @@ public class SearchBar {
     @EventRegister(registerClass = ShowSearchBarEvent.class)
     private static void showSearchBarEvent(Event event) {
         ShowSearchBarEvent showSearchBarTask = (ShowSearchBarEvent) event;
-        getInstance().showSearchbar(showSearchBarTask.isGrabFocus);
+        getInstance().showSearchbar(showSearchBarTask.isGrabFocus, showSearchBarTask.isSwitchToNormal);
     }
 
     @EventListener(listenClass = UpdateDatabaseEvent.class)
@@ -2701,7 +2702,7 @@ public class SearchBar {
                         switchToExplorerAttachMode();
                     } else {
                         if (showingMode != Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING && GetHandle.INSTANCE.changeToNormal()) {
-                            switchToNormalMode();
+                            switchToNormalMode(true);
                         }
                     }
                     TimeUnit.MILLISECONDS.sleep(10);
@@ -2742,7 +2743,7 @@ public class SearchBar {
             //设置窗口大小
             changeSearchBarSizeAndPos(positionX, positionY, searchBarWidth, searchBarHeight, labelHeight);
             setLabelAtTop(searchBarHeight);
-            showSearchbar(false);
+            showSearchbar();
         }
     }
 
@@ -2867,8 +2868,12 @@ public class SearchBar {
         return (int) (((searchBarHeight * 0.2) / 96 * 72) / 4.5);
     }
 
-    private void switchToNormalMode() throws InterruptedException {
-        closeSearchBar();
+    private void switchToNormalMode(boolean isCloseWindow) throws InterruptedException {
+        if (isCloseWindow) {
+            closeSearchBar();
+        } else {
+            closeWithoutHideSearchBar();
+        }
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize(); // 获取屏幕大小
         int height = screenSize.height;
         int searchBarHeight = (int) (height * 0.5);
@@ -3805,12 +3810,30 @@ public class SearchBar {
         return count;
     }
 
+    private void showSearchbar() {
+        showSearchbar(false, false);
+    }
+
+    private void grabFocus() {
+        GetHandle.INSTANCE.bringSearchBarToTop();
+        int x = 0, y = 0;
+        if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
+            x = searchBar.getX() + textField.getWidth() / 2;
+            y = searchBar.getY() + textField.getHeight() / 2;
+        } else if (showingMode == Constants.Enums.ShowingSearchBarMode.EXPLORER_ATTACH) {
+            x = searchBar.getX() + textField.getWidth() / 2;
+            y = (int) (searchBar.getY() + textField.getHeight() * 8.5);
+        }
+        RobotUtil.getInstance().mouseClicked(x, y, 1, InputEvent.BUTTON1_DOWN_MASK);
+        isFocusGrabbed.set(true);
+    }
+
     /**
      * 显示窗口
      *
      * @param isGrabFocus 是否强制抓取焦点
      */
-    private void showSearchbar(boolean isGrabFocus) {
+    private void showSearchbar(boolean isGrabFocus, boolean isSwitchToNormal) {
         SwingUtilities.invokeLater(() -> {
             if (!isVisible()) {
                 setVisible(true);
@@ -3819,16 +3842,16 @@ public class SearchBar {
                 startTime = System.currentTimeMillis();
                 visibleStartTime = startTime;
                 if (isGrabFocus) {
-                    GetHandle.INSTANCE.bringSearchBarToTop();
-                    int x = 0, y = 0;
-                    if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
-                        x = searchBar.getX() + textField.getWidth() / 2;
-                        y = searchBar.getY() + textField.getHeight() / 2;
-                    } else if (showingMode == Constants.Enums.ShowingSearchBarMode.EXPLORER_ATTACH) {
-                        x = searchBar.getX() + textField.getWidth() / 2;
-                        y = (int) (searchBar.getY() + textField.getHeight() * 8.5);
+                    grabFocus();
+                }
+            } else {
+                if (isSwitchToNormal) {
+                    try {
+                        grabFocus();
+                        switchToNormalMode(false);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
                     }
-                    RobotUtil.getInstance().mouseClicked(x, y, 1, InputEvent.BUTTON1_DOWN_MASK);
                 }
             }
             if (isBorderThreadNotExist.get()) {
@@ -4492,6 +4515,7 @@ public class SearchBar {
         if (!b) {
             if (!isPreviewMode.get()) {
                 searchBar.setVisible(false);
+                isFocusGrabbed.set(false);
             }
         } else {
             searchBar.setVisible(true);
