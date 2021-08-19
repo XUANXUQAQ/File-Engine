@@ -2871,13 +2871,12 @@ public class SearchBar {
             try {
                 clearAllLabels();
                 while (isVisible()) {
-                    if (!listResults.isEmpty()) {
+                    String text = getSearchBarText();
+                    if (text.isEmpty()) {
+                        clearAllLabels();
+                    } else if (!listResults.isEmpty()) {
                         //在结果不足8个的时候不断尝试显示
                         tryToShowRecordsWhenHasLabelEmpty();
-                        String text = getSearchBarText();
-                        if (text.isEmpty()) {
-                            clearAllLabels();
-                        }
                         //设置窗口是被选中还是未被选中，鼠标模式
                         setLabelChosenOrNotChosenMouseMode(0, label1);
                         setLabelChosenOrNotChosenMouseMode(1, label2);
