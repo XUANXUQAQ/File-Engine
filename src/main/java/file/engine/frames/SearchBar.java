@@ -3137,6 +3137,11 @@ public class SearchBar {
                 }
             }
         }));
+        try (PreparedStatement pStmt = SQLiteUtil.getPreparedStatement("SELECT PATH FROM cache", "cache")) {
+            pStmt.execute();
+        } catch (SQLException exception) {
+            exception.printStackTrace();
+        }
     }
 
     /**
@@ -3592,7 +3597,7 @@ public class SearchBar {
                             } else if (runningMode == Constants.Enums.RunningMode.PLUGIN_MODE) {
                                 String result;
                                 while (runningMode == Constants.Enums.RunningMode.PLUGIN_MODE) {
-                                    while  (currentUsingPlugin != null && (result = currentUsingPlugin.pollFromResultQueue()) != null) {
+                                    while (currentUsingPlugin != null && (result = currentUsingPlugin.pollFromResultQueue()) != null) {
                                         if (isNotContains(listResults, result)) {
                                             listResults.add(result);
                                             listResultsNum.incrementAndGet();
@@ -3869,7 +3874,8 @@ public class SearchBar {
     /**
      * 在路径中添加省略号
      *
-     * @param path           path
+     * @param path path
+     * @param maxShowingCharsNum 最大可显示字符数量
      * @return 生成后的字符串
      */
     private String getContractPath(String path, int maxShowingCharsNum) {
@@ -4410,63 +4416,42 @@ public class SearchBar {
     private void searchPriorityFolder() {
         File path = new File(AllConfigs.getInstance().getPriorityFolder());
         boolean isPriorityFolderExist = path.exists();
-        AtomicInteger taskNum = new AtomicInteger(0);
-        if (isPriorityFolderExist) {
-            ConcurrentLinkedQueue<String> listRemain = new ConcurrentLinkedQueue<>();
-            File[] files = path.listFiles();
-            if (null == files || files.length == 0) {
+        if (!isPriorityFolderExist) {
+            return;
+        }
+        File[] files = path.listFiles();
+        if (null == files || files.length == 0) {
+            return;
+        }
+        LinkedList<String> listRemainDir = new LinkedList<>();
+        long startSearchTime = System.currentTimeMillis();
+        for (File each : files) {
+            if (startTime > startSearchTime) {
                 return;
             }
-            Arrays.stream(files).forEach(each -> {
-                matchOnCacheAndPriorityFolder(each.getAbsolutePath(), false);
-                if (each.isDirectory()) {
-                    listRemain.add(each.getAbsolutePath());
-                }
-            });
-
-            int cpuCores = Runtime.getRuntime().availableProcessors();
-            final int threadCount = Math.min(cpuCores, 8);
-            CachedThreadPoolUtil threadPoolUtil = CachedThreadPoolUtil.getInstance();
-            for (int i = 0; i < threadCount; ++i) {
-                threadPoolUtil.executeTask(() -> {
-                    long startSearchTime = System.currentTimeMillis();
-                    while (!listRemain.isEmpty()) {
-                        String remain = listRemain.poll();
-                        if (remain == null || remain.isEmpty()) {
-                            continue;
-                        }
-                        File[] allFiles = new File(remain).listFiles();
-                        if (allFiles == null || allFiles.length == 0) {
-                            continue;
-                        }
-
-                        Arrays.stream(allFiles).forEach(each -> {
-                            matchOnCacheAndPriorityFolder(each.getAbsolutePath(), false);
-                            if (startTime > startSearchTime) {
-                                listRemain.clear();
-                                throw new RuntimeException("stopped");
-                            }
-                            if (each.isDirectory()) {
-                                listRemain.add(each.getAbsolutePath());
-                            }
-                        });
-                    }
-                    taskNum.incrementAndGet();
-                });
+            matchOnCacheAndPriorityFolder(each.getAbsolutePath(), false);
+            if (each.isDirectory()) {
+                listRemainDir.add(each.getAbsolutePath());
             }
-            //等待所有线程完成
-            try {
-                int count = 0;
-                EventManagement eventManagement = EventManagement.getInstance();
-                while (taskNum.get() != threadCount) {
-                    TimeUnit.MILLISECONDS.sleep(1);
-                    count++;
-                    if (count >= 2000 || (!eventManagement.isNotMainExit())) {
-                        break;
-                    }
+        }
+        out:
+        while (!listRemainDir.isEmpty()) {
+            String remain = listRemainDir.poll();
+            if (remain == null || remain.isEmpty()) {
+                continue;
+            }
+            File[] allFiles = new File(remain).listFiles();
+            if (allFiles == null || allFiles.length == 0) {
+                continue;
+            }
+            for (File each : allFiles) {
+                matchOnCacheAndPriorityFolder(each.getAbsolutePath(), false);
+                if (startTime > startSearchTime) {
+                    break out;
                 }
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+                if (each.isDirectory()) {
+                    listRemainDir.add(each.getAbsolutePath());
+                }
             }
         }
     }
