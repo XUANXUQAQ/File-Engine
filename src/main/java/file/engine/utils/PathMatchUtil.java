@@ -1,20 +1,17 @@
 package file.engine.utils;
 
+import file.engine.utils.file.FilePathUtil;
+
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.regex.Matcher;
 
 @SuppressWarnings({"IndexOfReplaceableByContains"})
-public class PathMatchUtils {
-
-    private static String getParentPath(String path) {
-        File f = new File(path);
-        return f.getParentFile().getAbsolutePath();
-    }
+public class PathMatchUtil {
 
     /**
-     * 判断文件路径是否满足当前匹配结果（该方法由check（String）方法使用），检查文件路径使用check（String）方法。
+     * 判断文件路径是否满足当前匹配结果（该方法由check方法使用），检查文件路径使用check方法。
      *
      * @param path         文件路径
      * @param isIgnoreCase 是否忽略大小谢
@@ -34,11 +31,11 @@ public class PathMatchUtils {
                 Matcher matcher = RegexUtil.slash.matcher(eachKeyword);
                 eachKeyword = matcher.replaceAll(Matcher.quoteReplacement(File.separator));
                 //获取父路径
-                matcherStrFromFilePath = getParentPath(path);
+                matcherStrFromFilePath = FilePathUtil.getParentPath(path);
             } else {
                 //获取名字
                 isPath = false;
-                matcherStrFromFilePath = getFileName(path);
+                matcherStrFromFilePath = FilePathUtil.getFileName(path);
             }
             //转换大小写
             if (isIgnoreCase) {
@@ -89,7 +86,7 @@ public class PathMatchUtils {
                     }
                     break;
                 case "full":
-                    if (!searchText.equalsIgnoreCase(getFileName(path))) {
+                    if (!searchText.equalsIgnoreCase(FilePathUtil.getFileName(path))) {
                         return false;
                     }
                     break;
@@ -101,13 +98,5 @@ public class PathMatchUtils {
         }
         //所有规则均已匹配
         return true;
-    }
-
-    private static String getFileName(String path) {
-        if (path != null) {
-            int index = path.lastIndexOf(File.separator);
-            return path.substring(index + 1);
-        }
-        return "";
     }
 }

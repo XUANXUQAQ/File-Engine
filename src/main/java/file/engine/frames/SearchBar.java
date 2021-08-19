@@ -22,6 +22,7 @@ import file.engine.services.plugin.system.Plugin;
 import file.engine.services.plugin.system.PluginService;
 import file.engine.utils.*;
 import file.engine.utils.file.CopyFileUtil;
+import file.engine.utils.file.FilePathUtil;
 import file.engine.utils.system.properties.IsDebug;
 
 import javax.swing.*;
@@ -640,8 +641,8 @@ public class SearchBar {
         RobotUtil robotUtil = RobotUtil.getInstance();
         Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
         Transferable originalData = clipboard.getContents(null);
-        if (isFile(result)) {
-            result = getParentPath(result);
+        if (FilePathUtil.isFile(result)) {
+            result = FilePathUtil.getParentPath(result);
         }
         saveCache(result);
         copyToClipBoard(result, false);
@@ -3308,26 +3309,13 @@ public class SearchBar {
         }
     }
 
-    private boolean isFile(String text) {
-        File file = new File(text);
-        return file.isFile();
-    }
-
-    private String getFileName(String path) {
-        if (path != null) {
-            int index = path.lastIndexOf(File.separator);
-            return path.substring(index + 1);
-        }
-        return "";
-    }
-
     /**
      * * 检查文件路径是否匹配然后加入到列表
      *  @param path              文件路径
      *
      */
     private void checkIsMatchedAndAddToList(String path) {
-        if (PathMatchUtils.check(path, searchCase, searchText, keywords)) {
+        if (PathMatchUtil.check(path, searchCase, searchText, keywords)) {
             if (Files.exists(Path.of(path))) {
                 //字符串匹配通过
                 if (!listResults.contains(path)) {
@@ -3471,7 +3459,7 @@ public class SearchBar {
         Matcher matcher = compile.matcher(html);
         html = matcher.replaceAll((matchResult) -> {
             String group = matchResult.group();
-            String s = "#" + ColorUtils.parseColorHex(fontColorWithCoverage);
+            String s = "#" + ColorUtil.parseColorHex(fontColorWithCoverage);
             return "<span style=\"color: " + s + ";\">" + group + "</span>";
         });
         return html;
@@ -3511,8 +3499,8 @@ public class SearchBar {
         } else if (command == null) {
             // 普通模式
             int maxShowCharNum = getMaxShowCharsNum(label1);
-            String parentPath = getParentPath(path);
-            String fileName = getFileName(path);
+            String parentPath = FilePathUtil.getParentPath(path);
+            String fileName = FilePathUtil.getFileName(path);
             int blankNUm = 20;
             int charNumbers = fileName.length() + parentPath.length() + 20;
             if (charNumbers > maxShowCharNum) {
@@ -3554,7 +3542,7 @@ public class SearchBar {
             subNum = Math.min(path.length(), subNum);
             String showPath = isContract ? path.substring(0, subNum) : path;
             String add = isContract ? "..." : "";
-            label.setName("<html><body>" + highLight(getFileName(path), keywords) + getBlank(20) + "<font size=\"-2\">" + showPath + add + "</font></body></html>");
+            label.setName("<html><body>" + highLight(FilePathUtil.getFileName(path), keywords) + getBlank(20) + "<font size=\"-2\">" + showPath + add + "</font></body></html>");
         } else {
             label.setName(Constants.RESULT_LABEL_NAME_HOLDER);
         }
@@ -3826,11 +3814,6 @@ public class SearchBar {
         return vbsFilePath.getAbsolutePath();
     }
 
-    private static String getParentPath(String path) {
-        File f = new File(path);
-        return f.getParentFile().getAbsolutePath();
-    }
-
     /**
      * 以普通权限运行文件，失败则打开文件位置
      *
@@ -3856,7 +3839,7 @@ public class SearchBar {
                         command = "start " + path.substring(0, 2) + "\"" + path.substring(2) + "\"";
                         String tmpDir = new File("").getAbsolutePath().indexOf(" ") != -1 ?
                                 System.getProperty("java.io.tmpdir") : new File("tmp").getAbsolutePath();
-                        String vbsFilePath = generateBatAndVbsFile(command, tmpDir, getParentPath(path));
+                        String vbsFilePath = generateBatAndVbsFile(command, tmpDir, FilePathUtil.getParentPath(path));
                         Runtime.getRuntime().exec("explorer.exe " + vbsFilePath.substring(0, 2) + "\"" + vbsFilePath.substring(2) + "\"");
                     } else {
                         Runtime.getRuntime().exec("explorer.exe \"" + path + "\"");

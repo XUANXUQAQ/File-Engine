@@ -2,7 +2,7 @@ package file.engine.utils;
 
 import java.awt.*;
 
-public class ColorUtils {
+public class ColorUtil {
 
     public static String parseColorHex(Color color) {
         int r = color.getRed();

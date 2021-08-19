@@ -66,7 +66,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-import static file.engine.utils.ColorUtils.*;
+import static file.engine.utils.ColorUtil.*;
 import static file.engine.utils.StartupUtil.hasStartup;
 
 
