@@ -451,7 +451,11 @@ public class DatabaseService {
                         waitTime = 0;
                         results = containerMap.get(start.toString());
                         if (results != null) {
-                            tempResults.addAll(results);
+                            for (String result : results) {
+                                if (!tempResults.contains(result)) {
+                                    tempResults.add(result);
+                                }
+                            }
                             if (!isFailed) {
                                 results.clear();
                             }
