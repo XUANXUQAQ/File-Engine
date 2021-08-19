@@ -10,7 +10,7 @@ import java.io.InputStreamReader;
 public class StartupUtil {
 
     /**
-     * 检查是否又开机启动
+     * 检查是否开机启动
      * @return boolean
      */
     public static boolean hasStartup() {

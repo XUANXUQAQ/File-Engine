@@ -275,7 +275,7 @@ public class DatabaseService {
      */
     private boolean checkIsMatchedAndAddToList(String path, ConcurrentSkipListSet<String> container) {
         boolean ret = false;
-        if (PathMatchUtils.check(path, searchCase, searchText, keywords)) {
+        if (PathMatchUtil.check(path, searchCase, searchText, keywords)) {
             if (Files.exists(Path.of(path))) {
                 //字符串匹配通过
                 ret = true;
@@ -740,6 +740,9 @@ public class DatabaseService {
         isExecuteImmediately.set(true);
     }
 
+    /**
+     * 执行sql
+     */
     private void executeAllCommands() {
         if (!commandSet.isEmpty()) {
             LinkedHashSet<SQLWithTaskId> tempCommandSet = new LinkedHashSet<>(commandSet);
