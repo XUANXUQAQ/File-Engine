@@ -3223,56 +3223,55 @@ public class SearchBar {
                         if (!getSearchBarText().isEmpty()) {
                             setLabelChosen(label1);
                         }
-                        if (databaseService.getStatus() == Constants.Enums.DatabaseStatus.NORMAL) {
-                            if (runningMode == Constants.Enums.RunningMode.COMMAND_MODE) {
-                                //去掉冒号
-                                boolean isExecuted = runInternalCommand(text.substring(1).toLowerCase());
-                                if (!isExecuted) {
-                                    LinkedHashSet<String> cmdSet = allConfigs.getCmdSet();
-                                    cmdSet.add(":clearbin;" + translateUtil.getTranslation("Clear the recycle bin"));
-                                    cmdSet.add(":update;" + translateUtil.getTranslation("Update file index"));
-                                    cmdSet.add(":help;" + translateUtil.getTranslation("View help"));
-                                    cmdSet.add(":version;" + translateUtil.getTranslation("View Version"));
-                                    String finalText = text;
-                                    cmdSet.forEach(i -> {
-                                        if (i.startsWith(finalText)) {
-                                            listResultsNum.incrementAndGet();
-                                            String result = translateUtil.getTranslation("Run command") + i;
-                                            listResults.add(result);
-                                        }
-                                        String[] cmdInfo = semicolon.split(i);
-                                        if (cmdInfo[0].equals(finalText)) {
-                                            detectShowingModeAndClose();
-                                            openWithoutAdmin(cmdInfo[1]);
-                                        }
-                                    });
-                                }
-                            } else if (runningMode == Constants.Enums.RunningMode.NORMAL_MODE) {
+                        if (runningMode == Constants.Enums.RunningMode.COMMAND_MODE) {
+                            //去掉冒号
+                            boolean isExecuted = runInternalCommand(text.substring(1).toLowerCase());
+                            if (!isExecuted) {
+                                LinkedHashSet<String> cmdSet = allConfigs.getCmdSet();
+                                cmdSet.add(":clearbin;" + translateUtil.getTranslation("Clear the recycle bin"));
+                                cmdSet.add(":update;" + translateUtil.getTranslation("Update file index"));
+                                cmdSet.add(":help;" + translateUtil.getTranslation("View help"));
+                                cmdSet.add(":version;" + translateUtil.getTranslation("View Version"));
+                                String finalText = text;
+                                cmdSet.forEach(i -> {
+                                    if (i.startsWith(finalText)) {
+                                        listResultsNum.incrementAndGet();
+                                        String result = translateUtil.getTranslation("Run command") + i;
+                                        listResults.add(result);
+                                    }
+                                    String[] cmdInfo = semicolon.split(i);
+                                    if (cmdInfo[0].equals(finalText)) {
+                                        detectShowingModeAndClose();
+                                        openWithoutAdmin(cmdInfo[1]);
+                                    }
+                                });
+                            }
+                        } else if (runningMode == Constants.Enums.RunningMode.NORMAL_MODE) {
+                            if (databaseService.getStatus() == Constants.Enums.DatabaseStatus.NORMAL) {
                                 //对搜索关键字赋值
                                 searchPriorityFolder();
                                 isPrioritySearched.set(true);
-                            } else if (runningMode == Constants.Enums.RunningMode.PLUGIN_MODE) {
-                                String result;
-                                while (runningMode == Constants.Enums.RunningMode.PLUGIN_MODE) {
-                                    while (currentUsingPlugin != null && (result = currentUsingPlugin.pollFromResultQueue()) != null) {
-                                        if (!listResults.contains(result)) {
-                                            listResults.add(result);
-                                            listResultsNum.incrementAndGet();
-                                        }
-                                    }
-                                    TimeUnit.MILLISECONDS.sleep(10);
-                                }
+                            } else if (databaseService.getStatus() == Constants.Enums.DatabaseStatus.MANUAL_UPDATE) {
+                                setLabelChosen(label1);
+                                eventManagement.putEvent(new ShowTaskBarMessageEvent(translateUtil.getTranslation("Info"),
+                                        translateUtil.getTranslation("Updating file index") + "..."));
+                            } else if (databaseService.getStatus() == Constants.Enums.DatabaseStatus.VACUUM) {
+                                setLabelChosen(label1);
+                                eventManagement.putEvent(new ShowTaskBarMessageEvent(translateUtil.getTranslation("Info"),
+                                        translateUtil.getTranslation("Organizing database")));
                             }
-                        } else if (databaseService.getStatus() == Constants.Enums.DatabaseStatus.VACUUM) {
-                            setLabelChosen(label1);
-                            eventManagement.putEvent(new ShowTaskBarMessageEvent(translateUtil.getTranslation("Info"),
-                                    translateUtil.getTranslation("Organizing database")));
-                        } else if (databaseService.getStatus() == Constants.Enums.DatabaseStatus.MANUAL_UPDATE) {
-                            setLabelChosen(label1);
-                            eventManagement.putEvent(new ShowTaskBarMessageEvent(translateUtil.getTranslation("Info"),
-                                    translateUtil.getTranslation("Updating file index") + "..."));
+                        } else if (runningMode == Constants.Enums.RunningMode.PLUGIN_MODE) {
+                            String result;
+                            while (runningMode == Constants.Enums.RunningMode.PLUGIN_MODE) {
+                                while (currentUsingPlugin != null && (result = currentUsingPlugin.pollFromResultQueue()) != null) {
+                                    if (!listResults.contains(result)) {
+                                        listResults.add(result);
+                                        listResultsNum.incrementAndGet();
+                                    }
+                                }
+                                TimeUnit.MILLISECONDS.sleep(10);
+                            }
                         }
-
                         if (databaseService.getStatus() != Constants.Enums.DatabaseStatus.NORMAL) {
                             //开启线程等待搜索完成
                             addSearchWaiter();
@@ -3310,8 +3309,8 @@ public class SearchBar {
 
     /**
      * * 检查文件路径是否匹配然后加入到列表
-     *  @param path              文件路径
      *
+     * @param path 文件路径
      */
     private void checkIsMatchedAndAddToList(String path) {
         if (PathMatchUtil.check(path, searchCase, searchText, keywords)) {
@@ -3411,7 +3410,7 @@ public class SearchBar {
     /**
      * 在路径中添加省略号
      *
-     * @param path path
+     * @param path               path
      * @param maxShowingCharsNum 最大可显示字符数量
      * @return 生成后的字符串
      */
@@ -3442,7 +3441,9 @@ public class SearchBar {
     private String highLight(String html, String[] keywords) {
         StringBuilder builder = new StringBuilder();
         for (String keyword : keywords) {
-            builder.append(keyword).append("|");
+            if (!keyword.isBlank()) {
+                builder.append(keyword).append("|");
+            }
         }
         // 挑出所有的中文字符
         Map<String, String> chinesePinyinMap = PinyinUtil.getChinesePinyinMap(html);
@@ -3453,14 +3454,17 @@ public class SearchBar {
                         .anyMatch(each -> each.toLowerCase(Locale.ROOT).indexOf(pair.getValue().toLowerCase(Locale.ROOT)) != -1))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue))
                 .forEach((k, v) -> builder.append(k).append("|"));
-        String pattern = builder.substring(0, builder.length() - 1);
-        Pattern compile = RegexUtil.getPatter(pattern, Pattern.CASE_INSENSITIVE);
-        Matcher matcher = compile.matcher(html);
-        html = matcher.replaceAll((matchResult) -> {
-            String group = matchResult.group();
-            String s = "#" + ColorUtil.parseColorHex(fontColorWithCoverage);
-            return "<span style=\"color: " + s + ";\">" + group + "</span>";
-        });
+        if (builder.length() > 0) {
+            String pattern = builder.substring(0, builder.length() - 1);
+            Pattern compile = RegexUtil.getPatter(pattern, Pattern.CASE_INSENSITIVE);
+            Matcher matcher = compile.matcher(html);
+            html = matcher.replaceAll((matchResult) -> {
+                String group = matchResult.group();
+                String s = "#" + ColorUtil.parseColorHex(fontColorWithCoverage);
+                return "<span style=\"color: " + s + ";\">" + group + "</span>";
+            });
+            return html;
+        }
         return html;
     }
 
