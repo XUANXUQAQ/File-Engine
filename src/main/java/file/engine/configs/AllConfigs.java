@@ -494,7 +494,7 @@ public class AllConfigs {
      * @param settingsInJson 用户配置json
      */
     private void readDisks(JSONObject settingsInJson) {
-        String disks = (String) getFromJson(settingsInJson, "disks", getLocalDisks());
+        String disks = getFromJson(settingsInJson, "disks", getLocalDisks());
         String[] stringDisk = RegexUtil.comma.split(disks);
         StringBuilder stringBuilder = new StringBuilder();
         for (String each : stringDisk) {
@@ -506,55 +506,55 @@ public class AllConfigs {
     }
 
     private void readIsAttachExplorer(JSONObject settingsInJson) {
-        configEntity.setAttachExplorer((boolean) getFromJson(settingsInJson, "isAttachExplorer", true));
+        configEntity.setAttachExplorer(getFromJson(settingsInJson, "isAttachExplorer", true));
     }
 
     private void readResponseCtrl(JSONObject settingsInJson) {
-        configEntity.setDoubleClickCtrlOpen((boolean) getFromJson(settingsInJson, "doubleClickCtrlOpen", true));
+        configEntity.setDoubleClickCtrlOpen(getFromJson(settingsInJson, "doubleClickCtrlOpen", true));
     }
 
     private void readUpdateAddress(JSONObject settingsInJson) {
-        configEntity.setUpdateAddress((String) getFromJson(settingsInJson, "updateAddress", "jsdelivr CDN"));
+        configEntity.setUpdateAddress(getFromJson(settingsInJson, "updateAddress", "jsdelivr CDN"));
     }
 
     private void readCacheNumLimit(JSONObject settingsInJson) {
-        configEntity.setCacheNumLimit((int) getFromJson(settingsInJson, "cacheNumLimit", 1000));
+        configEntity.setCacheNumLimit(getFromJson(settingsInJson, "cacheNumLimit", 1000));
     }
 
     private void readHotKey(JSONObject settingsInJson) {
-        configEntity.setHotkey((String) getFromJson(settingsInJson, "hotkey", "Ctrl + Alt + K"));
+        configEntity.setHotkey(getFromJson(settingsInJson, "hotkey", "Ctrl + Alt + K"));
     }
 
     private void readPriorityFolder(JSONObject settingsInJson) {
-        configEntity.setPriorityFolder((String) getFromJson(settingsInJson, "priorityFolder", ""));
+        configEntity.setPriorityFolder(getFromJson(settingsInJson, "priorityFolder", ""));
     }
 
     private void readIgnorePath(JSONObject settingsInJson) {
-        configEntity.setIgnorePath((String) getFromJson(settingsInJson, "ignorePath", "C:\\Windows,"));
+        configEntity.setIgnorePath(getFromJson(settingsInJson, "ignorePath", "C:\\Windows,"));
     }
 
     private void readUpdateTimeLimit(JSONObject settingsInJson) {
-        configEntity.setUpdateTimeLimit((int) getFromJson(settingsInJson, "updateTimeLimit", 5));
+        configEntity.setUpdateTimeLimit(getFromJson(settingsInJson, "updateTimeLimit", 5));
     }
 
     private void readIsDefaultAdmin(JSONObject settingsInJson) {
-        configEntity.setDefaultAdmin((boolean) getFromJson(settingsInJson, "isDefaultAdmin", false));
+        configEntity.setDefaultAdmin(getFromJson(settingsInJson, "isDefaultAdmin", false));
     }
 
     private void readIsLoseFocusClose(JSONObject settingsInJson) {
-        configEntity.setLoseFocusClose((boolean) getFromJson(settingsInJson, "isLoseFocusClose", true));
+        configEntity.setLoseFocusClose(getFromJson(settingsInJson, "isLoseFocusClose", true));
     }
 
     private void readOpenLastFolderKeyCode(JSONObject settingsInJson) {
-        configEntity.setOpenLastFolderKeyCode((int) getFromJson(settingsInJson, "openLastFolderKeyCode", 17));
+        configEntity.setOpenLastFolderKeyCode(getFromJson(settingsInJson, "openLastFolderKeyCode", 17));
     }
 
     private void readRunAsAdminKeyCode(JSONObject settingsInJson) {
-        configEntity.setRunAsAdminKeyCode((int) getFromJson(settingsInJson, "runAsAdminKeyCode", 16));
+        configEntity.setRunAsAdminKeyCode(getFromJson(settingsInJson, "runAsAdminKeyCode", 16));
     }
 
     private void readCopyPathKeyCode(JSONObject settingsInJson) {
-        configEntity.setCopyPathKeyCode((int) getFromJson(settingsInJson, "copyPathKeyCode", 18));
+        configEntity.setCopyPathKeyCode(getFromJson(settingsInJson, "copyPathKeyCode", 18));
     }
 
     private void readTransparency(JSONObject settingsInJson) {
@@ -562,66 +562,66 @@ public class AllConfigs {
     }
 
     private void readSearchBarColor(JSONObject settingsInJson) {
-        configEntity.setSearchBarColor((int) getFromJson(settingsInJson, "searchBarColor", defaultSearchbarColor));
+        configEntity.setSearchBarColor(getFromJson(settingsInJson, "searchBarColor", defaultSearchbarColor));
     }
 
     private void readDefaultBackground(JSONObject settingsInJson) {
-        configEntity.setDefaultBackgroundColor((int) getFromJson(settingsInJson, "defaultBackground", defaultWindowBackgroundColor));
+        configEntity.setDefaultBackgroundColor(getFromJson(settingsInJson, "defaultBackground", defaultWindowBackgroundColor));
     }
 
     private void readBorderType(JSONObject settingsInJson) {
-        configEntity.setBorderType((String) getFromJson(settingsInJson, "borderType", Constants.Enums.BorderType.AROUND.toString()));
+        configEntity.setBorderType(getFromJson(settingsInJson, "borderType", Enums.BorderType.AROUND.toString()));
     }
 
     private void readBorderColor(JSONObject settingsInJson) {
-        configEntity.setBorderColor((int) getFromJson(settingsInJson, "borderColor", defaultBorderColor));
+        configEntity.setBorderColor(getFromJson(settingsInJson, "borderColor", defaultBorderColor));
     }
 
     private void readFontColorWithCoverage(JSONObject settingsInJson) {
-        configEntity.setFontColorWithCoverage((int) getFromJson(settingsInJson, "fontColorWithCoverage", defaultFontColorWithCoverage));
+        configEntity.setFontColorWithCoverage(getFromJson(settingsInJson, "fontColorWithCoverage", defaultFontColorWithCoverage));
     }
 
     private void readLabelColor(JSONObject settingsInJson) {
-        configEntity.setLabelColor((int) getFromJson(settingsInJson, "labelColor", defaultLabelColor));
+        configEntity.setLabelColor(getFromJson(settingsInJson, "labelColor", defaultLabelColor));
     }
 
     private void readFontColor(JSONObject settingsInJson) {
-        configEntity.setFontColor((int) getFromJson(settingsInJson, "fontColor", defaultFontColor));
+        configEntity.setFontColor(getFromJson(settingsInJson, "fontColor", defaultFontColor));
     }
 
     private void readSearchBarFontColor(JSONObject settingsInJson) {
-        configEntity.setSearchBarFontColor((int) getFromJson(settingsInJson, "searchBarFontColor", defaultSearchbarFontColor));
+        configEntity.setSearchBarFontColor(getFromJson(settingsInJson, "searchBarFontColor", defaultSearchbarFontColor));
     }
 
     private void readBorderThickness(JSONObject settingsInJson) {
-        configEntity.setBorderThickness((int) getFromJson(settingsInJson, "borderThickness", 1));
+        configEntity.setBorderThickness(getFromJson(settingsInJson, "borderThickness", 1));
     }
 
     private void readLanguage(JSONObject settingsInJson) {
         TranslateUtil translateUtil = TranslateUtil.getInstance();
-        String language = (String) getFromJson(settingsInJson, "language", translateUtil.getDefaultLang());
+        String language = getFromJson(settingsInJson, "language", translateUtil.getDefaultLang());
         configEntity.setLanguage(language);
         translateUtil.setLanguage(language);
     }
 
     private void readProxy(JSONObject settingsInJson) {
-        configEntity.setProxyAddress((String) getFromJson(settingsInJson, "proxyAddress", ""));
-        configEntity.setProxyPort((int) getFromJson(settingsInJson, "proxyPort", 0));
-        configEntity.setProxyUserName((String) getFromJson(settingsInJson, "proxyUserName", ""));
-        configEntity.setProxyPassword((String) getFromJson(settingsInJson, "proxyPassword", ""));
-        configEntity.setProxyType((int) getFromJson(settingsInJson, "proxyType", Constants.Enums.ProxyType.PROXY_DIRECT));
+        configEntity.setProxyAddress(getFromJson(settingsInJson, "proxyAddress", ""));
+        configEntity.setProxyPort(getFromJson(settingsInJson, "proxyPort", 0));
+        configEntity.setProxyUserName(getFromJson(settingsInJson, "proxyUserName", ""));
+        configEntity.setProxyPassword(getFromJson(settingsInJson, "proxyPassword", ""));
+        configEntity.setProxyType(getFromJson(settingsInJson, "proxyType", Enums.ProxyType.PROXY_DIRECT));
     }
 
     private void readCheckUpdateStartup(JSONObject settings) {
-        configEntity.setCheckUpdateStartup((Boolean) getFromJson(settings, "isCheckUpdateStartup", true));
+        configEntity.setCheckUpdateStartup(getFromJson(settings, "isCheckUpdateStartup", true));
     }
 
     private void readSwingTheme(JSONObject settingsInJson) {
-        configEntity.setSwingTheme((String) getFromJson(settingsInJson, "swingTheme", defaultSwingTheme));
+        configEntity.setSwingTheme(getFromJson(settingsInJson, "swingTheme", defaultSwingTheme));
     }
 
     private void readShowTipOnCreatingLnk(JSONObject settingsInJson) {
-        configEntity.setShowTipCreatingLnk((boolean) getFromJson(settingsInJson, "isShowTipOnCreatingLnk", true));
+        configEntity.setShowTipCreatingLnk(getFromJson(settingsInJson, "isShowTipOnCreatingLnk", true));
     }
 
     /**
@@ -660,18 +660,19 @@ public class AllConfigs {
      * @param defaultObj 默认值
      * @return 读取值或默认值
      */
-    private Object getFromJson(JSONObject json, String key, Object defaultObj) {
+    @SuppressWarnings("unchecked")
+    private <T> T getFromJson(JSONObject json, String key, Object defaultObj) {
         if (json == null) {
-            return defaultObj;
+            return (T) defaultObj;
         }
         Object tmp = json.get(key);
         if (tmp == null) {
             if (IsDebug.isDebug()) {
                 System.err.println("配置文件读取到null值   key : " + key);
             }
-            return defaultObj;
+            return (T) defaultObj;
         }
-        return tmp;
+        return (T) tmp;
     }
 
     /**
