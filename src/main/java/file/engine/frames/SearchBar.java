@@ -9,7 +9,6 @@ import file.engine.dllInterface.FileMonitor;
 import file.engine.dllInterface.GetHandle;
 import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
-import file.engine.event.handler.impl.BootSystemEvent;
 import file.engine.event.handler.impl.database.*;
 import file.engine.event.handler.impl.frame.searchBar.*;
 import file.engine.event.handler.impl.frame.settingsFrame.AddCacheEvent;
@@ -22,7 +21,6 @@ import file.engine.services.DatabaseService;
 import file.engine.services.plugin.system.Plugin;
 import file.engine.services.plugin.system.PluginService;
 import file.engine.utils.*;
-import file.engine.utils.bit.Bit;
 import file.engine.utils.file.CopyFileUtil;
 import file.engine.utils.system.properties.IsDebug;
 
@@ -41,17 +39,12 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -59,7 +52,7 @@ import java.util.stream.Collectors;
 
 @SuppressWarnings({"IndexOfReplaceableByContains", "ListIndexOfReplaceableByContains"})
 public class SearchBar {
-    private final AtomicBoolean isCacheAndPrioritySearched = new AtomicBoolean(false);
+    private final AtomicBoolean isPrioritySearched = new AtomicBoolean(false);
     private final AtomicBoolean isLockMouseMotion = new AtomicBoolean(false);
     private final AtomicBoolean isOpenLastFolderPressed = new AtomicBoolean(false);
     private final AtomicBoolean isRunAsAdminPressed = new AtomicBoolean(false);
@@ -67,14 +60,12 @@ public class SearchBar {
     private final AtomicBoolean isCopyPathPressed = new AtomicBoolean(false);
     private final AtomicBoolean startSignal = new AtomicBoolean(false);
     private final AtomicBoolean isUserPressed = new AtomicBoolean(false);
-    private final AtomicBoolean isDatabaseUpdated = new AtomicBoolean(false);
     private final AtomicBoolean isMouseDraggedInWindow = new AtomicBoolean(false);
     private final AtomicBoolean isNotSqlInitialized = new AtomicBoolean(true);
     private final AtomicBoolean isBorderThreadNotExist = new AtomicBoolean(true);
     private final AtomicBoolean isLockMouseMotionThreadNotExist = new AtomicBoolean(true);
     private final AtomicBoolean isRepaintFrameThreadNotExist = new AtomicBoolean(true);
     private final AtomicBoolean isTryToShowResultThreadNotExist = new AtomicBoolean(true);
-    private final AtomicBoolean isTableWeightInitialized = new AtomicBoolean(false);
     private static final AtomicBoolean isPreviewMode = new AtomicBoolean(false);
     private final AtomicBoolean isTutorialMode = new AtomicBoolean(false);
     private Border fullBorder;
@@ -104,7 +95,6 @@ public class SearchBar {
     private final AtomicBoolean isWaiting = new AtomicBoolean(false);
     private final Pattern semicolon;
     private final Pattern colon;
-    private final Pattern slash;
     private final Pattern blank;
     private volatile Constants.Enums.RunningMode runningMode;
     private volatile Constants.Enums.ShowingSearchBarMode showingMode;
@@ -112,11 +102,7 @@ public class SearchBar {
     private int iconSideLength;
     private volatile long visibleStartTime = 0;  //记录窗口开始可见的事件，窗口默认最短可见时间0.5秒，防止窗口快速闪烁
     private volatile long firstResultStartShowingTime = 0;  //记录开始显示结果的时间，用于防止刚开始移动到鼠标导致误触
-    private final ConcurrentLinkedQueue<String> tempResults;  //在优先文件夹和数据库cache未搜索完时暂时保存结果，搜索完后会立即被转移到listResults
-    private final ConcurrentLinkedQueue<String> tableQueue;  //保存哪些表需要被查
     private final CopyOnWriteArrayList<String> listResults;  //保存从数据库中找出符合条件的记录（文件路径）
-    private final HashSet<TableNameWeightInfo> tableSet;    //保存从0-40数据库的表，使用频率和名字对应，使经常使用的表最快被搜索到
-    private final ConcurrentLinkedQueue<Integer> priorityQueue;
     private volatile String[] searchCase;
     private volatile String searchText;
     private volatile String[] keywords;
@@ -133,22 +119,8 @@ public class SearchBar {
 
     private static volatile SearchBar instance = null;
 
-    private static class TableNameWeightInfo {
-        private final String tableName;
-        private final AtomicLong weight;
-
-        private TableNameWeightInfo(String tableName, int weight) {
-            this.tableName = tableName;
-            this.weight = new AtomicLong(weight);
-        }
-    }
-
     private SearchBar() {
         listResults = new CopyOnWriteArrayList<>();
-        tempResults = new ConcurrentLinkedQueue<>();
-        tableQueue = new ConcurrentLinkedQueue<>();
-        tableSet = new HashSet<>();
-        priorityQueue = new ConcurrentLinkedQueue<>();
         searchBar = new JFrame();
         currentResultCount = new AtomicInteger(0);
         listResultsNum = new AtomicInteger(0);
@@ -167,14 +139,11 @@ public class SearchBar {
         currentLabelSelectedPosition = new AtomicInteger(0);
         semicolon = RegexUtil.semicolon;
         colon = RegexUtil.colon;
-        slash = RegexUtil.slash;
         blank = RegexUtil.blank;
 
         databaseService = DatabaseService.getInstance();
 
         initGUI();
-
-        initPriorityQueue();
 
         initMenuItems();
 
@@ -478,74 +447,6 @@ public class SearchBar {
                 }
             }
         });
-    }
-
-    /**
-     * 初始化所有表名和权重信息，不要移动到构造函数中，否则会造成死锁
-     * 在该任务前可能会有设置搜索框颜色等各种任务，这些任务被设置为异步，若在构造函数未执行完成时，会造成无法构造实例
-     */
-    private void initTableMap() {
-        if (isTableWeightInitialized.get()) {
-            return;
-        }
-        isTableWeightInitialized.set(true);
-        EventManagement eventManagement = EventManagement.getInstance();
-        QueryAllWeightsEvent queryAllWeightsEvent = new QueryAllWeightsEvent();
-        eventManagement.putEvent(queryAllWeightsEvent);
-        boolean isNeedSubtract = false;
-        if (!eventManagement.waitForEvent(queryAllWeightsEvent)) {
-            HashMap<String, Integer> returnValue = queryAllWeightsEvent.getReturnValue();
-            for (int i = 0; i <= Constants.ALL_TABLE_NUM; i++) {
-                Integer weight = returnValue.get("list" + i);
-                if (weight == null) {
-                    weight = 0;
-                }
-                if (weight > 100000000) {
-                    isNeedSubtract = true;
-                }
-                if (isNeedSubtract) {
-                    weight = weight / 2;
-                }
-                tableSet.add(new TableNameWeightInfo("list" + i, weight));
-            }
-        } else {
-            for (int i = 0; i <= Constants.ALL_TABLE_NUM; i++) {
-                tableSet.add(new TableNameWeightInfo("list" + i, 0));
-            }
-        }
-    }
-
-    /**
-     * 通过表名获得表的权重信息
-     *
-     * @param tableName 表名
-     * @return 权重信息
-     */
-    private TableNameWeightInfo getInfoByName(String tableName) {
-        for (TableNameWeightInfo each : tableSet) {
-            if (each.tableName.equals(tableName)) {
-                return each;
-            }
-        }
-        return null;
-    }
-
-    /**
-     * 更新权重信息
-     *
-     * @param tableName 表名
-     * @param weight    权重
-     */
-    private void updateTableWeight(String tableName, long weight) {
-        TableNameWeightInfo origin = getInfoByName(tableName);
-        if (origin == null) {
-            return;
-        }
-        origin.weight.addAndGet(weight);
-        EventManagement.getInstance().putEvent(new UpdateTableWeightEvent(tableName, origin.weight.get()));
-        if (IsDebug.isDebug()) {
-            System.err.println("已更新" + tableName + "权重, 之前为" + origin + "***增加了" + weight);
-        }
     }
 
     /**
@@ -2340,7 +2241,6 @@ public class SearchBar {
 
     private void clearListAndTempAndReset() {
         listResults.clear();
-        tempResults.clear();
         listResultsNum.set(0);
     }
 
@@ -2348,11 +2248,10 @@ public class SearchBar {
     private void clearAllAndResetAll() {
         clearAllLabels();
         clearListAndTempAndReset();
-        tableQueue.clear();
         firstResultStartShowingTime = 0;
         currentResultCount.set(0);
         currentLabelSelectedPosition.set(0);
-        isCacheAndPrioritySearched.set(false);
+        isPrioritySearched.set(false);
     }
 
     /**
@@ -2533,16 +2432,6 @@ public class SearchBar {
     private static void showSearchBarEvent(Event event) {
         ShowSearchBarEvent showSearchBarTask = (ShowSearchBarEvent) event;
         getInstance().showSearchbar(showSearchBarTask.isGrabFocus, showSearchBarTask.isSwitchToNormal);
-    }
-
-    @EventListener(listenClass = UpdateDatabaseEvent.class)
-    private static void updateDatabaseEvent(Event event) {
-        getInstance().isDatabaseUpdated.set(true);
-    }
-
-    @EventListener(listenClass = BootSystemEvent.class)
-    private static void warmupDatabase(Event event) {
-        getInstance().warmup();
     }
 
     @EventRegister(registerClass = HideSearchBarEvent.class)
@@ -2894,10 +2783,6 @@ public class SearchBar {
         TimeUnit.MILLISECONDS.sleep(150);
     }
 
-    private static boolean isNotContains(Collection<String> list, String record) {
-        return !list.contains(record);
-    }
-
     /**
      * 在鼠标滚轮往下滑的过程中，不检测鼠标指针的移动事件
      */
@@ -2991,7 +2876,6 @@ public class SearchBar {
                         String text = getSearchBarText();
                         if (text.isEmpty()) {
                             clearAllLabels();
-                            clearListAndTempAndReset();
                         }
                         //设置窗口是被选中还是未被选中，鼠标模式
                         setLabelChosenOrNotChosenMouseMode(0, label1);
@@ -3057,54 +2941,26 @@ public class SearchBar {
     }
 
     /**
-     * 生成未格式化的sql
-     * 第一个map中key保存未格式化的sql，value保存表名称，第二个map为搜索结果的暂时存储容器
-     *
-     * @return map
-     */
-    private LinkedHashMap<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>> getNonFormattedSqlFromTableQueue(boolean isNeedContainer) {
-        if (isDatabaseUpdated.get()) {
-            isDatabaseUpdated.set(false);
-            initPriorityQueue();
-        }
-        LinkedHashMap<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>> sqlColumnMap = new LinkedHashMap<>();
-        if (priorityQueue.isEmpty()) {
-            return sqlColumnMap;
-        }
-        priorityQueue.forEach(i -> {
-            LinkedHashMap<String, String> eachPriorityMap = new LinkedHashMap<>();
-            tableQueue.forEach(each -> {
-                String sql = "SELECT %s FROM " + each + " WHERE priority=" + i;
-                eachPriorityMap.put(sql, each);
-            });
-            ConcurrentSkipListSet<String> container = null;
-            if (isNeedContainer) {
-                container = new ConcurrentSkipListSet<>();
-            }
-            sqlColumnMap.put(eachPriorityMap, container);
-        });
-        tableQueue.clear();
-        return sqlColumnMap;
-    }
-
-    /**
      * 将tempResults中的结果转移到listResults中来显示
-     *
-     * @param isCreated 是否已经创建，防止并发时重复创建
      */
-    private void addMergeThread(AtomicBoolean isCreated) {
-        isCreated.set(true);
+    private void addMergeThread(AtomicBoolean isMergeThreadNotExist) {
+        if (!isMergeThreadNotExist.get()) {
+            return;
+        }
+        isMergeThreadNotExist.set(false);
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             try {
                 long time = System.currentTimeMillis();
-                while (isVisible()) {
-                    if (startTime > time) {
+                ConcurrentLinkedQueue<String> tempResults = databaseService.getTempResults();
+                while (startTime < time && isVisible()) {
+                    if (startTime > time || !isVisible() || listResultsNum.get() > Constants.MAX_RESULTS_COUNT) {
+                        EventManagement.getInstance().putEvent(new StopSearchEvent());
                         return;
                     }
-                    if (isCacheAndPrioritySearched.get()) {
+                    if (isPrioritySearched.get()) {
                         String each;
                         while ((each = tempResults.poll()) != null) {
-                            if (isNotContains(listResults, each)) {
+                            if (!listResults.contains(each)) {
                                 listResults.add(each);
                                 listResultsNum.incrementAndGet();
                             }
@@ -3115,208 +2971,8 @@ public class SearchBar {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             } finally {
-                isCreated.set(false);
-            }
-        });
-    }
-
-    private void warmup() {
-        initTableMap();
-        initTableQueueByPriority();
-        LinkedHashMap<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>> nonFormattedSql = getNonFormattedSqlFromTableQueue(false);
-        nonFormattedSql.forEach((commandsMap, container) -> Arrays.stream(RegexUtil.comma.split(AllConfigs.getInstance().getDisks())).forEach(eachDisk -> {
-            Set<String> sqls = commandsMap.keySet();
-            String formattedSql;
-            for (String each : sqls) {
-                formattedSql = String.format(each, "PATH");
-                String disk = String.valueOf(eachDisk.charAt(0));
-                try (PreparedStatement pStmt = SQLiteUtil.getPreparedStatement(formattedSql, disk)) {
-                    pStmt.execute();
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
-            }
-        }));
-        try (PreparedStatement pStmt = SQLiteUtil.getPreparedStatement("SELECT PATH FROM cache", "cache")) {
-            pStmt.execute();
-        } catch (SQLException exception) {
-            exception.printStackTrace();
-        }
-    }
-
-    /**
-     * 根据优先级将表排序放入tableQueue
-     */
-    private void initTableQueueByPriority() {
-        tableQueue.clear();
-        LinkedList<TableNameWeightInfo> tmpCommandList = new LinkedList<>(tableSet);
-        //将tableSet通过权重排序
-        tmpCommandList.sort((o1, o2) -> Long.compare(o2.weight.get(), o1.weight.get()));
-        for (TableNameWeightInfo each : tmpCommandList) {
-            if (IsDebug.isDebug()) {
-                System.out.println("已添加表" + each.tableName + "----权重" + each.weight.get());
-            }
-            tableQueue.add(each.tableName);
-        }
-    }
-
-    /**
-     * 添加sql语句，并开始搜索
-     */
-    private void addSqlCommands() {
-        initTableQueueByPriority();
-        AtomicBoolean isMergeTempResultThreadCreated = new AtomicBoolean(false);
-        CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
-        if (!isMergeTempResultThreadCreated.get()) {
-            addMergeThread(isMergeTempResultThreadCreated);
-        }
-        //每个priority用一个线程，每一个后缀名对应一个优先级
-        //按照优先级排列，key是sql和表名的对应，value是容器
-        LinkedHashMap<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>>
-                nonFormattedSql = getNonFormattedSqlFromTableQueue(true);
-        Bit taskStatus = new Bit(new byte[]{0});
-        Bit allTaskStatus = new Bit(new byte[]{0});
-
-        LinkedHashMap<String, ConcurrentSkipListSet<String>> containerMap = new LinkedHashMap<>();
-        //任务队列
-        ConcurrentLinkedQueue<Runnable> taskQueue = new ConcurrentLinkedQueue<>();
-        //添加搜索任务到队列
-        addSearchTasks(nonFormattedSql, taskStatus, allTaskStatus, containerMap, taskQueue);
-
-        //添加消费者线程，接受任务进行处理，最高4线程
-        int processors = Runtime.getRuntime().availableProcessors();
-        processors = Math.min(processors, 4);
-        for (int i = 0; i < processors; i++) {
-            cachedThreadPoolUtil.executeTask(() -> {
-                Runnable todo;
-                while ((todo = taskQueue.poll()) != null) {
-                    todo.run();
-                }
-            });
-        }
-        waitForTaskAndMergeResults(containerMap, allTaskStatus, taskStatus);
-    }
-
-    /**
-     * 添加搜索任务到队列
-     *
-     * @param nonFormattedSql sql未被格式化的所有任务
-     * @param taskStatus      用于保存任务信息，这是一个通用变量，从第二个位开始，每一个位代表一个任务，当任务完成，该位将被置为1，否则为0，
-     *                        例如第一个和第三个任务完成，第二个未完成，则为1010
-     * @param allTaskStatus   所有的任务信息，从第二位开始，只要有任务被创建，该为就为1，例如三个任务被创建，则为1110
-     * @param containerMap    每个任务搜索出来的结果都会被放到一个属于它自己的一个容器中，该容器保存任务与容器的映射关系
-     * @param taskQueue       任务栈
-     */
-    private void addSearchTasks(LinkedHashMap<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>> nonFormattedSql,
-                                Bit taskStatus,
-                                Bit allTaskStatus,
-                                LinkedHashMap<String, ConcurrentSkipListSet<String>> containerMap,
-                                ConcurrentLinkedQueue<Runnable> taskQueue) {
-        Bit number = new Bit(new byte[]{1});
-        nonFormattedSql.forEach((commandsMap, container) -> Arrays.stream(RegexUtil.comma.split(AllConfigs.getInstance().getDisks())).forEach(eachDisk -> {
-            //为每个任务分配的位，不断左移以不断进行分配
-            number.shiftLeft(1);
-            Bit currentTaskNum = new Bit(number);
-            allTaskStatus.set(allTaskStatus.or(currentTaskNum));
-            containerMap.put(currentTaskNum.toString(), container);
-            taskQueue.add(() -> {
-                long time = System.currentTimeMillis();
-                try {
-                    Set<String> sqls = commandsMap.keySet();
-                    DatabaseService databaseService = DatabaseService.getInstance();
-                    for (String each : sqls) {
-                        String formattedSql;
-                        if (runningMode == Constants.Enums.RunningMode.NORMAL_MODE && databaseService.getStatus() == Constants.Enums.DatabaseStatus.NORMAL) {
-                            //格式化是为了以后的拓展性
-                            formattedSql = String.format(each, "PATH");
-                            //当前数据库表中有多少个结果匹配成功
-                            int matchedNum = searchAndAddToTempResults(System.currentTimeMillis(),
-                                    formattedSql,
-                                    container,
-                                    String.valueOf(eachDisk.charAt(0)));
-                            long weight = Math.min(matchedNum, 5);
-                            if (weight != 0L) {
-                                //更新表的权重，每次搜索将会按照各个表的权重排序
-                                updateTableWeight(commandsMap.get(each), weight);
-                            }
-                            if (listResultsNum.get() > Constants.MAX_RESULTS_COUNT || time < startTime) {
-                                break;
-                            }
-                        }
-                    }
-                } finally {
-                    //执行完后将对应的线程flag设为1
-                    taskStatus.set(taskStatus.or(currentTaskNum));
-                }
-            });
-        }));
-    }
-
-    /**
-     * 根据上面分配的位信息，从第二位开始，与taskStatus做与运算，并向右偏移，若结果为1，则表示该任务完成
-     *
-     * @param containerMap  任务搜索结果存放容器
-     * @param allTaskStatus 所有的任务信息
-     * @param taskStatus    实时更新的任务完成信息
-     */
-    private void waitForTaskAndMergeResults(LinkedHashMap<String, ConcurrentSkipListSet<String>> containerMap, Bit allTaskStatus, Bit taskStatus) {
-        CachedThreadPoolUtil.getInstance().executeTask(() -> {
-            final long startSearchTime = System.currentTimeMillis();
-            try {
-                out:
-                while (isVisible() && startTime < startSearchTime) {
-                    Bit tmpTaskStatus = new Bit(new byte[]{0});
-                    //线程状态的记录从第二个位开始，所以初始值为2
-                    Bit start = new Bit(new byte[]{1, 0});
-                    //循环次数，也是下方与运算结束后需要向右偏移的位数
-                    int loopCount = 1;
-                    //由于任务的耗时不同，如果阻塞时间过长，则跳过该任务，在下次循环中重新拿取结果
-                    long waitTime = 0;
-                    Bit zero = new Bit(new byte[]{0});
-                    Bit one = new Bit(new byte[]{1});
-                    ConcurrentSkipListSet<String> results;
-                    while (start.length() <= allTaskStatus.length() || taskStatus.or(zero).equals(zero)) {
-                        if (startTime > startSearchTime || !isVisible()) {
-                            //用户重新输入，结束当前任务
-                            break out;
-                        }
-                        results = containerMap.get(start.toString());
-                        if (results != null) {
-                            for (String result : results) {
-                                if (isNotContains(tempResults, result)) {
-                                    tempResults.add(result);
-                                    results.remove(result);
-                                }
-                            }
-                        }
-                        //当线程完成，taskStatus中的位会被设置为1
-                        //这时，将taskStatus和start做与运算，然后移到第一位，如果为1，则线程已完成搜索
-                        Bit and = taskStatus.and(start);
-                        boolean isFailed = System.currentTimeMillis() - waitTime > 300 && waitTime != 0;
-                        if (((and).shiftRight(loopCount)).equals(one) || isFailed) {
-                            // failCount过大，阻塞时间过长则跳过
-                            waitTime = 0;
-                            results = containerMap.get(start.toString());
-                            if (results != null) {
-                                tempResults.addAll(results);
-                                if (!isFailed) {
-                                    results.clear();
-                                }
-                            }
-                            tmpTaskStatus = tmpTaskStatus.or(start);
-                            //将start左移，代表当前任务结束，继续拿下一个任务的结果
-                            start.shiftLeft(1);
-                            loopCount++;
-                        } else {
-                            if (waitTime == 0) {
-                                waitTime = System.currentTimeMillis();
-                            }
-                        }
-                    }
-                    TimeUnit.MILLISECONDS.sleep(1);
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
+                isMergeThreadNotExist.set(true);
+                EventManagement.getInstance().putEvent(new StopSearchEvent());
             }
         });
     }
@@ -3534,6 +3190,7 @@ public class SearchBar {
                 if (allConfigs.isFirstRun()) {
                     runInternalCommand("help");
                 }
+                final AtomicBoolean isMergeThreadNotExist = new AtomicBoolean(true);
                 while (eventManagement.isNotMainExit()) {
                     long endTime = System.currentTimeMillis();
                     text = getSearchBarText();
@@ -3552,7 +3209,8 @@ public class SearchBar {
                                 }
                                 keywords = semicolon.split(searchText);
                                 searchCaseToLowerAndRemoveConflict();
-                                addSqlCommands();
+                                eventManagement.putEvent(new StartSearchEvent(searchText, keywords, searchCase));
+                                addMergeThread(isMergeThreadNotExist);
                             }
                         }
                     }
@@ -3592,13 +3250,12 @@ public class SearchBar {
                             } else if (runningMode == Constants.Enums.RunningMode.NORMAL_MODE) {
                                 //对搜索关键字赋值
                                 searchPriorityFolder();
-                                searchCache();
-                                isCacheAndPrioritySearched.set(true);
+                                isPrioritySearched.set(true);
                             } else if (runningMode == Constants.Enums.RunningMode.PLUGIN_MODE) {
                                 String result;
                                 while (runningMode == Constants.Enums.RunningMode.PLUGIN_MODE) {
                                     while (currentUsingPlugin != null && (result = currentUsingPlugin.pollFromResultQueue()) != null) {
-                                        if (isNotContains(listResults, result)) {
+                                        if (!listResults.contains(result)) {
                                             listResults.add(result);
                                             listResultsNum.incrementAndGet();
                                         }
@@ -3651,49 +3308,34 @@ public class SearchBar {
         }
     }
 
-    private boolean isExist(String path) {
-        return Files.exists(Path.of(path));
+    private boolean isFile(String text) {
+        File file = new File(text);
+        return file.isFile();
     }
 
+    private String getFileName(String path) {
+        if (path != null) {
+            int index = path.lastIndexOf(File.separator);
+            return path.substring(index + 1);
+        }
+        return "";
+    }
 
     /**
-     * 检查文件路径是否匹配所有输入规则
+     * * 检查文件路径是否匹配然后加入到列表
+     *  @param path              文件路径
      *
-     * @param path 文件路径
-     * @return true如果满足所有条件 否则false
      */
-    private boolean check(String path) {
-        if (notMatched(path, true)) {
-            return false;
-        }
-        if (searchCase == null || searchCase.length == 0) {
-            return true;
-        }
-        for (String eachCase : searchCase) {
-            switch (eachCase) {
-                case "f":
-                    if (!Files.isRegularFile(Path.of(path))) {
-                        return false;
-                    }
-                    break;
-                case "d":
-                    if (!Files.isDirectory(Path.of(path))) {
-                        return false;
-                    }
-                    break;
-                case "full":
-                    if (!searchText.equalsIgnoreCase(getFileName(path))) {
-                        return false;
-                    }
-                    break;
-                case "case":
-                    if (notMatched(path, false)) {
-                        return false;
-                    }
+    private void checkIsMatchedAndAddToList(String path) {
+        if (PathMatchUtils.check(path, searchCase, searchText, keywords)) {
+            if (Files.exists(Path.of(path))) {
+                //字符串匹配通过
+                if (!listResults.contains(path)) {
+                    listResultsNum.incrementAndGet();
+                    listResults.add(path);
+                }
             }
         }
-        //所有规则均已匹配
-        return true;
     }
 
     /**
@@ -3701,100 +3343,8 @@ public class SearchBar {
      *
      * @param path 文件路径
      */
-    private void matchOnCacheAndPriorityFolder(String path, boolean isResultFromCache) {
-        checkIsMatchedAndAddToList(path, false, isResultFromCache, null);
-    }
-
-    /**
-     * * 检查文件路径是否匹配然后加入到列表
-     *
-     * @param path              文件路径
-     * @param isPutToTemp       是否放到临时容器，在搜索优先文件夹和cache时为false，其他为true
-     * @param isResultFromCache 是否来自缓存
-     * @return true如果匹配成功
-     */
-    private boolean checkIsMatchedAndAddToList(String path, boolean isPutToTemp, boolean isResultFromCache, ConcurrentSkipListSet<String> container) {
-        boolean ret = false;
-        if (check(path)) {
-            if (isExist(path)) {
-                //字符串匹配通过
-                ret = true;
-                if (isPutToTemp) {
-                    if (isNotContains(tempResults, path)) {
-                        if (container == null) {
-                            tempResults.add(path);
-                        } else {
-                            container.add(path);
-                        }
-                    }
-                } else {
-                    if (isNotContains(listResults, path)) {
-                        if (container == null) {
-                            listResultsNum.incrementAndGet();
-                            listResults.add(path);
-                        } else {
-                            container.add(path);
-                        }
-                    }
-                }
-            } else {
-                if (isResultFromCache) {
-                    EventManagement.getInstance().putEvent(new DeleteFromCacheEvent(path));
-                }
-            }
-        }
-        return ret;
-    }
-
-    /**
-     * 初始化优先级队列
-     */
-    private void initPriorityQueue() {
-        priorityQueue.clear();
-        try (PreparedStatement pStmt = SQLiteUtil.getPreparedStatement("SELECT PRIORITY FROM priority order by priority desc;", "cache")) {
-            ResultSet resultSet = pStmt.executeQuery();
-            while (resultSet.next()) {
-                priorityQueue.add(resultSet.getInt("PRIORITY"));
-            }
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
-        }
-    }
-
-    /**
-     * 搜索数据酷并加入到tempQueue中
-     *
-     * @param time 开始搜索时间，用于检测用于重新输入匹配信息后快速停止
-     * @param sql  sql
-     */
-    private int searchAndAddToTempResults(long time, String sql, ConcurrentSkipListSet<String> container, String disk) {
-        int count = 0;
-        //结果太多则不再进行搜索
-        if (startTime > time || !isVisible() || listResultsNum.get() > Constants.MAX_RESULTS_COUNT) {
-            return count;
-        }
-        try (PreparedStatement stmt = SQLiteUtil.getPreparedStatement(sql, disk);
-             ResultSet resultSet = stmt.executeQuery()) {
-            String each;
-            while (resultSet.next()) {
-                //结果太多则不再进行搜索
-                //用户重新输入了信息
-                if (startTime > time || !isVisible() || listResultsNum.get() > Constants.MAX_RESULTS_COUNT) {
-                    tableQueue.clear();
-                    return count;
-                }
-                each = resultSet.getString("PATH");
-                if (databaseService.getStatus() == Constants.Enums.DatabaseStatus.NORMAL) {
-                    if (checkIsMatchedAndAddToList(each, true, false, container)) {
-                        count++;
-                    }
-                }
-            }
-        } catch (SQLException e) {
-            System.err.println("error sql : " + sql);
-            e.printStackTrace();
-        }
-        return count;
+    private void matchOnCacheAndPriorityFolder(String path) {
+        checkIsMatchedAndAddToList(path);
     }
 
     private void showSearchbar() {
@@ -3812,7 +3362,6 @@ public class SearchBar {
             y = (int) (searchBar.getY() + textField.getHeight() * 8.5);
         }
         RobotUtil.getInstance().mouseClicked(x, y, 1, InputEvent.BUTTON1_DOWN_MASK);
-        isFocusGrabbed.set(true);
     }
 
     /**
@@ -3838,6 +3387,7 @@ public class SearchBar {
                         grabFocus();
                         switchToNormalMode(false);
                         EventManagement.getInstance().putEvent(new SearchBarReadyEvent(showingMode.toString()));
+                        isFocusGrabbed.set(true);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
@@ -4276,6 +3826,11 @@ public class SearchBar {
         return vbsFilePath.getAbsolutePath();
     }
 
+    private static String getParentPath(String path) {
+        File f = new File(path);
+        return f.getParentFile().getAbsolutePath();
+    }
+
     /**
      * 以普通权限运行文件，失败则打开文件位置
      *
@@ -4317,14 +3872,6 @@ public class SearchBar {
         }
     }
 
-    private String getFileName(String path) {
-        if (path != null) {
-            int index = path.lastIndexOf(File.separator);
-            return path.substring(index + 1);
-        }
-        return "";
-    }
-
     /**
      * 保存当前文件路径到数据库缓存
      *
@@ -4346,71 +3893,6 @@ public class SearchBar {
     }
 
     /**
-     * 从缓存中搜索结果并将匹配的放入listResults
-     */
-    private void searchCache() {
-        try (PreparedStatement statement = SQLiteUtil.getPreparedStatement("SELECT PATH FROM cache;", "cache");
-             ResultSet resultSet = statement.executeQuery()) {
-            while (resultSet.next()) {
-                String eachCache = resultSet.getString("PATH");
-                matchOnCacheAndPriorityFolder(eachCache, true);
-            }
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
-        }
-    }
-
-    /**
-     * 判断文件路径是否满足当前匹配结果（该方法由check（String）方法使用），检查文件路径使用check（String）方法。
-     *
-     * @param path         文件路径
-     * @param isIgnoreCase 是否忽略大小谢
-     * @return true如果匹配成功
-     * @see #check(String);
-     */
-    private boolean notMatched(String path, boolean isIgnoreCase) {
-        String matcherStrFromFilePath;
-        boolean isPath;
-        for (String eachKeyword : keywords) {
-            if (eachKeyword == null || eachKeyword.isEmpty()) {
-                continue;
-            }
-            if (eachKeyword.startsWith("/") || eachKeyword.startsWith(File.separator)) {
-                //匹配路径
-                isPath = true;
-                Matcher matcher = slash.matcher(eachKeyword);
-                eachKeyword = matcher.replaceAll(Matcher.quoteReplacement(File.separator));
-                //获取父路径
-                matcherStrFromFilePath = getParentPath(path);
-            } else {
-                //获取名字
-                isPath = false;
-                matcherStrFromFilePath = getFileName(path);
-            }
-            //转换大小写
-            if (isIgnoreCase) {
-                matcherStrFromFilePath = matcherStrFromFilePath.toLowerCase();
-                eachKeyword = eachKeyword.toLowerCase();
-            }
-            //开始匹配
-            if (matcherStrFromFilePath.indexOf(eachKeyword) == -1) {
-                if (isPath) {
-                    return true;
-                } else {
-                    if (PinyinUtil.isContainChinese(matcherStrFromFilePath)) {
-                        if (PinyinUtil.toPinyin(matcherStrFromFilePath, "").indexOf(eachKeyword) == -1) {
-                            return true;
-                        }
-                    } else {
-                        return true;
-                    }
-                }
-            }
-        }
-        return false;
-    }
-
-    /**
      * 搜索优先文件夹
      */
     private void searchPriorityFolder() {
@@ -4429,7 +3911,7 @@ public class SearchBar {
             if (startTime > startSearchTime) {
                 return;
             }
-            matchOnCacheAndPriorityFolder(each.getAbsolutePath(), false);
+            matchOnCacheAndPriorityFolder(each.getAbsolutePath());
             if (each.isDirectory()) {
                 listRemainDir.add(each.getAbsolutePath());
             }
@@ -4445,7 +3927,7 @@ public class SearchBar {
                 continue;
             }
             for (File each : allFiles) {
-                matchOnCacheAndPriorityFolder(each.getAbsolutePath(), false);
+                matchOnCacheAndPriorityFolder(each.getAbsolutePath());
                 if (startTime > startSearchTime) {
                     break out;
                 }
@@ -4525,17 +4007,17 @@ public class SearchBar {
         currentResultCount.set(0);
         currentLabelSelectedPosition.set(0);
         clearListAndTempAndReset();
-        tableQueue.clear();
         isUserPressed.set(false);
         isLockMouseMotion.set(false);
         isOpenLastFolderPressed.set(false);
         isRunAsAdminPressed.set(false);
         isCopyPathPressed.set(false);
         startSignal.set(false);
-        isCacheAndPrioritySearched.set(false);
+        isPrioritySearched.set(false);
         isWaiting.set(false);
         isMouseDraggedInWindow.set(false);
         currentUsingPlugin = null;
+        EventManagement.getInstance().putEvent(new StopPreviewEvent());
     }
 
     /**
@@ -4548,16 +4030,6 @@ public class SearchBar {
             return false;
         }
         return searchBar.isVisible();
-    }
-
-    private String getParentPath(String path) {
-        File f = new File(path);
-        return f.getParentFile().getAbsolutePath();
-    }
-
-    private boolean isFile(String text) {
-        File file = new File(text);
-        return file.isFile();
     }
 
     private void setFontColorWithCoverage(int colorNum) {

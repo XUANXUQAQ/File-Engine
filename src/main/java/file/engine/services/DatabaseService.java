@@ -9,16 +9,16 @@ import file.engine.dllInterface.GetAscII;
 import file.engine.dllInterface.IsLocalDisk;
 import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
+import file.engine.event.handler.impl.BootSystemEvent;
 import file.engine.event.handler.impl.database.*;
 import file.engine.event.handler.impl.monitor.disk.StartMonitorDiskEvent;
 import file.engine.event.handler.impl.stop.RestartEvent;
 import file.engine.event.handler.impl.taskbar.ShowTaskBarMessageEvent;
-import file.engine.utils.CachedThreadPoolUtil;
-import file.engine.utils.RegexUtil;
-import file.engine.utils.SQLiteUtil;
-import file.engine.utils.TranslateUtil;
+import file.engine.utils.*;
+import file.engine.utils.bit.Bit;
 import file.engine.utils.system.properties.IsDebug;
 import lombok.Data;
+import lombok.Getter;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -28,29 +28,87 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.HashMap;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.Scanner;
+import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class DatabaseService {
     private final ConcurrentLinkedQueue<SQLWithTaskId> commandSet = new ConcurrentLinkedQueue<>();
     private volatile Constants.Enums.DatabaseStatus status = Constants.Enums.DatabaseStatus.NORMAL;
     private final AtomicBoolean isExecuteImmediately = new AtomicBoolean(false);
     private final AtomicInteger cacheNum = new AtomicInteger(0);
+    private final ConcurrentLinkedQueue<Integer> priorityQueue;
+    private final HashSet<TableNameWeightInfo> tableSet;    //保存从0-40数据库的表，使用频率和名字对应，使经常使用的表最快被搜索到
+    private final ConcurrentLinkedQueue<String> tableQueue;  //保存哪些表需要被查
+    private final AtomicBoolean isDatabaseUpdated = new AtomicBoolean(false);
+    private final @Getter
+    ConcurrentLinkedQueue<String> tempResults;  //在优先文件夹和数据库cache未搜索完时暂时保存结果，搜索完后会立即被转移到listResults
+    private final AtomicBoolean isStop = new AtomicBoolean(false);
+    private volatile String[] searchCase;
+    private volatile String searchText;
+    private volatile String[] keywords;
 
     private static volatile DatabaseService INSTANCE = null;
 
+    private static class TableNameWeightInfo {
+        private final String tableName;
+        private final AtomicLong weight;
+
+        private TableNameWeightInfo(String tableName, int weight) {
+            this.tableName = tableName;
+            this.weight = new AtomicLong(weight);
+        }
+    }
+
     private DatabaseService() {
+        tableSet = new HashSet<>();
+        tempResults = new ConcurrentLinkedQueue<>();
+        tableQueue = new ConcurrentLinkedQueue<>();
+        priorityQueue = new ConcurrentLinkedQueue<>();
+        initPriorityQueue();
         addRecordsToDatabaseThread();
         deleteRecordsToDatabaseThread();
         checkTimeAndSendExecuteSqlSignalThread();
         executeSqlCommandsThread();
         initCacheNum();
+    }
+
+    /**
+     * 通过表名获得表的权重信息
+     *
+     * @param tableName 表名
+     * @return 权重信息
+     */
+    private TableNameWeightInfo getInfoByName(String tableName) {
+        for (TableNameWeightInfo each : tableSet) {
+            if (each.tableName.equals(tableName)) {
+                return each;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * 更新权重信息
+     *
+     * @param tableName 表名
+     * @param weight    权重
+     */
+    private void updateTableWeight(String tableName, long weight) {
+        TableNameWeightInfo origin = getInfoByName(tableName);
+        if (origin == null) {
+            return;
+        }
+        origin.weight.addAndGet(weight);
+        String format = String.format("UPDATE weight SET TABLE_WEIGHT=%d WHERE TABLE_NAME=\"%s\"", weight, tableName);
+        commandSet.add(new SQLWithTaskId(format, SqlTaskIds.UPDATE_WEIGHT, "weight"));
+        if (IsDebug.isDebug()) {
+            System.err.println("已更新" + tableName + "权重, 之前为" + origin + "***增加了" + weight);
+        }
     }
 
     /**
@@ -195,9 +253,347 @@ public class DatabaseService {
     }
 
     /**
-     * 生成删除记录sql
-     * @param asciiSum ascii
+     * 从缓存中搜索结果并将匹配的放入listResults
+     */
+    private void searchCache() {
+        try (PreparedStatement statement = SQLiteUtil.getPreparedStatement("SELECT PATH FROM cache;", "cache");
+             ResultSet resultSet = statement.executeQuery()) {
+            while (resultSet.next()) {
+                String eachCache = resultSet.getString("PATH");
+                checkIsMatchedAndAddToList(eachCache, null);
+            }
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+    }
+
+    /**
+     * * 检查文件路径是否匹配然后加入到列表
+     *
      * @param path 文件路径
+     * @return true如果匹配成功
+     */
+    private boolean checkIsMatchedAndAddToList(String path, ConcurrentSkipListSet<String> container) {
+        boolean ret = false;
+        if (PathMatchUtils.check(path, searchCase, searchText, keywords)) {
+            if (Files.exists(Path.of(path))) {
+                //字符串匹配通过
+                ret = true;
+                if (!tempResults.contains(path)) {
+                    if (container == null) {
+                        tempResults.add(path);
+                    } else {
+                        container.add(path);
+                    }
+                }
+            } else if (container == null) {
+                EventManagement.getInstance().putEvent(new DeleteFromCacheEvent(path));
+            }
+        }
+        return ret;
+    }
+
+    /**
+     * 搜索数据酷并加入到tempQueue中
+     *
+     * @param sql sql
+     */
+    private int searchAndAddToTempResults(String sql, ConcurrentSkipListSet<String> container, String disk) {
+        int count = 0;
+        //结果太多则不再进行搜索
+        if (isStop.get()) {
+            return count;
+        }
+        try (PreparedStatement stmt = SQLiteUtil.getPreparedStatement(sql, disk);
+             ResultSet resultSet = stmt.executeQuery()) {
+            String each;
+            while (resultSet.next()) {
+                //结果太多则不再进行搜索
+                //用户重新输入了信息
+                if (isStop.get()) {
+                    tableQueue.clear();
+                    return count;
+                }
+                each = resultSet.getString("PATH");
+                if (checkIsMatchedAndAddToList(each, container)) {
+                    count++;
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("error sql : " + sql);
+            e.printStackTrace();
+        }
+        return count;
+    }
+
+    /**
+     * 初始化优先级队列
+     */
+    private void initPriorityQueue() {
+        priorityQueue.clear();
+        try (PreparedStatement pStmt = SQLiteUtil.getPreparedStatement("SELECT PRIORITY FROM priority order by priority desc;", "cache")) {
+            ResultSet resultSet = pStmt.executeQuery();
+            while (resultSet.next()) {
+                priorityQueue.add(resultSet.getInt("PRIORITY"));
+            }
+        } catch (SQLException throwable) {
+            throwable.printStackTrace();
+        }
+    }
+
+    private void warmup() {
+        initTableMap();
+        LinkedHashMap<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>> nonFormattedSql = getNonFormattedSqlFromTableQueue(false);
+        nonFormattedSql.forEach((commandsMap, container) -> Arrays.stream(RegexUtil.comma.split(AllConfigs.getInstance().getDisks())).forEach(eachDisk -> {
+            Set<String> sqls = commandsMap.keySet();
+            String formattedSql;
+            for (String each : sqls) {
+                formattedSql = String.format(each, "PATH");
+                String disk = String.valueOf(eachDisk.charAt(0));
+                try (PreparedStatement pStmt = SQLiteUtil.getPreparedStatement(formattedSql, disk)) {
+                    pStmt.execute();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        }));
+        try (PreparedStatement pStmt = SQLiteUtil.getPreparedStatement("SELECT PATH FROM cache", "cache")) {
+            pStmt.execute();
+        } catch (SQLException exception) {
+            exception.printStackTrace();
+        }
+    }
+
+    /**
+     * 根据优先级将表排序放入tableQueue
+     */
+    private void initTableQueueByPriority() {
+        tableQueue.clear();
+        LinkedList<TableNameWeightInfo> tmpCommandList = new LinkedList<>(tableSet);
+        //将tableSet通过权重排序
+        tmpCommandList.sort((o1, o2) -> Long.compare(o2.weight.get(), o1.weight.get()));
+        for (TableNameWeightInfo each : tmpCommandList) {
+            if (IsDebug.isDebug()) {
+                System.out.println("已添加表" + each.tableName + "----权重" + each.weight.get());
+            }
+            tableQueue.add(each.tableName);
+        }
+    }
+
+    /**
+     * 初始化所有表名和权重信息，不要移动到构造函数中，否则会造成死锁
+     * 在该任务前可能会有设置搜索框颜色等各种任务，这些任务被设置为异步，若在构造函数未执行完成时，会造成无法构造实例
+     */
+    private void initTableMap() {
+        boolean isNeedSubtract = false;
+        HashMap<String, Integer> weights = queryAllWeights();
+        if (!weights.isEmpty()) {
+            for (int i = 0; i <= Constants.ALL_TABLE_NUM; i++) {
+                Integer weight = weights.get("list" + i);
+                if (weight == null) {
+                    weight = 0;
+                }
+                if (weight > 100000000) {
+                    isNeedSubtract = true;
+                }
+                if (isNeedSubtract) {
+                    weight = weight / 2;
+                }
+                tableSet.add(new TableNameWeightInfo("list" + i, weight));
+            }
+        } else {
+            for (int i = 0; i <= Constants.ALL_TABLE_NUM; i++) {
+                tableSet.add(new TableNameWeightInfo("list" + i, 0));
+            }
+        }
+    }
+
+    /**
+     * 根据上面分配的位信息，从第二位开始，与taskStatus做与运算，并向右偏移，若结果为1，则表示该任务完成
+     *
+     * @param containerMap  任务搜索结果存放容器
+     * @param allTaskStatus 所有的任务信息
+     * @param taskStatus    实时更新的任务完成信息
+     */
+    private void waitForTaskAndMergeResults(LinkedHashMap<String, ConcurrentSkipListSet<String>> containerMap, Bit allTaskStatus, Bit taskStatus) {
+        CachedThreadPoolUtil.getInstance().executeTask(() -> {
+            try {
+                Bit tmpTaskStatus = new Bit(new byte[]{0});
+                //线程状态的记录从第二个位开始，所以初始值为2
+                Bit start = new Bit(new byte[]{1, 0});
+                //循环次数，也是下方与运算结束后需要向右偏移的位数
+                int loopCount = 1;
+                //由于任务的耗时不同，如果阻塞时间过长，则跳过该任务，在下次循环中重新拿取结果
+                long waitTime = 0;
+                Bit zero = new Bit(new byte[]{0});
+                Bit one = new Bit(new byte[]{1});
+                ConcurrentSkipListSet<String> results;
+                while (start.length() <= allTaskStatus.length() || taskStatus.or(zero).equals(zero)) {
+                    if (isStop.get()) {
+                        //用户重新输入，结束当前任务
+                        break;
+                    }
+                    results = containerMap.get(start.toString());
+                    if (results != null) {
+                        for (String result : results) {
+                            if (!tempResults.contains(result)) {
+                                tempResults.add(result);
+                                results.remove(result);
+                            }
+                        }
+                    }
+                    //当线程完成，taskStatus中的位会被设置为1
+                    //这时，将taskStatus和start做与运算，然后移到第一位，如果为1，则线程已完成搜索
+                    Bit and = taskStatus.and(start);
+                    boolean isFailed = System.currentTimeMillis() - waitTime > 300 && waitTime != 0;
+                    if (((and).shiftRight(loopCount)).equals(one) || isFailed) {
+                        // failCount过大，阻塞时间过长则跳过
+                        waitTime = 0;
+                        results = containerMap.get(start.toString());
+                        if (results != null) {
+                            tempResults.addAll(results);
+                            if (!isFailed) {
+                                results.clear();
+                            }
+                        }
+                        tmpTaskStatus = tmpTaskStatus.or(start);
+                        //将start左移，代表当前任务结束，继续拿下一个任务的结果
+                        start.shiftLeft(1);
+                        loopCount++;
+                    } else {
+                        if (waitTime == 0) {
+                            waitTime = System.currentTimeMillis();
+                        }
+                    }
+                }
+                TimeUnit.MILLISECONDS.sleep(1);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
+    /**
+     * 添加搜索任务到队列
+     *
+     * @param nonFormattedSql sql未被格式化的所有任务
+     * @param taskStatus      用于保存任务信息，这是一个通用变量，从第二个位开始，每一个位代表一个任务，当任务完成，该位将被置为1，否则为0，
+     *                        例如第一个和第三个任务完成，第二个未完成，则为1010
+     * @param allTaskStatus   所有的任务信息，从第二位开始，只要有任务被创建，该为就为1，例如三个任务被创建，则为1110
+     * @param containerMap    每个任务搜索出来的结果都会被放到一个属于它自己的一个容器中，该容器保存任务与容器的映射关系
+     * @param taskQueue       任务栈
+     */
+    private void addSearchTasks(LinkedHashMap<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>> nonFormattedSql,
+                                Bit taskStatus,
+                                Bit allTaskStatus,
+                                LinkedHashMap<String, ConcurrentSkipListSet<String>> containerMap,
+                                ConcurrentLinkedQueue<Runnable> taskQueue) {
+        Bit number = new Bit(new byte[]{1});
+        nonFormattedSql.forEach((commandsMap, container) -> Arrays.stream(RegexUtil.comma.split(AllConfigs.getInstance().getDisks())).forEach(eachDisk -> {
+            //为每个任务分配的位，不断左移以不断进行分配
+            number.shiftLeft(1);
+            Bit currentTaskNum = new Bit(number);
+            allTaskStatus.set(allTaskStatus.or(currentTaskNum));
+            containerMap.put(currentTaskNum.toString(), container);
+            taskQueue.add(() -> {
+                try {
+                    Set<String> sqls = commandsMap.keySet();
+                    for (String each : sqls) {
+                        String formattedSql;
+                        //格式化是为了以后的拓展性
+                        formattedSql = String.format(each, "PATH");
+                        //当前数据库表中有多少个结果匹配成功
+                        int matchedNum = searchAndAddToTempResults(
+                                formattedSql,
+                                container,
+                                String.valueOf(eachDisk.charAt(0)));
+                        long weight = Math.min(matchedNum, 5);
+                        if (weight != 0L) {
+                            //更新表的权重，每次搜索将会按照各个表的权重排序
+                            updateTableWeight(commandsMap.get(each), weight);
+                        }
+                        if (isStop.get()) {
+                            break;
+                        }
+                    }
+                } finally {
+                    //执行完后将对应的线程flag设为1
+                    taskStatus.set(taskStatus.or(currentTaskNum));
+                }
+            });
+        }));
+    }
+
+    /**
+     * 生成未格式化的sql
+     * 第一个map中key保存未格式化的sql，value保存表名称，第二个map为搜索结果的暂时存储容器
+     *
+     * @return map
+     */
+    private LinkedHashMap<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>> getNonFormattedSqlFromTableQueue(boolean isNeedContainer) {
+        if (isDatabaseUpdated.get()) {
+            isDatabaseUpdated.set(false);
+            initPriorityQueue();
+        }
+        LinkedHashMap<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>> sqlColumnMap = new LinkedHashMap<>();
+        if (priorityQueue.isEmpty()) {
+            return sqlColumnMap;
+        }
+        initTableQueueByPriority();
+        priorityQueue.forEach(i -> {
+            LinkedHashMap<String, String> eachPriorityMap = new LinkedHashMap<>();
+            tableQueue.forEach(each -> {
+                String sql = "SELECT %s FROM " + each + " WHERE priority=" + i;
+                eachPriorityMap.put(sql, each);
+            });
+            ConcurrentSkipListSet<String> container = null;
+            if (isNeedContainer) {
+                container = new ConcurrentSkipListSet<>();
+            }
+            sqlColumnMap.put(eachPriorityMap, container);
+        });
+        tableQueue.clear();
+        return sqlColumnMap;
+    }
+
+    /**
+     * 添加sql语句，并开始搜索
+     */
+    private void addSqlCommands() {
+        searchCache();
+        CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
+        //每个priority用一个线程，每一个后缀名对应一个优先级
+        //按照优先级排列，key是sql和表名的对应，value是容器
+        LinkedHashMap<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>>
+                nonFormattedSql = getNonFormattedSqlFromTableQueue(true);
+        Bit taskStatus = new Bit(new byte[]{0});
+        Bit allTaskStatus = new Bit(new byte[]{0});
+
+        LinkedHashMap<String, ConcurrentSkipListSet<String>> containerMap = new LinkedHashMap<>();
+        //任务队列
+        ConcurrentLinkedQueue<Runnable> taskQueue = new ConcurrentLinkedQueue<>();
+        //添加搜索任务到队列
+        addSearchTasks(nonFormattedSql, taskStatus, allTaskStatus, containerMap, taskQueue);
+
+        //添加消费者线程，接受任务进行处理，最高4线程
+        int processors = Runtime.getRuntime().availableProcessors();
+        processors = Math.min(processors, 4);
+        for (int i = 0; i < processors; i++) {
+            cachedThreadPoolUtil.executeTask(() -> {
+                Runnable todo;
+                while ((todo = taskQueue.poll()) != null) {
+                    todo.run();
+                }
+            });
+        }
+        waitForTaskAndMergeResults(containerMap, allTaskStatus, taskStatus);
+    }
+
+    /**
+     * 生成删除记录sql
+     *
+     * @param asciiSum ascii
+     * @param path     文件路径
      */
     private void addDeleteSqlCommandByAscii(int asciiSum, String path) {
         String command;
@@ -212,8 +608,9 @@ public class DatabaseService {
 
     /**
      * 生成添加记录sql
+     *
      * @param asciiSum ascii
-     * @param path 文件路径
+     * @param path     文件路径
      * @param priority 优先级
      */
     private void addAddSqlCommandByAscii(int asciiSum, String path, int priority) {
@@ -229,6 +626,7 @@ public class DatabaseService {
 
     /**
      * 获得文件名
+     *
      * @param path 文件路径
      * @return 文件名
      */
@@ -265,6 +663,7 @@ public class DatabaseService {
 
     /**
      * 从数据库中删除记录
+     *
      * @param path 文件路径
      */
     private void removeFileFromDatabase(String path) {
@@ -276,6 +675,7 @@ public class DatabaseService {
 
     /**
      * 根据文件后缀获取优先级信息
+     *
      * @param suffix 文件后缀名
      * @return 优先级
      */
@@ -299,6 +699,7 @@ public class DatabaseService {
 
     /**
      * 获取文件后缀
+     *
      * @param path 文件路径
      * @return 后缀名
      */
@@ -385,6 +786,7 @@ public class DatabaseService {
 
     /**
      * 添加任务到任务列表
+     *
      * @param sql 任务
      */
     private void addToCommandSet(SQLWithTaskId sql) {
@@ -405,6 +807,7 @@ public class DatabaseService {
 
     /**
      * 检查任务是否重复
+     *
      * @param sql 任务
      * @return boolean
      */
@@ -419,6 +822,7 @@ public class DatabaseService {
 
     /**
      * 获取数据库状态
+     *
      * @return 装填
      */
     public Constants.Enums.DatabaseStatus getStatus() {
@@ -427,6 +831,7 @@ public class DatabaseService {
 
     /**
      * 设置数据库状态
+     *
      * @param status 状态
      */
     private void setStatus(Constants.Enums.DatabaseStatus status) {
@@ -435,7 +840,8 @@ public class DatabaseService {
 
     /**
      * 更新文件索引
-     * @param disks 磁盘
+     *
+     * @param disks      磁盘
      * @param ignorePath 忽略文件夹
      */
     private void searchFile(String disks, String ignorePath) throws IOException, InterruptedException {
@@ -457,9 +863,10 @@ public class DatabaseService {
 
     /**
      * 调用C程序搜索并等待执行完毕
-     * @param paths 磁盘信息
+     *
+     * @param paths      磁盘信息
      * @param ignorePath 忽略文件夹
-     * @throws IOException exception
+     * @throws IOException          exception
      * @throws InterruptedException exception
      */
     private void searchByUSN(String paths, String ignorePath) throws IOException, InterruptedException {
@@ -482,10 +889,11 @@ public class DatabaseService {
 
     /**
      * 进程是否存在
-     * @param procName 进程名
+     *
+     * @param procName   进程名
      * @param strBuilder 用于获取cmd执行tasklist后返回的信息
      * @return boolean
-     * @throws IOException 失败
+     * @throws IOException          失败
      * @throws InterruptedException 失败
      */
     private boolean isTaskExist(String procName, StringBuilder strBuilder) throws IOException, InterruptedException {
@@ -505,8 +913,9 @@ public class DatabaseService {
 
     /**
      * 等待进程
+     *
      * @param procName 进程名
-     * @throws IOException 失败
+     * @throws IOException          失败
      * @throws InterruptedException 失败
      */
     private void waitForProcess(@SuppressWarnings("SameParameterValue") String procName) throws IOException, InterruptedException {
@@ -546,6 +955,7 @@ public class DatabaseService {
 
     /**
      * 关闭数据库连接并更新数据库
+     *
      * @param ignorePath 忽略文件夹
      */
     private void updateLists(String ignorePath) throws IOException, InterruptedException {
@@ -565,6 +975,7 @@ public class DatabaseService {
 
     /**
      * 等待sql任务执行
+     *
      * @param taskId 任务id
      */
     private void waitForCommandSet(@SuppressWarnings("SameParameterValue") SqlTaskIds taskId) {
@@ -603,16 +1014,6 @@ public class DatabaseService {
             }
         }
         return false;
-    }
-
-    /**
-     * 更新表权重
-     * @param tableName 表名
-     * @param weight 权重
-     */
-    private void updateTableWeight(String tableName, long weight) {
-        String format = String.format("UPDATE weight SET TABLE_WEIGHT=%d WHERE TABLE_NAME=\"%s\"", weight, tableName);
-        commandSet.add(new SQLWithTaskId(format, SqlTaskIds.UPDATE_WEIGHT, "weight"));
     }
 
     private HashMap<String, Integer> queryAllWeights() {
@@ -691,21 +1092,34 @@ public class DatabaseService {
         }
     }
 
+
     @EventRegister(registerClass = StartMonitorDiskEvent.class)
     private static void startMonitorDiskEvent(Event event) {
         getInstance().startMonitorDisk();
     }
 
-    @EventRegister(registerClass = QueryAllWeightsEvent.class)
-    private static void queryAllWeights(Event event) {
-        HashMap<String, Integer> weightsMap = getInstance().queryAllWeights();
-        event.setReturnValue(weightsMap);
+    @EventRegister(registerClass = StartSearchEvent.class)
+    private static void startSearchEvent(Event event) {
+        StartSearchEvent startSearchEvent = (StartSearchEvent) event;
+        DatabaseService databaseService = getInstance();
+        databaseService.searchText = startSearchEvent.searchText;
+        databaseService.searchCase = startSearchEvent.searchCase;
+        databaseService.keywords = startSearchEvent.keywords;
+        databaseService.isStop.set(false);
+        databaseService.addSqlCommands();
     }
 
-    @EventRegister(registerClass = UpdateTableWeightEvent.class)
-    private static void updateWeight(Event event) {
-        UpdateTableWeightEvent updateTableWeightEvent = (UpdateTableWeightEvent) event;
-        getInstance().updateTableWeight(updateTableWeightEvent.tableName, updateTableWeightEvent.tableWeight);
+    @EventRegister(registerClass = StopSearchEvent.class)
+    private static void stopSearchEvent(Event event) {
+        DatabaseService databaseService = getInstance();
+        databaseService.isStop.set(true);
+        databaseService.tableQueue.clear();
+        databaseService.tempResults.clear();
+    }
+
+    @EventListener(listenClass = BootSystemEvent.class)
+    private static void warmupDatabase(Event event) {
+        getInstance().warmup();
     }
 
     @EventRegister(registerClass = AddToCacheEvent.class)
@@ -745,6 +1159,7 @@ public class DatabaseService {
         databaseService.setStatus(Constants.Enums.DatabaseStatus.MANUAL_UPDATE);
         databaseService.updateLists(AllConfigs.getInstance().getIgnorePath());
         databaseService.setStatus(Constants.Enums.DatabaseStatus.NORMAL);
+        getInstance().isDatabaseUpdated.set(true);
     }
 
     @EventRegister(registerClass = ExecuteSQLEvent.class)
@@ -821,7 +1236,7 @@ public class DatabaseService {
 
     private enum SqlTaskIds {
         DELETE_FROM_LIST, DELETE_FROM_CACHE, INSERT_TO_LIST, INSERT_TO_CACHE,
-        CREATE_INDEX, CREATE_TABLE, DROP_TABLE, DROP_INDEX, UPDATE_SUFFIX,UPDATE_WEIGHT
+        CREATE_INDEX, CREATE_TABLE, DROP_TABLE, DROP_INDEX, UPDATE_SUFFIX, UPDATE_WEIGHT
     }
 }
 
