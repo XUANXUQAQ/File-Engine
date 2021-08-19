@@ -104,7 +104,7 @@ public class DatabaseService {
             return;
         }
         origin.weight.addAndGet(weight);
-        String format = String.format("UPDATE weight SET TABLE_WEIGHT=%d WHERE TABLE_NAME=\"%s\"", weight, tableName);
+        String format = String.format("UPDATE weight SET TABLE_WEIGHT=%d WHERE TABLE_NAME=\"%s\"", origin.weight.get(), tableName);
         commandSet.add(new SQLWithTaskId(format, SqlTaskIds.UPDATE_WEIGHT, "weight"));
         if (IsDebug.isDebug()) {
             System.err.println("已更新" + tableName + "权重, 之前为" + origin + "***增加了" + weight);
@@ -743,6 +743,7 @@ public class DatabaseService {
     /**
      * 执行sql
      */
+    @SuppressWarnings("SqlNoDataSourceInspection")
     private void executeAllCommands() {
         if (!commandSet.isEmpty()) {
             LinkedHashSet<SQLWithTaskId> tempCommandSet = new LinkedHashSet<>(commandSet);
