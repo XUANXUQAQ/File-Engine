@@ -13,7 +13,7 @@ A tool can make you work more efficiently.
 ### [View help](https://github.com/XUANXUQAQ/File-Engine/wiki/Usage)   
 Or enter :help in the search bar. by default Ctrl + Alt + K to call out the search bar.
 ## feature
-  * Quick search, ***measured 80W file index takes 15-20 seconds.***
+  * Quick search, ***measured 1 million files index only takes 10 seconds. The search speed depends on the speed of your hard drive***
   * Green portable software, all configuration files are in its own directory.
   * Custom commands to quickly perform selected operations.
   * Update files in real time, automatically detect deleted and new files.
@@ -29,14 +29,3 @@ Thanks for the following project:
 3.jna (https://github.com/java-native-access/jna)   
 4.sqlite_jdbc (https://github.com/xerial/sqlite-jdbc)   
 5.lombok (https://projectlombok.org/)
-
-## Demos:
-![8PPdxS.gif](https://github.com/XUANXUQAQ/File-Engine/raw/master/%E6%BC%94%E7%A4%BA.gif)
-
-![8PPdxS.gif](https://github.com/XUANXUQAQ/File-Engine/raw/master/%E6%BC%94%E7%A4%BA-attach.gif)
-
-[![s6JDN6.png](https://s3.ax1x.com/2021/01/18/s6JDN6.png)](https://imgchr.com/i/s6JDN6)
-
-[![s6Jr4K.png](https://s3.ax1x.com/2021/01/18/s6Jr4K.png)](https://imgchr.com/i/s6Jr4K)
-
-[![s68sVx.png](https://s3.ax1x.com/2021/01/18/s68sVx.png)](https://imgchr.com/i/s68sVx)

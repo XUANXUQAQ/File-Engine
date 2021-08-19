@@ -12,7 +12,7 @@ A tool can make you work more efficiently.
 ### [查看帮助](https://github.com/XUANXUQAQ/File-Engine/wiki/Usage)   
 或者在搜索框中输入 :help    默认Ctrl + Alt + K呼出搜索框
 ## 特性
- * 快速搜索，***实测80W文件索引需要15-20秒。***
+ * 快速搜索，***实测100W文件索引仅需要10秒。搜索速度取决于你的硬盘的速度***
  * 绿色便携软件，所有配置文件均在自身目录。
  * 自定义命令，快速进行所选操作。
  * 实时更新文件，自动检测已删除和新增文件。
@@ -29,15 +29,4 @@ A tool can make you work more efficiently.
 4.sqlite_jdbc (https://github.com/xerial/sqlite-jdbc)   
 5.lombok (https://projectlombok.org/)
 
-## Demos:
-![8PPdxS.gif](https://github.com/XUANXUQAQ/File-Engine/raw/master/%E6%BC%94%E7%A4%BA.gif)
 
-![8PPdxS.gif](https://github.com/XUANXUQAQ/File-Engine/raw/master/%E6%BC%94%E7%A4%BA-attach.gif)
-
-[![s6JDN6.png](https://s3.ax1x.com/2021/01/18/s6JDN6.png)](https://imgchr.com/i/s6JDN6)
-
-[![s6Jr4K.png](https://s3.ax1x.com/2021/01/18/s6Jr4K.png)](https://imgchr.com/i/s6Jr4K)
-
-[![s68sVx.png](https://s3.ax1x.com/2021/01/18/s68sVx.png)](https://imgchr.com/i/s68sVx)
-
-   
