@@ -1744,7 +1744,13 @@ public class SettingsFrame {
      */
     private void setCheckBoxGui() {
         checkBoxLoseFocus.setSelected(allConfigs.isLoseFocusClose());
-        checkBoxAddToStartup.setSelected(hasStartup());
+        int startup = hasStartup();
+        if (startup == 1) {
+            eventManagement.putEvent(
+                    new ShowTaskBarMessageEvent(translateUtil.getTranslation("Warning"),
+                            translateUtil.getTranslation("The startup path is invalid")));
+        }
+        checkBoxAddToStartup.setSelected(startup == 0);
         checkBoxAdmin.setSelected(allConfigs.isDefaultAdmin());
         checkBoxIsShowTipOnCreatingLnk.setSelected(allConfigs.isShowTipOnCreatingLnk());
         checkBoxResponseCtrl.setSelected(allConfigs.isResponseCtrl());
@@ -2528,7 +2534,7 @@ public class SettingsFrame {
                 e.printStackTrace();
             }
         } else {
-            if (hasStartup()) {
+            if (hasStartup() == 0) {
                 try {
                     Process p = StartupUtil.deleteStartup();
                     StringBuilder result = new StringBuilder();

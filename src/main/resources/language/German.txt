@@ -230,3 +230,4 @@ Do you want to download it manually=Möchten Sie es manuell herunterladen?
 Select disk=Datenträger auswählen
 Search Failed=Suche fehlgeschlagen
 Priority folder does not exist=Der Prioritätssuchordner existiert nicht
+The startup path is invalid=Der Startpfad ist ungültig
