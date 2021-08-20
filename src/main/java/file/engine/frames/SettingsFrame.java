@@ -520,7 +520,7 @@ public class SettingsFrame {
                 cmd = fileChooser.getSelectedFile().getAbsolutePath();
                 eventManagement.putEvent(new AddCmdEvent(":" + name + ";" + cmd), event ->
                         listCmds.setListData(allConfigs.getCmdSet().toArray()), event ->
-                    listCmds.setListData(allConfigs.getCmdSet().toArray()));
+                        listCmds.setListData(allConfigs.getCmdSet().toArray()));
             }
         });
     }

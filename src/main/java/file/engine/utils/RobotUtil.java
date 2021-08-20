@@ -30,9 +30,10 @@ public class RobotUtil {
 
     /**
      * 移动鼠标点击
-     * @param x x坐标
-     * @param y y坐标
-     * @param count 次数
+     *
+     * @param x              x坐标
+     * @param y              y坐标
+     * @param count          次数
      * @param mouseButtonNum 需要点击的案件
      * @see java.awt.event.InputEvent
      */
@@ -55,6 +56,7 @@ public class RobotUtil {
 
     /**
      * 键盘点击
+     *
      * @param keyCodes 键盘案件
      * @see java.awt.event.KeyEvent
      */

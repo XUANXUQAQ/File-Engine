@@ -46,6 +46,7 @@ public class MainClass {
 
     /**
      * 加载本地释放的dll
+     *
      * @throws ClassNotFoundException 加载失败
      */
     private static void initializeDllInterface() throws ClassNotFoundException {
@@ -58,6 +59,7 @@ public class MainClass {
 
     /**
      * 如果有更新标志，更新插件
+     *
      * @throws FileNotFoundException 找不到文件更新失败
      */
     private static void updatePlugins() throws FileNotFoundException {
@@ -85,6 +87,7 @@ public class MainClass {
 
     /**
      * 检查数据库中表是否存在
+     *
      * @param tableNames 所有待检测的表名
      * @return true如果所有都存在
      */
@@ -104,6 +107,7 @@ public class MainClass {
 
     /**
      * 检查是否安装在C盘
+     *
      * @return Boolean
      */
     private static boolean isAtDiskC() {
@@ -112,6 +116,7 @@ public class MainClass {
 
     /**
      * 检查数据库是否损坏
+     *
      * @return boolean
      */
     private static boolean isDatabaseDamaged() {
@@ -124,6 +129,7 @@ public class MainClass {
 
     /**
      * 清空一个目录，不删除目录本身
+     *
      * @param file 目录文件
      */
     private static void deleteDir(File file) {
@@ -354,6 +360,7 @@ public class MainClass {
 
     /**
      * 主循环
+     *
      * @throws InterruptedException sleep exception
      */
     private static void mainLoop() throws InterruptedException {
@@ -456,6 +463,7 @@ public class MainClass {
 
     /**
      * 检查启动次数，若已超过三次则发出重新更新索引信号
+     *
      * @return true如果启动超过三次
      */
     private static boolean checkIndex() {
@@ -542,6 +550,7 @@ public class MainClass {
 
     /**
      * 释放所有文件
+     *
      * @throws IOException 释放失败
      */
     private static void initFoldersAndFiles() throws IOException {

@@ -385,6 +385,7 @@ public class AllConfigs {
 
     /**
      * 获取网络代理信息
+     *
      * @return ProxyInfo
      */
     public ProxyInfo getProxy() {
@@ -402,6 +403,7 @@ public class AllConfigs {
 
     /**
      * 是否响应双击Ctrl键
+     *
      * @return boolean
      */
     public boolean isResponseCtrl() {
@@ -451,6 +453,7 @@ public class AllConfigs {
 
     /**
      * 根据用户选择的更新服务器获取地址
+     *
      * @return addressUrl
      */
     public AddressUrl getUpdateUrlFromMap() {
@@ -459,6 +462,7 @@ public class AllConfigs {
 
     /**
      * 获取所有更新服务器
+     *
      * @return Set
      */
     public Set<String> getAllUpdateAddress() {
@@ -471,6 +475,7 @@ public class AllConfigs {
 
     /**
      * 获取所有可用的本地磁盘
+     *
      * @return String，用逗号隔开
      */
     private String getLocalDisks() {
@@ -491,6 +496,7 @@ public class AllConfigs {
 
     /**
      * 获取用户配置的磁盘信息
+     *
      * @param settingsInJson 用户配置json
      */
     private void readDisks(JSONObject settingsInJson) {
@@ -626,6 +632,7 @@ public class AllConfigs {
 
     /**
      * 打开配置文件，解析为json
+     *
      * @return JSON
      */
     private JSONObject getSettingsJSON() {
@@ -655,8 +662,9 @@ public class AllConfigs {
 
     /**
      * 尝试从json中读取，若失败则返回默认值
-     * @param json json数据
-     * @param key key
+     *
+     * @param json       json数据
+     * @param key        key
      * @param defaultObj 默认值
      * @return 读取值或默认值
      */
@@ -677,6 +685,7 @@ public class AllConfigs {
 
     /**
      * 检查配置并发出警告
+     *
      * @param configEntity 配置
      * @return 错误信息
      */
@@ -752,6 +761,7 @@ public class AllConfigs {
 
     /**
      * 设置swing的主题
+     *
      * @param theme theme
      */
     private void setSwingLaf(Constants.Enums.SwingThemes theme) {
@@ -833,6 +843,7 @@ public class AllConfigs {
 
     /**
      * 检查configEntity中有没有null值，在debug时使用
+     *
      * @param config configEntity
      * @return boolean
      */
@@ -854,6 +865,7 @@ public class AllConfigs {
 
     /**
      * 获取更新地址
+     *
      * @return url
      */
     private String getUpdateUrl() {
@@ -862,6 +874,7 @@ public class AllConfigs {
 
     /**
      * 从服务器获取最新信息
+     *
      * @return JSON
      * @throws IOException 获取失败
      */

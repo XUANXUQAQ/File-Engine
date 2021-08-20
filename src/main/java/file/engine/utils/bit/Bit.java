@@ -9,7 +9,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public class Bit {
 
     private final AtomicReference<byte[]> bytes = new AtomicReference<>();
-    private final byte[] zero = new byte[] {0};
+    private final byte[] zero = new byte[]{0};
 
     public Bit(byte[] init) {
         if (init != null && init.length > 0) {
@@ -30,6 +30,7 @@ public class Bit {
 
     /**
      * 左移count位
+     *
      * @param count 次数
      * @return 当前bit对象
      */
@@ -41,6 +42,7 @@ public class Bit {
 
     /**
      * 右移count位
+     *
      * @param count 次数
      * @return 当前bit对象
      */
@@ -56,6 +58,7 @@ public class Bit {
 
     /**
      * 与运算
+     *
      * @param bit bit
      * @return 结果
      */
@@ -82,6 +85,7 @@ public class Bit {
 
     /**
      * 或运算
+     *
      * @param bit bit
      * @return 结果
      */
@@ -92,7 +96,7 @@ public class Bit {
         int offset = Math.abs(this.bytes.get().length - bit.bytes.get().length);
         int maxLength = bigger.get().length;
         byte[] res = new byte[maxLength];
-        for (int i = maxLength - 1; i >= 0 ; i--) {
+        for (int i = maxLength - 1; i >= 0; i--) {
             byte b1, b2;
             int index;
             b1 = bigger.get()[i];
@@ -108,18 +112,27 @@ public class Bit {
 
     /**
      * 非运算
+     *
      * @return 结果
      */
     public Bit not() {
-        byte[] res = new byte[this.bytes.get().length];
+        int index = 0;
         for (int i = 0; i < this.bytes.get().length; i++) {
-            res[i] = (byte) (this.bytes.get()[i] == 0 ? 1 : 0);
+            if (this.bytes.get()[i] == 0) {
+                index = i;
+                break;
+            }
+        }
+        byte[] res = Arrays.copyOfRange(this.bytes.get(), index, this.bytes.get().length);
+        for (int i = 0; i < res.length; i++) {
+            res[i] = (byte) (res[i] == 0 ? 1 : 0);
         }
         return new Bit(res);
     }
 
     /**
      * 更新值
+     *
      * @param bit bit
      * @return this
      */

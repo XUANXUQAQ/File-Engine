@@ -55,16 +55,16 @@ public class CachedThreadPoolUtil {
                 System.err.println("线程池等待超时");
                 ThreadPoolExecutor tpe = (ThreadPoolExecutor) cachedThreadPool;
                 int queueSize = tpe.getQueue().size();
-                System.err.println("当前排队线程数："+ queueSize);
+                System.err.println("当前排队线程数：" + queueSize);
 
                 int activeCount = tpe.getActiveCount();
-                System.err.println("当前活动线程数："+ activeCount);
+                System.err.println("当前活动线程数：" + activeCount);
 
                 long completedTaskCount = tpe.getCompletedTaskCount();
-                System.err.println("执行完成线程数："+ completedTaskCount);
+                System.err.println("执行完成线程数：" + completedTaskCount);
 
                 long taskCount = tpe.getTaskCount();
-                System.err.println("总线程数："+ taskCount);
+                System.err.println("总线程数：" + taskCount);
             }
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -80,6 +80,7 @@ public class CachedThreadPoolUtil {
             SecurityManager s = System.getSecurityManager();
             group = (s != null) ? s.getThreadGroup() : Thread.currentThread().getThreadGroup();
         }
+
         @Override
         public Thread newThread(Runnable r) {
             String name = "pool-" + poolNumber.incrementAndGet() + "-thread-" + threadNumber.getAndIncrement();
@@ -97,6 +98,7 @@ public class CachedThreadPoolUtil {
         /**
          * 用于在debug时查看在哪个位置发出的任务
          * 由于执行任务的调用栈长度超过3，所以不会出现数组越界
+         *
          * @return stackTraceElement
          */
         private StackTraceElement getStackTraceElement() {

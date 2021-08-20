@@ -417,17 +417,19 @@ public class DatabaseService {
      */
     private void waitForTaskAndMergeResults(LinkedHashMap<String, ConcurrentSkipListSet<String>> containerMap, Bit allTaskStatus, Bit taskStatus) {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
+            Bit zero = new Bit(new byte[]{0});
+            Bit one = new Bit(new byte[]{1});
+            Bit emptyContainerTask = new Bit(new byte[]{0});
             try {
-                while (!isStop.get()) {
+                // 每当有一个容器全部包含后被清空，emptyContainerTask中对应的位会被设为1，当所有容器都为空时，取not运算将会得到1，但开始时取反也会得1，所以需要判断长度
+                while (!isStop.get() && !(emptyContainerTask.not().equals(one) && emptyContainerTask.length() > 1)) {
                     Bit tmpTaskStatus = new Bit(new byte[]{0});
-                    //线程状态的记录从第二个位开始，所以初始值为2
+                    //线程状态的记录从第二个位开始，所以初始值为1 0
                     Bit start = new Bit(new byte[]{1, 0});
                     //循环次数，也是下方与运算结束后需要向右偏移的位数
                     int loopCount = 1;
                     //由于任务的耗时不同，如果阻塞时间过长，则跳过该任务，在下次循环中重新拿取结果
                     long waitTime = 0;
-                    Bit zero = new Bit(new byte[]{0});
-                    Bit one = new Bit(new byte[]{1});
                     ConcurrentSkipListSet<String> results;
                     while (start.length() <= allTaskStatus.length() || taskStatus.or(zero).equals(zero)) {
                         if (isStop.get()) {
@@ -459,6 +461,7 @@ public class DatabaseService {
                                 }
                                 if (!isFailed) {
                                     results.clear();
+                                    emptyContainerTask = emptyContainerTask.or(start);
                                 }
                             }
                             tmpTaskStatus = tmpTaskStatus.or(start);
@@ -505,6 +508,9 @@ public class DatabaseService {
                 try {
                     Set<String> sqls = commandsMap.keySet();
                     for (String each : sqls) {
+                        if (isStop.get()) {
+                            return;
+                        }
                         String formattedSql;
                         //格式化是为了以后的拓展性
                         formattedSql = String.format(each, "PATH");

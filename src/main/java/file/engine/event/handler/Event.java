@@ -11,7 +11,8 @@ public class Event {
     private final AtomicBoolean isFailed = new AtomicBoolean(false);
     private final AtomicInteger executeTimes = new AtomicInteger(0);
     private final AtomicBoolean isBlock = new AtomicBoolean(false);
-    private @Setter Object returnValue;
+    private @Setter
+    Object returnValue;
     private Consumer<Event> callback;
     private Consumer<Event> errorHandler;
 

@@ -9,6 +9,7 @@ public class Md5Util {
 
     /**
      * 获取文件MD5值，固定为32位
+     *
      * @param filePath 文件路径
      * @return MD5字符串
      */
