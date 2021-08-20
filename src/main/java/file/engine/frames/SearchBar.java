@@ -2529,6 +2529,7 @@ public class SearchBar {
                     }
                 });
             }
+            searchBar.repaint();
         }
     }
 
