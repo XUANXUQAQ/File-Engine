@@ -418,59 +418,61 @@ public class DatabaseService {
     private void waitForTaskAndMergeResults(LinkedHashMap<String, ConcurrentSkipListSet<String>> containerMap, Bit allTaskStatus, Bit taskStatus) {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             try {
-                Bit tmpTaskStatus = new Bit(new byte[]{0});
-                //线程状态的记录从第二个位开始，所以初始值为2
-                Bit start = new Bit(new byte[]{1, 0});
-                //循环次数，也是下方与运算结束后需要向右偏移的位数
-                int loopCount = 1;
-                //由于任务的耗时不同，如果阻塞时间过长，则跳过该任务，在下次循环中重新拿取结果
-                long waitTime = 0;
-                Bit zero = new Bit(new byte[]{0});
-                Bit one = new Bit(new byte[]{1});
-                ConcurrentSkipListSet<String> results;
-                while (start.length() <= allTaskStatus.length() || taskStatus.or(zero).equals(zero)) {
-                    if (isStop.get()) {
-                        //用户重新输入，结束当前任务
-                        break;
-                    }
-                    results = containerMap.get(start.toString());
-                    if (results != null) {
-                        for (String result : results) {
-                            if (!tempResults.contains(result)) {
-                                tempResults.add(result);
-                                results.remove(result);
-                            }
+                while (!isStop.get()) {
+                    Bit tmpTaskStatus = new Bit(new byte[]{0});
+                    //线程状态的记录从第二个位开始，所以初始值为2
+                    Bit start = new Bit(new byte[]{1, 0});
+                    //循环次数，也是下方与运算结束后需要向右偏移的位数
+                    int loopCount = 1;
+                    //由于任务的耗时不同，如果阻塞时间过长，则跳过该任务，在下次循环中重新拿取结果
+                    long waitTime = 0;
+                    Bit zero = new Bit(new byte[]{0});
+                    Bit one = new Bit(new byte[]{1});
+                    ConcurrentSkipListSet<String> results;
+                    while (start.length() <= allTaskStatus.length() || taskStatus.or(zero).equals(zero)) {
+                        if (isStop.get()) {
+                            //用户重新输入，结束当前任务
+                            break;
                         }
-                    }
-                    //当线程完成，taskStatus中的位会被设置为1
-                    //这时，将taskStatus和start做与运算，然后移到第一位，如果为1，则线程已完成搜索
-                    Bit and = taskStatus.and(start);
-                    boolean isFailed = System.currentTimeMillis() - waitTime > 300 && waitTime != 0;
-                    if (((and).shiftRight(loopCount)).equals(one) || isFailed) {
-                        // failCount过大，阻塞时间过长则跳过
-                        waitTime = 0;
                         results = containerMap.get(start.toString());
                         if (results != null) {
                             for (String result : results) {
                                 if (!tempResults.contains(result)) {
                                     tempResults.add(result);
+                                    results.remove(result);
                                 }
                             }
-                            if (!isFailed) {
-                                results.clear();
+                        }
+                        //当线程完成，taskStatus中的位会被设置为1
+                        //这时，将taskStatus和start做与运算，然后移到第一位，如果为1，则线程已完成搜索
+                        Bit and = taskStatus.and(start);
+                        boolean isFailed = System.currentTimeMillis() - waitTime > 300 && waitTime != 0;
+                        if (((and).shiftRight(loopCount)).equals(one) || isFailed) {
+                            // failCount过大，阻塞时间过长则跳过
+                            waitTime = 0;
+                            results = containerMap.get(start.toString());
+                            if (results != null) {
+                                for (String result : results) {
+                                    if (!tempResults.contains(result)) {
+                                        tempResults.add(result);
+                                    }
+                                }
+                                if (!isFailed) {
+                                    results.clear();
+                                }
+                            }
+                            tmpTaskStatus = tmpTaskStatus.or(start);
+                            //将start左移，代表当前任务结束，继续拿下一个任务的结果
+                            start.shiftLeft(1);
+                            loopCount++;
+                        } else {
+                            if (waitTime == 0) {
+                                waitTime = System.currentTimeMillis();
                             }
                         }
-                        tmpTaskStatus = tmpTaskStatus.or(start);
-                        //将start左移，代表当前任务结束，继续拿下一个任务的结果
-                        start.shiftLeft(1);
-                        loopCount++;
-                    } else {
-                        if (waitTime == 0) {
-                            waitTime = System.currentTimeMillis();
-                        }
                     }
+                    TimeUnit.MILLISECONDS.sleep(1);
                 }
-                TimeUnit.MILLISECONDS.sleep(1);
             } catch (Exception e) {
                 e.printStackTrace();
             }
