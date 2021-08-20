@@ -65,7 +65,6 @@ public class SearchBar {
     private final AtomicBoolean isNotSqlInitialized = new AtomicBoolean(true);
     private final AtomicBoolean isBorderThreadNotExist = new AtomicBoolean(true);
     private final AtomicBoolean isLockMouseMotionThreadNotExist = new AtomicBoolean(true);
-    private final AtomicBoolean isRepaintFrameThreadNotExist = new AtomicBoolean(true);
     private final AtomicBoolean isTryToShowResultThreadNotExist = new AtomicBoolean(true);
     private static final AtomicBoolean isPreviewMode = new AtomicBoolean(false);
     private final AtomicBoolean isTutorialMode = new AtomicBoolean(false);
@@ -1885,6 +1884,7 @@ public class SearchBar {
                         e.printStackTrace();
                     }
                 }
+                repaint();
                 break;
         }
     }
@@ -2015,6 +2015,7 @@ public class SearchBar {
                         e.printStackTrace();
                     }
                 }
+                repaint();
                 break;
             case 1:
                 size = listResultsNum.get();
@@ -2901,6 +2902,7 @@ public class SearchBar {
                         clearALabel(label6);
                         clearALabel(label7);
                         clearALabel(label8);
+                        repaint();
                     }
                     TimeUnit.MILLISECONDS.sleep(16);
                 }
@@ -2920,24 +2922,6 @@ public class SearchBar {
             SwingUtilities.invokeLater(() -> SwingUtilities.updateComponentTreeUI(searchBar));
         }
         SwingUtilities.invokeLater(searchBar::repaint);
-    }
-
-    /**
-     * 更新画面线程
-     */
-    private void repaintFrameThread() {
-        CachedThreadPoolUtil.getInstance().executeTask(() -> {
-            try {
-                while (isVisible()) {
-                    repaint();
-                    TimeUnit.MILLISECONDS.sleep(16);
-                }
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            } finally {
-                isRepaintFrameThreadNotExist.set(true);
-            }
-        });
     }
 
     /**
@@ -3383,10 +3367,6 @@ public class SearchBar {
                 isBorderThreadNotExist.set(false);
                 CachedThreadPoolUtil.getInstance().executeTask(this::setBorderOnVisible);
             }
-            if (isRepaintFrameThreadNotExist.get()) {
-                isRepaintFrameThreadNotExist.set(false);
-                repaintFrameThread();
-            }
             if (isTryToShowResultThreadNotExist.get()) {
                 isTryToShowResultThreadNotExist.set(false);
                 tryToShowRecordsThread();
@@ -3754,6 +3734,7 @@ public class SearchBar {
         clearALabel(label6);
         clearALabel(label7);
         clearALabel(label8);
+        repaint();
     }
 
     /**
