@@ -230,3 +230,4 @@ Do you want to download it manually=Вы хотите скачать его вр
 Select disk=Выбрать диск
 Search Failed=Поиск не удался
 Priority folder does not exist=Папка приоритетного поиска не существует
+The startup path is invalid=Путь запуска недействителен

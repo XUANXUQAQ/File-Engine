@@ -31,6 +31,8 @@ import java.util.Date;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static file.engine.utils.StartupUtil.hasStartup;
+
 
 public class MainClass {
     private static final String FILE_MONITOR_64_MD_5 = "5a8c123397c8e89614d4f9b91c2fa8f9";
@@ -371,6 +373,11 @@ public class MainClass {
 
         startGetCursorPosTimer();
 
+        if (hasStartup() == 1) {
+            eventManagement.putEvent(
+                    new ShowTaskBarMessageEvent(translateUtil.getTranslation("Warning"),
+                            translateUtil.getTranslation("The startup path is invalid")));
+        }
         while (eventManagement.isNotMainExit()) {
             // 主循环开始
             if (CursorCount.count.get() < 200) {

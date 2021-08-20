@@ -230,3 +230,4 @@ Do you want to download it manually=您要手动下载吗
 Select disk=选择磁盘
 Search Failed=搜索失败
 Priority folder does not exist=优先搜索文件夹不存在
+The startup path is invalid=开机启动项无效

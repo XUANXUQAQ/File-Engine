@@ -230,3 +230,4 @@ Do you want to download it manually=
 Select disk=
 Search Failed=
 Priority folder does not exist=
+The startup path is invalid=
