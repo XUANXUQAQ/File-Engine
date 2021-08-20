@@ -18,7 +18,6 @@ import java.util.function.Supplier;
  * 使用方法：给点击下载的button添加actionListener，判断当前按钮是点击下载，还是点击取消下载
  * 如果是点击取消下载则发送一个cancel请求
  * 如果是点击下载，则通过判断后发送一个start下载请求，然后开启一个线程运行该方法即可
- *
  */
 public class SetDownloadProgress {
 

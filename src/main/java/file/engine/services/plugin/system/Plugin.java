@@ -79,8 +79,9 @@ public class Plugin {
 
     /**
      * 初始化方法
+     *
      * @param methodName 方法名
-     * @param aClass 插件类名
+     * @param aClass     插件类名
      * @throws Exception exception
      */
     private void loadMethod(String methodName, Class<?> aClass) throws Exception {

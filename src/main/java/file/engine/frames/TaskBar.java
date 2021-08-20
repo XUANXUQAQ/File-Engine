@@ -185,6 +185,7 @@ public class TaskBar {
 
     /**
      * 创建弹出菜单
+     *
      * @return 菜单
      */
     private JPopupMenu getPopupMenu() {
@@ -228,9 +229,10 @@ public class TaskBar {
 
     /**
      * 将消息放入队列中
+     *
      * @param caption 标题
      * @param message 消息
-     * @param event 携带的事件
+     * @param event   携带的事件
      */
     private void showMessage(String caption, String message, Event event) {
         messageQueue.add(new MessageStruct(caption, message, event));
@@ -238,6 +240,7 @@ public class TaskBar {
 
     /**
      * 显示消息
+     *
      * @param caption 标题
      * @param message 消息
      */

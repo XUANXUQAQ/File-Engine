@@ -17,7 +17,8 @@ import java.util.concurrent.ConcurrentHashMap;
 public class TranslateUtil {
     private static volatile TranslateUtil INSTANCE = null;
 
-    private volatile @Getter String language;
+    private volatile @Getter
+    String language;
     private final ConcurrentHashMap<String, String> translationMap = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, String> fileMap = new ConcurrentHashMap<>();
     private Font[] fList;
@@ -39,6 +40,7 @@ public class TranslateUtil {
 
     /**
      * 获取翻译
+     *
      * @param text 原文
      * @return 翻译
      */
@@ -58,6 +60,7 @@ public class TranslateUtil {
 
     /**
      * 如果翻译太长则换行
+     *
      * @param str 翻译
      * @return html包裹的翻译
      */
@@ -82,6 +85,7 @@ public class TranslateUtil {
 
     /**
      * 获取系统默认语言
+     *
      * @return 系统区域语言信息
      */
     public String getDefaultLang() {
@@ -182,6 +186,7 @@ public class TranslateUtil {
 
     /**
      * 设置语言
+     *
      * @param language 语言
      */
     public void setLanguage(String language) {
@@ -196,6 +201,7 @@ public class TranslateUtil {
 
     /**
      * 获取当前语言下定义的窗口宽度
+     *
      * @return width
      */
     public String getFrameWidth() {
@@ -204,6 +210,7 @@ public class TranslateUtil {
 
     /**
      * 获取当前语言下定义的窗口高度
+     *
      * @return height
      */
     public String getFrameHeight() {
@@ -212,9 +219,10 @@ public class TranslateUtil {
 
     /**
      * 自动寻找可以显示的字体并加载
+     *
      * @param fontStyle 字体风格
-     * @param size 大小
-     * @param testStr 测试字符串，用于系统检测是否可以显示该字符串
+     * @param size      大小
+     * @param testStr   测试字符串，用于系统检测是否可以显示该字符串
      * @return 字体
      */
     public Font getFitFont(int fontStyle, int size, String testStr) {

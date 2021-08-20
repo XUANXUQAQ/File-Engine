@@ -22,8 +22,9 @@ public class RegexUtil {
 
     /**
      * 获取正则表达式并放入缓存
+     *
      * @param patternStr 正则表达式
-     * @param flags flags
+     * @param flags      flags
      * @return 编译后的正则表达式
      */
     public static Pattern getPatter(String patternStr, int flags) {

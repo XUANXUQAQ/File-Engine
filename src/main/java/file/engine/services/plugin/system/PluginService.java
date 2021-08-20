@@ -80,6 +80,7 @@ public class PluginService {
 
     /**
      * 检查是否有过旧的插件
+     *
      * @return boolean
      */
     public boolean isPluginTooOld() {
@@ -88,6 +89,7 @@ public class PluginService {
 
     /**
      * 检查是否有重复插件
+     *
      * @return boolean
      */
     public boolean isPluginRepeat() {
@@ -96,6 +98,7 @@ public class PluginService {
 
     /**
      * 检查是否有加载失败的插件
+     *
      * @return boolean
      */
     public boolean isPluginLoadError() {
@@ -104,6 +107,7 @@ public class PluginService {
 
     /**
      * 检查是否含有可更新的插件
+     *
      * @param pluginName 插件名
      * @return boolean
      */
@@ -121,6 +125,7 @@ public class PluginService {
 
     /**
      * 获取所有加载失败的插件
+     *
      * @return 插件名称，以逗号隔开
      */
     public String getLoadingErrorPlugins() {
@@ -133,6 +138,7 @@ public class PluginService {
 
     /**
      * 获取所有重复插件
+     *
      * @return 插件名称，以逗号隔开
      */
     public String getRepeatPlugins() {
@@ -145,6 +151,7 @@ public class PluginService {
 
     /**
      * 根据插件名获取插件实例
+     *
      * @param name 插件名
      * @return 插件实例
      */
@@ -159,6 +166,7 @@ public class PluginService {
 
     /**
      * 根据插件出发关键字获取插件
+     *
      * @param identifier 触发关键字
      * @return 插件实例
      */
@@ -173,6 +181,7 @@ public class PluginService {
 
     /**
      * 获取插件数量
+     *
      * @return 插件数量
      */
     public int getInstalledPluginNum() {
@@ -189,6 +198,7 @@ public class PluginService {
 
     /**
      * 读取插件中的配置信息
+     *
      * @param inputStream inputStream
      * @return 插件信息
      */
@@ -207,6 +217,7 @@ public class PluginService {
 
     /**
      * 卸载插件
+     *
      * @param plugin 插件
      */
     private void unloadPlugin(Plugin plugin) {
@@ -217,11 +228,12 @@ public class PluginService {
 
     /**
      * 加载插件
+     *
      * @param pluginFile 插件jar文件路径
-     * @param className 插件全类名
+     * @param className  插件全类名
      * @param identifier 触发关键字
      * @param pluginName 插件名
-     * @param configs File-Engine配置信息
+     * @param configs    File-Engine配置信息
      * @return 是否有过旧的插件
      * @throws Exception 加载失败
      */
@@ -257,10 +269,11 @@ public class PluginService {
 
     /**
      * 向所有插件发出配置更改事件
-     * @param defaultColor 背景颜色，兼容老API
+     *
+     * @param defaultColor     背景颜色，兼容老API
      * @param chosenLabelColor 选中框颜色，兼容老API
-     * @param borderColor 边框颜色，兼容老API
-     * @param configs 配置信息
+     * @param borderColor      边框颜色，兼容老API
+     * @param configs          配置信息
      */
     private void configsChanged(int defaultColor, int chosenLabelColor, int borderColor, Map<String, Object> configs) {
         for (PluginInfo each : pluginInfoSet) {
@@ -271,6 +284,7 @@ public class PluginService {
 
     /**
      * 检查该插件名所对应的插件是否存在
+     *
      * @param pluginName 插件名
      * @return boolean
      */
@@ -293,6 +307,7 @@ public class PluginService {
 
     /**
      * 加载所有插件
+     *
      * @param pluginPath 插件目录
      */
     private void loadAllPlugins(String pluginPath) {
@@ -361,6 +376,7 @@ public class PluginService {
 
     /**
      * 向所有插件发出窗口已打开事件
+     *
      * @param showingType 显示模式
      */
     private void onSearchBarVisible(String showingType) {

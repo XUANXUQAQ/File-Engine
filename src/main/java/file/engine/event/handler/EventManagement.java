@@ -130,6 +130,7 @@ public class EventManagement {
     /**
      * 用于在debug时查看在哪个位置发出的任务
      * 由于执行任务的调用栈长度超过3，所以不会出现数组越界
+     *
      * @return stackTraceElement
      */
     private StackTraceElement getStackTraceElement() {
@@ -139,8 +140,9 @@ public class EventManagement {
 
     /**
      * 执行所有监听了该Event的任务链
+     *
      * @param eventType 任务类型
-     * @param event 任务
+     * @param event     任务
      */
     private void doAllMethod(String eventType, Event event) {
         ConcurrentLinkedQueue<Method> methodChains = EVENT_LISTENER_MAP.get(eventType);
@@ -161,6 +163,7 @@ public class EventManagement {
     /**
      * 发送任务
      * 不要在构造函数中执行，单例模式下可能会导致死锁
+     *
      * @param event 任务
      */
     public void putEvent(Event event) {
@@ -188,8 +191,9 @@ public class EventManagement {
     /**
      * 异步回调方法发送任务
      * 不要在构造函数中执行，单例模式下可能会导致死锁
-     * @param event 任务
-     * @param callback 回调函数
+     *
+     * @param event        任务
+     * @param callback     回调函数
      * @param errorHandler 错误处理
      */
     public void putEvent(Event event, Consumer<Event> callback, Consumer<Event> errorHandler) {
@@ -324,6 +328,7 @@ public class EventManagement {
 
     /**
      * 检查是否所有任务执行完毕再推出
+     *
      * @return boolean
      */
     private boolean isEventHandlerNotExit() {

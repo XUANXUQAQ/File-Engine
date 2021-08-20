@@ -2557,6 +2557,7 @@ public class SearchBar {
     @EventListener(listenClass = RestartEvent.class)
     private static void restartEvent(Event event) {
         FileMonitor.INSTANCE.stop_monitor();
+        getInstance().closeSearchBar();
     }
 
     /**
@@ -2934,17 +2935,22 @@ public class SearchBar {
         }
         isMergeThreadNotExist.set(false);
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
+            EventManagement eventManagement = EventManagement.getInstance();
             try {
                 long time = System.currentTimeMillis();
                 ConcurrentLinkedQueue<String> tempResults = databaseService.getTempResults();
-                while (startTime < time && isVisible()) {
+                while (true) {
                     if (startTime > time || !isVisible() || listResultsNum.get() > Constants.MAX_RESULTS_COUNT) {
-                        EventManagement.getInstance().putEvent(new StopSearchEvent());
+                        eventManagement.putEvent(new StopSearchEvent());
                         return;
                     }
                     if (isPrioritySearched.get()) {
                         String each;
                         while ((each = tempResults.poll()) != null) {
+                            if (startTime > time || !isVisible() || listResultsNum.get() > Constants.MAX_RESULTS_COUNT) {
+                                eventManagement.putEvent(new StopSearchEvent());
+                                return;
+                            }
                             if (!listResults.contains(each)) {
                                 listResults.add(each);
                                 listResultsNum.incrementAndGet();
@@ -2956,8 +2962,8 @@ public class SearchBar {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             } finally {
+                eventManagement.putEvent(new StopSearchEvent());
                 isMergeThreadNotExist.set(true);
-                EventManagement.getInstance().putEvent(new StopSearchEvent());
             }
         });
     }

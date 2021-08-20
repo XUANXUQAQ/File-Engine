@@ -24,6 +24,7 @@ public class PinyinUtil {
 
     /**
      * 挑出字符串中所有的中文，转换成拼音然后返回hash表
+     *
      * @param str 字符串
      * @return hashMap
      */
