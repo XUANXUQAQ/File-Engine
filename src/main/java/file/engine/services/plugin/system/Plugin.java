@@ -7,8 +7,6 @@ import java.lang.reflect.Method;
 import java.util.LinkedList;
 import java.util.Map;
 
-import static file.engine.configs.Constants.PLUGIN_API_VERSION;
-
 public class Plugin {
     private final Object instance;
     private final LinkedList<String> methodList = new LinkedList<>();
@@ -186,10 +184,6 @@ public class Plugin {
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
-
-    public static int getLatestApiVersion() {
-        return PLUGIN_API_VERSION;
     }
 
     public int getApiVersion() {

@@ -239,7 +239,7 @@ public class PluginService {
         plugin.loadPlugin(configs);
         AllConfigs allConfigs = AllConfigs.getInstance();
         plugin.setCurrentTheme(allConfigs.getDefaultBackgroundColor(), allConfigs.getLabelColor(), allConfigs.getBorderColor());
-        if (Plugin.getLatestApiVersion() - plugin.getApiVersion() >= Constants.MAX_SUPPORT_API_DIFFERENCE) {
+        if (Arrays.stream(Constants.COMPATIBLE_API_VERSIONS).noneMatch(each -> each == plugin.getApiVersion())) {
             isTooOld = true;
         }
         pluginInfoSet.add(new PluginInfo(plugin, pluginName, identifier));
