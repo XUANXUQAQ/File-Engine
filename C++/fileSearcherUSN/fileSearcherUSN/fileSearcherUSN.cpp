@@ -1,8 +1,6 @@
-﻿#include <iostream>
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "search.h"
-#include <fstream>
-#include <thread>
+
 // #define TEST
 
 typedef struct
@@ -14,10 +12,10 @@ typedef struct
 
 static PriorityMap suffixPriorityMap;
 
-void initUSN(parameter p);
+void initUSN(const parameter& p);
 void splitString(char* str, vector<string>& vec);
 
-void initUSN(const parameter p)
+void initUSN(const parameter& p)
 {
 	sqlite3_exec(p.db, "BEGIN;", nullptr, nullptr, nullptr);
 	volume volumeInstance(p.disk, p.db, p.ignorePath, suffixPriorityMap);
@@ -82,17 +80,17 @@ void splitString(char* str, vector<string>& vec)
 
 int main()
 {
-	char diskPath[1000];
-	char output[1000];
-	char ignorePath[1000];
+	char diskPath[500];
+	char output[500];
+	char ignorePath[500];
 
 	vector<string> diskVec;
 	vector<string> ignorePathsVec;
 
 	ifstream input("MFTSearchInfo.dat", ios::in);
-	input.getline(diskPath, 1000);
-	input.getline(output, 1000);
-	input.getline(ignorePath, 1000);
+	input.getline(diskPath, 500);
+	input.getline(output, 500);
+	input.getline(ignorePath, 500);
 	input.close();
 
 	diskVec.reserve(26);
