@@ -1,9 +1,10 @@
 #pragma once
 
 #include <iostream>
+#include <fstream>
+#include <thread>
 #include <unordered_map>
 #include <winioctl.h>
-#include <fstream>
 #include <string>
 #include <vector>
 #include <algorithm>
@@ -30,7 +31,7 @@ typedef unordered_map<DWORDLONG, pfrn_name> Frn_Pfrn_Name_Map;
 CONCURRENT_MAP<HANDLE, LPVOID> sharedMemoryMap;
 static atomic_int* completeTaskCount = new atomic_int(0);
 static atomic_int* allTaskCount = new atomic_int(0);
-static atomic<void*> isCompletePtr(nullptr);
+static atomic<LPVOID> isCompletePtr(nullptr);
 constexpr int maxPath = 500;
 
 inline string to_utf8(const wchar_t* buffer, int len);
@@ -339,7 +340,7 @@ inline void createFileMapping(HANDLE& hMapFile, LPVOID& pBuf, size_t memorySize,
 		nullptr, // 默认安全级别
 		PAGE_READWRITE, // 可读可写
 		0, // 高位文件大小
-		memorySize, // 低位文件大小
+		static_cast<DWORD>(memorySize), // 低位文件大小
 		sharedMemoryName
 	);
 
@@ -388,12 +389,11 @@ inline void volume::createSharedMemoryAndCopy(const string& listName, const int 
 	int count = 0;
 	for (auto iter = result.unsafe_begin(); iter != result.unsafe_end(); ++iter)
 	{
-		memcpy_s((void*)(reinterpret_cast<long long>(pBuf) + count * maxPath), maxPath,
+		memcpy_s((void*)(reinterpret_cast<long long>(pBuf) + static_cast<long long>(count) * maxPath), maxPath,
 		         iter->c_str(), iter->length());
 		count++;
 	}
 	// 保存该结果的大小信息
-
 	createFileMapping(hMapFile, pBuf, sizeof size_t, (sharedMemoryName + "size").c_str());
 	memcpy_s(pBuf, sizeof size_t, &memorySize, sizeof size_t);
 }
