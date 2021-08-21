@@ -71,6 +71,12 @@ inline string to_utf8(const wchar_t* buffer, int len)
 	return newBuffer;
 }
 
+inline string getFileName(const string& path)
+{
+	string fileName = path.substr(path.find_last_of('\\') + 1);
+	return fileName;
+}
+
 inline bool initCompleteSignalMemory()
 {
 	HANDLE handle;
@@ -401,7 +407,7 @@ inline void volume::saveAllResultsToDb()
 		{
 			for (auto iter = eachResult.second.unsafe_begin(); iter != eachResult.second.unsafe_end(); ++iter)
 			{
-				saveResult(*iter, getAscIISum(*iter));
+				saveResult(*iter, getAscIISum(getFileName(*iter)));
 			}
 		}
 	}
