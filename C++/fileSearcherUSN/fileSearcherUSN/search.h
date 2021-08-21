@@ -344,7 +344,7 @@ inline void createFileMapping(HANDLE& hMapFile, LPVOID& pBuf, size_t memorySize,
 		0,
 		memorySize
 	);
-	sharedMemoryMap.insert(pair<HANDLE, void*>(hMapFile, pBuf));
+	sharedMemoryMap.insert(pair<HANDLE, LPVOID>(hMapFile, pBuf));
 }
 
 inline void volume::setCompleteSignal()

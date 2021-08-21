@@ -157,6 +157,12 @@ int main()
 	{
 		each_thread.join();
 	}
+#ifdef TEST
+	while (true)
+	{
+		Sleep(10);
+	}
+#endif
 	closeSharedMemory();
 	return 0;
 }

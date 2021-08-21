@@ -30,14 +30,26 @@ public class RegexUtil {
     public static Pattern getPatter(String patternStr, int flags) {
         String key = patternStr + ":flags:" + flags;
         WeakReference<Pattern> pattern = patternMap.get(key);
-        if (pattern == null || pattern.get() == null) {
-            pattern = new WeakReference<>(Pattern.compile(patternStr, flags));
+        if (pattern == null) {
+            Pattern compile = Pattern.compile(patternStr, flags);
+            pattern = new WeakReference<>(compile);
+            if (patternMap.size() < Constants.MAX_PATTERN_CACHE_NUM) {
+                patternMap.put(key, pattern);
+            } else {
+                patternMap.remove(patternMap.firstEntry().getKey());
+            }
+            return compile;
+        }
+        Pattern compile = pattern.get();
+        if (compile == null) {
+            compile = Pattern.compile(patternStr, flags);
+            pattern = new WeakReference<>(compile);
             if (patternMap.size() < Constants.MAX_PATTERN_CACHE_NUM) {
                 patternMap.put(key, pattern);
             } else {
                 patternMap.remove(patternMap.firstEntry().getKey());
             }
         }
-        return pattern.get();
+        return compile;
     }
 }

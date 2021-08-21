@@ -39,10 +39,11 @@ public class MainClass {
     private static final String GET_ASC_II_64_MD_5 = "62a56c26e1afa7c4fa3f441aadb9d515";
     private static final String HOTKEY_LISTENER_64_MD_5 = "a212cc427a89a614402e59897c82e50d";
     private static final String IS_LOCAL_DISK_64_MD_5 = "f8a71d3496d8cc188713d521e6dfa2b2";
-    private static final String FILE_SEARCHER_USN_64_MD_5 = "865f7f667fc61c09249739fbeaf1c58f";
+    private static final String FILE_SEARCHER_USN_64_MD_5 = "318394ca249f8c471a4b67a7a1bc383b";
     private static final String SQLITE3_64_MD_5 = "703bd51c19755db49c9070ceb255dfe5";
     private static final String GET_HANDLE_64_MD_5 = "0d4b4c74e29642e2fbfddcbdf9030d0f";
     private static final String SHORTCUT_GEN_MD_5 = "fa4e26f99f3dcd58d827828c411ea5d7";
+    private static final String RESULT_PIPE_MD_5 = "b1fb7b676d8a36bd03fdde206aa41663";
 
     /**
      * 加载本地释放的dll
@@ -55,6 +56,7 @@ public class MainClass {
         Class.forName("file.engine.dllInterface.HotkeyListener");
         Class.forName("file.engine.dllInterface.GetAscII");
         Class.forName("file.engine.dllInterface.GetHandle");
+        Class.forName("file.engine.dllInterface.ResultPipe");
     }
 
     /**
@@ -533,6 +535,7 @@ public class MainClass {
         copyOrIgnoreFile("user/sqlite3.dll", "/win32-native/sqlite3.dll", SQLITE3_64_MD_5);
         copyOrIgnoreFile("user/getHandle.dll", "/win32-native/getHandle.dll", GET_HANDLE_64_MD_5);
         copyOrIgnoreFile("user/shortcutGenerator.vbs", "/shortcutGenerator.vbs", SHORTCUT_GEN_MD_5);
+        copyOrIgnoreFile("user/resultPipe.dll", "/win32-native/resultPipe.dll", RESULT_PIPE_MD_5);
     }
 
     private static void copyOrIgnoreFile(String path, String rootPath, String md5) throws IOException {
