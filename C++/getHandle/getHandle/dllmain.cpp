@@ -76,6 +76,9 @@ int getToolBarX()
     return toolbar_click_x;
 }
 
+/**
+ * 检查顶层窗口是不是全屏显示，防止游戏时开始搜索导致卡顿
+ */
 bool isForegroundFullscreen()
 {
     bool b_fullscreen = false;//存放当前激活窗口是否是全屏的，true表示是，false表示不是
@@ -121,6 +124,9 @@ bool isMousePressed()
     return false;
 }
 
+/**
+ * 获取Windows缩放等级，适配高DPI
+ */
 double getDpi()
 {
     SetProcessDPIAware();
@@ -148,6 +154,9 @@ bool changeToNormal()
     return isMouseClickOutOfExplorer || isDialogNotExist();
 }
 
+/**
+ * 尝试将File-Engine带到最顶层
+ */
 void bringSearchBarToTop()
 {
     auto* const hWnd = getSearchBarHWND();
@@ -167,6 +176,9 @@ bool isDialogWindow()
     return topWindowType == G_DIALOG;
 }
 
+/**
+ * 获取鼠标当前位置的explorer窗口句柄打开的文件夹位置
+ */
 const char* getExplorerPath()
 {
     POINT p;
@@ -297,6 +309,7 @@ void checkMouseThread()
 		{
             count++;
 		}
+        // count防止窗口闪烁
 		if (isMouseClickedFlag && count > waitCountTimes && !isMouseClickOutOfExplorer || count > maxWaitCount)
 		{
             count = 0;
@@ -304,10 +317,12 @@ void checkMouseThread()
             HWND topWindow = GetForegroundWindow();
             isMouseClickOutOfExplorer = !(is_explorer_window_high_cost(topWindow) || is_file_chooser_window(topWindow) || is_search_bar_window(topWindow));
 		}
+        // 如果窗口句柄已经失效或者最小化，则判定为关闭窗口
 		if (!IsWindow(currentAttachExplorer) || IsIconic(currentAttachExplorer))
 		{
             isMouseClickOutOfExplorer = true;
 		} else if (isMouseClicked()) {
+            // 检测鼠标位置，如果点击位置不在explorer窗口内则判定为关闭窗口
             if (GetCursorPos(&point))
             {
                 GetWindowRect(currentAttachExplorer, &explorerArea);
@@ -339,6 +354,9 @@ void checkMouseThread()
 	}
 }
 
+/**
+ * 检查顶层窗口类型，是选择文件对话框还是explorer
+ */
 void checkTopWindowThread()
 {
 	RECT windowRect;

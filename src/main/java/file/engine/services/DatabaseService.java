@@ -883,9 +883,8 @@ public class DatabaseService {
      * @param paths      磁盘信息
      * @param ignorePath 忽略文件夹
      * @throws IOException          exception
-     * @throws InterruptedException exception
      */
-    private void searchByUSN(String paths, String ignorePath) throws IOException, InterruptedException {
+    private void searchByUSN(String paths, String ignorePath) throws IOException {
         File usnSearcher = new File("user/fileSearcherUSN.exe");
         String absPath = usnSearcher.getAbsolutePath();
         String start = absPath.substring(0, 2);
@@ -900,7 +899,6 @@ public class DatabaseService {
         }
         String command = "cmd.exe /c " + start + end;
         Runtime.getRuntime().exec(command, null, new File("user"));
-        waitForProcess("fileSearcherUSN.exe");
     }
 
     /**
@@ -979,14 +977,20 @@ public class DatabaseService {
         recreateDatabase();
         waitForCommandSet(SqlTaskIds.CREATE_TABLE);
         SQLiteUtil.closeAll();
-        try {
-            searchFile(AllConfigs.getInstance().getDisks(), ignorePath);
-        } finally {
-            SQLiteUtil.initAllConnections();
-            // 可能会出错
-            recreateDatabase();
-            createAllIndex();
-        }
+        searchFile(AllConfigs.getInstance().getDisks(), ignorePath);
+        // todo 当共享内存可用则停止等待
+        CachedThreadPoolUtil.getInstance().executeTask(() -> {
+            try {
+                waitForProcess("fileSearcherUSN.exe");
+            } catch (IOException | InterruptedException e) {
+                e.printStackTrace();
+            } finally {
+                SQLiteUtil.initAllConnections();
+                // 可能会出错
+                recreateDatabase();
+                createAllIndex();
+            }
+        });
     }
 
     /**
@@ -1122,6 +1126,7 @@ public class DatabaseService {
         databaseService.searchCase = startSearchEvent.searchCase;
         databaseService.keywords = startSearchEvent.keywords;
         databaseService.isStop.set(false);
+        // todo 判断共享内存标志
         databaseService.addSqlCommands();
     }
 

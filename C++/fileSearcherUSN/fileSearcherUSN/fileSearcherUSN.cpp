@@ -1,12 +1,12 @@
 ﻿#include <iostream>
 #include "stdafx.h"
-#include "Volume.h"
+#include "search.h"
 #include <fstream>
 #include <thread>
 // #define TEST
 
-
-typedef struct {
+typedef struct
+{
 	char disk;
 	vector<string> ignorePath;
 	sqlite3* db;
@@ -17,8 +17,8 @@ static PriorityMap suffixPriorityMap;
 void initUSN(parameter p);
 void splitString(char* str, vector<string>& vec);
 
-
-void initUSN(const parameter p) {
+void initUSN(const parameter p)
+{
 	sqlite3_exec(p.db, "BEGIN;", nullptr, nullptr, nullptr);
 	volume volumeInstance(p.disk, p.db, p.ignorePath, suffixPriorityMap);
 	volumeInstance.initVolume();
@@ -51,7 +51,7 @@ inline bool initPriorityMap(PriorityMap& priority_map, const char* priorityDbPat
 	{
 		const string suffix(pResult[i]);
 		const string priorityVal(pResult[i + 1]);
-		auto pairPriority = pair<string, int>{ suffix, stoi(priorityVal) };
+		auto pairPriority = pair<string, int>{suffix, stoi(priorityVal)};
 		priority_map.insert(pairPriority);
 	}
 	sqlite3_free_table(pResult);
@@ -59,24 +59,29 @@ inline bool initPriorityMap(PriorityMap& priority_map, const char* priorityDbPat
 	return true;
 }
 
-void splitString(char* str, vector<string>& vec) {
+void splitString(char* str, vector<string>& vec)
+{
 	char* remainDisk = nullptr;
 	char diskPath[5000];
 	strcpy_s(diskPath, str);
 	char* _diskPath = diskPath;
 	char* p = strtok_s(_diskPath, ",", &remainDisk);
-	if (p != nullptr) {
+	if (p != nullptr)
+	{
 		vec.emplace_back(p);
 	}
-	while (p != nullptr) {
+	while (p != nullptr)
+	{
 		p = strtok_s(nullptr, ",", &remainDisk);
-		if (p != nullptr) {
+		if (p != nullptr)
+		{
 			vec.emplace_back(p);
 		}
 	}
 }
 
-int main() {
+int main()
+{
 	char diskPath[1000];
 	char output[1000];
 	char ignorePath[1000];
@@ -100,11 +105,17 @@ int main() {
 
 	bool isPriorityMapInitialized = false;
 	vector<thread> threads;
+	if (!initCompleteSignalMemory())
+	{
+		closeSharedMemory();
+		return 1;
+	}
 	// 创建线程
 	for (auto& iter : diskVec)
 	{
 		const auto disk = iter[0];
-		if ('A' <= disk && disk <= 'Z') {
+		if ('A' <= disk && disk <= 'Z')
+		{
 			parameter p;
 			p.disk = disk;
 			p.ignorePath = ignorePathsVec;
@@ -119,7 +130,8 @@ int main() {
 #ifdef TEST
 			cout << "database path: " << tmpDbPath << endl;
 #endif
-			if (SQLITE_OK != ret) {
+			if (SQLITE_OK != ret)
+			{
 				cout << "error opening database" << endl;
 				return 0;
 			}
@@ -145,6 +157,6 @@ int main() {
 	{
 		each_thread.join();
 	}
+	closeSharedMemory();
 	return 0;
 }
-
