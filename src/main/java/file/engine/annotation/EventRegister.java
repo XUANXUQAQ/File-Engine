@@ -8,7 +8,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * 注册事件处理器，该注解可以保证方法被第一个执行
+ * 注册事件处理器，该注解可以保证方法被第一个执行，且一个事件只能有一个Register，可以有多个Listener
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)

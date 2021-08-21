@@ -7,6 +7,7 @@ import file.engine.configs.Constants;
 import file.engine.dllInterface.FileMonitor;
 import file.engine.dllInterface.GetAscII;
 import file.engine.dllInterface.IsLocalDisk;
+import file.engine.dllInterface.ResultPipe;
 import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
 import file.engine.event.handler.impl.BootSystemEvent;
@@ -29,30 +30,36 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.*;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ConcurrentSkipListSet;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 public class DatabaseService {
     private final ConcurrentLinkedQueue<SQLWithTaskId> commandSet = new ConcurrentLinkedQueue<>();
     private volatile Constants.Enums.DatabaseStatus status = Constants.Enums.DatabaseStatus.NORMAL;
     private final AtomicBoolean isExecuteImmediately = new AtomicBoolean(false);
     private final AtomicInteger cacheNum = new AtomicInteger(0);
-    private final ConcurrentLinkedQueue<Integer> priorityQueue;
     private final HashSet<TableNameWeightInfo> tableSet;    //保存从0-40数据库的表，使用频率和名字对应，使经常使用的表最快被搜索到
     private final ConcurrentLinkedQueue<String> tableQueue;  //保存哪些表需要被查
     private final AtomicBoolean isDatabaseUpdated = new AtomicBoolean(false);
+    private final AtomicBoolean isReadSharedMemory = new AtomicBoolean(false);
     private final @Getter
     ConcurrentLinkedQueue<String> tempResults;  //在优先文件夹和数据库cache未搜索完时暂时保存结果，搜索完后会立即被转移到listResults
     private final AtomicBoolean isStop = new AtomicBoolean(false);
+    private final ConcurrentLinkedQueue<Pair> priorityMap = new ConcurrentLinkedQueue<>();
     private volatile String[] searchCase;
     private volatile String searchText;
     private volatile String[] keywords;
 
     private static volatile DatabaseService INSTANCE = null;
+
+    @Data
+    private static class Pair {
+        private final String suffix;
+        private final int priority;
+    }
 
     private static class TableNameWeightInfo {
         private final String tableName;
@@ -68,13 +75,12 @@ public class DatabaseService {
         tableSet = new HashSet<>();
         tempResults = new ConcurrentLinkedQueue<>();
         tableQueue = new ConcurrentLinkedQueue<>();
-        priorityQueue = new ConcurrentLinkedQueue<>();
-        initPriorityQueue();
         addRecordsToDatabaseThread();
         deleteRecordsToDatabaseThread();
         checkTimeAndSendExecuteSqlSignalThread();
         executeSqlCommandsThread();
         initCacheNum();
+        initPriority();
     }
 
     /**
@@ -135,7 +141,9 @@ public class DatabaseService {
                 while (eventManagement.isNotMainExit()) {
                     if (isExecuteImmediately.get()) {
                         isExecuteImmediately.set(false);
-                        executeAllCommands();
+                        if (!isReadSharedMemory.get()) {
+                            executeAllCommands();
+                        }
                     }
                     TimeUnit.MILLISECONDS.sleep(20);
                 }
@@ -179,8 +187,12 @@ public class DatabaseService {
                         }
                     }
                     if (status == Constants.Enums.DatabaseStatus.NORMAL && !deletePaths.isEmpty()) {
-                        eventManagement.putEvent(new DeleteFromDatabaseEvent(deletePaths));
-                        deletePaths = new LinkedHashSet<>();
+                        if (!isReadSharedMemory.get()) {
+                            for (String deletePath : deletePaths) {
+                                removeFileFromDatabase(deletePath);
+                            }
+                        }
+                        deletePaths.clear();
                         fileCount = 0;
                     }
                     TimeUnit.MILLISECONDS.sleep(10);
@@ -240,8 +252,12 @@ public class DatabaseService {
                         }
                     }
                     if (status == Constants.Enums.DatabaseStatus.NORMAL && !addPaths.isEmpty()) {
-                        eventManagement.putEvent(new AddToDatabaseEvent(addPaths));
-                        addPaths = new LinkedHashSet<>();
+                        if (!isReadSharedMemory.get()) {
+                            for (String addPath : addPaths) {
+                                addFileToDatabase(addPath);
+                            }
+                        }
+                        addPaths.clear();
                         fileCount = 0;
                     }
                     TimeUnit.MILLISECONDS.sleep(10);
@@ -324,21 +340,6 @@ public class DatabaseService {
             e.printStackTrace();
         }
         return count;
-    }
-
-    /**
-     * 初始化优先级队列
-     */
-    private void initPriorityQueue() {
-        priorityQueue.clear();
-        try (PreparedStatement pStmt = SQLiteUtil.getPreparedStatement("SELECT PRIORITY FROM priority order by priority desc;", "cache")) {
-            ResultSet resultSet = pStmt.executeQuery();
-            while (resultSet.next()) {
-                priorityQueue.add(resultSet.getInt("PRIORITY"));
-            }
-        } catch (SQLException throwable) {
-            throwable.printStackTrace();
-        }
     }
 
     private void warmup() {
@@ -482,6 +483,68 @@ public class DatabaseService {
         });
     }
 
+    private void addSearchTasksForSharedMemory(LinkedHashMap<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>> nonFormattedSql,
+                                               Bit taskStatus,
+                                               Bit allTaskStatus,
+                                               LinkedHashMap<String, ConcurrentSkipListSet<String>> containerMap,
+                                               ConcurrentLinkedQueue<Runnable> taskQueue) {
+        Bit number = new Bit(new byte[]{1});
+        nonFormattedSql.forEach((commandsMap, container) -> Arrays.stream(RegexUtil.comma.split(AllConfigs.getInstance().getDisks())).forEach(eachDisk -> {
+            //为每个任务分配的位，不断左移以不断进行分配
+            number.shiftLeft(1);
+            Bit currentTaskNum = new Bit(number);
+            allTaskStatus.set(allTaskStatus.or(currentTaskNum));
+            containerMap.put(currentTaskNum.toString(), container);
+            taskQueue.add(() -> {
+                try {
+                    Set<String> sqls = commandsMap.keySet();
+                    for (String each : sqls) {
+                        if (isStop.get()) {
+                            return;
+                        }
+                        HashMap<String, String> parseSql = parseSql(each);
+                        String listName = parseSql.get("list");
+                        int priority = Integer.parseInt(parseSql.get("priority"));
+                        int count = 0;
+                        while (!isStop.get()) {
+                            String result = ResultPipe.INSTANCE.getResult(eachDisk.charAt(0), listName, priority, count);
+                            if (result == null) {
+                                break;
+                            }
+                            checkIsMatchedAndAddToList(result, container);
+                            count++;
+                        }
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                } finally {
+                    taskStatus.set(taskStatus.or(currentTaskNum));
+                }
+            });
+        }));
+    }
+
+    /**
+     * 解析出sql中的list和priority
+     *
+     * @param sql sql
+     * @return map
+     */
+    private HashMap<String, String> parseSql(String sql) {
+        String[] split = RegexUtil.blank.split(sql);
+        HashMap<String, String> parsedVal = new HashMap<>();
+        Arrays.stream(split).filter(each -> !each.isBlank()).forEach(each -> {
+            int val;
+            //noinspection IndexOfReplaceableByContains
+            if (each.indexOf("list") != -1) {
+                parsedVal.put("list", each);
+            } else if ((val = each.indexOf("=")) != -1) {
+                parsedVal.put("priority", each.substring(val + 1));
+            }
+        });
+        return parsedVal;
+    }
+
     /**
      * 添加搜索任务到队列
      *
@@ -545,17 +608,18 @@ public class DatabaseService {
     private LinkedHashMap<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>> getNonFormattedSqlFromTableQueue(boolean isNeedContainer) {
         if (isDatabaseUpdated.get()) {
             isDatabaseUpdated.set(false);
-            initPriorityQueue();
+            initPriority();
         }
         LinkedHashMap<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>> sqlColumnMap = new LinkedHashMap<>();
-        if (priorityQueue.isEmpty()) {
+        if (priorityMap.isEmpty()) {
             return sqlColumnMap;
         }
         initTableQueueByPriority();
-        priorityQueue.forEach(i -> {
+        priorityMap.forEach(i -> {
             LinkedHashMap<String, String> eachPriorityMap = new LinkedHashMap<>();
             tableQueue.forEach(each -> {
-                String sql = "SELECT %s FROM " + each + " WHERE priority=" + i;
+                // where后面=不能有空格，否则解析priority会出错
+                String sql = "SELECT %s FROM " + each + " WHERE priority=" + i.priority;
                 eachPriorityMap.put(sql, each);
             });
             ConcurrentSkipListSet<String> container = null;
@@ -572,7 +636,9 @@ public class DatabaseService {
      * 添加sql语句，并开始搜索
      */
     private void addSqlCommands() {
-        searchCache();
+        if (!isReadSharedMemory.get()) {
+            searchCache();
+        }
         CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
         //每个priority用一个线程，每一个后缀名对应一个优先级
         //按照优先级排列，key是sql和表名的对应，value是容器
@@ -585,7 +651,11 @@ public class DatabaseService {
         //任务队列
         ConcurrentLinkedQueue<Runnable> taskQueue = new ConcurrentLinkedQueue<>();
         //添加搜索任务到队列
-        addSearchTasks(nonFormattedSql, taskStatus, allTaskStatus, containerMap, taskQueue);
+        if (isReadSharedMemory.get()) {
+            addSearchTasksForSharedMemory(nonFormattedSql, taskStatus, allTaskStatus, containerMap, taskQueue);
+        } else {
+            addSearchTasks(nonFormattedSql, taskStatus, allTaskStatus, containerMap, taskQueue);
+        }
 
         //添加消费者线程，接受任务进行处理，最高4线程
         int processors = Runtime.getRuntime().availableProcessors();
@@ -686,25 +756,41 @@ public class DatabaseService {
     }
 
     /**
+     * 初始化优先级表
+     */
+    private void initPriority() {
+        priorityMap.clear();
+        try (PreparedStatement pStmt = SQLiteUtil.getPreparedStatement("SELECT * FROM priority order by PRIORITY desc;", "cache")) {
+            ResultSet resultSet = pStmt.executeQuery();
+            while (resultSet.next()) {
+                String suffix = resultSet.getString("SUFFIX");
+                String priority = resultSet.getString("PRIORITY");
+                try {
+                    priorityMap.add(new Pair(suffix, Integer.parseInt(priority)));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    priorityMap.add(new Pair(suffix, 0));
+                }
+            }
+        } catch (SQLException exception) {
+            exception.printStackTrace();
+        }
+    }
+
+    /**
      * 根据文件后缀获取优先级信息
      *
      * @param suffix 文件后缀名
      * @return 优先级
      */
     private int getPriorityBySuffix(String suffix) {
-        String sqlTemplate = "select PRIORITY from priority where suffix=\"%s\"";
-        String sql = String.format(sqlTemplate, suffix);
-        try (PreparedStatement pStmt = SQLiteUtil.getPreparedStatement(sql, "cache")) {
-            ResultSet resultSet = pStmt.executeQuery();
-            if (resultSet.next()) {
-                String priority = resultSet.getString("PRIORITY");
-                return Integer.parseInt(priority);
+        List<Pair> result = priorityMap.stream().filter(each -> each.suffix.equals(suffix)).collect(Collectors.toList());
+        if (result.isEmpty()) {
+            if (!"defaultPriority".equals(suffix)) {
+                return getPriorityBySuffix("defaultPriority");
             }
-        } catch (Exception throwables) {
-            throwables.printStackTrace();
-        }
-        if (!"defaultPriority".equals(suffix)) {
-            return getPriorityBySuffix("defaultPriority");
+        } else {
+            return result.get(0).priority;
         }
         return 0;
     }
@@ -860,7 +946,7 @@ public class DatabaseService {
      * @param disks      磁盘
      * @param ignorePath 忽略文件夹
      */
-    private void searchFile(String disks, String ignorePath) throws IOException, InterruptedException {
+    private void searchFile(String disks, String ignorePath) throws IOException {
         searchByUSN(disks, ignorePath.toLowerCase());
     }
 
@@ -882,7 +968,7 @@ public class DatabaseService {
      *
      * @param paths      磁盘信息
      * @param ignorePath 忽略文件夹
-     * @throws IOException          exception
+     * @throws IOException exception
      */
     private void searchByUSN(String paths, String ignorePath) throws IOException {
         File usnSearcher = new File("user/fileSearcherUSN.exe");
@@ -926,6 +1012,24 @@ public class DatabaseService {
     }
 
     /**
+     * 添加等待进程并当进程完成后执行回调
+     *
+     * @param procName 进程名
+     * @param callback 回调
+     */
+    private void waitForProcessAsync(@SuppressWarnings("SameParameterValue") String procName, Runnable callback) {
+        CachedThreadPoolUtil.getInstance().executeTask(() -> {
+            try {
+                waitForProcess(procName);
+            } catch (IOException | InterruptedException e) {
+                e.printStackTrace();
+            } finally {
+                callback.run();
+            }
+        });
+    }
+
+    /**
      * 等待进程
      *
      * @param procName 进程名
@@ -935,9 +1039,13 @@ public class DatabaseService {
     private void waitForProcess(@SuppressWarnings("SameParameterValue") String procName) throws IOException, InterruptedException {
         StringBuilder strBuilder = new StringBuilder();
         long start = System.currentTimeMillis();
+        long timeLimit = 3 * 60 * 1000;
+        if (IsDebug.isDebug()) {
+            timeLimit = Long.MAX_VALUE;
+        }
         while (isTaskExist(procName, strBuilder)) {
             TimeUnit.MILLISECONDS.sleep(10);
-            if (System.currentTimeMillis() - start > 3 * 60 * 1000) {
+            if (System.currentTimeMillis() - start > timeLimit) {
                 System.err.printf("等待进程%s超时\n", procName);
                 String command = String.format("taskkill /im %s /f", procName);
                 Process exec = Runtime.getRuntime().exec(command);
@@ -972,24 +1080,28 @@ public class DatabaseService {
      *
      * @param ignorePath 忽略文件夹
      */
-    private void updateLists(String ignorePath) throws IOException, InterruptedException {
+    private void updateLists(String ignorePath) throws IOException {
         checkFileSize();
         recreateDatabase();
         waitForCommandSet(SqlTaskIds.CREATE_TABLE);
         SQLiteUtil.closeAll();
         searchFile(AllConfigs.getInstance().getDisks(), ignorePath);
-        // todo 当共享内存可用则停止等待
-        CachedThreadPoolUtil.getInstance().executeTask(() -> {
-            try {
-                waitForProcess("fileSearcherUSN.exe");
-            } catch (IOException | InterruptedException e) {
-                e.printStackTrace();
-            } finally {
-                SQLiteUtil.initAllConnections();
-                // 可能会出错
-                recreateDatabase();
-                createAllIndex();
+        try {
+            isReadSharedMemory.set(true);
+            while (!ResultPipe.INSTANCE.isComplete()) {
+                TimeUnit.MILLISECONDS.sleep(10);
             }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        waitForProcessAsync("fileSearcherUSN.exe", () -> {
+            SQLiteUtil.initAllConnections();
+            // 可能会出错
+            recreateDatabase();
+            createAllIndex();
+            ResultPipe.INSTANCE.closeAllSharedMemory();
+            isDatabaseUpdated.set(true);
+            isReadSharedMemory.set(false);
         });
     }
 
@@ -1077,7 +1189,7 @@ public class DatabaseService {
                 EventManagement eventManagement = EventManagement.getInstance();
                 while (eventManagement.isNotMainExit()) {
                     if (status == Constants.Enums.DatabaseStatus.NORMAL) {
-                        eventManagement.putEvent(new ExecuteSQLEvent());
+                        executeImmediately();
                     }
                     TimeUnit.SECONDS.sleep(updateTimeLimit);
                 }
@@ -1126,7 +1238,6 @@ public class DatabaseService {
         databaseService.searchCase = startSearchEvent.searchCase;
         databaseService.keywords = startSearchEvent.keywords;
         databaseService.isStop.set(false);
-        // todo 判断共享内存标志
         databaseService.addSqlCommands();
     }
 
@@ -1146,6 +1257,9 @@ public class DatabaseService {
     @EventRegister(registerClass = AddToCacheEvent.class)
     private static void addToCacheEvent(Event event) {
         DatabaseService databaseService = getInstance();
+        if (databaseService.isReadSharedMemory.get()) {
+            return;
+        }
         databaseService.addFileToCache(((AddToCacheEvent) event).path);
         databaseService.cacheNum.incrementAndGet();
     }
@@ -1153,44 +1267,30 @@ public class DatabaseService {
     @EventRegister(registerClass = DeleteFromCacheEvent.class)
     private static void deleteFromCacheEvent(Event event) {
         DatabaseService databaseService = getInstance();
+        if (databaseService.isReadSharedMemory.get()) {
+            return;
+        }
         databaseService.removeFileFromCache(((DeleteFromCacheEvent) event).path);
         databaseService.cacheNum.decrementAndGet();
     }
 
-    @EventRegister(registerClass = AddToDatabaseEvent.class)
-    private static void addToDatabaseEvent(Event event) {
-        DatabaseService databaseService = getInstance();
-        for (Object each : ((AddToDatabaseEvent) event).getPaths()) {
-            databaseService.addFileToDatabase((String) each);
-        }
-    }
-
-    @EventRegister(registerClass = DeleteFromDatabaseEvent.class)
-    private static void deleteFromDatabaseEvent(Event event) {
-        DeleteFromDatabaseEvent deleteFromDatabaseEvent = ((DeleteFromDatabaseEvent) event);
-        DatabaseService databaseService = getInstance();
-        for (Object each : deleteFromDatabaseEvent.getPaths()) {
-            databaseService.removeFileFromDatabase((String) each);
-        }
-    }
-
     @EventRegister(registerClass = UpdateDatabaseEvent.class)
-    private static void updateDatabaseEvent(Event event) throws IOException, InterruptedException {
+    private static void updateDatabaseEvent(Event event) throws IOException {
         DatabaseService databaseService = getInstance();
+        if (databaseService.isReadSharedMemory.get()) {
+            return;
+        }
         databaseService.setStatus(Constants.Enums.DatabaseStatus.MANUAL_UPDATE);
         databaseService.updateLists(AllConfigs.getInstance().getIgnorePath());
         databaseService.setStatus(Constants.Enums.DatabaseStatus.NORMAL);
-        getInstance().isDatabaseUpdated.set(true);
-    }
-
-    @EventRegister(registerClass = ExecuteSQLEvent.class)
-    private static void executeSQLEvent(Event event) {
-        getInstance().executeImmediately();
     }
 
     @EventRegister(registerClass = OptimiseDatabaseEvent.class)
     private static void optimiseDatabaseEvent(Event event) {
         DatabaseService databaseService = getInstance();
+        if (databaseService.isReadSharedMemory.get()) {
+            return;
+        }
         databaseService.setStatus(Constants.Enums.DatabaseStatus.VACUUM);
         //执行VACUUM命令
         for (String eachDisk : RegexUtil.comma.split(AllConfigs.getInstance().getDisks())) {
@@ -1209,10 +1309,13 @@ public class DatabaseService {
 
     @EventRegister(registerClass = AddToSuffixPriorityMapEvent.class)
     private static void addToSuffixPriorityMapEvent(Event event) {
+        DatabaseService databaseService = getInstance();
+        if (databaseService.isReadSharedMemory.get()) {
+            return;
+        }
         AddToSuffixPriorityMapEvent event1 = (AddToSuffixPriorityMapEvent) event;
         String suffix = event1.suffix;
         int priority = event1.priority;
-        DatabaseService databaseService = getInstance();
         databaseService.addToCommandSet(
                 new SQLWithTaskId(String.format("INSERT INTO priority VALUES(\"%s\", %d);", suffix, priority), SqlTaskIds.UPDATE_SUFFIX, "cache"));
     }
@@ -1220,6 +1323,9 @@ public class DatabaseService {
     @EventRegister(registerClass = ClearSuffixPriorityMapEvent.class)
     private static void clearSuffixPriorityMapEvent(Event event) {
         DatabaseService databaseService = getInstance();
+        if (databaseService.isReadSharedMemory.get()) {
+            return;
+        }
         databaseService.addToCommandSet(new SQLWithTaskId("DELETE FROM priority;", SqlTaskIds.UPDATE_SUFFIX, "cache"));
         databaseService.addToCommandSet(
                 new SQLWithTaskId("INSERT INTO priority VALUES(\"defaultPriority\", 0);", SqlTaskIds.UPDATE_SUFFIX, "cache"));
@@ -1229,11 +1335,18 @@ public class DatabaseService {
     private static void deleteFromSuffixPriorityMapEvent(Event event) {
         DeleteFromSuffixPriorityMapEvent delete = (DeleteFromSuffixPriorityMapEvent) event;
         DatabaseService databaseService = getInstance();
+        if (databaseService.isReadSharedMemory.get()) {
+            return;
+        }
         databaseService.addToCommandSet(new SQLWithTaskId(String.format("DELETE FROM priority where SUFFIX=\"%s\"", delete.suffix), SqlTaskIds.UPDATE_SUFFIX, "cache"));
     }
 
     @EventRegister(registerClass = UpdateSuffixPriorityEvent.class)
     private static void updateSuffixPriorityEvent(Event event) {
+        DatabaseService databaseService = DatabaseService.getInstance();
+        if (databaseService.isReadSharedMemory.get()) {
+            return;
+        }
         EventManagement eventManagement = EventManagement.getInstance();
         UpdateSuffixPriorityEvent update = (UpdateSuffixPriorityEvent) event;
         String origin = update.originSuffix;
