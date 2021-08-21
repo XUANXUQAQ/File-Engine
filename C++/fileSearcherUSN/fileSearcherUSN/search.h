@@ -5,34 +5,135 @@
 #include <winioctl.h>
 #include <fstream>
 #include <string>
-// #include <utility>
 #include <vector>
 #include <algorithm>
-// #include <mutex>
 #include "sqlite3.h"
-//#define TEST
+#include <concurrent_queue.h>
+#include <concurrent_unordered_map.h>
+#include <atomic>
+
+#define CONCURRENT_MAP concurrency::concurrent_unordered_map
+#define CONCURRENT_QUEUE concurrency::concurrent_queue
+// #define TEST
 
 using namespace std;
 
-typedef struct _pfrn_name {
+typedef struct _pfrn_name
+{
 	DWORDLONG pfrn = 0;
 	CString filename;
-}pfrn_name;
+} pfrn_name;
 
 typedef unordered_map<string, int> PriorityMap;
-
 typedef unordered_map<DWORDLONG, pfrn_name> Frn_Pfrn_Name_Map;
 
-class volume {
+CONCURRENT_MAP<HANDLE, LPVOID> sharedMemoryMap;
+static atomic_int* completeTaskCount = new atomic_int(0);
+static atomic_int* allTaskCount = new atomic_int(0);
+static atomic<void*> isCompletePtr(nullptr);
+constexpr int maxPath = 500;
+
+inline string to_utf8(const wchar_t* buffer, int len);
+static void createFileMapping(HANDLE& hMapFile, LPVOID& pBuf, size_t memorySize, const char* sharedMemoryName);
+
+inline string to_utf8(const wstring& str)
+{
+	return to_utf8(str.c_str(), static_cast<int>(str.size()));
+}
+
+inline string to_utf8(const wchar_t* buffer, int len)
+{
+	const auto nChars = WideCharToMultiByte(
+		CP_UTF8,
+		0,
+		buffer,
+		len,
+		nullptr,
+		0,
+		nullptr,
+		nullptr);
+	if (nChars == 0)
+	{
+		return "";
+	}
+	string newBuffer;
+	newBuffer.resize(nChars);
+	WideCharToMultiByte(
+		CP_UTF8,
+		0,
+		buffer,
+		len,
+		const_cast<char*>(newBuffer.c_str()),
+		nChars,
+		nullptr,
+		nullptr);
+
+	return newBuffer;
+}
+
+inline bool initCompleteSignalMemory()
+{
+	HANDLE handle;
+	LPVOID tmp;
+	createFileMapping(handle, tmp, sizeof(bool), "sharedMemory:complete:status");
+	if (tmp == nullptr)
+	{
+		cout << GetLastError() << endl;
+		return false;
+	}
+	isCompletePtr.store(tmp);
+	return true;
+}
+
+inline void closeSharedMemory()
+{
+	for (const auto& each : sharedMemoryMap)
+	{
+		UnmapViewOfFile(each.second);
+		CloseHandle(each.first);
+	}
+}
+
+class result
+{
 public:
-	volume(const char vol, sqlite3* database, vector<string> ignorePaths, PriorityMap priorityMap) {
+	result(const string& _path, const int ascii)
+	{
+		this->_path = _path;
+		this->ascii = ascii;
+	}
+
+	~result() = default;
+
+	string getPath()
+	{
+		return _path;
+	}
+
+	int getAscii()
+	{
+		return ascii;
+	}
+
+private:
+	string _path;
+	int ascii;
+};
+
+class volume
+{
+public:
+	volume(const char vol, sqlite3* database, vector<string> ignorePaths, PriorityMap priorityMap)
+	{
 		this->vol = vol;
 		this->priorityMap = std::move(priorityMap);
 		hVol = nullptr;
 		path = "";
 		db = database;
 		addIgnorePath(ignorePaths);
+		++*allTaskCount;
 	}
+
 	~volume() = default;
 
 	char getPath() const
@@ -40,10 +141,66 @@ public:
 		return vol;
 	}
 
+	void collectResult(const int ascii, const string& fullPath)
+	{
+		const int asciiGroup = ascii / 100;
+		if (asciiGroup > 40)
+		{
+			return;
+		}
+		string listName("list");
+		listName += to_string(asciiGroup);
+		CONCURRENT_MAP<int, CONCURRENT_QUEUE<string>>* tmpResults;
+		CONCURRENT_QUEUE<string>* priorityStrList;
+		const int priority = getPriorityByPath(fullPath);
+		if (allResultsMap.find(listName) != allResultsMap.end())
+		{
+			tmpResults = &allResultsMap.at(listName);
+			if (tmpResults->find(priority) != tmpResults->end())
+			{
+				priorityStrList = &tmpResults->at(priority);
+			}
+			else
+			{
+				priorityStrList = new CONCURRENT_QUEUE<string>();
+				tmpResults->insert(pair<int, CONCURRENT_QUEUE<string>>(priority, *priorityStrList));
+			}
+		}
+		else
+		{
+			priorityStrList = new CONCURRENT_QUEUE<string>();
+			tmpResults = new CONCURRENT_MAP<int, CONCURRENT_QUEUE<string>>();
+			tmpResults->insert(pair<int, CONCURRENT_QUEUE<string>>(priority, *priorityStrList));
+			allResultsMap.insert(
+				pair<string, CONCURRENT_MAP<int, CONCURRENT_QUEUE<string>>>(listName, *tmpResults));
+		}
+		priorityStrList->push(fullPath);
+	}
+
+	/**
+	 * 将内存中的数据保存到共享内存中
+	 */
+	void copyResultsToSharedMemory()
+	{
+		for (int i = 0; i <= 40; ++i)
+		{
+			for (const auto& eachPriority : priorityMap)
+			{
+				static const char* listNamePrefix = "list";
+				static const char* prefix = "sharedMemory:";
+				size_t memorySize = 0;
+				string eachListName = string(listNamePrefix) + to_string(i);
+				const auto& sharedMemoryName = string(prefix) + getPath() + ":" + eachListName + ":" + to_string(
+					eachPriority.second); // 共享内存名为 sharedMemory:[path]:list[num]:[priority]
+				createSharedMemoryAndCopy(eachListName, eachPriority.second, &memorySize, sharedMemoryName);
+			}
+		}
+	}
+
 	void initVolume()
 	{
 		if (
-			// 2.获取驱动盘句柄
+				// 2.获取驱动盘句柄
 			getHandle() &&
 			// 3.创建USN日志
 			createUSN() &&
@@ -53,32 +210,36 @@ public:
 			getUSNJournal() &&
 			// 06. 删除 USN 日志文件 ( 也可以不删除 ) 
 			deleteUSN()
-			)
+		)
 		{
-			try {
-				initAllPrepareStatement();
-
+			try
+			{
 				const auto endIter = frnPfrnNameMap.end();
-				for (auto iter = frnPfrnNameMap.begin(); iter != endIter; ++iter) {
+				for (auto iter = frnPfrnNameMap.begin(); iter != endIter; ++iter)
+				{
 					auto name = iter->second.filename;
 					const auto ascii = getAscIISum(to_utf8(wstring(name)));
 					CString path = _T("\0");
 					getPath(iter->first, path);
 					CString record = vol + path;
-					const auto fullPath = to_utf8(wstring(record));
-					if (!isIgnore(fullPath)) {
-						saveResult(fullPath, ascii);
+					auto fullPath = to_utf8(wstring(record));
+					if (!isIgnore(fullPath))
+					{
+						collectResult(ascii, fullPath);
 					}
 				}
-				finalizeAllStatement();
 			}
 			catch (exception& e)
 			{
 				cerr << e.what() << endl;
 			}
+			isSearchDone = true;
+			copyResultsToSharedMemory();
+			++*completeTaskCount;
+			setCompleteSignal();
+			saveAllResultsToDb();
 		}
 	}
-
 
 private:
 	char vol;
@@ -129,69 +290,123 @@ private:
 	sqlite3_stmt* stmt39 = nullptr;
 	sqlite3_stmt* stmt40 = nullptr;
 
+	volatile bool isSearchDone = false;
+
 	USN_JOURNAL_DATA ujd{};
 	CREATE_USN_JOURNAL_DATA cujd{};
 
 	vector<string> ignorePathVector;
 	PriorityMap priorityMap;
-
-	static string to_utf8(const wchar_t* buffer, int len);
-
-	string to_utf8(const std::wstring& str) const
-	{
-		return to_utf8(str.c_str(), static_cast<int>(str.size()));
-	}
+	CONCURRENT_MAP<string, CONCURRENT_MAP<int, CONCURRENT_QUEUE<string>>> allResultsMap;
 
 	bool getHandle();
 	bool createUSN();
 	bool getUSNInfo();
 	bool getUSNJournal();
 	bool deleteUSN() const;
-	void saveResult(string path, int ascII);
+	void saveResult(const string& _path, int ascII);
 	void getPath(DWORDLONG frn, CString& path);
 	static int getAscIISum(string name);
 	bool isIgnore(string path);
 	void finalizeAllStatement() const;
 	void saveSingleRecordToDB(sqlite3_stmt* stmt, string record, int ascii);
-	void addIgnorePath(const vector<string>& vec) {
-		ignorePathVector = vec;
-	}
 	int getPriorityBySuffix(const string& suffix);
 	int getPriorityByPath(const string& path);
 	void initAllPrepareStatement();
 	void initSinglePrepareStatement(sqlite3_stmt** statement, const char* init) const;
+	void saveAllResultsToDb();
+	void createSharedMemoryAndCopy(const string& listName, int priority, size_t* size,
+	                               const string& sharedMemoryName);
+	static void setCompleteSignal();
+
+	void addIgnorePath(const vector<string>& vec)
+	{
+		ignorePathVector = vec;
+	}
 };
 
-inline std::string volume::to_utf8(const wchar_t* buffer, int len)
+inline void createFileMapping(HANDLE& hMapFile, LPVOID& pBuf, size_t memorySize, const char* sharedMemoryName)
 {
-	const auto nChars = ::WideCharToMultiByte(
-		CP_UTF8,
-		0,
-		buffer,
-		len,
-		nullptr,
-		0,
-		nullptr,
-		nullptr);
-	if (nChars == 0)
-	{
-		return "";
-	}
-	string newBuffer;
-	newBuffer.resize(nChars);
-	::WideCharToMultiByte(
-		CP_UTF8,
-		0,
-		buffer,
-		len,
-		const_cast<char*>(newBuffer.c_str()),
-		nChars,
-		nullptr,
-		nullptr);
+	// 创建共享文件句柄
+	hMapFile = CreateFileMappingA(
+		INVALID_HANDLE_VALUE, // 物理文件句柄
+		nullptr, // 默认安全级别
+		PAGE_READWRITE, // 可读可写
+		0, // 高位文件大小
+		memorySize, // 低位文件大小
+		sharedMemoryName
+	);
 
-	return newBuffer;
+	pBuf = MapViewOfFile(
+		hMapFile, // 共享内存的句柄
+		FILE_MAP_ALL_ACCESS, // 可读写许可
+		0,
+		0,
+		memorySize
+	);
+	sharedMemoryMap.insert(pair<HANDLE, void*>(hMapFile, pBuf));
 }
 
+inline void volume::setCompleteSignal()
+{
+	const bool isAllDone = allTaskCount->load() == completeTaskCount->load();
+	memcpy_s(isCompletePtr.load(), sizeof(bool), &isAllDone, sizeof(bool));
+}
+
+
+inline void volume::createSharedMemoryAndCopy(const string& listName, const int priority, size_t* size,
+                                              const string& sharedMemoryName)
+{
+	if (allResultsMap.find(listName) == allResultsMap.end())
+	{
+		return;
+	}
+	auto& table = allResultsMap.at(listName);
+	if (table.find(priority) == table.end())
+	{
+		return;
+	}
+	CONCURRENT_QUEUE<string>& result = table.at(priority);
+	const size_t _size = result.unsafe_size();
+	const size_t memorySize = _size * maxPath;
+
+	// 创建共享文件句柄
+	HANDLE hMapFile;
+	LPVOID pBuf = nullptr;
+	createFileMapping(hMapFile, pBuf, memorySize, sharedMemoryName.c_str());
+	*size = memorySize;
+	if (pBuf == nullptr)
+	{
+		return;
+	}
+	int count = 0;
+	for (auto iter = result.unsafe_begin(); iter != result.unsafe_end(); ++iter)
+	{
+		memcpy_s((void*)(reinterpret_cast<long long>(pBuf) + count * maxPath), maxPath,
+		         iter->c_str(), iter->length());
+		count++;
+	}
+	// 保存该结果的大小信息
+
+	createFileMapping(hMapFile, pBuf, sizeof size_t, (sharedMemoryName + "size").c_str());
+	memcpy_s(pBuf, sizeof size_t, &memorySize, sizeof size_t);
+}
+
+inline void volume::saveAllResultsToDb()
+{
+	initAllPrepareStatement();
+	for (auto& eachTable : allResultsMap)
+	{
+		for (auto& eachResult : eachTable.second)
+		{
+			for (auto iter = eachResult.second.unsafe_begin(); iter != eachResult.second.unsafe_end(); ++iter)
+			{
+				saveResult(*iter, getAscIISum(*iter));
+			}
+		}
+	}
+	finalizeAllStatement();
+}
 
 inline int volume::getPriorityBySuffix(const string& suffix)
 {
@@ -210,7 +425,6 @@ inline int volume::getPriorityByPath(const string& path)
 	transform(suffix.begin(), suffix.end(), suffix.begin(), tolower);
 	return getPriorityBySuffix(suffix);
 }
-
 
 inline void volume::initSinglePrepareStatement(sqlite3_stmt** statement, const char* init) const
 {
@@ -267,7 +481,8 @@ inline void volume::finalizeAllStatement() const
 	sqlite3_finalize(stmt40);
 }
 
-inline void volume::saveSingleRecordToDB(sqlite3_stmt* stmt, const string record, const int ascii) {
+inline void volume::saveSingleRecordToDB(sqlite3_stmt* stmt, const string record, const int ascii)
+{
 	sqlite3_reset(stmt);
 	sqlite3_bind_int(stmt, 1, ascii);
 	sqlite3_bind_text(stmt, 2, record.c_str(), -1, SQLITE_STATIC);
@@ -275,7 +490,8 @@ inline void volume::saveSingleRecordToDB(sqlite3_stmt* stmt, const string record
 	sqlite3_step(stmt);
 }
 
-inline void volume::initAllPrepareStatement() {
+inline void volume::initAllPrepareStatement()
+{
 	initSinglePrepareStatement(&stmt0, "INSERT OR IGNORE INTO list0 VALUES(?, ?, ?);");
 	initSinglePrepareStatement(&stmt1, "INSERT OR IGNORE INTO list1 VALUES(?, ?, ?);");
 	initSinglePrepareStatement(&stmt2, "INSERT OR IGNORE INTO list2 VALUES(?, ?, ?);");
@@ -319,12 +535,13 @@ inline void volume::initAllPrepareStatement() {
 	initSinglePrepareStatement(&stmt40, "INSERT OR IGNORE INTO list40 VALUES(?, ?, ?);");
 }
 
-inline bool volume::isIgnore(string path) {
+inline bool volume::isIgnore(string path)
+{
 	if (path.find('$') != string::npos)
 	{
 		return true;
 	}
-	transform(path.begin(), path.end(), path.begin(), ::tolower);
+	transform(path.begin(), path.end(), path.begin(), tolower);
 	const auto size = ignorePathVector.size();
 	for (auto i = 0; i < size; i++)
 	{
@@ -336,143 +553,141 @@ inline bool volume::isIgnore(string path) {
 	return false;
 }
 
-inline void volume::saveResult(string path, const int ascII)
+inline void volume::saveResult(const string& _path, const int ascII)
 {
-#ifdef TEST
-	cout << "path = " << path << endl;
-#endif
 	const int asciiGroup = ascII / 100;
 	switch (asciiGroup)
 	{
 	case 0:
-		saveSingleRecordToDB(stmt0, path, ascII);
+		saveSingleRecordToDB(stmt0, _path, ascII);
 		break;
 	case 1:
-		saveSingleRecordToDB(stmt1, path, ascII);
+		saveSingleRecordToDB(stmt1, _path, ascII);
 		break;
 	case 2:
-		saveSingleRecordToDB(stmt2, path, ascII);
+		saveSingleRecordToDB(stmt2, _path, ascII);
 		break;
 	case 3:
-		saveSingleRecordToDB(stmt3, path, ascII);
+		saveSingleRecordToDB(stmt3, _path, ascII);
 		break;
 	case 4:
-		saveSingleRecordToDB(stmt4, path, ascII);
+		saveSingleRecordToDB(stmt4, _path, ascII);
 		break;
 	case 5:
-		saveSingleRecordToDB(stmt5, path, ascII);
+		saveSingleRecordToDB(stmt5, _path, ascII);
 		break;
 	case 6:
-		saveSingleRecordToDB(stmt6, path, ascII);
+		saveSingleRecordToDB(stmt6, _path, ascII);
 		break;
 	case 7:
-		saveSingleRecordToDB(stmt7, path, ascII);
+		saveSingleRecordToDB(stmt7, _path, ascII);
 		break;
 	case 8:
-		saveSingleRecordToDB(stmt8, path, ascII);
+		saveSingleRecordToDB(stmt8, _path, ascII);
 		break;
 	case 9:
-		saveSingleRecordToDB(stmt9, path, ascII);
+		saveSingleRecordToDB(stmt9, _path, ascII);
 		break;
 	case 10:
-		saveSingleRecordToDB(stmt10, path, ascII);
+		saveSingleRecordToDB(stmt10, _path, ascII);
 		break;
 	case 11:
-		saveSingleRecordToDB(stmt11, path, ascII);
+		saveSingleRecordToDB(stmt11, _path, ascII);
 		break;
 	case 12:
-		saveSingleRecordToDB(stmt12, path, ascII);
+		saveSingleRecordToDB(stmt12, _path, ascII);
 		break;
 	case 13:
-		saveSingleRecordToDB(stmt13, path, ascII);
+		saveSingleRecordToDB(stmt13, _path, ascII);
 		break;
 	case 14:
-		saveSingleRecordToDB(stmt14, path, ascII);
+		saveSingleRecordToDB(stmt14, _path, ascII);
 		break;
 	case 15:
-		saveSingleRecordToDB(stmt15, path, ascII);
+		saveSingleRecordToDB(stmt15, _path, ascII);
 		break;
 	case 16:
-		saveSingleRecordToDB(stmt16, path, ascII);
+		saveSingleRecordToDB(stmt16, _path, ascII);
 		break;
 	case 17:
-		saveSingleRecordToDB(stmt17, path, ascII);
+		saveSingleRecordToDB(stmt17, _path, ascII);
 		break;
 	case 18:
-		saveSingleRecordToDB(stmt18, path, ascII);
+		saveSingleRecordToDB(stmt18, _path, ascII);
 		break;
 	case 19:
-		saveSingleRecordToDB(stmt19, path, ascII);
+		saveSingleRecordToDB(stmt19, _path, ascII);
 		break;
 	case 20:
-		saveSingleRecordToDB(stmt20, path, ascII);
+		saveSingleRecordToDB(stmt20, _path, ascII);
 		break;
 	case 21:
-		saveSingleRecordToDB(stmt21, path, ascII);
+		saveSingleRecordToDB(stmt21, _path, ascII);
 		break;
 	case 22:
-		saveSingleRecordToDB(stmt22, path, ascII);
+		saveSingleRecordToDB(stmt22, _path, ascII);
 		break;
 	case 23:
-		saveSingleRecordToDB(stmt23, path, ascII);
+		saveSingleRecordToDB(stmt23, _path, ascII);
 		break;
 	case 24:
-		saveSingleRecordToDB(stmt24, path, ascII);
+		saveSingleRecordToDB(stmt24, _path, ascII);
 		break;
 	case 25:
-		saveSingleRecordToDB(stmt25, path, ascII);
+		saveSingleRecordToDB(stmt25, _path, ascII);
 		break;
 	case 26:
-		saveSingleRecordToDB(stmt26, path, ascII);
+		saveSingleRecordToDB(stmt26, _path, ascII);
 		break;
 	case 27:
-		saveSingleRecordToDB(stmt27, path, ascII);
+		saveSingleRecordToDB(stmt27, _path, ascII);
 		break;
 	case 28:
-		saveSingleRecordToDB(stmt28, path, ascII);
+		saveSingleRecordToDB(stmt28, _path, ascII);
 		break;
 	case 29:
-		saveSingleRecordToDB(stmt29, path, ascII);
+		saveSingleRecordToDB(stmt29, _path, ascII);
 		break;
 	case 30:
-		saveSingleRecordToDB(stmt30, path, ascII);
+		saveSingleRecordToDB(stmt30, _path, ascII);
 		break;
 	case 31:
-		saveSingleRecordToDB(stmt31, path, ascII);
+		saveSingleRecordToDB(stmt31, _path, ascII);
 		break;
 	case 32:
-		saveSingleRecordToDB(stmt32, path, ascII);
+		saveSingleRecordToDB(stmt32, _path, ascII);
 		break;
 	case 33:
-		saveSingleRecordToDB(stmt33, path, ascII);
+		saveSingleRecordToDB(stmt33, _path, ascII);
 		break;
 	case 34:
-		saveSingleRecordToDB(stmt34, path, ascII);
+		saveSingleRecordToDB(stmt34, _path, ascII);
 		break;
 	case 35:
-		saveSingleRecordToDB(stmt35, path, ascII);
+		saveSingleRecordToDB(stmt35, _path, ascII);
 		break;
 	case 36:
-		saveSingleRecordToDB(stmt36, path, ascII);
+		saveSingleRecordToDB(stmt36, _path, ascII);
 		break;
 	case 37:
-		saveSingleRecordToDB(stmt37, path, ascII);
+		saveSingleRecordToDB(stmt37, _path, ascII);
 		break;
 	case 38:
-		saveSingleRecordToDB(stmt38, path, ascII);
+		saveSingleRecordToDB(stmt38, _path, ascII);
 		break;
 	case 39:
-		saveSingleRecordToDB(stmt39, path, ascII);
+		saveSingleRecordToDB(stmt39, _path, ascII);
 		break;
 	case 40:
-		saveSingleRecordToDB(stmt40, path, ascII);
+		saveSingleRecordToDB(stmt40, _path, ascII);
 		break;
 	default:
 		break;
 	}
 }
 
-inline int volume::getAscIISum(string name) {
+inline int volume::getAscIISum(string name)
+{
 	auto sum = 0;
 	const auto length = name.length();
 	for (size_t i = 0; i < length; i++)
@@ -485,11 +700,14 @@ inline int volume::getAscIISum(string name) {
 	return sum;
 }
 
-inline void volume::getPath(DWORDLONG frn, CString& path) {
+inline void volume::getPath(DWORDLONG frn, CString& path)
+{
 	const auto end = frnPfrnNameMap.end();
-	while (true) {
+	while (true)
+	{
 		auto it = frnPfrnNameMap.find(frn);
-		if (it == end) {
+		if (it == end)
+		{
 			path = L":" + path;
 			return;
 		}
@@ -498,67 +716,74 @@ inline void volume::getPath(DWORDLONG frn, CString& path) {
 	}
 }
 
-inline bool volume::getHandle() {
+inline bool volume::getHandle()
+{
 	// 为\\.\C:的形式
 	CString lpFileName(_T("\\\\.\\c:"));
 	lpFileName.SetAt(4, vol);
 
 
 	hVol = CreateFile(lpFileName,
-		GENERIC_READ | GENERIC_WRITE, // 可以为0
-		FILE_SHARE_READ | FILE_SHARE_WRITE, // 必须包含有FILE_SHARE_WRITE
-		nullptr,
-		OPEN_EXISTING, // 必须包含OPEN_EXISTING, CREATE_ALWAYS可能会导致错误
-		FILE_ATTRIBUTE_READONLY, // FILE_ATTRIBUTE_NORMAL可能会导致错误
-		nullptr);
+	                  GENERIC_READ | GENERIC_WRITE, // 可以为0
+	                  FILE_SHARE_READ | FILE_SHARE_WRITE, // 必须包含有FILE_SHARE_WRITE
+	                  nullptr,
+	                  OPEN_EXISTING, // 必须包含OPEN_EXISTING, CREATE_ALWAYS可能会导致错误
+	                  FILE_ATTRIBUTE_READONLY, // FILE_ATTRIBUTE_NORMAL可能会导致错误
+	                  nullptr);
 
 
-	if (INVALID_HANDLE_VALUE != hVol) {
+	if (INVALID_HANDLE_VALUE != hVol)
+	{
 		return true;
 	}
 
 	return false;
 }
 
-inline bool volume::createUSN() {
+inline bool volume::createUSN()
+{
 	cujd.MaximumSize = 0; // 0表示使用默认值  
 	cujd.AllocationDelta = 0; // 0表示使用默认值
 
 	DWORD br;
 	if (
-		DeviceIoControl(hVol,// handle to volume
-			FSCTL_CREATE_USN_JOURNAL,      // dwIoControlCode
-			&cujd,           // input buffer
-			sizeof(cujd),         // size of input buffer
-			nullptr,                          // lpOutBuffer
-			0,                             // nOutBufferSize
-			&br,     // number of bytes returned
-			nullptr) // OVERLAPPED structure	
-		) {
+		DeviceIoControl(hVol, // handle to volume
+		                FSCTL_CREATE_USN_JOURNAL, // dwIoControlCode
+		                &cujd, // input buffer
+		                sizeof(cujd), // size of input buffer
+		                nullptr, // lpOutBuffer
+		                0, // nOutBufferSize
+		                &br, // number of bytes returned
+		                nullptr) // OVERLAPPED structure	
+	)
+	{
 		return true;
 	}
 	return false;
 }
 
 
-inline bool volume::getUSNInfo() {
+inline bool volume::getUSNInfo()
+{
 	DWORD br;
 	if (
 		DeviceIoControl(hVol, // handle to volume
-			FSCTL_QUERY_USN_JOURNAL,// dwIoControlCode
-			nullptr,            // lpInBuffer
-			0,               // nInBufferSize
-			&ujd,     // output buffer
-			sizeof(ujd),  // size of output buffer
-			&br, // number of bytes returned
-			nullptr) // OVERLAPPED structure
-		) {
+		                FSCTL_QUERY_USN_JOURNAL, // dwIoControlCode
+		                nullptr, // lpInBuffer
+		                0, // nInBufferSize
+		                &ujd, // output buffer
+		                sizeof(ujd), // size of output buffer
+		                &br, // number of bytes returned
+		                nullptr) // OVERLAPPED structure
+	)
+	{
 		return true;
 	}
 	return false;
 }
 
-inline bool volume::getUSNJournal() {
+inline bool volume::getUSNJournal()
+{
 	MFT_ENUM_DATA med;
 	med.StartFileReferenceNumber = 0;
 	med.LowUsn = ujd.FirstUsn;
@@ -570,26 +795,26 @@ inline bool volume::getUSNJournal() {
 	frnPfrnNameMap[0x20000000000005].filename = tmp;
 	frnPfrnNameMap[0x20000000000005].pfrn = 0;
 
-	constexpr auto BUF_LEN = 0x3900;	// 尽可能地大，提高效率;
+	constexpr auto BUF_LEN = 0x3900; // 尽可能地大，提高效率;
 
 	CHAR Buffer[BUF_LEN];
 	DWORD usnDataSize;
 
 	while (0 != DeviceIoControl(hVol,
-		FSCTL_ENUM_USN_DATA,
-		&med,
-		sizeof(med),
-		Buffer,
-		BUF_LEN,
-		&usnDataSize,
-		nullptr))
+	                            FSCTL_ENUM_USN_DATA,
+	                            &med,
+	                            sizeof(med),
+	                            Buffer,
+	                            BUF_LEN,
+	                            &usnDataSize,
+	                            nullptr))
 	{
-
 		DWORD dwRetBytes = usnDataSize - sizeof(USN);
 		// 找到第一个 USN 记录  
 		auto UsnRecord = reinterpret_cast<PUSN_RECORD>(static_cast<PCHAR>(Buffer) + sizeof(USN));
 
-		while (dwRetBytes > 0) {
+		while (dwRetBytes > 0)
+		{
 			// 获取到的信息  	
 			const CString CfileName(UsnRecord->FileName, UsnRecord->FileNameLength / 2);
 
@@ -616,14 +841,15 @@ inline bool volume::deleteUSN() const
 	DWORD br;
 
 	if (DeviceIoControl(hVol,
-		FSCTL_DELETE_USN_JOURNAL,
-		&dujd,
-		sizeof(dujd),
-		nullptr,
-		0,
-		&br,
-		nullptr)
-		) {
+	                    FSCTL_DELETE_USN_JOURNAL,
+	                    &dujd,
+	                    sizeof(dujd),
+	                    nullptr,
+	                    0,
+	                    &br,
+	                    nullptr)
+	)
+	{
 		CloseHandle(hVol);
 		return true;
 	}
