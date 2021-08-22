@@ -8,38 +8,43 @@
 #include <TlHelp32.h>
 #include <iostream>
 #include <string>
+#include <Psapi.h>
+#include <string>
+#include <tchar.h>
+#include <codecvt>
 #include "zip/zip.h"
 #pragma comment(lib, "shell32.lib")
 #pragma comment(lib, "Ole32.lib")
 #pragma comment(lib, "User32.lib")
 
-//#define TEST
+// #define TEST
 
 #ifndef TEST
 #pragma comment( linker, "/subsystem:windows /entry:mainCRTStartup" )
 #endif
 
 constexpr auto* g_file_engine_zip_name = "File-Engine.zip";
+constexpr auto* g_jvm_parameters =
+	"-Xms8M -Xmx128M -XX:+UseParallelGC -XX:MaxHeapFreeRatio=20 -XX:MinHeapFreeRatio=10 -XX:NewRatio=3";
 
 char g_close_signal_file[1000];
-char g_file_engine_exe_path[1000];
+char g_file_engine_jar_path[1000];
 char g_file_engine_working_dir[1000];
+char g_jre_path[1000];
 char g_update_signal_file[1000];
-char g_new_file_engine_exe_path[1000];
+char g_new_file_engine_jar_path[1000];
 #ifdef TEST
 int g_check_time_count = 10;
 #else
 int g_check_time_count = 50;
 #endif
 
-constexpr auto* const g_proc_name = TEXT("File-Engine-x64.exe");
-
 int g_restart_count = 0;
 std::time_t g_restart_time = std::time(nullptr);
 bool g_is_restart_on_release_file = false;
 
 bool is_close_exist();
-bool find_process(const WCHAR* procName);
+DWORD find_process();
 void restart_file_engine(bool);
 bool release_resources();
 void extract_zip();
@@ -51,17 +56,15 @@ void init_path();
 
 int main()
 {
-	if (find_process(g_proc_name))
-	{
-		return 0;
-	}
 	init_path();
-
-	std::cout << "file-engine-x64.exe path :  " << g_file_engine_exe_path << std::endl;
+#ifdef TEST
+	std::cout << "file-engine.jar path :  " << g_file_engine_jar_path << std::endl;
+	std::cout << "jre path: " << g_jre_path << std::endl;
 	std::cout << "file-engine working dir: " << g_file_engine_working_dir << std::endl;
-	std::cout << "new file-engine-x64.exe path: " << g_new_file_engine_exe_path << std::endl;
+	std::cout << "new file-engine.jar path: " << g_new_file_engine_jar_path << std::endl;
 	std::cout << "update signal file: " << g_update_signal_file << std::endl;
 	std::cout << "close signal file : " << g_close_signal_file << std::endl;
+#endif
 	auto loop_count = 0;
 	if (is_dir_not_exist(g_file_engine_working_dir))
 	{
@@ -79,7 +82,7 @@ int main()
 		loop_count++;
 		if (loop_count > g_check_time_count)
 		{
-			if (!find_process(g_proc_name))
+			if (!find_process())
 			{
 				std::cout << "File-Engine process not exist" << std::endl;
 				if (is_close_exist())
@@ -103,20 +106,24 @@ inline void init_path()
 	std::string tmp_current_dir(current_dir);
 	strcpy_s(current_dir, tmp_current_dir.substr(0, tmp_current_dir.find_last_of('\\')).c_str());
 
-	std::string file_engine_exe_dir_string(current_dir);
-	file_engine_exe_dir_string += "\\data\\";
-	strcpy_s(g_file_engine_working_dir, file_engine_exe_dir_string.c_str());
+	std::string file_engine_jar_dir_string(current_dir);
+	file_engine_jar_dir_string += "\\data\\";
+	strcpy_s(g_file_engine_working_dir, file_engine_jar_dir_string.c_str());
 
-	file_engine_exe_dir_string += "File-Engine-x64.exe";
-	strcpy_s(g_file_engine_exe_path, file_engine_exe_dir_string.c_str());
+	std::string jre_path(file_engine_jar_dir_string);
+	jre_path += "jre\\";
+	strcpy_s(g_jre_path, jre_path.c_str());
+
+	file_engine_jar_dir_string += "File-Engine.jar";
+	strcpy_s(g_file_engine_jar_path, file_engine_jar_dir_string.c_str());
 
 	std::string file_engine_directory(g_file_engine_working_dir);
 	file_engine_directory += "tmp\\closeDaemon";
 	strcpy_s(g_close_signal_file, file_engine_directory.c_str());
 
 	std::string new_file_engine_path(g_file_engine_working_dir);
-	new_file_engine_path += "tmp\\File-Engine-x64.exe";
-	strcpy_s(g_new_file_engine_exe_path, new_file_engine_path.c_str());
+	new_file_engine_path += "tmp\\File-Engine.jar";
+	strcpy_s(g_new_file_engine_jar_path, new_file_engine_path.c_str());
 
 	std::string update_signal_file(g_file_engine_working_dir);
 	update_signal_file += "user\\update";
@@ -131,7 +138,9 @@ void release_all()
 	if (release_resources())
 	{
 		extract_zip();
+#ifndef TEST
 		remove(g_file_engine_zip_name);
+#endif
 	}
 }
 
@@ -219,14 +228,23 @@ void restart_file_engine(bool isIgnoreCloseFile)
 		MessageBoxA(nullptr, "Launch failed after 3 retries", "Error", MB_OK);
 		exit(-1);
 	}
-	if (g_restart_count > 3 || !is_file_exist(g_file_engine_exe_path))
+	if (g_restart_count > 3 || !is_file_exist(g_file_engine_jar_path))
 	{
 		release_all();
 		g_is_restart_on_release_file = true;
 		g_restart_count = 0;
 	}
 	g_restart_count++;
-	ShellExecuteA(nullptr, "open", g_file_engine_exe_path, nullptr, g_file_engine_working_dir, SW_SHOWNORMAL);
+	std::string command("/c ");
+	std::string jre(g_jre_path);
+	command.append(jre.substr(0, 2));
+	command.append("\"");
+	command.append(jre.substr(2));
+	command.append("bin\\javaw.exe\" ").append(g_jvm_parameters).append(" -jar File-Engine.jar");
+#ifdef TEST
+	std::cout << "running command: " << command << std::endl;
+#endif
+	ShellExecuteA(nullptr, "open", "cmd", command.c_str(), g_file_engine_working_dir, SW_HIDE);
 }
 
 /**
@@ -234,7 +252,7 @@ void restart_file_engine(bool isIgnoreCloseFile)
  */
 void update()
 {
-	CopyFileA(g_new_file_engine_exe_path, g_file_engine_exe_path, false);
+	CopyFileA(g_new_file_engine_jar_path, g_file_engine_jar_path, false);
 	remove(g_update_signal_file);
 }
 
@@ -255,22 +273,98 @@ bool is_file_exist(const char* file_path)
 {
 	FILE* fp = nullptr;
 	fopen_s(&fp, file_path, "rb");
-	if (fp != nullptr){
+	if (fp != nullptr)
+	{
 		fclose(fp);
 		return true;
 	}
 	return false;
 }
 
+BOOL dos_path_to_nt_path(LPTSTR pszDosPath, LPTSTR pszNtPath)
+{
+	TCHAR szDriveStr[500];
+	TCHAR szDrive[3];
+	TCHAR szDevName[100];
+	INT cchDevName;
+	INT i;
+
+	//检查参数
+	if (!pszDosPath || !pszNtPath)
+		return FALSE;
+
+	//获取本地磁盘字符串
+	if (GetLogicalDriveStrings(sizeof szDriveStr, szDriveStr))
+	{
+		for (i = 0; szDriveStr[i]; i += 4)
+		{
+			if (!lstrcmpi(&(szDriveStr[i]), TEXT("A:\\")) || !lstrcmpi(&(szDriveStr[i]), TEXT("B:\\")))
+				continue;
+
+			szDrive[0] = szDriveStr[i];
+			szDrive[1] = szDriveStr[i + 1];
+			szDrive[2] = '\0';
+			if (!QueryDosDevice(szDrive, szDevName, 100)) //查询 Dos 设备名
+				return FALSE;
+
+			cchDevName = lstrlen(szDevName);
+			if (_tcsnicmp(pszDosPath, szDevName, cchDevName) == 0) //命中
+			{
+				lstrcpy(pszNtPath, szDrive); //复制驱动器
+				lstrcat(pszNtPath, pszDosPath + cchDevName); //复制路径
+
+				return TRUE;
+			}
+		}
+	}
+
+	lstrcpy(pszNtPath, pszDosPath);
+
+	return FALSE;
+}
+
+//获取进程完整路径
+BOOL get_process_full_path(DWORD dwPID, TCHAR* pszFullPath)
+{
+	TCHAR szImagePath[MAX_PATH];
+	HANDLE hProcess;
+	if (!pszFullPath)
+		return FALSE;
+
+	pszFullPath[0] = '\0';
+	hProcess = OpenProcess(PROCESS_QUERY_INFORMATION, 0, dwPID);
+	if (!hProcess)
+		return FALSE;
+
+	if (!GetProcessImageFileName(hProcess, szImagePath, MAX_PATH))
+	{
+		CloseHandle(hProcess);
+		return FALSE;
+	}
+
+	if (!dos_path_to_nt_path(szImagePath, pszFullPath))
+	{
+		CloseHandle(hProcess);
+		return FALSE;
+	}
+
+	CloseHandle(hProcess);
+
+	return TRUE;
+}
+
 /**
  * 查找File-Engine进程是否存在
  */
-bool find_process(const WCHAR* procName)
+DWORD find_process()
 {
 	PROCESSENTRY32 pe;
 	DWORD id = 0;
 	auto* const hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
 	pe.dwSize = sizeof(PROCESSENTRY32);
+	const std::string _workingDir(g_file_engine_working_dir);
+	std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
+	const std::wstring workingDir = converter.from_bytes(_workingDir);
 	if (!Process32First(hSnapshot, &pe))
 		return 0;
 	while (true)
@@ -278,10 +372,16 @@ bool find_process(const WCHAR* procName)
 		pe.dwSize = sizeof(PROCESSENTRY32);
 		if (Process32Next(hSnapshot, &pe) == FALSE)
 			break;
-		if (wcscmp(pe.szExeFile, procName) == 0)
+		if (wcscmp(pe.szExeFile, L"javaw.exe") == 0)
 		{
 			id = pe.th32ProcessID;
-			break;
+			TCHAR szProcessName[1000] = { 0 };
+			get_process_full_path(id, szProcessName);
+			std::wstring processName(szProcessName);
+			if (processName.find(workingDir) != std::wstring::npos)
+			{
+				break;
+			}
 		}
 	}
 	CloseHandle(hSnapshot);
