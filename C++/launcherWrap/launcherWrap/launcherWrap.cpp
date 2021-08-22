@@ -25,7 +25,7 @@
 
 constexpr auto* g_file_engine_zip_name = "File-Engine.zip";
 constexpr auto* g_jvm_parameters =
-	"-Xms8M -Xmx128M -XX:+UseParallelGC -XX:MaxHeapFreeRatio=20 -XX:MinHeapFreeRatio=10 -XX:NewRatio=3";
+	"-Xms8M -Xmx128M -XX:+UseParallelGC -XX:MaxHeapFreeRatio=20 -XX:MinHeapFreeRatio=10 -XX:NewRatio=3 -Xshareclasses";
 
 char g_close_signal_file[1000];
 char g_file_engine_jar_path[1000];
@@ -225,7 +225,7 @@ void restart_file_engine(bool isIgnoreCloseFile)
 	}
 	if (g_is_restart_on_release_file && g_restart_count >= 1)
 	{
-		MessageBoxA(nullptr, "Launch failed after 3 retries", "Error", MB_OK);
+		MessageBoxA(nullptr, "Launch failed", "Error", MB_OK);
 		exit(-1);
 	}
 	if (g_restart_count > 3 || !is_file_exist(g_file_engine_jar_path))
