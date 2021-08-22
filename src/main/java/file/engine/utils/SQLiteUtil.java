@@ -132,6 +132,7 @@ public class SQLiteUtil {
             File data = new File("data", eachDisk.charAt(0) + ".db");
             try {
                 initConnection("jdbc:sqlite:" + data.getAbsolutePath(), String.valueOf(eachDisk.charAt(0)));
+                initTable(String.valueOf(eachDisk.charAt(0)));
             } catch (Exception e) {
                 malformedFiles.add(data);
             }
@@ -190,6 +191,20 @@ public class SQLiteUtil {
                 String format = String.format("INSERT OR IGNORE INTO weight values(\"%s\", %d)", tableName, 0);
                 stmt.executeUpdate(format);
             }
+        }
+    }
+
+    /**
+     * 初始化表
+     * @param disk disk
+     */
+    private static void initTable(String disk) {
+        try (Statement stmt = getStatement(disk)) {
+            for (int i = 0; i < 41; i++) {
+                stmt.executeUpdate("CREATE TABLE IF NOT EXISTS list" + i + "(ASCII INT, PATH TEXT, PRIORITY INT)");
+            }
+        } catch (SQLException exception) {
+            exception.printStackTrace();
         }
     }
 
