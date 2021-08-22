@@ -5,7 +5,7 @@
 #include <concurrent_unordered_map.h>
 using namespace std;
 
-concurrency::concurrent_unordered_map<string, pair<HANDLE, void*>> connectionPool;
+concurrency::concurrent_unordered_map<string, pair<HANDLE, LPVOID>> connectionPool;
 
 extern "C" {
 	_declspec(dllexport) char* getResult(char disk, const char* listName, int priority, int offset);
@@ -66,7 +66,7 @@ inline void createFileMapping(HANDLE& hMapFile, LPVOID& pBuf, size_t memorySize,
 		nullptr, // 默认安全级别
 		PAGE_READWRITE, // 可读可写
 		0, // 高位文件大小
-		memorySize, // 低位文件大小
+		static_cast<DWORD>(memorySize), // 低位文件大小
 		sharedMemoryName
 	);
 
@@ -77,13 +77,13 @@ inline void createFileMapping(HANDLE& hMapFile, LPVOID& pBuf, size_t memorySize,
 		0,
 		memorySize
 	);
-	connectionPool.insert(pair<string, pair<HANDLE, void*>>(sharedMemoryName, pair<HANDLE, void*>(hMapFile, pBuf)));
+	connectionPool.insert(pair<string, pair<HANDLE, LPVOID>>(sharedMemoryName, pair<HANDLE, void*>(hMapFile, pBuf)));
 }
 
 bool isComplete()
 {
 	void* pBuf;
-	const char* completeSignal = "sharedMemory:complete:status";
+	static constexpr auto completeSignal = "sharedMemory:complete:status";
 	if (connectionPool.find(completeSignal) == connectionPool.end())
 	{
 		HANDLE hMapFile;
