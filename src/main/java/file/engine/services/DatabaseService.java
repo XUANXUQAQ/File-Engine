@@ -988,12 +988,12 @@ public class DatabaseService {
      * 进程是否存在
      *
      * @param procName   进程名
-     * @param strBuilder 用于获取cmd执行tasklist后返回的信息
      * @return boolean
      * @throws IOException          失败
      * @throws InterruptedException 失败
      */
-    private boolean isTaskExist(String procName, StringBuilder strBuilder) throws IOException, InterruptedException {
+    private boolean isProcessExist(String procName) throws IOException, InterruptedException {
+        StringBuilder strBuilder = new StringBuilder();
         if (!procName.isEmpty()) {
             Process p = Runtime.getRuntime().exec("tasklist /FI \"IMAGENAME eq " + procName + "\"");
             p.waitFor();
@@ -1034,13 +1034,12 @@ public class DatabaseService {
      * @throws InterruptedException 失败
      */
     private void waitForProcess(@SuppressWarnings("SameParameterValue") String procName) throws IOException, InterruptedException {
-        StringBuilder strBuilder = new StringBuilder();
         long start = System.currentTimeMillis();
         long timeLimit = 3 * 60 * 1000;
         if (IsDebug.isDebug()) {
             timeLimit = Long.MAX_VALUE;
         }
-        while (isTaskExist(procName, strBuilder)) {
+        while (isProcessExist(procName)) {
             TimeUnit.MILLISECONDS.sleep(10);
             if (System.currentTimeMillis() - start > timeLimit) {
                 System.err.printf("等待进程%s超时\n", procName);
@@ -1049,7 +1048,6 @@ public class DatabaseService {
                 exec.waitFor();
                 break;
             }
-            strBuilder.delete(0, strBuilder.length());
         }
     }
 
@@ -1084,8 +1082,12 @@ public class DatabaseService {
         SQLiteUtil.closeAll();
         searchFile(AllConfigs.getInstance().getDisks(), ignorePath);
         try {
+            long start = System.currentTimeMillis();
             isReadSharedMemory.set(true);
-            while (!ResultPipe.INSTANCE.isComplete()) {
+            while (!ResultPipe.INSTANCE.isComplete() && isProcessExist("fileSearcherUSN.exe")) {
+                if (System.currentTimeMillis() - start > 60000) {
+                    break;
+                }
                 TimeUnit.MILLISECONDS.sleep(10);
             }
         } catch (InterruptedException e) {

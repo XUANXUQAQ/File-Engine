@@ -25,6 +25,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Date;
@@ -98,7 +99,9 @@ public class MainClass {
             try (Statement stmt = SQLiteUtil.getStatement(String.valueOf(each.charAt(0)))) {
                 for (String tableName : tableNames) {
                     String sql = String.format("SELECT ASCII, PATH FROM %s;", tableName);
-                    stmt.executeQuery(sql);
+                    try (ResultSet resultSet = stmt.executeQuery(sql)) {
+                        return resultSet.next();
+                    }
                 }
             } catch (Exception e) {
                 return false;
