@@ -240,7 +240,7 @@ void restart_file_engine(bool isIgnoreCloseFile)
 	command.append(jre.substr(0, 2));
 	command.append("\"");
 	command.append(jre.substr(2));
-	command.append("bin\\javaw.exe\" ").append(g_jvm_parameters).append(" -jar File-Engine.jar");
+	command.append("bin\\javaw.exe\" ").append(g_jvm_parameters).append(" -jar File-Engine.jar").append(" > error.log");
 #ifdef TEST
 	std::cout << "running command: " << command << std::endl;
 #endif
