@@ -43,7 +43,7 @@ public class MainClass {
     private static final String SQLITE3_64_MD_5 = "703bd51c19755db49c9070ceb255dfe5";
     private static final String GET_HANDLE_64_MD_5 = "0d4b4c74e29642e2fbfddcbdf9030d0f";
     private static final String SHORTCUT_GEN_MD_5 = "fa4e26f99f3dcd58d827828c411ea5d7";
-    private static final String RESULT_PIPE_MD_5 = "b1fb7b676d8a36bd03fdde206aa41663";
+    private static final String RESULT_PIPE_MD_5 = "5e661251d2c15409e330c9116df0c6e7";
 
     /**
      * 加载本地释放的dll

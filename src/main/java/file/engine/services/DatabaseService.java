@@ -505,14 +505,11 @@ public class DatabaseService {
                         HashMap<String, String> parseSql = parseSql(each);
                         String listName = parseSql.get("list");
                         int priority = Integer.parseInt(parseSql.get("priority"));
-                        int count = 0;
-                        while (!isStop.get()) {
-                            String result = ResultPipe.INSTANCE.getResult(eachDisk.charAt(0), listName, priority, count);
-                            if (result == null) {
-                                break;
-                            }
+                        String result;
+                        for (int count = 0;
+                             !isStop.get() && ((result = ResultPipe.INSTANCE.getResult(eachDisk.charAt(0), listName, priority, count)) != null);
+                             ++count) {
                             checkIsMatchedAndAddToList(result, container);
-                            count++;
                         }
                     }
                 } catch (Exception e) {
