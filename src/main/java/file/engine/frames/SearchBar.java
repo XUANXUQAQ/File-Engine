@@ -3238,9 +3238,9 @@ public class SearchBar {
                                 LinkedHashSet<String> cmdSet = allConfigs.getCmdSet();
                                 cmdSet.add(":clearbin;" + translateUtil.getTranslation("Clear the recycle bin"));
                                 cmdSet.add(":update;" + translateUtil.getTranslation("Update file index"));
+                                cmdSet.add(":clearUpdate;" + translateUtil.getTranslation("Clear the database and update file index"));
                                 cmdSet.add(":help;" + translateUtil.getTranslation("View help"));
                                 cmdSet.add(":version;" + translateUtil.getTranslation("View Version"));
-                                cmdSet.add(":clearUpdate;" + translateUtil.getTranslation("Clear the database and update file index"));
                                 String finalText = text;
                                 cmdSet.forEach(i -> {
                                     if (i.startsWith(finalText)) {
