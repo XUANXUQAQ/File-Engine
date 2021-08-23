@@ -1,5 +1,4 @@
-﻿// dllmain.cpp : 定义 DLL 应用程序的入口点。
-#include "pch.h"
+﻿#include "pch.h"
 #include <string>
 #include <Windows.h>
 #include <concurrent_unordered_map.h>
@@ -29,13 +28,13 @@ char* getResult(char disk, const char* listName, const int priority, const int o
 	const string resultSizeMemoryName(memoryName);
 	HANDLE hMapFile;
 	void* resultsSize = nullptr;
-	if (connectionPool.find(resultSizeMemoryName) == connectionPool.end())
-	{
-		createFileMapping(hMapFile, resultsSize, sizeof size_t, resultSizeMemoryName.c_str());
-	}
-	else
+	try
 	{
 		resultsSize = static_cast<int*>(connectionPool.at(resultSizeMemoryName).second);
+	}
+	catch(exception&)
+	{
+		createFileMapping(hMapFile, resultsSize, sizeof size_t, resultSizeMemoryName.c_str());
 	}
 	if (resultsSize == nullptr)
 	{
@@ -46,16 +45,16 @@ char* getResult(char disk, const char* listName, const int priority, const int o
 	{
 		return nullptr;
 	}
-	void* resultsPtr;
-	if (connectionPool.find(resultMemoryName) == connectionPool.end())
-	{
-		createFileMapping(hMapFile, resultsPtr, *static_cast<int*>(resultsSize), resultMemoryName.c_str());
-	}
-	else
+	void* resultsPtr = nullptr;
+	try
 	{
 		resultsPtr = connectionPool.at(resultMemoryName).second;
 	}
-	return (char*)(reinterpret_cast<long long>(resultsPtr) + static_cast<long long>(offset) * maxPath);
+	catch(exception&)
+	{
+		createFileMapping(hMapFile, resultsPtr, *static_cast<int*>(resultsSize), resultMemoryName.c_str());
+	}
+	return reinterpret_cast<char*>(reinterpret_cast<long long>(resultsPtr) + static_cast<long long>(offset) * maxPath);
 }
 
 inline void createFileMapping(HANDLE& hMapFile, LPVOID& pBuf, size_t memorySize, const char* sharedMemoryName)
@@ -107,4 +106,5 @@ void closeAllSharedMemory()
 		UnmapViewOfFile(each.second.second);
 		CloseHandle(each.second.first);
 	}
+	connectionPool.clear();
 }

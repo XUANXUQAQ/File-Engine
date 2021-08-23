@@ -1,24 +1,26 @@
-﻿#include "stdafx.h"
+﻿#include <thread>
+
+#include "stdafx.h"
 #include "search.h"
 
 // #define TEST
 
-typedef struct
+typedef struct PARAMETER
 {
-	char disk;
+	char disk{'\0'};
 	vector<string> ignorePath;
-	sqlite3* db;
+	sqlite3* db{nullptr};
 } parameter;
 
 static PriorityMap suffixPriorityMap;
 
-void initUSN(const parameter& p);
-void splitString(char* str, vector<string>& vec);
+void initUSN(parameter p);
+void splitString(const char* str, vector<string>& vec);
 
-void initUSN(const parameter& p)
+void initUSN(parameter p)
 {
 	sqlite3_exec(p.db, "BEGIN;", nullptr, nullptr, nullptr);
-	volume volumeInstance(p.disk, p.db, p.ignorePath, suffixPriorityMap);
+	volume volumeInstance(p.disk, p.db, &p.ignorePath, &suffixPriorityMap);
 	volumeInstance.initVolume();
 	sqlite3_exec(p.db, "COMMIT;", nullptr, nullptr, nullptr);
 	sqlite3_close(p.db);
@@ -57,7 +59,7 @@ inline bool initPriorityMap(PriorityMap& priority_map, const char* priorityDbPat
 	return true;
 }
 
-void splitString(char* str, vector<string>& vec)
+void splitString(const char* str, vector<string>& vec)
 {
 	char* remainDisk = nullptr;
 	char diskPath[5000];
@@ -146,7 +148,6 @@ int main()
 			sqlite3_exec(p.db, "PRAGMA page_size=65535;", nullptr, nullptr, nullptr);
 			sqlite3_exec(p.db, "PRAGMA auto_vacuum=0;", nullptr, nullptr, nullptr);
 			sqlite3_exec(p.db, "PRAGMA mmap_size=4096;", nullptr, nullptr, nullptr);
-			// initUSN(p);
 			threads.emplace_back(thread(initUSN, p));
 		}
 	}
