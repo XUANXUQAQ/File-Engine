@@ -917,7 +917,22 @@ public class SearchBar {
                 eventManagement.putEvent(new ShowTaskBarMessageEvent(
                         translateUtil.getTranslation("Info"),
                         translateUtil.getTranslation("Updating file index")));
-                eventManagement.putEvent(new UpdateDatabaseEvent(),
+                eventManagement.putEvent(new UpdateDatabaseEvent(false),
+                        event -> eventManagement.putEvent(new ShowTaskBarMessageEvent(
+                                TranslateUtil.getInstance().getTranslation("Info"),
+                                TranslateUtil.getInstance().getTranslation("Search Done"))),
+                        event -> eventManagement.putEvent(new ShowTaskBarMessageEvent(
+                                TranslateUtil.getInstance().getTranslation("Warning"),
+                                TranslateUtil.getInstance().getTranslation("Search Failed"))));
+                startSignal.set(false);
+                isNotSqlInitialized.set(false);
+                return true;
+            case "clearUpdate":
+                detectShowingModeAndClose();
+                eventManagement.putEvent(new ShowTaskBarMessageEvent(
+                        translateUtil.getTranslation("Info"),
+                        translateUtil.getTranslation("Updating file index")));
+                eventManagement.putEvent(new UpdateDatabaseEvent(true),
                         event -> eventManagement.putEvent(new ShowTaskBarMessageEvent(
                                 TranslateUtil.getInstance().getTranslation("Info"),
                                 TranslateUtil.getInstance().getTranslation("Search Done"))),
@@ -1039,6 +1054,8 @@ public class SearchBar {
         SwingUtilities.invokeLater(() -> textField.setText("test;/file:d;case"));
         JOptionPane.showMessageDialog(searchBar,
                 translateUtil.getTranslation("Different keywords are separated by \";\" (semicolon), suffix and keywords are separated by \":\" (colon)"));
+        JOptionPane.showMessageDialog(searchBar,
+                translateUtil.getTranslation("You can drag any search result out to create a shortcut on the desktop or any folder"));
         //判断是否为中文
         if ("简体中文".equals(translateUtil.getLanguage())) {
             SwingUtilities.invokeLater(() -> textField.setText("pinyin"));
@@ -3223,6 +3240,7 @@ public class SearchBar {
                                 cmdSet.add(":update;" + translateUtil.getTranslation("Update file index"));
                                 cmdSet.add(":help;" + translateUtil.getTranslation("View help"));
                                 cmdSet.add(":version;" + translateUtil.getTranslation("View Version"));
+                                cmdSet.add(":clearUpdate;" + translateUtil.getTranslation("Clear the database and update file index"));
                                 String finalText = text;
                                 cmdSet.forEach(i -> {
                                     if (i.startsWith(finalText)) {

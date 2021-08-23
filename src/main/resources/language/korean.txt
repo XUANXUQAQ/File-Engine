@@ -231,3 +231,5 @@ Select disk=디스크 선택
 Search Failed=검색 실패
 Priority folder does not exist=우선 순위 검색 폴더가 존재하지 않습니다
 The startup path is invalid=시작 경로가 잘못되었습니다
+Clear the database and update file index=데이터베이스 지우기 및 파일 인덱스 업데이트
+You can drag any search result out to create a shortcut on the desktop or any folder=검색 결과를 끌어 바탕 화면이나 폴더에 바로 가기를 만들 수 있습니다.

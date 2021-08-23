@@ -231,3 +231,5 @@ Select disk=Datenträger auswählen
 Search Failed=Suche fehlgeschlagen
 Priority folder does not exist=Der Prioritätssuchordner existiert nicht
 The startup path is invalid=Der Startpfad ist ungültig
+Clear the database and update file index=Löschen Sie die Datenbank und aktualisieren Sie den Dateiindex
+You can drag any search result out to create a shortcut on the desktop or any folder=Sie können jedes Suchergebnis herausziehen, um eine Verknüpfung auf dem Desktop oder einem beliebigen Ordner zu erstellen

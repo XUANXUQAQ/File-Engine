@@ -231,3 +231,5 @@ Select disk=Sélectionnez le disque
 Search Failed=Échec de la recherche
 Priority folder does not exist=Le dossier de recherche prioritaire n'existe pas
 The startup path is invalid=Le chemin de démarrage n'est pas valide
+Clear the database and update file index=Effacer la base de données et mettre à jour l'index des fichiers
+You can drag any search result out to create a shortcut on the desktop or any folder=Vous pouvez faire glisser n'importe quel résultat de recherche pour créer un raccourci sur le bureau ou dans n'importe quel dossier

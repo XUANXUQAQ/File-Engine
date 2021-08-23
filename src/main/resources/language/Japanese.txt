@@ -231,3 +231,5 @@ Select disk=ディスクを選択
 Search Failed=検索に失敗しました
 Priority folder does not exist=優先検索フォルダが存在しません
 The startup path is invalid=起動パスが無効です
+Clear the database and update file index=データベースをクリアし、ファイルインデックスを更新します
+You can drag any search result out to create a shortcut on the desktop or any folder=検索結果をドラッグして、デスクトップまたは任意のフォルダにショートカットを作成できます

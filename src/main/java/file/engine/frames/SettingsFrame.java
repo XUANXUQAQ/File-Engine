@@ -1155,7 +1155,7 @@ public class SettingsFrame {
             eventManagement.putEvent(new ShowTaskBarMessageEvent(
                     translateUtil.getTranslation("Info"),
                     translateUtil.getTranslation("Updating file index")));
-            eventManagement.putEvent(new UpdateDatabaseEvent(),
+            eventManagement.putEvent(new UpdateDatabaseEvent(false),
                     event -> eventManagement.putEvent(new ShowTaskBarMessageEvent(
                             TranslateUtil.getInstance().getTranslation("Info"),
                             TranslateUtil.getInstance().getTranslation("Search Done"))),
