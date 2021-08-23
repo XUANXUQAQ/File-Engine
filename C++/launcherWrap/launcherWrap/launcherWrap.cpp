@@ -25,7 +25,7 @@
 
 constexpr auto* g_file_engine_zip_name = "File-Engine.zip";
 constexpr auto* g_jvm_parameters =
-	"-Xms8M -Xmx128M -XX:+UseParallelGC -XX:MaxHeapFreeRatio=20 -XX:MinHeapFreeRatio=10 -XX:NewRatio=3 -Xshareclasses";
+	"-Xms8M -Xmx128M -XX:+UseParallelGC -XX:MaxHeapFreeRatio=20 -XX:MinHeapFreeRatio=10 -XX:NewRatio=3 -Xshareclasses -Xaggressive";
 
 char g_close_signal_file[1000];
 char g_file_engine_jar_path[1000];
@@ -109,7 +109,7 @@ inline void init_path()
 {
 	char current_dir[1000];
 	GetModuleFileNameA(nullptr, current_dir, sizeof current_dir);
-	std::string tmp_current_dir(current_dir);
+	const std::string tmp_current_dir(current_dir);
 	strcpy_s(current_dir, tmp_current_dir.substr(0, tmp_current_dir.find_last_of('\\')).c_str());
 
 	std::string file_engine_jar_dir_string(current_dir);
@@ -242,11 +242,11 @@ void restart_file_engine(bool isIgnoreCloseFile)
 	}
 	g_restart_count++;
 	std::string command("/c ");
-	std::string jre(g_jre_path);
+	const std::string jre(g_jre_path);
 	command.append(jre.substr(0, 2));
 	command.append("\"");
 	command.append(jre.substr(2));
-	command.append("bin\\javaw.exe\" ").append(g_jvm_parameters).append(" -jar File-Engine.jar").append(" > error.log");
+	command.append("bin\\java.exe\" ").append(g_jvm_parameters).append(" -jar File-Engine.jar").append(" 2> error.log");
 #ifdef TEST
 	std::cout << "running command: " << command << std::endl;
 #endif
@@ -290,10 +290,6 @@ bool is_file_exist(const char* file_path)
 BOOL dos_path_to_nt_path(LPTSTR pszDosPath, LPTSTR pszNtPath)
 {
 	TCHAR szDriveStr[500];
-	TCHAR szDrive[3];
-	TCHAR szDevName[100];
-	INT cchDevName;
-	INT i;
 
 	//检查参数
 	if (!pszDosPath || !pszNtPath)
@@ -302,8 +298,10 @@ BOOL dos_path_to_nt_path(LPTSTR pszDosPath, LPTSTR pszNtPath)
 	//获取本地磁盘字符串
 	if (GetLogicalDriveStrings(500, szDriveStr))
 	{
-		for (i = 0; szDriveStr[i]; i += 4)
+		TCHAR szDrive[3];
+		for (int i = 0; szDriveStr[i]; i += 4)
 		{
+			TCHAR szDevName[100];
 			if (!lstrcmpi(&(szDriveStr[i]), TEXT("A:\\")) || !lstrcmpi(&(szDriveStr[i]), TEXT("B:\\")))
 				continue;
 
@@ -313,7 +311,7 @@ BOOL dos_path_to_nt_path(LPTSTR pszDosPath, LPTSTR pszNtPath)
 			if (!QueryDosDevice(szDrive, szDevName, 100)) //查询 Dos 设备名
 				return FALSE;
 
-			cchDevName = lstrlen(szDevName);
+			const int cchDevName = lstrlen(szDevName);
 			if (_tcsnicmp(pszDosPath, szDevName, cchDevName) == 0) //命中
 			{
 				lstrcpy(pszNtPath, szDrive); //复制驱动器
@@ -413,7 +411,7 @@ DWORD find_process()
 		pe.dwSize = sizeof(PROCESSENTRY32);
 		if (Process32Next(hSnapshot, &pe) == FALSE)
 			break;
-		if (wcscmp(pe.szExeFile, L"javaw.exe") == 0)
+		if (wcscmp(pe.szExeFile, L"java.exe") == 0)
 		{
 			id = pe.th32ProcessID;
 			TCHAR szProcessName[1000] = {0};
