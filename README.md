@@ -24,8 +24,10 @@ Or enter :help in the search bar. by default Ctrl + Alt + K to call out the sear
 ### The software only support 64-bit operating system.
 
 Thanks for the following project:   
-1.fastjson (https://github.com/alibaba/fastjson)   
-2.FlatLaf (https://github.com/JFormDesigner/FlatLaf)   
-3.jna (https://github.com/java-native-access/jna)   
-4.sqlite_jdbc (https://github.com/xerial/sqlite-jdbc)   
-5.lombok (https://projectlombok.org/)
+1. fastjson (https://github.com/alibaba/fastjson)   
+2. FlatLaf (https://github.com/JFormDesigner/FlatLaf)   
+3. jna (https://github.com/java-native-access/jna)   
+4. sqlite_jdbc (https://github.com/xerial/sqlite-jdbc)   
+5. lombok (https://projectlombok.org/)   
+6. TinyPinyin (https://github.com/promeG/TinyPinyin)
+7. zip (https://github.com/kuba--/zip)

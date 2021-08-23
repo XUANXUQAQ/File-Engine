@@ -23,10 +23,10 @@ A tool can make you work more efficiently.
 ### 该软件仅支持64位系统
 
 感谢以下项目：   
-1.fastjson (https://github.com/alibaba/fastjson)   
-2.FlatLaf (https://github.com/JFormDesigner/FlatLaf)   
-3.jna (https://github.com/java-native-access/jna)   
-4.sqlite_jdbc (https://github.com/xerial/sqlite-jdbc)   
-5.lombok (https://projectlombok.org/)
-
-
+1. fastjson (https://github.com/alibaba/fastjson)   
+2. FlatLaf (https://github.com/JFormDesigner/FlatLaf)   
+3. jna (https://github.com/java-native-access/jna)   
+4. sqlite_jdbc (https://github.com/xerial/sqlite-jdbc)   
+5. lombok (https://projectlombok.org/)   
+6. TinyPinyin (https://github.com/promeG/TinyPinyin)
+7. zip (https://github.com/kuba--/zip)
