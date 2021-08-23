@@ -4,7 +4,10 @@ import file.engine.event.handler.Event;
 
 public class UpdateDatabaseEvent extends Event {
 
-    public UpdateDatabaseEvent() {
+    public final boolean isDropPrevious;
+
+    public UpdateDatabaseEvent(boolean isDropPrevious) {
         this.setBlock();
+        this.isDropPrevious = isDropPrevious;
     }
 }

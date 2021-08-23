@@ -37,7 +37,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 public class DatabaseService {
-    private final ConcurrentLinkedQueue<SQLWithTaskId> commandSet = new ConcurrentLinkedQueue<>();
+    private final ConcurrentLinkedQueue<SQLWithTaskId> commandQueue = new ConcurrentLinkedQueue<>();
     private volatile Constants.Enums.DatabaseStatus status = Constants.Enums.DatabaseStatus.NORMAL;
     private final AtomicBoolean isExecuteImmediately = new AtomicBoolean(false);
     private final AtomicInteger cacheNum = new AtomicInteger(0);
@@ -111,7 +111,7 @@ public class DatabaseService {
         }
         origin.weight.addAndGet(weight);
         String format = String.format("UPDATE weight SET TABLE_WEIGHT=%d WHERE TABLE_NAME=\"%s\"", origin.weight.get(), tableName);
-        commandSet.add(new SQLWithTaskId(format, SqlTaskIds.UPDATE_WEIGHT, "weight"));
+        commandQueue.add(new SQLWithTaskId(format, SqlTaskIds.UPDATE_WEIGHT, "weight"));
         if (IsDebug.isDebug()) {
             System.err.println("已更新" + tableName + "权重, 之前为" + origin + "***增加了" + weight);
         }
@@ -732,7 +732,7 @@ public class DatabaseService {
      * @return true如果待删除文件已经在数据库中
      */
     private boolean isRemoveFileInDatabase(String path) {
-        for (SQLWithTaskId each : commandSet) {
+        for (SQLWithTaskId each : commandQueue) {
             if (each.taskId == SqlTaskIds.INSERT_TO_LIST && each.sql.contains(path)) {
                 return false;
             }
@@ -840,8 +840,8 @@ public class DatabaseService {
      */
     @SuppressWarnings("SqlNoDataSourceInspection")
     private void executeAllCommands() {
-        if (!commandSet.isEmpty()) {
-            LinkedHashSet<SQLWithTaskId> tempCommandSet = new LinkedHashSet<>(commandSet);
+        if (!commandQueue.isEmpty()) {
+            LinkedHashSet<SQLWithTaskId> tempCommandSet = new LinkedHashSet<>(commandQueue);
             HashMap<String, LinkedList<String>> commandMap = new HashMap<>();
             tempCommandSet.forEach(sqlWithTaskId -> {
                 if (commandMap.containsKey(sqlWithTaskId.key)) {
@@ -879,7 +879,7 @@ public class DatabaseService {
                     }
                 }
             });
-            commandSet.removeAll(tempCommandSet);
+            commandQueue.removeAll(tempCommandSet);
         }
     }
 
@@ -889,12 +889,12 @@ public class DatabaseService {
      * @param sql 任务
      */
     private void addToCommandSet(SQLWithTaskId sql) {
-        if (commandSet.size() < Constants.MAX_SQL_NUM) {
+        if (commandQueue.size() < Constants.MAX_SQL_NUM) {
             if (status == Constants.Enums.DatabaseStatus.MANUAL_UPDATE) {
                 System.err.println("正在搜索中");
                 return;
             }
-            commandSet.add(sql);
+            commandQueue.add(sql);
         } else {
             if (IsDebug.isDebug()) {
                 System.err.println("添加sql语句" + sql + "失败，已达到最大上限");
@@ -911,7 +911,7 @@ public class DatabaseService {
      * @return boolean
      */
     private boolean isCommandNotRepeat(String sql) {
-        for (SQLWithTaskId each : commandSet) {
+        for (SQLWithTaskId each : commandQueue) {
             if (each.sql.equals(sql)) {
                 return false;
             }
@@ -951,11 +951,11 @@ public class DatabaseService {
      * 创建索引
      */
     private void createAllIndex() {
-        commandSet.add(new SQLWithTaskId("CREATE INDEX IF NOT EXISTS cache_index ON cache(PATH);", SqlTaskIds.CREATE_INDEX, "cache"));
+        commandQueue.add(new SQLWithTaskId("CREATE INDEX IF NOT EXISTS cache_index ON cache(PATH);", SqlTaskIds.CREATE_INDEX, "cache"));
         for (String each : RegexUtil.comma.split(AllConfigs.getInstance().getDisks())) {
             for (int i = 0; i <= Constants.ALL_TABLE_NUM; ++i) {
                 String createIndex = "CREATE INDEX IF NOT EXISTS list" + i + "_index ON list" + i + "(PRIORITY);";
-                commandSet.add(new SQLWithTaskId(createIndex, SqlTaskIds.CREATE_INDEX, String.valueOf(each.charAt(0))));
+                commandQueue.add(new SQLWithTaskId(createIndex, SqlTaskIds.CREATE_INDEX, String.valueOf(each.charAt(0))));
             }
         }
     }
@@ -1075,10 +1075,11 @@ public class DatabaseService {
      * 关闭数据库连接并更新数据库
      *
      * @param ignorePath 忽略文件夹
+     * @param isDropPrevious 是否删除之前的记录
      */
-    private void updateLists(String ignorePath) throws IOException {
+    private void updateLists(String ignorePath, boolean isDropPrevious) throws IOException {
         checkFileSize();
-        recreateDatabase();
+        recreateDatabase(isDropPrevious);
         waitForCommandSet(SqlTaskIds.CREATE_TABLE);
         SQLiteUtil.closeAll();
         searchFile(AllConfigs.getInstance().getDisks(), ignorePath);
@@ -1086,7 +1087,7 @@ public class DatabaseService {
             waitForProcessAsync("fileSearcherUSN.exe", () -> {
                 SQLiteUtil.initAllConnections();
                 // 可能会出错
-                recreateDatabase();
+                recreateDatabase(false);
                 createAllIndex();
                 ResultPipe.INSTANCE.closeAllSharedMemory();
                 isDatabaseUpdated.set(true);
@@ -1140,7 +1141,7 @@ public class DatabaseService {
     }
 
     private boolean isTaskExistInCommandSet(SqlTaskIds taskId) {
-        for (SQLWithTaskId tasks : commandSet) {
+        for (SQLWithTaskId tasks : commandQueue) {
             if (tasks.taskId == taskId) {
                 return true;
             }
@@ -1163,19 +1164,24 @@ public class DatabaseService {
         return stringIntegerHashMap;
     }
 
-    private void recreateDatabase() {
-        commandSet.clear();
+    private void recreateDatabase(boolean isDropPrevious) {
+        commandQueue.clear();
         //删除所有索引
-//        for (int i = 0; i <= Constants.ALL_TABLE_NUM; i++) {
-//            commandSet.add(new SQLWithTaskId(SqlTaskIds.DROP_INDEX, "DROP INDEX IF EXISTS list" + i + "_index;"));
-//        }
-        //创建新表
         String[] disks = RegexUtil.comma.split(AllConfigs.getInstance().getDisks());
+        if (isDropPrevious) {
+            for (int i = 0; i <= Constants.ALL_TABLE_NUM; i++) {
+                for (String disk : disks) {
+                    commandQueue.add(new SQLWithTaskId("DROP INDEX IF EXISTS list" + i + "_index;", SqlTaskIds.DROP_INDEX, String.valueOf(disk.charAt(0))));
+                    commandQueue.add(new SQLWithTaskId("DROP TABLE IF EXISTS list" + i, SqlTaskIds.DROP_TABLE, String.valueOf(disk.charAt(0))));
+                }
+            }
+        }
+        //创建新表
         String sql = "CREATE TABLE IF NOT EXISTS list";
         for (int i = 0; i <= Constants.ALL_TABLE_NUM; i++) {
             String command = sql + i + " " + "(ASCII INT, PATH text unique, PRIORITY INT)" + ";";
             for (String disk : disks) {
-                commandSet.add(new SQLWithTaskId(command, SqlTaskIds.CREATE_TABLE, String.valueOf(disk.charAt(0))));
+                commandQueue.add(new SQLWithTaskId(command, SqlTaskIds.CREATE_TABLE, String.valueOf(disk.charAt(0))));
             }
         }
         executeImmediately();
@@ -1280,8 +1286,9 @@ public class DatabaseService {
         if (databaseService.isReadSharedMemory.get()) {
             return;
         }
+        UpdateDatabaseEvent updateDatabaseEvent = (UpdateDatabaseEvent) event;
         databaseService.setStatus(Constants.Enums.DatabaseStatus.MANUAL_UPDATE);
-        databaseService.updateLists(AllConfigs.getInstance().getIgnorePath());
+        databaseService.updateLists(AllConfigs.getInstance().getIgnorePath(), updateDatabaseEvent.isDropPrevious);
         databaseService.setStatus(Constants.Enums.DatabaseStatus.NORMAL);
     }
 

@@ -231,3 +231,5 @@ Select disk=Выбрать диск
 Search Failed=Поиск не удался
 Priority folder does not exist=Папка приоритетного поиска не существует
 The startup path is invalid=Путь запуска недействителен
+Clear the database and update file index=Очистить базу данных и обновить индекс файла
+You can drag any search result out to create a shortcut on the desktop or any folder=Вы можете перетащить любой результат поиска, чтобы создать ярлык на рабочем столе или в любой папке.

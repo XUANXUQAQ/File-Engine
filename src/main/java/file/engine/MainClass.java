@@ -116,7 +116,7 @@ public class MainClass {
      * @return Boolean
      */
     private static boolean isAtDiskC() {
-        return new File("").getAbsolutePath().startsWith("C:");
+        return System.getProperty("user.dir").startsWith("C:");
     }
 
     /**
@@ -417,7 +417,7 @@ public class MainClass {
                 eventManagement.putEvent(new ShowTaskBarMessageEvent(
                         translateUtil.getTranslation("Info"),
                         translateUtil.getTranslation("Updating file index")));
-                eventManagement.putEvent(new UpdateDatabaseEvent(),
+                eventManagement.putEvent(new UpdateDatabaseEvent(false),
                         event -> eventManagement.putEvent(new ShowTaskBarMessageEvent(
                                 translateUtil.getTranslation("Info"),
                                 translateUtil.getTranslation("Search Done"))),

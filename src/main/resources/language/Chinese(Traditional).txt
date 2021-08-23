@@ -231,3 +231,5 @@ Select disk=選擇磁盤
 Search Failed=搜索失敗
 Priority folder does not exist=優先搜索文件夾不存在
 The startup path is invalid=開機啟動項無效
+Clear the database and update file index=清除數據庫並更新文件索引
+You can drag any search result out to create a shortcut on the desktop or any folder=您可以將任何搜索結果拖出以在桌面或任何文件夾上創建快捷方式
