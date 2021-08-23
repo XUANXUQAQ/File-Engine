@@ -53,9 +53,15 @@ void release_all();
 bool is_dir_not_exist(const char* path);
 void update();
 void init_path();
+bool is_launched();
+std::wstring get_self_name();
 
 int main()
 {
+	if (is_launched())
+	{
+		return 0;
+	}
 	init_path();
 #ifdef TEST
 	std::cout << "file-engine.jar path :  " << g_file_engine_jar_path << std::endl;
@@ -215,7 +221,7 @@ void restart_file_engine(bool isIgnoreCloseFile)
 	{
 		update();
 	}
-	std::time_t tmp_restart_time = std::time(nullptr);
+	const std::time_t tmp_restart_time = std::time(nullptr);
 	// 这次重启距离上次时间超过了10分钟，视为正常重启
 	const std::time_t tmp = tmp_restart_time - g_restart_time;
 	if (tmp > 600)
@@ -294,7 +300,7 @@ BOOL dos_path_to_nt_path(LPTSTR pszDosPath, LPTSTR pszNtPath)
 		return FALSE;
 
 	//获取本地磁盘字符串
-	if (GetLogicalDriveStrings(sizeof szDriveStr, szDriveStr))
+	if (GetLogicalDriveStrings(500, szDriveStr))
 	{
 		for (i = 0; szDriveStr[i]; i += 4)
 		{
@@ -353,6 +359,41 @@ BOOL get_process_full_path(DWORD dwPID, TCHAR* pszFullPath)
 	return TRUE;
 }
 
+std::wstring get_self_name()
+{
+	WCHAR _proc_name[MAX_PATH];
+	GetModuleFileNameW(nullptr, _proc_name, sizeof _proc_name / 2);
+	const std::wstring proc_name(_proc_name);
+	return proc_name.substr(proc_name.find_last_of(L'\\') + 1);
+}
+
+bool is_launched()
+{
+	PROCESSENTRY32 pe;
+	DWORD id = 0;
+	auto* const hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+	pe.dwSize = sizeof(PROCESSENTRY32);
+	if (!Process32First(hSnapshot, &pe))
+		return false;
+	int proc_num = 0;
+	while (true)
+	{
+		pe.dwSize = sizeof(PROCESSENTRY32);
+		if (Process32Next(hSnapshot, &pe) == FALSE)
+			break;
+		if (wcscmp(pe.szExeFile, get_self_name().c_str()) == 0)
+		{
+			proc_num++;
+			if (proc_num > 1)
+			{
+				return true;
+			}
+		}
+	}
+	CloseHandle(hSnapshot);
+	return false;
+}
+
 /**
  * 查找File-Engine进程是否存在
  */
@@ -375,7 +416,7 @@ DWORD find_process()
 		if (wcscmp(pe.szExeFile, L"javaw.exe") == 0)
 		{
 			id = pe.th32ProcessID;
-			TCHAR szProcessName[1000] = { 0 };
+			TCHAR szProcessName[1000] = {0};
 			get_process_full_path(id, szProcessName);
 			std::wstring processName(szProcessName);
 			if (processName.find(workingDir) != std::wstring::npos)

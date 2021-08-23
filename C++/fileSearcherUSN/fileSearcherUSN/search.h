@@ -101,32 +101,6 @@ inline void closeSharedMemory()
 	}
 }
 
-class result
-{
-public:
-	result(const string& _path, const int ascii)
-	{
-		this->_path = _path;
-		this->ascii = ascii;
-	}
-
-	~result() = default;
-
-	string getPath()
-	{
-		return _path;
-	}
-
-	int getAscii()
-	{
-		return ascii;
-	}
-
-private:
-	string _path;
-	int ascii;
-};
-
 class volume
 {
 public:
@@ -148,7 +122,7 @@ public:
 		return vol;
 	}
 
-	void collectResult(const int ascii, const string& fullPath)
+	void collectResult(const int ascii, string& fullPath)
 	{
 		const int asciiGroup = ascii / 100;
 		if (asciiGroup > 40)
@@ -157,29 +131,29 @@ public:
 		}
 		string listName("list");
 		listName += to_string(asciiGroup);
-		CONCURRENT_MAP<int, CONCURRENT_QUEUE<string>>* tmpResults;
+		CONCURRENT_MAP<int, CONCURRENT_QUEUE<string>&>* tmpResults;
 		CONCURRENT_QUEUE<string>* priorityStrList;
 		const int priority = getPriorityByPath(fullPath);
-		if (allResultsMap.find(listName) != allResultsMap.end())
+		try
 		{
-			tmpResults = &allResultsMap.at(listName);
-			if (tmpResults->find(priority) != tmpResults->end())
+			tmpResults = allResultsMap.at(listName);
+			try
 			{
 				priorityStrList = &tmpResults->at(priority);
 			}
-			else
+			catch(exception&)
 			{
 				priorityStrList = new CONCURRENT_QUEUE<string>();
-				tmpResults->insert(pair<int, CONCURRENT_QUEUE<string>>(priority, *priorityStrList));
+				tmpResults->insert(pair<int, CONCURRENT_QUEUE<string>&>(priority, *priorityStrList));
 			}
 		}
-		else
+		catch (exception&)
 		{
 			priorityStrList = new CONCURRENT_QUEUE<string>();
-			tmpResults = new CONCURRENT_MAP<int, CONCURRENT_QUEUE<string>>();
-			tmpResults->insert(pair<int, CONCURRENT_QUEUE<string>>(priority, *priorityStrList));
+			tmpResults = new CONCURRENT_MAP<int, CONCURRENT_QUEUE<string>&>();
+			tmpResults->insert(pair<int, CONCURRENT_QUEUE<string>&>(priority, *priorityStrList));
 			allResultsMap.insert(
-				pair<string, CONCURRENT_MAP<int, CONCURRENT_QUEUE<string>>>(listName, *tmpResults));
+				pair<string, CONCURRENT_MAP<int, CONCURRENT_QUEUE<string>&>*>(listName, tmpResults));
 		}
 		priorityStrList->push(fullPath);
 	}
@@ -304,7 +278,7 @@ private:
 
 	vector<string> ignorePathVector;
 	PriorityMap priorityMap;
-	CONCURRENT_MAP<string, CONCURRENT_MAP<int, CONCURRENT_QUEUE<string>>> allResultsMap;
+	CONCURRENT_MAP<string, CONCURRENT_MAP<int, CONCURRENT_QUEUE<string>&>*> allResultsMap;
 
 	bool getHandle();
 	bool createUSN();
@@ -369,11 +343,11 @@ inline void volume::createSharedMemoryAndCopy(const string& listName, const int 
 		return;
 	}
 	auto& table = allResultsMap.at(listName);
-	if (table.find(priority) == table.end())
+	if (table->find(priority) == table->end())
 	{
 		return;
 	}
-	CONCURRENT_QUEUE<string>& result = table.at(priority);
+	CONCURRENT_QUEUE<string>& result = table->at(priority);
 	const size_t _size = result.unsafe_size();
 	const size_t memorySize = _size * maxPath;
 
@@ -403,7 +377,7 @@ inline void volume::saveAllResultsToDb()
 	initAllPrepareStatement();
 	for (auto& eachTable : allResultsMap)
 	{
-		for (auto& eachResult : eachTable.second)
+		for (auto& eachResult : *eachTable.second)
 		{
 			for (auto iter = eachResult.second.unsafe_begin(); iter != eachResult.second.unsafe_end(); ++iter)
 			{
