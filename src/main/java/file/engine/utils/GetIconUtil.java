@@ -75,6 +75,7 @@ public class GetIconUtil {
             case "clearbin":
                 return recycleBin;
             case "update":
+            case "clearUpdate":
                 return updateIcon;
             case "help":
                 return helpIcon;
