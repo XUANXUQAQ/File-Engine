@@ -992,6 +992,7 @@ public class DatabaseService {
      * @throws IOException          失败
      * @throws InterruptedException 失败
      */
+    @SuppressWarnings("IndexOfReplaceableByContains")
     private boolean isProcessExist(String procName) throws IOException, InterruptedException {
         StringBuilder strBuilder = new StringBuilder();
         if (!procName.isEmpty()) {
@@ -1003,7 +1004,7 @@ public class DatabaseService {
                     strBuilder.append(eachLine);
                 }
             }
-            return strBuilder.toString().contains(procName);
+            return strBuilder.toString().indexOf(procName) != -1;
         }
         return false;
     }
@@ -1082,6 +1083,15 @@ public class DatabaseService {
         SQLiteUtil.closeAll();
         searchFile(AllConfigs.getInstance().getDisks(), ignorePath);
         try {
+            waitForProcessAsync("fileSearcherUSN.exe", () -> {
+                SQLiteUtil.initAllConnections();
+                // 可能会出错
+                recreateDatabase();
+                createAllIndex();
+                ResultPipe.INSTANCE.closeAllSharedMemory();
+                isDatabaseUpdated.set(true);
+                isReadSharedMemory.set(false);
+            });
             long start = System.currentTimeMillis();
             isReadSharedMemory.set(true);
             while (!ResultPipe.INSTANCE.isComplete() && isProcessExist("fileSearcherUSN.exe")) {
@@ -1093,15 +1103,6 @@ public class DatabaseService {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        waitForProcessAsync("fileSearcherUSN.exe", () -> {
-            SQLiteUtil.initAllConnections();
-            // 可能会出错
-            recreateDatabase();
-            createAllIndex();
-            ResultPipe.INSTANCE.closeAllSharedMemory();
-            isDatabaseUpdated.set(true);
-            isReadSharedMemory.set(false);
-        });
     }
 
     /**

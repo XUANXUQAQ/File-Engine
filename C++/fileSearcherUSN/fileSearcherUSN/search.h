@@ -2,7 +2,6 @@
 
 #include <iostream>
 #include <fstream>
-#include <thread>
 #include <unordered_map>
 #include <winioctl.h>
 #include <string>
@@ -104,14 +103,14 @@ inline void closeSharedMemory()
 class volume
 {
 public:
-	volume(const char vol, sqlite3* database, vector<string> ignorePaths, PriorityMap priorityMap)
+	volume(const char vol, sqlite3* database, vector<string>* ignorePaths, PriorityMap* priorityMap)
 	{
 		this->vol = vol;
-		this->priorityMap = std::move(priorityMap);
+		this->priorityMap = priorityMap;
 		hVol = nullptr;
 		path = "";
 		db = database;
-		addIgnorePath(ignorePaths);
+		ignorePathVector = ignorePaths;
 		++*allTaskCount;
 	}
 
@@ -122,7 +121,7 @@ public:
 		return vol;
 	}
 
-	void collectResult(const int ascii, string& fullPath)
+	void collectResult(const int ascii, const string& fullPath)
 	{
 		const int asciiGroup = ascii / 100;
 		if (asciiGroup > 40)
@@ -141,7 +140,7 @@ public:
 			{
 				priorityStrList = &tmpResults->at(priority);
 			}
-			catch(exception&)
+			catch (exception&)
 			{
 				priorityStrList = new CONCURRENT_QUEUE<string>();
 				tmpResults->insert(pair<int, CONCURRENT_QUEUE<string>&>(priority, *priorityStrList));
@@ -165,7 +164,7 @@ public:
 	{
 		for (int i = 0; i <= 40; ++i)
 		{
-			for (const auto& eachPriority : priorityMap)
+			for (const auto& eachPriority : *priorityMap)
 			{
 				static const char* listNamePrefix = "list";
 				static const char* prefix = "sharedMemory:";
@@ -212,9 +211,8 @@ public:
 			}
 			catch (exception& e)
 			{
-				cerr << e.what() << endl;
+				cout << e.what() << endl;
 			}
-			isSearchDone = true;
 			copyResultsToSharedMemory();
 			++*completeTaskCount;
 			setCompleteSignal();
@@ -271,13 +269,11 @@ private:
 	sqlite3_stmt* stmt39 = nullptr;
 	sqlite3_stmt* stmt40 = nullptr;
 
-	volatile bool isSearchDone = false;
-
 	USN_JOURNAL_DATA ujd{};
 	CREATE_USN_JOURNAL_DATA cujd{};
 
-	vector<string> ignorePathVector;
-	PriorityMap priorityMap;
+	vector<string>* ignorePathVector = nullptr;
+	PriorityMap* priorityMap = nullptr;
 	CONCURRENT_MAP<string, CONCURRENT_MAP<int, CONCURRENT_QUEUE<string>&>*> allResultsMap;
 
 	bool getHandle();
@@ -288,10 +284,10 @@ private:
 	void saveResult(const string& _path, int ascII);
 	void getPath(DWORDLONG frn, CString& path);
 	static int getAscIISum(string name);
-	bool isIgnore(string path);
+	bool isIgnore(const string& path);
 	void finalizeAllStatement() const;
 	void saveSingleRecordToDB(sqlite3_stmt* stmt, string record, int ascii);
-	int getPriorityBySuffix(const string& suffix);
+	int getPriorityBySuffix(const string& suffix) const;
 	int getPriorityByPath(const string& path);
 	void initAllPrepareStatement();
 	void initSinglePrepareStatement(sqlite3_stmt** statement, const char* init) const;
@@ -299,11 +295,6 @@ private:
 	void createSharedMemoryAndCopy(const string& listName, int priority, size_t* size,
 	                               const string& sharedMemoryName);
 	static void setCompleteSignal();
-
-	void addIgnorePath(const vector<string>& vec)
-	{
-		ignorePathVector = vec;
-	}
 };
 
 inline void createFileMapping(HANDLE& hMapFile, LPVOID& pBuf, size_t memorySize, const char* sharedMemoryName)
@@ -388,10 +379,10 @@ inline void volume::saveAllResultsToDb()
 	finalizeAllStatement();
 }
 
-inline int volume::getPriorityBySuffix(const string& suffix)
+inline int volume::getPriorityBySuffix(const string& suffix) const
 {
-	auto iter = priorityMap.find(suffix);
-	if (iter == priorityMap.end())
+	const auto& iter = priorityMap->find(suffix);
+	if (iter == priorityMap->end())
 	{
 		return getPriorityBySuffix("defaultPriority");
 	}
@@ -515,22 +506,18 @@ inline void volume::initAllPrepareStatement()
 	initSinglePrepareStatement(&stmt40, "INSERT OR IGNORE INTO list40 VALUES(?, ?, ?);");
 }
 
-inline bool volume::isIgnore(string path)
+inline bool volume::isIgnore(const string& _path)
 {
-	if (path.find('$') != string::npos)
+	if (_path.find('$') != string::npos)
 	{
 		return true;
 	}
-	transform(path.begin(), path.end(), path.begin(), tolower);
-	const auto size = ignorePathVector.size();
-	for (auto i = 0; i < size; i++)
+	string _path0(_path);
+	transform(_path0.begin(), _path0.end(), _path0.begin(), tolower);
+	return std::any_of(ignorePathVector->begin(), ignorePathVector->end(), [_path0](const string& each)
 	{
-		if (path.find(ignorePathVector[i]) != string::npos)
-		{
-			return true;
-		}
-	}
-	return false;
+		return _path0.find(each) != string::npos;
+	});
 }
 
 inline void volume::saveResult(const string& _path, const int ascII)

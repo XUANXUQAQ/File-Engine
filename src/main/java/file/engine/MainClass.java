@@ -40,11 +40,11 @@ public class MainClass {
     private static final String GET_ASC_II_64_MD_5 = "62a56c26e1afa7c4fa3f441aadb9d515";
     private static final String HOTKEY_LISTENER_64_MD_5 = "a212cc427a89a614402e59897c82e50d";
     private static final String IS_LOCAL_DISK_64_MD_5 = "f8a71d3496d8cc188713d521e6dfa2b2";
-    private static final String FILE_SEARCHER_USN_64_MD_5 = "e3e919d5108d7895c7ef7e71859075d7";
+    private static final String FILE_SEARCHER_USN_64_MD_5 = "a263cb5f4e8c68e6292af77ef7d18708";
     private static final String SQLITE3_64_MD_5 = "703bd51c19755db49c9070ceb255dfe5";
     private static final String GET_HANDLE_64_MD_5 = "0d4b4c74e29642e2fbfddcbdf9030d0f";
     private static final String SHORTCUT_GEN_MD_5 = "fa4e26f99f3dcd58d827828c411ea5d7";
-    private static final String RESULT_PIPE_MD_5 = "5e661251d2c15409e330c9116df0c6e7";
+    private static final String RESULT_PIPE_MD_5 = "7c7a8ae645649d8f51ce6d4aa9e0a31f";
 
     /**
      * 加载本地释放的dll
@@ -278,12 +278,10 @@ public class MainClass {
      * -Djna.library.path=user
      * -Dswing.aatext=true
      * -Djna.debug_load=false
-     * -DFile_Engine_Debug=true
+     * -DFile_Engine_Debug=true  todo Debug设置为true
      * -DFile_Engine_Preview=true
      */
     private static void setSystemProperties() {
-        //todo Debug在发布时设置为false
-        System.setProperty("File_Engine_Debug", "true");
         System.setProperty("File_Engine_Preview", "false");
         System.setProperty("file.encoding", "UTF-8");
         System.setProperty("sun.java2d.noddraw", "true");
