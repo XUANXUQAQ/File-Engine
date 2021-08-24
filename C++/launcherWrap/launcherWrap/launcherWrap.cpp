@@ -9,7 +9,6 @@
 #include <iostream>
 #include <string>
 #include <Psapi.h>
-#include <string>
 #include <tchar.h>
 #include <codecvt>
 #include "zip/zip.h"
@@ -34,9 +33,9 @@ char g_jre_path[1000];
 char g_update_signal_file[1000];
 char g_new_file_engine_jar_path[1000];
 #ifdef TEST
-int g_check_time_count = 10;
+int g_check_time_threshold = 1000;
 #else
-int g_check_time_count = 50;
+int g_check_time_threshold = 5000;
 #endif
 
 int g_restart_count = 0;
@@ -71,7 +70,6 @@ int main()
 	std::cout << "update signal file: " << g_update_signal_file << std::endl;
 	std::cout << "close signal file : " << g_close_signal_file << std::endl;
 #endif
-	auto loop_count = 0;
 	if (is_dir_not_exist(g_file_engine_working_dir))
 	{
 		if (_mkdir(g_file_engine_working_dir))
@@ -83,11 +81,12 @@ int main()
 		}
 	}
 	restart_file_engine(true);
+	std::time_t start_time = std::time(nullptr);
 	while (!is_close_exist())
 	{
-		loop_count++;
-		if (loop_count > g_check_time_count)
+		if (std::time(nullptr) - start_time > g_check_time_threshold)
 		{
+			start_time = std::time(nullptr);
 			if (!find_process())
 			{
 				std::cout << "File-Engine process not exist" << std::endl;
@@ -98,9 +97,8 @@ int main()
 				}
 				restart_file_engine(false);
 			}
-			loop_count = 0;
 		}
-		Sleep(100);
+		Sleep(50);
 	}
 	return 0;
 }
