@@ -329,12 +329,11 @@ BOOL dos_path_to_nt_path(LPTSTR pszDosPath, LPTSTR pszNtPath)
 BOOL get_process_full_path(DWORD dwPID, TCHAR* pszFullPath)
 {
 	TCHAR szImagePath[MAX_PATH];
-	HANDLE hProcess;
 	if (!pszFullPath)
 		return FALSE;
 
 	pszFullPath[0] = '\0';
-	hProcess = OpenProcess(PROCESS_QUERY_INFORMATION, 0, dwPID);
+	HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION, 0, dwPID);
 	if (!hProcess)
 		return FALSE;
 
@@ -370,7 +369,10 @@ bool is_launched()
 	auto* const hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
 	pe.dwSize = sizeof(PROCESSENTRY32);
 	if (!Process32First(hSnapshot, &pe))
+	{
+		CloseHandle(hSnapshot);
 		return false;
+	}
 	int proc_num = 0;
 	while (true)
 	{
@@ -382,6 +384,7 @@ bool is_launched()
 			proc_num++;
 			if (proc_num > 1)
 			{
+				CloseHandle(hSnapshot);
 				return true;
 			}
 		}
@@ -403,7 +406,10 @@ DWORD find_process()
 	std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
 	const std::wstring workingDir = converter.from_bytes(_workingDir);
 	if (!Process32First(hSnapshot, &pe))
+	{
+		CloseHandle(hSnapshot);
 		return 0;
+	}
 	while (true)
 	{
 		pe.dwSize = sizeof(PROCESSENTRY32);
