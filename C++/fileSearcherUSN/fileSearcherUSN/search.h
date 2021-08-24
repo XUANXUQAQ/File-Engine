@@ -216,6 +216,17 @@ public:
 			copyResultsToSharedMemory();
 			++*completeTaskCount;
 			setCompleteSignal();
+			const std::time_t startWaitTime = std::time(nullptr);
+			//阻塞等待其他线程全部完成共享内存的复制
+			while (allTaskCount->load() != completeTaskCount->load())
+			{
+				if (std::time(nullptr) - startWaitTime > 10000)
+				{
+					//等待超过十秒
+					break;
+				}
+				Sleep(10);
+			}
 			saveAllResultsToDb();
 		}
 	}
@@ -284,7 +295,7 @@ private:
 	void saveResult(const string& _path, int ascII) const;
 	void getPath(DWORDLONG frn, CString& _path);
 	static int getAscIISum(const string& name);
-	bool isIgnore(const string& path);
+	bool isIgnore(const string& path) const;
 	void finalizeAllStatement() const;
 	void saveSingleRecordToDB(sqlite3_stmt* stmt, const string& record, int ascii) const;
 	int getPriorityBySuffix(const string& suffix) const;
@@ -333,7 +344,7 @@ inline void volume::createSharedMemoryAndCopy(const string& listName, const int 
 	{
 		return;
 	}
-	auto& table = allResultsMap.at(listName);
+	const auto& table = allResultsMap.at(listName);
 	if (table->find(priority) == table->end())
 	{
 		return;
@@ -351,10 +362,10 @@ inline void volume::createSharedMemoryAndCopy(const string& listName, const int 
 	{
 		return;
 	}
-	int count = 0;
+	long long count = 0;
 	for (auto iter = result.unsafe_begin(); iter != result.unsafe_end(); ++iter)
 	{
-		memcpy_s((void*)(reinterpret_cast<long long>(pBuf) + static_cast<long long>(count) * maxPath), maxPath,
+		memcpy_s(reinterpret_cast<void*>(reinterpret_cast<long long>(pBuf) + count * maxPath), maxPath,
 		         iter->c_str(), iter->length());
 		count++;
 	}
@@ -506,7 +517,7 @@ inline void volume::initAllPrepareStatement()
 	initSinglePrepareStatement(&stmt40, "INSERT OR IGNORE INTO list40 VALUES(?, ?, ?);");
 }
 
-inline bool volume::isIgnore(const string& _path)
+inline bool volume::isIgnore(const string& _path) const
 {
 	if (_path.find('$') != string::npos)
 	{
