@@ -41,6 +41,7 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
@@ -3445,7 +3446,8 @@ public class SearchBar {
      */
     private String highLight(String html, String[] keywords) {
         StringBuilder builder = new StringBuilder();
-        for (String keyword : keywords) {
+        List<String> collect = Arrays.stream(keywords).sorted((o1, o2) -> o2.length() - o1.length()).collect(Collectors.toList());
+        for (String keyword : collect) {
             if (!keyword.isBlank()) {
                 builder.append(keyword).append("|");
             }
