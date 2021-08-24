@@ -116,7 +116,7 @@ public:
 
 	~volume() = default;
 
-	char getPath() const
+	char getDiskPath() const
 	{
 		return vol;
 	}
@@ -170,7 +170,7 @@ public:
 				static const char* prefix = "sharedMemory:";
 				size_t memorySize = 0;
 				string eachListName = string(listNamePrefix) + to_string(i);
-				const auto& sharedMemoryName = string(prefix) + getPath() + ":" + eachListName + ":" + to_string(
+				const auto& sharedMemoryName = string(prefix) + getDiskPath() + ":" + eachListName + ":" + to_string(
 					eachPriority.second); // 共享内存名为 sharedMemory:[path]:list[num]:[priority]
 				createSharedMemoryAndCopy(eachListName, eachPriority.second, &memorySize, sharedMemoryName);
 			}
@@ -281,14 +281,14 @@ private:
 	bool getUSNInfo();
 	bool getUSNJournal();
 	bool deleteUSN() const;
-	void saveResult(const string& _path, int ascII);
-	void getPath(DWORDLONG frn, CString& path);
-	static int getAscIISum(string name);
+	void saveResult(const string& _path, int ascII) const;
+	void getPath(DWORDLONG frn, CString& _path);
+	static int getAscIISum(const string& name);
 	bool isIgnore(const string& path);
 	void finalizeAllStatement() const;
-	void saveSingleRecordToDB(sqlite3_stmt* stmt, string record, int ascii);
+	void saveSingleRecordToDB(sqlite3_stmt* stmt, const string& record, int ascii) const;
 	int getPriorityBySuffix(const string& suffix) const;
-	int getPriorityByPath(const string& path);
+	int getPriorityByPath(const string& _path) const;
 	void initAllPrepareStatement();
 	void initSinglePrepareStatement(sqlite3_stmt** statement, const char* init) const;
 	void saveAllResultsToDb();
@@ -390,9 +390,9 @@ inline int volume::getPriorityBySuffix(const string& suffix) const
 }
 
 
-inline int volume::getPriorityByPath(const string& path)
+inline int volume::getPriorityByPath(const string& _path) const
 {
-	auto suffix = path.substr(path.find_last_of('.') + 1);
+	auto suffix = _path.substr(_path.find_last_of('.') + 1);
 	transform(suffix.begin(), suffix.end(), suffix.begin(), tolower);
 	return getPriorityBySuffix(suffix);
 }
@@ -403,7 +403,7 @@ inline void volume::initSinglePrepareStatement(sqlite3_stmt** statement, const c
 	if (SQLITE_OK != ret)
 	{
 		cout << "error preparing stmt \"" << init << "\"" << endl;
-		cout << "disk: " << this->getPath() << endl;
+		cout << "disk: " << this->getDiskPath() << endl;
 	}
 }
 
@@ -452,7 +452,7 @@ inline void volume::finalizeAllStatement() const
 	sqlite3_finalize(stmt40);
 }
 
-inline void volume::saveSingleRecordToDB(sqlite3_stmt* stmt, const string record, const int ascii)
+inline void volume::saveSingleRecordToDB(sqlite3_stmt* stmt, const string& record, const int ascii) const
 {
 	sqlite3_reset(stmt);
 	sqlite3_bind_int(stmt, 1, ascii);
@@ -520,7 +520,7 @@ inline bool volume::isIgnore(const string& _path)
 	});
 }
 
-inline void volume::saveResult(const string& _path, const int ascII)
+inline void volume::saveResult(const string& _path, const int ascII) const
 {
 	const int asciiGroup = ascII / 100;
 	switch (asciiGroup)
@@ -653,7 +653,7 @@ inline void volume::saveResult(const string& _path, const int ascII)
 	}
 }
 
-inline int volume::getAscIISum(string name)
+inline int volume::getAscIISum(const string& name)
 {
 	auto sum = 0;
 	const auto length = name.length();
@@ -667,7 +667,7 @@ inline int volume::getAscIISum(string name)
 	return sum;
 }
 
-inline void volume::getPath(DWORDLONG frn, CString& path)
+inline void volume::getPath(DWORDLONG frn, CString& _path)
 {
 	const auto end = frnPfrnNameMap.end();
 	while (true)
@@ -675,10 +675,10 @@ inline void volume::getPath(DWORDLONG frn, CString& path)
 		auto it = frnPfrnNameMap.find(frn);
 		if (it == end)
 		{
-			path = L":" + path;
+			_path = L":" + _path;
 			return;
 		}
-		path = _T("\\") + it->second.filename + path;
+		_path = _T("\\") + it->second.filename + _path;
 		frn = it->second.pfrn;
 	}
 }
@@ -795,7 +795,7 @@ inline bool volume::getUSNJournal()
 			UsnRecord = reinterpret_cast<PUSN_RECORD>(reinterpret_cast<PCHAR>(UsnRecord) + recordLen);
 		}
 		// 获取下一页数据 
-		med.StartFileReferenceNumber = *(USN*)&Buffer;
+		med.StartFileReferenceNumber = *reinterpret_cast<USN*>(&Buffer);
 	}
 	return true;
 }
