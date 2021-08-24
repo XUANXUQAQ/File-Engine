@@ -1,6 +1,5 @@
 package file.engine.frames;
 
-import com.alibaba.fastjson.JSONObject;
 import file.engine.annotation.EventListener;
 import file.engine.annotation.EventRegister;
 import file.engine.configs.AllConfigs;
@@ -574,12 +573,12 @@ public class SettingsFrame {
                 eventManagement.putEvent(new StopDownloadEvent(downloadManager.downloadManager));
             } else {
                 //开始下载
-                JSONObject updateInfo;
+                Map<String, Object> updateInfo;
                 String latestVersion;
                 try {
                     updateInfo = allConfigs.getUpdateInfo();
                     if (updateInfo != null) {
-                        latestVersion = updateInfo.getString("version");
+                        latestVersion = (String) updateInfo.get("version");
                     } else {
                         throw new IOException("failed");
                     }
@@ -589,7 +588,7 @@ public class SettingsFrame {
                     return;
                 }
                 if (Double.parseDouble(latestVersion) > Double.parseDouble(Constants.version) || IsPreview.isPreview()) {
-                    String description = updateInfo.getString("description");
+                    String description = (String) updateInfo.get("description");
                     int result = JOptionPane.showConfirmDialog(frame,
                             translateUtil.getTranslation(
                                     "New Version available") + latestVersion + "," +
@@ -602,7 +601,7 @@ public class SettingsFrame {
                         urlChoose = "url64";
                         fileName = Constants.FILE_NAME;
                         downloadManager.downloadManager = new DownloadManager(
-                                updateInfo.getString(urlChoose),
+                                (String) updateInfo.get(urlChoose),
                                 fileName,
                                 new File("tmp").getAbsolutePath()
                         );
@@ -1610,7 +1609,7 @@ public class SettingsFrame {
     private void setLabelGui() {
         labelAboutGithub.setText("<html><a href='https://github.com/XUANXUQAQ/File-Engine'><font size=\"4\">File-Engine</font></a></html>");
         labelWebLookAndFeel.setText("1.JFormDesigner/FlatLaf");
-        labelFastJson.setText("2.alibaba/FastJson");
+        labelFastJson.setText("2.google/gson");
         labelJna.setText("3.java-native-access/jna");
         labelSQLite.setText("4.xerial/sqlite-jdbc");
         labelTinyPinyin.setText("5.promeG/TinyPinyin");

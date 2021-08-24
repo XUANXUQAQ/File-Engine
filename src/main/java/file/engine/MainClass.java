@@ -1,6 +1,5 @@
 package file.engine;
 
-import com.alibaba.fastjson.JSONObject;
 import com.github.promeg.pinyinhelper.Pinyin;
 import com.github.promeg.tinypinyin.lexicons.java.cncity.CnCityDict;
 import file.engine.configs.AllConfigs;
@@ -29,6 +28,7 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -607,9 +607,9 @@ public class MainClass {
     private static boolean isLatest() {
         //检测是否为最新版本
         try {
-            JSONObject info = AllConfigs.getInstance().getUpdateInfo();
+            Map<String, Object> info = AllConfigs.getInstance().getUpdateInfo();
             if (info != null) {
-                String latestVersion = info.getString("version");
+                String latestVersion = (String) info.get("version");
                 if (Double.parseDouble(latestVersion) > Double.parseDouble(Constants.version) || IsPreview.isPreview()) {
                     return false;
                 }

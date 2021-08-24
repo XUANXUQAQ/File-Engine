@@ -1,6 +1,6 @@
 package file.engine.services.plugin.system;
 
-import com.alibaba.fastjson.JSONObject;
+import com.google.gson.Gson;
 import file.engine.annotation.EventListener;
 import file.engine.annotation.EventRegister;
 import file.engine.configs.AllConfigs;
@@ -15,6 +15,7 @@ import file.engine.event.handler.impl.plugin.ConfigsChangedEvent;
 import file.engine.event.handler.impl.stop.RestartEvent;
 import file.engine.event.handler.impl.taskbar.ShowTaskBarMessageEvent;
 import file.engine.utils.CachedThreadPoolUtil;
+import file.engine.utils.gson.GsonUtil;
 import file.engine.utils.system.properties.IsDebug;
 
 import java.io.*;
@@ -316,6 +317,7 @@ public class PluginService {
         if (files == null || files.length == 0) {
             return;
         }
+        Gson gson = GsonUtil.getInstance().getGson();
         try {
             for (File jar : files) {
                 JarFile jarFile = new JarFile(jar);
@@ -325,10 +327,11 @@ public class PluginService {
                     String name = element.getName();
                     if ("PluginInfo.json".equals(name)) {
                         String pluginInfo = readAll(jarFile.getInputStream(element));
-                        JSONObject json = JSONObject.parseObject(pluginInfo);
-                        String className = json.getString("className");
-                        String identifier = json.getString("identifier");
-                        String pluginName = json.getString("name");
+                        //noinspection unchecked
+                        Map<String, Object> json = gson.fromJson(pluginInfo, Map.class);
+                        String className = (String) json.get("className");
+                        String identifier = (String) json.get("identifier");
+                        String pluginName = (String) json.get("name");
                         if (!hasPlugin(pluginName)) {
                             try {
                                 boolean isPluginApiTooOld = loadPlugin(jar, className, identifier, pluginName, AllConfigs.getInstance().getConfigMap());

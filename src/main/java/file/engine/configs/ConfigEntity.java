@@ -1,106 +1,106 @@
 package file.engine.configs;
 
-import com.alibaba.fastjson.annotation.JSONField;
+import com.google.gson.annotations.SerializedName;
 import lombok.Data;
 
 @Data
 public class ConfigEntity {
-    @JSONField(name = "cacheNumLimit")
+    @SerializedName("cacheNumLimit")
     private int cacheNumLimit;
 
-    @JSONField(name = "isShowTipOnCreatingLnk")
+    @SerializedName("isShowTipOnCreatingLnk")
     private boolean isShowTipCreatingLnk;
 
-    @JSONField(name = "hotkey")
+    @SerializedName("hotkey")
     private String hotkey;
 
-    @JSONField(name = "updateTimeLimit")
+    @SerializedName("updateTimeLimit")
     private int updateTimeLimit;
 
-    @JSONField(name = "ignorePath")
+    @SerializedName("ignorePath")
     private String ignorePath;
 
-    @JSONField(name = "priorityFolder")
+    @SerializedName("priorityFolder")
     private String priorityFolder;
 
-    @JSONField(name = "isDefaultAdmin")
+    @SerializedName("isDefaultAdmin")
     private boolean isDefaultAdmin;
 
-    @JSONField(name = "isLoseFocusClose")
+    @SerializedName("isLoseFocusClose")
     private boolean isLoseFocusClose;
 
-    @JSONField(name = "openLastFolderKeyCode")
+    @SerializedName("openLastFolderKeyCode")
     private int openLastFolderKeyCode;
 
-    @JSONField(name = "runAsAdminKeyCode")
+    @SerializedName("runAsAdminKeyCode")
     private int runAsAdminKeyCode;
 
-    @JSONField(name = "copyPathKeyCode")
+    @SerializedName("copyPathKeyCode")
     private int copyPathKeyCode;
 
-    @JSONField(name = "transparency")
+    @SerializedName("transparency")
     private float transparency;
 
-    @JSONField(name = "proxyAddress")
+    @SerializedName("proxyAddress")
     private String proxyAddress;
 
-    @JSONField(name = "proxyPort")
+    @SerializedName("proxyPort")
     private int proxyPort;
 
-    @JSONField(name = "proxyUserName")
+    @SerializedName("proxyUserName")
     private String proxyUserName;
 
-    @JSONField(name = "proxyPassword")
+    @SerializedName("proxyPassword")
     private String proxyPassword;
 
-    @JSONField(name = "proxyType")
+    @SerializedName("proxyType")
     private int proxyType;
 
-    @JSONField(name = "labelColor")
+    @SerializedName("labelColor")
     private int labelColor;
 
-    @JSONField(name = "defaultBackground")
+    @SerializedName("defaultBackground")
     private int defaultBackgroundColor;
 
-    @JSONField(name = "fontColorWithCoverage")
+    @SerializedName("fontColorWithCoverage")
     private int fontColorWithCoverage;
 
-    @JSONField(name = "fontColor")
+    @SerializedName("fontColor")
     private int fontColor;
 
-    @JSONField(name = "searchBarColor")
+    @SerializedName("searchBarColor")
     private int searchBarColor;
 
-    @JSONField(name = "searchBarFontColor")
+    @SerializedName("searchBarFontColor")
     private int searchBarFontColor;
 
-    @JSONField(name = "borderColor")
+    @SerializedName("borderColor")
     private int borderColor;
 
-    @JSONField(name = "updateAddress")
+    @SerializedName("updateAddress")
     private String updateAddress;
 
-    @JSONField(name = "swingTheme")
+    @SerializedName("swingTheme")
     private String swingTheme;
 
-    @JSONField(name = "language")
+    @SerializedName("language")
     private String language;
 
-    @JSONField(name = "doubleClickCtrlOpen")
+    @SerializedName("doubleClickCtrlOpen")
     private boolean doubleClickCtrlOpen;
 
-    @JSONField(name = "disks")
+    @SerializedName("disks")
     private String disks;
 
-    @JSONField(name = "isCheckUpdateStartup")
+    @SerializedName("isCheckUpdateStartup")
     private boolean isCheckUpdateStartup;
 
-    @JSONField(name = "borderType")
+    @SerializedName("borderType")
     private String borderType;
 
-    @JSONField(name = "borderThickness")
+    @SerializedName("borderThickness")
     private int borderThickness;
 
-    @JSONField(name = "isAttachExplorer")
+    @SerializedName("isAttachExplorer")
     private boolean isAttachExplorer;
 }
