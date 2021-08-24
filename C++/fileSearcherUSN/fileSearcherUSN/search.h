@@ -332,8 +332,8 @@ inline void createFileMapping(HANDLE& hMapFile, LPVOID& pBuf, size_t memorySize,
 
 inline void volume::setCompleteSignal()
 {
-	const bool isAllDone = allTaskCount->load() == completeTaskCount->load();
-	memcpy_s(isCompletePtr.load(), sizeof(bool), &isAllDone, sizeof(bool));
+	const BOOL isAllDone = allTaskCount->load() == completeTaskCount->load();
+	memcpy_s(isCompletePtr.load(), sizeof(BOOL), &isAllDone, sizeof(BOOL));
 }
 
 

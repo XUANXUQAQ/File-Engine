@@ -38,13 +38,13 @@ import static file.engine.utils.StartupUtil.hasStartup;
 public class MainClass {
     private static final String FILE_MONITOR_64_MD_5 = "5a8c123397c8e89614d4f9b91c2fa8f9";
     private static final String GET_ASC_II_64_MD_5 = "62a56c26e1afa7c4fa3f441aadb9d515";
-    private static final String HOTKEY_LISTENER_64_MD_5 = "a212cc427a89a614402e59897c82e50d";
-    private static final String IS_LOCAL_DISK_64_MD_5 = "f8a71d3496d8cc188713d521e6dfa2b2";
-    private static final String FILE_SEARCHER_USN_64_MD_5 = "25e56508f759363422cd168ca124aa22";
+    private static final String HOTKEY_LISTENER_64_MD_5 = "6b6c2fc8dfd0f19249cdaf81010a7de5";
+    private static final String IS_LOCAL_DISK_64_MD_5 = "50a5afd3611f07bec792ddf3a03c91d1";
+    private static final String FILE_SEARCHER_USN_64_MD_5 = "c87929bd82b67f1dd343ed4420e6e805";
     private static final String SQLITE3_64_MD_5 = "703bd51c19755db49c9070ceb255dfe5";
-    private static final String GET_HANDLE_64_MD_5 = "0d4b4c74e29642e2fbfddcbdf9030d0f";
+    private static final String GET_HANDLE_64_MD_5 = "4e000730a47c771c0a5140396e4f80ed";
     private static final String SHORTCUT_GEN_MD_5 = "fa4e26f99f3dcd58d827828c411ea5d7";
-    private static final String RESULT_PIPE_MD_5 = "7c7a8ae645649d8f51ce6d4aa9e0a31f";
+    private static final String RESULT_PIPE_MD_5 = "936615088f864c6204b04c6b7776df3f";
 
     /**
      * 加载本地释放的dll
@@ -402,15 +402,13 @@ public class MainClass {
                 //启动时间已经超过2天,更新索引
                 isDatabaseOutDated = true;
             }
-            if (IsDebug.isDebug()) {
-                if (isCursorLongTimeNotMove()) {
-                    if (IsDebug.isDebug()) {
-                        System.out.println("长时间未移动鼠标");
-                    }
-                }
-            }
             //开始检测鼠标移动，若鼠标长时间未移动，且更新标志isNeedUpdate为true，则更新
             // 数据库损坏或者重启次数超过3次，需要重建索引
+            if (IsDebug.isDebug()) {
+                if (GetHandle.INSTANCE.isForegroundFullscreen()) {
+                    System.out.println("前台程序已全屏");
+                }
+            }
             if ((isDatabaseOutDated && isCursorLongTimeNotMove() && !GetHandle.INSTANCE.isForegroundFullscreen()) || isNeedUpdate) {
                 isDatabaseOutDated = false;
                 isNeedUpdate = false;
@@ -425,7 +423,7 @@ public class MainClass {
                                 translateUtil.getTranslation("Warning"),
                                 translateUtil.getTranslation("Search Failed"))));
             }
-            TimeUnit.SECONDS.sleep(10);
+            TimeUnit.MILLISECONDS.sleep(50);
         }
     }
 
@@ -442,10 +440,10 @@ public class MainClass {
      * 持续检测鼠标位置，如果在一秒内移动过，则重置CursorCount.count
      */
     private static void startGetCursorPosTimer() {
-        Point lastPoint = new Point();
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             EventManagement eventManagement = EventManagement.getInstance();
             try {
+                Point lastPoint = new Point();
                 while (eventManagement.isNotMainExit()) {
                     Point point = getCursorPoint();
                     if (!point.equals(lastPoint)) {

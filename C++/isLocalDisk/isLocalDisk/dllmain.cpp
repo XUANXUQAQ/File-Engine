@@ -6,11 +6,11 @@
 
 using namespace std;
 
-extern "C" __declspec(dllexport) bool isLocalDisk(const char* path);
-extern "C" __declspec(dllexport) bool isDiskNTFS(const char* disk);
+extern "C" __declspec(dllexport) BOOL isLocalDisk(const char* path);
+extern "C" __declspec(dllexport) BOOL isDiskNTFS(const char* disk);
 
 
-__declspec(dllexport) bool isDiskNTFS(const char* disk)
+__declspec(dllexport) BOOL isDiskNTFS(const char* disk)
 {
 	char lpRootPathName[20];
 	strcpy_s(lpRootPathName, disk);
@@ -31,20 +31,20 @@ __declspec(dllexport) bool isDiskNTFS(const char* disk)
 		MAX_PATH
 	)) {
 		if (!strcmp(lpFileSystemNameBuffer, "NTFS")) {
-			return true;
+			return TRUE;
 		}
 	}
-	return false;
+	return FALSE;
 }
 
-__declspec(dllexport) bool isLocalDisk(const char* path)
+__declspec(dllexport) BOOL isLocalDisk(const char* path)
 {
-    UINT type = GetDriveTypeA(path);
+    const UINT type = GetDriveTypeA(path);
     if (type == DRIVE_FIXED)
     {
-        return true;
+        return TRUE;
     }
-    return false;
+    return FALSE;
 }
 
 #ifdef TEST
