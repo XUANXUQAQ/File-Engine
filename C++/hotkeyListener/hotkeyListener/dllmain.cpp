@@ -10,7 +10,7 @@
 using namespace std;
 
 extern "C" __declspec(dllexport) void registerHotKey(int key1, int key2, int key3, int key4, int key5);
-extern "C" __declspec(dllexport) bool getKeyStatus();
+extern "C" __declspec(dllexport) BOOL getKeyStatus();
 extern "C" __declspec(dllexport) void startListen();
 extern "C" __declspec(dllexport) void stopListen();
 extern "C" __declspec(dllexport) void setCtrlDoubleClick(bool isResponse);
@@ -18,7 +18,7 @@ extern "C" __declspec(dllexport) void setCtrlDoubleClick(bool isResponse);
 inline time_t getCurrentMills();
 inline int isVirtualKeyPressed(int vk);
 
-static volatile bool isKeyPressed = false;
+static volatile BOOL isKeyPressed = FALSE;
 static volatile bool isStop = false;
 static volatile int hotkey1;
 static volatile int hotkey2;
@@ -114,17 +114,17 @@ __declspec(dllexport) void startListen()
         }
         if (isCtrlPressedDouble || isKey1Pressed < 0 && isKey2Pressed < 0 && isKey3Pressed < 0 && isKey4Pressed < 0 && isKey5Pressed < 0) //如果某键被按下
         {
-            isKeyPressed = true;
+            isKeyPressed = TRUE;
         }
         else
         {
-            isKeyPressed = false;
+            isKeyPressed = FALSE;
         }
         Sleep(10);
     }
 }
 
-__declspec(dllexport) bool getKeyStatus()
+__declspec(dllexport) BOOL getKeyStatus()
 {
     return isKeyPressed;
 }

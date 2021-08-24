@@ -6,11 +6,10 @@ using namespace std;
 
 concurrency::concurrent_unordered_map<string, pair<HANDLE, LPVOID>> connectionPool;
 
-extern "C" {
-	_declspec(dllexport) char* getResult(char disk, const char* listName, int priority, int offset);
-	_declspec(dllexport) void closeAllSharedMemory();
-	_declspec(dllexport) bool isComplete();
-}
+extern "C" __declspec(dllexport) char* getResult(char disk, const char* listName, int priority, int offset);
+extern "C" __declspec(dllexport) void closeAllSharedMemory();
+extern "C" __declspec(dllexport) BOOL isComplete();
+
 
 inline void createFileMapping(HANDLE& hMapFile, LPVOID& pBuf, size_t memorySize, const char* sharedMemoryName);
 
@@ -79,14 +78,14 @@ inline void createFileMapping(HANDLE& hMapFile, LPVOID& pBuf, size_t memorySize,
 	connectionPool.insert(pair<string, pair<HANDLE, LPVOID>>(sharedMemoryName, pair<HANDLE, void*>(hMapFile, pBuf)));
 }
 
-bool isComplete()
+BOOL isComplete()
 {
 	void* pBuf;
 	static constexpr auto completeSignal = "sharedMemory:complete:status";
 	if (connectionPool.find(completeSignal) == connectionPool.end())
 	{
 		HANDLE hMapFile;
-		createFileMapping(hMapFile, pBuf, sizeof(bool), completeSignal);
+		createFileMapping(hMapFile, pBuf, sizeof(BOOL), completeSignal);
 	}
 	else
 	{
@@ -94,9 +93,9 @@ bool isComplete()
 	}
 	if (pBuf == nullptr)
 	{
-		return false;
+		return FALSE;
 	}
-	return *static_cast<bool*>(pBuf);
+	return *static_cast<BOOL*>(pBuf);
 }
 
 void closeAllSharedMemory()

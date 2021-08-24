@@ -44,20 +44,20 @@ inline bool isKeyPressed(int vk_key);
 bool isDialogNotExist();
 extern "C" __declspec(dllexport) void start();
 extern "C" __declspec(dllexport) void stop();
-extern "C" __declspec(dllexport) bool changeToAttach();
-extern "C" __declspec(dllexport) bool changeToNormal();
+extern "C" __declspec(dllexport) BOOL changeToAttach();
+extern "C" __declspec(dllexport) BOOL changeToNormal();
 extern "C" __declspec(dllexport) long getExplorerX();
 extern "C" __declspec(dllexport) long getExplorerY();
 extern "C" __declspec(dllexport) long getExplorerWidth();
 extern "C" __declspec(dllexport) long getExplorerHeight();
 extern "C" __declspec(dllexport) const char* getExplorerPath();
-extern "C" __declspec(dllexport) bool isDialogWindow();
+extern "C" __declspec(dllexport) BOOL isDialogWindow();
 extern "C" __declspec(dllexport) void bringSearchBarToTop();
 extern "C" __declspec(dllexport) int getToolBarX();
 extern "C" __declspec(dllexport) int getToolBarY();
 extern "C" __declspec(dllexport) double getDpi();
-extern "C" __declspec(dllexport) bool isMousePressed();
-extern "C" __declspec(dllexport) bool isForegroundFullscreen();
+extern "C" __declspec(dllexport) BOOL isMousePressed();
+extern "C" __declspec(dllexport) BOOL isForegroundFullscreen();
 
 #ifdef TEST
 void outputHwndInfo(HWND hwnd)
@@ -79,13 +79,13 @@ int getToolBarX()
 /**
  * 检查顶层窗口是不是全屏显示，防止游戏时开始搜索导致卡顿
  */
-bool isForegroundFullscreen()
+BOOL isForegroundFullscreen()
 {
     bool b_fullscreen = false;//存放当前激活窗口是否是全屏的，true表示是，false表示不是
     RECT rc_app;
     RECT rc_desk;
 
-    const HWND hWnd = GetForegroundWindow();//获取当前正在与用户交互的当前激活窗口句柄
+    HWND hWnd = GetForegroundWindow();//获取当前正在与用户交互的当前激活窗口句柄
 
     if ((hWnd != GetDesktopWindow()) && (hWnd != GetShellWindow()))//如果当前激活窗口不是桌面窗口，也不是控制台窗口
     {
@@ -115,7 +115,7 @@ bool isForegroundFullscreen()
     return b_fullscreen;
 }
 
-bool isMousePressed()
+BOOL isMousePressed()
 {
 	if (isKeyPressed(VK_LBUTTON) || isKeyPressed(VK_RBUTTON))
 	{
@@ -149,7 +149,7 @@ int getToolBarY()
     return toolbar_click_y;
 }
 
-bool changeToNormal()
+BOOL changeToNormal()
 {
     return isMouseClickOutOfExplorer || isDialogNotExist();
 }
@@ -171,7 +171,7 @@ void bringSearchBarToTop()
     AttachThreadInput(dwCurID, dwForeID, FALSE);
 }
 
-bool isDialogWindow()
+BOOL isDialogWindow()
 {
     return topWindowType == G_DIALOG;
 }
@@ -269,7 +269,7 @@ void stop()
     isRunning = false;
 }
 
-bool changeToAttach()
+BOOL changeToAttach()
 {
     return isExplorerWindowAtTop;
 }
