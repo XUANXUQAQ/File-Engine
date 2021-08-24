@@ -1,6 +1,5 @@
 package file.engine.frames;
 
-import com.alibaba.fastjson.JSONObject;
 import file.engine.annotation.EventListener;
 import file.engine.annotation.EventRegister;
 import file.engine.configs.AllConfigs;
@@ -17,6 +16,7 @@ import file.engine.services.download.DownloadService;
 import file.engine.services.plugin.system.PluginService;
 import file.engine.utils.CachedThreadPoolUtil;
 import file.engine.utils.TranslateUtil;
+import file.engine.utils.gson.GsonUtil;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -30,10 +30,7 @@ import java.io.*;
 import java.lang.reflect.Method;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -154,10 +151,10 @@ public class PluginMarket {
                 eventManagement.putEvent(new StopDownloadEvent(downloadManager));
             } else {
                 String pluginFullName = pluginName + ".jar";
-                JSONObject info = getPluginDetailInfo(pluginName);
+                Map<String, Object> info = getPluginDetailInfo(pluginName);
                 if (info != null) {
                     downloadManager = new DownloadManager(
-                            info.getString("url"),
+                            (String) info.get("url"),
                             pluginFullName,
                             new File("tmp", "pluginsUpdate").getAbsolutePath()
                     );
@@ -274,15 +271,15 @@ public class PluginMarket {
                         //用户重新点击
                         return;
                     }
-                    JSONObject info = getPluginDetailInfo(pluginName);
+                    Map<String, Object> info = getPluginDetailInfo(pluginName);
                     if (info == null) {
                         return;
                     }
-                    String officialSite = info.getString("officialSite");
-                    String version = info.getString("version");
-                    String imageUrl = info.getString("icon");
-                    String description = info.getString("description");
-                    String author = info.getString("author");
+                    String officialSite = (String) info.get("officialSite");
+                    String version = (String) info.get("version");
+                    String imageUrl = (String) info.get("icon");
+                    String description = (String) info.get("description");
+                    String author = (String) info.get("author");
                     labelVersion.setText(TranslateUtil.getInstance().getTranslation("Version") + ":" + version);
                     labelOfficialSite.setText("<html><a href='" + officialSite + "'><font size=\"4\">" + pluginName + "</font></a></html>");
                     labelPluginName.setText("<html><body><font size=\"+1\">" + pluginName + "</body></html>");
@@ -358,7 +355,7 @@ public class PluginMarket {
         }
     }
 
-    private JSONObject getPluginDetailInfo(String pluginName) {
+    private Map<String, Object> getPluginDetailInfo(String pluginName) {
         String infoUrl = NAME_PLUGIN_INFO_URL_MAP.get(pluginName);
         if (infoUrl != null) {
             try {
@@ -370,7 +367,8 @@ public class PluginMarket {
         return null;
     }
 
-    private static JSONObject getPluginInfo(String url, String saveFileName) throws IOException {
+    @SuppressWarnings("unchecked")
+    private static Map<String, Object> getPluginInfo(String url, String saveFileName) throws IOException {
         DownloadService downloadService = DownloadService.getInstance();
         DownloadManager downloadManager = new DownloadManager(
                 url,
@@ -387,7 +385,7 @@ public class PluginMarket {
                 strBuilder.append(eachLine);
             }
         }
-        return JSONObject.parseObject(strBuilder.toString());
+        return GsonUtil.getInstance().getGson().fromJson(strBuilder.toString(), Map.class);
     }
 
     private String getPluginListUrl() {
@@ -401,13 +399,13 @@ public class PluginMarket {
             buttonInstall.setVisible(false);
             String url = getPluginListUrl();
 
-            JSONObject allPlugins = getPluginInfo(url, "allPluginsList.json");
+            Map<String, Object> allPlugins = getPluginInfo(url, "allPluginsList.json");
             if (allPlugins == null) {
                 return;
             }
             Set<String> pluginSet = allPlugins.keySet();
             for (String each : pluginSet) {
-                NAME_PLUGIN_INFO_URL_MAP.put(each, allPlugins.getString(each));
+                NAME_PLUGIN_INFO_URL_MAP.put(each, (String) allPlugins.get(each));
             }
             listPlugins.setListData(pluginSet.toArray());
             getAllPluginsDetailInfo();

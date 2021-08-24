@@ -23,7 +23,7 @@ A tool can make you work more efficiently.
 ### 该软件仅支持64位系统
 
 感谢以下项目：   
-1. fastjson (https://github.com/alibaba/fastjson)   
+1. gson (https://github.com/google/gson)
 2. FlatLaf (https://github.com/JFormDesigner/FlatLaf)   
 3. jna (https://github.com/java-native-access/jna)   
 4. sqlite_jdbc (https://github.com/xerial/sqlite-jdbc)   

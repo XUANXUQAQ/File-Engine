@@ -1,8 +1,5 @@
 package file.engine.configs;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
-import com.alibaba.fastjson.serializer.SerializerFeature;
 import com.formdev.flatlaf.FlatDarculaLaf;
 import com.formdev.flatlaf.FlatDarkLaf;
 import com.formdev.flatlaf.FlatIntelliJLaf;
@@ -10,6 +7,7 @@ import com.formdev.flatlaf.FlatLightLaf;
 import com.formdev.flatlaf.intellijthemes.*;
 import com.formdev.flatlaf.intellijthemes.materialthemeuilite.FlatMaterialDarkerIJTheme;
 import com.formdev.flatlaf.intellijthemes.materialthemeuilite.FlatMaterialLighterIJTheme;
+import com.google.gson.Gson;
 import file.engine.annotation.EventListener;
 import file.engine.annotation.EventRegister;
 import file.engine.dllInterface.IsLocalDisk;
@@ -33,6 +31,7 @@ import file.engine.services.download.DownloadManager;
 import file.engine.services.download.DownloadService;
 import file.engine.utils.RegexUtil;
 import file.engine.utils.TranslateUtil;
+import file.engine.utils.gson.GsonUtil;
 import file.engine.utils.system.properties.IsDebug;
 import lombok.Data;
 
@@ -499,7 +498,7 @@ public class AllConfigs {
      *
      * @param settingsInJson 用户配置json
      */
-    private void readDisks(JSONObject settingsInJson) {
+    private void readDisks(Map<String, Object> settingsInJson) {
         String disks = getFromJson(settingsInJson, "disks", getLocalDisks());
         String[] stringDisk = RegexUtil.comma.split(disks);
         StringBuilder stringBuilder = new StringBuilder();
@@ -511,106 +510,106 @@ public class AllConfigs {
         configEntity.setDisks(stringBuilder.toString());
     }
 
-    private void readIsAttachExplorer(JSONObject settingsInJson) {
+    private void readIsAttachExplorer(Map<String, Object> settingsInJson) {
         configEntity.setAttachExplorer(getFromJson(settingsInJson, "isAttachExplorer", true));
     }
 
-    private void readResponseCtrl(JSONObject settingsInJson) {
+    private void readResponseCtrl(Map<String, Object> settingsInJson) {
         configEntity.setDoubleClickCtrlOpen(getFromJson(settingsInJson, "doubleClickCtrlOpen", true));
     }
 
-    private void readUpdateAddress(JSONObject settingsInJson) {
+    private void readUpdateAddress(Map<String, Object> settingsInJson) {
         configEntity.setUpdateAddress(getFromJson(settingsInJson, "updateAddress", "jsdelivr CDN"));
     }
 
-    private void readCacheNumLimit(JSONObject settingsInJson) {
+    private void readCacheNumLimit(Map<String, Object> settingsInJson) {
         configEntity.setCacheNumLimit(getFromJson(settingsInJson, "cacheNumLimit", 1000));
     }
 
-    private void readHotKey(JSONObject settingsInJson) {
+    private void readHotKey(Map<String, Object> settingsInJson) {
         configEntity.setHotkey(getFromJson(settingsInJson, "hotkey", "Ctrl + Alt + K"));
     }
 
-    private void readPriorityFolder(JSONObject settingsInJson) {
+    private void readPriorityFolder(Map<String, Object> settingsInJson) {
         configEntity.setPriorityFolder(getFromJson(settingsInJson, "priorityFolder", ""));
     }
 
-    private void readIgnorePath(JSONObject settingsInJson) {
+    private void readIgnorePath(Map<String, Object> settingsInJson) {
         configEntity.setIgnorePath(getFromJson(settingsInJson, "ignorePath", "C:\\Windows,"));
     }
 
-    private void readUpdateTimeLimit(JSONObject settingsInJson) {
+    private void readUpdateTimeLimit(Map<String, Object> settingsInJson) {
         configEntity.setUpdateTimeLimit(getFromJson(settingsInJson, "updateTimeLimit", 5));
     }
 
-    private void readIsDefaultAdmin(JSONObject settingsInJson) {
+    private void readIsDefaultAdmin(Map<String, Object> settingsInJson) {
         configEntity.setDefaultAdmin(getFromJson(settingsInJson, "isDefaultAdmin", false));
     }
 
-    private void readIsLoseFocusClose(JSONObject settingsInJson) {
+    private void readIsLoseFocusClose(Map<String, Object> settingsInJson) {
         configEntity.setLoseFocusClose(getFromJson(settingsInJson, "isLoseFocusClose", true));
     }
 
-    private void readOpenLastFolderKeyCode(JSONObject settingsInJson) {
+    private void readOpenLastFolderKeyCode(Map<String, Object> settingsInJson) {
         configEntity.setOpenLastFolderKeyCode(getFromJson(settingsInJson, "openLastFolderKeyCode", 17));
     }
 
-    private void readRunAsAdminKeyCode(JSONObject settingsInJson) {
+    private void readRunAsAdminKeyCode(Map<String, Object> settingsInJson) {
         configEntity.setRunAsAdminKeyCode(getFromJson(settingsInJson, "runAsAdminKeyCode", 16));
     }
 
-    private void readCopyPathKeyCode(JSONObject settingsInJson) {
+    private void readCopyPathKeyCode(Map<String, Object> settingsInJson) {
         configEntity.setCopyPathKeyCode(getFromJson(settingsInJson, "copyPathKeyCode", 18));
     }
 
-    private void readTransparency(JSONObject settingsInJson) {
+    private void readTransparency(Map<String, Object> settingsInJson) {
         configEntity.setTransparency(Float.parseFloat(getFromJson(settingsInJson, "transparency", 0.8f).toString()));
     }
 
-    private void readSearchBarColor(JSONObject settingsInJson) {
+    private void readSearchBarColor(Map<String, Object> settingsInJson) {
         configEntity.setSearchBarColor(getFromJson(settingsInJson, "searchBarColor", defaultSearchbarColor));
     }
 
-    private void readDefaultBackground(JSONObject settingsInJson) {
+    private void readDefaultBackground(Map<String, Object> settingsInJson) {
         configEntity.setDefaultBackgroundColor(getFromJson(settingsInJson, "defaultBackground", defaultWindowBackgroundColor));
     }
 
-    private void readBorderType(JSONObject settingsInJson) {
+    private void readBorderType(Map<String, Object> settingsInJson) {
         configEntity.setBorderType(getFromJson(settingsInJson, "borderType", Enums.BorderType.AROUND.toString()));
     }
 
-    private void readBorderColor(JSONObject settingsInJson) {
+    private void readBorderColor(Map<String, Object> settingsInJson) {
         configEntity.setBorderColor(getFromJson(settingsInJson, "borderColor", defaultBorderColor));
     }
 
-    private void readFontColorWithCoverage(JSONObject settingsInJson) {
+    private void readFontColorWithCoverage(Map<String, Object> settingsInJson) {
         configEntity.setFontColorWithCoverage(getFromJson(settingsInJson, "fontColorWithCoverage", defaultFontColorWithCoverage));
     }
 
-    private void readLabelColor(JSONObject settingsInJson) {
+    private void readLabelColor(Map<String, Object> settingsInJson) {
         configEntity.setLabelColor(getFromJson(settingsInJson, "labelColor", defaultLabelColor));
     }
 
-    private void readFontColor(JSONObject settingsInJson) {
+    private void readFontColor(Map<String, Object> settingsInJson) {
         configEntity.setFontColor(getFromJson(settingsInJson, "fontColor", defaultFontColor));
     }
 
-    private void readSearchBarFontColor(JSONObject settingsInJson) {
+    private void readSearchBarFontColor(Map<String, Object> settingsInJson) {
         configEntity.setSearchBarFontColor(getFromJson(settingsInJson, "searchBarFontColor", defaultSearchbarFontColor));
     }
 
-    private void readBorderThickness(JSONObject settingsInJson) {
+    private void readBorderThickness(Map<String, Object> settingsInJson) {
         configEntity.setBorderThickness(getFromJson(settingsInJson, "borderThickness", 1));
     }
 
-    private void readLanguage(JSONObject settingsInJson) {
+    private void readLanguage(Map<String, Object> settingsInJson) {
         TranslateUtil translateUtil = TranslateUtil.getInstance();
         String language = getFromJson(settingsInJson, "language", translateUtil.getDefaultLang());
         configEntity.setLanguage(language);
         translateUtil.setLanguage(language);
     }
 
-    private void readProxy(JSONObject settingsInJson) {
+    private void readProxy(Map<String, Object> settingsInJson) {
         configEntity.setProxyAddress(getFromJson(settingsInJson, "proxyAddress", ""));
         configEntity.setProxyPort(getFromJson(settingsInJson, "proxyPort", 0));
         configEntity.setProxyUserName(getFromJson(settingsInJson, "proxyUserName", ""));
@@ -618,15 +617,15 @@ public class AllConfigs {
         configEntity.setProxyType(getFromJson(settingsInJson, "proxyType", Enums.ProxyType.PROXY_DIRECT));
     }
 
-    private void readCheckUpdateStartup(JSONObject settings) {
+    private void readCheckUpdateStartup(Map<String, Object> settings) {
         configEntity.setCheckUpdateStartup(getFromJson(settings, "isCheckUpdateStartup", true));
     }
 
-    private void readSwingTheme(JSONObject settingsInJson) {
+    private void readSwingTheme(Map<String, Object> settingsInJson) {
         configEntity.setSwingTheme(getFromJson(settingsInJson, "swingTheme", defaultSwingTheme));
     }
 
-    private void readShowTipOnCreatingLnk(JSONObject settingsInJson) {
+    private void readShowTipOnCreatingLnk(Map<String, Object> settingsInJson) {
         configEntity.setShowTipCreatingLnk(getFromJson(settingsInJson, "isShowTipOnCreatingLnk", true));
     }
 
@@ -635,7 +634,8 @@ public class AllConfigs {
      *
      * @return JSON
      */
-    private JSONObject getSettingsJSON() {
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> getSettingsJSON() {
         File settings = new File("user/settings.json");
         if (settings.exists()) {
             try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(settings), StandardCharsets.UTF_8))) {
@@ -644,7 +644,7 @@ public class AllConfigs {
                 while (null != (line = br.readLine())) {
                     result.append(line);
                 }
-                return JSONObject.parseObject(result.toString());
+                return GsonUtil.getInstance().getGson().fromJson(result.toString(), Map.class);
             } catch (IOException e) {
                 return null;
             }
@@ -656,8 +656,9 @@ public class AllConfigs {
 
     @SuppressWarnings("unchecked")
     public Map<String, Object> getConfigMap() {
-        String jsonString = JSON.toJSONString(configEntity);
-        return JSON.parseObject(jsonString, Map.class);
+        Gson gson = GsonUtil.getInstance().getGson();
+        String jsonString = gson.toJson(configEntity);
+        return gson.fromJson(jsonString, Map.class);
     }
 
     /**
@@ -669,7 +670,7 @@ public class AllConfigs {
      * @return 读取值或默认值
      */
     @SuppressWarnings("unchecked")
-    private <T> T getFromJson(JSONObject json, String key, Object defaultObj) {
+    private <T> T getFromJson(Map<String, Object> json, String key, Object defaultObj) {
         if (json == null) {
             return (T) defaultObj;
         }
@@ -702,7 +703,7 @@ public class AllConfigs {
      */
     private void readAllSettings() {
         configEntity = new ConfigEntity();
-        JSONObject settingsInJson = getSettingsJSON();
+        Map<String, Object> settingsInJson = getSettingsJSON();
         readProxy(settingsInJson);
         readLabelColor(settingsInJson);
         readLanguage(settingsInJson);
@@ -829,12 +830,7 @@ public class AllConfigs {
      */
     private void saveAllSettings() {
         try (BufferedWriter buffW = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("user/settings.json"), StandardCharsets.UTF_8))) {
-            String format = JSON.toJSONString(
-                    configEntity,
-                    SerializerFeature.PrettyFormat,
-                    SerializerFeature.WriteMapNullValue,
-                    SerializerFeature.WriteDateUseDateFormat
-            );
+            String format = GsonUtil.getInstance().getGson().toJson(configEntity);
             buffW.write(format);
         } catch (IOException e) {
             e.printStackTrace();
@@ -878,7 +874,8 @@ public class AllConfigs {
      * @return JSON
      * @throws IOException 获取失败
      */
-    public JSONObject getUpdateInfo() throws IOException {
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> getUpdateInfo() throws IOException {
         DownloadService downloadService = DownloadService.getInstance();
         String url = getUpdateUrl();
         DownloadManager downloadManager = new DownloadManager(
@@ -896,7 +893,7 @@ public class AllConfigs {
                 strBuilder.append(eachLine);
             }
         }
-        return JSONObject.parseObject(strBuilder.toString());
+        return GsonUtil.getInstance().getGson().fromJson(strBuilder.toString(), Map.class);
     }
 
     @EventRegister(registerClass = AddCmdEvent.class)
