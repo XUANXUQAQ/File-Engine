@@ -23,8 +23,8 @@ import file.engine.event.handler.impl.frame.settingsFrame.GetExcludeComponentEve
 import file.engine.event.handler.impl.hotkey.RegisterHotKeyEvent;
 import file.engine.event.handler.impl.hotkey.ResponseCtrlEvent;
 import file.engine.event.handler.impl.monitor.disk.StartMonitorDiskEvent;
-import file.engine.event.handler.impl.plugin.LoadAllPluginsEvent;
 import file.engine.event.handler.impl.plugin.ConfigsChangedEvent;
+import file.engine.event.handler.impl.plugin.LoadAllPluginsEvent;
 import file.engine.event.handler.impl.stop.CloseEvent;
 import file.engine.event.handler.impl.taskbar.ShowTrayIconEvent;
 import file.engine.services.download.DownloadManager;
@@ -629,13 +629,7 @@ public class AllConfigs {
         configEntity.setShowTipCreatingLnk(getFromJson(settingsInJson, "isShowTipOnCreatingLnk", true));
     }
 
-    /**
-     * 打开配置文件，解析为json
-     *
-     * @return JSON
-     */
-    @SuppressWarnings("unchecked")
-    private Map<String, Object> getSettingsJSON() {
+    private String readConfigsJson() {
         File settings = new File("user/settings.json");
         if (settings.exists()) {
             try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(settings), StandardCharsets.UTF_8))) {
@@ -644,13 +638,28 @@ public class AllConfigs {
                 while (null != (line = br.readLine())) {
                     result.append(line);
                 }
-                return GsonUtil.getInstance().getGson().fromJson(result.toString(), Map.class);
+                return result.toString();
             } catch (IOException e) {
-                return null;
+                e.printStackTrace();
             }
         } else {
             isFirstRunApp = true;
-            return null;
+        }
+        return "";
+    }
+
+    /**
+     * 打开配置文件，解析为json
+     *
+     * @return JSON
+     */
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> getSettingsJSON() {
+        String jsonConfig = readConfigsJson();
+        if (jsonConfig.isEmpty()) {
+            return new HashMap<>();
+        } else {
+            return GsonUtil.getInstance().getGson().fromJson(jsonConfig, Map.class);
         }
     }
 
@@ -838,7 +847,7 @@ public class AllConfigs {
     }
 
     /**
-     * 检查configEntity中有没有null值，在debug时使用
+     * 检查configEntity中有没有null值
      *
      * @param config configEntity
      * @return boolean

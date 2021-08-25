@@ -14,8 +14,8 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class TranslateUtil {
-    private static volatile TranslateUtil INSTANCE = null;
+public enum TranslateUtil {
+    INSTANCE;
 
     private volatile @Getter
     String language;
@@ -23,18 +23,11 @@ public class TranslateUtil {
     private final ConcurrentHashMap<String, String> fileMap = new ConcurrentHashMap<>();
     private Font[] fList;
 
-    private TranslateUtil() {
+    TranslateUtil() {
         initAll();
     }
 
     public static TranslateUtil getInstance() {
-        if (INSTANCE == null) {
-            synchronized (TranslateUtil.class) {
-                if (INSTANCE == null) {
-                    INSTANCE = new TranslateUtil();
-                }
-            }
-        }
         return INSTANCE;
     }
 
