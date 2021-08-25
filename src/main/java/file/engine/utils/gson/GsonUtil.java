@@ -4,29 +4,24 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 
+import java.lang.reflect.Type;
 import java.util.Map;
 
-public class GsonUtil {
-    private static volatile GsonUtil INSTANCE = null;
+public enum GsonUtil {
+    INSTANCE;
     private final GsonBuilder gsonBuilder = new GsonBuilder();
     private final DataDataTypeAdaptor dataDataTypeAdaptor = new DataDataTypeAdaptor();
+    @SuppressWarnings("rawtypes")
+    private final Type mapType = new TypeToken<Map>(){}.getType();
 
-    private GsonUtil() {
+    GsonUtil() {
     }
 
     public static GsonUtil getInstance() {
-        if (INSTANCE == null) {
-            synchronized (GsonUtil.class) {
-                if (INSTANCE == null) {
-                    INSTANCE = new GsonUtil();
-                }
-            }
-        }
         return INSTANCE;
     }
 
-    @SuppressWarnings("rawtypes")
     public Gson getGson() {
-        return gsonBuilder.setPrettyPrinting().registerTypeAdapter(new TypeToken<Map>(){}.getType(), dataDataTypeAdaptor).create();
+        return gsonBuilder.setPrettyPrinting().registerTypeAdapter(mapType, dataDataTypeAdaptor).create();
     }
 }
