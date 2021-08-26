@@ -9,7 +9,10 @@ import file.engine.dllInterface.FileMonitor;
 import file.engine.dllInterface.GetHandle;
 import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
-import file.engine.event.handler.impl.database.*;
+import file.engine.event.handler.impl.database.AddToCacheEvent;
+import file.engine.event.handler.impl.database.StartSearchEvent;
+import file.engine.event.handler.impl.database.StopSearchEvent;
+import file.engine.event.handler.impl.database.UpdateDatabaseEvent;
 import file.engine.event.handler.impl.frame.searchBar.*;
 import file.engine.event.handler.impl.frame.settingsFrame.AddCacheEvent;
 import file.engine.event.handler.impl.frame.settingsFrame.IsCacheExistEvent;
@@ -17,6 +20,7 @@ import file.engine.event.handler.impl.frame.settingsFrame.ShowSettingsFrameEvent
 import file.engine.event.handler.impl.stop.RestartEvent;
 import file.engine.event.handler.impl.taskbar.ShowTaskBarMessageEvent;
 import file.engine.frames.components.LoadingPanel;
+import file.engine.frames.components.MouseDragInfo;
 import file.engine.services.DatabaseService;
 import file.engine.services.plugin.system.Plugin;
 import file.engine.services.plugin.system.PluginService;
@@ -38,10 +42,12 @@ import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
 import java.util.List;
+import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
@@ -501,7 +507,7 @@ public class SearchBar {
             String start = "cmd.exe /c start " + shortcutGenPath.substring(0, 2);
             String end = "\"" + shortcutGenPath.substring(2) + "\"";
             String commandToGenLnk = start + end + " /target:" + "\"" + fileOrFolderPath + "\"" + " " + "/shortcut:" + "\"" + writeShortCutPath + "\"" + " /workingdir:" + "\"" + fileOrFolderPath.substring(0, fileOrFolderPath.lastIndexOf(File.separator)) + "\"";
-            Runtime.getRuntime().exec("cmd.exe " + commandToGenLnk);
+            Runtime.getRuntime().exec("cmd.exe " + new String(commandToGenLnk.getBytes(StandardCharsets.UTF_8), Charset.defaultCharset()));
         }
         if (isNotifyUser) {
             eventManagement.putEvent(new ShowTaskBarMessageEvent(
@@ -587,42 +593,6 @@ public class SearchBar {
 
             @Override
             public void mouseReleased(MouseEvent e) {
-                if (isMouseDraggedInWindow.get()) {
-                    isMouseDraggedInWindow.set(false);
-                    if (IsDebug.isDebug()) {
-                        Point point = java.awt.MouseInfo.getPointerInfo().getLocation();
-                        System.out.println("鼠标释放");
-                        System.out.println("鼠标X：" + point.x);
-                        System.out.println("鼠标Y：" + point.y);
-                    }
-                    //创建快捷方式
-                    try {
-                        String writePath = GetHandle.INSTANCE.getExplorerPath();
-                        if (writePath != null) {
-                            if (!writePath.isEmpty()) {
-                                String result = listResults.get(currentResultCount.get());
-                                if (runningMode == Constants.Enums.RunningMode.NORMAL_MODE) {
-                                    //普通模式直接获取文件路径
-                                    File f = new File(result);
-                                    createShortCut(f.getAbsolutePath(), writePath + File.separator + f.getName(), AllConfigs.getInstance().isShowTipOnCreatingLnk());
-                                } else if (runningMode == Constants.Enums.RunningMode.COMMAND_MODE) {
-                                    String[] commandInfo = semicolon.split(result);
-                                    //获取命令后的文件路径
-                                    if (commandInfo == null || commandInfo.length <= 1) {
-                                        return;
-                                    }
-                                    File f = new File(commandInfo[1]);
-                                    if (f.exists()) {
-                                        createShortCut(f.getAbsolutePath(),
-                                                writePath + File.separator + f.getName(), AllConfigs.getInstance().isShowTipOnCreatingLnk());
-                                    }
-                                }
-                            }
-                        }
-                    } catch (Exception exception) {
-                        exception.printStackTrace();
-                    }
-                }
                 if (runningMode == Constants.Enums.RunningMode.PLUGIN_MODE) {
                     if (currentUsingPlugin != null) {
                         if (listResultsNum.get() != 0) {
@@ -1169,6 +1139,7 @@ public class SearchBar {
             double absoluteDistance;
             int lastPositionX = 0;
             int lastPositionY = 0;
+            final AtomicBoolean isIconCreated = new AtomicBoolean(false);
 
             @Override
             public void mouseDragged(MouseEvent e) {
@@ -1177,6 +1148,41 @@ public class SearchBar {
                         mode == Constants.Enums.RunningMode.NORMAL_MODE ||
                                 mode == Constants.Enums.RunningMode.COMMAND_MODE
                 );
+                if (isMouseDraggedInWindow.get() && !isIconCreated.get() && listResultsNum.get() > 0) {
+                    isIconCreated.set(true);
+                    String result = listResults.get(currentResultCount.get());
+                    File f = null;
+                    if (runningMode == Constants.Enums.RunningMode.NORMAL_MODE) {
+                        //普通模式直接获取文件路径
+                        f = new File(result);
+                    } else if (runningMode == Constants.Enums.RunningMode.COMMAND_MODE) {
+                        String[] commandInfo = semicolon.split(result);
+                        //获取命令后的文件路径
+                        if (commandInfo == null || commandInfo.length <= 1) {
+                            return;
+                        }
+                        f = new File(commandInfo[1]);
+                    }
+                    if (f != null) {
+                        File finalF = f;
+                        new MouseDragInfo().showDragInfo(f.getAbsolutePath(),
+                                () -> MouseInfo.getPointerInfo().getLocation(),
+                                () -> !GetHandle.INSTANCE.isKeyPressed(0x01),
+                                () -> {
+                                    //创建快捷方式
+                                    try {
+                                        String writePath = GetHandle.INSTANCE.getExplorerPath();
+                                        if (writePath != null && !writePath.isEmpty()) {
+                                            createShortCut(finalF.getAbsolutePath(), writePath + File.separator + finalF.getName(), AllConfigs.getInstance().isShowTipOnCreatingLnk());
+                                        }
+                                    } catch (Exception exception) {
+                                        exception.printStackTrace();
+                                    }
+                                    isIconCreated.set(false);
+                                    isMouseDraggedInWindow.set(false);
+                                });
+                    }
+                }
             }
 
             @Override
