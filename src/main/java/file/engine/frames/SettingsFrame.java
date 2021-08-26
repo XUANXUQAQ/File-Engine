@@ -678,13 +678,13 @@ public class SettingsFrame {
      */
     private void addResetColorButtonListener() {
         buttonResetColor.addActionListener(e -> {
-            textFieldFontColorWithCoverage.setText(toRGBHexString(Constants.defaultFontColorWithCoverage));
-            textFieldSearchBarColor.setText(toRGBHexString(Constants.defaultSearchbarColor));
-            textFieldLabelColor.setText(toRGBHexString(Constants.defaultLabelColor));
-            textFieldBackgroundDefault.setText(toRGBHexString(Constants.defaultWindowBackgroundColor));
-            textFieldFontColor.setText(toRGBHexString(Constants.defaultFontColor));
-            textFieldSearchBarFontColor.setText(toRGBHexString(Constants.defaultSearchbarFontColor));
-            textFieldBorderColor.setText(toRGBHexString(Constants.defaultBorderColor));
+            textFieldFontColorWithCoverage.setText(toRGBHexString(Constants.DEFAULT_FONT_COLOR_WITH_COVERAGE));
+            textFieldSearchBarColor.setText(toRGBHexString(Constants.DEFAULT_SEARCHBAR_COLOR));
+            textFieldLabelColor.setText(toRGBHexString(Constants.DEFAULT_LABEL_COLOR));
+            textFieldBackgroundDefault.setText(toRGBHexString(Constants.DEFAULT_WINDOW_BACKGROUND_COLOR));
+            textFieldFontColor.setText(toRGBHexString(Constants.DEFAULT_FONT_COLOR));
+            textFieldSearchBarFontColor.setText(toRGBHexString(Constants.DEFAULT_SEARCHBAR_FONT_COLOR));
+            textFieldBorderColor.setText(toRGBHexString(Constants.DEFAULT_BORDER_COLOR));
         });
     }
 

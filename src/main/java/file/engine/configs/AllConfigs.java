@@ -523,7 +523,7 @@ public class AllConfigs {
     }
 
     private void readRoundRadius(Map<String, Object> settingsInJson) {
-        configEntity.setRoundRadius(Double.parseDouble(getFromJson(settingsInJson, "roundRadius", 23.0).toString()));
+        configEntity.setRoundRadius(Double.parseDouble(getFromJson(settingsInJson, "roundRadius", 20.0).toString()));
     }
 
     private void readUpdateAddress(Map<String, Object> settingsInJson) {
@@ -575,11 +575,11 @@ public class AllConfigs {
     }
 
     private void readSearchBarColor(Map<String, Object> settingsInJson) {
-        configEntity.setSearchBarColor(getFromJson(settingsInJson, "searchBarColor", defaultSearchbarColor));
+        configEntity.setSearchBarColor(getFromJson(settingsInJson, "searchBarColor", DEFAULT_SEARCHBAR_COLOR));
     }
 
     private void readDefaultBackground(Map<String, Object> settingsInJson) {
-        configEntity.setDefaultBackgroundColor(getFromJson(settingsInJson, "defaultBackground", defaultWindowBackgroundColor));
+        configEntity.setDefaultBackgroundColor(getFromJson(settingsInJson, "defaultBackground", DEFAULT_WINDOW_BACKGROUND_COLOR));
     }
 
     private void readBorderType(Map<String, Object> settingsInJson) {
@@ -587,23 +587,23 @@ public class AllConfigs {
     }
 
     private void readBorderColor(Map<String, Object> settingsInJson) {
-        configEntity.setBorderColor(getFromJson(settingsInJson, "borderColor", defaultBorderColor));
+        configEntity.setBorderColor(getFromJson(settingsInJson, "borderColor", DEFAULT_BORDER_COLOR));
     }
 
     private void readFontColorWithCoverage(Map<String, Object> settingsInJson) {
-        configEntity.setFontColorWithCoverage(getFromJson(settingsInJson, "fontColorWithCoverage", defaultFontColorWithCoverage));
+        configEntity.setFontColorWithCoverage(getFromJson(settingsInJson, "fontColorWithCoverage", DEFAULT_FONT_COLOR_WITH_COVERAGE));
     }
 
     private void readLabelColor(Map<String, Object> settingsInJson) {
-        configEntity.setLabelColor(getFromJson(settingsInJson, "labelColor", defaultLabelColor));
+        configEntity.setLabelColor(getFromJson(settingsInJson, "labelColor", DEFAULT_LABEL_COLOR));
     }
 
     private void readFontColor(Map<String, Object> settingsInJson) {
-        configEntity.setFontColor(getFromJson(settingsInJson, "fontColor", defaultFontColor));
+        configEntity.setFontColor(getFromJson(settingsInJson, "fontColor", DEFAULT_FONT_COLOR));
     }
 
     private void readSearchBarFontColor(Map<String, Object> settingsInJson) {
-        configEntity.setSearchBarFontColor(getFromJson(settingsInJson, "searchBarFontColor", defaultSearchbarFontColor));
+        configEntity.setSearchBarFontColor(getFromJson(settingsInJson, "searchBarFontColor", DEFAULT_SEARCHBAR_FONT_COLOR));
     }
 
     private void readBorderThickness(Map<String, Object> settingsInJson) {

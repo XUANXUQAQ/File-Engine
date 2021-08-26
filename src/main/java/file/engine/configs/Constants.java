@@ -20,13 +20,13 @@ public class Constants {
 
     public static final int[] COMPATIBLE_API_VERSIONS = {3, 4, 5};
 
-    public static final int defaultLabelColor = 0xff9933;
-    public static final int defaultWindowBackgroundColor = 0xffffff;
-    public static final int defaultBorderColor = 0xffffff;
-    public static final int defaultFontColor = 0;
-    public static final int defaultFontColorWithCoverage = 0xff3333;
-    public static final int defaultSearchbarColor = 0xffffff;
-    public static final int defaultSearchbarFontColor = 0;
+    public static final int DEFAULT_LABEL_COLOR = 0xff9933;
+    public static final int DEFAULT_WINDOW_BACKGROUND_COLOR = 0xffffff;
+    public static final int DEFAULT_BORDER_COLOR = 0xffffff;
+    public static final int DEFAULT_FONT_COLOR = 0;
+    public static final int DEFAULT_FONT_COLOR_WITH_COVERAGE = 0xff3333;
+    public static final int DEFAULT_SEARCHBAR_COLOR = 0xffffff;
+    public static final int DEFAULT_SEARCHBAR_FONT_COLOR = 0;
     public static final int MAX_RESULTS_COUNT = 200;
 
     public static final String defaultSwingTheme = "MaterialLighter";
