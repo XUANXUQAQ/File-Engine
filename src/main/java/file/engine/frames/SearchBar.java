@@ -28,6 +28,7 @@ import file.engine.utils.*;
 import file.engine.utils.file.CopyFileUtil;
 import file.engine.utils.file.FilePathUtil;
 import file.engine.utils.system.properties.IsDebug;
+import lombok.SneakyThrows;
 
 import javax.swing.*;
 import javax.swing.border.Border;
@@ -2845,7 +2846,8 @@ public class SearchBar {
         return (int) (((searchBarHeight * 0.2) / 96 * 72) / 4.5);
     }
 
-    private void switchToNormalMode(boolean isCloseWindow) throws InterruptedException {
+    @SneakyThrows
+    private void switchToNormalMode(boolean isCloseWindow) {
         if (isCloseWindow) {
             closeSearchBar();
         } else {
@@ -3414,8 +3416,8 @@ public class SearchBar {
         showSearchbar(false, false);
     }
 
+    @SneakyThrows
     private void grabFocus() {
-        GetHandle.INSTANCE.bringSearchBarToTop();
         int x = 0, y = 0;
         if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
             x = searchBar.getX() + textField.getWidth() / 2;
@@ -3434,6 +3436,7 @@ public class SearchBar {
      */
     private void showSearchbar(boolean isGrabFocus, boolean isSwitchToNormal) {
         SwingUtilities.invokeLater(() -> {
+            EventManagement eventManagement = EventManagement.getInstance();
             if (!isVisible()) {
                 setVisible(true);
                 textField.requestFocusInWindow();
@@ -3443,17 +3446,13 @@ public class SearchBar {
                 if (isGrabFocus) {
                     grabFocus();
                 }
-                EventManagement.getInstance().putEvent(new SearchBarReadyEvent(showingMode.toString()));
+                eventManagement.putEvent(new SearchBarReadyEvent(showingMode.toString()));
             } else {
                 if (isSwitchToNormal) {
-                    try {
-                        grabFocus();
-                        switchToNormalMode(false);
-                        EventManagement.getInstance().putEvent(new SearchBarReadyEvent(showingMode.toString()));
-                        isFocusGrabbed.set(true);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
+                    grabFocus();
+                    switchToNormalMode(false);
+                    eventManagement.putEvent(new SearchBarReadyEvent(showingMode.toString()));
+                    isFocusGrabbed.set(true);
                 }
             }
             if (isBorderThreadNotExist.get()) {

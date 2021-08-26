@@ -41,22 +41,23 @@ inline void setClickPos(const HWND& fileChooserHwnd);
 BOOL CALLBACK findToolbar(HWND hwndChild, LPARAM lParam);
 inline bool isMouseClicked();
 bool isDialogNotExist();
-extern "C" __declspec(dllexport) void start();
-extern "C" __declspec(dllexport) void stop();
-extern "C" __declspec(dllexport) BOOL changeToAttach();
-extern "C" __declspec(dllexport) BOOL changeToNormal();
-extern "C" __declspec(dllexport) long getExplorerX();
-extern "C" __declspec(dllexport) long getExplorerY();
-extern "C" __declspec(dllexport) long getExplorerWidth();
-extern "C" __declspec(dllexport) long getExplorerHeight();
-extern "C" __declspec(dllexport) const char* getExplorerPath();
-extern "C" __declspec(dllexport) BOOL isDialogWindow();
-extern "C" __declspec(dllexport) void bringSearchBarToTop();
-extern "C" __declspec(dllexport) int getToolBarX();
-extern "C" __declspec(dllexport) int getToolBarY();
-extern "C" __declspec(dllexport) double getDpi();
-extern "C" __declspec(dllexport) BOOL isKeyPressed(int vk_key);
-extern "C" __declspec(dllexport) BOOL isForegroundFullscreen();
+extern "C" {
+    __declspec(dllexport) void start();
+    __declspec(dllexport) void stop();
+    __declspec(dllexport) BOOL changeToAttach();
+    __declspec(dllexport) BOOL changeToNormal();
+    __declspec(dllexport) long getExplorerX();
+    __declspec(dllexport) long getExplorerY();
+    __declspec(dllexport) long getExplorerWidth();
+    __declspec(dllexport) long getExplorerHeight();
+    __declspec(dllexport) const char* getExplorerPath();
+    __declspec(dllexport) BOOL isDialogWindow();
+    __declspec(dllexport) int getToolBarX();
+    __declspec(dllexport) int getToolBarY();
+    __declspec(dllexport) double getDpi();
+    __declspec(dllexport) BOOL isKeyPressed(int vk_key);
+    __declspec(dllexport) BOOL isForegroundFullscreen();
+}
 
 #ifdef TEST
 void outputHwndInfo(HWND hwnd)
@@ -142,23 +143,6 @@ int getToolBarY()
 BOOL changeToNormal()
 {
     return isMouseClickOutOfExplorer || isDialogNotExist();
-}
-
-/**
- * 尝试将File-Engine带到最顶层
- */
-void bringSearchBarToTop()
-{
-    auto* const hWnd = getSearchBarHWND();
-    auto* hForeWnd = GetForegroundWindow();
-    const auto dwForeID = GetWindowThreadProcessId(hForeWnd, nullptr);
-    const auto dwCurID = GetCurrentThreadId();
-    AttachThreadInput(dwCurID, dwForeID, TRUE);
-    ShowWindow(hWnd, SW_SHOWNORMAL);
-    SetWindowPos(hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
-    SetWindowPos(hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
-    SetForegroundWindow(hWnd);
-    AttachThreadInput(dwCurID, dwForeID, FALSE);
 }
 
 BOOL isDialogWindow()

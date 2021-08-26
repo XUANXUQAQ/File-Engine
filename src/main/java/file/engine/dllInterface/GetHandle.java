@@ -26,8 +26,6 @@ public interface GetHandle extends Library {
 
     boolean isDialogWindow();
 
-    void bringSearchBarToTop();
-
     int getToolBarX();
 
     int getToolBarY();
