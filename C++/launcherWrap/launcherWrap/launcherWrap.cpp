@@ -33,9 +33,9 @@ char g_jre_path[1000];
 char g_update_signal_file[1000];
 char g_new_file_engine_jar_path[1000];
 #ifdef TEST
-int g_check_time_threshold = 1000;
+int g_check_time_threshold = 1;
 #else
-int g_check_time_threshold = 5000;
+int g_check_time_threshold = 5;
 #endif
 
 int g_restart_count = 0;
@@ -84,17 +84,13 @@ int main()
 	std::time_t start_time = std::time(nullptr);
 	while (!is_close_exist())
 	{
-		if (std::time(nullptr) - start_time > g_check_time_threshold)
+		const std::time_t tmp = std::time(nullptr) - start_time;
+		if (tmp > g_check_time_threshold)
 		{
 			start_time = std::time(nullptr);
-			if (!find_process())
+			if (find_process() == 0)
 			{
 				std::cout << "File-Engine process not exist" << std::endl;
-				if (is_close_exist())
-				{
-					// 再次检测，防止已经关闭后重启
-					break;
-				}
 				restart_file_engine(false);
 			}
 		}
