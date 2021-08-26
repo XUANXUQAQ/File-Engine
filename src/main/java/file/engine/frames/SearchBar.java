@@ -38,6 +38,7 @@ import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
 import java.awt.event.*;
+import java.awt.geom.RoundRectangle2D;
 import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -73,6 +74,7 @@ public class SearchBar {
     private final AtomicBoolean isBorderThreadNotExist = new AtomicBoolean(true);
     private final AtomicBoolean isLockMouseMotionThreadNotExist = new AtomicBoolean(true);
     private final AtomicBoolean isTryToShowResultThreadNotExist = new AtomicBoolean(true);
+    private final AtomicBoolean isRoundRadiusSet = new AtomicBoolean(false);
     private static final AtomicBoolean isPreviewMode = new AtomicBoolean(false);
     private final AtomicBoolean isTutorialMode = new AtomicBoolean(false);
     private Border fullBorder;
@@ -398,7 +400,7 @@ public class SearchBar {
             middleBorder = emptyBorder;
             bottomBorder = emptyBorder;
             fullBorder = emptyBorder;
-        } else {
+        } else if (borderType == Constants.Enums.BorderType.FULL) {
             Border lineBorder = BorderFactory.createMatteBorder(
                     borderThickness,
                     borderThickness,
@@ -2280,6 +2282,7 @@ public class SearchBar {
         currentResultCount.set(0);
         currentLabelSelectedPosition.set(0);
         isPrioritySearched.set(false);
+        isRoundRadiusSet.set(false);
     }
 
     /**
@@ -2430,6 +2433,61 @@ public class SearchBar {
                     e.printStackTrace();
                 }
             });
+        }
+    }
+
+    private void setSearchBarRadius(int x, int y, double radius, int width, int height) {
+        searchBar.setShape(new RoundRectangle2D.Double(x, y, width, height, radius, radius));
+    }
+
+    private void setSearchBarRadius(double radius, int width, int height) {
+        setSearchBarRadius(0, 0, radius, width, height);
+    }
+
+    /**
+     * 自动设置圆角
+     */
+    private void autoSetSearchBarRadius() {
+        if (isRoundRadiusSet.get()) {
+            return;
+        }
+        double roundRadius = AllConfigs.getInstance().getRoundRadius();
+        int length = Math.min(listResultsNum.get() + 1, 9);
+        if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
+            if (listResultsNum.get() == 0) {
+                if (getSearchBarText().isEmpty() || System.currentTimeMillis() - startTime < 300) {
+                    setSearchBarRadius(roundRadius, searchBar.getWidth(), textField.getHeight());
+                } else {
+                    setSearchBarRadius(roundRadius, searchBar.getWidth(), 2 * textField.getHeight());
+                }
+            } else {
+                setSearchBarRadius(roundRadius, searchBar.getWidth(), length * textField.getHeight());
+            }
+        } else if (showingMode == Constants.Enums.ShowingSearchBarMode.EXPLORER_ATTACH) {
+            if (listResultsNum.get() == 0) {
+                if (getSearchBarText().isEmpty()) {
+                    setSearchBarRadius(textField.getX(),
+                            textField.getY(),
+                            roundRadius,
+                            searchBar.getWidth(),
+                            textField.getHeight());
+                } else {
+                    setSearchBarRadius(textField.getX(),
+                            textField.getY() - label1.getHeight(),
+                            roundRadius,
+                            searchBar.getWidth(),
+                            2 * textField.getHeight());
+                }
+            } else {
+                setSearchBarRadius(textField.getX(),
+                        textField.getY() - label1.getHeight() * (length - 1),
+                        roundRadius,
+                        searchBar.getWidth(),
+                        length * textField.getHeight());
+            }
+        }
+        if (length == 9) {
+            isRoundRadiusSet.set(true);
         }
     }
 
@@ -2932,6 +2990,7 @@ public class SearchBar {
                         clearALabel(label8);
                         repaint();
                     }
+                    SwingUtilities.invokeLater(this::autoSetSearchBarRadius);
                     TimeUnit.MILLISECONDS.sleep(16);
                 }
             } catch (InterruptedException e) {
@@ -3038,7 +3097,7 @@ public class SearchBar {
         try {
             while (isVisible()) {
                 String text = getSearchBarText();
-                if (text == null || text.isEmpty()) {
+                if (text == null || text.isEmpty() || System.currentTimeMillis() - startTime < 300) {
                     clearAllLabelBorder();
                     chooseAndSetBorder(textField, 4);
                 } else {
@@ -4019,6 +4078,7 @@ public class SearchBar {
         isWaiting.set(false);
         isMouseDraggedInWindow.set(false);
         currentUsingPlugin = null;
+        isRoundRadiusSet.set(false);
         EventManagement.getInstance().putEvent(new StopPreviewEvent());
     }
 

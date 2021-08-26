@@ -234,3 +234,5 @@ The startup path is invalid=开机启动项无效
 Clear the database and update file index=清空数据库并更新文件索引
 You can drag any search result out to create a shortcut on the desktop or any folder=您可以将任何搜索结果拖出以在桌面或任何文件夹上创建快捷方式
 Waiting for searching disks=等待搜索磁盘
+Round rectangle radius=圆角矩形半径
+Round rectangle radius is wrong, please change=圆角矩形半径设置错误，请修改

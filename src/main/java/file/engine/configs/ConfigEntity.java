@@ -101,6 +101,9 @@ public class ConfigEntity {
     @SerializedName("borderThickness")
     private int borderThickness;
 
+    @SerializedName("roundRadius")
+    private double roundRadius;
+
     @SerializedName("isAttachExplorer")
     private boolean isAttachExplorer;
 }

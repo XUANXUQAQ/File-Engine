@@ -234,3 +234,5 @@ The startup path is invalid=Путь запуска недействителен
 Clear the database and update file index=Очистить базу данных и обновить индекс файла
 You can drag any search result out to create a shortcut on the desktop or any folder=Вы можете перетащить любой результат поиска, чтобы создать ярлык на рабочем столе или в любой папке.
 Waiting for searching disks=Ожидание поиска дисков
+Round rectangle radius=Радиус скругленного прямоугольника
+Round rectangle radius is wrong, please change=Радиус прямоугольника с закругленными углами установлен неправильно, измените
