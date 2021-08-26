@@ -22,7 +22,7 @@ public class Constants {
 
     public static final int defaultLabelColor = 0xff9933;
     public static final int defaultWindowBackgroundColor = 0xffffff;
-    public static final int defaultBorderColor = 0;
+    public static final int defaultBorderColor = 0xffffff;
     public static final int defaultFontColor = 0;
     public static final int defaultFontColorWithCoverage = 0xff3333;
     public static final int defaultSearchbarColor = 0xffffff;

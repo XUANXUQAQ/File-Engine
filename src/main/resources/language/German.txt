@@ -234,3 +234,5 @@ The startup path is invalid=Der Startpfad ist ungültig
 Clear the database and update file index=Löschen Sie die Datenbank und aktualisieren Sie den Dateiindex
 You can drag any search result out to create a shortcut on the desktop or any folder=Sie können jedes Suchergebnis herausziehen, um eine Verknüpfung auf dem Desktop oder einem beliebigen Ordner zu erstellen
 Waiting for searching disks=Warten auf das Durchsuchen von Datenträgern
+Round rectangle radius=Radius des abgerundeten Rechtecks
+Round rectangle radius is wrong, please change=Der Radius des abgerundeten Rechtecks ​​ist falsch eingestellt, bitte ändern

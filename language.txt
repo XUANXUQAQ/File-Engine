@@ -234,3 +234,5 @@ The startup path is invalid=
 Clear the database and update file index=
 You can drag any search result out to create a shortcut on the desktop or any folder=
 Waiting for searching disks=
+Round rectangle radius=
+Round rectangle radius is wrong, please change=

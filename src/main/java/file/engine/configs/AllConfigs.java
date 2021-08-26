@@ -245,6 +245,10 @@ public class AllConfigs {
         return configEntity.getSwingTheme();
     }
 
+    public double getRoundRadius() {
+        return configEntity.getRoundRadius();
+    }
+
     /**
      * 获取打开上级文件夹的键盘快捷键code
      *
@@ -518,6 +522,10 @@ public class AllConfigs {
         configEntity.setDoubleClickCtrlOpen(getFromJson(settingsInJson, "doubleClickCtrlOpen", true));
     }
 
+    private void readRoundRadius(Map<String, Object> settingsInJson) {
+        configEntity.setRoundRadius(Double.parseDouble(getFromJson(settingsInJson, "roundRadius", 23.0).toString()));
+    }
+
     private void readUpdateAddress(Map<String, Object> settingsInJson) {
         configEntity.setUpdateAddress(getFromJson(settingsInJson, "updateAddress", "jsdelivr CDN"));
     }
@@ -715,6 +723,7 @@ public class AllConfigs {
         Map<String, Object> settingsInJson = getSettingsJSON();
         readProxy(settingsInJson);
         readLabelColor(settingsInJson);
+        readRoundRadius(settingsInJson);
         readLanguage(settingsInJson);
         readBorderColor(settingsInJson);
         readBorderType(settingsInJson);

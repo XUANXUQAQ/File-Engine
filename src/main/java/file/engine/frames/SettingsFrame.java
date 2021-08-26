@@ -274,6 +274,8 @@ public class SettingsFrame {
     private JComboBox<Object> comboBoxBorderType;
     private JCheckBox checkBoxIsAttachExplorer;
     private JLabel labelZip;
+    private JLabel labelRoundRadius;
+    private JTextField textFieldRoundRadius;
 
 
     private static volatile SettingsFrame instance = null;
@@ -702,6 +704,19 @@ public class SettingsFrame {
             } else {
                 throw new Exception("parse failed");
             }
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    @SuppressWarnings("SameParameterValue")
+    private boolean canParseDouble(String str, double min, double max) {
+        try {
+            double v = Double.parseDouble(str);
+            if (min <= v && v <= max) {
+                return true;
+            }
+            throw new Exception("parse failed");
         } catch (Exception e) {
             return false;
         }
@@ -1635,6 +1650,7 @@ public class SettingsFrame {
         textFieldSearchBarFontColor.setText(toRGBHexString(allConfigs.getSearchBarFontColor()));
         textFieldCacheNum.setText(String.valueOf(allConfigs.getCacheNumLimit()));
         textFieldHotkey.setText(allConfigs.getHotkey());
+        textFieldRoundRadius.setText(String.valueOf(allConfigs.getRoundRadius()));
         textFieldPriorityFolder.setText(allConfigs.getPriorityFolder());
         textFieldUpdateInterval.setText(String.valueOf(allConfigs.getUpdateTimeLimit()));
         textFieldSearchBarColor.setText(toRGBHexString(allConfigs.getSearchBarColor()));
@@ -2147,6 +2163,7 @@ public class SettingsFrame {
         labelLocalDiskTip.setText(translateUtil.getTranslation("Only the disks on this machine are listed below, click \"Add\" button to add a removable disk"));
         labelBorderThickness.setText(translateUtil.getTranslation("Border Thickness"));
         labelBorderType.setText(translateUtil.getTranslation("Border Type"));
+        labelRoundRadius.setText(translateUtil.getTranslation("Round rectangle radius"));
     }
 
     private void translateCheckbox() {
@@ -2281,6 +2298,12 @@ public class SettingsFrame {
                     event -> SwingUtilities.invokeLater(() -> frame.setVisible(true)),
                     event -> SwingUtilities.invokeLater(() -> frame.setVisible(true)));
         });
+    }
+
+    private void checkRoundRadius(StringBuilder stringBuilder) {
+        if (!canParseDouble(textFieldRoundRadius.getText(), 0, 100)) {
+            stringBuilder.append(translateUtil.getTranslation("Round rectangle radius is wrong, please change"));
+        }
     }
 
     private void checkBorderThickness(StringBuilder stringBuilder) {
@@ -2418,6 +2441,7 @@ public class SettingsFrame {
         configEntity.setFontColorWithCoverage(Integer.parseInt(textFieldFontColorWithCoverage.getText(), 16));
         configEntity.setFontColor(Integer.parseInt(textFieldFontColor.getText(), 16));
         configEntity.setSearchBarFontColor(Integer.parseInt(textFieldSearchBarFontColor.getText(), 16));
+        configEntity.setRoundRadius(Double.parseDouble(textFieldRoundRadius.getText()));
         configEntity.setProxyAddress(tmp_proxyAddress);
         configEntity.setProxyPort(Integer.parseInt(textFieldPort.getText()));
         configEntity.setProxyUserName(tmp_proxyUserName);
@@ -2455,6 +2479,7 @@ public class SettingsFrame {
         checkCacheNumLimit(errorsStrb);
         checkUpdateTimeLimit(errorsStrb);
         checkBorderThickness(errorsStrb);
+        checkRoundRadius(errorsStrb);
 
         String errors = errorsStrb.toString();
         if (!errors.isEmpty()) {
@@ -2505,7 +2530,8 @@ public class SettingsFrame {
         }
         try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("user/cmds.txt"), StandardCharsets.UTF_8))) {
             bw.write(strb.toString());
-        } catch (IOException ignored) {
+        } catch (IOException e) {
+            e.printStackTrace();
         }
         hideFrame();
         return "";
