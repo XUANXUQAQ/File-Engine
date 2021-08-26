@@ -2102,7 +2102,7 @@ public class SettingsFrame {
         labeltipPriorityFolder.setText(translateUtil.getTranslation("Priority search folder location (double-click to clear):"));
         labelConstIgnorePathTip.setText(translateUtil.getTranslation("Separate different paths with commas, and ignore C:\\Windows by default"));
         labelSetIgnorePathTip.setText(translateUtil.getTranslation("Set ignore folder:"));
-        labelTransparency.setText(translateUtil.getTranslation("Search bar transparency:"));
+        labelTransparency.setText(translateUtil.getTranslation("Search bar opacity:"));
         labelOpenSearchBarHotKey.setText(translateUtil.getTranslation("Open search bar:"));
         labelRunAsAdminHotKey.setText(translateUtil.getTranslation("Run as administrator:"));
         labelOpenFolderHotKey.setText(translateUtil.getTranslation("Open the parent folder:"));

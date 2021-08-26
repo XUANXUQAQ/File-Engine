@@ -939,7 +939,7 @@ public class SearchBar {
             return;
         }
         int count = 0;
-        final int maxWaiting = 10;
+        final int maxWaiting = 30;
         AtomicBoolean isCanceled = new AtomicBoolean(false);
         TranslateUtil translateUtil = TranslateUtil.getInstance();
         //检查数据库是否正常
@@ -947,10 +947,12 @@ public class SearchBar {
             JFrame frame = new JFrame();
             frame.setUndecorated(true);
             frame.getRootPane().setWindowDecorationStyle(JRootPane.FRAME);
-            LoadingPanel glasspane = new LoadingPanel(translateUtil.getTranslation("Please wait up to 10 seconds"));
-            glasspane.setSize(600, 400);
-            frame.setGlassPane(glasspane);
-            glasspane.start();//开始动画加载效果
+            LoadingPanel glassPane = new LoadingPanel(translateUtil.getTranslation("Waiting for searching disks")
+                    + ", "
+                    + translateUtil.getTranslation("Please wait up to 30 seconds"));
+            glassPane.setSize(600, 400);
+            frame.setGlassPane(glassPane);
+            glassPane.start();//开始动画加载效果
             frame.setSize(600, 400);
             frame.setLocationRelativeTo(null);
             frame.setResizable(false);
@@ -970,7 +972,7 @@ public class SearchBar {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             } finally {
-                glasspane.stop();
+                glassPane.stop();
                 frame.setVisible(false);
             }
         }
