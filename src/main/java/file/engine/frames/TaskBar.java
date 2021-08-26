@@ -50,7 +50,7 @@ public class TaskBar {
             EventManagement instance = EventManagement.getInstance();
             try {
                 while (instance.isNotMainExit()) {
-                    if (popupMenu != null && popupMenu.isVisible() && GetHandle.INSTANCE.isMousePressed()) {
+                    if (popupMenu != null && popupMenu.isVisible() && GetHandle.INSTANCE.isKeyPressed(0x01) && GetHandle.INSTANCE.isKeyPressed(0x02)) {
                         Point point = java.awt.MouseInfo.getPointerInfo().getLocation();
                         Point location = popupMenu.getLocationOnScreen();
                         int X = location.x;

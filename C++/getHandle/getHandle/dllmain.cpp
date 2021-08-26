@@ -40,7 +40,6 @@ void checkMouseThread();
 inline void setClickPos(const HWND& fileChooserHwnd);
 BOOL CALLBACK findToolbar(HWND hwndChild, LPARAM lParam);
 inline bool isMouseClicked();
-inline bool isKeyPressed(int vk_key);
 bool isDialogNotExist();
 extern "C" __declspec(dllexport) void start();
 extern "C" __declspec(dllexport) void stop();
@@ -56,7 +55,7 @@ extern "C" __declspec(dllexport) void bringSearchBarToTop();
 extern "C" __declspec(dllexport) int getToolBarX();
 extern "C" __declspec(dllexport) int getToolBarY();
 extern "C" __declspec(dllexport) double getDpi();
-extern "C" __declspec(dllexport) BOOL isMousePressed();
+extern "C" __declspec(dllexport) BOOL isKeyPressed(int vk_key);
 extern "C" __declspec(dllexport) BOOL isForegroundFullscreen();
 
 #ifdef TEST
@@ -113,15 +112,6 @@ BOOL isForegroundFullscreen()
     }//如果当前激活窗口是桌面窗口，或者是控制台窗口，就直接返回不是全屏
 
     return b_fullscreen;
-}
-
-BOOL isMousePressed()
-{
-	if (isKeyPressed(VK_LBUTTON) || isKeyPressed(VK_RBUTTON))
-	{
-        return true;
-	}
-    return false;
 }
 
 /**
@@ -189,9 +179,9 @@ const char* getExplorerPath()
     return dragExplorerPath;
 }
 
-inline bool isKeyPressed(const int vk_key)
+BOOL isKeyPressed(const int vk_key)
 {
-    return GetAsyncKeyState(vk_key) & 0x8000 ? true : false;
+    return GetAsyncKeyState(vk_key) & 0x8000 ? TRUE : FALSE;
 }
 
 inline bool isMouseClicked()
