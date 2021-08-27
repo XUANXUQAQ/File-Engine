@@ -3418,6 +3418,7 @@ public class SearchBar {
 
     @SneakyThrows
     private void grabFocus() {
+        TimeUnit.MILLISECONDS.sleep(50);
         int x = 0, y = 0;
         if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
             x = searchBar.getX() + textField.getWidth() / 2;
@@ -3444,12 +3445,12 @@ public class SearchBar {
                 startTime = System.currentTimeMillis();
                 visibleStartTime = startTime;
                 if (isGrabFocus) {
-                    grabFocus();
+                    CachedThreadPoolUtil.getInstance().executeTask(this::grabFocus);
                 }
                 eventManagement.putEvent(new SearchBarReadyEvent(showingMode.toString()));
             } else {
                 if (isSwitchToNormal) {
-                    grabFocus();
+                    CachedThreadPoolUtil.getInstance().executeTask(this::grabFocus);
                     switchToNormalMode(false);
                     eventManagement.putEvent(new SearchBarReadyEvent(showingMode.toString()));
                     isFocusGrabbed.set(true);
