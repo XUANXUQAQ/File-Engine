@@ -40,11 +40,11 @@ public class CachedThreadPoolUtil {
         return cachedThreadPool.submit(todo);
     }
 
-    public Future<?> executeTask(Runnable todo) {
+    public void executeTask(Runnable todo) {
         if (isShutdown.get()) {
-            return null;
+            return;
         }
-        return cachedThreadPool.submit(todo);
+        cachedThreadPool.submit(todo);
     }
 
     public void shutdown() {
