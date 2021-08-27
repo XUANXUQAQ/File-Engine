@@ -1178,6 +1178,7 @@ public class SearchBar {
                                     try {
                                         String writePath = GetHandle.INSTANCE.getExplorerPath();
                                         if (writePath != null && !writePath.isEmpty()) {
+                                            writePath = new String(writePath.getBytes(Charset.defaultCharset()), StandardCharsets.UTF_8);
                                             createShortCut(finalF.getAbsolutePath(), writePath + File.separator + finalF.getName(), AllConfigs.getInstance().isShowTipOnCreatingLnk());
                                         }
                                     } catch (Exception exception) {
