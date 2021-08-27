@@ -16,7 +16,7 @@
 #pragma comment(lib, "Ole32.lib")
 #pragma comment(lib, "User32.lib")
 
-// #define TEST
+#define TEST
 
 #ifndef TEST
 #pragma comment( linker, "/subsystem:windows /entry:mainCRTStartup" )
@@ -43,7 +43,7 @@ std::time_t g_restart_time = std::time(nullptr);
 bool g_is_restart_on_release_file = false;
 
 bool is_close_exist();
-DWORD find_process();
+BOOL find_process();
 void restart_file_engine(bool);
 bool release_resources();
 void extract_zip();
@@ -88,7 +88,7 @@ int main()
 		if (tmp > g_check_time_threshold)
 		{
 			start_time = std::time(nullptr);
-			if (find_process() == 0)
+			if (!find_process())
 			{
 				std::cout << "File-Engine process not exist" << std::endl;
 				restart_file_engine(false);
@@ -392,10 +392,10 @@ bool is_launched()
 /**
  * 查找File-Engine进程是否存在
  */
-DWORD find_process()
+BOOL find_process()
 {
 	PROCESSENTRY32 pe;
-	DWORD id = 0;
+	BOOL ret = 0;
 	auto* const hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
 	pe.dwSize = sizeof(PROCESSENTRY32);
 	const std::string _workingDir(g_file_engine_working_dir);
@@ -404,7 +404,7 @@ DWORD find_process()
 	if (!Process32First(hSnapshot, &pe))
 	{
 		CloseHandle(hSnapshot);
-		return 0;
+		return FALSE;
 	}
 	while (true)
 	{
@@ -413,16 +413,17 @@ DWORD find_process()
 			break;
 		if (wcscmp(pe.szExeFile, L"java.exe") == 0)
 		{
-			id = pe.th32ProcessID;
+			DWORD id = pe.th32ProcessID;
 			TCHAR szProcessName[1000] = {0};
 			get_process_full_path(id, szProcessName);
 			std::wstring processName(szProcessName);
 			if (processName.find(workingDir) != std::wstring::npos)
 			{
+				ret = TRUE;
 				break;
 			}
 		}
 	}
 	CloseHandle(hSnapshot);
-	return id;
+	return ret;
 }
