@@ -16,7 +16,7 @@
 #pragma comment(lib, "Ole32.lib")
 #pragma comment(lib, "User32.lib")
 
-#define TEST
+// #define TEST
 
 #ifndef TEST
 #pragma comment( linker, "/subsystem:windows /entry:mainCRTStartup" )
