@@ -14,9 +14,6 @@ public enum GsonUtil {
     @SuppressWarnings("rawtypes")
     private final Type mapType = new TypeToken<Map>(){}.getType();
 
-    GsonUtil() {
-    }
-
     public static GsonUtil getInstance() {
         return INSTANCE;
     }

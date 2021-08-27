@@ -420,10 +420,8 @@ public class DatabaseService {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             Bit zero = new Bit(new byte[]{0});
             Bit one = new Bit(new byte[]{1});
-            Bit emptyContainerTask = new Bit(new byte[]{0});
             try {
-                // 每当有一个容器全部包含后被清空，emptyContainerTask中对应的位会被设为1，当所有容器都为空时，取not运算将会得到1，但开始时取反也会得1，所以需要判断长度
-                while (!isStop.get() && !(emptyContainerTask.not().equals(one) && emptyContainerTask.length() > 1)) {
+                while (!isStop.get()) {
                     Bit tmpTaskStatus = new Bit(new byte[]{0});
                     //线程状态的记录从第二个位开始，所以初始值为1 0
                     Bit start = new Bit(new byte[]{1, 0});
@@ -451,7 +449,7 @@ public class DatabaseService {
                         Bit and = taskStatus.and(start);
                         boolean isFailed = System.currentTimeMillis() - waitTime > 300 && waitTime != 0;
                         if (((and).shiftRight(loopCount)).equals(one) || isFailed) {
-                            // failCount过大，阻塞时间过长则跳过
+                            // 阻塞时间过长则跳过
                             waitTime = 0;
                             results = containerMap.get(start.toString());
                             if (results != null) {
@@ -462,7 +460,6 @@ public class DatabaseService {
                                 }
                                 if (!isFailed) {
                                     results.clear();
-                                    emptyContainerTask = emptyContainerTask.or(start);
                                 }
                             }
                             tmpTaskStatus = tmpTaskStatus.or(start);
@@ -632,7 +629,7 @@ public class DatabaseService {
     /**
      * 添加sql语句，并开始搜索
      */
-    private void addSqlCommands() {
+    private void startSearch() {
         if (!isReadSharedMemory.get()) {
             searchCache();
         }
@@ -1244,7 +1241,7 @@ public class DatabaseService {
         databaseService.searchCase = startSearchEvent.searchCase;
         databaseService.keywords = startSearchEvent.keywords;
         databaseService.isStop.set(false);
-        databaseService.addSqlCommands();
+        databaseService.startSearch();
     }
 
     @EventRegister(registerClass = StopSearchEvent.class)
