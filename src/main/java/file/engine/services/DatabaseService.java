@@ -22,6 +22,7 @@ import lombok.Data;
 import lombok.Getter;
 
 import java.io.*;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -75,12 +76,12 @@ public class DatabaseService {
         tableSet = new HashSet<>();
         tempResults = new ConcurrentLinkedQueue<>();
         tableQueue = new ConcurrentLinkedQueue<>();
+        initCacheNum();
+        initPriority();
         addRecordsToDatabaseThread();
         deleteRecordsToDatabaseThread();
         checkTimeAndSendExecuteSqlSignalThread();
         executeSqlCommandsThread();
-        initCacheNum();
-        initPriority();
     }
 
     /**
@@ -996,7 +997,7 @@ public class DatabaseService {
             Process p = Runtime.getRuntime().exec("tasklist /FI \"IMAGENAME eq " + procName + "\"");
             p.waitFor();
             String eachLine;
-            try (BufferedReader buffr = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
+            try (BufferedReader buffr = new BufferedReader(new InputStreamReader(p.getInputStream(), Charset.defaultCharset()))) {
                 while ((eachLine = buffr.readLine()) != null) {
                     strBuilder.append(eachLine);
                 }
@@ -1033,7 +1034,7 @@ public class DatabaseService {
      */
     private void waitForProcess(@SuppressWarnings("SameParameterValue") String procName) throws IOException, InterruptedException {
         long start = System.currentTimeMillis();
-        long timeLimit = 3 * 60 * 1000;
+        long timeLimit = 10 * 60 * 1000;
         if (IsDebug.isDebug()) {
             timeLimit = Long.MAX_VALUE;
         }
@@ -1057,10 +1058,10 @@ public class DatabaseService {
         for (String eachDisk : RegexUtil.comma.split(AllConfigs.getInstance().getDisks())) {
             String name = eachDisk.charAt(0) + ".db";
             long length = Files.size(Path.of("data/" + name));
-            if (length > 6L * 1024 * 1024 * 100) {
-                // 大小超过600M
+            if (length > 5L * 1024 * 1024 * 100) {
+                // 大小超过500M
                 if (IsDebug.isDebug()) {
-                    System.out.println("当前文件" + name + "大小超过600M，已删除");
+                    System.out.println("当前文件" + name + "过大，已删除");
                 }
                 Files.delete(Path.of("data/" + name));
             }
@@ -1092,8 +1093,9 @@ public class DatabaseService {
             });
             long start = System.currentTimeMillis();
             isReadSharedMemory.set(true);
+            final long timeLimit = 10 * 60 * 1000;
             while (!ResultPipe.INSTANCE.isComplete() && isProcessExist("fileSearcherUSN.exe")) {
-                if (System.currentTimeMillis() - start > 60000) {
+                if (System.currentTimeMillis() - start > timeLimit) {
                     break;
                 }
                 TimeUnit.MILLISECONDS.sleep(10);
@@ -1196,11 +1198,16 @@ public class DatabaseService {
                     }
                     TimeUnit.SECONDS.sleep(updateTimeLimit);
                 }
-            } catch (InterruptedException ignored) {
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
         });
     }
 
+    /**
+     * 检查是否拥有管理员权限
+     * @return boolean
+     */
     private boolean isAdmin() {
         try {
             ProcessBuilder processBuilder = new ProcessBuilder("cmd.exe");
