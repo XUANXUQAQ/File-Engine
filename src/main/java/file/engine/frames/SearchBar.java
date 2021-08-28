@@ -1092,7 +1092,6 @@ public class SearchBar {
                     }
                 }
                 label.setBackground(labelColor);
-//                label.setForeground(fontColorWithCoverage);
             });
         }
     }
@@ -1116,7 +1115,6 @@ public class SearchBar {
                     }
                 }
                 label.setBackground(backgroundColor);
-                label.setForeground(labelFontColor);
             });
         }
     }
@@ -2276,7 +2274,9 @@ public class SearchBar {
         listResultsNum.set(0);
     }
 
-    //只在重新输入需要初始化所有设置时使用
+    /**
+     * 只在重新输入需要初始化所有设置时使用
+     */
     private void clearAllAndResetAll() {
         clearAllLabels();
         clearListAndTempAndReset();
@@ -2423,16 +2423,17 @@ public class SearchBar {
                 try {
                     while (isWaiting.get()) {
                         if (databaseService.getStatus() == Constants.Enums.DatabaseStatus.NORMAL) {
-                            startTime = System.currentTimeMillis() - 500;
+                            startTime = System.currentTimeMillis() - 300;
                             startSignal.set(true);
                             isNotSqlInitialized.set(true);
-                            isWaiting.set(false);
                             return;
                         }
                         TimeUnit.MILLISECONDS.sleep(20);
                     }
                 } catch (InterruptedException e) {
                     e.printStackTrace();
+                } finally {
+                    isWaiting.set(false);
                 }
             });
         }
@@ -3451,7 +3452,7 @@ public class SearchBar {
                 eventManagement.putEvent(new SearchBarReadyEvent(showingMode.toString()));
             } else {
                 if (isSwitchToNormal) {
-                    CachedThreadPoolUtil.getInstance().executeTask(this::grabFocus);
+                    grabFocus();
                     switchToNormalMode(false);
                     eventManagement.putEvent(new SearchBarReadyEvent(showingMode.toString()));
                     isFocusGrabbed.set(true);
