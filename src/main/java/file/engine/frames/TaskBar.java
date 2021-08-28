@@ -31,6 +31,8 @@ public class TaskBar {
     private final AtomicBoolean isMessageClear = new AtomicBoolean(true);
     private volatile Event currentShowingMessageWithEvent = null;
     private volatile JPopupMenu popupMenu = null;
+    private final int L_BUTTON = 0x01;
+    private final int R_BUTTON = 0x02;
 
     private static volatile TaskBar INSTANCE = null;
 
@@ -50,7 +52,7 @@ public class TaskBar {
             EventManagement instance = EventManagement.getInstance();
             try {
                 while (instance.isNotMainExit()) {
-                    if (popupMenu != null && popupMenu.isVisible() && GetHandle.INSTANCE.isKeyPressed(0x01) && GetHandle.INSTANCE.isKeyPressed(0x02)) {
+                    if (popupMenu != null && popupMenu.isVisible() && (GetHandle.INSTANCE.isKeyPressed(L_BUTTON) || GetHandle.INSTANCE.isKeyPressed(R_BUTTON))) {
                         Point point = java.awt.MouseInfo.getPointerInfo().getLocation();
                         Point location = popupMenu.getLocationOnScreen();
                         int X = location.x;
@@ -61,9 +63,10 @@ public class TaskBar {
                             SwingUtilities.invokeLater(() -> popupMenu.setVisible(false));
                         }
                     }
-                    TimeUnit.MILLISECONDS.sleep(100);
+                    TimeUnit.MILLISECONDS.sleep(50);
                 }
-            } catch (InterruptedException ignored) {
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
         });
     }
@@ -95,7 +98,8 @@ public class TaskBar {
                     }
                     TimeUnit.MILLISECONDS.sleep(50);
                 }
-            } catch (InterruptedException ignored) {
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
         });
     }
