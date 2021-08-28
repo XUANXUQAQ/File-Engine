@@ -3044,7 +3044,8 @@ public class SearchBar {
                 int dotNum = 1;
             };
             try {
-                while (!"done".equals(searchInfoLabel.getName()) && isVisible()) {
+                long time = System.currentTimeMillis();
+                while (!"done".equals(searchInfoLabel.getName()) && isVisible() && startTime < time) {
                     ref.dotNum++;
                     SwingUtilities.invokeLater(() -> {
                         searchInfoLabel.setText(TranslateUtil.INSTANCE.getTranslation("Searching") + ".".repeat(ref.dotNum));
@@ -3157,8 +3158,13 @@ public class SearchBar {
                 String text = getSearchBarText();
                 if (text == null || text.isEmpty() || System.currentTimeMillis() - startTime < 300) {
                     clearAllLabelBorder();
-                    chooseAndSetBorder(textField, 1);
-                    chooseAndSetBorder(searchInfoLabel, 2);
+                    if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
+                        chooseAndSetBorder(textField, 1);
+                        chooseAndSetBorder(searchInfoLabel, 2);
+                    } else {
+                        chooseAndSetBorder(textField, 2);
+                        chooseAndSetBorder(searchInfoLabel, 1);
+                    }
                 } else {
                     if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
                         chooseAndSetBorder(textField, 1);
