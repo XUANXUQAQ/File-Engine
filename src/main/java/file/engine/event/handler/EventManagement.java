@@ -222,7 +222,7 @@ public class EventManagement {
                         throw new RuntimeException("注册handler方法参数错误" + method);
                     }
                 }
-                register(annotation.registerClass().toString(), method);
+                registerHandler(annotation.registerClass().toString(), method);
             });
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
@@ -258,9 +258,12 @@ public class EventManagement {
      * @param eventType 需要监听的任务类型
      * @param handler   需要执行的操作
      */
-    private void register(String eventType, Method handler) {
+    private void registerHandler(String eventType, Method handler) {
         if (IsDebug.isDebug()) {
             System.err.println("注册监听器" + eventType);
+        }
+        if (EVENT_HANDLER_MAP.containsKey(eventType)) {
+            throw new RuntimeException("重复的监听器：" + eventType + "方法：" + handler);
         }
         EVENT_HANDLER_MAP.put(eventType, handler);
     }

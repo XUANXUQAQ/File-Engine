@@ -236,3 +236,4 @@ You can drag any search result out to create a shortcut on the desktop or any fo
 Waiting for searching disks=En attente de recherche de disques
 Round rectangle radius=Rayon du rectangle arrondi
 Round rectangle radius is wrong, please change=Le rayon du rectangle arrondi est mal défini, veuillez le modifier
+Searching=Recherche

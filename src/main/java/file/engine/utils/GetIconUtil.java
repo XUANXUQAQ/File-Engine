@@ -7,6 +7,7 @@ import javax.swing.filechooser.FileSystemView;
 import java.awt.*;
 import java.io.File;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -14,14 +15,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class GetIconUtil {
     private static final FileSystemView FILE_SYSTEM_VIEW = FileSystemView.getFileSystemView();
-    private volatile ImageIcon dllImageIcon;
-    private volatile ImageIcon folderImageIcon;
-    private volatile ImageIcon txtImageIcon;
-    private volatile ImageIcon helpIcon;
-    private volatile ImageIcon updateIcon;
-    private volatile ImageIcon blankIcon;
-    private volatile ImageIcon recycleBin;
     private final AtomicBoolean isInitialized = new AtomicBoolean(false);
+    private final ConcurrentHashMap<String, ImageIcon> iconMap = new ConcurrentHashMap<>();
 
     private static volatile GetIconUtil INSTANCE = null;
 
@@ -40,24 +35,26 @@ public class GetIconUtil {
     }
 
     private ImageIcon changeIcon(ImageIcon icon, int width, int height) {
-        try {
-            Image image = icon.getImage().getScaledInstance(width, height, Image.SCALE_DEFAULT);
-            return new ImageIcon(image);
-        } catch (NullPointerException e) {
-            return null;
-        }
+        Image image = icon.getImage().getScaledInstance(width, height, Image.SCALE_DEFAULT);
+        return new ImageIcon(image);
     }
 
     private void initIconCache(int width, int height) {
         //添加其他常量图标  changeIcon((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(new File("")), width, height); 获取应用程序时使用
         //或者 changeIcon(new ImageIcon(GetIconUtil.class.getResource("")), width, height); 本地图标时使用
-        dllImageIcon = changeIcon((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(new File("C:\\Windows\\System32\\sysmain.dll")), width, height);
-        folderImageIcon = changeIcon((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(new File("C:\\Windows")), width, height);
-        txtImageIcon = changeIcon((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(new File("user\\cmds.txt")), width, height);
-        blankIcon = changeIcon(new ImageIcon(Objects.requireNonNull(GetIconUtil.class.getResource("/icons/blank.png"))), width, height);
-        recycleBin = changeIcon(new ImageIcon(Objects.requireNonNull(GetIconUtil.class.getResource("/icons/recyclebin.png"))), width, height);
-        updateIcon = changeIcon(new ImageIcon(Objects.requireNonNull(GetIconUtil.class.getResource("/icons/update.png"))), width, height);
-        helpIcon = changeIcon(new ImageIcon(Objects.requireNonNull(GetIconUtil.class.getResource("/icons/help.png"))), width, height);
+        iconMap.put("dllImageIcon", Objects.requireNonNull(changeIcon((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(new File("C:\\Windows\\System32\\sysmain.dll")), width, height)));
+        iconMap.put("folderImageIcon", Objects.requireNonNull(changeIcon((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(new File("C:\\Windows")), width, height)));
+        iconMap.put("txtImageIcon", Objects.requireNonNull(changeIcon((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(new File("user\\cmds.txt")), width, height)));
+        iconMap.put("blankIcon", Objects.requireNonNull(changeIcon(new ImageIcon(Objects.requireNonNull(GetIconUtil.class.getResource("/icons/blank.png"))), width, height)));
+        iconMap.put("recycleBin", Objects.requireNonNull(changeIcon(new ImageIcon(Objects.requireNonNull(GetIconUtil.class.getResource("/icons/recyclebin.png"))), width, height)));
+        iconMap.put("updateIcon", Objects.requireNonNull(changeIcon(new ImageIcon(Objects.requireNonNull(GetIconUtil.class.getResource("/icons/update.png"))), width, height)));
+        iconMap.put("helpIcon", Objects.requireNonNull(changeIcon(new ImageIcon(Objects.requireNonNull(GetIconUtil.class.getResource("/icons/help.png"))), width, height)));
+        iconMap.put("completeIcon", Objects.requireNonNull(changeIcon(new ImageIcon(Objects.requireNonNull(GetIconUtil.class.getResource("/icons/complete.png"))), width, height)));
+        iconMap.put("loadingIcon", Objects.requireNonNull(changeIcon(new ImageIcon(Objects.requireNonNull(GetIconUtil.class.getResource("/icons/loading.gif"))), width, height)));
+    }
+
+    public ImageIcon getIcon(String key) {
+        return iconMap.get(key);
     }
 
     public ImageIcon getCommandIcon(String commandName, int width, int height) {
@@ -73,14 +70,14 @@ public class GetIconUtil {
         }
         switch (commandName) {
             case "clearbin":
-                return recycleBin;
+                return iconMap.get("recycleBin");
             case "update":
             case "clearUpdate":
-                return updateIcon;
+                return iconMap.get("updateIcon");
             case "help":
-                return helpIcon;
+                return iconMap.get("helpIcon");
             case "version":
-                return blankIcon;
+                return iconMap.get("blankIcon");
             default:
                 return null;
         }
@@ -92,26 +89,26 @@ public class GetIconUtil {
             isInitialized.set(true);
         }
         if (path == null || path.isEmpty()) {
-            return blankIcon;
+            return iconMap.get("blankIcon");
         }
         File f = new File(path);
         path = path.toLowerCase();
         if (f.exists()) {
             //已保存的常量图标
             if (path.endsWith(".dll") || path.endsWith(".sys")) {
-                return dllImageIcon;
+                return iconMap.get("dllImageIcon");
             }
             if (path.endsWith(".txt")) {
-                return txtImageIcon;
+                return iconMap.get("txtImageIcon");
             }
             //检测是否为文件夹
             if (f.isDirectory()) {
-                return folderImageIcon;
+                return iconMap.get("folderImageIcon");
             } else {
                 return changeIcon((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(f), width, height);
             }
         } else {
-            return blankIcon;
+            return iconMap.get("blankIcon");
         }
     }
 }

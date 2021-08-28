@@ -9,10 +9,7 @@ import file.engine.dllInterface.FileMonitor;
 import file.engine.dllInterface.GetHandle;
 import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
-import file.engine.event.handler.impl.database.AddToCacheEvent;
-import file.engine.event.handler.impl.database.StartSearchEvent;
-import file.engine.event.handler.impl.database.StopSearchEvent;
-import file.engine.event.handler.impl.database.UpdateDatabaseEvent;
+import file.engine.event.handler.impl.database.*;
 import file.engine.event.handler.impl.frame.searchBar.*;
 import file.engine.event.handler.impl.frame.settingsFrame.AddCacheEvent;
 import file.engine.event.handler.impl.frame.settingsFrame.IsCacheExistEvent;
@@ -95,6 +92,7 @@ public class SearchBar {
     private JLabel label6;
     private JLabel label7;
     private JLabel label8;
+    private JLabel searchInfoLabel;
     private final AtomicInteger currentResultCount;  //保存当前选中的结果是在listResults中的第几个 范围 0 - listResults.size()
     private JTextField textField;
     private Color labelColor;
@@ -126,6 +124,7 @@ public class SearchBar {
     private final JMenuItem openAsAdmin;
     private final JMenuItem copyDir;
     private final JMenuItem openLast;
+    private final float textFieldHeightRatio = 0.7f;
 
     private static volatile SearchBar instance = null;
 
@@ -222,6 +221,19 @@ public class SearchBar {
 
         initFrame(positionX, positionY, searchBarWidth, searchBarHeight, transparentColor, panel);
 
+        int labelHeight = searchBarHeight / 9;
+        int textFieldHeight = (int) (labelHeight * textFieldHeightRatio);
+        //TextField
+        textField = new JTextField(1000);
+        textField.setSize(searchBarWidth, textFieldHeight);
+        Font textFieldFont = new Font(Font.SANS_SERIF, Font.PLAIN, getTextFieldFontSizeByTextFieldHeight(textFieldHeight));
+        textField.setFont(textFieldFont);
+        textField.setForeground(Color.BLACK);
+        textField.setHorizontalAlignment(JTextField.LEFT);
+        textField.setBackground(Color.WHITE);
+        textField.setLocation(0, 0);
+        textField.setOpaque(true);
+
         //labels
         Font labelFont = new Font(Font.SANS_SERIF, Font.BOLD, getLabelFontSizeBySearchBarHeight(searchBarHeight));
         label1 = new JLabel();
@@ -232,8 +244,11 @@ public class SearchBar {
         label6 = new JLabel();
         label7 = new JLabel();
         label8 = new JLabel();
+        searchInfoLabel = new JLabel();
+        searchInfoLabel.setHorizontalAlignment(SwingConstants.CENTER);
 
-        int labelHeight = searchBarHeight / 9;
+        int searchInfoHeight = labelHeight - textFieldHeight;
+        initLabel(labelFont, searchBarWidth, searchInfoHeight, textFieldHeight, searchInfoLabel);
         initLabel(labelFont, searchBarWidth, labelHeight, labelHeight, label1);
         initLabel(labelFont, searchBarWidth, labelHeight, labelHeight * 2, label2);
         initLabel(labelFont, searchBarWidth, labelHeight, labelHeight * 3, label3);
@@ -250,22 +265,12 @@ public class SearchBar {
             Image image = new ImageIcon(icon).getImage();
             searchBar.setIconImage(image);
         }
-
-        //TextField
-        textField = new JTextField(1000);
-        textField.setSize(searchBarWidth, labelHeight);
-        Font textFieldFont = new Font(Font.SANS_SERIF, Font.PLAIN, getTextFieldFontSizeBySearchBarHeight(searchBarHeight));
-        textField.setFont(textFieldFont);
-        textField.setForeground(Color.BLACK);
-        textField.setHorizontalAlignment(JTextField.LEFT);
-        textField.setBackground(Color.WHITE);
-        textField.setLocation(0, 0);
-        textField.setOpaque(true);
-
         //panel
+        panel.setBounds(0, 0, searchBarWidth, searchBarHeight);
         panel.setLayout(null);
         panel.setBackground(transparentColor);
         panel.add(textField);
+        panel.add(searchInfoLabel);
         panel.add(label1);
         panel.add(label2);
         panel.add(label3);
@@ -485,9 +490,8 @@ public class SearchBar {
      * @param height 高
      * @param label  需要修改大小的label
      */
-    private void setLabelSize(int width, int height, int positionY, JLabel label) {
+    private void setLabelSize(int width, int height, JLabel label) {
         label.setSize(width, height);
-        label.setLocation(0, positionY);
     }
 
     /**
@@ -2285,6 +2289,9 @@ public class SearchBar {
         currentLabelSelectedPosition.set(0);
         isPrioritySearched.set(false);
         isRoundRadiusSet.set(false);
+        searchInfoLabel.setText("");
+        searchInfoLabel.setName("");
+        searchInfoLabel.setIcon(null);
     }
 
     /**
@@ -2459,34 +2466,34 @@ public class SearchBar {
         if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
             if (listResultsNum.get() == 0) {
                 if (getSearchBarText().isEmpty() || System.currentTimeMillis() - startTime < 300) {
-                    setSearchBarRadius(roundRadius, searchBar.getWidth(), textField.getHeight());
+                    setSearchBarRadius(roundRadius, searchBar.getWidth(), label1.getHeight());
                 } else {
-                    setSearchBarRadius(roundRadius, searchBar.getWidth(), 2 * textField.getHeight());
+                    setSearchBarRadius(roundRadius, searchBar.getWidth(), 2 * label1.getHeight());
                 }
             } else {
-                setSearchBarRadius(roundRadius, searchBar.getWidth(), length * textField.getHeight());
+                setSearchBarRadius(roundRadius, searchBar.getWidth(), length * label1.getHeight());
             }
         } else if (showingMode == Constants.Enums.ShowingSearchBarMode.EXPLORER_ATTACH) {
             if (listResultsNum.get() == 0) {
                 if (getSearchBarText().isEmpty()) {
-                    setSearchBarRadius(textField.getX(),
-                            textField.getY(),
+                    setSearchBarRadius(searchInfoLabel.getX(),
+                            searchInfoLabel.getY(),
                             roundRadius,
                             searchBar.getWidth(),
-                            textField.getHeight());
+                            label1.getHeight());
                 } else {
-                    setSearchBarRadius(textField.getX(),
-                            textField.getY() - label1.getHeight(),
+                    setSearchBarRadius(searchInfoLabel.getX(),
+                            searchInfoLabel.getY() - label1.getHeight(),
                             roundRadius,
                             searchBar.getWidth(),
-                            2 * textField.getHeight());
+                            2 * label1.getHeight());
                 }
             } else {
-                setSearchBarRadius(textField.getX(),
-                        textField.getY() - label1.getHeight() * (length - 1),
+                setSearchBarRadius(searchInfoLabel.getX(),
+                        searchInfoLabel.getY() - label1.getHeight() * (length - 1),
                         roundRadius,
                         searchBar.getWidth(),
-                        length * textField.getHeight());
+                        length * label1.getHeight());
             }
         }
         if (length == 9) {
@@ -2523,6 +2530,11 @@ public class SearchBar {
         getInstance().showSearchbar(showSearchBarTask.isGrabFocus, showSearchBarTask.isSwitchToNormal);
     }
 
+    @EventRegister(registerClass = SearchDoneEvent.class)
+    private static void showSearchDone(Event event) {
+        SwingUtilities.invokeLater(() -> getInstance().searchInfoLabel.setName("done"));
+    }
+
     @EventRegister(registerClass = HideSearchBarEvent.class)
     private static void hideSearchBarEvent(Event event) {
         getInstance().closeSearchBar();
@@ -2545,6 +2557,7 @@ public class SearchBar {
         SetSearchBarColorEvent setSearchBarColorTask = (SetSearchBarColorEvent) event;
         SearchBar searchBarInstance = getInstance();
         searchBarInstance.setSearchBarColor(setSearchBarColorTask.color);
+        searchBarInstance.searchInfoLabel.setBackground(new Color(setSearchBarColorTask.color));
         if (searchBarInstance.isDark(setSearchBarColorTask.color)) {
             searchBarInstance.textField.setCaretColor(Color.WHITE);
         } else {
@@ -2673,7 +2686,7 @@ public class SearchBar {
                             positionX = width / 2 - searchBarWidth / 2;
                             positionY = height / 2 - searchBarHeight / 3;
                         }
-                        changeSearchBarSizeAndPos(positionX, positionY, searchBarWidth, searchBarHeight);
+                        changeSearchBarSize(positionX, positionY, searchBarWidth, searchBarHeight);
                         setTextFieldAtTop(searchBarHeight);
                     }
                     boolean isChangeToAttach = GetHandle.INSTANCE.changeToAttach();
@@ -2721,7 +2734,7 @@ public class SearchBar {
                 positionY = (int) (explorerY + explorerHeight - searchBarHeight - labelHeight);
             }
             //设置窗口大小
-            changeSearchBarSizeAndPos(positionX, positionY, searchBarWidth, searchBarHeight, labelHeight);
+            changeSearchBarSize(positionX, positionY, searchBarWidth, searchBarHeight, labelHeight);
             setLabelAtTop(searchBarHeight);
             showSearchbar();
         }
@@ -2735,7 +2748,8 @@ public class SearchBar {
     private void setLabelAtTop(int searchBarHeight) {
         int labelHeight = searchBarHeight / 9;
         SwingUtilities.invokeLater(() -> {
-            textField.setLocation(0, labelHeight * 8);
+            textField.setLocation(0, (int) (labelHeight * 8 + labelHeight * (1 - textFieldHeightRatio)));
+            searchInfoLabel.setLocation(0, labelHeight * 8);
             int offset = 8 - listResultsNum.get();
             offset = Math.max(0, offset);
             offset = offset == 8 ? 7 : offset;
@@ -2757,8 +2771,10 @@ public class SearchBar {
      */
     private void setTextFieldAtTop(int searchBarHeight) {
         int labelHeight = searchBarHeight / 9;
+        int textFieldHeight = (int) (labelHeight * textFieldHeightRatio);
         SwingUtilities.invokeLater(() -> {
             textField.setLocation(0, 0);
+            searchInfoLabel.setLocation(0, textFieldHeight);
             label1.setLocation(0, labelHeight);
             label2.setLocation(0, labelHeight * 2);
             label3.setLocation(0, labelHeight * 3);
@@ -2779,7 +2795,7 @@ public class SearchBar {
      * @param searchBarHeight 高度
      * @param labelHeight     每个label的高度
      */
-    private void changeSearchBarSizeAndPos(int positionX, int positionY, int searchBarWidth, int searchBarHeight, int labelHeight) {
+    private void changeSearchBarSize(int positionX, int positionY, int searchBarWidth, int searchBarHeight, int labelHeight) {
         if (positionX != searchBar.getX()
                 || positionY != searchBar.getY()
                 || searchBarWidth != searchBar.getWidth()
@@ -2788,17 +2804,18 @@ public class SearchBar {
                 //设置窗口大小
                 searchBar.setBounds(positionX, positionY, searchBarWidth, searchBarHeight);
                 //设置label大小
-                int firstLabelY = label1.getY();
-                setLabelSize(searchBarWidth, labelHeight, firstLabelY, label1);
-                setLabelSize(searchBarWidth, labelHeight, firstLabelY + labelHeight, label2);
-                setLabelSize(searchBarWidth, labelHeight, firstLabelY + labelHeight * 2, label3);
-                setLabelSize(searchBarWidth, labelHeight, firstLabelY + labelHeight * 3, label4);
-                setLabelSize(searchBarWidth, labelHeight, firstLabelY + labelHeight * 4, label5);
-                setLabelSize(searchBarWidth, labelHeight, firstLabelY + labelHeight * 5, label6);
-                setLabelSize(searchBarWidth, labelHeight, firstLabelY + labelHeight * 6, label7);
-                setLabelSize(searchBarWidth, labelHeight, firstLabelY + labelHeight * 7, label8);
+                int textFieldHeight = (int) (labelHeight * textFieldHeightRatio);
+                setLabelSize(searchBarWidth, labelHeight, label1);
+                setLabelSize(searchBarWidth, labelHeight, label2);
+                setLabelSize(searchBarWidth, labelHeight, label3);
+                setLabelSize(searchBarWidth, labelHeight, label4);
+                setLabelSize(searchBarWidth, labelHeight, label5);
+                setLabelSize(searchBarWidth, labelHeight, label6);
+                setLabelSize(searchBarWidth, labelHeight, label7);
+                setLabelSize(searchBarWidth, labelHeight, label8);
+                setLabelSize(searchBarWidth, labelHeight - textFieldHeight, searchInfoLabel);
                 //设置textField大小
-                textField.setSize(searchBarWidth, labelHeight);
+                textField.setSize(searchBarWidth, textFieldHeight);
             });
         }
     }
@@ -2811,9 +2828,9 @@ public class SearchBar {
      * @param searchBarWidth  宽度
      * @param searchBarHeight 高度
      */
-    private void changeSearchBarSizeAndPos(int positionX, int positionY, int searchBarWidth, int searchBarHeight) {
+    private void changeSearchBarSize(int positionX, int positionY, int searchBarWidth, int searchBarHeight) {
         int labelHeight = searchBarHeight / 9;
-        changeSearchBarSizeAndPos(positionX, positionY, searchBarWidth, searchBarHeight, labelHeight);
+        changeSearchBarSize(positionX, positionY, searchBarWidth, searchBarHeight, labelHeight);
     }
 
     private void switchToExplorerAttachMode() throws InterruptedException {
@@ -2822,7 +2839,8 @@ public class SearchBar {
         if (labelHeight > 35) {
             if (showingMode != Constants.Enums.ShowingSearchBarMode.EXPLORER_ATTACH) {
                 //设置字体
-                Font textFieldFont = new Font(null, Font.PLAIN, getTextFieldFontSizeBySearchBarHeight(searchBarHeight));
+                int textFieldHeight = (int) (labelHeight * textFieldHeightRatio);
+                Font textFieldFont = new Font(null, Font.PLAIN, getTextFieldFontSizeByTextFieldHeight(textFieldHeight));
                 textField.setFont(textFieldFont);
                 Font labelFont = new Font(null, Font.BOLD, getLabelFontSizeBySearchBarHeight(searchBarHeight));
                 label1.setFont(labelFont);
@@ -2840,8 +2858,8 @@ public class SearchBar {
         }
     }
 
-    private int getTextFieldFontSizeBySearchBarHeight(int searchBarHeight) {
-        return (int) ((searchBarHeight * 0.4) / 96 * 72) / 4;
+    private int getTextFieldFontSizeByTextFieldHeight(int textFieldHeight) {
+        return (int) ((textFieldHeight / 0.7 * 9 * 0.35) / 96 * 72) / 4;
     }
 
     private int getLabelFontSizeBySearchBarHeight(int searchBarHeight) {
@@ -2859,8 +2877,10 @@ public class SearchBar {
         int height = screenSize.height;
         int searchBarHeight = (int) (height * 0.5);
         //设置字体
+        int labelHeight = searchBarHeight / 9;
+        int textFieldHeight = (int) (labelHeight * textFieldHeightRatio);
         Font labelFont = new Font(null, Font.BOLD, getLabelFontSizeBySearchBarHeight(searchBarHeight));
-        Font textFieldFont = new Font(null, Font.PLAIN, getTextFieldFontSizeBySearchBarHeight(searchBarHeight));
+        Font textFieldFont = new Font(null, Font.PLAIN, getTextFieldFontSizeByTextFieldHeight(textFieldHeight));
         textField.setFont(textFieldFont);
         label1.setFont(labelFont);
         label2.setFont(labelFont);
@@ -3013,6 +3033,40 @@ public class SearchBar {
             SwingUtilities.invokeLater(() -> SwingUtilities.updateComponentTreeUI(searchBar));
         }
         SwingUtilities.invokeLater(searchBar::repaint);
+    }
+
+    private void addShowSearchStatusThread(AtomicBoolean isShowSearchStatusThreadNotExist) {
+        if (!isShowSearchStatusThreadNotExist.get()) {
+            return;
+        }
+        CachedThreadPoolUtil.getInstance().executeTask(() -> {
+            var ref = new Object() {
+                int dotNum = 1;
+            };
+            try {
+                while (!"done".equals(searchInfoLabel.getName()) && isVisible()) {
+                    ref.dotNum++;
+                    SwingUtilities.invokeLater(() -> {
+                        searchInfoLabel.setText(TranslateUtil.INSTANCE.getTranslation("Searching") + ".".repeat(ref.dotNum));
+                        searchInfoLabel.setIcon(GetIconUtil.getInstance().getIcon("loadingIcon"));
+                    });
+                    if (ref.dotNum >= 6) {
+                        ref.dotNum = 1;
+                    }
+                    TimeUnit.MILLISECONDS.sleep(250);
+                }
+                if ("done".equals(searchInfoLabel.getName())) {
+                    SwingUtilities.invokeLater(() -> {
+                        searchInfoLabel.setText(TranslateUtil.INSTANCE.getTranslation("Search Done"));
+                        searchInfoLabel.setIcon(GetIconUtil.getInstance().getIcon("completeIcon"));
+                    });
+                }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } finally {
+                isShowSearchStatusThreadNotExist.set(true);
+            }
+        });
     }
 
     /**
@@ -3271,6 +3325,7 @@ public class SearchBar {
                     runInternalCommand("help");
                 }
                 final AtomicBoolean isMergeThreadNotExist = new AtomicBoolean(true);
+                final AtomicBoolean isShowSearchStatusThreadNotExist = new AtomicBoolean(true);
                 while (eventManagement.isNotMainExit()) {
                     long endTime = System.currentTimeMillis();
                     text = getSearchBarText();
@@ -3305,8 +3360,7 @@ public class SearchBar {
                         }
                         if (runningMode == Constants.Enums.RunningMode.COMMAND_MODE) {
                             //去掉冒号
-                            boolean isExecuted = runInternalCommand(text.substring(1).toLowerCase());
-                            if (!isExecuted) {
+                            if (!runInternalCommand(text.substring(1).toLowerCase())) {
                                 LinkedHashSet<String> cmdSet = allConfigs.getCmdSet();
                                 cmdSet.add(":clearbin;" + translateUtil.getTranslation("Clear the recycle bin"));
                                 cmdSet.add(":update;" + translateUtil.getTranslation("Update file index"));
@@ -3331,6 +3385,7 @@ public class SearchBar {
                             if (databaseService.getStatus() == Constants.Enums.DatabaseStatus.NORMAL) {
                                 //对搜索关键字赋值
                                 searchPriorityFolder();
+                                addShowSearchStatusThread(isShowSearchStatusThreadNotExist);
                                 isPrioritySearched.set(true);
                             } else if (databaseService.getStatus() == Constants.Enums.DatabaseStatus.MANUAL_UPDATE) {
                                 setLabelChosen(label1);
@@ -3420,14 +3475,13 @@ public class SearchBar {
 
     @SneakyThrows
     private void grabFocus() {
-        TimeUnit.MILLISECONDS.sleep(50);
         int x = 0, y = 0;
         if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
             x = searchBar.getX() + textField.getWidth() / 2;
             y = searchBar.getY() + textField.getHeight() / 2;
         } else if (showingMode == Constants.Enums.ShowingSearchBarMode.EXPLORER_ATTACH) {
             x = searchBar.getX() + textField.getWidth() / 2;
-            y = (int) (searchBar.getY() + textField.getHeight() * 8.5);
+            y = searchBar.getY() + label1.getHeight() * 8 + searchInfoLabel.getHeight() + textField.getHeight() / 2;
         }
         RobotUtil.getInstance().mouseClicked(x, y, 1, InputEvent.BUTTON1_DOWN_MASK);
     }
@@ -3444,10 +3498,20 @@ public class SearchBar {
                 setVisible(true);
                 textField.requestFocusInWindow();
                 textField.setCaretPosition(0);
+                searchInfoLabel.setText("");
+                searchInfoLabel.setName("");
+                searchInfoLabel.setIcon(null);
                 startTime = System.currentTimeMillis();
                 visibleStartTime = startTime;
                 if (isGrabFocus) {
-                    CachedThreadPoolUtil.getInstance().executeTask(this::grabFocus);
+                    CachedThreadPoolUtil.getInstance().executeTask(() -> {
+                        try {
+                            TimeUnit.MILLISECONDS.sleep(50);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        grabFocus();
+                    });
                 }
                 eventManagement.putEvent(new SearchBarReadyEvent(showingMode.toString()));
             } else {
