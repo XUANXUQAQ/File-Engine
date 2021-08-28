@@ -3157,12 +3157,15 @@ public class SearchBar {
                 String text = getSearchBarText();
                 if (text == null || text.isEmpty() || System.currentTimeMillis() - startTime < 300) {
                     clearAllLabelBorder();
-                    chooseAndSetBorder(textField, 4);
+                    chooseAndSetBorder(textField, 1);
+                    chooseAndSetBorder(searchInfoLabel, 2);
                 } else {
                     if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
                         chooseAndSetBorder(textField, 1);
+                        chooseAndSetBorder(searchInfoLabel, 2);
                     } else {
                         chooseAndSetBorder(textField, 2);
+                        chooseAndSetBorder(searchInfoLabel, 1);
                     }
                     int resultNum = listResultsNum.get();
                     if (resultNum == 0 || resultNum == 1) {
