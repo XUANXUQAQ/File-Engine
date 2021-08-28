@@ -236,3 +236,4 @@ You can drag any search result out to create a shortcut on the desktop or any fo
 Waiting for searching disks=
 Round rectangle radius=
 Round rectangle radius is wrong, please change=
+Searching=

@@ -422,7 +422,7 @@ public class DatabaseService {
             Bit zero = new Bit(new byte[]{0});
             Bit one = new Bit(new byte[]{1});
             try {
-                while (!isStop.get()) {
+                while (!taskStatus.equals(allTaskStatus) && !isStop.get()) {
                     Bit tmpTaskStatus = new Bit(new byte[]{0});
                     //线程状态的记录从第二个位开始，所以初始值为1 0
                     Bit start = new Bit(new byte[]{1, 0});
@@ -477,6 +477,8 @@ public class DatabaseService {
                 }
             } catch (Exception e) {
                 e.printStackTrace();
+            } finally {
+                EventManagement.getInstance().putEvent(new SearchDoneEvent());
             }
         });
     }

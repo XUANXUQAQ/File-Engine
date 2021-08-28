@@ -236,3 +236,4 @@ You can drag any search result out to create a shortcut on the desktop or any fo
 Waiting for searching disks=Ожидание поиска дисков
 Round rectangle radius=Радиус скругленного прямоугольника
 Round rectangle radius is wrong, please change=Радиус прямоугольника с закругленными углами установлен неправильно, измените
+Searching=Поиск в

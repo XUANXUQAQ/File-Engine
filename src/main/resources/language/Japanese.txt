@@ -236,3 +236,4 @@ You can drag any search result out to create a shortcut on the desktop or any fo
 Waiting for searching disks=ディスクの検索を待っています
 Round rectangle radius=角丸長方形の半径
 Round rectangle radius is wrong, please change=角丸長方形の半径が正しく設定されていません。変更してください
+Searching=検索中

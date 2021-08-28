@@ -236,3 +236,4 @@ You can drag any search result out to create a shortcut on the desktop or any fo
 Waiting for searching disks=디스크 검색 대기 중
 Round rectangle radius=둥근 사각형의 반경
 Round rectangle radius is wrong, please change=둥근 사각형의 반경이 잘못 설정되었습니다. 수정하십시오.
+Searching=수색
