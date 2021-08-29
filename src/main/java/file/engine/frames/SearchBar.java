@@ -68,7 +68,7 @@ public class SearchBar {
     private final AtomicBoolean startSignal = new AtomicBoolean(false);
     private final AtomicBoolean isUserPressed = new AtomicBoolean(false);
     private final AtomicBoolean isMouseDraggedInWindow = new AtomicBoolean(false);
-    private final AtomicBoolean isNotSqlInitialized = new AtomicBoolean(true);
+    private final AtomicBoolean isSqlNotInitialized = new AtomicBoolean(true);
     private final AtomicBoolean isBorderThreadNotExist = new AtomicBoolean(true);
     private final AtomicBoolean isLockMouseMotionThreadNotExist = new AtomicBoolean(true);
     private final AtomicBoolean isTryToShowResultThreadNotExist = new AtomicBoolean(true);
@@ -100,7 +100,6 @@ public class SearchBar {
     private Color fontColorWithCoverage;
     private Color labelFontColor;
     private volatile long startTime = 0;
-    private final AtomicBoolean isWaiting = new AtomicBoolean(false);
     private final Pattern semicolon;
     private final Pattern colon;
     private final Pattern blank;
@@ -615,7 +614,7 @@ public class SearchBar {
     //在explorer attach模式时操作鼠标和键盘以快速跳转到文件位置
     private void quickJump(String result) {
         int x, y;
-        RobotUtil robotUtil = RobotUtil.getInstance();
+        RobotUtil robotUtil = RobotUtil.INSTANCE;
         Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
         Transferable originalData = clipboard.getContents(null);
         if (FilePathUtil.isFile(result)) {
@@ -903,7 +902,7 @@ public class SearchBar {
                                 TranslateUtil.getInstance().getTranslation("Warning"),
                                 TranslateUtil.getInstance().getTranslation("Search Failed"))));
                 startSignal.set(false);
-                isNotSqlInitialized.set(false);
+                isSqlNotInitialized.set(false);
                 return true;
             case "clearUpdate":
                 detectShowingModeAndClose();
@@ -918,7 +917,7 @@ public class SearchBar {
                                 TranslateUtil.getInstance().getTranslation("Warning"),
                                 TranslateUtil.getInstance().getTranslation("Search Failed"))));
                 startSignal.set(false);
-                isNotSqlInitialized.set(false);
+                isSqlNotInitialized.set(false);
                 return true;
             case "help":
                 detectShowingModeAndClose();
@@ -1829,95 +1828,220 @@ public class SearchBar {
                 setLabelChosen(label8);
                 break;
             case 7:
-                if (runningMode == Constants.Enums.RunningMode.NORMAL_MODE) {
-                    //到达最下端，刷新显示
-                    try {
-                        String path = listResults.get(currentResultCount.get() - 7);
-                        showResultOnLabel(path, label1, false);
-
-                        path = listResults.get(currentResultCount.get() - 6);
-                        showResultOnLabel(path, label2, false);
-
-                        path = listResults.get(currentResultCount.get() - 5);
-                        showResultOnLabel(path, label3, false);
-
-                        path = listResults.get(currentResultCount.get() - 4);
-                        showResultOnLabel(path, label4, false);
-
-                        path = listResults.get(currentResultCount.get() - 3);
-                        showResultOnLabel(path, label5, false);
-
-                        path = listResults.get(currentResultCount.get() - 2);
-                        showResultOnLabel(path, label6, false);
-
-                        path = listResults.get(currentResultCount.get() - 1);
-                        showResultOnLabel(path, label7, false);
-
-                        path = listResults.get(currentResultCount.get());
-                        showResultOnLabel(path, label8, true);
-                    } catch (ArrayIndexOutOfBoundsException e) {
-                        e.printStackTrace();
-                    }
-                } else if (runningMode == Constants.Enums.RunningMode.COMMAND_MODE) {
-                    //到达了最下端，刷新显示
-                    try {
-                        String command = listResults.get(currentResultCount.get() - 7);
-                        showCommandOnLabel(command, label1, false);
-
-                        command = listResults.get(currentResultCount.get() - 6);
-                        showCommandOnLabel(command, label2, false);
-
-                        command = listResults.get(currentResultCount.get() - 5);
-                        showCommandOnLabel(command, label3, false);
-
-                        command = listResults.get(currentResultCount.get() - 4);
-                        showCommandOnLabel(command, label4, false);
-
-                        command = listResults.get(currentResultCount.get() - 3);
-                        showCommandOnLabel(command, label5, false);
-
-                        command = listResults.get(currentResultCount.get() - 2);
-                        showCommandOnLabel(command, label6, false);
-
-                        command = listResults.get(currentResultCount.get() - 1);
-                        showCommandOnLabel(command, label7, false);
-
-                        command = listResults.get(currentResultCount.get());
-                        showCommandOnLabel(command, label8, true);
-                    } catch (ArrayIndexOutOfBoundsException e) {
-                        e.printStackTrace();
-                    }
-                } else if (runningMode == Constants.Enums.RunningMode.PLUGIN_MODE) {
-                    try {
-                        String command = listResults.get(currentResultCount.get() - 7);
-                        showPluginResultOnLabel(command, label1, false);
-
-                        command = listResults.get(currentResultCount.get() - 6);
-                        showPluginResultOnLabel(command, label2, false);
-
-                        command = listResults.get(currentResultCount.get() - 5);
-                        showPluginResultOnLabel(command, label3, false);
-
-                        command = listResults.get(currentResultCount.get() - 4);
-                        showPluginResultOnLabel(command, label4, false);
-
-                        command = listResults.get(currentResultCount.get() - 3);
-                        showPluginResultOnLabel(command, label5, false);
-
-                        command = listResults.get(currentResultCount.get() - 2);
-                        showPluginResultOnLabel(command, label6, false);
-
-                        command = listResults.get(currentResultCount.get() - 1);
-                        showPluginResultOnLabel(command, label7, false);
-
-                        command = listResults.get(currentResultCount.get());
-                        showPluginResultOnLabel(command, label8, true);
-                    } catch (ArrayIndexOutOfBoundsException e) {
-                        e.printStackTrace();
-                    }
-                }
+                tryToShowResultsAndSetLastChosen();
                 repaint();
                 break;
+        }
+    }
+
+    private void tryToShowResultsAndSetLastChosen() {
+        if (runningMode == Constants.Enums.RunningMode.NORMAL_MODE) {
+            //到达最下端，刷新显示
+            try {
+                String path = listResults.get(currentResultCount.get() - 7);
+                showResultOnLabel(path, label1, false);
+
+                path = listResults.get(currentResultCount.get() - 6);
+                showResultOnLabel(path, label2, false);
+
+                path = listResults.get(currentResultCount.get() - 5);
+                showResultOnLabel(path, label3, false);
+
+                path = listResults.get(currentResultCount.get() - 4);
+                showResultOnLabel(path, label4, false);
+
+                path = listResults.get(currentResultCount.get() - 3);
+                showResultOnLabel(path, label5, false);
+
+                path = listResults.get(currentResultCount.get() - 2);
+                showResultOnLabel(path, label6, false);
+
+                path = listResults.get(currentResultCount.get() - 1);
+                showResultOnLabel(path, label7, false);
+
+                path = listResults.get(currentResultCount.get());
+                showResultOnLabel(path, label8, true);
+            } catch (ArrayIndexOutOfBoundsException e) {
+                e.printStackTrace();
+            }
+        } else if (runningMode == Constants.Enums.RunningMode.COMMAND_MODE) {
+            //到达了最下端，刷新显示
+            try {
+                String command = listResults.get(currentResultCount.get() - 7);
+                showCommandOnLabel(command, label1, false);
+
+                command = listResults.get(currentResultCount.get() - 6);
+                showCommandOnLabel(command, label2, false);
+
+                command = listResults.get(currentResultCount.get() - 5);
+                showCommandOnLabel(command, label3, false);
+
+                command = listResults.get(currentResultCount.get() - 4);
+                showCommandOnLabel(command, label4, false);
+
+                command = listResults.get(currentResultCount.get() - 3);
+                showCommandOnLabel(command, label5, false);
+
+                command = listResults.get(currentResultCount.get() - 2);
+                showCommandOnLabel(command, label6, false);
+
+                command = listResults.get(currentResultCount.get() - 1);
+                showCommandOnLabel(command, label7, false);
+
+                command = listResults.get(currentResultCount.get());
+                showCommandOnLabel(command, label8, true);
+            } catch (ArrayIndexOutOfBoundsException e) {
+                e.printStackTrace();
+            }
+        } else if (runningMode == Constants.Enums.RunningMode.PLUGIN_MODE) {
+            try {
+                String command = listResults.get(currentResultCount.get() - 7);
+                showPluginResultOnLabel(command, label1, false);
+
+                command = listResults.get(currentResultCount.get() - 6);
+                showPluginResultOnLabel(command, label2, false);
+
+                command = listResults.get(currentResultCount.get() - 5);
+                showPluginResultOnLabel(command, label3, false);
+
+                command = listResults.get(currentResultCount.get() - 4);
+                showPluginResultOnLabel(command, label4, false);
+
+                command = listResults.get(currentResultCount.get() - 3);
+                showPluginResultOnLabel(command, label5, false);
+
+                command = listResults.get(currentResultCount.get() - 2);
+                showPluginResultOnLabel(command, label6, false);
+
+                command = listResults.get(currentResultCount.get() - 1);
+                showPluginResultOnLabel(command, label7, false);
+
+                command = listResults.get(currentResultCount.get());
+                showPluginResultOnLabel(command, label8, true);
+            } catch (ArrayIndexOutOfBoundsException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    /**
+     * 尝试显示结果，并将第一个label设置为选中
+     */
+    private void tryToShowResultsAndSetFirstChosen() {
+        int size = listResultsNum.get();
+        if (runningMode == Constants.Enums.RunningMode.NORMAL_MODE) {
+            //到达了最上端，刷新显示
+            try {
+                String path = listResults.get(currentResultCount.get());
+                showResultOnLabel(path, label1, true);
+                if (size > currentResultCount.get() + 1) {
+                    path = listResults.get(currentResultCount.get() + 1);
+                    showResultOnLabel(path, label2, false);
+                }
+                if (size > currentResultCount.get() + 2) {
+                    path = listResults.get(currentResultCount.get() + 2);
+                    showResultOnLabel(path, label3, false);
+                }
+                if (size > currentResultCount.get() + 3) {
+                    path = listResults.get(currentResultCount.get() + 3);
+                    showResultOnLabel(path, label4, false);
+                }
+                if (size > currentResultCount.get() + 4) {
+                    path = listResults.get(currentResultCount.get() + 4);
+                    showResultOnLabel(path, label5, false);
+                }
+                if (size > currentResultCount.get() + 5) {
+                    path = listResults.get(currentResultCount.get() + 5);
+                    showResultOnLabel(path, label6, false);
+                }
+                if (size > currentResultCount.get() + 6) {
+                    path = listResults.get(currentResultCount.get() + 6);
+                    showResultOnLabel(path, label7, false);
+                }
+                if (size > currentResultCount.get() + 7) {
+                    path = listResults.get(currentResultCount.get() + 7);
+                    showResultOnLabel(path, label8, false);
+                }
+            } catch (ArrayIndexOutOfBoundsException e) {
+                e.printStackTrace();
+            }
+        } else if (runningMode == Constants.Enums.RunningMode.COMMAND_MODE) {
+            //到达了最上端，刷新显示
+            try {
+
+                String command = listResults.get(currentResultCount.get());
+                showCommandOnLabel(command, label1, true);
+                if (size > currentResultCount.get() + 1) {
+                    command = listResults.get(currentResultCount.get() + 1);
+                    showCommandOnLabel(command, label2, false);
+                }
+                if (size > currentResultCount.get() + 2) {
+
+                    command = listResults.get(currentResultCount.get() + 2);
+                    showCommandOnLabel(command, label3, false);
+                }
+                if (size > currentResultCount.get() + 3) {
+
+                    command = listResults.get(currentResultCount.get() + 3);
+                    showCommandOnLabel(command, label4, false);
+                }
+                if (size > currentResultCount.get() + 4) {
+
+                    command = listResults.get(currentResultCount.get() + 4);
+                    showCommandOnLabel(command, label5, false);
+                }
+                if (size > currentResultCount.get() + 5) {
+
+                    command = listResults.get(currentResultCount.get() + 5);
+                    showCommandOnLabel(command, label6, false);
+                }
+                if (size > currentResultCount.get() + 6) {
+                    command = listResults.get(currentResultCount.get() + 6);
+                    showCommandOnLabel(command, label7, false);
+                }
+                if (size > currentResultCount.get() + 7) {
+                    command = listResults.get(currentResultCount.get() + 7);
+                    showCommandOnLabel(command, label8, false);
+                }
+            } catch (ArrayIndexOutOfBoundsException e) {
+                e.printStackTrace();
+            }
+        } else if (runningMode == Constants.Enums.RunningMode.PLUGIN_MODE) {
+            try {
+                String command = listResults.get(currentResultCount.get());
+                showPluginResultOnLabel(command, label1, true);
+
+                if (size > currentResultCount.get() + 1) {
+                    command = listResults.get(currentResultCount.get() + 1);
+                    showPluginResultOnLabel(command, label2, false);
+                }
+                if (size > currentResultCount.get() + 2) {
+                    command = listResults.get(currentResultCount.get() + 2);
+                    showPluginResultOnLabel(command, label3, false);
+                }
+                if (size > currentResultCount.get() + 3) {
+                    command = listResults.get(currentResultCount.get() + 3);
+                    showPluginResultOnLabel(command, label4, false);
+                }
+                if (size > currentResultCount.get() + 4) {
+                    command = listResults.get(currentResultCount.get() + 4);
+                    showPluginResultOnLabel(command, label5, false);
+                }
+                if (size > currentResultCount.get() + 5) {
+                    command = listResults.get(currentResultCount.get() + 5);
+                    showPluginResultOnLabel(command, label6, false);
+                }
+                if (size > currentResultCount.get() + 6) {
+                    command = listResults.get(currentResultCount.get() + 6);
+                    showPluginResultOnLabel(command, label7, false);
+                }
+                if (size > currentResultCount.get() + 7) {
+                    command = listResults.get(currentResultCount.get() + 7);
+                    showPluginResultOnLabel(command, label8, false);
+                }
+            } catch (ArrayIndexOutOfBoundsException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -1932,121 +2056,7 @@ public class SearchBar {
         int size;
         switch (position) {
             case 0:
-                size = listResultsNum.get();
-                if (runningMode == Constants.Enums.RunningMode.NORMAL_MODE) {
-                    //到达了最上端，刷新显示
-                    try {
-                        String path = listResults.get(currentResultCount.get());
-                        showResultOnLabel(path, label1, true);
-                        if (size > currentResultCount.get() + 1) {
-                            path = listResults.get(currentResultCount.get() + 1);
-                            showResultOnLabel(path, label2, false);
-                        }
-                        if (size > currentResultCount.get() + 2) {
-                            path = listResults.get(currentResultCount.get() + 2);
-                            showResultOnLabel(path, label3, false);
-                        }
-                        if (size > currentResultCount.get() + 3) {
-                            path = listResults.get(currentResultCount.get() + 3);
-                            showResultOnLabel(path, label4, false);
-                        }
-                        if (size > currentResultCount.get() + 4) {
-                            path = listResults.get(currentResultCount.get() + 4);
-                            showResultOnLabel(path, label5, false);
-                        }
-                        if (size > currentResultCount.get() + 5) {
-                            path = listResults.get(currentResultCount.get() + 5);
-                            showResultOnLabel(path, label6, false);
-                        }
-                        if (size > currentResultCount.get() + 6) {
-                            path = listResults.get(currentResultCount.get() + 6);
-                            showResultOnLabel(path, label7, false);
-                        }
-                        if (size > currentResultCount.get() + 7) {
-                            path = listResults.get(currentResultCount.get() + 7);
-                            showResultOnLabel(path, label8, false);
-                        }
-                    } catch (ArrayIndexOutOfBoundsException e) {
-                        e.printStackTrace();
-                    }
-                } else if (runningMode == Constants.Enums.RunningMode.COMMAND_MODE) {
-                    //到达了最上端，刷新显示
-                    try {
-
-                        String command = listResults.get(currentResultCount.get());
-                        showCommandOnLabel(command, label1, true);
-                        if (size > currentResultCount.get() + 1) {
-                            command = listResults.get(currentResultCount.get() + 1);
-                            showCommandOnLabel(command, label2, false);
-                        }
-                        if (size > currentResultCount.get() + 2) {
-
-                            command = listResults.get(currentResultCount.get() + 2);
-                            showCommandOnLabel(command, label3, false);
-                        }
-                        if (size > currentResultCount.get() + 3) {
-
-                            command = listResults.get(currentResultCount.get() + 3);
-                            showCommandOnLabel(command, label4, false);
-                        }
-                        if (size > currentResultCount.get() + 4) {
-
-                            command = listResults.get(currentResultCount.get() + 4);
-                            showCommandOnLabel(command, label5, false);
-                        }
-                        if (size > currentResultCount.get() + 5) {
-
-                            command = listResults.get(currentResultCount.get() + 5);
-                            showCommandOnLabel(command, label6, false);
-                        }
-                        if (size > currentResultCount.get() + 6) {
-                            command = listResults.get(currentResultCount.get() + 6);
-                            showCommandOnLabel(command, label7, false);
-                        }
-                        if (size > currentResultCount.get() + 7) {
-                            command = listResults.get(currentResultCount.get() + 7);
-                            showCommandOnLabel(command, label8, false);
-                        }
-                    } catch (ArrayIndexOutOfBoundsException e) {
-                        e.printStackTrace();
-                    }
-                } else if (runningMode == Constants.Enums.RunningMode.PLUGIN_MODE) {
-                    try {
-                        String command = listResults.get(currentResultCount.get());
-                        showPluginResultOnLabel(command, label1, true);
-
-                        if (size > currentResultCount.get() + 1) {
-                            command = listResults.get(currentResultCount.get() + 1);
-                            showPluginResultOnLabel(command, label2, false);
-                        }
-                        if (size > currentResultCount.get() + 2) {
-                            command = listResults.get(currentResultCount.get() + 2);
-                            showPluginResultOnLabel(command, label3, false);
-                        }
-                        if (size > currentResultCount.get() + 3) {
-                            command = listResults.get(currentResultCount.get() + 3);
-                            showPluginResultOnLabel(command, label4, false);
-                        }
-                        if (size > currentResultCount.get() + 4) {
-                            command = listResults.get(currentResultCount.get() + 4);
-                            showPluginResultOnLabel(command, label5, false);
-                        }
-                        if (size > currentResultCount.get() + 5) {
-                            command = listResults.get(currentResultCount.get() + 5);
-                            showPluginResultOnLabel(command, label6, false);
-                        }
-                        if (size > currentResultCount.get() + 6) {
-                            command = listResults.get(currentResultCount.get() + 6);
-                            showPluginResultOnLabel(command, label7, false);
-                        }
-                        if (size > currentResultCount.get() + 7) {
-                            command = listResults.get(currentResultCount.get() + 7);
-                            showPluginResultOnLabel(command, label8, false);
-                        }
-                    } catch (ArrayIndexOutOfBoundsException e) {
-                        e.printStackTrace();
-                    }
-                }
+                tryToShowResultsAndSetFirstChosen();
                 repaint();
                 break;
             case 1:
@@ -2369,7 +2379,7 @@ public class SearchBar {
                 if (isSendSignal) {
                     startTime = System.currentTimeMillis();
                     startSignal.set(true);
-                    isNotSqlInitialized.set(true);
+                    isSqlNotInitialized.set(true);
                 }
                 if (runningMode == Constants.Enums.RunningMode.PLUGIN_MODE && currentUsingPlugin != null) {
                     currentUsingPlugin.textChanged(getSearchBarText());
@@ -2387,12 +2397,12 @@ public class SearchBar {
                     currentResultCount.set(0);
                     startTime = System.currentTimeMillis();
                     startSignal.set(false);
-                    isNotSqlInitialized.set(false);
+                    isSqlNotInitialized.set(false);
                 } else {
                     if (isSendSignal) {
                         startTime = System.currentTimeMillis();
                         startSignal.set(true);
-                        isNotSqlInitialized.set(true);
+                        isSqlNotInitialized.set(true);
                     }
                     if (runningMode == Constants.Enums.RunningMode.PLUGIN_MODE && currentUsingPlugin != null) {
                         currentUsingPlugin.textChanged(getSearchBarText());
@@ -2405,7 +2415,7 @@ public class SearchBar {
             public void changedUpdate(DocumentEvent e) {
                 startTime = System.currentTimeMillis();
                 startSignal.set(false);
-                isNotSqlInitialized.set(false);
+                isSqlNotInitialized.set(false);
             }
         });
     }
@@ -2423,7 +2433,7 @@ public class SearchBar {
     /**
      * 在搜索磁盘，创建索引时，添加当完成搜索时自动发出开始信号的线程
      */
-    private void addSearchWaiter() {
+    private void addSearchWaiter(AtomicBoolean isWaiting) {
         if (!isWaiting.get()) {
             isWaiting.set(true);
             CachedThreadPoolUtil.getInstance().executeTask(() -> {
@@ -2432,7 +2442,7 @@ public class SearchBar {
                         if (databaseService.getStatus() == Constants.Enums.DatabaseStatus.NORMAL) {
                             startTime = System.currentTimeMillis() - 300;
                             startSignal.set(true);
-                            isNotSqlInitialized.set(true);
+                            isSqlNotInitialized.set(true);
                             return;
                         }
                         TimeUnit.MILLISECONDS.sleep(20);
@@ -2625,7 +2635,7 @@ public class SearchBar {
                         IsStartTimeSet.isStartTimeSet.set(true);
                         searchBar.startTime = System.currentTimeMillis();
                         searchBar.startSignal.set(true);
-                        searchBar.isNotSqlInitialized.set(true);
+                        searchBar.isSqlNotInitialized.set(true);
                     }
                 });
             }
@@ -2859,7 +2869,7 @@ public class SearchBar {
     }
 
     private int getTextFieldFontSizeByTextFieldHeight(int textFieldHeight) {
-        return (int) ((textFieldHeight / 0.7 * 9 * 0.35) / 96 * 72) / 4;
+        return (int) ((textFieldHeight / 0.7 * 9 * 0.3) / 96 * 72) / 4;
     }
 
     private int getLabelFontSizeBySearchBarHeight(int searchBarHeight) {
@@ -3040,26 +3050,42 @@ public class SearchBar {
             return;
         }
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
-            var ref = new Object() {
-                int dotNum = 1;
-            };
             try {
                 long time = System.currentTimeMillis();
                 while (!"done".equals(searchInfoLabel.getName()) && isVisible() && startTime < time) {
-                    ref.dotNum++;
                     SwingUtilities.invokeLater(() -> {
-                        searchInfoLabel.setText(TranslateUtil.INSTANCE.getTranslation("Searching") + ".".repeat(ref.dotNum));
+                        searchInfoLabel.setText(TranslateUtil.INSTANCE.getTranslation("Searching"));
                         searchInfoLabel.setIcon(GetIconUtil.getInstance().getIcon("loadingIcon"));
                     });
-                    if (ref.dotNum >= 6) {
-                        ref.dotNum = 1;
-                    }
                     TimeUnit.MILLISECONDS.sleep(250);
                 }
                 if ("done".equals(searchInfoLabel.getName())) {
                     SwingUtilities.invokeLater(() -> {
                         searchInfoLabel.setText(TranslateUtil.INSTANCE.getTranslation("Search Done"));
                         searchInfoLabel.setIcon(GetIconUtil.getInstance().getIcon("completeIcon"));
+                        CachedThreadPoolUtil.getInstance().executeTask(() -> {
+                            long _time = System.currentTimeMillis();
+                            int count = 0;
+                            try {
+                                while (startTime < _time) {
+                                    count++;
+                                    if (count > 60) {
+                                        break;
+                                    }
+                                    TimeUnit.MILLISECONDS.sleep(50);
+                                }
+                                if (startTime > _time) {
+                                    return;
+                                }
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                            SwingUtilities.invokeLater(() -> {
+                                searchInfoLabel.setText("");
+                                searchInfoLabel.setName("");
+                                searchInfoLabel.setIcon(null);
+                            });
+                        });
                     });
                 }
             } catch (InterruptedException e) {
@@ -3335,12 +3361,13 @@ public class SearchBar {
                 }
                 final AtomicBoolean isMergeThreadNotExist = new AtomicBoolean(true);
                 final AtomicBoolean isShowSearchStatusThreadNotExist = new AtomicBoolean(true);
+                final AtomicBoolean isWaiting = new AtomicBoolean(false);
                 while (eventManagement.isNotMainExit()) {
                     long endTime = System.currentTimeMillis();
                     text = getSearchBarText();
-                    if ((endTime - startTime > 250) && isNotSqlInitialized.get() && startSignal.get()) {
+                    if ((endTime - startTime > 250) && isSqlNotInitialized.get() && startSignal.get()) {
                         if (!getSearchBarText().isEmpty()) {
-                            isNotSqlInitialized.set(false);
+                            isSqlNotInitialized.set(false);
                             if (databaseService.getStatus() == Constants.Enums.DatabaseStatus.NORMAL && runningMode == Constants.Enums.RunningMode.NORMAL_MODE) {
                                 strings = colon.split(text);
                                 length = strings.length;
@@ -3419,7 +3446,7 @@ public class SearchBar {
                         }
                         if (databaseService.getStatus() != Constants.Enums.DatabaseStatus.NORMAL) {
                             //开启线程等待搜索完成
-                            addSearchWaiter();
+                            addSearchWaiter(isWaiting);
                             clearAllLabels();
                         }
                     }
@@ -3492,7 +3519,7 @@ public class SearchBar {
             x = searchBar.getX() + textField.getWidth() / 2;
             y = searchBar.getY() + label1.getHeight() * 8 + searchInfoLabel.getHeight() + textField.getHeight() / 2;
         }
-        RobotUtil.getInstance().mouseClicked(x, y, 1, InputEvent.BUTTON1_DOWN_MASK);
+        RobotUtil.INSTANCE.mouseClicked(x, y, 1, InputEvent.BUTTON1_DOWN_MASK);
     }
 
     /**
@@ -3605,7 +3632,7 @@ public class SearchBar {
                 .forEach((k, v) -> builder.append(k).append("|"));
         if (builder.length() > 0) {
             String pattern = builder.substring(0, builder.length() - 1);
-            Pattern compile = RegexUtil.getPatter(pattern, Pattern.CASE_INSENSITIVE);
+            Pattern compile = RegexUtil.getPattern(pattern, Pattern.CASE_INSENSITIVE);
             Matcher matcher = compile.matcher(html);
             html = matcher.replaceAll((matchResult) -> {
                 String group = matchResult.group();
@@ -4150,10 +4177,12 @@ public class SearchBar {
         isCopyPathPressed.set(false);
         startSignal.set(false);
         isPrioritySearched.set(false);
-        isWaiting.set(false);
         isMouseDraggedInWindow.set(false);
         currentUsingPlugin = null;
         isRoundRadiusSet.set(false);
+        searchInfoLabel.setText("");
+        searchInfoLabel.setName("");
+        searchInfoLabel.setIcon(null);
         EventManagement.getInstance().putEvent(new StopPreviewEvent());
     }
 

@@ -2,30 +2,18 @@ package file.engine.utils;
 
 import java.awt.*;
 
-public class RobotUtil {
+public enum RobotUtil {
+    INSTANCE;
     private static Robot robot;
-
-    private static volatile RobotUtil INSTANCE = null;
 
     private static final int delayMills = 5;
 
-    private RobotUtil() {
+    static {
         try {
             robot = new Robot();
         } catch (AWTException e) {
             e.printStackTrace();
         }
-    }
-
-    public static RobotUtil getInstance() {
-        if (INSTANCE == null) {
-            synchronized (RobotUtil.class) {
-                if (INSTANCE == null) {
-                    INSTANCE = new RobotUtil();
-                }
-            }
-        }
-        return INSTANCE;
     }
 
     /**

@@ -338,12 +338,15 @@ public class SettingsFrame {
             if (isConfirmed == JOptionPane.YES_OPTION) {
                 Future<Boolean> future = cachedThreadPoolUtil.executeTask(MoveDesktopFiles::start);
                 try {
+                    if (future == null) {
+                        return;
+                    }
                     if (!future.get()) {
                         JOptionPane.showMessageDialog(null,
                                 translateUtil.getTranslation("Files with the same name are detected, please move them by yourself"));
                     }
-                } catch (InterruptedException | ExecutionException interruptedException) {
-                    interruptedException.printStackTrace();
+                } catch (InterruptedException | ExecutionException exception) {
+                    exception.printStackTrace();
                 }
             }
         });
