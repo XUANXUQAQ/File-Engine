@@ -7,7 +7,8 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class CachedThreadPoolUtil {
+public enum CachedThreadPoolUtil {
+    INSTANCE;
     private final ExecutorService cachedThreadPool = new ThreadPoolExecutor(
             0,
             200,
@@ -17,19 +18,7 @@ public class CachedThreadPoolUtil {
             new NamedThreadFactory());
     private final AtomicBoolean isShutdown = new AtomicBoolean(false);
 
-    private static volatile CachedThreadPoolUtil INSTANCE = null;
-
-    private CachedThreadPoolUtil() {
-    }
-
     public static CachedThreadPoolUtil getInstance() {
-        if (INSTANCE == null) {
-            synchronized (CachedThreadPoolUtil.class) {
-                if (INSTANCE == null) {
-                    INSTANCE = new CachedThreadPoolUtil();
-                }
-            }
-        }
         return INSTANCE;
     }
 

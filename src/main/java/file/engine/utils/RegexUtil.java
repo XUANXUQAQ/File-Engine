@@ -27,7 +27,7 @@ public class RegexUtil {
      * @param flags      flags
      * @return 编译后的正则表达式
      */
-    public static Pattern getPatter(String patternStr, int flags) {
+    public static Pattern getPattern(String patternStr, int flags) {
         String key = patternStr + ":flags:" + flags;
         WeakReference<Pattern> pattern = patternMap.get(key);
         if (pattern == null) {
