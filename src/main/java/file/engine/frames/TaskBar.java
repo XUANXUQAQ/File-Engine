@@ -167,9 +167,7 @@ public class TaskBar {
                 @Override
                 public void mouseReleased(MouseEvent e) {
                     if (e.isPopupTrigger()) {
-                        if (popupMenu == null) {
-                            popupMenu = getPopupMenu();
-                        }
+                        popupMenu = getPopupMenu();
                         popupMenu.setInvoker(popupMenu);
                         popupMenu.setVisible(true);
                         double dpi = GetHandle.INSTANCE.getDpi();

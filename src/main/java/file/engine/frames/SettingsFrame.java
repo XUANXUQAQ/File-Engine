@@ -276,6 +276,9 @@ public class SettingsFrame {
     private JLabel labelZip;
     private JLabel labelRoundRadius;
     private JTextField textFieldRoundRadius;
+    private JSplitPane splitPane;
+    private JPanel leftPanel;
+    private JPanel rightPanel;
 
 
     private static volatile SettingsFrame instance = null;
@@ -1781,7 +1784,7 @@ public class SettingsFrame {
      */
     private void setListGui() {
         listCmds.setListData(allConfigs.getCmdSet().toArray());
-        listLanguage.setListData(translateUtil.getLanguageSet().toArray());
+        listLanguage.setListData(translateUtil.getLanguageArray());
         listLanguage.setSelectedValue(translateUtil.getLanguage(), true);
         Object[] plugins = PluginService.getInstance().getPluginNameArray();
         listPlugins.setListData(plugins);
@@ -2292,20 +2295,16 @@ public class SettingsFrame {
             e.printStackTrace();
         }
         frame.setContentPane(getInstance().panel);
-        panel.setSize(width, height);
-        frame.setSize(width, height);
+        Dimension dimension = new Dimension(width, height);
+        panel.setPreferredSize(dimension);
+        frame.setSize(dimension);
         frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         frame.setResizable(false);
         frame.setLocationRelativeTo(null);
         initGUI();
         showOnTabbedPane(tabName);
         textAreaDescription.setForeground(tabbedPane.getForeground());
-        SwingUtilities.invokeLater(() -> {
-            //使swing风格生效
-            eventManagement.putEvent(new SetSwingLaf("current"),
-                    event -> SwingUtilities.invokeLater(() -> frame.setVisible(true)),
-                    event -> SwingUtilities.invokeLater(() -> frame.setVisible(true)));
-        });
+        frame.setVisible(true);
     }
 
     private void checkRoundRadius(StringBuilder stringBuilder) {
@@ -2494,8 +2493,8 @@ public class SettingsFrame {
             return errors;
         }
 
-        //重新显示翻译GUI
-        if (!listLanguage.getSelectedValue().equals(translateUtil.getLanguage())) {
+        //重新显示翻译GUI，采用等号比对内存地址，不是用equals
+        if (!(listLanguage.getSelectedValue() == translateUtil.getLanguage())) {
             translateUtil.setLanguage((String) listLanguage.getSelectedValue());
             translate();
         }
