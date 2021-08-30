@@ -2284,8 +2284,13 @@ public class SettingsFrame {
             return;
         }
         frame.setResizable(true);
-        int width = Integer.parseInt(translateUtil.getFrameWidth());
-        int height = Integer.parseInt(translateUtil.getFrameHeight());
+        int width = 1000, height = 600;
+        try {
+            width = Integer.parseInt(translateUtil.getFrameWidth());
+            height = Integer.parseInt(translateUtil.getFrameHeight());
+        } catch (NumberFormatException e) {
+            e.printStackTrace();
+        }
         frame.setContentPane(getInstance().panel);
         panel.setSize(width, height);
         frame.setSize(width, height);
