@@ -134,7 +134,7 @@ public enum TranslateUtil {
     private void initTranslations() {
         if (!"English(US)".equals(language)) {
             String filePath = fileMap.get(language);
-            translationMap.clear();
+//            translationMap.clear();
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(Objects.requireNonNull(TranslateUtil.class.getResourceAsStream(filePath)), StandardCharsets.UTF_8))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
