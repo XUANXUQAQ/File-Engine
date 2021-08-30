@@ -6,12 +6,11 @@ import lombok.Getter;
 import javax.swing.*;
 import java.awt.*;
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Locale;
 import java.util.Objects;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 public enum TranslateUtil {
@@ -134,7 +133,9 @@ public enum TranslateUtil {
     private void initTranslations() {
         if (!"English(US)".equals(language)) {
             String filePath = fileMap.get(language);
-//            translationMap.clear();
+            if (IsDebug.isDebug()) {
+                translationMap.clear();
+            }
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(Objects.requireNonNull(TranslateUtil.class.getResourceAsStream(filePath)), StandardCharsets.UTF_8))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
@@ -148,7 +149,8 @@ public enum TranslateUtil {
                         translationMap.put(record[0].trim().toLowerCase(), record[1].trim());
                     }
                 }
-            } catch (IOException ignored) {
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         } else {
             translationMap.put("#frame_width", String.valueOf(1000));
@@ -184,12 +186,18 @@ public enum TranslateUtil {
      */
     public void setLanguage(String language) {
         this.language = language;
-        setUIFont();
         initTranslations();
+        setUIFont();
     }
 
-    public Set<String> getLanguageSet() {
-        return fileMap.keySet();
+    public String[] getLanguageArray() {
+        int size = fileMap.size();
+        ArrayList<String> languages = new ArrayList<>(fileMap.keySet());
+        String[] languageArray = new String[size];
+        for (int i = 0; i < size; i++) {
+            languageArray[i] = languages.get(i);
+        }
+        return languageArray;
     }
 
     /**
@@ -211,11 +219,39 @@ public enum TranslateUtil {
     }
 
     /**
+     * 测试字体是否能显示所有的翻译文字
+     * @param font 字体
+     * @return boolean
+     */
+    private boolean canDisplay(Font font) {
+        for (String each : translationMap.values()) {
+            if (font.canDisplayUpTo(each) != -1) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
      * 自动寻找可以显示的字体并加载
      *
-     * @param fontStyle 字体风格
-     * @param size      大小
-     * @param testStr   测试字符串，用于系统检测是否可以显示该字符串
+     * @return 字体
+     */
+    private Font getFitFont() {
+        Font defaultFont = new Font(Font.SANS_SERIF, Font.PLAIN, 13);
+        if (!canDisplay(defaultFont)) {
+            for (Font each : fList) {
+                if (canDisplay(each)) {
+                    return each;
+                }
+            }
+        }
+        return defaultFont;
+    }
+
+    /**
+     * 自动寻找可以显示的字体并加载
+     *
      * @return 字体
      */
     public Font getFitFont(int fontStyle, int size, String testStr) {
@@ -234,7 +270,7 @@ public enum TranslateUtil {
      * 加载字体
      */
     private void setUIFont() {
-        Font f = getFitFont(Font.PLAIN, 13, language);
+        Font f = getFitFont();
         String[] names = {"Label", "CheckBox", "PopupMenu", "MenuItem", "CheckBoxMenuItem",
                 "JRadioButtonMenuItem", "ComboBox", "Button", "Tree", "ScrollPane",
                 "TabbedPane", "EditorPane", "TitledBorder", "Menu", "TextArea",
