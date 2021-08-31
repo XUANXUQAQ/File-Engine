@@ -279,6 +279,12 @@ public class SettingsFrame {
     private JSplitPane splitPane;
     private JPanel leftPanel;
     private JPanel rightPanel;
+    private JLabel labelSearchSettingsPlaceholder;
+    private JLabel labelpriorityPlaceholder;
+    private JLabel labelCachePlaceholder;
+    private JLabel labelLanguagePlaceholder;
+    private JLabel labelCommandsPlaceholder;
+    private JLabel labelSearchSettingsPlaceholder2;
 
 
     private static volatile SettingsFrame instance = null;
