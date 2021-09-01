@@ -237,3 +237,4 @@ Waiting for searching disks=等待搜索磁盘
 Round rectangle radius=圆角矩形半径
 Round rectangle radius is wrong, please change=圆角矩形半径设置错误，请修改
 Searching=正在搜索中
+Number of current results=当前结果数量

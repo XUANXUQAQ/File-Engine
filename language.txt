@@ -237,3 +237,4 @@ Waiting for searching disks=
 Round rectangle radius=
 Round rectangle radius is wrong, please change=
 Searching=
+Number of current results=

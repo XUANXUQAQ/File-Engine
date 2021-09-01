@@ -237,3 +237,4 @@ Waiting for searching disks=En attente de recherche de disques
 Round rectangle radius=Rayon du rectangle arrondi
 Round rectangle radius is wrong, please change=Le rayon du rectangle arrondi est mal défini, veuillez le modifier
 Searching=Recherche
+Number of current results=Nombre de résultats actuels
