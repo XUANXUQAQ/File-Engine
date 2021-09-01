@@ -3054,24 +3054,24 @@ public class SearchBar {
                 long time = System.currentTimeMillis();
                 while (!"done".equals(searchInfoLabel.getName()) && isVisible() && startTime < time) {
                     SwingUtilities.invokeLater(() -> {
-                        searchInfoLabel.setText(TranslateUtil.INSTANCE.getTranslation("Searching"));
+                        searchInfoLabel.setText(TranslateUtil.INSTANCE.getTranslation("Searching") + "    " +
+                                TranslateUtil.INSTANCE.getTranslation("Number of current results") + ": " + listResultsNum.get());
                         searchInfoLabel.setIcon(GetIconUtil.getInstance().getIcon("loadingIcon"));
                     });
+                    repaint();
                     TimeUnit.MILLISECONDS.sleep(250);
                 }
                 if ("done".equals(searchInfoLabel.getName())) {
                     SwingUtilities.invokeLater(() -> {
-                        searchInfoLabel.setText(TranslateUtil.INSTANCE.getTranslation("Search Done"));
+                        searchInfoLabel.setText(TranslateUtil.INSTANCE.getTranslation("Search Done") + "    " +
+                                TranslateUtil.INSTANCE.getTranslation("Number of current results") + ": " + listResultsNum.get());
                         searchInfoLabel.setIcon(GetIconUtil.getInstance().getIcon("completeIcon"));
                         CachedThreadPoolUtil.getInstance().executeTask(() -> {
                             long _time = System.currentTimeMillis();
                             int count = 0;
                             try {
-                                while (startTime < _time) {
+                                while (startTime < _time && count <= 60) {
                                     count++;
-                                    if (count > 60) {
-                                        break;
-                                    }
                                     TimeUnit.MILLISECONDS.sleep(50);
                                 }
                                 if (startTime > _time) {
@@ -3081,7 +3081,7 @@ public class SearchBar {
                                 e.printStackTrace();
                             }
                             SwingUtilities.invokeLater(() -> {
-                                searchInfoLabel.setText("");
+                                searchInfoLabel.setText(TranslateUtil.INSTANCE.getTranslation("Number of current results") + ": " + listResultsNum.get());
                                 searchInfoLabel.setName("");
                                 searchInfoLabel.setIcon(null);
                             });

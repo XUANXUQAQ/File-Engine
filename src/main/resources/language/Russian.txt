@@ -237,3 +237,4 @@ Waiting for searching disks=Ожидание поиска дисков
 Round rectangle radius=Радиус скругленного прямоугольника
 Round rectangle radius is wrong, please change=Радиус прямоугольника с закругленными углами установлен неправильно, измените
 Searching=Поиск в
+Number of current results=Количество текущих результатов

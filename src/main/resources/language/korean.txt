@@ -237,3 +237,4 @@ Waiting for searching disks=디스크 검색 대기 중
 Round rectangle radius=둥근 사각형의 반경
 Round rectangle radius is wrong, please change=둥근 사각형의 반경이 잘못 설정되었습니다. 수정하십시오.
 Searching=수색
+Number of current results=현재 결과 수
