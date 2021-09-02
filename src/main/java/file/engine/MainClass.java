@@ -19,12 +19,14 @@ import file.engine.utils.*;
 import file.engine.utils.file.CopyFileUtil;
 import file.engine.utils.system.properties.IsDebug;
 import file.engine.utils.system.properties.IsPreview;
+import lombok.SneakyThrows;
 
 import javax.swing.*;
 import java.awt.*;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Date;
@@ -89,25 +91,29 @@ public class MainClass {
     }
 
     /**
-     * 检查数据库中表是否存在
+     * 检查数据库中表是否为空
      *
      * @param tableNames 所有待检测的表名
-     * @return true如果所有都存在
+     * @return true如果超过10个表结果都不超过10条
      */
-    private static boolean isTableExist(ArrayList<String> tableNames) {
+    private static boolean isDatabaseEmpty(ArrayList<String> tableNames) throws SQLException {
+        int emptyNum = 0;
         for (String each : RegexUtil.comma.split(AllConfigs.getInstance().getDisks())) {
             try (Statement stmt = SQLiteUtil.getStatement(String.valueOf(each.charAt(0)))) {
                 for (String tableName : tableNames) {
-                    String sql = String.format("SELECT ASCII, PATH FROM %s;", tableName);
+                    String sql = String.format("SELECT COUNT(ASCII) as num FROM %s;", tableName);
                     try (ResultSet resultSet = stmt.executeQuery(sql)) {
-                        return resultSet.next();
+                        if (resultSet.next()) {
+                            int resultNum = resultSet.getInt("num");
+                            if (resultNum < 10) {
+                                emptyNum++;
+                            }
+                        }
                     }
                 }
-            } catch (Exception e) {
-                return false;
             }
         }
-        return true;
+        return emptyNum > 10;
     }
 
     /**
@@ -124,12 +130,12 @@ public class MainClass {
      *
      * @return boolean
      */
-    private static boolean isDatabaseDamaged() {
+    private static boolean isDatabaseDamaged() throws SQLException {
         ArrayList<String> list = new ArrayList<>();
         for (int i = 0; i <= Constants.ALL_TABLE_NUM; i++) {
             list.add("list" + i);
         }
-        return !isTableExist(list);
+        return isDatabaseEmpty(list);
     }
 
     /**
@@ -364,9 +370,9 @@ public class MainClass {
     /**
      * 主循环
      *
-     * @throws InterruptedException sleep exception
      */
-    private static void mainLoop() throws InterruptedException {
+    @SneakyThrows
+    private static void mainLoop() {
         Date startTime = new Date();
         Date endTime;
         long timeDiff;
