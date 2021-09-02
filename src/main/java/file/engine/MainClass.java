@@ -130,12 +130,17 @@ public class MainClass {
      *
      * @return boolean
      */
-    private static boolean isDatabaseDamaged() throws SQLException {
-        ArrayList<String> list = new ArrayList<>();
-        for (int i = 0; i <= Constants.ALL_TABLE_NUM; i++) {
-            list.add("list" + i);
+    private static boolean isDatabaseDamaged() {
+        try {
+            ArrayList<String> list = new ArrayList<>();
+            for (int i = 0; i <= Constants.ALL_TABLE_NUM; i++) {
+                list.add("list" + i);
+            }
+            return isDatabaseEmpty(list);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return true;
         }
-        return isDatabaseEmpty(list);
     }
 
     /**
