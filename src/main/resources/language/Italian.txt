@@ -238,3 +238,4 @@ Round rectangle radius=Raggio del rettangolo arrotondato
 Round rectangle radius is wrong, please change=Il raggio del rettangolo arrotondato è impostato in modo errato, si prega di modificare
 Searching=ricerca
 Number of current results=Numero di risultati attuali
+Currently selected=Attualmente selezionato

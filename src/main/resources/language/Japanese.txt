@@ -238,3 +238,4 @@ Round rectangle radius=角丸長方形の半径
 Round rectangle radius is wrong, please change=角丸長方形の半径が正しく設定されていません。変更してください
 Searching=検索中
 Number of current results=現在の結果の数
+Currently selected=現在選択中

@@ -238,3 +238,4 @@ Round rectangle radius=Radius des abgerundeten Rechtecks
 Round rectangle radius is wrong, please change=Der Radius des abgerundeten Rechtecks ​​ist falsch eingestellt, bitte ändern
 Searching=Suche
 Number of current results=Anzahl der aktuellen Ergebnisse
+Currently selected=Momentan ausgewählt

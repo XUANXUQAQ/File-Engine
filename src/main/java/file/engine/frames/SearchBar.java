@@ -1469,6 +1469,7 @@ public class SearchBar {
                         }
                     }
                 }
+                showSelectInfoOnLabel();
             }
         });
     }
@@ -1605,6 +1606,7 @@ public class SearchBar {
         if (currentLabelSelectedPosition.get() > 7) {
             currentLabelSelectedPosition.set(7);
         }
+        showSelectInfoOnLabel();
         switch (position) {
             case 0:
                 int size = listResultsNum.get();
@@ -2053,6 +2055,7 @@ public class SearchBar {
         if (currentLabelSelectedPosition.get() < 0) {
             currentLabelSelectedPosition.set(0);
         }
+        showSelectInfoOnLabel();
         int size;
         switch (position) {
             case 0:
@@ -3055,6 +3058,7 @@ public class SearchBar {
                 while (!"done".equals(searchInfoLabel.getName()) && isVisible() && startTime < time) {
                     SwingUtilities.invokeLater(() -> {
                         searchInfoLabel.setText(TranslateUtil.INSTANCE.getTranslation("Searching") + "    " +
+                                TranslateUtil.INSTANCE.getTranslation("Currently selected") + ": " + (currentResultCount.get() + 1) + "    " +
                                 TranslateUtil.INSTANCE.getTranslation("Number of current results") + ": " + listResultsNum.get());
                         searchInfoLabel.setIcon(GetIconUtil.getInstance().getIcon("loadingIcon"));
                     });
@@ -3064,6 +3068,7 @@ public class SearchBar {
                 if ("done".equals(searchInfoLabel.getName())) {
                     SwingUtilities.invokeLater(() -> {
                         searchInfoLabel.setText(TranslateUtil.INSTANCE.getTranslation("Search Done") + "    " +
+                                TranslateUtil.INSTANCE.getTranslation("Currently selected") + ": " + (currentResultCount.get() + 1) + "    " +
                                 TranslateUtil.INSTANCE.getTranslation("Number of current results") + ": " + listResultsNum.get());
                         searchInfoLabel.setIcon(GetIconUtil.getInstance().getIcon("completeIcon"));
                         CachedThreadPoolUtil.getInstance().executeTask(() -> {
@@ -3080,11 +3085,7 @@ public class SearchBar {
                             } catch (InterruptedException e) {
                                 e.printStackTrace();
                             }
-                            SwingUtilities.invokeLater(() -> {
-                                searchInfoLabel.setText(TranslateUtil.INSTANCE.getTranslation("Number of current results") + ": " + listResultsNum.get());
-                                searchInfoLabel.setName("");
-                                searchInfoLabel.setIcon(null);
-                            });
+                            showSelectInfoOnLabel();
                         });
                     });
                 }
@@ -3093,6 +3094,21 @@ public class SearchBar {
             } finally {
                 isShowSearchStatusThreadNotExist.set(true);
             }
+        });
+    }
+
+    /**
+     * 显示一共有多少个结果，当前选中哪个
+     */
+    private void showSelectInfoOnLabel() {
+        String name = searchInfoLabel.getName();
+        if (!"done".equals(name)) {
+            return;
+        }
+        SwingUtilities.invokeLater(() -> {
+            searchInfoLabel.setText(TranslateUtil.INSTANCE.getTranslation("Currently selected") + ": " + (currentResultCount.get() + 1) + "    " +
+                    TranslateUtil.INSTANCE.getTranslation("Number of current results") + ": " + listResultsNum.get());
+            searchInfoLabel.setIcon(null);
         });
     }
 
@@ -3127,7 +3143,7 @@ public class SearchBar {
                             }
                         }
                     }
-                    TimeUnit.MILLISECONDS.sleep(5);
+                    TimeUnit.MILLISECONDS.sleep(1);
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();
