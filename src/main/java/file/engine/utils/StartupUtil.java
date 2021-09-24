@@ -77,7 +77,7 @@ public class StartupUtil {
         String command = "cmd.exe /c schtasks /create /ru \"administrators\" /rl HIGHEST /sc ONLOGON /tn \"File-Engine\" /tr ";
         String parentPath = FilePathUtil.getParentPath(new File("").getAbsolutePath());
         File FileEngine = new File(parentPath + File.separator + Constants.LAUNCH_WRAPPER_NAME);
-        String absolutePath = "\"\"" + FileEngine.getAbsolutePath() + "\"\" /f";
+        String absolutePath = "\"" + FileEngine.getAbsolutePath() + "\" /f";
         command += absolutePath;
         Process p;
         p = Runtime.getRuntime().exec(command);
@@ -120,6 +120,6 @@ public class StartupUtil {
         if (keySize == resultList.size()) {
             return IntStream.range(0, keySize).boxed().collect(Collectors.toMap(keyList::get, resultList::get));
         }
-        throw new RuntimeException("parse failed.");
+        throw new RuntimeException("parse schtasks information failed.");
     }
 }
