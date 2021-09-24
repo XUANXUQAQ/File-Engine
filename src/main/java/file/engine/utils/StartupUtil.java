@@ -78,10 +78,7 @@ public class StartupUtil {
         String parentPath = FilePathUtil.getParentPath(new File("").getAbsolutePath());
         File fileEngine = new File(parentPath + File.separator + Constants.LAUNCH_WRAPPER_NAME);
         String absolutePath = fileEngine.getAbsolutePath();
-        String start = absolutePath.substring(0, 2);
-        String end = absolutePath.substring(2);
-        absolutePath = start + "\"" + end + "\"";
-        command += absolutePath;
+        command += "\"'" + absolutePath + "'\"";
         Process p;
         p = Runtime.getRuntime().exec(command);
         p.waitFor();
