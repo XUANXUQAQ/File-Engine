@@ -3126,14 +3126,14 @@ public class SearchBar {
                 long time = System.currentTimeMillis();
                 ConcurrentLinkedQueue<String> tempResults = databaseService.getTempResults();
                 while (true) {
-                    if (startTime > time || !isVisible() || listResultsNum.get() > Constants.MAX_RESULTS_COUNT) {
+                    if (startTime > time || !isVisible() || listResultsNum.get() >= Constants.MAX_RESULTS_COUNT) {
                         eventManagement.putEvent(new StopSearchEvent());
                         return;
                     }
                     if (isPrioritySearched.get()) {
                         String each;
                         while ((each = tempResults.poll()) != null) {
-                            if (startTime > time || !isVisible() || listResultsNum.get() > Constants.MAX_RESULTS_COUNT) {
+                            if (startTime > time || !isVisible() || listResultsNum.get() >= Constants.MAX_RESULTS_COUNT) {
                                 eventManagement.putEvent(new StopSearchEvent());
                                 return;
                             }
