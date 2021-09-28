@@ -343,7 +343,10 @@ public class DatabaseService {
         return count;
     }
 
-    private void warmup() {
+    /**
+     * 启动数据库，使第一次启动响应速度加快
+     */
+    private void warmupDatabase() {
         initTableMap();
         LinkedHashMap<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>> nonFormattedSql = getNonFormattedSqlFromTableQueue(false);
         nonFormattedSql.forEach((commandsMap, container) -> Arrays.stream(RegexUtil.comma.split(AllConfigs.getInstance().getDisks())).forEach(eachDisk -> {
@@ -483,6 +486,16 @@ public class DatabaseService {
         });
     }
 
+    /**
+     * 当使用共享内存时，添加搜索任务到队列
+     *
+     * @param nonFormattedSql sql未被格式化的所有任务
+     * @param taskStatus      用于保存任务信息，这是一个通用变量，从第二个位开始，每一个位代表一个任务，当任务完成，该位将被置为1，否则为0，
+     *                        例如第一个和第三个任务完成，第二个未完成，则为1010
+     * @param allTaskStatus   所有的任务信息，从第二位开始，只要有任务被创建，该为就为1，例如三个任务被创建，则为1110
+     * @param containerMap    每个任务搜索出来的结果都会被放到一个属于它自己的一个容器中，该容器保存任务与容器的映射关系
+     * @param taskQueue       任务栈
+     */
     private void addSearchTasksForSharedMemory(LinkedHashMap<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>> nonFormattedSql,
                                                Bit taskStatus,
                                                Bit allTaskStatus,
@@ -616,7 +629,7 @@ public class DatabaseService {
             LinkedHashMap<String, String> eachPriorityMap = new LinkedHashMap<>();
             tableQueue.forEach(each -> {
                 // where后面=不能有空格，否则解析priority会出错
-                String sql = "SELECT %s FROM " + each + " WHERE priority=" + i.priority;
+                String sql = "SELECT %s FROM " + each + " WHERE PRIORITY=" + i.priority;
                 eachPriorityMap.put(sql, each);
             });
             ConcurrentSkipListSet<String> container = null;
@@ -1263,7 +1276,7 @@ public class DatabaseService {
 
     @EventListener(listenClass = BootSystemEvent.class)
     private static void warmupDatabase(Event event) {
-        getInstance().warmup();
+        getInstance().warmupDatabase();
     }
 
     @EventRegister(registerClass = AddToCacheEvent.class)
