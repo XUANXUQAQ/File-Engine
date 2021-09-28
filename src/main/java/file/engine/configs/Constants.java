@@ -1,7 +1,7 @@
 package file.engine.configs;
 
 public class Constants {
-    public static final String version = "3.3"; //TODO 更改版本号
+    public static final String version = "3.4"; //更改版本号
 
     public static final int ALL_TABLE_NUM = 40;
 
