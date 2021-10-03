@@ -54,6 +54,7 @@ public class DatabaseService {
     private volatile String[] searchCase;
     private volatile String searchText;
     private volatile String[] keywords;
+    private final AtomicBoolean isSharedMemoryCreated = new AtomicBoolean(false);
 
     private static volatile DatabaseService INSTANCE = null;
 
@@ -485,6 +486,10 @@ public class DatabaseService {
                 e.printStackTrace();
             } finally {
                 EventManagement.getInstance().putEvent(new SearchDoneEvent());
+                if (isSharedMemoryCreated.get()) {
+                    isSharedMemoryCreated.set(false);
+                    ResultPipe.INSTANCE.closeAllSharedMemory();
+                }
             }
         });
     }
@@ -653,6 +658,8 @@ public class DatabaseService {
         if (!isReadSharedMemory.get()) {
             isCacheSearched.set(false);
             cachedThreadPoolUtil.executeTask(this::searchCache);
+        } else {
+            isCacheSearched.set(true);
         }
         //每个priority用一个线程，每一个后缀名对应一个优先级
         //按照优先级排列，key是sql和表名的对应，value是容器
@@ -1111,6 +1118,7 @@ public class DatabaseService {
         recreateDatabase(isDropPrevious);
         waitForCommandSet(SqlTaskIds.CREATE_TABLE);
         SQLiteUtil.closeAll();
+        isSharedMemoryCreated.set(true);
         searchFile(AllConfigs.getInstance().getDisks(), ignorePath);
         try {
             waitForProcessAsync("fileSearcherUSN.exe", () -> {
@@ -1118,7 +1126,6 @@ public class DatabaseService {
                 // 可能会出错
                 recreateDatabase(false);
                 createAllIndex();
-                ResultPipe.INSTANCE.closeAllSharedMemory();
                 isDatabaseUpdated.set(true);
                 isReadSharedMemory.set(false);
             });
