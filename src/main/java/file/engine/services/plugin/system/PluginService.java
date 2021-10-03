@@ -150,6 +150,16 @@ public class PluginService {
         return strb.substring(0, strb.length() - 1);
     }
 
+    public ArrayList<PluginInfo> searchPluginByKeyword(String keyword) {
+        ArrayList<PluginInfo> pluginInfos = new ArrayList<>();
+        for (PluginInfo each : pluginInfoSet) {
+            if (keyword.isBlank() || each.identifier.toLowerCase().contains(keyword)) {
+                pluginInfos.add(each);
+            }
+        }
+        return pluginInfos;
+    }
+
     /**
      * 根据插件名获取插件实例
      *

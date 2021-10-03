@@ -34,7 +34,7 @@ public class GetIconUtil {
         return INSTANCE;
     }
 
-    private ImageIcon changeIcon(ImageIcon icon, int width, int height) {
+    public ImageIcon changeIcon(ImageIcon icon, int width, int height) {
         Image image = icon.getImage().getScaledInstance(width, height, Image.SCALE_DEFAULT);
         return new ImageIcon(image);
     }

@@ -513,7 +513,7 @@ public class SearchBar {
             String start = "cmd.exe /c start " + shortcutGenPath.substring(0, 2);
             String end = "\"" + shortcutGenPath.substring(2) + "\"";
             String commandToGenLnk = start + end + " /target:" + "\"" + fileOrFolderPath + "\"" + " " + "/shortcut:" + "\"" + writeShortCutPath + "\"" + " /workingdir:" + "\"" + fileOrFolderPath.substring(0, fileOrFolderPath.lastIndexOf(File.separator)) + "\"";
-            Runtime.getRuntime().exec("cmd.exe " + new String(commandToGenLnk.getBytes(StandardCharsets.UTF_8), Charset.defaultCharset()));
+            Runtime.getRuntime().exec(new String(commandToGenLnk.getBytes(), System.getProperty("sun.jnu.encoding")));
         }
         if (isNotifyUser) {
             eventManagement.putEvent(new ShowTaskBarMessageEvent(
@@ -746,29 +746,36 @@ public class SearchBar {
                             //enter被点击
                             clearAllLabels();
                             if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
-                                if (isVisible()) {
+                                String searchBarText = getSearchBarText();
+                                if (isVisible() && searchBarText.charAt(0) != '>') {
                                     setVisible(false);
                                 }
                             }
                             if (listResultsNum.get() != 0) {
                                 String res = listResults.get(currentResultCount.get());
                                 if (runningMode == Constants.Enums.RunningMode.NORMAL_MODE) {
-                                    if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
-                                        if (isOpenLastFolderPressed.get()) {
-                                            //打开上级文件夹
-                                            openFolderByExplorer(res);
-                                        } else if (allConfigs.isDefaultAdmin() || isRunAsAdminPressed.get()) {
-                                            openWithAdmin(res);
-                                        } else if (isCopyPathPressed.get()) {
-                                            copyToClipBoard(res, true);
-                                        } else {
-                                            openWithoutAdmin(res);
-                                        }
-                                    } else if (showingMode == Constants.Enums.ShowingSearchBarMode.EXPLORER_ATTACH) {
-                                        if (isCopyPathPressed.get()) {
-                                            copyToClipBoard(res, true);
-                                        } else {
-                                            quickJump(res);
+                                    String searchBarText = getSearchBarText();
+                                    if (searchBarText.charAt(0) == '>') {
+                                        SwingUtilities.invokeLater(() -> textField.setText(">" + res + " "));
+                                        return;
+                                    } else {
+                                        if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
+                                            if (isOpenLastFolderPressed.get()) {
+                                                //打开上级文件夹
+                                                openFolderByExplorer(res);
+                                            } else if (allConfigs.isDefaultAdmin() || isRunAsAdminPressed.get()) {
+                                                openWithAdmin(res);
+                                            } else if (isCopyPathPressed.get()) {
+                                                copyToClipBoard(res, true);
+                                            } else {
+                                                openWithoutAdmin(res);
+                                            }
+                                        } else if (showingMode == Constants.Enums.ShowingSearchBarMode.EXPLORER_ATTACH) {
+                                            if (isCopyPathPressed.get()) {
+                                                copyToClipBoard(res, true);
+                                            } else {
+                                                quickJump(res);
+                                            }
                                         }
                                     }
                                 } else if (runningMode == Constants.Enums.RunningMode.COMMAND_MODE) {
@@ -3421,7 +3428,7 @@ public class SearchBar {
                                 cmdSet.add(":version;" + translateUtil.getTranslation("View Version"));
                                 String finalText = text;
                                 cmdSet.forEach(i -> {
-                                    if (i.startsWith(finalText)) {
+                                    if (i.toLowerCase().contains(finalText.substring(1))) {
                                         listResultsNum.incrementAndGet();
                                         String result = translateUtil.getTranslation("Run command") + i;
                                         listResults.add(result);
@@ -3434,19 +3441,33 @@ public class SearchBar {
                                 });
                             }
                         } else if (runningMode == Constants.Enums.RunningMode.NORMAL_MODE) {
-                            if (databaseService.getStatus() == Constants.Enums.DatabaseStatus.NORMAL) {
-                                //对搜索关键字赋值
-                                searchPriorityFolder();
-                                addShowSearchStatusThread(isShowSearchStatusThreadNotExist);
-                                isPrioritySearched.set(true);
-                            } else if (databaseService.getStatus() == Constants.Enums.DatabaseStatus.MANUAL_UPDATE) {
-                                setLabelChosen(label1);
-                                eventManagement.putEvent(new ShowTaskBarMessageEvent(translateUtil.getTranslation("Info"),
-                                        translateUtil.getTranslation("Updating file index") + "..."));
-                            } else if (databaseService.getStatus() == Constants.Enums.DatabaseStatus.VACUUM) {
-                                setLabelChosen(label1);
-                                eventManagement.putEvent(new ShowTaskBarMessageEvent(translateUtil.getTranslation("Info"),
-                                        translateUtil.getTranslation("Organizing database")));
+                            String searchBarText = getSearchBarText();
+                            if (searchBarText.charAt(0) == '>') {
+                                if (searchBarText.length() > 1) {
+                                    searchBarText = searchBarText.substring(1);
+                                } else {
+                                    searchBarText = "";
+                                }
+                                ArrayList<PluginService.PluginInfo> pluginInfos = PluginService.getInstance().searchPluginByKeyword(searchBarText);
+                                for (PluginService.PluginInfo pluginInfo : pluginInfos) {
+                                    listResults.add(pluginInfo.identifier);
+                                    listResultsNum.incrementAndGet();
+                                }
+                            } else {
+                                if (databaseService.getStatus() == Constants.Enums.DatabaseStatus.NORMAL) {
+                                    //对搜索关键字赋值
+                                    searchPriorityFolder();
+                                    addShowSearchStatusThread(isShowSearchStatusThreadNotExist);
+                                    isPrioritySearched.set(true);
+                                } else if (databaseService.getStatus() == Constants.Enums.DatabaseStatus.MANUAL_UPDATE) {
+                                    setLabelChosen(label1);
+                                    eventManagement.putEvent(new ShowTaskBarMessageEvent(translateUtil.getTranslation("Info"),
+                                            translateUtil.getTranslation("Updating file index") + "..."));
+                                } else if (databaseService.getStatus() == Constants.Enums.DatabaseStatus.VACUUM) {
+                                    setLabelChosen(label1);
+                                    eventManagement.putEvent(new ShowTaskBarMessageEvent(translateUtil.getTranslation("Info"),
+                                            translateUtil.getTranslation("Organizing database")));
+                                }
                             }
                         } else if (runningMode == Constants.Enums.RunningMode.PLUGIN_MODE) {
                             String result;
@@ -3688,7 +3709,7 @@ public class SearchBar {
             }
             return String.format(template,
                     "<div>" +
-                            highLight(commandName, new String[]{getSearchBarText()}) +
+                            highLight(commandName, new String[]{getSearchBarText().substring(1)}) +
                             "<br><font size=\"-2\">" + "&gt;&gt;" + commandPath +
                             "</div>");
         } else if (command == null) {
@@ -3727,23 +3748,31 @@ public class SearchBar {
      * @param isChosen 是否当前被选中
      */
     private void showResultOnLabel(String path, JLabel label, boolean isChosen) {
-        //将文件的路径信息存储在label的名称中，在未被选中时只显示文件名，选中后才显示文件路径
-        boolean[] isParentPathEmpty = new boolean[1];
-        String allHtml = getHtml(path, null, isParentPathEmpty);
-        if (isParentPathEmpty[0]) {
-            int maxShowCharsNum = getMaxShowCharsNum(label1);
-            boolean isContract = path.length() > maxShowCharsNum;
-            int subNum = Math.max(0, maxShowCharsNum - "...".length() - 20);
-            subNum = Math.min(path.length(), subNum);
-            String showPath = isContract ? path.substring(0, subNum) : path;
-            String add = isContract ? "..." : "";
-            label.setName("<html><body>" + highLight(FilePathUtil.getFileName(path), keywords) + getBlank(20) + "<font size=\"-2\">" + showPath + add + "</font></body></html>");
+        String searchBarText = getSearchBarText();
+        if (searchBarText.charAt(0) == '>') {
+            PluginService.PluginInfo pluginInfoByName = PluginService.getInstance().getPluginInfoByIdentifier(path);
+            ImageIcon pluginIcon = GetIconUtil.getInstance().changeIcon(pluginInfoByName.plugin.getPluginIcon(), iconSideLength, iconSideLength);
+            label.setIcon(pluginIcon);
+            label.setText(path);
         } else {
-            label.setName(Constants.RESULT_LABEL_NAME_HOLDER);
+            //将文件的路径信息存储在label的名称中，在未被选中时只显示文件名，选中后才显示文件路径
+            boolean[] isParentPathEmpty = new boolean[1];
+            String allHtml = getHtml(path, null, isParentPathEmpty);
+            if (isParentPathEmpty[0]) {
+                int maxShowCharsNum = getMaxShowCharsNum(label1);
+                boolean isContract = path.length() > maxShowCharsNum;
+                int subNum = Math.max(0, maxShowCharsNum - "...".length() - 20);
+                subNum = Math.min(path.length(), subNum);
+                String showPath = isContract ? path.substring(0, subNum) : path;
+                String add = isContract ? "..." : "";
+                label.setName("<html><body>" + highLight(FilePathUtil.getFileName(path), keywords) + getBlank(20) + "<font size=\"-2\">" + showPath + add + "</font></body></html>");
+            } else {
+                label.setName(Constants.RESULT_LABEL_NAME_HOLDER);
+            }
+            label.setText(allHtml);
+            ImageIcon icon = GetIconUtil.getInstance().getBigIcon(path, iconSideLength, iconSideLength);
+            label.setIcon(icon);
         }
-        label.setText(allHtml);
-        ImageIcon icon = GetIconUtil.getInstance().getBigIcon(path, iconSideLength, iconSideLength);
-        label.setIcon(icon);
         if (isChosen) {
             setLabelChosen(label);
         } else {
