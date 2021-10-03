@@ -46,6 +46,7 @@ public class DatabaseService {
     private final ConcurrentLinkedQueue<String> tableQueue;  //保存哪些表需要被查
     private final AtomicBoolean isDatabaseUpdated = new AtomicBoolean(false);
     private final AtomicBoolean isReadSharedMemory = new AtomicBoolean(false);
+    private final AtomicBoolean isCacheSearched = new AtomicBoolean();
     private final @Getter
     ConcurrentLinkedQueue<String> tempResults;  //在优先文件夹和数据库cache未搜索完时暂时保存结果，搜索完后会立即被转移到listResults
     private final AtomicBoolean isStop = new AtomicBoolean(false);
@@ -279,8 +280,10 @@ public class DatabaseService {
                 String eachCache = resultSet.getString("PATH");
                 checkIsMatchedAndAddToList(eachCache, null);
             }
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            isCacheSearched.set(true);
         }
     }
 
@@ -646,10 +649,11 @@ public class DatabaseService {
      * 添加sql语句，并开始搜索
      */
     private void startSearch() {
-        if (!isReadSharedMemory.get()) {
-            searchCache();
-        }
         CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
+        if (!isReadSharedMemory.get()) {
+            isCacheSearched.set(false);
+            cachedThreadPoolUtil.executeTask(this::searchCache);
+        }
         //每个priority用一个线程，每一个后缀名对应一个优先级
         //按照优先级排列，key是sql和表名的对应，value是容器
         LinkedHashMap<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>>
@@ -677,6 +681,18 @@ public class DatabaseService {
                     todo.run();
                 }
             });
+        }
+        long startWaitingTime = System.currentTimeMillis();
+        // 等待cache搜索完成，最多等待5s
+        try {
+            while (!isCacheSearched.get()) {
+                if (System.currentTimeMillis() - startWaitingTime > 5000) {
+                    break;
+                }
+                TimeUnit.MILLISECONDS.sleep(5);
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
         waitForTaskAndMergeResults(containerMap, allTaskStatus, taskStatus);
     }

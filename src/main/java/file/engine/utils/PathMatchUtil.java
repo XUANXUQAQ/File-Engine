@@ -25,7 +25,8 @@ public class PathMatchUtil {
             if (eachKeyword == null || eachKeyword.isEmpty()) {
                 continue;
             }
-            if (eachKeyword.startsWith("/") || eachKeyword.startsWith(File.separator)) {
+            char firstChar = eachKeyword.charAt(0);
+            if (firstChar == '/' || firstChar == File.separatorChar) {
                 //匹配路径
                 isPath = true;
                 Matcher matcher = RegexUtil.slash.matcher(eachKeyword);
