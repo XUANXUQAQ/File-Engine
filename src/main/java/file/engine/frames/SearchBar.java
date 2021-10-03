@@ -539,22 +539,29 @@ public class SearchBar {
                     if (listResultsNum.get() != 0) {
                         if (runningMode != Constants.Enums.RunningMode.PLUGIN_MODE) {
                             if (showingMode != Constants.Enums.ShowingSearchBarMode.EXPLORER_ATTACH) {
-                                if (isVisible()) {
+                                String searchBarText = getSearchBarText();
+                                if (isVisible() && searchBarText.charAt(0) != '>') {
                                     setVisible(false);
                                 }
                             }
                             String res = listResults.get(currentResultCount.get());
                             if (runningMode == Constants.Enums.RunningMode.NORMAL_MODE) {
-                                if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
-                                    if (isOpenLastFolderPressed.get()) {
-                                        //打开上级文件夹
-                                        openFolderByExplorer(res);
-                                    } else if (allConfigs.isDefaultAdmin() || isRunAsAdminPressed.get()) {
-                                        openWithAdmin(res);
-                                    } else if (isCopyPathPressed.get()) {
-                                        copyToClipBoard(res, true);
-                                    } else {
-                                        openWithoutAdmin(res);
+                                String searchBarText = getSearchBarText();
+                                if (searchBarText.charAt(0) == '>') {
+                                    SwingUtilities.invokeLater(() -> textField.setText(">" + res + " "));
+                                    return;
+                                } else {
+                                    if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
+                                        if (isOpenLastFolderPressed.get()) {
+                                            //打开上级文件夹
+                                            openFolderByExplorer(res);
+                                        } else if (allConfigs.isDefaultAdmin() || isRunAsAdminPressed.get()) {
+                                            openWithAdmin(res);
+                                        } else if (isCopyPathPressed.get()) {
+                                            copyToClipBoard(res, true);
+                                        } else {
+                                            openWithoutAdmin(res);
+                                        }
                                     }
                                 }
                             } else if (runningMode == Constants.Enums.RunningMode.COMMAND_MODE) {
