@@ -3042,6 +3042,13 @@ public class SearchBar {
                         repaint();
                     }
                     SwingUtilities.invokeLater(this::autoSetSearchBarRadius);
+                    SwingUtilities.invokeLater(() -> {
+                        if (getSearchBarText().isEmpty()) {
+                            searchInfoLabel.setText("");
+                            searchInfoLabel.setName("");
+                            searchInfoLabel.setIcon(null);
+                        }
+                    });
                     TimeUnit.MILLISECONDS.sleep(16);
                 }
             } catch (InterruptedException e) {
