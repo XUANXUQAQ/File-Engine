@@ -12,6 +12,7 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -52,12 +53,15 @@ public class StartupUtil {
             }
             Map<String, String> infoMap = parseResults(separator, keys, results);
             String taskToRun = infoMap.get("Task To Run");
+            Pattern pattern = RegexUtil.getPattern("\"", 0);
+            taskToRun = pattern.matcher(taskToRun).replaceAll("");
             if (Files.exists(Path.of(taskToRun))) {
                 return 0;
             }
             deleteStartup();
             return 1;
         } catch (Exception e) {
+            e.printStackTrace();
             return 2;
         } finally {
             if (p != null) {
