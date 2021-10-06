@@ -127,10 +127,8 @@ public class DatabaseService {
         try (PreparedStatement stmt = SQLiteUtil.getPreparedStatement("SELECT COUNT(PATH) FROM cache;", "cache");
              ResultSet resultSet = stmt.executeQuery()) {
             cacheNum.set(resultSet.getInt(1));
-        } catch (Exception throwables) {
-            if (IsDebug.isDebug()) {
-                throwables.printStackTrace();
-            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -139,18 +137,23 @@ public class DatabaseService {
      */
     private void executeSqlCommandsThread() {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
-            EventManagement eventManagement = EventManagement.getInstance();
             try {
+                EventManagement eventManagement = EventManagement.getInstance();
                 while (eventManagement.isNotMainExit()) {
                     if (isExecuteImmediately.get()) {
-                        isExecuteImmediately.set(false);
-                        if (!isReadSharedMemory.get()) {
-                            executeAllCommands();
+                        try {
+                            isExecuteImmediately.set(false);
+                            if (!isReadSharedMemory.get()) {
+                                executeAllCommands();
+                            }
+                        } catch (Exception e) {
+                            e.printStackTrace();
                         }
                     }
                     TimeUnit.MILLISECONDS.sleep(20);
                 }
-            } catch (InterruptedException ignored) {
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
         });
     }
