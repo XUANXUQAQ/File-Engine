@@ -636,7 +636,7 @@ public class DatabaseService {
             return sqlColumnMap;
         }
         initTableQueueByPriority();
-        if (Arrays.asList(searchCase).contains("d")) {
+        if (searchCase != null && Arrays.asList(searchCase).contains("d")) {
             LinkedHashMap<String, String> _priorityMap = new LinkedHashMap<>();
             tableQueue.forEach(each -> {
                 // where后面=不能有空格，否则解析priority会出错
