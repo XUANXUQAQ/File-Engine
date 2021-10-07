@@ -636,19 +636,33 @@ public class DatabaseService {
             return sqlColumnMap;
         }
         initTableQueueByPriority();
-        priorityMap.forEach(i -> {
-            LinkedHashMap<String, String> eachPriorityMap = new LinkedHashMap<>();
+        if (Arrays.asList(searchCase).contains("d")) {
+            LinkedHashMap<String, String> _priorityMap = new LinkedHashMap<>();
             tableQueue.forEach(each -> {
                 // where后面=不能有空格，否则解析priority会出错
-                String sql = "SELECT %s FROM " + each + " WHERE PRIORITY=" + i.priority;
-                eachPriorityMap.put(sql, each);
+                String sql = "SELECT %s FROM " + each + " WHERE PRIORITY=" + 0;
+                _priorityMap.put(sql, each);
             });
             ConcurrentSkipListSet<String> container = null;
             if (isNeedContainer) {
                 container = new ConcurrentSkipListSet<>();
             }
-            sqlColumnMap.put(eachPriorityMap, container);
-        });
+            sqlColumnMap.put(_priorityMap, container);
+        } else {
+            priorityMap.forEach(i -> {
+                LinkedHashMap<String, String> eachPriorityMap = new LinkedHashMap<>();
+                tableQueue.forEach(each -> {
+                    // where后面=不能有空格，否则解析priority会出错
+                    String sql = "SELECT %s FROM " + each + " WHERE PRIORITY=" + i.priority;
+                    eachPriorityMap.put(sql, each);
+                });
+                ConcurrentSkipListSet<String> container = null;
+                if (isNeedContainer) {
+                    container = new ConcurrentSkipListSet<>();
+                }
+                sqlColumnMap.put(eachPriorityMap, container);
+            });
+        }
         tableQueue.clear();
         return sqlColumnMap;
     }
@@ -1026,7 +1040,7 @@ public class DatabaseService {
     /**
      * 进程是否存在
      *
-     * @param procName   进程名
+     * @param procName 进程名
      * @return boolean
      * @throws IOException          失败
      * @throws InterruptedException 失败
@@ -1113,7 +1127,7 @@ public class DatabaseService {
     /**
      * 关闭数据库连接并更新数据库
      *
-     * @param ignorePath 忽略文件夹
+     * @param ignorePath     忽略文件夹
      * @param isDropPrevious 是否删除之前的记录
      */
     private void updateLists(String ignorePath, boolean isDropPrevious) throws IOException {
@@ -1247,6 +1261,7 @@ public class DatabaseService {
 
     /**
      * 检查是否拥有管理员权限
+     *
      * @return boolean
      */
     private boolean isAdmin() {
