@@ -55,7 +55,7 @@ public class DatabaseService {
     private volatile String searchText;
     private volatile String[] keywords;
     private final AtomicBoolean isSharedMemoryCreated = new AtomicBoolean(false);
-    private final Set<String> cacheSet = ConcurrentHashMap.newKeySet();
+    private final ConcurrentSkipListSet<String> cacheSet = new ConcurrentSkipListSet<>();
 
     private static volatile DatabaseService INSTANCE = null;
 
