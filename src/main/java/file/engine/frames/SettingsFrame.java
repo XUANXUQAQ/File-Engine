@@ -285,6 +285,7 @@ public class SettingsFrame {
     private JLabel labelLanguagePlaceholder;
     private JLabel labelCommandsPlaceholder;
     private JLabel labelSearchSettingsPlaceholder2;
+    private JTextField textFieldSearchCache;
 
 
     private static volatile SettingsFrame instance = null;
@@ -950,6 +951,31 @@ public class SettingsFrame {
                 JOptionPane.showMessageDialog(frame, paneSwingThemes,
                         translateUtil.getTranslation("Change Theme"),
                         JOptionPane.PLAIN_MESSAGE));
+    }
+
+    private Object[] queryListData(String keyword) {
+        return cacheSet.stream().filter(each -> keyword == null || keyword.isEmpty() || each.toLowerCase().contains(keyword.toLowerCase())).toArray();
+    }
+
+    private void addSearchCacheListener() {
+        textFieldSearchCache.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                Object[] listData = queryListData(textFieldSearchCache.getText());
+                listCache.setListData(listData);
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                Object[] listData = queryListData(textFieldSearchCache.getText());
+                listCache.setListData(listData);
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+
+            }
+        });
     }
 
     private void addButtonDeleteCacheListener() {
@@ -2074,6 +2100,7 @@ public class SettingsFrame {
         addButtonProxyListener();
         addButtonDeleteCacheListener();
         addButtonChangeThemeListener();
+        addSearchCacheListener();
         addButtonDeleteAllCacheListener();
         addButtonPreviewListener();
         addButtonClosePreviewListener();
