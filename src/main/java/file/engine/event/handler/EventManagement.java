@@ -246,7 +246,9 @@ public class EventManagement {
                         throw new RuntimeException("注册Listener方法参数错误" + method);
                     }
                 }
-                registerListener(annotation.listenClass().toString(), method);
+                for (Class<? extends Event> aClass : annotation.listenClass()) {
+                    registerListener(aClass.toString(), method);
+                }
             });
         } catch (ClassNotFoundException e) {
             e.printStackTrace();

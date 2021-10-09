@@ -31,7 +31,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -55,6 +57,7 @@ public class DatabaseService {
     private volatile String[] keywords;
     private final AtomicBoolean isSharedMemoryCreated = new AtomicBoolean(false);
     private final ConcurrentSkipListSet<String> cacheSet = new ConcurrentSkipListSet<>();
+    private final AtomicBoolean isWarmedUp = new AtomicBoolean(false);
 
     private static volatile DatabaseService INSTANCE = null;
 
@@ -279,12 +282,14 @@ public class DatabaseService {
      * 将缓存中的文件保存到cacheSet中
      */
     private void prepareCache() {
+        String eachLine;
         try (PreparedStatement statement = SQLiteUtil.getPreparedStatement("SELECT PATH FROM cache;", "cache");
              ResultSet resultSet = statement.executeQuery()) {
             while (resultSet.next()) {
-                cacheSet.add(resultSet.getString("PATH"));
+                eachLine = resultSet.getString("PATH");
+                cacheSet.add(eachLine);
             }
-        } catch (SQLException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -373,6 +378,7 @@ public class DatabaseService {
                     pStmt.execute();
                 } catch (SQLException e) {
                     e.printStackTrace();
+                    return;
                 }
             }
         }));
@@ -674,7 +680,7 @@ public class DatabaseService {
      */
     private void startSearch() {
         CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
-        this.searchCache();
+        searchCache();
         //每个priority用一个线程，每一个后缀名对应一个优先级
         //按照优先级排列，key是sql和表名的对应，value是容器
         LinkedHashMap<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>>
@@ -1300,14 +1306,14 @@ public class DatabaseService {
         databaseService.tempResults.clear();
     }
 
-    @EventListener(listenClass = BootSystemEvent.class)
-    private static void warmupDatabase(Event event) {
-        getInstance().warmupDatabase();
-    }
-
-    @EventListener(listenClass = BootSystemEvent.class)
-    private static void prepareCache(Event event) {
-        getInstance().prepareCache();
+    @EventListener(listenClass = {BootSystemEvent.class, StartSearchEvent.class})
+    private static void init(Event event) {
+        DatabaseService databaseService = getInstance();
+        if (!databaseService.isWarmedUp.get()) {
+            databaseService.isWarmedUp.set(true);
+            databaseService.prepareCache();
+            databaseService.warmupDatabase();
+        }
     }
 
     @EventRegister(registerClass = AddToCacheEvent.class)

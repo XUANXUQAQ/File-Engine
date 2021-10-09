@@ -1676,6 +1676,7 @@ public class SettingsFrame {
      * 初始化textField的显示
      */
     private void setTextFieldAndTextAreaGui() {
+        textFieldSearchCache.setText("");
         textFieldBackgroundDefault.setText(toRGBHexString(allConfigs.getDefaultBackgroundColor()));
         textFieldLabelColor.setText(toRGBHexString(allConfigs.getLabelColor()));
         textFieldFontColorWithCoverage.setText(toRGBHexString(allConfigs.getLabelFontColorWithCoverage()));
