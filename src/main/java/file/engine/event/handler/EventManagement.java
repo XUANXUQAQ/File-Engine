@@ -65,7 +65,8 @@ public class EventManagement {
                 }
                 TimeUnit.MILLISECONDS.sleep(5);
             }
-        } catch (InterruptedException ignored) {
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
         return event.isFailed();
     }
