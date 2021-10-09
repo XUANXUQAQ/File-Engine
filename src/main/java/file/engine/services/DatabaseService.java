@@ -46,7 +46,6 @@ public class DatabaseService {
     private final ConcurrentLinkedQueue<String> tableQueue;  //保存哪些表需要被查
     private final AtomicBoolean isDatabaseUpdated = new AtomicBoolean(false);
     private final AtomicBoolean isReadSharedMemory = new AtomicBoolean(false);
-    private final AtomicBoolean isCacheSearched = new AtomicBoolean();
     private final @Getter
     ConcurrentLinkedQueue<String> tempResults;  //在优先文件夹和数据库cache未搜索完时暂时保存结果，搜索完后会立即被转移到listResults
     private final AtomicBoolean isStop = new AtomicBoolean(false);
@@ -294,13 +293,8 @@ public class DatabaseService {
      * 从缓存中搜索结果并将匹配的放入listResults
      */
     private void searchCache() {
-        try {
-            isCacheSearched.set(false);
-            for (String each : cacheSet) {
-                checkIsMatchedAndAddToList(each, null);
-            }
-        } finally {
-            isCacheSearched.set(true);
+        for (String each : cacheSet) {
+            checkIsMatchedAndAddToList(each, null);
         }
     }
 
@@ -680,7 +674,7 @@ public class DatabaseService {
      */
     private void startSearch() {
         CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
-        cachedThreadPoolUtil.executeTask(this::searchCache);
+        this.searchCache();
         //每个priority用一个线程，每一个后缀名对应一个优先级
         //按照优先级排列，key是sql和表名的对应，value是容器
         LinkedHashMap<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>>
@@ -708,18 +702,6 @@ public class DatabaseService {
                     todo.run();
                 }
             });
-        }
-        long startWaitingTime = System.currentTimeMillis();
-        // 等待cache搜索完成，最多等待3s
-        try {
-            while (!isCacheSearched.get()) {
-                if (System.currentTimeMillis() - startWaitingTime > 3000) {
-                    break;
-                }
-                TimeUnit.MILLISECONDS.sleep(5);
-            }
-        } catch (InterruptedException e) {
-            e.printStackTrace();
         }
         waitForTaskAndMergeResults(containerMap, allTaskStatus, taskStatus);
     }
