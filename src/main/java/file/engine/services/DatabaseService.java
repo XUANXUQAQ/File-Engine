@@ -644,9 +644,18 @@ public class DatabaseService {
             return sqlColumnMap;
         }
         initTableQueueByPriority();
+        int asciiSum = 0;
+        for (String keyword : keywords) {
+            int ascII = GetAscII.INSTANCE.getAscII(keyword);
+            asciiSum += Math.max(ascII, 0);
+        }
+        int asciiGroup = asciiSum / 100;
+        String firstTableName = "list" + asciiGroup;
         if (searchCase != null && Arrays.asList(searchCase).contains("d")) {
             LinkedHashMap<String, String> _priorityMap = new LinkedHashMap<>();
-            tableQueue.forEach(each -> {
+            String _sql = "SELECT %s FROM " + firstTableName + " WHERE PRIORITY=" + 0;
+            _priorityMap.put(_sql, firstTableName);
+            tableQueue.stream().filter(each -> !each.equals(firstTableName)).forEach(each -> {
                 // where后面=不能有空格，否则解析priority会出错
                 String sql = "SELECT %s FROM " + each + " WHERE PRIORITY=" + 0;
                 _priorityMap.put(sql, each);
@@ -657,9 +666,11 @@ public class DatabaseService {
             }
             sqlColumnMap.put(_priorityMap, container);
         } else {
-            priorityMap.forEach(i -> {
+            for (Pair i : priorityMap) {
                 LinkedHashMap<String, String> eachPriorityMap = new LinkedHashMap<>();
-                tableQueue.forEach(each -> {
+                String _sql = "SELECT %s FROM " + firstTableName + " WHERE PRIORITY=" + i.priority;
+                eachPriorityMap.put(_sql, firstTableName);
+                tableQueue.stream().filter(each -> !each.equals(firstTableName)).forEach(each -> {
                     // where后面=不能有空格，否则解析priority会出错
                     String sql = "SELECT %s FROM " + each + " WHERE PRIORITY=" + i.priority;
                     eachPriorityMap.put(sql, each);
@@ -669,7 +680,7 @@ public class DatabaseService {
                     container = new ConcurrentSkipListSet<>();
                 }
                 sqlColumnMap.put(eachPriorityMap, container);
-            });
+            }
         }
         tableQueue.clear();
         return sqlColumnMap;
@@ -887,7 +898,7 @@ public class DatabaseService {
         if (!commandQueue.isEmpty()) {
             LinkedHashSet<SQLWithTaskId> tempCommandSet = new LinkedHashSet<>(commandQueue);
             HashMap<String, LinkedList<String>> commandMap = new HashMap<>();
-            tempCommandSet.forEach(sqlWithTaskId -> {
+            for (SQLWithTaskId sqlWithTaskId : tempCommandSet) {
                 if (commandMap.containsKey(sqlWithTaskId.key)) {
                     commandMap.get(sqlWithTaskId.key).add(sqlWithTaskId.sql);
                 } else {
@@ -895,7 +906,7 @@ public class DatabaseService {
                     sqls.add(sqlWithTaskId.sql);
                     commandMap.put(sqlWithTaskId.key, sqls);
                 }
-            });
+            }
             commandMap.forEach((k, v) -> {
                 Statement stmt = null;
                 try {
