@@ -22,7 +22,6 @@ import file.engine.utils.system.properties.IsPreview;
 import lombok.SneakyThrows;
 
 import javax.swing.*;
-import java.awt.*;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.sql.ResultSet;
@@ -32,7 +31,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import static file.engine.utils.StartupUtil.hasStartup;
 
@@ -364,10 +362,6 @@ public class MainClass {
         }
     }
 
-    static class CursorCount {
-        private static final AtomicInteger count = new AtomicInteger();
-    }
-
     private static void initPinyin() {
         Pinyin.init(Pinyin.newConfig().with(CnCityDict.getInstance()));
     }
@@ -392,7 +386,7 @@ public class MainClass {
         EventManagement eventManagement = EventManagement.getInstance();
         TranslateUtil translateUtil = TranslateUtil.getInstance();
 
-        startGetCursorPosTimer();
+        SystemIdleCheckUtil.start();
 
         if (hasStartup() == 1) {
             eventManagement.putEvent(
@@ -401,9 +395,6 @@ public class MainClass {
         }
         while (eventManagement.isNotMainExit()) {
             // 主循环开始
-            if (CursorCount.count.get() < 200) {
-                CursorCount.count.incrementAndGet();
-            }
             //检查已工作时间
             endTime = new Date();
             timeDiff = endTime.getTime() - startTime.getTime();
@@ -420,7 +411,7 @@ public class MainClass {
                     System.out.println("前台程序已全屏");
                 }
             }
-            if ((isDatabaseOutDated && isCursorLongTimeNotMove() && !GetHandle.INSTANCE.isForegroundFullscreen()) || isNeedUpdate) {
+            if ((isDatabaseOutDated && SystemIdleCheckUtil.isCursorLongTimeNotMove() && !GetHandle.INSTANCE.isForegroundFullscreen()) || isNeedUpdate) {
                 isDatabaseOutDated = false;
                 isNeedUpdate = false;
                 eventManagement.putEvent(new ShowTaskBarMessageEvent(
@@ -436,41 +427,6 @@ public class MainClass {
             }
             TimeUnit.MILLISECONDS.sleep(50);
         }
-    }
-
-    /**
-     * 检测鼠标是否在两分钟内都未移动
-     *
-     * @return true if cursor not move in 2 minutes
-     */
-    private static boolean isCursorLongTimeNotMove() {
-        return CursorCount.count.get() > 120;
-    }
-
-    /**
-     * 持续检测鼠标位置，如果在一秒内移动过，则重置CursorCount.count
-     */
-    private static void startGetCursorPosTimer() {
-        CachedThreadPoolUtil.getInstance().executeTask(() -> {
-            EventManagement eventManagement = EventManagement.getInstance();
-            try {
-                Point lastPoint = new Point();
-                while (eventManagement.isNotMainExit()) {
-                    Point point = getCursorPoint();
-                    if (!point.equals(lastPoint)) {
-                        CursorCount.count.set(0);
-                    }
-                    lastPoint.setLocation(point);
-                    TimeUnit.SECONDS.sleep(1);
-                }
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        });
-    }
-
-    private static Point getCursorPoint() {
-        return java.awt.MouseInfo.getPointerInfo().getLocation();
     }
 
     /**

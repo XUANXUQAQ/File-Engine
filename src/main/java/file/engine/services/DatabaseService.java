@@ -12,6 +12,7 @@ import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
 import file.engine.event.handler.impl.BootSystemEvent;
 import file.engine.event.handler.impl.database.*;
+import file.engine.event.handler.impl.frame.searchBar.IsSearchBarVisibleEvent;
 import file.engine.event.handler.impl.monitor.disk.StartMonitorDiskEvent;
 import file.engine.event.handler.impl.stop.RestartEvent;
 import file.engine.event.handler.impl.taskbar.ShowTaskBarMessageEvent;
@@ -496,11 +497,8 @@ public class DatabaseService {
             } catch (Exception e) {
                 e.printStackTrace();
             } finally {
-                EventManagement.getInstance().putEvent(new SearchDoneEvent());
-                if (isSharedMemoryCreated.get()) {
-                    isSharedMemoryCreated.set(false);
-                    ResultPipe.INSTANCE.closeAllSharedMemory();
-                }
+                EventManagement eventManagement = EventManagement.getInstance();
+                eventManagement.putEvent(new SearchDoneEvent());
             }
         });
     }
@@ -645,9 +643,11 @@ public class DatabaseService {
         }
         initTableQueueByPriority();
         int asciiSum = 0;
-        for (String keyword : keywords) {
-            int ascII = GetAscII.INSTANCE.getAscII(keyword);
-            asciiSum += Math.max(ascII, 0);
+        if (keywords != null) {
+            for (String keyword : keywords) {
+                int ascII = GetAscII.INSTANCE.getAscII(keyword);
+                asciiSum += Math.max(ascII, 0);
+            }
         }
         int asciiGroup = asciiSum / 100;
         String firstTableName = "list" + asciiGroup;
@@ -1133,11 +1133,34 @@ public class DatabaseService {
      * @param isDropPrevious 是否删除之前的记录
      */
     private void updateLists(String ignorePath, boolean isDropPrevious) throws IOException {
+        if (status == Constants.Enums.DatabaseStatus.MANUAL_UPDATE) {
+            return;
+        }
         checkFileSize();
         recreateDatabase(isDropPrevious);
         waitForCommandSet(SqlTaskIds.CREATE_TABLE);
         SQLiteUtil.closeAll();
         isSharedMemoryCreated.set(true);
+        CachedThreadPoolUtil.getInstance().executeTask(() -> {
+            try {
+                EventManagement eventManagement = EventManagement.getInstance();
+                while (isSharedMemoryCreated.get()) {
+                    if (SystemIdleCheckUtil.isCursorLongTimeNotMove()) {
+                        IsSearchBarVisibleEvent event = new IsSearchBarVisibleEvent();
+                        eventManagement.putEvent(event);
+                        eventManagement.waitForEvent(event);
+                        boolean isVisible = event.getReturnValue();
+                        if (!isVisible) {
+                            isSharedMemoryCreated.set(false);
+                            ResultPipe.INSTANCE.closeAllSharedMemory();
+                        }
+                    }
+                    TimeUnit.MILLISECONDS.sleep(50);
+                }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        });
         searchFile(AllConfigs.getInstance().getDisks(), ignorePath);
         try {
             waitForProcessAsync("fileSearcherUSN.exe", () -> {
