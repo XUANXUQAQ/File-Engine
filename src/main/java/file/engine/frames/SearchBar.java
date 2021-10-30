@@ -4242,7 +4242,6 @@ public class SearchBar {
         searchInfoLabel.setText("");
         searchInfoLabel.setName("");
         searchInfoLabel.setIcon(null);
-        EventManagement.getInstance().putEvent(new StopPreviewEvent());
     }
 
     /**
