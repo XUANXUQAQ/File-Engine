@@ -38,7 +38,7 @@ import static file.engine.utils.StartupUtil.hasStartup;
 public class MainClass {
     private static final String FILE_MONITOR_64_MD_5 = "5a8c123397c8e89614d4f9b91c2fa8f9";
     private static final String GET_ASC_II_64_MD_5 = "62a56c26e1afa7c4fa3f441aadb9d515";
-    private static final String HOTKEY_LISTENER_64_MD_5 = "6b6c2fc8dfd0f19249cdaf81010a7de5";
+    private static final String HOTKEY_LISTENER_64_MD_5 = "28861deda83c3a04f76cdb896985a129";
     private static final String IS_LOCAL_DISK_64_MD_5 = "50a5afd3611f07bec792ddf3a03c91d1";
     private static final String FILE_SEARCHER_USN_64_MD_5 = "c87929bd82b67f1dd343ed4420e6e805";
     private static final String SQLITE3_64_MD_5 = "703bd51c19755db49c9070ceb255dfe5";
