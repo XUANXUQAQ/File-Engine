@@ -21,6 +21,7 @@ import file.engine.utils.bit.Bit;
 import file.engine.utils.system.properties.IsDebug;
 import lombok.Data;
 import lombok.Getter;
+import lombok.SneakyThrows;
 
 import java.io.*;
 import java.nio.charset.Charset;
@@ -238,6 +239,50 @@ public class DatabaseService {
     }
 
     /**
+     * 搜索优先文件夹
+     */
+    private void searchPriorityFolder() {
+        File path = new File(AllConfigs.getInstance().getPriorityFolder());
+        if (!path.exists()) {
+            return;
+        }
+        File[] files = path.listFiles();
+        if (null == files || files.length == 0) {
+            return;
+        }
+        LinkedList<String> listRemainDir = new LinkedList<>();
+        for (File each : files) {
+            if (isStop.get()) {
+                return;
+            }
+            checkIsMatchedAndAddToList(each.getAbsolutePath(), null);
+            if (each.isDirectory()) {
+                listRemainDir.add(each.getAbsolutePath());
+            }
+        }
+        out:
+        while (!listRemainDir.isEmpty()) {
+            String remain = listRemainDir.poll();
+            if (remain == null || remain.isEmpty()) {
+                continue;
+            }
+            File[] allFiles = new File(remain).listFiles();
+            if (allFiles == null || allFiles.length == 0) {
+                continue;
+            }
+            for (File each : allFiles) {
+                checkIsMatchedAndAddToList(each.getAbsolutePath(), null);
+                if (isStop.get()) {
+                    break out;
+                }
+                if (each.isDirectory()) {
+                    listRemainDir.add(each.getAbsolutePath());
+                }
+            }
+        }
+    }
+
+    /**
      * 读取磁盘监控信息并发送添加sql线程
      */
     private void addRecordsToDatabaseThread() {
@@ -366,23 +411,27 @@ public class DatabaseService {
     /**
      * 启动数据库，使第一次启动响应速度加快
      */
+    @SneakyThrows
     private void warmupDatabase() {
         initTableMap();
-        LinkedHashMap<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>> nonFormattedSql = getNonFormattedSqlFromTableQueue(false);
-        nonFormattedSql.forEach((commandsMap, container) -> Arrays.stream(RegexUtil.comma.split(AllConfigs.getInstance().getDisks())).forEach(eachDisk -> {
-            Set<String> sqls = commandsMap.keySet();
-            String formattedSql;
-            for (String each : sqls) {
-                formattedSql = String.format(each, "PATH");
-                String disk = String.valueOf(eachDisk.charAt(0));
-                try (PreparedStatement pStmt = SQLiteUtil.getPreparedStatement(formattedSql, disk)) {
-                    pStmt.execute();
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                    return;
+        LinkedHashMap<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>> nonFormattedSql =
+                getNonFormattedSqlFromTableQueue(false);
+        String[] disks = RegexUtil.comma.split(AllConfigs.getInstance().getDisks());
+        for (Map.Entry<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>> entry
+                : nonFormattedSql.entrySet()) {
+            LinkedHashMap<String, String> commandsMap = entry.getKey();
+            for (String eachDisk : disks) {
+                Set<String> sqls = commandsMap.keySet();
+                String formattedSql;
+                for (String each : sqls) {
+                    formattedSql = String.format(each, "PATH");
+                    String disk = String.valueOf(eachDisk.charAt(0));
+                    try (PreparedStatement pStmt = SQLiteUtil.getPreparedStatement(formattedSql, disk)) {
+                        pStmt.execute();
+                    }
                 }
             }
-        }));
+        }
     }
 
     /**
@@ -692,6 +741,7 @@ public class DatabaseService {
     private void startSearch() {
         CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
         searchCache();
+        searchPriorityFolder();
         //每个priority用一个线程，每一个后缀名对应一个优先级
         //按照优先级排列，key是sql和表名的对应，value是容器
         LinkedHashMap<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>>
