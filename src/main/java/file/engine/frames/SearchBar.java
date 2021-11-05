@@ -43,8 +43,6 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -59,7 +57,6 @@ import java.util.stream.Collectors;
 
 @SuppressWarnings({"IndexOfReplaceableByContains", "ListIndexOfReplaceableByContains"})
 public class SearchBar {
-    private final AtomicBoolean isPrioritySearched = new AtomicBoolean(false);
     private final AtomicBoolean isLockMouseMotion = new AtomicBoolean(false);
     private final AtomicBoolean isOpenLastFolderPressed = new AtomicBoolean(false);
     private final AtomicBoolean isRunAsAdminPressed = new AtomicBoolean(false);
@@ -2314,7 +2311,6 @@ public class SearchBar {
         firstResultStartShowingTime = 0;
         currentResultCount.set(0);
         currentLabelSelectedPosition.set(0);
-        isPrioritySearched.set(false);
         isRoundRadiusSet.set(false);
         searchInfoLabel.setText("");
         searchInfoLabel.setName("");
@@ -3151,17 +3147,15 @@ public class SearchBar {
                         eventManagement.putEvent(new StopSearchEvent());
                         return;
                     }
-                    if (isPrioritySearched.get()) {
-                        String each;
-                        while ((each = tempResults.poll()) != null) {
-                            if (startTime > time || !isVisible() || listResultsNum.get() >= Constants.MAX_RESULTS_COUNT) {
-                                eventManagement.putEvent(new StopSearchEvent());
-                                return;
-                            }
-                            if (!listResults.contains(each)) {
-                                listResults.add(each);
-                                listResultsNum.incrementAndGet();
-                            }
+                    String each;
+                    while ((each = tempResults.poll()) != null) {
+                        if (startTime > time || !isVisible() || listResultsNum.get() >= Constants.MAX_RESULTS_COUNT) {
+                            eventManagement.putEvent(new StopSearchEvent());
+                            return;
+                        }
+                        if (!listResults.contains(each)) {
+                            listResults.add(each);
+                            listResultsNum.incrementAndGet();
                         }
                     }
                     TimeUnit.MILLISECONDS.sleep(1);
@@ -3469,10 +3463,7 @@ public class SearchBar {
                                 }
                             } else {
                                 if (databaseService.getStatus() == Constants.Enums.DatabaseStatus.NORMAL) {
-                                    //对搜索关键字赋值
-                                    searchPriorityFolder();
                                     addShowSearchStatusThread(isShowSearchStatusThreadNotExist);
-                                    isPrioritySearched.set(true);
                                 } else if (databaseService.getStatus() == Constants.Enums.DatabaseStatus.MANUAL_UPDATE) {
                                     setLabelChosen(label1);
                                     eventManagement.putEvent(new ShowTaskBarMessageEvent(translateUtil.getTranslation("Info"),
@@ -3528,32 +3519,6 @@ public class SearchBar {
             list.toArray(tmp);
             searchCase = tmp;
         }
-    }
-
-    /**
-     * * 检查文件路径是否匹配然后加入到列表
-     *
-     * @param path 文件路径
-     */
-    private void checkIsMatchedAndAddToList(String path) {
-        if (PathMatchUtil.check(path, searchCase, searchText, keywords)) {
-            if (Files.exists(Path.of(path))) {
-                //字符串匹配通过
-                if (!listResults.contains(path)) {
-                    listResultsNum.incrementAndGet();
-                    listResults.add(path);
-                }
-            }
-        }
-    }
-
-    /**
-     * 检查文件路径是否匹配然后加入到列表
-     *
-     * @param path 文件路径
-     */
-    private void matchOnCacheAndPriorityFolder(String path) {
-        checkIsMatchedAndAddToList(path);
     }
 
     private void showSearchbar() {
@@ -4115,52 +4080,6 @@ public class SearchBar {
     }
 
     /**
-     * 搜索优先文件夹
-     */
-    private void searchPriorityFolder() {
-        File path = new File(AllConfigs.getInstance().getPriorityFolder());
-        boolean isPriorityFolderExist = path.exists();
-        if (!isPriorityFolderExist) {
-            return;
-        }
-        File[] files = path.listFiles();
-        if (null == files || files.length == 0) {
-            return;
-        }
-        LinkedList<String> listRemainDir = new LinkedList<>();
-        long startSearchTime = System.currentTimeMillis();
-        for (File each : files) {
-            if (startTime > startSearchTime) {
-                return;
-            }
-            matchOnCacheAndPriorityFolder(each.getAbsolutePath());
-            if (each.isDirectory()) {
-                listRemainDir.add(each.getAbsolutePath());
-            }
-        }
-        out:
-        while (!listRemainDir.isEmpty()) {
-            String remain = listRemainDir.poll();
-            if (remain == null || remain.isEmpty()) {
-                continue;
-            }
-            File[] allFiles = new File(remain).listFiles();
-            if (allFiles == null || allFiles.length == 0) {
-                continue;
-            }
-            for (File each : allFiles) {
-                matchOnCacheAndPriorityFolder(each.getAbsolutePath());
-                if (startTime > startSearchTime) {
-                    break out;
-                }
-                if (each.isDirectory()) {
-                    listRemainDir.add(each.getAbsolutePath());
-                }
-            }
-        }
-    }
-
-    /**
      * 设置窗口透明度
      *
      * @param trans 透明度
@@ -4235,7 +4154,6 @@ public class SearchBar {
         isRunAsAdminPressed.set(false);
         isCopyPathPressed.set(false);
         startSignal.set(false);
-        isPrioritySearched.set(false);
         isMouseDraggedInWindow.set(false);
         currentUsingPlugin = null;
         isRoundRadiusSet.set(false);
