@@ -30,8 +30,6 @@ public class EventManagement {
     private final ConcurrentHashMap<String, ConcurrentLinkedQueue<Method>> EVENT_LISTENER_MAP = new ConcurrentHashMap<>();
     private final AtomicInteger failureEventNum = new AtomicInteger(0);
 
-    private final int MAX_TASK_RETRY_TIME = 20;
-
     private EventManagement() {
         startBlockEventHandler();
         startAsyncEventHandler();
@@ -308,7 +306,7 @@ public class EventManagement {
                         if (event.isFinished() || event.isFailed()) {
                             continue;
                         }
-                        if (event.getExecuteTimes() < MAX_TASK_RETRY_TIME) {
+                        if (event.getExecuteTimes() < event.getMaxRetryTimes()) {
                             //判断是否超过最大次数
                             if (executeTaskFailed(event)) {
                                 System.err.println("异步任务执行失败---" + event);
@@ -361,7 +359,7 @@ public class EventManagement {
                         continue;
                     }
                     //判断任务是否超过最大执行次数
-                    if (event.getExecuteTimes() < MAX_TASK_RETRY_TIME) {
+                    if (event.getExecuteTimes() < event.getMaxRetryTimes()) {
                         if (executeTaskFailed(event)) {
                             if (failureEventNum.get() > 20) {
                                 System.err.println("超过20个任务失败，自动重启");

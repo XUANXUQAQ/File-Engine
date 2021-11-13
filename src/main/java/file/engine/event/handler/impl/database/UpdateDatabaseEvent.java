@@ -9,5 +9,6 @@ public class UpdateDatabaseEvent extends Event {
     public UpdateDatabaseEvent(boolean isDropPrevious) {
         this.setBlock();
         this.isDropPrevious = isDropPrevious;
+        setMaxRetryTimes(1);
     }
 }

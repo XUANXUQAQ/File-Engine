@@ -11,6 +11,7 @@ public class Event {
     private final AtomicBoolean isFailed = new AtomicBoolean(false);
     private final AtomicInteger executeTimes = new AtomicInteger(0);
     private final AtomicBoolean isBlock = new AtomicBoolean(false);
+    private int maxRetryTimes = 5;
     private @Setter
     Object returnValue;
     private Consumer<Event> callback;
@@ -65,6 +66,14 @@ public class Event {
 
     protected void setErrorHandler(Consumer<Event> errorHandler) {
         this.errorHandler = errorHandler;
+    }
+
+    public int getMaxRetryTimes() {
+        return maxRetryTimes;
+    }
+
+    public void setMaxRetryTimes(int maxRetryTimes) {
+        this.maxRetryTimes = maxRetryTimes;
     }
 
     @Override

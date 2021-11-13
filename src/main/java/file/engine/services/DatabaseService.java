@@ -1239,7 +1239,7 @@ public class DatabaseService {
             }
             TimeUnit.MILLISECONDS.sleep(10);
         }
-        return process.exitValue() == 0;
+        return ResultPipe.INSTANCE.isComplete() || process.exitValue() == 0;
     }
 
     /**
