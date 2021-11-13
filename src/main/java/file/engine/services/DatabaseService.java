@@ -1233,13 +1233,14 @@ public class DatabaseService {
         isReadFromSharedMemory.set(true);
         final long timeLimit = 10 * 60 * 1000;
         // 阻塞等待程序执行完成
-        while (!ResultPipe.INSTANCE.isComplete() && isProcessExist("fileSearcherUSN.exe")) {
+        boolean isSharedMemoryComplete;
+        while (!(isSharedMemoryComplete = ResultPipe.INSTANCE.isComplete()) && isProcessExist("fileSearcherUSN.exe")) {
             if (System.currentTimeMillis() - start > timeLimit) {
                 break;
             }
             TimeUnit.MILLISECONDS.sleep(10);
         }
-        return ResultPipe.INSTANCE.isComplete() || process.exitValue() == 0;
+        return isSharedMemoryComplete || process.exitValue() == 0;
     }
 
     /**
