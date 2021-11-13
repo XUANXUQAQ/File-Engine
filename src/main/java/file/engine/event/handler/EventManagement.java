@@ -322,7 +322,8 @@ public class EventManagement {
                             }
                         }
                     }
-                } catch (InterruptedException ignored) {
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
                 } finally {
                     if (isDebug) {
                         System.err.println("******异步任务执行线程" + finalI + "退出******");
@@ -377,7 +378,8 @@ public class EventManagement {
                         }
                     }
                 }
-            } catch (InterruptedException ignored) {
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             } finally {
                 if (isDebug) {
                     System.err.println("******同步任务执行线程退出******");

@@ -90,6 +90,11 @@ int main()
 	vector<string> ignorePathsVec;
 
 	ifstream input("MFTSearchInfo.dat", ios::in);
+	if (!input)
+	{
+		cerr << "open MFTSearchInfo.dat failed";
+		return 1;
+	}
 	input.getline(diskPath, 500);
 	input.getline(output, 500);
 	input.getline(ignorePath, 500);
@@ -133,7 +138,7 @@ int main()
 			if (SQLITE_OK != ret)
 			{
 				cout << "error opening database" << endl;
-				return 0;
+				return 1;
 			}
 			tmpDbPath[strlen(tmpDbPath) - 4] = '\0';
 			strcat_s(tmpDbPath, "cache.db");
