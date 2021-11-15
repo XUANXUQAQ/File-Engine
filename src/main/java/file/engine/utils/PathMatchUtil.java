@@ -1,6 +1,6 @@
 package file.engine.utils;
 
-import file.engine.utils.file.FilePathUtil;
+import file.engine.utils.file.FileUtil;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -32,11 +32,11 @@ public class PathMatchUtil {
                 Matcher matcher = RegexUtil.slash.matcher(eachKeyword);
                 eachKeyword = matcher.replaceAll(Matcher.quoteReplacement(File.separator));
                 //获取父路径
-                matcherStrFromFilePath = FilePathUtil.getParentPath(path);
+                matcherStrFromFilePath = FileUtil.getParentPath(path);
             } else {
                 //获取名字
                 isPath = false;
-                matcherStrFromFilePath = FilePathUtil.getFileName(path);
+                matcherStrFromFilePath = FileUtil.getFileName(path);
             }
             //转换大小写
             if (isIgnoreCase) {
@@ -87,7 +87,7 @@ public class PathMatchUtil {
                     }
                     break;
                 case "full":
-                    if (!searchText.equalsIgnoreCase(FilePathUtil.getFileName(path))) {
+                    if (!searchText.equalsIgnoreCase(FileUtil.getFileName(path))) {
                         return false;
                     }
                     break;

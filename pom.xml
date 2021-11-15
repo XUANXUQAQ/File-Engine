@@ -39,12 +39,12 @@
         <dependency>
             <groupId>net.java.dev.jna</groupId>
             <artifactId>jna</artifactId>
-            <version>5.9.0</version>
+            <version>5.10.0</version>
         </dependency>
         <dependency>
             <groupId>org.xerial</groupId>
             <artifactId>sqlite-jdbc</artifactId>
-            <version>3.36.0.2</version>
+            <version>3.36.0.3</version>
         </dependency>
         <dependency>
             <groupId>com.formdev</groupId>
