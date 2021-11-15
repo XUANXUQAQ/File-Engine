@@ -1155,8 +1155,8 @@ public class DatabaseService {
         for (String eachDisk : RegexUtil.comma.split(AllConfigs.getInstance().getDisks())) {
             String name = eachDisk.charAt(0) + ".db";
             long length = Files.size(Path.of("data/" + name));
-            if (length > 5L * 1024 * 1024 * 100) {
-                // 大小超过500M
+            if (length > 4L * 1024 * 1024 * 100) {
+                // 大小超过400M
                 if (IsDebug.isDebug()) {
                     System.out.println("当前文件" + name + "过大，已删除");
                 }
