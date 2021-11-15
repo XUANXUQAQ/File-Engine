@@ -32,6 +32,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.time.LocalDate;
+import java.time.Period;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentSkipListSet;
@@ -1150,17 +1152,40 @@ public class DatabaseService {
     /**
      * 检查索引数据库大小
      */
-    private void checkFileSize() throws IOException {
+    private void checkFileSize() {
+        boolean isDatabaseCreateTimeTooLong = false;
+        String databaseCreateTimeFileName = "user/databaseCreateTime.dat";
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(databaseCreateTimeFileName), StandardCharsets.UTF_8))) {
+            LocalDate now = LocalDate.now();
+            LocalDate createTime = LocalDate.parse(reader.readLine());
+            Period between = Period.between(createTime, now);
+            if (between.getDays() > 5) {
+                isDatabaseCreateTimeTooLong = true;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(databaseCreateTimeFileName), StandardCharsets.UTF_8))) {
+            LocalDate now = LocalDate.now();
+            writer.write(now.toString());
+        } catch (IOException e1) {
+            e1.printStackTrace();
+        }
+
         SQLiteUtil.closeAll();
         for (String eachDisk : RegexUtil.comma.split(AllConfigs.getInstance().getDisks())) {
             String name = eachDisk.charAt(0) + ".db";
-            long length = Files.size(Path.of("data/" + name));
-            if (length > 3L * 1024 * 1024 * 100) {
-                // 大小超过300M
-                if (IsDebug.isDebug()) {
-                    System.out.println("当前文件" + name + "过大，已删除");
+            try {
+                long length = Files.size(Path.of("data/" + name));
+                if (length > 3L * 1024 * 1024 * 100 || isDatabaseCreateTimeTooLong) {
+                    // 大小超过300M
+                    if (IsDebug.isDebug()) {
+                        System.out.println("当前文件" + name + "过大，已删除");
+                    }
+                    Files.delete(Path.of("data/" + name));
                 }
-                Files.delete(Path.of("data/" + name));
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
         SQLiteUtil.initAllConnections();
@@ -1202,12 +1227,7 @@ public class DatabaseService {
             throw new RuntimeException("already searching");
         }
         setStatus(Constants.Enums.DatabaseStatus.MANUAL_UPDATE);
-        try {
-            checkFileSize();
-        } catch (IOException e) {
-            e.printStackTrace();
-            return false;
-        }
+        checkFileSize();
         recreateDatabase(isDropPrevious);
         waitForCommandSet(SqlTaskIds.CREATE_TABLE);
         SQLiteUtil.closeAll();
