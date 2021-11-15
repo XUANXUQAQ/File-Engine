@@ -1,5 +1,6 @@
 package file.engine.services;
 
+import com.google.gson.Gson;
 import file.engine.annotation.EventListener;
 import file.engine.annotation.EventRegister;
 import file.engine.configs.AllConfigs;
@@ -18,6 +19,7 @@ import file.engine.event.handler.impl.stop.RestartEvent;
 import file.engine.event.handler.impl.taskbar.ShowTaskBarMessageEvent;
 import file.engine.utils.*;
 import file.engine.utils.bit.Bit;
+import file.engine.utils.gson.GsonUtil;
 import file.engine.utils.system.properties.IsDebug;
 import lombok.Data;
 import lombok.Getter;
@@ -1152,41 +1154,57 @@ public class DatabaseService {
     /**
      * 检查索引数据库大小
      */
+    @SuppressWarnings({"unchecked", "rawtypes"})
     private void checkFileSize() {
-        boolean isDatabaseCreateTimeTooLong = false;
         String databaseCreateTimeFileName = "user/databaseCreateTime.dat";
+        HashMap<String, String> databaseCreateTimeMap = new HashMap<>();
+        String[] disks = RegexUtil.comma.split(AllConfigs.getInstance().getDisks());
+        LocalDate now = LocalDate.now();
+        //从文件中读取每个数据库的创建时间
+        StringBuilder stringBuilder = new StringBuilder();
+        Gson gson = GsonUtil.INSTANCE.getGson();
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(databaseCreateTimeFileName), StandardCharsets.UTF_8))) {
-            LocalDate now = LocalDate.now();
-            LocalDate createTime = LocalDate.parse(reader.readLine());
-            Period between = Period.between(createTime, now);
-            if (between.getDays() > 5) {
-                isDatabaseCreateTimeTooLong = true;
+            String line;
+            while ((line = reader.readLine()) != null) {
+                stringBuilder.append(line);
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
-        try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(databaseCreateTimeFileName), StandardCharsets.UTF_8))) {
-            LocalDate now = LocalDate.now();
-            writer.write(now.toString());
-        } catch (IOException e1) {
-            e1.printStackTrace();
+        try {
+            for (String disk : disks) {
+                databaseCreateTimeMap.put(disk, now.toString());
+            }
+            Map map = gson.fromJson(stringBuilder.toString(), Map.class);
+            //从文件中读取每个数据库的创建时间
+            map.forEach((disk, createTime) -> databaseCreateTimeMap.put((String) disk,(String) createTime));
+        } catch (Exception e) {
+            e.printStackTrace();
         }
 
         SQLiteUtil.closeAll();
-        for (String eachDisk : RegexUtil.comma.split(AllConfigs.getInstance().getDisks())) {
+        for (String eachDisk : disks) {
             String name = eachDisk.charAt(0) + ".db";
             try {
                 long length = Files.size(Path.of("data/" + name));
-                if (length > 3L * 1024 * 1024 * 100 || isDatabaseCreateTimeTooLong) {
+                if (length > 3L * 1024 * 1024 * 100 || Period.between(LocalDate.parse(databaseCreateTimeMap.get(eachDisk)), now).getDays() > 5) {
                     // 大小超过300M
                     if (IsDebug.isDebug()) {
                         System.out.println("当前文件" + name + "过大，已删除");
                     }
+                    //更新创建时间
+                    databaseCreateTimeMap.put(eachDisk, now.toString());
                     Files.delete(Path.of("data/" + name));
                 }
             } catch (IOException e) {
                 e.printStackTrace();
             }
+        }
+        String toJson = gson.toJson(databaseCreateTimeMap);
+        try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(databaseCreateTimeFileName), StandardCharsets.UTF_8))) {
+            writer.write(toJson);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
         SQLiteUtil.initAllConnections();
     }
