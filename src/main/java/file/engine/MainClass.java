@@ -10,13 +10,14 @@ import file.engine.event.handler.EventManagement;
 import file.engine.event.handler.impl.BootSystemEvent;
 import file.engine.event.handler.impl.ReadConfigsEvent;
 import file.engine.event.handler.impl.configs.CheckConfigsEvent;
+import file.engine.event.handler.impl.database.InitializeDatabaseEvent;
 import file.engine.event.handler.impl.database.UpdateDatabaseEvent;
 import file.engine.event.handler.impl.frame.settingsFrame.ShowSettingsFrameEvent;
 import file.engine.event.handler.impl.taskbar.ShowTaskBarMessageEvent;
 import file.engine.services.DatabaseService;
 import file.engine.services.plugin.system.PluginService;
 import file.engine.utils.*;
-import file.engine.utils.file.CopyFileUtil;
+import file.engine.utils.file.FileUtil;
 import file.engine.utils.system.properties.IsDebug;
 import file.engine.utils.system.properties.IsPreview;
 import lombok.SneakyThrows;
@@ -83,7 +84,7 @@ public class MainClass {
             for (File eachPlugin : files) {
                 String pluginName = eachPlugin.getName();
                 File targetPlugin = new File("plugins" + File.separator + pluginName);
-                CopyFileUtil.copyFile(new FileInputStream(eachPlugin), targetPlugin);
+                FileUtil.copyFile(new FileInputStream(eachPlugin), targetPlugin);
             }
         }
     }
@@ -138,31 +139,6 @@ public class MainClass {
         } catch (Exception e) {
             e.printStackTrace();
             return true;
-        }
-    }
-
-    /**
-     * 清空一个目录，不删除目录本身
-     *
-     * @param file 目录文件
-     */
-    private static void deleteDir(File file) {
-        if (!file.exists()) {
-            return;
-        }
-        File[] content = file.listFiles();//取得当前目录下所有文件和文件夹
-        if (content == null || content.length == 0) {
-            return;
-        }
-        for (File temp : content) {
-            //直接删除文件
-            if (temp.isDirectory()) {//判断是否是目录
-                deleteDir(temp);//递归调用，删除目录里的内容
-            }
-            //删除空目录
-            if (!temp.delete()) {
-                System.err.println("Failed to delete " + temp.getAbsolutePath());
-            }
         }
     }
 
@@ -225,13 +201,6 @@ public class MainClass {
                     errorPlugins + "\n" + translateUtil.getTranslation("Loading plugins error"),
                     new ShowSettingsFrameEvent("tabPlugin")));
         }
-    }
-
-    /**
-     * 初始化数据库
-     */
-    private static void initDatabase() {
-        SQLiteUtil.initAllConnections();
     }
 
     /**
@@ -312,7 +281,7 @@ public class MainClass {
             updatePlugins();
 
             //清空tmp
-            deleteDir(new File("tmp"));
+            FileUtil.deleteDir(new File("tmp"));
             initFoldersAndFiles();
 
             initializeDllInterface();
@@ -329,7 +298,12 @@ public class MainClass {
                 throw new RuntimeException("Read Configs Failed");
             }
 
-            initDatabase();
+            InitializeDatabaseEvent initializeDatabaseEvent = new InitializeDatabaseEvent();
+            eventManagement.putEvent(initializeDatabaseEvent);
+            if (eventManagement.waitForEvent(initializeDatabaseEvent)) {
+                JOptionPane.showMessageDialog(null, "Initialize database failed", "ERROR", JOptionPane.ERROR_MESSAGE);
+                throw new RuntimeException("Initialize database failed");
+            }
 
             initPinyin();
 
@@ -474,8 +448,8 @@ public class MainClass {
                         new OutputStreamWriter(new FileOutputStream(startTimeCount), StandardCharsets.UTF_8))) {
                     writer.write(String.valueOf(startTimes));
                 }
-            } catch (Exception throwables) {
-                throwables.printStackTrace();
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }
         return ret;
@@ -512,7 +486,7 @@ public class MainClass {
                 System.out.println("正在重新释放文件：" + path);
             }
             try (InputStream resource = MainClass.class.getResourceAsStream(rootPath)) {
-                CopyFileUtil.copyFile(resource, target);
+                FileUtil.copyFile(resource, target);
             }
         }
     }

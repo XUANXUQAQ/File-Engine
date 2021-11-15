@@ -22,8 +22,7 @@ import file.engine.services.DatabaseService;
 import file.engine.services.plugin.system.Plugin;
 import file.engine.services.plugin.system.PluginService;
 import file.engine.utils.*;
-import file.engine.utils.file.CopyFileUtil;
-import file.engine.utils.file.FilePathUtil;
+import file.engine.utils.file.FileUtil;
 import file.engine.utils.system.properties.IsDebug;
 import lombok.SneakyThrows;
 
@@ -503,7 +502,7 @@ public class SearchBar {
         String lower = fileOrFolderPath.toLowerCase();
         if (lower.endsWith(".lnk") || lower.endsWith(".url")) {
             //直接复制文件
-            CopyFileUtil.copyFile(new File(fileOrFolderPath), new File(writeShortCutPath));
+            FileUtil.copyFile(new File(fileOrFolderPath), new File(writeShortCutPath));
         } else {
             File shortcutGen = new File("user/shortcutGenerator.vbs");
             String shortcutGenPath = shortcutGen.getAbsolutePath();
@@ -621,8 +620,8 @@ public class SearchBar {
         RobotUtil robotUtil = RobotUtil.INSTANCE;
         Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
         Transferable originalData = clipboard.getContents(null);
-        if (FilePathUtil.isFile(result)) {
-            result = FilePathUtil.getParentPath(result);
+        if (FileUtil.isFile(result)) {
+            result = FileUtil.getParentPath(result);
         }
         saveCache(result);
         copyToClipBoard(result, false);
@@ -3694,8 +3693,8 @@ public class SearchBar {
         } else if (command == null) {
             // 普通模式
             int maxShowCharNum = getMaxShowCharsNum(label1);
-            String parentPath = FilePathUtil.getParentPath(path);
-            String fileName = FilePathUtil.getFileName(path);
+            String parentPath = FileUtil.getParentPath(path);
+            String fileName = FileUtil.getFileName(path);
             int blankNUm = 20;
             int charNumbers = fileName.length() + parentPath.length() + 20;
             if (charNumbers > maxShowCharNum) {
@@ -3744,7 +3743,7 @@ public class SearchBar {
                 subNum = Math.min(path.length(), subNum);
                 String showPath = isContract ? path.substring(0, subNum) : path;
                 String add = isContract ? "..." : "";
-                label.setName("<html><body>" + highLight(FilePathUtil.getFileName(path), keywords) + getBlank(20) + "<font size=\"-2\">" + showPath + add + "</font></body></html>");
+                label.setName("<html><body>" + highLight(FileUtil.getFileName(path), keywords) + getBlank(20) + "<font size=\"-2\">" + showPath + add + "</font></body></html>");
             } else {
                 label.setName(Constants.RESULT_LABEL_NAME_HOLDER);
             }
@@ -4043,7 +4042,7 @@ public class SearchBar {
                         command = "start " + path.substring(0, 2) + "\"" + path.substring(2) + "\"";
                         String tmpDir = new File("").getAbsolutePath().indexOf(" ") != -1 ?
                                 System.getProperty("java.io.tmpdir") : new File("tmp").getAbsolutePath();
-                        String vbsFilePath = generateBatAndVbsFile(command, tmpDir, FilePathUtil.getParentPath(path));
+                        String vbsFilePath = generateBatAndVbsFile(command, tmpDir, FileUtil.getParentPath(path));
                         Runtime.getRuntime().exec("explorer.exe " + vbsFilePath.substring(0, 2) + "\"" + vbsFilePath.substring(2) + "\"");
                     } else {
                         Runtime.getRuntime().exec("explorer.exe \"" + path + "\"");
