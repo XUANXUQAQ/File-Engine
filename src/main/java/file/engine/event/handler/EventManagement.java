@@ -5,11 +5,10 @@ import file.engine.annotation.EventRegister;
 import file.engine.event.handler.impl.stop.CloseEvent;
 import file.engine.event.handler.impl.stop.RestartEvent;
 import file.engine.utils.CachedThreadPoolUtil;
+import file.engine.utils.ProcessUtil;
 import file.engine.utils.clazz.scan.ClassScannerUtil;
 import file.engine.utils.system.properties.IsDebug;
 
-import java.io.File;
-import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -70,24 +69,6 @@ public class EventManagement {
     }
 
     /**
-     * 关闭守护进程
-     */
-    private void stopDaemon() {
-        File closeSignal = new File("tmp/closeDaemon");
-        if (!closeSignal.exists()) {
-            boolean isCreated = false;
-            try {
-                isCreated = closeSignal.createNewFile();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            if (!isCreated) {
-                System.err.println("创建守护进程关闭标志文件失败");
-            }
-        }
-    }
-
-    /**
      * 执行任务
      *
      * @param event 任务
@@ -99,7 +80,7 @@ public class EventManagement {
             exit.set(true);
             doAllMethod(RestartEvent.class.toString(), event);
             if (event instanceof CloseEvent) {
-                stopDaemon();
+                ProcessUtil.stopDaemon();
             }
             event.setFinished();
             CachedThreadPoolUtil.getInstance().shutdown();

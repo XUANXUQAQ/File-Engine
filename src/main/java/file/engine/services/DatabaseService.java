@@ -26,7 +26,6 @@ import lombok.Getter;
 import lombok.SneakyThrows;
 
 import java.io.*;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -224,7 +223,7 @@ public class DatabaseService {
     private void startMonitorDisk() {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             EventManagement eventManagement = EventManagement.getInstance();
-            TranslateUtil translateUtil = TranslateUtil.getInstance();
+            TranslateService translateService = TranslateService.getInstance();
             String disks = AllConfigs.getInstance().getDisks();
             String[] splitDisks = RegexUtil.comma.split(disks);
             if (isAdmin()) {
@@ -236,8 +235,8 @@ public class DatabaseService {
                 }
             } else {
                 eventManagement.putEvent(new ShowTaskBarMessageEvent(
-                        translateUtil.getTranslation("Warning"),
-                        translateUtil.getTranslation("Not administrator, file monitoring function is turned off")));
+                        translateService.getTranslation("Warning"),
+                        translateService.getTranslation("Not administrator, file monitoring function is turned off")));
             }
         });
     }
@@ -1084,74 +1083,6 @@ public class DatabaseService {
     }
 
     /**
-     * 进程是否存在
-     *
-     * @param procName 进程名
-     * @return boolean
-     * @throws IOException          失败
-     * @throws InterruptedException 失败
-     */
-    @SuppressWarnings("IndexOfReplaceableByContains")
-    private boolean isProcessExist(String procName) throws IOException, InterruptedException {
-        StringBuilder strBuilder = new StringBuilder();
-        if (!procName.isEmpty()) {
-            Process p = Runtime.getRuntime().exec("tasklist /FI \"IMAGENAME eq " + procName + "\"");
-            p.waitFor();
-            String eachLine;
-            try (BufferedReader buffr = new BufferedReader(new InputStreamReader(p.getInputStream(), Charset.defaultCharset()))) {
-                while ((eachLine = buffr.readLine()) != null) {
-                    strBuilder.append(eachLine);
-                }
-            }
-            return strBuilder.toString().indexOf(procName) != -1;
-        }
-        return false;
-    }
-
-    /**
-     * 添加等待进程并当进程完成后执行回调
-     *
-     * @param procName 进程名
-     * @param callback 回调
-     */
-    private void waitForProcessAsync(@SuppressWarnings("SameParameterValue") String procName, Runnable callback) {
-        CachedThreadPoolUtil.getInstance().executeTask(() -> {
-            try {
-                waitForProcess(procName);
-            } catch (IOException | InterruptedException e) {
-                e.printStackTrace();
-            } finally {
-                callback.run();
-            }
-        });
-    }
-
-    /**
-     * 等待进程
-     *
-     * @param procName 进程名
-     * @throws IOException          失败
-     * @throws InterruptedException 失败
-     */
-    private void waitForProcess(@SuppressWarnings("SameParameterValue") String procName) throws IOException, InterruptedException {
-        long start = System.currentTimeMillis();
-        long timeLimit = 10 * 60 * 1000;
-        if (IsDebug.isDebug()) {
-            timeLimit = Long.MAX_VALUE;
-        }
-        while (isProcessExist(procName)) {
-            TimeUnit.MILLISECONDS.sleep(10);
-            if (System.currentTimeMillis() - start > timeLimit) {
-                System.err.printf("等待进程%s超时\n", procName);
-                String command = String.format("taskkill /im %s /f", procName);
-                Process exec = Runtime.getRuntime().exec(command);
-                exec.waitFor();
-                break;
-            }
-        }
-    }
-
-    /**
      * 检查索引数据库大小
      */
     @SuppressWarnings({"unchecked", "rawtypes"})
@@ -1259,7 +1190,7 @@ public class DatabaseService {
             return false;
         }
         // 搜索完成并写入数据库后，重新建立数据库连接
-        waitForProcessAsync("fileSearcherUSN.exe", () -> {
+        ProcessUtil.waitForProcessAsync("fileSearcherUSN.exe", () -> {
             SQLiteUtil.initAllConnections();
             // 可能会出错
             recreateDatabase(false);
@@ -1272,7 +1203,7 @@ public class DatabaseService {
         final long timeLimit = 10 * 60 * 1000;
         // 阻塞等待程序执行完成
         boolean isSharedMemoryComplete;
-        while (!(isSharedMemoryComplete = ResultPipe.INSTANCE.isComplete()) && isProcessExist("fileSearcherUSN.exe")) {
+        while (!(isSharedMemoryComplete = ResultPipe.INSTANCE.isComplete()) && ProcessUtil.isProcessExist("fileSearcherUSN.exe")) {
             if (System.currentTimeMillis() - start > timeLimit) {
                 break;
             }

@@ -3,6 +3,7 @@ package file.engine.services.download;
 import file.engine.annotation.EventRegister;
 import file.engine.configs.Constants;
 import file.engine.event.handler.Event;
+import file.engine.event.handler.EventManagement;
 import file.engine.event.handler.impl.download.StartDownloadEvent;
 import file.engine.event.handler.impl.download.StopDownloadEvent;
 import file.engine.utils.CachedThreadPoolUtil;
@@ -73,29 +74,31 @@ public class DownloadService {
         return downloadManager.getDownloadProgress();
     }
 
-    public void waitForDownloadTask(DownloadManager downloadManager, int maxWaitingMills) throws IOException {
+    public boolean waitForDownloadTask(DownloadManager downloadManager, int maxWaitingMills) throws IOException {
         try {
             long startTime = System.currentTimeMillis();
             final int sleepMills = 10;
-            while (true) {
+            EventManagement instance = EventManagement.getInstance();
+            while (instance.isNotMainExit()) {
                 if (System.currentTimeMillis() - startTime > maxWaitingMills) {
                     throw new IOException("download failed");
                 }
                 Constants.Enums.DownloadStatus downloadStatus = downloadManager.getDownloadStatus();
                 if (downloadStatus == Constants.Enums.DownloadStatus.DOWNLOAD_DONE) {
-                    return;
+                    return true;
                 } else if (downloadStatus == Constants.Enums.DownloadStatus.DOWNLOAD_ERROR) {
                     throw new IOException("download failed");
                 } else if (downloadStatus == Constants.Enums.DownloadStatus.DOWNLOAD_INTERRUPTED) {
-                    return;
+                    return false;
                 }
                 TimeUnit.MILLISECONDS.sleep(sleepMills);
             }
         } catch (InterruptedException ignored) {
         }
+        return false;
     }
 
-    public boolean isTaskDone(DownloadManager downloadManager) {
+    public boolean isTaskDoneBefore(DownloadManager downloadManager) {
         return getFromSet(downloadManager).getDownloadStatus() == Constants.Enums.DownloadStatus.DOWNLOAD_DONE;
     }
 

@@ -54,6 +54,7 @@ void update();
 void init_path();
 bool is_launched();
 std::wstring get_self_name();
+void deleteJreDir();
 
 int main()
 {
@@ -80,7 +81,10 @@ int main()
 			return 0;
 		}
 	}
-	restart_file_engine(true);
+	if (!find_process())
+	{
+		restart_file_engine(true);
+	}
 	std::time_t start_time = std::time(nullptr);
 	while (!is_close_exist())
 	{
@@ -130,11 +134,18 @@ inline void init_path()
 	strcpy_s(g_update_signal_file, update_signal_file.c_str());
 }
 
+void deleteJreDir()
+{
+	RemoveDirectoryA(g_file_engine_jar_path);
+}
+
 /**
  * 释放所有文件
  */
 void release_all()
 {
+	// 删除jre文件夹
+	deleteJreDir();
 	if (release_resources())
 	{
 		extract_zip();
