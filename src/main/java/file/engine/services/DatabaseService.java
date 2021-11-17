@@ -62,7 +62,6 @@ public class DatabaseService {
     private volatile String[] keywords;
     private final AtomicBoolean isSharedMemoryCreated = new AtomicBoolean(false);
     private final ConcurrentSkipListSet<String> cacheSet = new ConcurrentSkipListSet<>();
-    private final AtomicBoolean isWarmedUp = new AtomicBoolean(false);
 
     private static volatile DatabaseService INSTANCE = null;
 
@@ -412,32 +411,6 @@ public class DatabaseService {
     }
 
     /**
-     * 启动数据库，使第一次启动响应速度加快
-     */
-    @SneakyThrows
-    private void warmupDatabase() {
-        initTableMap();
-        LinkedHashMap<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>> nonFormattedSql =
-                getNonFormattedSqlFromTableQueue(false);
-        String[] disks = RegexUtil.comma.split(AllConfigs.getInstance().getDisks());
-        for (Map.Entry<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>> entry
-                : nonFormattedSql.entrySet()) {
-            LinkedHashMap<String, String> commandsMap = entry.getKey();
-            for (String eachDisk : disks) {
-                Set<String> sqls = commandsMap.keySet();
-                String formattedSql;
-                for (String each : sqls) {
-                    formattedSql = String.format(each, "PATH");
-                    String disk = String.valueOf(eachDisk.charAt(0));
-                    try (PreparedStatement pStmt = SQLiteUtil.getPreparedStatement(formattedSql, disk)) {
-                        pStmt.execute();
-                    }
-                }
-            }
-        }
-    }
-
-    /**
      * 根据优先级将表排序放入tableQueue
      */
     private void initTableQueueByPriority() {
@@ -684,7 +657,7 @@ public class DatabaseService {
      *
      * @return map
      */
-    private LinkedHashMap<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>> getNonFormattedSqlFromTableQueue(boolean isNeedContainer) {
+    private LinkedHashMap<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>> getNonFormattedSqlFromTableQueue() {
         if (isDatabaseUpdated.get()) {
             isDatabaseUpdated.set(false);
             initPriority();
@@ -712,10 +685,8 @@ public class DatabaseService {
                 String sql = "SELECT %s FROM " + each + " WHERE PRIORITY=" + 0;
                 _priorityMap.put(sql, each);
             });
-            ConcurrentSkipListSet<String> container = null;
-            if (isNeedContainer) {
-                container = new ConcurrentSkipListSet<>();
-            }
+            ConcurrentSkipListSet<String> container;
+            container = new ConcurrentSkipListSet<>();
             sqlColumnMap.put(_priorityMap, container);
         } else {
             for (Pair i : priorityMap) {
@@ -727,10 +698,8 @@ public class DatabaseService {
                     String sql = "SELECT %s FROM " + each + " WHERE PRIORITY=" + i.priority;
                     eachPriorityMap.put(sql, each);
                 });
-                ConcurrentSkipListSet<String> container = null;
-                if (isNeedContainer) {
-                    container = new ConcurrentSkipListSet<>();
-                }
+                ConcurrentSkipListSet<String> container;
+                container = new ConcurrentSkipListSet<>();
                 sqlColumnMap.put(eachPriorityMap, container);
             }
         }
@@ -748,7 +717,7 @@ public class DatabaseService {
         //每个priority用一个线程，每一个后缀名对应一个优先级
         //按照优先级排列，key是sql和表名的对应，value是容器
         LinkedHashMap<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>>
-                nonFormattedSql = getNonFormattedSqlFromTableQueue(true);
+                nonFormattedSql = getNonFormattedSqlFromTableQueue();
         Bit taskStatus = new Bit(new byte[]{0});
         Bit allTaskStatus = new Bit(new byte[]{0});
 
@@ -1373,14 +1342,11 @@ public class DatabaseService {
         databaseService.tempResults.clear();
     }
 
-    @EventListener(listenClass = {BootSystemEvent.class, StartSearchEvent.class})
-    private static void init(Event event) {
+    @EventListener(listenClass = BootSystemEvent.class)
+    private static void initCache(Event event) {
         DatabaseService databaseService = getInstance();
-        if (!databaseService.isWarmedUp.get()) {
-            databaseService.isWarmedUp.set(true);
-            databaseService.prepareCache();
-            databaseService.warmupDatabase();
-        }
+        databaseService.initTableMap();
+        databaseService.prepareCache();
     }
 
     @EventRegister(registerClass = AddToCacheEvent.class)
