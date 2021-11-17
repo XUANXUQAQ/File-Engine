@@ -19,6 +19,7 @@ import file.engine.event.handler.impl.taskbar.ShowTaskBarMessageEvent;
 import file.engine.frames.components.LoadingPanel;
 import file.engine.frames.components.MouseDragInfo;
 import file.engine.services.DatabaseService;
+import file.engine.services.TranslateService;
 import file.engine.services.plugin.system.Plugin;
 import file.engine.services.plugin.system.PluginService;
 import file.engine.utils.*;
@@ -128,11 +129,11 @@ public class SearchBar {
         searchBar = new JFrame();
         currentResultCount = new AtomicInteger(0);
         listResultsNum = new AtomicInteger(0);
-        TranslateUtil translateUtil = TranslateUtil.getInstance();
-        open = new JMenuItem(translateUtil.getTranslation("Open"));
-        openAsAdmin = new JMenuItem(translateUtil.getTranslation("Open as administrator"));
-        copyDir = new JMenuItem(translateUtil.getTranslation("Copy file path"));
-        openLast = new JMenuItem(translateUtil.getTranslation("Open parent folder"));
+        TranslateService translateService = TranslateService.getInstance();
+        open = new JMenuItem(translateService.getTranslation("Open"));
+        openAsAdmin = new JMenuItem(translateService.getTranslation("Open as administrator"));
+        copyDir = new JMenuItem(translateService.getTranslation("Copy file path"));
+        openLast = new JMenuItem(translateService.getTranslation("Open parent folder"));
         menu.add(open);
         menu.add(openAsAdmin);
         menu.add(copyDir);
@@ -498,7 +499,7 @@ public class SearchBar {
      */
     private void createShortCut(String fileOrFolderPath, String writeShortCutPath, boolean isNotifyUser) throws Exception {
         EventManagement eventManagement = EventManagement.getInstance();
-        TranslateUtil translateUtil = TranslateUtil.getInstance();
+        TranslateService translateService = TranslateService.getInstance();
         String lower = fileOrFolderPath.toLowerCase();
         if (lower.endsWith(".lnk") || lower.endsWith(".url")) {
             //直接复制文件
@@ -513,8 +514,8 @@ public class SearchBar {
         }
         if (isNotifyUser) {
             eventManagement.putEvent(new ShowTaskBarMessageEvent(
-                    translateUtil.getTranslation("Info"),
-                    translateUtil.getTranslation("Shortcut created")));
+                    translateService.getTranslation("Info"),
+                    translateService.getTranslation("Shortcut created")));
         }
     }
 
@@ -653,13 +654,13 @@ public class SearchBar {
     }
 
     private void copyToClipBoard(Transferable data, boolean isNotifyUser) {
-        TranslateUtil translateUtil = TranslateUtil.getInstance();
+        TranslateService translateService = TranslateService.getInstance();
         Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
         clipboard.setContents(data, null);
         if (isNotifyUser) {
             EventManagement.getInstance().putEvent(new ShowTaskBarMessageEvent(
-                    translateUtil.getTranslation("Info"),
-                    translateUtil.getTranslation("The result has been copied to the clipboard")));
+                    translateService.getTranslation("Info"),
+                    translateService.getTranslation("The result has been copied to the clipboard")));
         }
     }
 
@@ -859,17 +860,13 @@ public class SearchBar {
         });
     }
 
-    private void openFolderByExplorerWithException(String dir) throws IOException {
-        Runtime.getRuntime().exec("explorer.exe /select, \"" + dir + "\"");
-    }
-
     private void openFolderByExplorer(String dir) {
         try {
             saveCache(dir);
-            openFolderByExplorerWithException(dir);
+            OpenFileUtil.openFolderByExplorer(dir);
         } catch (IOException e) {
             e.printStackTrace();
-            JOptionPane.showMessageDialog(null, TranslateUtil.getInstance().getTranslation("Execute failed"));
+            JOptionPane.showMessageDialog(null, TranslateService.getInstance().getTranslation("Execute failed"));
         }
     }
 
@@ -879,22 +876,22 @@ public class SearchBar {
      * return true only the internal command was executed. Otherwise false
      */
     private boolean runInternalCommand(String commandName) {
-        TranslateUtil translateUtil = TranslateUtil.getInstance();
+        TranslateService translateService = TranslateService.getInstance();
         EventManagement eventManagement = EventManagement.getInstance();
         switch (commandName) {
             case "clearbin":
                 detectShowingModeAndClose();
-                if (JOptionPane.showConfirmDialog(null, translateUtil.getTranslation(
+                if (JOptionPane.showConfirmDialog(null, translateService.getTranslation(
                         "Are you sure you want to empty the recycle bin")) == JOptionPane.OK_OPTION) {
                     try {
                         File[] roots = File.listRoots();
                         for (File root : roots) {
                             Runtime.getRuntime().exec("cmd.exe /c rd /s /q " + root.getAbsolutePath() + "$Recycle.Bin");
                         }
-                        JOptionPane.showMessageDialog(null, translateUtil.getTranslation(
+                        JOptionPane.showMessageDialog(null, translateService.getTranslation(
                                 "Successfully empty the recycle bin"));
                     } catch (IOException e) {
-                        JOptionPane.showMessageDialog(null, translateUtil.getTranslation(
+                        JOptionPane.showMessageDialog(null, translateService.getTranslation(
                                 "Failed to empty the recycle bin"));
                     }
                 }
@@ -902,36 +899,36 @@ public class SearchBar {
             case "update":
                 detectShowingModeAndClose();
                 eventManagement.putEvent(new ShowTaskBarMessageEvent(
-                        translateUtil.getTranslation("Info"),
-                        translateUtil.getTranslation("Updating file index")));
+                        translateService.getTranslation("Info"),
+                        translateService.getTranslation("Updating file index")));
                 eventManagement.putEvent(new UpdateDatabaseEvent(false),
                         event -> eventManagement.putEvent(new ShowTaskBarMessageEvent(
-                                TranslateUtil.getInstance().getTranslation("Info"),
-                                TranslateUtil.getInstance().getTranslation("Search Done"))),
+                                TranslateService.getInstance().getTranslation("Info"),
+                                TranslateService.getInstance().getTranslation("Search Done"))),
                         event -> eventManagement.putEvent(new ShowTaskBarMessageEvent(
-                                TranslateUtil.getInstance().getTranslation("Warning"),
-                                TranslateUtil.getInstance().getTranslation("Search Failed"))));
+                                TranslateService.getInstance().getTranslation("Warning"),
+                                TranslateService.getInstance().getTranslation("Search Failed"))));
                 startSignal.set(false);
                 isSqlNotInitialized.set(false);
                 return true;
             case "clearUpdate":
                 detectShowingModeAndClose();
                 eventManagement.putEvent(new ShowTaskBarMessageEvent(
-                        translateUtil.getTranslation("Info"),
-                        translateUtil.getTranslation("Updating file index")));
+                        translateService.getTranslation("Info"),
+                        translateService.getTranslation("Updating file index")));
                 eventManagement.putEvent(new UpdateDatabaseEvent(true),
                         event -> eventManagement.putEvent(new ShowTaskBarMessageEvent(
-                                TranslateUtil.getInstance().getTranslation("Info"),
-                                TranslateUtil.getInstance().getTranslation("Search Done"))),
+                                TranslateService.getInstance().getTranslation("Info"),
+                                TranslateService.getInstance().getTranslation("Search Done"))),
                         event -> eventManagement.putEvent(new ShowTaskBarMessageEvent(
-                                TranslateUtil.getInstance().getTranslation("Warning"),
-                                TranslateUtil.getInstance().getTranslation("Search Failed"))));
+                                TranslateService.getInstance().getTranslation("Warning"),
+                                TranslateService.getInstance().getTranslation("Search Failed"))));
                 startSignal.set(false);
                 isSqlNotInitialized.set(false);
                 return true;
             case "help":
                 detectShowingModeAndClose();
-                if (JOptionPane.showConfirmDialog(null, translateUtil.getTranslation("Whether to view help"))
+                if (JOptionPane.showConfirmDialog(null, translateService.getTranslation("Whether to view help"))
                         == JOptionPane.OK_OPTION) {
                     isTutorialMode.set(true);
                     CachedThreadPoolUtil.getInstance().executeTask(() -> {
@@ -942,7 +939,7 @@ public class SearchBar {
                 return true;
             case "version":
                 detectShowingModeAndClose();
-                JOptionPane.showMessageDialog(null, translateUtil.getTranslation(
+                JOptionPane.showMessageDialog(null, translateService.getTranslation(
                         "Current Version:") + Constants.version);
                 return true;
             default:
@@ -957,15 +954,15 @@ public class SearchBar {
         int count = 0;
         final int maxWaiting = 30;
         AtomicBoolean isCanceled = new AtomicBoolean(false);
-        TranslateUtil translateUtil = TranslateUtil.getInstance();
+        TranslateService translateService = TranslateService.getInstance();
         //检查数据库是否正常
         if (databaseService.getStatus() != Constants.Enums.DatabaseStatus.NORMAL) {
             JFrame frame = new JFrame();
             frame.setUndecorated(true);
             frame.getRootPane().setWindowDecorationStyle(JRootPane.FRAME);
-            LoadingPanel glassPane = new LoadingPanel(translateUtil.getTranslation("Waiting for searching disks")
+            LoadingPanel glassPane = new LoadingPanel(translateService.getTranslation("Waiting for searching disks")
                     + ", "
-                    + translateUtil.getTranslation("Please wait up to 30 seconds"));
+                    + translateService.getTranslation("Please wait up to 30 seconds"));
             glassPane.setSize(600, 400);
             frame.setGlassPane(glassPane);
             glassPane.start();//开始动画加载效果
@@ -996,82 +993,82 @@ public class SearchBar {
             return;
         }
         if (count == maxWaiting) {
-            JOptionPane.showMessageDialog(null, translateUtil.getTranslation("Waiting overtime"));
+            JOptionPane.showMessageDialog(null, translateService.getTranslation("Waiting overtime"));
             return;
         }
         EventManagement eventManagement = EventManagement.getInstance();
         showSearchbar();
-        JOptionPane.showMessageDialog(searchBar, translateUtil.getTranslation("Welcome to the tutorial of File-Engine") + "\n" +
-                translateUtil.getTranslation("The default Ctrl + Alt + K calls out the search bar, which can be changed in the settings.") +
-                translateUtil.getTranslation("You can enter the keywords you want to search here"));
-        JOptionPane.showMessageDialog(searchBar, translateUtil.getTranslation("Let's see an example"));
+        JOptionPane.showMessageDialog(searchBar, translateService.getTranslation("Welcome to the tutorial of File-Engine") + "\n" +
+                translateService.getTranslation("The default Ctrl + Alt + K calls out the search bar, which can be changed in the settings.") +
+                translateService.getTranslation("You can enter the keywords you want to search here"));
+        JOptionPane.showMessageDialog(searchBar, translateService.getTranslation("Let's see an example"));
         SwingUtilities.invokeLater(() -> textField.setText("test"));
         JOptionPane.showMessageDialog(searchBar,
-                translateUtil.getTranslation("When you enter \"test\" in the search bar") + ",\n" +
-                        translateUtil.getTranslation("files with \"test\" in the name will be displayed below the search bar"));
+                translateService.getTranslation("When you enter \"test\" in the search bar") + ",\n" +
+                        translateService.getTranslation("files with \"test\" in the name will be displayed below the search bar"));
         SwingUtilities.invokeLater(() -> textField.setText("test;file"));
         JOptionPane.showMessageDialog(searchBar,
-                translateUtil.getTranslation("If you know multiple keywords of a file") + "\n" +
-                        translateUtil.getTranslation("(for example, the file name contains both \"file\" and \"test\")") + ",\n" +
-                        translateUtil.getTranslation("you can separate them with \";\" (semicolon) to search together as keywords."));
+                translateService.getTranslation("If you know multiple keywords of a file") + "\n" +
+                        translateService.getTranslation("(for example, the file name contains both \"file\" and \"test\")") + ",\n" +
+                        translateService.getTranslation("you can separate them with \";\" (semicolon) to search together as keywords."));
         SwingUtilities.invokeLater(() -> textField.setText("/test"));
         JOptionPane.showMessageDialog(searchBar,
-                translateUtil.getTranslation("When entering \"/test\" in the search bar") + ", " +
-                        translateUtil.getTranslation("the file containing \"test\" in the path will be displayed below the search bar"));
+                translateService.getTranslation("When entering \"/test\" in the search bar") + ", " +
+                        translateService.getTranslation("the file containing \"test\" in the path will be displayed below the search bar"));
         SwingUtilities.invokeLater(() -> textField.setText(""));
         JOptionPane.showMessageDialog(searchBar,
-                translateUtil.getTranslation("Add \":\" + suffix after the keyword to achieve a more precise search") + "\n" +
-                        translateUtil.getTranslation("The program has the following four suffixes") + "\n" +
+                translateService.getTranslation("Add \":\" + suffix after the keyword to achieve a more precise search") + "\n" +
+                        translateService.getTranslation("The program has the following four suffixes") + "\n" +
                         ":d     :f     :full     :case" + "\n" +
-                        translateUtil.getTranslation("not case sensitive"));
+                        translateService.getTranslation("not case sensitive"));
         SwingUtilities.invokeLater(() -> textField.setText("test:d"));
         JOptionPane.showMessageDialog(searchBar,
-                translateUtil.getTranslation("\":d\" is the suffix for searching only folders"));
+                translateService.getTranslation("\":d\" is the suffix for searching only folders"));
         SwingUtilities.invokeLater(() -> textField.setText("test:f"));
         JOptionPane.showMessageDialog(searchBar,
-                translateUtil.getTranslation("\":f\" is the suffix to search only for files"));
+                translateService.getTranslation("\":f\" is the suffix to search only for files"));
         SwingUtilities.invokeLater(() -> textField.setText("test:full"));
         JOptionPane.showMessageDialog(searchBar,
-                translateUtil.getTranslation("\":full\" means full word matching, but case insensitive"));
+                translateService.getTranslation("\":full\" means full word matching, but case insensitive"));
         SwingUtilities.invokeLater(() -> textField.setText("test:case"));
         JOptionPane.showMessageDialog(searchBar,
-                translateUtil.getTranslation("\":case\" means case sensitive"));
+                translateService.getTranslation("\":case\" means case sensitive"));
         SwingUtilities.invokeLater(() -> textField.setText("test:d;full"));
         JOptionPane.showMessageDialog(searchBar,
-                translateUtil.getTranslation("You can also combine different suffixes to use") + "\n" +
-                        translateUtil.getTranslation("you can separate them with \";\" (semicolon) to search together as keywords."));
+                translateService.getTranslation("You can also combine different suffixes to use") + "\n" +
+                        translateService.getTranslation("you can separate them with \";\" (semicolon) to search together as keywords."));
         SwingUtilities.invokeLater(() -> textField.setText("test;/file:d;case"));
         JOptionPane.showMessageDialog(searchBar,
-                translateUtil.getTranslation("Different keywords are separated by \";\" (semicolon), suffix and keywords are separated by \":\" (colon)"));
+                translateService.getTranslation("Different keywords are separated by \";\" (semicolon), suffix and keywords are separated by \":\" (colon)"));
         JOptionPane.showMessageDialog(searchBar,
-                translateUtil.getTranslation("You can drag any search result out to create a shortcut on the desktop or any folder"));
+                translateService.getTranslation("You can drag any search result out to create a shortcut on the desktop or any folder"));
         //判断是否为中文
-        if ("简体中文".equals(translateUtil.getLanguage())) {
+        if ("简体中文".equals(translateService.getLanguage())) {
             SwingUtilities.invokeLater(() -> textField.setText("pinyin"));
             JOptionPane.showMessageDialog(searchBar, "你可以使用拼音来代替汉字");
         }
         JOptionPane.showMessageDialog(searchBar,
-                translateUtil.getTranslation("Click \"Enter\" to open the file directly") + "\n" +
-                        translateUtil.getTranslation("Click \"Ctrl + Enter\" to open the folder where the file is located") + "\n" +
-                        translateUtil.getTranslation("Click \"Shift + Enter\" to open the file as an administrator (use with caution)") + "\n" +
-                        translateUtil.getTranslation("Click \"Alt+ Enter\" to copy the file path") + "\n\n" +
-                        translateUtil.getTranslation("You can modify these hotkeys in the settings"));
+                translateService.getTranslation("Click \"Enter\" to open the file directly") + "\n" +
+                        translateService.getTranslation("Click \"Ctrl + Enter\" to open the folder where the file is located") + "\n" +
+                        translateService.getTranslation("Click \"Shift + Enter\" to open the file as an administrator (use with caution)") + "\n" +
+                        translateService.getTranslation("Click \"Alt+ Enter\" to copy the file path") + "\n\n" +
+                        translateService.getTranslation("You can modify these hotkeys in the settings"));
         SwingUtilities.invokeLater(() -> textField.setText(":"));
         JOptionPane.showMessageDialog(searchBar,
-                translateUtil.getTranslation("Enter \":\" (colon) at the front of the search box to enter the command mode") + "\n" +
-                        translateUtil.getTranslation("There are built-in commands, you can also add custom commands in the settings"));
+                translateService.getTranslation("Enter \":\" (colon) at the front of the search box to enter the command mode") + "\n" +
+                        translateService.getTranslation("There are built-in commands, you can also add custom commands in the settings"));
         JOptionPane.showMessageDialog(searchBar,
-                translateUtil.getTranslation("If you find that some files cannot be searched, you can enter \":update\" in the search bar to rebuild the index."));
+                translateService.getTranslation("If you find that some files cannot be searched, you can enter \":update\" in the search bar to rebuild the index."));
         closeSearchBar();
         eventManagement.putEvent(new ShowSettingsFrameEvent());
         JOptionPane.showMessageDialog(null,
-                translateUtil.getTranslation("This is the settings window") + "\n" +
-                        translateUtil.getTranslation("You can modify many settings here") + "\n" +
-                        translateUtil.getTranslation("Including the color of the window, the hot key to call out the search box, the transparency of the window, custom commands and so on."));
+                translateService.getTranslation("This is the settings window") + "\n" +
+                        translateService.getTranslation("You can modify many settings here") + "\n" +
+                        translateService.getTranslation("Including the color of the window, the hot key to call out the search box, the transparency of the window, custom commands and so on."));
         if (JOptionPane.showConfirmDialog(null,
-                translateUtil.getTranslation("End of the tutorial") + "\n" +
-                        translateUtil.getTranslation("You can enter \":help\" in the search bar at any time to enter the tutorial") + "\n" +
-                        translateUtil.getTranslation("There are more detailed tutorials on the Github wiki. Would you like to check it out?"))
+                translateService.getTranslation("End of the tutorial") + "\n" +
+                        translateService.getTranslation("You can enter \":help\" in the search bar at any time to enter the tutorial") + "\n" +
+                        translateService.getTranslation("There are more detailed tutorials on the Github wiki. Would you like to check it out?"))
                 == JOptionPane.OK_OPTION) {
             try {
                 Desktop desktop;
@@ -2360,15 +2357,15 @@ public class SearchBar {
         if (origin.canDisplayUpTo(testStr) == -1) {
             return;
         }
-        TranslateUtil translateUtil = TranslateUtil.getInstance();
+        TranslateService translateService = TranslateService.getInstance();
         if (IsDebug.isDebug()) {
             System.out.println();
             System.err.println("正在切换字体");
             System.out.println();
         }
         Font labelFont = label1.getFont();
-        Font newFont = translateUtil.getFitFont(labelFont.getStyle(), labelFont.getSize(), testStr);
-        textField.setFont(translateUtil.getFitFont(origin.getStyle(), origin.getSize(), testStr));
+        Font newFont = translateService.getFitFont(labelFont.getStyle(), labelFont.getSize(), testStr);
+        textField.setFont(translateService.getFitFont(origin.getStyle(), origin.getSize(), testStr));
         label1.setFont(newFont);
         label2.setFont(newFont);
         label3.setFont(newFont);
@@ -3073,9 +3070,9 @@ public class SearchBar {
                 long time = System.currentTimeMillis();
                 while (!"done".equals(searchInfoLabel.getName()) && isVisible() && startTime < time) {
                     SwingUtilities.invokeLater(() -> {
-                        searchInfoLabel.setText(TranslateUtil.INSTANCE.getTranslation("Searching") + "    " +
-                                TranslateUtil.INSTANCE.getTranslation("Currently selected") + ": " + (currentResultCount.get() + 1) + "    " +
-                                TranslateUtil.INSTANCE.getTranslation("Number of current results") + ": " + listResultsNum.get());
+                        searchInfoLabel.setText(TranslateService.INSTANCE.getTranslation("Searching") + "    " +
+                                TranslateService.INSTANCE.getTranslation("Currently selected") + ": " + (currentResultCount.get() + 1) + "    " +
+                                TranslateService.INSTANCE.getTranslation("Number of current results") + ": " + listResultsNum.get());
                         searchInfoLabel.setIcon(GetIconUtil.getInstance().getIcon("loadingIcon"));
                     });
                     repaint();
@@ -3083,9 +3080,9 @@ public class SearchBar {
                 }
                 if ("done".equals(searchInfoLabel.getName())) {
                     SwingUtilities.invokeLater(() -> {
-                        searchInfoLabel.setText(TranslateUtil.INSTANCE.getTranslation("Search Done") + "    " +
-                                TranslateUtil.INSTANCE.getTranslation("Currently selected") + ": " + (currentResultCount.get() + 1) + "    " +
-                                TranslateUtil.INSTANCE.getTranslation("Number of current results") + ": " + listResultsNum.get());
+                        searchInfoLabel.setText(TranslateService.INSTANCE.getTranslation("Search Done") + "    " +
+                                TranslateService.INSTANCE.getTranslation("Currently selected") + ": " + (currentResultCount.get() + 1) + "    " +
+                                TranslateService.INSTANCE.getTranslation("Number of current results") + ": " + listResultsNum.get());
                         searchInfoLabel.setIcon(GetIconUtil.getInstance().getIcon("completeIcon"));
                         CachedThreadPoolUtil.getInstance().executeTask(() -> {
                             long _time = System.currentTimeMillis();
@@ -3122,8 +3119,8 @@ public class SearchBar {
             return;
         }
         SwingUtilities.invokeLater(() -> {
-            searchInfoLabel.setText(TranslateUtil.INSTANCE.getTranslation("Currently selected") + ": " + (currentResultCount.get() + 1) + "    " +
-                    TranslateUtil.INSTANCE.getTranslation("Number of current results") + ": " + listResultsNum.get());
+            searchInfoLabel.setText(TranslateService.INSTANCE.getTranslation("Currently selected") + ": " + (currentResultCount.get() + 1) + "    " +
+                    TranslateService.INSTANCE.getTranslation("Number of current results") + ": " + listResultsNum.get());
             searchInfoLabel.setIcon(null);
         });
     }
@@ -3381,7 +3378,7 @@ public class SearchBar {
             //每一次输入会更新一次startTime，该线程记录endTime
             try {
                 EventManagement eventManagement = EventManagement.getInstance();
-                TranslateUtil translateUtil = TranslateUtil.getInstance();
+                TranslateService translateService = TranslateService.getInstance();
                 AllConfigs allConfigs = AllConfigs.getInstance();
                 String[] strings;
                 int length;
@@ -3428,16 +3425,16 @@ public class SearchBar {
                             //去掉冒号
                             if (!runInternalCommand(text.substring(1).toLowerCase())) {
                                 LinkedHashSet<String> cmdSet = allConfigs.getCmdSet();
-                                cmdSet.add(":clearbin;" + translateUtil.getTranslation("Clear the recycle bin"));
-                                cmdSet.add(":update;" + translateUtil.getTranslation("Update file index"));
-                                cmdSet.add(":clearUpdate;" + translateUtil.getTranslation("Clear the database and update file index"));
-                                cmdSet.add(":help;" + translateUtil.getTranslation("View help"));
-                                cmdSet.add(":version;" + translateUtil.getTranslation("View Version"));
+                                cmdSet.add(":clearbin;" + translateService.getTranslation("Clear the recycle bin"));
+                                cmdSet.add(":update;" + translateService.getTranslation("Update file index"));
+                                cmdSet.add(":clearUpdate;" + translateService.getTranslation("Clear the database and update file index"));
+                                cmdSet.add(":help;" + translateService.getTranslation("View help"));
+                                cmdSet.add(":version;" + translateService.getTranslation("View Version"));
                                 String finalText = text;
                                 cmdSet.forEach(i -> {
                                     if (i.toLowerCase().contains(finalText.substring(1))) {
                                         listResultsNum.incrementAndGet();
-                                        String result = translateUtil.getTranslation("Run command") + i;
+                                        String result = translateService.getTranslation("Run command") + i;
                                         listResults.add(result);
                                     }
                                     String[] cmdInfo = semicolon.split(i);
@@ -3465,12 +3462,12 @@ public class SearchBar {
                                     addShowSearchStatusThread(isShowSearchStatusThreadNotExist);
                                 } else if (databaseService.getStatus() == Constants.Enums.DatabaseStatus.MANUAL_UPDATE) {
                                     setLabelChosen(label1);
-                                    eventManagement.putEvent(new ShowTaskBarMessageEvent(translateUtil.getTranslation("Info"),
-                                            translateUtil.getTranslation("Updating file index") + "..."));
+                                    eventManagement.putEvent(new ShowTaskBarMessageEvent(translateService.getTranslation("Info"),
+                                            translateService.getTranslation("Updating file index") + "..."));
                                 } else if (databaseService.getStatus() == Constants.Enums.DatabaseStatus.VACUUM) {
                                     setLabelChosen(label1);
-                                    eventManagement.putEvent(new ShowTaskBarMessageEvent(translateUtil.getTranslation("Info"),
-                                            translateUtil.getTranslation("Organizing database")));
+                                    eventManagement.putEvent(new ShowTaskBarMessageEvent(translateService.getTranslation("Info"),
+                                            translateService.getTranslation("Organizing database")));
                                 }
                             }
                         } else if (runningMode == Constants.Enums.RunningMode.PLUGIN_MODE) {
@@ -3963,58 +3960,7 @@ public class SearchBar {
      */
     private void openWithAdmin(String path) {
         saveCache(path);
-        TranslateUtil translateUtil = TranslateUtil.getInstance();
-        File file = new File(path);
-        if (file.exists()) {
-            try {
-                String command = file.getAbsolutePath();
-                String start = "cmd.exe /c start " + command.substring(0, 2);
-                String end = "\"" + command.substring(2) + "\"";
-                Runtime.getRuntime().exec(start + end, null, file.getParentFile());
-            } catch (IOException e) {
-                //打开上级文件夹
-                try {
-                    openFolderByExplorerWithException(file.getAbsolutePath());
-                } catch (IOException e1) {
-                    JOptionPane.showMessageDialog(null, translateUtil.getTranslation("Execute failed"));
-                    e.printStackTrace();
-                }
-            }
-        } else {
-            JOptionPane.showMessageDialog(null, translateUtil.getTranslation("File not exist"));
-        }
-    }
-
-    /**
-     * 在windows的temp目录(或者该软件的tmp目录，如果路径中没有空格)中生成bat以及用于隐藏bat的vbs脚本
-     *
-     * @param command    要运行的cmd命令
-     * @param filePath   文件位置（必须传入文件夹）
-     * @param workingDir 应用打开后的工作目录
-     * @return vbs的路径
-     */
-    private String generateBatAndVbsFile(String command, String filePath, String workingDir) {
-        char disk = workingDir.charAt(0);
-        String start = workingDir.substring(0, 2);
-        String end = workingDir.substring(2);
-        File batFilePath = new File(filePath, "openBat_File_Engine.bat");
-        File vbsFilePath = new File(filePath, "openVbs_File_Engine.vbs");
-        try (BufferedWriter batW = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(batFilePath), System.getProperty("sun.jnu.encoding")));
-             BufferedWriter vbsW = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(vbsFilePath), System.getProperty("sun.jnu.encoding")))) {
-            //生成bat
-            batW.write(disk + ":");
-            batW.newLine();
-            batW.write("cd " + start + "\"" + end + "\"");
-            batW.newLine();
-            batW.write(command);
-            //生成vbs
-            vbsW.write("set ws=createobject(\"wscript.shell\")");
-            vbsW.newLine();
-            vbsW.write("ws.run \"" + batFilePath + "\", 0");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return vbsFilePath.getAbsolutePath();
+        OpenFileUtil.openWithAdmin(path);
     }
 
     /**
@@ -4024,38 +3970,7 @@ public class SearchBar {
      */
     private void openWithoutAdmin(String path) {
         saveCache(path);
-        File file = new File(path);
-        String pathLower = path.toLowerCase();
-        Desktop desktop;
-        if (file.exists()) {
-            try {
-                if (pathLower.endsWith(".url")) {
-                    if (Desktop.isDesktopSupported()) {
-                        desktop = Desktop.getDesktop();
-                        desktop.open(new File(path));
-                    }
-                } else if (pathLower.endsWith(".lnk")) {
-                    Runtime.getRuntime().exec("explorer.exe \"" + path + "\"");
-                } else {
-                    String command;
-                    if (file.isFile()) {
-                        command = "start " + path.substring(0, 2) + "\"" + path.substring(2) + "\"";
-                        String tmpDir = new File("").getAbsolutePath().indexOf(" ") != -1 ?
-                                System.getProperty("java.io.tmpdir") : new File("tmp").getAbsolutePath();
-                        String vbsFilePath = generateBatAndVbsFile(command, tmpDir, FileUtil.getParentPath(path));
-                        Runtime.getRuntime().exec("explorer.exe " + vbsFilePath.substring(0, 2) + "\"" + vbsFilePath.substring(2) + "\"");
-                    } else {
-                        Runtime.getRuntime().exec("explorer.exe \"" + path + "\"");
-                    }
-                }
-            } catch (Exception e) {
-                //打开上级文件夹
-                e.printStackTrace();
-                openFolderByExplorer(path);
-            }
-        } else {
-            JOptionPane.showMessageDialog(null, TranslateUtil.getInstance().getTranslation("File not exist"));
-        }
+        OpenFileUtil.openWithoutAdmin(path);
     }
 
     /**

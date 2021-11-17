@@ -30,7 +30,7 @@ import file.engine.event.handler.impl.taskbar.ShowTrayIconEvent;
 import file.engine.services.download.DownloadManager;
 import file.engine.services.download.DownloadService;
 import file.engine.utils.RegexUtil;
-import file.engine.utils.TranslateUtil;
+import file.engine.services.TranslateService;
 import file.engine.utils.gson.GsonUtil;
 import file.engine.utils.system.properties.IsDebug;
 import lombok.Data;
@@ -611,10 +611,10 @@ public class AllConfigs {
     }
 
     private void readLanguage(Map<String, Object> settingsInJson) {
-        TranslateUtil translateUtil = TranslateUtil.getInstance();
-        String language = getFromJson(settingsInJson, "language", translateUtil.getDefaultLang());
+        TranslateService translateService = TranslateService.getInstance();
+        String language = getFromJson(settingsInJson, "language", translateService.getDefaultLang());
         configEntity.setLanguage(language);
-        translateUtil.setLanguage(language);
+        translateService.setLanguage(language);
     }
 
     private void readProxy(Map<String, Object> settingsInJson) {
@@ -903,7 +903,9 @@ public class AllConfigs {
         );
         EventManagement eventManagement = EventManagement.getInstance();
         eventManagement.putEvent(new StartDownloadEvent(downloadManager));
-        downloadService.waitForDownloadTask(downloadManager, 10000);
+        if (!downloadService.waitForDownloadTask(downloadManager, 10000)) {
+            return null;
+        }
         String eachLine;
         StringBuilder strBuilder = new StringBuilder();
         try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream("tmp/version.json"), StandardCharsets.UTF_8))) {

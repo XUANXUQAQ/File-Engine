@@ -12,7 +12,7 @@ import file.engine.event.handler.impl.stop.RestartEvent;
 import file.engine.event.handler.impl.taskbar.ShowTaskBarMessageEvent;
 import file.engine.event.handler.impl.taskbar.ShowTrayIconEvent;
 import file.engine.utils.CachedThreadPoolUtil;
-import file.engine.utils.TranslateUtil;
+import file.engine.services.TranslateService;
 import lombok.Data;
 
 import javax.swing.*;
@@ -151,7 +151,7 @@ public class TaskBar {
             if (IsDebug.isDebug()) {
                 trayIcon.setToolTip("File-Engine(Debug)");
             } else {
-                trayIcon.setToolTip("File-Engine," + TranslateUtil.getInstance().getTranslation("Double click to open settings"));
+                trayIcon.setToolTip("File-Engine," + TranslateService.getInstance().getTranslation("Double click to open settings"));
             }
             // 为托盘图标加弹出菜单
 
@@ -193,15 +193,15 @@ public class TaskBar {
     private JPopupMenu getPopupMenu() {
         JPopupMenu popupMenu = new JPopupMenu();
         EventManagement eventManagement = EventManagement.getInstance();
-        TranslateUtil translateUtil = TranslateUtil.getInstance();
-        JMenuItem settings = new JMenuItem(translateUtil.getTranslation("Settings"));
+        TranslateService translateService = TranslateService.getInstance();
+        JMenuItem settings = new JMenuItem(translateService.getTranslation("Settings"));
         settings.addActionListener(e -> eventManagement.putEvent(new ShowSettingsFrameEvent()));
 
         JSeparator separator = new JSeparator();
 
-        JMenuItem restartProc = new JMenuItem(translateUtil.getTranslation("Restart"));
+        JMenuItem restartProc = new JMenuItem(translateService.getTranslation("Restart"));
         restartProc.addActionListener(e -> restart());
-        JMenuItem close = new JMenuItem(translateUtil.getTranslation("Exit"));
+        JMenuItem close = new JMenuItem(translateService.getTranslation("Exit"));
         close.addActionListener(e -> closeAndExit());
 
         popupMenu.add(settings);
@@ -248,9 +248,9 @@ public class TaskBar {
      */
     private void showMessageOnTrayIcon(String caption, String message) {
         if (trayIcon != null) {
-            TranslateUtil translateUtil = TranslateUtil.getInstance();
+            TranslateService translateService = TranslateService.getInstance();
             TrayIcon.MessageType type = TrayIcon.MessageType.INFO;
-            if (caption.equals(translateUtil.getTranslation("Warning"))) {
+            if (caption.equals(translateService.getTranslation("Warning"))) {
                 type = TrayIcon.MessageType.WARNING;
             }
             trayIcon.displayMessage(caption, message, type);

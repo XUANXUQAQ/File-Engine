@@ -15,7 +15,7 @@ import file.engine.services.download.DownloadManager;
 import file.engine.services.download.DownloadService;
 import file.engine.services.plugin.system.PluginService;
 import file.engine.utils.CachedThreadPoolUtil;
-import file.engine.utils.TranslateUtil;
+import file.engine.services.TranslateService;
 import file.engine.utils.gson.GsonUtil;
 
 import javax.imageio.ImageIO;
@@ -93,7 +93,7 @@ public class PluginMarket {
 
     private void showWindow() {
         ImageIcon frameIcon = new ImageIcon(Objects.requireNonNull(PluginMarket.class.getResource("/icons/frame.png")));
-        TranslateUtil translateUtil = TranslateUtil.getInstance();
+        TranslateService translateService = TranslateService.getInstance();
         labelIcon.setIcon(null);
         labelAuthor.setText("");
         labelOfficialSite.setText("");
@@ -101,7 +101,7 @@ public class PluginMarket {
         labelVersion.setText("");
         textAreaPluginDescription.setText("");
         textFieldSearchPlugin.setText("");
-        buttonInstall.setText(translateUtil.getTranslation("Install"));
+        buttonInstall.setText(translateService.getTranslation("Install"));
         panel.setSize(800, 600);
         frame.setSize(800, 600);
         frame.setContentPane(getInstance().panel);
@@ -109,7 +109,7 @@ public class PluginMarket {
         frame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
         frame.setResizable(false);
         frame.setLocationRelativeTo(null);
-        frame.setTitle(translateUtil.getTranslation("Plugin Market"));
+        frame.setTitle(translateService.getTranslation("Plugin Market"));
         SwingUtilities.invokeLater(() -> frame.setVisible(true));
         LoadingPanel loadingPanel = new LoadingPanel("loading...");
         loadingPanel.setSize(800, 600);
@@ -258,7 +258,7 @@ public class PluginMarket {
         class getPluginInfo {
             final CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
             final String pluginName;
-            final TranslateUtil translateUtil = TranslateUtil.getInstance();
+            final TranslateService translateUtil = TranslateService.getInstance();
 
             getPluginInfo(String pluginName) {
                 this.pluginName = pluginName;
@@ -280,14 +280,14 @@ public class PluginMarket {
                     String imageUrl = (String) info.get("icon");
                     String description = (String) info.get("description");
                     String author = (String) info.get("author");
-                    labelVersion.setText(TranslateUtil.getInstance().getTranslation("Version") + ":" + version);
+                    labelVersion.setText(TranslateService.getInstance().getTranslation("Version") + ":" + version);
                     labelOfficialSite.setText("<html><a href='" + officialSite + "'><font size=\"4\">" + pluginName + "</font></a></html>");
                     labelPluginName.setText("<html><body><font size=\"+1\">" + pluginName + "</body></html>");
                     textAreaPluginDescription.setText(description);
                     labelAuthor.setText(author);
                     buttonInstall.setVisible(true);
                     boolean hasPlugin = PluginService.getInstance().hasPlugin(pluginName);
-                    boolean downloaded = DownloadService.getInstance().isTaskDone(
+                    boolean downloaded = DownloadService.getInstance().isTaskDoneBefore(
                             new DownloadManager(
                                     null,
                                     pluginName + ".jar",
@@ -346,7 +346,9 @@ public class PluginMarket {
                 "tmp"
         );
         EventManagement.getInstance().putEvent(new StartDownloadEvent(downloadManager));
-        downloadService.waitForDownloadTask(downloadManager, 10000);
+        if (!downloadService.waitForDownloadTask(downloadManager, 10000)) {
+            return null;
+        }
 
         BufferedImage bitmap = ImageIO.read(icon);
         try (ByteArrayOutputStream bytes = new ByteArrayOutputStream()) {

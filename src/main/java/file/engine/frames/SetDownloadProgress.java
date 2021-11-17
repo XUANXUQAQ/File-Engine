@@ -4,7 +4,7 @@ import file.engine.configs.Constants;
 import file.engine.event.handler.EventManagement;
 import file.engine.services.download.DownloadManager;
 import file.engine.services.download.DownloadService;
-import file.engine.utils.TranslateUtil;
+import file.engine.services.TranslateService;
 
 import javax.swing.*;
 import java.io.File;
@@ -43,7 +43,7 @@ public class SetDownloadProgress {
                                          Object invokeMethodObj) {
         boolean retVal = false;
         try {
-            TranslateUtil translateUtil = TranslateUtil.getInstance();
+            TranslateService translateService = TranslateService.getInstance();
             DownloadService downloadService = DownloadService.getInstance();
             EventManagement eventManagement = EventManagement.getInstance();
             String buttonOriginalText = buttonInstall.getText();
@@ -63,7 +63,7 @@ public class SetDownloadProgress {
                         if (downloadStatus == Constants.Enums.DownloadStatus.DOWNLOAD_DONE) {
                             //下载完成，禁用按钮
                             labelProgress.setText("");
-                            buttonInstall.setText(translateUtil.getTranslation("Downloaded"));
+                            buttonInstall.setText(translateService.getTranslation("Downloaded"));
                             buttonInstall.setEnabled(false);
                             isStarted = false;
                             if (!successSign.exists()) {
@@ -74,14 +74,14 @@ public class SetDownloadProgress {
                             retVal = true;
                         } else if (downloadStatus == Constants.Enums.DownloadStatus.DOWNLOAD_ERROR) {
                             //下载错误，重置button
-                            labelProgress.setText(translateUtil.getTranslation("Download failed"));
+                            labelProgress.setText(translateService.getTranslation("Download failed"));
                             buttonInstall.setText(buttonOriginalText);
                             buttonInstall.setEnabled(true);
                             isStarted = false;
                         } else if (downloadStatus == Constants.Enums.DownloadStatus.DOWNLOAD_DOWNLOADING) {
                             //正在下载
-                            labelProgress.setText(translateUtil.getTranslation("Downloading:") + (int) (progress * 100) + "%");
-                            buttonInstall.setText(translateUtil.getTranslation("Cancel"));
+                            labelProgress.setText(translateService.getTranslation("Downloading:") + (int) (progress * 100) + "%");
+                            buttonInstall.setText(translateService.getTranslation("Cancel"));
                             buttonInstall.setEnabled(true);
                         } else if (downloadStatus == Constants.Enums.DownloadStatus.DOWNLOAD_INTERRUPTED) {
                             //用户自行中断

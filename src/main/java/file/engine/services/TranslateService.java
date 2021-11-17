@@ -1,5 +1,6 @@
-package file.engine.utils;
+package file.engine.services;
 
+import file.engine.utils.RegexUtil;
 import file.engine.utils.system.properties.IsDebug;
 import lombok.Getter;
 
@@ -13,7 +14,7 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
-public enum TranslateUtil {
+public enum TranslateService {
     INSTANCE;
 
     private volatile @Getter
@@ -22,11 +23,11 @@ public enum TranslateUtil {
     private final ConcurrentHashMap<String, String> fileMap = new ConcurrentHashMap<>();
     private Font[] fList;
 
-    TranslateUtil() {
+    TranslateService() {
         initAll();
     }
 
-    public static TranslateUtil getInstance() {
+    public static TranslateService getInstance() {
         return INSTANCE;
     }
 
@@ -136,7 +137,7 @@ public enum TranslateUtil {
             if (IsDebug.isDebug()) {
                 translationMap.clear();
             }
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(Objects.requireNonNull(TranslateUtil.class.getResourceAsStream(filePath)), StandardCharsets.UTF_8))) {
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(Objects.requireNonNull(TranslateService.class.getResourceAsStream(filePath)), StandardCharsets.UTF_8))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
                     String[] record = RegexUtil.equalSign.split(line);

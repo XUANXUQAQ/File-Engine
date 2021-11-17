@@ -15,6 +15,7 @@ import file.engine.event.handler.impl.database.UpdateDatabaseEvent;
 import file.engine.event.handler.impl.frame.settingsFrame.ShowSettingsFrameEvent;
 import file.engine.event.handler.impl.taskbar.ShowTaskBarMessageEvent;
 import file.engine.services.DatabaseService;
+import file.engine.services.TranslateService;
 import file.engine.services.plugin.system.PluginService;
 import file.engine.utils.*;
 import file.engine.utils.file.FileUtil;
@@ -62,30 +63,56 @@ public class MainClass {
     }
 
     /**
+     * 更新启动器
+     */
+    private static void updateLauncher() {
+        File sign = new File("user/updateLauncher");
+        if (!sign.exists()) {
+            return;
+        }
+        if (!sign.delete()) {
+            System.err.println("删除插件更新标志失败");
+        }
+        File launcherFile = new File("tmp/" + Constants.LAUNCH_WRAPPER_NAME);
+        if (!launcherFile.exists()) {
+            return;
+        }
+        ProcessUtil.stopDaemon();
+        try {
+            ProcessUtil.waitForProcess(Constants.LAUNCH_WRAPPER_NAME);
+            File originLauncherFile = new File("..", Constants.LAUNCH_WRAPPER_NAME);
+            FileUtil.copyFile(launcherFile, originLauncherFile);
+            OpenFileUtil.openWithAdmin(originLauncherFile.getAbsolutePath());
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
      * 如果有更新标志，更新插件
      *
      * @throws FileNotFoundException 找不到文件更新失败
      */
     private static void updatePlugins() throws FileNotFoundException {
         File sign = new File("user/updatePlugin");
+        if (!sign.exists()) {
+            return;
+        }
+        if (!sign.delete()) {
+            System.err.println("删除插件更新标志失败");
+        }
         File tmpPlugins = new File("tmp/pluginsUpdate");
-        if (sign.exists()) {
-            if (IsDebug.isDebug()) {
-                System.out.println("正在更新插件");
-            }
-            boolean isUpdatePluginSignDeleted = sign.delete();
-            if (!isUpdatePluginSignDeleted) {
-                System.err.println("删除插件更新标志失败");
-            }
-            File[] files = tmpPlugins.listFiles();
-            if (files == null || files.length == 0) {
-                return;
-            }
-            for (File eachPlugin : files) {
-                String pluginName = eachPlugin.getName();
-                File targetPlugin = new File("plugins" + File.separator + pluginName);
-                FileUtil.copyFile(new FileInputStream(eachPlugin), targetPlugin);
-            }
+        if (IsDebug.isDebug()) {
+            System.out.println("正在更新插件");
+        }
+        File[] files = tmpPlugins.listFiles();
+        if (files == null || files.length == 0) {
+            return;
+        }
+        for (File eachPlugin : files) {
+            String pluginName = eachPlugin.getName();
+            File targetPlugin = new File("plugins" + File.separator + pluginName);
+            FileUtil.copyFile(new FileInputStream(eachPlugin), targetPlugin);
         }
     }
 
@@ -148,11 +175,11 @@ public class MainClass {
     private static void checkVersion() {
         if (AllConfigs.getInstance().isCheckUpdateStartup()) {
             EventManagement eventManagement = EventManagement.getInstance();
-            TranslateUtil translateUtil = TranslateUtil.getInstance();
+            TranslateService translateService = TranslateService.getInstance();
             if (!isLatest()) {
                 eventManagement.putEvent(new ShowTaskBarMessageEvent(
-                        translateUtil.getTranslation("Info"),
-                        translateUtil.getTranslation("New version can be updated"),
+                        translateService.getTranslation("Info"),
+                        translateService.getTranslation("New version can be updated"),
                         new ShowSettingsFrameEvent("tabAbout")));
             }
         }
@@ -163,12 +190,12 @@ public class MainClass {
      */
     private static void checkOldApiPlugin() {
         EventManagement eventManagement = EventManagement.getInstance();
-        TranslateUtil translateUtil = TranslateUtil.getInstance();
+        TranslateService translateService = TranslateService.getInstance();
         if (PluginService.getInstance().isPluginTooOld()) {
             String oldPlugins = PluginService.getInstance().getAllOldPluginsName();
             eventManagement.putEvent(new ShowTaskBarMessageEvent(
-                    translateUtil.getTranslation("Warning"),
-                    oldPlugins + "\n" + translateUtil.getTranslation("Plugin Api is too old"),
+                    translateService.getTranslation("Warning"),
+                    oldPlugins + "\n" + translateService.getTranslation("Plugin Api is too old"),
                     new ShowSettingsFrameEvent("tabPlugin")));
         }
     }
@@ -178,12 +205,12 @@ public class MainClass {
      */
     private static void checkRepeatPlugin() {
         EventManagement eventManagement = EventManagement.getInstance();
-        TranslateUtil translateUtil = TranslateUtil.getInstance();
+        TranslateService translateService = TranslateService.getInstance();
         if (PluginService.getInstance().isPluginRepeat()) {
             String repeatPlugins = PluginService.getInstance().getRepeatPlugins();
             eventManagement.putEvent(new ShowTaskBarMessageEvent(
-                    translateUtil.getTranslation("Warning"),
-                    repeatPlugins + "\n" + translateUtil.getTranslation("Duplicate plugin, please delete it in plugins folder"),
+                    translateService.getTranslation("Warning"),
+                    repeatPlugins + "\n" + translateService.getTranslation("Duplicate plugin, please delete it in plugins folder"),
                     new ShowSettingsFrameEvent("tabPlugin")));
         }
     }
@@ -193,12 +220,12 @@ public class MainClass {
      */
     private static void checkErrorPlugin() {
         EventManagement eventManagement = EventManagement.getInstance();
-        TranslateUtil translateUtil = TranslateUtil.getInstance();
+        TranslateService translateService = TranslateService.getInstance();
         if (PluginService.getInstance().isPluginLoadError()) {
             String errorPlugins = PluginService.getInstance().getLoadingErrorPlugins();
             eventManagement.putEvent(new ShowTaskBarMessageEvent(
-                    translateUtil.getTranslation("Warning"),
-                    errorPlugins + "\n" + translateUtil.getTranslation("Loading plugins error"),
+                    translateService.getTranslation("Warning"),
+                    errorPlugins + "\n" + translateService.getTranslation("Loading plugins error"),
                     new ShowSettingsFrameEvent("tabPlugin")));
         }
     }
@@ -224,13 +251,13 @@ public class MainClass {
                 PluginService pluginService = PluginService.getInstance();
                 pluginService.checkAllPluginsVersion(notLatestPluginsBuilder);
                 EventManagement eventManagement = EventManagement.getInstance();
-                TranslateUtil translateUtil = TranslateUtil.getInstance();
+                TranslateService translateService = TranslateService.getInstance();
                 String notLatestPlugins = notLatestPluginsBuilder.toString();
                 if (!notLatestPlugins.isEmpty()) {
                     eventManagement.putEvent(
-                            new ShowTaskBarMessageEvent(translateUtil.getTranslation("Info"),
+                            new ShowTaskBarMessageEvent(translateService.getTranslation("Info"),
                                     notLatestPlugins + "\n" +
-                                            translateUtil.getTranslation("New versions of these plugins can be updated"),
+                                            translateService.getTranslation("New versions of these plugins can be updated"),
                                     new ShowSettingsFrameEvent("tabPlugin")));
                 }
             });
@@ -242,11 +269,11 @@ public class MainClass {
      */
     private static void checkRunningDirAtDiskC() {
         EventManagement eventManagement = EventManagement.getInstance();
-        TranslateUtil translateUtil = TranslateUtil.getInstance();
+        TranslateService translateService = TranslateService.getInstance();
         if (isAtDiskC()) {
             eventManagement.putEvent(new ShowTaskBarMessageEvent(
-                    translateUtil.getTranslation("Warning"),
-                    translateUtil.getTranslation("Putting the software on the C drive may cause index failure issue")));
+                    translateService.getTranslation("Warning"),
+                    translateService.getTranslation("Putting the software on the C drive may cause index failure issue")));
         }
     }
 
@@ -278,6 +305,7 @@ public class MainClass {
                 throw new RuntimeException("Not 64 Bit");
             }
             Class.forName("org.sqlite.JDBC");
+            updateLauncher();
             updatePlugins();
 
             //清空tmp
@@ -316,8 +344,8 @@ public class MainClass {
             eventManagement.putEvent(new CheckConfigsEvent(), event -> {
                 String errorInfo = event.getReturnValue();
                 if (!errorInfo.isEmpty()) {
-                    EventManagement.getInstance().putEvent(new ShowTaskBarMessageEvent(TranslateUtil.getInstance().getTranslation("Warning"),
-                            TranslateUtil.getInstance().getTranslation(errorInfo), new ShowSettingsFrameEvent("tabSearchSettings")));
+                    EventManagement.getInstance().putEvent(new ShowTaskBarMessageEvent(TranslateService.getInstance().getTranslation("Warning"),
+                            TranslateService.getInstance().getTranslation(errorInfo), new ShowSettingsFrameEvent("tabSearchSettings")));
                 }
             }, null);
 
@@ -342,7 +370,6 @@ public class MainClass {
 
     /**
      * 主循环
-     *
      */
     @SneakyThrows
     private static void mainLoop() {
@@ -358,14 +385,14 @@ public class MainClass {
         }
 
         EventManagement eventManagement = EventManagement.getInstance();
-        TranslateUtil translateUtil = TranslateUtil.getInstance();
+        TranslateService translateService = TranslateService.getInstance();
 
         SystemIdleCheckUtil.start();
 
         if (hasStartup() == 1) {
             eventManagement.putEvent(
-                    new ShowTaskBarMessageEvent(translateUtil.getTranslation("Warning"),
-                            translateUtil.getTranslation("The startup path is invalid")));
+                    new ShowTaskBarMessageEvent(translateService.getTranslation("Warning"),
+                            translateService.getTranslation("The startup path is invalid")));
         }
         while (eventManagement.isNotMainExit()) {
             // 主循环开始
@@ -389,15 +416,15 @@ public class MainClass {
                 isDatabaseOutDated = false;
                 isNeedUpdate = false;
                 eventManagement.putEvent(new ShowTaskBarMessageEvent(
-                        translateUtil.getTranslation("Info"),
-                        translateUtil.getTranslation("Updating file index")));
+                        translateService.getTranslation("Info"),
+                        translateService.getTranslation("Updating file index")));
                 eventManagement.putEvent(new UpdateDatabaseEvent(false),
                         event -> eventManagement.putEvent(new ShowTaskBarMessageEvent(
-                                translateUtil.getTranslation("Info"),
-                                translateUtil.getTranslation("Search Done"))),
+                                translateService.getTranslation("Info"),
+                                translateService.getTranslation("Search Done"))),
                         event -> eventManagement.putEvent(new ShowTaskBarMessageEvent(
-                                translateUtil.getTranslation("Warning"),
-                                translateUtil.getTranslation("Search Failed"))));
+                                translateService.getTranslation("Warning"),
+                                translateService.getTranslation("Search Failed"))));
             }
             TimeUnit.MILLISECONDS.sleep(50);
         }
