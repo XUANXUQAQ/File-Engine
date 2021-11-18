@@ -834,8 +834,8 @@ public class DatabaseService {
      */
     private void initPriority() {
         priorityMap.clear();
-        try (PreparedStatement pStmt = SQLiteUtil.getPreparedStatement("SELECT * FROM priority order by PRIORITY desc;", "cache")) {
-            ResultSet resultSet = pStmt.executeQuery();
+        try (PreparedStatement pStmt = SQLiteUtil.getPreparedStatement("SELECT * FROM priority order by PRIORITY desc;", "cache");
+             ResultSet resultSet = pStmt.executeQuery()) {
             while (resultSet.next()) {
                 String suffix = resultSet.getString("SUFFIX");
                 String priority = resultSet.getString("PRIORITY");
@@ -1077,7 +1077,7 @@ public class DatabaseService {
             }
             Map map = gson.fromJson(stringBuilder.toString(), Map.class);
             //从文件中读取每个数据库的创建时间
-            map.forEach((disk, createTime) -> databaseCreateTimeMap.put((String) disk,(String) createTime));
+            map.forEach((disk, createTime) -> databaseCreateTimeMap.put((String) disk, (String) createTime));
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -1227,8 +1227,8 @@ public class DatabaseService {
 
     private HashMap<String, Integer> queryAllWeights() {
         HashMap<String, Integer> stringIntegerHashMap = new HashMap<>();
-        try (PreparedStatement pStmt = SQLiteUtil.getPreparedStatement("SELECT TABLE_NAME, TABLE_WEIGHT FROM weight", "weight")) {
-            ResultSet resultSet = pStmt.executeQuery();
+        try (PreparedStatement pStmt = SQLiteUtil.getPreparedStatement("SELECT TABLE_NAME, TABLE_WEIGHT FROM weight", "weight");
+             ResultSet resultSet = pStmt.executeQuery()) {
             while (resultSet.next()) {
                 String tableName = resultSet.getString("TABLE_NAME");
                 int weight = resultSet.getInt("TABLE_WEIGHT");
