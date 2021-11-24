@@ -121,6 +121,8 @@ public class SearchBar {
     private final JMenuItem copyDir;
     private final JMenuItem openLast;
     private final float textFieldHeightRatio = 0.7f;
+    private volatile int lastMousePositionX = 0;
+    private volatile int lastMousePositionY = 0;
 
     private static volatile SearchBar instance = null;
 
@@ -1134,7 +1136,7 @@ public class SearchBar {
      */
     private void addSearchBarMouseMotionListener() {
         AtomicBoolean shouldSaveMousePos = new AtomicBoolean(false);
-        final int minMouseMoveDistance = label1.getHeight() / 6;
+        final int minMouseMoveDistance = label1.getHeight() / 3;
         //添加一个线程不断更新鼠标保存时间
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             try {
@@ -1150,8 +1152,6 @@ public class SearchBar {
 
         searchBar.addMouseMotionListener(new MouseAdapter() {
             double absoluteDistance;
-            int lastPositionX = 0;
-            int lastPositionY = 0;
             final AtomicBoolean isIconCreated = new AtomicBoolean(false);
 
             @Override
@@ -1220,17 +1220,17 @@ public class SearchBar {
                 if (System.currentTimeMillis() - firstResultStartShowingTime > 500 && firstResultStartShowingTime != 0) {
                     int currentX = e.getX();
                     int currentY = e.getY();
-                    if (lastPositionX == 0 || lastPositionY == 0) {
-                        lastPositionX = currentX;
-                        lastPositionY = currentY;
+                    if (lastMousePositionX == 0 || lastMousePositionY == 0) {
+                        lastMousePositionX = currentX;
+                        lastMousePositionY = currentY;
                     }
                     //计算鼠标当前位置到上次位置的直线距离
-                    absoluteDistance = Math.sqrt(Math.pow((currentX - lastPositionX), 2) + Math.pow((currentY - lastPositionY), 2));
+                    absoluteDistance = Math.sqrt(Math.pow((currentX - lastMousePositionX), 2) + Math.pow((currentY - lastMousePositionY), 2));
                     if (shouldSaveMousePos.get()) {
                         //超过50毫秒，保存一次鼠标位置
                         shouldSaveMousePos.set(false);
-                        lastPositionX = currentX;
-                        lastPositionY = currentY;
+                        lastMousePositionX = currentX;
+                        lastMousePositionY = currentY;
                     }
                     //距离大于鼠标最小移动值
                     if (absoluteDistance > minMouseMoveDistance) {
@@ -2402,6 +2402,8 @@ public class SearchBar {
                 clearAllAndResetAll();
                 isSendSignal = setRunningMode();
                 if (getSearchBarText().isEmpty()) {
+                    lastMousePositionX = 0;
+                    lastMousePositionY = 0;
                     listResultsNum.set(0);
                     currentResultCount.set(0);
                     startTime = System.currentTimeMillis();
@@ -2556,7 +2558,8 @@ public class SearchBar {
 
     @EventRegister(registerClass = HideSearchBarEvent.class)
     private static void hideSearchBarEvent(Event event) {
-        getInstance().closeSearchBar();
+        SearchBar searchBar = getInstance();
+        searchBar.closeSearchBar();
     }
 
     @EventRegister(registerClass = SetSearchBarTransparencyEvent.class)

@@ -407,11 +407,6 @@ public class MainClass {
             }
             //开始检测鼠标移动，若鼠标长时间未移动，且更新标志isNeedUpdate为true，则更新
             // 数据库损坏或者重启次数超过3次，需要重建索引
-            if (IsDebug.isDebug()) {
-                if (GetHandle.INSTANCE.isForegroundFullscreen()) {
-                    System.out.println("前台程序已全屏");
-                }
-            }
             if ((isDatabaseOutDated && SystemIdleCheckUtil.isCursorLongTimeNotMove() && !GetHandle.INSTANCE.isForegroundFullscreen()) || isNeedUpdate) {
                 isDatabaseOutDated = false;
                 isNeedUpdate = false;
