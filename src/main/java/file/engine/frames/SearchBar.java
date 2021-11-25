@@ -634,15 +634,25 @@ public class SearchBar {
         robotUtil.mouseClicked(x, y, 1, InputEvent.BUTTON1_DOWN_MASK);
         robotUtil.keyTyped(KeyEvent.VK_CONTROL, KeyEvent.VK_V);
         robotUtil.keyTyped(KeyEvent.VK_ENTER);
-        CachedThreadPoolUtil.getInstance().executeTask(() -> {
-            try {
-                //保证在执行粘贴操作时不会被提前恢复数据
-                TimeUnit.MILLISECONDS.sleep(500);
-                copyToClipBoard(originalData, false);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        });
+        {//恢复之前的剪贴板数据
+            String finalResult = result;
+            CachedThreadPoolUtil.getInstance().executeTask(() -> {
+                try {
+                    int count = 0;
+                    while (!finalResult.equals(GetHandle.INSTANCE.getExplorerPath())) {
+                        //保证在执行粘贴操作时不会被提前恢复数据
+                        TimeUnit.MILLISECONDS.sleep(500);
+                        count++;
+                        if (count >= 6) {
+                            break;
+                        }
+                    }
+                    copyToClipBoard(originalData, false);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            });
+        }
     }
 
     /**
