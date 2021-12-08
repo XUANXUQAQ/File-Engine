@@ -318,7 +318,7 @@ public class EventManagement {
      * @return boolean
      */
     private boolean isEventHandlerNotExit() {
-        return (!exit.get() || !blockEventQueue.isEmpty() || !asyncEventQueue.isEmpty());
+        return !(exit.get() && blockEventQueue.isEmpty() && asyncEventQueue.isEmpty());
     }
 
     /**
