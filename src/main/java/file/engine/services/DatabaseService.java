@@ -228,7 +228,7 @@ public class DatabaseService {
             if (isAdmin()) {
                 FileMonitor.INSTANCE.set_output(new File("tmp").getAbsolutePath());
                 for (String root : splitDisks) {
-                    if (IsLocalDisk.INSTANCE.isLocalDisk(root)) {
+                    if (Files.exists(Path.of(root)) && IsLocalDisk.INSTANCE.isDiskNTFS(root)) {
                         FileMonitor.INSTANCE.monitor(root);
                     }
                 }
