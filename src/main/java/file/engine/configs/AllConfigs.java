@@ -507,9 +507,7 @@ public class AllConfigs {
         String[] stringDisk = RegexUtil.comma.split(disks);
         StringBuilder stringBuilder = new StringBuilder();
         for (String each : stringDisk) {
-            if (new File(each).exists()) {
-                stringBuilder.append(each).append(",");
-            }
+            stringBuilder.append(each).append(",");
         }
         configEntity.setDisks(stringBuilder.toString());
     }
