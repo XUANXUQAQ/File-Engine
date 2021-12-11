@@ -3389,20 +3389,20 @@ public class SearchBar {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             //缓存和常用文件夹搜索线程
             //每一次输入会更新一次startTime，该线程记录endTime
-            try {
-                EventManagement eventManagement = EventManagement.getInstance();
-                TranslateService translateService = TranslateService.getInstance();
-                AllConfigs allConfigs = AllConfigs.getInstance();
-                String[] strings;
-                int length;
-                String text;
-                if (allConfigs.isFirstRun()) {
-                    runInternalCommand("help");
-                }
-                final AtomicBoolean isMergeThreadNotExist = new AtomicBoolean(true);
-                final AtomicBoolean isShowSearchStatusThreadNotExist = new AtomicBoolean(true);
-                final AtomicBoolean isWaiting = new AtomicBoolean(false);
-                while (eventManagement.isNotMainExit()) {
+            EventManagement eventManagement = EventManagement.getInstance();
+            TranslateService translateService = TranslateService.getInstance();
+            AllConfigs allConfigs = AllConfigs.getInstance();
+            String[] strings;
+            int length;
+            String text;
+            if (allConfigs.isFirstRun()) {
+                runInternalCommand("help");
+            }
+            final AtomicBoolean isMergeThreadNotExist = new AtomicBoolean(true);
+            final AtomicBoolean isShowSearchStatusThreadNotExist = new AtomicBoolean(true);
+            final AtomicBoolean isWaiting = new AtomicBoolean(false);
+            while (eventManagement.isNotMainExit()) {
+                try {
                     long endTime = System.currentTimeMillis();
                     text = getSearchBarText();
                     if ((endTime - startTime > 250) && isSqlNotInitialized.get() && startSignal.get()) {
@@ -3502,9 +3502,9 @@ public class SearchBar {
                         }
                     }
                     TimeUnit.MILLISECONDS.sleep(25);
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
-            } catch (InterruptedException e) {
-                e.printStackTrace();
             }
         });
     }
