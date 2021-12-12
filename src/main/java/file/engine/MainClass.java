@@ -290,7 +290,7 @@ public class MainClass {
         System.setProperty("File_Engine_Preview", "false");
         System.setProperty("file.encoding", "UTF-8");
         System.setProperty("sun.java2d.noddraw", "true");
-        System.setProperty("sun.java2d.opengl", "true");
+//        System.setProperty("sun.java2d.opengl", "true");
         System.setProperty("jna.library.path", "user");
         System.setProperty("swing.aatext", "true");
         System.setProperty("jna.debug_load", "false");
