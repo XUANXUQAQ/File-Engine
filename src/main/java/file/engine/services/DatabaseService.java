@@ -395,7 +395,6 @@ public class DatabaseService {
                 //结果太多则不再进行搜索
                 //用户重新输入了信息
                 if (isStop.get()) {
-                    tableQueue.clear();
                     return count;
                 }
                 each = resultSet.getString("PATH");
@@ -624,6 +623,7 @@ public class DatabaseService {
                     Set<String> sqls = commandsMap.keySet();
                     for (String each : sqls) {
                         if (isStop.get()) {
+                            tableQueue.clear();
                             return;
                         }
                         String formattedSql;
@@ -638,9 +638,6 @@ public class DatabaseService {
                         if (weight != 0L) {
                             //更新表的权重，每次搜索将会按照各个表的权重排序
                             updateTableWeight(commandsMap.get(each), weight);
-                        }
-                        if (isStop.get()) {
-                            break;
                         }
                     }
                 } finally {
@@ -739,6 +736,10 @@ public class DatabaseService {
                 Runnable todo;
                 while ((todo = taskQueue.poll()) != null) {
                     todo.run();
+                    if (isStop.get()) {
+                        taskQueue.clear();
+                        break;
+                    }
                 }
             });
         }
@@ -1141,7 +1142,7 @@ public class DatabaseService {
      */
     @SneakyThrows
     private boolean updateLists(String ignorePath, boolean isDropPrevious) {
-        if (status == Constants.Enums.DatabaseStatus.MANUAL_UPDATE) {
+        if (status == Constants.Enums.DatabaseStatus.MANUAL_UPDATE || ProcessUtil.isProcessExist("fileSearcherUSN.exe")) {
             throw new RuntimeException("already searching");
         }
         setStatus(Constants.Enums.DatabaseStatus.MANUAL_UPDATE);
