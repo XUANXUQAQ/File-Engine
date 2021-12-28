@@ -27,10 +27,10 @@ import file.engine.event.handler.impl.plugin.ConfigsChangedEvent;
 import file.engine.event.handler.impl.plugin.LoadAllPluginsEvent;
 import file.engine.event.handler.impl.stop.CloseEvent;
 import file.engine.event.handler.impl.taskbar.ShowTrayIconEvent;
+import file.engine.services.TranslateService;
 import file.engine.services.download.DownloadManager;
 import file.engine.services.download.DownloadService;
 import file.engine.utils.RegexUtil;
-import file.engine.services.TranslateService;
 import file.engine.utils.gson.GsonUtil;
 import file.engine.utils.system.properties.IsDebug;
 import lombok.Data;
@@ -398,6 +398,18 @@ public class AllConfigs {
                 configEntity.getProxyUserName(),
                 configEntity.getProxyPassword(),
                 configEntity.getProxyType());
+    }
+
+    public String getAvailableDisks() {
+        String disks = AllConfigs.getInstance().getDisks();
+        String[] splitDisks = RegexUtil.comma.split(disks);
+        StringBuilder stringBuilder = new StringBuilder();
+        for (String root : splitDisks) {
+            if (Files.exists(Path.of(root)) && IsLocalDisk.INSTANCE.isDiskNTFS(root)) {
+                stringBuilder.append(root).append(",");
+            }
+        }
+        return stringBuilder.toString();
     }
 
     public String getDisks() {

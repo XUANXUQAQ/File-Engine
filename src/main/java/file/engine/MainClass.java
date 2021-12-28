@@ -26,10 +26,6 @@ import lombok.SneakyThrows;
 import javax.swing.*;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -117,56 +113,12 @@ public class MainClass {
     }
 
     /**
-     * 检查数据库中表是否为空
-     *
-     * @param tableNames 所有待检测的表名
-     * @return true如果超过10个表结果都不超过10条
-     */
-    private static boolean isDatabaseEmpty(ArrayList<String> tableNames) throws SQLException {
-        int emptyNum = 0;
-        for (String each : RegexUtil.comma.split(AllConfigs.getInstance().getDisks())) {
-            try (Statement stmt = SQLiteUtil.getStatement(String.valueOf(each.charAt(0)))) {
-                for (String tableName : tableNames) {
-                    String sql = String.format("SELECT COUNT(ASCII) as num FROM %s;", tableName);
-                    try (ResultSet resultSet = stmt.executeQuery(sql)) {
-                        if (resultSet.next()) {
-                            int resultNum = resultSet.getInt("num");
-                            if (resultNum < 10) {
-                                emptyNum++;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return emptyNum > 10;
-    }
-
-    /**
      * 检查是否安装在C盘
      *
      * @return Boolean
      */
     private static boolean isAtDiskC() {
         return System.getProperty("user.dir").startsWith("C:");
-    }
-
-    /**
-     * 检查数据库是否损坏
-     *
-     * @return boolean
-     */
-    private static boolean isDatabaseDamaged() {
-        try {
-            ArrayList<String> list = new ArrayList<>();
-            for (int i = 0; i <= Constants.ALL_TABLE_NUM; i++) {
-                list.add("list" + i);
-            }
-            return isDatabaseEmpty(list);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return true;
-        }
     }
 
     /**
@@ -377,11 +329,12 @@ public class MainClass {
         Date endTime;
         long timeDiff;
         long div = 24 * 60 * 60 * 1000;
-        boolean isNeedUpdate = isDatabaseDamaged();
+        boolean isDatabaseDamaged = SQLiteUtil.isDatabaseDamaged();
         boolean isDatabaseOutDated = false;
+        boolean isNeedUpdate = isDatabaseDamaged;
 
         if (!IsDebug.isDebug()) {
-            isNeedUpdate |= checkIndex();
+            isNeedUpdate = checkStartTimes() || isDatabaseDamaged;
         }
 
         EventManagement eventManagement = EventManagement.getInstance();
@@ -430,7 +383,7 @@ public class MainClass {
      *
      * @return true如果启动超过三次
      */
-    private static boolean checkIndex() {
+    private static boolean checkStartTimes() {
         int startTimes = 0;
         File startTimeCount = new File("user/startTimeCount.dat");
         boolean isFileCreated;
