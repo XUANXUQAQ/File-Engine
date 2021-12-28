@@ -1,5 +1,7 @@
 package file.engine.utils;
 
+import file.engine.configs.Constants;
+import file.engine.utils.file.FileUtil;
 import file.engine.utils.system.properties.IsDebug;
 import file.engine.configs.AllConfigs;
 import file.engine.event.handler.EventManagement;
@@ -117,19 +119,85 @@ public class SQLiteUtil {
                 e.printStackTrace();
             }
         }
-        String disks = AllConfigs.getInstance().getDisks();
+        String disks = AllConfigs.getInstance().getAvailableDisks();
         if (disks == null || disks.isEmpty() || disks.isBlank()) {
             throw new RuntimeException("initialize failed");
         }
         return disks;
     }
 
+    /**
+     * 复制数据库文件到另一个文件夹
+     * @param fromDir 源路径
+     * @param toDir 目标路径
+     */
+    public static void copyDatabases(String fromDir, String toDir) {
+        File cache = new File(fromDir, "cache.db");
+        FileUtil.copyFile(cache, new File(toDir, "cache.db"));
+        File weight = new File(fromDir, "weight.db");
+        FileUtil.copyFile(weight, new File(toDir, "weight.db"));
+        String[] split = RegexUtil.comma.split(initialize());
+        for (String eachDisk : split) {
+            String dbName = eachDisk.charAt(0) + ".db";
+            File data = new File(fromDir, dbName);
+            FileUtil.copyFile(data, new File(toDir, dbName));
+        }
+    }
+
+    /**
+     * 检查数据库中表是否为空
+     *
+     * @param tableNames 所有待检测的表名
+     * @return true如果超过10个表结果都不超过10条
+     */
+    private static boolean isDatabaseEmpty(ArrayList<String> tableNames) throws SQLException {
+        int emptyNum = 0;
+        for (String each : RegexUtil.comma.split(AllConfigs.getInstance().getAvailableDisks())) {
+            try (Statement stmt = SQLiteUtil.getStatement(String.valueOf(each.charAt(0)))) {
+                for (String tableName : tableNames) {
+                    String sql = String.format("SELECT COUNT(ASCII) as num FROM %s;", tableName);
+                    try (ResultSet resultSet = stmt.executeQuery(sql)) {
+                        if (resultSet.next()) {
+                            int resultNum = resultSet.getInt("num");
+                            if (resultNum < 10) {
+                                emptyNum++;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return emptyNum > 10;
+    }
+
+    /**
+     * 检查数据库是否损坏
+     *
+     * @return boolean
+     */
+    public static boolean isDatabaseDamaged() {
+        try {
+            ArrayList<String> list = new ArrayList<>();
+            for (int i = 0; i <= Constants.ALL_TABLE_NUM; i++) {
+                list.add("list" + i);
+            }
+            return isDatabaseEmpty(list);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return true;
+        }
+    }
+
     public static void initAllConnections() {
+        initAllConnections("data");
+    }
+
+    public static void initAllConnections(String dir) {
         deleteMalFormedFile();
         String[] split = RegexUtil.comma.split(initialize());
         ArrayList<File> malformedFiles = new ArrayList<>();
         for (String eachDisk : split) {
-            File data = new File("data", eachDisk.charAt(0) + ".db");
+            File data = new File(dir, eachDisk.charAt(0) + ".db");
             try {
                 initConnection("jdbc:sqlite:" + data.getAbsolutePath(), String.valueOf(eachDisk.charAt(0)));
                 initTable(String.valueOf(eachDisk.charAt(0)));
@@ -138,7 +206,7 @@ public class SQLiteUtil {
             }
         }
 
-        File cache = new File("data", "cache.db");
+        File cache = new File(dir, "cache.db");
         try {
             initConnection("jdbc:sqlite:" + cache.getAbsolutePath(), "cache");
             createCacheTable();
@@ -146,7 +214,7 @@ public class SQLiteUtil {
         } catch (SQLException e) {
             malformedFiles.add(cache);
         }
-        File weight = new File("data", "weight.db");
+        File weight = new File(dir, "weight.db");
         try {
             initConnection("jdbc:sqlite:" + weight.getAbsolutePath(), "weight");
             createWeightTable();

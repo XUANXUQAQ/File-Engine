@@ -7,7 +7,6 @@ import file.engine.configs.AllConfigs;
 import file.engine.configs.Constants;
 import file.engine.dllInterface.FileMonitor;
 import file.engine.dllInterface.GetAscII;
-import file.engine.dllInterface.IsLocalDisk;
 import file.engine.dllInterface.ResultPipe;
 import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
@@ -223,14 +222,12 @@ public class DatabaseService {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             EventManagement eventManagement = EventManagement.getInstance();
             TranslateService translateService = TranslateService.getInstance();
-            String disks = AllConfigs.getInstance().getDisks();
+            String disks = AllConfigs.getInstance().getAvailableDisks();
             String[] splitDisks = RegexUtil.comma.split(disks);
             if (isAdmin()) {
                 FileMonitor.INSTANCE.set_output(new File("tmp").getAbsolutePath());
                 for (String root : splitDisks) {
-                    if (Files.exists(Path.of(root)) && IsLocalDisk.INSTANCE.isDiskNTFS(root)) {
-                        FileMonitor.INSTANCE.monitor(root);
-                    }
+                    FileMonitor.INSTANCE.monitor(root);
                 }
             } else {
                 eventManagement.putEvent(new ShowTaskBarMessageEvent(
@@ -543,7 +540,7 @@ public class DatabaseService {
                                                LinkedHashMap<String, ConcurrentSkipListSet<String>> containerMap,
                                                ConcurrentLinkedQueue<Runnable> taskQueue) {
         Bit number = new Bit(new byte[]{1});
-        nonFormattedSql.forEach((commandsMap, container) -> Arrays.stream(RegexUtil.comma.split(AllConfigs.getInstance().getDisks())).forEach(eachDisk -> {
+        nonFormattedSql.forEach((commandsMap, container) -> Arrays.stream(RegexUtil.comma.split(AllConfigs.getInstance().getAvailableDisks())).forEach(eachDisk -> {
             //为每个任务分配的位，不断左移以不断进行分配
             number.shiftLeft(1);
             Bit currentTaskNum = new Bit(number);
@@ -612,7 +609,7 @@ public class DatabaseService {
                                 LinkedHashMap<String, ConcurrentSkipListSet<String>> containerMap,
                                 ConcurrentLinkedQueue<Runnable> taskQueue) {
         Bit number = new Bit(new byte[]{1});
-        nonFormattedSql.forEach((commandsMap, container) -> Arrays.stream(RegexUtil.comma.split(AllConfigs.getInstance().getDisks())).forEach(eachDisk -> {
+        nonFormattedSql.forEach((commandsMap, container) -> Arrays.stream(RegexUtil.comma.split(AllConfigs.getInstance().getAvailableDisks())).forEach(eachDisk -> {
             //为每个任务分配的位，不断左移以不断进行分配
             number.shiftLeft(1);
             Bit currentTaskNum = new Bit(number);
@@ -1020,7 +1017,7 @@ public class DatabaseService {
      */
     private void createAllIndex() {
         commandQueue.add(new SQLWithTaskId("CREATE INDEX IF NOT EXISTS cache_index ON cache(PATH);", SqlTaskIds.CREATE_INDEX, "cache"));
-        for (String each : RegexUtil.comma.split(AllConfigs.getInstance().getDisks())) {
+        for (String each : RegexUtil.comma.split(AllConfigs.getInstance().getAvailableDisks())) {
             for (int i = 0; i <= Constants.ALL_TABLE_NUM; ++i) {
                 String createIndex = "CREATE INDEX IF NOT EXISTS list" + i + "_index ON list" + i + "(PRIORITY);";
                 commandQueue.add(new SQLWithTaskId(createIndex, SqlTaskIds.CREATE_INDEX, String.valueOf(each.charAt(0))));
@@ -1035,7 +1032,7 @@ public class DatabaseService {
      * @param ignorePath 忽略文件夹
      * @throws IOException exception
      */
-    private Process searchByUSN(String paths, String ignorePath) throws IOException {
+    private void searchByUSN(String paths, String ignorePath) throws IOException {
         File usnSearcher = new File("user/fileSearcherUSN.exe");
         String absPath = usnSearcher.getAbsolutePath();
         String start = absPath.substring(0, 2);
@@ -1049,7 +1046,7 @@ public class DatabaseService {
             buffW.write(ignorePath);
         }
         String command = "cmd.exe /c " + start + end;
-        return Runtime.getRuntime().exec(command, null, new File("user"));
+        Runtime.getRuntime().exec(command, null, new File("user"));
     }
 
     /**
@@ -1059,7 +1056,7 @@ public class DatabaseService {
     private void checkFileSize() {
         String databaseCreateTimeFileName = "user/databaseCreateTime.dat";
         HashMap<String, String> databaseCreateTimeMap = new HashMap<>();
-        String[] disks = RegexUtil.comma.split(AllConfigs.getInstance().getDisks());
+        String[] disks = RegexUtil.comma.split(AllConfigs.getInstance().getAvailableDisks());
         LocalDate now = LocalDate.now();
         //从文件中读取每个数据库的创建时间
         StringBuilder stringBuilder = new StringBuilder();
@@ -1149,18 +1146,27 @@ public class DatabaseService {
         checkFileSize();
         recreateDatabase(isDropPrevious);
         waitForCommandSet(SqlTaskIds.CREATE_TABLE);
-        SQLiteUtil.closeAll();
+        boolean waitForSharedMemoryFlag = false;
+        if (!SQLiteUtil.isDatabaseDamaged()) {
+            SQLiteUtil.closeAll();
+            // 复制数据库到tmp
+            SQLiteUtil.copyDatabases("data", "tmp");
+            SQLiteUtil.initAllConnections("tmp");
+        } else {
+            SQLiteUtil.closeAll();
+            waitForSharedMemoryFlag = true;
+        }
         isSharedMemoryCreated.set(true);
         closeSharedMemoryOnIdle();
-        Process process;
         try {
-            process = searchByUSN(AllConfigs.getInstance().getDisks(), ignorePath.toLowerCase());
+            searchByUSN(AllConfigs.getInstance().getAvailableDisks(), ignorePath.toLowerCase());
         } catch (IOException e) {
             e.printStackTrace();
             return false;
         }
         // 搜索完成并写入数据库后，重新建立数据库连接
         ProcessUtil.waitForProcessAsync("fileSearcherUSN.exe", () -> {
+            SQLiteUtil.closeAll();
             SQLiteUtil.initAllConnections();
             // 可能会出错
             recreateDatabase(false);
@@ -1168,18 +1174,28 @@ public class DatabaseService {
             isDatabaseUpdated.set(true);
             isReadFromSharedMemory.set(false);
         });
-        long start = System.currentTimeMillis();
-        isReadFromSharedMemory.set(true);
-        final long timeLimit = 10 * 60 * 1000;
-        // 阻塞等待程序执行完成
-        boolean isSharedMemoryComplete;
-        while (!(isSharedMemoryComplete = ResultPipe.INSTANCE.isComplete()) && ProcessUtil.isProcessExist("fileSearcherUSN.exe")) {
-            if (System.currentTimeMillis() - start > timeLimit) {
-                break;
+        Runnable task = () -> {
+            long start = System.currentTimeMillis();
+            final long timeLimit = 10 * 60 * 1000;
+            // 阻塞等待程序执行完成
+            try {
+                while (!ResultPipe.INSTANCE.isComplete() && ProcessUtil.isProcessExist("fileSearcherUSN.exe")) {
+                    if (System.currentTimeMillis() - start > timeLimit) {
+                        break;
+                    }
+                    TimeUnit.MILLISECONDS.sleep(1);
+                }
+            } catch (InterruptedException | IOException e) {
+                e.printStackTrace();
             }
-            TimeUnit.MILLISECONDS.sleep(10);
+            isReadFromSharedMemory.set(true);
+        };
+        if (waitForSharedMemoryFlag) {
+            task.run();
+        } else {
+            CachedThreadPoolUtil.getInstance().executeTask(task);
         }
-        return isSharedMemoryComplete || process.exitValue() == 0;
+        return true;
     }
 
     /**
@@ -1244,7 +1260,7 @@ public class DatabaseService {
     private void recreateDatabase(boolean isDropPrevious) {
         commandQueue.clear();
         //删除所有索引
-        String[] disks = RegexUtil.comma.split(AllConfigs.getInstance().getDisks());
+        String[] disks = RegexUtil.comma.split(AllConfigs.getInstance().getAvailableDisks());
         if (isDropPrevious) {
             for (int i = 0; i <= Constants.ALL_TABLE_NUM; i++) {
                 for (String disk : disks) {
@@ -1398,7 +1414,7 @@ public class DatabaseService {
         }
         databaseService.setStatus(Constants.Enums.DatabaseStatus.VACUUM);
         //执行VACUUM命令
-        for (String eachDisk : RegexUtil.comma.split(AllConfigs.getInstance().getDisks())) {
+        for (String eachDisk : RegexUtil.comma.split(AllConfigs.getInstance().getAvailableDisks())) {
             try (PreparedStatement stmt = SQLiteUtil.getPreparedStatement("VACUUM;", String.valueOf(eachDisk.charAt(0)))) {
                 stmt.execute();
             } catch (Exception ex) {
