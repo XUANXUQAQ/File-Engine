@@ -3420,7 +3420,7 @@ public class SearchBar {
                                 }
                                 keywords = semicolon.split(searchText);
                                 searchCaseToLowerAndRemoveConflict();
-                                eventManagement.putEvent(new StartSearchEvent(searchText, keywords, searchCase));
+                                eventManagement.putEvent(new StartSearchEvent(() -> searchText, () -> searchCase, () -> keywords));
                                 addMergeThread(isMergeThreadNotExist);
                             }
                         }

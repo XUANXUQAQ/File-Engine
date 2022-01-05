@@ -41,6 +41,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public class DatabaseService {
@@ -56,11 +57,12 @@ public class DatabaseService {
     ConcurrentLinkedQueue<String> tempResults;  //在优先文件夹和数据库cache未搜索完时暂时保存结果，搜索完后会立即被转移到listResults
     private final AtomicBoolean isStop = new AtomicBoolean(false);
     private final ConcurrentLinkedQueue<Pair> priorityMap = new ConcurrentLinkedQueue<>();
-    private volatile String[] searchCase;
-    private volatile String searchText;
-    private volatile String[] keywords;
+    private volatile Supplier<String[]> searchCase;
+    private volatile Supplier<String> searchText;
+    private volatile Supplier<String[]> keywords;
     private final AtomicBoolean isSharedMemoryCreated = new AtomicBoolean(false);
     private final ConcurrentSkipListSet<String> cacheSet = new ConcurrentSkipListSet<>();
+    private final AtomicInteger searchThreadCount = new AtomicInteger(0);
 
     private static volatile DatabaseService INSTANCE = null;
 
@@ -356,7 +358,7 @@ public class DatabaseService {
      */
     private boolean checkIsMatchedAndAddToList(String path, ConcurrentSkipListSet<String> container) {
         boolean ret = false;
-        if (PathMatchUtil.check(path, searchCase, searchText, keywords)) {
+        if (PathMatchUtil.check(path, searchCase.get(), searchText.get(), keywords.get())) {
             if (Files.exists(Path.of(path))) {
                 //字符串匹配通过
                 ret = true;
@@ -662,15 +664,15 @@ public class DatabaseService {
         }
         initTableQueueByPriority();
         int asciiSum = 0;
-        if (keywords != null) {
-            for (String keyword : keywords) {
+        if (keywords.get() != null) {
+            for (String keyword : keywords.get()) {
                 int ascII = GetAscII.INSTANCE.getAscII(keyword);
                 asciiSum += Math.max(ascII, 0);
             }
         }
         int asciiGroup = asciiSum / 100;
         String firstTableName = "list" + asciiGroup;
-        if (searchCase != null && Arrays.asList(searchCase).contains("d")) {
+        if (searchCase.get() != null && Arrays.asList(searchCase.get()).contains("d")) {
             LinkedHashMap<String, String> _priorityMap = new LinkedHashMap<>();
             String _sql = "SELECT %s FROM " + firstTableName + " WHERE PRIORITY=" + 0;
             _priorityMap.put(_sql, firstTableName);
@@ -730,13 +732,18 @@ public class DatabaseService {
         processors = Math.min(processors, 4);
         for (int i = 0; i < processors; i++) {
             cachedThreadPoolUtil.executeTask(() -> {
-                Runnable todo;
-                while ((todo = taskQueue.poll()) != null) {
-                    todo.run();
-                    if (isStop.get()) {
-                        taskQueue.clear();
-                        break;
+                try {
+                    searchThreadCount.incrementAndGet();
+                    Runnable todo;
+                    while ((todo = taskQueue.poll()) != null) {
+                        todo.run();
+                        if (isStop.get()) {
+                            taskQueue.clear();
+                            break;
+                        }
                     }
+                } finally {
+                    searchThreadCount.decrementAndGet();
                 }
             });
         }
@@ -1166,6 +1173,15 @@ public class DatabaseService {
         }
         // 搜索完成并写入数据库后，重新建立数据库连接
         ProcessUtil.waitForProcessAsync("fileSearcherUSN.exe", () -> {
+            try {
+                long start = System.currentTimeMillis();
+                //最多等待5分钟
+                while (searchThreadCount.get() != 0 && System.currentTimeMillis() - start < 5 * 60 * 1000) {
+                    TimeUnit.MILLISECONDS.sleep(20);
+                }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             SQLiteUtil.closeAll();
             SQLiteUtil.initAllConnections();
             // 可能会出错
@@ -1403,6 +1419,16 @@ public class DatabaseService {
             }
         } finally {
             databaseService.setStatus(Constants.Enums.DatabaseStatus.NORMAL);
+            if (IsDebug.isDebug()) {
+                System.out.println("搜索已经可用");
+            }
+            try {
+                while (!databaseService.isDatabaseUpdated.get()) {
+                    TimeUnit.MILLISECONDS.sleep(20);
+                }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
     }
 
