@@ -913,7 +913,7 @@ public class DatabaseService {
     /**
      * 发送立即执行所有sql信号
      */
-    private void executeImmediately() {
+    private void sendExecuteSQLSignal() {
         isExecuteImmediately.set(true);
     }
 
@@ -982,7 +982,7 @@ public class DatabaseService {
                 System.err.println("添加sql语句" + sql + "失败，已达到最大上限");
             }
             //立即处理sql语句
-            executeImmediately();
+//            executeImmediately();
         }
     }
 
@@ -1087,13 +1087,12 @@ public class DatabaseService {
             e.printStackTrace();
         }
 
-        SQLiteUtil.closeAll();
         for (String eachDisk : disks) {
             String name = eachDisk.charAt(0) + ".db";
             try {
                 long length = Files.size(Path.of("data/" + name));
-                if (length > 3L * 1024 * 1024 * 100 || Period.between(LocalDate.parse(databaseCreateTimeMap.get(eachDisk)), now).getDays() > 5) {
-                    // 大小超过300M
+                if (length > 5L * 1024 * 1024 * 100 || Period.between(LocalDate.parse(databaseCreateTimeMap.get(eachDisk)), now).getDays() > 5) {
+                    // 大小超过500M
                     if (IsDebug.isDebug()) {
                         System.out.println("当前文件" + name + "过大，已删除");
                     }
@@ -1111,7 +1110,6 @@ public class DatabaseService {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        SQLiteUtil.initAllConnections();
     }
 
     // 当软件空闲时将共享内存关闭
@@ -1138,6 +1136,12 @@ public class DatabaseService {
         });
     }
 
+    private void stopSearch() {
+        isStop.set(true);
+        tableQueue.clear();
+        tempResults.clear();
+    }
+
     /**
      * 关闭数据库连接并更新数据库
      *
@@ -1150,20 +1154,29 @@ public class DatabaseService {
             throw new RuntimeException("already searching");
         }
         setStatus(Constants.Enums.DatabaseStatus.MANUAL_UPDATE);
-        checkFileSize();
+        // 停止搜索
+        stopSearch();
+        sendExecuteSQLSignal();
+        try {
+            // 将在队列中的sql全部执行并等待搜索线程全部完成
+            while (searchThreadCount.get() != 0 || !commandQueue.isEmpty()) {
+                TimeUnit.MILLISECONDS.sleep(10);
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         recreateDatabase(isDropPrevious);
         waitForCommandSet(SqlTaskIds.CREATE_TABLE);
-        boolean waitForSharedMemoryFlag = false;
-        if (!SQLiteUtil.isDatabaseDamaged()) {
-            SQLiteUtil.closeAll();
-            // 复制数据库到tmp
-            SQLiteUtil.copyDatabases("data", "tmp");
-            SQLiteUtil.initAllConnections("tmp");
-        } else {
-            SQLiteUtil.closeAll();
-            waitForSharedMemoryFlag = true;
-        }
+
+        SQLiteUtil.closeAll();
+        // 复制数据库到tmp
+        SQLiteUtil.copyDatabases("data", "tmp");
+        SQLiteUtil.initAllConnections("tmp");
+
+        checkFileSize();
+
         isSharedMemoryCreated.set(true);
+        //创建检测系统空闲线程，当检测到系统空闲时关闭共享内存
         closeSharedMemoryOnIdle();
         try {
             searchByUSN(AllConfigs.getInstance().getAvailableDisks(), ignorePath.toLowerCase());
@@ -1190,27 +1203,23 @@ public class DatabaseService {
             isDatabaseUpdated.set(true);
             isReadFromSharedMemory.set(false);
         });
-        Runnable task = () -> {
+        Runnable waitForSharedMemory = () -> {
             long start = System.currentTimeMillis();
             final long timeLimit = 10 * 60 * 1000;
-            // 阻塞等待程序执行完成
+            // 阻塞等待程序将共享内存配置完成
             try {
                 while (!ResultPipe.INSTANCE.isComplete() && ProcessUtil.isProcessExist("fileSearcherUSN.exe")) {
                     if (System.currentTimeMillis() - start > timeLimit) {
                         break;
                     }
-                    TimeUnit.MILLISECONDS.sleep(1);
+                    TimeUnit.MILLISECONDS.sleep(10);
                 }
             } catch (InterruptedException | IOException e) {
                 e.printStackTrace();
             }
             isReadFromSharedMemory.set(true);
         };
-        if (waitForSharedMemoryFlag) {
-            task.run();
-        } else {
-            CachedThreadPoolUtil.getInstance().executeTask(task);
-        }
+        CachedThreadPoolUtil.getInstance().executeTask(waitForSharedMemory);
         return true;
     }
 
@@ -1293,7 +1302,7 @@ public class DatabaseService {
                 commandQueue.add(new SQLWithTaskId(command, SqlTaskIds.CREATE_TABLE, String.valueOf(disk.charAt(0))));
             }
         }
-        executeImmediately();
+        sendExecuteSQLSignal();
     }
 
     private void checkTimeAndSendExecuteSqlSignalThread() {
@@ -1304,7 +1313,7 @@ public class DatabaseService {
                 EventManagement eventManagement = EventManagement.getInstance();
                 while (eventManagement.isNotMainExit()) {
                     if (status == Constants.Enums.DatabaseStatus.NORMAL) {
-                        executeImmediately();
+                        sendExecuteSQLSignal();
                     }
                     TimeUnit.SECONDS.sleep(updateTimeLimit);
                 }
@@ -1370,9 +1379,7 @@ public class DatabaseService {
     @EventRegister(registerClass = StopSearchEvent.class)
     private static void stopSearchEvent(Event event) {
         DatabaseService databaseService = getInstance();
-        databaseService.isStop.set(true);
-        databaseService.tableQueue.clear();
-        databaseService.tempResults.clear();
+        databaseService.stopSearch();
     }
 
     @EventListener(listenClass = BootSystemEvent.class)
