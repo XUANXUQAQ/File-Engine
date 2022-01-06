@@ -136,7 +136,7 @@ inline void init_path()
 
 void deleteJreDir()
 {
-	RemoveDirectoryA(g_file_engine_jar_path);
+	RemoveDirectoryA(g_jre_path);
 }
 
 /**

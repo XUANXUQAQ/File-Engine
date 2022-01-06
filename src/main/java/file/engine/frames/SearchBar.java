@@ -3537,6 +3537,10 @@ public class SearchBar {
     @SneakyThrows
     private void grabFocus() {
         int x = 0, y = 0;
+        long start = System.currentTimeMillis();
+        while (!searchBar.isVisible() && System.currentTimeMillis() - start < 3000) {
+            TimeUnit.MILLISECONDS.sleep(5);
+        }
         if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
             x = searchBar.getX() + textField.getWidth() / 2;
             y = searchBar.getY() + textField.getHeight() / 2;
