@@ -1178,12 +1178,6 @@ public class DatabaseService {
         isSharedMemoryCreated.set(true);
         //创建检测系统空闲线程，当检测到系统空闲时关闭共享内存
         closeSharedMemoryOnIdle();
-        try {
-            searchByUSN(AllConfigs.getInstance().getAvailableDisks(), ignorePath.toLowerCase());
-        } catch (IOException e) {
-            e.printStackTrace();
-            return false;
-        }
         // 搜索完成并写入数据库后，重新建立数据库连接
         ProcessUtil.waitForProcessAsync("fileSearcherUSN.exe", () -> {
             try {
@@ -1203,6 +1197,12 @@ public class DatabaseService {
             isDatabaseUpdated.set(true);
             isReadFromSharedMemory.set(false);
         });
+        try {
+            searchByUSN(AllConfigs.getInstance().getAvailableDisks(), ignorePath.toLowerCase());
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
         Runnable waitForSharedMemory = () -> {
             long start = System.currentTimeMillis();
             final long timeLimit = 10 * 60 * 1000;
