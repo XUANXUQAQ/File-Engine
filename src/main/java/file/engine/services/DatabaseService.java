@@ -1060,7 +1060,7 @@ public class DatabaseService {
      * 检查索引数据库大小
      */
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private void checkFileSize() {
+    private void checkFileSize(boolean isDropPrevious) {
         String databaseCreateTimeFileName = "user/databaseCreateTime.dat";
         HashMap<String, String> databaseCreateTimeMap = new HashMap<>();
         String[] disks = RegexUtil.comma.split(AllConfigs.getInstance().getAvailableDisks());
@@ -1091,10 +1091,10 @@ public class DatabaseService {
             String name = eachDisk.charAt(0) + ".db";
             try {
                 long length = Files.size(Path.of("data/" + name));
-                if (length > 5L * 1024 * 1024 * 100 || Period.between(LocalDate.parse(databaseCreateTimeMap.get(eachDisk)), now).getDays() > 5) {
+                if (length > 5L * 1024 * 1024 * 100 || Period.between(LocalDate.parse(databaseCreateTimeMap.get(eachDisk)), now).getDays() > 5 || isDropPrevious) {
                     // 大小超过500M
                     if (IsDebug.isDebug()) {
-                        System.out.println("当前文件" + name + "过大，已删除");
+                        System.out.println("当前文件" + name + "已删除");
                     }
                     //更新创建时间
                     databaseCreateTimeMap.put(eachDisk, now.toString());
@@ -1112,7 +1112,9 @@ public class DatabaseService {
         }
     }
 
-    // 当软件空闲时将共享内存关闭
+    /**
+     * 当软件空闲时将共享内存关闭
+     */
     private void closeSharedMemoryOnIdle() {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             try {
@@ -1165,7 +1167,7 @@ public class DatabaseService {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        recreateDatabase(isDropPrevious);
+        recreateDatabase();
         waitForCommandSet(SqlTaskIds.CREATE_TABLE);
 
         SQLiteUtil.closeAll();
@@ -1173,7 +1175,7 @@ public class DatabaseService {
         SQLiteUtil.copyDatabases("data", "tmp");
         SQLiteUtil.initAllConnections("tmp");
 
-        checkFileSize();
+        checkFileSize(isDropPrevious);
 
         isSharedMemoryCreated.set(true);
         //创建检测系统空闲线程，当检测到系统空闲时关闭共享内存
@@ -1220,7 +1222,7 @@ public class DatabaseService {
                         SQLiteUtil.closeAll();
                         SQLiteUtil.initAllConnections();
                         // 可能会出错
-                        recreateDatabase(false);
+                        recreateDatabase();
                         createAllIndex();
                         isDatabaseUpdated.set(true);
                         isReadFromSharedMemory.set(false);
@@ -1290,18 +1292,18 @@ public class DatabaseService {
         return stringIntegerHashMap;
     }
 
-    private void recreateDatabase(boolean isDropPrevious) {
+    private void recreateDatabase() {
         commandQueue.clear();
         //删除所有索引
         String[] disks = RegexUtil.comma.split(AllConfigs.getInstance().getAvailableDisks());
-        if (isDropPrevious) {
-            for (int i = 0; i <= Constants.ALL_TABLE_NUM; i++) {
-                for (String disk : disks) {
-                    commandQueue.add(new SQLWithTaskId("DROP INDEX IF EXISTS list" + i + "_index;", SqlTaskIds.DROP_INDEX, String.valueOf(disk.charAt(0))));
-                    commandQueue.add(new SQLWithTaskId("DROP TABLE IF EXISTS list" + i, SqlTaskIds.DROP_TABLE, String.valueOf(disk.charAt(0))));
-                }
-            }
-        }
+//        if (isDropPrevious) {
+//            for (int i = 0; i <= Constants.ALL_TABLE_NUM; i++) {
+//                for (String disk : disks) {
+//                    commandQueue.add(new SQLWithTaskId("DROP INDEX IF EXISTS list" + i + "_index;", SqlTaskIds.DROP_INDEX, String.valueOf(disk.charAt(0))));
+//                    commandQueue.add(new SQLWithTaskId("DROP TABLE IF EXISTS list" + i, SqlTaskIds.DROP_TABLE, String.valueOf(disk.charAt(0))));
+//                }
+//            }
+//        }
         //创建新表
         String sql = "CREATE TABLE IF NOT EXISTS list";
         for (int i = 0; i <= Constants.ALL_TABLE_NUM; i++) {
