@@ -48,7 +48,7 @@ public class PathMatchUtil {
                 if (isPath) {
                     return true;
                 } else {
-                    if (PinyinUtil.isContainChinese(matcherStrFromFilePath)) {
+                    if (PinyinUtil.isStringContainChinese(matcherStrFromFilePath)) {
                         if (PinyinUtil.toPinyin(matcherStrFromFilePath, "").indexOf(eachKeyword) == -1) {
                             return true;
                         }

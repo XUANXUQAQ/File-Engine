@@ -12,7 +12,7 @@ public class PinyinUtil {
      * @param str 字符串
      * @return true如果存在
      */
-    public static boolean isContainChinese(String str) {
+    public static boolean isStringContainChinese(String str) {
         final int length = str.length();
         for (int i = 0; i < length; i++) {
             if (Pinyin.isChinese(str.charAt(i))) {

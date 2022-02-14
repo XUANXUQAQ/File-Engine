@@ -34,6 +34,7 @@ public class StartupUtil {
             String separator = "";
             String line;
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
+                // 前三行无用
                 reader.readLine();
                 reader.readLine();
                 reader.readLine();
@@ -104,6 +105,13 @@ public class StartupUtil {
         return p;
     }
 
+    /**
+     * 解析schtasks返回的结果字符串为Map
+     * @param separator 分隔符
+     * @param keys 所有的key，用分隔符连接在一起
+     * @param results 所有的result，用分隔符连接在一起
+     * @return Map
+     */
     private static Map<String, String> parseResults(String separator, String keys, String results) {
         String[] separatorArray = RegexUtil.blank.split(separator);
         int size = separatorArray.length;
