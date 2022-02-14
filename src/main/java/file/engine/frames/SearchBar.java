@@ -2762,7 +2762,7 @@ public class SearchBar {
                 positionX = (int) (explorerX + (explorerWidth / 2 - searchBarWidth / 2));
                 positionY = (int) (explorerY + explorerHeight - searchBarHeight + labelHeight);
             } else {
-                positionX = (int) (explorerX + explorerWidth - searchBarWidth - 25);
+                positionX = (int) (explorerX + explorerWidth - searchBarWidth - 25 / dpi);
                 positionY = (int) (explorerY + explorerHeight - searchBarHeight - labelHeight);
             }
             //设置窗口大小

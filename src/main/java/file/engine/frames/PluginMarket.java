@@ -4,6 +4,7 @@ import file.engine.annotation.EventListener;
 import file.engine.annotation.EventRegister;
 import file.engine.configs.AllConfigs;
 import file.engine.configs.Constants;
+import file.engine.dllInterface.GetHandle;
 import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
 import file.engine.event.handler.impl.download.StartDownloadEvent;
@@ -91,7 +92,13 @@ public class PluginMarket {
         });
     }
 
+    /**
+     * 显示插件窗口
+     */
     private void showWindow() {
+        double dpi = GetHandle.INSTANCE.getDpi();
+        int width = (int) (800 / dpi);
+        int height = (int) (600 / dpi);
         ImageIcon frameIcon = new ImageIcon(Objects.requireNonNull(PluginMarket.class.getResource("/icons/frame.png")));
         TranslateService translateService = TranslateService.getInstance();
         labelIcon.setIcon(null);
@@ -102,8 +109,8 @@ public class PluginMarket {
         textAreaPluginDescription.setText("");
         textFieldSearchPlugin.setText("");
         buttonInstall.setText(translateService.getTranslation("Install"));
-        panel.setSize(800, 600);
-        frame.setSize(800, 600);
+        panel.setSize(width, height);
+        frame.setSize(width, height);
         frame.setContentPane(getInstance().panel);
         frame.setIconImage(frameIcon.getImage());
         frame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
@@ -112,7 +119,7 @@ public class PluginMarket {
         frame.setTitle(translateService.getTranslation("Plugin Market"));
         SwingUtilities.invokeLater(() -> frame.setVisible(true));
         LoadingPanel loadingPanel = new LoadingPanel("loading...");
-        loadingPanel.setSize(800, 600);
+        loadingPanel.setSize(width, height);
         frame.setGlassPane(loadingPanel);
         loadingPanel.start();
         initPluginList();
@@ -139,6 +146,9 @@ public class PluginMarket {
         SwingUtilities.invokeLater(() -> frame.setVisible(false));
     }
 
+    /**
+     * 点击安装插件
+     */
     private void addButtonInstallListener() {
         EventManagement eventManagement = EventManagement.getInstance();
         ConcurrentHashMap<String, DownloadManager> downloadManagerConcurrentHashMap = new ConcurrentHashMap<>();
@@ -184,6 +194,9 @@ public class PluginMarket {
         });
     }
 
+    /**
+     * 根据关键字搜索插件
+     */
     private void addSearchPluginListener() {
         class search {
             final String searchKeywords;
@@ -228,6 +241,9 @@ public class PluginMarket {
         });
     }
 
+    /**
+     * 当用户点击官网后打开浏览器进入官网
+     */
     private void addOpenPluginOfficialSiteListener() {
         labelOfficialSite.addMouseListener(new MouseAdapter() {
             @Override
@@ -252,6 +268,9 @@ public class PluginMarket {
         });
     }
 
+    /**
+     * 当鼠标点击后在右边显示插件的基本信息
+     */
     private void addSelectPluginOnListListener() {
         final AtomicBoolean isStartGetPluginInfo = new AtomicBoolean(false);
 
@@ -337,6 +356,13 @@ public class PluginMarket {
         });
     }
 
+    /**
+     * 通过url获取图片
+     * @param url url
+     * @param pluginName 插件名
+     * @return 图片
+     * @throws IOException IOException
+     */
     private ImageIcon getImageByUrl(String url, String pluginName) throws IOException {
         File icon = new File("tmp/$$" + pluginName);
         DownloadService downloadService = DownloadService.getInstance();
@@ -369,6 +395,13 @@ public class PluginMarket {
         return null;
     }
 
+    /**
+     * 获取插件的基本信息
+     * @param url 获取url
+     * @param saveFileName 保存的文件名
+     * @return 插件信息Map
+     * @throws IOException IOException
+     */
     @SuppressWarnings("unchecked")
     private static Map<String, Object> getPluginInfo(String url, String saveFileName) throws IOException {
         DownloadService downloadService = DownloadService.getInstance();
@@ -390,11 +423,18 @@ public class PluginMarket {
         return GsonUtil.getInstance().getGson().fromJson(strBuilder.toString(), Map.class);
     }
 
+    /**
+     * 获取所有插件列表url
+     * @return url
+     */
     private String getPluginListUrl() {
         AllConfigs allConfigs = AllConfigs.getInstance();
         return allConfigs.getUpdateUrlFromMap().pluginListUrl;
     }
 
+    /**
+     * 初始化插件列表
+     */
     private void initPluginList() {
         try {
             buttonInstall.setEnabled(false);

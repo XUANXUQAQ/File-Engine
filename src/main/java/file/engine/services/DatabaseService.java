@@ -1060,7 +1060,7 @@ public class DatabaseService {
      * 检查索引数据库大小
      */
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private void checkFileSize(boolean isDropPrevious) {
+    private void checkDbFileSize(boolean isDropPrevious) {
         String databaseCreateTimeFileName = "user/databaseCreateTime.dat";
         HashMap<String, String> databaseCreateTimeMap = new HashMap<>();
         String[] disks = RegexUtil.comma.split(AllConfigs.getInstance().getAvailableDisks());
@@ -1158,14 +1158,16 @@ public class DatabaseService {
         setStatus(Constants.Enums.DatabaseStatus.MANUAL_UPDATE);
         // 停止搜索
         stopSearch();
-        sendExecuteSQLSignal();
-        try {
-            // 将在队列中的sql全部执行并等待搜索线程全部完成
-            while (searchThreadCount.get() != 0 || !commandQueue.isEmpty()) {
-                TimeUnit.MILLISECONDS.sleep(10);
+        {// 等待剩余的sql全部执行完成
+            sendExecuteSQLSignal();
+            try {
+                // 将在队列中的sql全部执行并等待搜索线程全部完成
+                while (searchThreadCount.get() != 0 || !commandQueue.isEmpty()) {
+                    TimeUnit.MILLISECONDS.sleep(10);
+                }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
-        } catch (InterruptedException e) {
-            e.printStackTrace();
         }
         recreateDatabase();
         waitForCommandSet(SqlTaskIds.CREATE_TABLE);
@@ -1175,12 +1177,14 @@ public class DatabaseService {
         SQLiteUtil.copyDatabases("data", "tmp");
         SQLiteUtil.initAllConnections("tmp");
 
-        checkFileSize(isDropPrevious);
+        // 检查数据库文件大小，过大则删除
+        checkDbFileSize(isDropPrevious);
 
         isSharedMemoryCreated.set(true);
         //创建检测系统空闲线程，当检测到系统空闲时关闭共享内存
         closeSharedMemoryOnIdle();
         try {
+            // 创建搜索进程并等待
             searchByUSN(AllConfigs.getInstance().getAvailableDisks(), ignorePath.toLowerCase());
         } catch (IOException e) {
             e.printStackTrace();

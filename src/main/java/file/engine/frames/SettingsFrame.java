@@ -5,6 +5,7 @@ import file.engine.annotation.EventRegister;
 import file.engine.configs.AllConfigs;
 import file.engine.configs.ConfigEntity;
 import file.engine.configs.Constants;
+import file.engine.dllInterface.GetHandle;
 import file.engine.dllInterface.IsLocalDisk;
 import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
@@ -2335,7 +2336,8 @@ public class SettingsFrame {
             return;
         }
         frame.setResizable(true);
-        int width = 1000, height = 600;
+        double dpi = GetHandle.INSTANCE.getDpi();
+        int width = (int) (1000 / dpi), height = (int) (600 / dpi);
         try {
             width = Integer.parseInt(TRANSLATE_SERVICE.getFrameWidth());
             height = Integer.parseInt(TRANSLATE_SERVICE.getFrameHeight());

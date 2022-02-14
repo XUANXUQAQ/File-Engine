@@ -45,10 +45,17 @@ public class SystemIdleCheckUtil {
         });
     }
 
+    /**
+     * 获取鼠标位置
+     * @return Point
+     */
     private static Point getCursorPoint() {
         return java.awt.MouseInfo.getPointerInfo().getLocation();
     }
 
+    /**
+     * 开启检测
+     */
     public static void start() {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             EventManagement instance = EventManagement.getInstance();
