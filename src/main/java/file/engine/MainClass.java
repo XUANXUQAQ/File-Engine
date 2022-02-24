@@ -347,7 +347,7 @@ public class MainClass {
                     new ShowTaskBarMessageEvent(translateService.getTranslation("Warning"),
                             translateService.getTranslation("The startup path is invalid")));
         }
-        while (eventManagement.isNotMainExit()) {
+        while (eventManagement.notMainExit()) {
             // 主循环开始
             //检查已工作时间
             endTime = new Date();

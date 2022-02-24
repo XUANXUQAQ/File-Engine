@@ -72,7 +72,7 @@ public class PluginMarket {
             try {
                 String pluginName;
                 EventManagement eventManagement = EventManagement.getInstance();
-                while (eventManagement.isNotMainExit()) {
+                while (eventManagement.notMainExit()) {
                     TimeUnit.MILLISECONDS.sleep(100);
                     pluginName = (String) listPlugins.getSelectedValue();
                     if (pluginName == null) {

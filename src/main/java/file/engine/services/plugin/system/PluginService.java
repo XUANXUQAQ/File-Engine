@@ -7,11 +7,9 @@ import file.engine.configs.AllConfigs;
 import file.engine.configs.Constants;
 import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
+import file.engine.event.handler.impl.BuildEventRequestEvent;
 import file.engine.event.handler.impl.frame.searchBar.SearchBarReadyEvent;
-import file.engine.event.handler.impl.plugin.AddPluginsCanUpdateEvent;
-import file.engine.event.handler.impl.plugin.LoadAllPluginsEvent;
-import file.engine.event.handler.impl.plugin.RemoveFromPluginsCanUpdateEvent;
-import file.engine.event.handler.impl.plugin.ConfigsChangedEvent;
+import file.engine.event.handler.impl.plugin.*;
 import file.engine.event.handler.impl.stop.RestartEvent;
 import file.engine.event.handler.impl.taskbar.ShowTaskBarMessageEvent;
 import file.engine.utils.CachedThreadPoolUtil;
@@ -51,6 +49,27 @@ public class PluginService {
         return INSTANCE;
     }
 
+    private void checkPluginEventThread() {
+        CachedThreadPoolUtil.getInstance().executeTask(() -> {
+            try {
+                EventManagement eventManagement = EventManagement.getInstance();
+                while (eventManagement.notMainExit()) {
+                    for (PluginInfo pluginInfo : pluginInfoSet) {
+                        Plugin plugin = pluginInfo.plugin;
+                        Object[] eventInfo = plugin.pollFromEventQueue();
+                        // 构建事件并发出
+                        if (eventInfo != null) {
+                            eventManagement.putEvent(new BuildEventRequestEvent(eventInfo));
+                        }
+                    }
+                    TimeUnit.SECONDS.sleep(1);
+                }
+            } catch (InterruptedException ignored) {
+
+            }
+        });
+    }
+
     /**
      * 检查所有的插件，若有任务栏信息则显示
      */
@@ -60,7 +79,7 @@ public class PluginService {
                 String[] message;
                 Plugin plugin;
                 EventManagement eventManagement = EventManagement.getInstance();
-                while (eventManagement.isNotMainExit()) {
+                while (eventManagement.notMainExit()) {
                     for (PluginInfo each : pluginInfoSet) {
                         plugin = each.plugin;
                         message = plugin.getMessage();
@@ -77,6 +96,7 @@ public class PluginService {
 
     private PluginService() {
         checkPluginMessageThread();
+        checkPluginEventThread();
     }
 
     /**
@@ -423,7 +443,7 @@ public class PluginService {
                     checkUpdateThread.interrupt();
                     throw new InterruptedException("check update failed.");
                 }
-                if (!EventManagement.getInstance().isNotMainExit()) {
+                if (!EventManagement.getInstance().notMainExit()) {
                     break;
                 }
             }
@@ -463,6 +483,15 @@ public class PluginService {
     @EventListener(listenClass = RestartEvent.class)
     private static void restartEvent(Event event) {
         getInstance().unloadAllPlugins();
+    }
+
+    @EventRegister(registerClass = EventProcessedBroadcastEvent.class)
+    private static void broadcastEventProcess(Event event) {
+        EventProcessedBroadcastEvent eventProcessed = (EventProcessedBroadcastEvent) event;
+        PluginService pluginService = getInstance();
+        for (PluginInfo each : pluginService.pluginInfoSet) {
+            each.plugin.eventProcessed(eventProcessed.c, eventProcessed.eventInstance);
+        }
     }
 
     public static class PluginInfo {

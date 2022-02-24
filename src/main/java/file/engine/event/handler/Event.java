@@ -78,6 +78,6 @@ public class Event {
 
     @Override
     public String toString() {
-        return "{task >>> " + this.getClass() + "}";
+        return "{event >>> " + this.getClass() + "}";
     }
 }
