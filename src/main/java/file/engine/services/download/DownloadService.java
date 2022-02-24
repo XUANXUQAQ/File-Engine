@@ -79,7 +79,7 @@ public class DownloadService {
             long startTime = System.currentTimeMillis();
             final int sleepMills = 10;
             EventManagement instance = EventManagement.getInstance();
-            while (instance.isNotMainExit()) {
+            while (instance.notMainExit()) {
                 if (System.currentTimeMillis() - startTime > maxWaitingMills) {
                     throw new IOException("download failed");
                 }

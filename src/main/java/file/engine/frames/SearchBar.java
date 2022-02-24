@@ -1151,7 +1151,7 @@ public class SearchBar {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             try {
                 EventManagement eventManagement = EventManagement.getInstance();
-                while (eventManagement.isNotMainExit()) {
+                while (eventManagement.notMainExit()) {
                     shouldSaveMousePos.set(true);
                     TimeUnit.MILLISECONDS.sleep(50);
                 }
@@ -2701,7 +2701,7 @@ public class SearchBar {
                 EventManagement eventManagement = EventManagement.getInstance();
                 GetHandle.INSTANCE.start();
                 AllConfigs allConfigs = AllConfigs.getInstance();
-                while (eventManagement.isNotMainExit()) {
+                while (eventManagement.notMainExit()) {
                     if (showingMode == Constants.Enums.ShowingSearchBarMode.EXPLORER_ATTACH) {
                         getExplorerSizeAndChangeSearchBarSizeExplorerMode();
                     } else {
@@ -3401,7 +3401,7 @@ public class SearchBar {
             final AtomicBoolean isMergeThreadNotExist = new AtomicBoolean(true);
             final AtomicBoolean isShowSearchStatusThreadNotExist = new AtomicBoolean(true);
             final AtomicBoolean isWaiting = new AtomicBoolean(false);
-            while (eventManagement.isNotMainExit()) {
+            while (eventManagement.notMainExit()) {
                 try {
                     long endTime = System.currentTimeMillis();
                     text = getSearchBarText();

@@ -50,7 +50,7 @@ public class SetDownloadProgress {
             boolean isStarted = true;
             while (isStarted) {
                 if (func.get()) {
-                    if (!eventManagement.isNotMainExit()) {
+                    if (!eventManagement.notMainExit()) {
                         return true;
                     }
                     String taskStrFromMethod = currentTaskStr;

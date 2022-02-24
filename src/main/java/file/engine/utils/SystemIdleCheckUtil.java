@@ -31,7 +31,7 @@ public class SystemIdleCheckUtil {
             EventManagement eventManagement = EventManagement.getInstance();
             try {
                 Point lastPoint = new Point();
-                while (eventManagement.isNotMainExit()) {
+                while (eventManagement.notMainExit()) {
                     Point point = getCursorPoint();
                     if (!point.equals(lastPoint)) {
                         CursorCount.count.set(0);
@@ -60,7 +60,7 @@ public class SystemIdleCheckUtil {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             EventManagement instance = EventManagement.getInstance();
             try {
-                while (instance.isNotMainExit()) {
+                while (instance.notMainExit()) {
                     if (CursorCount.count.get() <= THRESHOLD) {
                         CursorCount.count.incrementAndGet();
                     }

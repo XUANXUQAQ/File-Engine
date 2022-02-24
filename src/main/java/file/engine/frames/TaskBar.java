@@ -51,7 +51,7 @@ public class TaskBar {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             EventManagement instance = EventManagement.getInstance();
             try {
-                while (instance.isNotMainExit()) {
+                while (instance.notMainExit()) {
                     if (popupMenu != null && popupMenu.isVisible() && (GetHandle.INSTANCE.isKeyPressed(L_BUTTON) || GetHandle.INSTANCE.isKeyPressed(R_BUTTON))) {
                         Point point = java.awt.MouseInfo.getPointerInfo().getLocation();
                         Point location = popupMenu.getLocationOnScreen();
@@ -80,7 +80,7 @@ public class TaskBar {
                 EventManagement eventManagement = EventManagement.getInstance();
                 MessageStruct message;
                 int count = 0;
-                while (eventManagement.isNotMainExit()) {
+                while (eventManagement.notMainExit()) {
                     if (isMessageClear.get()) {
                         currentShowingMessageWithEvent = null;
                         message = messageQueue.poll();

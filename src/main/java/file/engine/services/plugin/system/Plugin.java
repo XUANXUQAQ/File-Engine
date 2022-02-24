@@ -34,6 +34,8 @@ public class Plugin {
     private Method pluginSetCurrentTheme;
     private Method pluginSearchBarVisible;
     private Method pluginConfigsChanged;
+    private Method pluginEventProcessed;
+    private Method pluginPollFromEventQueue;
 
     public Plugin(PluginClassAndInstanceInfo pluginClassAndInstanceInfo) {
         Class<?> aClass = pluginClassAndInstanceInfo.cls;
@@ -75,6 +77,8 @@ public class Plugin {
         methodList.add("setCurrentTheme");
         methodList.add("searchBarVisible");
         methodList.add("configsChanged");
+        methodList.add("eventProcessed");
+        methodList.add("pollFromEventQueue");
     }
 
     /**
@@ -132,6 +136,29 @@ public class Plugin {
             pluginSetCurrentTheme = aClass.getDeclaredMethod("setCurrentTheme", int.class, int.class, int.class);
         } else if ("searchBarVisible".equals(methodName)) {
             pluginSearchBarVisible = aClass.getDeclaredMethod("searchBarVisible", String.class);
+        } else if ("eventProcessed".equals(methodName)) {
+            pluginEventProcessed = aClass.getDeclaredMethod("eventProcessed", Class.class, Object.class);
+        } else if ("pollFromEventQueue".equals(methodName)) {
+            pluginPollFromEventQueue = aClass.getDeclaredMethod("pollFromEventQueue");
+        }
+    }
+
+    public Object[] pollFromEventQueue() {
+        try {
+            return (Object[]) pluginPollFromEventQueue.invoke(instance);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public void eventProcessed(Class<?> c, Object eventInstance) {
+        try {
+            if (pluginEventProcessed == null) {
+                return;
+            }
+            pluginEventProcessed.invoke(instance, c, eventInstance);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 

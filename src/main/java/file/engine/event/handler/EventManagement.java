@@ -2,13 +2,17 @@ package file.engine.event.handler;
 
 import file.engine.annotation.EventListener;
 import file.engine.annotation.EventRegister;
+import file.engine.event.handler.impl.BuildEventRequestEvent;
+import file.engine.event.handler.impl.plugin.EventProcessedBroadcastEvent;
 import file.engine.event.handler.impl.stop.CloseEvent;
 import file.engine.event.handler.impl.stop.RestartEvent;
 import file.engine.utils.CachedThreadPoolUtil;
 import file.engine.utils.ProcessUtil;
+import file.engine.utils.RegexUtil;
 import file.engine.utils.clazz.scan.ClassScannerUtil;
 import file.engine.utils.system.properties.IsDebug;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -85,6 +89,22 @@ public class EventManagement {
             event.setFinished();
             CachedThreadPoolUtil.getInstance().shutdown();
             System.exit(0);
+        } else if (event instanceof BuildEventRequestEvent) {
+            BuildEventRequestEvent buildEventRequestEvent = (BuildEventRequestEvent) event;
+            Object[] eventInfo = buildEventRequestEvent.eventInfo;
+            String eventClassName = (String) eventInfo[0];
+            Object[] eventParams = (Object[]) eventInfo[1];
+            // 构建任务
+            String[] eventFullPath = RegexUtil.blank.split(eventClassName);
+            if (eventFullPath == null || eventFullPath.length != 2) {
+                return true;
+            }
+            Event buildEvent = buildEvent(eventFullPath[1], eventParams);
+            if (buildEvent == null) {
+                return true;
+            }
+            putEvent(buildEvent);
+            return false;
         } else {
             String eventClassName = event.getClass().toString();
             Method eventHandler = EVENT_HANDLER_MAP.get(eventClassName);
@@ -105,6 +125,51 @@ public class EventManagement {
             return false;
         }
         return true;
+    }
+
+    /**
+     * 根据类名构建类实例
+     * @param eventClassName 事件全类名
+     * @param eventParams 事件所需参数
+     * @return 事件实例
+     */
+    private Event buildEvent(String eventClassName, Object[] eventParams) {
+        try {
+            Class<?> eventClass = Class.forName(eventClassName);
+            outer:
+            for (Constructor<?> constructor : eventClass.getConstructors()) {
+                Class<?>[] parameterTypes = constructor.getParameterTypes();
+                int parameterCount = constructor.getParameterCount();
+                if (parameterCount == 0) {
+                    // 构造方法无参数但传入了参数
+                    if (eventParams != null && eventParams.length > 0) {
+                        continue;
+                    }
+                } else {
+                    // 构造有参数但没有传入参数
+                    if (eventParams == null || eventParams.length != parameterCount) {
+                        continue;
+                    }
+                }
+                // 检查参数类型
+                for (int i = 0; i < parameterCount; i++) {
+                    Class<?> parameterType = parameterTypes[i];
+                    Object eventParam = eventParams[i];
+                    if (eventParam == null) {
+                        continue;
+                    }
+                    if (!parameterType.equals(eventParam.getClass())) {
+                        continue outer;
+                    }
+                }
+                // 检查完成
+                Object eventInstance = constructor.newInstance(eventParams);
+                return (Event) eventInstance;
+            }
+        } catch (ClassNotFoundException | InvocationTargetException | InstantiationException | IllegalAccessException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     /**
@@ -182,7 +247,7 @@ public class EventManagement {
         putEvent(event);
     }
 
-    public boolean isNotMainExit() {
+    public boolean notMainExit() {
         return !exit.get();
     }
 
@@ -292,6 +357,11 @@ public class EventManagement {
                             if (executeTaskFailed(event)) {
                                 System.err.println("异步任务执行失败---" + event);
                                 asyncEventQueue.add(event);
+                            } else {
+                                // 任务执行成功
+                                if (!EventProcessedBroadcastEvent.class.equals(event.getClass())) {
+                                    putEvent(new EventProcessedBroadcastEvent(event.getClass(), event));
+                                }
                             }
                         } else {
                             event.setFailed();
@@ -348,6 +418,11 @@ public class EventManagement {
                             }
                             System.err.println("同步任务执行失败---" + event);
                             blockEventQueue.add(event);
+                        } else {
+                            // 任务执行成功
+                            if (!EventProcessedBroadcastEvent.class.equals(event.getClass())) {
+                                putEvent(new EventProcessedBroadcastEvent(event.getClass(), event));
+                            }
                         }
                     } else {
                         event.setFailed();

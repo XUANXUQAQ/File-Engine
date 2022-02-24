@@ -787,7 +787,7 @@ public class SettingsFrame {
                 Color searchBarColor;
                 Color searchBarFontColor;
                 Color borderColor;
-                while (eventManagement.isNotMainExit()) {
+                while (eventManagement.notMainExit()) {
                     labelColor = getColorFromTextFieldStr(textFieldLabelColor);
                     fontColorWithCoverage = getColorFromTextFieldStr(textFieldFontColorWithCoverage);
                     defaultBackgroundColor = getColorFromTextFieldStr(textFieldBackgroundDefault);
@@ -1137,7 +1137,7 @@ public class SettingsFrame {
                     String defaultBackgroundColor;
                     Constants.Enums.BorderType borderType;
                     String borderThickness;
-                    while (PreviewStatus.isPreview && eventManagement.isNotMainExit()) {
+                    while (PreviewStatus.isPreview && eventManagement.notMainExit()) {
                         borderColor = textFieldBorderColor.getText();
                         searchBarColor = textFieldSearchBarColor.getText();
                         searchBarFontColor = textFieldSearchBarFontColor.getText();
@@ -1589,7 +1589,7 @@ public class SettingsFrame {
                     JOptionPane.showMessageDialog(frame, TRANSLATE_SERVICE.getTranslation("Check update failed"));
                     return;
                 }
-                if (!eventManagement.isNotMainExit()) {
+                if (!eventManagement.notMainExit()) {
                     return;
                 }
             }

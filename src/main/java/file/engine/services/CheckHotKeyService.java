@@ -127,7 +127,7 @@ public class CheckHotKeyService {
             try {
                 ref.endVisibleTime = System.currentTimeMillis();
                 //获取快捷键状态，检测是否被按下线程
-                while (eventManagement.isNotMainExit()) {
+                while (eventManagement.notMainExit()) {
                     if (!isExecuted && instance.getKeyStatus()) {
                         eventManagement.putEvent(new IsSearchBarVisibleEvent(), event -> {
                             //是否搜索框可见

@@ -147,7 +147,7 @@ public class DatabaseService {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             try {
                 EventManagement eventManagement = EventManagement.getInstance();
-                while (eventManagement.isNotMainExit()) {
+                while (eventManagement.notMainExit()) {
                     if (isExecuteImmediately.get()) {
                         try {
                             isExecuteImmediately.set(false);
@@ -190,7 +190,7 @@ public class DatabaseService {
                 int fileCount = 0;
                 LinkedHashSet<String> deletePaths = new LinkedHashSet<>();
                 EventManagement eventManagement = EventManagement.getInstance();
-                while (eventManagement.isNotMainExit()) {
+                while (eventManagement.notMainExit()) {
                     if (status == Constants.Enums.DatabaseStatus.NORMAL) {
                         while ((tmp = readerRemove.readLine()) != null) {
                             fileCount++;
@@ -297,7 +297,7 @@ public class DatabaseService {
                 int fileCount = 0;
                 LinkedHashSet<String> addPaths = new LinkedHashSet<>();
                 EventManagement eventManagement = EventManagement.getInstance();
-                while (eventManagement.isNotMainExit()) {
+                while (eventManagement.notMainExit()) {
                     if (status == Constants.Enums.DatabaseStatus.NORMAL) {
                         while ((tmp = readerAdd.readLine()) != null) {
                             fileCount++;
@@ -1246,7 +1246,7 @@ public class DatabaseService {
         try {
             EventManagement eventManagement = EventManagement.getInstance();
             long tmpStartTime = System.currentTimeMillis();
-            while (eventManagement.isNotMainExit()) {
+            while (eventManagement.notMainExit()) {
                 //等待
                 if (System.currentTimeMillis() - tmpStartTime > 60 * 1000) {
                     System.err.println("等待SQL语句任务" + taskId + "处理超时");
@@ -1325,7 +1325,7 @@ public class DatabaseService {
             final long updateTimeLimit = AllConfigs.getInstance().getUpdateTimeLimit();
             try {
                 EventManagement eventManagement = EventManagement.getInstance();
-                while (eventManagement.isNotMainExit()) {
+                while (eventManagement.notMainExit()) {
                     if (status == Constants.Enums.DatabaseStatus.NORMAL) {
                         sendExecuteSQLSignal();
                     }
