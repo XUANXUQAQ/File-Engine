@@ -37,7 +37,8 @@ import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
 import java.awt.event.*;
 import java.awt.geom.RoundRectangle2D;
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -3487,6 +3488,7 @@ public class SearchBar {
                             String result;
                             while (runningMode == Constants.Enums.RunningMode.PLUGIN_MODE) {
                                 while (currentUsingPlugin != null && (result = currentUsingPlugin.pollFromResultQueue()) != null) {
+                                    result = "plugin|" + currentUsingPlugin.identifier + "|" + result;
                                     if (!listResults.contains(result)) {
                                         listResults.add(result);
                                         listResultsNum.incrementAndGet();
@@ -3740,11 +3742,18 @@ public class SearchBar {
      * @param isChosen 是否当前被选中
      */
     private void showResultOnLabel(String path, JLabel label, boolean isChosen) {
+        if (path.startsWith("plugin")) {
+            showPluginResultOnLabel(path, label, isChosen);
+            return;
+        }
         String searchBarText = getSearchBarText();
         if (searchBarText.charAt(0) == '>') {
             PluginService.PluginInfo pluginInfoByName = PluginService.getInstance().getPluginInfoByIdentifier(path);
-            ImageIcon pluginIcon = GetIconUtil.getInstance().changeIcon(pluginInfoByName.plugin.getPluginIcon(), iconSideLength, iconSideLength);
-            label.setIcon(pluginIcon);
+            ImageIcon tmpIcon = pluginInfoByName.plugin.getPluginIcon();
+            if (tmpIcon != null) {
+                ImageIcon pluginIcon = GetIconUtil.getInstance().changeIcon(tmpIcon, iconSideLength, iconSideLength);
+                label.setIcon(pluginIcon);
+            }
             label.setText(path);
         } else {
             //将文件的路径信息存储在label的名称中，在未被选中时只显示文件名，选中后才显示文件路径
@@ -3780,7 +3789,17 @@ public class SearchBar {
      * @param isChosen 是否当前被选中
      */
     private void showPluginResultOnLabel(String result, JLabel label, boolean isChosen) {
-        currentUsingPlugin.showResultOnLabel(result, label, isChosen);
+        Pattern pattern = RegexUtil.getPattern("|", 0);
+        String[] resultWithPluginInfo = pattern.split(result);
+        if (resultWithPluginInfo.length != 3) {
+            throw new RuntimeException("plugin result error: " + result);
+        }
+        if (runningMode == Constants.Enums.RunningMode.PLUGIN_MODE) {
+            currentUsingPlugin.showResultOnLabel(resultWithPluginInfo[2], label, isChosen);
+        } else {
+            PluginService.PluginInfo plugin = PluginService.getInstance().getPluginInfoByIdentifier(resultWithPluginInfo[1]);
+            plugin.plugin.showResultOnLabel(resultWithPluginInfo[2], label, isChosen);
+        }
     }
 
     /**

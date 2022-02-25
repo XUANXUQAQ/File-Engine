@@ -49,36 +49,16 @@ public class PluginService {
         return INSTANCE;
     }
 
-    private void checkPluginEventThread() {
-        CachedThreadPoolUtil.getInstance().executeTask(() -> {
-            try {
-                EventManagement eventManagement = EventManagement.getInstance();
-                while (eventManagement.notMainExit()) {
-                    for (PluginInfo pluginInfo : pluginInfoSet) {
-                        Plugin plugin = pluginInfo.plugin;
-                        Object[] eventInfo = plugin.pollFromEventQueue();
-                        // 构建事件并发出
-                        if (eventInfo != null) {
-                            eventManagement.putEvent(new BuildEventRequestEvent(eventInfo));
-                        }
-                    }
-                    TimeUnit.SECONDS.sleep(1);
-                }
-            } catch (InterruptedException ignored) {
-
-            }
-        });
-    }
-
     /**
      * 检查所有的插件，若有任务栏信息则显示
      */
-    private void checkPluginMessageThread() {
+    private void checkPluginThread() {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             try {
                 String[] message;
                 Plugin plugin;
                 EventManagement eventManagement = EventManagement.getInstance();
+                long lastCheckEventTime = System.currentTimeMillis();
                 while (eventManagement.notMainExit()) {
                     for (PluginInfo each : pluginInfoSet) {
                         plugin = each.plugin;
@@ -87,6 +67,18 @@ public class PluginService {
                             eventManagement.putEvent(new ShowTaskBarMessageEvent(message[0], message[1]));
                         }
                     }
+                    if (System.currentTimeMillis() - lastCheckEventTime > 1000) {
+                        lastCheckEventTime = System.currentTimeMillis();
+                        for (PluginInfo pluginInfo : pluginInfoSet) {
+                            plugin = pluginInfo.plugin;
+                            Object[] eventInfo = plugin.pollFromEventQueue();
+                            // 构建事件并发出
+                            if (eventInfo != null) {
+                                eventManagement.putEvent(new BuildEventRequestEvent(eventInfo));
+                            }
+                        }
+                    }
+
                     TimeUnit.MILLISECONDS.sleep(50);
                 }
             } catch (InterruptedException ignored) {
@@ -95,8 +87,7 @@ public class PluginService {
     }
 
     private PluginService() {
-        checkPluginMessageThread();
-        checkPluginEventThread();
+        checkPluginThread();
     }
 
     /**
@@ -277,7 +268,7 @@ public class PluginService {
         Class<?> c = Class.forName(className, true, classLoader);
         Object instance = c.getDeclaredConstructor().newInstance();
         Plugin.PluginClassAndInstanceInfo pluginClassAndInstanceInfo = new Plugin.PluginClassAndInstanceInfo(c, instance);
-        Plugin plugin = new Plugin(pluginClassAndInstanceInfo);
+        Plugin plugin = new Plugin(pluginName, identifier, pluginClassAndInstanceInfo);
         plugin.loadPlugin(); // 兼容以前版本
         plugin.loadPlugin(configs);
         AllConfigs allConfigs = AllConfigs.getInstance();
