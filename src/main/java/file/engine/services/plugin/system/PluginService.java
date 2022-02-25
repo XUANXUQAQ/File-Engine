@@ -148,6 +148,10 @@ public class PluginService {
         return strb.substring(0, strb.length() - 1);
     }
 
+    public Set<PluginInfo> getAllPlugins() {
+        return pluginInfoSet;
+    }
+
     /**
      * 获取所有重复插件
      *
