@@ -1,6 +1,7 @@
 package file.engine.utils;
 
 import file.engine.utils.system.properties.IsDebug;
+import lombok.NonNull;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileSystemView;
@@ -34,7 +35,7 @@ public class GetIconUtil {
         return INSTANCE;
     }
 
-    public ImageIcon changeIcon(ImageIcon icon, int width, int height) {
+    public ImageIcon changeIcon(@NonNull ImageIcon icon, int width, int height) {
         Image image = icon.getImage().getScaledInstance(width, height, Image.SCALE_DEFAULT);
         return new ImageIcon(image);
     }
