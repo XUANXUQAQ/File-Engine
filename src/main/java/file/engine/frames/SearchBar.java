@@ -3140,7 +3140,7 @@ public class SearchBar {
     }
 
     /**
-     * 将tempResults中的结果转移到listResults中来显示
+     * 将tempResults以及插件返回的结果转移到listResults中来显示
      */
     private void addMergeThread(AtomicBoolean isMergeThreadNotExist) {
         if (!isMergeThreadNotExist.get()) {
@@ -3158,6 +3158,15 @@ public class SearchBar {
                         return;
                     }
                     String each;
+                    for (PluginService.PluginInfo eachPlugin : PluginService.getInstance().getAllPlugins()) {
+                        while ((each = eachPlugin.plugin.pollFromResultQueue()) != null) {
+                            each = "plugin--" + eachPlugin.plugin.identifier + "--" + each;
+                            if (!listResults.contains(each)) {
+                                listResults.add(each);
+                                listResultsNum.incrementAndGet();
+                            }
+                        }
+                    }
                     while ((each = tempResults.poll()) != null) {
                         if (startTime > time || !isVisible() || listResultsNum.get() >= Constants.MAX_RESULTS_COUNT) {
                             eventManagement.putEvent(new StopSearchEvent());
@@ -3488,7 +3497,7 @@ public class SearchBar {
                             String result;
                             while (runningMode == Constants.Enums.RunningMode.PLUGIN_MODE) {
                                 while (currentUsingPlugin != null && (result = currentUsingPlugin.pollFromResultQueue()) != null) {
-                                    result = "plugin|" + currentUsingPlugin.identifier + "|" + result;
+                                    result = "plugin--" + currentUsingPlugin.identifier + "--" + result;
                                     if (!listResults.contains(result)) {
                                         listResults.add(result);
                                         listResultsNum.incrementAndGet();
@@ -3789,7 +3798,7 @@ public class SearchBar {
      * @param isChosen 是否当前被选中
      */
     private void showPluginResultOnLabel(String result, JLabel label, boolean isChosen) {
-        Pattern pattern = RegexUtil.getPattern("|", 0);
+        Pattern pattern = RegexUtil.getPattern("--", 0);
         String[] resultWithPluginInfo = pattern.split(result);
         if (resultWithPluginInfo.length != 3) {
             throw new RuntimeException("plugin result error: " + result);
