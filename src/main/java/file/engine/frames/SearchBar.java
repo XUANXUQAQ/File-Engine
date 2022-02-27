@@ -531,68 +531,83 @@ public class SearchBar {
 
             @Override
             public void mousePressed(MouseEvent e) {
+                if (listResultsNum.get() == 0) {
+                    return;
+                }
                 int count = e.getClickCount();
-                if (count == 2) {
-                    if (isPreviewMode.get() || isTutorialMode.get()) {
-                        return;
+                String res = listResults.get(currentResultCount.get());
+                if (res != null && res.startsWith("plugin")) {
+                    String[] split = RegexUtil.getPattern("--", 0).split(res);
+                    PluginService.PluginInfo pluginInfo = PluginService.getInstance().getPluginInfoByIdentifier(split[1]);
+                    pluginInfo.plugin.mousePressed(e, split[2]);
+                    if (count == 2) {
+                        detectShowingModeAndClose();
                     }
-                    if (listResultsNum.get() != 0) {
-                        if (runningMode != Constants.Enums.RunningMode.PLUGIN_MODE) {
-                            if (showingMode != Constants.Enums.ShowingSearchBarMode.EXPLORER_ATTACH) {
-                                String searchBarText = getSearchBarText();
-                                if (isVisible() && searchBarText.charAt(0) != '>') {
-                                    setVisible(false);
-                                }
-                            }
-                            String res = listResults.get(currentResultCount.get());
-                            if (runningMode == Constants.Enums.RunningMode.NORMAL_MODE) {
-                                String searchBarText = getSearchBarText();
-                                if (searchBarText.charAt(0) == '>') {
-                                    SwingUtilities.invokeLater(() -> textField.setText(">" + res + " "));
-                                    return;
-                                } else {
-                                    if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
-                                        if (isOpenLastFolderPressed.get()) {
-                                            //打开上级文件夹
-                                            openFolderByExplorer(res);
-                                        } else if (allConfigs.isDefaultAdmin() || isRunAsAdminPressed.get()) {
-                                            openWithAdmin(res);
-                                        } else if (isCopyPathPressed.get()) {
-                                            copyToClipBoard(res, true);
-                                        } else {
-                                            openWithoutAdmin(res);
-                                        }
+                } else {
+                    if (count == 2) {
+                        if (isPreviewMode.get() || isTutorialMode.get()) {
+                            return;
+                        }
+                        if (listResultsNum.get() != 0) {
+                            if (runningMode != Constants.Enums.RunningMode.PLUGIN_MODE) {
+                                if (showingMode != Constants.Enums.ShowingSearchBarMode.EXPLORER_ATTACH) {
+                                    String searchBarText = getSearchBarText();
+                                    if (isVisible() && searchBarText.charAt(0) != '>') {
+                                        setVisible(false);
                                     }
                                 }
-                            } else if (runningMode == Constants.Enums.RunningMode.COMMAND_MODE) {
-                                String[] commandInfo = semicolon.split(res);
-                                boolean isExecuted = runInternalCommand(colon.split(commandInfo[0])[1]);
-                                if (isExecuted) {
-                                    return;
-                                }
-                                File open = new File(commandInfo[1]);
-                                if (isOpenLastFolderPressed.get()) {
-                                    //打开上级文件夹
-                                    openFolderByExplorer(open.getAbsolutePath());
-                                } else if (allConfigs.isDefaultAdmin() || isRunAsAdminPressed.get()) {
-                                    openWithAdmin(open.getAbsolutePath());
-                                } else if (isCopyPathPressed.get()) {
-                                    copyToClipBoard(open.getAbsolutePath(), true);
-                                } else {
-                                    openWithoutAdmin(open.getAbsolutePath());
-                                }
-                            }
-                        } else if (runningMode == Constants.Enums.RunningMode.PLUGIN_MODE) {
-                            if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
-                                if (currentUsingPlugin != null) {
-                                    if (listResultsNum.get() != 0) {
-                                        currentUsingPlugin.mousePressed(e, listResults.get(currentResultCount.get()));
+                                if (runningMode == Constants.Enums.RunningMode.NORMAL_MODE) {
+                                    String searchBarText = getSearchBarText();
+                                    if (searchBarText.charAt(0) == '>') {
+                                        SwingUtilities.invokeLater(() -> textField.setText(">" + res + " "));
+                                        return;
+                                    } else {
+                                        if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
+                                            if (isOpenLastFolderPressed.get()) {
+                                                //打开上级文件夹
+                                                openFolderByExplorer(res);
+                                            } else if (allConfigs.isDefaultAdmin() || isRunAsAdminPressed.get()) {
+                                                openWithAdmin(res);
+                                            } else if (isCopyPathPressed.get()) {
+                                                copyToClipBoard(res, true);
+                                            } else {
+                                                openWithoutAdmin(res);
+                                            }
+                                        }
+                                    }
+                                } else if (runningMode == Constants.Enums.RunningMode.COMMAND_MODE) {
+                                    String[] commandInfo = semicolon.split(res);
+                                    boolean isExecuted = runInternalCommand(colon.split(commandInfo[0])[1]);
+                                    if (isExecuted) {
+                                        return;
+                                    }
+                                    File open = new File(commandInfo[1]);
+                                    if (isOpenLastFolderPressed.get()) {
+                                        //打开上级文件夹
+                                        openFolderByExplorer(open.getAbsolutePath());
+                                    } else if (allConfigs.isDefaultAdmin() || isRunAsAdminPressed.get()) {
+                                        openWithAdmin(open.getAbsolutePath());
+                                    } else if (isCopyPathPressed.get()) {
+                                        copyToClipBoard(open.getAbsolutePath(), true);
+                                    } else {
+                                        openWithoutAdmin(open.getAbsolutePath());
                                     }
                                 }
                             }
                         }
+                        detectShowingModeAndClose();
                     }
-                    detectShowingModeAndClose();
+                }
+
+                if (runningMode == Constants.Enums.RunningMode.PLUGIN_MODE &&
+                        showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING &&
+                        currentUsingPlugin != null) {
+                    if (listResultsNum.get() != 0) {
+                        currentUsingPlugin.mousePressed(e, listResults.get(currentResultCount.get()));
+                        if (count == 2) {
+                            detectShowingModeAndClose();
+                        }
+                    }
                 }
 
                 if (e.getButton() == MouseEvent.BUTTON3 && runningMode != Constants.Enums.RunningMode.PLUGIN_MODE) {
@@ -606,11 +621,18 @@ public class SearchBar {
 
             @Override
             public void mouseReleased(MouseEvent e) {
-                if (runningMode == Constants.Enums.RunningMode.PLUGIN_MODE) {
-                    if (currentUsingPlugin != null) {
-                        if (listResultsNum.get() != 0) {
-                            currentUsingPlugin.mouseReleased(e, listResults.get(currentResultCount.get()));
-                        }
+                if (listResultsNum.get() == 0) {
+                    return;
+                }
+                String res = listResults.get(currentResultCount.get());
+                if (res != null && res.startsWith("plugin")) {
+                    String[] split = RegexUtil.getPattern("--", 0).split(res);
+                    PluginService.PluginInfo pluginInfo = PluginService.getInstance().getPluginInfoByIdentifier(split[1]);
+                    pluginInfo.plugin.mouseReleased(e, split[2]);
+                }
+                if (runningMode == Constants.Enums.RunningMode.PLUGIN_MODE && currentUsingPlugin != null) {
+                    if (listResultsNum.get() != 0) {
+                        currentUsingPlugin.mouseReleased(e, listResults.get(currentResultCount.get()));
                     }
                 }
             }
@@ -768,8 +790,12 @@ public class SearchBar {
                                     setVisible(false);
                                 }
                             }
-                            if (listResultsNum.get() != 0) {
-                                String res = listResults.get(currentResultCount.get());
+                            String res = listResults.get(currentResultCount.get());
+                            if (res != null && res.startsWith("plugin")) {
+                                String[] split = RegexUtil.getPattern("--", 0).split(res);
+                                PluginService.PluginInfo pluginInfo = PluginService.getInstance().getPluginInfoByIdentifier(split[1]);
+                                pluginInfo.plugin.keyPressed(arg0, split[2]);
+                            } else {
                                 if (runningMode == Constants.Enums.RunningMode.NORMAL_MODE) {
                                     String searchBarText = getSearchBarText();
                                     if (searchBarText.charAt(0) == '>') {
@@ -825,14 +851,20 @@ public class SearchBar {
                     } else if (allConfigs.getCopyPathKeyCode() == key) {
                         isCopyPathPressed.set(true);
                     }
+                    if (key != 38 && key != 40 && key != 10) {
+                        String res = listResults.get(currentResultCount.get());
+                        if (res != null && res.startsWith("plugin")) {
+                            String[] split = RegexUtil.getPattern("--", 0).split(res);
+                            PluginService.PluginInfo pluginInfo = PluginService.getInstance().getPluginInfoByIdentifier(split[1]);
+                            pluginInfo.plugin.keyPressed(arg0, split[2]);
+                        }
+                    }
                 }
                 if (showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
                     if (runningMode == Constants.Enums.RunningMode.PLUGIN_MODE) {
-                        if (key != 38 && key != 40) {
-                            if (currentUsingPlugin != null) {
-                                if (listResultsNum.get() != 0) {
-                                    currentUsingPlugin.keyPressed(arg0, listResults.get(currentResultCount.get()));
-                                }
+                        if (key != 38 && key != 40 && currentUsingPlugin != null) {
+                            if (listResultsNum.get() != 0) {
+                                currentUsingPlugin.keyPressed(arg0, listResults.get(currentResultCount.get()));
                             }
                             if (key == 10) {
                                 closeSearchBar();
@@ -845,6 +877,17 @@ public class SearchBar {
             @Override
             public void keyReleased(KeyEvent arg0) {
                 int key = arg0.getKeyCode();
+                if (listResultsNum.get() == 0) {
+                    return;
+                }
+                String res = listResults.get(currentResultCount.get());
+                if (res.startsWith("plugin")) {
+                    String[] split = RegexUtil.getPattern("--", 0).split(res);
+                    PluginService.PluginInfo pluginInfo = PluginService.getInstance().getPluginInfoByIdentifier(split[1]);
+                    if (key != 38 && key != 40) {
+                        pluginInfo.plugin.keyReleased(arg0, split[2]);
+                    }
+                }
                 if (allConfigs.getOpenLastFolderKeyCode() == key) {
                     //复位按键状态
                     isOpenLastFolderPressed.set(false);
@@ -863,8 +906,19 @@ public class SearchBar {
 
             @Override
             public void keyTyped(KeyEvent arg0) {
+                int key = arg0.getKeyCode();
+                if (listResultsNum.get() == 0) {
+                    return;
+                }
+                String res = listResults.get(currentResultCount.get());
+                if (res.startsWith("plugin")) {
+                    String[] split = RegexUtil.getPattern("--", 0).split(res);
+                    PluginService.PluginInfo pluginInfo = PluginService.getInstance().getPluginInfoByIdentifier(split[1]);
+                    if (key != 38 && key != 40) {
+                        pluginInfo.plugin.keyTyped(arg0, split[2]);
+                    }
+                }
                 if (runningMode == Constants.Enums.RunningMode.PLUGIN_MODE) {
-                    int key = arg0.getKeyCode();
                     if (key != 38 && key != 40 && currentUsingPlugin != null && listResultsNum.get() != 0) {
                         currentUsingPlugin.keyTyped(arg0, listResults.get(currentResultCount.get()));
                     }
