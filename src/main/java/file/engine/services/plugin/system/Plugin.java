@@ -40,6 +40,8 @@ public class Plugin {
         methodList.add("configsChanged");
         methodList.add("eventProcessed");
         methodList.add("pollFromEventQueue");
+        methodList.add("pollFromEventHandlerQueue");
+        methodList.add("restoreFileEngineEventHandler");
     }
 
     public Plugin(String name, String identifier, PluginClassAndInstanceInfo pluginClassAndInstanceInfo) {
@@ -55,6 +57,22 @@ public class Plugin {
             if (methodList.contains(methodName)) {
                 methodHashMap.put(key, method);
             }
+        }
+    }
+
+    public String restoreFileEngineEventHandler() {
+        try {
+            return (String) methodHashMap.get("restoreFileEngineEventHandler[]").invoke(instance);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public Object[] pollFromEventHandlerQueue() {
+        try {
+            return (Object[]) methodHashMap.get("pollFromEventHandlerQueue[]").invoke(instance);
+        } catch (Exception e) {
+            return null;
         }
     }
 
