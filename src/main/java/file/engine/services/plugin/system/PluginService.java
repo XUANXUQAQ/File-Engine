@@ -25,6 +25,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.BiConsumer;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
@@ -66,6 +67,15 @@ public class PluginService {
                         if (message != null) {
                             eventManagement.putEvent(new ShowTaskBarMessageEvent(message[0], message[1]));
                         }
+                        Object[] registerEventHandler = plugin.pollFromEventHandlerQueue();
+                        if (registerEventHandler != null) {
+                            //noinspection unchecked
+                            eventManagement.registerPluginHandler((String) registerEventHandler[0], (BiConsumer<Class<?>, Object>) registerEventHandler[1]);
+                        }
+                        String className = plugin.restoreFileEngineEventHandler();
+                        if (!(className == null || className.isEmpty())) {
+                            eventManagement.unregisterPluginHandler(className);
+                        }
                     }
                     if (System.currentTimeMillis() - lastCheckEventTime > 1000) {
                         lastCheckEventTime = System.currentTimeMillis();
@@ -78,7 +88,6 @@ public class PluginService {
                             }
                         }
                     }
-
                     TimeUnit.MILLISECONDS.sleep(50);
                 }
             } catch (InterruptedException ignored) {

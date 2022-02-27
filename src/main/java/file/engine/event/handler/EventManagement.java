@@ -8,7 +8,6 @@ import file.engine.event.handler.impl.stop.CloseEvent;
 import file.engine.event.handler.impl.stop.RestartEvent;
 import file.engine.utils.CachedThreadPoolUtil;
 import file.engine.utils.ProcessUtil;
-import file.engine.utils.RegexUtil;
 import file.engine.utils.clazz.scan.ClassScannerUtil;
 import file.engine.utils.system.properties.IsDebug;
 
@@ -22,6 +21,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 public class EventManagement {
@@ -31,6 +31,7 @@ public class EventManagement {
     private final ConcurrentLinkedQueue<Event> asyncEventQueue = new ConcurrentLinkedQueue<>();
     private final ConcurrentHashMap<String, Method> EVENT_HANDLER_MAP = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, ConcurrentLinkedQueue<Method>> EVENT_LISTENER_MAP = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, BiConsumer<Class<?>, Object>> PLUGIN_EVENT_HANDLER_MAP = new ConcurrentHashMap<>();
     private final AtomicInteger failureEventNum = new AtomicInteger(0);
 
     private EventManagement() {
@@ -47,6 +48,14 @@ public class EventManagement {
             }
         }
         return instance;
+    }
+
+    public void unregisterPluginHandler(String className) {
+        PLUGIN_EVENT_HANDLER_MAP.remove(className);
+    }
+
+    public void registerPluginHandler(String className, BiConsumer<Class<?>, Object> handler) {
+        PLUGIN_EVENT_HANDLER_MAP.put(className, handler);
     }
 
     /**
@@ -82,7 +91,7 @@ public class EventManagement {
         event.incrementExecuteTimes();
         if (event instanceof RestartEvent) {
             exit.set(true);
-            doAllMethod(RestartEvent.class.toString(), event);
+            doAllMethod(RestartEvent.class.getName(), event);
             if (event instanceof CloseEvent) {
                 ProcessUtil.stopDaemon();
             }
@@ -95,32 +104,39 @@ public class EventManagement {
             String eventClassName = (String) eventInfo[0];
             Object[] eventParams = (Object[]) eventInfo[1];
             // 构建任务
-            String[] eventFullPath = RegexUtil.blank.split(eventClassName);
-            if (eventFullPath == null || eventFullPath.length != 2) {
+            if (eventClassName == null || eventClassName.isEmpty()) {
                 return true;
             }
-            Event buildEvent = buildEvent(eventFullPath[1], eventParams);
+            Event buildEvent = buildEvent(eventClassName, eventParams);
             if (buildEvent == null) {
                 return true;
             }
             putEvent(buildEvent);
             return false;
         } else {
-            String eventClassName = event.getClass().toString();
-            Method eventHandler = EVENT_HANDLER_MAP.get(eventClassName);
-            if (eventHandler != null) {
-                try {
-                    eventHandler.invoke(null, event);
-                    event.setFinished();
-                    doAllMethod(eventClassName, event);
-                    return false;
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    return true;
-                }
-            } else {
+            String eventClassName = event.getClass().getName();
+            BiConsumer<Class<?>, Object> pluginHandler = PLUGIN_EVENT_HANDLER_MAP.get(eventClassName);
+            if (pluginHandler != null) {
+                pluginHandler.accept(event.getClass(), event);
                 event.setFinished();
                 doAllMethod(eventClassName, event);
+                return false;
+            } else {
+                Method eventHandler = EVENT_HANDLER_MAP.get(eventClassName);
+                if (eventHandler != null) {
+                    try {
+                        eventHandler.invoke(null, event);
+                        event.setFinished();
+                        doAllMethod(eventClassName, event);
+                        return false;
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        return true;
+                    }
+                } else {
+                    event.setFinished();
+                    doAllMethod(eventClassName, event);
+                }
             }
             return false;
         }
@@ -129,8 +145,9 @@ public class EventManagement {
 
     /**
      * 根据类名构建类实例
+     *
      * @param eventClassName 事件全类名
-     * @param eventParams 事件所需参数
+     * @param eventParams    事件所需参数
      * @return 事件实例
      */
     private Event buildEvent(String eventClassName, Object[] eventParams) {
@@ -267,7 +284,7 @@ public class EventManagement {
                         throw new RuntimeException("注册handler方法参数错误" + method);
                     }
                 }
-                registerHandler(annotation.registerClass().toString(), method);
+                registerHandler(annotation.registerClass().getName(), method);
             });
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
@@ -291,7 +308,7 @@ public class EventManagement {
                     }
                 }
                 for (Class<? extends Event> aClass : annotation.listenClass()) {
-                    registerListener(aClass.toString(), method);
+                    registerListener(aClass.getName(), method);
                 }
             });
         } catch (ClassNotFoundException e) {
