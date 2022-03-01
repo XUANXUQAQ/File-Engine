@@ -281,6 +281,16 @@ public class SearchBar {
     }
 
     /**
+     * 插件返回的结果为plugin--pluginIdentifier-result
+     *
+     * @param res 结果
+     * @return 以--分开的字符串
+     */
+    private String[] splitPluginResult(String res) {
+        return RegexUtil.getPattern("--", 0).split(res);
+    }
+
+    /**
      * 添加对右键菜单的相应
      */
     private void initMenuItems() {
@@ -294,6 +304,10 @@ public class SearchBar {
                 }
                 String res = listResults.get(currentResultCount.get());
                 if (runningMode == Constants.Enums.RunningMode.NORMAL_MODE) {
+                    if (res.startsWith("plugin")) {
+                        String[] split = splitPluginResult(res);
+                        res = split[2];
+                    }
                     openWithoutAdmin(res);
                 } else {
                     String[] commandInfo = semicolon.split(res);
@@ -318,6 +332,10 @@ public class SearchBar {
                 }
                 String res = listResults.get(currentResultCount.get());
                 if (runningMode == Constants.Enums.RunningMode.NORMAL_MODE) {
+                    if (res.startsWith("plugin")) {
+                        String[] split = splitPluginResult(res);
+                        res = split[2];
+                    }
                     openWithAdmin(res);
                 } else {
                     String[] commandInfo = semicolon.split(res);
@@ -342,6 +360,10 @@ public class SearchBar {
                 }
                 String res = listResults.get(currentResultCount.get());
                 if (runningMode == Constants.Enums.RunningMode.NORMAL_MODE) {
+                    if (res.startsWith("plugin")) {
+                        String[] split = splitPluginResult(res);
+                        res = split[2];
+                    }
                     copyToClipBoard(res, true);
                 } else {
                     String[] commandInfo = semicolon.split(res);
@@ -366,6 +388,10 @@ public class SearchBar {
                 }
                 String res = listResults.get(currentResultCount.get());
                 if (runningMode == Constants.Enums.RunningMode.NORMAL_MODE) {
+                    if (res.startsWith("plugin")) {
+                        String[] split = splitPluginResult(res);
+                        res = split[2];
+                    }
                     openFolderByExplorer(res);
                 } else {
                     String[] commandInfo = semicolon.split(res);
@@ -537,7 +563,7 @@ public class SearchBar {
                 int count = e.getClickCount();
                 String res = listResults.get(currentResultCount.get());
                 if (res != null && res.startsWith("plugin")) {
-                    String[] split = RegexUtil.getPattern("--", 0).split(res);
+                    String[] split = splitPluginResult(res);
                     PluginService.PluginInfo pluginInfo = PluginService.getInstance().getPluginInfoByIdentifier(split[1]);
                     pluginInfo.plugin.mousePressed(e, split[2]);
                     if (count == 2) {
@@ -603,7 +629,8 @@ public class SearchBar {
                         showingMode == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING &&
                         currentUsingPlugin != null) {
                     if (listResultsNum.get() != 0) {
-                        currentUsingPlugin.mousePressed(e, listResults.get(currentResultCount.get()));
+                        String[] split = splitPluginResult(listResults.get(currentResultCount.get()));
+                        currentUsingPlugin.mousePressed(e, split[2]);
                         if (count == 2) {
                             detectShowingModeAndClose();
                         }
@@ -626,14 +653,14 @@ public class SearchBar {
                 }
                 String res = listResults.get(currentResultCount.get());
                 if (res != null && res.startsWith("plugin")) {
-                    String[] split = RegexUtil.getPattern("--", 0).split(res);
+                    String[] split = splitPluginResult(res);
                     PluginService.PluginInfo pluginInfo = PluginService.getInstance().getPluginInfoByIdentifier(split[1]);
                     pluginInfo.plugin.mouseReleased(e, split[2]);
                 }
                 if (runningMode == Constants.Enums.RunningMode.PLUGIN_MODE && currentUsingPlugin != null) {
-                    if (listResultsNum.get() != 0) {
-                        currentUsingPlugin.mouseReleased(e, listResults.get(currentResultCount.get()));
-                    }
+                    String[] split = splitPluginResult(res);
+                    res = split[2];
+                    currentUsingPlugin.mouseReleased(e, res);
                 }
             }
         });
@@ -792,7 +819,7 @@ public class SearchBar {
                             }
                             String res = listResults.get(currentResultCount.get());
                             if (res != null && res.startsWith("plugin")) {
-                                String[] split = RegexUtil.getPattern("--", 0).split(res);
+                                String[] split = splitPluginResult(res);
                                 PluginService.PluginInfo pluginInfo = PluginService.getInstance().getPluginInfoByIdentifier(split[1]);
                                 pluginInfo.plugin.keyPressed(arg0, split[2]);
                             } else {
@@ -854,7 +881,7 @@ public class SearchBar {
                     if (key != 38 && key != 40 && key != 10) {
                         String res = listResults.get(currentResultCount.get());
                         if (res != null && res.startsWith("plugin")) {
-                            String[] split = RegexUtil.getPattern("--", 0).split(res);
+                            String[] split = splitPluginResult(res);
                             PluginService.PluginInfo pluginInfo = PluginService.getInstance().getPluginInfoByIdentifier(split[1]);
                             pluginInfo.plugin.keyPressed(arg0, split[2]);
                         }
@@ -864,7 +891,8 @@ public class SearchBar {
                     if (runningMode == Constants.Enums.RunningMode.PLUGIN_MODE) {
                         if (key != 38 && key != 40 && currentUsingPlugin != null) {
                             if (listResultsNum.get() != 0) {
-                                currentUsingPlugin.keyPressed(arg0, listResults.get(currentResultCount.get()));
+                                String[] split = splitPluginResult(listResults.get(currentResultCount.get()));
+                                currentUsingPlugin.keyPressed(arg0, split[2]);
                             }
                             if (key == 10) {
                                 closeSearchBar();
@@ -882,7 +910,7 @@ public class SearchBar {
                 }
                 String res = listResults.get(currentResultCount.get());
                 if (res.startsWith("plugin")) {
-                    String[] split = RegexUtil.getPattern("--", 0).split(res);
+                    String[] split = splitPluginResult(res);
                     PluginService.PluginInfo pluginInfo = PluginService.getInstance().getPluginInfoByIdentifier(split[1]);
                     if (key != 38 && key != 40) {
                         pluginInfo.plugin.keyReleased(arg0, split[2]);
@@ -899,7 +927,7 @@ public class SearchBar {
 
                 if (runningMode == Constants.Enums.RunningMode.PLUGIN_MODE) {
                     if (key != 38 && key != 40 && currentUsingPlugin != null && listResultsNum.get() != 0) {
-                        currentUsingPlugin.keyReleased(arg0, listResults.get(currentResultCount.get()));
+                        currentUsingPlugin.keyReleased(arg0, splitPluginResult(listResults.get(currentResultCount.get()))[2]);
                     }
                 }
             }
@@ -912,7 +940,7 @@ public class SearchBar {
                 }
                 String res = listResults.get(currentResultCount.get());
                 if (res.startsWith("plugin")) {
-                    String[] split = RegexUtil.getPattern("--", 0).split(res);
+                    String[] split = splitPluginResult(res);
                     PluginService.PluginInfo pluginInfo = PluginService.getInstance().getPluginInfoByIdentifier(split[1]);
                     if (key != 38 && key != 40) {
                         pluginInfo.plugin.keyTyped(arg0, split[2]);
@@ -920,7 +948,7 @@ public class SearchBar {
                 }
                 if (runningMode == Constants.Enums.RunningMode.PLUGIN_MODE) {
                     if (key != 38 && key != 40 && currentUsingPlugin != null && listResultsNum.get() != 0) {
-                        currentUsingPlugin.keyTyped(arg0, listResults.get(currentResultCount.get()));
+                        currentUsingPlugin.keyTyped(arg0, splitPluginResult(listResults.get(currentResultCount.get()))[2]);
                     }
                 }
             }
