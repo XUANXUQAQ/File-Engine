@@ -138,11 +138,11 @@ public class DownloadManager {
         isUserInterrupted = true;
     }
 
-    protected double getDownloadProgress() {
+    public double getDownloadProgress() {
         return progress;
     }
 
-    protected Constants.Enums.DownloadStatus getDownloadStatus() {
+    public Constants.Enums.DownloadStatus getDownloadStatus() {
         if (downloadStatus != Constants.Enums.DownloadStatus.DOWNLOAD_DONE) {
             return downloadStatus;
         } else {

@@ -143,7 +143,7 @@ public class MainClass {
     private static void checkOldApiPlugin() {
         EventManagement eventManagement = EventManagement.getInstance();
         TranslateService translateService = TranslateService.getInstance();
-        if (PluginService.getInstance().isPluginTooOld()) {
+        if (PluginService.getInstance().hasPluginTooOld()) {
             String oldPlugins = PluginService.getInstance().getAllOldPluginsName();
             eventManagement.putEvent(new ShowTaskBarMessageEvent(
                     translateService.getTranslation("Warning"),

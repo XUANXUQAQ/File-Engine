@@ -104,7 +104,7 @@ public class PluginService {
      *
      * @return boolean
      */
-    public boolean isPluginTooOld() {
+    public boolean hasPluginTooOld() {
         return !OLD_API_PLUGINS.isEmpty();
     }
 

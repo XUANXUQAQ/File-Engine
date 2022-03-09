@@ -15,6 +15,7 @@ import file.engine.event.handler.impl.configs.DeleteCmdEvent;
 import file.engine.event.handler.impl.configs.SaveConfigsEvent;
 import file.engine.event.handler.impl.configs.SetConfigsEvent;
 import file.engine.event.handler.impl.database.*;
+import file.engine.event.handler.impl.download.IsTaskDoneBeforeEvent;
 import file.engine.event.handler.impl.download.StartDownloadEvent;
 import file.engine.event.handler.impl.download.StopDownloadEvent;
 import file.engine.event.handler.impl.frame.pluginMarket.ShowPluginMarket;
@@ -34,7 +35,10 @@ import file.engine.services.download.DownloadManager;
 import file.engine.services.download.DownloadService;
 import file.engine.services.plugin.system.Plugin;
 import file.engine.services.plugin.system.PluginService;
-import file.engine.utils.*;
+import file.engine.utils.CachedThreadPoolUtil;
+import file.engine.utils.RegexUtil;
+import file.engine.utils.SQLiteUtil;
+import file.engine.utils.StartupUtil;
 import file.engine.utils.file.MoveDesktopFiles;
 import file.engine.utils.system.properties.IsDebug;
 import file.engine.utils.system.properties.IsPreview;
@@ -586,7 +590,7 @@ public class SettingsFrame {
         DownloadService downloadService = DownloadService.getInstance();
 
         buttonCheckUpdate.addActionListener(e -> {
-            if (downloadManager.newJar != null && downloadService.getDownloadStatus(downloadManager.newJar) == Constants.Enums.DownloadStatus.DOWNLOAD_DOWNLOADING) {
+            if (downloadManager.newJar != null && downloadManager.newJar.getDownloadStatus() == Constants.Enums.DownloadStatus.DOWNLOAD_DOWNLOADING) {
                 eventManagement.putEvent(new StopDownloadEvent(downloadManager.newJar));
                 eventManagement.putEvent(new StopDownloadEvent(downloadManager.newLauncher));
             } else {
@@ -630,7 +634,7 @@ public class SettingsFrame {
                                 if (!downloadService.waitForDownloadTask(downloadManager.newLauncher, 10 * 60 * 1000)) {
                                     return;
                                 }
-                                if (downloadService.getDownloadStatus(downloadManager.newLauncher) == Constants.Enums.DownloadStatus.DOWNLOAD_DONE) {
+                                if (downloadManager.newLauncher.getDownloadStatus() == Constants.Enums.DownloadStatus.DOWNLOAD_DONE) {
                                     Files.createFile(Path.of("user/updateLauncher"));
                                 }
                             } catch (IOException e1) {
@@ -911,8 +915,13 @@ public class SettingsFrame {
                     labelProgress.setText("");
                     buttonUpdatePlugin.setVisible(true);
                     if (PluginService.getInstance().isPluginNotLatest(pluginName)) {
-                        if (DownloadService.getInstance().isTaskDoneBefore(
-                                new DownloadManager(null, pluginName + ".jar", new File("tmp", "pluginsUpdate").getAbsolutePath()))) {
+                        IsTaskDoneBeforeEvent isTaskDoneBeforeEvent = new IsTaskDoneBeforeEvent(
+                                new DownloadManager(null,
+                                        pluginName + ".jar",
+                                        new File("tmp", "pluginsUpdate").getAbsolutePath()));
+                        eventManagement.putEvent(isTaskDoneBeforeEvent);
+                        eventManagement.waitForEvent(isTaskDoneBeforeEvent);
+                        if (isTaskDoneBeforeEvent.getReturnValue()) {
                             buttonUpdatePlugin.setEnabled(false);
                             buttonUpdatePlugin.setText(TRANSLATE_SERVICE.getTranslation("Downloaded"));
                         } else {
@@ -1604,13 +1613,12 @@ public class SettingsFrame {
         AtomicBoolean isSkipConfirm = new AtomicBoolean(false);
 
         HashMap<String, DownloadManager> pluginInfoMap = new HashMap<>();
-        DownloadService downloadService = DownloadService.getInstance();
         PluginService pluginService = PluginService.getInstance();
 
         buttonUpdatePlugin.addActionListener(e -> {
             String pluginName = (String) listPlugins.getSelectedValue();
             DownloadManager downloadManager = pluginInfoMap.get(pluginName);
-            if (downloadManager != null && downloadService.getDownloadStatus(downloadManager) == Constants.Enums.DownloadStatus.DOWNLOAD_DOWNLOADING) {
+            if (downloadManager != null && downloadManager.getDownloadStatus() == Constants.Enums.DownloadStatus.DOWNLOAD_DOWNLOADING) {
                 eventManagement.putEvent(new StopDownloadEvent(downloadManager));
             } else {
                 startCheckTime.set(0L);

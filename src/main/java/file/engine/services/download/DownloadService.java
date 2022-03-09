@@ -4,8 +4,7 @@ import file.engine.annotation.EventRegister;
 import file.engine.configs.Constants;
 import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
-import file.engine.event.handler.impl.download.StartDownloadEvent;
-import file.engine.event.handler.impl.download.StopDownloadEvent;
+import file.engine.event.handler.impl.download.*;
 import file.engine.utils.CachedThreadPoolUtil;
 
 import java.io.IOException;
@@ -43,6 +42,12 @@ public class DownloadService {
         getInstance().cancelDownload(stopDownloadTask.downloadManager);
     }
 
+    @EventRegister(registerClass = IsTaskDoneBeforeEvent.class)
+    private static void IsTaskDoneBeforeEvent(Event event) {
+        IsTaskDoneBeforeEvent isTaskDoneBeforeEvent = (IsTaskDoneBeforeEvent) event;
+        isTaskDoneBeforeEvent.setReturnValue(getInstance().isTaskDoneBefore(isTaskDoneBeforeEvent.downloadManager));
+    }
+
     /**
      * 从网络Url中下载文件
      */
@@ -65,13 +70,6 @@ public class DownloadService {
             }
         }
         return downloadManager;
-    }
-
-    /**
-     * 根据下载文件名获取当前下载进度
-     */
-    public double getDownloadProgress(DownloadManager downloadManager) {
-        return downloadManager.getDownloadProgress();
     }
 
     public boolean waitForDownloadTask(DownloadManager downloadManager, int maxWaitingMills) throws IOException {
@@ -98,7 +96,7 @@ public class DownloadService {
         return false;
     }
 
-    public boolean isTaskDoneBefore(DownloadManager downloadManager) {
+    private boolean isTaskDoneBefore(DownloadManager downloadManager) {
         return getFromSet(downloadManager).getDownloadStatus() == Constants.Enums.DownloadStatus.DOWNLOAD_DONE;
     }
 
@@ -107,12 +105,5 @@ public class DownloadService {
      */
     private void cancelDownload(DownloadManager downloadManager) {
         downloadManager.setInterrupt();
-    }
-
-    /**
-     * 获取当前任务的下载状态， 已完成 无任务 下载错误 已取消
-     */
-    public Constants.Enums.DownloadStatus getDownloadStatus(DownloadManager downloadManager) {
-        return downloadManager.getDownloadStatus();
     }
 }
