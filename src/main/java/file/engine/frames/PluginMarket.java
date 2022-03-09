@@ -7,16 +7,17 @@ import file.engine.configs.Constants;
 import file.engine.dllInterface.GetHandle;
 import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
+import file.engine.event.handler.impl.download.IsTaskDoneBeforeEvent;
 import file.engine.event.handler.impl.download.StartDownloadEvent;
 import file.engine.event.handler.impl.download.StopDownloadEvent;
 import file.engine.event.handler.impl.frame.pluginMarket.ShowPluginMarket;
 import file.engine.event.handler.impl.stop.RestartEvent;
 import file.engine.frames.components.LoadingPanel;
+import file.engine.services.TranslateService;
 import file.engine.services.download.DownloadManager;
 import file.engine.services.download.DownloadService;
 import file.engine.services.plugin.system.PluginService;
 import file.engine.utils.CachedThreadPoolUtil;
-import file.engine.services.TranslateService;
 import file.engine.utils.gson.GsonUtil;
 
 import javax.imageio.ImageIO;
@@ -152,11 +153,10 @@ public class PluginMarket {
     private void addButtonInstallListener() {
         EventManagement eventManagement = EventManagement.getInstance();
         ConcurrentHashMap<String, DownloadManager> downloadManagerConcurrentHashMap = new ConcurrentHashMap<>();
-        DownloadService downloadService = DownloadService.getInstance();
         buttonInstall.addActionListener(e -> {
             String pluginName = (String) listPlugins.getSelectedValue();
             DownloadManager downloadManager = downloadManagerConcurrentHashMap.get(pluginName);
-            if (downloadManager != null && downloadService.getDownloadStatus(downloadManager) == Constants.Enums.DownloadStatus.DOWNLOAD_DOWNLOADING) {
+            if (downloadManager != null && downloadManager.getDownloadStatus() == Constants.Enums.DownloadStatus.DOWNLOAD_DOWNLOADING) {
                 //取消下载
                 eventManagement.putEvent(new StopDownloadEvent(downloadManager));
             } else {
@@ -306,13 +306,15 @@ public class PluginMarket {
                     labelAuthor.setText(author);
                     buttonInstall.setVisible(true);
                     boolean hasPlugin = PluginService.getInstance().hasPlugin(pluginName);
-                    boolean downloaded = DownloadService.getInstance().isTaskDoneBefore(
-                            new DownloadManager(
-                                    null,
-                                    pluginName + ".jar",
-                                    new File("tmp", "pluginsUpdate").getAbsolutePath()
-                            )
-                    );
+                    IsTaskDoneBeforeEvent isTaskDoneBeforeEvent = new IsTaskDoneBeforeEvent(new DownloadManager(
+                            null,
+                            pluginName + ".jar",
+                            new File("tmp", "pluginsUpdate").getAbsolutePath()
+                    ));
+                    EventManagement eventManagement = EventManagement.getInstance();
+                    eventManagement.putEvent(isTaskDoneBeforeEvent);
+                    eventManagement.waitForEvent(isTaskDoneBeforeEvent);
+                    boolean downloaded = isTaskDoneBeforeEvent.getReturnValue();
                     if (hasPlugin) {
                         buttonInstall.setEnabled(false);
                         buttonInstall.setText(translateUtil.getTranslation("Installed"));

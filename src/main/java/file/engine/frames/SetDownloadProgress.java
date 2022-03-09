@@ -2,9 +2,8 @@ package file.engine.frames;
 
 import file.engine.configs.Constants;
 import file.engine.event.handler.EventManagement;
-import file.engine.services.download.DownloadManager;
-import file.engine.services.download.DownloadService;
 import file.engine.services.TranslateService;
+import file.engine.services.download.DownloadManager;
 
 import javax.swing.*;
 import java.io.File;
@@ -44,7 +43,6 @@ public class SetDownloadProgress {
         boolean retVal = false;
         try {
             TranslateService translateService = TranslateService.getInstance();
-            DownloadService downloadService = DownloadService.getInstance();
             EventManagement eventManagement = EventManagement.getInstance();
             String buttonOriginalText = buttonInstall.getText();
             boolean isStarted = true;
@@ -58,8 +56,8 @@ public class SetDownloadProgress {
                         taskStrFromMethod = (String) getSelectedMethod.invoke(invokeMethodObj);
                     }
                     if (currentTaskStr.equals(taskStrFromMethod)) {
-                        double progress = downloadService.getDownloadProgress(downloadManager);
-                        Constants.Enums.DownloadStatus downloadStatus = downloadService.getDownloadStatus(downloadManager);
+                        double progress = downloadManager.getDownloadProgress();
+                        Constants.Enums.DownloadStatus downloadStatus = downloadManager.getDownloadStatus();
                         if (downloadStatus == Constants.Enums.DownloadStatus.DOWNLOAD_DONE) {
                             //下载完成，禁用按钮
                             labelProgress.setText("");
