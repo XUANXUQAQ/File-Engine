@@ -10,6 +10,7 @@ import file.engine.event.handler.impl.frame.searchBar.GetShowingModeEvent;
 import file.engine.event.handler.impl.frame.searchBar.HideSearchBarEvent;
 import file.engine.event.handler.impl.frame.searchBar.IsSearchBarVisibleEvent;
 import file.engine.event.handler.impl.frame.searchBar.ShowSearchBarEvent;
+import file.engine.event.handler.impl.hotkey.CheckHotKeyAvailableEvent;
 import file.engine.event.handler.impl.hotkey.RegisterHotKeyEvent;
 import file.engine.event.handler.impl.hotkey.ResponseCtrlEvent;
 import file.engine.event.handler.impl.stop.RestartEvent;
@@ -28,7 +29,7 @@ public class CheckHotKeyService {
     private static volatile CheckHotKeyService INSTANCE = null;
     private final Pattern plus = RegexUtil.plus;
 
-    public static CheckHotKeyService getInstance() {
+    private static CheckHotKeyService getInstance() {
         if (INSTANCE == null) {
             synchronized (CheckHotKeyService.class) {
                 if (INSTANCE == null) {
@@ -79,7 +80,7 @@ public class CheckHotKeyService {
     }
 
     //检查快捷键是否有效
-    public boolean isHotkeyAvailable(String hotkey) {
+    private boolean isHotkeyAvailable(String hotkey) {
         String[] hotkeys = plus.split(hotkey);
         int length = hotkeys.length;
         for (int i = 0; i < length - 1; i++) {
@@ -160,6 +161,12 @@ public class CheckHotKeyService {
                 e.printStackTrace();
             }
         });
+    }
+
+    @EventRegister(registerClass = CheckHotKeyAvailableEvent.class)
+    private static void checkHotKeyAvailableEvent(Event event) {
+        CheckHotKeyAvailableEvent event1 = (CheckHotKeyAvailableEvent) event;
+        event1.setReturnValue(getInstance().isHotkeyAvailable(event1.hotkey));
     }
 
     @EventRegister(registerClass = RegisterHotKeyEvent.class)

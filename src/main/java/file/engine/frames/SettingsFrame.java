@@ -24,15 +24,15 @@ import file.engine.event.handler.impl.frame.searchBar.PreviewSearchBarEvent;
 import file.engine.event.handler.impl.frame.searchBar.StartPreviewEvent;
 import file.engine.event.handler.impl.frame.searchBar.StopPreviewEvent;
 import file.engine.event.handler.impl.frame.settingsFrame.*;
+import file.engine.event.handler.impl.hotkey.CheckHotKeyAvailableEvent;
 import file.engine.event.handler.impl.hotkey.ResponseCtrlEvent;
 import file.engine.event.handler.impl.plugin.AddPluginsCanUpdateEvent;
+import file.engine.event.handler.impl.plugin.GetPluginByNameEvent;
 import file.engine.event.handler.impl.stop.RestartEvent;
 import file.engine.event.handler.impl.taskbar.ShowTaskBarMessageEvent;
-import file.engine.services.CheckHotKeyService;
 import file.engine.services.DatabaseService;
 import file.engine.services.TranslateService;
 import file.engine.services.download.DownloadManager;
-import file.engine.services.download.DownloadService;
 import file.engine.services.plugin.system.Plugin;
 import file.engine.services.plugin.system.PluginService;
 import file.engine.utils.CachedThreadPoolUtil;
@@ -587,7 +587,6 @@ public class SettingsFrame {
             DownloadManager newJar;
             DownloadManager newLauncher;
         };
-        DownloadService downloadService = DownloadService.getInstance();
 
         buttonCheckUpdate.addActionListener(e -> {
             if (downloadManager.newJar != null && downloadManager.newJar.getDownloadStatus() == Constants.Enums.DownloadStatus.DOWNLOAD_DOWNLOADING) {
@@ -631,7 +630,7 @@ public class SettingsFrame {
                         eventManagement.putEvent(new StartDownloadEvent(downloadManager.newLauncher));
                         cachedThreadPoolUtil.executeTask(() -> {
                             try {
-                                if (!downloadService.waitForDownloadTask(downloadManager.newLauncher, 10 * 60 * 1000)) {
+                                if (!downloadManager.newLauncher.waitFor(10 * 60 * 1000)) {
                                     return;
                                 }
                                 if (downloadManager.newLauncher.getDownloadStatus() == Constants.Enums.DownloadStatus.DOWNLOAD_DONE) {
@@ -896,7 +895,10 @@ public class SettingsFrame {
             public void mouseClicked(MouseEvent e) {
                 String pluginName = (String) listPlugins.getSelectedValue();
                 if (pluginName != null) {
-                    PluginService.PluginInfo pluginInfo = PluginService.getInstance().getPluginInfoByName(pluginName);
+                    GetPluginByNameEvent getPluginByNameEvent = new GetPluginByNameEvent(pluginName);
+                    eventManagement.putEvent(getPluginByNameEvent);
+                    eventManagement.waitForEvent(getPluginByNameEvent);
+                    PluginService.PluginInfo pluginInfo = getPluginByNameEvent.getReturnValue();
                     Plugin plugin = pluginInfo.plugin;
                     int apiVersion;
                     ImageIcon icon = plugin.getPluginIcon();
@@ -914,7 +916,7 @@ public class SettingsFrame {
                     labelOfficialSite.setText("<html><a href='" + officialSite + "'><font size=\"4\">" + pluginName + "</font></a></html>");
                     labelProgress.setText("");
                     buttonUpdatePlugin.setVisible(true);
-                    if (PluginService.getInstance().isPluginNotLatest(pluginName)) {
+                    if (PluginService.getInstance().hasPluginNotLatest(pluginName)) {
                         IsTaskDoneBeforeEvent isTaskDoneBeforeEvent = new IsTaskDoneBeforeEvent(
                                 new DownloadManager(null,
                                         pluginName + ".jar",
@@ -1622,10 +1624,14 @@ public class SettingsFrame {
                 eventManagement.putEvent(new StopDownloadEvent(downloadManager));
             } else {
                 startCheckTime.set(0L);
-                Plugin plugin = pluginService.getPluginInfoByName(pluginName).plugin;
+                GetPluginByNameEvent getPluginByNameEvent = new GetPluginByNameEvent(pluginName);
+                eventManagement.putEvent(getPluginByNameEvent);
+                eventManagement.waitForEvent(getPluginByNameEvent);
+                PluginService.PluginInfo pluginInfo = getPluginByNameEvent.getReturnValue();
+                Plugin plugin = pluginInfo.plugin;
                 String pluginFullName = pluginName + ".jar";
 
-                if (pluginService.isPluginNotLatest(pluginName)) {
+                if (pluginService.hasPluginNotLatest(pluginName)) {
                     //已经检查过
                     isVersionLatest.set(false);
                     isSkipConfirm.set(true);
@@ -2394,7 +2400,11 @@ public class SettingsFrame {
         if (tmp_hotkey.length() < 5) {
             strBuilder.append(TRANSLATE_SERVICE.getTranslation("Hotkey setting is wrong, please change")).append("\n");
         } else {
-            if (!CheckHotKeyService.getInstance().isHotkeyAvailable(tmp_hotkey)) {
+            CheckHotKeyAvailableEvent checkHotKeyAvailableEvent = new CheckHotKeyAvailableEvent(tmp_hotkey);
+            eventManagement.putEvent(checkHotKeyAvailableEvent);
+            eventManagement.waitForEvent(checkHotKeyAvailableEvent);
+            boolean isAvailable = checkHotKeyAvailableEvent.getReturnValue();
+            if (!isAvailable) {
                 strBuilder.append(TRANSLATE_SERVICE.getTranslation("Hotkey setting is wrong, please change")).append("\n");
             }
         }

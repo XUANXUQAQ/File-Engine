@@ -158,7 +158,7 @@ public class MainClass {
     private static void checkRepeatPlugin() {
         EventManagement eventManagement = EventManagement.getInstance();
         TranslateService translateService = TranslateService.getInstance();
-        if (PluginService.getInstance().isPluginRepeat()) {
+        if (PluginService.getInstance().hasPluginRepeat()) {
             String repeatPlugins = PluginService.getInstance().getRepeatPlugins();
             eventManagement.putEvent(new ShowTaskBarMessageEvent(
                     translateService.getTranslation("Warning"),
@@ -173,7 +173,7 @@ public class MainClass {
     private static void checkErrorPlugin() {
         EventManagement eventManagement = EventManagement.getInstance();
         TranslateService translateService = TranslateService.getInstance();
-        if (PluginService.getInstance().isPluginLoadError()) {
+        if (PluginService.getInstance().hasPluginLoadError()) {
             String errorPlugins = PluginService.getInstance().getLoadingErrorPlugins();
             eventManagement.putEvent(new ShowTaskBarMessageEvent(
                     translateService.getTranslation("Warning"),

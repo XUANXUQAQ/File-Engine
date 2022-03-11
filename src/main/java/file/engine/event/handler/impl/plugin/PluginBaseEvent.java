@@ -4,6 +4,7 @@ import file.engine.event.handler.Event;
 
 public class PluginBaseEvent extends Event {
 
+    // 仅在加载时遍历使用
     public final String pluginDirPath;
     public final String pluginName;
 
