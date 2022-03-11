@@ -1,6 +1,7 @@
 package file.engine.services.download;
 
 import file.engine.configs.Constants;
+import file.engine.event.handler.EventManagement;
 import file.engine.utils.system.properties.IsDebug;
 import file.engine.configs.AllConfigs;
 import file.engine.configs.ProxyInfo;
@@ -14,6 +15,7 @@ import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
+import java.util.concurrent.TimeUnit;
 
 public class DownloadManager {
     public final String url;
@@ -61,6 +63,30 @@ public class DownloadManager {
         };
         HttpsURLConnection.setDefaultHostnameVerifier(hv);
         System.setProperty("https.protocols", "TLSv1.2,TLSv1.1,SSLv3");
+    }
+
+    public boolean waitFor(int maxWaitingMills) throws IOException {
+        try {
+            long startTime = System.currentTimeMillis();
+            final int sleepMills = 10;
+            EventManagement instance = EventManagement.getInstance();
+            while (instance.notMainExit()) {
+                if (System.currentTimeMillis() - startTime > maxWaitingMills) {
+                    throw new IOException("download failed");
+                }
+                Constants.Enums.DownloadStatus downloadStatus = this.getDownloadStatus();
+                if (downloadStatus == Constants.Enums.DownloadStatus.DOWNLOAD_DONE) {
+                    return true;
+                } else if (downloadStatus == Constants.Enums.DownloadStatus.DOWNLOAD_ERROR) {
+                    throw new IOException("download failed");
+                } else if (downloadStatus == Constants.Enums.DownloadStatus.DOWNLOAD_INTERRUPTED) {
+                    return false;
+                }
+                TimeUnit.MILLISECONDS.sleep(sleepMills);
+            }
+        } catch (InterruptedException ignored) {
+        }
+        return false;
     }
 
     protected void download() {

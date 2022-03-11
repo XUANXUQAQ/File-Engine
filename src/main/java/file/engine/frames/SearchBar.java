@@ -14,6 +14,7 @@ import file.engine.event.handler.impl.frame.searchBar.*;
 import file.engine.event.handler.impl.frame.settingsFrame.AddCacheEvent;
 import file.engine.event.handler.impl.frame.settingsFrame.IsCacheExistEvent;
 import file.engine.event.handler.impl.frame.settingsFrame.ShowSettingsFrameEvent;
+import file.engine.event.handler.impl.plugin.GetPluginByIdentifierEvent;
 import file.engine.event.handler.impl.stop.RestartEvent;
 import file.engine.event.handler.impl.taskbar.ShowTaskBarMessageEvent;
 import file.engine.frames.components.LoadingPanel;
@@ -564,7 +565,11 @@ public class SearchBar {
                 String res = listResults.get(currentResultCount.get());
                 if (res != null && res.startsWith("plugin")) {
                     String[] split = splitPluginResult(res);
-                    PluginService.PluginInfo pluginInfo = PluginService.getInstance().getPluginInfoByIdentifier(split[1]);
+                    GetPluginByIdentifierEvent getPluginByIdentifierEvent = new GetPluginByIdentifierEvent(split[1]);
+                    EventManagement eventManagement = EventManagement.getInstance();
+                    eventManagement.putEvent(getPluginByIdentifierEvent);
+                    eventManagement.waitForEvent(getPluginByIdentifierEvent);
+                    PluginService.PluginInfo pluginInfo = getPluginByIdentifierEvent.getReturnValue();
                     pluginInfo.plugin.mousePressed(e, split[2]);
                     if (count == 2) {
                         detectShowingModeAndClose();
@@ -654,7 +659,13 @@ public class SearchBar {
                 String res = listResults.get(currentResultCount.get());
                 if (res != null && res.startsWith("plugin")) {
                     String[] split = splitPluginResult(res);
-                    PluginService.PluginInfo pluginInfo = PluginService.getInstance().getPluginInfoByIdentifier(split[1]);
+                    GetPluginByIdentifierEvent getPluginByIdentifierEvent = new GetPluginByIdentifierEvent(split[1]);
+                    EventManagement eventManagement = EventManagement.getInstance();
+                    eventManagement.putEvent(getPluginByIdentifierEvent);
+                    eventManagement.waitForEvent(getPluginByIdentifierEvent);
+
+                    PluginService.PluginInfo pluginInfo =
+                            getPluginByIdentifierEvent.getReturnValue();
                     pluginInfo.plugin.mouseReleased(e, split[2]);
                 }
                 if (runningMode == Constants.Enums.RunningMode.PLUGIN_MODE && currentUsingPlugin != null) {
@@ -820,7 +831,11 @@ public class SearchBar {
                             String res = listResults.get(currentResultCount.get());
                             if (res != null && res.startsWith("plugin")) {
                                 String[] split = splitPluginResult(res);
-                                PluginService.PluginInfo pluginInfo = PluginService.getInstance().getPluginInfoByIdentifier(split[1]);
+                                GetPluginByIdentifierEvent getPluginByIdentifierEvent = new GetPluginByIdentifierEvent(split[1]);
+                                EventManagement eventManagement = EventManagement.getInstance();
+                                eventManagement.putEvent(getPluginByIdentifierEvent);
+                                eventManagement.waitForEvent(getPluginByIdentifierEvent);
+                                PluginService.PluginInfo pluginInfo = getPluginByIdentifierEvent.getReturnValue();
                                 pluginInfo.plugin.keyPressed(arg0, split[2]);
                             } else {
                                 if (runningMode == Constants.Enums.RunningMode.NORMAL_MODE) {
@@ -882,7 +897,11 @@ public class SearchBar {
                         String res = listResults.get(currentResultCount.get());
                         if (res != null && res.startsWith("plugin")) {
                             String[] split = splitPluginResult(res);
-                            PluginService.PluginInfo pluginInfo = PluginService.getInstance().getPluginInfoByIdentifier(split[1]);
+                            GetPluginByIdentifierEvent getPluginByIdentifierEvent = new GetPluginByIdentifierEvent(split[1]);
+                            EventManagement eventManagement = EventManagement.getInstance();
+                            eventManagement.putEvent(getPluginByIdentifierEvent);
+                            eventManagement.waitForEvent(getPluginByIdentifierEvent);
+                            PluginService.PluginInfo pluginInfo = getPluginByIdentifierEvent.getReturnValue();
                             pluginInfo.plugin.keyPressed(arg0, split[2]);
                         }
                     }
@@ -911,7 +930,11 @@ public class SearchBar {
                 String res = listResults.get(currentResultCount.get());
                 if (res.startsWith("plugin")) {
                     String[] split = splitPluginResult(res);
-                    PluginService.PluginInfo pluginInfo = PluginService.getInstance().getPluginInfoByIdentifier(split[1]);
+                    GetPluginByIdentifierEvent getPluginByIdentifierEvent = new GetPluginByIdentifierEvent(split[1]);
+                    EventManagement eventManagement = EventManagement.getInstance();
+                    eventManagement.putEvent(getPluginByIdentifierEvent);
+                    eventManagement.waitForEvent(getPluginByIdentifierEvent);
+                    PluginService.PluginInfo pluginInfo = getPluginByIdentifierEvent.getReturnValue();
                     if (key != 38 && key != 40) {
                         pluginInfo.plugin.keyReleased(arg0, split[2]);
                     }
@@ -941,7 +964,11 @@ public class SearchBar {
                 String res = listResults.get(currentResultCount.get());
                 if (res.startsWith("plugin")) {
                     String[] split = splitPluginResult(res);
-                    PluginService.PluginInfo pluginInfo = PluginService.getInstance().getPluginInfoByIdentifier(split[1]);
+                    GetPluginByIdentifierEvent getPluginByIdentifierEvent = new GetPluginByIdentifierEvent(split[1]);
+                    EventManagement eventManagement = EventManagement.getInstance();
+                    eventManagement.putEvent(getPluginByIdentifierEvent);
+                    eventManagement.waitForEvent(getPluginByIdentifierEvent);
+                    PluginService.PluginInfo pluginInfo = getPluginByIdentifierEvent.getReturnValue();
                     if (key != 38 && key != 40) {
                         pluginInfo.plugin.keyTyped(arg0, split[2]);
                     }
@@ -2426,7 +2453,12 @@ public class SearchBar {
                 String subText = text.substring(1);
                 String[] s = blank.split(subText);
                 if (text.charAt(text.length() - 1) == ' ') {
-                    currentUsingPlugin = PluginService.getInstance().getPluginInfoByIdentifier(s[0]).plugin;
+                    GetPluginByIdentifierEvent getPluginByIdentifierEvent = new GetPluginByIdentifierEvent(s[0]);
+                    EventManagement eventManagement = EventManagement.getInstance();
+                    eventManagement.putEvent(getPluginByIdentifierEvent);
+                    eventManagement.waitForEvent(getPluginByIdentifierEvent);
+                    PluginService.PluginInfo pluginInfo = getPluginByIdentifierEvent.getReturnValue();
+                    currentUsingPlugin = pluginInfo.plugin;
                     if (currentUsingPlugin != null) {
                         runningMode = Constants.Enums.RunningMode.PLUGIN_MODE;
                         currentPluginIdentifier = s[0];
@@ -3839,7 +3871,11 @@ public class SearchBar {
         }
         String searchBarText = getSearchBarText();
         if (searchBarText.charAt(0) == '>') {
-            PluginService.PluginInfo pluginInfoByName = PluginService.getInstance().getPluginInfoByIdentifier(path);
+            GetPluginByIdentifierEvent getPluginByIdentifierEvent = new GetPluginByIdentifierEvent(path);
+            EventManagement eventManagement = EventManagement.getInstance();
+            eventManagement.putEvent(getPluginByIdentifierEvent);
+            eventManagement.waitForEvent(getPluginByIdentifierEvent);
+            PluginService.PluginInfo pluginInfoByName = getPluginByIdentifierEvent.getReturnValue();
             ImageIcon tmpIcon = pluginInfoByName.plugin.getPluginIcon();
             if (tmpIcon != null) {
                 ImageIcon pluginIcon = GetIconUtil.getInstance().changeIcon(tmpIcon, iconSideLength, iconSideLength);
@@ -3888,7 +3924,11 @@ public class SearchBar {
         if (runningMode == Constants.Enums.RunningMode.PLUGIN_MODE) {
             currentUsingPlugin.showResultOnLabel(resultWithPluginInfo[2], label, isChosen);
         } else {
-            PluginService.PluginInfo plugin = PluginService.getInstance().getPluginInfoByIdentifier(resultWithPluginInfo[1]);
+            GetPluginByIdentifierEvent getPluginByIdentifierEvent = new GetPluginByIdentifierEvent(resultWithPluginInfo[1]);
+            EventManagement eventManagement = EventManagement.getInstance();
+            eventManagement.putEvent(getPluginByIdentifierEvent);
+            eventManagement.waitForEvent(getPluginByIdentifierEvent);
+            PluginService.PluginInfo plugin = getPluginByIdentifierEvent.getReturnValue();
             plugin.plugin.showResultOnLabel(resultWithPluginInfo[2], label, isChosen);
         }
     }

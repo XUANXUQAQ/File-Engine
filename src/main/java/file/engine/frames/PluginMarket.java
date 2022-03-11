@@ -11,12 +11,11 @@ import file.engine.event.handler.impl.download.IsTaskDoneBeforeEvent;
 import file.engine.event.handler.impl.download.StartDownloadEvent;
 import file.engine.event.handler.impl.download.StopDownloadEvent;
 import file.engine.event.handler.impl.frame.pluginMarket.ShowPluginMarket;
+import file.engine.event.handler.impl.plugin.CheckPluginExistEvent;
 import file.engine.event.handler.impl.stop.RestartEvent;
 import file.engine.frames.components.LoadingPanel;
 import file.engine.services.TranslateService;
 import file.engine.services.download.DownloadManager;
-import file.engine.services.download.DownloadService;
-import file.engine.services.plugin.system.PluginService;
 import file.engine.utils.CachedThreadPoolUtil;
 import file.engine.utils.gson.GsonUtil;
 
@@ -305,13 +304,16 @@ public class PluginMarket {
                     textAreaPluginDescription.setText(description);
                     labelAuthor.setText(author);
                     buttonInstall.setVisible(true);
-                    boolean hasPlugin = PluginService.getInstance().hasPlugin(pluginName);
+                    CheckPluginExistEvent checkPluginExistEvent = new CheckPluginExistEvent(pluginName);
+                    EventManagement eventManagement = EventManagement.getInstance();
+                    eventManagement.putEvent(checkPluginExistEvent);
+                    eventManagement.waitForEvent(checkPluginExistEvent);
+                    boolean hasPlugin = checkPluginExistEvent.getReturnValue();
                     IsTaskDoneBeforeEvent isTaskDoneBeforeEvent = new IsTaskDoneBeforeEvent(new DownloadManager(
                             null,
                             pluginName + ".jar",
                             new File("tmp", "pluginsUpdate").getAbsolutePath()
                     ));
-                    EventManagement eventManagement = EventManagement.getInstance();
                     eventManagement.putEvent(isTaskDoneBeforeEvent);
                     eventManagement.waitForEvent(isTaskDoneBeforeEvent);
                     boolean downloaded = isTaskDoneBeforeEvent.getReturnValue();
@@ -367,14 +369,13 @@ public class PluginMarket {
      */
     private ImageIcon getImageByUrl(String url, String pluginName) throws IOException {
         File icon = new File("tmp/$$" + pluginName);
-        DownloadService downloadService = DownloadService.getInstance();
         DownloadManager downloadManager = new DownloadManager(
                 url,
                 icon.getName(),
                 "tmp"
         );
         EventManagement.getInstance().putEvent(new StartDownloadEvent(downloadManager));
-        if (!downloadService.waitForDownloadTask(downloadManager, 10000)) {
+        if (!downloadManager.waitFor(10000)) {
             return null;
         }
 
@@ -406,14 +407,13 @@ public class PluginMarket {
      */
     @SuppressWarnings("unchecked")
     private static Map<String, Object> getPluginInfo(String url, String saveFileName) throws IOException {
-        DownloadService downloadService = DownloadService.getInstance();
         DownloadManager downloadManager = new DownloadManager(
                 url,
                 saveFileName,
                 new File("tmp").getAbsolutePath()
         );
         EventManagement.getInstance().putEvent(new StartDownloadEvent(downloadManager));
-        downloadService.waitForDownloadTask(downloadManager, 10000);
+        downloadManager.waitFor(10000);
         //已下载完，返回json
         String eachLine;
         StringBuilder strBuilder = new StringBuilder();

@@ -29,7 +29,6 @@ import file.engine.event.handler.impl.stop.CloseEvent;
 import file.engine.event.handler.impl.taskbar.ShowTrayIconEvent;
 import file.engine.services.TranslateService;
 import file.engine.services.download.DownloadManager;
-import file.engine.services.download.DownloadService;
 import file.engine.utils.RegexUtil;
 import file.engine.utils.gson.GsonUtil;
 import file.engine.utils.system.properties.IsDebug;
@@ -904,7 +903,6 @@ public class AllConfigs {
      */
     @SuppressWarnings("unchecked")
     public Map<String, Object> getUpdateInfo() throws IOException {
-        DownloadService downloadService = DownloadService.getInstance();
         String url = getUpdateUrl();
         DownloadManager downloadManager = new DownloadManager(
                 url,
@@ -913,7 +911,7 @@ public class AllConfigs {
         );
         EventManagement eventManagement = EventManagement.getInstance();
         eventManagement.putEvent(new StartDownloadEvent(downloadManager));
-        if (!downloadService.waitForDownloadTask(downloadManager, 10000)) {
+        if (!downloadManager.waitFor(1000)) {
             return null;
         }
         String eachLine;

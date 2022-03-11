@@ -18,6 +18,7 @@ public class Constants {
 
     public static final int MAX_SQL_NUM = 5000;
 
+    public static final int API_VERSION = 6;
     public static final int[] COMPATIBLE_API_VERSIONS = {3, 4, 5, 6};
 
     public static final int DEFAULT_LABEL_COLOR = 0xff9933;

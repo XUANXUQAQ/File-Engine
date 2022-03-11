@@ -113,7 +113,7 @@ public class PluginService {
      *
      * @return boolean
      */
-    public boolean isPluginRepeat() {
+    public boolean hasPluginRepeat() {
         return !REPEAT_PLUGINS.isEmpty();
     }
 
@@ -122,7 +122,7 @@ public class PluginService {
      *
      * @return boolean
      */
-    public boolean isPluginLoadError() {
+    public boolean hasPluginLoadError() {
         return !LOAD_ERROR_PLUGINS.isEmpty();
     }
 
@@ -132,7 +132,7 @@ public class PluginService {
      * @param pluginName 插件名
      * @return boolean
      */
-    public boolean isPluginNotLatest(String pluginName) {
+    public boolean hasPluginNotLatest(String pluginName) {
         return NOT_LATEST_PLUGINS.contains(pluginName);
     }
 
@@ -190,7 +190,7 @@ public class PluginService {
      * @param name 插件名
      * @return 插件实例
      */
-    public PluginInfo getPluginInfoByName(String name) {
+    private PluginInfo getPluginInfoByName(String name) {
         for (PluginInfo each : pluginInfoSet) {
             if (each.name.equals(name)) {
                 return each;
@@ -205,7 +205,7 @@ public class PluginService {
      * @param identifier 触发关键字
      * @return 插件实例
      */
-    public PluginInfo getPluginInfoByIdentifier(String identifier) {
+    private PluginInfo getPluginInfoByIdentifier(String identifier) {
         for (PluginInfo each : pluginInfoSet) {
             if (each.identifier.equals(identifier)) {
                 return each;
@@ -287,6 +287,9 @@ public class PluginService {
         AllConfigs allConfigs = AllConfigs.getInstance();
         plugin.setCurrentTheme(allConfigs.getDefaultBackgroundColor(), allConfigs.getLabelColor(), allConfigs.getBorderColor());
         if (Arrays.stream(Constants.COMPATIBLE_API_VERSIONS).noneMatch(each -> each == plugin.getApiVersion())) {
+            throw new RuntimeException("api version incompatible");
+        }
+        if (Constants.API_VERSION != plugin.getApiVersion()) {
             isTooOld = true;
         }
         pluginInfoSet.add(new PluginInfo(plugin, pluginName, identifier));
@@ -323,7 +326,7 @@ public class PluginService {
      * @param pluginName 插件名
      * @return boolean
      */
-    public boolean hasPlugin(String pluginName) {
+    private boolean hasPlugin(String pluginName) {
         for (PluginInfo each : pluginInfoSet) {
             if (each.name.equals(pluginName)) {
                 return true;
@@ -455,6 +458,27 @@ public class PluginService {
         } catch (InterruptedException e) {
             throw new InterruptedException("check update failed.");
         }
+    }
+
+    @EventRegister(registerClass = CheckPluginExistEvent.class)
+    private static void checkPluginExistEvent(Event event) {
+        CheckPluginExistEvent event1 = (CheckPluginExistEvent) event;
+        boolean b = getInstance().hasPlugin(event1.pluginName);
+        event.setReturnValue(b);
+    }
+
+    @EventRegister(registerClass = GetPluginByNameEvent.class)
+    private static void getPluginByNameEvent(Event event) {
+        GetPluginByNameEvent event1 = (GetPluginByNameEvent) event;
+        PluginInfo pluginInfoByName = getInstance().getPluginInfoByName(event1.pluginName);
+        event1.setReturnValue(pluginInfoByName);
+    }
+
+    @EventRegister(registerClass = GetPluginByIdentifierEvent.class)
+    private static void getPluginByIdentifier(Event event) {
+        GetPluginByIdentifierEvent event1 = (GetPluginByIdentifierEvent) event;
+        PluginInfo pluginInfoByIdentifier = getInstance().getPluginInfoByIdentifier(event1.identifier);
+        event1.setReturnValue(pluginInfoByIdentifier);
     }
 
     @EventRegister(registerClass = AddPluginsCanUpdateEvent.class)
