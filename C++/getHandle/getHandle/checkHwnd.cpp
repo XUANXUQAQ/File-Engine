@@ -40,7 +40,7 @@ bool is_explorer_window_by_class_name(const HWND& hwnd)
 			HWND tmp = FindWindowExA(hwnd, nullptr, "ShellTabWindowClass", nullptr);
 			if (tmp)
 			{
-				return FindWindowExA(
+				return !FindWindowExA(
 					tmp,
 					nullptr,
 					"SHELLDLL_DefView",
