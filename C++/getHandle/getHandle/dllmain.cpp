@@ -189,7 +189,7 @@ bool isDialogNotExist()
             const int tmp_explorerHeight = windowRect.bottom - windowRect.top;
             if (!(tmp_explorerHeight < EXPLORER_MIN_HEIGHT || tmp_explorerWidth < EXPLORER_MIN_WIDTH))
             {
-                if (is_explorer_window_low_cost(hd) || is_file_chooser_window(hd))
+                if (is_explorer_window_by_class_name(hd) || is_file_chooser_window(hd))
                 {
                     return false;
                 }
@@ -289,7 +289,7 @@ void checkMouseThread()
             count = 0;
             isMouseClickedFlag = false;
             HWND topWindow = GetForegroundWindow();
-            isMouseClickOutOfExplorer = !(is_explorer_window_high_cost(topWindow) || is_file_chooser_window(topWindow) || is_search_bar_window(topWindow));
+            isMouseClickOutOfExplorer = !(is_explorer_window_by_process(topWindow) || is_file_chooser_window(topWindow) || is_search_bar_window(topWindow));
 		}
         // 如果窗口句柄已经失效或者最小化，则判定为关闭窗口
 		if (!IsWindow(currentAttachExplorer) || IsIconic(currentAttachExplorer))
@@ -300,7 +300,7 @@ void checkMouseThread()
             if (GetCursorPos(&point))
             {
                 GetWindowRect(currentAttachExplorer, &explorerArea);
-                GetWindowRect(getSearchBarHWND(), &searchBarArea);
+                GetWindowRect(get_search_bar_hwnd(), &searchBarArea);
                 isMouseClickOutOfExplorer = 
                     !(explorerArea.left <= point.x && point.x <= explorerArea.right && (explorerArea.top <= point.y && point.y <= explorerArea.bottom)) &&
                     !(searchBarArea.left <= point.x && point.x <= searchBarArea.right && (searchBarArea.top <= point.y && point.y <= searchBarArea.bottom));
@@ -317,7 +317,7 @@ void checkMouseThread()
             count = 0;
             isMouseClickedFlag = true;
         }
-		if (IsWindowVisible(getSearchBarHWND())) {
+		if (IsWindowVisible(get_search_bar_hwnd())) {
             Sleep(10);
 		} else {
 #ifdef TEST
@@ -337,7 +337,7 @@ void checkTopWindowThread()
     while (isRunning)
     {
         HWND hwnd = GetForegroundWindow();
-        const auto isExplorerWindow = is_explorer_window_low_cost(hwnd);
+        const auto isExplorerWindow = is_explorer_window_by_class_name(hwnd);
         const auto isDialogWindow = is_file_chooser_window(hwnd);
 
         if (isExplorerWindow || isDialogWindow)
