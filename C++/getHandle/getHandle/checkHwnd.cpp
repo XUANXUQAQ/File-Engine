@@ -6,7 +6,7 @@
 #include <Windows.h>
 
 std::wstring get_process_name_by_handle(HWND nlHandle);
-BOOL CALLBACK isHwndHasToolbar(HWND hwndChild, LPARAM lParam);
+BOOL CALLBACK is_hwnd_has_toolbar(HWND hwndChild, LPARAM lParam);
 
 bool is_search_bar_window(const HWND& hd)
 {
@@ -15,12 +15,12 @@ bool is_search_bar_window(const HWND& hd)
     return strcmp(title, "File-Engine-SearchBar") == 0;
 }
 
-HWND getSearchBarHWND()
+HWND get_search_bar_hwnd()
 {
     return FindWindowExA(nullptr, nullptr, nullptr, "File-Engine-SearchBar");
 }
 
-bool is_explorer_window_low_cost(const HWND& hwnd)
+bool is_explorer_window_by_class_name(const HWND& hwnd)
 {
     if (IsWindowEnabled(hwnd) && !IsIconic(hwnd))
     {
@@ -29,12 +29,18 @@ bool is_explorer_window_low_cost(const HWND& hwnd)
         std::string WindowClassName(className);
         transform(WindowClassName.begin(), WindowClassName.end(), WindowClassName.begin(), ::tolower);
         //使用检测窗口类名的方式更节省CPU资源
-        return WindowClassName.find("cabinet") != std::string::npos;
+        if (WindowClassName.find("cabinet") != std::string::npos)
+        {
+            if (FindWindowExA(hwnd, nullptr, "UIRibbonCommandBarDock", nullptr))
+            {
+                return true;
+            }
+        }
     }
     return false;
 }
 
-bool is_explorer_window_high_cost(const HWND& hwnd)
+bool is_explorer_window_by_process(const HWND& hwnd)
 {
 	std::wstring proc_name = get_process_name_by_handle(hwnd);
     transform(proc_name.begin(), proc_name.end(), proc_name.begin(), tolower);
@@ -80,7 +86,7 @@ bool is_file_chooser_window(const HWND& hwnd)
     char _windowClassName[100];
     char title[100];
     int hasToolbar = false;
-    EnumChildWindows(hwnd, isHwndHasToolbar, reinterpret_cast<LPARAM>(&hasToolbar));
+    EnumChildWindows(hwnd, is_hwnd_has_toolbar, reinterpret_cast<LPARAM>(&hasToolbar));
 	if (hasToolbar)
 	{
         GetClassNameA(hwnd, _windowClassName, 100);
@@ -95,7 +101,7 @@ bool is_file_chooser_window(const HWND& hwnd)
     return false;
 }
 
-BOOL CALLBACK isHwndHasToolbar(HWND hwndChild, LPARAM lParam)
+BOOL CALLBACK is_hwnd_has_toolbar(HWND hwndChild, LPARAM lParam)
 {
     char windowClassName[100] = {'\0'};
     GetClassNameA(hwndChild, windowClassName, 100);
