@@ -2351,12 +2351,14 @@ public class SettingsFrame {
         }
         frame.setResizable(true);
         double dpi = GetHandle.INSTANCE.getDpi();
-        int width = (int) (1000 / dpi), height = (int) (600 / dpi);
+        int width, height;
         try {
             width = Integer.parseInt(TRANSLATE_SERVICE.getFrameWidth());
             height = Integer.parseInt(TRANSLATE_SERVICE.getFrameHeight());
         } catch (NumberFormatException e) {
             e.printStackTrace();
+            width = (int) (1000 / dpi);
+            height = (int) (600 / dpi);
         }
         frame.setContentPane(getInstance().panel);
         Dimension dimension = new Dimension(width, height);
