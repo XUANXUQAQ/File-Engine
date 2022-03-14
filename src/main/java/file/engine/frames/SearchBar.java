@@ -3685,6 +3685,7 @@ public class SearchBar {
         SwingUtilities.invokeLater(() -> {
             EventManagement eventManagement = EventManagement.getInstance();
             if (!isVisible()) {
+                searchBar.setAutoRequestFocus(isGrabFocus);
                 setVisible(true);
                 textField.requestFocusInWindow();
                 textField.setCaretPosition(0);
