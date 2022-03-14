@@ -97,8 +97,7 @@ public class PluginMarket {
      */
     private void showWindow() {
         double dpi = GetHandle.INSTANCE.getDpi();
-        int width = (int) (800 / dpi);
-        int height = (int) (600 / dpi);
+        int width = (int) (1000 / dpi), height = (int) (600 / dpi);
         ImageIcon frameIcon = new ImageIcon(Objects.requireNonNull(PluginMarket.class.getResource("/icons/frame.png")));
         TranslateService translateService = TranslateService.getInstance();
         labelIcon.setIcon(null);
@@ -114,7 +113,7 @@ public class PluginMarket {
         frame.setContentPane(getInstance().panel);
         frame.setIconImage(frameIcon.getImage());
         frame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
-        frame.setResizable(false);
+        frame.setResizable(true);
         frame.setLocationRelativeTo(null);
         frame.setTitle(translateService.getTranslation("Plugin Market"));
         SwingUtilities.invokeLater(() -> frame.setVisible(true));
