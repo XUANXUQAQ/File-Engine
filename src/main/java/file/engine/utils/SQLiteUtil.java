@@ -155,13 +155,14 @@ public class SQLiteUtil {
         for (String each : RegexUtil.comma.split(AllConfigs.getInstance().getAvailableDisks())) {
             try (Statement stmt = SQLiteUtil.getStatement(String.valueOf(each.charAt(0)))) {
                 for (String tableName : tableNames) {
-                    String sql = String.format("SELECT COUNT(ASCII) as num FROM %s;", tableName);
+                    String sql = String.format("SELECT ASCII FROM %s LIMIT 10;", tableName);
                     try (ResultSet resultSet = stmt.executeQuery(sql)) {
-                        if (resultSet.next()) {
-                            int resultNum = resultSet.getInt("num");
-                            if (resultNum < 10) {
-                                emptyNum++;
-                            }
+                        int count = 0;
+                        while (resultSet.next()) {
+                            count++;
+                        }
+                        if (count < 10) {
+                            emptyNum++;
                         }
                     }
                 }

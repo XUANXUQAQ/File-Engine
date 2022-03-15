@@ -10,7 +10,7 @@ import java.util.Map;
 public enum GsonUtil {
     INSTANCE;
     private final GsonBuilder gsonBuilder = new GsonBuilder();
-    private final DataDataTypeAdaptor dataDataTypeAdaptor = new DataDataTypeAdaptor();
+    private final DataDataTypeAdapter dataDataTypeAdapter = new DataDataTypeAdapter();
     @SuppressWarnings("rawtypes")
     private final Type mapType = new TypeToken<Map>(){}.getType();
 
@@ -19,6 +19,6 @@ public enum GsonUtil {
     }
 
     public Gson getGson() {
-        return gsonBuilder.setPrettyPrinting().registerTypeAdapter(mapType, dataDataTypeAdaptor).create();
+        return gsonBuilder.setPrettyPrinting().registerTypeAdapter(mapType, dataDataTypeAdapter).create();
     }
 }
