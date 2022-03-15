@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class DataDataTypeAdaptor extends TypeAdapter<Object> {
+public class DataDataTypeAdapter extends TypeAdapter<Object> {
     private final TypeAdapter<Object> delegate = new Gson().getAdapter(Object.class);
 
     @Override
