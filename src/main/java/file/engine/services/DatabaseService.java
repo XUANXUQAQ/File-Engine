@@ -1200,7 +1200,7 @@ public class DatabaseService {
                             if (System.currentTimeMillis() - start > timeLimit) {
                                 break;
                             }
-                            TimeUnit.MILLISECONDS.sleep(10);
+                            TimeUnit.MILLISECONDS.sleep(1000);
                         }
                     } catch (InterruptedException | IOException e) {
                         e.printStackTrace();
