@@ -40,9 +40,10 @@ public class MainClass {
     private static final String IS_LOCAL_DISK_64_MD_5 = "50a5afd3611f07bec792ddf3a03c91d1";
     private static final String FILE_SEARCHER_USN_64_MD_5 = "e9affd7b4709494a876fd2983ae8ef4b";
     private static final String SQLITE3_64_MD_5 = "703bd51c19755db49c9070ceb255dfe5";
-    private static final String GET_HANDLE_64_MD_5 = "4e18c26dd26924aaa2e3df68fda96e17";
+    private static final String GET_HANDLE_64_MD_5 = "c06607b82185b44741ff10ff037233fb";
     private static final String SHORTCUT_GEN_MD_5 = "fa4e26f99f3dcd58d827828c411ea5d7";
     private static final String RESULT_PIPE_MD_5 = "936615088f864c6204b04c6b7776df3f";
+    private static final String GET_DPI_MD_5 = "c06607b82185b44741ff10ff037233fb";
 
     /**
      * 加载本地释放的dll
@@ -451,6 +452,7 @@ public class MainClass {
         copyOrIgnoreFile("user/getHandle.dll", "/win32-native/getHandle.dll", GET_HANDLE_64_MD_5);
         copyOrIgnoreFile("user/shortcutGenerator.vbs", "/shortcutGenerator.vbs", SHORTCUT_GEN_MD_5);
         copyOrIgnoreFile("user/resultPipe.dll", "/win32-native/resultPipe.dll", RESULT_PIPE_MD_5);
+        copyOrIgnoreFile("user/getDpi.exe", "/win32-native/getDpi.exe", GET_DPI_MD_5);
     }
 
     private static void copyOrIgnoreFile(String path, String rootPath, String md5) throws IOException {

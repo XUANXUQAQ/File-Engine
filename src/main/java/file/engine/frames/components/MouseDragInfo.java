@@ -1,7 +1,7 @@
 package file.engine.frames.components;
 
-import file.engine.dllInterface.GetHandle;
 import file.engine.utils.CachedThreadPoolUtil;
+import file.engine.utils.DpiUtil;
 import file.engine.utils.GetIconUtil;
 
 import javax.swing.*;
@@ -37,7 +37,7 @@ public class MouseDragInfo extends JFrame {
      */
     public void showDragInfo(String result, Supplier<Point> pointSupplier, Supplier<Boolean> isFinished, Runnable callback) {
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize(); // 获取屏幕大小
-        double dpi = GetHandle.INSTANCE.getDpi();
+        double dpi = DpiUtil.getDpi();
         int length = (int) ((screenSize.width / 20.0) * dpi);
         int iconLength = (int) (length * 0.6);
         int offset = (length - iconLength) / 2;

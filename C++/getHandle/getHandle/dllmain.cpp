@@ -8,7 +8,6 @@
 #include <dwmapi.h>
 #include "checkHwnd.h"
 #include "getExplorerPath.h"
-#pragma comment(lib, "Gdi32.lib")
 #pragma comment(lib, "dwmapi")
 #pragma comment(lib, "user32")
 #pragma comment(lib, "kernel32")
@@ -54,7 +53,6 @@ extern "C" {
     __declspec(dllexport) BOOL isDialogWindow();
     __declspec(dllexport) int getToolBarX();
     __declspec(dllexport) int getToolBarY();
-    __declspec(dllexport) double getDpi();
     __declspec(dllexport) BOOL isKeyPressed(int vk_key);
     __declspec(dllexport) BOOL isForegroundFullscreen();
 }
@@ -113,26 +111,6 @@ BOOL isForegroundFullscreen()
     }//如果当前激活窗口是桌面窗口，或者是控制台窗口，就直接返回不是全屏
 
     return b_fullscreen;
-}
-
-/**
- * 获取Windows缩放等级，适配高DPI
- */
-double getDpi()
-{
-    SetProcessDPIAware();
-    // Get desktop dc
-    HDC desktopDc = GetDC(nullptr);
-    // Get native resolution
-    const int dpi = GetDeviceCaps(desktopDc, LOGPIXELSX);
-    auto ret = 1 + (dpi - 96.0) / 24.0 * 0.25;
-    if (ret < 1)
-    {
-        ret = 1;
-    }
-
-    ReleaseDC(nullptr, desktopDc);
-    return ret;
 }
 
 int getToolBarY()

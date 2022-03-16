@@ -644,7 +644,7 @@ public class SearchBar {
 
                 if (e.getButton() == MouseEvent.BUTTON3 && runningMode != Constants.Enums.RunningMode.PLUGIN_MODE) {
                     //右键被点击
-                    double dpi = GetHandle.INSTANCE.getDpi();
+                    double dpi = DpiUtil.getDpi();
                     menu.show(searchBar, (int) (e.getX() / dpi), (int) (e.getY() / dpi));
                 } else if (e.getButton() == MouseEvent.BUTTON1) {
                     menu.setVisible(false);
@@ -689,7 +689,7 @@ public class SearchBar {
         }
         saveCache(result);
         copyToClipBoard(result, false);
-        double dpi = GetHandle.INSTANCE.getDpi();
+        double dpi = DpiUtil.getDpi();
         x = (int) (GetHandle.INSTANCE.getToolBarX() / dpi);
         y = (int) (GetHandle.INSTANCE.getToolBarY() / dpi);
         robotUtil.mouseClicked(x, y, 1, InputEvent.BUTTON1_DOWN_MASK);
@@ -2859,7 +2859,7 @@ public class SearchBar {
      * 获取explorer窗口大小，并修改显示模式和大小
      */
     private void getExplorerSizeAndChangeSearchBarSizeExplorerMode() {
-        double dpi = GetHandle.INSTANCE.getDpi();
+        double dpi = DpiUtil.getDpi();
         long explorerWidth = (long) (GetHandle.INSTANCE.getExplorerWidth() / dpi);
         long explorerHeight = (long) (GetHandle.INSTANCE.getExplorerHeight() / dpi);
         long explorerX = (long) (GetHandle.INSTANCE.getExplorerX() / dpi);

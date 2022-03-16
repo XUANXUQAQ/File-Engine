@@ -1,5 +1,6 @@
 package file.engine.frames;
 
+import file.engine.utils.DpiUtil;
 import file.engine.utils.system.properties.IsDebug;
 import file.engine.annotation.EventListener;
 import file.engine.annotation.EventRegister;
@@ -170,7 +171,7 @@ public class TaskBar {
                         popupMenu = getPopupMenu();
                         popupMenu.setInvoker(popupMenu);
                         popupMenu.setVisible(true);
-                        double dpi = GetHandle.INSTANCE.getDpi();
+                        double dpi = DpiUtil.getDpi();
                         popupMenu.setLocation((int) (e.getX() / dpi), (int) ((e.getY() - popupMenu.getHeight()) / dpi));
                     }
                 }

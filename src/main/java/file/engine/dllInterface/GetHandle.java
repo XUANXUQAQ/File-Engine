@@ -30,8 +30,6 @@ public interface GetHandle extends Library {
 
     int getToolBarY();
 
-    double getDpi();
-
     boolean isKeyPressed(int vk_key);
 
     boolean isForegroundFullscreen();
