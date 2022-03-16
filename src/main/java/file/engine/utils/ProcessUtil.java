@@ -61,14 +61,14 @@ public class ProcessUtil {
      * @throws IOException          失败
      * @throws InterruptedException 失败
      */
-    public static void waitForProcess(@SuppressWarnings("SameParameterValue") String procName) throws IOException, InterruptedException {
+    public static void waitForProcess(@SuppressWarnings("SameParameterValue") String procName, long checkInterval) throws IOException, InterruptedException {
         long start = System.currentTimeMillis();
         long timeLimit = 10 * 60 * 1000;
         if (IsDebug.isDebug()) {
             timeLimit = Long.MAX_VALUE;
         }
         while (isProcessExist(procName)) {
-            TimeUnit.MILLISECONDS.sleep(10);
+            TimeUnit.MILLISECONDS.sleep(checkInterval);
             if (System.currentTimeMillis() - start > timeLimit) {
                 System.err.printf("等待进程%s超时\n", procName);
                 String command = String.format("taskkill /im %s /f", procName);
@@ -77,23 +77,5 @@ public class ProcessUtil {
                 break;
             }
         }
-    }
-
-    /**
-     * 添加等待进程并当进程完成后执行回调
-     *
-     * @param procName 进程名
-     * @param callback 回调
-     */
-    public static void waitForProcessAsync(@SuppressWarnings("SameParameterValue") String procName, Runnable callback) {
-        CachedThreadPoolUtil.getInstance().executeTask(() -> {
-            try {
-                waitForProcess(procName);
-            } catch (IOException | InterruptedException e) {
-                e.printStackTrace();
-            } finally {
-                callback.run();
-            }
-        });
     }
 }

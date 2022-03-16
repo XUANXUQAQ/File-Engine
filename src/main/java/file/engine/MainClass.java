@@ -76,7 +76,7 @@ public class MainClass {
         }
         ProcessUtil.stopDaemon();
         try {
-            ProcessUtil.waitForProcess(Constants.LAUNCH_WRAPPER_NAME);
+            ProcessUtil.waitForProcess(Constants.LAUNCH_WRAPPER_NAME, 10);
             File originLauncherFile = new File("..", Constants.LAUNCH_WRAPPER_NAME);
             FileUtil.copyFile(launcherFile, originLauncherFile);
             OpenFileUtil.openWithAdmin(originLauncherFile.getAbsolutePath());

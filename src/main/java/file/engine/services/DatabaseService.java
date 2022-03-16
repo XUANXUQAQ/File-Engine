@@ -1210,7 +1210,7 @@ public class DatabaseService {
                 // 搜索完成并写入数据库后，重新建立数据库连接
                 {
                     try {
-                        ProcessUtil.waitForProcess("fileSearcherUSN.exe");
+                        ProcessUtil.waitForProcess("fileSearcherUSN.exe", 1000);
                     } catch (Exception e) {
                         e.printStackTrace();
                     } finally {
