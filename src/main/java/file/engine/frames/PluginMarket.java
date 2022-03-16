@@ -4,7 +4,6 @@ import file.engine.annotation.EventListener;
 import file.engine.annotation.EventRegister;
 import file.engine.configs.AllConfigs;
 import file.engine.configs.Constants;
-import file.engine.dllInterface.GetHandle;
 import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
 import file.engine.event.handler.impl.download.IsTaskDoneBeforeEvent;
@@ -17,6 +16,7 @@ import file.engine.frames.components.LoadingPanel;
 import file.engine.services.TranslateService;
 import file.engine.services.download.DownloadManager;
 import file.engine.utils.CachedThreadPoolUtil;
+import file.engine.utils.DpiUtil;
 import file.engine.utils.gson.GsonUtil;
 
 import javax.imageio.ImageIO;
@@ -96,7 +96,7 @@ public class PluginMarket {
      * 显示插件窗口
      */
     private void showWindow() {
-        double dpi = GetHandle.INSTANCE.getDpi();
+        double dpi = DpiUtil.getDpi();
         int width = (int) (1000 / dpi), height = (int) (600 / dpi);
         ImageIcon frameIcon = new ImageIcon(Objects.requireNonNull(PluginMarket.class.getResource("/icons/frame.png")));
         TranslateService translateService = TranslateService.getInstance();

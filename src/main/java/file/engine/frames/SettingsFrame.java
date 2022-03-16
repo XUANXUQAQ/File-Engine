@@ -35,10 +35,7 @@ import file.engine.services.TranslateService;
 import file.engine.services.download.DownloadManager;
 import file.engine.services.plugin.system.Plugin;
 import file.engine.services.plugin.system.PluginService;
-import file.engine.utils.CachedThreadPoolUtil;
-import file.engine.utils.RegexUtil;
-import file.engine.utils.SQLiteUtil;
-import file.engine.utils.StartupUtil;
+import file.engine.utils.*;
 import file.engine.utils.file.MoveDesktopFiles;
 import file.engine.utils.system.properties.IsDebug;
 import file.engine.utils.system.properties.IsPreview;
@@ -2350,7 +2347,7 @@ public class SettingsFrame {
             return;
         }
         frame.setResizable(true);
-        double dpi = GetHandle.INSTANCE.getDpi();
+        double dpi = DpiUtil.getDpi();
         int width, height;
         try {
             width = Integer.parseInt(TRANSLATE_SERVICE.getFrameWidth());
