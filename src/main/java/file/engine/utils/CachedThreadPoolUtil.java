@@ -22,6 +22,10 @@ public enum CachedThreadPoolUtil {
         return INSTANCE;
     }
 
+    public boolean isShutdown() {
+        return isShutdown.get();
+    }
+
     public <T> Future<T> executeTask(Callable<T> todo) {
         if (isShutdown.get()) {
             return null;

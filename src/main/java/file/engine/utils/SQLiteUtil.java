@@ -1,11 +1,12 @@
 package file.engine.utils;
 
-import file.engine.configs.Constants;
-import file.engine.utils.file.FileUtil;
-import file.engine.utils.system.properties.IsDebug;
 import file.engine.configs.AllConfigs;
+import file.engine.configs.Constants;
 import file.engine.event.handler.EventManagement;
 import file.engine.event.handler.impl.stop.RestartEvent;
+import file.engine.utils.file.FileUtil;
+import file.engine.utils.system.properties.IsDebug;
+import lombok.SneakyThrows;
 import org.sqlite.SQLiteConfig;
 import org.sqlite.SQLiteOpenMode;
 
@@ -17,13 +18,57 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author XUANXU
  */
 public class SQLiteUtil {
     private static final SQLiteConfig sqLiteConfig = new SQLiteConfig();
-    private static final ConcurrentHashMap<String, Connection> connectionPool = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, ConnectionWrapper> connectionPool = new ConcurrentHashMap<>();
+
+    static {
+        CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
+        cachedThreadPoolUtil.executeTask(() -> {
+            try {
+                long timeout = 5 * 60 * 1000;
+                while (!cachedThreadPoolUtil.isShutdown()) {
+                    for (ConnectionWrapper conn : connectionPool.values()) {
+                        long currentTimeMillis = System.currentTimeMillis();
+                        try {
+                            if (currentTimeMillis - conn.usingTimeMills > timeout && !conn.connection.isClosed()) {
+                                if (IsDebug.isDebug()) {
+                                    System.out.println("长时间未使用 " + conn.url + "  已关闭连接");
+                                }
+                                conn.connection.close();
+                            }
+                        } catch (SQLException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    TimeUnit.SECONDS.sleep(1);
+                }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
+    private static class ConnectionWrapper {
+        private final String url;
+        private Connection connection;
+        private volatile long usingTimeMills;
+
+        private ConnectionWrapper(String url) {
+            this.url = url;
+            try {
+                this.connection = DriverManager.getConnection(url, sqLiteConfig.toProperties());
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            this.usingTimeMills = System.currentTimeMillis();
+        }
+    }
 
     private static void initSqliteConfig() {
         sqLiteConfig.setTempStore(SQLiteConfig.TempStore.MEMORY);
@@ -35,6 +80,22 @@ public class SQLiteUtil {
         sqLiteConfig.setLockingMode(SQLiteConfig.LockingMode.NORMAL);
     }
 
+    @SneakyThrows
+    private static Connection getFromConnectionPool(String key) {
+        ConnectionWrapper connectionWrapper = connectionPool.get(key);
+        if (connectionWrapper == null) {
+            throw new RuntimeException("no connection named " + key);
+        }
+        if (connectionWrapper.connection.isClosed()) {
+            connectionWrapper.connection = DriverManager.getConnection(connectionWrapper.url, sqLiteConfig.toProperties());
+            if (IsDebug.isDebug()) {
+                System.out.println("已恢复连接 " + connectionWrapper.url);
+            }
+        }
+        connectionWrapper.usingTimeMills = System.currentTimeMillis();
+        return connectionWrapper.connection;
+    }
+
     /**
      * 仅用于select语句，以及需要及时生效的SQL语句
      *
@@ -44,7 +105,7 @@ public class SQLiteUtil {
      */
     public static PreparedStatement getPreparedStatement(String sql, String key) throws SQLException {
         checkEmpty(key);
-        return connectionPool.get(key).prepareStatement(sql);
+        return getFromConnectionPool(key).prepareStatement(sql);
     }
 
     /**
@@ -55,7 +116,7 @@ public class SQLiteUtil {
      */
     public static Statement getStatement(String key) throws SQLException {
         checkEmpty(key);
-        return connectionPool.get(key).createStatement();
+        return getFromConnectionPool(key).createStatement();
     }
 
     private static void checkEmpty(String key) {
@@ -69,8 +130,8 @@ public class SQLiteUtil {
 
     public static void initConnection(String url, String key) throws SQLException {
         initSqliteConfig();
-        Connection conn = DriverManager.getConnection(url, sqLiteConfig.toProperties());
-        connectionPool.put(key, conn);
+        ConnectionWrapper connectionWrapper = new ConnectionWrapper(url);
+        connectionPool.put(key, connectionWrapper);
     }
 
     /**
@@ -82,7 +143,7 @@ public class SQLiteUtil {
         }
         connectionPool.forEach((k, v) -> {
             try {
-                v.close();
+                v.connection.close();
             } catch (SQLException e) {
                 e.printStackTrace();
             }
@@ -128,8 +189,9 @@ public class SQLiteUtil {
 
     /**
      * 复制数据库文件到另一个文件夹
+     *
      * @param fromDir 源路径
-     * @param toDir 目标路径
+     * @param toDir   目标路径
      */
     public static void copyDatabases(String fromDir, String toDir) {
         File cache = new File(fromDir, "cache.db");
@@ -265,6 +327,7 @@ public class SQLiteUtil {
 
     /**
      * 初始化表
+     *
      * @param disk disk
      */
     private static void initTable(String disk) {
