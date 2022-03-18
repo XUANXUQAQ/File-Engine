@@ -37,10 +37,14 @@ public class SQLiteUtil {
                         long currentTimeMillis = System.currentTimeMillis();
                         try {
                             if (currentTimeMillis - conn.usingTimeMills > timeout && !conn.connection.isClosed()) {
-                                if (IsDebug.isDebug()) {
-                                    System.out.println("长时间未使用 " + conn.url + "  已关闭连接");
+                                synchronized (SQLiteUtil.class) {
+                                    if (currentTimeMillis - conn.usingTimeMills > timeout && !conn.connection.isClosed()) {
+                                        if (IsDebug.isDebug()) {
+                                            System.out.println("长时间未使用 " + conn.url + "  已关闭连接");
+                                        }
+                                        conn.connection.close();
+                                    }
                                 }
-                                conn.connection.close();
                             }
                         } catch (SQLException e) {
                             e.printStackTrace();
@@ -87,12 +91,16 @@ public class SQLiteUtil {
             throw new RuntimeException("no connection named " + key);
         }
         if (connectionWrapper.connection.isClosed()) {
-            connectionWrapper.connection = DriverManager.getConnection(connectionWrapper.url, sqLiteConfig.toProperties());
-            if (IsDebug.isDebug()) {
-                System.out.println("已恢复连接 " + connectionWrapper.url);
+            synchronized (SQLiteUtil.class) {
+                if (connectionWrapper.connection.isClosed()) {
+                    connectionWrapper.connection = DriverManager.getConnection(connectionWrapper.url, sqLiteConfig.toProperties());
+                    if (IsDebug.isDebug()) {
+                        System.out.println("已恢复连接 " + connectionWrapper.url);
+                    }
+                }
+                connectionWrapper.usingTimeMills = System.currentTimeMillis();
             }
         }
-        connectionWrapper.usingTimeMills = System.currentTimeMillis();
         return connectionWrapper.connection;
     }
 
