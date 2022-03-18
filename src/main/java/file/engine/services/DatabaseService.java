@@ -63,6 +63,7 @@ public class DatabaseService {
     private final AtomicBoolean isSharedMemoryCreated = new AtomicBoolean(false);
     private final ConcurrentSkipListSet<String> cacheSet = new ConcurrentSkipListSet<>();
     private final AtomicInteger searchThreadCount = new AtomicInteger(0);
+    private final AtomicLong startSearchTimeMills = new AtomicLong(0);
 
     private static volatile DatabaseService INSTANCE = null;
 
@@ -1326,7 +1327,8 @@ public class DatabaseService {
             try {
                 EventManagement eventManagement = EventManagement.getInstance();
                 while (eventManagement.notMainExit()) {
-                    if (status == Constants.Enums.DatabaseStatus.NORMAL) {
+                    if ((status == Constants.Enums.DatabaseStatus.NORMAL && System.currentTimeMillis() - startSearchTimeMills.get() < 4 * 60 * 1000) ||
+                            (status == Constants.Enums.DatabaseStatus.NORMAL && commandQueue.size() > 1000)) {
                         sendExecuteSQLSignal();
                     }
                     TimeUnit.SECONDS.sleep(updateTimeLimit);
@@ -1373,7 +1375,6 @@ public class DatabaseService {
         SQLiteUtil.initAllConnections();
     }
 
-
     @EventRegister(registerClass = StartMonitorDiskEvent.class)
     private static void startMonitorDiskEvent(Event event) {
         getInstance().startMonitorDisk();
@@ -1388,6 +1389,7 @@ public class DatabaseService {
         databaseService.keywords = startSearchEvent.keywords;
         databaseService.isStop.set(false);
         databaseService.startSearch();
+        databaseService.startSearchTimeMills.set(System.currentTimeMillis());
     }
 
     @EventRegister(registerClass = StopSearchEvent.class)
