@@ -43,7 +43,7 @@ public class MainClass {
     private static final String GET_HANDLE_64_MD_5 = "c06607b82185b44741ff10ff037233fb";
     private static final String SHORTCUT_GEN_MD_5 = "fa4e26f99f3dcd58d827828c411ea5d7";
     private static final String RESULT_PIPE_MD_5 = "936615088f864c6204b04c6b7776df3f";
-    private static final String GET_DPI_MD_5 = "c06607b82185b44741ff10ff037233fb";
+    private static final String GET_DPI_MD_5 = "2d835577b3505af292966411b50e93b4";
 
     /**
      * 加载本地释放的dll
