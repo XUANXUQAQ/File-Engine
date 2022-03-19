@@ -39,9 +39,7 @@ public class SQLiteUtil {
                             if (currentTimeMillis - conn.usingTimeMills > timeout && !conn.connection.isClosed()) {
                                 synchronized (SQLiteUtil.class) {
                                     if (currentTimeMillis - conn.usingTimeMills > timeout && !conn.connection.isClosed()) {
-                                        if (IsDebug.isDebug()) {
-                                            System.out.println("长时间未使用 " + conn.url + "  已关闭连接");
-                                        }
+                                        System.out.println("长时间未使用 " + conn.url + "  已关闭连接");
                                         conn.connection.close();
                                     }
                                 }
@@ -94,9 +92,7 @@ public class SQLiteUtil {
             synchronized (SQLiteUtil.class) {
                 if (connectionWrapper.connection.isClosed()) {
                     connectionWrapper.connection = DriverManager.getConnection(connectionWrapper.url, sqLiteConfig.toProperties());
-                    if (IsDebug.isDebug()) {
-                        System.out.println("已恢复连接 " + connectionWrapper.url);
-                    }
+                    System.out.println("已恢复连接 " + connectionWrapper.url);
                 }
                 connectionWrapper.usingTimeMills = System.currentTimeMillis();
             }
