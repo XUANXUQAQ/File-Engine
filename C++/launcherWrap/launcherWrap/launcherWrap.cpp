@@ -55,6 +55,7 @@ void init_path();
 bool is_launched();
 std::wstring get_self_name();
 void deleteJreDir();
+bool removeDir(const char* szFileDir);
 
 int main()
 {
@@ -134,9 +135,9 @@ inline void init_path()
 	strcpy_s(g_update_signal_file, update_signal_file.c_str());
 }
 
-void deleteJreDir()
+inline void deleteJreDir()
 {
-	RemoveDirectoryA(g_jre_path);
+	removeDir(g_jre_path);
 }
 
 /**
@@ -251,7 +252,8 @@ void restart_file_engine(bool isIgnoreCloseFile)
 	command.append(jre.substr(0, 2));
 	command.append("\"");
 	command.append(jre.substr(2));
-	command.append("bin\\java.exe\" ").append(g_jvm_parameters).append(" -jar File-Engine.jar").append(" 2> error.log");
+	command.append("bin\\java.exe\" ").append(g_jvm_parameters).append(" -jar File-Engine.jar").append(" 1> normal.log")
+	       .append(" 2> error.log");
 #ifdef TEST
 	std::cout << "running command: " << command << std::endl;
 #endif
@@ -437,4 +439,31 @@ BOOL find_process()
 	}
 	CloseHandle(hSnapshot);
 	return ret;
+}
+
+bool removeDir(const char* szFileDir)
+{
+	std::string strDir = szFileDir;
+	if (strDir.at(strDir.length() - 1) != '\\')
+		strDir += '\\';
+	WIN32_FIND_DATAA wfd;
+	HANDLE hFind = FindFirstFileA((strDir + "*.*").c_str(), &wfd);
+	if (hFind == INVALID_HANDLE_VALUE)
+		return false;
+	do
+	{
+		if (wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+		{
+			if (_stricmp(wfd.cFileName, ".") != 0 &&
+				_stricmp(wfd.cFileName, "..") != 0)
+				removeDir((strDir + wfd.cFileName).c_str());
+		}
+		else
+		{
+			DeleteFileA((strDir + wfd.cFileName).c_str());
+		}
+	} while (FindNextFileA(hFind, &wfd));
+	FindClose(hFind);
+	RemoveDirectoryA(szFileDir);
+	return true;
 }

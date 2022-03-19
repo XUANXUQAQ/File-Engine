@@ -13,7 +13,7 @@ import file.engine.event.handler.EventManagement;
 import file.engine.event.handler.impl.BootSystemEvent;
 import file.engine.event.handler.impl.database.*;
 import file.engine.event.handler.impl.frame.searchBar.IsSearchBarVisibleEvent;
-import file.engine.event.handler.impl.frame.searchBar.ShowSearchBarEvent;
+import file.engine.event.handler.impl.frame.searchBar.SearchBarReadyEvent;
 import file.engine.event.handler.impl.monitor.disk.StartMonitorDiskEvent;
 import file.engine.event.handler.impl.stop.RestartEvent;
 import file.engine.event.handler.impl.taskbar.ShowTaskBarMessageEvent;
@@ -1371,7 +1371,7 @@ public class DatabaseService {
         }
     }
 
-    @EventListener(listenClass = ShowSearchBarEvent.class)
+    @EventListener(listenClass = SearchBarReadyEvent.class)
     private static void searchBarVisibleListener(Event event) {
         getInstance().sendExecuteSQLSignal();
     }
