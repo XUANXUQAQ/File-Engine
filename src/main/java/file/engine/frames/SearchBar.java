@@ -125,6 +125,7 @@ public class SearchBar {
     private final float textFieldHeightRatio = 0.7f;
     private volatile int lastMousePositionX = 0;
     private volatile int lastMousePositionY = 0;
+    private final String pluginResultSplitStr = "-@-@-";
 
     private static volatile SearchBar instance = null;
 
@@ -282,13 +283,13 @@ public class SearchBar {
     }
 
     /**
-     * 插件返回的结果为plugin--pluginIdentifier-result
+     * 插件返回的结果为plugin[pluginResultSplitStr]pluginIdentifier-result
      *
      * @param res 结果
-     * @return 以--分开的字符串
+     * @return 以pluginResultSplitStr分开的字符串
      */
     private String[] splitPluginResult(String res) {
-        return RegexUtil.getPattern("--", 0).split(res);
+        return RegexUtil.getPattern(pluginResultSplitStr, 0).split(res);
     }
 
     /**
@@ -3274,7 +3275,7 @@ public class SearchBar {
                     String each;
                     for (PluginService.PluginInfo eachPlugin : PluginService.getInstance().getAllPlugins()) {
                         while ((each = eachPlugin.plugin.pollFromResultQueue()) != null) {
-                            each = "plugin--" + eachPlugin.plugin.identifier + "--" + each;
+                            each = "plugin" + pluginResultSplitStr + eachPlugin.plugin.identifier + pluginResultSplitStr + each;
                             if (!listResults.contains(each)) {
                                 listResults.add(each);
                                 listResultsNum.incrementAndGet();
@@ -3611,7 +3612,7 @@ public class SearchBar {
                             String result;
                             while (runningMode == Constants.Enums.RunningMode.PLUGIN_MODE) {
                                 while (currentUsingPlugin != null && (result = currentUsingPlugin.pollFromResultQueue()) != null) {
-                                    result = "plugin--" + currentUsingPlugin.identifier + "--" + result;
+                                    result = "plugin" + pluginResultSplitStr + currentUsingPlugin.identifier + pluginResultSplitStr + result;
                                     if (!listResults.contains(result)) {
                                         listResults.add(result);
                                         listResultsNum.incrementAndGet();
@@ -3917,7 +3918,7 @@ public class SearchBar {
      * @param isChosen 是否当前被选中
      */
     private void showPluginResultOnLabel(String result, JLabel label, boolean isChosen) {
-        Pattern pattern = RegexUtil.getPattern("--", 0);
+        Pattern pattern = RegexUtil.getPattern(pluginResultSplitStr, 0);
         String[] resultWithPluginInfo = pattern.split(result);
         if (resultWithPluginInfo.length != 3) {
             throw new RuntimeException("plugin result error: " + result);
