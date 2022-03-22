@@ -1327,8 +1327,9 @@ public class DatabaseService {
             final long updateTimeLimit = AllConfigs.getInstance().getUpdateTimeLimit();
             try {
                 EventManagement eventManagement = EventManagement.getInstance();
+                long timeout = Constants.CLOSE_DATABASE_TIMEOUT_MILLS - 30 * 1000;
                 while (eventManagement.notMainExit()) {
-                    if ((status == Constants.Enums.DatabaseStatus.NORMAL && System.currentTimeMillis() - startSearchTimeMills.get() < 4 * 60 * 1000) ||
+                    if ((status == Constants.Enums.DatabaseStatus.NORMAL && System.currentTimeMillis() - startSearchTimeMills.get() < timeout) ||
                             (status == Constants.Enums.DatabaseStatus.NORMAL && commandQueue.size() > 1000)) {
                         sendExecuteSQLSignal();
                     }

@@ -639,7 +639,7 @@ public class AllConfigs {
     }
 
     private void readSwingTheme(Map<String, Object> settingsInJson) {
-        configEntity.setSwingTheme(getFromJson(settingsInJson, "swingTheme", defaultSwingTheme));
+        configEntity.setSwingTheme(getFromJson(settingsInJson, "swingTheme", DEFAULT_SWING_THEME));
     }
 
     private void readShowTipOnCreatingLnk(Map<String, Object> settingsInJson) {
