@@ -13,6 +13,8 @@ public class Constants {
 
     public static final int MAX_PATTERN_CACHE_NUM = 20;
 
+    public static final int CLOSE_DATABASE_TIMEOUT_MILLS = 60 * 1000;
+
     public static final String FILE_NAME = "File-Engine.jar";
     public static final String LAUNCH_WRAPPER_NAME = "File-Engine.exe";
 
@@ -30,7 +32,7 @@ public class Constants {
     public static final int DEFAULT_SEARCHBAR_FONT_COLOR = 0;
     public static final int MAX_RESULTS_COUNT = 200;
 
-    public static final String defaultSwingTheme = "MaterialLighter";
+    public static final String DEFAULT_SWING_THEME = "MaterialLighter";
 
     public static final String RESULT_LABEL_NAME_HOLDER = "filled";
 

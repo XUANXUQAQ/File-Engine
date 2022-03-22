@@ -31,14 +31,13 @@ public class SQLiteUtil {
         CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
         cachedThreadPoolUtil.executeTask(() -> {
             try {
-                long timeout = 5 * 60 * 1000;
                 while (!cachedThreadPoolUtil.isShutdown()) {
                     for (ConnectionWrapper conn : connectionPool.values()) {
                         long currentTimeMillis = System.currentTimeMillis();
                         try {
-                            if (currentTimeMillis - conn.usingTimeMills > timeout && !conn.connection.isClosed()) {
+                            if (currentTimeMillis - conn.usingTimeMills > Constants.CLOSE_DATABASE_TIMEOUT_MILLS && !conn.connection.isClosed()) {
                                 synchronized (SQLiteUtil.class) {
-                                    if (currentTimeMillis - conn.usingTimeMills > timeout && !conn.connection.isClosed()) {
+                                    if (currentTimeMillis - conn.usingTimeMills > Constants.CLOSE_DATABASE_TIMEOUT_MILLS && !conn.connection.isClosed()) {
                                         System.out.println("长时间未使用 " + conn.url + "  已关闭连接");
                                         conn.connection.close();
                                     }
