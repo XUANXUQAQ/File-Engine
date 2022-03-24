@@ -2,6 +2,7 @@
 #include <string>
 #include <Windows.h>
 #include <concurrent_unordered_map.h>
+#include "file_engine_dllInterface_ResultPipe.h"
 using namespace std;
 
 concurrency::concurrent_unordered_map<string, pair<HANDLE, LPVOID>> connectionPool;
@@ -10,6 +11,25 @@ extern "C" __declspec(dllexport) char* getResult(char disk, const char* listName
 extern "C" __declspec(dllexport) void closeAllSharedMemory();
 extern "C" __declspec(dllexport) BOOL isComplete();
 
+
+JNIEXPORT jstring JNICALL Java_file_engine_dllInterface_ResultPipe_getResult
+(JNIEnv* env, jobject, jchar disk, jstring listName, jint priority, jint offset)
+{
+	const char* tmp = getResult(static_cast<char>(disk), env->GetStringUTFChars(listName, nullptr), priority, offset);
+	return env->NewStringUTF(tmp);
+}
+
+JNIEXPORT void JNICALL Java_file_engine_dllInterface_ResultPipe_closeAllSharedMemory
+(JNIEnv*, jobject)
+{
+	closeAllSharedMemory();
+}
+
+JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_ResultPipe_isComplete
+(JNIEnv*, jobject)
+{
+	return static_cast<jboolean>(isComplete());
+}
 
 inline void createFileMapping(HANDLE& hMapFile, LPVOID& pBuf, size_t memorySize, const char* sharedMemoryName);
 

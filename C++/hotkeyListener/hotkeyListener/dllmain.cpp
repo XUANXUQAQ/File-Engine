@@ -4,6 +4,7 @@
 #include <chrono>
 #include <Windows.h>
 #include <WinUser.h>
+#include "file_engine_dllInterface_HotkeyListener.h"
 #include <fstream>
 #pragma comment(lib, "User32.lib")
 
@@ -28,6 +29,36 @@ static volatile int hotkey5;
 static volatile time_t ctrlPressedTime;
 
 bool isResponseCtrlDoubleClick = true;
+
+JNIEXPORT void JNICALL Java_file_engine_dllInterface_HotkeyListener_registerHotKey
+(JNIEnv*, jobject, jint key1, jint key2, jint key3, jint key4, jint key5)
+{
+	registerHotKey(key1, key2, key3, key4, key5);
+}
+
+JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_HotkeyListener_getKeyStatus
+(JNIEnv*, jobject)
+{
+	return static_cast<jboolean>(getKeyStatus());
+}
+
+JNIEXPORT void JNICALL Java_file_engine_dllInterface_HotkeyListener_startListen
+(JNIEnv*, jobject)
+{
+	startListen();
+}
+
+JNIEXPORT void JNICALL Java_file_engine_dllInterface_HotkeyListener_stopListen
+(JNIEnv*, jobject)
+{
+	stopListen();
+}
+
+JNIEXPORT void JNICALL Java_file_engine_dllInterface_HotkeyListener_setCtrlDoubleClick
+(JNIEnv*, jobject, jboolean val)
+{
+	setCtrlDoubleClick(val);
+}
 
 inline int isVirtualKeyPressed(int vk)
 {

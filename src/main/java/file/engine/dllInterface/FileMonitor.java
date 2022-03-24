@@ -1,15 +1,17 @@
 package file.engine.dllInterface;
 
-import com.sun.jna.Library;
-import com.sun.jna.Native;
+import java.nio.file.Path;
 
+public enum FileMonitor {
+    INSTANCE;
 
-public interface FileMonitor extends Library {
-    FileMonitor INSTANCE = Native.load("fileMonitor", FileMonitor.class);
+    static {
+        System.load(Path.of("user/fileMonitor.dll").toAbsolutePath().toString());
+    }
 
-    void monitor(String path);
+    public native void monitor(String path);
 
-    void stop_monitor();
+    public native void stop_monitor();
 
-    void set_output(String path);
+    public native void set_output(String path);
 }

@@ -2,6 +2,7 @@
 #include "pch.h"
 #include <iostream>
 #include <Windows.h>
+#include "file_engine_dllInterface_IsLocalDisk.h"
 //#define TEST
 
 using namespace std;
@@ -9,6 +10,19 @@ using namespace std;
 extern "C" __declspec(dllexport) BOOL isLocalDisk(const char* path);
 extern "C" __declspec(dllexport) BOOL isDiskNTFS(const char* disk);
 
+JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_IsLocalDisk_isLocalDisk
+(JNIEnv* env, jobject, jstring path)
+{
+	const BOOL isLocalDiskVal = isLocalDisk(env->GetStringUTFChars(path, nullptr));
+	return static_cast<jboolean>(isLocalDiskVal);
+}
+
+JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_IsLocalDisk_isDiskNTFS
+(JNIEnv* env, jobject, jstring disk)
+{
+	const BOOL tmp = isDiskNTFS(env->GetStringUTFChars(disk, nullptr));
+	return static_cast<jboolean>(tmp);
+}
 
 __declspec(dllexport) BOOL isDiskNTFS(const char* disk)
 {

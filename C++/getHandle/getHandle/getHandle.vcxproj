@@ -154,8 +154,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="checkHwnd.h" />
+    <ClInclude Include="file_engine_dllInterface_GetHandle.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="getExplorerPath.h" />
+    <ClInclude Include="jni.h" />
+    <ClInclude Include="jni_md.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>

@@ -1,12 +1,15 @@
 package file.engine.dllInterface;
 
-import com.sun.jna.Library;
-import com.sun.jna.Native;
+import java.nio.file.Path;
 
-public interface IsLocalDisk extends Library {
-    IsLocalDisk INSTANCE = Native.load("isLocalDisk", IsLocalDisk.class);
+public enum IsLocalDisk {
+    INSTANCE;
 
-    boolean isLocalDisk(String path);
+    static {
+        System.load(Path.of("user/isLocalDisk.dll").toAbsolutePath().toString());
+    }
 
-    boolean isDiskNTFS(String disk);
+    public native boolean isLocalDisk(String path);
+
+    public native boolean isDiskNTFS(String disk);
 }
