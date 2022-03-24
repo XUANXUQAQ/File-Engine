@@ -1,10 +1,13 @@
 package file.engine.dllInterface;
 
-import com.sun.jna.Library;
-import com.sun.jna.Native;
+import java.nio.file.Path;
 
-public interface GetAscII extends Library {
-    GetAscII INSTANCE = Native.load("getAscII", GetAscII.class);
+public enum GetAscII {
+    INSTANCE;
 
-    int getAscII(String str);
+    static {
+        System.load(Path.of("user/getAscII.dll").toAbsolutePath().toString());
+    }
+
+    public native int getAscII(String str);
 }

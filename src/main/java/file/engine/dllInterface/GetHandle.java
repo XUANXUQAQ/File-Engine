@@ -1,36 +1,39 @@
 package file.engine.dllInterface;
 
-import com.sun.jna.Library;
-import com.sun.jna.Native;
+import java.nio.file.Path;
 
-public interface GetHandle extends Library {
-    GetHandle INSTANCE = Native.load("getHandle", GetHandle.class);
+public enum GetHandle {
+    INSTANCE;
 
-    void start();
+    static {
+        System.load(Path.of("user/getHandle.dll").toAbsolutePath().toString());
+    }
 
-    void stop();
+    public native void start();
 
-    boolean changeToAttach();
+    public native void stop();
 
-    boolean changeToNormal();
+    public native boolean changeToAttach();
 
-    long getExplorerX();
+    public native boolean changeToNormal();
 
-    long getExplorerY();
+    public native long getExplorerX();
 
-    long getExplorerWidth();
+    public native long getExplorerY();
 
-    long getExplorerHeight();
+    public native long getExplorerWidth();
 
-    String getExplorerPath();
+    public native long getExplorerHeight();
 
-    boolean isDialogWindow();
+    public native String getExplorerPath();
 
-    int getToolBarX();
+    public native boolean isDialogWindow();
 
-    int getToolBarY();
+    public native int getToolBarX();
 
-    boolean isKeyPressed(int vk_key);
+    public native int getToolBarY();
 
-    boolean isForegroundFullscreen();
+    public native boolean isKeyPressed(int vk_key);
+
+    public native boolean isForegroundFullscreen();
 }

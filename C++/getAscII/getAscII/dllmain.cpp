@@ -2,10 +2,17 @@
 #include "pch.h"
 #include <iostream>
 #include <cstring>
+#include "file_engine_dllInterface_GetAscII.h"
 //#define TEST
 
 using namespace std;
 extern "C" __declspec(dllexport) int getAscII(const char* str);
+
+JNIEXPORT jint JNICALL Java_file_engine_dllInterface_GetAscII_getAscII
+(JNIEnv* env, jobject, jstring str)
+{
+    return getAscII(env->GetStringUTFChars(str, nullptr));
+}
 
 __declspec(dllexport) int getAscII(const char* str)
 {

@@ -1,14 +1,17 @@
 package file.engine.dllInterface;
 
-import com.sun.jna.Library;
-import com.sun.jna.Native;
+import java.nio.file.Path;
 
-public interface ResultPipe extends Library {
-    ResultPipe INSTANCE = Native.load("resultPipe", ResultPipe.class);
+public enum ResultPipe {
+    INSTANCE;
 
-    String getResult(char disk, String listName, int priority, int offset);
+    static {
+        System.load(Path.of("user/resultPipe.dll").toAbsolutePath().toString());
+    }
 
-    void closeAllSharedMemory();
+    public native String getResult(char disk, String listName, int priority, int offset);
 
-    boolean isComplete();
+    public native void closeAllSharedMemory();
+
+    public native boolean isComplete();
 }

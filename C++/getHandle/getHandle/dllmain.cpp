@@ -8,6 +8,7 @@
 #include <dwmapi.h>
 #include "checkHwnd.h"
 #include "getExplorerPath.h"
+#include "file_engine_dllInterface_GetHandle.h"
 #pragma comment(lib, "dwmapi")
 #pragma comment(lib, "user32")
 #pragma comment(lib, "kernel32")
@@ -56,6 +57,162 @@ extern "C" {
     __declspec(dllexport) BOOL isKeyPressed(int vk_key);
     __declspec(dllexport) BOOL isForegroundFullscreen();
 }
+
+/*
+ * Class:     file_engine_dllInterface_GetHandle
+ * Method:    start
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_file_engine_dllInterface_GetHandle_start
+(JNIEnv*, jobject)
+{
+    start();
+}
+
+/*
+ * Class:     file_engine_dllInterface_GetHandle
+ * Method:    stop
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_file_engine_dllInterface_GetHandle_stop
+(JNIEnv*, jobject)
+{
+    stop();
+}
+
+/*
+ * Class:     file_engine_dllInterface_GetHandle
+ * Method:    changeToAttach
+ * Signature: ()Z
+ */
+JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_GetHandle_changeToAttach
+(JNIEnv*, jobject)
+{
+    return static_cast<jboolean>(changeToAttach());
+}
+
+/*
+ * Class:     file_engine_dllInterface_GetHandle
+ * Method:    changeToNormal
+ * Signature: ()Z
+ */
+JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_GetHandle_changeToNormal
+(JNIEnv*, jobject)
+{
+    return static_cast<jboolean>(changeToNormal());
+}
+
+/*
+ * Class:     file_engine_dllInterface_GetHandle
+ * Method:    getExplorerX
+ * Signature: ()J
+ */
+JNIEXPORT jlong JNICALL Java_file_engine_dllInterface_GetHandle_getExplorerX
+(JNIEnv*, jobject)
+{
+    return getExplorerX();
+}
+
+/*
+ * Class:     file_engine_dllInterface_GetHandle
+ * Method:    getExplorerY
+ * Signature: ()J
+ */
+JNIEXPORT jlong JNICALL Java_file_engine_dllInterface_GetHandle_getExplorerY
+(JNIEnv*, jobject)
+{
+    return getExplorerY();
+}
+
+/*
+ * Class:     file_engine_dllInterface_GetHandle
+ * Method:    getExplorerWidth
+ * Signature: ()J
+ */
+JNIEXPORT jlong JNICALL Java_file_engine_dllInterface_GetHandle_getExplorerWidth
+(JNIEnv*, jobject)
+{
+    return getExplorerWidth();
+}
+
+/*
+ * Class:     file_engine_dllInterface_GetHandle
+ * Method:    getExplorerHeight
+ * Signature: ()J
+ */
+JNIEXPORT jlong JNICALL Java_file_engine_dllInterface_GetHandle_getExplorerHeight
+(JNIEnv*, jobject)
+{
+    return getExplorerHeight();
+}
+
+/*
+ * Class:     file_engine_dllInterface_GetHandle
+ * Method:    getExplorerPath
+ * Signature: ()Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_file_engine_dllInterface_GetHandle_getExplorerPath
+(JNIEnv* env, jobject)
+{
+    const char* tmp = getExplorerPath();
+    return env->NewStringUTF(tmp);
+}
+
+/*
+ * Class:     file_engine_dllInterface_GetHandle
+ * Method:    isDialogWindow
+ * Signature: ()Z
+ */
+JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_GetHandle_isDialogWindow
+(JNIEnv*, jobject)
+{
+    return static_cast<jboolean>(isDialogWindow());
+}
+
+/*
+ * Class:     file_engine_dllInterface_GetHandle
+ * Method:    getToolBarX
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_file_engine_dllInterface_GetHandle_getToolBarX
+(JNIEnv*, jobject)
+{
+    return getToolBarX();
+}
+
+/*
+ * Class:     file_engine_dllInterface_GetHandle
+ * Method:    getToolBarY
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_file_engine_dllInterface_GetHandle_getToolBarY
+(JNIEnv*, jobject)
+{
+    return getToolBarY();
+}
+
+/*
+ * Class:     file_engine_dllInterface_GetHandle
+ * Method:    isKeyPressed
+ * Signature: (I)Z
+ */
+JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_GetHandle_isKeyPressed
+(JNIEnv*, jobject, jint vk_key)
+{
+    return static_cast<jboolean>(isKeyPressed(vk_key));
+}
+
+/*
+ * Class:     file_engine_dllInterface_GetHandle
+ * Method:    isForegroundFullscreen
+ * Signature: ()Z
+ */
+JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_GetHandle_isForegroundFullscreen
+(JNIEnv*, jobject)
+{
+    return static_cast<jboolean>(isForegroundFullscreen());
+}
+
 
 #ifdef TEST
 void outputHwndInfo(HWND hwnd)

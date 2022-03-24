@@ -1,18 +1,21 @@
 package file.engine.dllInterface;
 
-import com.sun.jna.Library;
-import com.sun.jna.Native;
+import java.nio.file.Path;
 
-public interface HotkeyListener extends Library {
-    HotkeyListener INSTANCE = Native.load("HotkeyListener", HotkeyListener.class);
+public enum HotkeyListener {
+    INSTANCE;
 
-    void registerHotKey(int key1, int key2, int key3, int key4, int key5);
+    static {
+        System.load(Path.of("user/hotkeyListener.dll").toAbsolutePath().toString());
+    }
 
-    boolean getKeyStatus();
+    public native void registerHotKey(int key1, int key2, int key3, int key4, int key5);
 
-    void startListen();
+    public native boolean getKeyStatus();
 
-    void stopListen();
+    public native void startListen();
 
-    void setCtrlDoubleClick(boolean isResponse);
+    public native void stopListen();
+
+    public native void setCtrlDoubleClick(boolean isResponse);
 }
