@@ -30,7 +30,7 @@ public class PathMatchUtil {
                 //匹配路径
                 isPath = true;
                 Matcher matcher = RegexUtil.slash.matcher(eachKeyword);
-                eachKeyword = matcher.replaceAll(Matcher.quoteReplacement(File.separator));
+                eachKeyword = matcher.replaceAll(Matcher.quoteReplacement(""));
                 //获取父路径
                 matcherStrFromFilePath = FileUtil.getParentPath(path);
             } else {
