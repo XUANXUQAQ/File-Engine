@@ -541,7 +541,8 @@ public class SearchBar {
             String start = "cmd.exe /c start " + shortcutGenPath.substring(0, 2);
             String end = "\"" + shortcutGenPath.substring(2) + "\"";
             String commandToGenLnk = start + end + " /target:" + "\"" + fileOrFolderPath + "\"" + " " + "/shortcut:" + "\"" + writeShortCutPath + "\"" + " /workingdir:" + "\"" + fileOrFolderPath.substring(0, fileOrFolderPath.lastIndexOf(File.separator)) + "\"";
-            Runtime.getRuntime().exec(new String(commandToGenLnk.getBytes(), System.getProperty("sun.jnu.encoding")));
+//            String encoding = System.getProperty("sun.jnu.encoding");
+            Runtime.getRuntime().exec(commandToGenLnk);
         }
         if (isNotifyUser) {
             eventManagement.putEvent(new ShowTaskBarMessageEvent(
