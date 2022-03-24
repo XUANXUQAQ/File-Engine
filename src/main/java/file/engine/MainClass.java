@@ -271,6 +271,7 @@ public class MainClass {
             EventManagement eventManagement = EventManagement.getInstance();
             eventManagement.registerAllHandler();
             eventManagement.registerAllListener();
+            eventManagement.releaseClassesList();
             // 发送读取所有配置时间，初始化配置
             ReadConfigsEvent readConfigsEvent = new ReadConfigsEvent();
             eventManagement.putEvent(readConfigsEvent);
