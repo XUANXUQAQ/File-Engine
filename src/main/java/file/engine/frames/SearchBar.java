@@ -43,8 +43,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -1308,7 +1306,7 @@ public class SearchBar {
                                     try {
                                         String writePath = GetHandle.INSTANCE.getExplorerPath();
                                         if (writePath != null && !writePath.isEmpty()) {
-                                            writePath = new String(writePath.getBytes(Charset.defaultCharset()), StandardCharsets.UTF_8);
+//                                            writePath = new String(writePath.getBytes(Charset.defaultCharset()), StandardCharsets.UTF_8);
                                             createShortCut(finalF.getAbsolutePath(), writePath + File.separator + finalF.getName(), AllConfigs.getInstance().isShowTipOnCreatingLnk());
                                         }
                                     } catch (Exception exception) {
