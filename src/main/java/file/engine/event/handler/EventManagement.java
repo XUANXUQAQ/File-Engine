@@ -11,11 +11,18 @@ import file.engine.utils.ProcessUtil;
 import file.engine.utils.clazz.scan.ClassScannerUtil;
 import file.engine.utils.system.properties.IsDebug;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
@@ -33,10 +40,21 @@ public class EventManagement {
     private final ConcurrentHashMap<String, ConcurrentLinkedQueue<Method>> EVENT_LISTENER_MAP = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, BiConsumer<Class<?>, Object>> PLUGIN_EVENT_HANDLER_MAP = new ConcurrentHashMap<>();
     private final AtomicInteger failureEventNum = new AtomicInteger(0);
+    private HashSet<String> classesList = new HashSet<>();
 
     private EventManagement() {
         startBlockEventHandler();
         startAsyncEventHandler();
+        try (BufferedReader reader = new BufferedReader(
+                new InputStreamReader(
+                        Objects.requireNonNull(EventManagement.class.getResourceAsStream("/classes.list")), StandardCharsets.UTF_8))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                classesList.add(line);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public static EventManagement getInstance() {
@@ -273,7 +291,7 @@ public class EventManagement {
      */
     public void registerAllHandler() {
         try {
-            ClassScannerUtil.searchAndRun(EventRegister.class, (annotationClass, method) -> {
+            BiConsumer<Class<? extends Annotation>, Method> doFunction = (annotationClass, method) -> {
                 EventRegister annotation = (EventRegister) method.getAnnotation(annotationClass);
                 if (IsDebug.isDebug()) {
                     Class<?>[] parameterTypes = method.getParameterTypes();
@@ -285,7 +303,23 @@ public class EventManagement {
                     }
                 }
                 registerHandler(annotation.registerClass().getName(), method);
-            });
+            };
+            if (IsDebug.isDebug()) {
+                ClassScannerUtil.searchAndRun(EventRegister.class, doFunction);
+            } else {
+                Class<?> c;
+                Method[] methods;
+                for (String className : classesList) {
+                    c = Class.forName(className);
+                    methods = c.getDeclaredMethods();
+                    for (Method eachMethod : methods) {
+                        eachMethod.setAccessible(true);
+                        if (eachMethod.isAnnotationPresent(EventRegister.class)) {
+                            doFunction.accept(EventRegister.class, eachMethod);
+                        }
+                    }
+                }
+            }
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
@@ -296,7 +330,7 @@ public class EventManagement {
      */
     public void registerAllListener() {
         try {
-            ClassScannerUtil.searchAndRun(EventListener.class, (annotationClass, method) -> {
+            BiConsumer<Class<? extends Annotation>, Method> doFunction = (annotationClass, method) -> {
                 EventListener annotation = (EventListener) method.getAnnotation(annotationClass);
                 if (IsDebug.isDebug()) {
                     Class<?>[] parameterTypes = method.getParameterTypes();
@@ -310,10 +344,30 @@ public class EventManagement {
                 for (Class<? extends Event> aClass : annotation.listenClass()) {
                     registerListener(aClass.getName(), method);
                 }
-            });
+            };
+            if (IsDebug.isDebug()) {
+                ClassScannerUtil.searchAndRun(EventListener.class, doFunction);
+            } else {
+                Class<?> c;
+                Method[] methods;
+                for (String className : classesList) {
+                    c = Class.forName(className);
+                    methods = c.getDeclaredMethods();
+                    for (Method eachMethod : methods) {
+                        eachMethod.setAccessible(true);
+                        if (eachMethod.isAnnotationPresent(EventListener.class)) {
+                            doFunction.accept(EventListener.class, eachMethod);
+                        }
+                    }
+                }
+            }
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }
+    }
+
+    public void releaseClassesList() {
+        classesList = null;
     }
 
     /**
@@ -324,7 +378,7 @@ public class EventManagement {
      */
     private void registerHandler(String eventType, Method handler) {
         if (IsDebug.isDebug()) {
-            System.err.println("注册监听器" + eventType);
+            System.err.println("注册处理器" + eventType);
         }
         if (EVENT_HANDLER_MAP.containsKey(eventType)) {
             throw new RuntimeException("重复的监听器：" + eventType + "方法：" + handler);
@@ -338,6 +392,9 @@ public class EventManagement {
      * @param eventType 需要监听的任务类型
      */
     private void registerListener(String eventType, Method todo) {
+        if (IsDebug.isDebug()) {
+            System.err.println("注册监听器" + eventType);
+        }
         ConcurrentLinkedQueue<Method> queue = EVENT_LISTENER_MAP.get(eventType);
         if (queue == null) {
             queue = new ConcurrentLinkedQueue<>();
