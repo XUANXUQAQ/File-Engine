@@ -70,8 +70,7 @@ public enum CachedThreadPoolUtil {
         private final AtomicInteger threadNumber = new AtomicInteger(1);
 
         NamedThreadFactory() {
-            SecurityManager s = System.getSecurityManager();
-            group = (s != null) ? s.getThreadGroup() : Thread.currentThread().getThreadGroup();
+            group = Thread.currentThread().getThreadGroup();
         }
 
         @Override
