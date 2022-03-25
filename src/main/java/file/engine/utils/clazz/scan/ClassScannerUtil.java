@@ -2,10 +2,13 @@ package file.engine.utils.clazz.scan;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.function.BiConsumer;
 
 public class ClassScannerUtil {
+
+    private static HashSet<String> classWithAnnotation = null;
 
     private static Set<String> searchClasses(String packageName) {
         return ScannerExecutor.getInstance().search(packageName);
@@ -23,6 +26,9 @@ public class ClassScannerUtil {
         Set<String> classNames = searchClasses(packageName);
         Class<?> c;
         Method[] methods;
+        if (classWithAnnotation == null) {
+            classWithAnnotation = new HashSet<>();
+        }
         if (classNames == null || classNames.isEmpty()) {
             return;
         }
@@ -33,8 +39,13 @@ public class ClassScannerUtil {
                 eachMethod.setAccessible(true);
                 if (eachMethod.isAnnotationPresent(cl)) {
                     doFunction.accept(cl, eachMethod);
+                    classWithAnnotation.add(className);
                 }
             }
         }
+    }
+
+    public static void printClassesWithAnnotation() {
+        System.out.println(classWithAnnotation);
     }
 }

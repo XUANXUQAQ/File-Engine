@@ -18,6 +18,7 @@ import file.engine.services.DatabaseService;
 import file.engine.services.TranslateService;
 import file.engine.services.plugin.system.PluginService;
 import file.engine.utils.*;
+import file.engine.utils.clazz.scan.ClassScannerUtil;
 import file.engine.utils.file.FileUtil;
 import file.engine.utils.system.properties.IsDebug;
 import file.engine.utils.system.properties.IsPreview;
@@ -271,6 +272,9 @@ public class MainClass {
             EventManagement eventManagement = EventManagement.getInstance();
             eventManagement.registerAllHandler();
             eventManagement.registerAllListener();
+            if (IsDebug.isDebug()) {
+                ClassScannerUtil.printClassesWithAnnotation();
+            }
             eventManagement.releaseClassesList();
             // 发送读取所有配置时间，初始化配置
             ReadConfigsEvent readConfigsEvent = new ReadConfigsEvent();
