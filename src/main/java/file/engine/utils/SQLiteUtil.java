@@ -26,6 +26,7 @@ import java.util.concurrent.TimeUnit;
 public class SQLiteUtil {
     private static final SQLiteConfig sqLiteConfig = new SQLiteConfig();
     private static final ConcurrentHashMap<String, ConnectionWrapper> connectionPool = new ConcurrentHashMap<>();
+    private static String currentDatabaseDir = "data";
 
     static {
         CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
@@ -107,7 +108,10 @@ public class SQLiteUtil {
      * @throws SQLException 失败
      */
     public static PreparedStatement getPreparedStatement(String sql, String key) throws SQLException {
-        checkEmpty(key);
+        if (isConnectionInitialized(key)) {
+            File data = new File(currentDatabaseDir, key + ".db");
+            initConnection("jdbc:sqlite:" + data.getAbsolutePath(), key);
+        }
         return getFromConnectionPool(key).prepareStatement(sql);
     }
 
@@ -118,17 +122,18 @@ public class SQLiteUtil {
      * @throws SQLException 失败
      */
     public static Statement getStatement(String key) throws SQLException {
-        checkEmpty(key);
+        if (!isConnectionInitialized(key)) {
+            File data = new File(currentDatabaseDir, key + ".db");
+            initConnection("jdbc:sqlite:" + data.getAbsolutePath(), key);
+        }
         return getFromConnectionPool(key).createStatement();
     }
 
-    private static void checkEmpty(String key) {
+    private static boolean isConnectionInitialized(String key) {
         if (connectionPool.isEmpty()) {
             throw new RuntimeException("The connection must be initialized first, call initConnection(String url)");
         }
-        if (!connectionPool.containsKey(key)) {
-            throw new RuntimeException("key doesn't exist");
-        }
+        return connectionPool.containsKey(key);
     }
 
     public static void initConnection(String url, String key) throws SQLException {
@@ -259,6 +264,7 @@ public class SQLiteUtil {
     }
 
     public static void initAllConnections(String dir) {
+        currentDatabaseDir = dir;
         deleteMalFormedFile();
         String[] split = RegexUtil.comma.split(initialize());
         ArrayList<File> malformedFiles = new ArrayList<>();
