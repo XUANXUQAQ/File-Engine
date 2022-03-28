@@ -245,9 +245,9 @@ public class MainClass {
         System.setProperty("file.encoding", "UTF-8");
         System.setProperty("sun.java2d.noddraw", "true");
 //        System.setProperty("sun.java2d.opengl", "true");
-        System.setProperty("jna.library.path", "user");
+//        System.setProperty("jna.library.path", "user");
         System.setProperty("swing.aatext", "true");
-        System.setProperty("jna.debug_load", "false");
+//        System.setProperty("jna.debug_load", "false");
     }
 
     public static void main(String[] args) {
@@ -276,7 +276,7 @@ public class MainClass {
                 ClassScannerUtil.printClassesWithAnnotation();
             }
             eventManagement.releaseClassesList();
-            // 发送读取所有配置时间，初始化配置
+            // 发送读取所有配置事件，初始化配置
             ReadConfigsEvent readConfigsEvent = new ReadConfigsEvent();
             eventManagement.putEvent(readConfigsEvent);
             if (eventManagement.waitForEvent(readConfigsEvent)) {
