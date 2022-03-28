@@ -15,7 +15,7 @@
 #pragma comment(lib, "shell32.lib")
 #pragma comment(lib, "Ole32.lib")
 #pragma comment(lib, "User32.lib")
-
+#define MAX_LOG_PRESERVE_DAYS 5
 // #define TEST
 
 #ifndef TEST
@@ -32,6 +32,7 @@ char g_file_engine_working_dir[1000];
 char g_jre_path[1000];
 char g_update_signal_file[1000];
 char g_new_file_engine_jar_path[1000];
+char g_log_file_path[1000];
 #ifdef TEST
 int g_check_time_threshold = 1;
 #else
@@ -54,8 +55,12 @@ void update();
 void init_path();
 bool is_launched();
 std::wstring get_self_name();
-void deleteJreDir();
-bool removeDir(const char* szFileDir);
+void delete_jre_dir();
+bool remove_dir(const char* szFileDir);
+std::string get_time();
+time_t convert(int year, int month, int day);
+int get_days(const char* from, const char* to);
+void check_logs();
 
 int main()
 {
@@ -64,6 +69,7 @@ int main()
 		return 0;
 	}
 	init_path();
+	check_logs();
 #ifdef TEST
 	std::cout << "file-engine.jar path :  " << g_file_engine_jar_path << std::endl;
 	std::cout << "jre path: " << g_jre_path << std::endl;
@@ -111,6 +117,20 @@ inline void init_path()
 	const std::string tmp_current_dir(current_dir);
 	strcpy_s(current_dir, tmp_current_dir.substr(0, tmp_current_dir.find_last_of('\\')).c_str());
 
+	std::string _file_engine_log_path(current_dir);
+	_file_engine_log_path += "\\logs\\";
+	strcpy_s(g_log_file_path, _file_engine_log_path.c_str());
+	if (is_dir_not_exist(g_log_file_path))
+	{
+		if (_mkdir(g_log_file_path))
+		{
+			std::string msg;
+			msg.append("Create dir ").append(g_log_file_path).append(" failed");
+			MessageBoxA(nullptr, msg.c_str(), "Error", MB_OK);
+			exit(1);
+		}
+	}
+
 	std::string file_engine_jar_dir_string(current_dir);
 	file_engine_jar_dir_string += "\\data\\";
 	strcpy_s(g_file_engine_working_dir, file_engine_jar_dir_string.c_str());
@@ -135,9 +155,65 @@ inline void init_path()
 	strcpy_s(g_update_signal_file, update_signal_file.c_str());
 }
 
-inline void deleteJreDir()
+void check_logs()
 {
-	removeDir(g_jre_path);
+	WIN32_FIND_DATAA FindFileData;
+	char tmp[1000];
+	strcpy_s(tmp, g_log_file_path);
+	std::string _log_dir(tmp);
+	_log_dir += "*";
+	strcpy_s(tmp, _log_dir.c_str());
+
+	HANDLE hFind = FindFirstFileA(tmp, &FindFileData);
+
+	if (hFind == INVALID_HANDLE_VALUE) //如果hFind句柄创建失败，输出错误信息
+	{
+		FindClose(hFind);
+		return;
+	}
+	while (FindNextFileA(hFind, &FindFileData) != 0) //当文件或者文件夹存在时
+	{
+		if ((FindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0 && strcmp(FindFileData.cFileName, ".") == 0
+			|| strcmp(FindFileData.cFileName, "..") == 0) //判断是文件夹&&表示为"."||表示为"."
+		{
+			continue;
+		}
+		if ((FindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0) //如果不是文件夹
+		{
+			const int days = get_days(FindFileData.cFileName, get_time().c_str());
+			if (days > MAX_LOG_PRESERVE_DAYS)
+			{
+				std::string full_path(g_log_file_path);
+				full_path += FindFileData.cFileName;
+				DeleteFileA(full_path.c_str());
+			}
+		}
+	}
+	FindClose(hFind);
+}
+
+inline void delete_jre_dir()
+{
+	remove_dir(g_jre_path);
+}
+
+inline time_t convert(int year, int month, int day)
+{
+	tm info = {0};
+	info.tm_year = year - 1900;
+	info.tm_mon = month - 1;
+	info.tm_mday = day;
+	return mktime(&info);
+}
+
+inline int get_days(const char* from, const char* to)
+{
+	int year, month, day;
+	sscanf(from, "%d-%d-%d.log", &year, &month, &day);
+	const int fromSecond = static_cast<int>(convert(year, month, day));
+	sscanf(to, "%d-%d-%d", &year, &month, &day);
+	const int toSecond = static_cast<int>(convert(year, month, day));
+	return (toSecond - fromSecond) / 24 / 3600;
 }
 
 /**
@@ -146,7 +222,7 @@ inline void deleteJreDir()
 void release_all()
 {
 	// 删除jre文件夹
-	deleteJreDir();
+	delete_jre_dir();
 	if (release_resources())
 	{
 		extract_zip();
@@ -253,11 +329,25 @@ void restart_file_engine(bool isIgnoreCloseFile)
 	command.append("\"");
 	command.append(jre.substr(2));
 	command.append("bin\\java.exe\" ").append(g_jvm_parameters).append(" -jar File-Engine.jar").append(" 1> normal.log")
-	       .append(" 2> error.log");
+	       .append(" 2>> ").append("\"").append(g_log_file_path).append(get_time()).append(".log").append("\"");
 #ifdef TEST
 	std::cout << "running command: " << command << std::endl;
 #endif
 	ShellExecuteA(nullptr, "open", "cmd", command.c_str(), g_file_engine_working_dir, SW_HIDE);
+}
+
+/**
+ * 获取当前时间
+ */
+std::string get_time()
+{
+	time_t timep;
+	time(&timep);
+	tm tmpTime;
+	localtime_s(&tmpTime, &timep);
+	char tmp[64];
+	strftime(tmp, sizeof(tmp), "%Y-%m-%d", &tmpTime);
+	return tmp;
 }
 
 /**
@@ -441,7 +531,7 @@ BOOL find_process()
 	return ret;
 }
 
-bool removeDir(const char* szFileDir)
+bool remove_dir(const char* szFileDir)
 {
 	std::string strDir = szFileDir;
 	if (strDir.at(strDir.length() - 1) != '\\')
@@ -456,13 +546,14 @@ bool removeDir(const char* szFileDir)
 		{
 			if (_stricmp(wfd.cFileName, ".") != 0 &&
 				_stricmp(wfd.cFileName, "..") != 0)
-				removeDir((strDir + wfd.cFileName).c_str());
+				remove_dir((strDir + wfd.cFileName).c_str());
 		}
 		else
 		{
 			DeleteFileA((strDir + wfd.cFileName).c_str());
 		}
-	} while (FindNextFileA(hFind, &wfd));
+	}
+	while (FindNextFileA(hFind, &wfd));
 	FindClose(hFind);
 	RemoveDirectoryA(szFileDir);
 	return true;
