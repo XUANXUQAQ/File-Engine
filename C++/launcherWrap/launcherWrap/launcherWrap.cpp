@@ -16,7 +16,7 @@
 #pragma comment(lib, "Ole32.lib")
 #pragma comment(lib, "User32.lib")
 #define MAX_LOG_PRESERVE_DAYS 5
-// #define TEST
+//#define TEST
 
 #ifndef TEST
 #pragma comment( linker, "/subsystem:windows /entry:mainCRTStartup" )
@@ -77,7 +77,18 @@ int main()
 	std::cout << "new file-engine.jar path: " << g_new_file_engine_jar_path << std::endl;
 	std::cout << "update signal file: " << g_update_signal_file << std::endl;
 	std::cout << "close signal file : " << g_close_signal_file << std::endl;
+	std::cout << "log file path: " << g_log_file_path << std::endl;
 #endif
+	if (is_dir_not_exist(g_log_file_path))
+	{
+		if (_mkdir(g_log_file_path))
+		{
+			std::string msg;
+			msg.append("Create dir ").append(g_log_file_path).append(" failed");
+			MessageBoxA(nullptr, msg.c_str(), "Error", MB_OK);
+			return 0;
+		}
+	}
 	if (is_dir_not_exist(g_file_engine_working_dir))
 	{
 		if (_mkdir(g_file_engine_working_dir))
@@ -120,16 +131,6 @@ inline void init_path()
 	std::string _file_engine_log_path(current_dir);
 	_file_engine_log_path += "\\logs\\";
 	strcpy_s(g_log_file_path, _file_engine_log_path.c_str());
-	if (is_dir_not_exist(g_log_file_path))
-	{
-		if (_mkdir(g_log_file_path))
-		{
-			std::string msg;
-			msg.append("Create dir ").append(g_log_file_path).append(" failed");
-			MessageBoxA(nullptr, msg.c_str(), "Error", MB_OK);
-			exit(1);
-		}
-	}
 
 	std::string file_engine_jar_dir_string(current_dir);
 	file_engine_jar_dir_string += "\\data\\";
@@ -369,7 +370,8 @@ bool is_close_exist()
 
 bool is_dir_not_exist(const char* path)
 {
-	return ENOENT == _access(path, 0);
+	const int tmp = _access(path, 0);
+	return -1 == tmp;
 }
 
 bool is_file_exist(const char* file_path)
