@@ -29,7 +29,6 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -43,7 +42,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 public class DatabaseService {
     private final ConcurrentLinkedQueue<SQLWithTaskId> commandQueue = new ConcurrentLinkedQueue<>();
@@ -134,8 +132,8 @@ public class DatabaseService {
      * 获取数据库缓存条目数量，用于判断软件是否还能继续写入缓存
      */
     private void initCacheNum() {
-        try (PreparedStatement stmt = SQLiteUtil.getPreparedStatement("SELECT COUNT(PATH) FROM cache;", "cache");
-             ResultSet resultSet = stmt.executeQuery()) {
+        try (Statement stmt = SQLiteUtil.getStatement("cache");
+             ResultSet resultSet = stmt.executeQuery("SELECT COUNT(PATH) FROM cache;")) {
             cacheNum.set(resultSet.getInt(1));
         } catch (Exception e) {
             e.printStackTrace();
@@ -332,8 +330,8 @@ public class DatabaseService {
      */
     private void prepareCache() {
         String eachLine;
-        try (PreparedStatement statement = SQLiteUtil.getPreparedStatement("SELECT PATH FROM cache;", "cache");
-             ResultSet resultSet = statement.executeQuery()) {
+        try (Statement statement = SQLiteUtil.getStatement("cache");
+             ResultSet resultSet = statement.executeQuery("SELECT PATH FROM cache;")) {
             while (resultSet.next()) {
                 eachLine = resultSet.getString("PATH");
                 cacheSet.add(eachLine);
@@ -389,8 +387,8 @@ public class DatabaseService {
         if (isStop.get()) {
             return count;
         }
-        try (PreparedStatement stmt = SQLiteUtil.getPreparedStatement(sql, disk);
-             ResultSet resultSet = stmt.executeQuery()) {
+        try (Statement stmt = SQLiteUtil.getStatement(disk);
+             ResultSet resultSet = stmt.executeQuery(sql)) {
             String each;
             while (resultSet.next()) {
                 //结果太多则不再进行搜索
@@ -841,8 +839,8 @@ public class DatabaseService {
      */
     private void initPriority() {
         priorityMap.clear();
-        try (PreparedStatement pStmt = SQLiteUtil.getPreparedStatement("SELECT * FROM priority order by PRIORITY desc;", "cache");
-             ResultSet resultSet = pStmt.executeQuery()) {
+        try (Statement stmt = SQLiteUtil.getStatement("cache");
+             ResultSet resultSet = stmt.executeQuery("SELECT * FROM priority order by PRIORITY desc;")) {
             while (resultSet.next()) {
                 String suffix = resultSet.getString("SUFFIX");
                 String priority = resultSet.getString("PRIORITY");
@@ -865,7 +863,7 @@ public class DatabaseService {
      * @return 优先级
      */
     private int getPriorityBySuffix(String suffix) {
-        List<Pair> result = priorityMap.stream().filter(each -> each.suffix.equals(suffix)).collect(Collectors.toList());
+        List<Pair> result = priorityMap.stream().filter(each -> each.suffix.equals(suffix)).toList();
         if (result.isEmpty()) {
             if (!"defaultPriority".equals(suffix)) {
                 return getPriorityBySuffix("defaultPriority");
@@ -1285,8 +1283,8 @@ public class DatabaseService {
 
     private HashMap<String, Integer> queryAllWeights() {
         HashMap<String, Integer> stringIntegerHashMap = new HashMap<>();
-        try (PreparedStatement pStmt = SQLiteUtil.getPreparedStatement("SELECT TABLE_NAME, TABLE_WEIGHT FROM weight", "weight");
-             ResultSet resultSet = pStmt.executeQuery()) {
+        try (Statement pStmt = SQLiteUtil.getStatement("weight");
+             ResultSet resultSet = pStmt.executeQuery("SELECT TABLE_NAME, TABLE_WEIGHT FROM weight;")) {
             while (resultSet.next()) {
                 String tableName = resultSet.getString("TABLE_NAME");
                 int weight = resultSet.getInt("TABLE_WEIGHT");
@@ -1471,8 +1469,8 @@ public class DatabaseService {
         databaseService.setStatus(Constants.Enums.DatabaseStatus.VACUUM);
         //执行VACUUM命令
         for (String eachDisk : RegexUtil.comma.split(AllConfigs.getInstance().getAvailableDisks())) {
-            try (PreparedStatement stmt = SQLiteUtil.getPreparedStatement("VACUUM;", String.valueOf(eachDisk.charAt(0)))) {
-                stmt.execute();
+            try (Statement stmt = SQLiteUtil.getStatement(String.valueOf(eachDisk.charAt(0)))) {
+                stmt.execute("VACUUM;");
             } catch (Exception ex) {
                 ex.printStackTrace();
             } finally {
