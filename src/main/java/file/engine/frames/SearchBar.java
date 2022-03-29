@@ -3569,12 +3569,12 @@ public class SearchBar {
                                 cmdSet.add(":version;" + translateService.getTranslation("View Version"));
                                 String finalText = text;
                                 cmdSet.forEach(i -> {
-                                    if (i.toLowerCase().contains(finalText.substring(1))) {
+                                    String[] cmdInfo = semicolon.split(i);
+                                    if (cmdInfo[0].contains(finalText.substring(1))) {
                                         listResultsNum.incrementAndGet();
                                         String result = translateService.getTranslation("Run command") + i;
                                         listResults.add(result);
                                     }
-                                    String[] cmdInfo = semicolon.split(i);
                                     if (cmdInfo[0].equals(finalText)) {
                                         detectShowingModeAndClose();
                                         openWithoutAdmin(cmdInfo[1]);
