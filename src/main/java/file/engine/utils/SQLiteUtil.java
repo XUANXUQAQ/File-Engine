@@ -86,14 +86,12 @@ public class SQLiteUtil {
         if (connectionWrapper == null) {
             throw new RuntimeException("no connection named " + key);
         }
-        if (connectionWrapper.connection.isClosed()) {
-            synchronized (SQLiteUtil.class) {
-                if (connectionWrapper.connection.isClosed()) {
-                    connectionWrapper.connection = DriverManager.getConnection(connectionWrapper.url, sqLiteConfig.toProperties());
-                    System.out.println("已恢复连接 " + connectionWrapper.url);
-                }
-                connectionWrapper.usingTimeMills = System.currentTimeMillis();
+        synchronized (SQLiteUtil.class) {
+            if (connectionWrapper.connection.isClosed()) {
+                connectionWrapper.connection = DriverManager.getConnection(connectionWrapper.url, sqLiteConfig.toProperties());
+                System.out.println("已恢复连接 " + connectionWrapper.url);
             }
+            connectionWrapper.usingTimeMills = System.currentTimeMillis();
         }
         return connectionWrapper.connection;
     }
@@ -106,7 +104,7 @@ public class SQLiteUtil {
      * @throws SQLException 失败
      */
     public static PreparedStatement getPreparedStatement(String sql, String key) throws SQLException {
-        if (isConnectionInitialized(key)) {
+        if (isConnectionNotInitialized(key)) {
             File data = new File(currentDatabaseDir, key + ".db");
             initConnection("jdbc:sqlite:" + data.getAbsolutePath(), key);
         }
@@ -120,18 +118,18 @@ public class SQLiteUtil {
      * @throws SQLException 失败
      */
     public static Statement getStatement(String key) throws SQLException {
-        if (!isConnectionInitialized(key)) {
+        if (isConnectionNotInitialized(key)) {
             File data = new File(currentDatabaseDir, key + ".db");
             initConnection("jdbc:sqlite:" + data.getAbsolutePath(), key);
         }
         return getFromConnectionPool(key).createStatement();
     }
 
-    private static boolean isConnectionInitialized(String key) {
+    private static boolean isConnectionNotInitialized(String key) {
         if (connectionPool.isEmpty()) {
             throw new RuntimeException("The connection must be initialized first, call initConnection(String url)");
         }
-        return connectionPool.containsKey(key);
+        return !connectionPool.containsKey(key);
     }
 
     public static void initConnection(String url, String key) throws SQLException {
