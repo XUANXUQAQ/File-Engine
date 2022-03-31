@@ -14,8 +14,8 @@ public class PathMatchUtil {
      * 判断文件路径是否满足当前匹配结果（该方法由check方法使用），检查文件路径使用check方法。
      *
      * @param path         文件路径
-     * @param isIgnoreCase 是否忽略大小谢
-     * @return true如果匹配成功
+     * @param isIgnoreCase 是否忽略大小写
+     * @return 如果匹配成功则返回true
      * @see #check(String, String[], String, String[])  ;
      */
     private static boolean notMatched(String path, boolean isIgnoreCase, String[] keywords) {
