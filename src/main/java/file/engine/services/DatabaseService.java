@@ -42,6 +42,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 public class DatabaseService {
     private final ConcurrentLinkedQueue<SQLWithTaskId> commandQueue = new ConcurrentLinkedQueue<>();
@@ -863,7 +864,7 @@ public class DatabaseService {
      * @return 优先级
      */
     private int getPriorityBySuffix(String suffix) {
-        List<Pair> result = priorityMap.stream().filter(each -> each.suffix.equals(suffix)).toList();
+        List<Pair> result = priorityMap.stream().filter(each -> each.suffix.equals(suffix)).collect(Collectors.toList());
         if (result.isEmpty()) {
             if (!"defaultPriority".equals(suffix)) {
                 return getPriorityBySuffix("defaultPriority");
