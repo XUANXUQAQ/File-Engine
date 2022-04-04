@@ -9,14 +9,27 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public enum CachedThreadPoolUtil {
     INSTANCE;
-    private final ExecutorService cachedThreadPool = new ThreadPoolExecutor(
-            0,
-            200,
-            60L,
-            TimeUnit.SECONDS,
-            new SynchronousQueue<>(),
-            new NamedThreadFactory());
+    private final ExecutorService cachedThreadPool;
     private final AtomicBoolean isShutdown = new AtomicBoolean(false);
+
+    CachedThreadPoolUtil() {
+        if (IsDebug.isDebug()) {
+            cachedThreadPool = new ThreadPoolExecutor(
+                    0,
+                    200,
+                    60L,
+                    TimeUnit.SECONDS,
+                    new SynchronousQueue<>(),
+                    new NamedThreadFactory());
+        } else {
+            cachedThreadPool = new ThreadPoolExecutor(
+                    0,
+                    200,
+                    60L,
+                    TimeUnit.SECONDS,
+                    new SynchronousQueue<>());
+        }
+    }
 
     public static CachedThreadPoolUtil getInstance() {
         return INSTANCE;
@@ -66,7 +79,6 @@ public enum CachedThreadPoolUtil {
 
     private static class NamedThreadFactory implements ThreadFactory {
         private final ThreadGroup group;
-        private static final AtomicInteger poolNumber = new AtomicInteger(1);
         private final AtomicInteger threadNumber = new AtomicInteger(1);
 
         NamedThreadFactory() {
@@ -75,10 +87,7 @@ public enum CachedThreadPoolUtil {
 
         @Override
         public Thread newThread(Runnable r) {
-            String name = "pool-" + poolNumber.incrementAndGet() + "-thread-" + threadNumber.getAndIncrement();
-            if (IsDebug.isDebug()) {
-                name = getStackTraceElement().toString() + threadNumber.getAndIncrement();
-            }
+            String name = getStackTraceElement().toString() + threadNumber.getAndIncrement();
             Thread t = new Thread(group, r, name, 0);
             if (t.isDaemon())
                 t.setDaemon(false);

@@ -639,8 +639,7 @@ public class SettingsFrame {
             if (Desktop.isDesktopSupported()) {
                 desktop = Desktop.getDesktop();
                 try {
-                    EventManagement.getInstance().putEvent(new ShowTaskBarMessageEvent(TRANSLATE_SERVICE.getTranslation("Info"), TRANSLATE_SERVICE.getTranslation("Password") + ": fxzj"));
-                    desktop.browse(new URI("https://file-engine.lanzous.com/b00z9337i"));
+                    desktop.browse(new URI("https://github.com/XUANXUQAQ/File-Engine/releases/"));
                 } catch (IOException | URISyntaxException ioException) {
                     ioException.printStackTrace();
                 }
