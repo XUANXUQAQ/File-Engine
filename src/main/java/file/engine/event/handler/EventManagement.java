@@ -41,6 +41,7 @@ public class EventManagement {
     private final ConcurrentHashMap<String, BiConsumer<Class<?>, Object>> PLUGIN_EVENT_HANDLER_MAP = new ConcurrentHashMap<>();
     private final AtomicInteger failureEventNum = new AtomicInteger(0);
     private HashSet<String> classesList = new HashSet<>();
+    public static final int asyncThreadNum = 2;
 
     private EventManagement() {
         startBlockEventHandler();
@@ -410,7 +411,7 @@ public class EventManagement {
      */
     private void startAsyncEventHandler() {
         CachedThreadPoolUtil threadPoolUtil = CachedThreadPoolUtil.getInstance();
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < asyncThreadNum; i++) {
             int finalI = i;
             threadPoolUtil.executeTask(() -> {
                 final boolean isDebug = IsDebug.isDebug();
