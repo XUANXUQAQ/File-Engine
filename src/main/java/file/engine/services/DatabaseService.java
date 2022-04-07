@@ -64,6 +64,8 @@ public class DatabaseService {
     private final ConcurrentSkipListSet<String> cacheSet = new ConcurrentSkipListSet<>();
     private final AtomicInteger searchThreadCount = new AtomicInteger(0);
     private final AtomicLong startSearchTimeMills = new AtomicLong(0);
+    @SuppressWarnings("FieldCanBeLocal")
+    private final int MAX_TEMP_QUERY_RESULT_CACHE = 5000;
 
     private static volatile DatabaseService INSTANCE = null;
 
@@ -388,19 +390,22 @@ public class DatabaseService {
         if (isStop.get()) {
             return count;
         }
+        ArrayList<String> tmpQueryResultsCache = new ArrayList<>();
         try (Statement stmt = SQLiteUtil.getStatement(disk);
              ResultSet resultSet = stmt.executeQuery(sql)) {
-            String each;
             while (resultSet.next()) {
-                //结果太多则不再进行搜索
-                //用户重新输入了信息
-                if (isStop.get()) {
-                    return count;
-                }
-                each = resultSet.getString("PATH");
-                if (checkIsMatchedAndAddToList(each, container)) {
-                    count++;
-                }
+                int i = 0;
+                do {
+                    //结果太多则不再进行搜索
+                    //用户重新输入了信息
+                    if (isStop.get()) {
+                        return count;
+                    }
+                    tmpQueryResultsCache.add(resultSet.getString("PATH"));
+                    i++;
+                } while (resultSet.next() && i < MAX_TEMP_QUERY_RESULT_CACHE);
+                count += tmpQueryResultsCache.stream().filter(each -> checkIsMatchedAndAddToList(each, container)).count();
+                tmpQueryResultsCache.clear();
             }
         } catch (SQLException e) {
             System.err.println("error sql : " + sql);
