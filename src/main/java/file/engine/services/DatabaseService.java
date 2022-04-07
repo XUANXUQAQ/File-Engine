@@ -390,7 +390,7 @@ public class DatabaseService {
         if (isStop.get()) {
             return count;
         }
-        ArrayList<String> tmpQueryResultsCache = new ArrayList<>();
+        ArrayList<String> tmpQueryResultsCache = new ArrayList<>(MAX_TEMP_QUERY_RESULT_CACHE);
         try (Statement stmt = SQLiteUtil.getStatement(disk);
              ResultSet resultSet = stmt.executeQuery(sql)) {
             while (resultSet.next()) {
