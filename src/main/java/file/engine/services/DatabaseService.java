@@ -384,15 +384,14 @@ public class DatabaseService {
      *
      * @param sql sql
      */
-    private int searchAndAddToTempResults(String sql, ConcurrentSkipListSet<String> container, String disk) {
+    private int searchAndAddToTempResults(String sql, ConcurrentSkipListSet<String> container, Statement stmt) {
         int count = 0;
         //结果太多则不再进行搜索
         if (isStop.get()) {
             return count;
         }
         ArrayList<String> tmpQueryResultsCache = new ArrayList<>(MAX_TEMP_QUERY_RESULT_CACHE);
-        try (Statement stmt = SQLiteUtil.getStatement(disk);
-             ResultSet resultSet = stmt.executeQuery(sql)) {
+        try (ResultSet resultSet = stmt.executeQuery(sql)) {
             while (resultSet.next()) {
                 int i = 0;
                 do {
@@ -624,7 +623,8 @@ public class DatabaseService {
             allTaskStatus.set(allTaskStatus.or(currentTaskNum));
             containerMap.put(currentTaskNum.toString(), container);
             taskQueue.add(() -> {
-                try {
+                String diskStr = String.valueOf(eachDisk.charAt(0));
+                try (Statement stmt = SQLiteUtil.getStatement(diskStr)) {
                     Set<String> sqls = commandsMap.keySet();
                     for (String each : sqls) {
                         if (isStop.get()) {
@@ -638,13 +638,15 @@ public class DatabaseService {
                         int matchedNum = searchAndAddToTempResults(
                                 formattedSql,
                                 container,
-                                String.valueOf(eachDisk.charAt(0)));
+                                stmt);
                         long weight = Math.min(matchedNum, 5);
                         if (weight != 0L) {
                             //更新表的权重，每次搜索将会按照各个表的权重排序
                             updateTableWeight(commandsMap.get(each), weight);
                         }
                     }
+                } catch (SQLException e) {
+                    e.printStackTrace();
                 } finally {
                     //执行完后将对应的线程flag设为1
                     taskStatus.set(taskStatus.or(currentTaskNum));
