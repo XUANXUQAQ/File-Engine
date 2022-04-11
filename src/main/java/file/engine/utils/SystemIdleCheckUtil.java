@@ -24,14 +24,26 @@ public class SystemIdleCheckUtil {
     }
 
     /**
+     * 获取鼠标位置
+     * @return Point
+     */
+    private static Point getCursorPoint() {
+        return java.awt.MouseInfo.getPointerInfo().getLocation();
+    }
+
+    /**
+     * 开启检测
      * 持续检测鼠标位置，如果在一秒内移动过，则重置CursorCount.count
      */
-    private static void startGetCursorPosTimer() {
+    public static void start() {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
-            EventManagement eventManagement = EventManagement.getInstance();
+            EventManagement instance = EventManagement.getInstance();
             try {
                 Point lastPoint = new Point();
-                while (eventManagement.notMainExit()) {
+                while (instance.notMainExit()) {
+                    if (CursorCount.count.get() <= THRESHOLD) {
+                        CursorCount.count.incrementAndGet();
+                    }
                     Point point = getCursorPoint();
                     if (!point.equals(lastPoint)) {
                         CursorCount.count.set(0);
@@ -43,33 +55,5 @@ public class SystemIdleCheckUtil {
                 e.printStackTrace();
             }
         });
-    }
-
-    /**
-     * 获取鼠标位置
-     * @return Point
-     */
-    private static Point getCursorPoint() {
-        return java.awt.MouseInfo.getPointerInfo().getLocation();
-    }
-
-    /**
-     * 开启检测
-     */
-    public static void start() {
-        CachedThreadPoolUtil.getInstance().executeTask(() -> {
-            EventManagement instance = EventManagement.getInstance();
-            try {
-                while (instance.notMainExit()) {
-                    if (CursorCount.count.get() <= THRESHOLD) {
-                        CursorCount.count.incrementAndGet();
-                    }
-                    TimeUnit.SECONDS.sleep(1);
-                }
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        });
-        startGetCursorPosTimer();
     }
 }
