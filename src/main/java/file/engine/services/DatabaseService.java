@@ -390,10 +390,11 @@ public class DatabaseService {
         if (isStop.get()) {
             return count;
         }
-        ArrayList<String> tmpQueryResultsCache = new ArrayList<>(MAX_TEMP_QUERY_RESULT_CACHE);
+        LinkedList<String> tmpQueryResultsCache = new LinkedList<>();
         try (ResultSet resultSet = stmt.executeQuery(sql)) {
             while (resultSet.next()) {
                 int i = 0;
+                // 先将结果查询出来，再进行字符串匹配，提高吞吐量
                 do {
                     //结果太多则不再进行搜索
                     //用户重新输入了信息
@@ -403,8 +404,8 @@ public class DatabaseService {
                     tmpQueryResultsCache.add(resultSet.getString("PATH"));
                     i++;
                 } while (resultSet.next() && i < MAX_TEMP_QUERY_RESULT_CACHE);
-                count += tmpQueryResultsCache.stream().filter(each -> checkIsMatchedAndAddToList(each, container)).count();
-                tmpQueryResultsCache.clear();
+                count += tmpQueryResultsCache.parallelStream().filter(each -> checkIsMatchedAndAddToList(each, container)).count();
+                tmpQueryResultsCache = new LinkedList<>();
             }
         } catch (SQLException e) {
             System.err.println("error sql : " + sql);
