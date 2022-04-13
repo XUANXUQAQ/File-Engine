@@ -4,6 +4,7 @@ import file.engine.annotation.EventListener;
 import file.engine.annotation.EventRegister;
 import file.engine.event.handler.impl.BuildEventRequestEvent;
 import file.engine.event.handler.impl.plugin.EventProcessedBroadcastEvent;
+import file.engine.event.handler.impl.plugin.PluginRegisterEvent;
 import file.engine.event.handler.impl.stop.CloseEvent;
 import file.engine.event.handler.impl.stop.RestartEvent;
 import file.engine.utils.CachedThreadPoolUtil;
@@ -133,7 +134,12 @@ public class EventManagement {
             putEvent(buildEvent);
             return false;
         } else {
-            String eventClassName = event.getClass().getName();
+            String eventClassName;
+            if (event instanceof PluginRegisterEvent) {
+                eventClassName = ((PluginRegisterEvent) event).getClassFullName();
+            } else {
+                eventClassName = event.getClass().getName();
+            }
             BiConsumer<Class<?>, Object> pluginHandler = PLUGIN_EVENT_HANDLER_MAP.get(eventClassName);
             if (pluginHandler != null) {
                 pluginHandler.accept(event.getClass(), event);
@@ -169,6 +175,7 @@ public class EventManagement {
      * @param eventParams    事件所需参数
      * @return 事件实例
      */
+    @SuppressWarnings({"unchecked", "rawtypes"})
     private Event buildEvent(String eventClassName, Object[] eventParams) {
         try {
             Class<?> eventClass = Class.forName(eventClassName);
@@ -203,7 +210,24 @@ public class EventManagement {
                 return (Event) eventInstance;
             }
         } catch (ClassNotFoundException | InvocationTargetException | InstantiationException | IllegalAccessException e) {
-            e.printStackTrace();
+            // 注入字段
+            if (eventParams != null && eventParams.length == 3) {
+                try {
+                    PluginRegisterEvent registerEvent = new PluginRegisterEvent();
+                    registerEvent.setClassFullName(eventClassName);
+                    AtomicBoolean isBlock = (AtomicBoolean) eventParams[0];
+                    if (isBlock.get()) {
+                        registerEvent.setBlock();
+                    }
+                    registerEvent.setCallback((eventVar) -> ((Consumer) eventParams[1]).accept(eventVar));
+                    registerEvent.setErrorHandler((eventVar) -> ((Consumer) eventParams[2]).accept(eventVar));
+                    return registerEvent;
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            } else {
+                e.printStackTrace();
+            }
         }
         return null;
     }
@@ -446,7 +470,7 @@ public class EventManagement {
                             }
                         }
                     }
-                } catch (InterruptedException e) {
+                } catch (Exception e) {
                     e.printStackTrace();
                 } finally {
                     if (isDebug) {
@@ -507,7 +531,7 @@ public class EventManagement {
                         }
                     }
                 }
-            } catch (InterruptedException e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             } finally {
                 if (isDebug) {
