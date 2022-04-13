@@ -60,11 +60,11 @@ public class Event {
         return (T) returnValue;
     }
 
-    protected void setCallback(Consumer<Event> callback) {
+    public void setCallback(Consumer<Event> callback) {
         this.callback = callback;
     }
 
-    protected void setErrorHandler(Consumer<Event> errorHandler) {
+    public void setErrorHandler(Consumer<Event> errorHandler) {
         this.errorHandler = errorHandler;
     }
 
