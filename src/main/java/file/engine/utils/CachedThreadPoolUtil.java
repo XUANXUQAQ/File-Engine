@@ -14,7 +14,7 @@ public enum CachedThreadPoolUtil {
         cachedThreadPool = new ThreadPoolExecutor(
                 0,
                 200,
-                60L,
+                0,
                 TimeUnit.SECONDS,
                 new SynchronousQueue<>(),
                 Thread.ofVirtual().factory());
