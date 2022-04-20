@@ -1,11 +1,9 @@
 package file.engine.utils;
 
 import file.engine.configs.Constants;
-import file.engine.utils.system.properties.IsDebug;
 
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public enum CachedThreadPoolUtil {
     INSTANCE;
@@ -13,22 +11,13 @@ public enum CachedThreadPoolUtil {
     private final AtomicBoolean isShutdown = new AtomicBoolean(false);
 
     CachedThreadPoolUtil() {
-        if (IsDebug.isDebug()) {
-            cachedThreadPool = new ThreadPoolExecutor(
-                    0,
-                    200,
-                    60L,
-                    TimeUnit.SECONDS,
-                    new SynchronousQueue<>(),
-                    new NamedThreadFactory());
-        } else {
-            cachedThreadPool = new ThreadPoolExecutor(
-                    0,
-                    200,
-                    60L,
-                    TimeUnit.SECONDS,
-                    new SynchronousQueue<>());
-        }
+        cachedThreadPool = new ThreadPoolExecutor(
+                0,
+                200,
+                60L,
+                TimeUnit.SECONDS,
+                new SynchronousQueue<>(),
+                Thread.ofVirtual().factory());
     }
 
     public static CachedThreadPoolUtil getInstance() {
@@ -74,37 +63,6 @@ public enum CachedThreadPoolUtil {
             }
         } catch (InterruptedException e) {
             e.printStackTrace();
-        }
-    }
-
-    private static class NamedThreadFactory implements ThreadFactory {
-        private final ThreadGroup group;
-        private final AtomicInteger threadNumber = new AtomicInteger(1);
-
-        NamedThreadFactory() {
-            group = Thread.currentThread().getThreadGroup();
-        }
-
-        @Override
-        public Thread newThread(Runnable r) {
-            String name = getStackTraceElement().toString() + threadNumber.getAndIncrement();
-            Thread t = new Thread(group, r, name, 0);
-            if (t.isDaemon())
-                t.setDaemon(false);
-            if (t.getPriority() != Thread.NORM_PRIORITY)
-                t.setPriority(Thread.NORM_PRIORITY);
-            return t;
-        }
-
-        /**
-         * 用于在debug时查看在哪个位置发出的任务
-         * 由于执行任务的调用栈长度超过3，所以不会出现数组越界
-         *
-         * @return stackTraceElement
-         */
-        private StackTraceElement getStackTraceElement() {
-            StackTraceElement[] stacktrace = Thread.currentThread().getStackTrace();
-            return stacktrace[8];
         }
     }
 }
