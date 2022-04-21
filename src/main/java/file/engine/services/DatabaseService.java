@@ -55,7 +55,7 @@ public class DatabaseService {
     private final AtomicBoolean isReadFromSharedMemory = new AtomicBoolean(false);
     private final @Getter
     ConcurrentLinkedQueue<String> tempResults;  //在优先文件夹和数据库cache未搜索完时暂时保存结果，搜索完后会立即被转移到listResults
-    private final AtomicBoolean isStop = new AtomicBoolean(false);
+    private final AtomicBoolean isSearchStopped = new AtomicBoolean(false);
     private final ConcurrentLinkedQueue<Pair> priorityMap = new ConcurrentLinkedQueue<>();
     private volatile Supplier<String[]> searchCase;
     private volatile Supplier<String> searchText;
@@ -64,8 +64,7 @@ public class DatabaseService {
     private final ConcurrentSkipListSet<String> cacheSet = new ConcurrentSkipListSet<>();
     private final AtomicInteger searchThreadCount = new AtomicInteger(0);
     private final AtomicLong startSearchTimeMills = new AtomicLong(0);
-    @SuppressWarnings("FieldCanBeLocal")
-    private final int MAX_TEMP_QUERY_RESULT_CACHE = 5000;
+    private static final int MAX_TEMP_QUERY_RESULT_CACHE = 4096;
 
     private static volatile DatabaseService INSTANCE = null;
 
@@ -256,7 +255,7 @@ public class DatabaseService {
         }
         LinkedList<String> listRemainDir = new LinkedList<>();
         for (File each : files) {
-            if (isStop.get()) {
+            if (isSearchStopped.get()) {
                 return;
             }
             checkIsMatchedAndAddToList(each.getAbsolutePath(), null);
@@ -276,7 +275,7 @@ public class DatabaseService {
             }
             for (File each : allFiles) {
                 checkIsMatchedAndAddToList(each.getAbsolutePath(), null);
-                if (isStop.get()) {
+                if (isSearchStopped.get()) {
                     break out;
                 }
                 if (each.isDirectory()) {
@@ -381,15 +380,14 @@ public class DatabaseService {
 
     /**
      * 搜索数据库并加入到tempQueue中
-     * 通过tmpQueryResultCache先缓存结果，随后使用parallelStream进行筛选。
      *
      * @param sql sql
      */
     private int searchAndAddToTempResults(String sql, ConcurrentSkipListSet<String> container, Statement stmt) {
-        int count = 0;
+        int matchedResultCount = 0;
         //结果太多则不再进行搜索
-        if (isStop.get()) {
-            return count;
+        if (isSearchStopped.get()) {
+            return matchedResultCount;
         }
         ArrayList<String> tmpQueryResultsCache = new ArrayList<>(MAX_TEMP_QUERY_RESULT_CACHE / 2);
         try (ResultSet resultSet = stmt.executeQuery(sql)) {
@@ -399,13 +397,13 @@ public class DatabaseService {
                 do {
                     //结果太多则不再进行搜索
                     //用户重新输入了信息
-                    if (isStop.get()) {
-                        return count;
+                    if (isSearchStopped.get()) {
+                        return matchedResultCount;
                     }
                     tmpQueryResultsCache.add(resultSet.getString("PATH"));
                     ++i;
                 } while (resultSet.next() && i < MAX_TEMP_QUERY_RESULT_CACHE);
-                count += tmpQueryResultsCache.parallelStream()
+                matchedResultCount += tmpQueryResultsCache.stream()
                         .filter(each -> checkIsMatchedAndAddToList(each, container))
                         .count();
                 tmpQueryResultsCache = new ArrayList<>();
@@ -414,7 +412,7 @@ public class DatabaseService {
             System.err.println("error sql : " + sql);
             e.printStackTrace();
         }
-        return count;
+        return matchedResultCount;
     }
 
     /**
@@ -473,7 +471,7 @@ public class DatabaseService {
             Bit zero = new Bit(new byte[]{0});
             Bit one = new Bit(new byte[]{1});
             try {
-                while (!taskStatus.equals(allTaskStatus) && !isStop.get()) {
+                while (!taskStatus.equals(allTaskStatus) && !isSearchStopped.get()) {
                     Bit tmpTaskStatus = new Bit(new byte[]{0});
                     //线程状态的记录从第二个位开始，所以初始值为1 0
                     Bit start = new Bit(new byte[]{1, 0});
@@ -483,7 +481,7 @@ public class DatabaseService {
                     long waitTime = 0;
                     ConcurrentSkipListSet<String> results;
                     while (start.length() <= allTaskStatus.length() || taskStatus.or(zero).equals(zero)) {
-                        if (isStop.get()) {
+                        if (isSearchStopped.get()) {
                             //用户重新输入，结束当前任务
                             break;
                         }
@@ -531,6 +529,7 @@ public class DatabaseService {
             } finally {
                 EventManagement eventManagement = EventManagement.getInstance();
                 eventManagement.putEvent(new SearchDoneEvent());
+                isSearchStopped.set(true);
             }
         });
     }
@@ -561,7 +560,7 @@ public class DatabaseService {
                 try {
                     Set<String> sqls = commandsMap.keySet();
                     for (String each : sqls) {
-                        if (isStop.get()) {
+                        if (isSearchStopped.get()) {
                             return;
                         }
                         HashMap<String, String> parseSql = parseSql(each);
@@ -569,7 +568,7 @@ public class DatabaseService {
                         int priority = Integer.parseInt(parseSql.get("priority"));
                         String result;
                         for (int count = 0;
-                             !isStop.get() && ((result = ResultPipe.INSTANCE.getResult(eachDisk.charAt(0), listName, priority, count)) != null);
+                             !isSearchStopped.get() && ((result = ResultPipe.INSTANCE.getResult(eachDisk.charAt(0), listName, priority, count)) != null);
                              ++count) {
                             checkIsMatchedAndAddToList(result, container);
                         }
@@ -644,7 +643,7 @@ public class DatabaseService {
                 try (Statement stmt = SQLiteUtil.getStatement(diskStr)) {
                     Set<String> sqls = commandsMap.keySet();
                     for (String each : sqls) {
-                        if (isStop.get()) {
+                        if (isSearchStopped.get()) {
                             tableQueue.clear();
                             return;
                         }
@@ -750,14 +749,14 @@ public class DatabaseService {
 
         // 采用虚拟线程的方式，直接提交任务到线程池
         for (Runnable runnable : taskQueue) {
-            if (isStop.get()) {
+            if (isSearchStopped.get()) {
                 break;
             }
             cachedThreadPoolUtil.executeTask(() -> {
                 try {
                     searchThreadCount.incrementAndGet();
                     runnable.run();
-                    if (isStop.get()) {
+                    if (isSearchStopped.get()) {
                         taskQueue.clear();
                     }
                 } finally {
@@ -1158,7 +1157,7 @@ public class DatabaseService {
     }
 
     private void stopSearch() {
-        isStop.set(true);
+        isSearchStopped.set(true);
         tableQueue.clear();
         tempResults.clear();
     }
@@ -1319,14 +1318,6 @@ public class DatabaseService {
         commandQueue.clear();
         //删除所有索引
         String[] disks = RegexUtil.comma.split(AllConfigs.getInstance().getAvailableDisks());
-//        if (isDropPrevious) {
-//            for (int i = 0; i <= Constants.ALL_TABLE_NUM; i++) {
-//                for (String disk : disks) {
-//                    commandQueue.add(new SQLWithTaskId("DROP INDEX IF EXISTS list" + i + "_index;", SqlTaskIds.DROP_INDEX, String.valueOf(disk.charAt(0))));
-//                    commandQueue.add(new SQLWithTaskId("DROP TABLE IF EXISTS list" + i, SqlTaskIds.DROP_TABLE, String.valueOf(disk.charAt(0))));
-//                }
-//            }
-//        }
         //创建新表
         String sql = "CREATE TABLE IF NOT EXISTS list";
         for (int i = 0; i <= Constants.ALL_TABLE_NUM; i++) {
@@ -1348,7 +1339,9 @@ public class DatabaseService {
                 while (eventManagement.notMainExit()) {
                     if ((status == Constants.Enums.DatabaseStatus.NORMAL && System.currentTimeMillis() - startSearchTimeMills.get() < timeout) ||
                             (status == Constants.Enums.DatabaseStatus.NORMAL && commandQueue.size() > 1000)) {
-                        sendExecuteSQLSignal();
+                        if (isSearchStopped.get()) {
+                            sendExecuteSQLSignal();
+                        }
                     }
                     TimeUnit.SECONDS.sleep(updateTimeLimit);
                 }
@@ -1411,7 +1404,7 @@ public class DatabaseService {
         databaseService.searchText = startSearchEvent.searchText;
         databaseService.searchCase = startSearchEvent.searchCase;
         databaseService.keywords = startSearchEvent.keywords;
-        databaseService.isStop.set(false);
+        databaseService.isSearchStopped.set(false);
         databaseService.startSearch();
         databaseService.startSearchTimeMills.set(System.currentTimeMillis());
     }
