@@ -24,7 +24,7 @@
 
 constexpr auto* g_file_engine_zip_name = "File-Engine.zip";
 constexpr auto* g_jvm_parameters =
-	"-Xms8M -Xmx128M -XX:+UseParallelGC -XX:MaxHeapFreeRatio=20 -XX:MinHeapFreeRatio=10 -XX:NewRatio=3 -XX:+CompactStrings -XX:MaxTenuringThreshold=16";
+	"-Xms8M -Xmx128M -XX:+UseSerialGC -XX:MaxHeapFreeRatio=20 -XX:MinHeapFreeRatio=10 -XX:NewRatio=3 -XX:+CompactStrings -XX:MaxTenuringThreshold=16";
 
 char g_close_signal_file[1000];
 char g_file_engine_jar_path[1000];

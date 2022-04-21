@@ -601,6 +601,19 @@ public class DatabaseService {
         return parsedVal;
     }
 
+    private void addSearchTasks(LinkedHashMap<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>> nonFormattedSql,
+                                Bit taskStatus,
+                                Bit allTaskStatus,
+                                LinkedHashMap<String, ConcurrentSkipListSet<String>> containerMap,
+                                ConcurrentLinkedQueue<Runnable> taskQueue,
+                                boolean isReadFromSharedMemory) {
+        if (isReadFromSharedMemory) {
+            addSearchTasksForSharedMemory(nonFormattedSql, taskStatus, allTaskStatus, containerMap, taskQueue);
+        } else {
+            addSearchTasksForDatabase(nonFormattedSql, taskStatus, allTaskStatus, containerMap, taskQueue);
+        }
+    }
+
     /**
      * 添加搜索任务到队列
      *
@@ -611,11 +624,11 @@ public class DatabaseService {
      * @param containerMap    每个任务搜索出来的结果都会被放到一个属于它自己的一个容器中，该容器保存任务与容器的映射关系
      * @param taskQueue       任务栈
      */
-    private void addSearchTasks(LinkedHashMap<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>> nonFormattedSql,
-                                Bit taskStatus,
-                                Bit allTaskStatus,
-                                LinkedHashMap<String, ConcurrentSkipListSet<String>> containerMap,
-                                ConcurrentLinkedQueue<Runnable> taskQueue) {
+    private void addSearchTasksForDatabase(LinkedHashMap<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>> nonFormattedSql,
+                                           Bit taskStatus,
+                                           Bit allTaskStatus,
+                                           LinkedHashMap<String, ConcurrentSkipListSet<String>> containerMap,
+                                           ConcurrentLinkedQueue<Runnable> taskQueue) {
         Bit number = new Bit(new byte[]{1});
         nonFormattedSql.forEach((commandsMap, container) -> Arrays.stream(RegexUtil.comma.split(AllConfigs.getInstance().getAvailableDisks())).forEach(eachDisk -> {
             //为每个任务分配的位，不断左移以不断进行分配
@@ -730,14 +743,13 @@ public class DatabaseService {
         //任务队列
         ConcurrentLinkedQueue<Runnable> taskQueue = new ConcurrentLinkedQueue<>();
         //添加搜索任务到队列
-        if (isReadFromSharedMemory.get()) {
-            addSearchTasksForSharedMemory(nonFormattedSql, taskStatus, allTaskStatus, containerMap, taskQueue);
-        } else {
-            addSearchTasks(nonFormattedSql, taskStatus, allTaskStatus, containerMap, taskQueue);
-        }
+        addSearchTasks(nonFormattedSql, taskStatus, allTaskStatus, containerMap, taskQueue, isReadFromSharedMemory.get());
 
         // 采用虚拟线程的方式，直接提交任务到线程池
         for (Runnable runnable : taskQueue) {
+            if (isStop.get()) {
+                break;
+            }
             cachedThreadPoolUtil.executeTask(() -> {
                 try {
                     searchThreadCount.incrementAndGet();
