@@ -736,20 +736,14 @@ public class DatabaseService {
             addSearchTasks(nonFormattedSql, taskStatus, allTaskStatus, containerMap, taskQueue);
         }
 
-        //添加消费者线程，接受任务进行处理，最高4线程
-        int processors = Runtime.getRuntime().availableProcessors();
-        processors = Math.min(processors, 4);
-        for (int i = 0; i < processors; i++) {
+        // 采用虚拟线程的方式，直接提交任务到线程池
+        for (Runnable runnable : taskQueue) {
             cachedThreadPoolUtil.executeTask(() -> {
                 try {
                     searchThreadCount.incrementAndGet();
-                    Runnable todo;
-                    while ((todo = taskQueue.poll()) != null) {
-                        todo.run();
-                        if (isStop.get()) {
-                            taskQueue.clear();
-                            break;
-                        }
+                    runnable.run();
+                    if (isStop.get()) {
+                        taskQueue.clear();
                     }
                 } finally {
                     searchThreadCount.decrementAndGet();
@@ -1099,7 +1093,8 @@ public class DatabaseService {
         for (String eachDisk : disks) {
             String name = eachDisk.charAt(0) + ".db";
             try {
-                long length = Files.size(Path.of("data/" + name));
+                Path diskDatabaseFile = Path.of("data/" + name);
+                long length = Files.size(diskDatabaseFile);
                 if (length > 5L * 1024 * 1024 * 100 || Period.between(LocalDate.parse(databaseCreateTimeMap.get(eachDisk)), now).getDays() > 5 || isDropPrevious) {
                     // 大小超过500M
                     if (IsDebug.isDebug()) {
@@ -1107,7 +1102,7 @@ public class DatabaseService {
                     }
                     //更新创建时间
                     databaseCreateTimeMap.put(eachDisk, now.toString());
-                    Files.delete(Path.of("data/" + name));
+                    Files.delete(diskDatabaseFile);
                 }
             } catch (IOException e) {
                 e.printStackTrace();
