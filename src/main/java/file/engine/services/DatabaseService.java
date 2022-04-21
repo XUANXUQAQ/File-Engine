@@ -380,7 +380,8 @@ public class DatabaseService {
     }
 
     /**
-     * 搜索数据酷并加入到tempQueue中
+     * 搜索数据库并加入到tempQueue中
+     * 通过tmpQueryResultCache先缓存结果，随后使用parallelStream进行筛选。
      *
      * @param sql sql
      */
