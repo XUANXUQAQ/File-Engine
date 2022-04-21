@@ -390,7 +390,7 @@ public class DatabaseService {
         if (isStop.get()) {
             return count;
         }
-        LinkedList<String> tmpQueryResultsCache = new LinkedList<>();
+        ArrayList<String> tmpQueryResultsCache = new ArrayList<>(MAX_TEMP_QUERY_RESULT_CACHE / 2);
         try (ResultSet resultSet = stmt.executeQuery(sql)) {
             while (resultSet.next()) {
                 int i = 0;
@@ -402,10 +402,12 @@ public class DatabaseService {
                         return count;
                     }
                     tmpQueryResultsCache.add(resultSet.getString("PATH"));
-                    i++;
+                    ++i;
                 } while (resultSet.next() && i < MAX_TEMP_QUERY_RESULT_CACHE);
-                count += tmpQueryResultsCache.parallelStream().filter(each -> checkIsMatchedAndAddToList(each, container)).count();
-                tmpQueryResultsCache = new LinkedList<>();
+                count += tmpQueryResultsCache.parallelStream()
+                        .filter(each -> checkIsMatchedAndAddToList(each, container))
+                        .count();
+                tmpQueryResultsCache = new ArrayList<>();
             }
         } catch (SQLException e) {
             System.err.println("error sql : " + sql);
