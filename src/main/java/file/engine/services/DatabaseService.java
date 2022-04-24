@@ -470,9 +470,10 @@ public class DatabaseService {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             Bit zero = new Bit(new byte[]{0});
             Bit one = new Bit(new byte[]{1});
+            int failedRetryTimes = 0;
             try {
                 while (!taskStatus.equals(allTaskStatus) && !isSearchStopped.get()) {
-                    Bit tmpTaskStatus = new Bit(new byte[]{0});
+//                    Bit tmpTaskStatus = new Bit(new byte[]{0});
                     //线程状态的记录从第二个位开始，所以初始值为1 0
                     Bit start = new Bit(new byte[]{1, 0});
                     //循环次数，也是下方与运算结束后需要向右偏移的位数
@@ -485,15 +486,15 @@ public class DatabaseService {
                             //用户重新输入，结束当前任务
                             break;
                         }
-                        results = containerMap.get(start.toString());
-                        if (results != null) {
-                            for (String result : results) {
-                                if (!tempResults.contains(result)) {
-                                    tempResults.add(result);
-                                    results.remove(result);
-                                }
-                            }
-                        }
+//                        results = containerMap.get(start.toString());
+//                        if (results != null) {
+//                            for (String result : results) {
+//                                if (!tempResults.contains(result)) {
+//                                    tempResults.add(result);
+//                                    results.remove(result);
+//                                }
+//                            }
+//                        }
                         //当线程完成，taskStatus中的位会被设置为1
                         //这时，将taskStatus和start做与运算，然后移到第一位，如果为1，则线程已完成搜索
                         Bit and = taskStatus.and(start);
@@ -508,21 +509,24 @@ public class DatabaseService {
                                         tempResults.add(result);
                                     }
                                 }
-                                if (!isFailed) {
+                                if (!isFailed || failedRetryTimes > 5) {
+                                    failedRetryTimes = 0;
                                     results.clear();
+                                    //将start左移，代表当前任务结束，继续拿下一个任务的结果
+                                    start.shiftLeft(1);
+                                    loopCount++;
+                                } else {
+                                    ++failedRetryTimes;
                                 }
                             }
-                            tmpTaskStatus = tmpTaskStatus.or(start);
-                            //将start左移，代表当前任务结束，继续拿下一个任务的结果
-                            start.shiftLeft(1);
-                            loopCount++;
+//                            tmpTaskStatus = tmpTaskStatus.or(start);
                         } else {
                             if (waitTime == 0) {
                                 waitTime = System.currentTimeMillis();
                             }
                         }
                     }
-                    TimeUnit.MILLISECONDS.sleep(1);
+                    TimeUnit.MILLISECONDS.sleep(10);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
