@@ -268,7 +268,7 @@ public class SQLiteUtil {
             File data = new File(dir, eachDisk.charAt(0) + ".db");
             try {
                 initConnection("jdbc:sqlite:" + data.getAbsolutePath(), String.valueOf(eachDisk.charAt(0)));
-                initTable(String.valueOf(eachDisk.charAt(0)));
+                initTables(String.valueOf(eachDisk.charAt(0)));
             } catch (Exception e) {
                 malformedFiles.add(data);
             }
@@ -335,7 +335,7 @@ public class SQLiteUtil {
      *
      * @param disk disk
      */
-    private static void initTable(String disk) {
+    private static void initTables(String disk) {
         try (Statement stmt = getStatement(disk)) {
             for (int i = 0; i < 41; i++) {
                 stmt.executeUpdate("CREATE TABLE IF NOT EXISTS list" + i + "(ASCII INT, PATH TEXT, PRIORITY INT)");
