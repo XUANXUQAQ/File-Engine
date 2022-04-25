@@ -3299,7 +3299,7 @@ public class SearchBar {
                 eventManagement.putEvent(new StopSearchEvent());
                 isMergeThreadNotExist.set(true);
             }
-        });
+        }, false);
     }
 
     private void clearAllLabelBorder() {

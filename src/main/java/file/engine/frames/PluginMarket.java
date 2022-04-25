@@ -361,7 +361,8 @@ public class PluginMarket {
 
     /**
      * 通过url获取图片
-     * @param url url
+     *
+     * @param url        url
      * @param pluginName 插件名
      * @return 图片
      * @throws IOException IOException
@@ -399,7 +400,8 @@ public class PluginMarket {
 
     /**
      * 获取插件的基本信息
-     * @param url 获取url
+     *
+     * @param url          获取url
      * @param saveFileName 保存的文件名
      * @return 插件信息Map
      * @throws IOException IOException
@@ -426,6 +428,7 @@ public class PluginMarket {
 
     /**
      * 获取所有插件列表url
+     *
      * @return url
      */
     private String getPluginListUrl() {

@@ -389,11 +389,12 @@ public class DatabaseService {
         if (isSearchStopped.get()) {
             return matchedResultCount;
         }
-        ArrayList<String> tmpQueryResultsCache = new ArrayList<>(MAX_TEMP_QUERY_RESULT_CACHE / 2);
+        ArrayList<String> tmpQueryResultsCache;
         try (ResultSet resultSet = stmt.executeQuery(sql)) {
             while (resultSet.next()) {
                 int i = 0;
                 // 先将结果查询出来，再进行字符串匹配，提高吞吐量
+                tmpQueryResultsCache = new ArrayList<>(MAX_TEMP_QUERY_RESULT_CACHE / 2);
                 do {
                     //结果太多则不再进行搜索
                     //用户重新输入了信息
@@ -406,7 +407,6 @@ public class DatabaseService {
                 matchedResultCount += tmpQueryResultsCache.stream()
                         .filter(each -> checkIsMatchedAndAddToList(each, container))
                         .count();
-                tmpQueryResultsCache = new ArrayList<>();
             }
         } catch (SQLException e) {
             System.err.println("error sql : " + sql);
@@ -535,7 +535,7 @@ public class DatabaseService {
                 eventManagement.putEvent(new SearchDoneEvent());
                 isSearchStopped.set(true);
             }
-        });
+        }, false);
     }
 
     /**
@@ -636,43 +636,48 @@ public class DatabaseService {
                                            LinkedHashMap<String, ConcurrentSkipListSet<String>> containerMap,
                                            ConcurrentLinkedQueue<Runnable> taskQueue) {
         Bit number = new Bit(new byte[]{1});
-        nonFormattedSql.forEach((commandsMap, container) -> Arrays.stream(RegexUtil.comma.split(AllConfigs.getInstance().getAvailableDisks())).forEach(eachDisk -> {
-            //为每个任务分配的位，不断左移以不断进行分配
-            number.shiftLeft(1);
-            Bit currentTaskNum = new Bit(number);
-            allTaskStatus.set(allTaskStatus.or(currentTaskNum));
-            containerMap.put(currentTaskNum.toString(), container);
-            taskQueue.add(() -> {
-                String diskStr = String.valueOf(eachDisk.charAt(0));
-                try (Statement stmt = SQLiteUtil.getStatement(diskStr)) {
-                    Set<String> sqls = commandsMap.keySet();
-                    for (String each : sqls) {
-                        if (isSearchStopped.get()) {
-                            tableQueue.clear();
-                            return;
+        String availableDisks = AllConfigs.getInstance().getAvailableDisks();
+        for (Map.Entry<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>> entry : nonFormattedSql.entrySet()) {
+            LinkedHashMap<String, String> commandsMap = entry.getKey();
+            ConcurrentSkipListSet<String> container = entry.getValue();
+            for (String eachDisk : RegexUtil.comma.split(availableDisks)) {
+                //为每个任务分配的位，不断左移以不断进行分配
+                number.shiftLeft(1);
+                Bit currentTaskNum = new Bit(number);
+                allTaskStatus.set(allTaskStatus.or(currentTaskNum));
+                containerMap.put(currentTaskNum.toString(), container);
+                taskQueue.add(() -> {
+                    String diskStr = String.valueOf(eachDisk.charAt(0));
+                    try (Statement stmt = SQLiteUtil.getStatement(diskStr)) {
+                        Set<String> sqls = commandsMap.keySet();
+                        for (String each : sqls) {
+                            if (isSearchStopped.get()) {
+                                tableQueue.clear();
+                                return;
+                            }
+                            String formattedSql;
+                            //格式化是为了以后的拓展性
+                            formattedSql = String.format(each, "PATH");
+                            //当前数据库表中有多少个结果匹配成功
+                            int matchedNum = searchAndAddToTempResults(
+                                    formattedSql,
+                                    container,
+                                    stmt);
+                            long weight = Math.min(matchedNum, 5);
+                            if (weight != 0L) {
+                                //更新表的权重，每次搜索将会按照各个表的权重排序
+                                updateTableWeight(commandsMap.get(each), weight);
+                            }
                         }
-                        String formattedSql;
-                        //格式化是为了以后的拓展性
-                        formattedSql = String.format(each, "PATH");
-                        //当前数据库表中有多少个结果匹配成功
-                        int matchedNum = searchAndAddToTempResults(
-                                formattedSql,
-                                container,
-                                stmt);
-                        long weight = Math.min(matchedNum, 5);
-                        if (weight != 0L) {
-                            //更新表的权重，每次搜索将会按照各个表的权重排序
-                            updateTableWeight(commandsMap.get(each), weight);
-                        }
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    } finally {
+                        //执行完后将对应的线程flag设为1
+                        taskStatus.set(taskStatus.or(currentTaskNum));
                     }
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                } finally {
-                    //执行完后将对应的线程flag设为1
-                    taskStatus.set(taskStatus.or(currentTaskNum));
-                }
-            });
-        }));
+                });
+            }
+        }
     }
 
     /**
@@ -751,22 +756,29 @@ public class DatabaseService {
         //添加搜索任务到队列
         addSearchTasks(nonFormattedSql, taskStatus, allTaskStatus, containerMap, taskQueue, isReadFromSharedMemory.get());
 
-        // 采用虚拟线程的方式，直接提交任务到线程池
-        for (Runnable runnable : taskQueue) {
-            if (isSearchStopped.get()) {
-                break;
-            }
-            cachedThreadPoolUtil.executeTask(() -> {
+        Runnable searchWorker = () -> {
+            Runnable runnable;
+            while ((runnable = taskQueue.poll()) != null) {
                 try {
                     searchThreadCount.incrementAndGet();
                     runnable.run();
                     if (isSearchStopped.get()) {
-                        taskQueue.clear();
+                        break;
                     }
                 } finally {
                     searchThreadCount.decrementAndGet();
                 }
-            });
+            }
+        };
+        // 采用虚拟线程的方式，直接提交任务到线程池
+        for (int i = 0; i < 32; ++i) {
+            if (isSearchStopped.get()) {
+                break;
+            }
+            cachedThreadPoolUtil.executeTask(searchWorker);
+        }
+        for (int i = 0; i < 4; ++i) {
+            cachedThreadPoolUtil.executeTask(searchWorker, false);
         }
         waitForTaskAndMergeResults(containerMap, allTaskStatus, taskStatus);
     }

@@ -209,7 +209,8 @@ public class EventManagement {
                 Object eventInstance = constructor.newInstance(eventParams);
                 return (Event) eventInstance;
             }
-        } catch (ClassNotFoundException | InvocationTargetException | InstantiationException | IllegalAccessException e) {
+        } catch (ClassNotFoundException | InvocationTargetException | InstantiationException |
+                 IllegalAccessException e) {
             // 注入字段
             if (eventParams != null && eventParams.length == 3) {
                 try {
@@ -477,7 +478,7 @@ public class EventManagement {
                         System.err.println("******异步任务执行线程" + finalI + "退出******");
                     }
                 }
-            });
+            }, false);
         }
     }
 
@@ -494,7 +495,7 @@ public class EventManagement {
      * 开启同步任务事件处理中心
      */
     private void startBlockEventHandler() {
-        new Thread(() -> {
+        Thread.ofPlatform().start(() -> {
             final boolean isDebug = IsDebug.isDebug();
             try {
                 Event event;
@@ -538,6 +539,6 @@ public class EventManagement {
                     System.err.println("******同步任务执行线程退出******");
                 }
             }
-        }).start();
+        });
     }
 }
