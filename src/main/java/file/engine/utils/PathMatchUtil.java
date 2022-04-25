@@ -74,15 +74,16 @@ public class PathMatchUtil {
         if (searchCase == null || searchCase.length == 0) {
             return true;
         }
+        Path pathVar = Path.of(path);
         for (String eachCase : searchCase) {
             switch (eachCase) {
                 case "f":
-                    if (!Files.isRegularFile(Path.of(path))) {
+                    if (!Files.isRegularFile(pathVar)) {
                         return false;
                     }
                     break;
                 case "d":
-                    if (!Files.isDirectory(Path.of(path))) {
+                    if (!Files.isDirectory(pathVar)) {
                         return false;
                     }
                     break;

@@ -7,17 +7,25 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public enum CachedThreadPoolUtil {
     INSTANCE;
-    private final ExecutorService cachedThreadPool;
+    private final ExecutorService virtualThreadPool;
+    private final ExecutorService platformThreadPool;
     private final AtomicBoolean isShutdown = new AtomicBoolean(false);
 
     CachedThreadPoolUtil() {
-        cachedThreadPool = new ThreadPoolExecutor(
+        virtualThreadPool = new ThreadPoolExecutor(
                 0,
-                200,
+                1000,
                 0,
                 TimeUnit.SECONDS,
                 new SynchronousQueue<>(),
                 Thread.ofVirtual().factory());
+        platformThreadPool = new ThreadPoolExecutor(
+                0,
+                100,
+                60,
+                TimeUnit.SECONDS,
+                new SynchronousQueue<>()
+        );
     }
 
     public static CachedThreadPoolUtil getInstance() {
@@ -32,33 +40,60 @@ public enum CachedThreadPoolUtil {
         if (isShutdown.get()) {
             return null;
         }
-        return cachedThreadPool.submit(todo);
+        return virtualThreadPool.submit(todo);
+    }
+
+    public <T> Future<T> executeTask(Callable<T> todo, boolean isVirtualThread) {
+        if (isShutdown.get()) {
+            return null;
+        }
+        if (isVirtualThread) {
+            return executeTask(todo);
+        } else {
+            return platformThreadPool.submit(todo);
+        }
+    }
+
+    public void executeTask(Runnable todo, boolean isVirtualThread) {
+        if (isShutdown.get()) {
+            return;
+        }
+        if (isVirtualThread) {
+            executeTask(todo);
+        } else {
+            platformThreadPool.submit(todo);
+        }
     }
 
     public void executeTask(Runnable todo) {
         if (isShutdown.get()) {
             return;
         }
-        cachedThreadPool.submit(todo);
+        virtualThreadPool.submit(todo);
     }
 
     public void shutdown() {
         isShutdown.set(true);
-        cachedThreadPool.shutdown();
+        virtualThreadPool.shutdown();
+        platformThreadPool.shutdown();
+        printInfo((ThreadPoolExecutor) virtualThreadPool);
+        printInfo((ThreadPoolExecutor) platformThreadPool);
+    }
+
+    private void printInfo(ThreadPoolExecutor threadPoolExecutor) {
         try {
-            if (!cachedThreadPool.awaitTermination(Constants.THREAD_POOL_AWAIT_TIMEOUT, TimeUnit.SECONDS)) {
+            if (!threadPoolExecutor.awaitTermination(Constants.THREAD_POOL_AWAIT_TIMEOUT, TimeUnit.SECONDS)) {
                 System.err.println("线程池等待超时");
-                ThreadPoolExecutor tpe = (ThreadPoolExecutor) cachedThreadPool;
-                int queueSize = tpe.getQueue().size();
+                int queueSize = threadPoolExecutor.getQueue().size();
                 System.err.println("当前排队线程数：" + queueSize);
 
-                int activeCount = tpe.getActiveCount();
+                int activeCount = threadPoolExecutor.getActiveCount();
                 System.err.println("当前活动线程数：" + activeCount);
 
-                long completedTaskCount = tpe.getCompletedTaskCount();
+                long completedTaskCount = threadPoolExecutor.getCompletedTaskCount();
                 System.err.println("执行完成线程数：" + completedTaskCount);
 
-                long taskCount = tpe.getTaskCount();
+                long taskCount = threadPoolExecutor.getTaskCount();
                 System.err.println("总线程数：" + taskCount);
             }
         } catch (InterruptedException e) {
