@@ -66,6 +66,15 @@ public class OpenFileUtil {
     public static void openWithAdmin(String path) {
         TranslateService translateService = TranslateService.getInstance();
         File file = new File(path);
+        if (file.isDirectory()) {
+            try {
+                openFolderByExplorer(path);
+            } catch (IOException e) {
+                e.printStackTrace();
+                JOptionPane.showMessageDialog(null, translateService.getTranslation("Execute failed"));
+            }
+            return;
+        }
         if (file.exists()) {
             try {
                 String command = file.getAbsolutePath();
