@@ -18,7 +18,8 @@ public enum CachedThreadPoolUtil {
                 0,
                 TimeUnit.SECONDS,
                 new SynchronousQueue<>(),
-                Thread.ofVirtual().factory());
+                Thread.ofVirtual().factory()
+        );
         platformThreadPool = new ThreadPoolExecutor(
                 0,
                 100,
