@@ -396,14 +396,14 @@ public class DatabaseService {
                 // 先将结果查询出来，再进行字符串匹配，提高吞吐量
                 tmpQueryResultsCache = new ArrayList<>(MAX_TEMP_QUERY_RESULT_CACHE / 2);
                 do {
-                    //结果太多则不再进行搜索
-                    //用户重新输入了信息
-                    if (isSearchStopped.get()) {
-                        return matchedResultCount;
-                    }
                     tmpQueryResultsCache.add(resultSet.getString("PATH"));
                     ++i;
                 } while (resultSet.next() && i < MAX_TEMP_QUERY_RESULT_CACHE);
+                //结果太多则不再进行搜索
+                //用户重新输入了信息
+                if (isSearchStopped.get()) {
+                    return matchedResultCount;
+                }
                 matchedResultCount += tmpQueryResultsCache.stream()
                         .filter(each -> checkIsMatchedAndAddToList(each, container))
                         .count();
@@ -771,13 +771,16 @@ public class DatabaseService {
             }
         };
         // 采用虚拟线程的方式，直接提交任务到线程池
-        for (int i = 0; i < 32; ++i) {
+        for (int i = 0; i < 4; ++i) {
             if (isSearchStopped.get()) {
                 break;
             }
             cachedThreadPoolUtil.executeTask(searchWorker);
         }
         for (int i = 0; i < 4; ++i) {
+            if (isSearchStopped.get()) {
+                break;
+            }
             cachedThreadPoolUtil.executeTask(searchWorker, false);
         }
         waitForTaskAndMergeResults(containerMap, allTaskStatus, taskStatus);
