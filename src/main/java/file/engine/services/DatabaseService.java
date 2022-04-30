@@ -35,6 +35,7 @@ import java.sql.Statement;
 import java.time.LocalDate;
 import java.time.Period;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.TimeUnit;
@@ -552,38 +553,44 @@ public class DatabaseService {
                                                Bit taskStatus,
                                                Bit allTaskStatus,
                                                LinkedHashMap<String, ConcurrentSkipListSet<String>> containerMap,
-                                               ConcurrentLinkedQueue<Runnable> taskQueue) {
+                                               ConcurrentHashMap<String, ConcurrentLinkedQueue<Runnable>> taskQueue) {
         Bit number = new Bit(new byte[]{1});
-        nonFormattedSql.forEach((commandsMap, container) -> Arrays.stream(RegexUtil.comma.split(AllConfigs.getInstance().getAvailableDisks())).forEach(eachDisk -> {
-            //为每个任务分配的位，不断左移以不断进行分配
-            number.shiftLeft(1);
-            Bit currentTaskNum = new Bit(number);
-            allTaskStatus.set(allTaskStatus.or(currentTaskNum));
-            containerMap.put(currentTaskNum.toString(), container);
-            taskQueue.add(() -> {
-                try {
-                    Set<String> sqls = commandsMap.keySet();
-                    for (String each : sqls) {
-                        if (isSearchStopped.get()) {
-                            return;
+        for (String eachDisk : RegexUtil.comma.split(AllConfigs.getInstance().getAvailableDisks())) {
+            ConcurrentLinkedQueue<Runnable> runnables = new ConcurrentLinkedQueue<>();
+            taskQueue.put(eachDisk, runnables);
+            for (Map.Entry<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>> entry : nonFormattedSql.entrySet()) {
+                LinkedHashMap<String, String> commandsMap = entry.getKey();
+                ConcurrentSkipListSet<String> container = entry.getValue();
+                //为每个任务分配的位，不断左移以不断进行分配
+                number.shiftLeft(1);
+                Bit currentTaskNum = new Bit(number);
+                allTaskStatus.set(allTaskStatus.or(currentTaskNum));
+                containerMap.put(currentTaskNum.toString(), container);
+                runnables.add(() -> {
+                    try {
+                        Set<String> sqls = commandsMap.keySet();
+                        for (String each : sqls) {
+                            if (isSearchStopped.get()) {
+                                return;
+                            }
+                            HashMap<String, String> parseSql = parseSql(each);
+                            String listName = parseSql.get("list");
+                            int priority = Integer.parseInt(parseSql.get("priority"));
+                            String result;
+                            for (int count = 0;
+                                 !isSearchStopped.get() && ((result = ResultPipe.INSTANCE.getResult(eachDisk.charAt(0), listName, priority, count)) != null);
+                                 ++count) {
+                                checkIsMatchedAndAddToList(result, container);
+                            }
                         }
-                        HashMap<String, String> parseSql = parseSql(each);
-                        String listName = parseSql.get("list");
-                        int priority = Integer.parseInt(parseSql.get("priority"));
-                        String result;
-                        for (int count = 0;
-                             !isSearchStopped.get() && ((result = ResultPipe.INSTANCE.getResult(eachDisk.charAt(0), listName, priority, count)) != null);
-                             ++count) {
-                            checkIsMatchedAndAddToList(result, container);
-                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    } finally {
+                        taskStatus.set(taskStatus.or(currentTaskNum));
                     }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                } finally {
-                    taskStatus.set(taskStatus.or(currentTaskNum));
-                }
-            });
-        }));
+                });
+            }
+        }
     }
 
     /**
@@ -611,7 +618,7 @@ public class DatabaseService {
                                 Bit taskStatus,
                                 Bit allTaskStatus,
                                 LinkedHashMap<String, ConcurrentSkipListSet<String>> containerMap,
-                                ConcurrentLinkedQueue<Runnable> taskQueue,
+                                ConcurrentHashMap<String, ConcurrentLinkedQueue<Runnable>> taskQueue,
                                 boolean isReadFromSharedMemory) {
         if (isReadFromSharedMemory) {
             addSearchTasksForSharedMemory(nonFormattedSql, taskStatus, allTaskStatus, containerMap, taskQueue);
@@ -634,19 +641,21 @@ public class DatabaseService {
                                            Bit taskStatus,
                                            Bit allTaskStatus,
                                            LinkedHashMap<String, ConcurrentSkipListSet<String>> containerMap,
-                                           ConcurrentLinkedQueue<Runnable> taskQueue) {
+                                           ConcurrentHashMap<String, ConcurrentLinkedQueue<Runnable>> taskQueue) {
         Bit number = new Bit(new byte[]{1});
         String availableDisks = AllConfigs.getInstance().getAvailableDisks();
-        for (Map.Entry<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>> entry : nonFormattedSql.entrySet()) {
-            LinkedHashMap<String, String> commandsMap = entry.getKey();
-            ConcurrentSkipListSet<String> container = entry.getValue();
-            for (String eachDisk : RegexUtil.comma.split(availableDisks)) {
+        for (String eachDisk : RegexUtil.comma.split(availableDisks)) {
+            ConcurrentLinkedQueue<Runnable> runnables = new ConcurrentLinkedQueue<>();
+            taskQueue.put(eachDisk, runnables);
+            for (Map.Entry<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>> entry : nonFormattedSql.entrySet()) {
+                LinkedHashMap<String, String> commandsMap = entry.getKey();
+                ConcurrentSkipListSet<String> container = entry.getValue();
                 //为每个任务分配的位，不断左移以不断进行分配
                 number.shiftLeft(1);
                 Bit currentTaskNum = new Bit(number);
                 allTaskStatus.set(allTaskStatus.or(currentTaskNum));
                 containerMap.put(currentTaskNum.toString(), container);
-                taskQueue.add(() -> {
+                runnables.add(() -> {
                     String diskStr = String.valueOf(eachDisk.charAt(0));
                     try (Statement stmt = SQLiteUtil.getStatement(diskStr)) {
                         Set<String> sqls = commandsMap.keySet();
@@ -752,37 +761,55 @@ public class DatabaseService {
 
         LinkedHashMap<String, ConcurrentSkipListSet<String>> containerMap = new LinkedHashMap<>();
         //任务队列
-        ConcurrentLinkedQueue<Runnable> taskQueue = new ConcurrentLinkedQueue<>();
+        ConcurrentHashMap<String, ConcurrentLinkedQueue<Runnable>> taskQueue = new ConcurrentHashMap<>();
         //添加搜索任务到队列
         addSearchTasks(nonFormattedSql, taskStatus, allTaskStatus, containerMap, taskQueue, isReadFromSharedMemory.get());
 
-        Runnable searchWorker = () -> {
-            Runnable runnable;
-            while ((runnable = taskQueue.poll()) != null) {
-                try {
-                    searchThreadCount.incrementAndGet();
-                    runnable.run();
-                    if (isSearchStopped.get()) {
-                        break;
+        taskQueue.forEach((key, value) -> {
+            for (int i = 0; i < 4; i++) {
+                cachedThreadPoolUtil.executeTask(() -> {
+                    Runnable runnable;
+                    while ((runnable = value.poll()) != null) {
+                        try {
+                            searchThreadCount.incrementAndGet();
+                            runnable.run();
+                            if (isSearchStopped.get()) {
+                                break;
+                            }
+                        } finally {
+                            searchThreadCount.decrementAndGet();
+                        }
                     }
-                } finally {
-                    searchThreadCount.decrementAndGet();
-                }
+                }, i % 2 == 0);
             }
-        };
+        });
+//        Runnable searchWorker = () -> {
+//            Runnable runnable;
+//            while ((runnable = taskQueue.poll()) != null) {
+//                try {
+//                    searchThreadCount.incrementAndGet();
+//                    runnable.run();
+//                    if (isSearchStopped.get()) {
+//                        break;
+//                    }
+//                } finally {
+//                    searchThreadCount.decrementAndGet();
+//                }
+//            }
+//        };
         // 采用虚拟线程的方式，直接提交任务到线程池
-        for (int i = 0; i < 4; ++i) {
-            if (isSearchStopped.get()) {
-                break;
-            }
-            cachedThreadPoolUtil.executeTask(searchWorker);
-        }
-        for (int i = 0; i < 4; ++i) {
-            if (isSearchStopped.get()) {
-                break;
-            }
-            cachedThreadPoolUtil.executeTask(searchWorker, false);
-        }
+//        for (int i = 0; i < 4; ++i) {
+//            if (isSearchStopped.get()) {
+//                break;
+//            }
+//            cachedThreadPoolUtil.executeTask(searchWorker);
+//        }
+//        for (int i = 0; i < 4; ++i) {
+//            if (isSearchStopped.get()) {
+//                break;
+//            }
+//            cachedThreadPoolUtil.executeTask(searchWorker, false);
+//        }
         waitForTaskAndMergeResults(containerMap, allTaskStatus, taskStatus);
     }
 
