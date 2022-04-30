@@ -22,7 +22,7 @@ public class Bit {
     public Bit(Bit bit) {
         if (bit != null && bit.bytes.get().length > 0) {
             byte[] bytes = Arrays.copyOf(bit.bytes.get(), bit.bytes.get().length);
-            this.bytes.set(bytes);
+            this.bytes.compareAndSet(this.bytes.get(), bytes);
         } else {
             throw new RuntimeException("the bytes could not be empty");
         }
@@ -36,7 +36,7 @@ public class Bit {
      */
     public Bit shiftLeft(int count) {
         byte[] newBytes = Arrays.copyOf(bytes.get(), this.bytes.get().length + count);
-        bytes.set(newBytes);
+        bytes.compareAndSet(bytes.get(), newBytes);
         return this;
     }
 
@@ -48,10 +48,10 @@ public class Bit {
      */
     public Bit shiftRight(int count) {
         if (bytes.get().length <= count) {
-            bytes.set(zero);
+            bytes.compareAndSet(bytes.get(), zero);
         } else {
             byte[] newBytes = Arrays.copyOfRange(bytes.get(), 0, bytes.get().length - count);
-            bytes.set(newBytes);
+            bytes.compareAndSet(bytes.get(), newBytes);
         }
         return this;
     }
@@ -138,7 +138,7 @@ public class Bit {
      */
     public Bit set(Bit bit) {
         byte[] bytes = Arrays.copyOf(bit.bytes.get(), bit.bytes.get().length);
-        this.bytes.set(bytes);
+        this.bytes.compareAndSet(this.bytes.get(), bytes);
         return this;
     }
 
