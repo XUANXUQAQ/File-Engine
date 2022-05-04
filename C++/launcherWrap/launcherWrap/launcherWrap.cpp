@@ -7,6 +7,7 @@
 #include "resource.h"
 #include <TlHelp32.h>
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <Psapi.h>
 #include <tchar.h>
@@ -23,7 +24,7 @@
 #endif
 
 constexpr auto* g_file_engine_zip_name = "File-Engine.zip";
-constexpr auto* g_jvm_parameters =
+std::string g_jvm_parameters =
 	"-Xms8M -Xmx128M -XX:+UseParallelGC -XX:MaxHeapFreeRatio=20 -XX:MinHeapFreeRatio=10 -XX:NewRatio=3 -XX:+CompactStrings -XX:MaxTenuringThreshold=16";
 
 char g_close_signal_file[1000];
@@ -33,6 +34,7 @@ char g_jre_path[1000];
 char g_update_signal_file[1000];
 char g_new_file_engine_jar_path[1000];
 char g_log_file_path[1000];
+char g_jvm_parameter_file_path[1000];
 #ifdef TEST
 int g_check_time_threshold = 1;
 #else
@@ -61,6 +63,7 @@ std::string get_time();
 time_t convert(int year, int month, int day);
 int get_days(const char* from, const char* to);
 void check_logs();
+void init_jvm_parameters();
 
 int main()
 {
@@ -70,6 +73,7 @@ int main()
 	}
 	init_path();
 	check_logs();
+	init_jvm_parameters();
 #ifdef TEST
 	std::cout << "file-engine.jar path :  " << g_file_engine_jar_path << std::endl;
 	std::cout << "jre path: " << g_jre_path << std::endl;
@@ -121,6 +125,35 @@ int main()
 	return 0;
 }
 
+void init_jvm_parameters()
+{
+	if (is_file_exist(g_jvm_parameter_file_path))
+	{
+		std::ifstream inputStream(g_jvm_parameter_file_path, std::ios::binary);
+		std::string line;
+		std::string jvm_parameter;
+		while (std::getline(inputStream, line))
+		{
+			jvm_parameter += line;
+			jvm_parameter += " ";
+		}
+		if (!jvm_parameter.empty())
+		{
+			g_jvm_parameters = jvm_parameter;
+		}
+		inputStream.close();
+	}
+	else
+	{
+		std::ofstream outputStream(g_jvm_parameter_file_path, std::ios::binary);
+		for (char eachChar : g_jvm_parameters)
+		{
+			outputStream.put(eachChar == ' ' ? '\n' : eachChar);
+		}
+		outputStream.close();
+	}
+}
+
 inline void init_path()
 {
 	char current_dir[1000];
@@ -154,6 +187,10 @@ inline void init_path()
 	std::string update_signal_file(g_file_engine_working_dir);
 	update_signal_file += "user\\update";
 	strcpy_s(g_update_signal_file, update_signal_file.c_str());
+
+	std::string jvm_parameter_file(g_file_engine_working_dir);
+	jvm_parameter_file += "jvm.vmoptions";
+	strcpy_s(g_jvm_parameter_file_path, jvm_parameter_file.c_str());
 }
 
 void check_logs()
