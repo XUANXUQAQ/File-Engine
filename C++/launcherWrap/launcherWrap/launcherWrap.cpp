@@ -73,7 +73,6 @@ int main()
 	}
 	init_path();
 	check_logs();
-	init_jvm_parameters();
 #ifdef TEST
 	std::cout << "file-engine.jar path :  " << g_file_engine_jar_path << std::endl;
 	std::cout << "jre path: " << g_jre_path << std::endl;
@@ -326,6 +325,7 @@ inline void extract_zip()
  */
 void restart_file_engine(bool isIgnoreCloseFile)
 {
+	init_jvm_parameters();
 	if (isIgnoreCloseFile)
 	{
 		remove(g_close_signal_file);
