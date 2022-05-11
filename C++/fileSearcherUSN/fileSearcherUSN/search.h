@@ -31,7 +31,7 @@ CONCURRENT_MAP<HANDLE, LPVOID> sharedMemoryMap;
 static atomic_int* completeTaskCount = new atomic_int(0);
 static atomic_int* allTaskCount = new atomic_int(0);
 static atomic<LPVOID> isCompletePtr(nullptr);
-constexpr int maxPath = 500;
+constexpr int RECORD_MAX_PATH = 500;
 
 inline string to_utf8(const wchar_t* buffer, int len);
 static void createFileMapping(HANDLE& hMapFile, LPVOID& pBuf, size_t memorySize, const char* sharedMemoryName);
@@ -180,7 +180,7 @@ public:
 	void initVolume()
 	{
 		if (
-				// 2.获取驱动盘句柄
+			// 2.获取驱动盘句柄
 			getHandle() &&
 			// 3.创建USN日志
 			createUSN() &&
@@ -213,6 +213,9 @@ public:
 			{
 				cout << e.what() << endl;
 			}
+#ifdef TEST
+			cout << "start copy disk " << this->getDiskPath() << " to shared memory" << endl;
+#endif
 			copyResultsToSharedMemory();
 			++*completeTaskCount;
 			setCompleteSignal();
@@ -229,6 +232,9 @@ public:
 			}
 			saveAllResultsToDb();
 		}
+#ifdef TEST
+		cout << "disk " << this->getDiskPath() << " complete" << endl;
+#endif
 	}
 
 private:
@@ -351,7 +357,11 @@ inline void volume::createSharedMemoryAndCopy(const string& listName, const int 
 	}
 	CONCURRENT_QUEUE<string>& result = table->at(priority);
 	const size_t _size = result.unsafe_size();
-	const size_t memorySize = _size * maxPath;
+	if (_size > 500)
+	{
+		return;
+	}
+	const size_t memorySize = _size * RECORD_MAX_PATH;
 
 	// 创建共享文件句柄
 	HANDLE hMapFile;
@@ -365,7 +375,7 @@ inline void volume::createSharedMemoryAndCopy(const string& listName, const int 
 	long long count = 0;
 	for (auto iter = result.unsafe_begin(); iter != result.unsafe_end(); ++iter)
 	{
-		memcpy_s(reinterpret_cast<void*>(reinterpret_cast<long long>(pBuf) + count * maxPath), maxPath,
+		memcpy_s(reinterpret_cast<void*>(reinterpret_cast<long long>(pBuf) + count * RECORD_MAX_PATH), RECORD_MAX_PATH,
 		         iter->c_str(), iter->length());
 		count++;
 	}
@@ -395,6 +405,10 @@ inline int volume::getPriorityBySuffix(const string& suffix) const
 	const auto& iter = priorityMap->find(suffix);
 	if (iter == priorityMap->end())
 	{
+		if (suffix.find('\\') != string::npos)
+		{
+			return getPriorityBySuffix("dirPriority");
+		}
 		return getPriorityBySuffix("defaultPriority");
 	}
 	return iter->second;

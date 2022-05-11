@@ -16,9 +16,22 @@ static PriorityMap suffixPriorityMap;
 
 void initUSN(parameter p);
 void splitString(const char* str, vector<string>& vec);
+void initTables(sqlite3* db);
+
+void initTables(sqlite3* db)
+{
+	sqlite3_exec(db, "BEGIN;", nullptr, nullptr, nullptr);
+	for (int i = 0; i < 41; i++)
+	{
+		string sql = "CREATE TABLE IF NOT EXISTS list" + to_string(i) + "(ASCII INT, PATH TEXT, PRIORITY INT)";
+		sqlite3_exec(db, sql.c_str(), nullptr, nullptr, nullptr);
+	}
+	sqlite3_exec(db, "COMMIT", nullptr, nullptr, nullptr);
+}
 
 void initUSN(parameter p)
 {
+	initTables(p.db);
 	sqlite3_exec(p.db, "BEGIN;", nullptr, nullptr, nullptr);
 	volume volumeInstance(p.disk, p.db, &p.ignorePath, &suffixPriorityMap);
 	volumeInstance.initVolume();
@@ -54,6 +67,7 @@ inline bool initPriorityMap(PriorityMap& priority_map, const char* priorityDbPat
 		auto pairPriority = pair<string, int>{suffix, stoi(priorityVal)};
 		priority_map.insert(pairPriority);
 	}
+	priority_map.insert(pair<string, int>("dirPriority", -1));
 	sqlite3_free_table(pResult);
 	sqlite3_close(cacheDb);
 	return true;

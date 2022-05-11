@@ -344,7 +344,7 @@ public class SettingsFrame {
             }
             int isConfirmed = JOptionPane.showConfirmDialog(frame, TRANSLATE_SERVICE.getTranslation("Whether to remove and backup all files on the desktop," + "they will be in the program's Files folder, which may take a few minutes"));
             if (isConfirmed == JOptionPane.YES_OPTION) {
-                Future<Boolean> future = cachedThreadPoolUtil.executeTask(MoveDesktopFiles::start);
+                Future<Boolean> future = cachedThreadPoolUtil.executeTask(MoveDesktopFiles::start, false);
                 try {
                     if (future == null) {
                         return;

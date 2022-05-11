@@ -39,7 +39,7 @@ public class MainClass {
     private static final String GET_ASC_II_64_MD_5 = "dea00d07d351fece770cd0bb2ad9af10";
     private static final String HOTKEY_LISTENER_64_MD_5 = "6d71f646529b69cff9d50fcce8d4b6e4";
     private static final String IS_LOCAL_DISK_64_MD_5 = "59793a286030bfafe8b8f0fa84b498ba";
-    private static final String FILE_SEARCHER_USN_64_MD_5 = "66ee86d2634e286488c9d9a8f50d6fcf";
+    private static final String FILE_SEARCHER_USN_64_MD_5 = "79a0317eb1a2a2b5031b192de3bf403e";
     private static final String SQLITE3_64_MD_5 = "f3bb1a137c93f8671a20235525171db1";
     private static final String GET_HANDLE_64_MD_5 = "e8a002f9f9303116b04cc8529e7ff6b9";
     private static final String SHORTCUT_GEN_MD_5 = "fa4e26f99f3dcd58d827828c411ea5d7";
