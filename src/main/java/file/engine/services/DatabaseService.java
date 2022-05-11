@@ -926,16 +926,18 @@ public class DatabaseService {
      * @param suffix 文件后缀名
      * @return 优先级
      */
+    @SuppressWarnings("IndexOfReplaceableByContains")
     private int getPriorityBySuffix(String suffix) {
         List<Pair> result = priorityMap.stream().filter(each -> each.suffix.equals(suffix)).collect(Collectors.toList());
         if (result.isEmpty()) {
-            if (!"defaultPriority".equals(suffix)) {
+            if (suffix.indexOf(File.separator) != -1) {
+                return getPriorityBySuffix("dirPriority");
+            } else {
                 return getPriorityBySuffix("defaultPriority");
             }
         } else {
             return result.get(0).priority;
         }
-        return 0;
     }
 
     /**
@@ -945,8 +947,7 @@ public class DatabaseService {
      * @return 后缀名
      */
     private String getSuffixByPath(String path) {
-        String name = getFileName(path);
-        return name.substring(name.lastIndexOf('.') + 1).toLowerCase();
+        return path.substring(path.lastIndexOf('.') + 1).toLowerCase();
     }
 
     private void addFileToDatabase(String path) {
