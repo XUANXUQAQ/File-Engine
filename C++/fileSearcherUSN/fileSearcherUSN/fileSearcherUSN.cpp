@@ -67,6 +67,7 @@ inline bool initPriorityMap(PriorityMap& priority_map, const char* priorityDbPat
 		auto pairPriority = pair<string, int>{suffix, stoi(priorityVal)};
 		priority_map.insert(pairPriority);
 	}
+	priority_map.insert(pair<string, int>("dirPriority", -1));
 	sqlite3_free_table(pResult);
 	sqlite3_close(cacheDb);
 	return true;

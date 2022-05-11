@@ -716,11 +716,11 @@ public class DatabaseService {
         String firstTableName = "list" + asciiGroup;
         if (searchCase.get() != null && Arrays.asList(searchCase.get()).contains("d")) {
             LinkedHashMap<String, String> _priorityMap = new LinkedHashMap<>();
-            String _sql = "SELECT %s FROM " + firstTableName + " WHERE PRIORITY=" + 0;
+            String _sql = "SELECT %s FROM " + firstTableName + " WHERE PRIORITY=" + "-1";
             _priorityMap.put(_sql, firstTableName);
             tableQueue.stream().filter(each -> !each.equals(firstTableName)).forEach(each -> {
                 // where后面=不能有空格，否则解析priority会出错
-                String sql = "SELECT %s FROM " + each + " WHERE PRIORITY=" + 0;
+                String sql = "SELECT %s FROM " + each + " WHERE PRIORITY=" + "-1";
                 _priorityMap.put(sql, each);
             });
             ConcurrentSkipListSet<String> container;
@@ -914,6 +914,7 @@ public class DatabaseService {
                     priorityMap.add(new Pair(suffix, 0));
                 }
             }
+            priorityMap.add(new Pair("dirPriority", -1));
         } catch (SQLException exception) {
             exception.printStackTrace();
         }
