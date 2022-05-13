@@ -20,6 +20,7 @@ import file.engine.utils.RegexUtil;
 import java.awt.event.KeyEvent;
 import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
 public class CheckHotKeyService {
@@ -128,31 +129,33 @@ public class CheckHotKeyService {
             try {
                 ref.endVisibleTime = System.currentTimeMillis();
                 //获取快捷键状态，检测是否被按下线程
+                IsSearchBarVisibleEvent isSearchBarVisibleEvent = new IsSearchBarVisibleEvent();
+                eventManagement.putEvent(isSearchBarVisibleEvent);
+                eventManagement.waitForEvent(isSearchBarVisibleEvent);
+                Supplier<Boolean> isVisible = isSearchBarVisibleEvent.getReturnValue();
                 while (eventManagement.notMainExit()) {
                     if (!isExecuted && instance.getKeyStatus()) {
-                        eventManagement.putEvent(new IsSearchBarVisibleEvent(), event -> {
-                            //是否搜索框可见
-                            if (event.getReturnValue()) {
-                                //搜索框最小可见时间为200ms，必须显示超过200ms后才响应关闭事件，防止闪屏
-                                if (System.currentTimeMillis() - ref.startVisibleTime > 200) {
-                                    //获取当前显示模式
-                                    eventManagement.putEvent(new GetShowingModeEvent(), getShowingModeEvent -> {
-                                        if (getShowingModeEvent.getReturnValue() == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
-                                            eventManagement.putEvent(new HideSearchBarEvent());
-                                            ref.endVisibleTime = System.currentTimeMillis();
-                                        } else {
-                                            eventManagement.putEvent(new ShowSearchBarEvent(true, true));
-                                            ref.startVisibleTime = System.currentTimeMillis();
-                                        }
-                                    }, event1 -> System.err.println("获取当前显示模式任务执行失败"));
-                                }
-                            } else {
-                                if (System.currentTimeMillis() - ref.endVisibleTime > 200) {
-                                    eventManagement.putEvent(new ShowSearchBarEvent(true));
-                                    ref.startVisibleTime = System.currentTimeMillis();
-                                }
+                        //是否搜索框可见
+                        if (isVisible.get()) {
+                            //搜索框最小可见时间为200ms，必须显示超过200ms后才响应关闭事件，防止闪屏
+                            if (System.currentTimeMillis() - ref.startVisibleTime > 200) {
+                                //获取当前显示模式
+                                eventManagement.putEvent(new GetShowingModeEvent(), getShowingModeEvent -> {
+                                    if (getShowingModeEvent.getReturnValue() == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
+                                        eventManagement.putEvent(new HideSearchBarEvent());
+                                        ref.endVisibleTime = System.currentTimeMillis();
+                                    } else {
+                                        eventManagement.putEvent(new ShowSearchBarEvent(true, true));
+                                        ref.startVisibleTime = System.currentTimeMillis();
+                                    }
+                                }, event1 -> System.err.println("获取当前显示模式任务执行失败"));
                             }
-                        }, event -> System.err.println("获取搜索框可见状态任务执行失败"));
+                        } else {
+                            if (System.currentTimeMillis() - ref.endVisibleTime > 200) {
+                                eventManagement.putEvent(new ShowSearchBarEvent(true));
+                                ref.startVisibleTime = System.currentTimeMillis();
+                            }
+                        }
                     }
                     isExecuted = instance.getKeyStatus();
                     TimeUnit.MILLISECONDS.sleep(10);

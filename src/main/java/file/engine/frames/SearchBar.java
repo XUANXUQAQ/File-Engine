@@ -50,6 +50,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -2793,7 +2794,8 @@ public class SearchBar {
 
     @EventRegister(registerClass = IsSearchBarVisibleEvent.class)
     private static void isSearchBarVisibleEvent(Event event) {
-        event.setReturnValue(getInstance().isVisible());
+        SearchBar searchBar = getInstance();
+        event.setReturnValue((Supplier<Boolean>) searchBar::isVisible);
     }
 
     @EventRegister(registerClass = GetShowingModeEvent.class)

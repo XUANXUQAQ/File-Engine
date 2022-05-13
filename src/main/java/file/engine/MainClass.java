@@ -372,7 +372,7 @@ public class MainClass {
                 eventManagement.putEvent(new ShowTaskBarMessageEvent(
                         translateService.getTranslation("Info"),
                         translateService.getTranslation("Updating file index")));
-                eventManagement.putEvent(new UpdateDatabaseEvent(false),
+                eventManagement.putEvent(new UpdateDatabaseEvent(true),
                         event -> eventManagement.putEvent(new ShowTaskBarMessageEvent(
                                 translateService.getTranslation("Info"),
                                 translateService.getTranslation("Search Done"))),
