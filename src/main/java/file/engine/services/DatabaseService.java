@@ -308,6 +308,7 @@ public class DatabaseService {
                 eventManagement.putEvent(isSearchBarVisibleEvent);
                 eventManagement.waitForEvent(isSearchBarVisibleEvent);
                 Supplier<Boolean> isSearchBarVisible = isSearchBarVisibleEvent.getReturnValue();
+                Supplier<Boolean> isStopCreateCache = () -> !isSearchStopped.get() || !eventManagement.notMainExit() || isSearchBarVisible.get() || status == Constants.Enums.DatabaseStatus.MANUAL_UPDATE;
                 while (eventManagement.notMainExit()) {
                     if (startCheckTimeMills == 0 || SystemIdleCheckUtil.isCursorLongTimeNotMove() &&
                             isSearchStopped.get() &&
@@ -334,7 +335,7 @@ public class DatabaseService {
                                                         tableNeedCache.put(disk + "," + tableName + "," + pair.priority, num);
                                                     }
                                                 }
-                                                if (!isSearchStopped.get() || !eventManagement.notMainExit() || isSearchBarVisible.get()) {
+                                                if (isStopCreateCache.get()) {
                                                     break out;
                                                 }
                                             }
@@ -355,7 +356,7 @@ public class DatabaseService {
                                         try (Statement stmt = SQLiteUtil.getStatement(info[0]);
                                              ResultSet resultSet = stmt.executeQuery("SELECT PATH FROM " + info[1] + " " + "WHERE PRIORITY=" + info[2])) {
                                             while (resultSet.next()) {
-                                                if (!isSearchStopped.get() || !eventManagement.notMainExit() || isSearchBarVisible.get()) {
+                                                if (isStopCreateCache.get()) {
                                                     break out;
                                                 }
                                                 cache.data.add(resultSet.getString("PATH"));
