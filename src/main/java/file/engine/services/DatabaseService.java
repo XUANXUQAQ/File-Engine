@@ -349,7 +349,7 @@ public class DatabaseService {
                                 String key = entry.getKey();
                                 Cache cache = entry.getValue();
                                 if (tableNeedCache.containsKey(key)) {
-                                    if (cacheCount.get() + tableNeedCache.get(key) < MAX_CACHED_RECORD_NUM && !cache.isCacheValid()) {
+                                    if (cacheCount.get() + tableNeedCache.get(key) < MAX_CACHED_RECORD_NUM - 1000 && !cache.isCacheValid()) {
                                         cache.data = new ConcurrentLinkedQueue<>();
                                         String[] info = RegexUtil.comma.split(key);
                                         try (Statement stmt = SQLiteUtil.getStatement(info[0]);
@@ -366,7 +366,9 @@ public class DatabaseService {
                                         }
                                         cache.isCached.compareAndSet(cache.isCached.get(), true);
                                         cache.isFileLost.set(false);
-                                        System.out.println("添加缓存 " + key);
+                                        if (IsDebug.isDebug()) {
+                                            System.out.println("添加缓存 " + key);
+                                        }
                                     }
                                 } else {
                                     if (cache.isCached.get()) {
@@ -773,7 +775,9 @@ public class DatabaseService {
                             Cache cache = tableCache.get(key);
                             int matchedNum = 0;
                             if (cache.isCacheValid()) {
-                                System.out.println("从缓存中读取 " + key);
+                                if (IsDebug.isDebug()) {
+                                    System.out.println("从缓存中读取 " + key);
+                                }
                                 matchedNum += cache.data.stream()
                                         .filter(record -> checkIsMatchedAndAddToList(record, container))
                                         .count();
@@ -987,7 +991,9 @@ public class DatabaseService {
             String tableName = "list" + asciiGroup;
             Cache cache = tableCache.get(path.charAt(0) + "," + tableName + "," + priorityBySuffix);
             if (cache.isCached.get()) {
-                cache.data.remove(path);
+                if (cache.data.remove(path)) {
+                    cacheCount.decrementAndGet();
+                }
             }
         }
     }
@@ -1055,8 +1061,9 @@ public class DatabaseService {
         Cache cache = tableCache.get(path.charAt(0) + "," + tableName + "," + priorityBySuffix);
         if (cache.isCached.get()) {
             if (cacheCount.get() < MAX_CACHED_RECORD_NUM) {
-                cache.data.add(path);
-                cacheCount.incrementAndGet();
+                if (cache.data.add(path)) {
+                    cacheCount.incrementAndGet();
+                }
             } else {
                 cache.isFileLost.set(true);
             }
