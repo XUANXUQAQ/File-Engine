@@ -298,6 +298,36 @@ public class DatabaseService {
         }
     }
 
+    private LinkedHashMap<String, Integer> scanDatabaseAndSelectCacheTable(String[] disks,
+                                                                           ConcurrentLinkedQueue<String> tableQueueByPriority,
+                                                                           Supplier<Boolean> isStopCreateCache) {
+        //检查哪些表符合缓存条件，通过表权重依次向下排序
+        LinkedHashMap<String, Integer> tableNeedCache = new LinkedHashMap<>();
+        for (String diskPath : disks) {
+            String disk = String.valueOf(diskPath.charAt(0));
+            try (Statement stmt = SQLiteUtil.getStatement(disk)) {
+                for (String tableName : tableQueueByPriority) {
+                    for (Pair pair : priorityMap) {
+                        try (ResultSet resultSet = stmt.executeQuery("SELECT COUNT(*) as num FROM " + tableName + " WHERE PRIORITY=" + pair.priority)) {
+                            if (resultSet.next()) {
+                                int num = resultSet.getInt("num");
+                                if (num > 100 && num < 2000) {
+                                    tableNeedCache.put(disk + "," + tableName + "," + pair.priority, num);
+                                }
+                            }
+                            if (isStopCreateCache.get()) {
+                                return tableNeedCache;
+                            }
+                        }
+                    }
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        return tableNeedCache;
+    }
+
     private void saveTableCacheThread() {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             try {
@@ -317,69 +347,46 @@ public class DatabaseService {
                             !isSearchBarVisible.get() || IsDebug.isDebug()) {
                         double memoryUsage = SystemInfoUtil.getMemoryUsage();
                         if (memoryUsage < 0.7) {
+                            // 系统内存使用少于70%
                             startCheckTimeMills = System.currentTimeMillis();
-                            LinkedHashMap<String, Integer> tableNeedCache = new LinkedHashMap<>();
                             String availableDisks = AllConfigs.getInstance().getAvailableDisks();
                             String[] disks = RegexUtil.comma.split(availableDisks);
                             ConcurrentLinkedQueue<String> tableQueueByPriority = initTableQueueByPriority();
+                            LinkedHashMap<String, Integer> tableNeedCache = scanDatabaseAndSelectCacheTable(disks, tableQueueByPriority, isStopCreateCache);
+                            //开始缓存数据库表
                             out:
-                            {
-                                //检查哪些表符合缓存条件，通过表权重依次向下排序
-                                for (String diskPath : disks) {
-                                    String disk = String.valueOf(diskPath.charAt(0));
-                                    try (Statement stmt = SQLiteUtil.getStatement(disk)) {
-                                        for (String tableName : tableQueueByPriority) {
-                                            for (Pair pair : priorityMap) {
-                                                try (ResultSet resultSet = stmt.executeQuery("SELECT COUNT(ASCII) as num FROM " + tableName + " WHERE PRIORITY=" + pair.priority)) {
-                                                    if (resultSet.next()) {
-                                                        int num = resultSet.getInt("num");
-                                                        if (num > 100 && num < 2000) {
-                                                            tableNeedCache.put(disk + "," + tableName + "," + pair.priority, num);
-                                                        }
-                                                    }
-                                                    if (isStopCreateCache.get()) {
-                                                        break out;
-                                                    }
+                            for (Map.Entry<String, Cache> entry : tableCache.entrySet()) {
+                                String key = entry.getKey();
+                                Cache cache = entry.getValue();
+                                if (tableNeedCache.containsKey(key)) {
+                                    //当前表可以被缓存
+                                    if (cacheCount.get() + tableNeedCache.get(key) < MAX_CACHED_RECORD_NUM - 1000 && !cache.isCacheValid()) {
+                                        cache.data = new ConcurrentLinkedQueue<>();
+                                        String[] info = RegexUtil.comma.split(key);
+                                        try (Statement stmt = SQLiteUtil.getStatement(info[0]);
+                                             ResultSet resultSet = stmt.executeQuery("SELECT PATH FROM " + info[1] + " " + "WHERE PRIORITY=" + info[2])) {
+                                            while (resultSet.next()) {
+                                                if (isStopCreateCache.get()) {
+                                                    break out;
                                                 }
+                                                cache.data.add(resultSet.getString("PATH"));
+                                                cacheCount.incrementAndGet();
                                             }
+                                        } catch (SQLException e) {
+                                            e.printStackTrace();
                                         }
-                                    } catch (SQLException e) {
-                                        e.printStackTrace();
+                                        cache.isCached.compareAndSet(cache.isCached.get(), true);
+                                        cache.isFileLost.set(false);
+                                        if (IsDebug.isDebug()) {
+                                            System.out.println("添加缓存 " + key);
+                                        }
                                     }
-                                }
-                                //开始缓存数据库表
-                                for (Map.Entry<String, Cache> entry : tableCache.entrySet()) {
-                                    String key = entry.getKey();
-                                    Cache cache = entry.getValue();
-                                    if (tableNeedCache.containsKey(key)) {
-                                        if (cacheCount.get() + tableNeedCache.get(key) < MAX_CACHED_RECORD_NUM - 1000 && !cache.isCacheValid()) {
-                                            cache.data = new ConcurrentLinkedQueue<>();
-                                            String[] info = RegexUtil.comma.split(key);
-                                            try (Statement stmt = SQLiteUtil.getStatement(info[0]);
-                                                 ResultSet resultSet = stmt.executeQuery("SELECT PATH FROM " + info[1] + " " + "WHERE PRIORITY=" + info[2])) {
-                                                while (resultSet.next()) {
-                                                    if (isStopCreateCache.get()) {
-                                                        break out;
-                                                    }
-                                                    cache.data.add(resultSet.getString("PATH"));
-                                                    cacheCount.incrementAndGet();
-                                                }
-                                            } catch (SQLException e) {
-                                                e.printStackTrace();
-                                            }
-                                            cache.isCached.compareAndSet(cache.isCached.get(), true);
-                                            cache.isFileLost.set(false);
-                                            if (IsDebug.isDebug()) {
-                                                System.out.println("添加缓存 " + key);
-                                            }
-                                        }
-                                    } else {
-                                        if (cache.isCached.get()) {
-                                            cache.isCached.compareAndSet(cache.isCached.get(), false);
-                                            int num = cache.data.size();
-                                            cacheCount.compareAndSet(cacheCount.get(), cacheCount.get() - num);
-                                            cache.data = null;
-                                        }
+                                } else {
+                                    if (cache.isCached.get()) {
+                                        cache.isCached.compareAndSet(cache.isCached.get(), false);
+                                        int num = cache.data.size();
+                                        cacheCount.compareAndSet(cacheCount.get(), cacheCount.get() - num);
+                                        cache.data = null;
                                     }
                                 }
                             }
