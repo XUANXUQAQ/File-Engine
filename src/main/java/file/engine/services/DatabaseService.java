@@ -578,7 +578,6 @@ public class DatabaseService {
             int failedRetryTimes = 0;
             try {
                 while (!taskStatus.equals(allTaskStatus) && !isSearchStopped.get()) {
-//                    Bit tmpTaskStatus = new Bit(new byte[]{0});
                     //线程状态的记录从第二个位开始，所以初始值为1 0
                     Bit start = new Bit(new byte[]{1, 0});
                     //循环次数，也是下方与运算结束后需要向右偏移的位数
@@ -591,15 +590,6 @@ public class DatabaseService {
                             //用户重新输入，结束当前任务
                             break;
                         }
-//                        results = containerMap.get(start.toString());
-//                        if (results != null) {
-//                            for (String result : results) {
-//                                if (!tempResults.contains(result)) {
-//                                    tempResults.add(result);
-//                                    results.remove(result);
-//                                }
-//                            }
-//                        }
                         //当线程完成，taskStatus中的位会被设置为1
                         //这时，将taskStatus和start做与运算，然后移到第一位，如果为1，则线程已完成搜索
                         Bit and = taskStatus.and(start);
@@ -624,12 +614,12 @@ public class DatabaseService {
                                     ++failedRetryTimes;
                                 }
                             }
-//                            tmpTaskStatus = tmpTaskStatus.or(start);
                         } else {
                             if (waitTime == 0) {
                                 waitTime = System.currentTimeMillis();
                             }
                         }
+                        TimeUnit.MILLISECONDS.sleep(10);
                     }
                     TimeUnit.MILLISECONDS.sleep(10);
                 }
@@ -884,7 +874,7 @@ public class DatabaseService {
         addSearchTasks(nonFormattedSql, taskStatus, allTaskStatus, containerMap, taskQueue, isReadFromSharedMemory.get());
 
         taskQueue.forEach((key, value) -> {
-            for (int i = 0; i < 4; i++) {
+            for (int i = 0; i < 2; i++) {
                 cachedThreadPoolUtil.executeTask(() -> {
                     Runnable runnable;
                     while ((runnable = value.poll()) != null) {
