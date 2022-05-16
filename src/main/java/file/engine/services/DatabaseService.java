@@ -377,9 +377,7 @@ public class DatabaseService {
                                         }
                                         cache.isCached.compareAndSet(cache.isCached.get(), true);
                                         cache.isFileLost.set(false);
-                                        if (IsDebug.isDebug()) {
-                                            System.out.println("添加缓存 " + key);
-                                        }
+                                        System.out.println("添加缓存 " + key);
                                     }
                                 } else {
                                     if (cache.isCached.get()) {
@@ -1060,7 +1058,7 @@ public class DatabaseService {
         asciiGroup = Math.min(asciiGroup, Constants.ALL_TABLE_NUM);
         String tableName = "list" + asciiGroup;
         Cache cache = tableCache.get(path.charAt(0) + "," + tableName + "," + priorityBySuffix);
-        if (cache.isCached.get()) {
+        if (cache.isCacheValid()) {
             if (cacheCount.get() < MAX_CACHED_RECORD_NUM) {
                 if (cache.data.add(path)) {
                     cacheCount.incrementAndGet();
