@@ -156,7 +156,8 @@ public class SQLiteUtil {
     }
 
     private static void deleteMalFormedFile() {
-        if (Files.exists(Path.of("user/malformedDB"))) {
+        Path malformedDB = Path.of("user/malformedDB");
+        if (Files.exists(malformedDB)) {
             String line;
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream("user/malformedDB"), StandardCharsets.UTF_8))) {
                 while ((line = reader.readLine()) != null) {
@@ -169,7 +170,7 @@ public class SQLiteUtil {
                 e.printStackTrace();
             }
             try {
-                Files.delete(Path.of("user/malformedDB"));
+                Files.delete(malformedDB);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -177,9 +178,10 @@ public class SQLiteUtil {
     }
 
     private static String initialize() {
-        if (!Files.exists(Path.of("data"))) {
+        Path data = Path.of("data");
+        if (!Files.exists(data)) {
             try {
-                Files.createDirectories(Path.of("data"));
+                Files.createDirectories(data);
             } catch (IOException e) {
                 e.printStackTrace();
             }
