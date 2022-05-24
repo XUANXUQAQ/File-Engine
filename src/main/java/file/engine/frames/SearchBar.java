@@ -3520,7 +3520,6 @@ public class SearchBar {
             AllConfigs allConfigs = AllConfigs.getInstance();
             String[] strings;
             int length;
-            String text;
             if (allConfigs.isFirstRun()) {
                 runInternalCommand("help");
             }
@@ -3529,22 +3528,25 @@ public class SearchBar {
             final AtomicBoolean isWaiting = new AtomicBoolean(false);
             while (eventManagement.notMainExit()) {
                 try {
+                    // 记录输入字符串
+                    {
+                        strings = colon.split(getSearchBarText());
+                        length = strings.length;
+                        if (length == 2) {
+                            searchCase = semicolon.split(strings[1]);
+                            searchText = strings[0];
+                        } else {
+                            searchText = strings[0];
+                            searchCase = null;
+                        }
+                        keywords = semicolon.split(searchText);
+                    }
                     long endTime = System.currentTimeMillis();
-                    text = getSearchBarText();
                     if ((endTime - startTime > 250) && isSqlNotInitialized.get() && startSignal.get()) {
                         if (!getSearchBarText().isEmpty()) {
                             isSqlNotInitialized.set(false);
                             if (databaseService.getStatus() == Constants.Enums.DatabaseStatus.NORMAL && runningMode == Constants.Enums.RunningMode.NORMAL_MODE) {
-                                strings = colon.split(text);
-                                length = strings.length;
-                                if (length == 2) {
-                                    searchCase = semicolon.split(strings[1]);
-                                    searchText = strings[0];
-                                } else {
-                                    searchText = strings[0];
-                                    searchCase = null;
-                                }
-                                keywords = semicolon.split(searchText);
+
                                 searchCaseToLowerAndRemoveConflict();
                                 eventManagement.putEvent(new StartSearchEvent(() -> searchText, () -> searchCase, () -> keywords));
                                 addMergeThread(isMergeThreadNotExist);
@@ -3562,6 +3564,7 @@ public class SearchBar {
                         }
                         if (runningMode == Constants.Enums.RunningMode.COMMAND_MODE) {
                             //去掉冒号
+                            String text = getSearchBarText();
                             if (!runInternalCommand(text.substring(1).toLowerCase())) {
                                 LinkedHashSet<String> cmdSet = allConfigs.getCmdSet();
                                 cmdSet.add(":clearbin;" + translateService.getTranslation("Clear the recycle bin"));
@@ -3569,15 +3572,14 @@ public class SearchBar {
                                 cmdSet.add(":clearUpdate;" + translateService.getTranslation("Clear the database and update file index"));
                                 cmdSet.add(":help;" + translateService.getTranslation("View help"));
                                 cmdSet.add(":version;" + translateService.getTranslation("View Version"));
-                                String finalText = text;
                                 cmdSet.forEach(i -> {
                                     String[] cmdInfo = semicolon.split(i);
-                                    if (cmdInfo[0].contains(finalText.substring(1))) {
+                                    if (cmdInfo[0].contains(text.substring(1))) {
                                         listResultsNum.incrementAndGet();
                                         String result = translateService.getTranslation("Run command") + i;
                                         listResults.add(result);
                                     }
-                                    if (cmdInfo[0].equals(finalText)) {
+                                    if (cmdInfo[0].equals(text)) {
                                         detectShowingModeAndClose();
                                         openWithoutAdmin(cmdInfo[1]);
                                     }
