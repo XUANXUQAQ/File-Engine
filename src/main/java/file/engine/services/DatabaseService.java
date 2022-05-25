@@ -344,7 +344,7 @@ public class DatabaseService {
                     if (SystemIdleCheckUtil.isCursorLongTimeNotMove() &&
                             isSearchStopped.get() &&
                             System.currentTimeMillis() - startCheckTimeMills > 10 * 60 * 1000 &&
-                            !isSearchBarVisible.get() || IsDebug.isDebug()) {
+                            !isSearchBarVisible.get()) {
                         double memoryUsage = SystemInfoUtil.getMemoryUsage();
                         if (memoryUsage < 0.7) {
                             // 系统内存使用少于70%

@@ -3529,17 +3529,20 @@ public class SearchBar {
             while (eventManagement.notMainExit()) {
                 try {
                     // 记录输入字符串
-                    {
-                        strings = colon.split(getSearchBarText());
-                        length = strings.length;
-                        if (length == 2) {
-                            searchCase = semicolon.split(strings[1]);
-                            searchText = strings[0];
-                        } else {
-                            searchText = strings[0];
-                            searchCase = null;
+                    if (isVisible()) {
+                        String searchBarText = getSearchBarText();
+                        if (!searchBarText.isEmpty()) {
+                            strings = colon.split(searchBarText);
+                            length = strings.length;
+                            if (length == 2) {
+                                searchCase = semicolon.split(strings[1]);
+                                searchText = strings[0];
+                            } else {
+                                searchText = strings[0];
+                                searchCase = null;
+                            }
+                            keywords = semicolon.split(searchText);
                         }
-                        keywords = semicolon.split(searchText);
                     }
                     long endTime = System.currentTimeMillis();
                     if ((endTime - startTime > 250) && isSqlNotInitialized.get() && startSignal.get()) {

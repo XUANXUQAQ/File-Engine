@@ -361,6 +361,10 @@ void restart_file_engine(bool isIgnoreCloseFile)
 		g_restart_count = 0;
 	}
 	g_restart_count++;
+	std::ofstream log_file(g_log_file_path + std::string(get_time()) + ".log", std::ios::app);
+	log_file << get_time() << std::endl;
+	log_file.close();
+
 	std::string command("/c ");
 	const std::string jre(g_jre_path);
 	command.append(jre.substr(0, 2));
