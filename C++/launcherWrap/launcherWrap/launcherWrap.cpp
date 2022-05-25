@@ -25,7 +25,7 @@
 
 constexpr auto* g_file_engine_zip_name = "File-Engine.zip";
 std::string g_jvm_parameters =
-	"-Xms8M -Xmx128M -XX:+UseParallelGC -XX:MaxHeapFreeRatio=20 -XX:MinHeapFreeRatio=10 -XX:NewRatio=3 -XX:+CompactStrings -XX:MaxTenuringThreshold=16";
+"-Xms8M -Xmx128M -XX:+UseParallelGC -XX:MaxHeapFreeRatio=20 -XX:MinHeapFreeRatio=10 -XX:NewRatio=3 -XX:+CompactStrings -XX:MaxTenuringThreshold=16";
 
 char g_close_signal_file[1000];
 char g_file_engine_jar_path[1000];
@@ -59,11 +59,12 @@ bool is_launched();
 std::wstring get_self_name();
 void delete_jre_dir();
 bool remove_dir(const char* szFileDir);
-std::string get_time();
+std::string get_date();
 time_t convert(int year, int month, int day);
 int get_days(const char* from, const char* to);
 void check_logs();
 void init_jvm_parameters();
+tm get_tm();
 
 int main()
 {
@@ -217,7 +218,7 @@ void check_logs()
 		}
 		if ((FindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0) //如果不是文件夹
 		{
-			const int days = get_days(FindFileData.cFileName, get_time().c_str());
+			const int days = get_days(FindFileData.cFileName, get_date().c_str());
 			if (days > MAX_LOG_PRESERVE_DAYS)
 			{
 				std::string full_path(g_log_file_path);
@@ -236,7 +237,7 @@ inline void delete_jre_dir()
 
 inline time_t convert(int year, int month, int day)
 {
-	tm info = {0};
+	tm info = { 0 };
 	info.tm_year = year - 1900;
 	info.tm_mon = month - 1;
 	info.tm_mday = day;
@@ -361,8 +362,11 @@ void restart_file_engine(bool isIgnoreCloseFile)
 		g_restart_count = 0;
 	}
 	g_restart_count++;
-	std::ofstream log_file(g_log_file_path + std::string(get_time()) + ".log", std::ios::app);
-	log_file << get_time() << std::endl;
+
+	std::ofstream log_file(g_log_file_path + std::string(get_date()) + ".log", std::ios::app);
+	tm t = get_tm();
+	log_file << "------------------------------------------------------------------------------------------------------" << std::endl;
+	log_file << t.tm_hour << ":" << t.tm_min << ":" << t.tm_sec << std::endl;
 	log_file.close();
 
 	std::string command("/c ");
@@ -371,7 +375,7 @@ void restart_file_engine(bool isIgnoreCloseFile)
 	command.append("\"");
 	command.append(jre.substr(2));
 	command.append("bin\\java.exe\" ").append(g_jvm_parameters).append(" -jar File-Engine.jar").append(" 1> normal.log")
-	       .append(" 2>> ").append("\"").append(g_log_file_path).append(get_time()).append(".log").append("\"");
+		.append(" 2>> ").append("\"").append(g_log_file_path).append(get_date()).append(".log").append("\"");
 #ifdef TEST
 	std::cout << "running command: " << command << std::endl;
 #endif
@@ -379,14 +383,23 @@ void restart_file_engine(bool isIgnoreCloseFile)
 }
 
 /**
- * 获取当前时间
- */
-std::string get_time()
+ * 获取具体时间
+*/
+tm get_tm()
 {
 	time_t timep;
 	time(&timep);
 	tm tmpTime;
 	localtime_s(&tmpTime, &timep);
+	return tmpTime;
+}
+
+/**
+ * 获取当前日期
+ */
+std::string get_date()
+{
+	tm tmpTime = get_tm();
 	char tmp[64];
 	strftime(tmp, sizeof(tmp), "%Y-%m-%d", &tmpTime);
 	return tmp;
@@ -560,7 +573,7 @@ BOOL find_process()
 		if (wcscmp(pe.szExeFile, L"java.exe") == 0)
 		{
 			DWORD id = pe.th32ProcessID;
-			TCHAR szProcessName[1000] = {0};
+			TCHAR szProcessName[1000] = { 0 };
 			get_process_full_path(id, szProcessName);
 			std::wstring processName(szProcessName);
 			if (processName.find(workingDir) != std::wstring::npos)
@@ -595,8 +608,7 @@ bool remove_dir(const char* szFileDir)
 		{
 			DeleteFileA((strDir + wfd.cFileName).c_str());
 		}
-	}
-	while (FindNextFileA(hFind, &wfd));
+	} while (FindNextFileA(hFind, &wfd));
 	FindClose(hFind);
 	RemoveDirectoryA(szFileDir);
 	return true;
