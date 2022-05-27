@@ -3549,7 +3549,6 @@ public class SearchBar {
                         if (!getSearchBarText().isEmpty()) {
                             isSqlNotInitialized.set(false);
                             if (databaseService.getStatus() == Constants.Enums.DatabaseStatus.NORMAL && runningMode == Constants.Enums.RunningMode.NORMAL_MODE) {
-
                                 searchCaseToLowerAndRemoveConflict();
                                 eventManagement.putEvent(new StartSearchEvent(() -> searchText, () -> searchCase, () -> keywords));
                                 addMergeThread(isMergeThreadNotExist);
@@ -3616,16 +3615,16 @@ public class SearchBar {
                             }
                         } else if (runningMode == Constants.Enums.RunningMode.PLUGIN_MODE) {
                             String result;
-                            while (runningMode == Constants.Enums.RunningMode.PLUGIN_MODE) {
-                                while (currentUsingPlugin != null && (result = currentUsingPlugin.pollFromResultQueue()) != null) {
-                                    result = "plugin" + pluginResultSplitStr + currentUsingPlugin.identifier + pluginResultSplitStr + result;
-                                    if (!listResults.contains(result)) {
-                                        listResults.add(result);
-                                        listResultsNum.incrementAndGet();
-                                    }
+                            while (currentUsingPlugin != null &&
+                                    (result = currentUsingPlugin.pollFromResultQueue()) != null &&
+                                    runningMode == Constants.Enums.RunningMode.PLUGIN_MODE) {
+                                result = "plugin" + pluginResultSplitStr + currentUsingPlugin.identifier + pluginResultSplitStr + result;
+                                if (!listResults.contains(result)) {
+                                    listResults.add(result);
+                                    listResultsNum.incrementAndGet();
                                 }
-                                TimeUnit.MILLISECONDS.sleep(10);
                             }
+                            TimeUnit.MILLISECONDS.sleep(10);
                         }
                         if (databaseService.getStatus() != Constants.Enums.DatabaseStatus.NORMAL) {
                             //开启线程等待搜索完成
