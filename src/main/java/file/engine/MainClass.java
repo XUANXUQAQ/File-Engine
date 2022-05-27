@@ -29,6 +29,7 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import static file.engine.utils.StartupUtil.hasStartup;
@@ -300,11 +301,13 @@ public class MainClass {
             }
 
             eventManagement.putEvent(new CheckConfigsEvent(), event -> {
-                String errorInfo = event.getReturnValue();
-                if (!errorInfo.isEmpty()) {
-                    EventManagement.getInstance().putEvent(new ShowTaskBarMessageEvent(TranslateService.getInstance().getTranslation("Warning"),
-                            TranslateService.getInstance().getTranslation(errorInfo), new ShowSettingsFrameEvent("tabSearchSettings")));
-                }
+                Optional<String> optional = event.getReturnValue();
+                optional.ifPresent((errorInfo) -> {
+                    if (!errorInfo.isEmpty()) {
+                        EventManagement.getInstance().putEvent(new ShowTaskBarMessageEvent(TranslateService.getInstance().getTranslation("Warning"),
+                                TranslateService.getInstance().getTranslation(errorInfo), new ShowSettingsFrameEvent("tabSearchSettings")));
+                    }
+                });
             }, null);
 
             if (AllConfigs.getInstance().isFirstRun()) {

@@ -860,37 +860,42 @@ public class SettingsFrame {
                     GetPluginByNameEvent getPluginByNameEvent = new GetPluginByNameEvent(pluginName);
                     eventManagement.putEvent(getPluginByNameEvent);
                     eventManagement.waitForEvent(getPluginByNameEvent);
-                    PluginService.PluginInfo pluginInfo = getPluginByNameEvent.getReturnValue();
-                    Plugin plugin = pluginInfo.plugin;
-                    int apiVersion;
-                    ImageIcon icon = plugin.getPluginIcon();
-                    String description = plugin.getDescription();
-                    String officialSite = plugin.getOfficialSite();
-                    String version = plugin.getVersion();
-                    String author = plugin.getAuthor();
-                    apiVersion = plugin.getApiVersion();
-                    labelPluginVersion.setText(TRANSLATE_SERVICE.getTranslation("Version") + ":" + version);
-                    labelApiVersion.setText("API " + TRANSLATE_SERVICE.getTranslation("Version") + ":" + apiVersion);
-                    PluginIconLabel.setIcon(icon);
-                    PluginNamelabel.setText("<html><body><font size=\"+1\">" + pluginName + "</body></html>");
-                    textAreaDescription.setText(description);
-                    labelAuthor.setText(TRANSLATE_SERVICE.getTranslation("Author") + ":" + author);
-                    labelOfficialSite.setText("<html><a href='" + officialSite + "'><font size=\"4\">" + pluginName + "</font></a></html>");
-                    labelProgress.setText("");
-                    buttonUpdatePlugin.setVisible(true);
+                    Optional<PluginService.PluginInfo> pluginInfoOptional = getPluginByNameEvent.getReturnValue();
+                    pluginInfoOptional.ifPresent(pluginInfo -> {
+                        Plugin plugin = pluginInfo.plugin;
+                        int apiVersion;
+                        ImageIcon icon = plugin.getPluginIcon();
+                        String description = plugin.getDescription();
+                        String officialSite = plugin.getOfficialSite();
+                        String version = plugin.getVersion();
+                        String author = plugin.getAuthor();
+                        apiVersion = plugin.getApiVersion();
+                        labelPluginVersion.setText(TRANSLATE_SERVICE.getTranslation("Version") + ":" + version);
+                        labelApiVersion.setText("API " + TRANSLATE_SERVICE.getTranslation("Version") + ":" + apiVersion);
+                        PluginIconLabel.setIcon(icon);
+                        PluginNamelabel.setText("<html><body><font size=\"+1\">" + pluginName + "</body></html>");
+                        textAreaDescription.setText(description);
+                        labelAuthor.setText(TRANSLATE_SERVICE.getTranslation("Author") + ":" + author);
+                        labelOfficialSite.setText("<html><a href='" + officialSite + "'><font size=\"4\">" + pluginName + "</font></a></html>");
+                        labelProgress.setText("");
+                        buttonUpdatePlugin.setVisible(true);
+                    });
                     if (PluginService.getInstance().hasPluginNotLatest(pluginName)) {
                         IsTaskDoneBeforeEvent isTaskDoneBeforeEvent = new IsTaskDoneBeforeEvent(new DownloadManager(null, pluginName + ".jar", new File("tmp", "pluginsUpdate").getAbsolutePath()));
                         eventManagement.putEvent(isTaskDoneBeforeEvent);
                         eventManagement.waitForEvent(isTaskDoneBeforeEvent);
-                        if (isTaskDoneBeforeEvent.getReturnValue()) {
-                            buttonUpdatePlugin.setEnabled(false);
-                            buttonUpdatePlugin.setText(TRANSLATE_SERVICE.getTranslation("Downloaded"));
-                        } else {
-                            Color color = new Color(51, 122, 183);
-                            buttonUpdatePlugin.setText(TRANSLATE_SERVICE.getTranslation("Update"));
-                            buttonUpdatePlugin.setBackground(color);
-                            buttonUpdatePlugin.setEnabled(true);
-                        }
+                        Optional<Boolean> returnValue = isTaskDoneBeforeEvent.getReturnValue();
+                        returnValue.ifPresent((isTaskDone) -> {
+                            if (isTaskDone) {
+                                buttonUpdatePlugin.setEnabled(false);
+                                buttonUpdatePlugin.setText(TRANSLATE_SERVICE.getTranslation("Downloaded"));
+                            } else {
+                                Color color = new Color(51, 122, 183);
+                                buttonUpdatePlugin.setText(TRANSLATE_SERVICE.getTranslation("Update"));
+                                buttonUpdatePlugin.setBackground(color);
+                                buttonUpdatePlugin.setEnabled(true);
+                            }
+                        });
                     } else {
                         buttonUpdatePlugin.setText(TRANSLATE_SERVICE.getTranslation("Check for update"));
                         buttonUpdatePlugin.setEnabled(true);
@@ -1530,57 +1535,70 @@ public class SettingsFrame {
 
         buttonUpdatePlugin.addActionListener(e -> {
             String pluginName = (String) listPlugins.getSelectedValue();
-            DownloadManager downloadManager = pluginInfoMap.get(pluginName);
-            if (downloadManager != null && downloadManager.getDownloadStatus() == Constants.Enums.DownloadStatus.DOWNLOAD_DOWNLOADING) {
-                eventManagement.putEvent(new StopDownloadEvent(downloadManager));
+            var downloadManagerContainer = new Object() {
+                DownloadManager downloadManager = pluginInfoMap.get(pluginName);
+            };
+            if (downloadManagerContainer.downloadManager != null && downloadManagerContainer.downloadManager.getDownloadStatus() == Constants.Enums.DownloadStatus.DOWNLOAD_DOWNLOADING) {
+                eventManagement.putEvent(new StopDownloadEvent(downloadManagerContainer.downloadManager));
             } else {
                 startCheckTime.set(0L);
                 GetPluginByNameEvent getPluginByNameEvent = new GetPluginByNameEvent(pluginName);
                 eventManagement.putEvent(getPluginByNameEvent);
                 eventManagement.waitForEvent(getPluginByNameEvent);
-                PluginService.PluginInfo pluginInfo = getPluginByNameEvent.getReturnValue();
-                Plugin plugin = pluginInfo.plugin;
-                String pluginFullName = pluginName + ".jar";
+                Optional<PluginService.PluginInfo> pluginInfoOptional = getPluginByNameEvent.getReturnValue();
+                pluginInfoOptional.ifPresent(pluginInfo -> {
+                    Plugin plugin = pluginInfo.plugin;
+                    String pluginFullName = pluginName + ".jar";
 
-                if (pluginService.hasPluginNotLatest(pluginName)) {
-                    //已经检查过
-                    isVersionLatest.set(false);
-                    isSkipConfirm.set(true);
-                } else {
-                    Thread checkUpdateThread = new Thread(() -> {
-                        startCheckTime.set(System.currentTimeMillis());
-                        try {
-                            isVersionLatest.set(plugin.isLatest());
-                            if (!Thread.interrupted()) {
-                                startCheckTime.set(0x100L); //表示检查成功
+                    if (pluginService.hasPluginNotLatest(pluginName)) {
+                        //已经检查过
+                        isVersionLatest.set(false);
+                        isSkipConfirm.set(true);
+                    } else {
+                        Thread checkUpdateThread = new Thread(() -> {
+                            startCheckTime.set(System.currentTimeMillis());
+                            try {
+                                isVersionLatest.set(plugin.isLatest());
+                                if (!Thread.interrupted()) {
+                                    startCheckTime.set(0x100L); //表示检查成功
+                                }
+                            } catch (Exception exception) {
+                                exception.printStackTrace();
+                                startCheckTime.set(0xFFFL);  //表示检查失败
                             }
-                        } catch (Exception exception) {
-                            exception.printStackTrace();
-                            startCheckTime.set(0xFFFL);  //表示检查失败
-                        }
-                    });
-                    cachedThreadPoolUtil.executeTask(checkUpdateThread);
-                    //等待获取插件更新信息
-                    waitForCheckUpdateResult(startCheckTime, checkUpdateThread);
-                }
-                if (isVersionLatest.get()) {
-                    JOptionPane.showMessageDialog(frame, TRANSLATE_SERVICE.getTranslation("Latest version:") + plugin.getVersion() + "\n" + TRANSLATE_SERVICE.getTranslation("The current version is the latest"));
-                    return;
-                }
-                if (!isSkipConfirm.get()) {
-                    eventManagement.putEvent(new AddPluginsCanUpdateEvent(pluginName));
-                    int ret = JOptionPane.showConfirmDialog(frame, TRANSLATE_SERVICE.getTranslation("New version available, do you want to update?"));
-                    if (ret != JOptionPane.YES_OPTION) {
+                        });
+                        cachedThreadPoolUtil.executeTask(checkUpdateThread);
+                        //等待获取插件更新信息
+                        waitForCheckUpdateResult(startCheckTime, checkUpdateThread);
+                    }
+
+                    if (isVersionLatest.get()) {
+                        JOptionPane.showMessageDialog(frame, TRANSLATE_SERVICE.getTranslation("Latest version:") + plugin.getVersion() + "\n" + TRANSLATE_SERVICE.getTranslation("The current version is the latest"));
                         return;
                     }
-                }
-                //开始下载
-                String url = plugin.getUpdateURL();
-                downloadManager = new DownloadManager(url, pluginFullName, new File("tmp", "pluginsUpdate").getAbsolutePath());
-                eventManagement.putEvent(new StartDownloadEvent(downloadManager));
-                pluginInfoMap.put(pluginName, downloadManager);
-                DownloadManager finalDownloadManager = downloadManager;
-                cachedThreadPoolUtil.executeTask(() -> SetDownloadProgress.setProgress(labelProgress, buttonUpdatePlugin, finalDownloadManager, () -> finalDownloadManager.fileName.equals(listPlugins.getSelectedValue() + ".jar"), new File("user/updatePlugin"), "", null, null));
+                    if (!isSkipConfirm.get()) {
+                        eventManagement.putEvent(new AddPluginsCanUpdateEvent(pluginName));
+                        int ret = JOptionPane.showConfirmDialog(frame, TRANSLATE_SERVICE.getTranslation("New version available, do you want to update?"));
+                        if (ret != JOptionPane.YES_OPTION) {
+                            return;
+                        }
+                    }
+                    //开始下载
+                    String url = plugin.getUpdateURL();
+                    downloadManagerContainer.downloadManager = new DownloadManager(url, pluginFullName, new File("tmp", "pluginsUpdate").getAbsolutePath());
+                    eventManagement.putEvent(new StartDownloadEvent(downloadManagerContainer.downloadManager));
+                    pluginInfoMap.put(pluginName, downloadManagerContainer.downloadManager);
+                    DownloadManager finalDownloadManager = downloadManagerContainer.downloadManager;
+                    cachedThreadPoolUtil.executeTask(() ->
+                            SetDownloadProgress.setProgress(labelProgress,
+                                    buttonUpdatePlugin,
+                                    finalDownloadManager,
+                                    () -> finalDownloadManager.fileName.equals(listPlugins.getSelectedValue() + ".jar"),
+                                    new File("user/updatePlugin"),
+                                    "",
+                                    null,
+                                    null));
+                });
             }
         });
     }
@@ -2295,10 +2313,12 @@ public class SettingsFrame {
             CheckHotKeyAvailableEvent checkHotKeyAvailableEvent = new CheckHotKeyAvailableEvent(tmp_hotkey);
             eventManagement.putEvent(checkHotKeyAvailableEvent);
             eventManagement.waitForEvent(checkHotKeyAvailableEvent);
-            boolean isAvailable = checkHotKeyAvailableEvent.getReturnValue();
-            if (!isAvailable) {
-                strBuilder.append(TRANSLATE_SERVICE.getTranslation("Hotkey setting is wrong, please change")).append("\n");
-            }
+            Optional<Boolean> isAvailable = checkHotKeyAvailableEvent.getReturnValue();
+            isAvailable.ifPresent(ret -> {
+                if (!ret) {
+                    strBuilder.append(TRANSLATE_SERVICE.getTranslation("Hotkey setting is wrong, please change")).append("\n");
+                }
+            });
         }
         if (tmp_openLastFolderKeyCode == tmp_runAsAdminKeyCode || tmp_openLastFolderKeyCode == tmp_copyPathKeyCode || tmp_runAsAdminKeyCode == tmp_copyPathKeyCode) {
             strBuilder.append(TRANSLATE_SERVICE.getTranslation("HotKey conflict")).append("\n");

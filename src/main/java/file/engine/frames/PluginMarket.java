@@ -307,7 +307,7 @@ public class PluginMarket {
                     EventManagement eventManagement = EventManagement.getInstance();
                     eventManagement.putEvent(checkPluginExistEvent);
                     eventManagement.waitForEvent(checkPluginExistEvent);
-                    boolean hasPlugin = checkPluginExistEvent.getReturnValue();
+                    Optional<Boolean> hasPluginOptional = checkPluginExistEvent.getReturnValue();
                     IsTaskDoneBeforeEvent isTaskDoneBeforeEvent = new IsTaskDoneBeforeEvent(new DownloadManager(
                             null,
                             pluginName + ".jar",
@@ -315,11 +315,18 @@ public class PluginMarket {
                     ));
                     eventManagement.putEvent(isTaskDoneBeforeEvent);
                     eventManagement.waitForEvent(isTaskDoneBeforeEvent);
-                    boolean downloaded = isTaskDoneBeforeEvent.getReturnValue();
-                    if (hasPlugin) {
+                    Optional<Boolean> downloadedOptional = isTaskDoneBeforeEvent.getReturnValue();
+                    var obj = new Object() {
+                        boolean hasPlugin;
+                        boolean downloaded;
+                    };
+
+                    hasPluginOptional.ifPresentOrElse((ret) -> obj.hasPlugin = ret, () -> obj.hasPlugin = false);
+                    downloadedOptional.ifPresentOrElse((ret) -> obj.downloaded = ret, () -> obj.downloaded = false);
+                    if (obj.hasPlugin) {
                         buttonInstall.setEnabled(false);
                         buttonInstall.setText(translateUtil.getTranslation("Installed"));
-                    } else if (downloaded) {
+                    } else if (obj.downloaded) {
                         buttonInstall.setEnabled(false);
                         buttonInstall.setText(translateUtil.getTranslation("Downloaded"));
                     } else {

@@ -2,6 +2,7 @@ package file.engine.event.handler;
 
 import lombok.Setter;
 
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
@@ -56,8 +57,8 @@ public class Event {
     }
 
     @SuppressWarnings("unchecked")
-    public <T> T getReturnValue() {
-        return (T) returnValue;
+    public <T> Optional<T> getReturnValue() {
+        return Optional.ofNullable((T) returnValue);
     }
 
     public void setCallback(Consumer<Event> callback) {

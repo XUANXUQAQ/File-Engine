@@ -35,7 +35,6 @@ public class PluginService {
     private final HashSet<String> OLD_API_PLUGINS = new HashSet<>();
     private final HashSet<String> REPEAT_PLUGINS = new HashSet<>();
     private final HashSet<String> LOAD_ERROR_PLUGINS = new HashSet<>();
-    private final PluginInfo nullPluginInfo = new PluginInfo(null, "", "");
 
     private static volatile PluginService INSTANCE = null;
 
@@ -196,7 +195,7 @@ public class PluginService {
                 return each;
             }
         }
-        return nullPluginInfo;
+        return null;
     }
 
     /**
@@ -211,7 +210,7 @@ public class PluginService {
                 return each;
             }
         }
-        return nullPluginInfo;
+        return null;
     }
 
     /**

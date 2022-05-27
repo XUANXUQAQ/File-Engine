@@ -19,7 +19,9 @@ import file.engine.utils.RegexUtil;
 
 import java.awt.event.KeyEvent;
 import java.util.HashMap;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
@@ -132,16 +134,20 @@ public class CheckHotKeyService {
                 IsSearchBarVisibleEvent isSearchBarVisibleEvent = new IsSearchBarVisibleEvent();
                 eventManagement.putEvent(isSearchBarVisibleEvent);
                 eventManagement.waitForEvent(isSearchBarVisibleEvent);
-                Supplier<Boolean> isVisible = isSearchBarVisibleEvent.getReturnValue();
+                Optional<Supplier<Boolean>> isVisibleOptional = isSearchBarVisibleEvent.getReturnValue();
+                AtomicReference<Supplier<Boolean>> isVisible = new AtomicReference<>();
+                isVisibleOptional.ifPresentOrElse(isVisible::set, () -> isVisible.set(() -> false));
                 while (eventManagement.notMainExit()) {
                     if (!isExecuted && instance.getKeyStatus()) {
                         //是否搜索框可见
-                        if (isVisible.get()) {
+                        if (isVisible.get().get()) {
                             //搜索框最小可见时间为200ms，必须显示超过200ms后才响应关闭事件，防止闪屏
                             if (System.currentTimeMillis() - ref.startVisibleTime > 200) {
                                 //获取当前显示模式
                                 eventManagement.putEvent(new GetShowingModeEvent(), getShowingModeEvent -> {
-                                    if (getShowingModeEvent.getReturnValue() == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
+                                    Optional<Constants.Enums.ShowingSearchBarMode> returnValue = getShowingModeEvent.getReturnValue();
+                                    //noinspection OptionalGetWithoutIsPresent
+                                    if (returnValue.get() == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
                                         eventManagement.putEvent(new HideSearchBarEvent());
                                         ref.endVisibleTime = System.currentTimeMillis();
                                     } else {

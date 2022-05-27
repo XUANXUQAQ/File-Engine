@@ -99,8 +99,6 @@ public class SearchBar {
     private Color labelFontColor;
     private volatile long startTime = 0;
     private final Pattern semicolon;
-    private final Pattern colon;
-    private final Pattern blank;
     private volatile Constants.Enums.RunningMode runningMode;
     private volatile Constants.Enums.ShowingSearchBarMode showingMode;
     private long mouseWheelTime = 0;
@@ -109,7 +107,7 @@ public class SearchBar {
     private volatile long firstResultStartShowingTime = 0;  //记录开始显示结果的时间，用于防止刚开始移动到鼠标导致误触
     private final CopyOnWriteArrayList<String> listResults;  //保存从数据库中找出符合条件的记录（文件路径）
     private volatile String[] searchCase;
-    private volatile String searchText;
+    private volatile String searchText = "";
     private volatile String[] keywords;
     private final DatabaseService databaseService;
     private final AtomicInteger listResultsNum;  //保存当前listResults中有多少个结果
@@ -147,8 +145,6 @@ public class SearchBar {
         showingMode = Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING;
         currentLabelSelectedPosition = new AtomicInteger(0);
         semicolon = RegexUtil.semicolon;
-        colon = RegexUtil.colon;
-        blank = RegexUtil.blank;
 
         databaseService = DatabaseService.getInstance();
 
@@ -312,7 +308,7 @@ public class SearchBar {
                     openWithoutAdmin(res);
                 } else {
                     String[] commandInfo = semicolon.split(res);
-                    boolean isExecuted = runInternalCommand(colon.split(commandInfo[0])[1]);
+                    boolean isExecuted = runInternalCommand(RegexUtil.colon.split(commandInfo[0])[1]);
                     if (isExecuted) {
                         return;
                     }
@@ -340,7 +336,7 @@ public class SearchBar {
                     openWithAdmin(res);
                 } else {
                     String[] commandInfo = semicolon.split(res);
-                    boolean isExecuted = runInternalCommand(colon.split(commandInfo[0])[1]);
+                    boolean isExecuted = runInternalCommand(RegexUtil.colon.split(commandInfo[0])[1]);
                     if (isExecuted) {
                         return;
                     }
@@ -368,7 +364,7 @@ public class SearchBar {
                     copyToClipBoard(res, true);
                 } else {
                     String[] commandInfo = semicolon.split(res);
-                    boolean isExecuted = runInternalCommand(colon.split(commandInfo[0])[1]);
+                    boolean isExecuted = runInternalCommand(RegexUtil.colon.split(commandInfo[0])[1]);
                     if (isExecuted) {
                         return;
                     }
@@ -396,7 +392,7 @@ public class SearchBar {
                     openFolderByExplorer(res);
                 } else {
                     String[] commandInfo = semicolon.split(res);
-                    boolean isExecuted = runInternalCommand(colon.split(commandInfo[0])[1]);
+                    boolean isExecuted = runInternalCommand(RegexUtil.colon.split(commandInfo[0])[1]);
                     if (isExecuted) {
                         return;
                     }
@@ -570,8 +566,8 @@ public class SearchBar {
                     EventManagement eventManagement = EventManagement.getInstance();
                     eventManagement.putEvent(getPluginByIdentifierEvent);
                     eventManagement.waitForEvent(getPluginByIdentifierEvent);
-                    PluginService.PluginInfo pluginInfo = getPluginByIdentifierEvent.getReturnValue();
-                    pluginInfo.plugin.mousePressed(e, split[2]);
+                    Optional<PluginService.PluginInfo> pluginInfoOptional = getPluginByIdentifierEvent.getReturnValue();
+                    pluginInfoOptional.ifPresent((pluginInfo) -> pluginInfo.plugin.mousePressed(e, split[2]));
                     if (count == 2) {
                         detectShowingModeAndClose();
                     }
@@ -609,7 +605,7 @@ public class SearchBar {
                                     }
                                 } else if (runningMode == Constants.Enums.RunningMode.COMMAND_MODE) {
                                     String[] commandInfo = semicolon.split(res);
-                                    boolean isExecuted = runInternalCommand(colon.split(commandInfo[0])[1]);
+                                    boolean isExecuted = runInternalCommand(RegexUtil.colon.split(commandInfo[0])[1]);
                                     if (isExecuted) {
                                         return;
                                     }
@@ -665,9 +661,9 @@ public class SearchBar {
                     eventManagement.putEvent(getPluginByIdentifierEvent);
                     eventManagement.waitForEvent(getPluginByIdentifierEvent);
 
-                    PluginService.PluginInfo pluginInfo =
+                    Optional<PluginService.PluginInfo> pluginInfoOptional =
                             getPluginByIdentifierEvent.getReturnValue();
-                    pluginInfo.plugin.mouseReleased(e, split[2]);
+                    pluginInfoOptional.ifPresent((pluginInfo -> pluginInfo.plugin.mouseReleased(e, split[2])));
                 }
                 if (runningMode == Constants.Enums.RunningMode.PLUGIN_MODE && currentUsingPlugin != null) {
                     String[] split = splitPluginResult(res);
@@ -836,8 +832,8 @@ public class SearchBar {
                                 EventManagement eventManagement = EventManagement.getInstance();
                                 eventManagement.putEvent(getPluginByIdentifierEvent);
                                 eventManagement.waitForEvent(getPluginByIdentifierEvent);
-                                PluginService.PluginInfo pluginInfo = getPluginByIdentifierEvent.getReturnValue();
-                                pluginInfo.plugin.keyPressed(arg0, split[2]);
+                                Optional<PluginService.PluginInfo> pluginInfoOptional = getPluginByIdentifierEvent.getReturnValue();
+                                pluginInfoOptional.ifPresent((pluginInfo -> pluginInfo.plugin.keyPressed(arg0, split[2])));
                             } else {
                                 if (runningMode == Constants.Enums.RunningMode.NORMAL_MODE) {
                                     String searchBarText = getSearchBarText();
@@ -866,7 +862,7 @@ public class SearchBar {
                                     }
                                 } else if (runningMode == Constants.Enums.RunningMode.COMMAND_MODE) {
                                     String[] commandInfo = semicolon.split(res);
-                                    boolean isExecuted = runInternalCommand(colon.split(commandInfo[0])[1]);
+                                    boolean isExecuted = runInternalCommand(RegexUtil.colon.split(commandInfo[0])[1]);
                                     if (isExecuted) {
                                         return;
                                     }
@@ -902,8 +898,8 @@ public class SearchBar {
                             EventManagement eventManagement = EventManagement.getInstance();
                             eventManagement.putEvent(getPluginByIdentifierEvent);
                             eventManagement.waitForEvent(getPluginByIdentifierEvent);
-                            PluginService.PluginInfo pluginInfo = getPluginByIdentifierEvent.getReturnValue();
-                            pluginInfo.plugin.keyPressed(arg0, split[2]);
+                            Optional<PluginService.PluginInfo> pluginInfoOptional = getPluginByIdentifierEvent.getReturnValue();
+                            pluginInfoOptional.ifPresent((pluginInfo -> pluginInfo.plugin.keyPressed(arg0, split[2])));
                         }
                     }
                 }
@@ -935,10 +931,12 @@ public class SearchBar {
                     EventManagement eventManagement = EventManagement.getInstance();
                     eventManagement.putEvent(getPluginByIdentifierEvent);
                     eventManagement.waitForEvent(getPluginByIdentifierEvent);
-                    PluginService.PluginInfo pluginInfo = getPluginByIdentifierEvent.getReturnValue();
-                    if (key != 38 && key != 40) {
-                        pluginInfo.plugin.keyReleased(arg0, split[2]);
-                    }
+                    Optional<PluginService.PluginInfo> pluginInfoOptional = getPluginByIdentifierEvent.getReturnValue();
+                    pluginInfoOptional.ifPresent(pluginInfo -> {
+                        if (key != 38 && key != 40) {
+                            pluginInfo.plugin.keyReleased(arg0, split[2]);
+                        }
+                    });
                 }
                 if (allConfigs.getOpenLastFolderKeyCode() == key) {
                     //复位按键状态
@@ -969,10 +967,12 @@ public class SearchBar {
                     EventManagement eventManagement = EventManagement.getInstance();
                     eventManagement.putEvent(getPluginByIdentifierEvent);
                     eventManagement.waitForEvent(getPluginByIdentifierEvent);
-                    PluginService.PluginInfo pluginInfo = getPluginByIdentifierEvent.getReturnValue();
-                    if (key != 38 && key != 40) {
-                        pluginInfo.plugin.keyTyped(arg0, split[2]);
-                    }
+                    Optional<PluginService.PluginInfo> pluginInfoOptional = getPluginByIdentifierEvent.getReturnValue();
+                    pluginInfoOptional.ifPresent(pluginInfo -> {
+                        if (key != 38 && key != 40) {
+                            pluginInfo.plugin.keyTyped(arg0, split[2]);
+                        }
+                    });
                 }
                 if (runningMode == Constants.Enums.RunningMode.PLUGIN_MODE) {
                     if (key != 38 && key != 40 && currentUsingPlugin != null && listResultsNum.get() != 0) {
@@ -2439,32 +2439,37 @@ public class SearchBar {
      *
      * @return 是否发送startTime以及开始信号
      */
-    private boolean setRunningMode() {
+    private boolean setRunningMode(AtomicBoolean isPluginSearchBarClearReady) {
         if (currentUsingPlugin != null) {
             return true;
         }
-        String text = getSearchBarText();
-        if (text == null || text.isEmpty()) {
+        String searchBarText = getSearchBarText();
+        if (searchBarText == null || searchBarText.isEmpty()) {
             runningMode = Constants.Enums.RunningMode.NORMAL_MODE;
         } else {
-            char first = text.charAt(0);
+            char first = searchBarText.charAt(0);
             if (first == ':') {
                 runningMode = Constants.Enums.RunningMode.COMMAND_MODE;
             } else if (first == '>') {
-                String subText = text.substring(1);
-                String[] s = blank.split(subText);
-                if (text.charAt(text.length() - 1) == ' ') {
-                    GetPluginByIdentifierEvent getPluginByIdentifierEvent = new GetPluginByIdentifierEvent(s[0]);
+                String subText = searchBarText.substring(1);
+                String[] splitByBlank = RegexUtil.blank.split(subText);
+                if (searchBarText.charAt(searchBarText.length() - 1) == ' ') {
+                    GetPluginByIdentifierEvent getPluginByIdentifierEvent = new GetPluginByIdentifierEvent(splitByBlank[0]);
                     EventManagement eventManagement = EventManagement.getInstance();
                     eventManagement.putEvent(getPluginByIdentifierEvent);
                     eventManagement.waitForEvent(getPluginByIdentifierEvent);
-                    PluginService.PluginInfo pluginInfo = getPluginByIdentifierEvent.getReturnValue();
-                    currentUsingPlugin = pluginInfo.plugin;
-                    if (currentUsingPlugin != null) {
-                        runningMode = Constants.Enums.RunningMode.PLUGIN_MODE;
-                        currentPluginIdentifier = s[0];
-                        SwingUtilities.invokeLater(() -> textField.setText(""));
-                    }
+                    Optional<PluginService.PluginInfo> pluginInfoOptional = getPluginByIdentifierEvent.getReturnValue();
+                    pluginInfoOptional.ifPresent(pluginInfo -> {
+                        if (pluginInfo.plugin != null) {
+                            currentUsingPlugin = pluginInfo.plugin;
+                            runningMode = Constants.Enums.RunningMode.PLUGIN_MODE;
+                            currentPluginIdentifier = splitByBlank[0];
+                            SwingUtilities.invokeLater(() -> {
+                                textField.setText("");
+                                isPluginSearchBarClearReady.compareAndSet(isPluginSearchBarClearReady.get(), true);
+                            });
+                        }
+                    });
                     return false;
                 }
             } else {
@@ -2505,28 +2510,34 @@ public class SearchBar {
     private void addTextFieldDocumentListener() {
         textField.getDocument().addDocumentListener(new DocumentListener() {
             private boolean isSendSignal;
+            private final AtomicBoolean isPluginSearchBarClearReady = new AtomicBoolean(false);
 
             @Override
             public void insertUpdate(DocumentEvent e) {
+                if (runningMode != Constants.Enums.RunningMode.PLUGIN_MODE) {
+                    isPluginSearchBarClearReady.compareAndSet(isPluginSearchBarClearReady.get(), false);
+                }
                 changeFontOnDisplayFailed();
                 clearAllAndResetAll();
-                isSendSignal = setRunningMode();
+                if (runningMode == Constants.Enums.RunningMode.PLUGIN_MODE && currentUsingPlugin != null && isPluginSearchBarClearReady.get()) {
+                    currentUsingPlugin.clearResultQueue();
+                    currentUsingPlugin.textChanged(getSearchBarText());
+                }
+                isSendSignal = setRunningMode(isPluginSearchBarClearReady);
                 if (isSendSignal) {
                     startTime = System.currentTimeMillis();
                     startSignal.set(true);
                     isSqlNotInitialized.set(true);
                 }
-                if (runningMode == Constants.Enums.RunningMode.PLUGIN_MODE && currentUsingPlugin != null) {
-                    currentUsingPlugin.textChanged(getSearchBarText());
-                    currentUsingPlugin.clearResultQueue();
-                }
             }
 
             @Override
             public void removeUpdate(DocumentEvent e) {
+                if (runningMode != Constants.Enums.RunningMode.PLUGIN_MODE) {
+                    isPluginSearchBarClearReady.compareAndSet(isPluginSearchBarClearReady.get(), false);
+                }
                 changeFontOnDisplayFailed();
                 clearAllAndResetAll();
-                isSendSignal = setRunningMode();
                 if (getSearchBarText().isEmpty()) {
                     lastMousePositionX = 0;
                     lastMousePositionY = 0;
@@ -2536,14 +2547,15 @@ public class SearchBar {
                     startSignal.set(false);
                     isSqlNotInitialized.set(false);
                 } else {
+                    if (runningMode == Constants.Enums.RunningMode.PLUGIN_MODE && currentUsingPlugin != null && isPluginSearchBarClearReady.get()) {
+                        currentUsingPlugin.clearResultQueue();
+                        currentUsingPlugin.textChanged(getSearchBarText());
+                    }
+                    isSendSignal = setRunningMode(isPluginSearchBarClearReady);
                     if (isSendSignal) {
                         startTime = System.currentTimeMillis();
                         startSignal.set(true);
                         isSqlNotInitialized.set(true);
-                    }
-                    if (runningMode == Constants.Enums.RunningMode.PLUGIN_MODE && currentUsingPlugin != null) {
-                        currentUsingPlugin.textChanged(getSearchBarText());
-                        currentUsingPlugin.clearResultQueue();
                     }
                 }
             }
@@ -3532,16 +3544,18 @@ public class SearchBar {
                     if (isVisible()) {
                         String searchBarText = getSearchBarText();
                         if (!searchBarText.isEmpty()) {
-                            strings = colon.split(searchBarText);
-                            length = strings.length;
-                            if (length == 2) {
-                                searchCase = semicolon.split(strings[1]);
-                                searchText = strings[0];
-                            } else {
-                                searchText = strings[0];
-                                searchCase = null;
+                            strings = RegexUtil.colon.split(searchBarText);
+                            if (strings != null) {
+                                length = strings.length;
+                                if (length == 1) {
+                                    searchText = strings[0];
+                                    searchCase = null;
+                                } else if (length > 1) {
+                                    searchText = strings[0];
+                                    searchCase = semicolon.split(strings[1]);
+                                }
+                                keywords = semicolon.split(searchText);
                             }
-                            keywords = semicolon.split(searchText);
                         }
                     }
                     long endTime = System.currentTimeMillis();
@@ -3615,16 +3629,19 @@ public class SearchBar {
                             }
                         } else if (runningMode == Constants.Enums.RunningMode.PLUGIN_MODE) {
                             String result;
-                            while (currentUsingPlugin != null &&
-                                    (result = currentUsingPlugin.pollFromResultQueue()) != null &&
-                                    runningMode == Constants.Enums.RunningMode.PLUGIN_MODE) {
-                                result = "plugin" + pluginResultSplitStr + currentUsingPlugin.identifier + pluginResultSplitStr + result;
-                                if (!listResults.contains(result)) {
-                                    listResults.add(result);
-                                    listResultsNum.incrementAndGet();
+                            //外层循环不断尝试获取消息
+                            while (runningMode == Constants.Enums.RunningMode.PLUGIN_MODE) {
+                                while (currentUsingPlugin != null &&
+                                        (result = currentUsingPlugin.pollFromResultQueue()) != null &&
+                                        runningMode == Constants.Enums.RunningMode.PLUGIN_MODE) {
+                                    result = "plugin" + pluginResultSplitStr + currentUsingPlugin.identifier + pluginResultSplitStr + result;
+                                    if (!listResults.contains(result)) {
+                                        listResults.add(result);
+                                        listResultsNum.incrementAndGet();
+                                    }
                                 }
+                                TimeUnit.MILLISECONDS.sleep(10);
                             }
-                            TimeUnit.MILLISECONDS.sleep(10);
                         }
                         if (databaseService.getStatus() != Constants.Enums.DatabaseStatus.NORMAL) {
                             //开启线程等待搜索完成
@@ -3882,12 +3899,14 @@ public class SearchBar {
             EventManagement eventManagement = EventManagement.getInstance();
             eventManagement.putEvent(getPluginByIdentifierEvent);
             eventManagement.waitForEvent(getPluginByIdentifierEvent);
-            PluginService.PluginInfo pluginInfoByName = getPluginByIdentifierEvent.getReturnValue();
-            ImageIcon tmpIcon = pluginInfoByName.plugin.getPluginIcon();
-            if (tmpIcon != null) {
-                ImageIcon pluginIcon = GetIconUtil.getInstance().changeIcon(tmpIcon, iconSideLength, iconSideLength);
-                label.setIcon(pluginIcon);
-            }
+            Optional<PluginService.PluginInfo> pluginInfoByName = getPluginByIdentifierEvent.getReturnValue();
+            pluginInfoByName.ifPresent(pluginInfo -> {
+                ImageIcon tmpIcon = pluginInfo.plugin.getPluginIcon();
+                if (tmpIcon != null) {
+                    ImageIcon pluginIcon = GetIconUtil.getInstance().changeIcon(tmpIcon, iconSideLength, iconSideLength);
+                    label.setIcon(pluginIcon);
+                }
+            });
             label.setText(path);
         } else {
             //将文件的路径信息存储在label的名称中，在未被选中时只显示文件名，选中后才显示文件路径
@@ -3935,8 +3954,8 @@ public class SearchBar {
             EventManagement eventManagement = EventManagement.getInstance();
             eventManagement.putEvent(getPluginByIdentifierEvent);
             eventManagement.waitForEvent(getPluginByIdentifierEvent);
-            PluginService.PluginInfo plugin = getPluginByIdentifierEvent.getReturnValue();
-            plugin.plugin.showResultOnLabel(resultWithPluginInfo[2], label, isChosen);
+            Optional<PluginService.PluginInfo> pluginInfoOptional = getPluginByIdentifierEvent.getReturnValue();
+            pluginInfoOptional.ifPresent(pluginInfo -> pluginInfo.plugin.showResultOnLabel(resultWithPluginInfo[2], label, isChosen));
         }
     }
 
@@ -3955,7 +3974,7 @@ public class SearchBar {
         String showStr = getHtml(null, command, new boolean[1]);
         label.setText(showStr);
         label.setName(Constants.RESULT_LABEL_NAME_HOLDER);
-        ImageIcon imageIcon = getIconUtil.getCommandIcon(colon.split(name)[1], iconSideLength, iconSideLength);
+        ImageIcon imageIcon = getIconUtil.getCommandIcon(RegexUtil.colon.split(name)[1], iconSideLength, iconSideLength);
         imageIcon = imageIcon == null ? getIconUtil.getBigIcon(path, iconSideLength, iconSideLength) : imageIcon;
         label.setIcon(imageIcon);
         if (isChosen) {
@@ -4158,11 +4177,14 @@ public class SearchBar {
         if (DatabaseService.getInstance().getCacheNum() < allConfigs.getCacheNumLimit()) {
             //检查缓存是否已存在
             eventManagement.putEvent(new IsCacheExistEvent(content), event -> {
-                if (!(Boolean) event.getReturnValue()) {
-                    //不存在则添加
-                    eventManagement.putEvent(new AddToCacheEvent(content));
-                    eventManagement.putEvent(new AddCacheEvent(content));
-                }
+                Optional<Boolean> ret = event.getReturnValue();
+                ret.ifPresent(isCacheExist -> {
+                    if (!isCacheExist) {
+                        //不存在则添加
+                        eventManagement.putEvent(new AddToCacheEvent(content));
+                        eventManagement.putEvent(new AddCacheEvent(content));
+                    }
+                });
             }, null);
         }
     }

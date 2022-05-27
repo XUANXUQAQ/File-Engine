@@ -843,7 +843,8 @@ public class AllConfigs {
              * 由于此时更新会导致nullPointerException，获取暂时不需要更新主题的组件
              */
             if (!eventManagement.waitForEvent(event)) {
-                components.addAll(event.getReturnValue());
+                Optional<Collection<? extends Component>> returnValue = event.getReturnValue();
+                returnValue.ifPresent(components::addAll);
                 // 更新组件主题
                 for (Component frame : components) {
                     SwingUtilities.updateComponentTreeUI(frame);

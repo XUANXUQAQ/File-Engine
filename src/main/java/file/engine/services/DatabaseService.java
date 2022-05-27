@@ -336,15 +336,19 @@ public class DatabaseService {
                 IsSearchBarVisibleEvent isSearchBarVisibleEvent = new IsSearchBarVisibleEvent();
                 eventManagement.putEvent(isSearchBarVisibleEvent);
                 eventManagement.waitForEvent(isSearchBarVisibleEvent);
-                Supplier<Boolean> isSearchBarVisible = isSearchBarVisibleEvent.getReturnValue();
+                Optional<Supplier<Boolean>> isSearchBarVisibleOptional = isSearchBarVisibleEvent.getReturnValue();
+                var tmp = new Object() {
+                    Supplier<Boolean> isSearchBarVisible;
+                };
+                isSearchBarVisibleOptional.ifPresentOrElse((ret) -> tmp.isSearchBarVisible = ret, () -> tmp.isSearchBarVisible = () -> false);
                 Supplier<Boolean> isStopCreateCache = () ->
                         !isSearchStopped.get() || !eventManagement.notMainExit() ||
-                                isSearchBarVisible.get() || status == Constants.Enums.DatabaseStatus.MANUAL_UPDATE;
+                                tmp.isSearchBarVisible.get() || status == Constants.Enums.DatabaseStatus.MANUAL_UPDATE;
                 while (eventManagement.notMainExit()) {
                     if (SystemIdleCheckUtil.isCursorLongTimeNotMove() &&
                             isSearchStopped.get() &&
                             System.currentTimeMillis() - startCheckTimeMills > 10 * 60 * 1000 &&
-                            !isSearchBarVisible.get()) {
+                            !tmp.isSearchBarVisible.get()) {
                         double memoryUsage = SystemInfoUtil.getMemoryUsage();
                         if (memoryUsage < 0.7) {
                             // 系统内存使用少于70%
@@ -1302,10 +1306,14 @@ public class DatabaseService {
                 IsSearchBarVisibleEvent event = new IsSearchBarVisibleEvent();
                 eventManagement.putEvent(event);
                 eventManagement.waitForEvent(event);
-                Supplier<Boolean> isVisible = event.getReturnValue();
+                var tmp = new Object() {
+                    Supplier<Boolean> isVisible;
+                };
+                Optional<Supplier<Boolean>> isVisibleOptional = event.getReturnValue();
+                isVisibleOptional.ifPresentOrElse(ret -> tmp.isVisible = ret, () -> tmp.isVisible = () -> false);
                 while (isSharedMemoryCreated.get()) {
                     if (SystemIdleCheckUtil.isCursorLongTimeNotMove()) {
-                        if (!isVisible.get()) {
+                        if (!tmp.isVisible.get()) {
                             isSharedMemoryCreated.set(false);
                             ResultPipe.INSTANCE.closeAllSharedMemory();
                         }
