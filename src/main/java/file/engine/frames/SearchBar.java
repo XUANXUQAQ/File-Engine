@@ -2459,18 +2459,18 @@ public class SearchBar {
                     eventManagement.putEvent(getPluginByIdentifierEvent);
                     eventManagement.waitForEvent(getPluginByIdentifierEvent);
                     Optional<PluginService.PluginInfo> pluginInfoOptional = getPluginByIdentifierEvent.getReturnValue();
-                    pluginInfoOptional.ifPresent(pluginInfo -> {
-                        if (pluginInfo.plugin != null) {
-                            currentUsingPlugin = pluginInfo.plugin;
-                            runningMode = Constants.Enums.RunningMode.PLUGIN_MODE;
-                            currentPluginIdentifier = splitByBlank[0];
-                            SwingUtilities.invokeLater(() -> {
-                                textField.setText("");
-                                isPluginSearchBarClearReady.compareAndSet(isPluginSearchBarClearReady.get(), true);
-                            });
-                        }
-                    });
+                    pluginInfoOptional.ifPresentOrElse(pluginInfo -> {
+                        currentUsingPlugin = pluginInfo.plugin;
+                        runningMode = Constants.Enums.RunningMode.PLUGIN_MODE;
+                        currentPluginIdentifier = splitByBlank[0];
+                        SwingUtilities.invokeLater(() -> {
+                            textField.setText("");
+                            isPluginSearchBarClearReady.compareAndSet(isPluginSearchBarClearReady.get(), true);
+                        });
+                    }, () -> runningMode = Constants.Enums.RunningMode.NORMAL_MODE);
                     return false;
+                } else {
+                    runningMode = Constants.Enums.RunningMode.NORMAL_MODE;
                 }
             } else {
                 runningMode = Constants.Enums.RunningMode.NORMAL_MODE;
