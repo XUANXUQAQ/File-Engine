@@ -19,6 +19,7 @@ import file.engine.event.handler.impl.stop.RestartEvent;
 import file.engine.event.handler.impl.taskbar.ShowTaskBarMessageEvent;
 import file.engine.frames.components.LoadingPanel;
 import file.engine.frames.components.MouseDragInfo;
+import file.engine.frames.components.RoundBorder;
 import file.engine.services.DatabaseService;
 import file.engine.services.TranslateService;
 import file.engine.services.plugin.system.Plugin;
@@ -93,6 +94,7 @@ public class SearchBar {
     private JLabel searchInfoLabel;
     private final AtomicInteger currentResultCount;  //保存当前选中的结果是在listResults中的第几个 范围 0 - listResults.size()
     private JTextField textField;
+    private Color searchBarColor;
     private Color labelColor;
     private Color backgroundColor;
     private Color fontColorWithCoverage;
@@ -209,6 +211,7 @@ public class SearchBar {
         JPanel panel = new JPanel();
         Color transparentColor = new Color(0, 0, 0, 0);
         AllConfigs allConfigs = AllConfigs.getInstance();
+        searchBarColor = new Color(allConfigs.getSearchBarColor());
         labelColor = new Color(allConfigs.getLabelColor());
         fontColorWithCoverage = new Color(allConfigs.getLabelFontColorWithCoverage());
         backgroundColor = new Color(allConfigs.getDefaultBackgroundColor());
@@ -412,16 +415,27 @@ public class SearchBar {
      * @param borderThickness 边框厚度
      */
     private void initBorder(Constants.Enums.BorderType borderType, Color borderColor, int borderThickness) {
+        double roundRadius = AllConfigs.getInstance().getRoundRadius();
+        RoundBorder topRound = new RoundBorder(borderColor,
+                borderThickness,
+                (int) roundRadius,
+                RoundBorder.RoundedCorners.TOP_LEFT | RoundBorder.RoundedCorners.TOP_RIGHT,
+                RoundBorder.ShowLines.TOP | RoundBorder.ShowLines.LEFT | RoundBorder.ShowLines.RIGHT);
+        RoundBorder bottomRound = new RoundBorder(borderColor,
+                borderThickness,
+                (int) roundRadius,
+                RoundBorder.RoundedCorners.BOTTOM_LEFT | RoundBorder.RoundedCorners.BOTTOM_RIGHT,
+                RoundBorder.ShowLines.BOTTOM | RoundBorder.ShowLines.LEFT | RoundBorder.ShowLines.RIGHT);
+        RoundBorder fullRound = new RoundBorder(borderColor,
+                borderThickness,
+                (int) roundRadius,
+                RoundBorder.RoundedCorners.ALL,
+                RoundBorder.ShowLines.ALL);
         if (Constants.Enums.BorderType.AROUND == borderType) {
-            topBorder = BorderFactory.createMatteBorder(borderThickness, borderThickness, 0, borderThickness, borderColor);
+            topBorder = topRound;
             middleBorder = BorderFactory.createMatteBorder(0, borderThickness, 0, borderThickness, borderColor);
-            bottomBorder = BorderFactory.createMatteBorder(0, borderThickness, borderThickness, borderThickness, borderColor);
-            fullBorder = BorderFactory.createMatteBorder(
-                    borderThickness,
-                    borderThickness,
-                    borderThickness,
-                    borderThickness,
-                    borderColor);
+            bottomBorder = bottomRound;
+            fullBorder = fullRound;
         } else if (Constants.Enums.BorderType.EMPTY == borderType) {
             Border emptyBorder = BorderFactory.createEmptyBorder();
             topBorder = emptyBorder;
@@ -430,21 +444,37 @@ public class SearchBar {
             fullBorder = emptyBorder;
         } else if (borderType == Constants.Enums.BorderType.FULL) {
             Border lineBorder = BorderFactory.createMatteBorder(
-                    borderThickness,
+                    0,
                     borderThickness,
                     borderThickness,
                     borderThickness,
                     borderColor);
-            topBorder = lineBorder;
+            topBorder = topRound;
             middleBorder = lineBorder;
-            bottomBorder = lineBorder;
-            fullBorder = lineBorder;
+            bottomBorder = bottomRound;
+            fullBorder = fullRound;
         }
-        Color highContrast = Color.RED;
-        pluginTopBorder = BorderFactory.createMatteBorder(2, 2, 0, 2, highContrast);
-        pluginBottomBorder = BorderFactory.createMatteBorder(0, 2, 2, 2, highContrast);
-        pluginFullBorder = BorderFactory.createMatteBorder(2, 2, 2, 2, highContrast);
-        pluginMiddleBorder = BorderFactory.createMatteBorder(0, 2, 0, 2, highContrast);
+        Color highContrast = ColorUtil.generateHighContrastColor(searchBarColor);
+        pluginTopBorder = new RoundBorder(highContrast,
+                2,
+                (int) roundRadius,
+                RoundBorder.RoundedCorners.TOP_LEFT | RoundBorder.RoundedCorners.TOP_RIGHT,
+                RoundBorder.ShowLines.TOP | RoundBorder.ShowLines.LEFT | RoundBorder.ShowLines.RIGHT);
+        pluginBottomBorder = new RoundBorder(highContrast,
+                2,
+                (int) roundRadius,
+                RoundBorder.RoundedCorners.BOTTOM_LEFT | RoundBorder.RoundedCorners.BOTTOM_RIGHT,
+                RoundBorder.ShowLines.BOTTOM | RoundBorder.ShowLines.LEFT | RoundBorder.ShowLines.RIGHT);
+        pluginFullBorder = new RoundBorder(highContrast,
+                2,
+                (int) roundRadius,
+                RoundBorder.RoundedCorners.ALL,
+                RoundBorder.ShowLines.ALL);
+        if (borderType == Constants.Enums.BorderType.FULL) {
+            pluginMiddleBorder = BorderFactory.createMatteBorder(0, 2, 2, 2, highContrast);
+        } else {
+            pluginMiddleBorder = BorderFactory.createMatteBorder(0, 2, 0, 2, highContrast);
+        }
     }
 
     private static SearchBar getInstance() {
@@ -2669,20 +2699,6 @@ public class SearchBar {
         switchSearchBarShowingMode();
     }
 
-    private boolean isDark(int rgbHex) {
-        Color color = new Color(rgbHex);
-        return isDark(color.getRed(), color.getGreen(), color.getBlue());
-    }
-
-    /**
-     * 根据RGB值判断 深色与浅色
-     *
-     * @return true if color is dark
-     */
-    private boolean isDark(int r, int g, int b) {
-        return !(r * 0.299 + g * 0.578 + b * 0.114 >= 192);
-    }
-
     @EventRegister(registerClass = ShowSearchBarEvent.class)
     private static void showSearchBarEvent(Event event) {
         ShowSearchBarEvent showSearchBarTask = (ShowSearchBarEvent) event;
@@ -2718,7 +2734,7 @@ public class SearchBar {
         SearchBar searchBarInstance = getInstance();
         searchBarInstance.setSearchBarColor(setSearchBarColorTask.color);
         searchBarInstance.searchInfoLabel.setBackground(new Color(setSearchBarColorTask.color));
-        if (searchBarInstance.isDark(setSearchBarColorTask.color)) {
+        if (ColorUtil.isDark(setSearchBarColorTask.color)) {
             searchBarInstance.textField.setCaretColor(Color.WHITE);
         } else {
             searchBarInstance.textField.setCaretColor(Color.BLACK);
@@ -3919,7 +3935,8 @@ public class SearchBar {
                 subNum = Math.min(path.length(), subNum);
                 String showPath = isContract ? path.substring(0, subNum) : path;
                 String add = isContract ? "..." : "";
-                label.setName("<html><body>" + highLight(FileUtil.getFileName(path), keywords) + getBlank(20) + "<font size=\"-2\">" + showPath + add + "</font></body></html>");
+                String color = "#" + ColorUtil.parseColorHex(labelFontColor);
+                label.setName("<html><body style=\"color: " + color + ";\">" + highLight(FileUtil.getFileName(path), keywords) + getBlank(20) + "<font size=\"-2\">" + showPath + add + "</font></body></html>");
             } else {
                 label.setName(Constants.RESULT_LABEL_NAME_HOLDER);
             }
@@ -4310,7 +4327,7 @@ public class SearchBar {
 
     private void setBorderColor(Constants.Enums.BorderType borderType, int colorNum, int borderThickness) {
         initBorder(borderType, new Color(colorNum), borderThickness);
-        textField.setBorder(fullBorder);
+//        textField.setBorder(fullBorder);
     }
 }
 
