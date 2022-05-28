@@ -3847,7 +3847,8 @@ public class SearchBar {
      * @return html
      */
     private String getHtml(String path, String command, boolean[] isParentPathEmpty) {
-        String template = "<html><body>%s</body></html>";
+        String colorHex = "#" + ColorUtil.parseColorHex(labelFontColor);
+        String template = "<html><body style=\"color: " + colorHex + ";\">%s</body></html>";
         isParentPathEmpty[0] = false;
         if (path == null) {
             // 命令模式
