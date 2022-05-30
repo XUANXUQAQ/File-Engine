@@ -27,6 +27,8 @@ import lombok.SneakyThrows;
 import javax.swing.*;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Date;
 import java.util.Map;
 import java.util.Optional;
@@ -356,6 +358,7 @@ public class MainClass {
                     new ShowTaskBarMessageEvent(translateService.getTranslation("Warning"),
                             translateService.getTranslation("The startup path is invalid")));
         }
+        AllConfigs allConfigs = AllConfigs.getInstance();
         while (eventManagement.notMainExit()) {
             // 主循环开始
             //检查已工作时间
@@ -372,10 +375,25 @@ public class MainClass {
             if ((isDatabaseOutDated && SystemIdleCheckUtil.isCursorLongTimeNotMove() && !GetHandle.INSTANCE.isForegroundFullscreen()) || isNeedUpdate) {
                 isDatabaseOutDated = false;
                 isNeedUpdate = false;
+                String availableDisks = allConfigs.getAvailableDisks();
+                String[] disks = RegexUtil.comma.split(availableDisks);
+                //检查文件大小
+                long totalSize = 0;
+                for (String eachDisk : disks) {
+                    String name = eachDisk.charAt(0) + ".db";
+                    try {
+                        Path diskDatabaseFile = Path.of("data/" + name);
+                        long length = Files.size(diskDatabaseFile);
+                        totalSize += length;
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
                 eventManagement.putEvent(new ShowTaskBarMessageEvent(
                         translateService.getTranslation("Info"),
                         translateService.getTranslation("Updating file index")));
-                eventManagement.putEvent(new UpdateDatabaseEvent(true),
+                // 文件大小超过600M则删除之前的索引，否则只进行添加
+                eventManagement.putEvent(new UpdateDatabaseEvent(totalSize > 6L * 1024 * 1024 * 100),
                         event -> eventManagement.putEvent(new ShowTaskBarMessageEvent(
                                 translateService.getTranslation("Info"),
                                 translateService.getTranslation("Search Done"))),
