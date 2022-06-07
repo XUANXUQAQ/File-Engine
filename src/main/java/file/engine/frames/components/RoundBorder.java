@@ -31,8 +31,8 @@ public class RoundBorder implements Border {
         }
     }
 
-    private static class RoundShape extends Path2D.Float {
-        private RoundShape(float width, float height, float radius, int roundedCorners, int showLines) {
+    private static class RoundShape extends Path2D.Double {
+        private RoundShape(double width, double height, double radius, int roundedCorners, int showLines) {
             if ((roundedCorners & RoundedCorners.TOP_LEFT) != 0) {
                 moveTo(radius, 0);
             } else {
@@ -101,7 +101,7 @@ public class RoundBorder implements Border {
     public void paintBorder(Component c, Graphics g, int x, int y, int width, int height) {
         Graphics2D graphics2d = (Graphics2D) g;
         graphics2d.setPaint(this.color);
-        graphics2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+//        graphics2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         RoundShape roundShape = new RoundShape(width, height, this.borderRadius, this.roundedCorners, this.showLines);
         BasicStroke basicStroke = new BasicStroke(this.thickness * 2);
         graphics2d.setStroke(basicStroke);

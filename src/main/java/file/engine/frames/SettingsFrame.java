@@ -287,6 +287,12 @@ public class SettingsFrame {
     private JLabel labelCommandsPlaceholder;
     private JLabel labelSearchSettingsPlaceholder2;
     private JTextField textFieldSearchCache;
+    private JLabel labelHolder;
+    private JLabel labelHolder2;
+    private JLabel labelHolder3;
+    private JLabel labelHolder4;
+    private JLabel labelHolder5;
+    private JLabel labelHolder6;
 
 
     private static volatile SettingsFrame instance = null;
@@ -1969,7 +1975,7 @@ public class SettingsFrame {
     }
 
     private SettingsFrame() {
-        frame.setUndecorated(true);
+//        frame.setUndecorated(true);
         frame.getRootPane().setWindowDecorationStyle(JRootPane.FRAME);
         frame.setIconImage(frameIcon.getImage());
 
@@ -2266,7 +2272,7 @@ public class SettingsFrame {
         } catch (NumberFormatException e) {
             e.printStackTrace();
             width = (int) (1000 / dpi);
-            height = (int) (600 / dpi);
+            height = (int) (700 / dpi);
         }
         frame.setContentPane(getInstance().panel);
         Dimension dimension = new Dimension(width, height);

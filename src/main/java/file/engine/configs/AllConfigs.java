@@ -912,7 +912,7 @@ public class AllConfigs {
         );
         EventManagement eventManagement = EventManagement.getInstance();
         eventManagement.putEvent(new StartDownloadEvent(downloadManager));
-        if (!downloadManager.waitFor(1000)) {
+        if (!downloadManager.waitFor(5000)) {
             return null;
         }
         String eachLine;
