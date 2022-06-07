@@ -101,6 +101,7 @@ public class RoundBorder implements Border {
     public void paintBorder(Component c, Graphics g, int x, int y, int width, int height) {
         Graphics2D graphics2d = (Graphics2D) g;
         graphics2d.setPaint(this.color);
+        graphics2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         RoundShape roundShape = new RoundShape(width, height, this.borderRadius, this.roundedCorners, this.showLines);
         BasicStroke basicStroke = new BasicStroke(this.thickness * 2);
         graphics2d.setStroke(basicStroke);
