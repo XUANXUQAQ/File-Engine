@@ -22,8 +22,8 @@ public class Event {
         executeTimes.incrementAndGet();
     }
 
-    protected int getExecuteTimes() {
-        return executeTimes.get();
+    protected boolean allRetryFailed() {
+        return executeTimes.get() > maxRetryTimes;
     }
 
     public boolean isFinished() {
@@ -67,10 +67,6 @@ public class Event {
 
     public void setErrorHandler(Consumer<Event> errorHandler) {
         this.errorHandler = errorHandler;
-    }
-
-    public int getMaxRetryTimes() {
-        return maxRetryTimes;
     }
 
     public void setMaxRetryTimes(int maxRetryTimes) {

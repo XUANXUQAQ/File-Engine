@@ -47,16 +47,7 @@ public class EventManagement {
     private EventManagement() {
         startBlockEventHandler();
         startAsyncEventHandler();
-        try (BufferedReader reader = new BufferedReader(
-                new InputStreamReader(
-                        Objects.requireNonNull(EventManagement.class.getResourceAsStream("/classes.list")), StandardCharsets.UTF_8))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                classesList.add(line);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        readClassList();
     }
 
     public static EventManagement getInstance() {
@@ -68,6 +59,19 @@ public class EventManagement {
             }
         }
         return instance;
+    }
+
+    private void readClassList() {
+        try (BufferedReader reader = new BufferedReader(
+                new InputStreamReader(
+                        Objects.requireNonNull(EventManagement.class.getResourceAsStream("/classes.list")), StandardCharsets.UTF_8))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                classesList.add(line);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public void unregisterPluginHandler(String className) {
@@ -317,7 +321,7 @@ public class EventManagement {
      */
     public void registerAllHandler() {
         try {
-            BiConsumer<Class<? extends Annotation>, Method> doFunction = (annotationClass, method) -> {
+            BiConsumer<Class<? extends Annotation>, Method> registerMethod = (annotationClass, method) -> {
                 EventRegister annotation = (EventRegister) method.getAnnotation(annotationClass);
                 if (IsDebug.isDebug()) {
                     Class<?>[] parameterTypes = method.getParameterTypes();
@@ -331,7 +335,7 @@ public class EventManagement {
                 registerHandler(annotation.registerClass().getName(), method);
             };
             if (IsDebug.isDebug()) {
-                ClassScannerUtil.searchAndRun(EventRegister.class, doFunction);
+                ClassScannerUtil.searchAndRun(EventRegister.class, registerMethod);
             } else {
                 Class<?> c;
                 Method[] methods;
@@ -341,7 +345,7 @@ public class EventManagement {
                     for (Method eachMethod : methods) {
                         eachMethod.setAccessible(true);
                         if (eachMethod.isAnnotationPresent(EventRegister.class)) {
-                            doFunction.accept(EventRegister.class, eachMethod);
+                            registerMethod.accept(EventRegister.class, eachMethod);
                         }
                     }
                 }
@@ -356,7 +360,7 @@ public class EventManagement {
      */
     public void registerAllListener() {
         try {
-            BiConsumer<Class<? extends Annotation>, Method> doFunction = (annotationClass, method) -> {
+            BiConsumer<Class<? extends Annotation>, Method> registerListenerMethod = (annotationClass, method) -> {
                 EventListener annotation = (EventListener) method.getAnnotation(annotationClass);
                 if (IsDebug.isDebug()) {
                     Class<?>[] parameterTypes = method.getParameterTypes();
@@ -372,7 +376,7 @@ public class EventManagement {
                 }
             };
             if (IsDebug.isDebug()) {
-                ClassScannerUtil.searchAndRun(EventListener.class, doFunction);
+                ClassScannerUtil.searchAndRun(EventListener.class, registerListenerMethod);
             } else {
                 Class<?> c;
                 Method[] methods;
@@ -382,7 +386,7 @@ public class EventManagement {
                     for (Method eachMethod : methods) {
                         eachMethod.setAccessible(true);
                         if (eachMethod.isAnnotationPresent(EventListener.class)) {
-                            doFunction.accept(EventListener.class, eachMethod);
+                            registerListenerMethod.accept(EventListener.class, eachMethod);
                         }
                     }
                 }
@@ -437,7 +441,6 @@ public class EventManagement {
     private void startAsyncEventHandler() {
         CachedThreadPoolUtil threadPoolUtil = CachedThreadPoolUtil.getInstance();
         for (int i = 0; i < asyncThreadNum; i++) {
-            int finalI = i;
             threadPoolUtil.executeTask(() -> {
                 final boolean isDebug = IsDebug.isDebug();
                 try {
@@ -452,8 +455,14 @@ public class EventManagement {
                         if (event.isFinished() || event.isFailed()) {
                             continue;
                         }
-                        if (event.getExecuteTimes() < event.getMaxRetryTimes()) {
+                        if (event.allRetryFailed()) {
                             //判断是否超过最大次数
+                            event.setFailed();
+                            failureEventNum.incrementAndGet();
+                            if (isDebug) {
+                                System.err.println("任务超时---" + event);
+                            }
+                        } else {
                             if (executeTaskFailed(event)) {
                                 System.err.println("异步任务执行失败---" + event);
                                 asyncEventQueue.add(event);
@@ -463,20 +472,10 @@ public class EventManagement {
                                     putEvent(new EventProcessedBroadcastEvent(event.getClass(), event));
                                 }
                             }
-                        } else {
-                            event.setFailed();
-                            failureEventNum.incrementAndGet();
-                            if (isDebug) {
-                                System.err.println("任务超时---" + event);
-                            }
                         }
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
-                } finally {
-                    if (isDebug) {
-                        System.err.println("******异步任务执行线程" + finalI + "退出******");
-                    }
                 }
             }, false);
         }
@@ -510,7 +509,13 @@ public class EventManagement {
                         continue;
                     }
                     //判断任务是否超过最大执行次数
-                    if (event.getExecuteTimes() < event.getMaxRetryTimes()) {
+                    if (event.allRetryFailed()) {
+                        event.setFailed();
+                        failureEventNum.incrementAndGet();
+                        if (isDebug) {
+                            System.err.println("任务超时---" + event);
+                        }
+                    } else {
                         if (executeTaskFailed(event)) {
                             if (failureEventNum.get() > 20) {
                                 System.err.println("超过20个任务失败，自动重启");
@@ -524,20 +529,10 @@ public class EventManagement {
                                 putEvent(new EventProcessedBroadcastEvent(event.getClass(), event));
                             }
                         }
-                    } else {
-                        event.setFailed();
-                        failureEventNum.incrementAndGet();
-                        if (isDebug) {
-                            System.err.println("任务超时---" + event);
-                        }
                     }
                 }
             } catch (Exception e) {
                 e.printStackTrace();
-            } finally {
-                if (isDebug) {
-                    System.err.println("******同步任务执行线程退出******");
-                }
             }
         });
     }

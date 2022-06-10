@@ -562,11 +562,8 @@ public class DatabaseService {
                 if (weight == null) {
                     weight = 0;
                 }
-                if (weight > 100000000) {
+                if (weight > 100_000_000) {
                     isNeedSubtract = true;
-                }
-                if (isNeedSubtract) {
-                    weight = weight / 2;
                 }
                 tableSet.add(new TableNameWeightInfo("list" + i, weight));
             }
@@ -574,6 +571,9 @@ public class DatabaseService {
             for (int i = 0; i <= Constants.ALL_TABLE_NUM; i++) {
                 tableSet.add(new TableNameWeightInfo("list" + i, 0));
             }
+        }
+        if (isNeedSubtract) {
+            tableSet.forEach(tableNameWeightInfo -> tableNameWeightInfo.weight.set(tableNameWeightInfo.weight.get() / 2));
         }
     }
 
