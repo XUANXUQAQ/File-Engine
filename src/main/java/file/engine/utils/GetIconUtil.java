@@ -9,19 +9,18 @@ import java.awt.*;
 import java.io.File;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @author XUANXU
  */
 public class GetIconUtil {
     private static final FileSystemView FILE_SYSTEM_VIEW = FileSystemView.getFileSystemView();
-    private final AtomicBoolean isInitialized = new AtomicBoolean(false);
     private final ConcurrentHashMap<String, ImageIcon> iconMap = new ConcurrentHashMap<>();
 
     private static volatile GetIconUtil INSTANCE = null;
 
     private GetIconUtil() {
+        initIconCache();
     }
 
     public static GetIconUtil getInstance() {
@@ -36,33 +35,23 @@ public class GetIconUtil {
     }
 
     public ImageIcon changeIcon(@NonNull ImageIcon icon, int width, int height) {
-        Image image = icon.getImage().getScaledInstance(width, height, Image.SCALE_DEFAULT);
+        Image image = icon.getImage().getScaledInstance(width, height, Image.SCALE_FAST);
         return new ImageIcon(image);
     }
 
-    private void initIconCache(int width, int height) {
-        //添加其他常量图标  changeIcon((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(new File("")), width, height); 获取应用程序时使用
-        //或者 changeIcon(new ImageIcon(GetIconUtil.class.getResource("")), width, height); 本地图标时使用
-        iconMap.put("dllImageIcon", Objects.requireNonNull(changeIcon((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(new File("C:\\Windows\\System32\\sysmain.dll")), width, height)));
-        iconMap.put("folderImageIcon", Objects.requireNonNull(changeIcon((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(new File("C:\\Windows")), width, height)));
-        iconMap.put("txtImageIcon", Objects.requireNonNull(changeIcon((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(new File("user\\cmds.txt")), width, height)));
-        iconMap.put("blankIcon", Objects.requireNonNull(changeIcon(new ImageIcon(Objects.requireNonNull(GetIconUtil.class.getResource("/icons/blank.png"))), width, height)));
-        iconMap.put("recycleBin", Objects.requireNonNull(changeIcon(new ImageIcon(Objects.requireNonNull(GetIconUtil.class.getResource("/icons/recyclebin.png"))), width, height)));
-        iconMap.put("updateIcon", Objects.requireNonNull(changeIcon(new ImageIcon(Objects.requireNonNull(GetIconUtil.class.getResource("/icons/update.png"))), width, height)));
-        iconMap.put("helpIcon", Objects.requireNonNull(changeIcon(new ImageIcon(Objects.requireNonNull(GetIconUtil.class.getResource("/icons/help.png"))), width, height)));
-        iconMap.put("completeIcon", Objects.requireNonNull(changeIcon(new ImageIcon(Objects.requireNonNull(GetIconUtil.class.getResource("/icons/complete.png"))), width, height)));
-        iconMap.put("loadingIcon", Objects.requireNonNull(changeIcon(new ImageIcon(Objects.requireNonNull(GetIconUtil.class.getResource("/icons/loading.gif"))), width, height)));
-    }
-
-    public ImageIcon getIcon(String key) {
-        return iconMap.get(key);
+    private void initIconCache() {
+        iconMap.put("dllImageIcon", Objects.requireNonNull((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(new File("C:\\Windows\\System32\\sysmain.dll"))));
+        iconMap.put("folderImageIcon", Objects.requireNonNull((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(new File("C:\\Windows"))));
+        iconMap.put("txtImageIcon", Objects.requireNonNull((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(new File("user\\cmds.txt"))));
+        iconMap.put("blankIcon", new ImageIcon(Objects.requireNonNull(GetIconUtil.class.getResource("/icons/blank.png"))));
+        iconMap.put("recycleBin", new ImageIcon(Objects.requireNonNull(GetIconUtil.class.getResource("/icons/recyclebin.png"))));
+        iconMap.put("updateIcon", new ImageIcon(Objects.requireNonNull(GetIconUtil.class.getResource("/icons/update.png"))));
+        iconMap.put("helpIcon", new ImageIcon(Objects.requireNonNull(GetIconUtil.class.getResource("/icons/help.png"))));
+        iconMap.put("completeIcon", new ImageIcon(Objects.requireNonNull(GetIconUtil.class.getResource("/icons/complete.png"))));
+        iconMap.put("loadingIcon", new ImageIcon(Objects.requireNonNull(GetIconUtil.class.getResource("/icons/loading.gif"))));
     }
 
     public ImageIcon getCommandIcon(String commandName, int width, int height) {
-        if (!isInitialized.get()) {
-            initIconCache(width, height);
-            isInitialized.set(true);
-        }
         if (commandName == null || commandName.isEmpty()) {
             if (IsDebug.isDebug()) {
                 System.err.println("Command is empty");
@@ -71,45 +60,44 @@ public class GetIconUtil {
         }
         switch (commandName) {
             case "clearbin":
-                return iconMap.get("recycleBin");
+                return changeIcon(iconMap.get("recycleBin"), width, height);
             case "update":
             case "clearUpdate":
-                return iconMap.get("updateIcon");
+                return changeIcon(iconMap.get("updateIcon"), width, height);
             case "help":
-                return iconMap.get("helpIcon");
+                return changeIcon(iconMap.get("helpIcon"), width, height);
             case "version":
-                return iconMap.get("blankIcon");
+                return changeIcon(iconMap.get("blankIcon"), width, height);
             default:
                 return null;
         }
     }
 
-    public ImageIcon getBigIcon(String path, int width, int height) {
-        if (!isInitialized.get()) {
-            initIconCache(width, height);
-            isInitialized.set(true);
+    public ImageIcon getBigIcon(String pathOrKey, int width, int height) {
+        if (pathOrKey == null || pathOrKey.isEmpty()) {
+            return changeIcon(iconMap.get("blankIcon"), width, height);
         }
-        if (path == null || path.isEmpty()) {
-            return iconMap.get("blankIcon");
+        if (iconMap.containsKey(pathOrKey)) {
+            return changeIcon(iconMap.get(pathOrKey), width, height);
         }
-        File f = new File(path);
-        path = path.toLowerCase();
+        File f = new File(pathOrKey);
+        pathOrKey = pathOrKey.toLowerCase();
         if (f.exists()) {
             //已保存的常量图标
-            if (path.endsWith(".dll") || path.endsWith(".sys")) {
-                return iconMap.get("dllImageIcon");
+            if (pathOrKey.endsWith(".dll") || pathOrKey.endsWith(".sys")) {
+                return changeIcon(iconMap.get("dllImageIcon"), width, height);
             }
-            if (path.endsWith(".txt")) {
-                return iconMap.get("txtImageIcon");
+            if (pathOrKey.endsWith(".txt")) {
+                return changeIcon(iconMap.get("txtImageIcon"), width, height);
             }
             //检测是否为文件夹
             if (f.isDirectory()) {
-                return iconMap.get("folderImageIcon");
+                return changeIcon(iconMap.get("folderImageIcon"), width, height);
             } else {
                 return changeIcon((ImageIcon) FILE_SYSTEM_VIEW.getSystemIcon(f), width, height);
             }
         } else {
-            return iconMap.get("blankIcon");
+            return changeIcon(iconMap.get("blankIcon"), width, height);
         }
     }
 }

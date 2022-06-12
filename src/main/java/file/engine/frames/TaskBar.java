@@ -141,7 +141,7 @@ public class TaskBar {
             systemTray = SystemTray.getSystemTray();
             EventManagement eventManagement = EventManagement.getInstance();
             // 创建托盘图标
-            icon = this.getClass().getResource("/icons/taskbar.png");
+            icon = TaskBar.class.getResource("/icons/taskbar.png");
             if (icon != null) {
                 image = new ImageIcon(icon).getImage();
                 trayIcon = new TrayIcon(image);
