@@ -1,6 +1,8 @@
 package file.engine.utils.file;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 public class FileUtil {
 
@@ -30,18 +32,20 @@ public class FileUtil {
     }
 
     public static String getParentPath(String path) {
-        File f = new File(path);
-        return f.getParentFile().getAbsolutePath();
+        if (path != null) {
+            int index = path.lastIndexOf(File.separatorChar);
+            return path.substring(0, index);
+        }
+        return "";
     }
 
     public static boolean isFile(String text) {
-        File file = new File(text);
-        return file.isFile();
+        return Files.isRegularFile(Path.of(text));
     }
 
     public static String getFileName(String path) {
         if (path != null) {
-            int index = path.lastIndexOf(File.separator);
+            int index = path.lastIndexOf(File.separatorChar);
             return path.substring(index + 1);
         }
         return "";

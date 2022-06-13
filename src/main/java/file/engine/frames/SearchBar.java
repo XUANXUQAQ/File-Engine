@@ -206,10 +206,10 @@ public class SearchBar {
         int height = screenSize.height;
         int searchBarWidth = (int) (width * 0.3);
         int searchBarHeight = (int) (height * 0.4);
-        int positionX = width / 2 - searchBarWidth / 2;
-        int positionY = height / 2 - searchBarHeight / 3;
+        final int positionX = width / 2 - searchBarWidth / 2;
+        final int positionY = height / 2 - searchBarHeight / 3;
         JPanel panel = new JPanel();
-        Color transparentColor = new Color(0, 0, 0, 0);
+        final Color transparentColor = new Color(0, 0, 0, 0);
         AllConfigs allConfigs = AllConfigs.getInstance();
         searchBarColor = new Color(allConfigs.getSearchBarColor());
         labelColor = new Color(allConfigs.getLabelColor());
@@ -234,7 +234,7 @@ public class SearchBar {
         textField.setOpaque(true);
 
         //labels
-        Font labelFont = new Font(Font.SANS_SERIF, Font.BOLD, getLabelFontSizeBySearchBarHeight(searchBarHeight));
+        final Font labelFont = new Font(Font.SANS_SERIF, Font.BOLD, getLabelFontSizeBySearchBarHeight(searchBarHeight));
         label1 = new JLabel();
         label2 = new JLabel();
         label3 = new JLabel();
