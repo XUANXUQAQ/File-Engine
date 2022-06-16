@@ -1915,8 +1915,6 @@ public class SettingsFrame {
         tabComponentNameMap.put(new TabNameAndTitle("tabCommands", "My commands"), tabCommands);
         tabComponentNameMap.put(new TabNameAndTitle("tabAbout", "About"), tabAbout);
         tabComponentNameMap.put(new TabNameAndTitle("tabIndex", "Index"), tabIndex);
-
-        excludeComponent.addAll(tabComponentNameMap.values());
     }
 
     private void initTreeSettings() {
@@ -2247,11 +2245,16 @@ public class SettingsFrame {
 
     @EventRegister(registerClass = GetExcludeComponentEvent.class)
     private static void getExcludeComponentEvent(Event event) {
+        SettingsFrame settingsFrame = getInstance();
+        settingsFrame.excludeComponent.addAll(settingsFrame.tabComponentNameMap.values());
         event.setReturnValue(getInstance().excludeComponent);
     }
 
     @EventListener(listenClass = RestartEvent.class)
     private static void restartEvent(Event event) {
+        if (instance == null) {
+            return;
+        }
         getInstance().hideFrame();
     }
 

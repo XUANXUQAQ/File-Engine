@@ -60,288 +60,161 @@ public class Plugin {
         }
     }
 
-    public String restoreFileEngineEventHandler() {
+    @SuppressWarnings("unchecked")
+    private <T> T invokeByKey(String key, Object... args) {
         try {
-            return (String) methodHashMap.get("restoreFileEngineEventHandler[]").invoke(instance);
+            if (methodHashMap.containsKey(key)) {
+                return (T) methodHashMap.get(key).invoke(instance, args);
+            }
         } catch (Exception e) {
-            return null;
+            e.printStackTrace();
         }
+        return null;
+    }
+
+    public String restoreFileEngineEventHandler() {
+        return invokeByKey("restoreFileEngineEventHandler[]");
     }
 
     public Object[] pollFromEventHandlerQueue() {
-        try {
-            return (Object[]) methodHashMap.get("pollFromEventHandlerQueue[]").invoke(instance);
-        } catch (Exception e) {
-            return null;
-        }
+        return invokeByKey("pollFromEventHandlerQueue[]");
     }
 
     public Object[] pollFromEventQueue() {
-        try {
-            return (Object[]) methodHashMap.get("pollFromEventQueue[]").invoke(instance);
-        } catch (Exception e) {
-            return null;
-        }
+        return invokeByKey("pollFromEventQueue[]");
     }
 
     public void eventProcessed(Class<?> c, Object eventInstance) {
-        try {
-            String key = "eventProcessed" + Arrays.toString(new Class<?>[]{Class.class, Object.class});
-            Method pluginEventProcessed = methodHashMap.get(key);
-            if (pluginEventProcessed == null) {
-                return;
-            }
-            pluginEventProcessed.invoke(instance, c, eventInstance);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        String key = "eventProcessed" + Arrays.toString(new Class<?>[]{Class.class, Object.class});
+        invokeByKey(key, c, eventInstance);
     }
 
     public void configsChanged(Map<String, Object> configs) {
-        try {
-            String key = "configsChanged" + Arrays.toString(new Class<?>[]{Map.class});
-            Method pluginConfigsChanged = methodHashMap.get(key);
-            pluginConfigsChanged.invoke(instance, configs);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        String key = "configsChanged" + Arrays.toString(new Class<?>[]{Map.class});
+        invokeByKey(key, configs);
     }
 
     public void loadPlugin(Map<String, Object> configs) {
-        try {
-            String key = "loadPlugin" + Arrays.toString(new Class<?>[]{Map.class});
-            Method method = methodHashMap.get(key);
-            if (method == null) {
-                return;
-            }
-            method.invoke(instance, configs);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        String key = "loadPlugin" + Arrays.toString(new Class<?>[]{Map.class});
+        invokeByKey(key, configs);
     }
 
     public void searchBarVisible(String showingMode) {
-        try {
-            String key = "searchBarVisible" + Arrays.toString(new Class<?>[]{String.class});
-            Method method = methodHashMap.get(key);
-            if (method == null) {
-                return;
-            }
-            method.invoke(instance, showingMode);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        String key = "searchBarVisible" + Arrays.toString(new Class<?>[]{String.class});
+        invokeByKey(key, showingMode);
     }
 
     public void setCurrentTheme(int defaultColor, int chosenLabelColor, int borderColor) {
-        try {
-            String key = "setCurrentTheme" + Arrays.toString(new Class<?>[]{int.class, int.class, int.class});
-            Method pluginSetCurrentTheme = methodHashMap.get(key);
-            if (pluginSetCurrentTheme == null) {
-                return;
-            }
-            pluginSetCurrentTheme.invoke(instance, defaultColor, chosenLabelColor, borderColor);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        String key = "setCurrentTheme" + Arrays.toString(new Class<?>[]{int.class, int.class, int.class});
+        invokeByKey(key, defaultColor, chosenLabelColor, borderColor);
     }
 
     public void clearResultQueue() {
-        try {
-            String key = "clearResultQueue[]";
-            Method pluginClearResultQueue = methodHashMap.get(key);
-            pluginClearResultQueue.invoke(instance);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        String key = "clearResultQueue[]";
+        invokeByKey(key);
     }
 
     public int getApiVersion() {
-        try {
-            String key = "getApiVersion[]";
-            Method pluginGetApiVersion = methodHashMap.get(key);
-            return (Integer) pluginGetApiVersion.invoke(instance);
-        } catch (Exception e) {
+        String key = "getApiVersion[]";
+        Object api = invokeByKey(key);
+        if (api == null) {
             return 1;
         }
+        return (int) api;
     }
 
     public String[] getMessage() {
-        try {
-            String key = "getMessage[]";
-            Method pluginGetMessage = methodHashMap.get(key);
-            return (String[]) pluginGetMessage.invoke(instance);
-        } catch (Exception e) {
-            return null;
-        }
+        String key = "getMessage[]";
+        return invokeByKey(key);
     }
 
     public String pollFromResultQueue() {
-        try {
-            String key = "pollFromResultQueue[]";
-            Method pluginPollFromResultQueue = methodHashMap.get(key);
-            return (String) pluginPollFromResultQueue.invoke(instance);
-        } catch (Exception e) {
-            return null;
-        }
+        String key = "pollFromResultQueue[]";
+        return invokeByKey(key);
     }
 
     public void textChanged(String text) {
-        try {
-            String key = "textChanged" + Arrays.toString(new Class<?>[]{String.class});
-            Method pluginTextChanged = methodHashMap.get(key);
-            if (text != null) {
-                pluginTextChanged.invoke(instance, text);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        String key = "textChanged" + Arrays.toString(new Class<?>[]{String.class});
+        invokeByKey(key, text);
     }
 
     public void loadPlugin() {
-        try {
-            String key = "loadPlugin[]";
-            Method pluginLoadPlugin = methodHashMap.get(key);
-            pluginLoadPlugin.invoke(instance);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        String key = "loadPlugin[]";
+        invokeByKey(key);
     }
 
     public void unloadPlugin() {
-        try {
-            String key = "unloadPlugin[]";
-            Method pluginUnloadPlugin = methodHashMap.get(key);
-            pluginUnloadPlugin.invoke(instance);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        String key = "unloadPlugin[]";
+        invokeByKey(key);
     }
 
     public void keyPressed(KeyEvent e, String result) {
-        try {
-            String key = "keyPressed" + Arrays.toString(new Class<?>[]{KeyEvent.class, String.class});
-            Method pluginKeyPressed = methodHashMap.get(key);
-            pluginKeyPressed.invoke(instance, e, result);
-        } catch (Exception e1) {
-            e1.printStackTrace();
-        }
+        String key = "keyPressed" + Arrays.toString(new Class<?>[]{KeyEvent.class, String.class});
+        invokeByKey(key, e, result);
     }
 
     public void keyReleased(KeyEvent e, String result) {
-        try {
-            String key = "keyReleased" + Arrays.toString(new Class<?>[]{KeyEvent.class, String.class});
-            Method pluginKeyReleased = methodHashMap.get(key);
-            pluginKeyReleased.invoke(instance, e, result);
-        } catch (Exception e1) {
-            e1.printStackTrace();
-        }
+        String key = "keyReleased" + Arrays.toString(new Class<?>[]{KeyEvent.class, String.class});
+        invokeByKey(key, e, result);
     }
 
     public void keyTyped(KeyEvent e, String result) {
-        try {
-            String key = "keyTyped" + Arrays.toString(new Class<?>[]{KeyEvent.class, String.class});
-            Method pluginKeyTyped = methodHashMap.get(key);
-            pluginKeyTyped.invoke(instance, e, result);
-        } catch (Exception e1) {
-            e1.printStackTrace();
-        }
+        String key = "keyTyped" + Arrays.toString(new Class<?>[]{KeyEvent.class, String.class});
+        invokeByKey(key, e, result);
     }
 
     public void mousePressed(MouseEvent e, String result) {
-        try {
-            String key = "mousePressed" + Arrays.toString(new Class<?>[]{MouseEvent.class, String.class});
-            Method pluginMousePressed = methodHashMap.get(key);
-            pluginMousePressed.invoke(instance, e, result);
-        } catch (Exception e1) {
-            e1.printStackTrace();
-        }
+        String key = "mousePressed" + Arrays.toString(new Class<?>[]{MouseEvent.class, String.class});
+        invokeByKey(key, e, result);
     }
 
     public void mouseReleased(MouseEvent e, String result) {
-        try {
-            String key = "mouseReleased" + Arrays.toString(new Class<?>[]{MouseEvent.class, String.class});
-            Method pluginMouseReleased = methodHashMap.get(key);
-            pluginMouseReleased.invoke(instance, e, result);
-        } catch (Exception e1) {
-            e1.printStackTrace();
-        }
+        String key = "mouseReleased" + Arrays.toString(new Class<?>[]{MouseEvent.class, String.class});
+        invokeByKey(key, e, result);
     }
 
     public String getAuthor() {
-        try {
-            String key = "getAuthor[]";
-            Method pluginGetAuthor = methodHashMap.get(key);
-            return (String) pluginGetAuthor.invoke(instance);
-        } catch (Exception e) {
-            return null;
-        }
+        String key = "getAuthor[]";
+        return invokeByKey(key);
     }
 
     public ImageIcon getPluginIcon() {
-        try {
-            String key = "getPluginIcon[]";
-            Method pluginGetPluginIcon = methodHashMap.get(key);
-            return (ImageIcon) pluginGetPluginIcon.invoke(instance);
-        } catch (Exception e) {
-            return null;
-        }
+        String key = "getPluginIcon[]";
+        return invokeByKey(key);
     }
 
     public String getOfficialSite() {
-        try {
-            String key = "getOfficialSite[]";
-            Method pluginGetOfficialSite = methodHashMap.get(key);
-            return (String) pluginGetOfficialSite.invoke(instance);
-        } catch (Exception e) {
-            return null;
-        }
+        String key = "getOfficialSite[]";
+        return invokeByKey(key);
     }
 
     public String getVersion() {
-        try {
-            String key = "getVersion[]";
-            Method pluginGetVersion = methodHashMap.get(key);
-            return (String) pluginGetVersion.invoke(instance);
-        } catch (Exception e) {
-            return null;
-        }
+        String key = "getVersion[]";
+        return invokeByKey(key);
     }
 
     public String getDescription() {
-        try {
-            String key = "getDescription[]";
-            Method pluginGetDescription = methodHashMap.get(key);
-            return (String) pluginGetDescription.invoke(instance);
-        } catch (Exception e) {
-            return null;
-        }
+        String key = "getDescription[]";
+        return invokeByKey(key);
     }
 
     public boolean isLatest() throws Exception {
         String key = "isLatest[]";
-        Method pluginIsLatest = methodHashMap.get(key);
-        return (boolean) pluginIsLatest.invoke(instance);
+        Object o = invokeByKey(key);
+        if (o == null) {
+            throw new Exception("failed");
+        }
+        return (boolean) o;
     }
 
     public String getUpdateURL() {
-        try {
-            String key = "getUpdateURL[]";
-            Method pluginGetUpdateURL = methodHashMap.get(key);
-            return (String) pluginGetUpdateURL.invoke(instance);
-        } catch (Exception e) {
-            return null;
-        }
+        String key = "getUpdateURL[]";
+        return invokeByKey(key);
     }
 
     public void showResultOnLabel(String result, JLabel label, boolean isChosen) {
-        try {
-            String key = "showResultOnLabel" + Arrays.toString(new Class<?>[]{String.class, JLabel.class, boolean.class});
-            Method pluginShowResultOnLabel = methodHashMap.get(key);
-            pluginShowResultOnLabel.invoke(instance, result, label, isChosen);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        String key = "showResultOnLabel" + Arrays.toString(new Class<?>[]{String.class, JLabel.class, boolean.class});
+        invokeByKey(key, result, label, isChosen);
     }
 
     /**
