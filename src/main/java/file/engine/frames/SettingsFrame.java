@@ -84,7 +84,7 @@ public class SettingsFrame {
     private final HashMap<TabNameAndTitle, Component> tabComponentNameMap = new HashMap<>();
     private final HashMap<String, Integer> suffixMap = new HashMap<>();
     private final Set<Component> excludeComponent = ConcurrentHashMap.newKeySet();
-    private final HashSet<String> diskSet = new HashSet<>();
+    private final LinkedHashSet<String> diskSet = new LinkedHashSet<>();
     private JTextField textFieldUpdateInterval;
     private JTextField textFieldCacheNum;
     private JTextArea textAreaIgnorePath;

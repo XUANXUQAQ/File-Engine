@@ -1332,6 +1332,65 @@ public class DatabaseService {
         tempResults.clear();
     }
 
+    private void waitForAllSQL() {// 等待剩余的sql全部执行完成
+        sendExecuteSQLSignal();
+        try {
+            // 将在队列中的sql全部执行并等待搜索线程全部完成
+            while (searchThreadCount.get() != 0 || !commandQueue.isEmpty()) {
+                TimeUnit.MILLISECONDS.sleep(10);
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void waitForSearchAndSwitchDatabase() {
+        CachedThreadPoolUtil.getInstance().executeTask(() -> {
+            {
+                long start = System.currentTimeMillis();
+                final long timeLimit = 10 * 60 * 1000;
+                // 阻塞等待程序将共享内存配置完成
+                try {
+                    while (!ResultPipe.INSTANCE.isComplete() && ProcessUtil.isProcessExist("fileSearcherUSN.exe")) {
+                        if (System.currentTimeMillis() - start > timeLimit) {
+                            break;
+                        }
+                        TimeUnit.SECONDS.sleep(1);
+                    }
+                } catch (InterruptedException | IOException e) {
+                    e.printStackTrace();
+                }
+                isReadFromSharedMemory.set(true);
+            }
+            // 搜索完成并写入数据库后，重新建立数据库连接
+            {
+                try {
+                    ProcessUtil.waitForProcess("fileSearcherUSN.exe", 1000);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                } finally {
+                    try {
+                        long startWaitingTime = System.currentTimeMillis();
+                        //最多等待5分钟
+                        while (searchThreadCount.get() != 0 && System.currentTimeMillis() - startWaitingTime < 5 * 60 * 1000) {
+                            TimeUnit.MILLISECONDS.sleep(20);
+                        }
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    SQLiteUtil.closeAll();
+                    invalidateAllCache();
+                    SQLiteUtil.initAllConnections();
+                    // 可能会出错
+                    recreateDatabase();
+                    createAllIndex();
+                    isDatabaseUpdated.set(true);
+                    isReadFromSharedMemory.set(false);
+                }
+            }
+        });
+    }
+
     /**
      * 关闭数据库连接并更新数据库
      *
@@ -1346,17 +1405,7 @@ public class DatabaseService {
         setStatus(Constants.Enums.DatabaseStatus.MANUAL_UPDATE);
         // 停止搜索
         stopSearch();
-        {// 等待剩余的sql全部执行完成
-            sendExecuteSQLSignal();
-            try {
-                // 将在队列中的sql全部执行并等待搜索线程全部完成
-                while (searchThreadCount.get() != 0 || !commandQueue.isEmpty()) {
-                    TimeUnit.MILLISECONDS.sleep(10);
-                }
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
+        waitForAllSQL();
         recreateDatabase();
         waitForCommandSet(SqlTaskIds.CREATE_TABLE);
 
@@ -1378,50 +1427,7 @@ public class DatabaseService {
             e.printStackTrace();
             return false;
         } finally {
-            CachedThreadPoolUtil.getInstance().executeTask(() -> {
-                {
-                    long start = System.currentTimeMillis();
-                    final long timeLimit = 10 * 60 * 1000;
-                    // 阻塞等待程序将共享内存配置完成
-                    try {
-                        while (!ResultPipe.INSTANCE.isComplete() && ProcessUtil.isProcessExist("fileSearcherUSN.exe")) {
-                            if (System.currentTimeMillis() - start > timeLimit) {
-                                break;
-                            }
-                            TimeUnit.SECONDS.sleep(1);
-                        }
-                    } catch (InterruptedException | IOException e) {
-                        e.printStackTrace();
-                    }
-                    isReadFromSharedMemory.set(true);
-                }
-                // 搜索完成并写入数据库后，重新建立数据库连接
-                {
-                    try {
-                        ProcessUtil.waitForProcess("fileSearcherUSN.exe", 1000);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    } finally {
-                        try {
-                            long startWaitingTime = System.currentTimeMillis();
-                            //最多等待5分钟
-                            while (searchThreadCount.get() != 0 && System.currentTimeMillis() - startWaitingTime < 5 * 60 * 1000) {
-                                TimeUnit.MILLISECONDS.sleep(20);
-                            }
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                        SQLiteUtil.closeAll();
-                        invalidateAllCache();
-                        SQLiteUtil.initAllConnections();
-                        // 可能会出错
-                        recreateDatabase();
-                        createAllIndex();
-                        isDatabaseUpdated.set(true);
-                        isReadFromSharedMemory.set(false);
-                    }
-                }
-            });
+            waitForSearchAndSwitchDatabase();
         }
         return true;
     }
