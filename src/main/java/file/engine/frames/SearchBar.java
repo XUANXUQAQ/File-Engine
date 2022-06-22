@@ -59,6 +59,8 @@ import java.util.stream.Collectors;
 
 @SuppressWarnings({"IndexOfReplaceableByContains", "ListIndexOfReplaceableByContains"})
 public class SearchBar {
+    public static final int MAX_RESULTS_COUNT = 200;
+    private static final String RESULT_LABEL_NAME_HOLDER = "filled";
     private final AtomicBoolean isLockMouseMotion = new AtomicBoolean(false);
     private final AtomicBoolean isOpenLastFolderPressed = new AtomicBoolean(false);
     private final AtomicBoolean isRunAsAdminPressed = new AtomicBoolean(false);
@@ -1245,7 +1247,7 @@ public class SearchBar {
         if (label != null) {
             SwingUtilities.invokeLater(() -> {
                 String name = label.getName();
-                if (!(name == null || name.isEmpty() || Constants.RESULT_LABEL_NAME_HOLDER.equals(name))) {
+                if (!(name == null || name.isEmpty() || RESULT_LABEL_NAME_HOLDER.equals(name))) {
                     String currentText = label.getText();
                     //indexOf效率更高
                     if (currentText == null || currentText.indexOf(":\\") == -1) {
@@ -1268,7 +1270,7 @@ public class SearchBar {
         if (label != null) {
             SwingUtilities.invokeLater(() -> {
                 String name = label.getName();
-                if (!(name == null || name.isEmpty() || Constants.RESULT_LABEL_NAME_HOLDER.equals(name))) {
+                if (!(name == null || name.isEmpty() || RESULT_LABEL_NAME_HOLDER.equals(name))) {
                     String currentText = label.getText();
                     //indexOf效率更高
                     if (currentText == null || currentText.indexOf(":\\") != -1) {
@@ -3295,7 +3297,7 @@ public class SearchBar {
                 long time = System.currentTimeMillis();
                 ConcurrentLinkedQueue<String> tempResults = databaseService.getTempResults();
                 while (true) {
-                    if (startTime > time || !isVisible() || listResultsNum.get() >= Constants.MAX_RESULTS_COUNT) {
+                    if (startTime > time || !isVisible() || listResultsNum.get() >= MAX_RESULTS_COUNT) {
                         eventManagement.putEvent(new StopSearchEvent());
                         return;
                     }
@@ -3310,7 +3312,7 @@ public class SearchBar {
                         }
                     }
                     while ((each = tempResults.poll()) != null) {
-                        if (startTime > time || !isVisible() || listResultsNum.get() >= Constants.MAX_RESULTS_COUNT) {
+                        if (startTime > time || !isVisible() || listResultsNum.get() >= MAX_RESULTS_COUNT) {
                             eventManagement.putEvent(new StopSearchEvent());
                             return;
                         }
@@ -3946,7 +3948,7 @@ public class SearchBar {
                 String color = "#" + ColorUtil.parseColorHex(labelFontColor);
                 label.setName("<html><body style=\"color: " + color + ";\">" + highLight(FileUtil.getFileName(path), keywords) + getBlank(20) + "<font size=\"-2\">" + showPath + add + "</font></body></html>");
             } else {
-                label.setName(Constants.RESULT_LABEL_NAME_HOLDER);
+                label.setName(RESULT_LABEL_NAME_HOLDER);
             }
             label.setText(allHtml);
             ImageIcon icon = GetIconUtil.getInstance().getBigIcon(path, iconSideLength, iconSideLength);
@@ -3998,7 +4000,7 @@ public class SearchBar {
         String name = info[0];
         String showStr = getHtml(null, command, new boolean[1]);
         label.setText(showStr);
-        label.setName(Constants.RESULT_LABEL_NAME_HOLDER);
+        label.setName(RESULT_LABEL_NAME_HOLDER);
         ImageIcon imageIcon = getIconUtil.getCommandIcon(RegexUtil.colon.split(name)[1], iconSideLength, iconSideLength);
         imageIcon = imageIcon == null ? getIconUtil.getBigIcon(path, iconSideLength, iconSideLength) : imageIcon;
         label.setIcon(imageIcon);

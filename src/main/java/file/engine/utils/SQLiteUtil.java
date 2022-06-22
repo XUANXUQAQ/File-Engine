@@ -48,7 +48,7 @@ public class SQLiteUtil {
                             e.printStackTrace();
                         }
                     }
-                    TimeUnit.SECONDS.sleep(1);
+                    TimeUnit.MILLISECONDS.sleep(50);
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();

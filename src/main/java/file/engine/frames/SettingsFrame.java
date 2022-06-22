@@ -677,13 +677,13 @@ public class SettingsFrame {
      */
     private void addResetColorButtonListener() {
         buttonResetColor.addActionListener(e -> {
-            textFieldFontColorWithCoverage.setText(toRGBHexString(Constants.DEFAULT_FONT_COLOR_WITH_COVERAGE));
-            textFieldSearchBarColor.setText(toRGBHexString(Constants.DEFAULT_SEARCHBAR_COLOR));
-            textFieldLabelColor.setText(toRGBHexString(Constants.DEFAULT_LABEL_COLOR));
-            textFieldBackgroundDefault.setText(toRGBHexString(Constants.DEFAULT_WINDOW_BACKGROUND_COLOR));
-            textFieldFontColor.setText(toRGBHexString(Constants.DEFAULT_FONT_COLOR));
-            textFieldSearchBarFontColor.setText(toRGBHexString(Constants.DEFAULT_SEARCHBAR_FONT_COLOR));
-            textFieldBorderColor.setText(toRGBHexString(Constants.DEFAULT_BORDER_COLOR));
+            textFieldFontColorWithCoverage.setText(toRGBHexString(Constants.Enums.DefaultColors.DEFAULT_FONT_COLOR_WITH_COVERAGE));
+            textFieldSearchBarColor.setText(toRGBHexString(Constants.Enums.DefaultColors.DEFAULT_SEARCHBAR_COLOR));
+            textFieldLabelColor.setText(toRGBHexString(Constants.Enums.DefaultColors.DEFAULT_LABEL_COLOR));
+            textFieldBackgroundDefault.setText(toRGBHexString(Constants.Enums.DefaultColors.DEFAULT_WINDOW_BACKGROUND_COLOR));
+            textFieldFontColor.setText(toRGBHexString(Constants.Enums.DefaultColors.DEFAULT_FONT_COLOR));
+            textFieldSearchBarFontColor.setText(toRGBHexString(Constants.Enums.DefaultColors.DEFAULT_SEARCHBAR_FONT_COLOR));
+            textFieldBorderColor.setText(toRGBHexString(Constants.Enums.DefaultColors.DEFAULT_BORDER_COLOR));
         });
     }
 

@@ -38,6 +38,7 @@ import static file.engine.utils.StartupUtil.hasStartup;
 
 
 public class MainClass {
+    private static final int UPDATE_DATABASE_THRESHOLD = 3;
     private static final String FILE_MONITOR_64_MD_5 = "ec8e19a00907da652c44a6609a9d0eb2";
     private static final String GET_ASC_II_64_MD_5 = "dea00d07d351fece770cd0bb2ad9af10";
     private static final String HOTKEY_LISTENER_64_MD_5 = "6d71f646529b69cff9d50fcce8d4b6e4";
@@ -434,7 +435,7 @@ public class MainClass {
                     try {
                         startTimes = Integer.parseInt(times);
                         //使用次数大于3次，优化数据库
-                        if (startTimes >= Constants.UPDATE_DATABASE_THRESHOLD) {
+                        if (startTimes >= UPDATE_DATABASE_THRESHOLD) {
                             startTimes = 0;
                             if (DatabaseService.getInstance().getStatus() == Constants.Enums.DatabaseStatus.NORMAL) {
                                 ret = true;

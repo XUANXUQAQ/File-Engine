@@ -1,12 +1,11 @@
 package file.engine.utils;
 
-import file.engine.configs.Constants;
-
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public enum CachedThreadPoolUtil {
     INSTANCE;
+    private static final int THREAD_POOL_AWAIT_TIMEOUT = 5;
     private final ExecutorService virtualThreadPool;
     private final ExecutorService platformThreadPool;
     private final AtomicBoolean isShutdown = new AtomicBoolean(false);
@@ -83,7 +82,7 @@ public enum CachedThreadPoolUtil {
 
     private void printInfo(ThreadPoolExecutor threadPoolExecutor) {
         try {
-            if (!threadPoolExecutor.awaitTermination(Constants.THREAD_POOL_AWAIT_TIMEOUT, TimeUnit.SECONDS)) {
+            if (!threadPoolExecutor.awaitTermination(THREAD_POOL_AWAIT_TIMEOUT, TimeUnit.SECONDS)) {
                 System.err.println("线程池等待超时");
                 int queueSize = threadPoolExecutor.getQueue().size();
                 System.err.println("当前排队线程数：" + queueSize);

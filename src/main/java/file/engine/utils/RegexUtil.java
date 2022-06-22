@@ -1,7 +1,5 @@
 package file.engine.utils;
 
-import file.engine.configs.Constants;
-
 import java.lang.ref.WeakReference;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.regex.Pattern;
@@ -17,6 +15,7 @@ public class RegexUtil {
     public static final Pattern equalSign = Pattern.compile("=");
     public static final Pattern lineFeed = Pattern.compile("\n");
     public static final Pattern comma = Pattern.compile(",");
+    private static final int MAX_PATTERN_CACHE_NUM = 20;
 
     private static final ConcurrentSkipListMap<String, WeakReference<Pattern>> patternMap = new ConcurrentSkipListMap<>();
 
@@ -33,7 +32,7 @@ public class RegexUtil {
         if (pattern == null) {
             Pattern compile = Pattern.compile(patternStr, flags);
             pattern = new WeakReference<>(compile);
-            if (patternMap.size() < Constants.MAX_PATTERN_CACHE_NUM) {
+            if (patternMap.size() < MAX_PATTERN_CACHE_NUM) {
                 patternMap.put(key, pattern);
             } else {
                 patternMap.remove(patternMap.firstEntry().getKey());
@@ -44,7 +43,7 @@ public class RegexUtil {
         if (compile == null) {
             compile = Pattern.compile(patternStr, flags);
             pattern = new WeakReference<>(compile);
-            if (patternMap.size() < Constants.MAX_PATTERN_CACHE_NUM) {
+            if (patternMap.size() < MAX_PATTERN_CACHE_NUM) {
                 patternMap.put(key, pattern);
             } else {
                 patternMap.remove(patternMap.firstEntry().getKey());

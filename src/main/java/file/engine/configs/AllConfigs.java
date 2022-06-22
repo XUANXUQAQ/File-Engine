@@ -584,11 +584,11 @@ public class AllConfigs {
     }
 
     private void readSearchBarColor(Map<String, Object> settingsInJson) {
-        configEntity.setSearchBarColor(getFromJson(settingsInJson, "searchBarColor", DEFAULT_SEARCHBAR_COLOR));
+        configEntity.setSearchBarColor(getFromJson(settingsInJson, "searchBarColor", Enums.DefaultColors.DEFAULT_SEARCHBAR_COLOR));
     }
 
     private void readDefaultBackground(Map<String, Object> settingsInJson) {
-        configEntity.setDefaultBackgroundColor(getFromJson(settingsInJson, "defaultBackground", DEFAULT_WINDOW_BACKGROUND_COLOR));
+        configEntity.setDefaultBackgroundColor(getFromJson(settingsInJson, "defaultBackground", Enums.DefaultColors.DEFAULT_WINDOW_BACKGROUND_COLOR));
     }
 
     private void readBorderType(Map<String, Object> settingsInJson) {
@@ -596,23 +596,23 @@ public class AllConfigs {
     }
 
     private void readBorderColor(Map<String, Object> settingsInJson) {
-        configEntity.setBorderColor(getFromJson(settingsInJson, "borderColor", DEFAULT_BORDER_COLOR));
+        configEntity.setBorderColor(getFromJson(settingsInJson, "borderColor", Enums.DefaultColors.DEFAULT_BORDER_COLOR));
     }
 
     private void readFontColorWithCoverage(Map<String, Object> settingsInJson) {
-        configEntity.setFontColorWithCoverage(getFromJson(settingsInJson, "fontColorWithCoverage", DEFAULT_FONT_COLOR_WITH_COVERAGE));
+        configEntity.setFontColorWithCoverage(getFromJson(settingsInJson, "fontColorWithCoverage", Enums.DefaultColors.DEFAULT_FONT_COLOR_WITH_COVERAGE));
     }
 
     private void readLabelColor(Map<String, Object> settingsInJson) {
-        configEntity.setLabelColor(getFromJson(settingsInJson, "labelColor", DEFAULT_LABEL_COLOR));
+        configEntity.setLabelColor(getFromJson(settingsInJson, "labelColor", Enums.DefaultColors.DEFAULT_LABEL_COLOR));
     }
 
     private void readFontColor(Map<String, Object> settingsInJson) {
-        configEntity.setFontColor(getFromJson(settingsInJson, "fontColor", DEFAULT_FONT_COLOR));
+        configEntity.setFontColor(getFromJson(settingsInJson, "fontColor", Enums.DefaultColors.DEFAULT_FONT_COLOR));
     }
 
     private void readSearchBarFontColor(Map<String, Object> settingsInJson) {
-        configEntity.setSearchBarFontColor(getFromJson(settingsInJson, "searchBarFontColor", DEFAULT_SEARCHBAR_FONT_COLOR));
+        configEntity.setSearchBarFontColor(getFromJson(settingsInJson, "searchBarFontColor", Enums.DefaultColors.DEFAULT_SEARCHBAR_FONT_COLOR));
     }
 
     private void readBorderThickness(Map<String, Object> settingsInJson) {

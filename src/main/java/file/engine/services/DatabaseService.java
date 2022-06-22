@@ -44,6 +44,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public class DatabaseService {
+    private static final int MAX_SQL_NUM = 5000;
     private final ConcurrentLinkedQueue<SQLWithTaskId> commandQueue = new ConcurrentLinkedQueue<>();
     private volatile Constants.Enums.DatabaseStatus status = Constants.Enums.DatabaseStatus.NORMAL;
     private final AtomicBoolean isExecuteImmediately = new AtomicBoolean(false);
@@ -1154,7 +1155,7 @@ public class DatabaseService {
      * @param sql 任务
      */
     private void addToCommandSet(SQLWithTaskId sql) {
-        if (commandQueue.size() < Constants.MAX_SQL_NUM) {
+        if (commandQueue.size() < MAX_SQL_NUM) {
             if (status == Constants.Enums.DatabaseStatus.MANUAL_UPDATE) {
                 System.err.println("正在搜索中");
                 return;
