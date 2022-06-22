@@ -3537,6 +3537,38 @@ public class SearchBar {
         }
     }
 
+    private void setSearchKeywordsAndSearchCase() {
+        String[] strings;
+        String searchBarText = getSearchBarText();
+        int length;
+        if (!searchBarText.isEmpty()) {
+            strings = RegexUtil.colon.split(searchBarText);
+            if (strings != null) {
+                length = strings.length;
+                if (length == 1) {
+                    searchText = strings[0];
+                    searchCase = null;
+                } else if (length > 1) {
+                    searchText = strings[0];
+                    searchCase = semicolon.split(strings[1]);
+                }
+                keywords = semicolon.split(searchText);
+            }
+        }
+    }
+
+    private void sendSearchEvent(AtomicBoolean isMergeThreadNotExist) {
+        EventManagement eventManagement = EventManagement.getInstance();
+        if (!getSearchBarText().isEmpty()) {
+            isSqlNotInitialized.set(false);
+            if (databaseService.getStatus() == Constants.Enums.DatabaseStatus.NORMAL && runningMode == Constants.Enums.RunningMode.NORMAL_MODE) {
+                searchCaseToLowerAndRemoveConflict();
+                eventManagement.putEvent(new StartSearchEvent(() -> searchText, () -> searchCase, () -> keywords));
+                addMergeThread(isMergeThreadNotExist);
+            }
+        }
+    }
+
     private void sendSignalAndShowCommandThread() {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             //缓存和常用文件夹搜索线程
@@ -3544,8 +3576,6 @@ public class SearchBar {
             EventManagement eventManagement = EventManagement.getInstance();
             TranslateService translateService = TranslateService.getInstance();
             AllConfigs allConfigs = AllConfigs.getInstance();
-            String[] strings;
-            int length;
             if (allConfigs.isFirstRun()) {
                 runInternalCommand("help");
             }
@@ -3556,32 +3586,11 @@ public class SearchBar {
                 try {
                     // 记录输入字符串
                     if (isVisible()) {
-                        String searchBarText = getSearchBarText();
-                        if (!searchBarText.isEmpty()) {
-                            strings = RegexUtil.colon.split(searchBarText);
-                            if (strings != null) {
-                                length = strings.length;
-                                if (length == 1) {
-                                    searchText = strings[0];
-                                    searchCase = null;
-                                } else if (length > 1) {
-                                    searchText = strings[0];
-                                    searchCase = semicolon.split(strings[1]);
-                                }
-                                keywords = semicolon.split(searchText);
-                            }
-                        }
+                        setSearchKeywordsAndSearchCase();
                     }
                     long endTime = System.currentTimeMillis();
                     if ((endTime - startTime > 250) && isSqlNotInitialized.get() && startSignal.get()) {
-                        if (!getSearchBarText().isEmpty()) {
-                            isSqlNotInitialized.set(false);
-                            if (databaseService.getStatus() == Constants.Enums.DatabaseStatus.NORMAL && runningMode == Constants.Enums.RunningMode.NORMAL_MODE) {
-                                searchCaseToLowerAndRemoveConflict();
-                                eventManagement.putEvent(new StartSearchEvent(() -> searchText, () -> searchCase, () -> keywords));
-                                addMergeThread(isMergeThreadNotExist);
-                            }
-                        }
+                        sendSearchEvent(isMergeThreadNotExist);
                     }
 
                     if ((endTime - startTime > 300) && startSignal.get()) {
@@ -3595,14 +3604,14 @@ public class SearchBar {
                         if (runningMode == Constants.Enums.RunningMode.COMMAND_MODE) {
                             //去掉冒号
                             String text = getSearchBarText();
-                            if (!runInternalCommand(text.substring(1).toLowerCase())) {
+                            if (text.length() <= 1 || !runInternalCommand(text.substring(1).toLowerCase())) {
                                 LinkedHashSet<String> cmdSet = allConfigs.getCmdSet();
                                 cmdSet.add(":clearbin;" + translateService.getTranslation("Clear the recycle bin"));
                                 cmdSet.add(":update;" + translateService.getTranslation("Update file index"));
                                 cmdSet.add(":clearUpdate;" + translateService.getTranslation("Clear the database and update file index"));
                                 cmdSet.add(":help;" + translateService.getTranslation("View help"));
                                 cmdSet.add(":version;" + translateService.getTranslation("View Version"));
-                                cmdSet.forEach(i -> {
+                                for (String i : cmdSet) {
                                     String[] cmdInfo = semicolon.split(i);
                                     if (cmdInfo[0].contains(text.substring(1))) {
                                         listResultsNum.incrementAndGet();
@@ -3613,7 +3622,7 @@ public class SearchBar {
                                         detectShowingModeAndClose();
                                         openWithoutAdmin(cmdInfo[1]);
                                     }
-                                });
+                                }
                             }
                         } else if (runningMode == Constants.Enums.RunningMode.NORMAL_MODE) {
                             String searchBarText = getSearchBarText();

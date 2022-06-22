@@ -59,8 +59,12 @@ public class PluginMarket {
     private final JFrame frame = new JFrame("Plugin Market");
     //保存插件名称和url的映射关系
     private final HashMap<String, String> NAME_PLUGIN_INFO_URL_MAP = new HashMap<>();
+    private boolean isFramePrepared = false;
 
     private PluginMarket() {
+    }
+
+    private void prepareFrame() {
         addSelectPluginOnListListener();
         addSearchPluginListener();
         addButtonInstallListener();
@@ -96,6 +100,10 @@ public class PluginMarket {
      * 显示插件窗口
      */
     private void showWindow() {
+        if (!isFramePrepared) {
+            isFramePrepared = true;
+            prepareFrame();
+        }
         double dpi = DpiUtil.getDpi();
         int width = (int) (1000 / dpi), height = (int) (600 / dpi);
         ImageIcon frameIcon = new ImageIcon(Objects.requireNonNull(PluginMarket.class.getResource("/icons/frame.png")));
