@@ -46,7 +46,7 @@
           <grid row="3" column="6" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
         </constraints>
         <properties>
-          <text value=""/>
+          <text value="  "/>
         </properties>
       </component>
       <component id="3e4a2" class="javax.swing.JLabel" binding="labelProgress">
@@ -54,7 +54,7 @@
           <grid row="2" column="7" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
         </constraints>
         <properties>
-          <text value=""/>
+          <text value="  "/>
         </properties>
       </component>
       <hspacer id="baa0c">
@@ -67,7 +67,7 @@
           <grid row="1" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
         </constraints>
         <properties>
-          <text value=""/>
+          <text value="  "/>
         </properties>
       </component>
       <component id="f86dd" class="javax.swing.JLabel" binding="labelPluginName">
@@ -75,7 +75,7 @@
           <grid row="1" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
         </constraints>
         <properties>
-          <text value=""/>
+          <text value="  "/>
         </properties>
       </component>
       <component id="8c067" class="javax.swing.JLabel" binding="labelOfficialSite">
@@ -83,7 +83,7 @@
           <grid row="2" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
         </constraints>
         <properties>
-          <text value=""/>
+          <text value="  "/>
         </properties>
       </component>
       <component id="5ccbb" class="javax.swing.JLabel" binding="labelAuthor">
@@ -91,7 +91,7 @@
           <grid row="2" column="6" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
         </constraints>
         <properties>
-          <text value=""/>
+          <text value="  "/>
         </properties>
       </component>
       <component id="1c8a2" class="javax.swing.JButton" binding="buttonInstall">

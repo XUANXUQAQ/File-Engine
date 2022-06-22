@@ -72,6 +72,7 @@ import static file.engine.utils.StartupUtil.hasStartup;
 
 public class SettingsFrame {
     private final Set<String> cacheSet = new ConcurrentSkipListSet<>();
+    private boolean isFramePrepared = false;
     private static volatile int tmp_copyPathKeyCode;
     private static volatile int tmp_runAsAdminKeyCode;
     private static volatile int tmp_openLastFolderKeyCode;
@@ -1974,6 +1975,9 @@ public class SettingsFrame {
 
     private SettingsFrame() {
 //        frame.setUndecorated(true);
+    }
+
+    private void prepareFrame() {
         frame.getRootPane().setWindowDecorationStyle(JRootPane.FRAME);
         frame.setIconImage(frameIcon.getImage());
 
@@ -2265,6 +2269,10 @@ public class SettingsFrame {
     private void showWindow(String tabName) {
         if (frame.isVisible()) {
             return;
+        }
+        if (!isFramePrepared) {
+            isFramePrepared = true;
+            prepareFrame();
         }
         frame.setResizable(true);
         double dpi = DpiUtil.getDpi();
