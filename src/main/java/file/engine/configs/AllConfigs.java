@@ -43,7 +43,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 
-import static file.engine.configs.Constants.*;
+import static file.engine.configs.Constants.DEFAULT_SWING_THEME;
+import static file.engine.configs.Constants.Enums;
 
 /**
  * 保存软件运行时的所有配置信息
@@ -784,7 +785,6 @@ public class AllConfigs {
         eventManagement.putEvent(new SetSearchBarColorEvent(configEntity.getSearchBarColor()));
         eventManagement.putEvent(new SetSearchBarFontColorEvent(configEntity.getSearchBarFontColor()));
         eventManagement.putEvent(new SetBorderEvent(allConfigs.getBorderType(), configEntity.getBorderColor(), configEntity.getBorderThickness()));
-        eventManagement.putEvent(new SetSwingLaf("current"));
     }
 
     /**
@@ -953,19 +953,24 @@ public class AllConfigs {
 
     @EventRegister(registerClass = BootSystemEvent.class)
     private static void BootSystemEvent(Event event) {
-        Event tmpEvent;
         EventManagement eventManagement = EventManagement.getInstance();
+        eventManagement.putEvent(new StartMonitorDiskEvent());
+        eventManagement.putEvent(new ShowTrayIconEvent());
 
+        Event tmpEvent;
         tmpEvent = new LoadAllPluginsEvent("plugins");
         eventManagement.putEvent(tmpEvent);
         eventManagement.waitForEvent(tmpEvent);
 
-        eventManagement.putEvent(new StartMonitorDiskEvent());
-        eventManagement.putEvent(new ShowTrayIconEvent());
+        tmpEvent = new SetSwingLaf("current");
+        eventManagement.putEvent(tmpEvent);
+        eventManagement.waitForEvent(tmpEvent);
 
         tmpEvent = new SetConfigsEvent();
         eventManagement.putEvent(tmpEvent);
-        eventManagement.waitForEvent(tmpEvent);
+        if (eventManagement.waitForEvent(tmpEvent)) {
+            throw new RuntimeException("set configs failed");
+        }
     }
 
     @EventRegister(registerClass = SetConfigsEvent.class)

@@ -297,10 +297,13 @@ public class DatabaseService {
         }
     }
 
+    /**
+     * 搜索文件夹
+     */
     private void searchStartMenu() {
         String startMenu = GetStartMenu.INSTANCE.getStartMenu();
         String[] split = RegexUtil.semicolon.split(startMenu);
-        if (split == null) {
+        if (split == null || split.length == 0) {
             return;
         }
         for (String s : split) {
@@ -671,17 +674,17 @@ public class DatabaseService {
      *                        例如第一个和第三个任务完成，第二个未完成，则为1010
      * @param allTaskStatus   所有的任务信息，从第二位开始，只要有任务被创建，该为就为1，例如三个任务被创建，则为1110
      * @param containerMap    每个任务搜索出来的结果都会被放到一个属于它自己的一个容器中，该容器保存任务与容器的映射关系
-     * @param taskQueue       任务栈
+     * @param taskMap         任务
      */
     private void addSearchTasksForSharedMemory(LinkedHashMap<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>> nonFormattedSql,
                                                Bit taskStatus,
                                                Bit allTaskStatus,
                                                LinkedHashMap<String, ConcurrentSkipListSet<String>> containerMap,
-                                               ConcurrentHashMap<String, ConcurrentLinkedQueue<Runnable>> taskQueue) {
+                                               ConcurrentHashMap<String, ConcurrentLinkedQueue<Runnable>> taskMap) {
         Bit number = new Bit(new byte[]{1});
         for (String eachDisk : RegexUtil.comma.split(AllConfigs.getInstance().getAvailableDisks())) {
             ConcurrentLinkedQueue<Runnable> runnables = new ConcurrentLinkedQueue<>();
-            taskQueue.put(eachDisk, runnables);
+            taskMap.put(eachDisk, runnables);
             for (Map.Entry<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>> entry : nonFormattedSql.entrySet()) {
                 LinkedHashMap<String, String> commandsMap = entry.getKey();
                 ConcurrentSkipListSet<String> container = entry.getValue();
@@ -741,12 +744,12 @@ public class DatabaseService {
                                 Bit taskStatus,
                                 Bit allTaskStatus,
                                 LinkedHashMap<String, ConcurrentSkipListSet<String>> containerMap,
-                                ConcurrentHashMap<String, ConcurrentLinkedQueue<Runnable>> taskQueue,
+                                ConcurrentHashMap<String, ConcurrentLinkedQueue<Runnable>> taskMap,
                                 boolean isReadFromSharedMemory) {
         if (isReadFromSharedMemory) {
-            addSearchTasksForSharedMemory(nonFormattedSql, taskStatus, allTaskStatus, containerMap, taskQueue);
+            addSearchTasksForSharedMemory(nonFormattedSql, taskStatus, allTaskStatus, containerMap, taskMap);
         } else {
-            addSearchTasksForDatabase(nonFormattedSql, taskStatus, allTaskStatus, containerMap, taskQueue);
+            addSearchTasksForDatabase(nonFormattedSql, taskStatus, allTaskStatus, containerMap, taskMap);
         }
     }
 
@@ -758,18 +761,18 @@ public class DatabaseService {
      *                        例如第一个和第三个任务完成，第二个未完成，则为1010
      * @param allTaskStatus   所有的任务信息，从第二位开始，只要有任务被创建，该为就为1，例如三个任务被创建，则为1110
      * @param containerMap    每个任务搜索出来的结果都会被放到一个属于它自己的一个容器中，该容器保存任务与容器的映射关系
-     * @param taskQueue       任务栈
+     * @param taskMap         任务
      */
     private void addSearchTasksForDatabase(LinkedHashMap<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>> nonFormattedSql,
                                            Bit taskStatus,
                                            Bit allTaskStatus,
                                            LinkedHashMap<String, ConcurrentSkipListSet<String>> containerMap,
-                                           ConcurrentHashMap<String, ConcurrentLinkedQueue<Runnable>> taskQueue) {
+                                           ConcurrentHashMap<String, ConcurrentLinkedQueue<Runnable>> taskMap) {
         Bit number = new Bit(new byte[]{1});
         String availableDisks = AllConfigs.getInstance().getAvailableDisks();
         for (String eachDisk : RegexUtil.comma.split(availableDisks)) {
             ConcurrentLinkedQueue<Runnable> runnables = new ConcurrentLinkedQueue<>();
-            taskQueue.put(eachDisk, runnables);
+            taskMap.put(eachDisk, runnables);
             for (Map.Entry<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>> entry : nonFormattedSql.entrySet()) {
                 LinkedHashMap<String, String> commandsMap = entry.getKey();
                 ConcurrentSkipListSet<String> container = entry.getValue();
@@ -887,7 +890,6 @@ public class DatabaseService {
      * 添加sql语句，并开始搜索
      */
     private void startSearch() {
-        CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
         searchCache();
         searchPriorityFolder();
         searchStartMenu();
@@ -900,15 +902,18 @@ public class DatabaseService {
 
         LinkedHashMap<String, ConcurrentSkipListSet<String>> containerMap = new LinkedHashMap<>();
         //任务队列
-        ConcurrentHashMap<String, ConcurrentLinkedQueue<Runnable>> taskQueue = new ConcurrentHashMap<>();
+        ConcurrentHashMap<String, ConcurrentLinkedQueue<Runnable>> taskMap = new ConcurrentHashMap<>();
         //添加搜索任务到队列
-        addSearchTasks(nonFormattedSql, taskStatus, allTaskStatus, containerMap, taskQueue, isReadFromSharedMemory.get());
-
-        taskQueue.forEach((key, value) -> {
-            for (int i = 0; i < 2; i++) {
+        addSearchTasks(nonFormattedSql, taskStatus, allTaskStatus, containerMap, taskMap, isReadFromSharedMemory.get());
+        if (isSearchStopped.get()) {
+            return;
+        }
+        taskMap.forEach((disk, taskQueue) -> {
+            CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
+            for (int i = 0; i < 4; i++) {
                 cachedThreadPoolUtil.executeTask(() -> {
                     Runnable runnable;
-                    while ((runnable = value.poll()) != null) {
+                    while ((runnable = taskQueue.poll()) != null) {
                         try {
                             searchThreadCount.incrementAndGet();
                             runnable.run();
@@ -919,7 +924,7 @@ public class DatabaseService {
                             searchThreadCount.decrementAndGet();
                         }
                     }
-                }, i % 2 == 0);
+                });
             }
         });
         waitForTaskAndMergeResults(containerMap, allTaskStatus, taskStatus);
@@ -1350,12 +1355,16 @@ public class DatabaseService {
         tempResults.clear();
     }
 
-    private void waitForAllSQL() {// 等待剩余的sql全部执行完成
+    private void executeAllSQLAndWait(@SuppressWarnings("SameParameterValue") int timeoutMills) {// 等待剩余的sql全部执行完成
         sendExecuteSQLSignal();
         try {
+            long time = System.currentTimeMillis();
             // 将在队列中的sql全部执行并等待搜索线程全部完成
             while (searchThreadCount.get() != 0 || !commandQueue.isEmpty()) {
                 TimeUnit.MILLISECONDS.sleep(10);
+                if (System.currentTimeMillis() - time > timeoutMills) {
+                    break;
+                }
             }
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -1423,7 +1432,7 @@ public class DatabaseService {
         setStatus(Constants.Enums.DatabaseStatus.MANUAL_UPDATE);
         // 停止搜索
         stopSearch();
-        waitForAllSQL();
+        executeAllSQLAndWait(3000);
         recreateDatabase();
         waitForCommandSet(SqlTaskIds.CREATE_TABLE);
 
@@ -1528,9 +1537,9 @@ public class DatabaseService {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             // 时间检测线程
             final long updateTimeLimit = AllConfigs.getInstance().getUpdateTimeLimit();
+            final long timeout = Constants.CLOSE_DATABASE_TIMEOUT_MILLS - 30 * 1000;
             try {
                 EventManagement eventManagement = EventManagement.getInstance();
-                long timeout = Constants.CLOSE_DATABASE_TIMEOUT_MILLS - 30 * 1000;
                 while (eventManagement.notMainExit()) {
                     if ((status == Constants.Enums.DatabaseStatus.NORMAL && System.currentTimeMillis() - startSearchTimeMills.get() < timeout) ||
                             (status == Constants.Enums.DatabaseStatus.NORMAL && commandQueue.size() > 1000)) {
@@ -1754,6 +1763,7 @@ public class DatabaseService {
 
     @EventListener(listenClass = RestartEvent.class)
     private static void restartEvent(Event event) {
+        getInstance().executeAllCommands();
         SQLiteUtil.closeAll();
     }
 

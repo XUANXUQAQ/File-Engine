@@ -3817,24 +3817,26 @@ public class SearchBar {
      * @return 处理后带html
      */
     private String highLight(String html, String[] keywords) {
-        StringBuilder builder = new StringBuilder();
+        StringBuilder regexPatternBuilder = new StringBuilder();
         List<String> collect = Arrays.stream(keywords).sorted((o1, o2) -> o2.length() - o1.length()).collect(Collectors.toList());
         for (String keyword : collect) {
             if (!keyword.isBlank()) {
-                builder.append(keyword).append("|");
+                regexPatternBuilder.append(keyword).append("|");
             }
         }
-        // 挑出所有的中文字符
-        Map<String, String> chinesePinyinMap = PinyinUtil.getChinesePinyinMap(html);
-        // 转换成拼音后和keywords匹配，如果发现匹配出成功，则添加到正则表达式中
-        chinesePinyinMap.entrySet()
-                .stream()
-                .filter(pair -> Arrays.stream(keywords)
-                        .anyMatch(each -> each.toLowerCase(Locale.ROOT).indexOf(pair.getValue().toLowerCase(Locale.ROOT)) != -1))
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue))
-                .forEach((k, v) -> builder.append(k).append("|"));
-        if (builder.length() > 0) {
-            String pattern = builder.substring(0, builder.length() - 1);
+        if (PinyinUtil.isStringContainChinese(html)) {
+            // 挑出所有的中文字符
+            Map<String, String> chinesePinyinMap = PinyinUtil.getChinesePinyinMap(html);
+            // 转换成拼音后和keywords匹配，如果发现匹配出成功，则添加到正则表达式中
+            chinesePinyinMap.entrySet()
+                    .stream()
+                    .filter(pair -> Arrays.stream(keywords)
+                            .anyMatch(each -> each.toLowerCase(Locale.ROOT).indexOf(pair.getValue().toLowerCase(Locale.ROOT)) != -1))
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue))
+                    .forEach((k, v) -> regexPatternBuilder.append(k).append("|"));
+        }
+        if (regexPatternBuilder.length() > 0) {
+            String pattern = regexPatternBuilder.substring(0, regexPatternBuilder.length() - 1);
             Pattern compile = RegexUtil.getPattern(pattern, Pattern.CASE_INSENSITIVE);
             Matcher matcher = compile.matcher(html);
             html = matcher.replaceAll((matchResult) -> {

@@ -147,24 +147,24 @@ public class EventManagement {
             BiConsumer<Class<?>, Object> pluginHandler = PLUGIN_EVENT_HANDLER_MAP.get(eventClassName);
             if (pluginHandler != null) {
                 pluginHandler.accept(event.getClass(), event);
-                event.setFinished();
                 doAllMethod(eventClassName, event);
+                event.setFinished();
                 return false;
             } else {
                 Method eventHandler = EVENT_HANDLER_MAP.get(eventClassName);
                 if (eventHandler != null) {
                     try {
                         eventHandler.invoke(null, event);
-                        event.setFinished();
                         doAllMethod(eventClassName, event);
+                        event.setFinished();
                         return false;
                     } catch (Exception e) {
                         e.printStackTrace();
                         return true;
                     }
                 } else {
-                    event.setFinished();
                     doAllMethod(eventClassName, event);
+                    event.setFinished();
                 }
             }
             return false;
