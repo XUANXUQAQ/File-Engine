@@ -49,6 +49,7 @@ public class MainClass {
     private static final String SHORTCUT_GEN_MD_5 = "fa4e26f99f3dcd58d827828c411ea5d7";
     private static final String RESULT_PIPE_MD_5 = "35e8f5de0917a9a557d81efbab0988cc";
     private static final String GET_DPI_MD_5 = "2d835577b3505af292966411b50e93b4";
+    private static final String GET_START_MENU_MD_5 = "3c83f83fe7273a44d9e3c27510c2e342";
 
     /**
      * 加载本地释放的dll
@@ -480,6 +481,7 @@ public class MainClass {
         copyOrIgnoreFile("user/shortcutGenerator.vbs", "/shortcutGenerator.vbs", SHORTCUT_GEN_MD_5);
         copyOrIgnoreFile("user/resultPipe.dll", "/win32-native/resultPipe.dll", RESULT_PIPE_MD_5);
         copyOrIgnoreFile("user/getDpi.exe", "/win32-native/getDpi.exe", GET_DPI_MD_5);
+        copyOrIgnoreFile("user/getStartMenu.dll", "/win32-native/getStartMenu.dll", GET_START_MENU_MD_5);
     }
 
     private static void copyOrIgnoreFile(String path, String rootPath, String md5) throws IOException {

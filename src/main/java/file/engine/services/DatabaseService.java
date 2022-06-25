@@ -7,6 +7,7 @@ import file.engine.configs.AllConfigs;
 import file.engine.configs.Constants;
 import file.engine.dllInterface.FileMonitor;
 import file.engine.dllInterface.GetAscII;
+import file.engine.dllInterface.GetStartMenu;
 import file.engine.dllInterface.ResultPipe;
 import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
@@ -255,11 +256,8 @@ public class DatabaseService {
         });
     }
 
-    /**
-     * 搜索优先文件夹
-     */
-    private void searchPriorityFolder() {
-        File path = new File(AllConfigs.getInstance().getPriorityFolder());
+    private void searchFolder(String folder) {
+        File path = new File(folder);
         if (!path.exists()) {
             return;
         }
@@ -297,6 +295,24 @@ public class DatabaseService {
                 }
             }
         }
+    }
+
+    private void searchStartMenu() {
+        String startMenu = GetStartMenu.INSTANCE.getStartMenu();
+        String[] split = RegexUtil.semicolon.split(startMenu);
+        if (split == null) {
+            return;
+        }
+        for (String s : split) {
+            searchFolder(s);
+        }
+    }
+
+    /**
+     * 搜索优先文件夹
+     */
+    private void searchPriorityFolder() {
+        searchFolder(AllConfigs.getInstance().getPriorityFolder());
     }
 
     private LinkedHashMap<String, Integer> scanDatabaseAndSelectCacheTable(String[] disks,
@@ -874,6 +890,7 @@ public class DatabaseService {
         CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
         searchCache();
         searchPriorityFolder();
+        searchStartMenu();
         //每个priority用一个线程，每一个后缀名对应一个优先级
         //按照优先级排列，key是sql和表名的对应，value是容器
         LinkedHashMap<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>>
