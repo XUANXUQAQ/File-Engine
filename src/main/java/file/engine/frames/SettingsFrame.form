@@ -12,7 +12,7 @@
       <opaque value="false"/>
       <preferredSize width="850" height="600"/>
       <requestFocusEnabled value="true"/>
-      <verifyInputWhenFocusTarget value="true"/>
+      <verifyInputWhenFocusTarget value="false"/>
       <visible value="true"/>
     </properties>
     <border type="none"/>

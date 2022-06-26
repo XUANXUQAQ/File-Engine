@@ -51,7 +51,6 @@ public class DatabaseService {
     private final AtomicBoolean isExecuteImmediately = new AtomicBoolean(false);
     private final AtomicInteger cacheNum = new AtomicInteger(0);
     private final Set<TableNameWeightInfo> tableSet;    //保存从0-40数据库的表，使用频率和名字对应，使经常使用的表最快被搜索到
-    //    private final ConcurrentLinkedQueue<String> tableQueue;  //保存哪些表需要被查
     private final AtomicBoolean isDatabaseUpdated = new AtomicBoolean(false);
     private final AtomicBoolean isReadFromSharedMemory = new AtomicBoolean(false);
     private final @Getter
@@ -1128,46 +1127,48 @@ public class DatabaseService {
      */
     @SuppressWarnings("SqlNoDataSourceInspection")
     private void executeAllCommands() {
-        if (!commandQueue.isEmpty()) {
-            LinkedHashSet<SQLWithTaskId> tempCommandSet = new LinkedHashSet<>(commandQueue);
-            HashMap<String, LinkedList<String>> commandMap = new HashMap<>();
-            for (SQLWithTaskId sqlWithTaskId : tempCommandSet) {
-                if (commandMap.containsKey(sqlWithTaskId.key)) {
-                    commandMap.get(sqlWithTaskId.key).add(sqlWithTaskId.sql);
-                } else {
-                    LinkedList<String> sqls = new LinkedList<>();
-                    sqls.add(sqlWithTaskId.sql);
-                    commandMap.put(sqlWithTaskId.key, sqls);
+        synchronized (this) {
+            if (!commandQueue.isEmpty()) {
+                LinkedHashSet<SQLWithTaskId> tempCommandSet = new LinkedHashSet<>(commandQueue);
+                HashMap<String, LinkedList<String>> commandMap = new HashMap<>();
+                for (SQLWithTaskId sqlWithTaskId : tempCommandSet) {
+                    if (commandMap.containsKey(sqlWithTaskId.key)) {
+                        commandMap.get(sqlWithTaskId.key).add(sqlWithTaskId.sql);
+                    } else {
+                        LinkedList<String> sqls = new LinkedList<>();
+                        sqls.add(sqlWithTaskId.sql);
+                        commandMap.put(sqlWithTaskId.key, sqls);
+                    }
                 }
+                commandMap.forEach((k, v) -> {
+                    Statement stmt = null;
+                    try {
+                        stmt = SQLiteUtil.getStatement(k);
+                        stmt.execute("BEGIN;");
+                        for (String sql : v) {
+                            if (IsDebug.isDebug()) {
+                                System.out.println("----------------------------------------------");
+                                System.out.println("执行SQL命令--" + sql);
+                                System.out.println("----------------------------------------------");
+                            }
+                            stmt.execute(sql);
+                        }
+                    } catch (SQLException exception) {
+                        exception.printStackTrace();
+                        System.err.println("执行失败：" + v);
+                    } finally {
+                        if (stmt != null) {
+                            try {
+                                stmt.execute("COMMIT;");
+                                stmt.close();
+                            } catch (SQLException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+                });
+                commandQueue.removeAll(tempCommandSet);
             }
-            commandMap.forEach((k, v) -> {
-                Statement stmt = null;
-                try {
-                    stmt = SQLiteUtil.getStatement(k);
-                    stmt.execute("BEGIN;");
-                    for (String sql : v) {
-                        if (IsDebug.isDebug()) {
-                            System.out.println("----------------------------------------------");
-                            System.out.println("执行SQL命令--" + sql);
-                            System.out.println("----------------------------------------------");
-                        }
-                        stmt.execute(sql);
-                    }
-                } catch (SQLException exception) {
-                    exception.printStackTrace();
-                    System.err.println("执行失败：" + v);
-                } finally {
-                    if (stmt != null) {
-                        try {
-                            stmt.execute("COMMIT;");
-                            stmt.close();
-                        } catch (SQLException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }
-            });
-            commandQueue.removeAll(tempCommandSet);
         }
     }
 
