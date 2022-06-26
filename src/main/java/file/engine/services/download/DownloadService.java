@@ -3,7 +3,6 @@ package file.engine.services.download;
 import file.engine.annotation.EventRegister;
 import file.engine.configs.Constants;
 import file.engine.event.handler.Event;
-import file.engine.event.handler.impl.download.IsTaskDoneBeforeEvent;
 import file.engine.event.handler.impl.download.StartDownloadEvent;
 import file.engine.event.handler.impl.download.StopDownloadEvent;
 import file.engine.utils.CachedThreadPoolUtil;
@@ -15,7 +14,7 @@ public class DownloadService {
     private final Set<DownloadManager> downloadManagerSet = ConcurrentHashMap.newKeySet();
     private static volatile DownloadService INSTANCE = null;
 
-    private static DownloadService getInstance() {
+    public static DownloadService getInstance() {
         if (INSTANCE == null) {
             synchronized (DownloadService.class) {
                 if (INSTANCE == null) {
@@ -39,12 +38,6 @@ public class DownloadService {
     private static void stopDownloadEvent(Event event) {
         StopDownloadEvent stopDownloadTask = (StopDownloadEvent) event;
         getInstance().cancelDownload(stopDownloadTask.downloadManager);
-    }
-
-    @EventRegister(registerClass = IsTaskDoneBeforeEvent.class)
-    private static void IsTaskDoneBeforeEvent(Event event) {
-        IsTaskDoneBeforeEvent isTaskDoneBeforeEvent = (IsTaskDoneBeforeEvent) event;
-        isTaskDoneBeforeEvent.setReturnValue(getInstance().isTaskDoneBefore(isTaskDoneBeforeEvent.downloadManager));
     }
 
     /**
@@ -71,7 +64,7 @@ public class DownloadService {
         return downloadManager;
     }
 
-    private boolean isTaskDoneBefore(DownloadManager downloadManager) {
+    public boolean isTaskDoneBefore(DownloadManager downloadManager) {
         return getFromSet(downloadManager).getDownloadStatus() == Constants.Enums.DownloadStatus.DOWNLOAD_DONE;
     }
 

@@ -14,7 +14,6 @@ import file.engine.event.handler.impl.configs.DeleteCmdEvent;
 import file.engine.event.handler.impl.configs.SaveConfigsEvent;
 import file.engine.event.handler.impl.configs.SetConfigsEvent;
 import file.engine.event.handler.impl.database.*;
-import file.engine.event.handler.impl.download.IsTaskDoneBeforeEvent;
 import file.engine.event.handler.impl.download.StartDownloadEvent;
 import file.engine.event.handler.impl.download.StopDownloadEvent;
 import file.engine.event.handler.impl.frame.pluginMarket.ShowPluginMarket;
@@ -32,6 +31,7 @@ import file.engine.event.handler.impl.taskbar.ShowTaskBarMessageEvent;
 import file.engine.services.DatabaseService;
 import file.engine.services.TranslateService;
 import file.engine.services.download.DownloadManager;
+import file.engine.services.download.DownloadService;
 import file.engine.services.plugin.system.Plugin;
 import file.engine.services.plugin.system.PluginService;
 import file.engine.utils.*;
@@ -888,21 +888,17 @@ public class SettingsFrame {
                         buttonUpdatePlugin.setVisible(true);
                     });
                     if (PluginService.getInstance().hasPluginNotLatest(pluginName)) {
-                        IsTaskDoneBeforeEvent isTaskDoneBeforeEvent = new IsTaskDoneBeforeEvent(new DownloadManager(null, pluginName + ".jar", new File("tmp", "pluginsUpdate").getAbsolutePath()));
-                        eventManagement.putEvent(isTaskDoneBeforeEvent);
-                        eventManagement.waitForEvent(isTaskDoneBeforeEvent);
-                        Optional<Boolean> returnValue = isTaskDoneBeforeEvent.getReturnValue();
-                        returnValue.ifPresent((isTaskDone) -> {
-                            if (isTaskDone) {
-                                buttonUpdatePlugin.setEnabled(false);
-                                buttonUpdatePlugin.setText(TRANSLATE_SERVICE.getTranslation("Downloaded"));
-                            } else {
-                                Color color = new Color(51, 122, 183);
-                                buttonUpdatePlugin.setText(TRANSLATE_SERVICE.getTranslation("Update"));
-                                buttonUpdatePlugin.setBackground(color);
-                                buttonUpdatePlugin.setEnabled(true);
-                            }
-                        });
+                        DownloadManager downloadManager = new DownloadManager(null, pluginName + ".jar", new File("tmp", "pluginsUpdate").getAbsolutePath());
+                        boolean isTaskDone = DownloadService.getInstance().isTaskDoneBefore(downloadManager);
+                        if (isTaskDone) {
+                            buttonUpdatePlugin.setEnabled(false);
+                            buttonUpdatePlugin.setText(TRANSLATE_SERVICE.getTranslation("Downloaded"));
+                        } else {
+                            Color color = new Color(51, 122, 183);
+                            buttonUpdatePlugin.setText(TRANSLATE_SERVICE.getTranslation("Update"));
+                            buttonUpdatePlugin.setBackground(color);
+                            buttonUpdatePlugin.setEnabled(true);
+                        }
                     } else {
                         buttonUpdatePlugin.setText(TRANSLATE_SERVICE.getTranslation("Check for update"));
                         buttonUpdatePlugin.setEnabled(true);
@@ -2249,6 +2245,9 @@ public class SettingsFrame {
 
     @EventRegister(registerClass = GetExcludeComponentEvent.class)
     private static void getExcludeComponentEvent(Event event) {
+        if (instance == null) {
+            return;
+        }
         SettingsFrame settingsFrame = getInstance();
         settingsFrame.excludeComponent.addAll(settingsFrame.tabComponentNameMap.values());
         event.setReturnValue(getInstance().excludeComponent);

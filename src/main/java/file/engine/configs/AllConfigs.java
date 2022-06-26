@@ -26,6 +26,7 @@ import file.engine.event.handler.impl.monitor.disk.StartMonitorDiskEvent;
 import file.engine.event.handler.impl.plugin.ConfigsChangedEvent;
 import file.engine.event.handler.impl.plugin.LoadAllPluginsEvent;
 import file.engine.event.handler.impl.stop.CloseEvent;
+import file.engine.event.handler.impl.taskbar.ShowTaskBarMessageEvent;
 import file.engine.event.handler.impl.taskbar.ShowTrayIconEvent;
 import file.engine.services.TranslateService;
 import file.engine.services.download.DownloadManager;
@@ -53,7 +54,7 @@ public class AllConfigs {
     private volatile ConfigEntity configEntity;
     private final LinkedHashMap<String, AddressUrl> updateAddressMap = new LinkedHashMap<>();
     private final LinkedHashSet<String> cmdSet = new LinkedHashSet<>();
-    private boolean isFirstRunApp = false;
+    private static boolean isFirstRunApp = false;
 
     private static volatile AllConfigs instance = null;
 
@@ -103,7 +104,7 @@ public class AllConfigs {
      *
      * @return boolean
      */
-    public boolean isFirstRun() {
+    public static boolean isFirstRun() {
         return isFirstRunApp;
     }
 
@@ -717,7 +718,7 @@ public class AllConfigs {
      * @param configEntity 配置
      * @return 错误信息
      */
-    private String checkSettings(ConfigEntity configEntity) {
+    private static String checkSettings(ConfigEntity configEntity) {
         String priorityFolder = configEntity.getPriorityFolder();
         if (!priorityFolder.isEmpty() && !Files.exists(Path.of(priorityFolder))) {
             return "Priority folder does not exist";
@@ -792,7 +793,7 @@ public class AllConfigs {
      *
      * @param theme theme
      */
-    private void setSwingLaf(Constants.Enums.SwingThemes theme) {
+    private static void setSwingLaf(Constants.Enums.SwingThemes theme) {
         SwingUtilities.invokeLater(() -> {
             if (theme == Constants.Enums.SwingThemes.CoreFlatIntelliJLaf) {
                 FlatIntelliJLaf.setup();
@@ -839,9 +840,6 @@ public class AllConfigs {
             EventManagement eventManagement = EventManagement.getInstance();
             GetExcludeComponentEvent event = new GetExcludeComponentEvent();
             eventManagement.putEvent(event);
-            /*
-             * 由于此时更新会导致nullPointerException，获取暂时不需要更新主题的组件
-             */
             if (!eventManagement.waitForEvent(event)) {
                 Optional<Collection<? extends Component>> returnValue = event.getReturnValue();
                 returnValue.ifPresent(components::addAll);
@@ -885,6 +883,28 @@ public class AllConfigs {
             return false;
         }
         return true;
+    }
+
+    /**
+     * 检查是否安装在C盘
+     *
+     * @return Boolean
+     */
+    private static boolean isAtDiskC() {
+        return System.getProperty("user.dir").startsWith("C:");
+    }
+
+    /**
+     * 检查软件是否运行在C盘
+     */
+    private static void checkRunningDirAtDiskC() {
+        EventManagement eventManagement = EventManagement.getInstance();
+        TranslateService translateService = TranslateService.getInstance();
+        if (isAtDiskC()) {
+            eventManagement.putEvent(new ShowTaskBarMessageEvent(
+                    translateService.getTranslation("Warning"),
+                    translateService.getTranslation("Putting the software on the C drive may cause index failure issue")));
+        }
     }
 
     /**
@@ -948,7 +968,7 @@ public class AllConfigs {
 
     @EventRegister(registerClass = CheckConfigsEvent.class)
     private static void checkConfigsEvent(Event event) {
-        event.setReturnValue(getInstance().checkSettings(getInstance().configEntity));
+        event.setReturnValue(checkSettings(getInstance().configEntity));
     }
 
     @EventRegister(registerClass = BootSystemEvent.class)
@@ -956,20 +976,10 @@ public class AllConfigs {
         EventManagement eventManagement = EventManagement.getInstance();
         eventManagement.putEvent(new StartMonitorDiskEvent());
         eventManagement.putEvent(new ShowTrayIconEvent());
-
-        Event tmpEvent;
-        tmpEvent = new LoadAllPluginsEvent("plugins");
-        eventManagement.putEvent(tmpEvent);
-        eventManagement.waitForEvent(tmpEvent);
-
-        tmpEvent = new SetSwingLaf("current");
-        eventManagement.putEvent(tmpEvent);
-        eventManagement.waitForEvent(tmpEvent);
-
-        tmpEvent = new SetConfigsEvent();
-        eventManagement.putEvent(tmpEvent);
-        if (eventManagement.waitForEvent(tmpEvent)) {
-            throw new RuntimeException("set configs failed");
+        eventManagement.putEvent(new LoadAllPluginsEvent("plugins"));
+        eventManagement.putEvent(new SetSwingLaf("current"));
+        if (isFirstRunApp) {
+            checkRunningDirAtDiskC();
         }
     }
 
@@ -982,7 +992,7 @@ public class AllConfigs {
     private static void setSwingLafEvent(Event event) {
         AllConfigs instance = getInstance();
         String theme = ((SetSwingLaf) event).theme;
-        instance.setSwingLaf(instance.swingThemesMapper(theme));
+        setSwingLaf(instance.swingThemesMapper(theme));
     }
 
     @EventRegister(registerClass = SaveConfigsEvent.class)

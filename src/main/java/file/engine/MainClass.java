@@ -10,13 +10,13 @@ import file.engine.event.handler.EventManagement;
 import file.engine.event.handler.impl.BootSystemEvent;
 import file.engine.event.handler.impl.ReadConfigsEvent;
 import file.engine.event.handler.impl.configs.CheckConfigsEvent;
+import file.engine.event.handler.impl.configs.SetConfigsEvent;
 import file.engine.event.handler.impl.database.InitializeDatabaseEvent;
 import file.engine.event.handler.impl.database.UpdateDatabaseEvent;
 import file.engine.event.handler.impl.frame.settingsFrame.ShowSettingsFrameEvent;
 import file.engine.event.handler.impl.taskbar.ShowTaskBarMessageEvent;
 import file.engine.services.DatabaseService;
 import file.engine.services.TranslateService;
-import file.engine.services.plugin.system.PluginService;
 import file.engine.utils.*;
 import file.engine.utils.clazz.scan.ClassScannerUtil;
 import file.engine.utils.file.FileUtil;
@@ -119,14 +119,6 @@ public class MainClass {
         }
     }
 
-    /**
-     * 检查是否安装在C盘
-     *
-     * @return Boolean
-     */
-    private static boolean isAtDiskC() {
-        return System.getProperty("user.dir").startsWith("C:");
-    }
 
     /**
      * 检查当前版本
@@ -141,98 +133,6 @@ public class MainClass {
                         translateService.getTranslation("New version can be updated"),
                         new ShowSettingsFrameEvent("tabAbout")));
             }
-        }
-    }
-
-    /**
-     * 检查API过旧的插件
-     */
-    private static void checkOldApiPlugin() {
-        EventManagement eventManagement = EventManagement.getInstance();
-        TranslateService translateService = TranslateService.getInstance();
-        if (PluginService.getInstance().hasPluginTooOld()) {
-            String oldPlugins = PluginService.getInstance().getAllOldPluginsName();
-            eventManagement.putEvent(new ShowTaskBarMessageEvent(
-                    translateService.getTranslation("Warning"),
-                    oldPlugins + "\n" + translateService.getTranslation("Plugin Api is too old"),
-                    new ShowSettingsFrameEvent("tabPlugin")));
-        }
-    }
-
-    /**
-     * 检查重复加载的插件
-     */
-    private static void checkRepeatPlugin() {
-        EventManagement eventManagement = EventManagement.getInstance();
-        TranslateService translateService = TranslateService.getInstance();
-        if (PluginService.getInstance().hasPluginRepeat()) {
-            String repeatPlugins = PluginService.getInstance().getRepeatPlugins();
-            eventManagement.putEvent(new ShowTaskBarMessageEvent(
-                    translateService.getTranslation("Warning"),
-                    repeatPlugins + "\n" + translateService.getTranslation("Duplicate plugin, please delete it in plugins folder"),
-                    new ShowSettingsFrameEvent("tabPlugin")));
-        }
-    }
-
-    /**
-     * 检查加载失败的插件
-     */
-    private static void checkErrorPlugin() {
-        EventManagement eventManagement = EventManagement.getInstance();
-        TranslateService translateService = TranslateService.getInstance();
-        if (PluginService.getInstance().hasPluginLoadError()) {
-            String errorPlugins = PluginService.getInstance().getLoadingErrorPlugins();
-            eventManagement.putEvent(new ShowTaskBarMessageEvent(
-                    translateService.getTranslation("Warning"),
-                    errorPlugins + "\n" + translateService.getTranslation("Loading plugins error"),
-                    new ShowSettingsFrameEvent("tabPlugin")));
-        }
-    }
-
-    /**
-     * 检查所有插件信息
-     */
-    private static void checkPluginInfo() {
-        checkOldApiPlugin();
-        checkRepeatPlugin();
-        checkErrorPlugin();
-        checkPluginVersion();
-    }
-
-    /**
-     * 检查插件的版本信息
-     */
-    private static void checkPluginVersion() {
-        if (AllConfigs.getInstance().isCheckUpdateStartup()) {
-            CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
-            cachedThreadPoolUtil.executeTask(() -> {
-                StringBuilder notLatestPluginsBuilder = new StringBuilder();
-                PluginService pluginService = PluginService.getInstance();
-                pluginService.checkAllPluginsVersion(notLatestPluginsBuilder);
-                EventManagement eventManagement = EventManagement.getInstance();
-                TranslateService translateService = TranslateService.getInstance();
-                String notLatestPlugins = notLatestPluginsBuilder.toString();
-                if (!notLatestPlugins.isEmpty()) {
-                    eventManagement.putEvent(
-                            new ShowTaskBarMessageEvent(translateService.getTranslation("Info"),
-                                    notLatestPlugins + "\n" +
-                                            translateService.getTranslation("New versions of these plugins can be updated"),
-                                    new ShowSettingsFrameEvent("tabPlugin")));
-                }
-            });
-        }
-    }
-
-    /**
-     * 检查软件是否运行在C盘
-     */
-    private static void checkRunningDirAtDiskC() {
-        EventManagement eventManagement = EventManagement.getInstance();
-        TranslateService translateService = TranslateService.getInstance();
-        if (isAtDiskC()) {
-            eventManagement.putEvent(new ShowTaskBarMessageEvent(
-                    translateService.getTranslation("Warning"),
-                    translateService.getTranslation("Putting the software on the C drive may cause index failure issue")));
         }
     }
 
@@ -255,6 +155,61 @@ public class MainClass {
 //        System.setProperty("jna.debug_load", "false");
     }
 
+    private static void readAllConfigs() {
+        EventManagement eventManagement = EventManagement.getInstance();
+        // 发送读取所有配置事件，初始化配置
+        ReadConfigsEvent readConfigsEvent = new ReadConfigsEvent();
+        eventManagement.putEvent(readConfigsEvent);
+        if (eventManagement.waitForEvent(readConfigsEvent)) {
+            JOptionPane.showMessageDialog(null, "Read configs failed", "ERROR", JOptionPane.ERROR_MESSAGE);
+            throw new RuntimeException("Read Configs Failed");
+        }
+    }
+
+    private static void initDatabase() {
+        EventManagement eventManagement = EventManagement.getInstance();
+        InitializeDatabaseEvent initializeDatabaseEvent = new InitializeDatabaseEvent();
+        eventManagement.putEvent(initializeDatabaseEvent);
+        if (eventManagement.waitForEvent(initializeDatabaseEvent)) {
+            JOptionPane.showMessageDialog(null, "Initialize database failed", "ERROR", JOptionPane.ERROR_MESSAGE);
+            throw new RuntimeException("Initialize database failed");
+        }
+    }
+
+    private static void setAllConfigs() {
+        EventManagement eventManagement = EventManagement.getInstance();
+        SetConfigsEvent setConfigsEvent = new SetConfigsEvent();
+        eventManagement.putEvent(setConfigsEvent);
+        if (eventManagement.waitForEvent(setConfigsEvent)) {
+            JOptionPane.showMessageDialog(null, "Set configs failed", "ERROR", JOptionPane.ERROR_MESSAGE);
+            throw new RuntimeException("Set configs failed");
+        }
+    }
+
+    private static void initEventManagement() {
+        // 初始化事件注册中心，注册所有事件
+        EventManagement eventManagement = EventManagement.getInstance();
+        eventManagement.registerAllHandler();
+        eventManagement.registerAllListener();
+        if (IsDebug.isDebug()) {
+            ClassScannerUtil.printClassesWithAnnotation();
+        }
+        eventManagement.releaseClassesList();
+    }
+
+    private static void checkConfigs() {
+        EventManagement eventManagement = EventManagement.getInstance();
+        eventManagement.putEvent(new CheckConfigsEvent(), event -> {
+            Optional<String> optional = event.getReturnValue();
+            optional.ifPresent((errorInfo) -> {
+                if (!errorInfo.isEmpty()) {
+                    EventManagement.getInstance().putEvent(new ShowTaskBarMessageEvent(TranslateService.getInstance().getTranslation("Warning"),
+                            TranslateService.getInstance().getTranslation(errorInfo), new ShowSettingsFrameEvent("tabSearchSettings")));
+                }
+            });
+        }, null);
+    }
+
     public static void main(String[] args) {
         try {
             setSystemProperties();
@@ -270,32 +225,10 @@ public class MainClass {
             //清空tmp
             FileUtil.deleteDir(new File("tmp"));
             initFoldersAndFiles();
-
             initializeDllInterface();
-
-            // 初始化事件注册中心，注册所有事件
-            EventManagement eventManagement = EventManagement.getInstance();
-            eventManagement.registerAllHandler();
-            eventManagement.registerAllListener();
-            if (IsDebug.isDebug()) {
-                ClassScannerUtil.printClassesWithAnnotation();
-            }
-            eventManagement.releaseClassesList();
-            // 发送读取所有配置事件，初始化配置
-            ReadConfigsEvent readConfigsEvent = new ReadConfigsEvent();
-            eventManagement.putEvent(readConfigsEvent);
-            if (eventManagement.waitForEvent(readConfigsEvent)) {
-                JOptionPane.showMessageDialog(null, "Read configs failed", "ERROR", JOptionPane.ERROR_MESSAGE);
-                throw new RuntimeException("Read Configs Failed");
-            }
-
-            InitializeDatabaseEvent initializeDatabaseEvent = new InitializeDatabaseEvent();
-            eventManagement.putEvent(initializeDatabaseEvent);
-            if (eventManagement.waitForEvent(initializeDatabaseEvent)) {
-                JOptionPane.showMessageDialog(null, "Initialize database failed", "ERROR", JOptionPane.ERROR_MESSAGE);
-                throw new RuntimeException("Initialize database failed");
-            }
-
+            initEventManagement();
+            readAllConfigs();
+            initDatabase();
             initPinyin();
 
             // 初始化全部完成，发出启动系统事件
@@ -304,23 +237,9 @@ public class MainClass {
                 throw new RuntimeException("Boot System Failed");
             }
 
-            eventManagement.putEvent(new CheckConfigsEvent(), event -> {
-                Optional<String> optional = event.getReturnValue();
-                optional.ifPresent((errorInfo) -> {
-                    if (!errorInfo.isEmpty()) {
-                        EventManagement.getInstance().putEvent(new ShowTaskBarMessageEvent(TranslateService.getInstance().getTranslation("Warning"),
-                                TranslateService.getInstance().getTranslation(errorInfo), new ShowSettingsFrameEvent("tabSearchSettings")));
-                    }
-                });
-            }, null);
-
-            if (AllConfigs.getInstance().isFirstRun()) {
-                checkRunningDirAtDiskC();
-            }
-
+            checkConfigs();
+            setAllConfigs();
             checkVersion();
-
-            checkPluginInfo();
 
             mainLoop();
         } catch (Exception e) {

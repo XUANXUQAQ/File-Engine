@@ -237,7 +237,7 @@ public class DatabaseService {
     /**
      * 开始监控磁盘文件变化
      */
-    private void startMonitorDisk() {
+    private static void startMonitorDisk() {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             EventManagement eventManagement = EventManagement.getInstance();
             TranslateService translateService = TranslateService.getInstance();
@@ -1560,7 +1560,7 @@ public class DatabaseService {
      *
      * @return boolean
      */
-    private boolean isAdmin() {
+    private static boolean isAdmin() {
         try {
             ProcessBuilder processBuilder = new ProcessBuilder("cmd.exe");
             Process process = processBuilder.start();
@@ -1598,7 +1598,7 @@ public class DatabaseService {
 
     @EventRegister(registerClass = StartMonitorDiskEvent.class)
     private static void startMonitorDiskEvent(Event event) {
-        getInstance().startMonitorDisk();
+        startMonitorDisk();
     }
 
     @EventRegister(registerClass = StartSearchEvent.class)

@@ -6,15 +6,15 @@ import file.engine.configs.AllConfigs;
 import file.engine.configs.Constants;
 import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
-import file.engine.event.handler.impl.download.IsTaskDoneBeforeEvent;
 import file.engine.event.handler.impl.download.StartDownloadEvent;
 import file.engine.event.handler.impl.download.StopDownloadEvent;
 import file.engine.event.handler.impl.frame.pluginMarket.ShowPluginMarket;
-import file.engine.event.handler.impl.plugin.CheckPluginExistEvent;
 import file.engine.event.handler.impl.stop.RestartEvent;
 import file.engine.frames.components.LoadingPanel;
 import file.engine.services.TranslateService;
 import file.engine.services.download.DownloadManager;
+import file.engine.services.download.DownloadService;
+import file.engine.services.plugin.system.PluginService;
 import file.engine.utils.CachedThreadPoolUtil;
 import file.engine.utils.DpiUtil;
 import file.engine.utils.gson.GsonUtil;
@@ -314,26 +314,17 @@ public class PluginMarket {
                     textAreaPluginDescription.setText(description);
                     labelAuthor.setText(author);
                     buttonInstall.setVisible(true);
-                    CheckPluginExistEvent checkPluginExistEvent = new CheckPluginExistEvent(pluginName);
-                    EventManagement eventManagement = EventManagement.getInstance();
-                    eventManagement.putEvent(checkPluginExistEvent);
-                    eventManagement.waitForEvent(checkPluginExistEvent);
-                    Optional<Boolean> hasPluginOptional = checkPluginExistEvent.getReturnValue();
-                    IsTaskDoneBeforeEvent isTaskDoneBeforeEvent = new IsTaskDoneBeforeEvent(new DownloadManager(
-                            null,
-                            pluginName + ".jar",
-                            new File("tmp", "pluginsUpdate").getAbsolutePath()
-                    ));
-                    eventManagement.putEvent(isTaskDoneBeforeEvent);
-                    eventManagement.waitForEvent(isTaskDoneBeforeEvent);
-                    Optional<Boolean> downloadedOptional = isTaskDoneBeforeEvent.getReturnValue();
+
                     var obj = new Object() {
                         boolean hasPlugin;
                         boolean downloaded;
                     };
-
-                    hasPluginOptional.ifPresentOrElse((ret) -> obj.hasPlugin = ret, () -> obj.hasPlugin = false);
-                    downloadedOptional.ifPresentOrElse((ret) -> obj.downloaded = ret, () -> obj.downloaded = false);
+                    obj.hasPlugin = PluginService.getInstance().hasPlugin(pluginName);
+                    obj.downloaded = DownloadService.getInstance().isTaskDoneBefore(new DownloadManager(
+                            null,
+                            pluginName + ".jar",
+                            new File("tmp", "pluginsUpdate").getAbsolutePath()
+                    ));
                     if (obj.hasPlugin) {
                         buttonInstall.setEnabled(false);
                         buttonInstall.setText(translateUtil.getTranslation("Installed"));

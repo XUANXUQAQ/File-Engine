@@ -9,9 +9,11 @@ import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
 import file.engine.event.handler.impl.BuildEventRequestEvent;
 import file.engine.event.handler.impl.frame.searchBar.SearchBarReadyEvent;
+import file.engine.event.handler.impl.frame.settingsFrame.ShowSettingsFrameEvent;
 import file.engine.event.handler.impl.plugin.*;
 import file.engine.event.handler.impl.stop.RestartEvent;
 import file.engine.event.handler.impl.taskbar.ShowTaskBarMessageEvent;
+import file.engine.services.TranslateService;
 import file.engine.utils.CachedThreadPoolUtil;
 import file.engine.utils.gson.GsonUtil;
 import file.engine.utils.system.properties.IsDebug;
@@ -103,7 +105,7 @@ public class PluginService {
      *
      * @return boolean
      */
-    public boolean hasPluginTooOld() {
+    private boolean hasPluginTooOld() {
         return !OLD_API_PLUGINS.isEmpty();
     }
 
@@ -112,7 +114,7 @@ public class PluginService {
      *
      * @return boolean
      */
-    public boolean hasPluginRepeat() {
+    private boolean hasPluginRepeat() {
         return !REPEAT_PLUGINS.isEmpty();
     }
 
@@ -121,7 +123,7 @@ public class PluginService {
      *
      * @return boolean
      */
-    public boolean hasPluginLoadError() {
+    private boolean hasPluginLoadError() {
         return !LOAD_ERROR_PLUGINS.isEmpty();
     }
 
@@ -148,7 +150,7 @@ public class PluginService {
      *
      * @return 插件名称，以逗号隔开
      */
-    public String getLoadingErrorPlugins() {
+    private String getLoadingErrorPlugins() {
         StringBuilder strb = new StringBuilder();
         for (String each : LOAD_ERROR_PLUGINS) {
             strb.append(each).append(",");
@@ -165,7 +167,7 @@ public class PluginService {
      *
      * @return 插件名称，以逗号隔开
      */
-    public String getRepeatPlugins() {
+    private String getRepeatPlugins() {
         StringBuilder strb = new StringBuilder();
         for (String repeatPlugins : REPEAT_PLUGINS) {
             strb.append(repeatPlugins).append(",");
@@ -222,7 +224,7 @@ public class PluginService {
         return pluginInfoSet.size();
     }
 
-    public String getAllOldPluginsName() {
+    private String getAllOldPluginsName() {
         StringBuilder strb = new StringBuilder();
         for (String oldPlugin : OLD_API_PLUGINS) {
             strb.append(oldPlugin).append(",");
@@ -325,7 +327,7 @@ public class PluginService {
      * @param pluginName 插件名
      * @return boolean
      */
-    private boolean hasPlugin(String pluginName) {
+    public boolean hasPlugin(String pluginName) {
         for (PluginInfo each : pluginInfoSet) {
             if (each.name.equals(pluginName)) {
                 return true;
@@ -388,7 +390,7 @@ public class PluginService {
         }
     }
 
-    public void checkAllPluginsVersion(StringBuilder oldPlugins) {
+    private void checkAllPluginsVersion(StringBuilder oldPlugins) {
         boolean isLatest;
         for (PluginInfo each : pluginInfoSet) {
             try {
@@ -458,11 +460,83 @@ public class PluginService {
         }
     }
 
-    @EventRegister(registerClass = CheckPluginExistEvent.class)
-    private static void checkPluginExistEvent(Event event) {
-        CheckPluginExistEvent event1 = (CheckPluginExistEvent) event;
-        boolean b = getInstance().hasPlugin(event1.pluginName);
-        event.setReturnValue(b);
+    /**
+     * 检查API过旧的插件
+     */
+    private static void checkOldApiPlugin() {
+        EventManagement eventManagement = EventManagement.getInstance();
+        TranslateService translateService = TranslateService.getInstance();
+        if (PluginService.getInstance().hasPluginTooOld()) {
+            String oldPlugins = PluginService.getInstance().getAllOldPluginsName();
+            eventManagement.putEvent(new ShowTaskBarMessageEvent(
+                    translateService.getTranslation("Warning"),
+                    oldPlugins + "\n" + translateService.getTranslation("Plugin Api is too old"),
+                    new ShowSettingsFrameEvent("tabPlugin")));
+        }
+    }
+
+    /**
+     * 检查重复加载的插件
+     */
+    private static void checkRepeatPlugin() {
+        EventManagement eventManagement = EventManagement.getInstance();
+        TranslateService translateService = TranslateService.getInstance();
+        if (PluginService.getInstance().hasPluginRepeat()) {
+            String repeatPlugins = PluginService.getInstance().getRepeatPlugins();
+            eventManagement.putEvent(new ShowTaskBarMessageEvent(
+                    translateService.getTranslation("Warning"),
+                    repeatPlugins + "\n" + translateService.getTranslation("Duplicate plugin, please delete it in plugins folder"),
+                    new ShowSettingsFrameEvent("tabPlugin")));
+        }
+    }
+
+    /**
+     * 检查插件的版本信息
+     */
+    private static void checkPluginVersion() {
+        if (AllConfigs.getInstance().isCheckUpdateStartup()) {
+            CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
+            cachedThreadPoolUtil.executeTask(() -> {
+                StringBuilder notLatestPluginsBuilder = new StringBuilder();
+                PluginService pluginService = PluginService.getInstance();
+                pluginService.checkAllPluginsVersion(notLatestPluginsBuilder);
+                EventManagement eventManagement = EventManagement.getInstance();
+                TranslateService translateService = TranslateService.getInstance();
+                String notLatestPlugins = notLatestPluginsBuilder.toString();
+                if (!notLatestPlugins.isEmpty()) {
+                    eventManagement.putEvent(
+                            new ShowTaskBarMessageEvent(translateService.getTranslation("Info"),
+                                    notLatestPlugins + "\n" +
+                                            translateService.getTranslation("New versions of these plugins can be updated"),
+                                    new ShowSettingsFrameEvent("tabPlugin")));
+                }
+            });
+        }
+    }
+
+    /**
+     * 检查加载失败的插件
+     */
+    private static void checkErrorPlugin() {
+        EventManagement eventManagement = EventManagement.getInstance();
+        TranslateService translateService = TranslateService.getInstance();
+        if (PluginService.getInstance().hasPluginLoadError()) {
+            String errorPlugins = PluginService.getInstance().getLoadingErrorPlugins();
+            eventManagement.putEvent(new ShowTaskBarMessageEvent(
+                    translateService.getTranslation("Warning"),
+                    errorPlugins + "\n" + translateService.getTranslation("Loading plugins error"),
+                    new ShowSettingsFrameEvent("tabPlugin")));
+        }
+    }
+
+    /**
+     * 检查所有插件信息
+     */
+    private static void checkPluginInfo() {
+        checkOldApiPlugin();
+        checkRepeatPlugin();
+        checkErrorPlugin();
+        checkPluginVersion();
     }
 
     @EventRegister(registerClass = GetPluginByNameEvent.class)
@@ -487,6 +561,7 @@ public class PluginService {
     @EventRegister(registerClass = LoadAllPluginsEvent.class)
     private static void loadAllPluginsEvent(Event event) {
         getInstance().loadAllPlugins(((LoadAllPluginsEvent) event).pluginDirPath);
+        checkPluginInfo();
     }
 
     @EventRegister(registerClass = RemoveFromPluginsCanUpdateEvent.class)

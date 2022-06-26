@@ -3577,8 +3577,7 @@ public class SearchBar {
             //每一次输入会更新一次startTime，该线程记录endTime
             EventManagement eventManagement = EventManagement.getInstance();
             TranslateService translateService = TranslateService.getInstance();
-            AllConfigs allConfigs = AllConfigs.getInstance();
-            if (allConfigs.isFirstRun()) {
+            if (AllConfigs.isFirstRun()) {
                 runInternalCommand("help");
             }
             final AtomicBoolean isMergeThreadNotExist = new AtomicBoolean(true);
@@ -3607,6 +3606,7 @@ public class SearchBar {
                             //去掉冒号
                             String text = getSearchBarText();
                             if (text.length() <= 1 || !runInternalCommand(text.substring(1).toLowerCase())) {
+                                AllConfigs allConfigs = AllConfigs.getInstance();
                                 LinkedHashSet<String> cmdSet = allConfigs.getCmdSet();
                                 cmdSet.add(":clearbin;" + translateService.getTranslation("Clear the recycle bin"));
                                 cmdSet.add(":update;" + translateService.getTranslation("Update file index"));
