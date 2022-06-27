@@ -106,6 +106,75 @@ public class EventManagement {
     }
 
     /**
+     * 处理重启和关闭事件
+     * @param event Restart
+     */
+    private void handleRestart(RestartEvent event) {
+        exit.set(true);
+        doAllMethod(RestartEvent.class.getName(), event);
+        if (event instanceof CloseEvent) {
+            ProcessUtil.stopDaemon();
+        }
+        event.setFinished();
+        CachedThreadPoolUtil.getInstance().shutdown();
+    }
+
+    /**
+     * 根绝buildEventRequest中的信息创建任务
+     * @param buildEventRequestEvent build event request
+     * @return true如果构建失败，false构建成功
+     */
+    private boolean handleBuildEvent(BuildEventRequestEvent buildEventRequestEvent) {
+        Object[] eventInfo = buildEventRequestEvent.eventInfo;
+        String eventClassName = (String) eventInfo[0];
+        Object[] eventParams = (Object[]) eventInfo[1];
+        buildEventRequestEvent.setFinished();
+        // 构建任务
+        if (eventClassName == null || eventClassName.isEmpty()) {
+            return true;
+        }
+        Event buildEvent = buildEvent(eventClassName, eventParams);
+        if (buildEvent == null) {
+            return true;
+        }
+        putEvent(buildEvent);
+        return false;
+    }
+
+    private boolean handleNormalEvent(Event event) {
+        String eventClassName;
+        if (event instanceof PluginRegisterEvent) {
+            eventClassName = ((PluginRegisterEvent) event).getClassFullName();
+        } else {
+            eventClassName = event.getClass().getName();
+        }
+        BiConsumer<Class<?>, Object> pluginHandler = PLUGIN_EVENT_HANDLER_MAP.get(eventClassName);
+        if (pluginHandler != null) {
+            pluginHandler.accept(event.getClass(), event);
+            doAllMethod(eventClassName, event);
+            event.setFinished();
+            return false;
+        } else {
+            Method eventHandler = EVENT_HANDLER_MAP.get(eventClassName);
+            if (eventHandler != null) {
+                try {
+                    eventHandler.invoke(null, event);
+                    doAllMethod(eventClassName, event);
+                    event.setFinished();
+                    return false;
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    return true;
+                }
+            } else {
+                doAllMethod(eventClassName, event);
+                event.setFinished();
+            }
+        }
+        return false;
+    }
+
+    /**
      * 执行任务
      *
      * @param event 任务
@@ -114,60 +183,12 @@ public class EventManagement {
     private boolean executeTaskFailed(Event event) {
         event.incrementExecuteTimes();
         if (event instanceof RestartEvent) {
-            exit.set(true);
-            doAllMethod(RestartEvent.class.getName(), event);
-            if (event instanceof CloseEvent) {
-                ProcessUtil.stopDaemon();
-            }
-            event.setFinished();
-            CachedThreadPoolUtil.getInstance().shutdown();
+            handleRestart((RestartEvent) event);
             System.exit(0);
         } else if (event instanceof BuildEventRequestEvent) {
-            BuildEventRequestEvent buildEventRequestEvent = (BuildEventRequestEvent) event;
-            Object[] eventInfo = buildEventRequestEvent.eventInfo;
-            String eventClassName = (String) eventInfo[0];
-            Object[] eventParams = (Object[]) eventInfo[1];
-            // 构建任务
-            if (eventClassName == null || eventClassName.isEmpty()) {
-                return true;
-            }
-            Event buildEvent = buildEvent(eventClassName, eventParams);
-            if (buildEvent == null) {
-                return true;
-            }
-            putEvent(buildEvent);
-            return false;
+            return handleBuildEvent((BuildEventRequestEvent) event);
         } else {
-            String eventClassName;
-            if (event instanceof PluginRegisterEvent) {
-                eventClassName = ((PluginRegisterEvent) event).getClassFullName();
-            } else {
-                eventClassName = event.getClass().getName();
-            }
-            BiConsumer<Class<?>, Object> pluginHandler = PLUGIN_EVENT_HANDLER_MAP.get(eventClassName);
-            if (pluginHandler != null) {
-                pluginHandler.accept(event.getClass(), event);
-                doAllMethod(eventClassName, event);
-                event.setFinished();
-                return false;
-            } else {
-                Method eventHandler = EVENT_HANDLER_MAP.get(eventClassName);
-                if (eventHandler != null) {
-                    try {
-                        eventHandler.invoke(null, event);
-                        doAllMethod(eventClassName, event);
-                        event.setFinished();
-                        return false;
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        return true;
-                    }
-                } else {
-                    doAllMethod(eventClassName, event);
-                    event.setFinished();
-                }
-            }
-            return false;
+            return handleNormalEvent(event);
         }
         return true;
     }
@@ -277,7 +298,7 @@ public class EventManagement {
      * @param event 任务
      */
     public void putEvent(Event event) {
-        boolean isDebug = IsDebug.isDebug();
+        final boolean isDebug = IsDebug.isDebug();
         if (isDebug) {
             System.err.println("尝试放入任务" + event.toString() + "---来自" + getStackTraceElement().toString());
         }
@@ -441,43 +462,7 @@ public class EventManagement {
     private void startAsyncEventHandler() {
         CachedThreadPoolUtil threadPoolUtil = CachedThreadPoolUtil.getInstance();
         for (int i = 0; i < asyncThreadNum; i++) {
-            threadPoolUtil.executeTask(() -> {
-                final boolean isDebug = IsDebug.isDebug();
-                try {
-                    Event event;
-                    while (isEventHandlerNotExit()) {
-                        //取出任务
-                        if ((event = asyncEventQueue.poll()) == null) {
-                            TimeUnit.MILLISECONDS.sleep(5);
-                            continue;
-                        }
-                        //判断任务是否执行完成或者失败
-                        if (event.isFinished() || event.isFailed()) {
-                            continue;
-                        }
-                        if (event.allRetryFailed()) {
-                            //判断是否超过最大次数
-                            event.setFailed();
-                            failureEventNum.incrementAndGet();
-                            if (isDebug) {
-                                System.err.println("任务超时---" + event);
-                            }
-                        } else {
-                            if (executeTaskFailed(event)) {
-                                System.err.println("异步任务执行失败---" + event);
-                                asyncEventQueue.add(event);
-                            } else {
-                                // 任务执行成功
-                                if (!EventProcessedBroadcastEvent.class.equals(event.getClass())) {
-                                    putEvent(new EventProcessedBroadcastEvent(event.getClass(), event));
-                                }
-                            }
-                        }
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }, false);
+            threadPoolUtil.executeTask(() -> eventHandle(asyncEventQueue), false);
         }
     }
 
@@ -494,46 +479,44 @@ public class EventManagement {
      * 开启同步任务事件处理中心
      */
     private void startBlockEventHandler() {
-        Thread.ofPlatform().start(() -> {
-            final boolean isDebug = IsDebug.isDebug();
-            try {
-                Event event;
-                while (isEventHandlerNotExit()) {
-                    //取出任务
-                    if ((event = blockEventQueue.poll()) == null) {
-                        TimeUnit.MILLISECONDS.sleep(5);
-                        continue;
+        Thread.ofPlatform().start(() -> eventHandle(blockEventQueue));
+    }
+
+    private void eventHandle(ConcurrentLinkedQueue<Event> eventQueue) {
+        final boolean isDebug = IsDebug.isDebug();
+        try {
+            Event event;
+            while (isEventHandlerNotExit()) {
+                //取出任务
+                if ((event = eventQueue.poll()) == null) {
+                    TimeUnit.MILLISECONDS.sleep(5);
+                    continue;
+                }
+                //判断任务是否执行完成或者失败
+                if (event.isFinished() || event.isFailed()) {
+                    continue;
+                }
+                if (event.allRetryFailed()) {
+                    //判断是否超过最大次数
+                    event.setFailed();
+                    failureEventNum.incrementAndGet();
+                    if (isDebug) {
+                        System.err.println("任务超时---" + event);
                     }
-                    //判断任务是否已经被执行或者失败
-                    if (event.isFinished() || event.isFailed()) {
-                        continue;
-                    }
-                    //判断任务是否超过最大执行次数
-                    if (event.allRetryFailed()) {
-                        event.setFailed();
-                        failureEventNum.incrementAndGet();
-                        if (isDebug) {
-                            System.err.println("任务超时---" + event);
-                        }
+                } else {
+                    if (executeTaskFailed(event)) {
+                        System.err.println("任务执行失败---" + event);
+                        eventQueue.add(event);
                     } else {
-                        if (executeTaskFailed(event)) {
-                            if (failureEventNum.get() > 20) {
-                                System.err.println("超过20个任务失败，自动重启");
-                                putEvent(new RestartEvent());
-                            }
-                            System.err.println("同步任务执行失败---" + event);
-                            blockEventQueue.add(event);
-                        } else {
-                            // 任务执行成功
-                            if (!EventProcessedBroadcastEvent.class.equals(event.getClass())) {
-                                putEvent(new EventProcessedBroadcastEvent(event.getClass(), event));
-                            }
+                        // 任务执行成功
+                        if (!EventProcessedBroadcastEvent.class.equals(event.getClass())) {
+                            putEvent(new EventProcessedBroadcastEvent(event.getClass(), event));
                         }
                     }
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
             }
-        });
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
