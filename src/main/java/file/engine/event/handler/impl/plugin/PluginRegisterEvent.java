@@ -5,11 +5,15 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
+import java.util.LinkedHashMap;
+
 @EqualsAndHashCode(callSuper = true)
 @Data
 @NoArgsConstructor
 public class PluginRegisterEvent extends Event {
 
     private String classFullName;
+
+    private LinkedHashMap<String, Object> params = new LinkedHashMap<>();
 
 }

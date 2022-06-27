@@ -23,6 +23,7 @@ import java.lang.reflect.Modifier;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -107,6 +108,7 @@ public class EventManagement {
 
     /**
      * 处理重启和关闭事件
+     *
      * @param event Restart
      */
     private void handleRestart(RestartEvent event) {
@@ -121,6 +123,7 @@ public class EventManagement {
 
     /**
      * 根绝buildEventRequest中的信息创建任务
+     *
      * @param buildEventRequestEvent build event request
      * @return true如果构建失败，false构建成功
      */
@@ -237,7 +240,7 @@ public class EventManagement {
         } catch (ClassNotFoundException | InvocationTargetException | InstantiationException |
                  IllegalAccessException e) {
             // 注入字段
-            if (eventParams != null && eventParams.length == 3) {
+            if (eventParams != null && eventParams.length >= 3) {
                 try {
                     PluginRegisterEvent registerEvent = new PluginRegisterEvent();
                     registerEvent.setClassFullName(eventClassName);
@@ -245,8 +248,11 @@ public class EventManagement {
                     if (isBlock.get()) {
                         registerEvent.setBlock();
                     }
-                    registerEvent.setCallback((eventVar) -> ((Consumer) eventParams[1]).accept(eventVar));
-                    registerEvent.setErrorHandler((eventVar) -> ((Consumer) eventParams[2]).accept(eventVar));
+                    registerEvent.setCallback((Consumer) eventParams[1]);
+                    registerEvent.setErrorHandler((Consumer) eventParams[2]);
+                    if (eventParams.length == 4) {
+                        registerEvent.setParams((LinkedHashMap<String, Object>) eventParams[3]);
+                    }
                     return registerEvent;
                 } catch (Exception ex) {
                     ex.printStackTrace();
