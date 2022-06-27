@@ -41,9 +41,8 @@ int g_check_time_threshold = 1;
 int g_check_time_threshold = 5;
 #endif
 
-int g_restart_count = 0;
+short g_restart_count = 0;
 std::time_t g_restart_time = std::time(nullptr);
-bool g_is_restart_on_release_file = false;
 
 bool is_close_exist();
 BOOL find_process();
@@ -342,24 +341,14 @@ void restart_file_engine(bool isIgnoreCloseFile)
 	{
 		update();
 	}
-	const std::time_t tmp_restart_time = std::time(nullptr);
-	// 这次重启距离上次时间超过了10分钟，视为正常重启
-	const std::time_t tmp = tmp_restart_time - g_restart_time;
-	if (tmp > 600)
-	{
-		g_restart_count = 0;
-		g_is_restart_on_release_file = false;
-	}
-	if (g_is_restart_on_release_file && g_restart_count >= 1)
+	if (g_restart_count >= 4)
 	{
 		MessageBoxA(nullptr, "Launch failed", "Error", MB_OK);
 		exit(-1);
 	}
-	if (g_restart_count > 3 || !is_file_exist(g_file_engine_jar_path))
+	if (g_restart_count >= 3 || !is_file_exist(g_file_engine_jar_path))
 	{
 		release_all();
-		g_is_restart_on_release_file = true;
-		g_restart_count = 0;
 	}
 	g_restart_count++;
 
