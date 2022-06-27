@@ -3821,6 +3821,11 @@ public class SearchBar {
         List<String> collect = Arrays.stream(keywords).sorted((o1, o2) -> o2.length() - o1.length()).collect(Collectors.toList());
         for (String keyword : collect) {
             if (!keyword.isBlank()) {
+                if (".".equals(keyword)) {
+                    keyword = "\\.";
+                } else if (keyword.startsWith(File.separator)) {
+                    continue;
+                }
                 regexPatternBuilder.append(keyword).append("|");
             }
         }
@@ -4339,7 +4344,6 @@ public class SearchBar {
 
     private void setBorderColor(Constants.Enums.BorderType borderType, int colorNum, int borderThickness) {
         initBorder(borderType, new Color(colorNum), borderThickness);
-//        textField.setBorder(fullBorder);
     }
 }
 
