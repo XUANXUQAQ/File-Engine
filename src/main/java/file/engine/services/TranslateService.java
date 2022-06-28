@@ -140,7 +140,7 @@ public enum TranslateService {
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(Objects.requireNonNull(TranslateService.class.getResourceAsStream(filePath)), StandardCharsets.UTF_8))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
-                    String[] record = RegexUtil.equalSign.split(line);
+                    String[] record = RegexUtil.getPattern("=", 0).split(line);
                     if (IsDebug.isDebug()) {
                         if (translationMap.get(record[0].toLowerCase()) != null) {
                             System.err.println("警告：翻译重复   " + record[0]);

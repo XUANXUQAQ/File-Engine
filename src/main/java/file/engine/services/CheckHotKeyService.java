@@ -23,14 +23,12 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
-import java.util.regex.Pattern;
 
 public class CheckHotKeyService {
 
     private final HashMap<String, Integer> map;
     private boolean isRegistered = false;
     private static volatile CheckHotKeyService INSTANCE = null;
-    private final Pattern plus = RegexUtil.plus;
 
     private static CheckHotKeyService getInstance() {
         if (INSTANCE == null) {
@@ -54,7 +52,7 @@ public class CheckHotKeyService {
             isRegistered = true;
             //noinspection DuplicatedCode
             int hotkey1 = -1, hotkey2 = -1, hotkey3 = -1, hotkey4 = -1, hotkey5;
-            String[] hotkeys = plus.split(hotkey);
+            String[] hotkeys = RegexUtil.plus.split(hotkey);
             int length = hotkeys.length;
             for (int i = 0; i < length - 1; i++) {
                 if (i == 0) {
@@ -84,7 +82,7 @@ public class CheckHotKeyService {
 
     //检查快捷键是否有效
     private boolean isHotkeyAvailable(String hotkey) {
-        String[] hotkeys = plus.split(hotkey);
+        String[] hotkeys = RegexUtil.plus.split(hotkey);
         int length = hotkeys.length;
         for (int i = 0; i < length - 1; i++) {
             String each = hotkeys[i];
@@ -102,7 +100,7 @@ public class CheckHotKeyService {
         }
         //noinspection DuplicatedCode
         int hotkey1 = -1, hotkey2 = -1, hotkey3 = -1, hotkey4 = -1, hotkey5;
-        String[] hotkeys = plus.split(hotkey);
+        String[] hotkeys = RegexUtil.plus.split(hotkey);
         int length = hotkeys.length;
         for (int i = 0; i < length - 1; i++) {
             if (i == 0) {

@@ -42,6 +42,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
+import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 
 public class DatabaseService {
@@ -59,9 +60,12 @@ public class DatabaseService {
     private final ConcurrentLinkedQueue<Pair> priorityMap = new ConcurrentLinkedQueue<>();
     private final ConcurrentHashMap<String, Cache> tableCache = new ConcurrentHashMap<>();
     private final AtomicInteger cacheCount = new AtomicInteger();
-    private volatile Supplier<String[]> searchCase;
-    private volatile Supplier<String> searchText;
-    private volatile Supplier<String[]> keywords;
+    private volatile String[] searchCase;
+    private volatile boolean isIgnoreCase;
+    private volatile String searchText;
+    private volatile String[] keywords;
+    private volatile String[] keywordsLowerCase;
+    private volatile boolean[] isKeywordPath;
     private final AtomicBoolean isSharedMemoryCreated = new AtomicBoolean(false);
     private final ConcurrentSkipListSet<String> cacheSet = new ConcurrentSkipListSet<>();
     private final AtomicInteger searchThreadCount = new AtomicInteger(0);
@@ -496,7 +500,7 @@ public class DatabaseService {
      */
     private boolean checkIsMatchedAndAddToList(String path, ConcurrentSkipListSet<String> container) {
         boolean ret = false;
-        if (PathMatchUtil.check(path, searchCase.get(), searchText.get(), keywords.get())) {
+        if (PathMatchUtil.check(path, searchCase, isIgnoreCase, searchText, keywords, keywordsLowerCase, isKeywordPath)) {
             if (Files.exists(Path.of(path))) {
                 //字符串匹配通过
                 ret = true;
@@ -846,15 +850,15 @@ public class DatabaseService {
         }
         ConcurrentLinkedQueue<String> tableQueue = initTableQueueByPriority();
         int asciiSum = 0;
-        if (keywords.get() != null) {
-            for (String keyword : keywords.get()) {
+        if (keywords != null) {
+            for (String keyword : keywords) {
                 int ascII = GetAscII.INSTANCE.getAscII(keyword);
                 asciiSum += Math.max(ascII, 0);
             }
         }
         int asciiGroup = asciiSum / 100;
         String firstTableName = "list" + asciiGroup;
-        if (searchCase.get() != null && Arrays.asList(searchCase.get()).contains("d")) {
+        if (searchCase != null && Arrays.asList(searchCase).contains("d")) {
             LinkedHashMap<String, String> _priorityMap = new LinkedHashMap<>();
             String _sql = "SELECT %s FROM " + firstTableName + " WHERE PRIORITY=" + "-1";
             _priorityMap.put(_sql, firstTableName);
@@ -1606,9 +1610,31 @@ public class DatabaseService {
     private static void startSearchEvent(Event event) {
         StartSearchEvent startSearchEvent = (StartSearchEvent) event;
         DatabaseService databaseService = getInstance();
-        databaseService.searchText = startSearchEvent.searchText;
-        databaseService.searchCase = startSearchEvent.searchCase;
-        databaseService.keywords = startSearchEvent.keywords;
+        databaseService.searchText = startSearchEvent.searchText.get();
+        databaseService.searchCase = startSearchEvent.searchCase.get();
+        databaseService.isIgnoreCase = databaseService.searchCase == null || Arrays.stream(databaseService.searchCase).noneMatch(s -> s.equals("case"));
+        String[] _keywords = startSearchEvent.keywords.get();
+        databaseService.keywords = new String[_keywords.length];
+        databaseService.keywordsLowerCase = new String[_keywords.length];
+        databaseService.isKeywordPath = new boolean[_keywords.length];
+        // 对keywords进行处理
+        for (int i = 0; i < _keywords.length; ++i) {
+            String eachKeyword = _keywords[i];
+            final char _firstChar = eachKeyword.charAt(0);
+            final boolean isPath = _firstChar == '/' || _firstChar == File.separatorChar;
+            if (isPath) {
+                // 当关键字为"test;/C:/test"时，分割出来为["test", "/C:/test"]
+                if (eachKeyword.contains(":")) {
+                    eachKeyword = eachKeyword.substring(1);
+                }
+                // 将 / 替换为 \，Windows系统使用 \ 来分隔文件夹
+                Matcher matcher = RegexUtil.slash.matcher(eachKeyword);
+                eachKeyword = matcher.replaceAll(Matcher.quoteReplacement(File.separator));
+            }
+            databaseService.isKeywordPath[i] = isPath;
+            databaseService.keywords[i] = eachKeyword;
+            databaseService.keywordsLowerCase[i] = eachKeyword.toLowerCase();
+        }
         databaseService.isSearchStopped.set(false);
         databaseService.startSearch();
         databaseService.startSearchTimeMills.set(System.currentTimeMillis());

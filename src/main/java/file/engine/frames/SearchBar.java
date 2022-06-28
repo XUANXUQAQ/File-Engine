@@ -1172,27 +1172,27 @@ public class SearchBar {
                         translateService.getTranslation("the file containing \"test\" in the path will be displayed below the search bar"));
         SwingUtilities.invokeLater(() -> textField.setText(""));
         JOptionPane.showMessageDialog(searchBar,
-                translateService.getTranslation("Add \":\" + suffix after the keyword to achieve a more precise search") + "\n" +
+                translateService.getTranslation("Add \"::\" + suffix after the keyword to achieve a more precise search") + "\n" +
                         translateService.getTranslation("The program has the following four suffixes") + "\n" +
-                        ":d     :f     :full     :case" + "\n" +
+                        "::d     ::f     ::full     ::case" + "\n" +
                         translateService.getTranslation("not case sensitive"));
-        SwingUtilities.invokeLater(() -> textField.setText("test:d"));
+        SwingUtilities.invokeLater(() -> textField.setText("test::d"));
         JOptionPane.showMessageDialog(searchBar,
-                translateService.getTranslation("\":d\" is the suffix for searching only folders"));
-        SwingUtilities.invokeLater(() -> textField.setText("test:f"));
+                translateService.getTranslation("\"::d\" is the suffix for searching only folders"));
+        SwingUtilities.invokeLater(() -> textField.setText("test::f"));
         JOptionPane.showMessageDialog(searchBar,
-                translateService.getTranslation("\":f\" is the suffix to search only for files"));
-        SwingUtilities.invokeLater(() -> textField.setText("test:full"));
+                translateService.getTranslation("\"::f\" is the suffix to search only for files"));
+        SwingUtilities.invokeLater(() -> textField.setText("test::full"));
         JOptionPane.showMessageDialog(searchBar,
-                translateService.getTranslation("\":full\" means full word matching, but case insensitive"));
-        SwingUtilities.invokeLater(() -> textField.setText("test:case"));
+                translateService.getTranslation("\"::full\" means full word matching, but case insensitive"));
+        SwingUtilities.invokeLater(() -> textField.setText("test::case"));
         JOptionPane.showMessageDialog(searchBar,
-                translateService.getTranslation("\":case\" means case sensitive"));
-        SwingUtilities.invokeLater(() -> textField.setText("test:d;full"));
+                translateService.getTranslation("\"::case\" means case sensitive"));
+        SwingUtilities.invokeLater(() -> textField.setText("test::d;full"));
         JOptionPane.showMessageDialog(searchBar,
                 translateService.getTranslation("You can also combine different suffixes to use") + "\n" +
                         translateService.getTranslation("you can separate them with \";\" (semicolon) to search together as keywords."));
-        SwingUtilities.invokeLater(() -> textField.setText("test;/file:d;case"));
+        SwingUtilities.invokeLater(() -> textField.setText("test;/file::d;case"));
         JOptionPane.showMessageDialog(searchBar,
                 translateService.getTranslation("Different keywords are separated by \";\" (semicolon), suffix and keywords are separated by \":\" (colon)"));
         JOptionPane.showMessageDialog(searchBar,
@@ -3540,22 +3540,17 @@ public class SearchBar {
     }
 
     private void setSearchKeywordsAndSearchCase() {
-        String[] strings;
         String searchBarText = getSearchBarText();
-        int length;
         if (!searchBarText.isEmpty()) {
-            strings = RegexUtil.colon.split(searchBarText);
-            if (strings != null) {
-                length = strings.length;
-                if (length == 1) {
-                    searchText = strings[0];
-                    searchCase = null;
-                } else if (length > 1) {
-                    searchText = strings[0];
-                    searchCase = semicolon.split(strings[1]);
-                }
-                keywords = semicolon.split(searchText);
+            final int i = searchBarText.lastIndexOf("::");
+            if (i == -1) {
+                searchText = searchBarText;
+                searchCase = null;
+            } else {
+                searchText = searchBarText.substring(0, i);
+                searchCase = semicolon.split(searchBarText.substring(i + 2));
             }
+            keywords = semicolon.split(searchText);
         }
     }
 
@@ -3585,12 +3580,9 @@ public class SearchBar {
             final AtomicBoolean isWaiting = new AtomicBoolean(false);
             while (eventManagement.notMainExit()) {
                 try {
-                    // 记录输入字符串
-                    if (isVisible()) {
-                        setSearchKeywordsAndSearchCase();
-                    }
                     long endTime = System.currentTimeMillis();
                     if ((endTime - startTime > 250) && isSqlNotInitialized.get() && startSignal.get()) {
+                        setSearchKeywordsAndSearchCase();
                         sendSearchEvent(isMergeThreadNotExist);
                     }
 

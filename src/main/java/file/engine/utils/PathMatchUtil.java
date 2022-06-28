@@ -2,10 +2,8 @@ package file.engine.utils;
 
 import file.engine.utils.file.FileUtil;
 
-import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.regex.Matcher;
 
 @SuppressWarnings({"IndexOfReplaceableByContains"})
 public class PathMatchUtil {
@@ -16,32 +14,22 @@ public class PathMatchUtil {
      * @param path         文件路径
      * @param isIgnoreCase 是否忽略大小写
      * @return 如果匹配成功则返回true
-     * @see #check(String, String[], String, String[])  ;
+     * @see #check(String, String[], boolean, String, String[], String[], boolean[])
      */
-    private static boolean notMatched(String path, boolean isIgnoreCase, String[] keywords) {
-        String matcherStrFromFilePath;
-        boolean isPath;
-        for (String eachKeyword : keywords) {
+    private static boolean notMatched(String path, boolean isIgnoreCase, String[] keywords, String[] keywordsLowerCase, boolean[] isKeywordPath) {
+        final int length = keywords.length;
+        for (int i = 0; i < length; ++i) {
+            String eachKeyword;
+            final boolean isPath = isKeywordPath[i];
+            String matcherStrFromFilePath = isPath ? FileUtil.getParentPath(path) : FileUtil.getFileName(path);
+            if (isIgnoreCase) {
+                eachKeyword = keywordsLowerCase[i];
+                matcherStrFromFilePath = matcherStrFromFilePath.toLowerCase();
+            } else {
+                eachKeyword = keywords[i];
+            }
             if (eachKeyword == null || eachKeyword.isEmpty()) {
                 continue;
-            }
-            char firstChar = eachKeyword.charAt(0);
-            if (firstChar == '/' || firstChar == File.separatorChar) {
-                //匹配路径
-                isPath = true;
-                Matcher matcher = RegexUtil.slash.matcher(eachKeyword);
-                eachKeyword = matcher.replaceAll(Matcher.quoteReplacement(""));
-                //获取父路径
-                matcherStrFromFilePath = FileUtil.getParentPath(path);
-            } else {
-                //获取名字
-                isPath = false;
-                matcherStrFromFilePath = FileUtil.getFileName(path);
-            }
-            //转换大小写
-            if (isIgnoreCase) {
-                matcherStrFromFilePath = matcherStrFromFilePath.toLowerCase();
-                eachKeyword = eachKeyword.toLowerCase();
             }
             //开始匹配
             if (matcherStrFromFilePath.indexOf(eachKeyword) == -1) {
@@ -63,12 +51,23 @@ public class PathMatchUtil {
 
     /**
      * 检查文件路径是否匹配所有输入规则
-     *
-     * @param path 文件路径
-     * @return true如果满足所有条件 否则false
+     * @param path 将要匹配的文件路径
+     * @param searchCase 匹配规则 f d case full
+     * @param isIgnoreCase 当searchCase中包含case则为false，该变量用于防止searchCase重复计算
+     * @param searchText 用户输入字符串，由关键字通过 ; 连接
+     * @param keywords 用户输入字符串生成的关键字
+     * @param keywordsLowerCase 防止重复计算
+     * @param isKeywordPath keyword是否为路径或者文件名
+     * @return true如果满足所有条件 否则返回false
      */
-    public static boolean check(String path, String[] searchCase, String searchText, String[] keywords) {
-        if (notMatched(path, true, keywords)) {
+    public static boolean check(String path,
+                                String[] searchCase,
+                                boolean isIgnoreCase,
+                                String searchText,
+                                String[] keywords,
+                                String[] keywordsLowerCase,
+                                boolean[] isKeywordPath) {
+        if (notMatched(path, isIgnoreCase, keywords, keywordsLowerCase, isKeywordPath)) {
             return false;
         }
         if (searchCase == null || searchCase.length == 0) {
@@ -92,10 +91,8 @@ public class PathMatchUtil {
                         return false;
                     }
                     break;
-                case "case":
-                    if (notMatched(path, false, keywords)) {
-                        return false;
-                    }
+                default:
+                    break;
             }
         }
         //所有规则均已匹配
