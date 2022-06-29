@@ -1620,6 +1620,12 @@ public class DatabaseService {
         // 对keywords进行处理
         for (int i = 0; i < _keywords.length; ++i) {
             String eachKeyword = _keywords[i];
+            if (eachKeyword == null || eachKeyword.isEmpty()) {
+                databaseService.isKeywordPath[i] = false;
+                databaseService.keywords[i] = "";
+                databaseService.keywordsLowerCase[i] = "";
+                continue;
+            }
             final char _firstChar = eachKeyword.charAt(0);
             final boolean isPath = _firstChar == '/' || _firstChar == File.separatorChar;
             if (isPath) {
