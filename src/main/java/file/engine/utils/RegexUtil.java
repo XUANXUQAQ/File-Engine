@@ -1,6 +1,6 @@
 package file.engine.utils;
 
-import java.lang.ref.WeakReference;
+import java.lang.ref.SoftReference;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.regex.Pattern;
 
@@ -16,7 +16,7 @@ public class RegexUtil {
     public static final Pattern comma = Pattern.compile(",");
     private static final int MAX_PATTERN_CACHE_NUM = 20;
 
-    private static final ConcurrentSkipListMap<String, WeakReference<Pattern>> patternMap = new ConcurrentSkipListMap<>();
+    private static final ConcurrentSkipListMap<String, SoftReference<Pattern>> patternMap = new ConcurrentSkipListMap<>();
 
     /**
      * 获取正则表达式并放入缓存
@@ -27,10 +27,10 @@ public class RegexUtil {
      */
     public static Pattern getPattern(String patternStr, int flags) {
         String key = patternStr + ":flags:" + flags;
-        WeakReference<Pattern> pattern = patternMap.get(key);
+        SoftReference<Pattern> pattern = patternMap.get(key);
         if (pattern == null) {
             Pattern compile = Pattern.compile(patternStr, flags);
-            pattern = new WeakReference<>(compile);
+            pattern = new SoftReference<>(compile);
             if (patternMap.size() < MAX_PATTERN_CACHE_NUM) {
                 patternMap.put(key, pattern);
             } else {
@@ -41,7 +41,7 @@ public class RegexUtil {
         Pattern compile = pattern.get();
         if (compile == null) {
             compile = Pattern.compile(patternStr, flags);
-            pattern = new WeakReference<>(compile);
+            pattern = new SoftReference<>(compile);
             if (patternMap.size() < MAX_PATTERN_CACHE_NUM) {
                 patternMap.put(key, pattern);
             } else {

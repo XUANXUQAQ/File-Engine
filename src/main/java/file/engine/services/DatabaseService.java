@@ -704,7 +704,7 @@ public class DatabaseService {
                             if (isSearchStopped.get()) {
                                 return;
                             }
-                            parseSql(each, searchInfo);
+                            getListAndPriority(each, searchInfo);
                             String listName = searchInfo[0];
                             int priority = Integer.parseInt(searchInfo[1]);
                             String result;
@@ -730,12 +730,11 @@ public class DatabaseService {
      * @param sql  sql
      * @param info info[0]存放list，info[1]存放priority，需要保证info长度大于2
      */
-    private void parseSql(String sql, @NonNull String[] info) {
+    private void getListAndPriority(String sql, @NonNull String[] info) {
         String[] split = RegexUtil.blank.split(sql);
         Arrays.stream(split).filter(each -> !each.isBlank()).forEach(each -> {
             int val;
-            //noinspection IndexOfReplaceableByContains
-            if (each.indexOf("list") != -1) {
+            if (each.contains("list")) {
                 info[0] = each;
             } else if ((val = each.indexOf("=")) != -1) {
                 info[1] = each.substring(val + 1);
@@ -794,7 +793,7 @@ public class DatabaseService {
 //                                tableQueue.clear();
                                 return;
                             }
-                            parseSql(eachSql, searchInfo);
+                            getListAndPriority(eachSql, searchInfo);
                             String tableName = searchInfo[0];
                             String priority = searchInfo[1];
                             String key = diskStr + "," + tableName + "," + priority;
@@ -816,7 +815,7 @@ public class DatabaseService {
                                         container,
                                         stmt);
                             }
-                            long weight = Math.min(matchedNum, 5);
+                            final long weight = Math.min(matchedNum, 5);
                             if (weight != 0L) {
                                 //更新表的权重，每次搜索将会按照各个表的权重排序
                                 updateTableWeight(commandsMap.get(eachSql), weight);
@@ -856,7 +855,7 @@ public class DatabaseService {
                 asciiSum += Math.max(ascII, 0);
             }
         }
-        int asciiGroup = asciiSum / 100;
+        final int asciiGroup = asciiSum / 100;
         String firstTableName = "list" + asciiGroup;
         if (searchCase != null && Arrays.asList(searchCase).contains("d")) {
             LinkedHashMap<String, String> _priorityMap = new LinkedHashMap<>();
