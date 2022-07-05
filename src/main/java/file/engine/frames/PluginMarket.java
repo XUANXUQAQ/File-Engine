@@ -70,8 +70,6 @@ public class PluginMarket {
         addButtonInstallListener();
         addOpenPluginOfficialSiteListener();
         frame.dispose();
-        frame.setUndecorated(true);
-        frame.getRootPane().setWindowDecorationStyle(JRootPane.FRAME);
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             try {
                 String pluginName;

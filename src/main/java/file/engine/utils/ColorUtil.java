@@ -59,7 +59,7 @@ public class ColorUtil {
     public static boolean canParseToRGB(String str) {
         if (str != null) {
             if (!str.isEmpty()) {
-                return RegexUtil.rgbHexPattern.matcher(str).matches();
+                return RegexUtil.getPattern("^[a-fA-F\\d]{6}$", 0).matcher(str).matches();
             }
         }
         return false;

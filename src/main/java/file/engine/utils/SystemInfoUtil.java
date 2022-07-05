@@ -17,7 +17,6 @@ public class SystemInfoUtil {
     }
 
     public static double getMemoryUsage() {
-
         long totalByte = memory.getTotal();
         long availableMemory = memory.getAvailable();
         return (totalByte - availableMemory) * 1.0 / totalByte;

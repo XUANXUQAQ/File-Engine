@@ -3785,7 +3785,7 @@ public class SearchBar {
      * @return 生成后的字符串
      */
     private String getContractPath(String path, int maxShowingCharsNum) {
-        String[] split = RegexUtil.reverseSlash.split(path);
+        String[] split = RegexUtil.getPattern("\\\\", 0).split(path);
         StringBuilder tmpPath = new StringBuilder();
         int contractLimit = 35;
         for (String tmp : split) {

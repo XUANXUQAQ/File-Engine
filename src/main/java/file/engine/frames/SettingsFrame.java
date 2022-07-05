@@ -3223,7 +3223,7 @@ public class SettingsFrame {
      */
     private ConfigEntity getConfigEntity() {
         ConfigEntity configEntity = new ConfigEntity();
-        String ignorePathTemp = RegexUtil.lineFeed.matcher(textAreaIgnorePath.getText()).replaceAll("");
+        String ignorePathTemp = RegexUtil.getPattern("\n", 0).matcher(textAreaIgnorePath.getText()).replaceAll("");
         String swingTheme = (String) listSwingThemes.getSelectedValue();
         Constants.Enums.BorderType borderType = (Constants.Enums.BorderType) comboBoxBorderType.getSelectedItem();
         String tmp_proxyAddress = textFieldAddress.getText();

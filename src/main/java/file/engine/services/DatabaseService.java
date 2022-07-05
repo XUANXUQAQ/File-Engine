@@ -1633,7 +1633,7 @@ public class DatabaseService {
                     eachKeyword = eachKeyword.substring(1);
                 }
                 // 将 / 替换为 \，Windows系统使用 \ 来分隔文件夹
-                Matcher matcher = RegexUtil.slash.matcher(eachKeyword);
+                Matcher matcher = RegexUtil.getPattern("/", 0).matcher(eachKeyword);
                 eachKeyword = matcher.replaceAll(Matcher.quoteReplacement(File.separator));
             }
             databaseService.isKeywordPath[i] = isPath;
