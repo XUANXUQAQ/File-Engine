@@ -221,13 +221,13 @@ public class MainClass {
                 JOptionPane.showMessageDialog(null, "Not 64 Bit", "ERROR", JOptionPane.ERROR_MESSAGE);
                 throw new RuntimeException("Not 64 Bit");
             }
-            Class.forName("org.sqlite.JDBC");
             updateLauncher();
             updatePlugins();
 
             //清空tmp
             FileUtil.deleteDir(new File("tmp"));
             initFoldersAndFiles();
+            Class.forName("org.sqlite.JDBC");
             initializeDllInterface();
             initEventManagement();
             readAllConfigs();
