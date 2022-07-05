@@ -6,19 +6,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public enum CachedThreadPoolUtil {
     INSTANCE;
     private static final int THREAD_POOL_AWAIT_TIMEOUT = 5;
-    private final ExecutorService virtualThreadPool;
     private final ExecutorService platformThreadPool;
     private final AtomicBoolean isShutdown = new AtomicBoolean(false);
 
     CachedThreadPoolUtil() {
-        virtualThreadPool = new ThreadPoolExecutor(
-                0,
-                1000,
-                0,
-                TimeUnit.SECONDS,
-                new SynchronousQueue<>(),
-                Thread.ofVirtual().factory()
-        );
         platformThreadPool = new ThreadPoolExecutor(
                 0,
                 100,
@@ -36,11 +27,11 @@ public enum CachedThreadPoolUtil {
         return isShutdown.get();
     }
 
-    public <T> Future<T> executeTask(Callable<T> todo) {
+    public <T> Future<T> executeTask(Callable<T> task) {
         if (isShutdown.get()) {
             return null;
         }
-        return virtualThreadPool.submit(todo);
+        return platformThreadPool.submit(task);
     }
 
     public <T> Future<T> executeTask(Callable<T> todo, boolean isVirtualThread) {
@@ -65,18 +56,16 @@ public enum CachedThreadPoolUtil {
         }
     }
 
-    public void executeTask(Runnable todo) {
+    public void executeTask(Runnable task) {
         if (isShutdown.get()) {
             return;
         }
-        virtualThreadPool.submit(todo);
+        platformThreadPool.submit(task);
     }
 
     public void shutdown() {
         isShutdown.set(true);
-        virtualThreadPool.shutdown();
         platformThreadPool.shutdown();
-        printInfo((ThreadPoolExecutor) virtualThreadPool);
         printInfo((ThreadPoolExecutor) platformThreadPool);
     }
 

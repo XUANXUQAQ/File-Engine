@@ -485,7 +485,7 @@ public class EventManagement {
      * 开启同步任务事件处理中心
      */
     private void startBlockEventHandler() {
-        Thread.ofPlatform().start(() -> eventHandle(blockEventQueue));
+        new Thread(() -> eventHandle(blockEventQueue)).start();
     }
 
     private void eventHandle(ConcurrentLinkedQueue<Event> eventQueue) {
