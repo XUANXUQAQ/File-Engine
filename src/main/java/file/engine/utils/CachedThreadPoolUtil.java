@@ -36,6 +36,11 @@ public enum CachedThreadPoolUtil {
         return isShutdown.get();
     }
 
+    /**
+     * 提交任务
+     * @param todo 任务
+     * @return Future
+     */
     public <T> Future<T> executeTask(Callable<T> todo) {
         if (isShutdown.get()) {
             return null;
@@ -43,6 +48,12 @@ public enum CachedThreadPoolUtil {
         return virtualThreadPool.submit(todo);
     }
 
+    /**
+     * 提交任务
+     * @param todo 任务
+     * @param isVirtualThread 是否使用虚拟线程
+     * @return Future
+     */
     public <T> Future<T> executeTask(Callable<T> todo, boolean isVirtualThread) {
         if (isShutdown.get()) {
             return null;
@@ -54,6 +65,11 @@ public enum CachedThreadPoolUtil {
         }
     }
 
+    /**
+     * 提交任务
+     * @param todo 任务
+     * @param isVirtualThread 是否使用虚拟线程
+     */
     public void executeTask(Runnable todo, boolean isVirtualThread) {
         if (isShutdown.get()) {
             return;
@@ -65,6 +81,10 @@ public enum CachedThreadPoolUtil {
         }
     }
 
+    /**
+     * 使用虚拟线程提交任务
+     * @param todo 任务
+     */
     public void executeTask(Runnable todo) {
         if (isShutdown.get()) {
             return;
@@ -72,6 +92,9 @@ public enum CachedThreadPoolUtil {
         virtualThreadPool.submit(todo);
     }
 
+    /**
+     * 关闭线程池病等待
+     */
     public void shutdown() {
         isShutdown.set(true);
         virtualThreadPool.shutdown();
@@ -80,6 +103,10 @@ public enum CachedThreadPoolUtil {
         printInfo((ThreadPoolExecutor) platformThreadPool);
     }
 
+    /**
+     * 等待线程池关闭并打印线程池信息
+     * @param threadPoolExecutor 线程池
+     */
     private void printInfo(ThreadPoolExecutor threadPoolExecutor) {
         try {
             if (!threadPoolExecutor.awaitTermination(THREAD_POOL_AWAIT_TIMEOUT, TimeUnit.SECONDS)) {
