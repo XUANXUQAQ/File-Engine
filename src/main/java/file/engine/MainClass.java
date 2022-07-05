@@ -43,13 +43,14 @@ public class MainClass {
     private static final String GET_ASC_II_64_MD_5 = "dea00d07d351fece770cd0bb2ad9af10";
     private static final String HOTKEY_LISTENER_64_MD_5 = "6d71f646529b69cff9d50fcce8d4b6e4";
     private static final String IS_LOCAL_DISK_64_MD_5 = "59793a286030bfafe8b8f0fa84b498ba";
-    private static final String FILE_SEARCHER_USN_64_MD_5 = "79a0317eb1a2a2b5031b192de3bf403e";
-    private static final String SQLITE3_64_MD_5 = "f3bb1a137c93f8671a20235525171db1";
+    private static final String FILE_SEARCHER_USN_64_MD_5 = "4bf6b4c6bc2aa3df2c4391917a638db9";
+    private static final String SQLITE3_64_MD_5 = "eb75b1a3ec5dbf58cf6d6cb307961ab5";
     private static final String GET_HANDLE_64_MD_5 = "e8a002f9f9303116b04cc8529e7ff6b9";
     private static final String SHORTCUT_GEN_MD_5 = "fa4e26f99f3dcd58d827828c411ea5d7";
     private static final String RESULT_PIPE_MD_5 = "35e8f5de0917a9a557d81efbab0988cc";
     private static final String GET_DPI_MD_5 = "2d835577b3505af292966411b50e93b4";
     private static final String GET_START_MENU_MD_5 = "3c83f83fe7273a44d9e3c27510c2e342";
+    private static final String SQLITE_JDBC_MD_5 = "580fd050832e37d14bc04e8d5d13b7b1";
 
     /**
      * 加载本地释放的dll
@@ -153,6 +154,8 @@ public class MainClass {
 //        System.setProperty("jna.library.path", "user");
         System.setProperty("swing.aatext", "true");
 //        System.setProperty("jna.debug_load", "false");
+        System.setProperty("org.sqlite.lib.path", Path.of("user/").toAbsolutePath().toString());
+        System.setProperty("org.sqlite.lib.name", "sqliteJDBC.dll");
     }
 
     private static void readAllConfigs() {
@@ -401,6 +404,7 @@ public class MainClass {
         copyOrIgnoreFile("user/resultPipe.dll", "/win32-native/resultPipe.dll", RESULT_PIPE_MD_5);
         copyOrIgnoreFile("user/getDpi.exe", "/win32-native/getDpi.exe", GET_DPI_MD_5);
         copyOrIgnoreFile("user/getStartMenu.dll", "/win32-native/getStartMenu.dll", GET_START_MENU_MD_5);
+        copyOrIgnoreFile("user/sqliteJDBC.dll", "/win32-native/sqliteJDBC.dll", SQLITE_JDBC_MD_5);
     }
 
     private static void copyOrIgnoreFile(String path, String rootPath, String md5) throws IOException {
