@@ -192,10 +192,13 @@ public class MainClass {
     private static void initEventManagement() {
         // 初始化事件注册中心，注册所有事件
         EventManagement eventManagement = EventManagement.getInstance();
-        eventManagement.registerAllHandler();
-        eventManagement.registerAllListener();
-        if (IsDebug.isDebug()) {
-            ClassScannerUtil.printClassesWithAnnotation();
+        eventManagement.readClassList();
+        {
+            eventManagement.registerAllHandler();
+            eventManagement.registerAllListener();
+            if (IsDebug.isDebug()) {
+                ClassScannerUtil.printClassesWithAnnotation();
+            }
         }
         eventManagement.releaseClassesList();
     }

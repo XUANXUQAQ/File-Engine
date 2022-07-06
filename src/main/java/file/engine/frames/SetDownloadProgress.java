@@ -23,19 +23,19 @@ public class SetDownloadProgress {
     /**
      * 当你点击下载按钮时使用，此时isDownloadStarted必须设为true
      *
-     * @param labelProgress     显示进度的label
-     * @param buttonInstall     设置文字为下载还是取消的下载点击按钮
-     * @param downloadManager   下载管理类的实例
-     * @param func              判断是否需要显示label和button的状态
-     * @param successSign       下载成功后创建文件
-     * @param currentTaskStr    当前任务的标志
-     * @param getSelectedMethod 线程需要从哪个方法获取字符串，当获取的字符串不等于currentTaskStr时，则会停止设置buttonInstall和labelProgress的值
-     * @param invokeMethodObj   执行method需要的实例
+     * @param labelProgress           显示进度的label
+     * @param buttonInstall           设置文字为下载还是取消的下载点击按钮
+     * @param downloadManager         下载管理类的实例
+     * @param isLabelAndButtonVisible 判断是否需要显示label和button的状态
+     * @param successSign             下载成功后创建文件
+     * @param currentTaskStr          当前任务的标志
+     * @param getSelectedMethod       线程需要从哪个方法获取任务的标志，当获取的字符串不等于currentTaskStr时，则会停止设置buttonInstall和labelProgress的值
+     * @param invokeMethodObj         执行method需要的实例
      */
     protected static boolean setProgress(JLabel labelProgress,
                                          JButton buttonInstall,
                                          DownloadManager downloadManager,
-                                         Supplier<Boolean> func,
+                                         Supplier<Boolean> isLabelAndButtonVisible,
                                          File successSign,
                                          String currentTaskStr,
                                          Method getSelectedMethod,
@@ -47,7 +47,7 @@ public class SetDownloadProgress {
             String buttonOriginalText = buttonInstall.getText();
             boolean isStarted = true;
             while (isStarted) {
-                if (func.get()) {
+                if (isLabelAndButtonVisible.get()) {
                     if (!eventManagement.notMainExit()) {
                         return true;
                     }

@@ -48,7 +48,6 @@ public class EventManagement {
     private EventManagement() {
         startBlockEventHandler();
         startAsyncEventHandler();
-        readClassList();
     }
 
     public static EventManagement getInstance() {
@@ -60,19 +59,6 @@ public class EventManagement {
             }
         }
         return instance;
-    }
-
-    private void readClassList() {
-        try (BufferedReader reader = new BufferedReader(
-                new InputStreamReader(
-                        Objects.requireNonNull(EventManagement.class.getResourceAsStream("/classes.list")), StandardCharsets.UTF_8))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                classesList.add(line);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
     public void unregisterPluginHandler(String className) {
@@ -419,6 +405,19 @@ public class EventManagement {
                 }
             }
         } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void readClassList() {
+        try (BufferedReader reader = new BufferedReader(
+                new InputStreamReader(
+                        Objects.requireNonNull(EventManagement.class.getResourceAsStream("/classes.list")), StandardCharsets.UTF_8))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                classesList.add(line);
+            }
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
