@@ -953,14 +953,14 @@ public class AllConfigs {
     }
 
     @EventRegister(registerClass = DeleteCmdEvent.class)
-    private static void DeleteCmdEvent(Event event) {
+    private static void deleteCmdEvent(Event event) {
         AllConfigs allConfigs = AllConfigs.getInstance();
         DeleteCmdEvent deleteCmdEvent = (DeleteCmdEvent) event;
         allConfigs.cmdSet.remove(deleteCmdEvent.cmd);
     }
 
     @EventRegister(registerClass = ReadConfigsEvent.class)
-    private static void ReadConfigsEvent(Event event) {
+    private static void readConfigsEvent(Event event) {
         AllConfigs allConfigs = AllConfigs.getInstance();
         allConfigs.readAllSettings();
         allConfigs.saveAllSettings();
@@ -972,7 +972,7 @@ public class AllConfigs {
     }
 
     @EventRegister(registerClass = BootSystemEvent.class)
-    private static void BootSystemEvent(Event event) {
+    private static void bootSystemEvent(Event event) {
         EventManagement eventManagement = EventManagement.getInstance();
         eventManagement.putEvent(new StartMonitorDiskEvent());
         eventManagement.putEvent(new ShowTrayIconEvent());
@@ -984,7 +984,7 @@ public class AllConfigs {
     }
 
     @EventRegister(registerClass = SetConfigsEvent.class)
-    private static void SetAllConfigsEvent(Event event) {
+    private static void setAllConfigsEvent(Event event) {
         getInstance().setAllSettings();
     }
 
