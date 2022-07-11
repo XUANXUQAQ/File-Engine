@@ -266,19 +266,16 @@ public class MainClass {
         Date startTime = new Date();
         Date endTime;
         long timeDiff;
-        long div = 24 * 60 * 60 * 1000;
-        boolean isDatabaseDamaged = SQLiteUtil.isDatabaseDamaged();
+        final long div = 24 * 60 * 60 * 1000;
+        boolean isNeedUpdate = SQLiteUtil.isDatabaseDamaged();
         boolean isDatabaseOutDated = false;
-        boolean isNeedUpdate = isDatabaseDamaged;
 
         if (!IsDebug.isDebug()) {
-            isNeedUpdate = checkStartTimes() || isDatabaseDamaged;
+            isNeedUpdate |= checkStartTimes();
         }
 
         EventManagement eventManagement = EventManagement.getInstance();
         TranslateService translateService = TranslateService.getInstance();
-
-        SystemIdleCheckUtil.start();
 
         if (hasStartup() == 1) {
             eventManagement.putEvent(
@@ -297,9 +294,9 @@ public class MainClass {
                 //启动时间已经超过2天,更新索引
                 isDatabaseOutDated = true;
             }
-            //开始检测鼠标移动，若鼠标长时间未移动，且更新标志isNeedUpdate为true，则更新
+            // 更新标志isNeedUpdate为true，则更新
             // 数据库损坏或者重启次数超过3次，需要重建索引
-            if ((isDatabaseOutDated && SystemIdleCheckUtil.isCursorLongTimeNotMove() && !GetHandle.INSTANCE.isForegroundFullscreen()) || isNeedUpdate) {
+            if ((isDatabaseOutDated && !GetHandle.INSTANCE.isForegroundFullscreen()) || isNeedUpdate) {
                 isDatabaseOutDated = false;
                 isNeedUpdate = false;
                 String availableDisks = allConfigs.getAvailableDisks();

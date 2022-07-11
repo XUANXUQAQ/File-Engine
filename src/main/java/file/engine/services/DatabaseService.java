@@ -5,10 +5,7 @@ import file.engine.annotation.EventListener;
 import file.engine.annotation.EventRegister;
 import file.engine.configs.AllConfigs;
 import file.engine.configs.Constants;
-import file.engine.dllInterface.FileMonitor;
-import file.engine.dllInterface.GetAscII;
-import file.engine.dllInterface.GetStartMenu;
-import file.engine.dllInterface.ResultPipe;
+import file.engine.dllInterface.*;
 import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
 import file.engine.event.handler.impl.BootSystemEvent;
@@ -367,11 +364,11 @@ public class DatabaseService {
                         !isSearchStopped.get() || !eventManagement.notMainExit() ||
                                 tmp.isSearchBarVisible.get() || status == Constants.Enums.DatabaseStatus.MANUAL_UPDATE;
                 while (eventManagement.notMainExit()) {
-                    if (SystemIdleCheckUtil.isCursorLongTimeNotMove() &&
-                            isSearchStopped.get() &&
+                    if (isSearchStopped.get() &&
                             System.currentTimeMillis() - startCheckTimeMills > 10 * 60 * 1000 &&
-                            !tmp.isSearchBarVisible.get()) {
-                        double memoryUsage = SystemInfoUtil.getMemoryUsage();
+                            !tmp.isSearchBarVisible.get() &&
+                            !GetHandle.INSTANCE.isForegroundFullscreen()) {
+                        final double memoryUsage = SystemInfoUtil.getMemoryUsage();
                         if (memoryUsage < 0.7) {
                             // 系统内存使用少于70%
                             startCheckTimeMills = System.currentTimeMillis();
@@ -1338,7 +1335,7 @@ public class DatabaseService {
                 Optional<Supplier<Boolean>> isVisibleOptional = event.getReturnValue();
                 isVisibleOptional.ifPresentOrElse(ret -> tmp.isVisible = ret, () -> tmp.isVisible = () -> false);
                 while (isSharedMemoryCreated.get()) {
-                    if (SystemIdleCheckUtil.isCursorLongTimeNotMove()) {
+                    if (isSearchStopped.get()) {
                         if (!tmp.isVisible.get()) {
                             isSharedMemoryCreated.set(false);
                             ResultPipe.INSTANCE.closeAllSharedMemory();
