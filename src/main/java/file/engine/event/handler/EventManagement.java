@@ -43,7 +43,7 @@ public class EventManagement {
     private final ConcurrentHashMap<String, BiConsumer<Class<?>, Object>> PLUGIN_EVENT_HANDLER_MAP = new ConcurrentHashMap<>();
     private final AtomicInteger failureEventNum = new AtomicInteger(0);
     private HashSet<String> classesList = new HashSet<>();
-    public static final int asyncThreadNum = 2;
+    private static final int ASYNC_THREAD_NUM = 2;
 
     private EventManagement() {
         startBlockEventHandler();
@@ -77,7 +77,7 @@ public class EventManagement {
      */
     public boolean waitForEvent(Event event) {
         try {
-            final long timeout = 20000; // 20s
+            final long timeout = 20_000; // 20s
             long startTime = System.currentTimeMillis();
             while (!event.isFailed() && !event.isFinished()) {
                 if (System.currentTimeMillis() - startTime > timeout) {
@@ -466,7 +466,7 @@ public class EventManagement {
      */
     private void startAsyncEventHandler() {
         CachedThreadPoolUtil threadPoolUtil = CachedThreadPoolUtil.getInstance();
-        for (int i = 0; i < asyncThreadNum; i++) {
+        for (int i = 0; i < ASYNC_THREAD_NUM; i++) {
             threadPoolUtil.executeTask(() -> eventHandle(asyncEventQueue), false);
         }
     }
@@ -514,7 +514,7 @@ public class EventManagement {
                         eventQueue.add(event);
                     } else {
                         // 任务执行成功
-                        if (!EventProcessedBroadcastEvent.class.equals(event.getClass())) {
+                        if (!(event instanceof EventProcessedBroadcastEvent)) {
                             putEvent(new EventProcessedBroadcastEvent(event.getClass(), event));
                         }
                     }

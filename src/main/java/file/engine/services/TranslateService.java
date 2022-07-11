@@ -72,7 +72,7 @@ public enum TranslateService {
             }
             stringBuilder.append(split[i]).append(" ");
         }
-        stringBuilder.append("<body><html>");
+        stringBuilder.append("</body></html>");
         return stringBuilder.toString();
     }
 
@@ -81,7 +81,7 @@ public enum TranslateService {
      *
      * @return 系统区域语言信息
      */
-    public String getDefaultLang() {
+    public static String getDefaultLang() {
         //TODO 添加语言
         Locale l = Locale.getDefault();
         String lang = l.toLanguageTag();

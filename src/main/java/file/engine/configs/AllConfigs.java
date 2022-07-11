@@ -623,7 +623,7 @@ public class AllConfigs {
 
     private void readLanguage(Map<String, Object> settingsInJson) {
         TranslateService translateService = TranslateService.getInstance();
-        String language = getFromJson(settingsInJson, "language", translateService.getDefaultLang());
+        String language = getFromJson(settingsInJson, "language", TranslateService.getDefaultLang());
         configEntity.setLanguage(language);
         translateService.setLanguage(language);
     }
@@ -1013,7 +1013,7 @@ public class AllConfigs {
     }
 
     @Data
-    public static class AddressUrl {
+    private static class AddressUrl {
         public final String fileEngineVersionUrl;
         public final String pluginListUrl;
     }

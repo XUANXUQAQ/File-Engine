@@ -104,7 +104,6 @@ public class DatabaseService {
     private DatabaseService() {
         tableSet = ConcurrentHashMap.newKeySet();
         tempResults = new ConcurrentLinkedQueue<>();
-//        tableQueue = new ConcurrentLinkedQueue<>();
     }
 
     private void invalidateAllCache() {
