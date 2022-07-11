@@ -1013,7 +1013,7 @@ public class AllConfigs {
     }
 
     @Data
-    private static class AddressUrl {
+    public static class AddressUrl {
         public final String fileEngineVersionUrl;
         public final String pluginListUrl;
     }
