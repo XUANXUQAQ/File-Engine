@@ -360,9 +360,7 @@ public class DatabaseService {
             final int checkTimeInterval = 10 * 60 * 1000;
             try {
                 while (eventManagement.notMainExit()) {
-                    if (isSearchStopped.get() &&
-                            System.currentTimeMillis() - startCheckTimeMills > checkTimeInterval &&
-                            !searchBar.isVisible()) {
+                    if (isSearchStopped.get() && System.currentTimeMillis() - startCheckTimeMills > checkTimeInterval && GetHandle.INSTANCE.isForegroundFullscreen()) {
                         final double memoryUsage = SystemInfoUtil.getMemoryUsage();
                         if (memoryUsage < 0.7) {
                             // 系统内存使用少于70%
