@@ -97,7 +97,7 @@ public class SQLiteUtil {
     }
 
     /**
-     * 仅用于select语句，以及需要及时生效的SQL语句
+     * 不要用于大量数据的select查询，否则可能会占用大量内存
      *
      * @param sql select语句
      * @return 已编译的PreparedStatement
