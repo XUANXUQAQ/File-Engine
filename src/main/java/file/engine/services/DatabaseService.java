@@ -1614,8 +1614,8 @@ public class DatabaseService {
                     eachKeyword = eachKeyword.substring(1);
                 }
                 // 将 / 替换为 \，Windows系统使用 \ 来分隔文件夹
-                Matcher matcher = RegexUtil.getPattern("/", 0).matcher(eachKeyword);
-                eachKeyword = matcher.replaceAll(Matcher.quoteReplacement(File.separator));
+                Matcher matcher = RegexUtil.getPattern("/|\\\\", 0).matcher(eachKeyword);
+                eachKeyword = matcher.replaceAll(Matcher.quoteReplacement(""));
             }
             databaseService.isKeywordPath[i] = isPath;
             databaseService.keywords[i] = eachKeyword;
