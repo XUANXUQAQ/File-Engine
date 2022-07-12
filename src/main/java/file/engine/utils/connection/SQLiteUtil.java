@@ -9,6 +9,7 @@ import file.engine.utils.RegexUtil;
 import file.engine.utils.file.FileUtil;
 import file.engine.utils.system.properties.IsDebug;
 import org.sqlite.SQLiteConfig;
+import org.sqlite.SQLiteConnection;
 import org.sqlite.SQLiteOpenMode;
 
 import java.io.*;
@@ -20,6 +21,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 
@@ -75,7 +77,7 @@ public class SQLiteUtil {
         sqLiteConfig.setLockingMode(SQLiteConfig.LockingMode.NORMAL);
     }
 
-    private static Connection getFromConnectionPool(String key) throws SQLException {
+    private static ConnectionWrapper getFromConnectionPool(String key) throws SQLException {
         ConnectionWrapper connectionWrapper = connectionPool.get(key);
         if (connectionWrapper == null) {
             throw new RuntimeException("no connection named " + key);
@@ -90,7 +92,7 @@ public class SQLiteUtil {
         } finally {
             connectionWrapper.lock.unlock();
         }
-        return connectionWrapper.connection;
+        return connectionWrapper;
     }
 
     /**
@@ -105,7 +107,8 @@ public class SQLiteUtil {
             File data = new File(currentDatabaseDir, key + ".db");
             initConnection("jdbc:sqlite:" + data.getAbsolutePath(), key);
         }
-        return getFromConnectionPool(key).prepareStatement(sql);
+        ConnectionWrapper connectionWrapper = getFromConnectionPool(key);
+        return new PreparedStatementWrapper((SQLiteConnection) connectionWrapper.connection, sql, connectionWrapper.connectionUsingCounter);
     }
 
     /**
@@ -119,7 +122,8 @@ public class SQLiteUtil {
             File data = new File(currentDatabaseDir, key + ".db");
             initConnection("jdbc:sqlite:" + data.getAbsolutePath(), key);
         }
-        return getFromConnectionPool(key).createStatement();
+        ConnectionWrapper wrapper = getFromConnectionPool(key);
+        return new StatementWrapper((SQLiteConnection) wrapper.connection, wrapper.connectionUsingCounter);
     }
 
     private static boolean isConnectionNotInitialized(String key) {
@@ -142,11 +146,19 @@ public class SQLiteUtil {
         if (IsDebug.isDebug()) {
             System.err.println("正在关闭数据库连接");
         }
+        final int timeout = 30_000; // 30s
         connectionPool.forEach((k, v) -> {
             try {
+                v.lock.lock();
+                final long checkTime = System.currentTimeMillis();
+                while (v.isConnectionUsing() && System.currentTimeMillis() - checkTime > timeout) {
+                    TimeUnit.MILLISECONDS.sleep(50);
+                }
                 v.connection.close();
-            } catch (SQLException e) {
+            } catch (SQLException | InterruptedException e) {
                 e.printStackTrace();
+            } finally {
+                v.lock.unlock();
             }
         });
         connectionPool.clear();
@@ -405,20 +417,21 @@ public class SQLiteUtil {
         private final String url;
         private Connection connection;
         private volatile long usingTimeMills;
+        private final AtomicInteger connectionUsingCounter = new AtomicInteger();
         private final ReentrantLock lock = new ReentrantLock();
 
-        private ConnectionWrapper(String url) {
+        private ConnectionWrapper(String url) throws SQLException {
             this.url = url;
-            try {
-                this.connection = DriverManager.getConnection(url, sqLiteConfig.toProperties());
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
+            this.connection = DriverManager.getConnection(url, sqLiteConfig.toProperties());
             this.usingTimeMills = System.currentTimeMillis();
         }
 
         private boolean isIdleTimeout() {
-            return System.currentTimeMillis() - this.usingTimeMills > Constants.CLOSE_DATABASE_TIMEOUT_MILLS;
+            return System.currentTimeMillis() - this.usingTimeMills > Constants.CLOSE_DATABASE_TIMEOUT_MILLS && connectionUsingCounter.get() == 0;
+        }
+
+        private boolean isConnectionUsing() {
+            return connectionUsingCounter.get() != 0;
         }
     }
 }

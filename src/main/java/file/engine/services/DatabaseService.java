@@ -1367,22 +1367,20 @@ public class DatabaseService {
 
     private void waitForSearchAndSwitchDatabase() {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
-            {
-                long start = System.currentTimeMillis();
-                final long timeLimit = 10 * 60 * 1000;
-                // 阻塞等待程序将共享内存配置完成
-                try {
-                    while (!ResultPipe.INSTANCE.isComplete() && ProcessUtil.isProcessExist("fileSearcherUSN.exe")) {
-                        if (System.currentTimeMillis() - start > timeLimit) {
-                            break;
-                        }
-                        TimeUnit.SECONDS.sleep(1);
+            final long start = System.currentTimeMillis();
+            final long timeLimit = 10 * 60 * 1000;
+            // 阻塞等待程序将共享内存配置完成
+            try {
+                while (!ResultPipe.INSTANCE.isComplete() && ProcessUtil.isProcessExist("fileSearcherUSN.exe")) {
+                    if (System.currentTimeMillis() - start > timeLimit) {
+                        break;
                     }
-                } catch (InterruptedException | IOException e) {
-                    e.printStackTrace();
+                    TimeUnit.SECONDS.sleep(1);
                 }
-                isReadFromSharedMemory.set(true);
+            } catch (InterruptedException | IOException e) {
+                e.printStackTrace();
             }
+            isReadFromSharedMemory.set(true);
             // 搜索完成并写入数据库后，重新建立数据库连接
             {
                 try {
@@ -1391,7 +1389,7 @@ public class DatabaseService {
                     e.printStackTrace();
                 } finally {
                     try {
-                        long startWaitingTime = System.currentTimeMillis();
+                        final long startWaitingTime = System.currentTimeMillis();
                         //最多等待5分钟
                         while (searchThreadCount.get() != 0 && System.currentTimeMillis() - startWaitingTime < 5 * 60 * 1000) {
                             TimeUnit.MILLISECONDS.sleep(20);
@@ -1399,12 +1397,19 @@ public class DatabaseService {
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
-                    SQLiteUtil.closeAll();
-                    invalidateAllCache();
-                    SQLiteUtil.initAllConnections();
-                    // 可能会出错
-                    recreateDatabase();
-                    createAllIndex();
+                    shouldStopSearch.set(true);
+                    setStatus(Constants.Enums.DatabaseStatus.MANUAL_UPDATE);
+                    {
+                        SQLiteUtil.closeAll();
+                        invalidateAllCache();
+                        SQLiteUtil.initAllConnections();
+                        // 可能会出错
+                        recreateDatabase();
+                        createAllIndex();
+                    }
+                    setStatus(Constants.Enums.DatabaseStatus.NORMAL);
+
+                    // 搜索完成，更新isDatabaseUpdated标志，结束UpdateDatabaseEvent事件等待
                     isDatabaseUpdated.set(true);
                     isReadFromSharedMemory.set(false);
                 }
@@ -1694,6 +1699,7 @@ public class DatabaseService {
         }
         UpdateDatabaseEvent updateDatabaseEvent = (UpdateDatabaseEvent) event;
         try {
+            // 在这里设置数据库状态为manual update
             if (!databaseService.updateLists(AllConfigs.getInstance().getIgnorePath(), updateDatabaseEvent.isDropPrevious)) {
                 throw new RuntimeException("search failed");
             }
@@ -1703,6 +1709,7 @@ public class DatabaseService {
                 System.out.println("搜索已经可用");
             }
             try {
+                // 等待搜索进程结束
                 while (!databaseService.isDatabaseUpdated.get()) {
                     TimeUnit.MILLISECONDS.sleep(20);
                 }
