@@ -479,7 +479,7 @@ public class SearchBar {
         }
     }
 
-    private static SearchBar getInstance() {
+    public static SearchBar getInstance() {
         if (instance == null) {
             synchronized (SearchBar.class) {
                 if (instance == null) {
@@ -2820,12 +2820,6 @@ public class SearchBar {
     private static void stopPreviewEvent(Event event) {
         isPreviewMode.set(false);
         IsStartTimeSet.isStartTimeSet.set(false);
-    }
-
-    @EventRegister(registerClass = IsSearchBarVisibleEvent.class)
-    private static void isSearchBarVisibleEvent(Event event) {
-        SearchBar searchBar = getInstance();
-        event.setReturnValue((Supplier<Boolean>) searchBar::isVisible);
     }
 
     @EventRegister(registerClass = GetShowingModeEvent.class)

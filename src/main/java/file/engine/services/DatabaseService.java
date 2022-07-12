@@ -10,11 +10,11 @@ import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
 import file.engine.event.handler.impl.BootSystemEvent;
 import file.engine.event.handler.impl.database.*;
-import file.engine.event.handler.impl.frame.searchBar.IsSearchBarVisibleEvent;
 import file.engine.event.handler.impl.frame.searchBar.SearchBarReadyEvent;
 import file.engine.event.handler.impl.monitor.disk.StartMonitorDiskEvent;
 import file.engine.event.handler.impl.stop.RestartEvent;
 import file.engine.event.handler.impl.taskbar.ShowTaskBarMessageEvent;
+import file.engine.frames.SearchBar;
 import file.engine.utils.*;
 import file.engine.utils.bit.Bit;
 import file.engine.utils.gson.GsonUtil;
@@ -349,24 +349,17 @@ public class DatabaseService {
 
     private void saveTableCacheThread() {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
+            EventManagement eventManagement = EventManagement.getInstance();
+            long startCheckTimeMills = 0;
+            SearchBar searchBar = SearchBar.getInstance();
+            Supplier<Boolean> isStopCreateCache = () ->
+                    !isSearchStopped.get() || !eventManagement.notMainExit() ||
+                            searchBar.isVisible() || status == Constants.Enums.DatabaseStatus.MANUAL_UPDATE;
             try {
-                EventManagement eventManagement = EventManagement.getInstance();
-                long startCheckTimeMills = 0;
-                IsSearchBarVisibleEvent isSearchBarVisibleEvent = new IsSearchBarVisibleEvent();
-                eventManagement.putEvent(isSearchBarVisibleEvent);
-                eventManagement.waitForEvent(isSearchBarVisibleEvent);
-                Optional<Supplier<Boolean>> isSearchBarVisibleOptional = isSearchBarVisibleEvent.getReturnValue();
-                var tmp = new Object() {
-                    Supplier<Boolean> isSearchBarVisible;
-                };
-                isSearchBarVisibleOptional.ifPresentOrElse((ret) -> tmp.isSearchBarVisible = ret, () -> tmp.isSearchBarVisible = () -> false);
-                Supplier<Boolean> isStopCreateCache = () ->
-                        !isSearchStopped.get() || !eventManagement.notMainExit() ||
-                                tmp.isSearchBarVisible.get() || status == Constants.Enums.DatabaseStatus.MANUAL_UPDATE;
                 while (eventManagement.notMainExit()) {
                     if (isSearchStopped.get() &&
                             System.currentTimeMillis() - startCheckTimeMills > 10 * 60 * 1000 &&
-                            !tmp.isSearchBarVisible.get() &&
+                            !searchBar.isVisible() &&
                             !GetHandle.INSTANCE.isForegroundFullscreen()) {
                         final double memoryUsage = SystemInfoUtil.getMemoryUsage();
                         if (memoryUsage < 0.7) {
@@ -1325,18 +1318,10 @@ public class DatabaseService {
     private void closeSharedMemoryOnIdle() {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             try {
-                EventManagement eventManagement = EventManagement.getInstance();
-                IsSearchBarVisibleEvent event = new IsSearchBarVisibleEvent();
-                eventManagement.putEvent(event);
-                eventManagement.waitForEvent(event);
-                var tmp = new Object() {
-                    Supplier<Boolean> isVisible;
-                };
-                Optional<Supplier<Boolean>> isVisibleOptional = event.getReturnValue();
-                isVisibleOptional.ifPresentOrElse(ret -> tmp.isVisible = ret, () -> tmp.isVisible = () -> false);
+                SearchBar searchBar = SearchBar.getInstance();
                 while (isSharedMemoryCreated.get()) {
                     if (isSearchStopped.get()) {
-                        if (!tmp.isVisible.get()) {
+                        if (!searchBar.isVisible()) {
                             isSharedMemoryCreated.set(false);
                             ResultPipe.INSTANCE.closeAllSharedMemory();
                         }

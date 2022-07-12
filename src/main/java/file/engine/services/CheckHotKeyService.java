@@ -8,12 +8,12 @@ import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
 import file.engine.event.handler.impl.frame.searchBar.GetShowingModeEvent;
 import file.engine.event.handler.impl.frame.searchBar.HideSearchBarEvent;
-import file.engine.event.handler.impl.frame.searchBar.IsSearchBarVisibleEvent;
 import file.engine.event.handler.impl.frame.searchBar.ShowSearchBarEvent;
 import file.engine.event.handler.impl.hotkey.CheckHotKeyAvailableEvent;
 import file.engine.event.handler.impl.hotkey.RegisterHotKeyEvent;
 import file.engine.event.handler.impl.hotkey.ResponseCtrlEvent;
 import file.engine.event.handler.impl.stop.RestartEvent;
+import file.engine.frames.SearchBar;
 import file.engine.utils.CachedThreadPoolUtil;
 import file.engine.utils.RegexUtil;
 
@@ -21,8 +21,6 @@ import java.awt.event.KeyEvent;
 import java.util.HashMap;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Supplier;
 
 public class CheckHotKeyService {
 
@@ -129,16 +127,11 @@ public class CheckHotKeyService {
             try {
                 ref.endVisibleTime = System.currentTimeMillis();
                 //获取快捷键状态，检测是否被按下线程
-                IsSearchBarVisibleEvent isSearchBarVisibleEvent = new IsSearchBarVisibleEvent();
-                eventManagement.putEvent(isSearchBarVisibleEvent);
-                eventManagement.waitForEvent(isSearchBarVisibleEvent);
-                Optional<Supplier<Boolean>> isVisibleOptional = isSearchBarVisibleEvent.getReturnValue();
-                AtomicReference<Supplier<Boolean>> isVisible = new AtomicReference<>();
-                isVisibleOptional.ifPresentOrElse(isVisible::set, () -> isVisible.set(() -> false));
+                SearchBar searchBar = SearchBar.getInstance();
                 while (eventManagement.notMainExit()) {
                     if (!isExecuted && instance.getKeyStatus()) {
                         //是否搜索框可见
-                        if (isVisible.get().get()) {
+                        if (searchBar.isVisible()) {
                             //搜索框最小可见时间为200ms，必须显示超过200ms后才响应关闭事件，防止闪屏
                             if (System.currentTimeMillis() - ref.startVisibleTime > 200) {
                                 //获取当前显示模式
