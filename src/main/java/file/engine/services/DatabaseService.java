@@ -352,15 +352,17 @@ public class DatabaseService {
             EventManagement eventManagement = EventManagement.getInstance();
             long startCheckTimeMills = 0;
             SearchBar searchBar = SearchBar.getInstance();
-            Supplier<Boolean> isStopCreateCache = () ->
-                    !isSearchStopped.get() || !eventManagement.notMainExit() ||
-                            searchBar.isVisible() || status == Constants.Enums.DatabaseStatus.MANUAL_UPDATE;
+            final Supplier<Boolean> isStopCreateCache =
+                    () -> !isSearchStopped.get() ||
+                            !eventManagement.notMainExit() ||
+                            searchBar.isVisible() ||
+                            status == Constants.Enums.DatabaseStatus.MANUAL_UPDATE;
+            final int checkTimeInterval = 10 * 60 * 1000;
             try {
                 while (eventManagement.notMainExit()) {
                     if (isSearchStopped.get() &&
-                            System.currentTimeMillis() - startCheckTimeMills > 10 * 60 * 1000 &&
-                            !searchBar.isVisible() &&
-                            !GetHandle.INSTANCE.isForegroundFullscreen()) {
+                            System.currentTimeMillis() - startCheckTimeMills > checkTimeInterval &&
+                            !searchBar.isVisible()) {
                         final double memoryUsage = SystemInfoUtil.getMemoryUsage();
                         if (memoryUsage < 0.7) {
                             // 系统内存使用少于70%
