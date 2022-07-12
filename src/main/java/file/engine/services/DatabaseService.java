@@ -355,10 +355,9 @@ public class DatabaseService {
             var startCheckTime = new Object() {
                 long startCheckTimeMills = 0;
             };
-            SearchBar searchBar = SearchBar.getInstance();
             final int checkTimeInterval = 10 * 60 * 1000;
             final Supplier<Boolean> isStopCreateCache =
-                    () -> !isSearchStopped.get() || !eventManagement.notMainExit() || searchBar.isVisible() || status == Constants.Enums.DatabaseStatus.MANUAL_UPDATE;
+                    () -> !isSearchStopped.get() || !eventManagement.notMainExit() || status == Constants.Enums.DatabaseStatus.MANUAL_UPDATE;
             final Supplier<Boolean> isStartSaveCache =
                     () -> isSearchStopped.get() && System.currentTimeMillis() - startCheckTime.startCheckTimeMills > checkTimeInterval && !GetHandle.INSTANCE.isForegroundFullscreen();
             try {
