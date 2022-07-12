@@ -17,6 +17,7 @@ import file.engine.event.handler.impl.taskbar.ShowTaskBarMessageEvent;
 import file.engine.frames.SearchBar;
 import file.engine.utils.*;
 import file.engine.utils.bit.Bit;
+import file.engine.utils.connection.SQLiteUtil;
 import file.engine.utils.gson.GsonUtil;
 import file.engine.utils.system.properties.IsDebug;
 import lombok.*;
