@@ -47,7 +47,7 @@ public class DatabaseService {
     private final ConcurrentLinkedQueue<SQLWithTaskId> commandQueue = new ConcurrentLinkedQueue<>();
     private volatile Constants.Enums.DatabaseStatus status = Constants.Enums.DatabaseStatus.NORMAL;
     private final AtomicBoolean isExecuteImmediately = new AtomicBoolean(false);
-    private final AtomicInteger cacheNum = new AtomicInteger(0);
+    private final AtomicInteger databaseCacheNum = new AtomicInteger(0);
     private final Set<TableNameWeightInfo> tableSet;    //保存从0-40数据库的表，使用频率和名字对应，使经常使用的表最快被搜索到
     private final AtomicBoolean isDatabaseUpdated = new AtomicBoolean(false);
     private final AtomicBoolean isReadFromSharedMemory = new AtomicBoolean(false);
@@ -66,7 +66,7 @@ public class DatabaseService {
     private volatile String[] keywordsLowerCase;
     private volatile boolean[] isKeywordPath;
     private final AtomicBoolean isSharedMemoryCreated = new AtomicBoolean(false);
-    private final ConcurrentSkipListSet<String> cacheSet = new ConcurrentSkipListSet<>();
+    private final ConcurrentSkipListSet<String> databaseCacheSet = new ConcurrentSkipListSet<>();
     private final AtomicInteger searchThreadCount = new AtomicInteger(0);
     private final AtomicLong startSearchTimeMills = new AtomicLong(0);
     private static final int MAX_TEMP_QUERY_RESULT_CACHE = 4096;
@@ -111,6 +111,7 @@ public class DatabaseService {
             each.isCached.set(false);
             each.data = null;
         });
+        cacheCount.set(0);
     }
 
     /**
@@ -150,10 +151,10 @@ public class DatabaseService {
     /**
      * 获取数据库缓存条目数量，用于判断软件是否还能继续写入缓存
      */
-    private void initCacheNum() {
+    private void initDatabaseCacheNum() {
         try (Statement stmt = SQLiteUtil.getStatement("cache");
              ResultSet resultSet = stmt.executeQuery("SELECT COUNT(PATH) FROM cache;")) {
-            cacheNum.set(resultSet.getInt(1));
+            databaseCacheNum.set(resultSet.getInt(1));
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -466,13 +467,13 @@ public class DatabaseService {
     /**
      * 将缓存中的文件保存到cacheSet中
      */
-    private void prepareCache() {
+    private void prepareDatabaseCache() {
         String eachLine;
         try (Statement statement = SQLiteUtil.getStatement("cache");
              ResultSet resultSet = statement.executeQuery("SELECT PATH FROM cache;")) {
             while (resultSet.next()) {
                 eachLine = resultSet.getString("PATH");
-                cacheSet.add(eachLine);
+                databaseCacheSet.add(eachLine);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -483,7 +484,7 @@ public class DatabaseService {
      * 从缓存中搜索结果并将匹配的放入listResults
      */
     private void searchCache() {
-        for (String each : cacheSet) {
+        for (String each : databaseCacheSet) {
             checkIsMatchedAndAddToList(each, null);
         }
     }
@@ -1489,8 +1490,8 @@ public class DatabaseService {
      *
      * @return cache num
      */
-    public int getCacheNum() {
-        return cacheNum.get();
+    public int getDatabaseCacheNum() {
+        return databaseCacheNum.get();
     }
 
     private boolean isTaskExistInCommandSet(SqlTaskIds taskId) {
@@ -1649,14 +1650,14 @@ public class DatabaseService {
     @EventListener(listenClass = BootSystemEvent.class)
     private static void init(Event event) {
         DatabaseService databaseService = getInstance();
-        databaseService.initCacheNum();
+        databaseService.initDatabaseCacheNum();
         databaseService.initPriority();
         databaseService.addRecordsToDatabaseThread();
         databaseService.deleteRecordsFromDatabaseThread();
         databaseService.checkTimeAndSendExecuteSqlSignalThread();
         databaseService.executeSqlCommandsThread();
         databaseService.initTableMap();
-        databaseService.prepareCache();
+        databaseService.prepareDatabaseCache();
         for (String diskPath : RegexUtil.comma.split(AllConfigs.getInstance().getAvailableDisks())) {
             for (int i = 0; i <= Constants.ALL_TABLE_NUM; i++) {
                 for (Pair pair : databaseService.priorityMap) {
@@ -1671,24 +1672,24 @@ public class DatabaseService {
     private static void addToCacheEvent(Event event) {
         DatabaseService databaseService = getInstance();
         String path = ((AddToCacheEvent) event).path;
-        databaseService.cacheSet.add(path);
+        databaseService.databaseCacheSet.add(path);
         if (databaseService.isReadFromSharedMemory.get()) {
             return;
         }
         databaseService.addFileToCache(path);
-        databaseService.cacheNum.incrementAndGet();
+        databaseService.databaseCacheNum.incrementAndGet();
     }
 
     @EventRegister(registerClass = DeleteFromCacheEvent.class)
     private static void deleteFromCacheEvent(Event event) {
         DatabaseService databaseService = getInstance();
         String path = ((DeleteFromCacheEvent) event).path;
-        databaseService.cacheSet.remove(path);
+        databaseService.databaseCacheSet.remove(path);
         if (databaseService.isReadFromSharedMemory.get()) {
             return;
         }
         databaseService.removeFileFromCache(path);
-        databaseService.cacheNum.decrementAndGet();
+        databaseService.databaseCacheNum.decrementAndGet();
     }
 
     @EventRegister(registerClass = UpdateDatabaseEvent.class)

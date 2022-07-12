@@ -2438,7 +2438,7 @@ public class SettingsFrame {
         ImageIcon imageIcon = new ImageIcon(Objects.requireNonNull(SettingsFrame.class.getResource("/icons/frame.png")));
         labelIcon.setIcon(imageIcon);
         labelVersion.setText(TRANSLATE_SERVICE.getTranslation("Current Version:") + Constants.version);
-        labelCurrentCacheNum.setText(TRANSLATE_SERVICE.getTranslation("Current Caches Num:") + DatabaseService.getInstance().getCacheNum());
+        labelCurrentCacheNum.setText(TRANSLATE_SERVICE.getTranslation("Current Caches Num:") + DatabaseService.getInstance().getDatabaseCacheNum());
     }
 
     /**
@@ -2952,7 +2952,7 @@ public class SettingsFrame {
         labelCacheTip2.setText(TRANSLATE_SERVICE.getTranslation("The cache is automatically generated " + "by the software and will be displayed first when searching."));
         labelSearchBarFontColor.setText(TRANSLATE_SERVICE.getTranslation("SearchBar Font Color:"));
         labelBorderColor.setText(TRANSLATE_SERVICE.getTranslation("Border Color:"));
-        labelCurrentCacheNum.setText(TRANSLATE_SERVICE.getTranslation("Current Caches Num:") + DatabaseService.getInstance().getCacheNum());
+        labelCurrentCacheNum.setText(TRANSLATE_SERVICE.getTranslation("Current Caches Num:") + DatabaseService.getInstance().getDatabaseCacheNum());
         labelUninstallPluginTip.setText(TRANSLATE_SERVICE.getTranslation("If you need to delete a plug-in, just delete it under the \"plugins\" folder in the software directory."));
         labelUninstallPluginTip2.setText(TRANSLATE_SERVICE.getTranslation("Tip:"));
         chooseUpdateAddressLabel.setText(TRANSLATE_SERVICE.getTranslation("Choose update address"));

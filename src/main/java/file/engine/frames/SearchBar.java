@@ -51,7 +51,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -4194,7 +4193,7 @@ public class SearchBar {
     private void saveCache(String content) {
         AllConfigs allConfigs = AllConfigs.getInstance();
         EventManagement eventManagement = EventManagement.getInstance();
-        if (DatabaseService.getInstance().getCacheNum() < allConfigs.getCacheNumLimit()) {
+        if (DatabaseService.getInstance().getDatabaseCacheNum() < allConfigs.getCacheNumLimit()) {
             //检查缓存是否已存在
             eventManagement.putEvent(new IsCacheExistEvent(content), event -> {
                 Optional<Boolean> ret = event.getReturnValue();
