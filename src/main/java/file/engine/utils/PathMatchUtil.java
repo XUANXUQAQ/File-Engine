@@ -5,6 +5,8 @@ import file.engine.utils.file.FileUtil;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import static file.engine.configs.Constants.Enums.SearchCase.*;
+
 @SuppressWarnings({"IndexOfReplaceableByContains"})
 public class PathMatchUtil {
 
@@ -76,17 +78,17 @@ public class PathMatchUtil {
         Path pathVar = Path.of(path);
         for (String eachCase : searchCase) {
             switch (eachCase) {
-                case "f":
+                case F:
                     if (!Files.isRegularFile(pathVar)) {
                         return false;
                     }
                     break;
-                case "d":
+                case D:
                     if (!Files.isDirectory(pathVar)) {
                         return false;
                     }
                     break;
-                case "full":
+                case FULL:
                     if (!searchText.equalsIgnoreCase(FileUtil.getFileName(path))) {
                         return false;
                     }

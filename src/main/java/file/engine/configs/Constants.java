@@ -64,5 +64,12 @@ public class Constants {
         public enum BorderType {
             EMPTY, AROUND, FULL
         }
+
+        public static class SearchCase {
+            public static final String D = "d";
+            public static final String F = "f";
+            public static final String FULL = "full";
+            public static final String CASE = "case";
+        }
     }
 }

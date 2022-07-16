@@ -3532,21 +3532,44 @@ public class SearchBar {
         }
     }
 
+    /**
+     * 根据用户输入设置搜索关键字
+     */
     private void setSearchKeywordsAndSearchCase() {
         String searchBarText = getSearchBarText();
         if (!searchBarText.isEmpty()) {
-            final int i = searchBarText.lastIndexOf("::");
+            final int i = searchBarText.lastIndexOf(':');
             if (i == -1) {
                 searchText = searchBarText;
                 searchCase = null;
             } else {
-                searchText = searchBarText.substring(0, i);
-                searchCase = semicolon.split(searchBarText.substring(i + 2));
+                if (searchBarText.length() - 1 > i) {
+                    final char c = searchBarText.charAt(i + 1);
+                    // 如 test;/C:/  test;/C:\  test;/D:  test;/D:;  则判断为搜索磁盘内的文件
+                    if (c == '/' || c == File.separatorChar || c == ' ' || c == ';') {
+                        searchText = searchBarText;
+                        searchCase = null;
+                    } else {
+                        searchText = searchBarText.substring(0, i);
+                        String[] tmpSearchCase = semicolon.split(searchBarText.substring(i + 1));
+                        searchCase = new String[tmpSearchCase.length];
+                        for (int j = 0; j < tmpSearchCase.length; j++) {
+                            searchCase[j] = tmpSearchCase[j].trim();
+                        }
+                    }
+                } else {
+                    searchText = searchBarText;
+                    searchCase = null;
+                }
             }
             keywords = semicolon.split(searchText);
         }
     }
 
+    /**
+     * 发送开始搜索事件
+     * @param isMergeThreadNotExist 合并搜索结果线程是否存在
+     */
     private void sendSearchEvent(AtomicBoolean isMergeThreadNotExist) {
         EventManagement eventManagement = EventManagement.getInstance();
         if (!getSearchBarText().isEmpty()) {
@@ -3573,7 +3596,7 @@ public class SearchBar {
             final AtomicBoolean isWaiting = new AtomicBoolean(false);
             while (eventManagement.notMainExit()) {
                 try {
-                    long endTime = System.currentTimeMillis();
+                    final long endTime = System.currentTimeMillis();
                     if ((endTime - startTime > 250) && isSqlNotInitialized.get() && startSignal.get()) {
                         setSearchKeywordsAndSearchCase();
                         sendSearchEvent(isMergeThreadNotExist);

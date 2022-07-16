@@ -1607,7 +1607,8 @@ public class DatabaseService {
         DatabaseService databaseService = getInstance();
         databaseService.searchText = startSearchEvent.searchText.get();
         databaseService.searchCase = startSearchEvent.searchCase.get();
-        databaseService.isIgnoreCase = databaseService.searchCase == null || Arrays.stream(databaseService.searchCase).noneMatch(s -> s.equals("case"));
+        databaseService.isIgnoreCase = databaseService.searchCase == null ||
+                Arrays.stream(databaseService.searchCase).noneMatch(s -> s.equals(Constants.Enums.SearchCase.CASE));
         String[] _keywords = startSearchEvent.keywords.get();
         databaseService.keywords = new String[_keywords.length];
         databaseService.keywordsLowerCase = new String[_keywords.length];
@@ -1615,6 +1616,7 @@ public class DatabaseService {
         // 对keywords进行处理
         for (int i = 0; i < _keywords.length; ++i) {
             String eachKeyword = _keywords[i];
+            // 当keywords为空，初始化为默认值
             if (eachKeyword == null || eachKeyword.isEmpty()) {
                 databaseService.isKeywordPath[i] = false;
                 databaseService.keywords[i] = "";
@@ -1624,7 +1626,7 @@ public class DatabaseService {
             final char _firstChar = eachKeyword.charAt(0);
             final boolean isPath = _firstChar == '/' || _firstChar == File.separatorChar;
             if (isPath) {
-                // 当关键字为"test;/C:/test"时，分割出来为["test", "/C:/test"]
+                // 当关键字为"test;/C:/test"时，分割出来为["test", "/C:/test"]，所以需要去掉 /C:/test 前面的 "/"
                 if (eachKeyword.contains(":")) {
                     eachKeyword = eachKeyword.substring(1);
                 }
