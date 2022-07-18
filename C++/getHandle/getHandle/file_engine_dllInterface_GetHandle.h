@@ -119,6 +119,14 @@ JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_GetHandle_isKeyPressed
 JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_GetHandle_isForegroundFullscreen
   (JNIEnv *, jobject);
 
+/*
+ * Class:     file_engine_dllInterface_GetHandle
+ * Method:    setEditPath
+ * Signature: (Ljava/lang/String;)V
+ */
+JNIEXPORT void JNICALL Java_file_engine_dllInterface_GetHandle_setEditPath
+  (JNIEnv *, jobject, jstring);
+
 #ifdef __cplusplus
 }
 #endif

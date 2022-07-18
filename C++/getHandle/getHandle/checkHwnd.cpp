@@ -9,6 +9,9 @@
 std::wstring get_process_name_by_handle(HWND nlHandle);
 BOOL CALLBACK is_hwnd_has_toolbar(HWND hwndChild, LPARAM lParam);
 
+/**
+ * 检查窗口是不是搜索框
+ */
 bool is_search_bar_window(const HWND& hd)
 {
 	char title[200];
@@ -16,11 +19,17 @@ bool is_search_bar_window(const HWND& hd)
 	return strcmp(title, "File-Engine-SearchBar") == 0;
 }
 
+/**
+ * 获取搜索框窗口句柄
+ */
 HWND get_search_bar_hwnd()
 {
 	return FindWindowExA(nullptr, nullptr, nullptr, "File-Engine-SearchBar");
 }
 
+/**
+ * 通过类名判断是不是explorer.exe窗口
+ */
 bool is_explorer_window_by_class_name(const HWND& hwnd)
 {
 	if (IsWindowEnabled(hwnd) && !IsIconic(hwnd))
@@ -51,6 +60,9 @@ bool is_explorer_window_by_class_name(const HWND& hwnd)
 	return false;
 }
 
+/**
+ * 通过进程名判断是不是explorer窗口
+ */
 bool is_explorer_window_by_process(const HWND& hwnd)
 {
 	std::wstring proc_name = get_process_name_by_handle(hwnd);
@@ -58,6 +70,9 @@ bool is_explorer_window_by_process(const HWND& hwnd)
 	return proc_name.find(_T("explorer")) != std::wstring::npos;
 }
 
+/**
+ * 通过窗口句柄获取进程信息
+ */
 std::wstring get_process_name_by_handle(HWND nlHandle)
 {
 	std::wstring loStrRet;
@@ -92,6 +107,9 @@ std::wstring get_process_name_by_handle(HWND nlHandle)
 }
 
 
+/**
+ * 判断窗口句柄是否为文件选择窗口
+ */
 bool is_file_chooser_window(const HWND& hwnd)
 {
 	char _windowClassName[100];
@@ -112,6 +130,9 @@ bool is_file_chooser_window(const HWND& hwnd)
 	return false;
 }
 
+/**
+ * 判断窗口句柄是否为explorer上方的toolbar
+ */
 BOOL CALLBACK is_hwnd_has_toolbar(HWND hwndChild, LPARAM lParam)
 {
 	char windowClassName[100] = {'\0'};

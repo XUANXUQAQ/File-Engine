@@ -710,38 +710,16 @@ public class SearchBar {
     private void quickJump(String result) {
         int x, y;
         RobotUtil robotUtil = RobotUtil.INSTANCE;
-        Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-        Transferable originalData = clipboard.getContents(null);
         if (FileUtil.isFile(result)) {
             result = FileUtil.getParentPath(result);
         }
         saveCache(result);
-        copyToClipBoard(result, false);
-        double dpi = DpiUtil.getDpi();
+        final double dpi = DpiUtil.getDpi();
         x = (int) (GetHandle.INSTANCE.getToolBarX() / dpi);
         y = (int) (GetHandle.INSTANCE.getToolBarY() / dpi);
         robotUtil.mouseClicked(x, y, 1, InputEvent.BUTTON1_DOWN_MASK);
-        robotUtil.keyTyped(KeyEvent.VK_CONTROL, KeyEvent.VK_V);
+        GetHandle.INSTANCE.setEditPath(result);
         robotUtil.keyTyped(KeyEvent.VK_ENTER);
-        {//恢复之前的剪贴板数据
-            String finalResult = result;
-            CachedThreadPoolUtil.getInstance().executeTask(() -> {
-                try {
-                    int count = 0;
-                    while (!finalResult.equals(GetHandle.INSTANCE.getExplorerPath())) {
-                        //保证在执行粘贴操作时不会被提前恢复数据
-                        TimeUnit.MILLISECONDS.sleep(500);
-                        count++;
-                        if (count >= 6) {
-                            break;
-                        }
-                    }
-                    copyToClipBoard(originalData, false);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            });
-        }
     }
 
     /**
@@ -749,7 +727,7 @@ public class SearchBar {
      *
      * @param res 需要复制的信息
      */
-    private void copyToClipBoard(String res, boolean isNotifyUser) {
+    private void copyToClipBoard(String res, @SuppressWarnings("SameParameterValue") boolean isNotifyUser) {
         Transferable trans = new StringSelection(res);
         copyToClipBoard(trans, isNotifyUser);
     }
@@ -3568,6 +3546,7 @@ public class SearchBar {
 
     /**
      * 发送开始搜索事件
+     *
      * @param isMergeThreadNotExist 合并搜索结果线程是否存在
      */
     private void sendSearchEvent(AtomicBoolean isMergeThreadNotExist) {

@@ -145,6 +145,9 @@ std::string to_utf8(const std::wstring& str)
     return to_utf8(str.c_str(), static_cast<int>(str.size()));
 }
 
+/**
+ * 获取explorer窗口当前显示的路径
+ */
 std::string getPathByHWND(const HWND& hwnd)
 {
     if (!IsWindow(hwnd))

@@ -57,6 +57,7 @@ __declspec(dllexport) int getToolBarX();
 __declspec(dllexport) int getToolBarY();
 __declspec(dllexport) BOOL isKeyPressed(int vk_key);
 __declspec(dllexport) BOOL isForegroundFullscreen();
+__declspec(dllexport) void setEditPath(const char* path);
 }
 
 /*
@@ -214,6 +215,17 @@ JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_GetHandle_isForegroundF
 	return static_cast<jboolean>(isForegroundFullscreen());
 }
 
+/*
+ * Class:     file_engine_dllInterface_GetHandle
+ * Method:    setEditPath
+ * Signature: (Ljava/lang/String;)V
+ */
+JNIEXPORT void JNICALL Java_file_engine_dllInterface_GetHandle_setEditPath
+(JNIEnv* env, jobject, jstring path)
+{
+	const char* _tmp_path = env->GetStringUTFChars(path, FALSE);
+	setEditPath(_tmp_path);
+}
 
 #ifdef TEST
 void outputHwndInfo(HWND hwnd)
@@ -298,11 +310,17 @@ const char* getExplorerPath()
 	return dragExplorerPath;
 }
 
+/**
+ * 检查键盘是否按下
+ */
 BOOL isKeyPressed(const int vk_key)
 {
 	return GetAsyncKeyState(vk_key) & 0x8000 ? TRUE : FALSE;
 }
 
+/**
+ * 检测鼠标的点击
+ */
 inline bool isMouseClicked()
 {
 	return isKeyPressed(VK_RBUTTON) ||
@@ -310,6 +328,9 @@ inline bool isMouseClicked()
 		isKeyPressed(VK_LBUTTON);
 }
 
+/**
+ * 判断窗口句柄是否已经失效，即被关闭
+ */
 bool isDialogNotExist()
 {
 	RECT windowRect;
@@ -338,11 +359,38 @@ bool isDialogNotExist()
 	return true;
 }
 
+/**
+ * 定位explorer窗口输入文件夹路径的控件坐标
+ */
 inline void setClickPos(const HWND& fileChooserHwnd)
 {
 	EnumChildWindows(fileChooserHwnd, findToolbar, NULL);
 }
 
+void setEditPath(const char* path)
+{
+	using namespace std::chrono;
+	POINT p;
+	p.x = toolbar_click_x;
+	p.y = toolbar_click_y;
+	char class_name[50] = {"\0"};
+	const auto start_time = system_clock::now();
+	const auto end_time = start_time + seconds(1);
+	HWND hwnd_from_toolbar;
+	do
+	{
+		hwnd_from_toolbar = WindowFromPoint(p);
+		GetClassNameA(hwnd_from_toolbar, class_name, 50);
+		Sleep(1);
+	}
+	while (strcmp(class_name, "Edit") != 0 && system_clock::now() < end_time);
+	SendMessageA(hwnd_from_toolbar, EM_SETSEL, static_cast<WPARAM>(0), -1);
+	SendMessageA(hwnd_from_toolbar, EM_REPLACESEL, static_cast<WPARAM>(TRUE), reinterpret_cast<LPARAM>(path));
+}
+
+/**
+ * 定位explorer窗口输入文件夹路径的控件坐标
+ */
 BOOL CALLBACK findToolbar(HWND hwndChild, LPARAM lParam)
 {
 	auto* hwd2 = FindWindowExA(hwndChild, nullptr, "Address Band Root", nullptr);
@@ -361,6 +409,9 @@ BOOL CALLBACK findToolbar(HWND hwndChild, LPARAM lParam)
 	return true;
 }
 
+/**
+ * 开始检测窗口句柄
+ */
 void start()
 {
 	if (!isRunning)
@@ -373,31 +424,49 @@ void start()
 	}
 }
 
+/**
+ * 停止检测
+ */
 void stop()
 {
 	isRunning = false;
 }
 
+/**
+ * 判断File-Engine窗口是否切换到贴靠模式
+ */
 BOOL changeToAttach()
 {
 	return isExplorerWindowAtTop;
 }
 
+/**
+ * 获取explorer窗口左上角的X坐标
+ */
 long getExplorerX()
 {
 	return explorerX;
 }
 
+/**
+ * 获取explorer窗口左上角的Y坐标
+ */
 long getExplorerY()
 {
 	return explorerY;
 }
 
+/**
+ * 获得explorer窗口的宽度
+ */
 long getExplorerWidth()
 {
 	return explorerWidth;
 }
 
+/**
+ * 获得explorer窗口的高度
+ */
 long getExplorerHeight()
 {
 	return explorerHeight;
