@@ -18,6 +18,9 @@
     <ClCompile Include="fileSearcherUSN.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="search.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="search.h">
@@ -27,6 +30,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="sqlite3.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="fileSearcherUSN.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

@@ -7,7 +7,7 @@
 #include <string>
 #include <fstream>
 #include <thread>
-#include <concurrent_unordered_set.h>
+#include <concurrent_queue.h>
 #include <io.h>
 #include "file_engine_dllInterface_FileMonitor.h"
 //#define TEST
@@ -15,11 +15,13 @@
 using namespace std;
 using namespace concurrency;
 
-typedef concurrent_unordered_set<string> file_set;
+typedef concurrent_queue<string> file_set;
 
-extern "C" __declspec(dllexport) void monitor(const char* path);
-extern "C" __declspec(dllexport) void stop_monitor();
-extern "C" __declspec(dllexport) void set_output(const char* path);
+extern "C" {
+__declspec(dllexport) void monitor(const char* path);
+__declspec(dllexport) void stop_monitor();
+__declspec(dllexport) void set_output(const char* path);
+}
 
 void monitor_path(const char* path);
 inline std::string to_utf8(const std::wstring& str);
@@ -30,12 +32,10 @@ inline void add_record(const std::string& record);
 inline void delete_record(const std::string& record);
 void write_add_records_to_file();
 void write_del_records_to_file();
-void searchDir(std::string path, std::string output);
+void searchDir(const std::string&, const std::string&);
 inline bool isDir(const char* path);
 
 
-wchar_t fileName[1000];
-wchar_t fileRename[1000];
 static volatile bool is_running = true;
 char* output = new char[1000];
 file_set add_set;
@@ -61,6 +61,9 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_FileMonitor_set_1output
 	set_output(env->GetStringUTFChars(path, nullptr));
 }
 
+/**
+ * 检查路径是否是文件夹
+ */
 inline bool isDir(const char* path)
 {
 	struct stat s{};
@@ -74,22 +77,22 @@ inline bool isDir(const char* path)
 	return false;
 }
 
-void searchDir(const string path, const string output_path)
+/**
+ * 搜索文件夹，并将搜索结果输出到output_path
+ */
+void searchDir(const string& path, const string& output_path)
 {
-	//cout << "getFiles()" << path<< endl;
 	//文件句柄
 	intptr_t hFile;
 	//文件信息
-	struct _finddata_t fileinfo{};
+	_finddata_t fileinfo{};
 	string pathName;
-	string exdName = "\\*";
+	const string exdName = "\\*";
 
 	if ((hFile = _findfirst(pathName.assign(path).append(exdName).c_str(), &fileinfo)) != -1)
 	{
 		do
 		{
-			//cout << fileinfo.name << endl;
-
 			//如果是文件夹中仍有文件夹,加入列表后迭代
 			//如果不是,加入列表
 			if ((fileinfo.attrib & _A_SUBDIR))
@@ -117,16 +120,25 @@ void searchDir(const string path, const string output_path)
 	}
 }
 
+/**
+ * 添加文件到add_set
+ */
 inline void add_record(const string& record)
 {
-	add_set.insert(record);
+	add_set.push(record);
 }
 
+/**
+ * 添加文件到delete_set
+ */
 inline void delete_record(const string& record)
 {
-	del_set.insert(record);
+	del_set.push(record);
 }
 
+/**
+ * 将record写入文件
+ */
 inline void write_to_file(const string& record, const char* file_path)
 {
 	ofstream file(file_path, ios::app | ios::binary);
@@ -134,15 +146,16 @@ inline void write_to_file(const string& record, const char* file_path)
 	file.close();
 }
 
+/**
+ * 将add_set的内容输出到文件fileAdded
+ */
 void write_add_records_to_file()
 {
+	string record;
 	while (is_running)
 	{
-		string record;
-		file_set::iterator iter;
-		for (iter = add_set.begin(); iter != add_set.end(); ++iter)
+		while (add_set.try_pop(record))
 		{
-			record = *iter;
 			if (!is_running)
 				break;
 			if (!record.empty())
@@ -154,20 +167,20 @@ void write_add_records_to_file()
 				}
 			}
 		}
-		add_set.clear();
 		Sleep(500);
 	}
 }
 
+/**
+ * 将del_set的内容输出到文件fileRemoved
+ */
 void write_del_records_to_file()
 {
+	string record;
 	while (is_running)
 	{
-		string record;
-		file_set::iterator iter;
-		for (iter = del_set.begin(); iter != del_set.end(); ++iter)
+		while (del_set.try_pop(record))
 		{
-			record = *iter;
 			if (!is_running)
 				break;
 			if (!record.empty())
@@ -175,11 +188,13 @@ void write_del_records_to_file()
 				write_to_file(record, fileRemoved);
 			}
 		}
-		del_set.clear();
 		Sleep(500);
 	}
 }
 
+/**
+ * 转换字符串到utf-8
+ */
 inline std::string to_utf8(const wchar_t* buffer, int len)
 {
 	const auto nChars = ::WideCharToMultiByte(
@@ -197,7 +212,7 @@ inline std::string to_utf8(const wchar_t* buffer, int len)
 	}
 	string newbuffer;
 	newbuffer.resize(nChars);
-	::WideCharToMultiByte(
+	WideCharToMultiByte(
 		CP_UTF8,
 		0,
 		buffer,
@@ -228,7 +243,9 @@ inline std::wstring StringToWString(const std::string& str)
 	return result;
 }
 
-
+/**
+ * 设置输出文件路径
+ */
 __declspec(dllexport) void set_output(const char* path)
 {
 	memset(output, 0, 1000);
@@ -262,6 +279,9 @@ __declspec(dllexport) void stop_monitor()
 	delete[] output;
 }
 
+/**
+ * 开始监控文件夹
+ */
 void monitor_path(const char* path)
 {
 	DWORD cb_bytes;
@@ -269,22 +289,23 @@ void monitor_path(const char* path)
 	char file_rename[1000]; //设置文件重命名后的名字;
 	char _path[1000];
 	char notify[1024];
+	wchar_t w_file_name[1000];
+	wchar_t w_file_rename[1000];
 
 	memset(_path, 0, 1000);
 	strcpy_s(_path, 1000, path);
 
-	WCHAR _dir[1000];
-	memset(_dir, 0, sizeof(_dir));
+	WCHAR _dir[1000] = {};
 	MultiByteToWideChar(CP_ACP, 0, _path, 1000, _dir,
-	                    sizeof(_dir) / sizeof(_dir[0]));
+	                    std::size(_dir));
 
-	HANDLE dirHandle = CreateFile(_dir,
-	                              GENERIC_READ | GENERIC_WRITE | FILE_LIST_DIRECTORY,
-	                              FILE_SHARE_READ | FILE_SHARE_WRITE,
-	                              nullptr,
-	                              OPEN_EXISTING,
-	                              FILE_FLAG_BACKUP_SEMANTICS,
-	                              nullptr);
+	auto* const dirHandle = CreateFile(_dir,
+	                                    GENERIC_READ | GENERIC_WRITE | FILE_LIST_DIRECTORY,
+	                                    FILE_SHARE_READ | FILE_SHARE_WRITE,
+	                                    nullptr,
+	                                    OPEN_EXISTING,
+	                                    FILE_FLAG_BACKUP_SEMANTICS,
+	                                    nullptr);
 
 	if (dirHandle == INVALID_HANDLE_VALUE) //若网络重定向或目标文件系统不支持该操作，函数失败，同时调用GetLastError()返回ERROR_INVALID_FUNCTION
 	{
@@ -304,8 +325,8 @@ void monitor_path(const char* path)
 			if (pnotify->FileName)
 			{
 				memset(file_name, 0, sizeof(file_name));
-				memset(fileName, 0, sizeof(fileName));
-				wcscpy_s(fileName, pnotify->FileName);
+				memset(w_file_name, 0, sizeof(w_file_name));
+				wcscpy_s(w_file_name, pnotify->FileName);
 				WideCharToMultiByte(CP_ACP, 0, pnotify->FileName, pnotify->FileNameLength / 2, file_name, 250, nullptr,
 				                    nullptr);
 			}
@@ -316,8 +337,8 @@ void monitor_path(const char* path)
 				auto p = reinterpret_cast<PFILE_NOTIFY_INFORMATION>(reinterpret_cast<char*>(pnotify) + pnotify->
 					NextEntryOffset);
 				memset(file_rename, 0, 1000);
-				memset(fileRename, 0, 1000);
-				wcscpy_s(fileRename, pnotify->FileName);
+				memset(w_file_rename, 0, 1000);
+				wcscpy_s(w_file_rename, pnotify->FileName);
 				WideCharToMultiByte(CP_ACP, 0, p->FileName, p->FileNameLength / 2, file_rename, 250, nullptr, nullptr);
 			}
 
@@ -345,7 +366,6 @@ void monitor_path(const char* path)
 					add_record(to_utf8(StringToWString(data)));
 				}
 				break;
-
 			case FILE_ACTION_MODIFIED:
 				if (strstr(file_name, "$RECYCLE.BIN") == nullptr && strstr(file_name, "fileAdded.txt") == nullptr &&
 					strstr(file_name, "fileRemoved.txt") == nullptr)
@@ -359,7 +379,6 @@ void monitor_path(const char* path)
 					add_record(to_utf8(StringToWString(data)));
 				}
 				break;
-
 			case FILE_ACTION_REMOVED:
 				if (strstr(file_name, "$RECYCLE.BIN") == nullptr)
 				{
@@ -372,7 +391,6 @@ void monitor_path(const char* path)
 					delete_record(to_utf8(StringToWString(data)));
 				}
 				break;
-
 			case FILE_ACTION_RENAMED_OLD_NAME:
 				if (strstr(file_name, "$RECYCLE.BIN") == nullptr)
 				{
@@ -391,7 +409,6 @@ void monitor_path(const char* path)
 					add_record(to_utf8(StringToWString(data)));
 				}
 				break;
-
 			default:
 				cout << "Unknown command!" << endl;
 			}
@@ -399,20 +416,4 @@ void monitor_path(const char* path)
 	}
 	CloseHandle(dirHandle);
 	cout << "stop monitoring " << _path << endl;
-	return;
 }
-
-#ifdef TEST
-int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
-    _In_opt_ HINSTANCE hPrevInstance,
-    _In_ LPWSTR    lpCmdLine,
-    _In_ int       nCmdShow)
-{
-    set_output("D:\\Code\\File-Engine\\C++\\fileMonitor\\test");
-    monitor("D:\\");
-    while (true)
-    {
-        Sleep(200);
-    }
-}
-#endif

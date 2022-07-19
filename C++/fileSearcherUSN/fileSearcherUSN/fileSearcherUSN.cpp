@@ -1,23 +1,12 @@
-﻿#include <thread>
-
-#include "stdafx.h"
-#include "search.h"
-
-// #define TEST
-
-typedef struct PARAMETER
-{
-	char disk{'\0'};
-	vector<string> ignorePath;
-	sqlite3* db{nullptr};
-} parameter;
+﻿#include "fileSearcherUSN.h"
+//#define TEST
+using namespace std;
 
 static PriorityMap suffixPriorityMap;
 
-void initUSN(parameter p);
-void splitString(const char* str, vector<string>& vec);
-void initTables(sqlite3* db);
-
+/**
+ * 创建数据库表 list0-list40
+ */
 void initTables(sqlite3* db)
 {
 	sqlite3_exec(db, "BEGIN;", nullptr, nullptr, nullptr);
@@ -29,6 +18,9 @@ void initTables(sqlite3* db)
 	sqlite3_exec(db, "COMMIT", nullptr, nullptr, nullptr);
 }
 
+/**
+ * 开始搜索
+ */
 void initUSN(parameter p)
 {
 	initTables(p.db);
@@ -43,6 +35,9 @@ void initUSN(parameter p)
 #endif
 }
 
+/**
+ * 获取后缀优先级表，构造成Map
+ */
 inline bool initPriorityMap(PriorityMap& priority_map, const char* priorityDbPath)
 {
 	char* error;
@@ -73,6 +68,9 @@ inline bool initPriorityMap(PriorityMap& priority_map, const char* priorityDbPat
 	return true;
 }
 
+/**
+ * 通过逗号（,）分割字符串，并存入vector
+ */
 void splitString(const char* str, vector<string>& vec)
 {
 	char* remainDisk = nullptr;
