@@ -202,17 +202,14 @@ public class DatabaseService {
      */
     private void deleteRecordsFromDatabaseThread() {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
-            try (BufferedReader readerRemove =
-                         new BufferedReader(new InputStreamReader(
-                                 new FileInputStream(new File("tmp").getAbsolutePath() + File.separator + "fileRemoved.txt"),
-                                 StandardCharsets.UTF_8))) {
-                String tmp;
-                int fileCount = 0;
-                LinkedHashSet<String> deletePaths = new LinkedHashSet<>();
-                EventManagement eventManagement = EventManagement.getInstance();
+            String tmp;
+            int fileCount = 0;
+            LinkedHashSet<String> deletePaths = new LinkedHashSet<>();
+            EventManagement eventManagement = EventManagement.getInstance();
+            try {
                 while (eventManagement.notMainExit()) {
                     if (status == Constants.Enums.DatabaseStatus.NORMAL) {
-                        while ((tmp = readerRemove.readLine()) != null) {
+                        while ((tmp = FileMonitor.INSTANCE.pop_del_file()) != null) {
                             fileCount++;
                             deletePaths.add(tmp);
                             if (fileCount > 3000) {
@@ -231,7 +228,7 @@ public class DatabaseService {
                     }
                     TimeUnit.MILLISECONDS.sleep(10);
                 }
-            } catch (IOException | InterruptedException e) {
+            } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         });
@@ -247,7 +244,6 @@ public class DatabaseService {
             String disks = AllConfigs.getInstance().getAvailableDisks();
             String[] splitDisks = RegexUtil.comma.split(disks);
             if (isAdmin()) {
-                FileMonitor.INSTANCE.set_output(new File("tmp").getAbsolutePath());
                 for (String root : splitDisks) {
                     FileMonitor.INSTANCE.monitor(root);
                 }
@@ -428,17 +424,14 @@ public class DatabaseService {
     private void addRecordsToDatabaseThread() {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             //检测文件添加线程
-            try (BufferedReader readerAdd =
-                         new BufferedReader(new InputStreamReader(
-                                 new FileInputStream(new File("tmp").getAbsolutePath() + File.separator + "fileAdded.txt"),
-                                 StandardCharsets.UTF_8))) {
-                String tmp;
-                int fileCount = 0;
-                LinkedHashSet<String> addPaths = new LinkedHashSet<>();
-                EventManagement eventManagement = EventManagement.getInstance();
+            String tmp;
+            int fileCount = 0;
+            LinkedHashSet<String> addPaths = new LinkedHashSet<>();
+            EventManagement eventManagement = EventManagement.getInstance();
+            try {
                 while (eventManagement.notMainExit()) {
                     if (status == Constants.Enums.DatabaseStatus.NORMAL) {
-                        while ((tmp = readerAdd.readLine()) != null) {
+                        while ((tmp = FileMonitor.INSTANCE.pop_add_file()) != null) {
                             fileCount++;
                             addPaths.add(tmp);
                             if (fileCount > 3000) {
@@ -457,7 +450,7 @@ public class DatabaseService {
                     }
                     TimeUnit.MILLISECONDS.sleep(10);
                 }
-            } catch (IOException | InterruptedException e) {
+            } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         });

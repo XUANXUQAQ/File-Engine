@@ -40,7 +40,7 @@ import static file.engine.utils.StartupUtil.hasStartup;
 
 public class MainClass {
     private static final int UPDATE_DATABASE_THRESHOLD = 3;
-    private static final String FILE_MONITOR_64_MD_5 = "b4c1edb158a553eb05213c44ca8c9db1";
+    private static final String FILE_MONITOR_64_MD_5 = "b6b09efb3f1471cbac1b01df92ce983a";
     private static final String GET_ASC_II_64_MD_5 = "dea00d07d351fece770cd0bb2ad9af10";
     private static final String HOTKEY_LISTENER_64_MD_5 = "6d71f646529b69cff9d50fcce8d4b6e4";
     private static final String IS_LOCAL_DISK_64_MD_5 = "59793a286030bfafe8b8f0fa84b498ba";

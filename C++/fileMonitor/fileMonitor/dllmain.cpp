@@ -5,7 +5,6 @@
 #include <tchar.h>
 #include <iomanip>
 #include <string>
-#include <fstream>
 #include <thread>
 #include <concurrent_queue.h>
 #include <io.h>
@@ -15,33 +14,24 @@
 using namespace std;
 using namespace concurrency;
 
-typedef concurrent_queue<string> file_set;
+typedef concurrent_queue<string> file_record_queue;
 
-extern "C" {
-__declspec(dllexport) void monitor(const char* path);
-__declspec(dllexport) void stop_monitor();
-__declspec(dllexport) void set_output(const char* path);
-}
-
+void monitor(const char* path);
+void stop_monitor();
 void monitor_path(const char* path);
 inline std::string to_utf8(const std::wstring& str);
 inline std::string to_utf8(const wchar_t* buffer, int len);
-inline std::wstring StringToWString(const std::string& str);
-inline void write_to_file(const std::string& record, const char* file_path);
+inline std::wstring string_to_w_string(const std::string& str);
 inline void add_record(const std::string& record);
 inline void delete_record(const std::string& record);
-void write_add_records_to_file();
-void write_del_records_to_file();
 void searchDir(const std::string&, const std::string&);
-inline bool isDir(const char* path);
-
+inline bool is_dir(const char* path);
+bool pop_del_file(string& record);
+bool pop_add_file(string& record);
 
 static volatile bool is_running = true;
-char* output = new char[1000];
-file_set add_set;
-file_set del_set;
-char fileRemoved[1000];
-char fileAdded[1000];
+file_record_queue file_added_queue;
+file_record_queue file_del_queue;
 
 JNIEXPORT void JNICALL Java_file_engine_dllInterface_FileMonitor_monitor
 (JNIEnv* env, jobject, jstring path)
@@ -55,16 +45,32 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_FileMonitor_stop_1monitor
 	stop_monitor();
 }
 
-JNIEXPORT void JNICALL Java_file_engine_dllInterface_FileMonitor_set_1output
-(JNIEnv* env, jobject, jstring path)
+JNIEXPORT jstring JNICALL Java_file_engine_dllInterface_FileMonitor_pop_1add_1file
+(JNIEnv* env, jobject)
 {
-	set_output(env->GetStringUTFChars(path, nullptr));
+	string record;
+	if (pop_add_file(record))
+	{
+		return env->NewStringUTF(record.c_str());
+	}
+	return nullptr;
+}
+
+JNIEXPORT jstring JNICALL Java_file_engine_dllInterface_FileMonitor_pop_1del_1file
+(JNIEnv* env, jobject)
+{
+	string record;
+	if (pop_del_file(record))
+	{
+		return env->NewStringUTF(record.c_str());
+	}
+	return nullptr;
 }
 
 /**
  * 检查路径是否是文件夹
  */
-inline bool isDir(const char* path)
+inline bool is_dir(const char* path)
 {
 	struct stat s{};
 	if (stat(path, &s) == 0)
@@ -80,7 +86,7 @@ inline bool isDir(const char* path)
 /**
  * 搜索文件夹，并将搜索结果输出到output_path
  */
-void searchDir(const string& path, const string& output_path)
+void search_dir(const string& path)
 {
 	//文件句柄
 	intptr_t hFile;
@@ -101,8 +107,8 @@ void searchDir(const string& path, const string& output_path)
 				{
 					string name(fileinfo.name);
 					string _path = pathName.assign(path).append("\\").append(fileinfo.name);
-					write_to_file(to_utf8(StringToWString(_path)), output_path.c_str());
-					searchDir(_path, output_path);
+					add_record(to_utf8(string_to_w_string(_path)));
+					search_dir(_path);
 				}
 			}
 			else
@@ -111,7 +117,7 @@ void searchDir(const string& path, const string& output_path)
 				{
 					string name(fileinfo.name);
 					string _path = pathName.assign(path).append("\\").append(fileinfo.name);
-					write_to_file(to_utf8(StringToWString(_path)), output_path.c_str());
+					add_record(to_utf8(string_to_w_string(_path)));
 				}
 			}
 		}
@@ -125,7 +131,7 @@ void searchDir(const string& path, const string& output_path)
  */
 inline void add_record(const string& record)
 {
-	add_set.push(record);
+	file_added_queue.push(record);
 }
 
 /**
@@ -133,63 +139,17 @@ inline void add_record(const string& record)
  */
 inline void delete_record(const string& record)
 {
-	del_set.push(record);
+	file_del_queue.push(record);
 }
 
-/**
- * 将record写入文件
- */
-inline void write_to_file(const string& record, const char* file_path)
+bool pop_del_file(string& record)
 {
-	ofstream file(file_path, ios::app | ios::binary);
-	file << record << endl;
-	file.close();
+	return file_del_queue.try_pop(record);
 }
 
-/**
- * 将add_set的内容输出到文件fileAdded
- */
-void write_add_records_to_file()
+bool pop_add_file(string& record)
 {
-	string record;
-	while (is_running)
-	{
-		while (add_set.try_pop(record))
-		{
-			if (!is_running)
-				break;
-			if (!record.empty())
-			{
-				write_to_file(record, fileAdded);
-				if (isDir(record.c_str()))
-				{
-					searchDir(record, fileAdded);
-				}
-			}
-		}
-		Sleep(500);
-	}
-}
-
-/**
- * 将del_set的内容输出到文件fileRemoved
- */
-void write_del_records_to_file()
-{
-	string record;
-	while (is_running)
-	{
-		while (del_set.try_pop(record))
-		{
-			if (!is_running)
-				break;
-			if (!record.empty())
-			{
-				write_to_file(record, fileRemoved);
-			}
-		}
-		Sleep(500);
-	}
+	return file_added_queue.try_pop(record);
 }
 
 /**
@@ -230,7 +190,7 @@ inline std::string to_utf8(const std::wstring& str)
 	return to_utf8(str.c_str(), static_cast<int>(str.size()));
 }
 
-inline std::wstring StringToWString(const std::string& str)
+inline std::wstring string_to_w_string(const std::string& str)
 {
 	setlocale(LC_ALL, "chs");
 	const auto* const point_to_source = str.c_str();
@@ -243,40 +203,17 @@ inline std::wstring StringToWString(const std::string& str)
 	return result;
 }
 
-/**
- * 设置输出文件路径
- */
-__declspec(dllexport) void set_output(const char* path)
-{
-	memset(output, 0, 1000);
-	strcpy_s(output, 1000, path);
-
-	memset(fileRemoved, 0, 1000);
-	memset(fileAdded, 0, 1000);
-
-	strcpy_s(fileRemoved, 1000, output);
-	strcat_s(fileRemoved, "\\fileRemoved.txt");
-	strcpy_s(fileAdded, 1000, output);
-	strcat_s(fileAdded, "\\fileAdded.txt");
-	thread write_add_file_thread(write_add_records_to_file);
-	thread write_del_file_thread(write_del_records_to_file);
-	write_add_file_thread.detach();
-	write_del_file_thread.detach();
-}
-
-__declspec(dllexport) void monitor(const char* path)
+void monitor(const char* path)
 {
 	is_running = true;
 	cout << "Monitoring " << path << endl;
 	thread t(monitor_path, path);
 	t.detach();
-	Sleep(1000); //防止路径在被保存前就被覆盖
 }
 
-__declspec(dllexport) void stop_monitor()
+void stop_monitor()
 {
 	is_running = false;
-	delete[] output;
 }
 
 /**
@@ -285,12 +222,12 @@ __declspec(dllexport) void stop_monitor()
 void monitor_path(const char* path)
 {
 	DWORD cb_bytes;
-	char file_name[1000]; //设置文件名
-	char file_rename[1000]; //设置文件重命名后的名字;
-	char _path[1000];
-	char notify[1024];
-	wchar_t w_file_name[1000];
-	wchar_t w_file_rename[1000];
+	char file_name[1000] = {"\0"}; //设置文件名
+	char file_rename[1000] = {"\0"}; //设置文件重命名后的名字;
+	char _path[1000] = {"\0"};
+	char notify[1024] = {"\0"};
+	wchar_t w_file_name[1000] = {L"\0"};
+	wchar_t w_file_rename[1000] = {L"\0"};
 
 	memset(_path, 0, 1000);
 	strcpy_s(_path, 1000, path);
@@ -300,17 +237,17 @@ void monitor_path(const char* path)
 	                    std::size(_dir));
 
 	auto* const dirHandle = CreateFile(_dir,
-	                                    GENERIC_READ | GENERIC_WRITE | FILE_LIST_DIRECTORY,
-	                                    FILE_SHARE_READ | FILE_SHARE_WRITE,
-	                                    nullptr,
-	                                    OPEN_EXISTING,
-	                                    FILE_FLAG_BACKUP_SEMANTICS,
-	                                    nullptr);
+	                                   GENERIC_READ | GENERIC_WRITE | FILE_LIST_DIRECTORY,
+	                                   FILE_SHARE_READ | FILE_SHARE_WRITE,
+	                                   nullptr,
+	                                   OPEN_EXISTING,
+	                                   FILE_FLAG_BACKUP_SEMANTICS,
+	                                   nullptr);
 
 	if (dirHandle == INVALID_HANDLE_VALUE) //若网络重定向或目标文件系统不支持该操作，函数失败，同时调用GetLastError()返回ERROR_INVALID_FUNCTION
 	{
 		cout << "error " << GetLastError() << endl;
-		exit(0);
+		return;
 	}
 
 	auto* pnotify = reinterpret_cast<FILE_NOTIFY_INFORMATION*>(notify);
@@ -334,7 +271,7 @@ void monitor_path(const char* path)
 			//获取重命名的文件名;
 			if (pnotify->NextEntryOffset != 0 && (pnotify->FileNameLength > 0 && pnotify->FileNameLength < 1000))
 			{
-				auto p = reinterpret_cast<PFILE_NOTIFY_INFORMATION>(reinterpret_cast<char*>(pnotify) + pnotify->
+				const auto p = reinterpret_cast<PFILE_NOTIFY_INFORMATION>(reinterpret_cast<char*>(pnotify) + pnotify->
 					NextEntryOffset);
 				memset(file_rename, 0, 1000);
 				memset(w_file_rename, 0, 1000);
@@ -363,7 +300,11 @@ void monitor_path(const char* path)
 #ifdef TEST
                     cout << "file add : " << data << endl;
 #endif
-					add_record(to_utf8(StringToWString(data)));
+					add_record(to_utf8(string_to_w_string(data)));
+					if (is_dir(data.c_str()))
+					{
+						search_dir(data);
+					}
 				}
 				break;
 			case FILE_ACTION_MODIFIED:
@@ -376,7 +317,11 @@ void monitor_path(const char* path)
 #ifdef TEST
                     cout << "file add : " << data << endl;
 #endif
-					add_record(to_utf8(StringToWString(data)));
+					add_record(to_utf8(string_to_w_string(data)));
+					if (is_dir(data.c_str()))
+					{
+						search_dir(data);
+					}
 				}
 				break;
 			case FILE_ACTION_REMOVED:
@@ -388,7 +333,7 @@ void monitor_path(const char* path)
 #ifdef TEST
                     cout << "file removed : " << data << endl;
 #endif
-					delete_record(to_utf8(StringToWString(data)));
+					delete_record(to_utf8(string_to_w_string(data)));
 				}
 				break;
 			case FILE_ACTION_RENAMED_OLD_NAME:
@@ -398,7 +343,7 @@ void monitor_path(const char* path)
 					data.append(_path);
 					data.append(file_name);
 
-					delete_record(to_utf8(StringToWString(data)));
+					delete_record(to_utf8(string_to_w_string(data)));
 
 					data.clear();
 					data.append(_path);
@@ -406,7 +351,11 @@ void monitor_path(const char* path)
 #ifdef TEST
                     cout << "file renamed : " << data << "->" << data << endl;
 #endif
-					add_record(to_utf8(StringToWString(data)));
+					add_record(to_utf8(string_to_w_string(data)));
+					if (is_dir(data.c_str()))
+					{
+						search_dir(data);
+					}
 				}
 				break;
 			default:
