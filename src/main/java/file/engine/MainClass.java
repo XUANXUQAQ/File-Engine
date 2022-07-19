@@ -434,10 +434,7 @@ public class MainClass {
         isSucceeded &= createFileOrFolder("plugins", false, false);
         //tmp
         File tmp = new File("tmp");
-        String tempPath = tmp.getAbsolutePath();
         isSucceeded &= createFileOrFolder(tmp, false, false);
-        isSucceeded &= createFileOrFolder(tempPath + File.separator + "fileAdded.txt", true, true);
-        isSucceeded &= createFileOrFolder(tempPath + File.separator + "fileRemoved.txt", true, true);
         //cmd.txt
         isSucceeded &= createFileOrFolder("user/cmds.txt", true, false);
         releaseAllDependence();
