@@ -460,11 +460,6 @@ public class AllConfigs {
                         "https://raw.githack.com/XUANXUQAQ/File-Engine-Version/master/version.json",
                         "https://raw.githack.com/XUANXUQAQ/File-Engine-Version/master/plugins.json"
                 ));
-        updateAddressMap.put("Gitee",
-                new AddressUrl(
-                        "https://gitee.com/XUANXUQAQ/file-engine-version/raw/master/version.json",
-                        "https://gitee.com/XUANXUQAQ/file-engine-version/raw/master/plugins.json"
-                ));
     }
 
     /**
