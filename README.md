@@ -23,12 +23,19 @@ Or enter :help in the search bar. by default Ctrl + Alt + K to call out the sear
 ## feature
 
 * Quick search, ***measured 1 million files index only takes 10 seconds. The search speed depends on the speed of your hard drive***
+
 * Green portable software, all configuration files are in its own directory.
+
 * Custom commands to quickly perform selected operations.
+
 * Update files in real time, automatically detect deleted and new files.
+
 * Support to specify the priority search folder, frequently used files can be opened immediately without waiting.
+
 * Simple UI, easy to set up.
+
 * Adaptive resolution display.    
+
 * Multiple languages support    
   
   ### The software only support 64-bit operating system.
@@ -41,4 +48,4 @@ Thanks for the following project:
 4. lombok (https://projectlombok.org/)   
 5. TinyPinyin (https://github.com/promeG/TinyPinyin)
 6. zip (https://github.com/kuba--/zip)
-7. TencentKona11 (https://github.com/Tencent/TencentKona-11)
+7. 

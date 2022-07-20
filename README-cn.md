@@ -21,12 +21,19 @@ A tool can make you work more efficiently.
 ## 特性
 
 * 快速搜索，***实测100W文件索引仅需要10秒。搜索速度取决于你的硬盘的速度***
+
 * 绿色便携软件，所有配置文件均在自身目录。
+
 * 自定义命令，快速进行所选操作。
+
 * 实时更新文件，自动检测已删除和新增文件。
+
 * 支持指定优先搜索文件夹，常用文件无需等待，立即打开。
+
 * 简洁UI，设置方便。
+
 * 自适应分辨率显示。    
+
 * 多语言支持。   
   
   ### 该软件仅支持64位系统
@@ -39,4 +46,3 @@ A tool can make you work more efficiently.
 4. lombok (https://projectlombok.org/)   
 5. TinyPinyin (https://github.com/promeG/TinyPinyin)
 6. zip (https://github.com/kuba--/zip)
-7. TencentKona11 (https://github.com/Tencent/TencentKona-11)
