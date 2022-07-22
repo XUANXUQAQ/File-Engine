@@ -2,52 +2,49 @@
 
 A tool can make you work more efficiently.
 
-> No more searching for files in cluttered folders.
->  Improve work efficiency.
->  This is a green software that does not have to be installed and can be used at any time.
+> 不必再在杂乱的文件夹中寻找文件。
+> 提高工作效率。
+> 这是一个绿色软件，不必安装，随时使用。
 
-[阅读中文版](https://github.com/XUANXUQAQ/File-Engine/blob/master/README-cn.md)   
+## [下载](https://github.com/XUANXUQAQ/File-Engine/releases/)
 
-## [Downloads](https://github.com/XUANXUQAQ/File-Engine/releases/)
+## [如何编译构建本项目](https://github.com/XUANXUQAQ/File-Engine/blob/master/README_BUILD.md)
 
-## [How to compile and build this project](https://github.com/XUANXUQAQ/File-Engine/blob/master/README_BUILD.md)
+### 可以使用插件[File-Engine-UDisk-Plugin](https://github.com/XUANXUQAQ/File-Engine-UDisk-Plugin) 使File-Engine支持U盘。
 
-### Use [File-Engine-UDisk-Plugin](https://github.com/XUANXUQAQ/File-Engine-UDisk-Plugin) to enable File-Engine to support non-NTFS disk。
+### 制作自己的插件[File-Engine-Plugin-Template](https://github.com/XUANXUQAQ/File-Engine-Plugin-Template)
 
-### Make your own plugin[File-Engine-Plugin-Template](https://github.com/XUANXUQAQ/File-Engine-Plugin-Template)
+## 使用
 
-## Usage
+### [查看帮助](https://github.com/XUANXUQAQ/File-Engine/wiki/Usage)
 
-### [View help](https://github.com/XUANXUQAQ/File-Engine/wiki/Usage)
+或者在搜索框中输入 :help    默认Ctrl + Alt + K呼出搜索框
 
-Or enter :help in the search bar. by default Ctrl + Alt + K to call out the search bar.
+## 特性
 
-## feature
+* 快速搜索，***实测100W文件索引仅需要10秒。搜索速度取决于你的硬盘的速度***
 
-* Quick search, ***measured 1 million files index only takes 10 seconds. The search speed depends on the speed of your hard drive***
+* 绿色便携软件，所有配置文件均在自身目录。
 
-* Green portable software, all configuration files are in its own directory.
+* 自定义命令，快速进行所选操作。
 
-* Custom commands to quickly perform selected operations.
+* 实时更新文件，自动检测已删除和新增文件。
 
-* Update files in real time, automatically detect deleted and new files.
+* 支持指定优先搜索文件夹，常用文件无需等待，立即打开。
 
-* Support to specify the priority search folder, frequently used files can be opened immediately without waiting.
+* 简洁UI，设置方便。
 
-* Simple UI, easy to set up.
+* 自适应分辨率显示。    
 
-* Adaptive resolution display.    
-
-* Multiple languages support    
+* 多语言支持。   
   
-  ### The software only support 64-bit operating system.
+  ### 该软件仅支持64位系统
 
-Thanks for the following project:   
+感谢以下项目：   
 
-1. gson (https://github.com/google/gson)   
+1. gson (https://github.com/google/gson)
 2. FlatLaf (https://github.com/JFormDesigner/FlatLaf)   
 3. sqlite_jdbc (https://github.com/xerial/sqlite-jdbc)   
 4. lombok (https://projectlombok.org/)   
 5. TinyPinyin (https://github.com/promeG/TinyPinyin)
 6. zip (https://github.com/kuba--/zip)
-7. 
