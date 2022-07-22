@@ -17,7 +17,7 @@
 #pragma comment(lib, "Ole32.lib")
 #pragma comment(lib, "User32.lib")
 #define MAX_LOG_PRESERVE_DAYS 5
-//#define TEST
+// #define TEST
 
 #ifndef TEST
 #pragma comment( linker, "/subsystem:windows /entry:mainCRTStartup" )
@@ -25,7 +25,7 @@
 
 constexpr auto* g_file_engine_zip_name = "File-Engine.zip";
 std::string g_jvm_parameters =
-"-Xms8M -Xmx64M -XX:+UseParallelGC -XX:MaxHeapFreeRatio=20 -XX:MinHeapFreeRatio=10 -XX:+CompactStrings -XX:MaxTenuringThreshold=16";
+	"-Xms8M -Xmx64M -XX:+UseParallelGC -XX:MaxHeapFreeRatio=20 -XX:MinHeapFreeRatio=10 -XX:+CompactStrings -XX:MaxTenuringThreshold=16";
 
 char g_close_signal_file[1000];
 char g_file_engine_jar_path[1000];
@@ -64,6 +64,7 @@ int get_days(const char* from, const char* to);
 void check_logs();
 void init_jvm_parameters();
 tm get_tm();
+std::wstring string2wstring(const std::string& str);
 
 int main()
 {
@@ -102,10 +103,19 @@ int main()
 			return 0;
 		}
 	}
+#ifdef TEST
+	std::cout << "finding process..." << std::endl;
+#endif
 	if (!find_process())
 	{
+#ifdef TEST
+		std::cout << "starting file-engine" << std::endl;
+#endif
 		restart_file_engine(true);
 	}
+#ifdef TEST
+	std::cout << "start loop" << std::endl;
+#endif
 	std::time_t start_time = std::time(nullptr);
 	while (!is_close_exist())
 	{
@@ -115,7 +125,9 @@ int main()
 			start_time = std::time(nullptr);
 			if (!find_process())
 			{
+#ifdef TEST
 				std::cout << "File-Engine process not exist" << std::endl;
+#endif
 				restart_file_engine(false);
 			}
 		}
@@ -236,7 +248,7 @@ inline void delete_jre_dir()
 
 inline time_t convert(int year, int month, int day)
 {
-	tm info = { 0 };
+	tm info = {0};
 	info.tm_year = year - 1900;
 	info.tm_mon = month - 1;
 	info.tm_mday = day;
@@ -274,7 +286,7 @@ void release_all()
  */
 bool release_resources()
 {
-	const HRSRC hRsrc = FindResourceA(nullptr, MAKEINTRESOURCEA(IDR_ZIP2), "ZIP");
+	HRSRC hRsrc = FindResourceW(nullptr, MAKEINTRESOURCEW(IDR_ZIP2), L"ZIP");
 	if (nullptr == hRsrc)
 	{
 		return false;
@@ -348,13 +360,17 @@ void restart_file_engine(bool isIgnoreCloseFile)
 	}
 	if (g_restart_count >= 3 || !is_file_exist(g_file_engine_jar_path))
 	{
+#ifdef TEST
+		std::cout << "release File-Engine.zip" << std::endl;
+#endif
 		release_all();
 	}
 	g_restart_count++;
 
 	std::ofstream log_file(g_log_file_path + std::string(get_date()) + ".log", std::ios::app);
 	tm t = get_tm();
-	log_file << "------------------------------------------------------------------------------------------------------" << std::endl;
+	log_file << "------------------------------------------------------------------------------------------------------"
+		<< std::endl;
 	log_file << t.tm_hour << ":" << t.tm_min << ":" << t.tm_sec << std::endl;
 	log_file.close();
 
@@ -364,7 +380,7 @@ void restart_file_engine(bool isIgnoreCloseFile)
 	command.append("\"");
 	command.append(jre.substr(2));
 	command.append("bin\\java.exe\" ").append(g_jvm_parameters).append(" -jar File-Engine.jar").append(" 1> normal.log")
-		.append(" 2>> ").append("\"").append(g_log_file_path).append(get_date()).append(".log").append("\"");
+	       .append(" 2>> ").append("\"").append(g_log_file_path).append(get_date()).append(".log").append("\"");
 #ifdef TEST
 	std::cout << "running command: " << command << std::endl;
 #endif
@@ -542,38 +558,61 @@ bool is_launched()
  */
 BOOL find_process()
 {
-	PROCESSENTRY32 pe;
-	BOOL ret = 0;
-	auto* const hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-	pe.dwSize = sizeof(PROCESSENTRY32);
-	const std::string _workingDir(g_file_engine_working_dir);
-	std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
-	const std::wstring workingDir = converter.from_bytes(_workingDir);
-	if (!Process32First(hSnapshot, &pe))
+	try
 	{
-		CloseHandle(hSnapshot);
-		return FALSE;
-	}
-	while (true)
-	{
+		PROCESSENTRY32 pe;
+		BOOL ret = 0;
+		auto* const hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
 		pe.dwSize = sizeof(PROCESSENTRY32);
-		if (Process32Next(hSnapshot, &pe) == FALSE)
-			break;
-		if (wcscmp(pe.szExeFile, L"java.exe") == 0)
+		const std::string _workingDir(g_file_engine_working_dir);
+		const std::wstring workingDir = string2wstring(_workingDir);
+		if (!Process32First(hSnapshot, &pe))
 		{
-			DWORD id = pe.th32ProcessID;
-			TCHAR szProcessName[1000] = { 0 };
-			get_process_full_path(id, szProcessName);
-			std::wstring processName(szProcessName);
-			if (processName.find(workingDir) != std::wstring::npos)
-			{
-				ret = TRUE;
+			CloseHandle(hSnapshot);
+			return FALSE;
+		}
+		while (true)
+		{
+			pe.dwSize = sizeof(PROCESSENTRY32);
+			if (Process32Next(hSnapshot, &pe) == FALSE)
 				break;
+			if (wcscmp(pe.szExeFile, L"java.exe") == 0)
+			{
+				const DWORD id = pe.th32ProcessID;
+				TCHAR szProcessName[1000] = {0};
+				get_process_full_path(id, szProcessName);
+				std::wstring processName(szProcessName);
+				if (processName.find(workingDir) != std::wstring::npos)
+				{
+					ret = TRUE;
+					break;
+				}
 			}
 		}
+		CloseHandle(hSnapshot);
+		return ret;
 	}
-	CloseHandle(hSnapshot);
-	return ret;
+	catch (std::exception& e)
+	{
+		std::cout << e.what() << std::endl;
+		exit(-1);
+	}
+}
+
+
+std::wstring string2wstring(const std::string& str)
+{
+	std::wstring result;
+	//获取缓冲区大小，并申请空间，缓冲区大小按字符计算  
+	const int len = MultiByteToWideChar(CP_ACP, 0, str.c_str(), static_cast<int>(str.size()), nullptr, 0);
+	const auto buffer = new TCHAR[len + 1];
+	//多字节编码转换成宽字节编码  
+	MultiByteToWideChar(CP_ACP, 0, str.c_str(), static_cast<int>(str.size()), buffer, len);
+	buffer[len] = '\0';
+	//删除缓冲区并返回值  
+	result.append(buffer);
+	delete[] buffer;
+	return result;
 }
 
 bool remove_dir(const char* szFileDir)
@@ -597,7 +636,8 @@ bool remove_dir(const char* szFileDir)
 		{
 			DeleteFileA((strDir + wfd.cFileName).c_str());
 		}
-	} while (FindNextFileA(hFind, &wfd));
+	}
+	while (FindNextFileA(hFind, &wfd));
 	FindClose(hFind);
 	RemoveDirectoryA(szFileDir);
 	return true;
