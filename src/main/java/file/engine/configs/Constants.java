@@ -1,7 +1,11 @@
 package file.engine.configs;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Properties;
+
 public class Constants {
-    public static final String version = "3.5"; //更改版本号
+    public static final String version;
 
     public static final int ALL_TABLE_NUM = 40;
 
@@ -18,6 +22,16 @@ public class Constants {
     public static final int[] COMPATIBLE_API_VERSIONS = {3, 4, 5, 6};
 
     public static final String DEFAULT_SWING_THEME = "MaterialLighter";
+
+    static {
+        Properties properties = new Properties();
+        try (InputStream projectInfo = Constants.class.getResourceAsStream("/project-info.properties")) {
+            properties.load(projectInfo);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        version = properties.getProperty("project.version");
+    }
 
     public static class Enums {
 
