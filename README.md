@@ -10,6 +10,8 @@ A tool can make you work more efficiently.
 
 ## [Downloads](https://github.com/XUANXUQAQ/File-Engine/releases/)
 
+## [How to compile and build this project](https://github.com/XUANXUQAQ/File-Engine/blob/master/README_BUILD.md)
+
 ### Use [File-Engine-UDisk-Plugin](https://github.com/XUANXUQAQ/File-Engine-UDisk-Plugin) to enable File-Engine to support non-NTFS disk。
 
 ### Make your own plugin[File-Engine-Plugin-Template](https://github.com/XUANXUQAQ/File-Engine-Plugin-Template)
