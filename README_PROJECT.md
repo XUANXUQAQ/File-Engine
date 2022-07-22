@@ -219,17 +219,17 @@ UI层和service层都可以通过事件的注册和处理来实现互相调用�
 
 ## C++库部分
 
-│ ├─fileMonitor
-│ ├─fileSearcherUSN
-│ ├─getAscII
-│ ├─getDpi
-│ ├─getHandle
-│ ├─getStartMenu
-│ ├─hotkeyListener
-│ ├─isLocalDisk
-│ ├─launcherWrap
-│ ├─resultPipe
-│ └─sqliteJDBC
+│ ├─fileMonitor   
+│ ├─fileSearcherUSN   
+│ ├─getAscII   
+│ ├─getDpi   
+│ ├─getHandle   
+│ ├─getStartMenu   
+│ ├─hotkeyListener   
+│ ├─isLocalDisk   
+│ ├─launcherWrap   
+│ ├─resultPipe   
+│ └─sqliteJDBC   
 
 ## fileMonitor
 
