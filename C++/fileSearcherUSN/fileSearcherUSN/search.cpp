@@ -153,11 +153,8 @@ void volume::createSharedMemoryAndCopy(const string& listName, const int priorit
 		return;
 	}
 	CONCURRENT_QUEUE<string>& result = table->at(priority);
-	const size_t _size = result.unsafe_size();
-	if (_size > MAX_RECORD_COUNT)
-	{
-		return;
-	}
+	size_t _size = result.unsafe_size();
+	_size = _size > MAX_RECORD_COUNT ? MAX_RECORD_COUNT : _size;
 	const size_t memorySize = _size * RECORD_MAX_PATH;
 
 	// 创建共享文件句柄
@@ -170,11 +167,11 @@ void volume::createSharedMemoryAndCopy(const string& listName, const int priorit
 		return;
 	}
 	long long count = 0;
-	for (auto iter = result.unsafe_begin(); iter != result.unsafe_end(); ++iter)
+	for (auto iterator = result.unsafe_begin(); iterator != result.unsafe_end() && count <= MAX_RECORD_COUNT; ++iterator)
 	{
 		memcpy_s(reinterpret_cast<void*>(reinterpret_cast<long long>(pBuf) + count * RECORD_MAX_PATH), RECORD_MAX_PATH,
-		         iter->c_str(), iter->length());
-		count++;
+		         iterator->c_str(), iterator->length());
+		++count;
 	}
 	// 保存该结果的大小信息
 	createFileMapping(hMapFile, pBuf, sizeof size_t, (sharedMemoryName + "size").c_str());
