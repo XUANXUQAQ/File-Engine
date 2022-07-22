@@ -10,6 +10,8 @@ A tool can make you work more efficiently.
 
 ## [如何编译构建本项目](https://github.com/XUANXUQAQ/File-Engine/blob/master/README_BUILD.md)
 
+## [项目结构](https://github.com/XUANXUQAQ/File-Engine/blob/master/README_PROJECT.md)
+
 ### 可以使用插件[File-Engine-UDisk-Plugin](https://github.com/XUANXUQAQ/File-Engine-UDisk-Plugin) 使File-Engine支持U盘。
 
 ### 制作自己的插件[File-Engine-Plugin-Template](https://github.com/XUANXUQAQ/File-Engine-Plugin-Template)
