@@ -38,7 +38,7 @@ mvn install:install-file -Dfile=libs/forms_rt.jar -DgroupId=com.intellij -Dartif
 通过maven进行编译构建
 
 ```bash
-maven clean compile package
+mvn clean compile package
 ```
 
 编译完成后在target目录下会生成 **File-Engine-(版本).jar** 以及**File-Engine.jar**。
