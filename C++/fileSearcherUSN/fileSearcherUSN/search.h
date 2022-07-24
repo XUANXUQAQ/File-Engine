@@ -1,17 +1,11 @@
 #pragma once
 
 #include "stdafx.h"
-#include <iostream>
-#include <fstream>
 #include <unordered_map>
-#include <winioctl.h>
-#include <string>
-#include <vector>
-#include <algorithm>
 #include "sqlite3.h"
-#include <concurrent_queue.h>
+#include <winioctl.h>
 #include <concurrent_unordered_map.h>
-#include <atomic>
+#include <concurrent_queue.h>
 
 #define CONCURRENT_MAP concurrency::concurrent_unordered_map
 #define CONCURRENT_QUEUE concurrency::concurrent_queue

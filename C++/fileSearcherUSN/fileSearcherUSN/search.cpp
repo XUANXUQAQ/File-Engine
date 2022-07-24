@@ -1,4 +1,14 @@
 #include "search.h"
+#include <iostream>
+#include <fstream>
+#include <unordered_map>
+#include <string>
+#include <vector>
+#include <algorithm>
+#include "sqlite3.h"
+#include <concurrent_queue.h>
+#include <concurrent_unordered_map.h>
+#include <atomic>
 
 CONCURRENT_MAP<HANDLE, LPVOID> sharedMemoryMap;
 static std::atomic_int* completeTaskCount = new std::atomic_int(0);

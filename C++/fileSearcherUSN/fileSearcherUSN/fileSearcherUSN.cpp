@@ -1,4 +1,10 @@
 ﻿#include "fileSearcherUSN.h"
+
+#include <iostream>
+#include <thread>
+#include "search.h"
+#include <fstream>
+
 //#define TEST
 using namespace std;
 

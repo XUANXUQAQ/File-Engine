@@ -1,6 +1,9 @@
 #pragma once
-#include <thread>
-#include "search.h"
+#include <string>
+#include <vector>
+
+#include "sqlite3.h"
+
 
 typedef struct PARAMETER
 {
