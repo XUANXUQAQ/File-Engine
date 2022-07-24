@@ -8,6 +8,7 @@
 #include <thread>
 #include <concurrent_queue.h>
 #include <io.h>
+#include <memory>
 #include "file_engine_dllInterface_FileMonitor.h"
 //#define TEST
 
@@ -195,10 +196,12 @@ inline std::wstring string_to_w_string(const std::string& str)
 	setlocale(LC_ALL, "chs");
 	const auto* const point_to_source = str.c_str();
 	const auto new_size = str.size() + 1;
-	auto* const point_to_destination = new wchar_t[new_size];
-	wmemset(point_to_destination, 0, new_size);
-	mbstowcs(point_to_destination, point_to_source, new_size);
-	std::wstring result = point_to_destination;
+	const unique_ptr<wchar_t> point_to_destination(new wchar_t[new_size]);
+	const auto tmp_ptr = point_to_destination.get();
+	wmemset(tmp_ptr, 0, new_size);
+	size_t converted;
+	mbstowcs_s(&converted, tmp_ptr, new_size, point_to_source, _TRUNCATE);
+	std::wstring result = point_to_destination.get();
 	setlocale(LC_ALL, "C");
 	return result;
 }
