@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 #include "stdafx.h"
 #include <unordered_map>
@@ -34,7 +34,7 @@ public:
 	void collectResult(int ascii, const std::string& fullPath);
 
 	/**
-	 * ½«ÄÚ´æÖĞµÄÊı¾İ±£´æµ½¹²ÏíÄÚ´æÖĞ
+	 * å°†å†…å­˜ä¸­çš„æ•°æ®ä¿å­˜åˆ°å…±äº«å†…å­˜ä¸­
 	 */
 	void copyResultsToSharedMemory();
 

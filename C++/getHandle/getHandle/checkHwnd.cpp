@@ -1,4 +1,4 @@
-#include "pch.h"
+ï»¿#include "pch.h"
 #include <algorithm>
 #include <string>
 #include <tchar.h>
@@ -10,7 +10,7 @@ std::wstring get_process_name_by_handle(HWND nlHandle);
 BOOL CALLBACK is_hwnd_has_toolbar(HWND hwndChild, LPARAM lParam);
 
 /**
- * ¼ì²é´°¿ÚÊÇ²»ÊÇËÑË÷¿ò
+ * æ£€æŸ¥çª—å£æ˜¯ä¸æ˜¯æœç´¢æ¡†
  */
 bool is_search_bar_window(const HWND& hd)
 {
@@ -20,7 +20,7 @@ bool is_search_bar_window(const HWND& hd)
 }
 
 /**
- * »ñÈ¡ËÑË÷¿ò´°¿Ú¾ä±ú
+ * è·å–æœç´¢æ¡†çª—å£å¥æŸ„
  */
 HWND get_search_bar_hwnd()
 {
@@ -28,7 +28,7 @@ HWND get_search_bar_hwnd()
 }
 
 /**
- * Í¨¹ıÀàÃûÅĞ¶ÏÊÇ²»ÊÇexplorer.exe´°¿Ú
+ * é€šè¿‡ç±»ååˆ¤æ–­æ˜¯ä¸æ˜¯explorer.exeçª—å£
  */
 bool is_explorer_window_by_class_name(const HWND& hwnd)
 {
@@ -38,7 +38,7 @@ bool is_explorer_window_by_class_name(const HWND& hwnd)
 		GetClassNameA(hwnd, className, 200);
 		std::string WindowClassName(className);
 		transform(WindowClassName.begin(), WindowClassName.end(), WindowClassName.begin(), ::tolower);
-		//Ê¹ÓÃ¼ì²â´°¿ÚÀàÃûµÄ·½Ê½¸ü½ÚÊ¡CPU×ÊÔ´
+		//ä½¿ç”¨æ£€æµ‹çª—å£ç±»åçš„æ–¹å¼æ›´èŠ‚çœCPUèµ„æº
 		if (WindowClassName.find("cabinet") != std::string::npos)
 		{
 			if (IsWindows8OrGreater())
@@ -61,7 +61,7 @@ bool is_explorer_window_by_class_name(const HWND& hwnd)
 }
 
 /**
- * Í¨¹ı½ø³ÌÃûÅĞ¶ÏÊÇ²»ÊÇexplorer´°¿Ú
+ * é€šè¿‡è¿›ç¨‹ååˆ¤æ–­æ˜¯ä¸æ˜¯explorerçª—å£
  */
 bool is_explorer_window_by_process(const HWND& hwnd)
 {
@@ -71,12 +71,12 @@ bool is_explorer_window_by_process(const HWND& hwnd)
 }
 
 /**
- * Í¨¹ı´°¿Ú¾ä±ú»ñÈ¡½ø³ÌĞÅÏ¢
+ * é€šè¿‡çª—å£å¥æŸ„è·å–è¿›ç¨‹ä¿¡æ¯
  */
 std::wstring get_process_name_by_handle(HWND nlHandle)
 {
 	std::wstring loStrRet;
-	//µÃµ½¸Ã½ø³ÌµÄ½ø³Ìid
+	//å¾—åˆ°è¯¥è¿›ç¨‹çš„è¿›ç¨‹id
 	DWORD ldwProID;
 	GetWindowThreadProcessId(nlHandle, &ldwProID);
 	if (0 == ldwProID)
@@ -108,7 +108,7 @@ std::wstring get_process_name_by_handle(HWND nlHandle)
 
 
 /**
- * ÅĞ¶Ï´°¿Ú¾ä±úÊÇ·ñÎªÎÄ¼şÑ¡Ôñ´°¿Ú
+ * åˆ¤æ–­çª—å£å¥æŸ„æ˜¯å¦ä¸ºæ–‡ä»¶é€‰æ‹©çª—å£
  */
 bool is_file_chooser_window(const HWND& hwnd)
 {
@@ -131,7 +131,7 @@ bool is_file_chooser_window(const HWND& hwnd)
 }
 
 /**
- * ÅĞ¶Ï´°¿Ú¾ä±úÊÇ·ñÎªexplorerÉÏ·½µÄtoolbar
+ * åˆ¤æ–­çª—å£å¥æŸ„æ˜¯å¦ä¸ºexplorerä¸Šæ–¹çš„toolbar
  */
 BOOL CALLBACK is_hwnd_has_toolbar(HWND hwndChild, LPARAM lParam)
 {

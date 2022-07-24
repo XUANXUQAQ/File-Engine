@@ -1,4 +1,4 @@
-#include "pch.h"
+ï»¿#include "pch.h"
 
 #include <algorithm>
 #include <Windows.h>
@@ -146,7 +146,7 @@ std::string to_utf8(const std::wstring& str)
 }
 
 /**
- * »ñÈ¡explorer´°¿Úµ±Ç°ÏÔÊ¾µÄÂ·¾¶
+ * è·å–explorerçª—å£å½“å‰æ˜¾ç¤ºçš„è·¯å¾„
  */
 std::string getPathByHWND(const HWND& hwnd)
 {
@@ -155,14 +155,14 @@ std::string getPathByHWND(const HWND& hwnd)
         std::cout << "hwnd is not valid" << std::endl;
         return "";
     }
-    //ÅĞ¶ÏÊÇ·ñÊÇ×ÀÃæ´°¿Ú¾ä±ú
+    //åˆ¤æ–­æ˜¯å¦æ˜¯æ¡Œé¢çª—å£å¥æŸ„
     char windowClassName[260];
     GetClassNameA(hwnd, windowClassName, 260);
     std::string window_class_name_str(windowClassName);
     std::transform(window_class_name_str.begin(), window_class_name_str.end(), window_class_name_str.begin(), ::tolower);
     if (window_class_name_str.find("workerw") != std::string::npos)
     {
-        //·µ»Ø×ÀÃæÎ»ÖÃ
+        //è¿”å›æ¡Œé¢ä½ç½®
         WCHAR path[260];
         SHGetSpecialFolderPath(nullptr, path, CSIDL_DESKTOP, 0);
         return to_utf8(path);

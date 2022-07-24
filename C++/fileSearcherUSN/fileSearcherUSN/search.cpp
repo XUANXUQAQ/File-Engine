@@ -1,4 +1,4 @@
-#include "search.h"
+ï»¿#include "search.h"
 #include <iostream>
 #include <fstream>
 #include <unordered_map>
@@ -33,15 +33,15 @@ volume::volume(const char vol, sqlite3* database, std::vector<std::string>* igno
 void volume::initVolume()
 {
 	if (
-		// 2.»ñÈ¡Çı¶¯ÅÌ¾ä±ú
+		// 2.è·å–é©±åŠ¨ç›˜å¥æŸ„
 		getHandle() &&
-		// 3.´´½¨USNÈÕÖ¾
+		// 3.åˆ›å»ºUSNæ—¥å¿—
 		createUSN() &&
-		// 4.»ñÈ¡USNÈÕÖ¾ĞÅÏ¢
+		// 4.è·å–USNæ—¥å¿—ä¿¡æ¯
 		getUSNInfo() &&
-		// 5.»ñÈ¡ USN Journal ÎÄ¼şµÄ»ù±¾ĞÅÏ¢
+		// 5.è·å– USN Journal æ–‡ä»¶çš„åŸºæœ¬ä¿¡æ¯
 		getUSNJournal() &&
-		// 06. É¾³ı USN ÈÕÖ¾ÎÄ¼ş ( Ò²¿ÉÒÔ²»É¾³ı ) 
+		// 06. åˆ é™¤ USN æ—¥å¿—æ–‡ä»¶ ( ä¹Ÿå¯ä»¥ä¸åˆ é™¤ ) 
 		deleteUSN()
 	)
 	{
@@ -73,12 +73,12 @@ void volume::initVolume()
 		++*completeTaskCount;
 		setCompleteSignal();
 		const std::time_t startWaitTime = std::time(nullptr);
-		//×èÈûµÈ´ıÆäËûÏß³ÌÈ«²¿Íê³É¹²ÏíÄÚ´æµÄ¸´ÖÆ
+		//é˜»å¡ç­‰å¾…å…¶ä»–çº¿ç¨‹å…¨éƒ¨å®Œæˆå…±äº«å†…å­˜çš„å¤åˆ¶
 		while (allTaskCount->load() != completeTaskCount->load())
 		{
 			if (std::time(nullptr) - startWaitTime > 10000)
 			{
-				//µÈ´ı³¬¹ıÊ®Ãë
+				//ç­‰å¾…è¶…è¿‡åç§’
 				break;
 			}
 			Sleep(10);
@@ -101,7 +101,7 @@ void volume::copyResultsToSharedMemory()
 			size_t memorySize = 0;
 			string eachListName = string(listNamePrefix) + to_string(i);
 			const auto& sharedMemoryName = string(prefix) + getDiskPath() + ":" + eachListName + ":" + to_string(
-				eachPriority.second); // ¹²ÏíÄÚ´æÃûÎª sharedMemory:[path]:list[num]:[priority]
+				eachPriority.second); // å…±äº«å†…å­˜åä¸º sharedMemory:[path]:list[num]:[priority]
 			createSharedMemoryAndCopy(eachListName, eachPriority.second, &memorySize, sharedMemoryName);
 		}
 	}
@@ -167,7 +167,7 @@ void volume::createSharedMemoryAndCopy(const string& listName, const int priorit
 	_size = _size > MAX_RECORD_COUNT ? MAX_RECORD_COUNT : _size;
 	const size_t memorySize = _size * RECORD_MAX_PATH;
 
-	// ´´½¨¹²ÏíÎÄ¼ş¾ä±ú
+	// åˆ›å»ºå…±äº«æ–‡ä»¶å¥æŸ„
 	HANDLE hMapFile;
 	LPVOID pBuf = nullptr;
 	createFileMapping(hMapFile, pBuf, memorySize, sharedMemoryName.c_str());
@@ -183,7 +183,7 @@ void volume::createSharedMemoryAndCopy(const string& listName, const int priorit
 		         iterator->c_str(), iterator->length());
 		++count;
 	}
-	// ±£´æ¸Ã½á¹ûµÄ´óĞ¡ĞÅÏ¢
+	// ä¿å­˜è¯¥ç»“æœçš„å¤§å°ä¿¡æ¯
 	createFileMapping(hMapFile, pBuf, sizeof size_t, (sharedMemoryName + "size").c_str());
 	memcpy_s(pBuf, sizeof size_t, &memorySize, sizeof size_t);
 }
@@ -514,17 +514,17 @@ void volume::getPath(DWORDLONG frn, CString& _path)
 
 bool volume::getHandle()
 {
-	// Îª\\.\C:µÄĞÎÊ½
+	// ä¸º\\.\C:çš„å½¢å¼
 	CString lpFileName(_T("\\\\.\\c:"));
 	lpFileName.SetAt(4, vol);
 
 
 	hVol = CreateFile(lpFileName,
-	                  GENERIC_READ | GENERIC_WRITE, // ¿ÉÒÔÎª0
-	                  FILE_SHARE_READ | FILE_SHARE_WRITE, // ±ØĞë°üº¬ÓĞFILE_SHARE_WRITE
+	                  GENERIC_READ | GENERIC_WRITE, // å¯ä»¥ä¸º0
+	                  FILE_SHARE_READ | FILE_SHARE_WRITE, // å¿…é¡»åŒ…å«æœ‰FILE_SHARE_WRITE
 	                  nullptr,
-	                  OPEN_EXISTING, // ±ØĞë°üº¬OPEN_EXISTING, CREATE_ALWAYS¿ÉÄÜ»áµ¼ÖÂ´íÎó
-	                  FILE_ATTRIBUTE_READONLY, // FILE_ATTRIBUTE_NORMAL¿ÉÄÜ»áµ¼ÖÂ´íÎó
+	                  OPEN_EXISTING, // å¿…é¡»åŒ…å«OPEN_EXISTING, CREATE_ALWAYSå¯èƒ½ä¼šå¯¼è‡´é”™è¯¯
+	                  FILE_ATTRIBUTE_READONLY, // FILE_ATTRIBUTE_NORMALå¯èƒ½ä¼šå¯¼è‡´é”™è¯¯
 	                  nullptr);
 
 
@@ -538,8 +538,8 @@ bool volume::getHandle()
 
 bool volume::createUSN()
 {
-	cujd.MaximumSize = 0; // 0±íÊ¾Ê¹ÓÃÄ¬ÈÏÖµ  
-	cujd.AllocationDelta = 0; // 0±íÊ¾Ê¹ÓÃÄ¬ÈÏÖµ
+	cujd.MaximumSize = 0; // 0è¡¨ç¤ºä½¿ç”¨é»˜è®¤å€¼  
+	cujd.AllocationDelta = 0; // 0è¡¨ç¤ºä½¿ç”¨é»˜è®¤å€¼
 
 	DWORD br;
 	if (
@@ -585,13 +585,13 @@ bool volume::getUSNJournal()
 	med.LowUsn = ujd.FirstUsn;
 	med.HighUsn = ujd.NextUsn;
 
-	// ¸ùÄ¿Â¼
+	// æ ¹ç›®å½•
 	CString tmp(_T("C:"));
 	tmp.SetAt(0, vol);
 	frnPfrnNameMap[0x20000000000005].filename = tmp;
 	frnPfrnNameMap[0x20000000000005].pfrn = 0;
 
-	constexpr auto BUF_LEN = 0x3900; // ¾¡¿ÉÄÜµØ´ó£¬Ìá¸ßĞ§ÂÊ;
+	constexpr auto BUF_LEN = 0x3900; // å°½å¯èƒ½åœ°å¤§ï¼Œæé«˜æ•ˆç‡;
 
 	CHAR Buffer[BUF_LEN];
 	DWORD usnDataSize;
@@ -606,24 +606,24 @@ bool volume::getUSNJournal()
 	                            nullptr))
 	{
 		DWORD dwRetBytes = usnDataSize - sizeof(USN);
-		// ÕÒµ½µÚÒ»¸ö USN ¼ÇÂ¼  
+		// æ‰¾åˆ°ç¬¬ä¸€ä¸ª USN è®°å½•  
 		auto UsnRecord = reinterpret_cast<PUSN_RECORD>(static_cast<PCHAR>(Buffer) + sizeof(USN));
 
 		while (dwRetBytes > 0)
 		{
-			// »ñÈ¡µ½µÄĞÅÏ¢  	
+			// è·å–åˆ°çš„ä¿¡æ¯  	
 			const CString CfileName(UsnRecord->FileName, UsnRecord->FileNameLength / 2);
 
 			pfrnName.filename = CfileName;
 			pfrnName.pfrn = UsnRecord->ParentFileReferenceNumber;
 
 			frnPfrnNameMap[UsnRecord->FileReferenceNumber] = pfrnName;
-			// »ñÈ¡ÏÂÒ»¸ö¼ÇÂ¼  
+			// è·å–ä¸‹ä¸€ä¸ªè®°å½•  
 			const auto recordLen = UsnRecord->RecordLength;
 			dwRetBytes -= recordLen;
 			UsnRecord = reinterpret_cast<PUSN_RECORD>(reinterpret_cast<PCHAR>(UsnRecord) + recordLen);
 		}
-		// »ñÈ¡ÏÂÒ»Ò³Êı¾İ 
+		// è·å–ä¸‹ä¸€é¡µæ•°æ® 
 		med.StartFileReferenceNumber = *reinterpret_cast<USN*>(&Buffer);
 	}
 	return true;
@@ -719,19 +719,19 @@ void closeSharedMemory()
 
 void createFileMapping(HANDLE& hMapFile, LPVOID& pBuf, size_t memorySize, const char* sharedMemoryName)
 {
-	// ´´½¨¹²ÏíÎÄ¼ş¾ä±ú
+	// åˆ›å»ºå…±äº«æ–‡ä»¶å¥æŸ„
 	hMapFile = CreateFileMappingA(
-		INVALID_HANDLE_VALUE, // ÎïÀíÎÄ¼ş¾ä±ú
-		nullptr, // Ä¬ÈÏ°²È«¼¶±ğ
-		PAGE_READWRITE, // ¿É¶Á¿ÉĞ´
-		0, // ¸ßÎ»ÎÄ¼ş´óĞ¡
-		static_cast<DWORD>(memorySize), // µÍÎ»ÎÄ¼ş´óĞ¡
+		INVALID_HANDLE_VALUE, // ç‰©ç†æ–‡ä»¶å¥æŸ„
+		nullptr, // é»˜è®¤å®‰å…¨çº§åˆ«
+		PAGE_READWRITE, // å¯è¯»å¯å†™
+		0, // é«˜ä½æ–‡ä»¶å¤§å°
+		static_cast<DWORD>(memorySize), // ä½ä½æ–‡ä»¶å¤§å°
 		sharedMemoryName
 	);
 
 	pBuf = MapViewOfFile(
-		hMapFile, // ¹²ÏíÄÚ´æµÄ¾ä±ú
-		FILE_MAP_ALL_ACCESS, // ¿É¶ÁĞ´Ğí¿É
+		hMapFile, // å…±äº«å†…å­˜çš„å¥æŸ„
+		FILE_MAP_ALL_ACCESS, // å¯è¯»å†™è®¸å¯
 		0,
 		0,
 		memorySize
