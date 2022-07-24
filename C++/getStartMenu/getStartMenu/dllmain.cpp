@@ -25,20 +25,18 @@ JNIEXPORT jstring JNICALL Java_file_engine_dllInterface_GetStartMenu_getStartMen
 
 string wstringToString(const wstring& wstr)
 {
-	const LPCWSTR pwszSrc = wstr.c_str();
-	const int nLen = WideCharToMultiByte(CP_ACP, 0, pwszSrc, -1, NULL, 0, NULL, NULL);
+	auto pwszSrc = wstr.c_str();
+	const int nLen = WideCharToMultiByte(CP_ACP, 0, pwszSrc, -1, nullptr, 0, nullptr, nullptr);
 	if (nLen == 0)
 		return "";
 
-	auto pszDst = new char[nLen];
+	const auto pszDst = new char[nLen];
 	if (!pszDst)
 		return "";
 
-	WideCharToMultiByte(CP_ACP, 0, pwszSrc, -1, pszDst, nLen, NULL, NULL);
+	WideCharToMultiByte(CP_ACP, 0, pwszSrc, -1, pszDst, nLen, nullptr, nullptr);
 	std::string str(pszDst);
 	delete[] pszDst;
-	pszDst = nullptr;
-
 	return str;
 }
 
