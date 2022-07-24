@@ -157,7 +157,7 @@ bool pop_add_file(string& record)
  */
 inline std::string to_utf8(const wchar_t* buffer, int len)
 {
-	const auto nChars = ::WideCharToMultiByte(
+	const auto nChars = WideCharToMultiByte(
 		CP_UTF8,
 		0,
 		buffer,
