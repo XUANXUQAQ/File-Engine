@@ -40,8 +40,8 @@ import static file.engine.utils.StartupUtil.hasStartup;
 
 public class MainClass {
     private static final int UPDATE_DATABASE_THRESHOLD = 3;
-    private static final String FILE_MONITOR_MD5 = "b6b09efb3f1471cbac1b01df92ce983a";
-    private static final String GET_ASC_II_MD5 = "dea00d07d351fece770cd0bb2ad9af10";
+    private static final String FILE_MONITOR_MD5 = "b2aacfff272fac4996febf50423031a8";
+    private static final String GET_ASC_II_MD5 = "cb1a74fdf7a0721e89ea1af49938b3ed";
     private static final String HOTKEY_LISTENER_MD5 = "6d71f646529b69cff9d50fcce8d4b6e4";
     private static final String IS_LOCAL_DISK_MD5 = "59793a286030bfafe8b8f0fa84b498ba";
     private static final String FILE_SEARCHER_USN_MD5 = "6f2bd9509a0d1b0953ca006d27743b4a";
@@ -50,7 +50,7 @@ public class MainClass {
     private static final String SHORTCUT_GEN_MD5 = "fa4e26f99f3dcd58d827828c411ea5d7";
     private static final String RESULT_PIPE_MD5 = "35e8f5de0917a9a557d81efbab0988cc";
     private static final String GET_DPI_MD5 = "2d835577b3505af292966411b50e93b4";
-    private static final String GET_START_MENU_MD5 = "3c83f83fe7273a44d9e3c27510c2e342";
+    private static final String GET_START_MENU_MD5 = "b446b307fae7646f9d7cd0064f55d1af";
     private static final String SQLITE_JDBC_MD5 = "580fd050832e37d14bc04e8d5d13b7b1";
 
     /**
