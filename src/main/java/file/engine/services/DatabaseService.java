@@ -1322,10 +1322,11 @@ public class DatabaseService {
             try {
                 SearchBar searchBar = SearchBar.getInstance();
                 while (isSharedMemoryCreated.get()) {
-                    if (shouldStopSearch.get()) {
-                        if (!searchBar.isVisible()) {
-                            isSharedMemoryCreated.set(false);
-                            ResultPipe.INSTANCE.closeAllSharedMemory();
+                    if (shouldStopSearch.get() && !searchBar.isVisible()) {
+                        isSharedMemoryCreated.set(false);
+                        ResultPipe.INSTANCE.closeAllSharedMemory();
+                        if (IsDebug.isDebug()) {
+                            System.out.println("已关闭共享内存");
                         }
                     }
                     TimeUnit.MILLISECONDS.sleep(250);
@@ -1402,7 +1403,8 @@ public class DatabaseService {
                         createAllIndex();
                     }
                     setStatus(Constants.Enums.DatabaseStatus.NORMAL);
-
+                    //关闭共享内存
+                    closeSharedMemoryOnIdle();
                     // 搜索完成，更新isDatabaseUpdated标志，结束UpdateDatabaseEvent事件等待
                     isDatabaseUpdated.set(true);
                     isReadFromSharedMemory.set(false);
@@ -1422,24 +1424,23 @@ public class DatabaseService {
         if (status == Constants.Enums.DatabaseStatus.MANUAL_UPDATE || ProcessUtil.isProcessExist("fileSearcherUSN.exe")) {
             throw new RuntimeException("already searching");
         }
+        // 复制数据库到tmp
+        SQLiteUtil.copyDatabases("data", "tmp");
         setStatus(Constants.Enums.DatabaseStatus.MANUAL_UPDATE);
         // 停止搜索
         stopSearch();
         executeAllSQLAndWait(3000);
-        recreateDatabase();
-        waitForCommandSet(SqlTaskIds.CREATE_TABLE);
 
         SQLiteUtil.closeAll();
-        // 复制数据库到tmp
-        SQLiteUtil.copyDatabases("data", "tmp");
         SQLiteUtil.initAllConnections("tmp");
+        if (IsDebug.isDebug()) {
+            System.out.println("成功切换到临时数据库");
+        }
 
         // 检查数据库文件大小，过大则删除
         checkDbFileSize(isDropPrevious);
 
         isSharedMemoryCreated.set(true);
-        //创建检测系统空闲线程，当检测到系统空闲时关闭共享内存
-        closeSharedMemoryOnIdle();
         try {
             // 创建搜索进程并等待
             searchByUSN(AllConfigs.getInstance().getAvailableDisks(), ignorePath.toLowerCase());
@@ -1452,31 +1453,31 @@ public class DatabaseService {
         return true;
     }
 
-    /**
-     * 等待sql任务执行
-     *
-     * @param taskId 任务id
+    /*
+      等待sql任务执行
+
+      @param taskId 任务id
      */
-    private void waitForCommandSet(@SuppressWarnings("SameParameterValue") SqlTaskIds taskId) {
-        try {
-            EventManagement eventManagement = EventManagement.getInstance();
-            long tmpStartTime = System.currentTimeMillis();
-            while (eventManagement.notMainExit()) {
-                //等待
-                if (System.currentTimeMillis() - tmpStartTime > 60 * 1000) {
-                    System.err.println("等待SQL语句任务" + taskId + "处理超时");
-                    break;
-                }
-                //判断commandSet中是否还有taskId存在
-                if (!isTaskExistInCommandSet(taskId)) {
-                    break;
-                }
-                TimeUnit.MILLISECONDS.sleep(10);
-            }
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
+//    private void waitForCommandSet(@SuppressWarnings("SameParameterValue") SqlTaskIds taskId) {
+//        try {
+//            EventManagement eventManagement = EventManagement.getInstance();
+//            long tmpStartTime = System.currentTimeMillis();
+//            while (eventManagement.notMainExit()) {
+//                //等待
+//                if (System.currentTimeMillis() - tmpStartTime > 60 * 1000) {
+//                    System.err.println("等待SQL语句任务" + taskId + "处理超时");
+//                    break;
+//                }
+//                //判断commandSet中是否还有taskId存在
+//                if (!isTaskExistInCommandSet(taskId)) {
+//                    break;
+//                }
+//                TimeUnit.MILLISECONDS.sleep(10);
+//            }
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
+//    }
 
     /**
      * 获取缓存数量
@@ -1487,14 +1488,14 @@ public class DatabaseService {
         return databaseCacheNum.get();
     }
 
-    private boolean isTaskExistInCommandSet(SqlTaskIds taskId) {
-        for (SQLWithTaskId tasks : commandQueue) {
-            if (tasks.taskId == taskId) {
-                return true;
-            }
-        }
-        return false;
-    }
+//    private boolean isTaskExistInCommandSet(SqlTaskIds taskId) {
+//        for (SQLWithTaskId tasks : commandQueue) {
+//            if (tasks.taskId == taskId) {
+//                return true;
+//            }
+//        }
+//        return false;
+//    }
 
     private HashMap<String, Integer> queryAllWeights() {
         HashMap<String, Integer> stringIntegerHashMap = new HashMap<>();
