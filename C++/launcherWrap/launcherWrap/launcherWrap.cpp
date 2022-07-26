@@ -1,6 +1,4 @@
-﻿#define _CRT_SECURE_NO_WARNINGS
-
-#include <corecrt_io.h>
+﻿#include <corecrt_io.h>
 #include <direct.h>
 #include <Windows.h>
 #include <ShlObj.h>
@@ -258,9 +256,9 @@ inline time_t convert(int year, int month, int day)
 inline int get_days(const char* from, const char* to)
 {
 	int year, month, day;
-	sscanf(from, "%d-%d-%d.log", &year, &month, &day);
+	sscanf_s(from, "%d-%d-%d.log", &year, &month, &day);
 	const int fromSecond = static_cast<int>(convert(year, month, day));
-	sscanf(to, "%d-%d-%d", &year, &month, &day);
+	sscanf_s(to, "%d-%d-%d", &year, &month, &day);
 	const int toSecond = static_cast<int>(convert(year, month, day));
 	return (toSecond - fromSecond) / 24 / 3600;
 }
