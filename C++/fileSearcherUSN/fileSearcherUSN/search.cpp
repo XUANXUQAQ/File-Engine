@@ -50,22 +50,29 @@ void volume::initVolume()
 			const auto endIter = frnPfrnNameMap.end();
 			for (auto iter = frnPfrnNameMap.begin(); iter != endIter; ++iter)
 			{
-				auto name = iter->second.filename;
-				const auto ascii = getAscIISum(to_utf8(wstring(name)));
-				CString path = _T("\0");
-				getPath(iter->first, path);
-				CString record = vol + path;
+				auto& name = iter->second.filename;
+				const int ascii = getAscIISum(to_utf8(wstring(name)));
+				CString resultPath = _T("\0");
+				getPath(iter->first, resultPath);
+				CString record = vol + resultPath;
 				auto fullPath = to_utf8(wstring(record));
 				if (!isIgnore(fullPath))
 				{
-					collectResult(ascii, fullPath);
+					collectResultToResultMap(ascii, fullPath);
 				}
 			}
 		}
+#ifdef TEST
 		catch (exception& e)
 		{
 			cout << e.what() << endl;
 		}
+#else
+		catch (exception&)
+		{
+		}
+#endif
+
 #ifdef TEST
 		cout << "start copy disk " << this->getDiskPath() << " to shared memory" << endl;
 #endif
@@ -107,7 +114,7 @@ void volume::copyResultsToSharedMemory()
 	}
 }
 
-void volume::collectResult(const int ascii, const string& fullPath)
+void volume::collectResultToResultMap(const int ascii, const string& fullPath)
 {
 	const int asciiGroup = ascii / 100;
 	if (asciiGroup > 40)
@@ -177,7 +184,8 @@ void volume::createSharedMemoryAndCopy(const string& listName, const int priorit
 		return;
 	}
 	long long count = 0;
-	for (auto iterator = result.unsafe_begin(); iterator != result.unsafe_end() && count <= MAX_RECORD_COUNT; ++iterator)
+	for (auto iterator = result.unsafe_begin(); iterator != result.unsafe_end() && count <= MAX_RECORD_COUNT; ++
+	     iterator)
 	{
 		memcpy_s(reinterpret_cast<void*>(reinterpret_cast<long long>(pBuf) + count * RECORD_MAX_PATH), RECORD_MAX_PATH,
 		         iterator->c_str(), iterator->length());
@@ -193,11 +201,13 @@ void volume::saveAllResultsToDb()
 	initAllPrepareStatement();
 	for (auto& eachTable : allResultsMap)
 	{
+		const int asciiGroup = stoi(eachTable.first.substr(4));
 		for (auto& eachResult : *eachTable.second)
 		{
+			const int priority = eachResult.first;
 			for (auto iter = eachResult.second.unsafe_begin(); iter != eachResult.second.unsafe_end(); ++iter)
 			{
-				saveResult(*iter, getAscIISum(getFileName(*iter)));
+				saveResult(*iter, getAscIISum(getFileName(*iter)), asciiGroup, priority);
 			}
 		}
 	}
@@ -281,12 +291,12 @@ void volume::finalizeAllStatement() const
 	sqlite3_finalize(stmt40);
 }
 
-void volume::saveSingleRecordToDB(sqlite3_stmt* stmt, const string& record, const int ascii) const
+void volume::saveSingleRecordToDB(sqlite3_stmt* stmt, const string& record, const int ascii, const int priority)
 {
 	sqlite3_reset(stmt);
 	sqlite3_bind_int(stmt, 1, ascii);
 	sqlite3_bind_text(stmt, 2, record.c_str(), -1, SQLITE_STATIC);
-	sqlite3_bind_int(stmt, 3, getPriorityByPath(record));
+	sqlite3_bind_int(stmt, 3, priority);
 	sqlite3_step(stmt);
 }
 
@@ -349,133 +359,132 @@ bool volume::isIgnore(const string& _path) const
 	});
 }
 
-void volume::saveResult(const string& _path, const int ascII) const
+void volume::saveResult(const string& _path, const int ascII, const int asciiGroup, const int priority) const
 {
-	const int asciiGroup = ascII / 100;
 	switch (asciiGroup)
 	{
 	case 0:
-		saveSingleRecordToDB(stmt0, _path, ascII);
+		saveSingleRecordToDB(stmt0, _path, ascII, priority);
 		break;
 	case 1:
-		saveSingleRecordToDB(stmt1, _path, ascII);
+		saveSingleRecordToDB(stmt1, _path, ascII, priority);
 		break;
 	case 2:
-		saveSingleRecordToDB(stmt2, _path, ascII);
+		saveSingleRecordToDB(stmt2, _path, ascII, priority);
 		break;
 	case 3:
-		saveSingleRecordToDB(stmt3, _path, ascII);
+		saveSingleRecordToDB(stmt3, _path, ascII, priority);
 		break;
 	case 4:
-		saveSingleRecordToDB(stmt4, _path, ascII);
+		saveSingleRecordToDB(stmt4, _path, ascII, priority);
 		break;
 	case 5:
-		saveSingleRecordToDB(stmt5, _path, ascII);
+		saveSingleRecordToDB(stmt5, _path, ascII, priority);
 		break;
 	case 6:
-		saveSingleRecordToDB(stmt6, _path, ascII);
+		saveSingleRecordToDB(stmt6, _path, ascII, priority);
 		break;
 	case 7:
-		saveSingleRecordToDB(stmt7, _path, ascII);
+		saveSingleRecordToDB(stmt7, _path, ascII, priority);
 		break;
 	case 8:
-		saveSingleRecordToDB(stmt8, _path, ascII);
+		saveSingleRecordToDB(stmt8, _path, ascII, priority);
 		break;
 	case 9:
-		saveSingleRecordToDB(stmt9, _path, ascII);
+		saveSingleRecordToDB(stmt9, _path, ascII, priority);
 		break;
 	case 10:
-		saveSingleRecordToDB(stmt10, _path, ascII);
+		saveSingleRecordToDB(stmt10, _path, ascII, priority);
 		break;
 	case 11:
-		saveSingleRecordToDB(stmt11, _path, ascII);
+		saveSingleRecordToDB(stmt11, _path, ascII, priority);
 		break;
 	case 12:
-		saveSingleRecordToDB(stmt12, _path, ascII);
+		saveSingleRecordToDB(stmt12, _path, ascII, priority);
 		break;
 	case 13:
-		saveSingleRecordToDB(stmt13, _path, ascII);
+		saveSingleRecordToDB(stmt13, _path, ascII, priority);
 		break;
 	case 14:
-		saveSingleRecordToDB(stmt14, _path, ascII);
+		saveSingleRecordToDB(stmt14, _path, ascII, priority);
 		break;
 	case 15:
-		saveSingleRecordToDB(stmt15, _path, ascII);
+		saveSingleRecordToDB(stmt15, _path, ascII, priority);
 		break;
 	case 16:
-		saveSingleRecordToDB(stmt16, _path, ascII);
+		saveSingleRecordToDB(stmt16, _path, ascII, priority);
 		break;
 	case 17:
-		saveSingleRecordToDB(stmt17, _path, ascII);
+		saveSingleRecordToDB(stmt17, _path, ascII, priority);
 		break;
 	case 18:
-		saveSingleRecordToDB(stmt18, _path, ascII);
+		saveSingleRecordToDB(stmt18, _path, ascII, priority);
 		break;
 	case 19:
-		saveSingleRecordToDB(stmt19, _path, ascII);
+		saveSingleRecordToDB(stmt19, _path, ascII, priority);
 		break;
 	case 20:
-		saveSingleRecordToDB(stmt20, _path, ascII);
+		saveSingleRecordToDB(stmt20, _path, ascII, priority);
 		break;
 	case 21:
-		saveSingleRecordToDB(stmt21, _path, ascII);
+		saveSingleRecordToDB(stmt21, _path, ascII, priority);
 		break;
 	case 22:
-		saveSingleRecordToDB(stmt22, _path, ascII);
+		saveSingleRecordToDB(stmt22, _path, ascII, priority);
 		break;
 	case 23:
-		saveSingleRecordToDB(stmt23, _path, ascII);
+		saveSingleRecordToDB(stmt23, _path, ascII, priority);
 		break;
 	case 24:
-		saveSingleRecordToDB(stmt24, _path, ascII);
+		saveSingleRecordToDB(stmt24, _path, ascII, priority);
 		break;
 	case 25:
-		saveSingleRecordToDB(stmt25, _path, ascII);
+		saveSingleRecordToDB(stmt25, _path, ascII, priority);
 		break;
 	case 26:
-		saveSingleRecordToDB(stmt26, _path, ascII);
+		saveSingleRecordToDB(stmt26, _path, ascII, priority);
 		break;
 	case 27:
-		saveSingleRecordToDB(stmt27, _path, ascII);
+		saveSingleRecordToDB(stmt27, _path, ascII, priority);
 		break;
 	case 28:
-		saveSingleRecordToDB(stmt28, _path, ascII);
+		saveSingleRecordToDB(stmt28, _path, ascII, priority);
 		break;
 	case 29:
-		saveSingleRecordToDB(stmt29, _path, ascII);
+		saveSingleRecordToDB(stmt29, _path, ascII, priority);
 		break;
 	case 30:
-		saveSingleRecordToDB(stmt30, _path, ascII);
+		saveSingleRecordToDB(stmt30, _path, ascII, priority);
 		break;
 	case 31:
-		saveSingleRecordToDB(stmt31, _path, ascII);
+		saveSingleRecordToDB(stmt31, _path, ascII, priority);
 		break;
 	case 32:
-		saveSingleRecordToDB(stmt32, _path, ascII);
+		saveSingleRecordToDB(stmt32, _path, ascII, priority);
 		break;
 	case 33:
-		saveSingleRecordToDB(stmt33, _path, ascII);
+		saveSingleRecordToDB(stmt33, _path, ascII, priority);
 		break;
 	case 34:
-		saveSingleRecordToDB(stmt34, _path, ascII);
+		saveSingleRecordToDB(stmt34, _path, ascII, priority);
 		break;
 	case 35:
-		saveSingleRecordToDB(stmt35, _path, ascII);
+		saveSingleRecordToDB(stmt35, _path, ascII, priority);
 		break;
 	case 36:
-		saveSingleRecordToDB(stmt36, _path, ascII);
+		saveSingleRecordToDB(stmt36, _path, ascII, priority);
 		break;
 	case 37:
-		saveSingleRecordToDB(stmt37, _path, ascII);
+		saveSingleRecordToDB(stmt37, _path, ascII, priority);
 		break;
 	case 38:
-		saveSingleRecordToDB(stmt38, _path, ascII);
+		saveSingleRecordToDB(stmt38, _path, ascII, priority);
 		break;
 	case 39:
-		saveSingleRecordToDB(stmt39, _path, ascII);
+		saveSingleRecordToDB(stmt39, _path, ascII, priority);
 		break;
 	case 40:
-		saveSingleRecordToDB(stmt40, _path, ascII);
+		saveSingleRecordToDB(stmt40, _path, ascII, priority);
 		break;
 	default:
 		break;

@@ -31,7 +31,7 @@ public:
 		return vol;
 	}
 
-	void collectResult(int ascii, const std::string& fullPath);
+	void collectResultToResultMap(int ascii, const std::string& fullPath);
 
 	/**
 	 * 将内存中的数据保存到共享内存中
@@ -101,12 +101,12 @@ private:
 	bool getUSNInfo();
 	bool getUSNJournal();
 	bool deleteUSN() const;
-	void saveResult(const std::string& _path, int ascII) const;
+	void saveResult(const std::string& _path, int ascII, int asciiGroup, int priority) const;
 	void getPath(DWORDLONG frn, CString& _path);
 	static int getAscIISum(const std::string& name);
 	bool isIgnore(const std::string& path) const;
 	void finalizeAllStatement() const;
-	void saveSingleRecordToDB(sqlite3_stmt* stmt, const std::string& record, int ascii) const;
+	static void saveSingleRecordToDB(sqlite3_stmt* stmt, const std::string& record, int ascii, int priority);
 	int getPriorityBySuffix(const std::string& suffix) const;
 	int getPriorityByPath(const std::string& _path) const;
 	void initAllPrepareStatement();
