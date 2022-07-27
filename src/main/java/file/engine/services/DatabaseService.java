@@ -1599,11 +1599,11 @@ public class DatabaseService {
     private static void startSearchEvent(Event event) {
         StartSearchEvent startSearchEvent = (StartSearchEvent) event;
         DatabaseService databaseService = getInstance();
-        databaseService.searchText = startSearchEvent.searchText;
-        databaseService.searchCase = startSearchEvent.searchCase;
+        databaseService.searchText = startSearchEvent.searchText.get();
+        databaseService.searchCase = startSearchEvent.searchCase.get();
         databaseService.isIgnoreCase = databaseService.searchCase == null ||
                 Arrays.stream(databaseService.searchCase).noneMatch(s -> s.equals(Constants.Enums.SearchCase.CASE));
-        String[] _keywords = startSearchEvent.keywords;
+        String[] _keywords = startSearchEvent.keywords.get();
         databaseService.keywords = new String[_keywords.length];
         databaseService.keywordsLowerCase = new String[_keywords.length];
         databaseService.isKeywordPath = new boolean[_keywords.length];
