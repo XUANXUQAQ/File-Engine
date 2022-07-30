@@ -2811,10 +2811,6 @@ public class SettingsFrame {
         proxyTypeButtonGroup.add(radioButtonProxyTypeHttp);
         proxyTypeButtonGroup.add(radioButtonProxyTypeSocks5);
 
-        tmp_openLastFolderKeyCode = allConfigs.getOpenLastFolderKeyCode();
-        tmp_runAsAdminKeyCode = allConfigs.getRunAsAdminKeyCode();
-        tmp_copyPathKeyCode = allConfigs.getCopyPathKeyCode();
-
         addUpdateAddressToComboBox();
 
         addBorderTypeToComboBox();
@@ -3092,6 +3088,9 @@ public class SettingsFrame {
             isFramePrepared = true;
             prepareFrame();
         }
+        tmp_openLastFolderKeyCode = allConfigs.getOpenLastFolderKeyCode();
+        tmp_runAsAdminKeyCode = allConfigs.getRunAsAdminKeyCode();
+        tmp_copyPathKeyCode = allConfigs.getCopyPathKeyCode();
         frame.setResizable(true);
         double dpi = DpiUtil.getDpi();
         int width, height;
