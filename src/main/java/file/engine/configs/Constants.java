@@ -1,5 +1,7 @@
 package file.engine.configs;
 
+import file.engine.utils.system.properties.IsDebug;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
@@ -24,13 +26,17 @@ public class Constants {
     public static final String DEFAULT_SWING_THEME = "MaterialLighter";
 
     static {
-        Properties properties = new Properties();
-        try (InputStream projectInfo = Constants.class.getResourceAsStream("/project-info.properties")) {
-            properties.load(projectInfo);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        if (IsDebug.isDebug()) {
+            version = "0";
+        } else {
+            Properties properties = new Properties();
+            try (InputStream projectInfo = Constants.class.getResourceAsStream("/project-info.properties")) {
+                properties.load(projectInfo);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            version = properties.getProperty("project.version");
         }
-        version = properties.getProperty("project.version");
     }
 
     public static class Enums {

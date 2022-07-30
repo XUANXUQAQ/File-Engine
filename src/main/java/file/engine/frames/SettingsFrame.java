@@ -389,6 +389,25 @@ public class SettingsFrame {
     private void addTextFieldListener() {
         textFieldHotkey.addKeyListener(new KeyListener() {
             boolean reset = true;
+            final LinkedHashSet<String> hotkeys = new LinkedHashSet<>();
+            final HashMap<Integer, String> availableHotkeyMap = new HashMap<>() {{
+                put(KeyEvent.VK_CONTROL, "Ctrl");
+                put(KeyEvent.VK_ALT, "Alt");
+                put(KeyEvent.VK_SHIFT, "Shift");
+                put(0x5B, "Win");
+                put(KeyEvent.VK_F1, "F1");
+                put(KeyEvent.VK_F2, "F2");
+                put(KeyEvent.VK_F3, "F3");
+                put(KeyEvent.VK_F4, "F4");
+                put(KeyEvent.VK_F5, "F5");
+                put(KeyEvent.VK_F6, "F6");
+                put(KeyEvent.VK_F7, "F7");
+                put(KeyEvent.VK_F8, "F8");
+                put(KeyEvent.VK_F9, "F9");
+                put(KeyEvent.VK_F10, "F10");
+                put(KeyEvent.VK_F11, "F11");
+                put(KeyEvent.VK_F12, "F12");
+            }};
 
             @Override
             public void keyTyped(KeyEvent e) {
@@ -396,43 +415,24 @@ public class SettingsFrame {
 
             @Override
             public void keyPressed(KeyEvent e) {
-                int key = e.getKeyCode();
+                final int key = e.getKeyCode();
                 if (reset) {
                     textFieldHotkey.setText(null);
+                    hotkeys.clear();
                     reset = false;
                 }
-                textFieldHotkey.setCaretPosition(textFieldHotkey.getText().length());
-                if (key == 17) {
-                    if (!textFieldHotkey.getText().contains("Ctrl + ")) {
-                        textFieldHotkey.setText(textFieldHotkey.getText() + "Ctrl + ");
-                    }
-                } else if (key == 18) {
-                    if (!textFieldHotkey.getText().contains("Alt + ")) {
-                        textFieldHotkey.setText(textFieldHotkey.getText() + "Alt + ");
-                    }
-                } else if (key == 524) {
-                    if (!textFieldHotkey.getText().contains("Win + ")) {
-                        textFieldHotkey.setText(textFieldHotkey.getText() + "Win + ");
-                    }
-                } else if (key == 16) {
-                    if (!textFieldHotkey.getText().contains("Shift + ")) {
-                        textFieldHotkey.setText(textFieldHotkey.getText() + "Shift + ");
-                    }
-                } else if (64 < key && key < 91) {
-                    String txt = textFieldHotkey.getText();
-                    if (!txt.isEmpty()) {
-                        char c1 = Character.toUpperCase(txt.charAt(txt.length() - 1));
-                        if (64 < c1 && c1 < 91) {
-                            String text = txt.substring(0, txt.length() - 1);
-                            textFieldHotkey.setText(text + (char) key);
-                        } else {
-                            textFieldHotkey.setText(txt + (char) key);
-                        }
-                    }
-                    if (txt.length() == 1) {
-                        textFieldHotkey.setText(null);
-                    }
+                if (availableHotkeyMap.containsKey(key) || 'A' <= key && key <= 'Z') {
+                    hotkeys.add(availableHotkeyMap.getOrDefault(key, String.valueOf((char) key)));
                 }
+                StringBuilder stringBuilder = new StringBuilder();
+                String token = " + ";
+                final int size = hotkeys.size();
+                ArrayList<String> tmpHotkeys = new ArrayList<>(hotkeys);
+                for (int i = 0 ; i < size - 1; ++i) {
+                    stringBuilder.append(tmpHotkeys.get(i)).append(token);
+                }
+                stringBuilder.append(tmpHotkeys.get(size - 1));
+                textFieldHotkey.setText(stringBuilder.toString());
             }
 
             @Override

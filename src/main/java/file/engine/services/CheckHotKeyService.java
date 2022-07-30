@@ -21,6 +21,7 @@ import java.awt.event.KeyEvent;
 import java.util.HashMap;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class CheckHotKeyService {
 
@@ -44,33 +45,25 @@ public class CheckHotKeyService {
         HotkeyListener.INSTANCE.stopListen();
     }
 
+    private int[] parseHotkey(String hotkey) {
+        int[] hotkeys = new int[]{
+                -1, -1, -1, -1, -1
+        };
+        String[] hotkeyString = RegexUtil.plus.split(hotkey);
+        for (int i = 0; i < hotkeyString.length; ++i) {
+            String eachHotkey = hotkeyString[i].trim();
+            hotkeys[i] = map.get(eachHotkey);
+        }
+        return hotkeys;
+    }
+
     //注册快捷键
     private void registerHotkey(String hotkey) {
         if (!isRegistered) {
             isRegistered = true;
-            //noinspection DuplicatedCode
-            int hotkey1 = -1, hotkey2 = -1, hotkey3 = -1, hotkey4 = -1, hotkey5;
-            String[] hotkeys = RegexUtil.plus.split(hotkey);
-            int length = hotkeys.length;
-            for (int i = 0; i < length - 1; i++) {
-                if (i == 0) {
-                    hotkey1 = map.get(hotkeys[i]);
-                } else if (i == 1) {
-                    hotkey2 = map.get(hotkeys[i]);
-                } else if (i == 2) {
-                    hotkey3 = map.get(hotkeys[i]);
-                } else if (i == 4) {
-                    hotkey4 = map.get(hotkeys[i]);
-                }
-            }
-            hotkey5 = hotkeys[length - 1].charAt(0);
-            int finalHotkey = hotkey1;
-            int finalHotkey1 = hotkey2;
-            int finalHotkey2 = hotkey3;
-            int finalHotkey3 = hotkey4;
-            int finalHotkey4 = hotkey5;
+            int[] hotkeyIds = parseHotkey(hotkey);
             CachedThreadPoolUtil.getInstance().executeTask(() -> {
-                HotkeyListener.INSTANCE.registerHotKey(finalHotkey, finalHotkey1, finalHotkey2, finalHotkey3, finalHotkey4);
+                HotkeyListener.INSTANCE.registerHotKey(hotkeyIds[0], hotkeyIds[1], hotkeyIds[2], hotkeyIds[3], hotkeyIds[4]);
                 HotkeyListener.INSTANCE.startListen();
             });
         } else {
@@ -81,51 +74,37 @@ public class CheckHotKeyService {
     //检查快捷键是否有效
     private boolean isHotkeyAvailable(String hotkey) {
         String[] hotkeys = RegexUtil.plus.split(hotkey);
-        int length = hotkeys.length;
+        final int length = hotkeys.length;
+        if (length > 5) {
+            return false;
+        }
         for (int i = 0; i < length - 1; i++) {
-            String each = hotkeys[i];
+            String each = hotkeys[i].trim();
             if (!map.containsKey(each)) {
                 return false;
             }
         }
-        return 'A' <= hotkey.charAt(hotkey.length() - 1) && hotkey.charAt(hotkey.length() - 1) <= 'Z';
+        return true;
     }
 
     //更改快捷键,必须在register后才可用
     private void changeHotKey(String hotkey) {
         if (!isRegistered) {
-            throw new NullPointerException();
+            throw new RuntimeException("should not reach here. Call registerHotkey() first");
         }
-        //noinspection DuplicatedCode
-        int hotkey1 = -1, hotkey2 = -1, hotkey3 = -1, hotkey4 = -1, hotkey5;
-        String[] hotkeys = RegexUtil.plus.split(hotkey);
-        int length = hotkeys.length;
-        for (int i = 0; i < length - 1; i++) {
-            if (i == 0) {
-                hotkey1 = map.get(hotkeys[i]);
-            } else if (i == 1) {
-                hotkey2 = map.get(hotkeys[i]);
-            } else if (i == 2) {
-                hotkey3 = map.get(hotkeys[i]);
-            } else if (i == 4) {
-                hotkey4 = map.get(hotkeys[i]);
-            }
-        }
-        hotkey5 = hotkeys[length - 1].charAt(0);
-        HotkeyListener.INSTANCE.registerHotKey(hotkey1, hotkey2, hotkey3, hotkey4, hotkey5);
+        int[] hotkeyIds = parseHotkey(hotkey);
+        HotkeyListener.INSTANCE.registerHotKey(hotkeyIds[0], hotkeyIds[1], hotkeyIds[2], hotkeyIds[3], hotkeyIds[4]);
     }
 
     private void startListenHotkeyThread() {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
-            boolean isExecuted = true;
-            var ref = new Object() {
-                long startVisibleTime = 0;
-                long endVisibleTime;
-            };
             HotkeyListener instance = HotkeyListener.INSTANCE;
             EventManagement eventManagement = EventManagement.getInstance();
             try {
-                ref.endVisibleTime = System.currentTimeMillis();
+                AtomicLong startVisibleTime = new AtomicLong();
+                AtomicLong endVisibleTime = new AtomicLong();
+                boolean isExecuted = true;
+                endVisibleTime.set(System.currentTimeMillis());
                 //获取快捷键状态，检测是否被按下线程
                 SearchBar searchBar = SearchBar.getInstance();
                 while (eventManagement.notMainExit()) {
@@ -133,24 +112,24 @@ public class CheckHotKeyService {
                         //是否搜索框可见
                         if (searchBar.isVisible()) {
                             //搜索框最小可见时间为200ms，必须显示超过200ms后才响应关闭事件，防止闪屏
-                            if (System.currentTimeMillis() - ref.startVisibleTime > 200) {
+                            if (System.currentTimeMillis() - startVisibleTime.get() > 200) {
                                 //获取当前显示模式
                                 eventManagement.putEvent(new GetShowingModeEvent(), getShowingModeEvent -> {
                                     Optional<Constants.Enums.ShowingSearchBarMode> returnValue = getShowingModeEvent.getReturnValue();
                                     //noinspection OptionalGetWithoutIsPresent
                                     if (returnValue.get() == Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING) {
                                         eventManagement.putEvent(new HideSearchBarEvent());
-                                        ref.endVisibleTime = System.currentTimeMillis();
+                                        endVisibleTime.set(System.currentTimeMillis());
                                     } else {
                                         eventManagement.putEvent(new ShowSearchBarEvent(true, true));
-                                        ref.startVisibleTime = System.currentTimeMillis();
+                                        startVisibleTime.set(System.currentTimeMillis());
                                     }
                                 }, event1 -> System.err.println("获取当前显示模式任务执行失败"));
                             }
                         } else {
-                            if (System.currentTimeMillis() - ref.endVisibleTime > 200) {
+                            if (System.currentTimeMillis() - endVisibleTime.get() > 200) {
                                 eventManagement.putEvent(new ShowSearchBarEvent(true));
-                                ref.startVisibleTime = System.currentTimeMillis();
+                                startVisibleTime.set(System.currentTimeMillis());
                             }
                         }
                     }
@@ -185,18 +164,29 @@ public class CheckHotKeyService {
         getInstance().stopListen();
     }
 
-    private void initThreadPool() {
-        startListenHotkeyThread();
-    }
-
     private CheckHotKeyService() {
-        map = new HashMap<>();
-        map.put("Ctrl", KeyEvent.VK_CONTROL);
-        map.put("Alt", KeyEvent.VK_ALT);
-        map.put("Shift", KeyEvent.VK_SHIFT);
-        map.put("Win", 0x5B);
-
-        initThreadPool();
+        map = new HashMap<>() {{
+            put("Ctrl", KeyEvent.VK_CONTROL);
+            put("Alt", KeyEvent.VK_ALT);
+            put("Shift", KeyEvent.VK_SHIFT);
+            put("Win", 0x5B);
+            put("F1", KeyEvent.VK_F1);
+            put("F2", KeyEvent.VK_F2);
+            put("F3", KeyEvent.VK_F3);
+            put("F4", KeyEvent.VK_F4);
+            put("F5", KeyEvent.VK_F5);
+            put("F6", KeyEvent.VK_F6);
+            put("F7", KeyEvent.VK_F7);
+            put("F8", KeyEvent.VK_F8);
+            put("F9", KeyEvent.VK_F9);
+            put("F10", KeyEvent.VK_F10);
+            put("F11", KeyEvent.VK_F11);
+            put("F12", KeyEvent.VK_F12);
+        }};
+        for (int i = 'A'; i <= 'Z'; i++) {
+            map.put(String.valueOf((char) i), i);
+        }
+        startListenHotkeyThread();
     }
 }
 
