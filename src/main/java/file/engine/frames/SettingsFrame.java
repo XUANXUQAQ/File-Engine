@@ -41,7 +41,7 @@ import file.engine.utils.CachedThreadPoolUtil;
 import file.engine.utils.DpiUtil;
 import file.engine.utils.RegexUtil;
 import file.engine.utils.StartupUtil;
-import file.engine.utils.file.MoveDesktopFiles;
+import file.engine.utils.file.MoveDesktopFilesUtil;
 import file.engine.utils.system.properties.IsDebug;
 import file.engine.utils.system.properties.IsPreview;
 
@@ -358,7 +358,7 @@ public class SettingsFrame {
             }
             int isConfirmed = JOptionPane.showConfirmDialog(frame, TRANSLATE_SERVICE.getTranslation("Whether to remove and backup all files on the desktop," + "they will be in the program's Files folder, which may take a few minutes"));
             if (isConfirmed == JOptionPane.YES_OPTION) {
-                Future<Boolean> future = cachedThreadPoolUtil.executeTask(MoveDesktopFiles::start, false);
+                Future<Boolean> future = cachedThreadPoolUtil.executeTask(MoveDesktopFilesUtil::start, false);
                 try {
                     if (future == null) {
                         return;

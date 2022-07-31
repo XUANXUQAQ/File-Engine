@@ -16,6 +16,7 @@ import file.engine.event.handler.impl.stop.RestartEvent;
 import file.engine.event.handler.impl.taskbar.ShowTaskBarMessageEvent;
 import file.engine.frames.SearchBar;
 import file.engine.services.utils.PathMatchUtil;
+import file.engine.services.utils.SystemInfoUtil;
 import file.engine.services.utils.connection.SQLiteUtil;
 import file.engine.utils.*;
 import file.engine.utils.bit.Bit;

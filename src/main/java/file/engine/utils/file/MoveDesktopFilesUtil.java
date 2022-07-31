@@ -5,7 +5,7 @@ import javax.swing.filechooser.FileSystemView;
 import java.io.*;
 import java.util.ArrayList;
 
-public class MoveDesktopFiles {
+public class MoveDesktopFilesUtil {
     public static boolean start() {
         boolean desktop1HasConflictFile;
         boolean desktop2HasConflictFile;
