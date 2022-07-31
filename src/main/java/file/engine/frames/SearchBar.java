@@ -14,6 +14,7 @@ import file.engine.event.handler.impl.frame.searchBar.*;
 import file.engine.event.handler.impl.frame.settingsFrame.AddCacheEvent;
 import file.engine.event.handler.impl.frame.settingsFrame.IsCacheExistEvent;
 import file.engine.event.handler.impl.frame.settingsFrame.ShowSettingsFrameEvent;
+import file.engine.event.handler.impl.open.file.OpenFileEvent;
 import file.engine.event.handler.impl.plugin.GetPluginByIdentifierEvent;
 import file.engine.event.handler.impl.stop.RestartEvent;
 import file.engine.event.handler.impl.taskbar.ShowTaskBarMessageEvent;
@@ -170,7 +171,7 @@ public class SearchBar {
         //添加结果的鼠标移动事件响应
         addSearchBarMouseMotionListener();
 
-        //添加textfield对键盘的响应
+        //添加textField对键盘的响应
         addTextFieldKeyListener();
 
         addTextFieldFocusListener();
@@ -547,35 +548,6 @@ public class SearchBar {
         label.setSize(width, height);
     }
 
-    /**
-     * 创建需要打开的文件的快捷方式
-     *
-     * @param fileOrFolderPath  文件路径
-     * @param writeShortCutPath 保存快捷方式的位置
-     * @throws Exception 创建错误
-     */
-    private void createShortCut(String fileOrFolderPath, String writeShortCutPath, boolean isNotifyUser) throws Exception {
-        EventManagement eventManagement = EventManagement.getInstance();
-        TranslateService translateService = TranslateService.getInstance();
-        String lower = fileOrFolderPath.toLowerCase();
-        if (lower.endsWith(".lnk") || lower.endsWith(".url")) {
-            //直接复制文件
-            FileUtil.copyFile(new File(fileOrFolderPath), new File(writeShortCutPath));
-        } else {
-            File shortcutGen = new File("user/shortcutGenerator.vbs");
-            String shortcutGenPath = shortcutGen.getAbsolutePath();
-            String start = "cmd.exe /c start " + shortcutGenPath.substring(0, 2);
-            String end = "\"" + shortcutGenPath.substring(2) + "\"";
-            String commandToGenLnk = start + end + " /target:" + "\"" + fileOrFolderPath + "\"" + " " + "/shortcut:" + "\"" + writeShortCutPath + "\"" + " /workingdir:" + "\"" + fileOrFolderPath.substring(0, fileOrFolderPath.lastIndexOf(File.separator)) + "\"";
-//            String encoding = System.getProperty("sun.jnu.encoding");
-            Runtime.getRuntime().exec(commandToGenLnk);
-        }
-        if (isNotifyUser) {
-            eventManagement.putEvent(new ShowTaskBarMessageEvent(
-                    translateService.getTranslation("Info"),
-                    translateService.getTranslation("Shortcut created")));
-        }
-    }
 
     /**
      * 让搜索窗口响应鼠标双击事件以打开文件
@@ -591,6 +563,7 @@ public class SearchBar {
                 }
                 int count = e.getClickCount();
                 String res = listResults.get(currentResultCount.get());
+                // 如果点击的是插件显示的结果，则发送鼠标事件到对应插件
                 if (res != null && res.startsWith("plugin")) {
                     String[] split = splitPluginResult(res);
                     GetPluginByIdentifierEvent getPluginByIdentifierEvent = new GetPluginByIdentifierEvent(split[1]);
@@ -672,8 +645,9 @@ public class SearchBar {
 
                 if (e.getButton() == MouseEvent.BUTTON3 && runningMode != Constants.Enums.RunningMode.PLUGIN_MODE) {
                     //右键被点击
-                    double dpi = DpiUtil.getDpi();
-                    menu.show(searchBar, (int) (e.getX() / dpi), (int) (e.getY() / dpi));
+                    final double dpi = DpiUtil.getDpi();
+                    Point mouseLocation = MouseInfo.getPointerInfo().getLocation();
+                    menu.show(null, (int) (mouseLocation.getX() / dpi), (int) (mouseLocation.getY() / dpi));
                 } else if (e.getButton() == MouseEvent.BUTTON1) {
                     menu.setVisible(false);
                 }
@@ -993,13 +967,7 @@ public class SearchBar {
     }
 
     private void openFolderByExplorer(String dir) {
-        try {
-            saveCache(dir);
-            OpenFileUtil.openFolderByExplorer(dir);
-        } catch (IOException e) {
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(null, TranslateService.getInstance().getTranslation("Execute failed"));
-        }
+        EventManagement.getInstance().putEvent(new OpenFileEvent(OpenFileEvent.OpenStatus.LAST_DIR, dir), event -> saveCache(dir), null);
     }
 
     /**
@@ -1316,8 +1284,9 @@ public class SearchBar {
                                     try {
                                         String writePath = GetHandle.INSTANCE.getExplorerPath();
                                         if (writePath != null && !writePath.isEmpty()) {
-//                                            writePath = new String(writePath.getBytes(Charset.defaultCharset()), StandardCharsets.UTF_8);
-                                            createShortCut(finalF.getAbsolutePath(), writePath + File.separator + finalF.getName(), AllConfigs.getInstance().isShowTipOnCreatingLnk());
+                                            ShortcutCreateUtil.createShortCut(finalF.getAbsolutePath(),
+                                                    writePath + File.separator + finalF.getName(),
+                                                    AllConfigs.getInstance().isShowTipOnCreatingLnk());
                                         }
                                     } catch (Exception exception) {
                                         exception.printStackTrace();
@@ -4173,8 +4142,7 @@ public class SearchBar {
      * @param path 文件路径
      */
     private void openWithAdmin(String path) {
-        saveCache(path);
-        OpenFileUtil.openWithAdmin(path);
+        EventManagement.getInstance().putEvent(new OpenFileEvent(OpenFileEvent.OpenStatus.WITH_ADMIN, path), event -> saveCache(path), null);
     }
 
     /**
@@ -4183,8 +4151,7 @@ public class SearchBar {
      * @param path 文件路径
      */
     private void openWithoutAdmin(String path) {
-        saveCache(path);
-        OpenFileUtil.openWithoutAdmin(path);
+        EventManagement.getInstance().putEvent(new OpenFileEvent(OpenFileEvent.OpenStatus.NORMAL_OPEN, path), event -> saveCache(path), null);
     }
 
     /**
