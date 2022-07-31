@@ -7,7 +7,7 @@ import java.io.InputStreamReader;
 public class DpiUtil {
 
     private static volatile double dpi = 1;
-    private static volatile long getDpiTime = System.currentTimeMillis();
+    private static volatile long getDpiTime = 0;
 
     public static double getDpi() {
         if (System.currentTimeMillis() - getDpiTime <= 5000) {
