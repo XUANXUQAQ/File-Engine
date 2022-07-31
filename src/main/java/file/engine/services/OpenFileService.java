@@ -3,7 +3,7 @@ package file.engine.services;
 import file.engine.annotation.EventRegister;
 import file.engine.event.handler.Event;
 import file.engine.event.handler.impl.open.file.OpenFileEvent;
-import file.engine.utils.OpenFileUtil;
+import file.engine.services.utils.OpenFileUtil;
 import file.engine.utils.file.FileUtil;
 
 import java.io.IOException;

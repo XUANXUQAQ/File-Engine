@@ -15,9 +15,10 @@ import file.engine.event.handler.impl.monitor.disk.StartMonitorDiskEvent;
 import file.engine.event.handler.impl.stop.RestartEvent;
 import file.engine.event.handler.impl.taskbar.ShowTaskBarMessageEvent;
 import file.engine.frames.SearchBar;
+import file.engine.services.utils.PathMatchUtil;
+import file.engine.services.utils.connection.SQLiteUtil;
 import file.engine.utils.*;
 import file.engine.utils.bit.Bit;
-import file.engine.utils.connection.SQLiteUtil;
 import file.engine.utils.gson.GsonUtil;
 import file.engine.utils.system.properties.IsDebug;
 import lombok.*;
@@ -456,6 +457,9 @@ public class DatabaseService {
         });
     }
 
+    public Set<String> getCache() {
+        return new LinkedHashSet<>(databaseCacheSet);
+    }
 
     /**
      * 将缓存中的文件保存到cacheSet中
@@ -1015,6 +1019,12 @@ public class DatabaseService {
                 }
             }
         }
+    }
+
+    public HashMap<String, Integer> getPriorityMap() {
+        HashMap<String, Integer> map = new HashMap<>();
+        priorityMap.forEach(p -> map.put(p.suffix, p.priority));
+        return map;
     }
 
     /**

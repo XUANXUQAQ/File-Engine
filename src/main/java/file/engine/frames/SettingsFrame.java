@@ -37,8 +37,10 @@ import file.engine.services.download.DownloadManager;
 import file.engine.services.download.DownloadService;
 import file.engine.services.plugin.system.Plugin;
 import file.engine.services.plugin.system.PluginService;
-import file.engine.utils.*;
-import file.engine.utils.connection.SQLiteUtil;
+import file.engine.utils.CachedThreadPoolUtil;
+import file.engine.utils.DpiUtil;
+import file.engine.utils.RegexUtil;
+import file.engine.utils.StartupUtil;
 import file.engine.utils.file.MoveDesktopFiles;
 import file.engine.utils.system.properties.IsDebug;
 import file.engine.utils.system.properties.IsPreview;
@@ -61,12 +63,12 @@ import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.List;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -76,7 +78,7 @@ import static file.engine.utils.StartupUtil.hasStartup;
 
 
 public class SettingsFrame {
-    private final Set<String> cacheSet = new ConcurrentSkipListSet<>();
+    private Set<String> cacheSet;
     private boolean isFramePrepared = false;
     private static volatile int tmp_copyPathKeyCode;
     private static volatile int tmp_runAsAdminKeyCode;
@@ -88,7 +90,7 @@ public class SettingsFrame {
     private static final AllConfigs allConfigs = AllConfigs.getInstance();
     private static final CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
     private final HashMap<TabNameAndTitle, Component> tabComponentNameMap = new HashMap<>();
-    private final HashMap<String, Integer> suffixMap = new HashMap<>();
+    private HashMap<String, Integer> suffixMap;
     private final Set<Component> excludeComponent = ConcurrentHashMap.newKeySet();
     private final LinkedHashSet<String> diskSet = new LinkedHashSet<>();
     private JTextField textFieldUpdateInterval;
@@ -2599,13 +2601,7 @@ public class SettingsFrame {
      * 初始化后缀名map
      */
     private void initSuffixMap() {
-        try (Statement stmt = SQLiteUtil.getStatement("cache"); ResultSet resultSet = stmt.executeQuery("SELECT * FROM priority;")) {
-            while (resultSet.next()) {
-                suffixMap.put(resultSet.getString("SUFFIX"), resultSet.getInt("PRIORITY"));
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        suffixMap = DatabaseService.getInstance().getPriorityMap();
     }
 
     /**
@@ -2690,15 +2686,7 @@ public class SettingsFrame {
      * 初始化cache
      */
     private void initCacheArray() {
-        String eachLine;
-        try (Statement statement = SQLiteUtil.getStatement("cache"); ResultSet resultSet = statement.executeQuery("SELECT PATH FROM cache;")) {
-            while (resultSet.next()) {
-                eachLine = resultSet.getString("PATH");
-                cacheSet.add(eachLine);
-            }
-        } catch (Exception throwables) {
-            throwables.printStackTrace();
-        }
+        cacheSet = DatabaseService.getInstance().getCache();
     }
 
     /**
