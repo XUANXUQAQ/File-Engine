@@ -240,21 +240,20 @@ public class DatabaseService {
      * 开始监控磁盘文件变化
      */
     private static void startMonitorDisk() {
-        CachedThreadPoolUtil.getInstance().executeTask(() -> {
-            EventManagement eventManagement = EventManagement.getInstance();
-            TranslateService translateService = TranslateService.getInstance();
-            String disks = AllConfigs.getInstance().getAvailableDisks();
-            String[] splitDisks = RegexUtil.comma.split(disks);
-            if (isAdmin()) {
-                for (String root : splitDisks) {
-                    FileMonitor.INSTANCE.monitor(root);
-                }
-            } else {
-                eventManagement.putEvent(new ShowTaskBarMessageEvent(
-                        translateService.getTranslation("Warning"),
-                        translateService.getTranslation("Not administrator, file monitoring function is turned off")));
+        CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
+        EventManagement eventManagement = EventManagement.getInstance();
+        TranslateService translateService = TranslateService.getInstance();
+        String disks = AllConfigs.getInstance().getAvailableDisks();
+        String[] splitDisks = RegexUtil.comma.split(disks);
+        if (isAdmin()) {
+            for (String root : splitDisks) {
+                cachedThreadPoolUtil.executeTask(() -> FileMonitor.INSTANCE.monitor(root), false);
             }
-        });
+        } else {
+            eventManagement.putEvent(new ShowTaskBarMessageEvent(
+                    translateService.getTranslation("Warning"),
+                    translateService.getTranslation("Not administrator, file monitoring function is turned off")));
+        }
     }
 
     private void searchFolder(String folder) {
@@ -1593,7 +1592,20 @@ public class DatabaseService {
 
     @EventListener(listenClass = SearchBarReadyEvent.class)
     private static void searchBarVisibleListener(Event event) {
-        getInstance().sendExecuteSQLSignal();
+        if (IsDebug.isDebug()) {
+            CachedThreadPoolUtil.getInstance().executeTask(() -> {
+                try {
+                    while (SearchBar.getInstance().isVisible()) {
+                        getInstance().sendExecuteSQLSignal();
+                        TimeUnit.MILLISECONDS.sleep(500);
+                    }
+                } catch (InterruptedException ignored) {
+
+                }
+            });
+        } else {
+            getInstance().sendExecuteSQLSignal();
+        }
     }
 
     @EventRegister(registerClass = InitializeDatabaseEvent.class)

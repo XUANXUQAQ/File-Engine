@@ -41,7 +41,7 @@ import static file.engine.utils.StartupUtil.hasStartup;
 
 public class MainClass {
     private static final int UPDATE_DATABASE_THRESHOLD = 3;
-    private static final String FILE_MONITOR_MD5 = "72a180e51315a0dd7528205593259144";
+    private static final String FILE_MONITOR_MD5 = "7e5ff5f96988ea95ab9c65eb33f4a2dc";
     private static final String GET_ASC_II_MD5 = "c63eec19bde81456693feb715c4e0313";
     private static final String HOTKEY_LISTENER_MD5 = "6d71f646529b69cff9d50fcce8d4b6e4";
     private static final String IS_LOCAL_DISK_MD5 = "4d612bd2728d720e1ce724d26d48bdb9";

@@ -5,7 +5,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public enum CachedThreadPoolUtil {
     INSTANCE;
-    private static final int THREAD_POOL_AWAIT_TIMEOUT = 5;
+    private static final int THREAD_POOL_AWAIT_TIMEOUT = 10;
     private final ExecutorService platformThreadPool;
     private final AtomicBoolean isShutdown = new AtomicBoolean(false);
 
