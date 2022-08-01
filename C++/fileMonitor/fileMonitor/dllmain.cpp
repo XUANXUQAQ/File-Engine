@@ -37,7 +37,9 @@ file_record_queue file_del_queue;
 JNIEXPORT void JNICALL Java_file_engine_dllInterface_FileMonitor_monitor
 (JNIEnv* env, jobject, jstring path)
 {
-	monitor(env->GetStringUTFChars(path, nullptr));
+	const char* str = env->GetStringUTFChars(path, nullptr);
+	monitor(str);
+	env->ReleaseStringUTFChars(path, str);
 }
 
 JNIEXPORT void JNICALL Java_file_engine_dllInterface_FileMonitor_stop_1monitor

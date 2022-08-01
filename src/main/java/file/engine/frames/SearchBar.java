@@ -45,6 +45,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -692,7 +693,7 @@ public class SearchBar {
         x = (int) (GetHandle.INSTANCE.getToolBarX() / dpi);
         y = (int) (GetHandle.INSTANCE.getToolBarY() / dpi);
         robotUtil.mouseClicked(x, y, 1, InputEvent.BUTTON1_DOWN_MASK);
-        GetHandle.INSTANCE.setEditPath(result);
+        GetHandle.INSTANCE.setEditPath(new String(result.getBytes(StandardCharsets.UTF_8), StandardCharsets.UTF_8));
         robotUtil.keyTyped(KeyEvent.VK_ENTER);
     }
 

@@ -2778,6 +2778,9 @@ public class SettingsFrame {
 
     private SettingsFrame() {
 //        frame.setUndecorated(true);
+        initCacheArray();
+        initDiskSet();
+        initSuffixMap();
     }
 
     private void prepareFrame() {
@@ -2785,8 +2788,6 @@ public class SettingsFrame {
         frame.setIconImage(frameIcon.getImage());
 
         initTabNameMap();
-
-        initDiskSet();
 
         panel.remove(paneSwingThemes);
         excludeComponent.add(paneSwingThemes);
@@ -2802,10 +2803,6 @@ public class SettingsFrame {
         addUpdateAddressToComboBox();
 
         addBorderTypeToComboBox();
-
-        initCacheArray();
-
-        initSuffixMap();
 
         translate();
 

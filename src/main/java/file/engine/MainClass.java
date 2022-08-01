@@ -41,15 +41,15 @@ import static file.engine.utils.StartupUtil.hasStartup;
 
 public class MainClass {
     private static final int UPDATE_DATABASE_THRESHOLD = 3;
-    private static final String FILE_MONITOR_MD5 = "b2aacfff272fac4996febf50423031a8";
-    private static final String GET_ASC_II_MD5 = "cb1a74fdf7a0721e89ea1af49938b3ed";
+    private static final String FILE_MONITOR_MD5 = "72a180e51315a0dd7528205593259144";
+    private static final String GET_ASC_II_MD5 = "c63eec19bde81456693feb715c4e0313";
     private static final String HOTKEY_LISTENER_MD5 = "6d71f646529b69cff9d50fcce8d4b6e4";
-    private static final String IS_LOCAL_DISK_MD5 = "59793a286030bfafe8b8f0fa84b498ba";
+    private static final String IS_LOCAL_DISK_MD5 = "4d612bd2728d720e1ce724d26d48bdb9";
     private static final String FILE_SEARCHER_USN_MD5 = "6a046e87b7319450f80ab0dd45b79b7a";
     private static final String SQLITE3_MD5 = "dade4d608e258014e311867c764acf77";
-    private static final String GET_HANDLE_MD5 = "27a1a67f1ab5d275fbc5848b5455372d";
+    private static final String GET_HANDLE_MD5 = "a370fd8a440d0d41d59cb5bdb0ec7295";
     private static final String SHORTCUT_GEN_MD5 = "fa4e26f99f3dcd58d827828c411ea5d7";
-    private static final String RESULT_PIPE_MD5 = "35e8f5de0917a9a557d81efbab0988cc";
+    private static final String RESULT_PIPE_MD5 = "e91b7783a6add81d8123e2698c52efb6";
     private static final String GET_DPI_MD5 = "2d835577b3505af292966411b50e93b4";
     private static final String GET_START_MENU_MD5 = "b446b307fae7646f9d7cd0064f55d1af";
     private static final String SQLITE_JDBC_MD5 = "580fd050832e37d14bc04e8d5d13b7b1";

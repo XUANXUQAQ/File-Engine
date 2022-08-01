@@ -57,7 +57,7 @@ __declspec(dllexport) int getToolBarX();
 __declspec(dllexport) int getToolBarY();
 __declspec(dllexport) BOOL isKeyPressed(int vk_key);
 __declspec(dllexport) BOOL isForegroundFullscreen();
-__declspec(dllexport) void setEditPath(const char* path);
+__declspec(dllexport) void setEditPath(const jchar* path);
 }
 
 /*
@@ -223,8 +223,9 @@ JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_GetHandle_isForegroundF
 JNIEXPORT void JNICALL Java_file_engine_dllInterface_GetHandle_setEditPath
 (JNIEnv* env, jobject, jstring path)
 {
-	const char* _tmp_path = env->GetStringUTFChars(path, FALSE);
+	const jchar* _tmp_path = env->GetStringChars(path, nullptr);
 	setEditPath(_tmp_path);
+	env->ReleaseStringChars(path, _tmp_path);
 }
 
 #ifdef TEST
@@ -367,7 +368,7 @@ inline void setClickPos(const HWND& fileChooserHwnd)
 	EnumChildWindows(fileChooserHwnd, findToolbar, NULL);
 }
 
-void setEditPath(const char* path)
+void setEditPath(const jchar* path)
 {
 	using namespace std::chrono;
 	POINT p;
@@ -375,7 +376,7 @@ void setEditPath(const char* path)
 	p.y = toolbar_click_y;
 	char class_name[50] = {"\0"};
 	const auto start_time = system_clock::now();
-	const auto end_time = start_time + seconds(1);
+	const auto end_time = start_time + seconds(5);
 	HWND hwnd_from_toolbar;
 	do
 	{
@@ -384,8 +385,8 @@ void setEditPath(const char* path)
 		Sleep(1);
 	}
 	while (strcmp(class_name, "Edit") != 0 && system_clock::now() < end_time);
-	SendMessageA(hwnd_from_toolbar, EM_SETSEL, static_cast<WPARAM>(0), -1);
-	SendMessageA(hwnd_from_toolbar, EM_REPLACESEL, static_cast<WPARAM>(TRUE), reinterpret_cast<LPARAM>(path));
+	SendMessageW(hwnd_from_toolbar, EM_SETSEL, static_cast<WPARAM>(0), -1);
+	SendMessageW(hwnd_from_toolbar, EM_REPLACESEL, static_cast<WPARAM>(TRUE), reinterpret_cast<LPARAM>(path));
 }
 
 /**

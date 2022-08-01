@@ -15,7 +15,9 @@ extern "C" __declspec(dllexport) BOOL isComplete();
 JNIEXPORT jstring JNICALL Java_file_engine_dllInterface_ResultPipe_getResult
 (JNIEnv* env, jobject, jchar disk, jstring listName, jint priority, jint offset)
 {
-	const char* tmp = getResult(static_cast<char>(disk), env->GetStringUTFChars(listName, nullptr), priority, offset);
+	const char* tmp_list_name = env->GetStringUTFChars(listName, nullptr);
+	const char* tmp = getResult(static_cast<char>(disk), tmp_list_name, priority, offset);
+	env->ReleaseStringUTFChars(listName, tmp_list_name);
 	return env->NewStringUTF(tmp);
 }
 

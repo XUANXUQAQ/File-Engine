@@ -11,7 +11,10 @@ int getAscII(const char* str);
 JNIEXPORT jint JNICALL Java_file_engine_dllInterface_GetAscII_getAscII
 (JNIEnv* env, jobject, jstring str)
 {
-    return getAscII(env->GetStringUTFChars(str, nullptr));
+    const char* tmp = env->GetStringUTFChars(str, nullptr);
+    const int val = getAscII(tmp);
+    env->ReleaseStringUTFChars(str, tmp);
+    return val;
 }
 
 int getAscII(const char* str)
