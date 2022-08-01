@@ -1408,8 +1408,6 @@ public class DatabaseService {
                         SQLiteUtil.closeAll();
                         invalidateAllCache();
                         SQLiteUtil.initAllConnections();
-                        // 可能会出错
-                        recreateDatabase();
                         createAllIndex();
                     }
                     setStatus(Constants.Enums.DatabaseStatus.NORMAL);
@@ -1522,20 +1520,20 @@ public class DatabaseService {
         return stringIntegerHashMap;
     }
 
-    private void recreateDatabase() {
-        commandQueue.clear();
-        //删除所有索引
-        String[] disks = RegexUtil.comma.split(AllConfigs.getInstance().getAvailableDisks());
-        //创建新表
-        String sql = "CREATE TABLE IF NOT EXISTS list";
-        for (int i = 0; i <= Constants.ALL_TABLE_NUM; i++) {
-            String command = sql + i + " " + "(ASCII INT, PATH text unique, PRIORITY INT)" + ";";
-            for (String disk : disks) {
-                commandQueue.add(new SQLWithTaskId(command, SqlTaskIds.CREATE_TABLE, String.valueOf(disk.charAt(0))));
-            }
-        }
-        sendExecuteSQLSignal();
-    }
+//    private void recreateDatabase() {
+//        commandQueue.clear();
+//        //删除所有索引
+//        String[] disks = RegexUtil.comma.split(AllConfigs.getInstance().getAvailableDisks());
+//        //创建新表
+//        String sql = "CREATE TABLE IF NOT EXISTS list";
+//        for (int i = 0; i <= Constants.ALL_TABLE_NUM; i++) {
+//            String command = sql + i + " " + "(ASCII INT, PATH text unique, PRIORITY INT)" + ";";
+//            for (String disk : disks) {
+//                commandQueue.add(new SQLWithTaskId(command, SqlTaskIds.CREATE_TABLE, String.valueOf(disk.charAt(0))));
+//            }
+//        }
+//        sendExecuteSQLSignal();
+//    }
 
     private void checkTimeAndSendExecuteSqlSignalThread() {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
