@@ -30,6 +30,9 @@
     <ClInclude Include="jni_md.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="dir_changes_reader.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
