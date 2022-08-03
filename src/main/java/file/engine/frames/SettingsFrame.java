@@ -3347,7 +3347,7 @@ public class SettingsFrame {
         if (b) {
             try {
                 StartupUtil.deleteStartup();
-                Process p = StartupUtil.addStartup();
+                Process p = StartupUtil.addStartupByXml();
                 BufferedReader outPut = new BufferedReader(new InputStreamReader(p.getErrorStream()));
                 String line;
                 StringBuilder result = new StringBuilder();
