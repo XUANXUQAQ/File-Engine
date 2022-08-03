@@ -10,10 +10,10 @@
 #include <concurrent_unordered_map.h>
 #include <atomic>
 
-CONCURRENT_MAP<HANDLE, LPVOID> sharedMemoryMap;
-static std::atomic_int* completeTaskCount = new std::atomic_int(0);
-static std::atomic_int* allTaskCount = new std::atomic_int(0);
-static std::atomic<LPVOID> isCompletePtr(nullptr);
+CONCURRENT_MAP<HANDLE, LPVOID> shared_memory_map;
+static std::atomic_int* complete_task_count = new std::atomic_int(0);
+static std::atomic_int* all_task_count = new std::atomic_int(0);
+static std::atomic<LPVOID> is_complete_ptr(nullptr);
 constexpr int RECORD_MAX_PATH = 500;
 constexpr int MAX_RECORD_COUNT = 1000;
 
@@ -22,27 +22,27 @@ using namespace std;
 volume::volume(const char vol, sqlite3* database, std::vector<std::string>* ignorePaths, PriorityMap* priorityMap)
 {
 	this->vol = vol;
-	this->priorityMap = priorityMap;
+	this->priority_map_ = priorityMap;
 	hVol = nullptr;
 	path = "";
 	db = database;
-	ignorePathVector = ignorePaths;
-	++*allTaskCount;
+	ignore_path_vector_ = ignorePaths;
+	++*all_task_count;
 }
 
-void volume::initVolume()
+void volume::init_volume()
 {
 	if (
 		// 2.获取驱动盘句柄
-		getHandle() &&
+		get_handle() &&
 		// 3.创建USN日志
-		createUSN() &&
+		create_usn() &&
 		// 4.获取USN日志信息
-		getUSNInfo() &&
+		get_usn_info() &&
 		// 5.获取 USN Journal 文件的基本信息
-		getUSNJournal() &&
+		get_usn_journal() &&
 		// 06. 删除 USN 日志文件 ( 也可以不删除 ) 
-		deleteUSN()
+		delete_usn()
 	)
 	{
 		try
@@ -51,14 +51,14 @@ void volume::initVolume()
 			for (auto iter = frnPfrnNameMap.begin(); iter != endIter; ++iter)
 			{
 				auto& name = iter->second.filename;
-				const int ascii = getAscIISum(to_utf8(wstring(name)));
+				const int ascii = get_asc_ii_sum(to_utf8(wstring(name)));
 				CString resultPath = _T("\0");
-				getPath(iter->first, resultPath);
+				get_path(iter->first, resultPath);
 				CString record = vol + resultPath;
 				auto fullPath = to_utf8(wstring(record));
-				if (!isIgnore(fullPath))
+				if (!is_ignore(fullPath))
 				{
-					collectResultToResultMap(ascii, fullPath);
+					collect_result_to_result_map(ascii, fullPath);
 				}
 			}
 		}
@@ -76,12 +76,12 @@ void volume::initVolume()
 #ifdef TEST
 		cout << "start copy disk " << this->getDiskPath() << " to shared memory" << endl;
 #endif
-		copyResultsToSharedMemory();
-		++*completeTaskCount;
-		setCompleteSignal();
+		copy_results_to_shared_memory();
+		++*complete_task_count;
+		set_complete_signal();
 		const std::time_t startWaitTime = std::time(nullptr);
 		//阻塞等待其他线程全部完成共享内存的复制
-		while (allTaskCount->load() != completeTaskCount->load())
+		while (all_task_count->load() != complete_task_count->load())
 		{
 			if (std::time(nullptr) - startWaitTime > 10000)
 			{
@@ -90,18 +90,18 @@ void volume::initVolume()
 			}
 			Sleep(10);
 		}
-		saveAllResultsToDb();
+		save_all_results_to_db();
 	}
 #ifdef TEST
 	cout << "disk " << this->getDiskPath() << " complete" << endl;
 #endif
 }
 
-void volume::copyResultsToSharedMemory()
+void volume::copy_results_to_shared_memory()
 {
 	for (int i = 0; i <= 40; ++i)
 	{
-		for (const auto& eachPriority : *priorityMap)
+		for (const auto& eachPriority : *priority_map_)
 		{
 			static const char* listNamePrefix = "list";
 			static const char* prefix = "sharedMemory:";
@@ -109,12 +109,12 @@ void volume::copyResultsToSharedMemory()
 			string eachListName = string(listNamePrefix) + to_string(i);
 			const auto& sharedMemoryName = string(prefix) + getDiskPath() + ":" + eachListName + ":" + to_string(
 				eachPriority.second); // 共享内存名为 sharedMemory:[path]:list[num]:[priority]
-			createSharedMemoryAndCopy(eachListName, eachPriority.second, &memorySize, sharedMemoryName);
+			create_shared_memory_and_copy(eachListName, eachPriority.second, &memorySize, sharedMemoryName);
 		}
 	}
 }
 
-void volume::collectResultToResultMap(const int ascii, const string& fullPath)
+void volume::collect_result_to_result_map(const int ascii, const string& fullPath)
 {
 	const int asciiGroup = ascii / 100;
 	if (asciiGroup > 40)
@@ -125,10 +125,10 @@ void volume::collectResultToResultMap(const int ascii, const string& fullPath)
 	listName += to_string(asciiGroup);
 	CONCURRENT_MAP<int, CONCURRENT_QUEUE<string>&>* tmpResults;
 	CONCURRENT_QUEUE<string>* priorityStrList;
-	const int priority = getPriorityByPath(fullPath);
+	const int priority = get_priority_by_path(fullPath);
 	try
 	{
-		tmpResults = allResultsMap.at(listName);
+		tmpResults = all_results_map_.at(listName);
 		try
 		{
 			priorityStrList = &tmpResults->at(priority);
@@ -144,27 +144,27 @@ void volume::collectResultToResultMap(const int ascii, const string& fullPath)
 		priorityStrList = new CONCURRENT_QUEUE<string>();
 		tmpResults = new CONCURRENT_MAP<int, CONCURRENT_QUEUE<string>&>();
 		tmpResults->insert(pair<int, CONCURRENT_QUEUE<string>&>(priority, *priorityStrList));
-		allResultsMap.insert(
+		all_results_map_.insert(
 			pair<string, CONCURRENT_MAP<int, CONCURRENT_QUEUE<string>&>*>(listName, tmpResults));
 	}
 	priorityStrList->push(fullPath);
 }
 
-void volume::setCompleteSignal()
+void volume::set_complete_signal()
 {
-	const BOOL isAllDone = allTaskCount->load() == completeTaskCount->load();
-	memcpy_s(isCompletePtr.load(), sizeof(BOOL), &isAllDone, sizeof(BOOL));
+	const BOOL isAllDone = all_task_count->load() == complete_task_count->load();
+	memcpy_s(is_complete_ptr.load(), sizeof(BOOL), &isAllDone, sizeof(BOOL));
 }
 
 
-void volume::createSharedMemoryAndCopy(const string& listName, const int priority, size_t* size,
-                                       const string& sharedMemoryName)
+void volume::create_shared_memory_and_copy(const string& list_name, const int priority, size_t* size,
+                                       const string& shared_memory_name)
 {
-	if (allResultsMap.find(listName) == allResultsMap.end())
+	if (all_results_map_.find(list_name) == all_results_map_.end())
 	{
 		return;
 	}
-	const auto& table = allResultsMap.at(listName);
+	const auto& table = all_results_map_.at(list_name);
 	if (table->find(priority) == table->end())
 	{
 		return;
@@ -177,7 +177,7 @@ void volume::createSharedMemoryAndCopy(const string& listName, const int priorit
 	// 创建共享文件句柄
 	HANDLE hMapFile;
 	LPVOID pBuf = nullptr;
-	createFileMapping(hMapFile, pBuf, memorySize, sharedMemoryName.c_str());
+	create_file_mapping(hMapFile, pBuf, memorySize, shared_memory_name.c_str());
 	*size = memorySize;
 	if (pBuf == nullptr)
 	{
@@ -192,14 +192,14 @@ void volume::createSharedMemoryAndCopy(const string& listName, const int priorit
 		++count;
 	}
 	// 保存该结果的大小信息
-	createFileMapping(hMapFile, pBuf, sizeof size_t, (sharedMemoryName + "size").c_str());
+	create_file_mapping(hMapFile, pBuf, sizeof size_t, (shared_memory_name + "size").c_str());
 	memcpy_s(pBuf, sizeof size_t, &memorySize, sizeof size_t);
 }
 
-void volume::saveAllResultsToDb()
+void volume::save_all_results_to_db()
 {
-	initAllPrepareStatement();
-	for (auto& eachTable : allResultsMap)
+	init_all_prepare_statement();
+	for (auto& eachTable : all_results_map_)
 	{
 		const int asciiGroup = stoi(eachTable.first.substr(4));
 		for (auto& eachResult : *eachTable.second)
@@ -207,36 +207,36 @@ void volume::saveAllResultsToDb()
 			const int priority = eachResult.first;
 			for (auto iter = eachResult.second.unsafe_begin(); iter != eachResult.second.unsafe_end(); ++iter)
 			{
-				saveResult(*iter, getAscIISum(getFileName(*iter)), asciiGroup, priority);
+				save_result(*iter, get_asc_ii_sum(get_file_name(*iter)), asciiGroup, priority);
 			}
 		}
 	}
-	finalizeAllStatement();
+	finalize_all_statement();
 }
 
-int volume::getPriorityBySuffix(const string& suffix) const
+int volume::get_priority_by_suffix(const string& suffix) const
 {
-	const auto& iter = priorityMap->find(suffix);
-	if (iter == priorityMap->end())
+	const auto& iter = priority_map_->find(suffix);
+	if (iter == priority_map_->end())
 	{
 		if (suffix.find('\\') != string::npos)
 		{
-			return getPriorityBySuffix("dirPriority");
+			return get_priority_by_suffix("dirPriority");
 		}
-		return getPriorityBySuffix("defaultPriority");
+		return get_priority_by_suffix("defaultPriority");
 	}
 	return iter->second;
 }
 
 
-int volume::getPriorityByPath(const string& _path) const
+int volume::get_priority_by_path(const string& _path) const
 {
 	auto suffix = _path.substr(_path.find_last_of('.') + 1);
 	transform(suffix.begin(), suffix.end(), suffix.begin(), tolower);
-	return getPriorityBySuffix(suffix);
+	return get_priority_by_suffix(suffix);
 }
 
-void volume::initSinglePrepareStatement(sqlite3_stmt** statement, const char* init) const
+void volume::init_single_prepare_statement(sqlite3_stmt** statement, const char* init) const
 {
 	const size_t ret = sqlite3_prepare_v2(db, init, static_cast<long>(strlen(init)), statement, nullptr);
 	if (SQLITE_OK != ret)
@@ -246,7 +246,7 @@ void volume::initSinglePrepareStatement(sqlite3_stmt** statement, const char* in
 	}
 }
 
-void volume::finalizeAllStatement() const
+void volume::finalize_all_statement() const
 {
 	sqlite3_finalize(stmt0);
 	sqlite3_finalize(stmt1);
@@ -291,7 +291,7 @@ void volume::finalizeAllStatement() const
 	sqlite3_finalize(stmt40);
 }
 
-void volume::saveSingleRecordToDB(sqlite3_stmt* stmt, const string& record, const int ascii, const int priority)
+void volume::save_single_record_to_db(sqlite3_stmt* stmt, const string& record, const int ascii, const int priority)
 {
 	sqlite3_reset(stmt);
 	sqlite3_bind_int(stmt, 1, ascii);
@@ -300,52 +300,52 @@ void volume::saveSingleRecordToDB(sqlite3_stmt* stmt, const string& record, cons
 	sqlite3_step(stmt);
 }
 
-void volume::initAllPrepareStatement()
+void volume::init_all_prepare_statement()
 {
-	initSinglePrepareStatement(&stmt0, "INSERT OR IGNORE INTO list0 VALUES(?, ?, ?);");
-	initSinglePrepareStatement(&stmt1, "INSERT OR IGNORE INTO list1 VALUES(?, ?, ?);");
-	initSinglePrepareStatement(&stmt2, "INSERT OR IGNORE INTO list2 VALUES(?, ?, ?);");
-	initSinglePrepareStatement(&stmt3, "INSERT OR IGNORE INTO list3 VALUES(?, ?, ?);");
-	initSinglePrepareStatement(&stmt4, "INSERT OR IGNORE INTO list4 VALUES(?, ?, ?);");
-	initSinglePrepareStatement(&stmt5, "INSERT OR IGNORE INTO list5 VALUES(?, ?, ?);");
-	initSinglePrepareStatement(&stmt6, "INSERT OR IGNORE INTO list6 VALUES(?, ?, ?);");
-	initSinglePrepareStatement(&stmt7, "INSERT OR IGNORE INTO list7 VALUES(?, ?, ?);");
-	initSinglePrepareStatement(&stmt8, "INSERT OR IGNORE INTO list8 VALUES(?, ?, ?);");
-	initSinglePrepareStatement(&stmt9, "INSERT OR IGNORE INTO list9 VALUES(?, ?, ?);");
-	initSinglePrepareStatement(&stmt10, "INSERT OR IGNORE INTO list10 VALUES(?, ?, ?);");
-	initSinglePrepareStatement(&stmt11, "INSERT OR IGNORE INTO list11 VALUES(?, ?, ?);");
-	initSinglePrepareStatement(&stmt12, "INSERT OR IGNORE INTO list12 VALUES(?, ?, ?);");
-	initSinglePrepareStatement(&stmt13, "INSERT OR IGNORE INTO list13 VALUES(?, ?, ?);");
-	initSinglePrepareStatement(&stmt14, "INSERT OR IGNORE INTO list14 VALUES(?, ?, ?);");
-	initSinglePrepareStatement(&stmt15, "INSERT OR IGNORE INTO list15 VALUES(?, ?, ?);");
-	initSinglePrepareStatement(&stmt16, "INSERT OR IGNORE INTO list16 VALUES(?, ?, ?);");
-	initSinglePrepareStatement(&stmt17, "INSERT OR IGNORE INTO list17 VALUES(?, ?, ?);");
-	initSinglePrepareStatement(&stmt18, "INSERT OR IGNORE INTO list18 VALUES(?, ?, ?);");
-	initSinglePrepareStatement(&stmt19, "INSERT OR IGNORE INTO list19 VALUES(?, ?, ?);");
-	initSinglePrepareStatement(&stmt20, "INSERT OR IGNORE INTO list20 VALUES(?, ?, ?);");
-	initSinglePrepareStatement(&stmt21, "INSERT OR IGNORE INTO list21 VALUES(?, ?, ?);");
-	initSinglePrepareStatement(&stmt22, "INSERT OR IGNORE INTO list22 VALUES(?, ?, ?);");
-	initSinglePrepareStatement(&stmt23, "INSERT OR IGNORE INTO list23 VALUES(?, ?, ?);");
-	initSinglePrepareStatement(&stmt24, "INSERT OR IGNORE INTO list24 VALUES(?, ?, ?);");
-	initSinglePrepareStatement(&stmt25, "INSERT OR IGNORE INTO list25 VALUES(?, ?, ?);");
-	initSinglePrepareStatement(&stmt26, "INSERT OR IGNORE INTO list26 VALUES(?, ?, ?);");
-	initSinglePrepareStatement(&stmt27, "INSERT OR IGNORE INTO list27 VALUES(?, ?, ?);");
-	initSinglePrepareStatement(&stmt28, "INSERT OR IGNORE INTO list28 VALUES(?, ?, ?);");
-	initSinglePrepareStatement(&stmt29, "INSERT OR IGNORE INTO list29 VALUES(?, ?, ?);");
-	initSinglePrepareStatement(&stmt30, "INSERT OR IGNORE INTO list30 VALUES(?, ?, ?);");
-	initSinglePrepareStatement(&stmt31, "INSERT OR IGNORE INTO list31 VALUES(?, ?, ?);");
-	initSinglePrepareStatement(&stmt32, "INSERT OR IGNORE INTO list32 VALUES(?, ?, ?);");
-	initSinglePrepareStatement(&stmt33, "INSERT OR IGNORE INTO list33 VALUES(?, ?, ?);");
-	initSinglePrepareStatement(&stmt34, "INSERT OR IGNORE INTO list34 VALUES(?, ?, ?);");
-	initSinglePrepareStatement(&stmt35, "INSERT OR IGNORE INTO list35 VALUES(?, ?, ?);");
-	initSinglePrepareStatement(&stmt36, "INSERT OR IGNORE INTO list36 VALUES(?, ?, ?);");
-	initSinglePrepareStatement(&stmt37, "INSERT OR IGNORE INTO list37 VALUES(?, ?, ?);");
-	initSinglePrepareStatement(&stmt38, "INSERT OR IGNORE INTO list38 VALUES(?, ?, ?);");
-	initSinglePrepareStatement(&stmt39, "INSERT OR IGNORE INTO list39 VALUES(?, ?, ?);");
-	initSinglePrepareStatement(&stmt40, "INSERT OR IGNORE INTO list40 VALUES(?, ?, ?);");
+	init_single_prepare_statement(&stmt0, "INSERT OR IGNORE INTO list0 VALUES(?, ?, ?);");
+	init_single_prepare_statement(&stmt1, "INSERT OR IGNORE INTO list1 VALUES(?, ?, ?);");
+	init_single_prepare_statement(&stmt2, "INSERT OR IGNORE INTO list2 VALUES(?, ?, ?);");
+	init_single_prepare_statement(&stmt3, "INSERT OR IGNORE INTO list3 VALUES(?, ?, ?);");
+	init_single_prepare_statement(&stmt4, "INSERT OR IGNORE INTO list4 VALUES(?, ?, ?);");
+	init_single_prepare_statement(&stmt5, "INSERT OR IGNORE INTO list5 VALUES(?, ?, ?);");
+	init_single_prepare_statement(&stmt6, "INSERT OR IGNORE INTO list6 VALUES(?, ?, ?);");
+	init_single_prepare_statement(&stmt7, "INSERT OR IGNORE INTO list7 VALUES(?, ?, ?);");
+	init_single_prepare_statement(&stmt8, "INSERT OR IGNORE INTO list8 VALUES(?, ?, ?);");
+	init_single_prepare_statement(&stmt9, "INSERT OR IGNORE INTO list9 VALUES(?, ?, ?);");
+	init_single_prepare_statement(&stmt10, "INSERT OR IGNORE INTO list10 VALUES(?, ?, ?);");
+	init_single_prepare_statement(&stmt11, "INSERT OR IGNORE INTO list11 VALUES(?, ?, ?);");
+	init_single_prepare_statement(&stmt12, "INSERT OR IGNORE INTO list12 VALUES(?, ?, ?);");
+	init_single_prepare_statement(&stmt13, "INSERT OR IGNORE INTO list13 VALUES(?, ?, ?);");
+	init_single_prepare_statement(&stmt14, "INSERT OR IGNORE INTO list14 VALUES(?, ?, ?);");
+	init_single_prepare_statement(&stmt15, "INSERT OR IGNORE INTO list15 VALUES(?, ?, ?);");
+	init_single_prepare_statement(&stmt16, "INSERT OR IGNORE INTO list16 VALUES(?, ?, ?);");
+	init_single_prepare_statement(&stmt17, "INSERT OR IGNORE INTO list17 VALUES(?, ?, ?);");
+	init_single_prepare_statement(&stmt18, "INSERT OR IGNORE INTO list18 VALUES(?, ?, ?);");
+	init_single_prepare_statement(&stmt19, "INSERT OR IGNORE INTO list19 VALUES(?, ?, ?);");
+	init_single_prepare_statement(&stmt20, "INSERT OR IGNORE INTO list20 VALUES(?, ?, ?);");
+	init_single_prepare_statement(&stmt21, "INSERT OR IGNORE INTO list21 VALUES(?, ?, ?);");
+	init_single_prepare_statement(&stmt22, "INSERT OR IGNORE INTO list22 VALUES(?, ?, ?);");
+	init_single_prepare_statement(&stmt23, "INSERT OR IGNORE INTO list23 VALUES(?, ?, ?);");
+	init_single_prepare_statement(&stmt24, "INSERT OR IGNORE INTO list24 VALUES(?, ?, ?);");
+	init_single_prepare_statement(&stmt25, "INSERT OR IGNORE INTO list25 VALUES(?, ?, ?);");
+	init_single_prepare_statement(&stmt26, "INSERT OR IGNORE INTO list26 VALUES(?, ?, ?);");
+	init_single_prepare_statement(&stmt27, "INSERT OR IGNORE INTO list27 VALUES(?, ?, ?);");
+	init_single_prepare_statement(&stmt28, "INSERT OR IGNORE INTO list28 VALUES(?, ?, ?);");
+	init_single_prepare_statement(&stmt29, "INSERT OR IGNORE INTO list29 VALUES(?, ?, ?);");
+	init_single_prepare_statement(&stmt30, "INSERT OR IGNORE INTO list30 VALUES(?, ?, ?);");
+	init_single_prepare_statement(&stmt31, "INSERT OR IGNORE INTO list31 VALUES(?, ?, ?);");
+	init_single_prepare_statement(&stmt32, "INSERT OR IGNORE INTO list32 VALUES(?, ?, ?);");
+	init_single_prepare_statement(&stmt33, "INSERT OR IGNORE INTO list33 VALUES(?, ?, ?);");
+	init_single_prepare_statement(&stmt34, "INSERT OR IGNORE INTO list34 VALUES(?, ?, ?);");
+	init_single_prepare_statement(&stmt35, "INSERT OR IGNORE INTO list35 VALUES(?, ?, ?);");
+	init_single_prepare_statement(&stmt36, "INSERT OR IGNORE INTO list36 VALUES(?, ?, ?);");
+	init_single_prepare_statement(&stmt37, "INSERT OR IGNORE INTO list37 VALUES(?, ?, ?);");
+	init_single_prepare_statement(&stmt38, "INSERT OR IGNORE INTO list38 VALUES(?, ?, ?);");
+	init_single_prepare_statement(&stmt39, "INSERT OR IGNORE INTO list39 VALUES(?, ?, ?);");
+	init_single_prepare_statement(&stmt40, "INSERT OR IGNORE INTO list40 VALUES(?, ?, ?);");
 }
 
-bool volume::isIgnore(const string& _path) const
+bool volume::is_ignore(const string& _path) const
 {
 	if (_path.find('$') != string::npos)
 	{
@@ -353,145 +353,145 @@ bool volume::isIgnore(const string& _path) const
 	}
 	string _path0(_path);
 	transform(_path0.begin(), _path0.end(), _path0.begin(), tolower);
-	return std::any_of(ignorePathVector->begin(), ignorePathVector->end(), [_path0](const string& each)
+	return std::any_of(ignore_path_vector_->begin(), ignore_path_vector_->end(), [_path0](const string& each)
 	{
 		return _path0.find(each) != string::npos;
 	});
 }
 
-void volume::saveResult(const string& _path, const int ascII, const int asciiGroup, const int priority) const
+void volume::save_result(const string& _path, const int ascii, const int ascii_group, const int priority) const
 {
-	switch (asciiGroup)
+	switch (ascii_group)
 	{
 	case 0:
-		saveSingleRecordToDB(stmt0, _path, ascII, priority);
+		save_single_record_to_db(stmt0, _path, ascii, priority);
 		break;
 	case 1:
-		saveSingleRecordToDB(stmt1, _path, ascII, priority);
+		save_single_record_to_db(stmt1, _path, ascii, priority);
 		break;
 	case 2:
-		saveSingleRecordToDB(stmt2, _path, ascII, priority);
+		save_single_record_to_db(stmt2, _path, ascii, priority);
 		break;
 	case 3:
-		saveSingleRecordToDB(stmt3, _path, ascII, priority);
+		save_single_record_to_db(stmt3, _path, ascii, priority);
 		break;
 	case 4:
-		saveSingleRecordToDB(stmt4, _path, ascII, priority);
+		save_single_record_to_db(stmt4, _path, ascii, priority);
 		break;
 	case 5:
-		saveSingleRecordToDB(stmt5, _path, ascII, priority);
+		save_single_record_to_db(stmt5, _path, ascii, priority);
 		break;
 	case 6:
-		saveSingleRecordToDB(stmt6, _path, ascII, priority);
+		save_single_record_to_db(stmt6, _path, ascii, priority);
 		break;
 	case 7:
-		saveSingleRecordToDB(stmt7, _path, ascII, priority);
+		save_single_record_to_db(stmt7, _path, ascii, priority);
 		break;
 	case 8:
-		saveSingleRecordToDB(stmt8, _path, ascII, priority);
+		save_single_record_to_db(stmt8, _path, ascii, priority);
 		break;
 	case 9:
-		saveSingleRecordToDB(stmt9, _path, ascII, priority);
+		save_single_record_to_db(stmt9, _path, ascii, priority);
 		break;
 	case 10:
-		saveSingleRecordToDB(stmt10, _path, ascII, priority);
+		save_single_record_to_db(stmt10, _path, ascii, priority);
 		break;
 	case 11:
-		saveSingleRecordToDB(stmt11, _path, ascII, priority);
+		save_single_record_to_db(stmt11, _path, ascii, priority);
 		break;
 	case 12:
-		saveSingleRecordToDB(stmt12, _path, ascII, priority);
+		save_single_record_to_db(stmt12, _path, ascii, priority);
 		break;
 	case 13:
-		saveSingleRecordToDB(stmt13, _path, ascII, priority);
+		save_single_record_to_db(stmt13, _path, ascii, priority);
 		break;
 	case 14:
-		saveSingleRecordToDB(stmt14, _path, ascII, priority);
+		save_single_record_to_db(stmt14, _path, ascii, priority);
 		break;
 	case 15:
-		saveSingleRecordToDB(stmt15, _path, ascII, priority);
+		save_single_record_to_db(stmt15, _path, ascii, priority);
 		break;
 	case 16:
-		saveSingleRecordToDB(stmt16, _path, ascII, priority);
+		save_single_record_to_db(stmt16, _path, ascii, priority);
 		break;
 	case 17:
-		saveSingleRecordToDB(stmt17, _path, ascII, priority);
+		save_single_record_to_db(stmt17, _path, ascii, priority);
 		break;
 	case 18:
-		saveSingleRecordToDB(stmt18, _path, ascII, priority);
+		save_single_record_to_db(stmt18, _path, ascii, priority);
 		break;
 	case 19:
-		saveSingleRecordToDB(stmt19, _path, ascII, priority);
+		save_single_record_to_db(stmt19, _path, ascii, priority);
 		break;
 	case 20:
-		saveSingleRecordToDB(stmt20, _path, ascII, priority);
+		save_single_record_to_db(stmt20, _path, ascii, priority);
 		break;
 	case 21:
-		saveSingleRecordToDB(stmt21, _path, ascII, priority);
+		save_single_record_to_db(stmt21, _path, ascii, priority);
 		break;
 	case 22:
-		saveSingleRecordToDB(stmt22, _path, ascII, priority);
+		save_single_record_to_db(stmt22, _path, ascii, priority);
 		break;
 	case 23:
-		saveSingleRecordToDB(stmt23, _path, ascII, priority);
+		save_single_record_to_db(stmt23, _path, ascii, priority);
 		break;
 	case 24:
-		saveSingleRecordToDB(stmt24, _path, ascII, priority);
+		save_single_record_to_db(stmt24, _path, ascii, priority);
 		break;
 	case 25:
-		saveSingleRecordToDB(stmt25, _path, ascII, priority);
+		save_single_record_to_db(stmt25, _path, ascii, priority);
 		break;
 	case 26:
-		saveSingleRecordToDB(stmt26, _path, ascII, priority);
+		save_single_record_to_db(stmt26, _path, ascii, priority);
 		break;
 	case 27:
-		saveSingleRecordToDB(stmt27, _path, ascII, priority);
+		save_single_record_to_db(stmt27, _path, ascii, priority);
 		break;
 	case 28:
-		saveSingleRecordToDB(stmt28, _path, ascII, priority);
+		save_single_record_to_db(stmt28, _path, ascii, priority);
 		break;
 	case 29:
-		saveSingleRecordToDB(stmt29, _path, ascII, priority);
+		save_single_record_to_db(stmt29, _path, ascii, priority);
 		break;
 	case 30:
-		saveSingleRecordToDB(stmt30, _path, ascII, priority);
+		save_single_record_to_db(stmt30, _path, ascii, priority);
 		break;
 	case 31:
-		saveSingleRecordToDB(stmt31, _path, ascII, priority);
+		save_single_record_to_db(stmt31, _path, ascii, priority);
 		break;
 	case 32:
-		saveSingleRecordToDB(stmt32, _path, ascII, priority);
+		save_single_record_to_db(stmt32, _path, ascii, priority);
 		break;
 	case 33:
-		saveSingleRecordToDB(stmt33, _path, ascII, priority);
+		save_single_record_to_db(stmt33, _path, ascii, priority);
 		break;
 	case 34:
-		saveSingleRecordToDB(stmt34, _path, ascII, priority);
+		save_single_record_to_db(stmt34, _path, ascii, priority);
 		break;
 	case 35:
-		saveSingleRecordToDB(stmt35, _path, ascII, priority);
+		save_single_record_to_db(stmt35, _path, ascii, priority);
 		break;
 	case 36:
-		saveSingleRecordToDB(stmt36, _path, ascII, priority);
+		save_single_record_to_db(stmt36, _path, ascii, priority);
 		break;
 	case 37:
-		saveSingleRecordToDB(stmt37, _path, ascII, priority);
+		save_single_record_to_db(stmt37, _path, ascii, priority);
 		break;
 	case 38:
-		saveSingleRecordToDB(stmt38, _path, ascII, priority);
+		save_single_record_to_db(stmt38, _path, ascii, priority);
 		break;
 	case 39:
-		saveSingleRecordToDB(stmt39, _path, ascII, priority);
+		save_single_record_to_db(stmt39, _path, ascii, priority);
 		break;
 	case 40:
-		saveSingleRecordToDB(stmt40, _path, ascII, priority);
+		save_single_record_to_db(stmt40, _path, ascii, priority);
 		break;
 	default:
 		break;
 	}
 }
 
-int volume::getAscIISum(const string& name)
+int volume::get_asc_ii_sum(const string& name)
 {
 	auto sum = 0;
 	const auto length = name.length();
@@ -505,7 +505,7 @@ int volume::getAscIISum(const string& name)
 	return sum;
 }
 
-void volume::getPath(DWORDLONG frn, CString& _path)
+void volume::get_path(DWORDLONG frn, CString& _path)
 {
 	const auto end = frnPfrnNameMap.end();
 	while (true)
@@ -521,7 +521,7 @@ void volume::getPath(DWORDLONG frn, CString& _path)
 	}
 }
 
-bool volume::getHandle()
+bool volume::get_handle()
 {
 	// 为\\.\C:的形式
 	CString lpFileName(_T("\\\\.\\c:"));
@@ -545,7 +545,7 @@ bool volume::getHandle()
 	return false;
 }
 
-bool volume::createUSN()
+bool volume::create_usn()
 {
 	cujd.MaximumSize = 0; // 0表示使用默认值  
 	cujd.AllocationDelta = 0; // 0表示使用默认值
@@ -568,7 +568,7 @@ bool volume::createUSN()
 }
 
 
-bool volume::getUSNInfo()
+bool volume::get_usn_info()
 {
 	DWORD br;
 	if (
@@ -587,7 +587,7 @@ bool volume::getUSNInfo()
 	return false;
 }
 
-bool volume::getUSNJournal()
+bool volume::get_usn_journal()
 {
 	MFT_ENUM_DATA med;
 	med.StartFileReferenceNumber = 0;
@@ -638,7 +638,7 @@ bool volume::getUSNJournal()
 	return true;
 }
 
-bool volume::deleteUSN() const
+bool volume::delete_usn() const
 {
 	DELETE_USN_JOURNAL_DATA dujd;
 	dujd.UsnJournalID = ujd.UsnJournalID;
@@ -662,71 +662,36 @@ bool volume::deleteUSN() const
 	return false;
 }
 
-string to_utf8(const wstring& str)
-{
-	return to_utf8(str.c_str(), static_cast<int>(str.size()));
-}
-
-string to_utf8(const wchar_t* buffer, int len)
-{
-	const auto nChars = WideCharToMultiByte(
-		CP_UTF8,
-		0,
-		buffer,
-		len,
-		nullptr,
-		0,
-		nullptr,
-		nullptr);
-	if (nChars == 0)
-	{
-		return "";
-	}
-	string newBuffer;
-	newBuffer.resize(nChars);
-	WideCharToMultiByte(
-		CP_UTF8,
-		0,
-		buffer,
-		len,
-		const_cast<char*>(newBuffer.c_str()),
-		nChars,
-		nullptr,
-		nullptr);
-
-	return newBuffer;
-}
-
-string getFileName(const string& path)
+string get_file_name(const string& path)
 {
 	string fileName = path.substr(path.find_last_of('\\') + 1);
 	return fileName;
 }
 
-bool initCompleteSignalMemory()
+bool init_complete_signal_memory()
 {
 	HANDLE handle;
 	LPVOID tmp;
-	createFileMapping(handle, tmp, sizeof(bool), "sharedMemory:complete:status");
+	create_file_mapping(handle, tmp, sizeof(bool), "sharedMemory:complete:status");
 	if (tmp == nullptr)
 	{
 		cout << GetLastError() << endl;
 		return false;
 	}
-	isCompletePtr.store(tmp);
+	is_complete_ptr.store(tmp);
 	return true;
 }
 
-void closeSharedMemory()
+void close_shared_memory()
 {
-	for (const auto& each : sharedMemoryMap)
+	for (const auto& each : shared_memory_map)
 	{
 		UnmapViewOfFile(each.second);
 		CloseHandle(each.first);
 	}
 }
 
-void createFileMapping(HANDLE& hMapFile, LPVOID& pBuf, size_t memorySize, const char* sharedMemoryName)
+void create_file_mapping(HANDLE& hMapFile, LPVOID& pBuf, size_t memorySize, const char* sharedMemoryName)
 {
 	// 创建共享文件句柄
 	hMapFile = CreateFileMappingA(
@@ -745,5 +710,5 @@ void createFileMapping(HANDLE& hMapFile, LPVOID& pBuf, size_t memorySize, const 
 		0,
 		memorySize
 	);
-	sharedMemoryMap.insert(pair<HANDLE, LPVOID>(hMapFile, pBuf));
+	shared_memory_map.insert(pair<HANDLE, LPVOID>(hMapFile, pBuf));
 }

@@ -9,7 +9,7 @@
 #include <concurrent_queue.h>
 #include <io.h>
 #include <mutex>
-#include <ranges>
+#include "string_wstring_converter.h"
 #include "dir_changes_reader.h"
 
 #include "file_engine_dllInterface_FileMonitor.h"
@@ -27,8 +27,6 @@ static void delete_record(const std::wstring& record);
 inline bool is_dir(const wchar_t* path);
 static bool pop_del_file(std::wstring& record);
 static bool pop_add_file(std::wstring& record);
-std::string wstring2string(const std::wstring& wstr);
-std::wstring string2wstring(const std::string& str);
 
 static volatile bool is_running = true;
 file_record_queue file_added_queue;
@@ -70,28 +68,6 @@ JNIEXPORT jstring JNICALL Java_file_engine_dllInterface_FileMonitor_pop_1del_1fi
 		return env->NewStringUTF(str.c_str());
 	}
 	return nullptr;
-}
-
-std::wstring string2wstring(const std::string& str)
-{
-	const int buf_size = MultiByteToWideChar(CP_ACP,
-	                                         0, str.c_str(), -1, nullptr, 0);
-	const std::unique_ptr<wchar_t> wsp(new wchar_t[buf_size]);
-	MultiByteToWideChar(CP_ACP,
-	                    0, str.c_str(), -1, wsp.get(), buf_size);
-	std::wstring wstr(wsp.get());
-	return wstr;
-}
-
-std::string wstring2string(const std::wstring& wstr)
-{
-	const int buf_size = WideCharToMultiByte(CP_UTF8,
-	                                         0, wstr.c_str(), -1, nullptr, 0, nullptr, nullptr);
-	const std::unique_ptr<char> sp(new char[buf_size]);
-	WideCharToMultiByte(CP_UTF8,
-	                    0, wstr.c_str(), -1, sp.get(), buf_size, nullptr, nullptr);
-	std::string str(sp.get());
-	return str;
 }
 
 /**
@@ -154,7 +130,7 @@ void search_dir(const std::wstring& path)
 }
 
 /**
- * 添加文件到add_set
+ * 添加文件到file_added_queue
  */
 static void add_record(const std::wstring& record)
 {
@@ -162,18 +138,24 @@ static void add_record(const std::wstring& record)
 }
 
 /**
- * 添加文件到delete_set
+ * 添加文件到file_del_queue
  */
 static void delete_record(const std::wstring& record)
 {
 	file_del_queue.push(record);
 }
 
+/**
+ * 从file_del_queue中取出一个结果
+ */
 static bool pop_del_file(std::wstring& record)
 {
 	return file_del_queue.try_pop(record);
 }
 
+/**
+ * 从file_add_queue中取出一个结果
+ */
 static bool pop_add_file(std::wstring& record)
 {
 	return file_added_queue.try_pop(record);

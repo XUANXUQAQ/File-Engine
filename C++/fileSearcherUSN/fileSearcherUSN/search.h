@@ -31,14 +31,14 @@ public:
 		return vol;
 	}
 
-	void collectResultToResultMap(int ascii, const std::string& fullPath);
+	void collect_result_to_result_map(int ascii, const std::string& fullPath);
 
 	/**
 	 * 将内存中的数据保存到共享内存中
 	 */
-	void copyResultsToSharedMemory();
+	void copy_results_to_shared_memory();
 
-	void initVolume();
+	void init_volume();
 
 private:
 	char vol;
@@ -92,29 +92,29 @@ private:
 	USN_JOURNAL_DATA ujd{};
 	CREATE_USN_JOURNAL_DATA cujd{};
 
-	std::vector<std::string>* ignorePathVector = nullptr;
-	PriorityMap* priorityMap = nullptr;
-	CONCURRENT_MAP<std::string, CONCURRENT_MAP<int, CONCURRENT_QUEUE<std::string>&>*> allResultsMap;
+	std::vector<std::string>* ignore_path_vector_ = nullptr;
+	PriorityMap* priority_map_ = nullptr;
+	CONCURRENT_MAP<std::string, CONCURRENT_MAP<int, CONCURRENT_QUEUE<std::string>&>*> all_results_map_;
 
-	bool getHandle();
-	bool createUSN();
-	bool getUSNInfo();
-	bool getUSNJournal();
-	bool deleteUSN() const;
-	void saveResult(const std::string& _path, int ascII, int asciiGroup, int priority) const;
-	void getPath(DWORDLONG frn, CString& _path);
-	static int getAscIISum(const std::string& name);
-	bool isIgnore(const std::string& path) const;
-	void finalizeAllStatement() const;
-	static void saveSingleRecordToDB(sqlite3_stmt* stmt, const std::string& record, int ascii, int priority);
-	int getPriorityBySuffix(const std::string& suffix) const;
-	int getPriorityByPath(const std::string& _path) const;
-	void initAllPrepareStatement();
-	void initSinglePrepareStatement(sqlite3_stmt** statement, const char* init) const;
-	void saveAllResultsToDb();
-	void createSharedMemoryAndCopy(const std::string& listName, int priority, size_t* size,
-	                               const std::string& sharedMemoryName);
-	static void setCompleteSignal();
+	bool get_handle();
+	bool create_usn();
+	bool get_usn_info();
+	bool get_usn_journal();
+	bool delete_usn() const;
+	void save_result(const std::string& _path, int ascii, int ascii_group, int priority) const;
+	void get_path(DWORDLONG frn, CString& _path);
+	static int get_asc_ii_sum(const std::string& name);
+	bool is_ignore(const std::string& path) const;
+	void finalize_all_statement() const;
+	static void save_single_record_to_db(sqlite3_stmt* stmt, const std::string& record, int ascii, int priority);
+	int get_priority_by_suffix(const std::string& suffix) const;
+	int get_priority_by_path(const std::string& _path) const;
+	void init_all_prepare_statement();
+	void init_single_prepare_statement(sqlite3_stmt** statement, const char* init) const;
+	void save_all_results_to_db();
+	void create_shared_memory_and_copy(const std::string& list_name, int priority, size_t* size,
+	                               const std::string& shared_memory_name);
+	static void set_complete_signal();
 };
 
 
@@ -122,10 +122,10 @@ std::string to_utf8(const wchar_t* buffer, int len);
 
 std::string to_utf8(const std::wstring& str);
 
-std::string getFileName(const std::string& path);
+std::string get_file_name(const std::string& path);
 
-bool initCompleteSignalMemory();
+bool init_complete_signal_memory();
 
-void closeSharedMemory();
+void close_shared_memory();
 
-void createFileMapping(HANDLE& hMapFile, LPVOID& pBuf, size_t memorySize, const char* sharedMemoryName);
+void create_file_mapping(HANDLE& hMapFile, LPVOID& pBuf, size_t memorySize, const char* sharedMemoryName);

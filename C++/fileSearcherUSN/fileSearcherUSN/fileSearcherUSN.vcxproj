@@ -148,14 +148,16 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="fileSearcherUSN.cpp" />
+    <ClCompile Include="file_searcher_usn.cpp" />
     <ClCompile Include="search.cpp" />
+    <ClCompile Include="string_to_utf8.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="fileSearcherUSN.h" />
+    <ClInclude Include="file_search_usn.h" />
     <ClInclude Include="sqlite3.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="search.h" />
+    <ClInclude Include="string_to_utf8.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -33,12 +33,18 @@
     <ClInclude Include="dir_changes_reader.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="string_wstring_converter.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="pch.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="string_wstring_converter.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

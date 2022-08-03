@@ -41,11 +41,11 @@ import static file.engine.utils.StartupUtil.hasStartup;
 
 public class MainClass {
     private static final int UPDATE_DATABASE_THRESHOLD = 3;
-    private static final String FILE_MONITOR_MD5 = "7e5ff5f96988ea95ab9c65eb33f4a2dc";
+    private static final String FILE_MONITOR_MD5 = "0b0119dffc17b4ed30caecae85fb0767";
     private static final String GET_ASC_II_MD5 = "c63eec19bde81456693feb715c4e0313";
     private static final String HOTKEY_LISTENER_MD5 = "6d71f646529b69cff9d50fcce8d4b6e4";
     private static final String IS_LOCAL_DISK_MD5 = "4d612bd2728d720e1ce724d26d48bdb9";
-    private static final String FILE_SEARCHER_USN_MD5 = "6a046e87b7319450f80ab0dd45b79b7a";
+    private static final String FILE_SEARCHER_USN_MD5 = "83cac5c142a4ade4d7f309454f8ab5bd";
     private static final String SQLITE3_MD5 = "dade4d608e258014e311867c764acf77";
     private static final String GET_HANDLE_MD5 = "a370fd8a440d0d41d59cb5bdb0ec7295";
     private static final String SHORTCUT_GEN_MD5 = "fa4e26f99f3dcd58d827828c411ea5d7";

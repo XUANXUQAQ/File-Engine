@@ -7,7 +7,7 @@ import java.io.InputStream;
 import java.util.Properties;
 
 public class Constants {
-    public static final String version;
+    public static String version;
 
     public static final int ALL_TABLE_NUM = 40;
 
@@ -26,9 +26,8 @@ public class Constants {
     public static final String DEFAULT_SWING_THEME = "MaterialLighter";
 
     static {
-        if (IsDebug.isDebug()) {
-            version = "0";
-        } else {
+        version = "0";
+        if (!IsDebug.isDebug()) {
             Properties properties = new Properties();
             try (InputStream projectInfo = Constants.class.getResourceAsStream("/project-info.properties")) {
                 properties.load(projectInfo);

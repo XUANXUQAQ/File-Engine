@@ -13,6 +13,6 @@ typedef struct PARAMETER
 } parameter;
 
 
-void initUSN(parameter p);
-void splitString(const char* str, std::vector<std::string>& vec);
-void initTables(sqlite3* db);
+void init_usn(parameter p);
+void split_string(const char* str, std::vector<std::string>& vec);
+void init_tables(sqlite3* db);

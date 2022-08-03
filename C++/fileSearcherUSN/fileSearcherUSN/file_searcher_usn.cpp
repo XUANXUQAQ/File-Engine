@@ -1,20 +1,19 @@
-﻿#include "fileSearcherUSN.h"
-
+﻿#include "file_search_usn.h"
+#include "string_to_utf8.h"
 #include <iostream>
 #include <thread>
 #include "search.h"
 #include <fstream>
 
 //#define TEST
-using namespace std;
-
 static PriorityMap suffixPriorityMap;
 
 /**
  * 创建数据库表 list0-list40
  */
-void initTables(sqlite3* db)
+void init_tables(sqlite3* db)
 {
+	using namespace std;
 	sqlite3_exec(db, "BEGIN;", nullptr, nullptr, nullptr);
 	for (int i = 0; i < 41; i++)
 	{
@@ -27,12 +26,12 @@ void initTables(sqlite3* db)
 /**
  * 开始搜索
  */
-void initUSN(parameter p)
+void init_usn(parameter p)
 {
-	initTables(p.db);
+	init_tables(p.db);
 	sqlite3_exec(p.db, "BEGIN;", nullptr, nullptr, nullptr);
 	volume volumeInstance(p.disk, p.db, &p.ignorePath, &suffixPriorityMap);
-	volumeInstance.initVolume();
+	volumeInstance.init_volume();
 	sqlite3_exec(p.db, "COMMIT;", nullptr, nullptr, nullptr);
 	sqlite3_close(p.db);
 #ifdef TEST
@@ -44,8 +43,9 @@ void initUSN(parameter p)
 /**
  * 获取后缀优先级表，构造成Map
  */
-inline bool initPriorityMap(PriorityMap& priority_map, const char* priorityDbPath)
+inline bool init_priority_map(PriorityMap& priority_map, const char* priorityDbPath)
 {
+	using namespace std;
 	char* error;
 	char** pResult;
 	int row, column;
@@ -77,20 +77,20 @@ inline bool initPriorityMap(PriorityMap& priority_map, const char* priorityDbPat
 /**
  * 通过逗号（,）分割字符串，并存入vector
  */
-void splitString(const char* str, vector<string>& vec)
+void split_string(const char* str, std::vector<std::string>& vec)
 {
-	char* remainDisk = nullptr;
-	char diskPath[5000];
-	strcpy_s(diskPath, str);
-	char* _diskPath = diskPath;
-	char* p = strtok_s(_diskPath, ",", &remainDisk);
+	char* remain_disk = nullptr;
+	char disk_path[5000];
+	strcpy_s(disk_path, str);
+	char* _diskPath = disk_path;
+	char* p = strtok_s(_diskPath, ",", &remain_disk);
 	if (p != nullptr)
 	{
 		vec.emplace_back(p);
 	}
 	while (p != nullptr)
 	{
-		p = strtok_s(nullptr, ",", &remainDisk);
+		p = strtok_s(nullptr, ",", &remain_disk);
 		if (p != nullptr)
 		{
 			vec.emplace_back(p);
@@ -100,9 +100,10 @@ void splitString(const char* str, vector<string>& vec)
 
 int main()
 {
-	char diskPath[500];
+	using namespace std;
+	char disk_path[500];
 	char output[500];
-	char ignorePath[500];
+	char ignore_path[500];
 
 	vector<string> diskVec;
 	vector<string> ignorePathsVec;
@@ -113,9 +114,9 @@ int main()
 		cerr << "open MFTSearchInfo.dat failed";
 		return 1;
 	}
-	input.getline(diskPath, 500);
+	input.getline(disk_path, 500);
 	input.getline(output, 500);
-	input.getline(ignorePath, 500);
+	input.getline(ignore_path, 500);
 	input.close();
 
 	diskVec.reserve(26);
@@ -123,14 +124,14 @@ int main()
 	sqlite3_config(SQLITE_CONFIG_MULTITHREAD);
 	sqlite3_config(SQLITE_CONFIG_MEMSTATUS, 0);
 
-	splitString(diskPath, diskVec);
-	splitString(ignorePath, ignorePathsVec);
+	split_string(disk_path, diskVec);
+	split_string(ignore_path, ignorePathsVec);
 
 	bool isPriorityMapInitialized = false;
 	vector<thread> threads;
-	if (!initCompleteSignalMemory())
+	if (!init_complete_signal_memory())
 	{
-		closeSharedMemory();
+		close_shared_memory();
 		return 1;
 	}
 	// 创建线程
@@ -164,14 +165,14 @@ int main()
 			if (!isPriorityMapInitialized)
 			{
 				isPriorityMapInitialized = true;
-				initPriorityMap(suffixPriorityMap, tmpDbPath);
+				init_priority_map(suffixPriorityMap, tmpDbPath);
 			}
 			sqlite3_exec(p.db, "PRAGMA TEMP_STORE=MEMORY;", nullptr, nullptr, nullptr);
 			sqlite3_exec(p.db, "PRAGMA cache_size=262144;", nullptr, nullptr, nullptr);
 			sqlite3_exec(p.db, "PRAGMA page_size=65535;", nullptr, nullptr, nullptr);
 			sqlite3_exec(p.db, "PRAGMA auto_vacuum=0;", nullptr, nullptr, nullptr);
 			sqlite3_exec(p.db, "PRAGMA mmap_size=4096;", nullptr, nullptr, nullptr);
-			threads.emplace_back(thread(initUSN, p));
+			threads.emplace_back(thread(init_usn, p));
 		}
 	}
 
@@ -185,6 +186,6 @@ int main()
 		Sleep(10);
 	}
 #endif
-	closeSharedMemory();
+	close_shared_memory();
 	return 0;
 }
