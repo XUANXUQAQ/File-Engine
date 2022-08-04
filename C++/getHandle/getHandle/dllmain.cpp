@@ -22,18 +22,18 @@ constexpr auto EXPLORER_MIN_WIDTH = 200;
 constexpr auto G_DIALOG = 1;
 constexpr auto G_EXPLORER = 2;
 
-volatile bool isExplorerWindowAtTop = false;
-volatile bool isMouseClickOutOfExplorer = false;
-volatile bool isRunning = false;
-volatile int explorerX;
-volatile int explorerY;
-volatile long explorerWidth;
-volatile long explorerHeight;
+volatile bool is_explorer_window_at_top = false;
+volatile bool is_mouse_click_out_of_explorer = false;
+volatile bool is_running = false;
+volatile int explorer_x;
+volatile int explorer_y;
+volatile long explorer_width;
+volatile long explorer_height;
 volatile int toolbar_click_x;
 volatile int toolbar_click_y;
-volatile int topWindowType;
-HWND currentAttachExplorer;
-char dragExplorerPath[500];
+volatile int top_window_type;
+HWND current_attach_explorer;
+char drag_explorer_path[500];
 
 void checkTopWindowThread();
 void checkMouseThread();
@@ -290,12 +290,12 @@ int getToolBarY()
 
 BOOL changeToNormal()
 {
-	return isMouseClickOutOfExplorer || isDialogNotExist();
+	return is_mouse_click_out_of_explorer || isDialogNotExist();
 }
 
 BOOL isDialogWindow()
 {
-	return topWindowType == G_DIALOG;
+	return top_window_type == G_DIALOG;
 }
 
 /**
@@ -307,8 +307,8 @@ const char* getExplorerPath()
 	GetCursorPos(&p);
 	auto* hd = WindowFromPoint(p);
 	hd = GetAncestor(hd, GA_ROOT);
-	strcpy_s(dragExplorerPath, getPathByHWND(hd).c_str());
-	return dragExplorerPath;
+	strcpy_s(drag_explorer_path, getPathByHWND(hd).c_str());
+	return drag_explorer_path;
 }
 
 /**
@@ -334,16 +334,16 @@ inline bool isMouseClicked()
  */
 bool isDialogNotExist()
 {
-	RECT windowRect;
+	RECT window_rect;
 	auto* hd = GetDesktopWindow(); //得到桌面窗口
 	hd = GetWindow(hd, GW_CHILD); //得到屏幕上第一个子窗口
 	while (hd != nullptr) //循环得到所有的子窗口
 	{
 		if (IsWindowVisible(hd) && !IsIconic(hd))
 		{
-			GetWindowRect(hd, &windowRect);
-			const int tmp_explorerWidth = windowRect.right - windowRect.left;
-			const int tmp_explorerHeight = windowRect.bottom - windowRect.top;
+			GetWindowRect(hd, &window_rect);
+			const int tmp_explorerWidth = window_rect.right - window_rect.left;
+			const int tmp_explorerHeight = window_rect.bottom - window_rect.top;
 			if (!(tmp_explorerHeight < EXPLORER_MIN_HEIGHT || tmp_explorerWidth < EXPLORER_MIN_WIDTH))
 			{
 				if (is_explorer_window_by_class_name(hd) || is_file_chooser_window(hd))
@@ -415,9 +415,9 @@ BOOL CALLBACK findToolbar(HWND hwndChild, LPARAM lParam)
  */
 void start()
 {
-	if (!isRunning)
+	if (!is_running)
 	{
-		isRunning = true;
+		is_running = true;
 		thread checkTopWindow(checkTopWindowThread);
 		checkTopWindow.detach();
 		thread checkMouse(checkMouseThread);
@@ -430,7 +430,7 @@ void start()
  */
 void stop()
 {
-	isRunning = false;
+	is_running = false;
 }
 
 /**
@@ -438,7 +438,7 @@ void stop()
  */
 BOOL changeToAttach()
 {
-	return isExplorerWindowAtTop;
+	return is_explorer_window_at_top;
 }
 
 /**
@@ -446,7 +446,7 @@ BOOL changeToAttach()
  */
 long getExplorerX()
 {
-	return explorerX;
+	return explorer_x;
 }
 
 /**
@@ -454,7 +454,7 @@ long getExplorerX()
  */
 long getExplorerY()
 {
-	return explorerY;
+	return explorer_y;
 }
 
 /**
@@ -462,7 +462,7 @@ long getExplorerY()
  */
 long getExplorerWidth()
 {
-	return explorerWidth;
+	return explorer_width;
 }
 
 /**
@@ -470,50 +470,50 @@ long getExplorerWidth()
  */
 long getExplorerHeight()
 {
-	return explorerHeight;
+	return explorer_height;
 }
 
 void checkMouseThread()
 {
 	POINT point;
-	RECT explorerArea;
-	RECT searchBarArea;
+	RECT explorer_area;
+	RECT search_bar_area;
 	int count = 0;
-	constexpr int waitCountTimes = 25;
-	constexpr int maxWaitCount = waitCountTimes * 2;
-	bool isMouseClickedFlag = false;
-	while (isRunning)
+	constexpr int wait_count_times = 25;
+	constexpr int max_wait_count = wait_count_times * 2;
+	bool is_mouse_clicked_flag = false;
+	while (is_running)
 	{
-		if (count <= maxWaitCount)
+		if (count <= max_wait_count)
 		{
 			count++;
 		}
 		// count防止窗口闪烁
-		if (isMouseClickedFlag && count > waitCountTimes && !isMouseClickOutOfExplorer || count > maxWaitCount)
+		if (is_mouse_clicked_flag && count > wait_count_times && !is_mouse_click_out_of_explorer || count > max_wait_count)
 		{
 			count = 0;
-			isMouseClickedFlag = false;
-			HWND topWindow = GetForegroundWindow();
-			isMouseClickOutOfExplorer = !(is_explorer_window_by_process(topWindow) || is_file_chooser_window(topWindow)
-				|| is_search_bar_window(topWindow));
+			is_mouse_clicked_flag = false;
+			HWND top_window = GetForegroundWindow();
+			is_mouse_click_out_of_explorer = !(is_explorer_window_by_process(top_window) || is_file_chooser_window(top_window)
+				|| is_search_bar_window(top_window));
 		}
 		// 如果窗口句柄已经失效或者最小化，则判定为关闭窗口
-		if (!IsWindow(currentAttachExplorer) || IsIconic(currentAttachExplorer))
+		if (!IsWindow(current_attach_explorer) || IsIconic(current_attach_explorer))
 		{
-			isMouseClickOutOfExplorer = true;
+			is_mouse_click_out_of_explorer = true;
 		}
 		else if (isMouseClicked())
 		{
 			// 检测鼠标位置，如果点击位置不在explorer窗口内则判定为关闭窗口
 			if (GetCursorPos(&point))
 			{
-				GetWindowRect(currentAttachExplorer, &explorerArea);
-				GetWindowRect(get_search_bar_hwnd(), &searchBarArea);
-				isMouseClickOutOfExplorer =
-					!(explorerArea.left <= point.x && point.x <= explorerArea.right && (explorerArea.top <= point.y &&
-						point.y <= explorerArea.bottom)) &&
-					!(searchBarArea.left <= point.x && point.x <= searchBarArea.right && (searchBarArea.top <= point.y
-						&& point.y <= searchBarArea.bottom));
+				GetWindowRect(current_attach_explorer, &explorer_area);
+				GetWindowRect(get_search_bar_hwnd(), &search_bar_area);
+				is_mouse_click_out_of_explorer =
+					!(explorer_area.left <= point.x && point.x <= explorer_area.right && (explorer_area.top <= point.y &&
+						point.y <= explorer_area.bottom)) &&
+					!(search_bar_area.left <= point.x && point.x <= search_bar_area.right && (search_bar_area.top <= point.y
+						&& point.y <= search_bar_area.bottom));
 #ifdef TEST
                 cout << "point X:" << point.x << endl;
                 cout << "point Y:" << point.y << endl;
@@ -525,7 +525,7 @@ void checkMouseThread()
 #endif
 			}
 			count = 0;
-			isMouseClickedFlag = true;
+			is_mouse_clicked_flag = true;
 		}
 		if (IsWindowVisible(get_search_bar_hwnd()))
 		{
@@ -546,8 +546,8 @@ void checkMouseThread()
  */
 void checkTopWindowThread()
 {
-	RECT windowRect;
-	while (isRunning)
+	RECT window_rect;
+	while (is_running)
 	{
 		HWND hwnd = GetForegroundWindow();
 		const auto isExplorerWindow = is_explorer_window_by_class_name(hwnd);
@@ -555,44 +555,44 @@ void checkTopWindowThread()
 
 		if (isExplorerWindow || isDialogWindow)
 		{
-			GetWindowRect(hwnd, &windowRect);
+			GetWindowRect(hwnd, &window_rect);
 			if (IsZoomed(hwnd))
 			{
-				explorerX = 0;
-				explorerY = 0;
+				explorer_x = 0;
+				explorer_y = 0;
 			}
 			else
 			{
-				explorerX = windowRect.left;
-				explorerY = windowRect.top;
+				explorer_x = window_rect.left;
+				explorer_y = window_rect.top;
 			}
-			explorerWidth = windowRect.right - windowRect.left;
-			explorerHeight = windowRect.bottom - windowRect.top;
-			if (explorerHeight < EXPLORER_MIN_HEIGHT || explorerWidth < EXPLORER_MIN_WIDTH)
+			explorer_width = window_rect.right - window_rect.left;
+			explorer_height = window_rect.bottom - window_rect.top;
+			if (explorer_height < EXPLORER_MIN_HEIGHT || explorer_width < EXPLORER_MIN_WIDTH)
 			{
-				isExplorerWindowAtTop = false;
+				is_explorer_window_at_top = false;
 			}
 			else
 			{
 				if (isExplorerWindow)
 				{
-					topWindowType = G_EXPLORER;
+					top_window_type = G_EXPLORER;
 				}
 				else if (isDialogWindow)
 				{
-					topWindowType = G_DIALOG;
+					top_window_type = G_DIALOG;
 				}
-				currentAttachExplorer = hwnd;
+				current_attach_explorer = hwnd;
 				setClickPos(hwnd);
-				isExplorerWindowAtTop = true;
-				isMouseClickOutOfExplorer = false;
+				is_explorer_window_at_top = true;
+				is_mouse_click_out_of_explorer = false;
 			}
 		}
 		else
 		{
-			isExplorerWindowAtTop = false;
+			is_explorer_window_at_top = false;
 		}
-		if (isExplorerWindowAtTop)
+		if (is_explorer_window_at_top)
 		{
 			Sleep(5);
 		}

@@ -34,12 +34,12 @@ bool is_explorer_window_by_class_name(const HWND& hwnd)
 {
 	if (IsWindowEnabled(hwnd) && !IsIconic(hwnd))
 	{
-		char className[200];
-		GetClassNameA(hwnd, className, 200);
-		std::string WindowClassName(className);
-		transform(WindowClassName.begin(), WindowClassName.end(), WindowClassName.begin(), ::tolower);
+		char class_name[200];
+		GetClassNameA(hwnd, class_name, 200);
+		std::string window_class_name(class_name);
+		transform(window_class_name.begin(), window_class_name.end(), window_class_name.begin(), ::tolower);
 		//使用检测窗口类名的方式更节省CPU资源
-		if (WindowClassName.find("cabinet") != std::string::npos)
+		if (window_class_name.find("cabinet") != std::string::npos)
 		{
 			if (IsWindows8OrGreater())
 			{
@@ -112,16 +112,16 @@ std::wstring get_process_name_by_handle(HWND nlHandle)
  */
 bool is_file_chooser_window(const HWND& hwnd)
 {
-	char _windowClassName[100];
-	char title[100];
-	int hasToolbar = false;
-	EnumChildWindows(hwnd, is_hwnd_has_toolbar, reinterpret_cast<LPARAM>(&hasToolbar));
-	if (hasToolbar)
+	int has_toolbar = false;
+	EnumChildWindows(hwnd, is_hwnd_has_toolbar, reinterpret_cast<LPARAM>(&has_toolbar));
+	if (has_toolbar)
 	{
-		GetClassNameA(hwnd, _windowClassName, 100);
+		char title[100];
+		char window_class_name[100];
+		GetClassNameA(hwnd, window_class_name, 100);
 		GetWindowTextA(hwnd, title, 100);
 		std::string windowTitle(title);
-		std::string WindowClassName(_windowClassName);
+		std::string WindowClassName(window_class_name);
 		std::transform(windowTitle.begin(), windowTitle.end(), windowTitle.begin(), ::tolower);
 		std::transform(WindowClassName.begin(), WindowClassName.end(), WindowClassName.begin(), ::tolower);
 		return WindowClassName.find("#32770") != std::string::npos ||
@@ -135,9 +135,9 @@ bool is_file_chooser_window(const HWND& hwnd)
  */
 BOOL CALLBACK is_hwnd_has_toolbar(HWND hwndChild, LPARAM lParam)
 {
-	char windowClassName[100] = {'\0'};
-	GetClassNameA(hwndChild, windowClassName, 100);
-	if (strcmp(windowClassName, "ToolbarWindow32") == 0)
+	char window_class_name[100] = {'\0'};
+	GetClassNameA(hwndChild, window_class_name, 100);
+	if (strcmp(window_class_name, "ToolbarWindow32") == 0)
 	{
 		*reinterpret_cast<int*>(lParam) = true;
 		return false;

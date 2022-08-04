@@ -36,6 +36,9 @@
     <ClInclude Include="jni_md.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="string_to_utf8.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -48,6 +51,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="getExplorerPath.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="string_to_utf8.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
