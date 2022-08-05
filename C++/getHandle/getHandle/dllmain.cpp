@@ -41,6 +41,7 @@ inline void setClickPos(const HWND& fileChooserHwnd);
 BOOL CALLBACK findToolbar(HWND hwndChild, LPARAM lParam);
 inline bool isMouseClicked();
 bool isDialogNotExist();
+BOOL CALLBACK findToolbarWin32Internal(HWND hwndChild, LPARAM lParam);
 
 extern "C" {
 __declspec(dllexport) void start();
@@ -389,6 +390,19 @@ void setEditPath(const jchar* path)
 	SendMessageW(hwnd_from_toolbar, EM_REPLACESEL, static_cast<WPARAM>(TRUE), reinterpret_cast<LPARAM>(path));
 }
 
+BOOL CALLBACK findToolbarWin32Internal(HWND hwndChild, LPARAM lParam)
+{
+	auto* hwd_tool_bar = FindWindowExA(hwndChild, nullptr, "ToolbarWindow32", nullptr);
+	if (IsWindow(hwd_tool_bar))
+	{
+		RECT combo_box_rect;
+		GetWindowRect(hwd_tool_bar, &combo_box_rect);
+		*reinterpret_cast<int*>(lParam) = combo_box_rect.right - combo_box_rect.left;
+		return false;
+	}
+	return true;
+}
+
 /**
  * 定位explorer窗口输入文件夹路径的控件坐标
  */
@@ -398,12 +412,15 @@ BOOL CALLBACK findToolbar(HWND hwndChild, LPARAM lParam)
 	if (IsWindow(hwd2))
 	{
 		RECT rect;
+		int toolbar_win32_width = 0;
 		GetWindowRect(hwd2, &rect);
 		const int toolbar_x = rect.left;
 		const int toolbar_y = rect.top;
 		const int toolbar_width = rect.right - rect.left;
 		const int toolbar_height = rect.bottom - rect.top;
-		toolbar_click_x = toolbar_x + toolbar_width - 100;
+		EnumChildWindows(hwd2, findToolbarWin32Internal, reinterpret_cast<LPARAM>(&toolbar_win32_width));
+		const int combo_box_width = toolbar_win32_width;
+		toolbar_click_x = toolbar_x + toolbar_width - combo_box_width - 10;
 		toolbar_click_y = toolbar_y + toolbar_height / 2;
 		return false;
 	}
@@ -489,12 +506,14 @@ void checkMouseThread()
 			count++;
 		}
 		// count防止窗口闪烁
-		if (is_mouse_clicked_flag && count > wait_count_times && !is_mouse_click_out_of_explorer || count > max_wait_count)
+		if (is_mouse_clicked_flag && count > wait_count_times && !is_mouse_click_out_of_explorer || count >
+			max_wait_count)
 		{
 			count = 0;
 			is_mouse_clicked_flag = false;
 			HWND top_window = GetForegroundWindow();
-			is_mouse_click_out_of_explorer = !(is_explorer_window_by_process(top_window) || is_file_chooser_window(top_window)
+			is_mouse_click_out_of_explorer = !(is_explorer_window_by_process(top_window) || is_file_chooser_window(
+					top_window)
 				|| is_search_bar_window(top_window));
 		}
 		// 如果窗口句柄已经失效或者最小化，则判定为关闭窗口
@@ -510,9 +529,11 @@ void checkMouseThread()
 				GetWindowRect(current_attach_explorer, &explorer_area);
 				GetWindowRect(get_search_bar_hwnd(), &search_bar_area);
 				is_mouse_click_out_of_explorer =
-					!(explorer_area.left <= point.x && point.x <= explorer_area.right && (explorer_area.top <= point.y &&
+					!(explorer_area.left <= point.x && point.x <= explorer_area.right && (explorer_area.top <= point.y
+						&&
 						point.y <= explorer_area.bottom)) &&
-					!(search_bar_area.left <= point.x && point.x <= search_bar_area.right && (search_bar_area.top <= point.y
+					!(search_bar_area.left <= point.x && point.x <= search_bar_area.right && (search_bar_area.top <=
+						point.y
 						&& point.y <= search_bar_area.bottom));
 #ifdef TEST
                 cout << "point X:" << point.x << endl;

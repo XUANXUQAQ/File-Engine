@@ -47,7 +47,7 @@ public class MainClass {
     private static final String IS_LOCAL_DISK_MD5 = "4d612bd2728d720e1ce724d26d48bdb9";
     private static final String FILE_SEARCHER_USN_MD5 = "83cac5c142a4ade4d7f309454f8ab5bd";
     private static final String SQLITE3_MD5 = "dade4d608e258014e311867c764acf77";
-    private static final String GET_HANDLE_MD5 = "a370fd8a440d0d41d59cb5bdb0ec7295";
+    private static final String GET_HANDLE_MD5 = "c3b769814eeb5d469c19cec04e0c3ff4";
     private static final String SHORTCUT_GEN_MD5 = "fa4e26f99f3dcd58d827828c411ea5d7";
     private static final String RESULT_PIPE_MD5 = "e91b7783a6add81d8123e2698c52efb6";
     private static final String GET_DPI_MD5 = "2d835577b3505af292966411b50e93b4";
