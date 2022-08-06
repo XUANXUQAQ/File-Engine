@@ -6,7 +6,7 @@
 #include <fstream>
 
 //#define TEST
-static PriorityMap suffixPriorityMap;
+static PriorityMap suffix_priority_map;
 
 /**
  * 创建数据库表 list0-list40
@@ -30,7 +30,7 @@ void init_usn(parameter p)
 {
 	init_tables(p.db);
 	sqlite3_exec(p.db, "BEGIN;", nullptr, nullptr, nullptr);
-	volume volumeInstance(p.disk, p.db, &p.ignorePath, &suffixPriorityMap);
+	volume volumeInstance(p.disk, p.db, &p.ignorePath, &suffix_priority_map);
 	volumeInstance.init_volume();
 	sqlite3_exec(p.db, "COMMIT;", nullptr, nullptr, nullptr);
 	sqlite3_close(p.db);
@@ -105,8 +105,8 @@ int main()
 	char output[500];
 	char ignore_path[500];
 
-	vector<string> diskVec;
-	vector<string> ignorePathsVec;
+	vector<string> disk_vector;
+	vector<string> ignore_paths_vector;
 
 	ifstream input("MFTSearchInfo.dat", ios::in);
 	if (!input)
@@ -119,15 +119,15 @@ int main()
 	input.getline(ignore_path, 500);
 	input.close();
 
-	diskVec.reserve(26);
+	disk_vector.reserve(26);
 
 	sqlite3_config(SQLITE_CONFIG_MULTITHREAD);
 	sqlite3_config(SQLITE_CONFIG_MEMSTATUS, 0);
 
-	split_string(disk_path, diskVec);
-	split_string(ignore_path, ignorePathsVec);
+	split_string(disk_path, disk_vector);
+	split_string(ignore_path, ignore_paths_vector);
 
-	bool isPriorityMapInitialized = false;
+	bool is_priority_map_initialized = false;
 	vector<thread> threads;
 	if (!init_complete_signal_memory())
 	{
@@ -135,22 +135,22 @@ int main()
 		return 1;
 	}
 	// 创建线程
-	for (auto& iter : diskVec)
+	for (auto& iter : disk_vector)
 	{
 		const auto disk = iter[0];
 		if ('A' <= disk && disk <= 'Z')
 		{
 			parameter p;
 			p.disk = disk;
-			p.ignorePath = ignorePathsVec;
-			char tmpDbPath[1000];
-			strcpy_s(tmpDbPath, output);
-			strcat_s(tmpDbPath, "\\");
-			const size_t length = strlen(tmpDbPath);
-			tmpDbPath[length] = disk;
-			tmpDbPath[length + 1] = '\0';
-			strcat_s(tmpDbPath, ".db");
-			const size_t ret = sqlite3_open(tmpDbPath, &p.db);
+			p.ignorePath = ignore_paths_vector;
+			char tmp_db_path[1000];
+			strcpy_s(tmp_db_path, output);
+			strcat_s(tmp_db_path, "\\");
+			const size_t length = strlen(tmp_db_path);
+			tmp_db_path[length] = disk;
+			tmp_db_path[length + 1] = '\0';
+			strcat_s(tmp_db_path, ".db");
+			const size_t ret = sqlite3_open(tmp_db_path, &p.db);
 #ifdef TEST
 			cout << "database path: " << tmpDbPath << endl;
 #endif
@@ -159,13 +159,13 @@ int main()
 				cout << "error opening database" << endl;
 				return 1;
 			}
-			tmpDbPath[strlen(tmpDbPath) - 4] = '\0';
-			strcat_s(tmpDbPath, "cache.db");
+			tmp_db_path[strlen(tmp_db_path) - 4] = '\0';
+			strcat_s(tmp_db_path, "cache.db");
 
-			if (!isPriorityMapInitialized)
+			if (!is_priority_map_initialized)
 			{
-				isPriorityMapInitialized = true;
-				init_priority_map(suffixPriorityMap, tmpDbPath);
+				is_priority_map_initialized = true;
+				init_priority_map(suffix_priority_map, tmp_db_path);
 			}
 			sqlite3_exec(p.db, "PRAGMA TEMP_STORE=MEMORY;", nullptr, nullptr, nullptr);
 			sqlite3_exec(p.db, "PRAGMA cache_size=262144;", nullptr, nullptr, nullptr);

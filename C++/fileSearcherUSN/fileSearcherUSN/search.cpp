@@ -116,38 +116,38 @@ void volume::copy_results_to_shared_memory()
 
 void volume::collect_result_to_result_map(const int ascii, const string& fullPath)
 {
-	const int asciiGroup = ascii / 100;
-	if (asciiGroup > 40)
+	const int ascii_group = ascii / 100;
+	if (ascii_group > 40)
 	{
 		return;
 	}
-	string listName("list");
-	listName += to_string(asciiGroup);
-	CONCURRENT_MAP<int, CONCURRENT_QUEUE<string>&>* tmpResults;
-	CONCURRENT_QUEUE<string>* priorityStrList;
+	string list_name("list");
+	list_name += to_string(ascii_group);
+	CONCURRENT_MAP<int, CONCURRENT_QUEUE<string>&>* tmp_results;
+	CONCURRENT_QUEUE<string>* priority_str_list;
 	const int priority = get_priority_by_path(fullPath);
 	try
 	{
-		tmpResults = all_results_map_.at(listName);
+		tmp_results = all_results_map.at(list_name);
 		try
 		{
-			priorityStrList = &tmpResults->at(priority);
+			priority_str_list = &tmp_results->at(priority);
 		}
 		catch (exception&)
 		{
-			priorityStrList = new CONCURRENT_QUEUE<string>();
-			tmpResults->insert(pair<int, CONCURRENT_QUEUE<string>&>(priority, *priorityStrList));
+			priority_str_list = new CONCURRENT_QUEUE<string>();
+			tmp_results->insert(pair<int, CONCURRENT_QUEUE<string>&>(priority, *priority_str_list));
 		}
 	}
 	catch (exception&)
 	{
-		priorityStrList = new CONCURRENT_QUEUE<string>();
-		tmpResults = new CONCURRENT_MAP<int, CONCURRENT_QUEUE<string>&>();
-		tmpResults->insert(pair<int, CONCURRENT_QUEUE<string>&>(priority, *priorityStrList));
-		all_results_map_.insert(
-			pair<string, CONCURRENT_MAP<int, CONCURRENT_QUEUE<string>&>*>(listName, tmpResults));
+		priority_str_list = new CONCURRENT_QUEUE<string>();
+		tmp_results = new CONCURRENT_MAP<int, CONCURRENT_QUEUE<string>&>();
+		tmp_results->insert(pair<int, CONCURRENT_QUEUE<string>&>(priority, *priority_str_list));
+		all_results_map.insert(
+			pair<string, CONCURRENT_MAP<int, CONCURRENT_QUEUE<string>&>*>(list_name, tmp_results));
 	}
-	priorityStrList->push(fullPath);
+	priority_str_list->push(fullPath);
 }
 
 void volume::set_complete_signal()
@@ -160,11 +160,11 @@ void volume::set_complete_signal()
 void volume::create_shared_memory_and_copy(const string& list_name, const int priority, size_t* size,
                                        const string& shared_memory_name)
 {
-	if (all_results_map_.find(list_name) == all_results_map_.end())
+	if (all_results_map.find(list_name) == all_results_map.end())
 	{
 		return;
 	}
-	const auto& table = all_results_map_.at(list_name);
+	const auto& table = all_results_map.at(list_name);
 	if (table->find(priority) == table->end())
 	{
 		return;
@@ -199,7 +199,7 @@ void volume::create_shared_memory_and_copy(const string& list_name, const int pr
 void volume::save_all_results_to_db()
 {
 	init_all_prepare_statement();
-	for (auto& eachTable : all_results_map_)
+	for (auto& eachTable : all_results_map)
 	{
 		const int asciiGroup = stoi(eachTable.first.substr(4));
 		for (auto& eachResult : *eachTable.second)
@@ -505,7 +505,7 @@ int volume::get_asc_ii_sum(const string& name)
 	return sum;
 }
 
-void volume::get_path(DWORDLONG frn, CString& _path)
+void volume::get_path(DWORDLONG frn, CString& output_path)
 {
 	const auto end = frnPfrnNameMap.end();
 	while (true)
@@ -513,10 +513,10 @@ void volume::get_path(DWORDLONG frn, CString& _path)
 		auto it = frnPfrnNameMap.find(frn);
 		if (it == end)
 		{
-			_path = L":" + _path;
+			output_path = L":" + output_path;
 			return;
 		}
-		_path = _T("\\") + it->second.filename + _path;
+		output_path = _T("\\") + it->second.filename + output_path;
 		frn = it->second.pfrn;
 	}
 }
@@ -541,7 +541,6 @@ bool volume::get_handle()
 	{
 		return true;
 	}
-
 	return false;
 }
 

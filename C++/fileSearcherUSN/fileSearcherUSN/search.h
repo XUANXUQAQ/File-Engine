@@ -94,7 +94,7 @@ private:
 
 	std::vector<std::string>* ignore_path_vector_ = nullptr;
 	PriorityMap* priority_map_ = nullptr;
-	CONCURRENT_MAP<std::string, CONCURRENT_MAP<int, CONCURRENT_QUEUE<std::string>&>*> all_results_map_;
+	CONCURRENT_MAP<std::string, CONCURRENT_MAP<int, CONCURRENT_QUEUE<std::string>&>*> all_results_map;
 
 	bool get_handle();
 	bool create_usn();
@@ -102,7 +102,7 @@ private:
 	bool get_usn_journal();
 	bool delete_usn() const;
 	void save_result(const std::string& _path, int ascii, int ascii_group, int priority) const;
-	void get_path(DWORDLONG frn, CString& _path);
+	void get_path(DWORDLONG frn, CString& output_path);
 	static int get_asc_ii_sum(const std::string& name);
 	bool is_ignore(const std::string& path) const;
 	void finalize_all_statement() const;
