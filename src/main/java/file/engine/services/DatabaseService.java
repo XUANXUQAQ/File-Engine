@@ -1781,6 +1781,8 @@ public class DatabaseService {
         databaseService.addToCommandQueue(new SQLWithTaskId("DELETE FROM priority;", SqlTaskIds.UPDATE_SUFFIX, "cache"));
         databaseService.addToCommandQueue(
                 new SQLWithTaskId("INSERT INTO priority VALUES(\"defaultPriority\", 0);", SqlTaskIds.UPDATE_SUFFIX, "cache"));
+        databaseService.addToCommandQueue(
+                new SQLWithTaskId("INSERT INTO priority VALUES(\"dirPriority\", -1);", SqlTaskIds.UPDATE_SUFFIX, "cache"));
     }
 
     @EventRegister(registerClass = DeleteFromSuffixPriorityMapEvent.class)

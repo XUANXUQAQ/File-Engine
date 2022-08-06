@@ -80,6 +80,7 @@ import static file.engine.utils.StartupUtil.hasStartup;
 public class SettingsFrame {
     private Set<String> cacheSet;
     private boolean isFramePrepared = false;
+    private boolean isSuffixChanged = false;
     private static volatile int tmp_copyPathKeyCode;
     private static volatile int tmp_runAsAdminKeyCode;
     private static volatile int tmp_openLastFolderKeyCode;
@@ -328,6 +329,16 @@ public class SettingsFrame {
                         hideFrame();
                     }
                 } else {
+                    if (isSuffixChanged) {
+                        TranslateService translateService = TranslateService.INSTANCE;
+                        eventManagement.putEvent(new UpdateDatabaseEvent(true),
+                                event -> eventManagement.putEvent(new ShowTaskBarMessageEvent(
+                                        translateService.getTranslation("Info"),
+                                        translateService.getTranslation("Search Done"))),
+                                event -> eventManagement.putEvent(new ShowTaskBarMessageEvent(
+                                        translateService.getTranslation("Warning"),
+                                        translateService.getTranslation("Search Failed"))));
+                    }
                     hideFrame();
                 }
             }
@@ -2044,6 +2055,8 @@ public class SettingsFrame {
             int ret = JOptionPane.showConfirmDialog(frame, TRANSLATE_SERVICE.getTranslation("Are you sure to delete all the suffixes") + "?");
             if (ret == JOptionPane.YES_OPTION) {
                 suffixMap.clear();
+                isSuffixChanged = true;
+                suffixMap.put("dirPriority", -1);
                 suffixMap.put("defaultPriority", 0);
                 eventManagement.putEvent(new ClearSuffixPriorityMapEvent());
                 refreshPriorityTable();
@@ -2229,6 +2242,7 @@ public class SettingsFrame {
                 if (checkSuffixAndPriority(suffix, priorityNum, errMsg, true, false)) {
                     int num = Integer.parseInt(priorityNum);
                     eventManagement.putEvent(new UpdateSuffixPriorityEvent(lastSuffix[0], suffix, num));
+                    isSuffixChanged = true;
                     suffixMap.remove(lastSuffix[0]);
                     suffixMap.put(suffix, num);
                     refreshPriorityTable();
@@ -2248,6 +2262,7 @@ public class SettingsFrame {
                 if (checkSuffixAndPriority(suffix, priorityNum, errMsg, false, true)) {
                     int num = Integer.parseInt(priorityNum);
                     eventManagement.putEvent(new UpdateSuffixPriorityEvent(lastSuffix[0], suffix, num));
+                    isSuffixChanged = true;
                     suffixMap.remove(lastSuffix[0]);
                     suffixMap.put(suffix, num);
                     refreshPriorityTable();
@@ -2281,6 +2296,7 @@ public class SettingsFrame {
                     String suffix = (String) tableSuffix.getValueAt(rowNum, 0);
                     suffixMap.remove(suffix);
                     eventManagement.putEvent(new DeleteFromSuffixPriorityMapEvent(suffix));
+                    isSuffixChanged = true;
                     refreshPriorityTable();
                 }
             }
@@ -2315,6 +2331,7 @@ public class SettingsFrame {
                     int num = Integer.parseInt(priorityNumTmp);
                     suffixMap.put(suffix, num);
                     eventManagement.putEvent(new AddToSuffixPriorityMapEvent(suffix, num));
+                    isSuffixChanged = true;
                     refreshPriorityTable();
                 } else {
                     JOptionPane.showMessageDialog(frame, err.toString());
@@ -3019,16 +3036,12 @@ public class SettingsFrame {
     private static void showSettingsFrameEvent(Event event) {
         ShowSettingsFrameEvent showSettingsFrameEvent = (ShowSettingsFrameEvent) event;
         SettingsFrame settingsFrame = getInstance();
+        settingsFrame.isSuffixChanged = false;
         if (showSettingsFrameEvent.showTabName == null) {
             settingsFrame.showWindow();
         } else {
             settingsFrame.showWindow(showSettingsFrameEvent.showTabName);
         }
-    }
-
-    @EventRegister(registerClass = HideSettingsFrameEvent.class)
-    private static void hideSettingsFrameEvent(Event event) {
-        getInstance().hideFrame();
     }
 
     @EventRegister(registerClass = IsCacheExistEvent.class)
