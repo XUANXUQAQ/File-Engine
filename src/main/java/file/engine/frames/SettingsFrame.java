@@ -331,6 +331,9 @@ public class SettingsFrame {
                 } else {
                     if (isSuffixChanged) {
                         TranslateService translateService = TranslateService.INSTANCE;
+                        eventManagement.putEvent(new ShowTaskBarMessageEvent(
+                                translateService.getTranslation("Info"),
+                                translateService.getTranslation("Updating file index")));
                         eventManagement.putEvent(new UpdateDatabaseEvent(true),
                                 event -> eventManagement.putEvent(new ShowTaskBarMessageEvent(
                                         translateService.getTranslation("Info"),
@@ -2191,7 +2194,7 @@ public class SettingsFrame {
 
         tableSuffix.addMouseListener(new MouseAdapter() {
             @Override
-            public void mouseClicked(MouseEvent e) {
+            public void mousePressed(MouseEvent e) {
                 //保存还未被修改之前的值
                 int row = tableSuffix.getSelectedRow();
                 int column = tableSuffix.getSelectedColumn();
@@ -2210,7 +2213,7 @@ public class SettingsFrame {
             if (currentRow == -1) {
                 return;
             }
-            class restoreUtil {
+            class RestoreUtil {
                 void doRestoreNum() {
                     // 恢复
                     SwingUtilities.invokeLater(() -> {
@@ -2228,9 +2231,9 @@ public class SettingsFrame {
                     });
                 }
             }
-            restoreUtil util = new restoreUtil();
+            RestoreUtil util = new RestoreUtil();
 
-            int column = tableSuffix.getSelectedColumn();
+            final int column = tableSuffix.getSelectedColumn();
             if (column == 0) {
                 //当前修改的是后缀
                 String suffix = String.valueOf(tableSuffix.getValueAt(currentRow, 0));
