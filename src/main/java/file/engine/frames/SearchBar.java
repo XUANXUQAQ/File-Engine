@@ -5,6 +5,7 @@ import file.engine.annotation.EventListener;
 import file.engine.annotation.EventRegister;
 import file.engine.configs.AllConfigs;
 import file.engine.configs.Constants;
+import file.engine.dllInterface.EmptyRecycleBin;
 import file.engine.dllInterface.FileMonitor;
 import file.engine.dllInterface.GetHandle;
 import file.engine.event.handler.Event;
@@ -982,20 +983,21 @@ public class SearchBar {
         switch (commandName) {
             case "clearbin":
                 detectShowingModeAndClose();
-                if (JOptionPane.showConfirmDialog(null, translateService.getTranslation(
-                        "Are you sure you want to empty the recycle bin")) == JOptionPane.OK_OPTION) {
-                    try {
-                        File[] roots = File.listRoots();
-                        for (File root : roots) {
-                            Runtime.getRuntime().exec("cmd.exe /c rd /s /q " + root.getAbsolutePath() + "$Recycle.Bin");
-                        }
-                        JOptionPane.showMessageDialog(null, translateService.getTranslation(
-                                "Successfully empty the recycle bin"));
-                    } catch (IOException e) {
-                        JOptionPane.showMessageDialog(null, translateService.getTranslation(
-                                "Failed to empty the recycle bin"));
-                    }
-                }
+//                if (JOptionPane.showConfirmDialog(null, translateService.getTranslation(
+//                        "Are you sure you want to empty the recycle bin")) == JOptionPane.OK_OPTION) {
+//                    try {
+//                        File[] roots = File.listRoots();
+//                        for (File root : roots) {
+//                            Runtime.getRuntime().exec("cmd.exe /c rd /s /q " + root.getAbsolutePath() + "$Recycle.Bin");
+//                        }
+//                        JOptionPane.showMessageDialog(null, translateService.getTranslation(
+//                                "Successfully empty the recycle bin"));
+//                    } catch (IOException e) {
+//                        JOptionPane.showMessageDialog(null, translateService.getTranslation(
+//                                "Failed to empty the recycle bin"));
+//                    }
+//                }
+                EmptyRecycleBin.INSTANCE.emptyRecycleBin();
                 return true;
             case "update":
                 detectShowingModeAndClose();

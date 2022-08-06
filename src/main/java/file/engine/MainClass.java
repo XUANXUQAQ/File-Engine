@@ -53,6 +53,7 @@ public class MainClass {
     private static final String GET_DPI_MD5 = "2d835577b3505af292966411b50e93b4";
     private static final String GET_START_MENU_MD5 = "b446b307fae7646f9d7cd0064f55d1af";
     private static final String SQLITE_JDBC_MD5 = "580fd050832e37d14bc04e8d5d13b7b1";
+    private static final String EMPTY_RECYCLE_BIN_MD5 = "431225a47e74fe343b42e4bba741b80b";
 
     /**
      * 加载本地释放的dll
@@ -66,6 +67,7 @@ public class MainClass {
         Class.forName("file.engine.dllInterface.GetAscII");
         Class.forName("file.engine.dllInterface.GetHandle");
         Class.forName("file.engine.dllInterface.ResultPipe");
+        Class.forName("file.engine.dllInterface.EmptyRecycleBin");
     }
 
     /**
@@ -404,6 +406,7 @@ public class MainClass {
         copyOrIgnoreFile("user/getDpi.exe", "/win32-native/getDpi.exe", GET_DPI_MD5);
         copyOrIgnoreFile("user/getStartMenu.dll", "/win32-native/getStartMenu.dll", GET_START_MENU_MD5);
         copyOrIgnoreFile("user/sqliteJDBC.dll", "/win32-native/sqliteJDBC.dll", SQLITE_JDBC_MD5);
+        copyOrIgnoreFile("user/emptyRecycleBin.dll", "/win32-native/emptyRecycleBin.dll", EMPTY_RECYCLE_BIN_MD5);
     }
 
     private static void copyOrIgnoreFile(String path, String rootPath, String md5) throws IOException {
