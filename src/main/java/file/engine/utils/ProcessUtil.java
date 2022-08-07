@@ -3,31 +3,12 @@ package file.engine.utils;
 import file.engine.utils.system.properties.IsDebug;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.util.concurrent.TimeUnit;
 
 public class ProcessUtil {
-
-    /**
-     * 关闭守护进程
-     */
-    public static void stopDaemon() {
-        File closeSignal = new File("tmp/closeDaemon");
-        if (!closeSignal.exists()) {
-            boolean isCreated = false;
-            try {
-                isCreated = closeSignal.createNewFile();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            if (!isCreated) {
-                System.err.println("创建守护进程关闭标志文件失败");
-            }
-        }
-    }
 
     /**
      * 进程是否存在

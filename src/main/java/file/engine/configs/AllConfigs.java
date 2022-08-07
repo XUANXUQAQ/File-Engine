@@ -46,6 +46,7 @@ import java.util.*;
 
 import static file.engine.configs.Constants.DEFAULT_SWING_THEME;
 import static file.engine.configs.Constants.Enums;
+import static file.engine.utils.StartupUtil.hasStartup;
 
 /**
  * 保存软件运行时的所有配置信息
@@ -713,7 +714,7 @@ public class AllConfigs {
      * @param configEntity 配置
      * @return 错误信息
      */
-    private static String checkSettings(ConfigEntity configEntity) {
+    private static String checkPriorityFolder(ConfigEntity configEntity) {
         String priorityFolder = configEntity.getPriorityFolder();
         if (!priorityFolder.isEmpty() && !Files.exists(Path.of(priorityFolder))) {
             return "Priority folder does not exist";
@@ -963,7 +964,16 @@ public class AllConfigs {
 
     @EventRegister(registerClass = CheckConfigsEvent.class)
     private static void checkConfigsEvent(Event event) {
-        event.setReturnValue(checkSettings(getInstance().configEntity));
+        StringBuilder stringBuilder = new StringBuilder();
+        TranslateService translateService = TranslateService.INSTANCE;
+        stringBuilder.append(translateService.getTranslation(checkPriorityFolder(getInstance().configEntity)));
+        if (!stringBuilder.toString().isEmpty()) {
+            stringBuilder.append("\n");
+        }
+        if (hasStartup() == 1) {
+            stringBuilder.append(translateService.getTranslation("The startup path is invalid"));
+        }
+        event.setReturnValue(stringBuilder.toString());
     }
 
     @EventRegister(registerClass = BootSystemEvent.class)

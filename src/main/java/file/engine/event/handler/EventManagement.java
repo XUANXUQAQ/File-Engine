@@ -7,8 +7,8 @@ import file.engine.event.handler.impl.plugin.EventProcessedBroadcastEvent;
 import file.engine.event.handler.impl.plugin.PluginRegisterEvent;
 import file.engine.event.handler.impl.stop.CloseEvent;
 import file.engine.event.handler.impl.stop.RestartEvent;
+import file.engine.services.utils.DaemonUtil;
 import file.engine.utils.CachedThreadPoolUtil;
-import file.engine.utils.ProcessUtil;
 import file.engine.utils.clazz.scan.ClassScannerUtil;
 import file.engine.utils.system.properties.IsDebug;
 
@@ -101,7 +101,7 @@ public class EventManagement {
         exit.set(true);
         doAllMethod(RestartEvent.class.getName(), event);
         if (event instanceof CloseEvent) {
-            ProcessUtil.stopDaemon();
+            DaemonUtil.stopDaemon();
         }
         event.setFinished();
         CachedThreadPoolUtil.getInstance().shutdown();
@@ -139,10 +139,15 @@ public class EventManagement {
         }
         BiConsumer<Class<?>, Object> pluginHandler = PLUGIN_EVENT_HANDLER_MAP.get(eventClassName);
         if (pluginHandler != null) {
-            pluginHandler.accept(event.getClass(), event);
-            doAllMethod(eventClassName, event);
-            event.setFinished();
-            return false;
+            try {
+                pluginHandler.accept(event.getClass(), event);
+                doAllMethod(eventClassName, event);
+                event.setFinished();
+                return false;
+            } catch (Exception e) {
+                e.printStackTrace();
+                return true;
+            }
         } else {
             Method eventHandler = EVENT_HANDLER_MAP.get(eventClassName);
             if (eventHandler != null) {
@@ -325,6 +330,10 @@ public class EventManagement {
         putEvent(event);
     }
 
+    /**
+     * 全局系统退出标志，用于常驻循环判断标志
+     * @return true如果系统未退出
+     */
     public boolean notMainExit() {
         return !exit.get();
     }

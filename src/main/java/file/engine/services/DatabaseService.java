@@ -1606,6 +1606,11 @@ public class DatabaseService {
         }
     }
 
+    @EventRegister(registerClass = CheckDatabaseEmptyEvent.class)
+    private static void checkDatabaseEmpty(Event event) {
+        event.setReturnValue(SQLiteUtil.isDatabaseDamaged());
+    }
+
     @EventRegister(registerClass = InitializeDatabaseEvent.class)
     private static void initAllDatabases(Event event) {
         SQLiteUtil.initAllConnections();

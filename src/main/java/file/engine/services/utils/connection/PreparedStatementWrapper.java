@@ -10,7 +10,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * 通过复写AutoCloseable接口的close方法实现引用计数，确保在关闭数据库时没有被使用
  * 必须使用 try-with-source语法
  */
-public class PreparedStatementWrapper extends JDBC4PreparedStatement {
+class PreparedStatementWrapper extends JDBC4PreparedStatement {
     private final AtomicInteger connectionUsingCounter;
 
     public PreparedStatementWrapper(SQLiteConnection conn, String sql, AtomicInteger connectionUsingCounter) throws SQLException {

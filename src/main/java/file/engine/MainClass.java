@@ -11,16 +11,18 @@ import file.engine.event.handler.impl.BootSystemEvent;
 import file.engine.event.handler.impl.ReadConfigsEvent;
 import file.engine.event.handler.impl.configs.CheckConfigsEvent;
 import file.engine.event.handler.impl.configs.SetConfigsEvent;
+import file.engine.event.handler.impl.daemon.StartDaemonEvent;
+import file.engine.event.handler.impl.daemon.StopDaemonEvent;
+import file.engine.event.handler.impl.database.CheckDatabaseEmptyEvent;
 import file.engine.event.handler.impl.database.InitializeDatabaseEvent;
 import file.engine.event.handler.impl.database.UpdateDatabaseEvent;
 import file.engine.event.handler.impl.frame.settingsFrame.ShowSettingsFrameEvent;
 import file.engine.event.handler.impl.taskbar.ShowTaskBarMessageEvent;
 import file.engine.services.DatabaseService;
 import file.engine.services.TranslateService;
-import file.engine.services.utils.OpenFileUtil;
-import file.engine.utils.*;
+import file.engine.utils.Md5Util;
+import file.engine.utils.RegexUtil;
 import file.engine.utils.clazz.scan.ClassScannerUtil;
-import file.engine.services.utils.connection.SQLiteUtil;
 import file.engine.utils.file.FileUtil;
 import file.engine.utils.system.properties.IsDebug;
 import file.engine.utils.system.properties.IsPreview;
@@ -35,8 +37,6 @@ import java.util.Date;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-
-import static file.engine.utils.StartupUtil.hasStartup;
 
 
 public class MainClass {
@@ -54,6 +54,44 @@ public class MainClass {
     private static final String GET_START_MENU_MD5 = "b446b307fae7646f9d7cd0064f55d1af";
     private static final String SQLITE_JDBC_MD5 = "580fd050832e37d14bc04e8d5d13b7b1";
     private static final String EMPTY_RECYCLE_BIN_MD5 = "431225a47e74fe343b42e4bba741b80b";
+
+    public static void main(String[] args) {
+        try {
+            setSystemProperties();
+
+            if (!System.getProperty("os.arch").contains("64")) {
+                JOptionPane.showMessageDialog(null, "Not 64 Bit", "ERROR", JOptionPane.ERROR_MESSAGE);
+                throw new RuntimeException("Not 64 Bit");
+            }
+            updatePlugins();
+
+            initFoldersAndFiles();
+            Class.forName("org.sqlite.JDBC");
+            initializeDllInterface();
+            initEventManagement();
+            updateLauncher();
+            //清空tmp
+            FileUtil.deleteDir(new File("tmp"));
+            readAllConfigs();
+            initDatabase();
+            initPinyin();
+
+            // 初始化全部完成，发出启动系统事件
+            if (sendBootSystemSignal()) {
+                JOptionPane.showMessageDialog(null, "Boot system failed", "ERROR", JOptionPane.ERROR_MESSAGE);
+                throw new RuntimeException("Boot System Failed");
+            }
+
+            checkConfigs();
+            setAllConfigs();
+            checkVersion();
+
+            mainLoop();
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.exit(-1);
+        }
+    }
 
     /**
      * 加载本地释放的dll
@@ -79,20 +117,22 @@ public class MainClass {
             return;
         }
         if (!sign.delete()) {
-            System.err.println("删除插件更新标志失败");
+            System.err.println("删除启动器更新标志失败");
         }
         File launcherFile = new File("tmp/" + Constants.LAUNCH_WRAPPER_NAME);
         if (!launcherFile.exists()) {
+            System.err.println(Constants.LAUNCH_WRAPPER_NAME + "不存在于tmp中");
             return;
         }
-        ProcessUtil.stopDaemon();
-        try {
-            ProcessUtil.waitForProcess(Constants.LAUNCH_WRAPPER_NAME, 10);
+        EventManagement eventManagement = EventManagement.getInstance();
+        StopDaemonEvent stopDaemonEvent = new StopDaemonEvent();
+        eventManagement.putEvent(stopDaemonEvent);
+        if (eventManagement.waitForEvent(stopDaemonEvent)) {
+            System.err.println("更新启动器失败");
+        } else {
             File originLauncherFile = new File("..", Constants.LAUNCH_WRAPPER_NAME);
             FileUtil.copyFile(launcherFile, originLauncherFile);
-            OpenFileUtil.openWithAdmin(originLauncherFile.getAbsolutePath());
-        } catch (IOException | InterruptedException e) {
-            e.printStackTrace();
+            eventManagement.putEvent(new StartDaemonEvent());
         }
     }
 
@@ -210,49 +250,11 @@ public class MainClass {
             Optional<String> optional = event.getReturnValue();
             optional.ifPresent((errorInfo) -> {
                 if (!errorInfo.isEmpty()) {
-                    EventManagement.getInstance().putEvent(new ShowTaskBarMessageEvent(TranslateService.getInstance().getTranslation("Warning"),
-                            TranslateService.getInstance().getTranslation(errorInfo), new ShowSettingsFrameEvent("tabSearchSettings")));
+                    eventManagement.putEvent(new ShowTaskBarMessageEvent(TranslateService.getInstance().getTranslation("Warning"),
+                            errorInfo, new ShowSettingsFrameEvent("tabSearchSettings")));
                 }
             });
         }, null);
-    }
-
-    public static void main(String[] args) {
-        try {
-            setSystemProperties();
-
-            if (!System.getProperty("os.arch").contains("64")) {
-                JOptionPane.showMessageDialog(null, "Not 64 Bit", "ERROR", JOptionPane.ERROR_MESSAGE);
-                throw new RuntimeException("Not 64 Bit");
-            }
-            updateLauncher();
-            updatePlugins();
-
-            //清空tmp
-            FileUtil.deleteDir(new File("tmp"));
-            initFoldersAndFiles();
-            Class.forName("org.sqlite.JDBC");
-            initializeDllInterface();
-            initEventManagement();
-            readAllConfigs();
-            initDatabase();
-            initPinyin();
-
-            // 初始化全部完成，发出启动系统事件
-            if (sendBootSystemSignal()) {
-                JOptionPane.showMessageDialog(null, "Boot system failed", "ERROR", JOptionPane.ERROR_MESSAGE);
-                throw new RuntimeException("Boot System Failed");
-            }
-
-            checkConfigs();
-            setAllConfigs();
-            checkVersion();
-
-            mainLoop();
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.exit(-1);
-        }
     }
 
     private static void initPinyin() {
@@ -261,35 +263,39 @@ public class MainClass {
 
     /**
      * 主循环
+     * 检查启动时间并更新索引
      */
     @SneakyThrows
     private static void mainLoop() {
-        Date startTime = new Date();
-        Date endTime;
-        long timeDiff;
-        final long div = 24 * 60 * 60 * 1000;
-        boolean isNeedUpdate = SQLiteUtil.isDatabaseDamaged();
+        EventManagement eventManagement = EventManagement.getInstance();
+        TranslateService translateService = TranslateService.getInstance();
+        AllConfigs allConfigs = AllConfigs.getInstance();
+
+        boolean isNeedUpdate = false;
         boolean isDatabaseOutDated = false;
 
         if (!IsDebug.isDebug()) {
-            isNeedUpdate |= checkStartTimes();
+            isNeedUpdate = isStartOverThreshold();
         }
-
-        EventManagement eventManagement = EventManagement.getInstance();
-        TranslateService translateService = TranslateService.getInstance();
-
-        if (hasStartup() == 1) {
-            eventManagement.putEvent(
-                    new ShowTaskBarMessageEvent(translateService.getTranslation("Warning"),
-                            translateService.getTranslation("The startup path is invalid")));
+        CheckDatabaseEmptyEvent checkDatabaseEmptyEvent = new CheckDatabaseEmptyEvent();
+        eventManagement.putEvent(checkDatabaseEmptyEvent);
+        if (eventManagement.waitForEvent(checkDatabaseEmptyEvent)) {
+            throw new RuntimeException("check database empty failed");
         }
-        AllConfigs allConfigs = AllConfigs.getInstance();
+        Optional<Object> returnValue = checkDatabaseEmptyEvent.getReturnValue();
+        // 不使用lambda表达式，否则需要转换成原子或者进行包装
+        if (returnValue.isPresent()) {
+            isNeedUpdate |= (boolean) returnValue.get();
+        }
+        Date startTime = new Date();
+        Date endTime;
+        final long div = 24 * 60 * 60 * 1000;
         while (eventManagement.notMainExit()) {
             // 主循环开始
             //检查已工作时间
             endTime = new Date();
-            timeDiff = endTime.getTime() - startTime.getTime();
-            long diffDays = timeDiff / div;
+            final long timeDiff = endTime.getTime() - startTime.getTime();
+            final long diffDays = timeDiff / div;
             if (diffDays > 2) {
                 startTime = endTime;
                 //启动时间已经超过2天,更新索引
@@ -335,7 +341,7 @@ public class MainClass {
      *
      * @return true如果启动超过三次
      */
-    private static boolean checkStartTimes() {
+    private static boolean isStartOverThreshold() {
         int startTimes = 0;
         File startTimeCount = new File("user/startTimeCount.dat");
         boolean isFileCreated;
@@ -351,8 +357,7 @@ public class MainClass {
             }
         }
         if (isFileCreated) {
-            try (BufferedReader reader =
-                         new BufferedReader(new InputStreamReader(new FileInputStream(startTimeCount), StandardCharsets.UTF_8))) {
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(startTimeCount), StandardCharsets.UTF_8))) {
                 //读取启动次数
                 String times = reader.readLine();
                 if (!(times == null || times.isEmpty())) {
@@ -371,8 +376,7 @@ public class MainClass {
                 }
                 //自增后写入
                 startTimes++;
-                try (BufferedWriter writer = new BufferedWriter(
-                        new OutputStreamWriter(new FileOutputStream(startTimeCount), StandardCharsets.UTF_8))) {
+                try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(startTimeCount), StandardCharsets.UTF_8))) {
                     writer.write(String.valueOf(startTimes));
                 }
             } catch (Exception e) {
