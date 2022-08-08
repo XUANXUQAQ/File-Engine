@@ -62,10 +62,6 @@ public class Constants {
             NORMAL_SHOWING, EXPLORER_ATTACH
         }
 
-        public enum RunningMode {
-            NORMAL_MODE, COMMAND_MODE, PLUGIN_MODE
-        }
-
         public static class ProxyType {
             public static final int PROXY_HTTP = 0x100;
             public static final int PROXY_SOCKS = 0x200;
@@ -83,13 +79,6 @@ public class Constants {
 
         public enum BorderType {
             EMPTY, AROUND, FULL
-        }
-
-        public static class SearchCase {
-            public static final String D = "d";
-            public static final String F = "f";
-            public static final String FULL = "full";
-            public static final String CASE = "case";
         }
     }
 }

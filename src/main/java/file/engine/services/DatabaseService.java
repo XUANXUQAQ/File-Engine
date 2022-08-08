@@ -1628,7 +1628,7 @@ public class DatabaseService {
         databaseService.searchText = startSearchEvent.searchText.get();
         databaseService.searchCase = startSearchEvent.searchCase.get();
         databaseService.isIgnoreCase = databaseService.searchCase == null ||
-                Arrays.stream(databaseService.searchCase).noneMatch(s -> s.equals(Constants.Enums.SearchCase.CASE));
+                Arrays.stream(databaseService.searchCase).noneMatch(s -> s.equals(PathMatchUtil.SearchCase.CASE));
         String[] _keywords = startSearchEvent.keywords.get();
         databaseService.keywords = new String[_keywords.length];
         databaseService.keywordsLowerCase = new String[_keywords.length];
