@@ -77,8 +77,8 @@ public class Constants {
             Arc, ArcDark, ArcDarkOrange, Carbon,
             CyanLight, DarkFlat, DarkPurple, Dracula,
             Gray, LightFlat, MaterialDesignDark, Monocai,
-            Nord, OneDark, MaterialDarker, MaterialLighter,SolarizedDark, SolarizedLight,
-            Spacegray, Vuesion,XcodeDark
+            Nord, OneDark, MaterialDarker, MaterialLighter, SolarizedDark, SolarizedLight,
+            Spacegray, Vuesion, XcodeDark
         }
 
         public enum BorderType {
