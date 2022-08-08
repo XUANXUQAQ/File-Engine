@@ -680,8 +680,8 @@ public class DatabaseService {
                                                ConcurrentHashMap<String, ConcurrentLinkedQueue<Runnable>> taskMap) {
         Bit number = new Bit(new byte[]{1});
         for (String eachDisk : RegexUtil.comma.split(AllConfigs.getInstance().getAvailableDisks())) {
-            ConcurrentLinkedQueue<Runnable> runnables = new ConcurrentLinkedQueue<>();
-            taskMap.put(eachDisk, runnables);
+            ConcurrentLinkedQueue<Runnable> tasks = new ConcurrentLinkedQueue<>();
+            taskMap.put(eachDisk, tasks);
             for (Map.Entry<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>> entry : nonFormattedSql.entrySet()) {
                 LinkedHashMap<String, String> commandsMap = entry.getKey();
                 ConcurrentSkipListSet<String> container = entry.getValue();
@@ -690,17 +690,15 @@ public class DatabaseService {
                 Bit currentTaskNum = new Bit(number);
                 allTaskStatus.set(allTaskStatus.or(currentTaskNum));
                 containerMap.put(currentTaskNum.toString(), container);
-                runnables.add(() -> {
+                tasks.add(() -> {
                     try {
                         Set<String> sqls = commandsMap.keySet();
-                        String[] searchInfo = new String[2];
                         for (String each : sqls) {
                             if (shouldStopSearch.get()) {
                                 return;
                             }
-                            getListAndPriority(each, searchInfo);
-                            String listName = searchInfo[0];
-                            int priority = Integer.parseInt(searchInfo[1]);
+                            String listName = commandsMap.get(each);
+                            int priority = Integer.parseInt(getPriorityFromSql(each));
                             String result;
                             for (int count = 0;
                                  !shouldStopSearch.get() && ((result = ResultPipe.INSTANCE.getResult(eachDisk.charAt(0), listName, priority, count)) != null);
@@ -719,21 +717,16 @@ public class DatabaseService {
     }
 
     /**
-     * 解析出sql中的list和priority
+     * 解析出sql中的priority
      *
-     * @param sql  sql
-     * @param info info[0]存放list，info[1]存放priority，需要保证info长度大于2
+     * @param sql sql
      */
-    private void getListAndPriority(String sql, @NonNull String[] info) {
-        String[] split = RegexUtil.blank.split(sql);
-        Arrays.stream(split).filter(each -> !each.isBlank()).forEach(each -> {
-            int val;
-            if (each.contains("list")) {
-                info[0] = each;
-            } else if ((val = each.indexOf("=")) != -1) {
-                info[1] = each.substring(val + 1);
-            }
-        });
+    private String getPriorityFromSql(String sql) {
+        final int pos = sql.indexOf('=');
+        if (pos == -1) {
+            throw new RuntimeException("error sql no priority");
+        }
+        return sql.substring(pos + 1);
     }
 
     private void addSearchTasks(LinkedHashMap<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>> nonFormattedSql,
@@ -755,7 +748,7 @@ public class DatabaseService {
      * @param nonFormattedSql sql未被格式化的所有任务
      * @param taskStatus      用于保存任务信息，这是一个通用变量，从第二个位开始，每一个位代表一个任务，当任务完成，该位将被置为1，否则为0，
      *                        例如第一个和第三个任务完成，第二个未完成，则为1010
-     * @param allTaskStatus   所有的任务信息，从第二位开始，只要有任务被创建，该为就为1，例如三个任务被创建，则为1110
+     * @param allTaskStatus   所有的任务信息，从第二位开始，只要有任务被创建，该位就为1，例如三个任务被创建，则为1110
      * @param containerMap    每个任务搜索出来的结果都会被放到一个属于它自己的一个容器中，该容器保存任务与容器的映射关系
      * @param taskMap         任务
      */
@@ -767,8 +760,8 @@ public class DatabaseService {
         Bit number = new Bit(new byte[]{1});
         String availableDisks = AllConfigs.getInstance().getAvailableDisks();
         for (String eachDisk : RegexUtil.comma.split(availableDisks)) {
-            ConcurrentLinkedQueue<Runnable> runnables = new ConcurrentLinkedQueue<>();
-            taskMap.put(eachDisk, runnables);
+            ConcurrentLinkedQueue<Runnable> tasks = new ConcurrentLinkedQueue<>();
+            taskMap.put(eachDisk, tasks);
             for (Map.Entry<LinkedHashMap<String, String>, ConcurrentSkipListSet<String>> entry : nonFormattedSql.entrySet()) {
                 LinkedHashMap<String, String> commandsMap = entry.getKey();
                 ConcurrentSkipListSet<String> container = entry.getValue();
@@ -777,41 +770,43 @@ public class DatabaseService {
                 Bit currentTaskNum = new Bit(number);
                 allTaskStatus.set(allTaskStatus.or(currentTaskNum));
                 containerMap.put(currentTaskNum.toString(), container);
-                runnables.add(() -> {
-                    String diskStr = String.valueOf(eachDisk.charAt(0));
-                    try (Statement stmt = SQLiteUtil.getStatement(diskStr)) {
+                tasks.add(() -> {
+                    try {
+                        String diskStr = String.valueOf(eachDisk.charAt(0));
                         Set<String> sqls = commandsMap.keySet();
-                        String[] searchInfo = new String[2];
                         for (String eachSql : sqls) {
                             if (shouldStopSearch.get()) {
                                 return;
                             }
-                            getListAndPriority(eachSql, searchInfo);
-                            String tableName = searchInfo[0];
-                            String priority = searchInfo[1];
+                            String tableName = commandsMap.get(eachSql);
+                            String priority = getPriorityFromSql(eachSql);
                             String key = diskStr + "," + tableName + "," + priority;
                             Cache cache = tableCache.get(key);
-                            int matchedNum = 0;
+                            long matchedNum;
                             if (cache.isCacheValid()) {
                                 if (IsDebug.isDebug()) {
                                     System.out.println("从缓存中读取 " + key);
                                 }
-                                matchedNum += cache.data.stream()
+                                matchedNum = cache.data.stream()
                                         .filter(record -> checkIsMatchedAndAddToList(record, container))
                                         .count();
                             } else {
-                                //格式化是为了以后的拓展性
-                                String formattedSql = String.format(eachSql, "PATH");
-                                //当前数据库表中有多少个结果匹配成功
-                                matchedNum = searchAndAddToTempResults(
-                                        formattedSql,
-                                        container,
-                                        stmt);
+                                try (Statement stmt = SQLiteUtil.getStatement(diskStr)) {
+                                    //格式化是为了以后的拓展性
+                                    String formattedSql = String.format(eachSql, "PATH");
+                                    //当前数据库表中有多少个结果匹配成功
+                                    matchedNum = searchAndAddToTempResults(
+                                            formattedSql,
+                                            container,
+                                            stmt);
+                                } catch (SQLException e) {
+                                    throw new RuntimeException(e);
+                                }
                             }
                             final long weight = Math.min(matchedNum, 5);
                             if (weight != 0L) {
                                 //更新表的权重，每次搜索将会按照各个表的权重排序
-                                updateTableWeight(commandsMap.get(eachSql), weight);
+                                updateTableWeight(tableName, weight);
                             }
                         }
                     } catch (Exception e) {
