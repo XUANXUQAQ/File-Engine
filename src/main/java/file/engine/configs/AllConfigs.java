@@ -791,46 +791,82 @@ public class AllConfigs {
      */
     private static void setSwingLaf(Constants.Enums.SwingThemes theme) {
         SwingUtilities.invokeLater(() -> {
-            if (theme == Constants.Enums.SwingThemes.CoreFlatIntelliJLaf) {
-                FlatIntelliJLaf.setup();
-            } else if (theme == Constants.Enums.SwingThemes.CoreFlatLightLaf) {
-                FlatLightLaf.setup();
-            } else if (theme == Constants.Enums.SwingThemes.CoreFlatDarkLaf) {
-                FlatDarkLaf.setup();
-            } else if (theme == Constants.Enums.SwingThemes.Arc) {
-                FlatArcIJTheme.setup();
-            } else if (theme == Constants.Enums.SwingThemes.ArcDark) {
-                FlatArcDarkIJTheme.setup();
-            } else if (theme == Constants.Enums.SwingThemes.DarkFlat) {
-                FlatDarkFlatIJTheme.setup();
-            } else if (theme == Constants.Enums.SwingThemes.Carbon) {
-                FlatCarbonIJTheme.setup();
-            } else if (theme == Constants.Enums.SwingThemes.CyanLight) {
-                FlatCyanLightIJTheme.setup();
-            } else if (theme == Constants.Enums.SwingThemes.DarkPurple) {
-                FlatDarkPurpleIJTheme.setup();
-            } else if (theme == Constants.Enums.SwingThemes.LightFlat) {
-                FlatLightFlatIJTheme.setup();
-            } else if (theme == Constants.Enums.SwingThemes.Monocai) {
-                FlatMonocaiIJTheme.setup();
-            } else if (theme == Constants.Enums.SwingThemes.OneDark) {
-                FlatOneDarkIJTheme.setup();
-            } else if (theme == Constants.Enums.SwingThemes.Gray) {
-                FlatGrayIJTheme.setup();
-            } else if (theme == Constants.Enums.SwingThemes.MaterialDesignDark) {
-                FlatMaterialDesignDarkIJTheme.setup();
-            } else if (theme == Constants.Enums.SwingThemes.MaterialLighter) {
-                FlatMaterialLighterIJTheme.setup();
-            } else if (theme == Constants.Enums.SwingThemes.MaterialDarker) {
-                FlatMaterialDarkerIJTheme.setup();
-            } else if (theme == Constants.Enums.SwingThemes.ArcDarkOrange) {
-                FlatArcDarkOrangeIJTheme.setup();
-            } else if (theme == Constants.Enums.SwingThemes.Dracula) {
-                FlatDraculaIJTheme.setup();
-            } else if (theme == Constants.Enums.SwingThemes.Nord) {
-                FlatNordIJTheme.setup();
-            } else {
-                FlatDarculaLaf.setup();
+            switch (theme) {
+                case CoreFlatIntelliJLaf:
+                    FlatIntelliJLaf.setup();
+                    break;
+                case CoreFlatLightLaf:
+                    FlatLightLaf.setup();
+                    break;
+                case CoreFlatDarkLaf:
+                    FlatDarkLaf.setup();
+                    break;
+                case Arc:
+                    FlatArcIJTheme.setup();
+                    break;
+                case ArcDark:
+                    FlatArcDarkIJTheme.setup();
+                    break;
+                case DarkFlat:
+                    FlatDarkFlatIJTheme.setup();
+                    break;
+                case Carbon:
+                    FlatCarbonIJTheme.setup();
+                    break;
+                case CyanLight:
+                    FlatCyanLightIJTheme.setup();
+                    break;
+                case DarkPurple:
+                    FlatDarkPurpleIJTheme.setup();
+                    break;
+                case LightFlat:
+                    FlatLightFlatIJTheme.setup();
+                    break;
+                case Monocai:
+                    FlatMonocaiIJTheme.setup();
+                    break;
+                case OneDark:
+                    FlatOneDarkIJTheme.setup();
+                    break;
+                case Gray:
+                    FlatGrayIJTheme.setup();
+                    break;
+                case MaterialDesignDark:
+                    FlatMaterialDesignDarkIJTheme.setup();
+                    break;
+                case MaterialLighter:
+                    FlatMaterialLighterIJTheme.setup();
+                    break;
+                case MaterialDarker:
+                    FlatMaterialDarkerIJTheme.setup();
+                    break;
+                case ArcDarkOrange:
+                    FlatArcDarkOrangeIJTheme.setup();
+                    break;
+                case Dracula:
+                    FlatDraculaIJTheme.setup();
+                    break;
+                case Nord:
+                    FlatNordIJTheme.setup();
+                    break;
+                case SolarizedDark:
+                    FlatSolarizedDarkIJTheme.setup();
+                    break;
+                case SolarizedLight:
+                    FlatSolarizedLightIJTheme.setup();
+                    break;
+                case Vuesion:
+                    FlatVuesionIJTheme.setup();
+                    break;
+                case XcodeDark:
+                    FlatXcodeDarkIJTheme.setup();
+                    break;
+                case Spacegray:
+                    FlatSpacegrayIJTheme.setup();
+                    break;
+                default:
+                    FlatDarculaLaf.setup();
+                    break;
             }
             ArrayList<Component> components = new ArrayList<>(Arrays.asList(JFrame.getFrames()));
             EventManagement eventManagement = EventManagement.getInstance();
