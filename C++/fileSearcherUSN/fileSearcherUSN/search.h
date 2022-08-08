@@ -31,7 +31,7 @@ public:
 		return vol;
 	}
 
-	void collect_result_to_result_map(int ascii, const std::string& fullPath);
+	void collect_result_to_result_map(int ascii, const std::string& full_path);
 
 	/**
 	 * 将内存中的数据保存到共享内存中

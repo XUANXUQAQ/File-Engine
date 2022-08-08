@@ -9,6 +9,7 @@
 #include <concurrent_queue.h>
 #include <concurrent_unordered_map.h>
 #include <atomic>
+#include <mutex>
 
 CONCURRENT_MAP<HANDLE, LPVOID> shared_memory_map;
 static std::atomic_int* complete_task_count = new std::atomic_int(0);
@@ -45,21 +46,68 @@ void volume::init_volume()
 		delete_usn()
 	)
 	{
+		auto collect_internal = [this](Frn_Pfrn_Name_Map::iterator iter)
+		{
+			const auto& name = iter->second.filename;
+			const int ascii = get_asc_ii_sum(to_utf8(wstring(name)));
+			CString result_path = _T("\0");
+			get_path(iter->first, result_path);
+			CString record = vol + result_path;
+			const auto full_path = to_utf8(wstring(record));
+			if (!is_ignore(full_path))
+			{
+				collect_result_to_result_map(ascii, full_path);
+			}
+		};
 		try
 		{
-			const auto endIter = frnPfrnNameMap.end();
-			for (auto iter = frnPfrnNameMap.begin(); iter != endIter; ++iter)
+			SYSTEM_INFO sys_info;
+			GetSystemInfo(&sys_info);
+			const auto thread_num = sys_info.dwNumberOfProcessors;
+			const auto map_size = frnPfrnNameMap.size();
+			const auto split_size = map_size / thread_num;
+			vector<thread> thread_vec;
+			auto search_internal = [split_size, this, collect_internal](int pre_loop_count)
 			{
-				auto& name = iter->second.filename;
-				const int ascii = get_asc_ii_sum(to_utf8(wstring(name)));
-				CString resultPath = _T("\0");
-				get_path(iter->first, resultPath);
-				CString record = vol + resultPath;
-				auto fullPath = to_utf8(wstring(record));
-				if (!is_ignore(fullPath))
+				auto start_iter = frnPfrnNameMap.begin();
+				for (size_t i = 0; i < split_size * pre_loop_count; ++i)
 				{
-					collect_result_to_result_map(ascii, fullPath);
+					++start_iter;
 				}
+				for (size_t i = 0; i < split_size; ++i)
+				{
+					collect_internal(start_iter);
+					++start_iter;
+				}
+			};
+			for (DWORD i = 0; i < thread_num - 1; ++i)
+			{
+				thread_vec.emplace_back(thread(search_internal, i));
+			}
+			thread t([split_size, this, collect_internal, thread_num]
+			{
+				auto start_iter = frnPfrnNameMap.begin();
+				auto end_iter = frnPfrnNameMap.end();
+				for (size_t i = 0; i < split_size * thread_num - 1; ++i)
+				{
+					++start_iter;
+				}
+				while (start_iter != end_iter)
+				{
+					collect_internal(start_iter);
+					++start_iter;
+				}
+			});
+			for (auto& each : thread_vec)
+			{
+				if (each.joinable())
+				{
+					each.join();
+				}
+			}
+			if (t.joinable())
+			{
+				t.join();
 			}
 		}
 #ifdef TEST
@@ -72,7 +120,6 @@ void volume::init_volume()
 		{
 		}
 #endif
-
 #ifdef TEST
 		cout << "start copy disk " << this->getDiskPath() << " to shared memory" << endl;
 #endif
@@ -114,8 +161,9 @@ void volume::copy_results_to_shared_memory()
 	}
 }
 
-void volume::collect_result_to_result_map(const int ascii, const string& fullPath)
+void volume::collect_result_to_result_map(const int ascii, const string& full_path)
 {
+	static std::mutex add_priority_lock;
 	const int ascii_group = ascii / 100;
 	if (ascii_group > 40)
 	{
@@ -125,7 +173,7 @@ void volume::collect_result_to_result_map(const int ascii, const string& fullPat
 	list_name += to_string(ascii_group);
 	CONCURRENT_MAP<int, CONCURRENT_QUEUE<string>&>* tmp_results;
 	CONCURRENT_QUEUE<string>* priority_str_list;
-	const int priority = get_priority_by_path(fullPath);
+	const int priority = get_priority_by_path(full_path);
 	try
 	{
 		tmp_results = all_results_map.at(list_name);
@@ -135,19 +183,49 @@ void volume::collect_result_to_result_map(const int ascii, const string& fullPat
 		}
 		catch (exception&)
 		{
-			priority_str_list = new CONCURRENT_QUEUE<string>();
-			tmp_results->insert(pair<int, CONCURRENT_QUEUE<string>&>(priority, *priority_str_list));
+			std::lock_guard<std::mutex> lock_guard(add_priority_lock);
+			auto iter = tmp_results->find(priority);
+			if (iter == tmp_results->end())
+			{
+				priority_str_list = new CONCURRENT_QUEUE<string>();
+				tmp_results->insert(pair<int, CONCURRENT_QUEUE<string>&>(priority, *priority_str_list));
+			}
+			else
+			{
+				priority_str_list = &iter->second;
+			}
 		}
 	}
 	catch (exception&)
 	{
-		priority_str_list = new CONCURRENT_QUEUE<string>();
-		tmp_results = new CONCURRENT_MAP<int, CONCURRENT_QUEUE<string>&>();
-		tmp_results->insert(pair<int, CONCURRENT_QUEUE<string>&>(priority, *priority_str_list));
-		all_results_map.insert(
-			pair<string, CONCURRENT_MAP<int, CONCURRENT_QUEUE<string>&>*>(list_name, tmp_results));
+		static std::mutex add_list_lock;
+		std::lock_guard<std::mutex> lock_guard(add_list_lock);
+		auto iter = all_results_map.find(list_name);
+		if (iter == all_results_map.end())
+		{
+			priority_str_list = new CONCURRENT_QUEUE<string>();
+			tmp_results = new CONCURRENT_MAP<int, CONCURRENT_QUEUE<string>&>();
+			tmp_results->insert(pair<int, CONCURRENT_QUEUE<string>&>(priority, *priority_str_list));
+			all_results_map.insert(
+				pair<string, CONCURRENT_MAP<int, CONCURRENT_QUEUE<string>&>*>(list_name, tmp_results));
+		}
+		else
+		{
+			tmp_results = iter->second;
+			std::lock_guard<std::mutex> lock_guard2(add_priority_lock);
+			auto iter2 = tmp_results->find(priority);
+			if (iter2 == tmp_results->end())
+			{
+				priority_str_list = new CONCURRENT_QUEUE<string>();
+				tmp_results->insert(pair<int, CONCURRENT_QUEUE<string>&>(priority, *priority_str_list));
+			}
+			else
+			{
+				priority_str_list = &iter2->second;
+			}
+		}
 	}
-	priority_str_list->push(fullPath);
+	priority_str_list->push(full_path);
 }
 
 void volume::set_complete_signal()
@@ -158,7 +236,7 @@ void volume::set_complete_signal()
 
 
 void volume::create_shared_memory_and_copy(const string& list_name, const int priority, size_t* size,
-                                       const string& shared_memory_name)
+                                           const string& shared_memory_name)
 {
 	if (all_results_map.find(list_name) == all_results_map.end())
 	{
