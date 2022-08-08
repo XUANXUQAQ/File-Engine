@@ -80,7 +80,7 @@ public class AllConfigs {
      * @return swingTheme枚举类实例
      */
     private Constants.Enums.SwingThemes swingThemesMapper(String swingTheme) {
-        if ("current".equals(swingTheme)) {
+        if (null == swingTheme || swingTheme.isEmpty()) {
             return swingThemesMapper(configEntity.getSwingTheme());
         }
         for (Constants.Enums.SwingThemes each : Constants.Enums.SwingThemes.values()) {
@@ -1018,7 +1018,7 @@ public class AllConfigs {
         eventManagement.putEvent(new StartMonitorDiskEvent());
         eventManagement.putEvent(new ShowTrayIconEvent());
         eventManagement.putEvent(new LoadAllPluginsEvent("plugins"));
-        eventManagement.putEvent(new SetSwingLaf("current"));
+        eventManagement.putEvent(new SetSwingLaf());
         if (isFirstRunApp) {
             checkRunningDirAtDiskC();
         }
