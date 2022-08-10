@@ -13,7 +13,7 @@ public enum CudaAccelerator {
         try {
             System.load(Path.of("user/cudaAccelerator.dll").toAbsolutePath().toString());
             isCudaLoaded = true;
-        } catch (Exception e) {
+        } catch (UnsatisfiedLinkError | Exception e) {
             e.printStackTrace();
             isCudaLoaded = false;
         }
