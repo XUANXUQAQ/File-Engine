@@ -119,6 +119,7 @@ public class DatabaseService {
     }
 
     private void invalidateAllCache() {
+        EventManagement.getInstance().putEvent(new CudaClearCacheEvent());
         tableCache.values().forEach(each -> {
             each.isCached.set(false);
             each.data = null;
@@ -379,11 +380,13 @@ public class DatabaseService {
             var startCheckTime = new Object() {
                 long startCheckTimeMills = 0;
             };
-            final int checkTimeInterval = 10 * 60 * 1000;
+            final int checkTimeInterval = 10 * 60 * 1000; // 10 min
             final Supplier<Boolean> isStopCreateCache =
                     () -> !isSearchStopped.get() || !eventManagement.notMainExit() || status == Constants.Enums.DatabaseStatus.MANUAL_UPDATE;
             final Supplier<Boolean> isStartSaveCache =
-                    () -> isSearchStopped.get() && System.currentTimeMillis() - startCheckTime.startCheckTimeMills > checkTimeInterval && !GetHandle.INSTANCE.isForegroundFullscreen();
+                    () -> isSearchStopped.get() &&
+                            System.currentTimeMillis() - startCheckTime.startCheckTimeMills > checkTimeInterval &&
+                            !GetHandle.INSTANCE.isForegroundFullscreen();
             try {
                 while (eventManagement.notMainExit()) {
                     if (CudaAccelerator.INSTANCE.isCudaAvailableOnSystem()) {
@@ -393,33 +396,14 @@ public class DatabaseService {
                         }
                     }
                     if (isStartSaveCache.get()) {
-                        String availableDisks = AllConfigs.getInstance().getAvailableDisks();
-                        ConcurrentLinkedQueue<String> tableQueueByPriority = initTableQueueByPriority();
                         if (CudaAccelerator.INSTANCE.isCudaAvailableOnSystem()) {
-                            isCreatingCache.set(true);
                             startCheckTime.startCheckTimeMills = System.currentTimeMillis();
-                            String[] disks = RegexUtil.comma.split(availableDisks);
-                            LinkedHashMap<String, Integer> tableNeedCache = scanDatabaseAndSelectCacheTable(disks,
-                                    tableQueueByPriority,
-                                    isStopCreateCache,
-                                    1,
-                                    10000);
-                            saveTableCacheForCuda(isStopCreateCache, tableNeedCache);
-                            isCreatingCache.set(false);
+                            createCudaCache(isStopCreateCache);
                         }
                         final double memoryUsage = SystemInfoUtil.getMemoryUsage();
                         if (memoryUsage < 0.7) {
-                            isCreatingCache.set(true);
-                            // 系统内存使用少于70%
                             startCheckTime.startCheckTimeMills = System.currentTimeMillis();
-                            String[] disks = RegexUtil.comma.split(availableDisks);
-                            LinkedHashMap<String, Integer> tableNeedCache = scanDatabaseAndSelectCacheTable(disks,
-                                    tableQueueByPriority,
-                                    isStopCreateCache,
-                                    100,
-                                    2000);
-                            saveTableCache(isStopCreateCache, tableNeedCache);
-                            isCreatingCache.set(false);
+                            createMemoryCache(isStopCreateCache);
                         }
                     }
                     TimeUnit.SECONDS.sleep(1);
@@ -430,6 +414,35 @@ public class DatabaseService {
                 isCreatingCache.set(false);
             }
         });
+    }
+
+    private void createMemoryCache(Supplier<Boolean> isStopCreateCache) {
+        String availableDisks = AllConfigs.getInstance().getAvailableDisks();
+        ConcurrentLinkedQueue<String> tableQueueByPriority = initTableQueueByPriority();
+        isCreatingCache.set(true);
+        // 系统内存使用少于70%
+        String[] disks = RegexUtil.comma.split(availableDisks);
+        LinkedHashMap<String, Integer> tableNeedCache = scanDatabaseAndSelectCacheTable(disks,
+                tableQueueByPriority,
+                isStopCreateCache,
+                100,
+                2000);
+        saveTableCache(isStopCreateCache, tableNeedCache);
+        isCreatingCache.set(false);
+    }
+
+    private void createCudaCache(Supplier<Boolean> isStopCreateCache) {
+        String availableDisks = AllConfigs.getInstance().getAvailableDisks();
+        ConcurrentLinkedQueue<String> tableQueueByPriority = initTableQueueByPriority();
+        isCreatingCache.set(true);
+        String[] disks = RegexUtil.comma.split(availableDisks);
+        LinkedHashMap<String, Integer> tableNeedCache = scanDatabaseAndSelectCacheTable(disks,
+                tableQueueByPriority,
+                isStopCreateCache,
+                1,
+                10000);
+        saveTableCacheForCuda(isStopCreateCache, tableNeedCache);
+        isCreatingCache.set(false);
     }
 
     /**
@@ -456,6 +469,9 @@ public class DatabaseService {
                     if (!CudaAccelerator.INSTANCE.hasCache(key)) {
                         System.out.println("添加cuda缓存" + key);
                         CudaAccelerator.INSTANCE.initCache(key, strings.toArray());
+                        if (isStopCreateCache.get()) {
+                            break;
+                        }
                     }
                     if (CudaAccelerator.INSTANCE.getCudaMemUsage() > 50) {
                         break;
@@ -1534,6 +1550,18 @@ public class DatabaseService {
                     // 搜索完成，更新isDatabaseUpdated标志，结束UpdateDatabaseEvent事件等待
                     isDatabaseUpdated.set(true);
                     isReadFromSharedMemory.set(false);
+                    if (IsDebug.isDebug()) {
+                        System.out.println("重新创建缓存");
+                    }
+                    final Supplier<Boolean> isStopCreateCache =
+                            () -> !isSearchStopped.get() || !EventManagement.getInstance().notMainExit() || status == Constants.Enums.DatabaseStatus.MANUAL_UPDATE;
+                    final double memoryUsage = SystemInfoUtil.getMemoryUsage();
+                    if (memoryUsage < 0.7) {
+                        createMemoryCache(isStopCreateCache);
+                    }
+                    if (CudaAccelerator.INSTANCE.isCudaAvailableOnSystem()) {
+                        createCudaCache(isStopCreateCache);
+                    }
                 }
             }
         });
