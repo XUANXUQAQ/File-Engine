@@ -54,6 +54,7 @@ public class MainClass {
     private static final String GET_START_MENU_MD5 = "b446b307fae7646f9d7cd0064f55d1af";
     private static final String SQLITE_JDBC_MD5 = "580fd050832e37d14bc04e8d5d13b7b1";
     private static final String EMPTY_RECYCLE_BIN_MD5 = "431225a47e74fe343b42e4bba741b80b";
+    private static final String CUDA_ACCELERATOR_MD5 = "9b4b688bcc2e8f539c540dfbf3abf345";
 
     public static void main(String[] args) {
         try {
@@ -106,6 +107,7 @@ public class MainClass {
         Class.forName("file.engine.dllInterface.GetHandle");
         Class.forName("file.engine.dllInterface.ResultPipe");
         Class.forName("file.engine.dllInterface.EmptyRecycleBin");
+        Class.forName("file.engine.dllInterface.CudaAccelerator");
     }
 
     /**
@@ -411,6 +413,7 @@ public class MainClass {
         copyOrIgnoreFile("user/getStartMenu.dll", "/win32-native/getStartMenu.dll", GET_START_MENU_MD5);
         copyOrIgnoreFile("user/sqliteJDBC.dll", "/win32-native/sqliteJDBC.dll", SQLITE_JDBC_MD5);
         copyOrIgnoreFile("user/emptyRecycleBin.dll", "/win32-native/emptyRecycleBin.dll", EMPTY_RECYCLE_BIN_MD5);
+        copyOrIgnoreFile("user/cudaAccelerator.dll", "/win32-native/cudaAccelerator.dll", CUDA_ACCELERATOR_MD5);
     }
 
     private static void copyOrIgnoreFile(String path, String rootPath, String md5) throws IOException {

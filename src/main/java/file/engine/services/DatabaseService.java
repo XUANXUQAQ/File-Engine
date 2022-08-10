@@ -10,6 +10,8 @@ import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
 import file.engine.event.handler.impl.BootSystemEvent;
 import file.engine.event.handler.impl.database.*;
+import file.engine.event.handler.impl.database.cuda.CudaAddRecordEvent;
+import file.engine.event.handler.impl.database.cuda.CudaClearCacheEvent;
 import file.engine.event.handler.impl.frame.searchBar.SearchBarReadyEvent;
 import file.engine.event.handler.impl.monitor.disk.StartMonitorDiskEvent;
 import file.engine.event.handler.impl.stop.RestartEvent;
@@ -18,11 +20,17 @@ import file.engine.frames.SearchBar;
 import file.engine.services.utils.PathMatchUtil;
 import file.engine.services.utils.SystemInfoUtil;
 import file.engine.services.utils.connection.SQLiteUtil;
-import file.engine.utils.*;
+import file.engine.utils.CachedThreadPoolUtil;
+import file.engine.utils.ProcessUtil;
+import file.engine.utils.RegexUtil;
 import file.engine.utils.bit.Bit;
+import file.engine.utils.file.FileUtil;
 import file.engine.utils.gson.GsonUtil;
 import file.engine.utils.system.properties.IsDebug;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.Getter;
+import lombok.SneakyThrows;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -55,10 +63,12 @@ public class DatabaseService {
     private final AtomicBoolean isReadFromSharedMemory = new AtomicBoolean(false);
     private final @Getter
     ConcurrentLinkedQueue<String> tempResults;  //在优先文件夹和数据库cache未搜索完时暂时保存结果，搜索完后会立即被转移到listResults
+    private final ConcurrentHashMap<String, ConcurrentLinkedQueue<String>> cudaCache = new ConcurrentHashMap<>();
     private final AtomicBoolean shouldStopSearch = new AtomicBoolean(true);
     private final AtomicBoolean isSearchStopped = new AtomicBoolean(true);
     private final AtomicBoolean isCreatingCache = new AtomicBoolean(false);
     private final ConcurrentLinkedQueue<Pair> priorityMap = new ConcurrentLinkedQueue<>();
+    //tableCache 数据表缓存，在初始化时将会放入所有的key和一个空的cache，后续需要缓存直接放入空的cache中，不再创建新的cache实例
     private final ConcurrentHashMap<String, Cache> tableCache = new ConcurrentHashMap<>();
     private final AtomicInteger cacheCount = new AtomicInteger();
     private volatile String[] searchCase;
@@ -318,9 +328,24 @@ public class DatabaseService {
         searchFolder(AllConfigs.getInstance().getPriorityFolder());
     }
 
+    /**
+     * 返回满足数据在minRecordNum-maxRecordNum之间的表可以被缓存的表
+     *
+     * @param disks                硬盘盘符
+     * @param tableQueueByPriority 后缀优先级表，从高到低优先级逐渐降低
+     * @param isStopCreateCache    是否停止
+     * @param minRecordNum         最小数据量
+     * @param maxRecordNum         最大数据量
+     * @return key为[盘符, 表名, 优先级]，例如 [C,list10,9]，value为实际数据量
+     */
     private LinkedHashMap<String, Integer> scanDatabaseAndSelectCacheTable(String[] disks,
                                                                            ConcurrentLinkedQueue<String> tableQueueByPriority,
-                                                                           Supplier<Boolean> isStopCreateCache) {
+                                                                           Supplier<Boolean> isStopCreateCache,
+                                                                           int minRecordNum,
+                                                                           int maxRecordNum) {
+        if (minRecordNum > maxRecordNum) {
+            throw new RuntimeException("minRecordNum > maxRecordNum");
+        }
         //检查哪些表符合缓存条件，通过表权重依次向下排序
         LinkedHashMap<String, Integer> tableNeedCache = new LinkedHashMap<>();
         for (String diskPath : disks) {
@@ -331,7 +356,7 @@ public class DatabaseService {
                         try (ResultSet resultSet = stmt.executeQuery("SELECT COUNT(*) as num FROM " + tableName + " WHERE PRIORITY=" + pair.priority)) {
                             if (resultSet.next()) {
                                 final int num = resultSet.getInt("num");
-                                if (num > 100 && num < 2000) {
+                                if (num > minRecordNum && num < maxRecordNum) {
                                     tableNeedCache.put(disk + "," + tableName + "," + pair.priority, num);
                                 }
                             }
@@ -361,51 +386,39 @@ public class DatabaseService {
                     () -> isSearchStopped.get() && System.currentTimeMillis() - startCheckTime.startCheckTimeMills > checkTimeInterval && !GetHandle.INSTANCE.isForegroundFullscreen();
             try {
                 while (eventManagement.notMainExit()) {
+                    if (CudaAccelerator.INSTANCE.isCudaAvailableOnSystem()) {
+                        int cudaMemUsage = CudaAccelerator.INSTANCE.getCudaMemUsage();
+                        if (cudaMemUsage > 70) {
+                            eventManagement.putEvent(new CudaClearCacheEvent());
+                        }
+                    }
                     if (isStartSaveCache.get()) {
+                        String availableDisks = AllConfigs.getInstance().getAvailableDisks();
+                        ConcurrentLinkedQueue<String> tableQueueByPriority = initTableQueueByPriority();
+                        if (CudaAccelerator.INSTANCE.isCudaAvailableOnSystem()) {
+                            isCreatingCache.set(true);
+                            startCheckTime.startCheckTimeMills = System.currentTimeMillis();
+                            String[] disks = RegexUtil.comma.split(availableDisks);
+                            LinkedHashMap<String, Integer> tableNeedCache = scanDatabaseAndSelectCacheTable(disks,
+                                    tableQueueByPriority,
+                                    isStopCreateCache,
+                                    1,
+                                    10000);
+                            saveTableCacheForCuda(isStopCreateCache, tableNeedCache);
+                            isCreatingCache.set(false);
+                        }
                         final double memoryUsage = SystemInfoUtil.getMemoryUsage();
                         if (memoryUsage < 0.7) {
                             isCreatingCache.set(true);
                             // 系统内存使用少于70%
                             startCheckTime.startCheckTimeMills = System.currentTimeMillis();
-                            String availableDisks = AllConfigs.getInstance().getAvailableDisks();
                             String[] disks = RegexUtil.comma.split(availableDisks);
-                            ConcurrentLinkedQueue<String> tableQueueByPriority = initTableQueueByPriority();
-                            LinkedHashMap<String, Integer> tableNeedCache = scanDatabaseAndSelectCacheTable(disks, tableQueueByPriority, isStopCreateCache);
-                            //开始缓存数据库表
-                            out:
-                            for (Map.Entry<String, Cache> entry : tableCache.entrySet()) {
-                                String key = entry.getKey();
-                                Cache cache = entry.getValue();
-                                if (tableNeedCache.containsKey(key)) {
-                                    //当前表可以被缓存
-                                    if (cacheCount.get() + tableNeedCache.get(key) < MAX_CACHED_RECORD_NUM - 1000 && !cache.isCacheValid()) {
-                                        cache.data = new ConcurrentLinkedQueue<>();
-                                        String[] info = RegexUtil.comma.split(key);
-                                        try (Statement stmt = SQLiteUtil.getStatement(info[0]);
-                                             ResultSet resultSet = stmt.executeQuery("SELECT PATH FROM " + info[1] + " " + "WHERE PRIORITY=" + info[2])) {
-                                            while (resultSet.next()) {
-                                                if (isStopCreateCache.get()) {
-                                                    break out;
-                                                }
-                                                cache.data.add(resultSet.getString("PATH"));
-                                                cacheCount.incrementAndGet();
-                                            }
-                                        } catch (SQLException e) {
-                                            e.printStackTrace();
-                                        }
-                                        cache.isCached.compareAndSet(cache.isCached.get(), true);
-                                        cache.isFileLost.set(false);
-                                        System.out.println("添加缓存 " + key);
-                                    }
-                                } else {
-                                    if (cache.isCached.get()) {
-                                        cache.isCached.compareAndSet(cache.isCached.get(), false);
-                                        int num = cache.data.size();
-                                        cacheCount.compareAndSet(cacheCount.get(), cacheCount.get() - num);
-                                        cache.data = null;
-                                    }
-                                }
-                            }
+                            LinkedHashMap<String, Integer> tableNeedCache = scanDatabaseAndSelectCacheTable(disks,
+                                    tableQueueByPriority,
+                                    isStopCreateCache,
+                                    100,
+                                    2000);
+                            saveTableCache(isStopCreateCache, tableNeedCache);
                             isCreatingCache.set(false);
                         }
                     }
@@ -417,6 +430,85 @@ public class DatabaseService {
                 isCreatingCache.set(false);
             }
         });
+    }
+
+    /**
+     * 缓存数据表到显存中
+     *
+     * @param isStopCreateCache 是否停止
+     * @param tableNeedCache    需要缓存的表
+     */
+    private void saveTableCacheForCuda(Supplier<Boolean> isStopCreateCache, LinkedHashMap<String, Integer> tableNeedCache) {
+        out:
+        for (Map.Entry<String, Cache> entry : tableCache.entrySet()) {
+            String key = entry.getKey();
+            if (tableNeedCache.containsKey(key)) {
+                String[] info = RegexUtil.comma.split(key);
+                ArrayList<String> strings = new ArrayList<>();
+                try (Statement stmt = SQLiteUtil.getStatement(info[0]);
+                     ResultSet resultSet = stmt.executeQuery("SELECT PATH FROM " + info[1] + " " + "WHERE PRIORITY=" + info[2])) {
+                    while (resultSet.next()) {
+                        if (isStopCreateCache.get()) {
+                            break out;
+                        }
+                        strings.add(resultSet.getString("PATH"));
+                    }
+                    if (!CudaAccelerator.INSTANCE.hasCache(key)) {
+                        System.out.println("添加cuda缓存" + key);
+                        CudaAccelerator.INSTANCE.initCache(key, strings.toArray());
+                    }
+                    if (CudaAccelerator.INSTANCE.getCudaMemUsage() > 50) {
+                        break;
+                    }
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    /**
+     * 缓存数据表
+     *
+     * @param isStopCreateCache 是否停止
+     * @param tableNeedCache    需要缓存的表
+     */
+    private void saveTableCache(Supplier<Boolean> isStopCreateCache, LinkedHashMap<String, Integer> tableNeedCache) {
+        //开始缓存数据库表
+        out:
+        for (Map.Entry<String, Cache> entry : tableCache.entrySet()) {
+            String key = entry.getKey();
+            Cache cache = entry.getValue();
+            if (tableNeedCache.containsKey(key)) {
+                //当前表可以被缓存
+                if (cacheCount.get() + tableNeedCache.get(key) < MAX_CACHED_RECORD_NUM - 1000 && !cache.isCacheValid()) {
+                    cache.data = new ConcurrentLinkedQueue<>();
+                    String[] info = RegexUtil.comma.split(key);
+                    try (Statement stmt = SQLiteUtil.getStatement(info[0]);
+                         ResultSet resultSet = stmt.executeQuery("SELECT PATH FROM " + info[1] + " " + "WHERE PRIORITY=" + info[2])) {
+                        while (resultSet.next()) {
+                            if (isStopCreateCache.get()) {
+                                break out;
+                            }
+                            cache.data.add(resultSet.getString("PATH"));
+                            cacheCount.incrementAndGet();
+                        }
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
+                    cache.isCached.compareAndSet(cache.isCached.get(), true);
+                    cache.isFileLost.set(false);
+                    System.out.println("添加缓存 " + key);
+                }
+            } else {
+                if (cache.isCached.get()) {
+                    cache.isCached.compareAndSet(cache.isCached.get(), false);
+                    int num = cache.data.size();
+                    cacheCount.compareAndSet(cacheCount.get(), cacheCount.get() - num);
+                    cache.data = null;
+                }
+            }
+        }
     }
 
     /**
@@ -781,26 +873,52 @@ public class DatabaseService {
                             String tableName = commandsMap.get(eachSql);
                             String priority = getPriorityFromSql(eachSql);
                             String key = diskStr + "," + tableName + "," + priority;
-                            Cache cache = tableCache.get(key);
                             long matchedNum;
-                            if (cache.isCacheValid()) {
+                            if (CudaAccelerator.INSTANCE.isMatchDone(key)) {
                                 if (IsDebug.isDebug()) {
-                                    System.out.println("从缓存中读取 " + key);
+                                    System.out.println("CUDA缓存命中" + key);
                                 }
-                                matchedNum = cache.data.stream()
-                                        .filter(record -> checkIsMatchedAndAddToList(record, container))
-                                        .count();
+                                if (cudaCache.containsKey(key)) {
+                                    ConcurrentLinkedQueue<String> strings = cudaCache.get(key);
+                                    // CUDA计算不支持判断文件和文件夹
+                                    if (searchCase == null || searchCase.length == 0) {
+                                        container.addAll(strings);
+                                        matchedNum = strings.size();
+                                    } else {
+                                        List<String> searchCaseList = Arrays.asList(searchCase);
+                                        if (searchCaseList.contains(PathMatchUtil.SearchCase.D)) {
+                                            matchedNum = strings.stream().filter(e -> Files.isDirectory(Path.of(e))).filter(container::add).count();
+                                        } else if (searchCaseList.contains(PathMatchUtil.SearchCase.F)) {
+                                            matchedNum = strings.stream().filter(FileUtil::isFile).filter(container::add).count();
+                                        } else {
+                                            container.addAll(strings);
+                                            matchedNum = strings.size();
+                                        }
+                                    }
+                                } else {
+                                    matchedNum = 0;
+                                }
                             } else {
-                                try (Statement stmt = SQLiteUtil.getStatement(diskStr)) {
-                                    //格式化是为了以后的拓展性
-                                    String formattedSql = String.format(eachSql, "PATH");
-                                    //当前数据库表中有多少个结果匹配成功
-                                    matchedNum = searchAndAddToTempResults(
-                                            formattedSql,
-                                            container,
-                                            stmt);
-                                } catch (SQLException e) {
-                                    throw new RuntimeException(e);
+                                Cache cache = tableCache.get(key);
+                                if (cache.isCacheValid()) {
+                                    if (IsDebug.isDebug()) {
+                                        System.out.println("从缓存中读取 " + key);
+                                    }
+                                    matchedNum = cache.data.stream()
+                                            .filter(record -> checkIsMatchedAndAddToList(record, container))
+                                            .count();
+                                } else {
+                                    try (Statement stmt = SQLiteUtil.getStatement(diskStr)) {
+                                        //格式化是为了以后的拓展性
+                                        String formattedSql = String.format(eachSql, "PATH");
+                                        //当前数据库表中有多少个结果匹配成功
+                                        matchedNum = searchAndAddToTempResults(
+                                                formattedSql,
+                                                container,
+                                                stmt);
+                                    } catch (SQLException e) {
+                                        throw new RuntimeException(e);
+                                    }
                                 }
                             }
                             final long weight = Math.min(matchedNum, 5);
@@ -1082,14 +1200,19 @@ public class DatabaseService {
         int asciiGroup = asciiSum / 100;
         asciiGroup = Math.min(asciiGroup, Constants.ALL_TABLE_NUM);
         String tableName = "list" + asciiGroup;
-        Cache cache = tableCache.get(path.charAt(0) + "," + tableName + "," + priorityBySuffix);
-        if (cache.isCacheValid()) {
-            if (cacheCount.get() < MAX_CACHED_RECORD_NUM) {
-                if (cache.data.add(path)) {
-                    cacheCount.incrementAndGet();
+        String key = path.charAt(0) + "," + tableName + "," + priorityBySuffix;
+        if (CudaAccelerator.INSTANCE.isCudaAvailableOnSystem()) {
+            EventManagement.getInstance().putEvent(new CudaAddRecordEvent(key, path));
+        } else {
+            Cache cache = tableCache.get(key);
+            if (cache.isCacheValid()) {
+                if (cacheCount.get() < MAX_CACHED_RECORD_NUM) {
+                    if (cache.data.add(path)) {
+                        cacheCount.incrementAndGet();
+                    }
+                } else {
+                    cache.isFileLost.set(true);
                 }
-            } else {
-                cache.isFileLost.set(true);
             }
         }
     }
@@ -1539,7 +1662,7 @@ public class DatabaseService {
                 EventManagement eventManagement = EventManagement.getInstance();
                 while (eventManagement.notMainExit()) {
                     if ((status == Constants.Enums.DatabaseStatus.NORMAL && System.currentTimeMillis() - startSearchTimeMills.get() < timeout) ||
-                            (status == Constants.Enums.DatabaseStatus.NORMAL && commandQueue.size() > 1000)) {
+                            (status == Constants.Enums.DatabaseStatus.NORMAL && commandQueue.size() > 100)) {
                         if (isSearchStopped.get()) {
                             sendExecuteSQLSignal();
                         }
@@ -1583,6 +1706,43 @@ public class DatabaseService {
         }
     }
 
+    private static void prepareSearchInfo(Supplier<String> searchTextSupplier, Supplier<String[]> searchCaseSupplier, Supplier<String[]> keywordsSupplier) {
+        DatabaseService databaseService = getInstance();
+        databaseService.searchText = searchTextSupplier.get();
+        databaseService.searchCase = searchCaseSupplier.get();
+        databaseService.isIgnoreCase = databaseService.searchCase == null ||
+                Arrays.stream(databaseService.searchCase).noneMatch(s -> s.equals(PathMatchUtil.SearchCase.CASE));
+        String[] _keywords = keywordsSupplier.get();
+        databaseService.keywords = new String[_keywords.length];
+        databaseService.keywordsLowerCase = new String[_keywords.length];
+        databaseService.isKeywordPath = new boolean[_keywords.length];
+        // 对keywords进行处理
+        for (int i = 0; i < _keywords.length; ++i) {
+            String eachKeyword = _keywords[i];
+            // 当keywords为空，初始化为默认值
+            if (eachKeyword == null || eachKeyword.isEmpty()) {
+                databaseService.isKeywordPath[i] = false;
+                databaseService.keywords[i] = "";
+                databaseService.keywordsLowerCase[i] = "";
+                continue;
+            }
+            final char _firstChar = eachKeyword.charAt(0);
+            final boolean isPath = _firstChar == '/' || _firstChar == File.separatorChar;
+            if (isPath) {
+                // 当关键字为"test;/C:/test"时，分割出来为["test", "/C:/test"]，所以需要去掉 /C:/test 前面的 "/"
+                if (eachKeyword.contains(":")) {
+                    eachKeyword = eachKeyword.substring(1);
+                }
+                // 将 / 以及 \ 替换为空字符串，以便模糊匹配文件夹路径
+                Matcher matcher = RegexUtil.getPattern("/|\\\\", 0).matcher(eachKeyword);
+                eachKeyword = matcher.replaceAll(Matcher.quoteReplacement(""));
+            }
+            databaseService.isKeywordPath[i] = isPath;
+            databaseService.keywords[i] = eachKeyword;
+            databaseService.keywordsLowerCase[i] = eachKeyword.toLowerCase();
+        }
+    }
+
     @EventListener(listenClass = SearchBarReadyEvent.class)
     private static void searchBarVisibleListener(Event event) {
         if (IsDebug.isDebug()) {
@@ -1620,38 +1780,16 @@ public class DatabaseService {
     private static void startSearchEvent(Event event) {
         StartSearchEvent startSearchEvent = (StartSearchEvent) event;
         DatabaseService databaseService = getInstance();
-        databaseService.searchText = startSearchEvent.searchText.get();
-        databaseService.searchCase = startSearchEvent.searchCase.get();
-        databaseService.isIgnoreCase = databaseService.searchCase == null ||
-                Arrays.stream(databaseService.searchCase).noneMatch(s -> s.equals(PathMatchUtil.SearchCase.CASE));
-        String[] _keywords = startSearchEvent.keywords.get();
-        databaseService.keywords = new String[_keywords.length];
-        databaseService.keywordsLowerCase = new String[_keywords.length];
-        databaseService.isKeywordPath = new boolean[_keywords.length];
-        // 对keywords进行处理
-        for (int i = 0; i < _keywords.length; ++i) {
-            String eachKeyword = _keywords[i];
-            // 当keywords为空，初始化为默认值
-            if (eachKeyword == null || eachKeyword.isEmpty()) {
-                databaseService.isKeywordPath[i] = false;
-                databaseService.keywords[i] = "";
-                databaseService.keywordsLowerCase[i] = "";
-                continue;
-            }
-            final char _firstChar = eachKeyword.charAt(0);
-            final boolean isPath = _firstChar == '/' || _firstChar == File.separatorChar;
-            if (isPath) {
-                // 当关键字为"test;/C:/test"时，分割出来为["test", "/C:/test"]，所以需要去掉 /C:/test 前面的 "/"
-                if (eachKeyword.contains(":")) {
-                    eachKeyword = eachKeyword.substring(1);
-                }
-                // 将 / 以及 \ 替换为空字符串，以便模糊匹配文件夹路径
-                Matcher matcher = RegexUtil.getPattern("/|\\\\", 0).matcher(eachKeyword);
-                eachKeyword = matcher.replaceAll(Matcher.quoteReplacement(""));
-            }
-            databaseService.isKeywordPath[i] = isPath;
-            databaseService.keywords[i] = eachKeyword;
-            databaseService.keywordsLowerCase[i] = eachKeyword.toLowerCase();
+        prepareSearchInfo(startSearchEvent.searchText, startSearchEvent.searchCase, startSearchEvent.keywords);
+        if (CudaAccelerator.INSTANCE.isCudaAvailableOnSystem()) {
+            databaseService.cudaCache.clear();
+            CachedThreadPoolUtil.getInstance().executeTask(() -> CudaAccelerator.INSTANCE.match(databaseService.searchCase,
+                    databaseService.isIgnoreCase,
+                    databaseService.searchText,
+                    databaseService.keywords,
+                    databaseService.keywordsLowerCase,
+                    databaseService.isKeywordPath,
+                    databaseService.cudaCache), false);
         }
         databaseService.shouldStopSearch.set(false);
         databaseService.startSearch();
@@ -1826,6 +1964,39 @@ public class DatabaseService {
     private enum SqlTaskIds {
         DELETE_FROM_LIST, DELETE_FROM_CACHE, INSERT_TO_LIST, INSERT_TO_CACHE,
         CREATE_INDEX, CREATE_TABLE, DROP_TABLE, DROP_INDEX, UPDATE_SUFFIX, UPDATE_WEIGHT
+    }
+
+    @SuppressWarnings("unused")
+    private static class CudaCacheService {
+        @EventRegister(registerClass = CudaAddRecordEvent.class)
+        private static void addToCuda(Event event) {
+            if (!CudaAccelerator.INSTANCE.isCudaAvailableOnSystem()) {
+                return;
+            }
+            CudaAddRecordEvent cudaAddRecordEvent = (CudaAddRecordEvent) event;
+            if (CudaAccelerator.INSTANCE.hasCache(cudaAddRecordEvent.key)) {
+                DatabaseService databaseService = DatabaseService.getInstance();
+                if (databaseService.isSearchStopped.get()) {
+                    if (CudaAccelerator.INSTANCE.isCacheValid(cudaAddRecordEvent.key)) {
+                        CudaAccelerator.INSTANCE.clearCache(cudaAddRecordEvent.key);
+                    } else {
+                        CudaAccelerator.INSTANCE.addOneRecordToCache(cudaAddRecordEvent.key, cudaAddRecordEvent.record);
+                    }
+                }
+            }
+        }
+
+        @EventRegister(registerClass = CudaClearCacheEvent.class)
+        @EventListener(listenClass = RestartEvent.class)
+        private static void clearCacheCuda(Event event) {
+            if (!CudaAccelerator.INSTANCE.isCudaAvailableOnSystem()) {
+                return;
+            }
+            DatabaseService databaseService = DatabaseService.getInstance();
+            if (databaseService.isSearchStopped.get()) {
+                CudaAccelerator.INSTANCE.clearAllCache();
+            }
+        }
     }
 }
 
