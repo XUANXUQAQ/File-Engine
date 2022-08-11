@@ -88,7 +88,7 @@ void volume::init_volume()
 			{
 				auto start_iter = frnPfrnNameMap.begin();
 				auto end_iter = frnPfrnNameMap.end();
-				for (size_t i = 0; i < split_size * thread_num - 1; ++i)
+				for (size_t i = 0; i < split_size * (static_cast<size_t>(thread_num) - 1); ++i)
 				{
 					++start_iter;
 				}
