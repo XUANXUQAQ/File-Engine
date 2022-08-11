@@ -279,9 +279,9 @@ void start_kernel(concurrency::concurrent_unordered_map<std::string, list_cache*
 		{
 			int block_num, thread_num;
 			const auto& cache = each.second;
-			if (cache->record_num > 256)
+			if (cache->record_num > MAX_THREAD_PER_BLOCK)
 			{
-				thread_num = 256;
+				thread_num = MAX_THREAD_PER_BLOCK;
 				block_num = static_cast<int>(cache->record_num / thread_num);
 			}
 			else

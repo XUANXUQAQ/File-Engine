@@ -171,7 +171,23 @@ JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_CudaAccelerator_isCudaA
 	{
 		return FALSE;
 	}
-	return device_num > 0;
+	if (device_num > 0)
+	{
+		void* test_ptr;
+		bool ret = FALSE;
+		// 测试分配内存
+		do
+		{
+			cudaStatus = cudaMalloc(&test_ptr, 1);
+			if (cudaStatus == cudaSuccess)
+			{
+				ret = TRUE;
+			}
+		} while (false);
+		cudaFree(test_ptr);
+		return ret;
+	}
+	return FALSE;
 }
 
 /*
