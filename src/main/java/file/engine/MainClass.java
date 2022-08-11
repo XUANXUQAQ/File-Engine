@@ -45,7 +45,7 @@ public class MainClass {
     private static final String GET_ASC_II_MD5 = "c63eec19bde81456693feb715c4e0313";
     private static final String HOTKEY_LISTENER_MD5 = "6d71f646529b69cff9d50fcce8d4b6e4";
     private static final String IS_LOCAL_DISK_MD5 = "4d612bd2728d720e1ce724d26d48bdb9";
-    private static final String FILE_SEARCHER_USN_MD5 = "6841480a1943dc5e8da4b3a7621c9428";
+    private static final String FILE_SEARCHER_USN_MD5 = "8609b1e780f8a534a85002c282545fa6";
     private static final String SQLITE3_MD5 = "dade4d608e258014e311867c764acf77";
     private static final String GET_HANDLE_MD5 = "c3b769814eeb5d469c19cec04e0c3ff4";
     private static final String SHORTCUT_GEN_MD5 = "fa4e26f99f3dcd58d827828c411ea5d7";
@@ -54,7 +54,7 @@ public class MainClass {
     private static final String GET_START_MENU_MD5 = "b446b307fae7646f9d7cd0064f55d1af";
     private static final String SQLITE_JDBC_MD5 = "580fd050832e37d14bc04e8d5d13b7b1";
     private static final String EMPTY_RECYCLE_BIN_MD5 = "431225a47e74fe343b42e4bba741b80b";
-    private static final String CUDA_ACCELERATOR_MD5 = "7b4ad2249b20938f27599e64fe55fd5e";
+    private static final String CUDA_ACCELERATOR_MD5 = "eaba98c47fc70021a037e93b521c74e7";
 
     public static void main(String[] args) {
         try {

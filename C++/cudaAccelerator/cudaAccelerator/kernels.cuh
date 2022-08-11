@@ -4,7 +4,7 @@
 #include "cache.h"
 #include "cuda_runtime.h"
 
-#define GET_TID() (blockIdx.x * blockDim.x + threadIdx.x)
+#define GET_TID() ((gridDim.x * gridDim.y * blockIdx.z + gridDim.x * blockIdx.y + blockIdx.x) * (blockDim.x * blockDim.y * blockDim.z) + blockDim.x * blockDim.y * threadIdx. z + blockDim.x * threadIdx.y + threadIdx.x)
 #define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
 
 void CUDART_CB set_match_done_flag_callback(cudaStream_t, cudaError_t, void* data);
@@ -19,22 +19,22 @@ void start_kernel(concurrency::concurrent_unordered_map<std::string, list_cache*
                   const std::vector<std::string>& keywords_lower_case,
                   const bool* is_keyword_path);
 
-__device__ bool not_matched(char* path,
+__device__ bool not_matched(const char* path,
                             bool is_ignore_case,
                             char* keywords,
                             char* keywords_lower_case,
                             int keywords_length,
-                            bool* is_keyword_path);
+                            const bool* is_keyword_path);
 
 
 __global__ void check(char* paths,
-                      int* search_case,
-                      bool* is_ignore_case,
+                      const int* search_case,
+                      const bool* is_ignore_case,
                       char* search_text,
                       char* keywords,
                       char* keywords_lower_case,
-                      size_t* keywords_length,
-                      bool* is_keyword_path,
+                      const size_t* keywords_length,
+                      const bool* is_keyword_path,
                       char* output);
 
 __device__ int strcmp_cuda(const char* str1, const char* str2);

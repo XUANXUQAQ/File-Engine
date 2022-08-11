@@ -19,44 +19,6 @@ inline void gpuAssert(cudaError_t code, const char* file, int line)
 	}
 }
 
-__device__ bool not_matched(char* path,
-                            bool is_ignore_case,
-                            char* keywords,
-                            char* keywords_lower_case,
-                            int keywords_length,
-                            bool* is_keyword_path)
-{
-	for (int i = 0; i < keywords_length; ++i)
-	{
-		const bool is_keyword_path_val = is_keyword_path[i];
-		char match_str[MAX_PATH_LENGTH]{0};
-		if (is_keyword_path_val)
-		{
-			get_parent_path(path, match_str);
-		}
-		else
-		{
-			get_file_name(path, match_str);
-		}
-		char* each_keyword;
-		if (is_ignore_case)
-		{
-			each_keyword = keywords_lower_case + i * static_cast<unsigned long long>(MAX_PATH_LENGTH);
-			strlwr_cuda(match_str);
-		}
-		else
-		{
-			each_keyword = keywords + i * static_cast<unsigned long long>(MAX_PATH_LENGTH);
-		}
-		if (strstr_cuda(match_str, each_keyword) == nullptr)
-		{
-			return true;
-		}
-	}
-	return false;
-}
-
-
 __device__ int strcmp_cuda(const char* str1, const char* str2)
 {
 	while (*str1)
@@ -149,18 +111,54 @@ __device__ void get_parent_path(const char* path, char* output)
 }
 
 
+__device__ bool not_matched(const char* path,
+                            const bool is_ignore_case,
+                            char* keywords,
+                            char* keywords_lower_case,
+                            const int keywords_length,
+                            const bool* is_keyword_path)
+{
+	for (int i = 0; i < keywords_length; ++i)
+	{
+		const bool is_keyword_path_val = is_keyword_path[i];
+		char match_str[MAX_PATH_LENGTH]{0};
+		if (is_keyword_path_val)
+		{
+			get_parent_path(path, match_str);
+		}
+		else
+		{
+			get_file_name(path, match_str);
+		}
+		char* each_keyword;
+		if (is_ignore_case)
+		{
+			each_keyword = keywords_lower_case + i * static_cast<unsigned long long>(MAX_PATH_LENGTH);
+			strlwr_cuda(match_str);
+		}
+		else
+		{
+			each_keyword = keywords + i * static_cast<unsigned long long>(MAX_PATH_LENGTH);
+		}
+		if (!match_str[0] || strstr_cuda(match_str, each_keyword) == nullptr)
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
 __global__ void check(char* paths,
-                      int* search_case,
-                      bool* is_ignore_case,
+                      const int* search_case,
+                      const bool* is_ignore_case,
                       char* search_text,
                       char* keywords,
                       char* keywords_lower_case,
-                      size_t* keywords_length,
-                      bool* is_keyword_path,
+                      const size_t* keywords_length,
+                      const bool* is_keyword_path,
                       char* output)
 {
 	const int thread_id = GET_TID();
-	output[thread_id] = 0;
 	char* path = paths + thread_id * static_cast<unsigned long long>(MAX_PATH_LENGTH);
 	if (path == nullptr || !path[0])
 	{
@@ -304,11 +302,11 @@ void start_kernel(concurrency::concurrent_unordered_map<std::string, list_cache*
 		}
 
 		// 等待执行完成
-		cudaStatus = cudaDeviceSynchronize();
-		if (cudaStatus != cudaSuccess)
-		{
-			fprintf(stderr, "cudaDeviceSynchronize returned error code %d after launch!\n", cudaStatus);
-		}
+		// cudaStatus = cudaDeviceSynchronize();
+		// if (cudaStatus != cudaSuccess)
+		// {
+		// 	fprintf(stderr, "cudaDeviceSynchronize returned error code %d after launch!\n", cudaStatus);
+		// }
 	}
 	while (false);
 	delete[] streams;
