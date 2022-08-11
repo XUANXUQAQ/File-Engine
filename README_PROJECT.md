@@ -229,6 +229,7 @@ UI层和service层都可以通过事件的注册和处理来实现互相调用�
 │ ├─isLocalDisk   
 │ ├─launcherWrap   
 │ ├─resultPipe   
+│ ├─cudaAccelerator   
 │ └─sqliteJDBC   
 
 ## fileMonitor
@@ -274,6 +275,10 @@ File-Engine的启动器以及守护进程。
 读取fileSearcherUSN创建的共享内存，实现在创建索引时也能进行搜索。
 
 共享内存将会在索引创建完成后关闭。
+
+## cudaAccelerator
+
+NVIDIA GPU CUDA加速引擎，通过并行计算实现高速搜索字符串。
 
 ## sqliteJDBC
 
