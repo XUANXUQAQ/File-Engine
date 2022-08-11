@@ -4,7 +4,12 @@
 #include "cache.h"
 #include "cuda_runtime.h"
 
+#define GET_TID() (blockIdx.x * blockDim.x + threadIdx.x)
+#define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
+
 void CUDART_CB set_match_done_flag_callback(cudaStream_t, cudaError_t, void* data);
+
+inline void gpuAssert(cudaError_t code, const char* file, int line);
 
 void start_kernel(concurrency::concurrent_unordered_map<std::string, list_cache*>& cache_map,
                   const std::vector<std::string>& search_case,

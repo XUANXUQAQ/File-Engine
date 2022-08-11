@@ -119,7 +119,10 @@ public class DatabaseService {
     }
 
     private void invalidateAllCache() {
-        EventManagement.getInstance().putEvent(new CudaClearCacheEvent());
+        CudaClearCacheEvent cudaClearCacheEvent = new CudaClearCacheEvent();
+        EventManagement eventManagement = EventManagement.getInstance();
+        eventManagement.putEvent(cudaClearCacheEvent);
+        eventManagement.waitForEvent(cudaClearCacheEvent);
         tableCache.values().forEach(each -> {
             each.isCached.set(false);
             each.data = null;

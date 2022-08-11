@@ -13,7 +13,7 @@ static concurrency::concurrent_unordered_map<std::string, list_cache*> cache_map
 
 void clear_cache(const std::string& key);
 void init_cache(std::string& key, const std::vector<std::string>& records);
-bool has_cache(std::string& key);
+bool has_cache(const std::string& key);
 void add_one_record_to_cache(const std::string& key, const std::string& record);
 void generate_search_case(JNIEnv* env, std::vector<std::string>& search_case_vec, jobjectArray search_case);
 void collect_results(JNIEnv* env, jobject output);
@@ -58,10 +58,10 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_CudaAccelerator_match
 	//复制全字匹配字符串 search_text
 	const auto search_text_chars = env->GetStringUTFChars(search_text, nullptr);
 	//初始化output为0
-	for (const auto& each : cache_map)
-	{
-		cudaMemset(each.second->dev_output, 0, each.second->record_num + each.second->remain_blank_num);
-	}
+	// for (const auto& each : cache_map)
+	// {
+	// 	cudaMemset(each.second->dev_output, 0, each.second->record_num + each.second->remain_blank_num);
+	// }
 	//GPU并行计算
 	start_kernel(cache_map, search_case_vec, is_ignore_case, search_text_chars, keywords_vec, keywords_lower_vec,
 	             is_keyword_path_ptr);
@@ -301,7 +301,7 @@ void init_cache(std::string& key, const std::vector<std::string>& records)
 	cache_map.insert(std::make_pair(key, cache));
 }
 
-bool has_cache(std::string& key)
+bool has_cache(const std::string& key)
 {
 	return cache_map.find(key) != cache_map.end();
 }

@@ -8,3 +8,5 @@ file.engine.services.DatabaseService
 file.engine.configs.AllConfigs
 file.engine.frames.SettingsFrame
 file.engine.frames.SearchBar
+file.engine.services.DaemonService
+file.engine.services.DatabaseService$CudaCacheService

@@ -10,7 +10,14 @@
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
 
-#define GET_TID() (blockIdx.x * blockDim.x + threadIdx.x)
+inline void gpuAssert(cudaError_t code, const char* file, int line)
+{
+	if (code != cudaSuccess)
+	{
+		fprintf(stderr, "GPU assert: %s %s %d\n", cudaGetErrorString(code), file, line);
+		std::quick_exit(code);
+	}
+}
 
 __device__ bool not_matched(char* path,
                             bool is_ignore_case,
@@ -154,6 +161,7 @@ __global__ void check(char* paths,
                       char* output)
 {
 	const int thread_id = GET_TID();
+	output[thread_id] = 0;
 	char* path = paths + thread_id * static_cast<unsigned long long>(MAX_PATH_LENGTH);
 	if (path == nullptr || !path[0])
 	{
@@ -207,7 +215,6 @@ void start_kernel(concurrency::concurrent_unordered_map<std::string, list_cache*
 	size_t* dev_keywords_length = nullptr;
 	bool* dev_is_keyword_path = nullptr;
 	bool* dev_is_ignore_case = nullptr;
-	cudaError_t cudaStatus;
 
 	const auto keywords_num = keywords.size();
 	const auto stream_count = cache_map.size();
@@ -215,28 +222,20 @@ void start_kernel(concurrency::concurrent_unordered_map<std::string, list_cache*
 	//初始化流
 	for (size_t i = 0; i < stream_count; ++i)
 	{
-		cudaStreamCreate(&streams[i]);
+		gpuErrchk(cudaStreamCreate(&streams[i]))
 	}
 	do
 	{
 		// 选择第一个GPU
-		cudaStatus = cudaSetDevice(0);
-		if (cudaStatus != cudaSuccess)
-		{
-			fprintf(stderr, "cudaSetDevice failed!");
-			break;
-		}
+		gpuErrchk(cudaSetDevice(0))
+
 		// 复制search case
 		// 第一位为1表示有F，第二位为1表示有D，第三位为1表示有FULL，CASE由File-Engine主程序进行判断，传入参数is_ignore_case为false表示有CASE
-		cudaStatus = cudaMalloc(reinterpret_cast<void**>(&dev_search_case), sizeof(int));
-		if (cudaStatus != cudaSuccess)
-		{
-			fprintf(stderr, "cudaMalloc failed!");
-			break;
-		}
+		gpuErrchk(cudaMalloc(reinterpret_cast<void**>(&dev_search_case), sizeof(int)))
 		int search_case_num = 0;
 		for (auto& each_case : search_case)
 		{
+			//TODO 支持文件和文件夹判断
 			// if (each_case == "f")
 			// {
 			// 	search_case_num |= 1;
@@ -250,56 +249,31 @@ void start_kernel(concurrency::concurrent_unordered_map<std::string, list_cache*
 				search_case_num |= 4;
 			}
 		}
-		cudaMemcpy(dev_search_case, &search_case_num, sizeof(int), cudaMemcpyHostToDevice);
+		gpuErrchk(cudaMemcpy(dev_search_case, &search_case_num, sizeof(int), cudaMemcpyHostToDevice))
+
 		// 复制search text
 		const auto search_text_len = strlen(search_text);
-		cudaStatus = cudaMalloc(reinterpret_cast<void**>(&dev_search_text), (search_text_len + 1) * sizeof(char));
-		if (cudaStatus != cudaSuccess)
-		{
-			fprintf(stderr, "cudaMalloc failed!");
-			break;
-		}
-		cudaMemset(dev_search_text, 0, search_text_len + 1);
-		cudaMemcpy(dev_search_text, search_text, search_text_len, cudaMemcpyHostToDevice);
+		gpuErrchk(cudaMalloc(reinterpret_cast<void**>(&dev_search_text), (search_text_len + 1) * sizeof(char)))
+		gpuErrchk(cudaMemset(dev_search_text, 0, search_text_len + 1))
+		gpuErrchk(cudaMemcpy(dev_search_text, search_text, search_text_len, cudaMemcpyHostToDevice))
+
 		// 复制keywords
-		cudaStatus = vector_to_cuda_char_array(keywords, reinterpret_cast<void**>(&dev_keywords), 0);
-		if (cudaStatus != cudaSuccess)
-		{
-			fprintf(stderr, "cudaMalloc failed!");
-			break;
-		}
+		gpuErrchk(vector_to_cuda_char_array(keywords, reinterpret_cast<void**>(&dev_keywords), 0))
+
 		// 复制keywords_lower_case
-		cudaStatus = vector_to_cuda_char_array(keywords_lower_case, reinterpret_cast<void**>(&dev_keywords_lower_case),
-		                                       0);
-		if (cudaStatus != cudaSuccess)
-		{
-			fprintf(stderr, "cudaMalloc failed!");
-			break;
-		}
+		gpuErrchk(vector_to_cuda_char_array(keywords_lower_case, reinterpret_cast<void**>(&dev_keywords_lower_case),0))
+
 		//复制keywords_length
-		cudaStatus = cudaMalloc(reinterpret_cast<void**>(&dev_keywords_length), sizeof(size_t));
-		if (cudaStatus != cudaSuccess)
-		{
-			fprintf(stderr, "cudaMalloc failed!");
-			break;
-		}
-		cudaMemcpy(dev_keywords_length, &keywords_num, sizeof(size_t), cudaMemcpyHostToDevice);
+		gpuErrchk(cudaMalloc(reinterpret_cast<void**>(&dev_keywords_length), sizeof(size_t)))
+		gpuErrchk(cudaMemcpy(dev_keywords_length, &keywords_num, sizeof(size_t), cudaMemcpyHostToDevice))
+
 		// 复制is_keyword_path
-		cudaStatus = cudaMalloc(reinterpret_cast<void**>(&dev_is_keyword_path), sizeof(bool) * keywords_num);
-		if (cudaStatus != cudaSuccess)
-		{
-			fprintf(stderr, "cudaMalloc failed!");
-			break;
-		}
-		cudaMemcpy(dev_is_keyword_path, is_keyword_path, sizeof(bool) * keywords_num, cudaMemcpyHostToDevice);
+		gpuErrchk(cudaMalloc(reinterpret_cast<void**>(&dev_is_keyword_path), sizeof(bool) * keywords_num))
+		gpuErrchk(cudaMemcpy(dev_is_keyword_path, is_keyword_path, sizeof(bool) * keywords_num, cudaMemcpyHostToDevice))
+
 		// 复制is_ignore_case
-		cudaStatus = cudaMalloc(reinterpret_cast<void**>(&dev_is_ignore_case), sizeof(bool));
-		if (cudaStatus != cudaSuccess)
-		{
-			fprintf(stderr, "cudaMalloc failed!");
-			break;
-		}
-		cudaMemcpy(dev_is_ignore_case, &is_ignore_case, sizeof(bool), cudaMemcpyHostToDevice);
+		gpuErrchk(cudaMalloc(reinterpret_cast<void**>(&dev_is_ignore_case), sizeof(bool)))
+		gpuErrchk(cudaMemcpy(dev_is_ignore_case, &is_ignore_case, sizeof(bool), cudaMemcpyHostToDevice))
 		int count = 0;
 		for (auto& each : cache_map)
 		{
@@ -318,6 +292,7 @@ void start_kernel(concurrency::concurrent_unordered_map<std::string, list_cache*
 			cache->is_match_done = false;
 			//注册回调
 			cudaStreamAddCallback(streams[count], set_match_done_flag_callback, cache, 0);
+
 			check<<<block_num, thread_num, 0, streams[count]>>>
 			(cache->dev_cache,
 			 dev_search_case,
@@ -332,7 +307,7 @@ void start_kernel(concurrency::concurrent_unordered_map<std::string, list_cache*
 		}
 
 		// 检查启动错误
-		cudaStatus = cudaGetLastError();
+		cudaError_t cudaStatus = cudaGetLastError();
 		if (cudaStatus != cudaSuccess)
 		{
 			fprintf(stderr, "check launch failed: %s\n", cudaGetErrorString(cudaStatus));
