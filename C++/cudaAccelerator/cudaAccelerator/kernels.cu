@@ -29,7 +29,7 @@ __device__ bool not_matched(char* path,
 	for (int i = 0; i < keywords_length; ++i)
 	{
 		const bool is_keyword_path_val = is_keyword_path[i];
-		char match_str[MAX_PATH_LENGTH];
+		char match_str[MAX_PATH_LENGTH]{0};
 		if (is_keyword_path_val)
 		{
 			get_parent_path(path, match_str);
@@ -42,7 +42,6 @@ __device__ bool not_matched(char* path,
 		if (is_ignore_case)
 		{
 			each_keyword = keywords_lower_case + i * static_cast<unsigned long long>(MAX_PATH_LENGTH);
-			// strlwr_cuda(each_keyword);
 			strlwr_cuda(match_str);
 		}
 		else
@@ -177,14 +176,6 @@ __global__ void check(char* paths,
 		output[thread_id] = 1;
 		return;
 	}
-	// if ((*search_case & 1) == 1)
-	// {
-	// 	// TODO 判断是否为文件
-	// }
-	// if ((*search_case & 2) == 2)
-	// {
-	// 	// TODO 判断是否为文件夹
-	// }
 	if ((*search_case & 4) == 4)
 	{
 		// 全字匹配
@@ -235,7 +226,6 @@ void start_kernel(concurrency::concurrent_unordered_map<std::string, list_cache*
 		int search_case_num = 0;
 		for (auto& each_case : search_case)
 		{
-			//TODO 支持文件和文件夹判断
 			// if (each_case == "f")
 			// {
 			// 	search_case_num |= 1;
@@ -289,7 +279,6 @@ void start_kernel(concurrency::concurrent_unordered_map<std::string, list_cache*
 				thread_num = static_cast<int>(cache->record_num.load());
 				block_num = 1;
 			}
-			cache->is_match_done = false;
 			//注册回调
 			cudaStreamAddCallback(streams[count], set_match_done_flag_callback, cache, 0);
 

@@ -57,11 +57,11 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_CudaAccelerator_match
 	}
 	//复制全字匹配字符串 search_text
 	const auto search_text_chars = env->GetStringUTFChars(search_text, nullptr);
-	//初始化output为0
-	// for (const auto& each : cache_map)
-	// {
-	// 	cudaMemset(each.second->dev_output, 0, each.second->record_num + each.second->remain_blank_num);
-	// }
+	// 初始化is_match_done为false
+	for (const auto& each : cache_map)
+	{
+		each.second->is_match_done = false;
+	}
 	//GPU并行计算
 	start_kernel(cache_map, search_case_vec, is_ignore_case, search_text_chars, keywords_vec, keywords_lower_vec,
 	             is_keyword_path_ptr);
