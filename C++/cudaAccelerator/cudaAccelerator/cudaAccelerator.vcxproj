@@ -143,6 +143,7 @@
     </Link>
     <CudaCompile>
       <TargetMachinePlatform>64</TargetMachinePlatform>
+      <CodeGeneration>compute_60,sm_60;compute_61,sm_61;compute_62,sm_62;compute_75,sm_75;compute_80,sm_80;compute_86,sm_86;%(CodeGeneration)</CodeGeneration>
     </CudaCompile>
   </ItemDefinitionGroup>
   <ItemGroup>

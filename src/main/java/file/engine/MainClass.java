@@ -54,7 +54,7 @@ public class MainClass {
     private static final String GET_START_MENU_MD5 = "b446b307fae7646f9d7cd0064f55d1af";
     private static final String SQLITE_JDBC_MD5 = "580fd050832e37d14bc04e8d5d13b7b1";
     private static final String EMPTY_RECYCLE_BIN_MD5 = "431225a47e74fe343b42e4bba741b80b";
-    private static final String CUDA_ACCELERATOR_MD5 = "9c482ce182af42ec51012f15a4a9c4f3";
+    private static final String CUDA_ACCELERATOR_MD5 = "0809b6622b4e04f7fa3551a367cd5874";
 
     public static void main(String[] args) {
         try {
