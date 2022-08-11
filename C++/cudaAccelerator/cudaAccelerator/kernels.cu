@@ -42,7 +42,7 @@ __device__ bool not_matched(char* path,
 		if (is_ignore_case)
 		{
 			each_keyword = keywords_lower_case + i * static_cast<unsigned long long>(MAX_PATH_LENGTH);
-			strlwr_cuda(each_keyword);
+			// strlwr_cuda(each_keyword);
 			strlwr_cuda(match_str);
 		}
 		else
@@ -64,8 +64,8 @@ __device__ int strcmp_cuda(const char* str1, const char* str2)
 	{
 		if (*str1 > *str2)return 1;
 		if (*str1 < *str2)return -1;
-		str1++;
-		str2++;
+		++str1;
+		++str2;
 	}
 	if (*str1 < *str2)return -1;
 	return 0;
@@ -80,7 +80,7 @@ __device__ char* strlwr_cuda(char* src)
 		{
 			*src += 32;
 		}
-		src++;
+		++src;
 	}
 	return src;
 }
@@ -93,14 +93,14 @@ __device__ char* strstr_cuda(char* s1, char* s2)
 	{
 		while (*s1)
 		{
-			for (n = 0; *(s1 + n) == *(s2 + n); n++)
+			for (n = 0; *(s1 + n) == *(s2 + n); ++n)
 			{
 				if (!*(s2 + n + 1)) //查找的下一个字符是否为'\0'
 				{
 					return s1;
 				}
 			}
-			s1++;
+			++s1;
 		}
 		return nullptr;
 	}
@@ -121,7 +121,7 @@ __device__ char* strrchr_cuda(const char* s, int c)
 		{
 			p_char = const_cast<char*>(s);
 		}
-		s++;
+		++s;
 	}
 
 	return p_char;
