@@ -448,7 +448,7 @@ public class DatabaseService {
                 tableQueueByPriority,
                 isStopCreateCache,
                 1,
-                10000);
+                50000);
         saveTableCacheForCuda(isStopCreateCache, tableNeedCache);
         isCreatingCache.set(false);
     }
