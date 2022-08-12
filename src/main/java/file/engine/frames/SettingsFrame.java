@@ -8,6 +8,7 @@ import file.engine.annotation.EventRegister;
 import file.engine.configs.AllConfigs;
 import file.engine.configs.ConfigEntity;
 import file.engine.configs.Constants;
+import file.engine.dllInterface.CudaAccelerator;
 import file.engine.dllInterface.IsLocalDisk;
 import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
@@ -302,6 +303,7 @@ public class SettingsFrame {
     private JLabel labelHolder4;
     private JLabel labelHolder5;
     private JLabel labelHolder6;
+    private JCheckBox checkBoxEnableCuda;
 
 
     private static volatile SettingsFrame instance = null;
@@ -444,7 +446,7 @@ public class SettingsFrame {
                 String token = " + ";
                 final int size = hotkeys.size();
                 ArrayList<String> tmpHotkeys = new ArrayList<>(hotkeys);
-                for (int i = 0 ; i < size - 1; ++i) {
+                for (int i = 0; i < size - 1; ++i) {
                     stringBuilder.append(tmpHotkeys.get(i)).append(token);
                 }
                 stringBuilder.append(tmpHotkeys.get(size - 1));
@@ -1214,7 +1216,7 @@ public class SettingsFrame {
         checkBoxCheckUpdate.setText("Check for update at startup");
         tabGeneral.add(checkBoxCheckUpdate, new GridConstraints(1, 0, 1, 2, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         tabSearchSettings = new JPanel();
-        tabSearchSettings.setLayout(new GridLayoutManager(11, 6, new Insets(0, 0, 0, 0), -1, -1));
+        tabSearchSettings.setLayout(new GridLayoutManager(12, 6, new Insets(0, 0, 0, 0), -1, -1));
         tabSearchSettings.setBackground(new Color(-1));
         tabSearchSettings.setMaximumSize(new Dimension(1000, 600));
         tabSearchSettings.setMinimumSize(new Dimension(850, 500));
@@ -1223,21 +1225,21 @@ public class SettingsFrame {
         tabSearchSettings.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEmptyBorder(), null, TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, null, null));
         labelSetIgnorePathTip = new JLabel();
         labelSetIgnorePathTip.setText("Set ignore folder:");
-        tabSearchSettings.add(labelSetIgnorePathTip, new GridConstraints(5, 0, 1, 6, GridConstraints.ANCHOR_NORTHWEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        tabSearchSettings.add(labelSetIgnorePathTip, new GridConstraints(6, 0, 1, 6, GridConstraints.ANCHOR_NORTHWEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         placeholdersearch0 = new JLabel();
         placeholdersearch0.setText("     ");
-        tabSearchSettings.add(placeholdersearch0, new GridConstraints(1, 0, 1, 3, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        tabSearchSettings.add(placeholdersearch0, new GridConstraints(2, 0, 1, 3, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         labeltipPriorityFolder = new JLabel();
         labeltipPriorityFolder.setText("Priority search folder location (double-click to clear):");
-        tabSearchSettings.add(labeltipPriorityFolder, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        tabSearchSettings.add(labeltipPriorityFolder, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         labelPlaceHolder = new JLabel();
         labelPlaceHolder.setText("     ");
-        tabSearchSettings.add(labelPlaceHolder, new GridConstraints(4, 0, 1, 3, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        tabSearchSettings.add(labelPlaceHolder, new GridConstraints(5, 0, 1, 3, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         labelConstIgnorePathTip = new JLabel();
         labelConstIgnorePathTip.setText("Separate different paths with commas, and ignore C:\\Windows by default");
-        tabSearchSettings.add(labelConstIgnorePathTip, new GridConstraints(6, 0, 1, 3, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        tabSearchSettings.add(labelConstIgnorePathTip, new GridConstraints(7, 0, 1, 3, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         scrollpaneIgnorePath = new JScrollPane();
-        tabSearchSettings.add(scrollpaneIgnorePath, new GridConstraints(7, 0, 1, 4, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+        tabSearchSettings.add(scrollpaneIgnorePath, new GridConstraints(8, 0, 1, 4, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         textAreaIgnorePath = new JTextArea();
         textAreaIgnorePath.setForeground(new Color(-4473925));
         textAreaIgnorePath.setLineWrap(true);
@@ -1247,37 +1249,41 @@ public class SettingsFrame {
         textFieldPriorityFolder = new JTextField();
         textFieldPriorityFolder.setEditable(false);
         textFieldPriorityFolder.setOpaque(false);
-        tabSearchSettings.add(textFieldPriorityFolder, new GridConstraints(0, 1, 1, 2, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
+        tabSearchSettings.add(textFieldPriorityFolder, new GridConstraints(1, 1, 1, 2, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
         ButtonPriorityFolder = new JButton();
         ButtonPriorityFolder.setText("Choose");
-        tabSearchSettings.add(ButtonPriorityFolder, new GridConstraints(0, 3, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        tabSearchSettings.add(ButtonPriorityFolder, new GridConstraints(1, 3, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         labelVacuumTip2 = new JLabel();
         labelVacuumTip2.setText("but it will consume a lot of time.");
-        tabSearchSettings.add(labelVacuumTip2, new GridConstraints(3, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        tabSearchSettings.add(labelVacuumTip2, new GridConstraints(4, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         labelVacuumStatus = new JLabel();
         labelVacuumStatus.setText("      ");
-        tabSearchSettings.add(labelVacuumStatus, new GridConstraints(2, 3, 2, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        tabSearchSettings.add(labelVacuumStatus, new GridConstraints(3, 3, 2, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         buttonVacuum = new JButton();
         buttonVacuum.setText("SQLite Vacuum");
-        tabSearchSettings.add(buttonVacuum, new GridConstraints(2, 2, 2, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        tabSearchSettings.add(buttonVacuum, new GridConstraints(3, 2, 2, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         labelVacuumTip = new JLabel();
         labelVacuumTip.setText("Click to organize the database and reduce the size of the database");
-        tabSearchSettings.add(labelVacuumTip, new GridConstraints(2, 0, 1, 2, GridConstraints.ANCHOR_SOUTHWEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        tabSearchSettings.add(labelVacuumTip, new GridConstraints(3, 0, 1, 2, GridConstraints.ANCHOR_SOUTHWEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         buttonChooseFile = new JButton();
         buttonChooseFile.setText("Choose");
-        tabSearchSettings.add(buttonChooseFile, new GridConstraints(7, 4, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        tabSearchSettings.add(buttonChooseFile, new GridConstraints(8, 4, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         placeholderSearch = new JLabel();
         placeholderSearch.setText("   ");
-        tabSearchSettings.add(placeholderSearch, new GridConstraints(6, 5, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        tabSearchSettings.add(placeholderSearch, new GridConstraints(7, 5, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         labelSearchSettingsPlaceholder = new JLabel();
         labelSearchSettingsPlaceholder.setText("");
-        tabSearchSettings.add(labelSearchSettingsPlaceholder, new GridConstraints(10, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        tabSearchSettings.add(labelSearchSettingsPlaceholder, new GridConstraints(11, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         labelSearchSettingsPlaceholder2 = new JLabel();
         labelSearchSettingsPlaceholder2.setText("  ");
-        tabSearchSettings.add(labelSearchSettingsPlaceholder2, new GridConstraints(9, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        tabSearchSettings.add(labelSearchSettingsPlaceholder2, new GridConstraints(10, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         labelHolder6 = new JLabel();
         labelHolder6.setText("  ");
-        tabSearchSettings.add(labelHolder6, new GridConstraints(8, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        tabSearchSettings.add(labelHolder6, new GridConstraints(9, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_FIXED, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
+        checkBoxEnableCuda = new JCheckBox();
+        checkBoxEnableCuda.setOpaque(false);
+        checkBoxEnableCuda.setText("Enable GPU acceleration");
+        tabSearchSettings.add(checkBoxEnableCuda, new GridConstraints(0, 0, 1, 2, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 0, false));
         tabSearchBarSettings = new JPanel();
         tabSearchBarSettings.setLayout(new GridLayoutManager(18, 9, new Insets(0, 0, 0, 0), -1, -1));
         tabSearchBarSettings.setBackground(new Color(-1));
@@ -2596,6 +2602,8 @@ public class SettingsFrame {
         checkBoxResponseCtrl.setSelected(allConfigs.isResponseCtrl());
         checkBoxCheckUpdate.setSelected(allConfigs.isCheckUpdateStartup());
         checkBoxIsAttachExplorer.setSelected(allConfigs.isAttachExplorer());
+        checkBoxEnableCuda.setSelected(allConfigs.isEnableCuda());
+        checkBoxEnableCuda.setEnabled(CudaAccelerator.INSTANCE.isCudaAvailableOnSystem());
     }
 
     /**
@@ -2976,6 +2984,7 @@ public class SettingsFrame {
         checkBoxResponseCtrl.setText(TRANSLATE_SERVICE.getTranslation("Double-click \"Ctrl\" to open the search bar"));
         checkBoxCheckUpdate.setText(TRANSLATE_SERVICE.getTranslation("Check for update at startup"));
         checkBoxIsAttachExplorer.setText(TRANSLATE_SERVICE.getTranslation("Attach to explorer"));
+        checkBoxEnableCuda.setText(TRANSLATE_SERVICE.getTranslation("Enable GPU acceleration"));
     }
 
     private void translateButtons() {
@@ -3277,6 +3286,7 @@ public class SettingsFrame {
         configEntity.setCheckUpdateStartup(checkBoxCheckUpdate.isSelected());
         configEntity.setDisks(parseDisk());
         configEntity.setAttachExplorer(checkBoxIsAttachExplorer.isSelected());
+        configEntity.setEnableCuda(checkBoxEnableCuda.isSelected());
         return configEntity;
     }
 

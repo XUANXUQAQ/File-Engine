@@ -239,3 +239,4 @@ Round rectangle radius is wrong, please change=둥근 사각형의 반경이 잘
 Searching=수색
 Number of current results=현재 결과 수
 Currently selected=현재 선택됨
+Enable GPU acceleration=GPU 가속 활성화

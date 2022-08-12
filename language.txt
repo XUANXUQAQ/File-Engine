@@ -239,3 +239,4 @@ Round rectangle radius is wrong, please change=
 Searching=
 Number of current results=
 Currently selected=
+Enable GPU acceleration=

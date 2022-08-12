@@ -239,3 +239,4 @@ Round rectangle radius is wrong, please change=圆角矩形半径设置错误，
 Searching=正在搜索中
 Number of current results=当前结果数量
 Currently selected=当前选中
+Enable GPU acceleration=开启GPU加速

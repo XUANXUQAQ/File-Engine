@@ -239,3 +239,4 @@ Round rectangle radius is wrong, please change=Der Radius des abgerundeten Recht
 Searching=Suche
 Number of current results=Anzahl der aktuellen Ergebnisse
 Currently selected=Momentan ausgewählt
+Enable GPU acceleration=Aktivieren Sie die GPU-Beschleunigung

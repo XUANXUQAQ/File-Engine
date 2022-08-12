@@ -239,3 +239,4 @@ Round rectangle radius is wrong, please change=角丸長方形の半径が正し
 Searching=検索中
 Number of current results=現在の結果の数
 Currently selected=現在選択中
+Enable GPU acceleration=GPU アクセラレーションを有効にする

@@ -239,3 +239,4 @@ Round rectangle radius is wrong, please change=Il raggio del rettangolo arrotond
 Searching=ricerca
 Number of current results=Numero di risultati attuali
 Currently selected=Attualmente selezionato
+Enable GPU acceleration=Abilita accelerazione GPU

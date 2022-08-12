@@ -10,6 +10,7 @@ import com.formdev.flatlaf.intellijthemes.materialthemeuilite.FlatMaterialLighte
 import com.google.gson.Gson;
 import file.engine.annotation.EventListener;
 import file.engine.annotation.EventRegister;
+import file.engine.dllInterface.CudaAccelerator;
 import file.engine.dllInterface.IsLocalDisk;
 import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
@@ -428,6 +429,15 @@ public class AllConfigs {
     }
 
     /**
+     * 是否启动GPU加速
+     *
+     * @return boolean
+     */
+    public boolean isEnableCuda() {
+        return configEntity.isEnableCuda();
+    }
+
+    /**
      * 初始化cmdSet
      */
     private void initCmdSetSettings() {
@@ -519,6 +529,15 @@ public class AllConfigs {
             stringBuilder.append(each).append(",");
         }
         configEntity.setDisks(stringBuilder.toString());
+    }
+
+    private void readIsEnableCuda(Map<String, Object> settingsInJson) {
+        boolean isEnableCuda = getFromJson(settingsInJson, "isEnableCuda", true);
+        if (isEnableCuda) {
+            configEntity.setEnableCuda(CudaAccelerator.INSTANCE.isCudaAvailableOnSystem());
+        } else {
+            configEntity.setEnableCuda(false);
+        }
     }
 
     private void readIsAttachExplorer(Map<String, Object> settingsInJson) {
@@ -758,6 +777,7 @@ public class AllConfigs {
         readDisks(settingsInJson);
         readCheckUpdateStartup(settingsInJson);
         readBorderThickness(settingsInJson);
+        readIsEnableCuda(settingsInJson);
         initUpdateAddress();
         initCmdSetSettings();
     }
@@ -918,6 +938,16 @@ public class AllConfigs {
     }
 
     /**
+     * 检查系统是否支持cuda加速，不支持则将isEnableCuda设置为false
+     * @param configEntity configEntity
+     */
+    private void checkCudaSetting(ConfigEntity configEntity) {
+        if (configEntity.isEnableCuda()) {
+            configEntity.setEnableCuda(CudaAccelerator.INSTANCE.isCudaAvailableOnSystem());
+        }
+    }
+
+    /**
      * 检查是否安装在C盘
      *
      * @return Boolean
@@ -1041,6 +1071,7 @@ public class AllConfigs {
         AllConfigs allConfigs = getInstance();
         ConfigEntity tempConfigEntity = ((SaveConfigsEvent) event).configEntity;
         if (allConfigs.noNullValue(tempConfigEntity)) {
+            allConfigs.checkCudaSetting(tempConfigEntity);
             allConfigs.configEntity = tempConfigEntity;
             allConfigs.saveAllSettings();
         } else {
