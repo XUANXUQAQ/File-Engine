@@ -377,13 +377,17 @@ public class DatabaseService {
         return tableNeedCache;
     }
 
+    /**
+     * 扫描数据库并添加缓存
+     */
     private void saveTableCacheThread() {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             EventManagement eventManagement = EventManagement.getInstance();
-            var startCheckTime = new Object() {
-                long startCheckTimeMills = 0;
-            };
             final int checkTimeInterval = 10 * 60 * 1000; // 10 min
+            final int startupLatency = 30 * 1000;
+            var startCheckTime = new Object() {
+                long startCheckTimeMills = System.currentTimeMillis() - checkTimeInterval + startupLatency;
+            };
             final Supplier<Boolean> isStopCreateCache =
                     () -> !isSearchStopped.get() || !eventManagement.notMainExit() || status == Constants.Enums.DatabaseStatus.MANUAL_UPDATE;
             final Supplier<Boolean> isStartSaveCache =
