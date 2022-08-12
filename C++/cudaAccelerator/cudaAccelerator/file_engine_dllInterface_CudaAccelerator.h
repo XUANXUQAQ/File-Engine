@@ -9,6 +9,14 @@ extern "C" {
 #endif
 /*
  * Class:     file_engine_dllInterface_CudaAccelerator
+ * Method:    resetAllResultStatus
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_file_engine_dllInterface_CudaAccelerator_resetAllResultStatus
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     file_engine_dllInterface_CudaAccelerator
  * Method:    match
  * Signature: ([Ljava/lang/String;ZLjava/lang/String;[Ljava/lang/String;[Ljava/lang/String;[ZLjava/util/concurrent/ConcurrentHashMap;)V
  */

@@ -1819,6 +1819,7 @@ public class DatabaseService {
         prepareSearchInfo(startSearchEvent.searchText, startSearchEvent.searchCase, startSearchEvent.keywords);
         if (AllConfigs.getInstance().isEnableCuda()) {
             databaseService.cudaCache.clear();
+            CudaAccelerator.INSTANCE.resetAllResultStatus();
             CachedThreadPoolUtil.getInstance().executeTask(() -> CudaAccelerator.INSTANCE.match(databaseService.searchCase,
                     databaseService.isIgnoreCase,
                     databaseService.searchText,

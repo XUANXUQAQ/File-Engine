@@ -19,6 +19,8 @@ public enum CudaAccelerator {
         }
     }
 
+    public native void resetAllResultStatus();
+
     public native void match(String[] searchCase,
                              boolean isIgnoreCase,
                              String searchText,
