@@ -1,7 +1,6 @@
 ﻿#pragma once
 #include <atomic>
 #include <mutex>
-#include <vector>
 
 typedef struct cache_data
 {
