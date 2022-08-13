@@ -6,11 +6,11 @@
  * 每个字符串分配max_path字节，存入连续内存
  * max_path定义在constants中
  */
-cudaError_t vector_to_cuda_char_array(const std::vector<std::string>& vec, void** cuda_mem, const unsigned blank_count)
+cudaError_t vector_to_cuda_char_array(const std::vector<std::string>& vec, void** cuda_mem)
 {
 	cudaError_t cudaStatus;
 	const auto vec_size = vec.size();
-	const auto bytes = MAX_PATH_LENGTH * sizeof(char) * (vec_size + blank_count);
+	const auto bytes = MAX_PATH_LENGTH * sizeof(char) * vec_size;
 	cudaStatus = cudaMalloc(cuda_mem, bytes);
 	if (cudaStatus != cudaSuccess)
 	{

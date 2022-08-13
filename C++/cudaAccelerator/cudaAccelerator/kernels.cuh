@@ -5,11 +5,11 @@
 #include "cuda_runtime.h"
 
 #define GET_TID() ((gridDim.x * gridDim.y * blockIdx.z + gridDim.x * blockIdx.y + blockIdx.x) * (blockDim.x * blockDim.y * blockDim.z) + blockDim.x * blockDim.y * threadIdx. z + blockDim.x * threadIdx.y + threadIdx.x)
-#define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
+#define gpuErrchk(ans, is_exit) { gpuAssert((ans), __FILE__, __LINE__, (is_exit)); }
 
 void CUDART_CB set_match_done_flag_callback(cudaStream_t, cudaError_t, void* data);
 
-inline void gpuAssert(cudaError_t code, const char* file, int line);
+inline void gpuAssert(cudaError_t code, const char* file, int line, bool is_exit);
 
 void start_kernel(concurrency::concurrent_unordered_map<std::string, list_cache*>& cache_map,
                   const std::vector<std::string>& search_case,
@@ -27,7 +27,7 @@ __device__ bool not_matched(const char* path,
                             const bool* is_keyword_path);
 
 
-__global__ void check(char* paths,
+__global__ void check(const unsigned long long* str_address_ptr_array,
                       const int* search_case,
                       const bool* is_ignore_case,
                       char* search_text,
