@@ -10,11 +10,19 @@
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
 
-inline void gpuAssert(cudaError_t code, const char* file, int line, bool is_exit)
+inline void gpuAssert(cudaError_t code, const char* file, int line, const char* function, bool is_exit,
+                      const char* info)
 {
 	if (code != cudaSuccess)
 	{
-		fprintf(stderr, "GPU assert: %s %s %d\n", cudaGetErrorString(code), file, line);
+		if (info == nullptr)
+		{
+			fprintf(stderr, "GPU assert: %s %s %d %s\n", cudaGetErrorString(code), file, line, function);
+		}
+		else
+		{
+			fprintf(stderr, "GPU assert: %s %s %d %s %s\n", cudaGetErrorString(code), file, line, function, info);
+		}
 		if (is_exit)
 		{
 			std::quick_exit(code);
@@ -218,16 +226,16 @@ void start_kernel(concurrency::concurrent_unordered_map<std::string, list_cache*
 	//初始化流
 	for (size_t i = 0; i < stream_count; ++i)
 	{
-		gpuErrchk(cudaStreamCreate(&streams[i]), true)
+		gpuErrchk(cudaStreamCreate(&streams[i]), true, nullptr)
 	}
 	do
 	{
 		// 选择第一个GPU
-		gpuErrchk(cudaSetDevice(0), true)
+		gpuErrchk(cudaSetDevice(0), true, nullptr)
 
 		// 复制search case
 		// 第一位为1表示有F，第二位为1表示有D，第三位为1表示有FULL，CASE由File-Engine主程序进行判断，传入参数is_ignore_case为false表示有CASE
-		gpuErrchk(cudaMalloc(reinterpret_cast<void**>(&dev_search_case), sizeof(int)), true)
+		gpuErrchk(cudaMalloc(reinterpret_cast<void**>(&dev_search_case), sizeof(int)), true, nullptr)
 		int search_case_num = 0;
 		for (auto& each_case : search_case)
 		{
@@ -244,33 +252,33 @@ void start_kernel(concurrency::concurrent_unordered_map<std::string, list_cache*
 				search_case_num |= 4;
 			}
 		}
-		gpuErrchk(cudaMemcpy(dev_search_case, &search_case_num, sizeof(int), cudaMemcpyHostToDevice), true)
+		gpuErrchk(cudaMemcpy(dev_search_case, &search_case_num, sizeof(int), cudaMemcpyHostToDevice), true, nullptr)
 
 		// 复制search text
 		const auto search_text_len = strlen(search_text);
-		gpuErrchk(cudaMalloc(reinterpret_cast<void**>(&dev_search_text), (search_text_len + 1) * sizeof(char)), true)
-		gpuErrchk(cudaMemset(dev_search_text, 0, search_text_len + 1), true)
-		gpuErrchk(cudaMemcpy(dev_search_text, search_text, search_text_len, cudaMemcpyHostToDevice), true)
+		gpuErrchk(cudaMalloc(reinterpret_cast<void**>(&dev_search_text), (search_text_len + 1) * sizeof(char)), true, nullptr)
+		gpuErrchk(cudaMemset(dev_search_text, 0, search_text_len + 1), true, nullptr)
+		gpuErrchk(cudaMemcpy(dev_search_text, search_text, search_text_len, cudaMemcpyHostToDevice), true, nullptr)
 
 		// 复制keywords
-		gpuErrchk(vector_to_cuda_char_array(keywords, reinterpret_cast<void**>(&dev_keywords)), true)
+		gpuErrchk(vector_to_cuda_char_array(keywords, reinterpret_cast<void**>(&dev_keywords)), true, nullptr)
 
 		// 复制keywords_lower_case
 		gpuErrchk(vector_to_cuda_char_array(keywords_lower_case, reinterpret_cast<void**>(&dev_keywords_lower_case)),
-		          true)
+		          true, nullptr)
 
 		//复制keywords_length
-		gpuErrchk(cudaMalloc(reinterpret_cast<void**>(&dev_keywords_length), sizeof(size_t)), true)
-		gpuErrchk(cudaMemcpy(dev_keywords_length, &keywords_num, sizeof(size_t), cudaMemcpyHostToDevice), true)
+		gpuErrchk(cudaMalloc(reinterpret_cast<void**>(&dev_keywords_length), sizeof(size_t)), true, nullptr)
+		gpuErrchk(cudaMemcpy(dev_keywords_length, &keywords_num, sizeof(size_t), cudaMemcpyHostToDevice), true, nullptr)
 
 		// 复制is_keyword_path
-		gpuErrchk(cudaMalloc(reinterpret_cast<void**>(&dev_is_keyword_path), sizeof(bool) * keywords_num), true)
+		gpuErrchk(cudaMalloc(reinterpret_cast<void**>(&dev_is_keyword_path), sizeof(bool) * keywords_num), true, nullptr)
 		gpuErrchk(cudaMemcpy(dev_is_keyword_path, is_keyword_path, sizeof(bool) * keywords_num, cudaMemcpyHostToDevice),
-		          true)
+		          true, nullptr)
 
 		// 复制is_ignore_case
-		gpuErrchk(cudaMalloc(reinterpret_cast<void**>(&dev_is_ignore_case), sizeof(bool)), true)
-		gpuErrchk(cudaMemcpy(dev_is_ignore_case, &is_ignore_case, sizeof(bool), cudaMemcpyHostToDevice), true)
+		gpuErrchk(cudaMalloc(reinterpret_cast<void**>(&dev_is_ignore_case), sizeof(bool)), true, nullptr)
+		gpuErrchk(cudaMemcpy(dev_is_ignore_case, &is_ignore_case, sizeof(bool), cudaMemcpyHostToDevice), true, nullptr)
 		int count = 0;
 		for (auto& each : cache_map)
 		{

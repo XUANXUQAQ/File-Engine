@@ -37,6 +37,8 @@ public enum CudaAccelerator {
     }
     public native boolean isMatchDone(String key);
 
+    public native void stopCollectResults();
+
     private native boolean isCudaAvailable();
 
     public native boolean hasCache(String key);
@@ -44,6 +46,8 @@ public enum CudaAccelerator {
     public native void initCache(String key, Object[] records);
 
     public native void addOneRecordToCache(String key, String record);
+
+    public native void removeOneRecordFromCache(String key, String record);
 
     public native void clearCache(String key);
 

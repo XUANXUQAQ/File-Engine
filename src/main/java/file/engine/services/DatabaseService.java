@@ -12,6 +12,7 @@ import file.engine.event.handler.impl.BootSystemEvent;
 import file.engine.event.handler.impl.database.*;
 import file.engine.event.handler.impl.database.cuda.CudaAddRecordEvent;
 import file.engine.event.handler.impl.database.cuda.CudaClearCacheEvent;
+import file.engine.event.handler.impl.database.cuda.CudaRemoveRecordEvent;
 import file.engine.event.handler.impl.frame.searchBar.SearchBarReadyEvent;
 import file.engine.event.handler.impl.monitor.disk.StartMonitorDiskEvent;
 import file.engine.event.handler.impl.stop.RestartEvent;
@@ -51,6 +52,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class DatabaseService {
@@ -384,9 +386,13 @@ public class DatabaseService {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             EventManagement eventManagement = EventManagement.getInstance();
             final int checkTimeInterval = 10 * 60 * 1000; // 10 min
-            final int startupLatency = 30 * 1000;
+            int startupLatency = 30 * 1000;
+            if (IsDebug.isDebug()) {
+                startupLatency = 0;
+            }
+            final int _startupLatency = startupLatency;
             var startCheckTime = new Object() {
-                long startCheckTimeMills = System.currentTimeMillis() - checkTimeInterval + startupLatency;
+                long startCheckTimeMills = System.currentTimeMillis() - checkTimeInterval + _startupLatency;
             };
             final Supplier<Boolean> isStopCreateCache =
                     () -> !isSearchStopped.get() || !eventManagement.notMainExit() || status == Constants.Enums.DatabaseStatus.MANUAL_UPDATE;
@@ -400,6 +406,8 @@ public class DatabaseService {
                     if (allConfigs.isEnableCuda()) {
                         int cudaMemUsage = CudaAccelerator.INSTANCE.getCudaMemUsage();
                         if (cudaMemUsage > 70) {
+                            // 防止显存占用超过70%后仍然扫描数据库
+                            startCheckTime.startCheckTimeMills = System.currentTimeMillis();
                             eventManagement.putEvent(new CudaClearCacheEvent());
                         }
                     }
@@ -447,7 +455,7 @@ public class DatabaseService {
         LinkedHashMap<String, Integer> tableNeedCache = scanDatabaseAndSelectCacheTable(disks,
                 tableQueueByPriority,
                 isStopCreateCache,
-                1,
+                5000,
                 50000);
         saveTableCacheForCuda(isStopCreateCache, tableNeedCache);
         isCreatingCache.set(false);
@@ -775,6 +783,7 @@ public class DatabaseService {
                 EventManagement eventManagement = EventManagement.getInstance();
                 eventManagement.putEvent(new SearchDoneEvent());
                 isSearchStopped.set(true);
+                CudaAccelerator.INSTANCE.stopCollectResults();
             }
         }, false);
     }
@@ -1149,7 +1158,11 @@ public class DatabaseService {
             int asciiGroup = asciiSum / 100;
             asciiGroup = Math.min(asciiGroup, Constants.ALL_TABLE_NUM);
             String tableName = "list" + asciiGroup;
-            Cache cache = tableCache.get(path.charAt(0) + "," + tableName + "," + priorityBySuffix);
+            String key = path.charAt(0) + "," + tableName + "," + priorityBySuffix;
+            if (AllConfigs.getInstance().isEnableCuda()) {
+                EventManagement.getInstance().putEvent(new CudaRemoveRecordEvent(key, path));
+            }
+            Cache cache = tableCache.get(key);
             if (cache.isCached.get()) {
                 if (cache.data.remove(path)) {
                     cacheCount.decrementAndGet();
@@ -1227,16 +1240,15 @@ public class DatabaseService {
         String key = path.charAt(0) + "," + tableName + "," + priorityBySuffix;
         if (AllConfigs.getInstance().isEnableCuda()) {
             EventManagement.getInstance().putEvent(new CudaAddRecordEvent(key, path));
-        } else {
-            Cache cache = tableCache.get(key);
-            if (cache.isCacheValid()) {
-                if (cacheCount.get() < MAX_CACHED_RECORD_NUM) {
-                    if (cache.data.add(path)) {
-                        cacheCount.incrementAndGet();
-                    }
-                } else {
-                    cache.isFileLost.set(true);
+        }
+        Cache cache = tableCache.get(key);
+        if (cache.isCacheValid()) {
+            if (cacheCount.get() < MAX_CACHED_RECORD_NUM) {
+                if (cache.data.add(path)) {
+                    cacheCount.incrementAndGet();
                 }
+            } else {
+                cache.isFileLost.set(true);
             }
         }
     }
@@ -1987,6 +1999,7 @@ public class DatabaseService {
 
     @EventListener(listenClass = RestartEvent.class)
     private static void restartEvent(Event event) {
+        FileMonitor.INSTANCE.stop_monitor();
         getInstance().executeAllCommands();
         SQLiteUtil.closeAll();
     }
@@ -2005,26 +2018,84 @@ public class DatabaseService {
 
     @SuppressWarnings("unused")
     private static class CudaCacheService {
-        @EventRegister(registerClass = CudaAddRecordEvent.class)
-        private static void addToCuda(Event event) {
+        private static final ConcurrentLinkedQueue<String> removeQueue = new ConcurrentLinkedQueue<>();
+        private static final ConcurrentLinkedQueue<String> addQueue = new ConcurrentLinkedQueue<>();
+        private static final Pattern questionMark = RegexUtil.getPattern("\\?", 0);
+
+        @EventListener(listenClass = BootSystemEvent.class)
+        private static void startThread(Event event) {
             if (!AllConfigs.getInstance().isEnableCuda()) {
                 return;
             }
-            CudaAddRecordEvent cudaAddRecordEvent = (CudaAddRecordEvent) event;
-            if (CudaAccelerator.INSTANCE.hasCache(cudaAddRecordEvent.key)) {
+            CachedThreadPoolUtil.getInstance().executeTask(() -> {
+                EventManagement eventManagement = EventManagement.getInstance();
+                try {
+                    String add, remove;
+                    while (eventManagement.notMainExit()) {
+                        add = addQueue.poll();
+                        remove = removeQueue.poll();
+                        if (add != null && add.equals(remove)) {
+                            continue;
+                        }
+                        if (add != null) {
+                            String[] split = questionMark.split(add);
+                            addRecord(split[0], split[1]);
+                        }
+                        if (remove != null) {
+                            String[] split = questionMark.split(remove);
+                            removeRecord(split[0], split[1]);
+                        }
+                        TimeUnit.MILLISECONDS.sleep(5);
+                    }
+                } catch (InterruptedException ignored) {
+                }
+            });
+        }
+
+        private static void addRecord(String key, String record) {
+            if (CudaAccelerator.INSTANCE.hasCache(key)) {
                 DatabaseService databaseService = DatabaseService.getInstance();
                 if (databaseService.isSearchStopped.get()) {
-                    if (CudaAccelerator.INSTANCE.isCacheValid(cudaAddRecordEvent.key)) {
-                        CudaAccelerator.INSTANCE.clearCache(cudaAddRecordEvent.key);
+                    if (CudaAccelerator.INSTANCE.isCacheValid(key)) {
+                        CudaAccelerator.INSTANCE.addOneRecordToCache(key, record);
                     } else {
-                        CudaAccelerator.INSTANCE.addOneRecordToCache(cudaAddRecordEvent.key, cudaAddRecordEvent.record);
+                        if (IsDebug.isDebug()) {
+                            System.out.println("cuda缓存: " + key + "已失效");
+                        }
+                        CudaAccelerator.INSTANCE.clearCache(key);
                     }
                 }
             }
         }
 
+        private static void removeRecord(String key, String record) {
+            if (CudaAccelerator.INSTANCE.hasCache(key)) {
+                DatabaseService databaseService = DatabaseService.getInstance();
+                if (databaseService.isSearchStopped.get()) {
+                    CudaAccelerator.INSTANCE.removeOneRecordFromCache(key, record);
+                }
+            }
+        }
+
+        @EventRegister(registerClass = CudaAddRecordEvent.class)
+        private static void addToGPUMemory(Event event) {
+            if (!AllConfigs.getInstance().isEnableCuda()) {
+                return;
+            }
+            CudaAddRecordEvent cudaAddRecordEvent = (CudaAddRecordEvent) event;
+            addQueue.add(cudaAddRecordEvent.key + "?" + cudaAddRecordEvent.record);
+        }
+
+        @EventRegister(registerClass = CudaRemoveRecordEvent.class)
+        private static void removeFromGPUMemory(Event event) {
+            if (!AllConfigs.getInstance().isEnableCuda()) {
+                return;
+            }
+            CudaRemoveRecordEvent cudaRemoveRecordEvent = (CudaRemoveRecordEvent) event;
+            removeQueue.add(cudaRemoveRecordEvent.key + "?" + cudaRemoveRecordEvent.record);
+        }
+
         @EventRegister(registerClass = CudaClearCacheEvent.class)
-        @EventListener(listenClass = RestartEvent.class)
         private static void clearCacheCuda(Event event) {
             if (!AllConfigs.getInstance().isEnableCuda()) {
                 return;

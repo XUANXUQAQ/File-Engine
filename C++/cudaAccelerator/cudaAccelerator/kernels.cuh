@@ -5,12 +5,12 @@
 #include "cuda_runtime.h"
 
 #define GET_TID() ((gridDim.x * gridDim.y * blockIdx.z + gridDim.x * blockIdx.y + blockIdx.x) * (blockDim.x * blockDim.y * blockDim.z) + blockDim.x * blockDim.y * threadIdx. z + blockDim.x * threadIdx.y + threadIdx.x)
-#define gpuErrchk(ans, is_exit) { gpuAssert((ans), __FILE__, __LINE__, (is_exit)); }
+#define gpuErrchk(ans, is_exit, info) { gpuAssert((ans), __FILE__, __LINE__, __FUNCTION__, (is_exit), (info)); }
 
 void CUDART_CB set_match_done_flag_callback(cudaStream_t, cudaError_t, void* data);
 
-inline void gpuAssert(cudaError_t code, const char* file, int line, bool is_exit);
-
+inline void gpuAssert(cudaError_t code, const char* file, int line, const char* function, bool is_exit,
+                      const char* info);
 void start_kernel(concurrency::concurrent_unordered_map<std::string, list_cache*>& cache_map,
                   const std::vector<std::string>& search_case,
                   bool is_ignore_case,

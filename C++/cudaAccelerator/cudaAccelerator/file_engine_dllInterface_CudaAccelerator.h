@@ -33,6 +33,14 @@ JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_CudaAccelerator_isMatch
 
 /*
  * Class:     file_engine_dllInterface_CudaAccelerator
+ * Method:    stopCollectResults
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_file_engine_dllInterface_CudaAccelerator_stopCollectResults
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     file_engine_dllInterface_CudaAccelerator
  * Method:    isCudaAvailable
  * Signature: ()Z
  */
@@ -61,6 +69,14 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_CudaAccelerator_initCache
  * Signature: (Ljava/lang/String;Ljava/lang/String;)V
  */
 JNIEXPORT void JNICALL Java_file_engine_dllInterface_CudaAccelerator_addOneRecordToCache
+  (JNIEnv *, jobject, jstring, jstring);
+
+/*
+ * Class:     file_engine_dllInterface_CudaAccelerator
+ * Method:    removeOneRecordFromCache
+ * Signature: (Ljava/lang/String;Ljava/lang/String;)V
+ */
+JNIEXPORT void JNICALL Java_file_engine_dllInterface_CudaAccelerator_removeOneRecordFromCache
   (JNIEnv *, jobject, jstring, jstring);
 
 /*

@@ -6,7 +6,6 @@ import file.engine.annotation.EventRegister;
 import file.engine.configs.AllConfigs;
 import file.engine.configs.Constants;
 import file.engine.dllInterface.EmptyRecycleBin;
-import file.engine.dllInterface.FileMonitor;
 import file.engine.dllInterface.GetHandle;
 import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
@@ -2782,7 +2781,6 @@ public class SearchBar {
 
     @EventListener(listenClass = RestartEvent.class)
     private static void restartEvent(Event event) {
-        FileMonitor.INSTANCE.stop_monitor();
         getInstance().closeSearchBar();
     }
 

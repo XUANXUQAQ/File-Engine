@@ -43,7 +43,7 @@ public class EventManagement {
     private final ConcurrentHashMap<String, BiConsumer<Class<?>, Object>> PLUGIN_EVENT_HANDLER_MAP = new ConcurrentHashMap<>();
     private final AtomicInteger failureEventNum = new AtomicInteger(0);
     private HashSet<String> classesList = new HashSet<>();
-    private static final int ASYNC_THREAD_NUM = 2;
+    private static final int ASYNC_THREAD_NUM = Runtime.getRuntime().availableProcessors();
 
     private EventManagement() {
         startBlockEventHandler();
@@ -277,15 +277,13 @@ public class EventManagement {
         if (methodChains == null) {
             return;
         }
-        CachedThreadPoolUtil.getInstance().executeTask(() -> {
-            for (Method each : methodChains) {
-                try {
-                    each.invoke(null, event);
-                } catch (IllegalAccessException | InvocationTargetException e) {
-                    e.printStackTrace();
-                }
+        for (Method each : methodChains) {
+            try {
+                each.invoke(null, event);
+            } catch (IllegalAccessException | InvocationTargetException e) {
+                e.printStackTrace();
             }
-        });
+        }
     }
 
     /**
@@ -476,7 +474,7 @@ public class EventManagement {
     private void startAsyncEventHandler() {
         CachedThreadPoolUtil threadPoolUtil = CachedThreadPoolUtil.getInstance();
         for (int i = 0; i < ASYNC_THREAD_NUM; i++) {
-            threadPoolUtil.executeTask(() -> eventHandle(asyncEventQueue), false);
+            threadPoolUtil.executeTask(() -> eventHandle(asyncEventQueue));
         }
     }
 
