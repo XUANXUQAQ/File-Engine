@@ -470,22 +470,23 @@ public class DatabaseService {
         for (Map.Entry<String, Cache> entry : tableCache.entrySet()) {
             String key = entry.getKey();
             if (tableNeedCache.containsKey(key)) {
+                if (CudaAccelerator.INSTANCE.hasCache(key)) {
+                    continue;
+                }
                 String[] info = RegexUtil.comma.split(key);
-                ArrayList<String> strings = new ArrayList<>();
                 try (Statement stmt = SQLiteUtil.getStatement(info[0]);
                      ResultSet resultSet = stmt.executeQuery("SELECT PATH FROM " + info[1] + " " + "WHERE PRIORITY=" + info[2])) {
+                    ArrayList<String> strings = new ArrayList<>();
                     while (resultSet.next()) {
                         if (isStopCreateCache.get()) {
                             break out;
                         }
                         strings.add(resultSet.getString("PATH"));
                     }
-                    if (!CudaAccelerator.INSTANCE.hasCache(key)) {
-                        System.out.println("添加cuda缓存" + key);
-                        CudaAccelerator.INSTANCE.initCache(key, strings.toArray());
-                        if (isStopCreateCache.get()) {
-                            break;
-                        }
+                    System.out.println("添加cuda缓存" + key);
+                    CudaAccelerator.INSTANCE.initCache(key, strings.toArray());
+                    if (isStopCreateCache.get()) {
+                        break;
                     }
                     if (CudaAccelerator.INSTANCE.getCudaMemUsage() > 50) {
                         break;
@@ -2017,16 +2018,16 @@ public class DatabaseService {
     @SuppressWarnings("unused")
     private static class CudaCacheService {
         private static final ConcurrentLinkedQueue<String> invalidCacheKeys = new ConcurrentLinkedQueue<>();
-        private static final Set<String> addSet = ConcurrentHashMap.newKeySet();
-        private static final Set<String> removeSet = ConcurrentHashMap.newKeySet();
-        private static final String pathKeySeparator = "?";
+        private static final ConcurrentLinkedQueue<Runnable> workQueue = new ConcurrentLinkedQueue<>();
 
         @EventListener(listenClass = BootSystemEvent.class)
         private static void startThread(Event event) {
             if (!AllConfigs.getInstance().isEnableCuda()) {
                 return;
             }
-            CachedThreadPoolUtil.getInstance().executeTask(() -> {
+            CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
+            //检测缓存是否有效并删除缓存
+            cachedThreadPoolUtil.executeTask(() -> {
                 EventManagement eventManagement = EventManagement.getInstance();
                 DatabaseService databaseService = DatabaseService.getInstance();
                 long startCheckInvalidCacheTime = System.currentTimeMillis();
@@ -2040,49 +2041,40 @@ public class DatabaseService {
                                 CudaAccelerator.INSTANCE.clearCache(eachKey);
                             }
                         }
-                        if (databaseService.isSearchStopped.get()) {
-                            String line;
-                            if (!addSet.isEmpty()) {
-                                ConcurrentLinkedQueue<String> addQueue = new ConcurrentLinkedQueue<>(addSet);
-                                while ((line = addQueue.poll()) != null) {
-                                    String[] info = RegexUtil.getPattern("\\" + pathKeySeparator, 0).split(line);
-                                    addRecord(info[0], info[1]);
-                                }
-                            }
-                            if (!removeSet.isEmpty()) {
-                                ConcurrentLinkedQueue<String> removeQueue = new ConcurrentLinkedQueue<>(removeSet);
-                                while ((line = removeQueue.poll()) != null) {
-                                    String[] info = RegexUtil.getPattern("\\" + pathKeySeparator, 0).split(line);
-                                    removeRecord(info[0], info[1]);
-                                }
-                            }
-                        }
                         TimeUnit.MILLISECONDS.sleep(100);
                     }
                 } catch (InterruptedException ignored) {
                 }
             });
+            //向cuda缓存添加或删除记录线程
+            for (int i = 0; i < 2; i++) {
+                cachedThreadPoolUtil.executeTask(() -> {
+                    EventManagement eventManagement = EventManagement.getInstance();
+                    DatabaseService databaseService = DatabaseService.getInstance();
+                    try {
+                        while (eventManagement.notMainExit()) {
+                            Runnable run;
+                            while (databaseService.isSearchStopped.get() && (run = workQueue.poll()) != null) {
+                                run.run();
+                            }
+                            TimeUnit.MILLISECONDS.sleep(100);
+                        }
+                    } catch (InterruptedException ignored) {
+                    }
+                });
+            }
         }
 
         private static void addRecord(String key, String record) {
-            DatabaseService databaseService = DatabaseService.getInstance();
-            if (databaseService.isSearchStopped.get()) {
-                CudaAccelerator.INSTANCE.addOneRecordToCache(key, record);
-                if (CudaAccelerator.INSTANCE.hasCache(key) && !CudaAccelerator.INSTANCE.isCacheValid(key)) {
-                    invalidCacheKeys.add(key);
-                }
+            if (CudaAccelerator.INSTANCE.hasCache(key) && !CudaAccelerator.INSTANCE.isCacheValid(key)) {
+                invalidCacheKeys.add(key);
             } else {
-                addSet.add(key + pathKeySeparator + record);
+                workQueue.add(() -> CudaAccelerator.INSTANCE.addOneRecordToCache(key, record));
             }
         }
 
         private static void removeRecord(String key, String record) {
-            DatabaseService databaseService = DatabaseService.getInstance();
-            if (databaseService.isSearchStopped.get()) {
-                CudaAccelerator.INSTANCE.removeOneRecordFromCache(key, record);
-            } else {
-                removeSet.add(key + pathKeySeparator + record);
-            }
+            workQueue.add(() -> CudaAccelerator.INSTANCE.removeOneRecordFromCache(key, record));
         }
 
         @EventRegister(registerClass = CudaAddRecordEvent.class)
