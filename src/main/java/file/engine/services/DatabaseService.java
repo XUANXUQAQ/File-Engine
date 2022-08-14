@@ -52,7 +52,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class DatabaseService {
@@ -2017,9 +2016,10 @@ public class DatabaseService {
 
     @SuppressWarnings("unused")
     private static class CudaCacheService {
-        private static final ConcurrentLinkedQueue<String> removeQueue = new ConcurrentLinkedQueue<>();
-        private static final ConcurrentLinkedQueue<String> addQueue = new ConcurrentLinkedQueue<>();
-        private static final Pattern questionMark = RegexUtil.getPattern("\\?", 0);
+        private static final ConcurrentLinkedQueue<String> invalidCacheKeys = new ConcurrentLinkedQueue<>();
+        private static final Set<String> addSet = ConcurrentHashMap.newKeySet();
+        private static final Set<String> removeSet = ConcurrentHashMap.newKeySet();
+        private static final String pathKeySeparator = "?";
 
         @EventListener(listenClass = BootSystemEvent.class)
         private static void startThread(Event event) {
@@ -2028,23 +2028,36 @@ public class DatabaseService {
             }
             CachedThreadPoolUtil.getInstance().executeTask(() -> {
                 EventManagement eventManagement = EventManagement.getInstance();
+                DatabaseService databaseService = DatabaseService.getInstance();
+                long startCheckInvalidCacheTime = System.currentTimeMillis();
+                final long checkInterval = 10 * 60 * 1000; // 10min
                 try {
-                    String add, remove;
                     while (eventManagement.notMainExit()) {
-                        add = addQueue.poll();
-                        remove = removeQueue.poll();
-                        if (add != null && add.equals(remove)) {
-                            continue;
+                        if (System.currentTimeMillis() - startCheckInvalidCacheTime > checkInterval) {
+                            startCheckInvalidCacheTime = System.currentTimeMillis();
+                            String eachKey;
+                            while ((eachKey = invalidCacheKeys.poll()) != null) {
+                                CudaAccelerator.INSTANCE.clearCache(eachKey);
+                            }
                         }
-                        if (add != null) {
-                            String[] split = questionMark.split(add);
-                            addRecord(split[0], split[1]);
+                        if (databaseService.isSearchStopped.get()) {
+                            String line;
+                            if (!addSet.isEmpty()) {
+                                ConcurrentLinkedQueue<String> addQueue = new ConcurrentLinkedQueue<>(addSet);
+                                while ((line = addQueue.poll()) != null) {
+                                    String[] info = RegexUtil.getPattern("\\" + pathKeySeparator, 0).split(line);
+                                    addRecord(info[0], info[1]);
+                                }
+                            }
+                            if (!removeSet.isEmpty()) {
+                                ConcurrentLinkedQueue<String> removeQueue = new ConcurrentLinkedQueue<>(removeSet);
+                                while ((line = removeQueue.poll()) != null) {
+                                    String[] info = RegexUtil.getPattern("\\" + pathKeySeparator, 0).split(line);
+                                    removeRecord(info[0], info[1]);
+                                }
+                            }
                         }
-                        if (remove != null) {
-                            String[] split = questionMark.split(remove);
-                            removeRecord(split[0], split[1]);
-                        }
-                        TimeUnit.MILLISECONDS.sleep(5);
+                        TimeUnit.MILLISECONDS.sleep(100);
                     }
                 } catch (InterruptedException ignored) {
                 }
@@ -2052,27 +2065,23 @@ public class DatabaseService {
         }
 
         private static void addRecord(String key, String record) {
-            if (CudaAccelerator.INSTANCE.hasCache(key)) {
-                DatabaseService databaseService = DatabaseService.getInstance();
-                if (databaseService.isSearchStopped.get()) {
-                    if (CudaAccelerator.INSTANCE.isCacheValid(key)) {
-                        CudaAccelerator.INSTANCE.addOneRecordToCache(key, record);
-                    } else {
-                        if (IsDebug.isDebug()) {
-                            System.out.println("cuda缓存: " + key + "已失效");
-                        }
-                        CudaAccelerator.INSTANCE.clearCache(key);
-                    }
+            DatabaseService databaseService = DatabaseService.getInstance();
+            if (databaseService.isSearchStopped.get()) {
+                CudaAccelerator.INSTANCE.addOneRecordToCache(key, record);
+                if (CudaAccelerator.INSTANCE.hasCache(key) && !CudaAccelerator.INSTANCE.isCacheValid(key)) {
+                    invalidCacheKeys.add(key);
                 }
+            } else {
+                addSet.add(key + pathKeySeparator + record);
             }
         }
 
         private static void removeRecord(String key, String record) {
-            if (CudaAccelerator.INSTANCE.hasCache(key)) {
-                DatabaseService databaseService = DatabaseService.getInstance();
-                if (databaseService.isSearchStopped.get()) {
-                    CudaAccelerator.INSTANCE.removeOneRecordFromCache(key, record);
-                }
+            DatabaseService databaseService = DatabaseService.getInstance();
+            if (databaseService.isSearchStopped.get()) {
+                CudaAccelerator.INSTANCE.removeOneRecordFromCache(key, record);
+            } else {
+                removeSet.add(key + pathKeySeparator + record);
             }
         }
 
@@ -2082,7 +2091,7 @@ public class DatabaseService {
                 return;
             }
             CudaAddRecordEvent cudaAddRecordEvent = (CudaAddRecordEvent) event;
-            addQueue.add(cudaAddRecordEvent.key + "?" + cudaAddRecordEvent.record);
+            addRecord(cudaAddRecordEvent.key, cudaAddRecordEvent.record);
         }
 
         @EventRegister(registerClass = CudaRemoveRecordEvent.class)
@@ -2091,7 +2100,7 @@ public class DatabaseService {
                 return;
             }
             CudaRemoveRecordEvent cudaRemoveRecordEvent = (CudaRemoveRecordEvent) event;
-            removeQueue.add(cudaRemoveRecordEvent.key + "?" + cudaRemoveRecordEvent.record);
+            removeRecord(cudaRemoveRecordEvent.key, cudaRemoveRecordEvent.record);
         }
 
         @EventRegister(registerClass = CudaClearCacheEvent.class)

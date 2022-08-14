@@ -6,6 +6,7 @@
 #include "cache.h"
 #include "constans.h"
 #include "cuda_copy_vector_util.h"
+#include <algorithm>
 
 #pragma comment(lib, "cudart.lib")
 
@@ -15,6 +16,9 @@ void add_one_record_to_cache(const std::string& key, const std::string& record);
 void remove_one_record_from_cache(const std::string& key, const std::string& record);
 void generate_search_case(JNIEnv* env, std::vector<std::string>& search_case_vec, jobjectArray search_case);
 void collect_results(JNIEnv* env, jobject output);
+bool is_record_repeat(const std::string& record, const list_cache* cache);
+
+//lock
 void wait_for_clear_cache();
 void wait_for_add_or_remove_record();
 inline void lock_clear_cache(std::atomic_uint& thread_counter);
@@ -27,6 +31,7 @@ static std::atomic_bool clear_cache_flag(false);
 static std::atomic_uint add_record_thread_count(0);
 static std::atomic_uint remove_record_thread_count(0);
 static std::mutex modify_cache_lock;
+static std::hash<std::string> hasher;
 
 /*
  * Class:     file_engine_dllInterface_CudaAccelerator
@@ -38,12 +43,12 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_CudaAccelerator_resetAllRes
 {
 	is_stop_collect = false;
 	// 初始化is_match_done is_output_done为false
-	for (const auto& each : cache_map)
+	for (const auto& [key, val] : cache_map)
 	{
-		each.second->is_match_done = false;
-		each.second->is_output_done = false;
-		cudaMemset(each.second->dev_output, 0,
-		           each.second->str_data.record_num + each.second->str_data.remain_blank_num);
+		val->is_match_done = false;
+		val->is_output_done = false;
+		cudaMemset(val->dev_output, 0,
+		           val->str_data.record_num + val->str_data.remain_blank_num);
 	}
 }
 
@@ -149,7 +154,6 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_CudaAccelerator_initCache
 	const auto _key = env->GetStringUTFChars(key_jstring, nullptr);
 	std::string key(_key);
 	const size_t length = env->GetArrayLength(records);
-
 	auto cache = new list_cache;
 	cache->str_data.record_num = length;
 	cache->str_data.remain_blank_num = MAX_RECORD_ADD_COUNT;
@@ -174,6 +178,7 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_CudaAccelerator_initCache
 			gpuErrchk(cudaMemset(reinterpret_cast<void*>(target_address), 0, MAX_PATH_LENGTH), true, nullptr)
 			gpuErrchk(cudaMemcpy(reinterpret_cast<void*>(target_address), record, record_len, cudaMemcpyHostToDevice),
 			          true, nullptr)
+			cache->str_data.record_hash.insert(hasher(record));
 		}
 		env->ReleaseStringUTFChars(jstring_val, record);
 	}
@@ -337,19 +342,19 @@ void collect_results(JNIEnv* env, jobject output)
 	{
 		//尝试退出
 		all_complete = true;
-		for (const auto& each : cache_map)
+		for (const auto& [key, val] : cache_map)
 		{
-			if (!each.second->is_match_done.load())
+			if (!val->is_match_done.load())
 			{
 				//发现仍然有结果为计算完，设置退出标志为false，跳到下一个计算结果
 				all_complete = false;
 				continue;
 			}
 			//复制结果数组到host，dev_output下标对应dev_cache中的下标，若dev_output[i]中的值为1，则对应dev_cache[i]字符串匹配成功
-			const auto output_ptr = new char[each.second->str_data.record_num + each.second->str_data.remain_blank_num];
+			const auto output_ptr = new char[val->str_data.record_num + val->str_data.remain_blank_num];
 			//将dev_output拷贝到output_ptr
-			cudaMemcpy(output_ptr, each.second->dev_output, each.second->str_data.record_num, cudaMemcpyDeviceToHost);
-			for (size_t i = 0; i < each.second->str_data.record_num.load(); ++i)
+			cudaMemcpy(output_ptr, val->dev_output, val->str_data.record_num, cudaMemcpyDeviceToHost);
+			for (size_t i = 0; i < val->str_data.record_num.load(); ++i)
 			{
 				if (is_stop_collect)
 				{
@@ -359,13 +364,13 @@ void collect_results(JNIEnv* env, jobject output)
 				if (static_cast<bool>(output_ptr[i]))
 				{
 					char tmp_matched_record_str[MAX_PATH_LENGTH]{0};
-					const auto str_address = reinterpret_cast<size_t>(each.second->str_data.dev_cache_str) + i *
+					const auto str_address = reinterpret_cast<size_t>(val->str_data.dev_cache_str) + i *
 						MAX_PATH_LENGTH;
 					//拷贝GPU中的字符串到host
 					cudaMemcpy(tmp_matched_record_str, reinterpret_cast<void*>(str_address),
 					           MAX_PATH_LENGTH, cudaMemcpyDeviceToHost);
 					const auto matched_record = env->NewStringUTF(tmp_matched_record_str);
-					const auto key_jstring = env->NewStringUTF(each.first.c_str());
+					const auto key_jstring = env->NewStringUTF(key.c_str());
 					if (env->CallBooleanMethod(output, contains_key_func, key_jstring))
 					{
 						//已经存在该key容器
@@ -382,7 +387,7 @@ void collect_results(JNIEnv* env, jobject output)
 					}
 				}
 			}
-			each.second->is_output_done = true;
+			val->is_output_done = true;
 			delete[] output_ptr;
 		}
 	}
@@ -436,7 +441,7 @@ bool has_cache(const std::string& key)
  */
 inline void lock_clear_cache(std::atomic_uint& thread_counter)
 {
-	std::lock_guard<std::mutex> lock_guard(modify_cache_lock);
+	std::lock_guard lock_guard(modify_cache_lock);
 	wait_for_clear_cache();
 	++thread_counter;
 }
@@ -450,22 +455,14 @@ inline void free_clear_cache(std::atomic_uint& thread_counter)
 	--thread_counter;
 }
 
-bool is_record_repeat(const std::string& record, const char* dev_str_ptr, const size_t size,
-                      char tmp_output[MAX_PATH_LENGTH])
+bool is_record_repeat(const std::string& record, const list_cache* cache)
 {
-	for (size_t i = 0; i < size; ++i)
-	{
-		//计算GPU内存偏移
-		const auto str_address = reinterpret_cast<size_t>(dev_str_ptr) + i * MAX_PATH_LENGTH;
-		//拷贝GPU中的字符串到host
-		gpuErrchk(cudaMemcpy(tmp_output, reinterpret_cast<void*>(str_address), MAX_PATH_LENGTH, cudaMemcpyDeviceToHost),
-		          true, nullptr)
-		if (record == tmp_output)
-		{
-			return true;
-		}
-	}
-	return false;
+	const auto record_hash = hasher(record);
+	return std::any_of(cache->str_data.record_hash.begin(), cache->str_data.record_hash.end(),
+	                   [record_hash](const size_t each_hash)
+	                   {
+		                   return each_hash == record_hash;
+	                   });
 }
 
 /**
@@ -486,14 +483,10 @@ void add_one_record_to_cache(const std::string& key, const std::string& record)
 	{
 		const auto& cache = cache_map.at(key);
 		//对当前cache加锁，防止一边add一边remove导致脏数据产生
-		std::lock_guard<std::mutex> lock_guard(cache->str_data.lock);
+		std::lock_guard lock_guard(cache->str_data.lock);
 		if (cache->is_cache_valid)
 		{
-			char tmp[MAX_PATH_LENGTH]{0};
-			const bool is_repeat = is_record_repeat(record, cache->str_data.dev_cache_str,
-			                                        cache->str_data.record_num.load(),
-			                                        tmp);
-			if (!is_repeat)
+			if (const bool is_repeat = is_record_repeat(record, cache); !is_repeat)
 			{
 				if (cache->str_data.remain_blank_num.load() > 0)
 				{
@@ -508,6 +501,7 @@ void add_one_record_to_cache(const std::string& key, const std::string& record)
 						true, get_cache_info(key, cache).c_str())
 					++cache->str_data.record_num;
 					--cache->str_data.remain_blank_num;
+					cache->str_data.record_hash.insert(hasher(record));
 				}
 				else
 				{
@@ -544,7 +538,7 @@ void remove_one_record_from_cache(const std::string& key, const std::string& rec
 	try
 	{
 		const auto& cache = cache_map.at(key);
-		std::lock_guard<std::mutex> lock_guard(cache->str_data.lock);
+		std::lock_guard lock_guard(cache->str_data.lock);
 		if (cache->is_cache_valid)
 		{
 			char tmp[MAX_PATH_LENGTH]{0};
@@ -567,6 +561,7 @@ void remove_one_record_from_cache(const std::string& key, const std::string& rec
 							MAX_PATH_LENGTH, cudaMemcpyDeviceToDevice), true, get_cache_info(key, cache).c_str())
 					--cache->str_data.record_num;
 					++cache->str_data.remain_blank_num;
+					cache->str_data.record_hash.unsafe_erase(hasher(record));
 					break;
 				}
 			}
@@ -596,7 +591,7 @@ void wait_for_add_or_remove_record()
  */
 inline void lock_add_or_remove_result()
 {
-	std::lock_guard<std::mutex> lock_guard(modify_cache_lock);
+	std::lock_guard lock_guard(modify_cache_lock);
 	wait_for_add_or_remove_record();
 	clear_cache_flag = true;
 }
@@ -609,11 +604,11 @@ void clear_cache(const std::string& key)
 	{
 		//对自身加锁，防止多个线程同时清除cache
 		static std::mutex clear_cache_lock;
-		std::lock_guard<std::mutex> clear_cache_lock_guard(clear_cache_lock);
+		std::lock_guard clear_cache_lock_guard(clear_cache_lock);
 		const auto cache = cache_map.at(key);
 		{
 			//对当前cache加锁
-			std::lock_guard<std::mutex> lock_guard(cache->str_data.lock);
+			std::lock_guard lock_guard(cache->str_data.lock);
 			gpuErrchk(cudaFree(cache->str_data.dev_cache_str), false, get_cache_info(key, cache).c_str())
 			gpuErrchk(cudaFree(cache->dev_output), false, get_cache_info(key, cache).c_str())
 		}
