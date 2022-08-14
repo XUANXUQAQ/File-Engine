@@ -412,13 +412,12 @@ public class DatabaseService {
                         }
                     }
                     if (isStartSaveCache.get()) {
+                        startCheckTime.startCheckTimeMills = System.currentTimeMillis();
                         if (allConfigs.isEnableCuda()) {
-                            startCheckTime.startCheckTimeMills = System.currentTimeMillis();
                             createCudaCache(isStopCreateCache);
                         }
                         final double memoryUsage = SystemInfoUtil.getMemoryUsage();
                         if (memoryUsage < 0.7) {
-                            startCheckTime.startCheckTimeMills = System.currentTimeMillis();
                             createMemoryCache(isStopCreateCache);
                         }
                     }
@@ -432,7 +431,7 @@ public class DatabaseService {
         });
     }
 
-    private void createMemoryCache(Supplier<Boolean> isStopCreateCache) {
+    private synchronized void createMemoryCache(Supplier<Boolean> isStopCreateCache) {
         String availableDisks = AllConfigs.getInstance().getAvailableDisks();
         ConcurrentLinkedQueue<String> tableQueueByPriority = initTableQueueByPriority();
         isCreatingCache.set(true);
@@ -447,7 +446,7 @@ public class DatabaseService {
         isCreatingCache.set(false);
     }
 
-    private void createCudaCache(Supplier<Boolean> isStopCreateCache) {
+    private synchronized void createCudaCache(Supplier<Boolean> isStopCreateCache) {
         String availableDisks = AllConfigs.getInstance().getAvailableDisks();
         ConcurrentLinkedQueue<String> tableQueueByPriority = initTableQueueByPriority();
         isCreatingCache.set(true);
