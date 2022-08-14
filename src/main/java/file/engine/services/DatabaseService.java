@@ -455,7 +455,7 @@ public class DatabaseService {
         LinkedHashMap<String, Integer> tableNeedCache = scanDatabaseAndSelectCacheTable(disks,
                 tableQueueByPriority,
                 isStopCreateCache,
-                5000,
+                1000,
                 50000);
         saveTableCacheForCuda(isStopCreateCache, tableNeedCache);
         isCreatingCache.set(false);
