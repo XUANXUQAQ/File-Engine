@@ -4,8 +4,7 @@
 
 typedef struct cache_data
 {
-	unsigned long long* dev_cache_str_ptr = nullptr;
-	size_t* str_length_array = nullptr;
+	char* dev_cache_str = nullptr;
 	std::atomic_uint64_t remain_blank_num;
 	std::atomic_uint64_t record_num;
 	std::mutex lock;

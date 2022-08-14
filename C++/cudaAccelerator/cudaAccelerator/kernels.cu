@@ -356,7 +356,7 @@ __device__ bool not_matched(const char* path,
 	return false;
 }
 
-__global__ void check(const unsigned long long* str_address_ptr_array,
+__global__ void check(const char* str_address_ptr_array,
                       const int* search_case,
                       const bool* is_ignore_case,
                       char* search_text,
@@ -366,8 +366,9 @@ __global__ void check(const unsigned long long* str_address_ptr_array,
                       const bool* is_keyword_path,
                       char* output)
 {
-	const int thread_id = GET_TID();
-	const char* path = reinterpret_cast<char*>(str_address_ptr_array[thread_id]);
+	const size_t thread_id = GET_TID();
+	const char* path = reinterpret_cast<const char*>(reinterpret_cast<size_t>(str_address_ptr_array) + thread_id *
+		MAX_PATH_LENGTH);
 	if (path == nullptr || !path[0])
 	{
 		return;
@@ -493,7 +494,7 @@ void start_kernel(concurrency::concurrent_unordered_map<std::string, list_cache*
 			cudaStreamAddCallback(streams[count], set_match_done_flag_callback, cache, 0);
 
 			check<<<block_num, thread_num, 0, streams[count]>>>
-			(cache->str_data.dev_cache_str_ptr,
+			(cache->str_data.dev_cache_str,
 			 dev_search_case,
 			 dev_is_ignore_case,
 			 dev_search_text,
