@@ -2,6 +2,7 @@
 #include <atomic>
 #include <mutex>
 #include <concurrent_unordered_set.h>
+#include "constans.h"
 
 /**
  * \brief 存储数据结构
@@ -12,7 +13,7 @@
  */
 typedef struct cache_data
 {
-	char* dev_cache_str = nullptr;
+	char (* dev_cache_str)[MAX_PATH_LENGTH] = nullptr;
 	std::atomic_uint64_t remain_blank_num;
 	std::atomic_uint64_t record_num;
 	std::mutex lock;
@@ -37,4 +38,15 @@ typedef struct cache_struct
 	std::atomic_bool is_output_done;
 } list_cache;
 
+
+typedef struct stop_signal_struct
+{
+	bool is_stop_collect = false;
+	bool* dev_is_stop_collect = nullptr;
+} stop_signal;
+
 std::string get_cache_info(const std::string& key, const list_cache* cache);
+bool is_stop();
+void set_stop(bool b);
+void init_stop_signal();
+bool* get_dev_stop_signal();

@@ -56,4 +56,6 @@ public enum CudaAccelerator {
     public native boolean isCacheValid(String key);
 
     public native int getCudaMemUsage();
+
+    public native void initialize();
 }

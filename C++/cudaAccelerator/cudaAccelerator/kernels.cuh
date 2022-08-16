@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 #include "cache.h"
+#include <concurrent_unordered_map.h>
 #include "cuda_runtime.h"
 
 #define GET_TID() ((gridDim.x * gridDim.y * blockIdx.z + gridDim.x * blockIdx.y + blockIdx.x) * (blockDim.x * blockDim.y * blockDim.z) + blockDim.x * blockDim.y * threadIdx. z + blockDim.x * threadIdx.y + threadIdx.x)
@@ -27,7 +28,7 @@ __device__ bool not_matched(const char* path,
                             const bool* is_keyword_path);
 
 
-__global__ void check(const unsigned long long* str_address_ptr_array,
+__global__ void check(const char (*str_address_ptr_array)[MAX_PATH_LENGTH],
                       const int* search_case,
                       const bool* is_ignore_case,
                       char* search_text,
@@ -35,7 +36,8 @@ __global__ void check(const unsigned long long* str_address_ptr_array,
                       char* keywords_lower_case,
                       const size_t* keywords_length,
                       const bool* is_keyword_path,
-                      char* output);
+                      char* output,
+                      const bool* is_stop_collect_var);
 
 __device__ int strcmp_cuda(const char* str1, const char* str2);
 __device__ char* strlwr_cuda(char* src);

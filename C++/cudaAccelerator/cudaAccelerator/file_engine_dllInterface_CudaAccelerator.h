@@ -111,6 +111,14 @@ JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_CudaAccelerator_isCache
 JNIEXPORT jint JNICALL Java_file_engine_dllInterface_CudaAccelerator_getCudaMemUsage
   (JNIEnv *, jobject);
 
+/*
+ * Class:     file_engine_dllInterface_CudaAccelerator
+ * Method:    initialize
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_file_engine_dllInterface_CudaAccelerator_initialize
+  (JNIEnv *, jobject);
+
 #ifdef __cplusplus
 }
 #endif

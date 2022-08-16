@@ -4,6 +4,7 @@ import com.github.promeg.pinyinhelper.Pinyin;
 import com.github.promeg.tinypinyin.lexicons.java.cncity.CnCityDict;
 import file.engine.configs.AllConfigs;
 import file.engine.configs.Constants;
+import file.engine.dllInterface.CudaAccelerator;
 import file.engine.dllInterface.GetHandle;
 import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
@@ -54,7 +55,7 @@ public class MainClass {
     private static final String GET_START_MENU_MD5 = "b446b307fae7646f9d7cd0064f55d1af";
     private static final String SQLITE_JDBC_MD5 = "580fd050832e37d14bc04e8d5d13b7b1";
     private static final String EMPTY_RECYCLE_BIN_MD5 = "431225a47e74fe343b42e4bba741b80b";
-    private static final String CUDA_ACCELERATOR_MD5 = "ea6235fb9f589de1196dbe445e7edb29";
+    private static final String CUDA_ACCELERATOR_MD5 = "d473dc1f4021328831b21dd8324ccac3";
     private static final String CUDA_RUNTIME_MD5 = "d7cfc69c62e8eb977d827f46bab408da";
 
     public static void main(String[] args) {
@@ -70,6 +71,7 @@ public class MainClass {
             initFoldersAndFiles();
             Class.forName("org.sqlite.JDBC");
             initializeDllInterface();
+            CudaAccelerator.INSTANCE.initialize();
             initEventManagement();
             updateLauncher();
             //清空tmp

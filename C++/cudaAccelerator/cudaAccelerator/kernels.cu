@@ -356,7 +356,7 @@ __device__ bool not_matched(const char* path,
 	return false;
 }
 
-__global__ void check(const char* str_address_ptr_array,
+__global__ void check(const char (* str_address_ptr_array)[MAX_PATH_LENGTH],
                       const int* search_case,
                       const bool* is_ignore_case,
                       char* search_text,
@@ -364,11 +364,18 @@ __global__ void check(const char* str_address_ptr_array,
                       char* keywords_lower_case,
                       const size_t* keywords_length,
                       const bool* is_keyword_path,
-                      char* output)
+                      char* output,
+                      const bool* is_stop_collect_var)
 {
 	const size_t thread_id = GET_TID();
-	const char* path = reinterpret_cast<const char*>(reinterpret_cast<size_t>(str_address_ptr_array) + thread_id *
-		MAX_PATH_LENGTH);
+	const char* path = reinterpret_cast<const char*>(str_address_ptr_array + thread_id);
+	if (*is_stop_collect_var)
+	{
+		return;
+	}
+#ifdef DEBUG_OUTPUT
+	printf("%s\n", path);
+#endif
 	if (path == nullptr || !path[0])
 	{
 		return;
@@ -502,7 +509,8 @@ void start_kernel(concurrency::concurrent_unordered_map<std::string, list_cache*
 			 dev_keywords_lower_case,
 			 dev_keywords_length,
 			 dev_is_keyword_path,
-			 cache->dev_output);
+			 cache->dev_output,
+			 get_dev_stop_signal());
 			++count;
 		}
 
