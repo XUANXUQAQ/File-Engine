@@ -19,8 +19,8 @@ void collect_results(JNIEnv* env, jobject output);
 bool is_record_repeat(const std::string& record, const list_cache* cache);
 
 //lock
-void wait_for_clear_cache();
-void wait_for_add_or_remove_record();
+inline void wait_for_clear_cache();
+inline void wait_for_add_or_remove_record();
 inline void lock_clear_cache(std::atomic_uint& thread_counter);
 inline void free_clear_cache(std::atomic_uint& thread_counter);
 inline void lock_add_or_remove_result();
@@ -86,13 +86,13 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_CudaAccelerator_match
 	for (jsize i = 0; i < keywords_length; ++i)
 	{
 		auto keywords_str = env->GetObjectArrayElement(keywords, i);
-		auto tmp_keywords_str = static_cast<jstring>(keywords_str);
+		auto tmp_keywords_str = reinterpret_cast<jstring>(keywords_str);
 		auto keywords_chars = env->GetStringUTFChars(tmp_keywords_str, nullptr);
 		keywords_vec.emplace_back(keywords_chars);
 		env->ReleaseStringUTFChars(tmp_keywords_str, keywords_chars);
 
 		keywords_str = env->GetObjectArrayElement(keywords_lower, i);
-		tmp_keywords_str = static_cast<jstring>(keywords_str);
+		tmp_keywords_str = reinterpret_cast<jstring>(keywords_str);
 		keywords_chars = env->GetStringUTFChars(tmp_keywords_str, nullptr);
 		keywords_lower_vec.emplace_back(keywords_chars);
 		env->ReleaseStringUTFChars(tmp_keywords_str, keywords_chars);
@@ -169,7 +169,7 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_CudaAccelerator_initCache
 
 	for (size_t i = 0; i < static_cast<size_t>(length); ++i)
 	{
-		const auto jstring_val = static_cast<jstring>(env->GetObjectArrayElement(records, i));
+		const auto jstring_val = reinterpret_cast<jstring>(env->GetObjectArrayElement(records, i));
 		const auto record = env->GetStringUTFChars(jstring_val, nullptr);
 		const auto record_len = strlen(record);
 		if (record_len < MAX_PATH_LENGTH)
@@ -416,7 +416,7 @@ void generate_search_case(JNIEnv* env, std::vector<std::string>& search_case_vec
 		const auto search_case_str = env->GetObjectArrayElement(search_case, i);
 		if (search_case_str != nullptr)
 		{
-			const auto tmp_search_case_str = static_cast<jstring>(search_case_str);
+			const auto tmp_search_case_str = reinterpret_cast<jstring>(search_case_str);
 			auto search_case_chars = env->GetStringUTFChars(tmp_search_case_str, nullptr);
 			search_case_vec.emplace_back(search_case_chars);
 			env->ReleaseStringUTFChars(tmp_search_case_str, search_case_chars);
