@@ -2034,7 +2034,7 @@ public class DatabaseService {
                 final long checkInterval = 10 * 60 * 1000; // 10min
                 try {
                     while (eventManagement.notMainExit()) {
-                        if (System.currentTimeMillis() - startCheckInvalidCacheTime > checkInterval) {
+                        if (System.currentTimeMillis() - startCheckInvalidCacheTime > checkInterval && !GetHandle.INSTANCE.isForegroundFullscreen()) {
                             startCheckInvalidCacheTime = System.currentTimeMillis();
                             String eachKey;
                             while ((eachKey = invalidCacheKeys.poll()) != null) {
@@ -2054,7 +2054,7 @@ public class DatabaseService {
                     try {
                         while (eventManagement.notMainExit()) {
                             Runnable run;
-                            while (databaseService.isSearchStopped.get() && (run = workQueue.poll()) != null) {
+                            while (databaseService.isSearchStopped.get() && !GetHandle.INSTANCE.isForegroundFullscreen() && (run = workQueue.poll()) != null) {
                                 run.run();
                             }
                             TimeUnit.MILLISECONDS.sleep(100);
