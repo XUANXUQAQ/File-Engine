@@ -2025,14 +2025,9 @@ public class DatabaseService {
         private static final ConcurrentLinkedQueue<String> invalidCacheKeys = new ConcurrentLinkedQueue<>();
         private static final ConcurrentLinkedQueue<Runnable> workQueue = new ConcurrentLinkedQueue<>();
 
-        @EventListener(listenClass = BootSystemEvent.class)
-        private static void startThread(Event event) {
-            if (!AllConfigs.getInstance().isEnableCuda()) {
-                return;
-            }
-            CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
+        private static void clearInvalidCacheThread() {
             //检测缓存是否有效并删除缓存
-            cachedThreadPoolUtil.executeTask(() -> {
+            CachedThreadPoolUtil.getInstance().executeTask(() -> {
                 EventManagement eventManagement = EventManagement.getInstance();
                 DatabaseService databaseService = DatabaseService.getInstance();
                 long startCheckInvalidCacheTime = System.currentTimeMillis();
@@ -2051,23 +2046,23 @@ public class DatabaseService {
                 } catch (InterruptedException ignored) {
                 }
             });
-            //向cuda缓存添加或删除记录线程
-            for (int i = 0; i < 2; i++) {
-                cachedThreadPoolUtil.executeTask(() -> {
-                    EventManagement eventManagement = EventManagement.getInstance();
-                    DatabaseService databaseService = DatabaseService.getInstance();
-                    try {
-                        while (eventManagement.notMainExit()) {
-                            Runnable run;
-                            while (databaseService.isSearchStopped.get() && !GetHandle.INSTANCE.isForegroundFullscreen() && (run = workQueue.poll()) != null) {
-                                run.run();
-                            }
-                            TimeUnit.MILLISECONDS.sleep(100);
+        }
+
+        private static void execWorkQueueThread() {
+            CachedThreadPoolUtil.getInstance().executeTask(() -> {
+                EventManagement eventManagement = EventManagement.getInstance();
+                DatabaseService databaseService = DatabaseService.getInstance();
+                try {
+                    while (eventManagement.notMainExit()) {
+                        Runnable run;
+                        while (databaseService.isSearchStopped.get() && !GetHandle.INSTANCE.isForegroundFullscreen() && (run = workQueue.poll()) != null) {
+                            run.run();
                         }
-                    } catch (InterruptedException ignored) {
+                        TimeUnit.SECONDS.sleep(1);
                     }
-                });
-            }
+                } catch (InterruptedException ignored) {
+                }
+            });
         }
 
         private static void addRecord(String key, String record) {
@@ -2080,6 +2075,19 @@ public class DatabaseService {
 
         private static void removeRecord(String key, String record) {
             workQueue.add(() -> CudaAccelerator.INSTANCE.removeOneRecordFromCache(key, record));
+        }
+
+        @EventListener(listenClass = BootSystemEvent.class)
+        private static void startThread(Event event) {
+            if (!AllConfigs.getInstance().isEnableCuda()) {
+                return;
+            }
+            CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
+            clearInvalidCacheThread();
+            //向cuda缓存添加或删除记录线程
+            for (int i = 0; i < 2; i++) {
+                execWorkQueueThread();
+            }
         }
 
         @EventRegister(registerClass = CudaAddRecordEvent.class)

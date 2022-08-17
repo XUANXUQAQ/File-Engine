@@ -6,7 +6,6 @@
 #include "cache.h"
 #include "constans.h"
 #include "cuda_copy_vector_util.h"
-#include <algorithm>
 
 #pragma comment(lib, "cudart.lib")
 
@@ -474,11 +473,7 @@ inline void free_clear_cache(std::atomic_uint& thread_counter)
 bool is_record_repeat(const std::string& record, const list_cache* cache)
 {
 	const auto record_hash = hasher(record);
-	return std::any_of(cache->str_data.record_hash.begin(), cache->str_data.record_hash.end(),
-	                   [record_hash](const size_t each_hash)
-	                   {
-		                   return each_hash == record_hash;
-	                   });
+	return cache->str_data.record_hash.find(record_hash) != cache->str_data.record_hash.end();
 }
 
 /**
