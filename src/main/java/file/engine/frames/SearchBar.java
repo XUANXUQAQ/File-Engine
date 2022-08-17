@@ -53,6 +53,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -3238,11 +3239,12 @@ public class SearchBar {
         isMergeThreadNotExist.set(false);
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             EventManagement eventManagement = EventManagement.getInstance();
+            final long time = System.currentTimeMillis();
+            Supplier<Boolean> isStopSearch = () -> startTime > time || !isVisible() || listResultsNum.get() >= MAX_RESULTS_COUNT;
             try {
-                long time = System.currentTimeMillis();
                 ConcurrentLinkedQueue<String> tempResults = databaseService.getTempResults();
                 while (true) {
-                    if (startTime > time || !isVisible() || listResultsNum.get() >= MAX_RESULTS_COUNT) {
+                    if (isStopSearch.get()) {
                         eventManagement.putEvent(new StopSearchEvent());
                         return;
                     }
@@ -3257,7 +3259,7 @@ public class SearchBar {
                         }
                     }
                     while ((each = tempResults.poll()) != null) {
-                        if (startTime > time || !isVisible() || listResultsNum.get() >= MAX_RESULTS_COUNT) {
+                        if (isStopSearch.get()) {
                             eventManagement.putEvent(new StopSearchEvent());
                             return;
                         }

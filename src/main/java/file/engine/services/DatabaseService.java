@@ -64,6 +64,7 @@ public class DatabaseService {
     private final AtomicBoolean isReadFromSharedMemory = new AtomicBoolean(false);
     private final @Getter
     ConcurrentLinkedQueue<String> tempResults;  //在优先文件夹和数据库cache未搜索完时暂时保存结果，搜索完后会立即被转移到listResults
+    private final ConcurrentLinkedQueue<String> tempResultsForEvent; //在SearchDoneEvent中保存的容器
     private final ConcurrentHashMap<String, ConcurrentLinkedQueue<String>> cudaCache = new ConcurrentHashMap<>();
     private final AtomicBoolean shouldStopSearch = new AtomicBoolean(true);
     private final AtomicBoolean isSearchStopped = new AtomicBoolean(true);
@@ -117,6 +118,7 @@ public class DatabaseService {
     private DatabaseService() {
         tableSet = ConcurrentHashMap.newKeySet();
         tempResults = new ConcurrentLinkedQueue<>();
+        tempResultsForEvent = new ConcurrentLinkedQueue<>();
     }
 
     private void invalidateAllCache() {
@@ -624,6 +626,7 @@ public class DatabaseService {
                 if (!tempResults.contains(path)) {
                     if (container == null) {
                         tempResults.add(path);
+                        tempResultsForEvent.add(path);
                     } else {
                         container.add(path);
                     }
@@ -755,6 +758,7 @@ public class DatabaseService {
                                 for (String result : results) {
                                     if (!tempResults.contains(result)) {
                                         tempResults.add(result);
+                                        tempResultsForEvent.add(result);
                                     }
                                 }
                                 if (!isFailed || failedRetryTimes > 5) {
@@ -780,7 +784,8 @@ public class DatabaseService {
                 e.printStackTrace();
             } finally {
                 EventManagement eventManagement = EventManagement.getInstance();
-                eventManagement.putEvent(new SearchDoneEvent());
+                eventManagement.putEvent(new SearchDoneEvent(new ConcurrentLinkedQueue<>(tempResultsForEvent)));
+                tempResultsForEvent.clear();
                 isSearchStopped.set(true);
                 CudaAccelerator.INSTANCE.stopCollectResults();
             }
