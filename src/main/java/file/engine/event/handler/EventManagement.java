@@ -352,7 +352,11 @@ public class EventManagement {
                         throw new RuntimeException("注册handler方法参数错误" + method);
                     }
                 }
-                registerHandler(annotation.registerClass().getName(), method);
+                String registerClassName = annotation.registerClass().getName();
+                if (RestartEvent.class.getName().equals(registerClassName) || CloseEvent.class.getName().equals(registerClassName)) {
+                    throw new RuntimeException("RestartEvent和CloseEvent不可被注册事件处理器");
+                }
+                registerHandler(registerClassName, method);
             };
             if (IsDebug.isDebug()) {
                 ClassScannerUtil.searchAndRun(EventRegister.class, registerMethod);
