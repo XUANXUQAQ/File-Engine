@@ -65,6 +65,7 @@ public class DatabaseService {
     private final @Getter
     ConcurrentLinkedQueue<String> tempResults;  //在优先文件夹和数据库cache未搜索完时暂时保存结果，搜索完后会立即被转移到listResults
     private final ConcurrentLinkedQueue<String> tempResultsForEvent; //在SearchDoneEvent中保存的容器
+    private final AtomicInteger tempResultsRecordCounter = new AtomicInteger();
     private final ConcurrentHashMap<String, ConcurrentLinkedQueue<String>> cudaCache = new ConcurrentHashMap<>();
     private final AtomicBoolean shouldStopSearch = new AtomicBoolean(true);
     private final AtomicBoolean isSearchStopped = new AtomicBoolean(true);
@@ -86,6 +87,7 @@ public class DatabaseService {
     private static final int MAX_TEMP_QUERY_RESULT_CACHE = 4096;
     private static final int MAX_CACHED_RECORD_NUM = 10240 * 5;
     private static final int MAX_SQL_NUM = 5000;
+    private static final int MAX_RESULTS = 500;
 
     private static volatile DatabaseService INSTANCE = null;
 
@@ -627,6 +629,10 @@ public class DatabaseService {
                     if (container == null) {
                         tempResults.add(path);
                         tempResultsForEvent.add(path);
+                        tempResultsRecordCounter.incrementAndGet();
+                        if (tempResultsRecordCounter.get() > MAX_RESULTS) {
+                            stopSearch();
+                        }
                     } else {
                         container.add(path);
                     }
@@ -759,6 +765,11 @@ public class DatabaseService {
                                     if (!tempResults.contains(result)) {
                                         tempResults.add(result);
                                         tempResultsForEvent.add(result);
+                                        tempResultsRecordCounter.incrementAndGet();
+                                        if (tempResultsRecordCounter.get() > MAX_RESULTS) {
+                                            stopSearch();
+                                            break;
+                                        }
                                     }
                                 }
                                 if (!isFailed || failedRetryTimes > 5) {
@@ -1508,6 +1519,7 @@ public class DatabaseService {
     private void stopSearch() {
         shouldStopSearch.set(true);
         tempResults.clear();
+        tempResultsRecordCounter.set(0);
     }
 
     private void executeAllSQLAndWait(@SuppressWarnings("SameParameterValue") int timeoutMills) {// 等待剩余的sql全部执行完成
