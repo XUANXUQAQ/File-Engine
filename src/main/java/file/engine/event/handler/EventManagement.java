@@ -220,7 +220,8 @@ public class EventManagement {
                     if (eventParam == null) {
                         continue;
                     }
-                    if (!parameterType.equals(eventParam.getClass())) {
+                    Class<?> eventParamClass = eventParam.getClass();
+                    if (!parameterType.isAssignableFrom(eventParamClass)) {
                         continue outer;
                     }
                 }
