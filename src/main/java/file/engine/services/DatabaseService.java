@@ -1844,6 +1844,7 @@ public class DatabaseService {
     private static void startSearchEvent(Event event) {
         StartSearchEvent startSearchEvent = (StartSearchEvent) event;
         DatabaseService databaseService = getInstance();
+        databaseService.tempResults.clear();
         prepareSearchInfo(startSearchEvent.searchText, startSearchEvent.searchCase, startSearchEvent.keywords);
         if (AllConfigs.getInstance().isEnableCuda()) {
             databaseService.cudaCache.clear();
