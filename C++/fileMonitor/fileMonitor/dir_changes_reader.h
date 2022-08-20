@@ -149,7 +149,8 @@ public:
 	// wait for the handles in the handles array
 	DWORD WaitForHandles()
 	{
-		return ::WaitForMultipleObjects(Handles, handles, false, INFINITE);
+		constexpr DWORD wait_threshold = 5000;
+		return ::WaitForMultipleObjects(Handles, handles, false, wait_threshold);
 	}
 
 	// access to the handles array

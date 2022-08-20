@@ -8,7 +8,6 @@
 #include <thread>
 #include <concurrent_queue.h>
 #include <io.h>
-#include <mutex>
 #include "string_wstring_converter.h"
 #include "dir_changes_reader.h"
 
@@ -22,13 +21,13 @@ typedef concurrent_queue<std::wstring> file_record_queue;
 void monitor(const char* path);
 void stop_monitor();
 void monitor_path(const std::string& path);
-static void add_record(const std::wstring& record);
-static void delete_record(const std::wstring& record);
+void add_record(const std::wstring& record);
+void delete_record(const std::wstring& record);
 inline bool is_dir(const wchar_t* path);
-static bool pop_del_file(std::wstring& record);
-static bool pop_add_file(std::wstring& record);
+bool pop_del_file(std::wstring& record);
+bool pop_add_file(std::wstring& record);
 
-static volatile bool is_running = true;
+static std::atomic_bool is_running = true;
 file_record_queue file_added_queue;
 file_record_queue file_del_queue;
 
@@ -94,37 +93,37 @@ void search_dir(const std::wstring& path)
 	//文件句柄
 	intptr_t hFile;
 	//文件信息
-	_wfinddata_t fileinfo{};
+	_wfinddata_t file_info{};
 	std::wstring pathName;
 	const std::wstring exdName = L"\\*";
 
-	if ((hFile = _wfindfirst(pathName.assign(path).append(exdName).c_str(), &fileinfo)) != -1)
+	if ((hFile = _wfindfirst(pathName.assign(path).append(exdName).c_str(), &file_info)) != -1)
 	{
 		do
 		{
 			//如果是文件夹中仍有文件夹,加入列表后迭代
 			//如果不是,加入列表
-			if ((fileinfo.attrib & _A_SUBDIR))
+			if ((file_info.attrib & _A_SUBDIR))
 			{
-				if (wcscmp(fileinfo.name, L".") != 0 && wcscmp(fileinfo.name, L"..") != 0)
+				if (wcscmp(file_info.name, L".") != 0 && wcscmp(file_info.name, L"..") != 0)
 				{
-					std::wstring name(fileinfo.name);
-					std::wstring _path = pathName.assign(path).append(L"\\").append(fileinfo.name);
+					std::wstring name(file_info.name);
+					std::wstring _path = pathName.assign(path).append(L"\\").append(file_info.name);
 					add_record(_path);
 					search_dir(_path);
 				}
 			}
 			else
 			{
-				if (wcscmp(fileinfo.name, L".") != 0 && wcscmp(fileinfo.name, L"..") != 0)
+				if (wcscmp(file_info.name, L".") != 0 && wcscmp(file_info.name, L"..") != 0)
 				{
-					std::wstring name(fileinfo.name);
-					std::wstring _path = pathName.assign(path).append(L"\\").append(fileinfo.name);
+					std::wstring name(file_info.name);
+					std::wstring _path = pathName.assign(path).append(L"\\").append(file_info.name);
 					add_record(_path);
 				}
 			}
 		}
-		while (_wfindnext(hFile, &fileinfo) == 0);
+		while (_wfindnext(hFile, &file_info) == 0);
 		_findclose(hFile);
 	}
 }
@@ -132,7 +131,7 @@ void search_dir(const std::wstring& path)
 /**
  * 添加文件到file_added_queue
  */
-static void add_record(const std::wstring& record)
+void add_record(const std::wstring& record)
 {
 	file_added_queue.push(record);
 }
@@ -140,7 +139,7 @@ static void add_record(const std::wstring& record)
 /**
  * 添加文件到file_del_queue
  */
-static void delete_record(const std::wstring& record)
+void delete_record(const std::wstring& record)
 {
 	file_del_queue.push(record);
 }
@@ -148,7 +147,7 @@ static void delete_record(const std::wstring& record)
 /**
  * 从file_del_queue中取出一个结果
  */
-static bool pop_del_file(std::wstring& record)
+bool pop_del_file(std::wstring& record)
 {
 	return file_del_queue.try_pop(record);
 }
@@ -156,7 +155,7 @@ static bool pop_del_file(std::wstring& record)
 /**
  * 从file_add_queue中取出一个结果
  */
-static bool pop_add_file(std::wstring& record)
+bool pop_add_file(std::wstring& record)
 {
 	return file_added_queue.try_pop(record);
 }
@@ -183,11 +182,10 @@ void monitor_path(const std::string& path)
 	const auto wPath = string2wstring(path);
 	DirectoryChangesReader dcr(wPath);
 	std::wstring dir_to_search;
-	while (is_running)
+	while (is_running.load())
 	{
 		dcr.EnqueueReadDirectoryChanges();
-		const DWORD rv = dcr.WaitForHandles();
-		if (rv == WAIT_OBJECT_0)
+		if (const DWORD rv = dcr.WaitForHandles(); rv == WAIT_OBJECT_0)
 		{
 			auto res = dcr.GetDirectoryChangesResultW();
 			for (const auto& pair : res)
