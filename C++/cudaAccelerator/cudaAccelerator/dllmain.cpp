@@ -414,7 +414,8 @@ void collect_results(JNIEnv* env, jobject output)
  */
 void wait_for_clear_cache()
 {
-	while (clear_cache_flag.load());
+	while (clear_cache_flag.load())
+		std::this_thread::yield();
 }
 
 /**
@@ -428,8 +429,7 @@ void generate_search_case(JNIEnv* env, std::vector<std::string>& search_case_vec
 	const auto search_case_len = env->GetArrayLength(search_case);
 	for (jsize i = 0; i < search_case_len; ++i)
 	{
-		const auto search_case_str = env->GetObjectArrayElement(search_case, i);
-		if (search_case_str != nullptr)
+		if (const auto search_case_str = env->GetObjectArrayElement(search_case, i); search_case_str != nullptr)
 		{
 			const auto tmp_search_case_str = reinterpret_cast<jstring>(search_case_str);
 			auto search_case_chars = env->GetStringUTFChars(tmp_search_case_str, nullptr);
@@ -598,7 +598,8 @@ void remove_one_record_from_cache(const std::string& key, const std::string& rec
  */
 void wait_for_add_or_remove_record()
 {
-	while (add_record_thread_count.load() != 0 || remove_record_thread_count.load() != 0);
+	while (add_record_thread_count.load() != 0 || remove_record_thread_count.load() != 0)
+		std::this_thread::yield();
 }
 
 /**
