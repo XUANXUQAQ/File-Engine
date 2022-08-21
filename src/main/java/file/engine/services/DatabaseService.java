@@ -2095,7 +2095,6 @@ public class DatabaseService {
             if (!AllConfigs.getInstance().isEnableCuda()) {
                 return;
             }
-            CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
             clearInvalidCacheThread();
             //向cuda缓存添加或删除记录线程
             for (int i = 0; i < 2; i++) {
