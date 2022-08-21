@@ -78,7 +78,6 @@ public class SearchBar {
     private final AtomicBoolean isRoundRadiusSet = new AtomicBoolean(false);
     private static final AtomicBoolean isPreviewMode = new AtomicBoolean(false);
     private final AtomicBoolean isTutorialMode = new AtomicBoolean(false);
-    private final AtomicBoolean notifyThreadSignal = new AtomicBoolean(false);
     private Border fullBorder;
     private Border topBorder;
     private Border middleBorder;
@@ -1245,11 +1244,6 @@ public class SearchBar {
                 EventManagement eventManagement = EventManagement.getInstance();
                 while (eventManagement.notMainExit()) {
                     shouldSaveMousePos.set(true);
-                    while (!notifyThreadSignal.get() && eventManagement.notMainExit()) {
-                        synchronized (this) {
-                            this.wait();
-                        }
-                    }
                     TimeUnit.MILLISECONDS.sleep(50);
                 }
             } catch (InterruptedException e) {
@@ -2661,10 +2655,6 @@ public class SearchBar {
         ShowSearchBarEvent showSearchBarTask = (ShowSearchBarEvent) event;
         SearchBar searchBarInstance = getInstance();
         searchBarInstance.showSearchbar(showSearchBarTask.isGrabFocus, showSearchBarTask.isSwitchToNormal);
-        synchronized (searchBarInstance) {
-            searchBarInstance.notifyThreadSignal.set(true);
-            searchBarInstance.notifyAll();
-        }
     }
 
     @EventRegister(registerClass = SearchDoneEvent.class)
@@ -2795,9 +2785,6 @@ public class SearchBar {
     private static void restartEvent(Event event) {
         SearchBar searchBarInstance = getInstance();
         searchBarInstance.closeSearchBar();
-        synchronized (searchBarInstance) {
-            searchBarInstance.notifyAll();
-        }
     }
 
     /**
@@ -2836,11 +2823,6 @@ public class SearchBar {
                     } else {
                         if (showingMode != Constants.Enums.ShowingSearchBarMode.NORMAL_SHOWING && GetHandle.INSTANCE.changeToNormal()) {
                             switchToNormalMode(true);
-                        }
-                    }
-                    while (!notifyThreadSignal.get() && eventManagement.notMainExit()) {
-                        synchronized (this) {
-                            this.wait();
                         }
                     }
                     TimeUnit.MILLISECONDS.sleep(10);
@@ -3657,11 +3639,6 @@ public class SearchBar {
                             clearAllLabels();
                         }
                     }
-                    while (!notifyThreadSignal.get() && eventManagement.notMainExit()) {
-                        synchronized (this) {
-                            this.wait();
-                        }
-                    }
                     TimeUnit.MILLISECONDS.sleep(25);
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -4238,7 +4215,6 @@ public class SearchBar {
             if (!isPreviewMode.get()) {
                 searchBar.setVisible(false);
                 isFocusGrabbed.set(false);
-                notifyThreadSignal.set(false);
             }
         } else {
             searchBar.setVisible(true);

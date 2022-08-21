@@ -63,7 +63,6 @@ public class PluginMarket {
     //保存插件名称和url的映射关系
     private final HashMap<String, String> NAME_PLUGIN_INFO_URL_MAP = new HashMap<>();
     private boolean isFramePrepared = false;
-    private final AtomicBoolean notifyThreadSignal = new AtomicBoolean(false);
 
     private PluginMarket() {
     }
@@ -79,11 +78,6 @@ public class PluginMarket {
                 String pluginName;
                 EventManagement eventManagement = EventManagement.getInstance();
                 while (eventManagement.notMainExit()) {
-                    while (!notifyThreadSignal.get() && eventManagement.notMainExit()) {
-                        synchronized (this) {
-                            this.wait();
-                        }
-                    }
                     TimeUnit.MILLISECONDS.sleep(100);
                     pluginName = (String) listPlugins.getSelectedValue();
                     if (pluginName == null) {
@@ -150,10 +144,6 @@ public class PluginMarket {
     private static void showPluginMarketEvent(Event event) {
         PluginMarket pluginMarket = getInstance();
         pluginMarket.showWindow();
-        synchronized (pluginMarket) {
-            pluginMarket.notifyThreadSignal.set(true);
-            pluginMarket.notifyAll();
-        }
     }
 
     @EventListener(listenClass = RestartEvent.class)
@@ -163,16 +153,10 @@ public class PluginMarket {
         }
         PluginMarket pluginMarket = getInstance();
         pluginMarket.hideWindow();
-        synchronized (pluginMarket) {
-            pluginMarket.notifyAll();
-        }
     }
 
     private void hideWindow() {
-        SwingUtilities.invokeLater(() -> {
-            frame.setVisible(false);
-            notifyThreadSignal.set(false);
-        });
+        SwingUtilities.invokeLater(() -> frame.setVisible(false));
     }
 
     /**
