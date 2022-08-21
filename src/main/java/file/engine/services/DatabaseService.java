@@ -798,7 +798,9 @@ public class DatabaseService {
                 eventManagement.putEvent(new SearchDoneEvent(new ConcurrentLinkedQueue<>(tempResultsForEvent)));
                 tempResultsForEvent.clear();
                 isSearchStopped.set(true);
-                CudaAccelerator.INSTANCE.stopCollectResults();
+                if (AllConfigs.getInstance().isEnableCuda()) {
+                    CudaAccelerator.INSTANCE.stopCollectResults();
+                }
             }
         }, false);
     }
@@ -922,7 +924,7 @@ public class DatabaseService {
                             String priority = getPriorityFromSql(eachSql);
                             String key = diskStr + "," + tableName + "," + priority;
                             long matchedNum;
-                            if (CudaAccelerator.INSTANCE.isMatchDone(key)) {
+                            if (AllConfigs.getInstance().isEnableCuda() && CudaAccelerator.INSTANCE.isMatchDone(key)) {
                                 if (IsDebug.isDebug()) {
                                     System.out.println("CUDA缓存命中" + key);
                                 }
