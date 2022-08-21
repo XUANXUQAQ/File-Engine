@@ -71,7 +71,9 @@ public class MainClass {
             initFoldersAndFiles();
             Class.forName("org.sqlite.JDBC");
             initializeDllInterface();
-            CudaAccelerator.INSTANCE.initialize();
+            if (CudaAccelerator.INSTANCE.isCudaAvailableOnSystem()) {
+                CudaAccelerator.INSTANCE.initialize();
+            }
             initEventManagement();
             updateLauncher();
             //清空tmp
