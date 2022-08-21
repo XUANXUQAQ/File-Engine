@@ -82,6 +82,7 @@ public class SettingsFrame {
     private Set<String> cacheSet;
     private boolean isFramePrepared = false;
     private boolean isSuffixChanged = false;
+    private final AtomicBoolean notifyThreadSignal = new AtomicBoolean(false);
     private static volatile int tmp_copyPathKeyCode;
     private static volatile int tmp_runAsAdminKeyCode;
     private static volatile int tmp_openLastFolderKeyCode;
@@ -797,6 +798,11 @@ public class SettingsFrame {
                     setColorChooserLabel(searchBarColor, searchBarColorChooser);
                     setColorChooserLabel(searchBarFontColor, SearchBarFontColorChooser);
                     setColorChooserLabel(borderColor, borderColorChooser);
+                    while (!notifyThreadSignal.get() && eventManagement.notMainExit()) {
+                        synchronized (this) {
+                            this.wait();
+                        }
+                    }
                     TimeUnit.MILLISECONDS.sleep(50);
                 }
             } catch (InterruptedException ignored) {
@@ -3038,6 +3044,7 @@ public class SettingsFrame {
     private void hideFrame() {
         SwingUtilities.invokeLater(() -> {
             frame.setVisible(false);
+            notifyThreadSignal.set(false);
             for (Component each : tabComponentNameMap.values()) {
                 tabbedPane.addTab("", each);
             }
@@ -3053,6 +3060,10 @@ public class SettingsFrame {
             settingsFrame.showWindow();
         } else {
             settingsFrame.showWindow(showSettingsFrameEvent.showTabName);
+        }
+        synchronized (settingsFrame) {
+            settingsFrame.notifyThreadSignal.set(true);
+            settingsFrame.notifyAll();
         }
     }
 
@@ -3083,7 +3094,11 @@ public class SettingsFrame {
         if (instance == null) {
             return;
         }
-        getInstance().hideFrame();
+        SettingsFrame settingsFrame = getInstance();
+        settingsFrame.hideFrame();
+        synchronized (settingsFrame) {
+            settingsFrame.notifyAll();
+        }
     }
 
     private void showWindow() {
