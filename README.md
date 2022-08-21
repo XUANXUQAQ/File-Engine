@@ -16,6 +16,18 @@ A tool can make you work more efficiently.
 
 ### 制作自己的插件[File-Engine-Plugin-Template](https://github.com/XUANXUQAQ/File-Engine-Plugin-Template)
 
+目前已经可以使用的插件：
+
+[File-Engine-Remote-Plugin](https://github.com/XUANXUQAQ/File-Engine-Remote-Plugin)
+
+[File-Engine-Cmd-Plugin](https://github.com/XUANXUQAQ/File-Engine-Cmd-Plugin)
+
+[File-Engine-Translate-Plugin](https://github.com/XUANXUQAQ/File-Engine-Translate-Plugin)
+
+[File-Engine-NoUAC-Plugin](https://github.com/XUANXUQAQ/File-Engine-NoUAC-Plugin)
+
+[File-Engine-Web-Plugin](https://github.com/XUANXUQAQ/File-Engine-Web-Plugin)
+
 ## 使用
 
 ### [查看帮助](https://github.com/XUANXUQAQ/File-Engine/wiki/Usage)
