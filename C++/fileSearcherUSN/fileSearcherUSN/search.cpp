@@ -164,10 +164,10 @@ void volume::copy_results_to_shared_memory()
 void volume::collect_result_to_result_map(const int ascii, const string& full_path)
 {
 	static std::mutex add_priority_lock;
-	const int ascii_group = ascii / 100;
+	int ascii_group = ascii / 100;
 	if (ascii_group > 40)
 	{
-		return;
+		ascii_group = 40;
 	}
 	string list_name("list");
 	list_name += to_string(ascii_group);
