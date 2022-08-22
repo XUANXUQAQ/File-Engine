@@ -45,7 +45,7 @@ mvn clean compile package
 
 其中File-Engine-(版本).jar是不包含依赖的jar包，而File-Engine.jar是包含所有依赖的jar包。
 
-![](https://i.bmp.ovh/imgs/2022/07/22/dadb33cef92f0657.png)
+![](https://p0.meituan.net/dpplatform/1d87be4c66fc8882ccf742a8b7022fb924871.png)
 
 ### 4. 构建启动器
 
@@ -53,17 +53,17 @@ mvn clean compile package
 
 File-Engine.zip压缩包中需要放入**jre运行环境**和刚才maven生成的**File-Engine.jar**
 
-![](https://i.bmp.ovh/imgs/2022/07/22/c82f676a3c7c6782.png)
+![](https://p1.meituan.net/dpplatform/6b3c8049ab49dac3a18560ebefd9275546273.png)
 
 jre运行环境可以由jlink工具进行生成。
 
 首先使用jdeps分析刚才maven生成的无依赖的jar包（File-Engine-(版本).jar)
 
 ```bash
-jdeps --ignore-missing-deps --list-deps .\File-Engine-3.5.jar
+jdeps --ignore-missing-deps --list-deps .\File-Engine-${version}.jar
 ```
 
-![](https://i.bmp.ovh/imgs/2022/07/22/5f28ebdce13ee327.png)
+![](https://p0.meituan.net/dpplatform/3d243f78a9c3f7536e4bcea8377e1a526459.png)
 
 分析完成后再使用jlink工具生成精简后的jre运行环境。
 
