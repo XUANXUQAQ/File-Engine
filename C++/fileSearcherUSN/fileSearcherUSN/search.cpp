@@ -118,7 +118,7 @@ void volume::init_volume()
 			cerr << e.what() << endl;
 		}
 		cout << "collect complete." << endl;
-		thread save_to_db_thread([this]
+		thread save_results_to_db_thread([this]
 		{
 			save_all_results_to_db();
 		});
@@ -127,6 +127,8 @@ void volume::init_volume()
 		set_complete_signal();
 		++*complete_task_count;
 		cout << "copy to shared memory complete. save to database." << endl;
+		if (save_results_to_db_thread.joinable())
+			save_results_to_db_thread.join();
 	}
 	else
 	{
