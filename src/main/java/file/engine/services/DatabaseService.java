@@ -1463,8 +1463,10 @@ public class DatabaseService {
                 databaseCreateTimeMap.put(disk, now.toString());
             }
             Map map = gson.fromJson(stringBuilder.toString(), Map.class);
-            //从文件中读取每个数据库的创建时间
-            map.forEach((disk, createTime) -> databaseCreateTimeMap.put((String) disk, (String) createTime));
+            if (map != null) {
+                //从文件中读取每个数据库的创建时间
+                map.forEach((disk, createTime) -> databaseCreateTimeMap.put((String) disk, (String) createTime));
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
