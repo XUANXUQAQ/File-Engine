@@ -609,7 +609,11 @@ public class DatabaseService {
      */
     private void searchCache() {
         for (String each : databaseCacheSet) {
-            checkIsMatchedAndAddToList(each, null);
+            if (Files.exists(Path.of(each))) {
+                checkIsMatchedAndAddToList(each, null);
+            } else {
+                EventManagement.getInstance().putEvent(new DeleteFromCacheEvent(each));
+            }
         }
     }
 
@@ -622,23 +626,19 @@ public class DatabaseService {
     private boolean checkIsMatchedAndAddToList(String path, ConcurrentSkipListSet<String> container) {
         boolean ret = false;
         if (PathMatchUtil.check(path, searchCase, isIgnoreCase, searchText, keywords, keywordsLowerCase, isKeywordPath)) {
-            if (Files.exists(Path.of(path))) {
-                //字符串匹配通过
-                ret = true;
-                if (!tempResults.contains(path)) {
-                    if (container == null) {
-                        tempResults.add(path);
-                        tempResultsForEvent.add(path);
-                        tempResultsRecordCounter.incrementAndGet();
-                        if (tempResultsRecordCounter.get() > MAX_RESULTS) {
-                            stopSearch();
-                        }
-                    } else {
-                        container.add(path);
+            //字符串匹配通过
+            ret = true;
+            if (!tempResults.contains(path)) {
+                if (container == null) {
+                    tempResults.add(path);
+                    tempResultsForEvent.add(path);
+                    tempResultsRecordCounter.incrementAndGet();
+                    if (tempResultsRecordCounter.get() > MAX_RESULTS) {
+                        stopSearch();
                     }
+                } else {
+                    container.add(path);
                 }
-            } else if (container == null) {
-                EventManagement.getInstance().putEvent(new DeleteFromCacheEvent(path));
             }
         }
         return ret;
