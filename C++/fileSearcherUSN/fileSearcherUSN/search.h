@@ -112,7 +112,7 @@ private:
 	void init_all_prepare_statement();
 	void init_single_prepare_statement(sqlite3_stmt** statement, const char* init) const;
 	void save_all_results_to_db();
-	void create_shared_memory_and_copy(const std::string& list_name, int priority, size_t* size,
+	void create_shared_memory_and_copy(const std::string& list_name, int priority,
 	                               const std::string& shared_memory_name);
 	static void set_complete_signal();
 };

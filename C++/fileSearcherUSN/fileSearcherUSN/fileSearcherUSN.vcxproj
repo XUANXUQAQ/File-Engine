@@ -153,6 +153,7 @@
     <ClCompile Include="string_to_utf8.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="constants.h" />
     <ClInclude Include="file_search_usn.h" />
     <ClInclude Include="sqlite3.h" />
     <ClInclude Include="stdafx.h" />

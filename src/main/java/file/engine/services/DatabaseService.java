@@ -1421,7 +1421,7 @@ public class DatabaseService {
      * @param ignorePath 忽略文件夹
      * @throws IOException exception
      */
-    private void searchByUSN(String paths, String ignorePath) throws IOException {
+    private Process searchByUSN(String paths, String ignorePath) throws IOException {
         File usnSearcher = new File("user/fileSearcherUSN.exe");
         String absPath = usnSearcher.getAbsolutePath();
         String start = absPath.substring(0, 2);
@@ -1435,7 +1435,7 @@ public class DatabaseService {
             buffW.write(ignorePath);
         }
         String command = "cmd.exe /c " + start + end;
-        Runtime.getRuntime().exec(command, null, new File("user"));
+        return Runtime.getRuntime().exec(command, null, new File("user"));
     }
 
     /**
@@ -1544,7 +1544,7 @@ public class DatabaseService {
         }
     }
 
-    private void waitForSearchAndSwitchDatabase() {
+    private void waitForSearchAndSwitchDatabase(Process searchByUsn) {
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
             final long start = System.currentTimeMillis();
             final long timeLimit = 10 * 60 * 1000;
@@ -1564,6 +1564,7 @@ public class DatabaseService {
             {
                 try {
                     ProcessUtil.waitForProcess("fileSearcherUSN.exe", 1000);
+                    readSearchUsnOutput(searchByUsn);
                 } catch (Exception e) {
                     e.printStackTrace();
                 } finally {
@@ -1607,6 +1608,25 @@ public class DatabaseService {
         });
     }
 
+    private static void readSearchUsnOutput(Process searchByUsn) {
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(searchByUsn.getInputStream()))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                System.out.println("fileSearcherUSN: " + line);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(searchByUsn.getErrorStream()))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                System.err.println("fileSearcherUSN: " + line);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     /**
      * 关闭数据库连接并更新数据库
      *
@@ -1635,14 +1655,15 @@ public class DatabaseService {
         checkDbFileSize(isDropPrevious);
 
         isSharedMemoryCreated.set(true);
+        Process searchByUSN = null;
         try {
             // 创建搜索进程并等待
-            searchByUSN(AllConfigs.getInstance().getAvailableDisks(), ignorePath.toLowerCase());
+            searchByUSN = searchByUSN(AllConfigs.getInstance().getAvailableDisks(), ignorePath.toLowerCase());
         } catch (IOException e) {
             e.printStackTrace();
             return false;
         } finally {
-            waitForSearchAndSwitchDatabase();
+            waitForSearchAndSwitchDatabase(searchByUSN);
         }
         return true;
     }

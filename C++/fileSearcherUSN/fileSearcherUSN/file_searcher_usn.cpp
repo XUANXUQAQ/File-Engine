@@ -4,8 +4,8 @@
 #include <thread>
 #include "search.h"
 #include <fstream>
+#include "constants.h"
 
-//#define TEST
 static PriorityMap suffix_priority_map;
 
 /**
@@ -35,8 +35,8 @@ void init_usn(parameter p)
 	sqlite3_exec(p.db, "COMMIT;", nullptr, nullptr, nullptr);
 	sqlite3_close(p.db);
 #ifdef TEST
-	cout << "path : " << p.disk << endl;
-	cout << "Initialize done " << p.disk << endl;
+	std::cout << "path : " << p.disk << std::endl;
+	std::cout << "Initialize done " << p.disk << std::endl;
 #endif
 }
 
@@ -119,6 +119,11 @@ int main()
 	input.getline(ignore_path, 500);
 	input.close();
 
+#ifdef TEST
+	cout << "disk path: " << disk_path << endl;
+	cout << "output: " << output << endl;
+	cout << "ignore_path" << ignore_path << endl;
+#endif
 	disk_vector.reserve(26);
 
 	sqlite3_config(SQLITE_CONFIG_MULTITHREAD);
@@ -152,7 +157,7 @@ int main()
 			strcat_s(tmp_db_path, ".db");
 			const size_t ret = sqlite3_open(tmp_db_path, &p.db);
 #ifdef TEST
-			cout << "database path: " << tmpDbPath << endl;
+			cout << "database path: " << tmp_db_path << endl;
 #endif
 			if (SQLITE_OK != ret)
 			{
@@ -180,12 +185,6 @@ int main()
 	{
 		each_thread.join();
 	}
-#ifdef TEST
-	while (true)
-	{
-		Sleep(10);
-	}
-#endif
 	close_shared_memory();
 	return 0;
 }

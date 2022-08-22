@@ -10,13 +10,12 @@
 #include <concurrent_unordered_map.h>
 #include <atomic>
 #include <mutex>
+#include "constants.h"
 
 CONCURRENT_MAP<HANDLE, LPVOID> shared_memory_map;
 static std::atomic_int* complete_task_count = new std::atomic_int(0);
 static std::atomic_int* all_task_count = new std::atomic_int(0);
 static std::atomic<LPVOID> is_complete_ptr(nullptr);
-constexpr int RECORD_MAX_PATH = 500;
-constexpr int MAX_RECORD_COUNT = 1000;
 
 using namespace std;
 
@@ -67,6 +66,10 @@ void volume::init_volume()
 			const auto map_size = frnPfrnNameMap.size();
 			const auto split_size = map_size / thread_num;
 			vector<thread> thread_vec;
+#ifdef TEST
+			cout << "starting " << thread_num << " threads to collect results" << endl;
+			cout << "fileMap size: " << map_size << endl;
+#endif
 			auto search_internal = [split_size, this, collect_internal](int pre_loop_count)
 			{
 				auto start_iter = frnPfrnNameMap.begin();
@@ -110,38 +113,26 @@ void volume::init_volume()
 				t.join();
 			}
 		}
-#ifdef TEST
 		catch (exception& e)
 		{
-			cout << e.what() << endl;
+			cerr << e.what() << endl;
 		}
-#else
-		catch (exception&)
+		cout << "collect complete." << endl;
+		thread save_to_db_thread([this]
 		{
-		}
-#endif
-#ifdef TEST
+			save_all_results_to_db();
+		});
 		cout << "start copy disk " << this->getDiskPath() << " to shared memory" << endl;
-#endif
 		copy_results_to_shared_memory();
-		++*complete_task_count;
 		set_complete_signal();
-		const std::time_t startWaitTime = std::time(nullptr);
-		//阻塞等待其他线程全部完成共享内存的复制
-		while (all_task_count->load() != complete_task_count->load())
-		{
-			if (std::time(nullptr) - startWaitTime > 10000)
-			{
-				//等待超过十秒
-				break;
-			}
-			Sleep(10);
-		}
-		save_all_results_to_db();
+		++*complete_task_count;
+		cout << "copy to shared memory complete. save to database." << endl;
 	}
-#ifdef TEST
+	else
+	{
+		cerr << "init usn journal failed." << endl;
+	}
 	cout << "disk " << this->getDiskPath() << " complete" << endl;
-#endif
 }
 
 void volume::copy_results_to_shared_memory()
@@ -152,11 +143,10 @@ void volume::copy_results_to_shared_memory()
 		{
 			static const char* listNamePrefix = "list";
 			static const char* prefix = "sharedMemory:";
-			size_t memorySize = 0;
 			string eachListName = string(listNamePrefix) + to_string(i);
 			const auto& sharedMemoryName = string(prefix) + getDiskPath() + ":" + eachListName + ":" + to_string(
 				eachPriority.second); // 共享内存名为 sharedMemory:[path]:list[num]:[priority]
-			create_shared_memory_and_copy(eachListName, eachPriority.second, &memorySize, sharedMemoryName);
+			create_shared_memory_and_copy(eachListName, eachPriority.second, sharedMemoryName);
 		}
 	}
 }
@@ -172,7 +162,7 @@ void volume::collect_result_to_result_map(const int ascii, const string& full_pa
 	string list_name("list");
 	list_name += to_string(ascii_group);
 	CONCURRENT_MAP<int, CONCURRENT_QUEUE<string>&>* tmp_results;
-	CONCURRENT_QUEUE<string>* priority_str_list;
+	CONCURRENT_QUEUE<string>* priority_str_list = nullptr;
 	const int priority = get_priority_by_path(full_path);
 	try
 	{
@@ -196,7 +186,7 @@ void volume::collect_result_to_result_map(const int ascii, const string& full_pa
 			}
 		}
 	}
-	catch (exception&)
+	catch (out_of_range&)
 	{
 		static std::mutex add_list_lock;
 		std::lock_guard<std::mutex> lock_guard(add_list_lock);
@@ -225,17 +215,23 @@ void volume::collect_result_to_result_map(const int ascii, const string& full_pa
 			}
 		}
 	}
-	priority_str_list->push(full_path);
+	catch (exception& e)
+	{
+		cerr << e.what() << endl;
+	}
+	if (priority_str_list != nullptr)
+	{
+		priority_str_list->push(full_path);
+	}
 }
 
 void volume::set_complete_signal()
 {
-	const BOOL isAllDone = all_task_count->load() == complete_task_count->load();
-	memcpy_s(is_complete_ptr.load(), sizeof(BOOL), &isAllDone, sizeof(BOOL));
+	const BOOL is_all_done = all_task_count->load() == complete_task_count->load();
+	memcpy_s(is_complete_ptr.load(), sizeof(BOOL), &is_all_done, sizeof(BOOL));
 }
 
-
-void volume::create_shared_memory_and_copy(const string& list_name, const int priority, size_t* size,
+void volume::create_shared_memory_and_copy(const string& list_name, const int priority,
                                            const string& shared_memory_name)
 {
 	if (all_results_map.find(list_name) == all_results_map.end())
@@ -248,24 +244,29 @@ void volume::create_shared_memory_and_copy(const string& list_name, const int pr
 		return;
 	}
 	CONCURRENT_QUEUE<string>& result = table->at(priority);
-	size_t _size = result.unsafe_size();
-	_size = _size > MAX_RECORD_COUNT ? MAX_RECORD_COUNT : _size;
-	const size_t memorySize = _size * RECORD_MAX_PATH;
+	size_t resultSize = result.unsafe_size();
+	resultSize = resultSize > MAX_RECORD_COUNT ? MAX_RECORD_COUNT : resultSize;
+	const size_t memorySize = resultSize * RECORD_MAX_PATH;
 
 	// 创建共享文件句柄
 	HANDLE hMapFile;
 	LPVOID pBuf = nullptr;
 	create_file_mapping(hMapFile, pBuf, memorySize, shared_memory_name.c_str());
-	*size = memorySize;
 	if (pBuf == nullptr)
 	{
 		return;
 	}
-	long long count = 0;
-	for (auto iterator = result.unsafe_begin(); iterator != result.unsafe_end() && count <= MAX_RECORD_COUNT; ++
-	     iterator)
+	unsigned long long count = 0;
+	for (auto iterator = result.unsafe_begin();
+	     iterator != result.unsafe_end() && count <= MAX_RECORD_COUNT;
+	     ++iterator)
 	{
-		memcpy_s(reinterpret_cast<void*>(reinterpret_cast<long long>(pBuf) + count * RECORD_MAX_PATH), RECORD_MAX_PATH,
+		if (iterator->length() >= RECORD_MAX_PATH)
+		{
+			continue;
+		}
+		memcpy_s(reinterpret_cast<void*>(reinterpret_cast<unsigned long long>(pBuf) + count * RECORD_MAX_PATH),
+		         RECORD_MAX_PATH,
 		         iterator->c_str(), iterator->length());
 		++count;
 	}
@@ -319,8 +320,8 @@ void volume::init_single_prepare_statement(sqlite3_stmt** statement, const char*
 	const size_t ret = sqlite3_prepare_v2(db, init, static_cast<long>(strlen(init)), statement, nullptr);
 	if (SQLITE_OK != ret)
 	{
-		cout << "error preparing stmt \"" << init << "\"" << endl;
-		cout << "disk: " << this->getDiskPath() << endl;
+		cerr << "error preparing stmt \"" << init << "\"" << endl;
+		cerr << "disk: " << this->getDiskPath() << endl;
 	}
 }
 
@@ -619,6 +620,7 @@ bool volume::get_handle()
 	{
 		return true;
 	}
+	cerr << "create file handle failed. " << lpFileName << "error code: " << GetLastError() << endl;
 	return false;
 }
 
@@ -641,6 +643,7 @@ bool volume::create_usn()
 	{
 		return true;
 	}
+	cerr << "create usn error. Error code: " << GetLastError() << endl;
 	return false;
 }
 
@@ -661,6 +664,7 @@ bool volume::get_usn_info()
 	{
 		return true;
 	}
+	cerr << "query usn error. Error code: " << GetLastError() << endl;
 	return false;
 }
 
@@ -674,18 +678,16 @@ bool volume::get_usn_journal()
 	// 根目录
 	CString tmp(_T("C:"));
 	tmp.SetAt(0, vol);
-	frnPfrnNameMap[0x20000000000005].filename = tmp;
-	frnPfrnNameMap[0x20000000000005].pfrn = 0;
 
-	constexpr auto BUF_LEN = 0x3900; // 尽可能地大，提高效率;
+	constexpr auto BUF_LEN = sizeof(USN) + 0x10000; // 尽可能地大，提高效率;
 
-	CHAR Buffer[BUF_LEN];
+	CHAR* Buffer = new CHAR[BUF_LEN];
 	DWORD usnDataSize;
 
 	while (0 != DeviceIoControl(hVol,
 	                            FSCTL_ENUM_USN_DATA,
 	                            &med,
-	                            sizeof(med),
+	                            sizeof med,
 	                            Buffer,
 	                            BUF_LEN,
 	                            &usnDataSize,
@@ -693,7 +695,7 @@ bool volume::get_usn_journal()
 	{
 		DWORD dwRetBytes = usnDataSize - sizeof(USN);
 		// 找到第一个 USN 记录  
-		auto UsnRecord = reinterpret_cast<PUSN_RECORD>(static_cast<PCHAR>(Buffer) + sizeof(USN));
+		auto UsnRecord = reinterpret_cast<PUSN_RECORD>(Buffer + sizeof(USN));
 
 		while (dwRetBytes > 0)
 		{
@@ -702,7 +704,6 @@ bool volume::get_usn_journal()
 
 			pfrnName.filename = CfileName;
 			pfrnName.pfrn = UsnRecord->ParentFileReferenceNumber;
-
 			frnPfrnNameMap[UsnRecord->FileReferenceNumber] = pfrnName;
 			// 获取下一个记录  
 			const auto recordLen = UsnRecord->RecordLength;
@@ -710,8 +711,9 @@ bool volume::get_usn_journal()
 			UsnRecord = reinterpret_cast<PUSN_RECORD>(reinterpret_cast<PCHAR>(UsnRecord) + recordLen);
 		}
 		// 获取下一页数据 
-		med.StartFileReferenceNumber = *reinterpret_cast<USN*>(&Buffer);
+		med.StartFileReferenceNumber = *reinterpret_cast<DWORDLONG*>(Buffer);
 	}
+	delete[] Buffer;
 	return true;
 }
 
@@ -752,7 +754,7 @@ bool init_complete_signal_memory()
 	create_file_mapping(handle, tmp, sizeof(bool), "sharedMemory:complete:status");
 	if (tmp == nullptr)
 	{
-		cout << GetLastError() << endl;
+		cerr << GetLastError() << endl;
 		return false;
 	}
 	is_complete_ptr.store(tmp);
