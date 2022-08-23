@@ -64,7 +64,7 @@ public class DatabaseService {
     private final AtomicBoolean isReadFromSharedMemory = new AtomicBoolean(false);
     private final @Getter
     ConcurrentLinkedQueue<String> tempResults;  //在优先文件夹和数据库cache未搜索完时暂时保存结果，搜索完后会立即被转移到listResults
-    private final ConcurrentLinkedQueue<String> tempResultsForEvent; //在SearchDoneEvent中保存的容器
+    private final Set<String> tempResultsForEvent; //在SearchDoneEvent中保存的容器
     private final AtomicInteger tempResultsRecordCounter = new AtomicInteger();
     private final ConcurrentHashMap<String, ConcurrentLinkedQueue<String>> cudaCache = new ConcurrentHashMap<>();
     private final AtomicBoolean shouldStopSearch = new AtomicBoolean(true);
@@ -120,7 +120,7 @@ public class DatabaseService {
     private DatabaseService() {
         tableSet = ConcurrentHashMap.newKeySet();
         tempResults = new ConcurrentLinkedQueue<>();
-        tempResultsForEvent = new ConcurrentLinkedQueue<>();
+        tempResultsForEvent = ConcurrentHashMap.newKeySet();
     }
 
     private void invalidateAllCache() {
@@ -628,7 +628,7 @@ public class DatabaseService {
         if (PathMatchUtil.check(path, searchCase, isIgnoreCase, searchText, keywords, keywordsLowerCase, isKeywordPath)) {
             //字符串匹配通过
             ret = true;
-            if (!tempResults.contains(path)) {
+            if (!tempResultsForEvent.contains(path)) {
                 if (container == null) {
                     tempResults.add(path);
                     tempResultsForEvent.add(path);
@@ -734,9 +734,9 @@ public class DatabaseService {
      * @param taskStatus    实时更新的任务完成信息
      */
     private void waitForTaskAndMergeResults(LinkedHashMap<String, ConcurrentSkipListSet<String>> containerMap, Bit allTaskStatus, Bit taskStatus) {
+        final Bit zero = new Bit(new byte[]{0});
+        final Bit one = new Bit(new byte[]{1});
         CachedThreadPoolUtil.getInstance().executeTask(() -> {
-            Bit zero = new Bit(new byte[]{0});
-            Bit one = new Bit(new byte[]{1});
             int failedRetryTimes = 0;
             try {
                 while (!taskStatus.equals(allTaskStatus) && !shouldStopSearch.get()) {
@@ -762,9 +762,8 @@ public class DatabaseService {
                             results = containerMap.get(start.toString());
                             if (results != null) {
                                 for (String result : results) {
-                                    if (!tempResults.contains(result)) {
+                                    if (tempResultsForEvent.add(result)) {
                                         tempResults.add(result);
-                                        tempResultsForEvent.add(result);
                                         tempResultsRecordCounter.incrementAndGet();
                                         if (tempResultsRecordCounter.get() > MAX_RESULTS) {
                                             stopSearch();
