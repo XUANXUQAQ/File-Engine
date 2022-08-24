@@ -514,3 +514,4 @@ FodyWeavers.xsd
 *.sln.iml
 
 File-Engine.zip
+cudart64_*.dll

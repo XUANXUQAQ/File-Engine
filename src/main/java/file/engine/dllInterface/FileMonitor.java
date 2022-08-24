@@ -13,5 +13,7 @@ public enum FileMonitor {
 
     public native void stop_monitor();
 
-    public native void set_output(String path);
+    public native String pop_add_file();
+
+    public native String pop_del_file();
 }

@@ -356,6 +356,7 @@ public class PluginService {
             return;
         }
         Gson gson = GsonUtil.getInstance().getGson();
+        nextJar:
         for (File jar : files) {
             try (JarFile jarFile = new JarFile(jar)) {
                 Enumeration<?> enu = jarFile.entries();
@@ -382,6 +383,7 @@ public class PluginService {
                         } else {
                             REPEAT_PLUGINS.add(jar.getName());
                         }
+                        continue nextJar;
                     }
                 }
             } catch (IOException e) {

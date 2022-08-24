@@ -1,7 +1,13 @@
 package file.engine.configs;
 
+import file.engine.utils.system.properties.IsDebug;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Properties;
+
 public class Constants {
-    public static final String version = "3.5"; //更改版本号
+    public static String version;
 
     public static final int ALL_TABLE_NUM = 40;
 
@@ -18,6 +24,19 @@ public class Constants {
     public static final int[] COMPATIBLE_API_VERSIONS = {3, 4, 5, 6};
 
     public static final String DEFAULT_SWING_THEME = "MaterialLighter";
+
+    static {
+        version = "0";
+        if (!IsDebug.isDebug()) {
+            Properties properties = new Properties();
+            try (InputStream projectInfo = Constants.class.getResourceAsStream("/project-info.properties")) {
+                properties.load(projectInfo);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            version = properties.getProperty("project.version");
+        }
+    }
 
     public static class Enums {
 
@@ -43,10 +62,6 @@ public class Constants {
             NORMAL_SHOWING, EXPLORER_ATTACH
         }
 
-        public enum RunningMode {
-            NORMAL_MODE, COMMAND_MODE, PLUGIN_MODE
-        }
-
         public static class ProxyType {
             public static final int PROXY_HTTP = 0x100;
             public static final int PROXY_SOCKS = 0x200;
@@ -58,7 +73,8 @@ public class Constants {
             Arc, ArcDark, ArcDarkOrange, Carbon,
             CyanLight, DarkFlat, DarkPurple, Dracula,
             Gray, LightFlat, MaterialDesignDark, Monocai,
-            Nord, OneDark, MaterialDarker, MaterialLighter
+            Nord, OneDark, MaterialDarker, MaterialLighter, SolarizedDark, SolarizedLight,
+            Spacegray, Vuesion, XcodeDark
         }
 
         public enum BorderType {

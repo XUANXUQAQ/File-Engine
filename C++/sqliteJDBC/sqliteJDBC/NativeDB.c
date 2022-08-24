@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (c) 2007 David Crawshaw <david@zentus.com>
  * 
  * Permission to use, copy, modify, and/or distribute this software for any

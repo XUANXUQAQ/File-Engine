@@ -106,4 +106,7 @@ public class ConfigEntity {
 
     @SerializedName("isAttachExplorer")
     private boolean isAttachExplorer;
+
+    @SerializedName("isEnableCuda")
+    private boolean isEnableCuda;
 }

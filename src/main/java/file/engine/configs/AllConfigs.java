@@ -10,6 +10,7 @@ import com.formdev.flatlaf.intellijthemes.materialthemeuilite.FlatMaterialLighte
 import com.google.gson.Gson;
 import file.engine.annotation.EventListener;
 import file.engine.annotation.EventRegister;
+import file.engine.dllInterface.CudaAccelerator;
 import file.engine.dllInterface.IsLocalDisk;
 import file.engine.event.handler.Event;
 import file.engine.event.handler.EventManagement;
@@ -46,6 +47,7 @@ import java.util.*;
 
 import static file.engine.configs.Constants.DEFAULT_SWING_THEME;
 import static file.engine.configs.Constants.Enums;
+import static file.engine.utils.StartupUtil.hasStartup;
 
 /**
  * 保存软件运行时的所有配置信息
@@ -79,7 +81,7 @@ public class AllConfigs {
      * @return swingTheme枚举类实例
      */
     private Constants.Enums.SwingThemes swingThemesMapper(String swingTheme) {
-        if ("current".equals(swingTheme)) {
+        if (null == swingTheme || swingTheme.isEmpty()) {
             return swingThemesMapper(configEntity.getSwingTheme());
         }
         for (Constants.Enums.SwingThemes each : Constants.Enums.SwingThemes.values()) {
@@ -427,6 +429,15 @@ public class AllConfigs {
     }
 
     /**
+     * 是否启动GPU加速
+     *
+     * @return boolean
+     */
+    public boolean isEnableCuda() {
+        return configEntity.isEnableCuda();
+    }
+
+    /**
      * 初始化cmdSet
      */
     private void initCmdSetSettings() {
@@ -459,11 +470,6 @@ public class AllConfigs {
                 new AddressUrl(
                         "https://raw.githack.com/XUANXUQAQ/File-Engine-Version/master/version.json",
                         "https://raw.githack.com/XUANXUQAQ/File-Engine-Version/master/plugins.json"
-                ));
-        updateAddressMap.put("Gitee",
-                new AddressUrl(
-                        "https://gitee.com/XUANXUQAQ/file-engine-version/raw/master/version.json",
-                        "https://gitee.com/XUANXUQAQ/file-engine-version/raw/master/plugins.json"
                 ));
     }
 
@@ -523,6 +529,15 @@ public class AllConfigs {
             stringBuilder.append(each).append(",");
         }
         configEntity.setDisks(stringBuilder.toString());
+    }
+
+    private void readIsEnableCuda(Map<String, Object> settingsInJson) {
+        boolean isEnableCuda = getFromJson(settingsInJson, "isEnableCuda", true);
+        if (isEnableCuda) {
+            configEntity.setEnableCuda(CudaAccelerator.INSTANCE.isCudaAvailableOnSystem());
+        } else {
+            configEntity.setEnableCuda(false);
+        }
     }
 
     private void readIsAttachExplorer(Map<String, Object> settingsInJson) {
@@ -623,7 +638,7 @@ public class AllConfigs {
 
     private void readLanguage(Map<String, Object> settingsInJson) {
         TranslateService translateService = TranslateService.getInstance();
-        String language = getFromJson(settingsInJson, "language", translateService.getDefaultLang());
+        String language = getFromJson(settingsInJson, "language", TranslateService.getDefaultLang());
         configEntity.setLanguage(language);
         translateService.setLanguage(language);
     }
@@ -718,7 +733,7 @@ public class AllConfigs {
      * @param configEntity 配置
      * @return 错误信息
      */
-    private static String checkSettings(ConfigEntity configEntity) {
+    private static String checkPriorityFolder(ConfigEntity configEntity) {
         String priorityFolder = configEntity.getPriorityFolder();
         if (!priorityFolder.isEmpty() && !Files.exists(Path.of(priorityFolder))) {
             return "Priority folder does not exist";
@@ -762,6 +777,7 @@ public class AllConfigs {
         readDisks(settingsInJson);
         readCheckUpdateStartup(settingsInJson);
         readBorderThickness(settingsInJson);
+        readIsEnableCuda(settingsInJson);
         initUpdateAddress();
         initCmdSetSettings();
     }
@@ -795,46 +811,82 @@ public class AllConfigs {
      */
     private static void setSwingLaf(Constants.Enums.SwingThemes theme) {
         SwingUtilities.invokeLater(() -> {
-            if (theme == Constants.Enums.SwingThemes.CoreFlatIntelliJLaf) {
-                FlatIntelliJLaf.setup();
-            } else if (theme == Constants.Enums.SwingThemes.CoreFlatLightLaf) {
-                FlatLightLaf.setup();
-            } else if (theme == Constants.Enums.SwingThemes.CoreFlatDarkLaf) {
-                FlatDarkLaf.setup();
-            } else if (theme == Constants.Enums.SwingThemes.Arc) {
-                FlatArcIJTheme.setup();
-            } else if (theme == Constants.Enums.SwingThemes.ArcDark) {
-                FlatArcDarkIJTheme.setup();
-            } else if (theme == Constants.Enums.SwingThemes.DarkFlat) {
-                FlatDarkFlatIJTheme.setup();
-            } else if (theme == Constants.Enums.SwingThemes.Carbon) {
-                FlatCarbonIJTheme.setup();
-            } else if (theme == Constants.Enums.SwingThemes.CyanLight) {
-                FlatCyanLightIJTheme.setup();
-            } else if (theme == Constants.Enums.SwingThemes.DarkPurple) {
-                FlatDarkPurpleIJTheme.setup();
-            } else if (theme == Constants.Enums.SwingThemes.LightFlat) {
-                FlatLightFlatIJTheme.setup();
-            } else if (theme == Constants.Enums.SwingThemes.Monocai) {
-                FlatMonocaiIJTheme.setup();
-            } else if (theme == Constants.Enums.SwingThemes.OneDark) {
-                FlatOneDarkIJTheme.setup();
-            } else if (theme == Constants.Enums.SwingThemes.Gray) {
-                FlatGrayIJTheme.setup();
-            } else if (theme == Constants.Enums.SwingThemes.MaterialDesignDark) {
-                FlatMaterialDesignDarkIJTheme.setup();
-            } else if (theme == Constants.Enums.SwingThemes.MaterialLighter) {
-                FlatMaterialLighterIJTheme.setup();
-            } else if (theme == Constants.Enums.SwingThemes.MaterialDarker) {
-                FlatMaterialDarkerIJTheme.setup();
-            } else if (theme == Constants.Enums.SwingThemes.ArcDarkOrange) {
-                FlatArcDarkOrangeIJTheme.setup();
-            } else if (theme == Constants.Enums.SwingThemes.Dracula) {
-                FlatDraculaIJTheme.setup();
-            } else if (theme == Constants.Enums.SwingThemes.Nord) {
-                FlatNordIJTheme.setup();
-            } else {
-                FlatDarculaLaf.setup();
+            switch (theme) {
+                case CoreFlatIntelliJLaf:
+                    FlatIntelliJLaf.setup();
+                    break;
+                case CoreFlatLightLaf:
+                    FlatLightLaf.setup();
+                    break;
+                case CoreFlatDarkLaf:
+                    FlatDarkLaf.setup();
+                    break;
+                case Arc:
+                    FlatArcIJTheme.setup();
+                    break;
+                case ArcDark:
+                    FlatArcDarkIJTheme.setup();
+                    break;
+                case DarkFlat:
+                    FlatDarkFlatIJTheme.setup();
+                    break;
+                case Carbon:
+                    FlatCarbonIJTheme.setup();
+                    break;
+                case CyanLight:
+                    FlatCyanLightIJTheme.setup();
+                    break;
+                case DarkPurple:
+                    FlatDarkPurpleIJTheme.setup();
+                    break;
+                case LightFlat:
+                    FlatLightFlatIJTheme.setup();
+                    break;
+                case Monocai:
+                    FlatMonocaiIJTheme.setup();
+                    break;
+                case OneDark:
+                    FlatOneDarkIJTheme.setup();
+                    break;
+                case Gray:
+                    FlatGrayIJTheme.setup();
+                    break;
+                case MaterialDesignDark:
+                    FlatMaterialDesignDarkIJTheme.setup();
+                    break;
+                case MaterialLighter:
+                    FlatMaterialLighterIJTheme.setup();
+                    break;
+                case MaterialDarker:
+                    FlatMaterialDarkerIJTheme.setup();
+                    break;
+                case ArcDarkOrange:
+                    FlatArcDarkOrangeIJTheme.setup();
+                    break;
+                case Dracula:
+                    FlatDraculaIJTheme.setup();
+                    break;
+                case Nord:
+                    FlatNordIJTheme.setup();
+                    break;
+                case SolarizedDark:
+                    FlatSolarizedDarkIJTheme.setup();
+                    break;
+                case SolarizedLight:
+                    FlatSolarizedLightIJTheme.setup();
+                    break;
+                case Vuesion:
+                    FlatVuesionIJTheme.setup();
+                    break;
+                case XcodeDark:
+                    FlatXcodeDarkIJTheme.setup();
+                    break;
+                case Spacegray:
+                    FlatSpacegrayIJTheme.setup();
+                    break;
+                default:
+                    FlatDarculaLaf.setup();
+                    break;
             }
             ArrayList<Component> components = new ArrayList<>(Arrays.asList(JFrame.getFrames()));
             EventManagement eventManagement = EventManagement.getInstance();
@@ -883,6 +935,16 @@ public class AllConfigs {
             return false;
         }
         return true;
+    }
+
+    /**
+     * 检查系统是否支持cuda加速，不支持则将isEnableCuda设置为false
+     * @param configEntity configEntity
+     */
+    private void checkCudaSetting(ConfigEntity configEntity) {
+        if (configEntity.isEnableCuda()) {
+            configEntity.setEnableCuda(CudaAccelerator.INSTANCE.isCudaAvailableOnSystem());
+        }
     }
 
     /**
@@ -953,14 +1015,14 @@ public class AllConfigs {
     }
 
     @EventRegister(registerClass = DeleteCmdEvent.class)
-    private static void DeleteCmdEvent(Event event) {
+    private static void deleteCmdEvent(Event event) {
         AllConfigs allConfigs = AllConfigs.getInstance();
         DeleteCmdEvent deleteCmdEvent = (DeleteCmdEvent) event;
         allConfigs.cmdSet.remove(deleteCmdEvent.cmd);
     }
 
     @EventRegister(registerClass = ReadConfigsEvent.class)
-    private static void ReadConfigsEvent(Event event) {
+    private static void readConfigsEvent(Event event) {
         AllConfigs allConfigs = AllConfigs.getInstance();
         allConfigs.readAllSettings();
         allConfigs.saveAllSettings();
@@ -968,23 +1030,32 @@ public class AllConfigs {
 
     @EventRegister(registerClass = CheckConfigsEvent.class)
     private static void checkConfigsEvent(Event event) {
-        event.setReturnValue(checkSettings(getInstance().configEntity));
+        StringBuilder stringBuilder = new StringBuilder();
+        TranslateService translateService = TranslateService.INSTANCE;
+        stringBuilder.append(translateService.getTranslation(checkPriorityFolder(getInstance().configEntity)));
+        if (!stringBuilder.toString().isEmpty()) {
+            stringBuilder.append("\n");
+        }
+        if (hasStartup() == 1) {
+            stringBuilder.append(translateService.getTranslation("The startup path is invalid"));
+        }
+        event.setReturnValue(stringBuilder.toString());
     }
 
     @EventRegister(registerClass = BootSystemEvent.class)
-    private static void BootSystemEvent(Event event) {
+    private static void bootSystemEvent(Event event) {
         EventManagement eventManagement = EventManagement.getInstance();
         eventManagement.putEvent(new StartMonitorDiskEvent());
         eventManagement.putEvent(new ShowTrayIconEvent());
         eventManagement.putEvent(new LoadAllPluginsEvent("plugins"));
-        eventManagement.putEvent(new SetSwingLaf("current"));
+        eventManagement.putEvent(new SetSwingLaf());
         if (isFirstRunApp) {
             checkRunningDirAtDiskC();
         }
     }
 
     @EventRegister(registerClass = SetConfigsEvent.class)
-    private static void SetAllConfigsEvent(Event event) {
+    private static void setAllConfigsEvent(Event event) {
         getInstance().setAllSettings();
     }
 
@@ -1000,6 +1071,7 @@ public class AllConfigs {
         AllConfigs allConfigs = getInstance();
         ConfigEntity tempConfigEntity = ((SaveConfigsEvent) event).configEntity;
         if (allConfigs.noNullValue(tempConfigEntity)) {
+            allConfigs.checkCudaSetting(tempConfigEntity);
             allConfigs.configEntity = tempConfigEntity;
             allConfigs.saveAllSettings();
         } else {

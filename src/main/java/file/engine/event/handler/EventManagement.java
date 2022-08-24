@@ -7,8 +7,8 @@ import file.engine.event.handler.impl.plugin.EventProcessedBroadcastEvent;
 import file.engine.event.handler.impl.plugin.PluginRegisterEvent;
 import file.engine.event.handler.impl.stop.CloseEvent;
 import file.engine.event.handler.impl.stop.RestartEvent;
+import file.engine.services.utils.DaemonUtil;
 import file.engine.utils.CachedThreadPoolUtil;
-import file.engine.utils.ProcessUtil;
 import file.engine.utils.clazz.scan.ClassScannerUtil;
 import file.engine.utils.system.properties.IsDebug;
 
@@ -43,12 +43,11 @@ public class EventManagement {
     private final ConcurrentHashMap<String, BiConsumer<Class<?>, Object>> PLUGIN_EVENT_HANDLER_MAP = new ConcurrentHashMap<>();
     private final AtomicInteger failureEventNum = new AtomicInteger(0);
     private HashSet<String> classesList = new HashSet<>();
-    public static final int asyncThreadNum = 2;
+    private static final int ASYNC_THREAD_NUM = Runtime.getRuntime().availableProcessors();
 
     private EventManagement() {
         startBlockEventHandler();
         startAsyncEventHandler();
-        readClassList();
     }
 
     public static EventManagement getInstance() {
@@ -60,19 +59,6 @@ public class EventManagement {
             }
         }
         return instance;
-    }
-
-    private void readClassList() {
-        try (BufferedReader reader = new BufferedReader(
-                new InputStreamReader(
-                        Objects.requireNonNull(EventManagement.class.getResourceAsStream("/classes.list")), StandardCharsets.UTF_8))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                classesList.add(line);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
     public void unregisterPluginHandler(String className) {
@@ -91,7 +77,7 @@ public class EventManagement {
      */
     public boolean waitForEvent(Event event) {
         try {
-            final long timeout = 20000; // 20s
+            final long timeout = 20_000; // 20s
             long startTime = System.currentTimeMillis();
             while (!event.isFailed() && !event.isFinished()) {
                 if (System.currentTimeMillis() - startTime > timeout) {
@@ -115,7 +101,7 @@ public class EventManagement {
         exit.set(true);
         doAllMethod(RestartEvent.class.getName(), event);
         if (event instanceof CloseEvent) {
-            ProcessUtil.stopDaemon();
+            DaemonUtil.stopDaemon();
         }
         event.setFinished();
         CachedThreadPoolUtil.getInstance().shutdown();
@@ -153,10 +139,15 @@ public class EventManagement {
         }
         BiConsumer<Class<?>, Object> pluginHandler = PLUGIN_EVENT_HANDLER_MAP.get(eventClassName);
         if (pluginHandler != null) {
-            pluginHandler.accept(event.getClass(), event);
-            doAllMethod(eventClassName, event);
-            event.setFinished();
-            return false;
+            try {
+                pluginHandler.accept(event.getClass(), event);
+                doAllMethod(eventClassName, event);
+                event.setFinished();
+                return false;
+            } catch (Exception e) {
+                e.printStackTrace();
+                return true;
+            }
         } else {
             Method eventHandler = EVENT_HANDLER_MAP.get(eventClassName);
             if (eventHandler != null) {
@@ -229,7 +220,8 @@ public class EventManagement {
                     if (eventParam == null) {
                         continue;
                     }
-                    if (!parameterType.equals(eventParam.getClass())) {
+                    Class<?> eventParamClass = eventParam.getClass();
+                    if (!parameterType.isAssignableFrom(eventParamClass)) {
                         continue outer;
                     }
                 }
@@ -286,15 +278,13 @@ public class EventManagement {
         if (methodChains == null) {
             return;
         }
-        CachedThreadPoolUtil.getInstance().executeTask(() -> {
-            for (Method each : methodChains) {
-                try {
-                    each.invoke(null, event);
-                } catch (IllegalAccessException | InvocationTargetException e) {
-                    e.printStackTrace();
-                }
+        for (Method each : methodChains) {
+            try {
+                each.invoke(null, event);
+            } catch (IllegalAccessException | InvocationTargetException e) {
+                e.printStackTrace();
             }
-        });
+        }
     }
 
     /**
@@ -339,6 +329,10 @@ public class EventManagement {
         putEvent(event);
     }
 
+    /**
+     * 全局系统退出标志，用于常驻循环判断标志
+     * @return true如果系统未退出
+     */
     public boolean notMainExit() {
         return !exit.get();
     }
@@ -359,7 +353,11 @@ public class EventManagement {
                         throw new RuntimeException("注册handler方法参数错误" + method);
                     }
                 }
-                registerHandler(annotation.registerClass().getName(), method);
+                String registerClassName = annotation.registerClass().getName();
+                if (RestartEvent.class.getName().equals(registerClassName) || CloseEvent.class.getName().equals(registerClassName)) {
+                    throw new RuntimeException("RestartEvent和CloseEvent不可被注册事件处理器");
+                }
+                registerHandler(registerClassName, method);
             };
             if (IsDebug.isDebug()) {
                 ClassScannerUtil.searchAndRun(EventRegister.class, registerMethod);
@@ -423,6 +421,19 @@ public class EventManagement {
         }
     }
 
+    public void readClassList() {
+        try (BufferedReader reader = new BufferedReader(
+                new InputStreamReader(
+                        Objects.requireNonNull(EventManagement.class.getResourceAsStream("/classes.list")), StandardCharsets.UTF_8))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                classesList.add(line);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     public void releaseClassesList() {
         classesList = null;
     }
@@ -467,8 +478,8 @@ public class EventManagement {
      */
     private void startAsyncEventHandler() {
         CachedThreadPoolUtil threadPoolUtil = CachedThreadPoolUtil.getInstance();
-        for (int i = 0; i < asyncThreadNum; i++) {
-            threadPoolUtil.executeTask(() -> eventHandle(asyncEventQueue), false);
+        for (int i = 0; i < ASYNC_THREAD_NUM; i++) {
+            threadPoolUtil.executeTask(() -> eventHandle(asyncEventQueue));
         }
     }
 
@@ -485,7 +496,7 @@ public class EventManagement {
      * 开启同步任务事件处理中心
      */
     private void startBlockEventHandler() {
-        Thread.ofPlatform().start(() -> eventHandle(blockEventQueue));
+        new Thread(() -> eventHandle(blockEventQueue)).start();
     }
 
     private void eventHandle(ConcurrentLinkedQueue<Event> eventQueue) {
@@ -515,7 +526,7 @@ public class EventManagement {
                         eventQueue.add(event);
                     } else {
                         // 任务执行成功
-                        if (!EventProcessedBroadcastEvent.class.equals(event.getClass())) {
+                        if (!(event instanceof EventProcessedBroadcastEvent)) {
                             putEvent(new EventProcessedBroadcastEvent(event.getClass(), event));
                         }
                     }

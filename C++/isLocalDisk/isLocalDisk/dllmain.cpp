@@ -13,14 +13,18 @@ extern "C" __declspec(dllexport) BOOL isDiskNTFS(const char* disk);
 JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_IsLocalDisk_isLocalDisk
 (JNIEnv* env, jobject, jstring path)
 {
-	const BOOL isLocalDiskVal = isLocalDisk(env->GetStringUTFChars(path, nullptr));
+	const char* tmp_path = env->GetStringUTFChars(path, nullptr);
+	const BOOL isLocalDiskVal = isLocalDisk(tmp_path);
+	env->ReleaseStringUTFChars(path, tmp_path);
 	return static_cast<jboolean>(isLocalDiskVal);
 }
 
 JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_IsLocalDisk_isDiskNTFS
 (JNIEnv* env, jobject, jstring disk)
 {
-	const BOOL tmp = isDiskNTFS(env->GetStringUTFChars(disk, nullptr));
+	const char* tmp_disk = env->GetStringUTFChars(disk, nullptr);
+	const BOOL tmp = isDiskNTFS(tmp_disk);
+	env->ReleaseStringUTFChars(disk, tmp_disk);
 	return static_cast<jboolean>(tmp);
 }
 

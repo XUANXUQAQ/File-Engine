@@ -36,4 +36,6 @@ public enum GetHandle {
     public native boolean isKeyPressed(int vk_key);
 
     public native boolean isForegroundFullscreen();
+
+    public native void setEditPath(String path);
 }

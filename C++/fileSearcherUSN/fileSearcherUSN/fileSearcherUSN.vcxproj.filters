@@ -15,7 +15,13 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="fileSearcherUSN.cpp">
+    <ClCompile Include="file_searcher_usn.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="search.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="string_to_utf8.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
@@ -27,6 +33,15 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="sqlite3.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="file_search_usn.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="string_to_utf8.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="constants.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

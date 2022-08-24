@@ -1,5 +1,6 @@
-package file.engine.utils;
+package file.engine.services.utils;
 
+import file.engine.utils.PinyinUtil;
 import file.engine.utils.file.FileUtil;
 
 import java.nio.file.Files;
@@ -76,17 +77,17 @@ public class PathMatchUtil {
         Path pathVar = Path.of(path);
         for (String eachCase : searchCase) {
             switch (eachCase) {
-                case "f":
+                case SearchCase.F:
                     if (!Files.isRegularFile(pathVar)) {
                         return false;
                     }
                     break;
-                case "d":
+                case SearchCase.D:
                     if (!Files.isDirectory(pathVar)) {
                         return false;
                     }
                     break;
-                case "full":
+                case SearchCase.FULL:
                     if (!searchText.equalsIgnoreCase(FileUtil.getFileName(path))) {
                         return false;
                     }
@@ -97,5 +98,12 @@ public class PathMatchUtil {
         }
         //所有规则均已匹配
         return true;
+    }
+
+    public static class SearchCase {
+        public static final String D = "d";
+        public static final String F = "f";
+        public static final String FULL = "full";
+        public static final String CASE = "case";
     }
 }

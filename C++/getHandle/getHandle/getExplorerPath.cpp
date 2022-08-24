@@ -1,4 +1,4 @@
-#include "pch.h"
+ï»¿#include "pch.h"
 
 #include <algorithm>
 #include <Windows.h>
@@ -8,6 +8,7 @@
 #include <vector>
 #include <system_error>
 #include <memory>
+#include "string_to_utf8.h"
 #pragma comment(lib, "shell32")
 #pragma comment(lib, "Ole32")
 #pragma comment(lib, "OleAut32")
@@ -110,41 +111,9 @@ std::vector< ExplorerFolderInfo > GetCurrentExplorerFolders()
     return result;
 }
 
-std::string to_utf8(const wchar_t* buffer, int len)
-{
-	const auto n_chars = WideCharToMultiByte(
-        CP_UTF8,
-        0,
-        buffer,
-        len,
-        nullptr,
-        0,
-        nullptr,
-        nullptr);
-    if (n_chars == 0)
-    {
-        return "";
-    }
-    std::string new_buffer;
-    new_buffer.resize(n_chars);
-    WideCharToMultiByte(
-        CP_UTF8,
-        0,
-        buffer,
-        len,
-        const_cast<char*>(new_buffer.c_str()),
-        n_chars,
-        nullptr,
-        nullptr);
-
-    return new_buffer;
-}
-
-std::string to_utf8(const std::wstring& str)
-{
-    return to_utf8(str.c_str(), static_cast<int>(str.size()));
-}
-
+/**
+ * è·å–explorerçª—å£å½“å‰æ˜¾ç¤ºçš„è·¯å¾„
+ */
 std::string getPathByHWND(const HWND& hwnd)
 {
     if (!IsWindow(hwnd))
@@ -152,14 +121,14 @@ std::string getPathByHWND(const HWND& hwnd)
         std::cout << "hwnd is not valid" << std::endl;
         return "";
     }
-    //ÅĞ¶ÏÊÇ·ñÊÇ×ÀÃæ´°¿Ú¾ä±ú
+    //åˆ¤æ–­æ˜¯å¦æ˜¯æ¡Œé¢çª—å£å¥æŸ„
     char windowClassName[260];
     GetClassNameA(hwnd, windowClassName, 260);
     std::string window_class_name_str(windowClassName);
     std::transform(window_class_name_str.begin(), window_class_name_str.end(), window_class_name_str.begin(), ::tolower);
     if (window_class_name_str.find("workerw") != std::string::npos)
     {
-        //·µ»Ø×ÀÃæÎ»ÖÃ
+        //è¿”å›æ¡Œé¢ä½ç½®
         WCHAR path[260];
         SHGetSpecialFolderPath(nullptr, path, CSIDL_DESKTOP, 0);
         return to_utf8(path);

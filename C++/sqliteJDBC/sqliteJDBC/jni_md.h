@@ -1,4 +1,4 @@
-/*
+﻿/*
  * @(#)jni_md.h	1.14 03/12/19
  *
  * Copyright 2004 Sun Microsystems, Inc. All rights reserved.

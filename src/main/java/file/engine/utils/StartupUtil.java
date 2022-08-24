@@ -7,11 +7,13 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -71,23 +73,53 @@ public class StartupUtil {
         }
     }
 
+    /*
+      添加到开机启动
+
+      @return Process
+     * @throws IOException          exception
+     * @throws InterruptedException exception
+     */
+//    public static Process addStartup() throws IOException, InterruptedException {
+//        String command = "cmd.exe /c schtasks /create /ru \"administrators\" /rl HIGHEST /sc ONLOGON /tn \"File-Engine\" /tr ";
+//        String parentPath = FileUtil.getParentPath(new File("").getAbsolutePath());
+//        File fileEngine = new File(parentPath + File.separator + Constants.LAUNCH_WRAPPER_NAME);
+//        String absolutePath = fileEngine.getAbsolutePath();
+//        command += "\"'" + absolutePath + "'\"";
+//        Process p;
+//        p = Runtime.getRuntime().exec(command);
+//        p.waitFor();
+//        return p;
+//    }
+
     /**
      * 添加到开机启动
      *
      * @return Process
-     * @throws IOException          exception
+     * @throws IOException          文件创建失败
      * @throws InterruptedException exception
      */
-    public static Process addStartup() throws IOException, InterruptedException {
-        String command = "cmd.exe /c schtasks /create /ru \"administrators\" /rl HIGHEST /sc ONLOGON /tn \"File-Engine\" /tr ";
+    public static Process addStartupByXml() throws IOException, InterruptedException {
         String parentPath = FileUtil.getParentPath(new File("").getAbsolutePath());
         File fileEngine = new File(parentPath + File.separator + Constants.LAUNCH_WRAPPER_NAME);
         String absolutePath = fileEngine.getAbsolutePath();
-        command += "\"'" + absolutePath + "'\"";
-        Process p;
-        p = Runtime.getRuntime().exec(command);
-        p.waitFor();
-        return p;
+        StringBuilder builder = new StringBuilder();
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(Objects.requireNonNull(StartupUtil.class.getResourceAsStream("/schtasks.xml")),
+                StandardCharsets.UTF_16LE))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                builder.append(line);
+            }
+        }
+        String xmlContent = builder.toString();
+        xmlContent = String.format(xmlContent, absolutePath);
+        String tmpDir = new File("").getAbsolutePath().contains(" ") ? System.getProperty("java.io.tmpdir") : new File("tmp").getAbsolutePath();
+        Path xmlPath = Path.of(tmpDir, "schtasks-File-Engine.xml");
+        Files.writeString(xmlPath, xmlContent, StandardCharsets.UTF_16LE);
+        String command = String.format("cmd.exe /c schtasks /create /xml %s /tn \"File-Engine\"", xmlPath.getFileName());
+        Process exec = Runtime.getRuntime().exec(command, null, new File(tmpDir));
+        exec.waitFor();
+        return exec;
     }
 
     /**
@@ -107,9 +139,10 @@ public class StartupUtil {
 
     /**
      * 解析schtasks返回的结果字符串为Map
+     *
      * @param separator 分隔符
-     * @param keys 所有的key，用分隔符连接在一起
-     * @param results 所有的result，用分隔符连接在一起
+     * @param keys      所有的key，用分隔符连接在一起
+     * @param results   所有的result，用分隔符连接在一起
      * @return Map
      */
     private static Map<String, String> parseResults(String separator, String keys, String results) {
