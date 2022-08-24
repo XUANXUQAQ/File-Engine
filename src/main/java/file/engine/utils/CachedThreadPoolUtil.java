@@ -7,6 +7,7 @@ public enum CachedThreadPoolUtil {
     INSTANCE;
     private static final int THREAD_POOL_AWAIT_TIMEOUT = 10;
     private final ExecutorService platformThreadPool;
+    private final ExecutorService virtualThreadPool;
     private final AtomicBoolean isShutdown = new AtomicBoolean(false);
 
     CachedThreadPoolUtil() {
@@ -37,58 +38,58 @@ public enum CachedThreadPoolUtil {
 
     /**
      * 提交任务
-     * @param todo 任务
+     * @param task 任务
      * @return Future
      */
-    public <T> Future<T> executeTask(Callable<T> todo) {
+    public <T> Future<T> executeTask(Callable<T> task) {
         if (isShutdown.get()) {
             return null;
         }
-        return virtualThreadPool.submit(todo);
+        return virtualThreadPool.submit(task);
     }
 
     /**
      * 提交任务
-     * @param todo 任务
+     * @param task 任务
      * @param isVirtualThread 是否使用虚拟线程
      * @return Future
      */
-    public <T> Future<T> executeTask(Callable<T> todo, boolean isVirtualThread) {
+    public <T> Future<T> executeTask(Callable<T> task, boolean isVirtualThread) {
         if (isShutdown.get()) {
             return null;
         }
         if (isVirtualThread) {
-            return executeTask(todo);
+            return executeTask(task);
         } else {
-            return platformThreadPool.submit(todo);
+            return platformThreadPool.submit(task);
         }
     }
 
     /**
      * 提交任务
-     * @param todo 任务
+     * @param task 任务
      * @param isVirtualThread 是否使用虚拟线程
      */
-    public void executeTask(Runnable todo, boolean isVirtualThread) {
+    public void executeTask(Runnable task, boolean isVirtualThread) {
         if (isShutdown.get()) {
             return;
         }
         if (isVirtualThread) {
-            executeTask(todo);
+            executeTask(task);
         } else {
-            platformThreadPool.submit(todo);
+            platformThreadPool.submit(task);
         }
     }
 
     /**
      * 使用虚拟线程提交任务
-     * @param todo 任务
+     * @param task 任务
      */
-    public void executeTask(Runnable todo) {
+    public void executeTask(Runnable task) {
         if (isShutdown.get()) {
             return;
         }
-        virtualThreadPool.submit(todo);
+        virtualThreadPool.submit(task);
     }
 
     /**
