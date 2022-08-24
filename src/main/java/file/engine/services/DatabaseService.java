@@ -84,7 +84,7 @@ public class DatabaseService {
     private final ConcurrentSkipListSet<String> databaseCacheSet = new ConcurrentSkipListSet<>();
     private final AtomicInteger searchThreadCount = new AtomicInteger(0);
     private final AtomicLong startSearchTimeMills = new AtomicLong(0);
-    private static final int MAX_TEMP_QUERY_RESULT_CACHE = 4096;
+    private static final int MAX_TEMP_QUERY_RESULT_CACHE = 8192;
     private static final int MAX_CACHED_RECORD_NUM = 10240 * 5;
     private static final int MAX_SQL_NUM = 5000;
     private static final int MAX_RESULTS = 500;
@@ -660,7 +660,7 @@ public class DatabaseService {
             while (resultSet.next()) {
                 int i = 0;
                 // 先将结果查询出来，再进行字符串匹配，提高吞吐量
-                tmpQueryResultsCache = new ArrayList<>(MAX_TEMP_QUERY_RESULT_CACHE / 2);
+                tmpQueryResultsCache = new ArrayList<>(MAX_TEMP_QUERY_RESULT_CACHE);
                 do {
                     tmpQueryResultsCache.add(resultSet.getString("PATH"));
                     ++i;
@@ -1069,7 +1069,7 @@ public class DatabaseService {
         }
         taskMap.forEach((disk, taskQueue) -> {
             CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
-            for (int i = 0; i < 4; i++) {
+            for (int i = 0; i < 4; ++i) {
                 cachedThreadPoolUtil.executeTask(() -> {
                     Runnable runnable;
                     while ((runnable = taskQueue.poll()) != null) {
