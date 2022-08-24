@@ -670,7 +670,7 @@ public class DatabaseService {
                 if (shouldStopSearch.get()) {
                     return matchedResultCount;
                 }
-                matchedResultCount += tmpQueryResultsCache.stream()
+                matchedResultCount += tmpQueryResultsCache.parallelStream()
                         .filter(each -> checkIsMatchedAndAddToList(each, container))
                         .count();
             }
@@ -936,9 +936,9 @@ public class DatabaseService {
                                     } else {
                                         List<String> searchCaseList = Arrays.asList(searchCase);
                                         if (searchCaseList.contains(PathMatchUtil.SearchCase.D)) {
-                                            matchedNum = strings.stream().filter(e -> Files.isDirectory(Path.of(e))).filter(container::add).count();
+                                            matchedNum = strings.parallelStream().filter(e -> Files.isDirectory(Path.of(e))).filter(container::add).count();
                                         } else if (searchCaseList.contains(PathMatchUtil.SearchCase.F)) {
-                                            matchedNum = strings.stream().filter(FileUtil::isFile).filter(container::add).count();
+                                            matchedNum = strings.parallelStream().filter(FileUtil::isFile).filter(container::add).count();
                                         } else {
                                             container.addAll(strings);
                                             matchedNum = strings.size();
@@ -953,7 +953,7 @@ public class DatabaseService {
                                     if (IsDebug.isDebug()) {
                                         System.out.println("从缓存中读取 " + key);
                                     }
-                                    matchedNum = cache.data.stream()
+                                    matchedNum = cache.data.parallelStream()
                                             .filter(record -> checkIsMatchedAndAddToList(record, container))
                                             .count();
                                 } else {
