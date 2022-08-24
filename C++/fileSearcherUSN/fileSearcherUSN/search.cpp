@@ -45,7 +45,16 @@ void volume::init_volume()
 		delete_usn()
 	)
 	{
-		auto collect_internal = [this](Frn_Pfrn_Name_Map::iterator iter)
+		SYSTEM_INFO sys_info;
+		GetSystemInfo(&sys_info);
+		const auto thread_num = sys_info.dwNumberOfProcessors;
+		const auto map_size = frnPfrnNameMap.size();
+		const auto split_size = map_size / thread_num;
+#ifdef TEST
+		cout << "starting " << thread_num << " threads to collect results" << endl;
+		cout << "fileMap size: " << map_size << endl;
+#endif
+		auto collect_internal = [this](const Frn_Pfrn_Name_Map::iterator& iter)
 		{
 			const auto& name = iter->second.filename;
 			const int ascii = get_asc_ii_sum(to_utf8(wstring(name)));
@@ -58,49 +67,40 @@ void volume::init_volume()
 				collect_result_to_result_map(ascii, full_path);
 			}
 		};
-		try
+		auto search_internal = [split_size, this, collect_internal](const int pre_loop_count,
+		                                                            const bool is_loop_to_end)
 		{
-			SYSTEM_INFO sys_info;
-			GetSystemInfo(&sys_info);
-			const auto thread_num = sys_info.dwNumberOfProcessors;
-			const auto map_size = frnPfrnNameMap.size();
-			const auto split_size = map_size / thread_num;
-			vector<thread> thread_vec;
-#ifdef TEST
-			cout << "starting " << thread_num << " threads to collect results" << endl;
-			cout << "fileMap size: " << map_size << endl;
-#endif
-			auto search_internal = [split_size, this, collect_internal](int pre_loop_count)
+			auto start_iter = frnPfrnNameMap.begin();
+			for (size_t i = 0; i < split_size * pre_loop_count; ++i)
 			{
-				auto start_iter = frnPfrnNameMap.begin();
-				for (size_t i = 0; i < split_size * pre_loop_count; ++i)
-				{
-					++start_iter;
-				}
-				for (size_t i = 0; i < split_size; ++i)
-				{
-					collect_internal(start_iter);
-					++start_iter;
-				}
-			};
-			for (DWORD i = 0; i < thread_num - 1; ++i)
-			{
-				thread_vec.emplace_back(thread(search_internal, i));
+				++start_iter;
 			}
-			thread t([split_size, this, collect_internal, thread_num]
+			if (is_loop_to_end)
 			{
-				auto start_iter = frnPfrnNameMap.begin();
 				auto end_iter = frnPfrnNameMap.end();
-				for (size_t i = 0; i < split_size * (static_cast<size_t>(thread_num) - 1); ++i)
-				{
-					++start_iter;
-				}
 				while (start_iter != end_iter)
 				{
 					collect_internal(start_iter);
 					++start_iter;
 				}
-			});
+			}
+			else
+			{
+				for (size_t i = 0; i < split_size; ++i)
+				{
+					collect_internal(start_iter);
+					++start_iter;
+				}
+			}
+		};
+		try
+		{
+			vector<thread> thread_vec;
+			for (DWORD i = 0; i < thread_num - 1; ++i)
+			{
+				thread_vec.emplace_back(thread(search_internal, i, false));
+			}
+			thread loop_to_end_thread(search_internal, thread_num - 1, true);
 			for (auto& each : thread_vec)
 			{
 				if (each.joinable())
@@ -108,9 +108,9 @@ void volume::init_volume()
 					each.join();
 				}
 			}
-			if (t.joinable())
+			if (loop_to_end_thread.joinable())
 			{
-				t.join();
+				loop_to_end_thread.join();
 			}
 		}
 		catch (exception& e)
@@ -681,10 +681,11 @@ bool volume::get_usn_journal()
 	CString tmp(_T("C:"));
 	tmp.SetAt(0, vol);
 
-	constexpr auto BUF_LEN = sizeof(USN) + 0x10000; // 尽可能地大，提高效率;
+	constexpr auto BUF_LEN = sizeof(USN) + 0x100000; // 尽可能地大，提高效率;
 
 	CHAR* Buffer = new CHAR[BUF_LEN];
 	DWORD usnDataSize;
+	pfrn_name pfrnName;
 
 	while (0 != DeviceIoControl(hVol,
 	                            FSCTL_ENUM_USN_DATA,
@@ -703,10 +704,10 @@ bool volume::get_usn_journal()
 		{
 			// 获取到的信息  	
 			const CString CfileName(UsnRecord->FileName, UsnRecord->FileNameLength / 2);
-
 			pfrnName.filename = CfileName;
 			pfrnName.pfrn = UsnRecord->ParentFileReferenceNumber;
-			frnPfrnNameMap[UsnRecord->FileReferenceNumber] = pfrnName;
+			// frnPfrnNameMap[UsnRecord->FileReferenceNumber] = pfrnName;
+			frnPfrnNameMap.insert(std::make_pair(UsnRecord->FileReferenceNumber, pfrnName));
 			// 获取下一个记录  
 			const auto recordLen = UsnRecord->RecordLength;
 			dwRetBytes -= recordLen;

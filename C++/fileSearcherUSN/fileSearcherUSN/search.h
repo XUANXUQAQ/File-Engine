@@ -10,7 +10,7 @@
 #define CONCURRENT_MAP concurrency::concurrent_unordered_map
 #define CONCURRENT_QUEUE concurrency::concurrent_queue
 
-typedef struct _pfrn_name
+typedef struct pfrn_name
 {
 	DWORDLONG pfrn = 0;
 	CString filename;
@@ -43,7 +43,6 @@ public:
 private:
 	char vol;
 	HANDLE hVol;
-	pfrn_name pfrnName;
 	Frn_Pfrn_Name_Map frnPfrnNameMap;
 	sqlite3* db;
 	CString path;
