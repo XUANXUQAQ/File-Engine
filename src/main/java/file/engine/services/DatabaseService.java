@@ -66,13 +66,13 @@ public class DatabaseService {
     ConcurrentLinkedQueue<String> tempResults;  //在优先文件夹和数据库cache未搜索完时暂时保存结果，搜索完后会立即被转移到listResults
     private final Set<String> tempResultsForEvent; //在SearchDoneEvent中保存的容器
     private final AtomicInteger tempResultsRecordCounter = new AtomicInteger();
-    private final ConcurrentHashMap<String, ConcurrentLinkedQueue<String>> cudaCache = new ConcurrentHashMap<>();
     private final AtomicBoolean shouldStopSearch = new AtomicBoolean(true);
     private final AtomicBoolean isSearchStopped = new AtomicBoolean(true);
     private final AtomicBoolean isCreatingCache = new AtomicBoolean(false);
     private final ConcurrentLinkedQueue<Pair> priorityMap = new ConcurrentLinkedQueue<>();
     //tableCache 数据表缓存，在初始化时将会放入所有的key和一个空的cache，后续需要缓存直接放入空的cache中，不再创建新的cache实例
     private final ConcurrentHashMap<String, Cache> tableCache = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, ConcurrentLinkedQueue<String>> cudaCache = new ConcurrentHashMap<>();
     private final AtomicInteger cacheCount = new AtomicInteger();
     private volatile String[] searchCase;
     private volatile boolean isIgnoreCase;
@@ -457,7 +457,7 @@ public class DatabaseService {
         LinkedHashMap<String, Integer> tableNeedCache = scanDatabaseAndSelectCacheTable(disks,
                 tableQueueByPriority,
                 isStopCreateCache,
-                1000,
+                2000,
                 50000);
         saveTableCacheForCuda(isStopCreateCache, tableNeedCache);
         isCreatingCache.set(false);
