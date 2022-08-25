@@ -3533,8 +3533,8 @@ public class SearchBar {
             isSqlNotInitialized.set(false);
             if (databaseService.getStatus() == Constants.Enums.DatabaseStatus.NORMAL && runningMode == RunningMode.NORMAL_MODE) {
                 searchCaseToLowerAndRemoveConflict();
-                eventManagement.putEvent(new StartSearchEvent(() -> searchText, () -> searchCase, () -> keywords));
-                addMergeThread(isMergeThreadNotExist);
+                eventManagement.putEvent(new StartSearchEvent(() -> searchText, () -> searchCase, () -> keywords),
+                        (event) -> addMergeThread(isMergeThreadNotExist), null);
             }
         }
     }
