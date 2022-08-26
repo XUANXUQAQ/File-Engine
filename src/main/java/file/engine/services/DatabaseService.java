@@ -655,12 +655,12 @@ public class DatabaseService {
         if (shouldStopSearch.get()) {
             return matchedResultCount;
         }
-        ArrayList<String> tmpQueryResultsCache;
+        ArrayList<String> tmpQueryResultsCache = new ArrayList<>(MAX_TEMP_QUERY_RESULT_CACHE);
         try (ResultSet resultSet = stmt.executeQuery(sql)) {
             while (resultSet.next()) {
                 int i = 0;
                 // 先将结果查询出来，再进行字符串匹配，提高吞吐量
-                tmpQueryResultsCache = new ArrayList<>(MAX_TEMP_QUERY_RESULT_CACHE);
+                tmpQueryResultsCache.clear();
                 do {
                     tmpQueryResultsCache.add(resultSet.getString("PATH"));
                     ++i;
@@ -786,7 +786,7 @@ public class DatabaseService {
                                 waitTime = System.currentTimeMillis();
                             }
                         }
-                        TimeUnit.MILLISECONDS.sleep(10);
+                        TimeUnit.MILLISECONDS.sleep(1);
                     }
                     TimeUnit.MILLISECONDS.sleep(10);
                 }
@@ -924,29 +924,7 @@ public class DatabaseService {
                             String key = diskStr + "," + tableName + "," + priority;
                             long matchedNum;
                             if (AllConfigs.getInstance().isEnableCuda() && CudaAccelerator.INSTANCE.isMatchDone(key)) {
-                                if (IsDebug.isDebug()) {
-                                    System.out.println("CUDA缓存命中" + key);
-                                }
-                                if (cudaCache.containsKey(key)) {
-                                    ConcurrentLinkedQueue<String> strings = cudaCache.get(key);
-                                    // CUDA计算不支持判断文件和文件夹
-                                    if (searchCase == null || searchCase.length == 0) {
-                                        container.addAll(strings);
-                                        matchedNum = strings.size();
-                                    } else {
-                                        List<String> searchCaseList = Arrays.asList(searchCase);
-                                        if (searchCaseList.contains(PathMatchUtil.SearchCase.D)) {
-                                            matchedNum = strings.parallelStream().filter(e -> Files.isDirectory(Path.of(e))).filter(container::add).count();
-                                        } else if (searchCaseList.contains(PathMatchUtil.SearchCase.F)) {
-                                            matchedNum = strings.parallelStream().filter(FileUtil::isFile).filter(container::add).count();
-                                        } else {
-                                            container.addAll(strings);
-                                            matchedNum = strings.size();
-                                        }
-                                    }
-                                } else {
-                                    matchedNum = 0;
-                                }
+                                matchedNum = searchFromCudaCache(container, key);
                             } else {
                                 Cache cache = tableCache.get(key);
                                 if (cache.isCacheValid()) {
@@ -985,6 +963,34 @@ public class DatabaseService {
                 });
             }
         }
+    }
+
+    private long searchFromCudaCache(ConcurrentSkipListSet<String> container, String key) {
+        long matchedNum;
+        if (IsDebug.isDebug()) {
+            System.out.println("CUDA缓存命中" + key);
+        }
+        if (cudaCache.containsKey(key)) {
+            ConcurrentLinkedQueue<String> strings = cudaCache.get(key);
+            // CUDA计算不支持判断文件和文件夹
+            if (searchCase == null || searchCase.length == 0) {
+                container.addAll(strings);
+                matchedNum = strings.size();
+            } else {
+                List<String> searchCaseList = Arrays.asList(searchCase);
+                if (searchCaseList.contains(PathMatchUtil.SearchCase.D)) {
+                    matchedNum = strings.parallelStream().filter(e -> Files.isDirectory(Path.of(e))).filter(container::add).count();
+                } else if (searchCaseList.contains(PathMatchUtil.SearchCase.F)) {
+                    matchedNum = strings.parallelStream().filter(FileUtil::isFile).filter(container::add).count();
+                } else {
+                    container.addAll(strings);
+                    matchedNum = strings.size();
+                }
+            }
+        } else {
+            matchedNum = 0;
+        }
+        return matchedNum;
     }
 
     /**
@@ -1069,7 +1075,7 @@ public class DatabaseService {
         }
         taskMap.forEach((disk, taskQueue) -> {
             CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
-            for (int i = 0; i < 4; ++i) {
+            for (int i = 0; i < 2; ++i) {
                 cachedThreadPoolUtil.executeTask(() -> {
                     Runnable runnable;
                     while ((runnable = taskQueue.poll()) != null) {
