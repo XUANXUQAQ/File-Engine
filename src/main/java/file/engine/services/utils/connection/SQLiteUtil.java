@@ -81,8 +81,10 @@ public class SQLiteUtil {
         for (ConnectionWrapper conn : connectionPool.values()) {
             try {
                 conn.lock.lock();
-                conn.usingTimeMills = System.currentTimeMillis();
-                conn.connection = DriverManager.getConnection(conn.url, sqLiteConfig.toProperties());
+                if (conn.connection.isClosed()) {
+                    conn.usingTimeMills = System.currentTimeMillis();
+                    conn.connection = DriverManager.getConnection(conn.url, sqLiteConfig.toProperties());
+                }
             } catch (SQLException e) {
                 e.printStackTrace();
             } finally {
