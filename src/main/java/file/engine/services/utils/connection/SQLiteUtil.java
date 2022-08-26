@@ -77,6 +77,20 @@ public class SQLiteUtil {
         sqLiteConfig.setLockingMode(SQLiteConfig.LockingMode.NORMAL);
     }
 
+    public static void openAllConnection() {
+        for (ConnectionWrapper conn : connectionPool.values()) {
+            try {
+                conn.lock.lock();
+                conn.usingTimeMills = System.currentTimeMillis();
+                conn.connection = DriverManager.getConnection(conn.url, sqLiteConfig.toProperties());
+            } catch (SQLException e) {
+                e.printStackTrace();
+            } finally {
+                conn.lock.unlock();
+            }
+        }
+    }
+
     private static ConnectionWrapper getFromConnectionPool(String key) throws SQLException {
         ConnectionWrapper connectionWrapper = connectionPool.get(key);
         if (connectionWrapper == null) {

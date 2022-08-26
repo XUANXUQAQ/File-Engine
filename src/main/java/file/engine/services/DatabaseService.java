@@ -1851,6 +1851,7 @@ public class DatabaseService {
                 }
             });
         } else {
+            SQLiteUtil.openAllConnection();
             getInstance().sendExecuteSQLSignal();
         }
     }
