@@ -34,7 +34,8 @@ public class SQLiteUtil {
     private static String currentDatabaseDir = "data";
 
     static {
-        CachedThreadPoolUtil.getInstance().executeTask(() -> {
+        CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
+        cachedThreadPoolUtil.executeTask(() -> {
             Consumer<ConnectionWrapper> checkConnectionAndClose = (conn) -> {
                 if (conn.isIdleTimeout()) {
                     try {
@@ -50,7 +51,6 @@ public class SQLiteUtil {
                     }
                 }
             };
-            CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
             long checkTimeMills = 0;
             final long threshold = 2 * 60 * 1000; // 2min
             try {
@@ -78,19 +78,21 @@ public class SQLiteUtil {
     }
 
     public static void openAllConnection() {
-        for (ConnectionWrapper conn : connectionPool.values()) {
-            try {
-                conn.lock.lock();
-                if (conn.connection.isClosed()) {
-                    conn.usingTimeMills = System.currentTimeMillis();
-                    conn.connection = DriverManager.getConnection(conn.url, sqLiteConfig.toProperties());
+        CachedThreadPoolUtil.getInstance().executeTask(() -> {
+            for (ConnectionWrapper conn : connectionPool.values()) {
+                try {
+                    conn.lock.lock();
+                    if (conn.connection.isClosed()) {
+                        conn.usingTimeMills = System.currentTimeMillis();
+                        conn.connection = DriverManager.getConnection(conn.url, sqLiteConfig.toProperties());
+                    }
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                } finally {
+                    conn.lock.unlock();
                 }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            } finally {
-                conn.lock.unlock();
             }
-        }
+        });
     }
 
     private static ConnectionWrapper getFromConnectionPool(String key) throws SQLException {
