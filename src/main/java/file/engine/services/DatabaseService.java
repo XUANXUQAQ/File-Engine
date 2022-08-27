@@ -899,7 +899,8 @@ public class DatabaseService {
                                            LinkedHashMap<String, ConcurrentSkipListSet<String>> containerMap,
                                            ConcurrentHashMap<String, ConcurrentLinkedQueue<Runnable>> taskMap) {
         Bit number = new Bit(new byte[]{1});
-        String availableDisks = AllConfigs.getInstance().getAvailableDisks();
+        AllConfigs allConfigs = AllConfigs.getInstance();
+        String availableDisks = allConfigs.getAvailableDisks();
         for (String eachDisk : RegexUtil.comma.split(availableDisks)) {
             ConcurrentLinkedQueue<Runnable> tasks = new ConcurrentLinkedQueue<>();
             taskMap.put(eachDisk, tasks);
@@ -923,30 +924,14 @@ public class DatabaseService {
                             String priority = getPriorityFromSql(eachSql);
                             String key = diskStr + "," + tableName + "," + priority;
                             long matchedNum;
-                            if (AllConfigs.getInstance().isEnableCuda() && CudaAccelerator.INSTANCE.isMatchDone(key)) {
+                            if (allConfigs.isEnableCuda() && CudaAccelerator.INSTANCE.isMatchDone(key)) {
                                 matchedNum = searchFromCudaCache(container, key);
-                            } else {
-                                Cache cache = tableCache.get(key);
-                                if (cache.isCacheValid()) {
-                                    if (IsDebug.isDebug()) {
-                                        System.out.println("从缓存中读取 " + key);
-                                    }
-                                    matchedNum = cache.data.parallelStream()
-                                            .filter(record -> checkIsMatchedAndAddToList(record, container))
-                                            .count();
-                                } else {
-                                    try (Statement stmt = SQLiteUtil.getStatement(diskStr)) {
-                                        //格式化是为了以后的拓展性
-                                        String formattedSql = String.format(eachSql, "PATH");
-                                        //当前数据库表中有多少个结果匹配成功
-                                        matchedNum = searchAndAddToTempResults(
-                                                formattedSql,
-                                                container,
-                                                stmt);
-                                    } catch (SQLException e) {
-                                        throw new RuntimeException(e);
-                                    }
+                                if (!CudaAccelerator.INSTANCE.isCacheValid(key)) {
+                                    // 如果已经发生文件丢失，则从数据库再读取数据
+                                    matchedNum = searchFromDatabaseOrCache(container, diskStr, eachSql, key);
                                 }
+                            } else {
+                                matchedNum = searchFromDatabaseOrCache(container, diskStr, eachSql, key);
                             }
                             final long weight = Math.min(matchedNum, 5);
                             if (weight != 0L) {
@@ -963,6 +948,41 @@ public class DatabaseService {
                 });
             }
         }
+    }
+
+    /**
+     * 从数据库中查找
+     *
+     * @param container 存储结果容器
+     * @param diskStr   磁盘盘符
+     * @param sql       sql
+     * @param key       查询key，例如 [C,list10,-1]
+     * @return 查询的结果数量
+     */
+    private long searchFromDatabaseOrCache(ConcurrentSkipListSet<String> container, String diskStr, String sql, String key) {
+        long matchedNum;
+        Cache cache = tableCache.get(key);
+        if (cache.isCacheValid()) {
+            if (IsDebug.isDebug()) {
+                System.out.println("从缓存中读取 " + key);
+            }
+            matchedNum = cache.data.parallelStream()
+                    .filter(record -> checkIsMatchedAndAddToList(record, container))
+                    .count();
+        } else {
+            try (Statement stmt = SQLiteUtil.getStatement(diskStr)) {
+                //格式化是为了以后的拓展性
+                String formattedSql = String.format(sql, "PATH");
+                //当前数据库表中有多少个结果匹配成功
+                matchedNum = searchAndAddToTempResults(
+                        formattedSql,
+                        container,
+                        stmt);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        return matchedNum;
     }
 
     private long searchFromCudaCache(ConcurrentSkipListSet<String> container, String key) {
