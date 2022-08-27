@@ -19,6 +19,7 @@ import java.nio.file.Path;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -83,9 +84,9 @@ public class SQLiteUtil {
                 try {
                     conn.lock.lock();
                     if (conn.connection.isClosed()) {
-                        conn.usingTimeMills = System.currentTimeMillis();
                         conn.connection = DriverManager.getConnection(conn.url, sqLiteConfig.toProperties());
                     }
+                    conn.usingTimeMills = System.currentTimeMillis();
                 } catch (SQLException e) {
                     e.printStackTrace();
                 } finally {
@@ -437,15 +438,18 @@ public class SQLiteUtil {
         private volatile long usingTimeMills;
         private final AtomicInteger connectionUsingCounter = new AtomicInteger();
         private final ReentrantLock lock = new ReentrantLock();
+        private final int randomTimeMills;
+        private static final Random random = new Random();
 
         private ConnectionWrapper(String url) throws SQLException {
             this.url = url;
             this.connection = DriverManager.getConnection(url, sqLiteConfig.toProperties());
             this.usingTimeMills = System.currentTimeMillis();
+            this.randomTimeMills = random.nextInt(9000) + 1000; //随机添加超时时间，从1秒到10秒，防止所有连接同时关闭
         }
 
         private boolean isIdleTimeout() {
-            return System.currentTimeMillis() - this.usingTimeMills > Constants.CLOSE_DATABASE_TIMEOUT_MILLS && connectionUsingCounter.get() == 0;
+            return System.currentTimeMillis() - this.usingTimeMills > Constants.CLOSE_DATABASE_TIMEOUT_MILLS + this.randomTimeMills && connectionUsingCounter.get() == 0;
         }
 
         private boolean isConnectionUsing() {
