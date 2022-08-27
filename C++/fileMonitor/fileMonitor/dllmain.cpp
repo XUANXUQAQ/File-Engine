@@ -196,6 +196,7 @@ void monitor_path(const std::string& path)
 				{
 				case FILE_ACTION_ADDED:
 				case FILE_ACTION_RENAMED_NEW_NAME:
+				case FILE_ACTION_MODIFIED:
 					if (wcsstr(data.c_str(), L"$RECYCLE.BIN") == nullptr)
 					{
 						std::wstring data_with_disk;
@@ -235,8 +236,6 @@ void monitor_path(const std::string& path)
 						std::cout << "file removed: " << wstring2string(data_with_disk) << std::endl;
 #endif
 					}
-					break;
-				case FILE_ACTION_MODIFIED:
 					break;
 				default:
 					std::cout << "Unknown command!  " << action << std::endl;
