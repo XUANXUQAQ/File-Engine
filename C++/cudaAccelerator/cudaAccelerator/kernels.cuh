@@ -18,7 +18,9 @@ void start_kernel(concurrency::concurrent_unordered_map<std::string, list_cache*
                   const char* search_text,
                   const std::vector<std::string>& keywords,
                   const std::vector<std::string>& keywords_lower_case,
-                  const bool* is_keyword_path);
+                  const bool* is_keyword_path,
+                  cudaStream_t* streams,
+                  size_t stream_count);
 
 __device__ bool not_matched(const char* path,
                             bool is_ignore_case,

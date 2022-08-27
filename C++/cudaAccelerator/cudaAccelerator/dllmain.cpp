@@ -111,12 +111,19 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_CudaAccelerator_match
 	}
 	//复制全字匹配字符串 search_text
 	const auto search_text_chars = env->GetStringUTFChars(search_text, nullptr);
+	const auto streamCount = cache_map.size();
+	const auto streams = new cudaStream_t[streamCount];
 	//GPU并行计算
 	start_kernel(cache_map, search_case_vec, is_ignore_case, search_text_chars, keywords_vec, keywords_lower_vec,
-	             is_keyword_path_ptr);
+	             is_keyword_path_ptr, streams, streamCount);
 	collect_results(env, output);
 	env->ReleaseStringUTFChars(search_text, search_text_chars);
+	// 等待执行完成
+	auto cudaStatus = cudaDeviceSynchronize();
+	if (cudaStatus != cudaSuccess)
+		fprintf(stderr, "cudaDeviceSynchronize returned error code %d after launch!\n", cudaStatus);
 	delete[] is_keyword_path_ptr;
+	delete[] streams;
 }
 
 /*

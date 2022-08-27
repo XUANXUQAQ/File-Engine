@@ -411,7 +411,9 @@ void start_kernel(concurrency::concurrent_unordered_map<std::string, list_cache*
                   const char* search_text,
                   const std::vector<std::string>& keywords,
                   const std::vector<std::string>& keywords_lower_case,
-                  const bool* is_keyword_path)
+                  const bool* is_keyword_path,
+                  cudaStream_t* streams,
+                  const size_t stream_count)
 {
 	int* dev_search_case = nullptr;
 	char* dev_search_text = nullptr;
@@ -422,8 +424,6 @@ void start_kernel(concurrency::concurrent_unordered_map<std::string, list_cache*
 	bool* dev_is_ignore_case = nullptr;
 
 	const auto keywords_num = keywords.size();
-	const auto stream_count = cache_map.size();
-	auto streams = new cudaStream_t[stream_count];
 	//初始化流
 	for (size_t i = 0; i < stream_count; ++i)
 	{
@@ -485,8 +485,12 @@ void start_kernel(concurrency::concurrent_unordered_map<std::string, list_cache*
 		int count = 0;
 		for (auto& each : cache_map)
 		{
-			int block_num, thread_num;
 			const auto& cache = each.second;
+			if (!cache->is_cache_valid)
+			{
+				continue;
+			}
+			int block_num, thread_num;
 			if (cache->str_data.record_num > MAX_THREAD_PER_BLOCK)
 			{
 				thread_num = MAX_THREAD_PER_BLOCK;
@@ -521,16 +525,8 @@ void start_kernel(concurrency::concurrent_unordered_map<std::string, list_cache*
 			fprintf(stderr, "check launch failed: %s\n", cudaGetErrorString(cudaStatus));
 			break;
 		}
-
-		// 等待执行完成
-		// cudaStatus = cudaDeviceSynchronize();
-		// if (cudaStatus != cudaSuccess)
-		// {
-		// 	fprintf(stderr, "cudaDeviceSynchronize returned error code %d after launch!\n", cudaStatus);
-		// }
 	}
 	while (false);
-	delete[] streams;
 	cudaFree(dev_search_case);
 	cudaFree(dev_search_text);
 	cudaFree(dev_keywords);

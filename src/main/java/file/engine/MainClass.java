@@ -42,7 +42,7 @@ import java.util.concurrent.TimeUnit;
 
 public class MainClass {
     private static final int UPDATE_DATABASE_THRESHOLD = 3;
-    private static final String FILE_MONITOR_MD5 = "9c443415ae838148fb5bc903dd1959c9";
+    private static final String FILE_MONITOR_MD5 = "f9637b1af0496d393fe02f67e0310541";
     private static final String GET_ASC_II_MD5 = "c63eec19bde81456693feb715c4e0313";
     private static final String HOTKEY_LISTENER_MD5 = "6d71f646529b69cff9d50fcce8d4b6e4";
     private static final String IS_LOCAL_DISK_MD5 = "4d612bd2728d720e1ce724d26d48bdb9";
@@ -55,7 +55,7 @@ public class MainClass {
     private static final String GET_START_MENU_MD5 = "b446b307fae7646f9d7cd0064f55d1af";
     private static final String SQLITE_JDBC_MD5 = "580fd050832e37d14bc04e8d5d13b7b1";
     private static final String EMPTY_RECYCLE_BIN_MD5 = "431225a47e74fe343b42e4bba741b80b";
-    private static final String CUDA_ACCELERATOR_MD5 = "7df4cc08b5a760b896df3a22bfea0c4e";
+    private static final String CUDA_ACCELERATOR_MD5 = "5a6d93b568798ae4e535bca9667911e1";
     private static final String CUDA_RUNTIME_MD5 = "d7cfc69c62e8eb977d827f46bab408da";
 
     public static void main(String[] args) {

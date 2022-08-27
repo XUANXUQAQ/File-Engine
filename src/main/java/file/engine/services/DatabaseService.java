@@ -924,12 +924,8 @@ public class DatabaseService {
                             String priority = getPriorityFromSql(eachSql);
                             String key = diskStr + "," + tableName + "," + priority;
                             long matchedNum;
-                            if (allConfigs.isEnableCuda() && CudaAccelerator.INSTANCE.isMatchDone(key)) {
+                            if (allConfigs.isEnableCuda() && CudaAccelerator.INSTANCE.isCacheValid(key) && CudaAccelerator.INSTANCE.isMatchDone(key)) {
                                 matchedNum = searchFromCudaCache(container, key);
-                                if (!CudaAccelerator.INSTANCE.isCacheValid(key)) {
-                                    // 如果已经发生文件丢失，则从数据库再读取数据
-                                    matchedNum = searchFromDatabaseOrCache(container, diskStr, eachSql, key);
-                                }
                             } else {
                                 matchedNum = searchFromDatabaseOrCache(container, diskStr, eachSql, key);
                             }
