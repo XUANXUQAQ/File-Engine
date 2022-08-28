@@ -5,31 +5,31 @@
 
 #define COMPBYTE(x, y) ((unsigned char)(x) << 8 | (unsigned char)(y))
 
-__device__ static const unsigned short* _pGbk2Utf16;
-__device__ static const unsigned short* _pUtf162Gbk;
-__device__ static const unsigned short* _pGbk2utf16_2;
-__device__ static unsigned short _gbk2utf16_2_size;
-__device__ static const unsigned short* _pGbk2utf16_3;
-__device__ static unsigned short _gbk2utf16_3_size;
+__device__ static const unsigned short* p_gbk2_utf16;
+__device__ static const unsigned short* p_utf162_gbk;
+__device__ static const unsigned short* p_gbk2_utf16_2;
+__device__ static unsigned short gbk2_utf16_2_size;
+__device__ static const unsigned short* p_gbk2_utf16_3;
+__device__ static unsigned short gbk2_utf16_3_size;
 
-__device__ const unsigned short* _initGbk2utf16_2();
-__device__ const unsigned short* _initGbk2utf16_3();
-__device__ const unsigned short* _initGbk2Utf16();
-__device__ const unsigned short* _initUtf162Gbk();
+__device__ const unsigned short* init_gbk2_utf16_2();
+__device__ const unsigned short* init_gbk2_utf16_3();
+__device__ const unsigned short* init_gbk2_utf16();
+__device__ const unsigned short* init_utf162_gbk();
 
 __device__ void str_normalize_init()
 {
-	_pGbk2utf16_2 = _initGbk2utf16_2();
-	_pGbk2utf16_3 = _initGbk2utf16_3();
-	_pGbk2Utf16 = _initGbk2Utf16();
-	_pUtf162Gbk = _initUtf162Gbk();
+	p_gbk2_utf16_2 = init_gbk2_utf16_2();
+	p_gbk2_utf16_3 = init_gbk2_utf16_3();
+	p_gbk2_utf16 = init_gbk2_utf16();
+	p_utf162_gbk = init_utf162_gbk();
 }
 
-__device__ const unsigned short* _initGbk2utf16_2()
+__device__ const unsigned short* init_gbk2_utf16_2()
 {
 	static const unsigned short _gbk2utf16_2[] =
 	{
-		0x8140, 0x4E02, // {{{
+		0x8140, 0x4E02,
 		0x8144, 0x4E0F,
 		0x8145, 0x4E12,
 		0x8146, 0x4E17,
@@ -7786,11 +7786,11 @@ __device__ const unsigned short* _initGbk2utf16_2()
 		0xFE44, 0xFA11,
 		0xFE47, 0xFA18, // }}}
 	};
-	_gbk2utf16_2_size = sizeof(_gbk2utf16_2) / sizeof(short);
+	gbk2_utf16_2_size = sizeof(_gbk2utf16_2) / sizeof(short);
 	return _gbk2utf16_2;
 }
 
-__device__ const unsigned short* _initGbk2utf16_3()
+__device__ const unsigned short* init_gbk2_utf16_3()
 {
 	static const unsigned short _gbk2utf16_3[] =
 	{
@@ -10394,36 +10394,36 @@ __device__ const unsigned short* _initGbk2utf16_3()
 		0xFE4D, 0xFE4F, 0xFA27,
 		0xFE50, 0xFEA0, 0xE815, // }}}
 	};
-	_gbk2utf16_3_size = sizeof(_gbk2utf16_3) / sizeof(short);
+	gbk2_utf16_3_size = sizeof(_gbk2utf16_3) / sizeof(short);
 	return _gbk2utf16_3;
 }
 
-__device__ const unsigned short* _initGbk2Utf16()
+__device__ const unsigned short* init_gbk2_utf16()
 {
 	static unsigned short gbk2utf16[0x8000] = {0};
 	unsigned short c;
 
-	for (c = 0; c < _gbk2utf16_2_size; c += 2)
-		gbk2utf16[_pGbk2utf16_2[c] - 0x8000] = _pGbk2utf16_2[c + 1];
+	for (c = 0; c < gbk2_utf16_2_size; c += 2)
+		gbk2utf16[p_gbk2_utf16_2[c] - 0x8000] = p_gbk2_utf16_2[c + 1];
 
-	for (c = 0; c < _gbk2utf16_3_size; c += 3)
-		for (unsigned short d = _pGbk2utf16_3[c]; d <= _pGbk2utf16_3[c + 1]; d++)
-			gbk2utf16[d - 0x8000] = _pGbk2utf16_3[c + 2] + d - _pGbk2utf16_3[c];
+	for (c = 0; c < gbk2_utf16_3_size; c += 3)
+		for (unsigned short d = p_gbk2_utf16_3[c]; d <= p_gbk2_utf16_3[c + 1]; d++)
+			gbk2utf16[d - 0x8000] = p_gbk2_utf16_3[c + 2] + d - p_gbk2_utf16_3[c];
 
 	return gbk2utf16;
 }
 
-__device__ const unsigned short* _initUtf162Gbk()
+__device__ const unsigned short* init_utf162_gbk()
 {
 	static unsigned short utf162gbk[0x10000] = {0};
 	unsigned short c;
 
-	for (c = 0; c < _gbk2utf16_2_size; c += 2)
-		utf162gbk[_pGbk2utf16_2[c + 1]] = _pGbk2utf16_2[c];
+	for (c = 0; c < gbk2_utf16_2_size; c += 2)
+		utf162gbk[p_gbk2_utf16_2[c + 1]] = p_gbk2_utf16_2[c];
 
-	for (c = 0; c < _gbk2utf16_3_size; c += 3)
-		for (unsigned short d = _pGbk2utf16_3[c]; d <= _pGbk2utf16_3[c + 1]; d++)
-			utf162gbk[_pGbk2utf16_3[c + 2] + d - _pGbk2utf16_3[c]] = d;
+	for (c = 0; c < gbk2_utf16_3_size; c += 3)
+		for (unsigned short d = p_gbk2_utf16_3[c]; d <= p_gbk2_utf16_3[c + 1]; d++)
+			utf162gbk[p_gbk2_utf16_3[c + 2] + d - p_gbk2_utf16_3[c]] = d;
 
 	return utf162gbk;
 }
@@ -10444,8 +10444,8 @@ __device__ int gbk_to_utf8(const char* from, unsigned int from_len, char** to, u
 		if (flag)
 		{
 			flag = 0;
-			unsigned short tmp =
-				_pGbk2Utf16[COMPBYTE(from[i_from - 1], from[i_from]) & ~0x8000];
+			const unsigned short tmp =
+				p_gbk2_utf16[COMPBYTE(from[i_from - 1], from[i_from]) & ~0x8000];
 
 			if (tmp == 0)
 				continue;
@@ -10501,7 +10501,7 @@ __device__ int utf8_to_gbk(const char* from, unsigned int from_len, char** to, u
 		{
 			if (i_from >= from_len - 1) break;
 
-			unsigned short tmp = _pUtf162Gbk[
+			const unsigned short tmp = p_utf162_gbk[
 				((from[i_from] & 0x1F) << 6) | (from[i_from + 1] & 0x3F)];
 
 			if (tmp)
@@ -10516,7 +10516,7 @@ __device__ int utf8_to_gbk(const char* from, unsigned int from_len, char** to, u
 		{
 			if (i_from >= from_len - 2) break;
 
-			unsigned short tmp = _pUtf162Gbk[((from[i_from] & 0x0F) << 12)
+			const unsigned short tmp = p_utf162_gbk[((from[i_from] & 0x0F) << 12)
 				| ((from[i_from + 1] & 0x3F) << 6) | (from[i_from + 2] & 0x3F)];
 
 			if (tmp)
