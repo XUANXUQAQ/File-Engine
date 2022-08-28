@@ -7784,7 +7784,7 @@ __device__ const unsigned short* init_gbk2_utf16_2()
 		0xFD9F, 0xF9E7,
 		0xFDA0, 0xF9F1,
 		0xFE44, 0xFA11,
-		0xFE47, 0xFA18, // }}}
+		0xFE47, 0xFA18
 	};
 	gbk2_utf16_2_size = sizeof(_gbk2utf16_2) / sizeof(short);
 	return _gbk2utf16_2;
@@ -7794,7 +7794,7 @@ __device__ const unsigned short* init_gbk2_utf16_3()
 {
 	static const unsigned short _gbk2utf16_3[] =
 	{
-		0x8141, 0x8143, 0x4E04, // {{{
+		0x8141, 0x8143, 0x4E04,
 		0x8147, 0x8149, 0x4E1F,
 		0x814D, 0x814E, 0x4E2E,
 		0x8154, 0x8156, 0x4E40,
@@ -10392,7 +10392,7 @@ __device__ const unsigned short* init_gbk2_utf16_3()
 		0xFE48, 0xFE4A, 0xFA1F,
 		0xFE4B, 0xFE4C, 0xFA23,
 		0xFE4D, 0xFE4F, 0xFA27,
-		0xFE50, 0xFEA0, 0xE815, // }}}
+		0xFE50, 0xFEA0, 0xE815
 	};
 	gbk2_utf16_3_size = sizeof(_gbk2utf16_3) / sizeof(short);
 	return _gbk2utf16_3;
