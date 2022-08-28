@@ -9,6 +9,8 @@
 #include "constans.h"
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
+#include "str_utils.cuh"
+#include "str_convert.cuh"
 
 inline void gpuAssert(cudaError_t code, const char* file, int line, const char* function, bool is_exit,
                       const char* info)
@@ -30,144 +32,9 @@ inline void gpuAssert(cudaError_t code, const char* file, int line, const char* 
 	}
 }
 
-__device__ int strcmp_cuda(const char* str1, const char* str2)
-{
-	while (*str1)
-	{
-		if (*str1 > *str2)return 1;
-		if (*str1 < *str2)return -1;
-		++str1;
-		++str2;
-	}
-	if (*str1 < *str2)return -1;
-	return 0;
-}
-
-
-__device__ char* strlwr_cuda(char* src)
-{
-	while (*src != '\0')
-	{
-		if (*src > 'A' && *src <= 'Z')
-		{
-			*src += 32;
-		}
-		++src;
-	}
-	return src;
-}
-
-
-__device__ char* strstr_cuda(char* s1, char* s2)
-{
-	int n;
-	if (*s2) //两种情况考虑
-	{
-		while (*s1)
-		{
-			for (n = 0; *(s1 + n) == *(s2 + n); ++n)
-			{
-				if (!*(s2 + n + 1)) //查找的下一个字符是否为'\0'
-				{
-					return s1;
-				}
-			}
-			++s1;
-		}
-		return nullptr;
-	}
-	return s1;
-}
-
-__device__ char* strrchr_cuda(const char* s, int c)
-{
-	if (s == nullptr)
-	{
-		return nullptr;
-	}
-
-	char* p_char = nullptr;
-	while (*s != '\0')
-	{
-		if (*s == static_cast<char>(c))
-		{
-			p_char = const_cast<char*>(s);
-		}
-		++s;
-	}
-
-	return p_char;
-}
-
-__device__ char* strcpy_cuda(char* dst, const char* src)
-{
-	char* ret = dst;
-	while ((*dst++ = *src++) != '\0')
-	{
-	}
-	return ret;
-}
-
-__device__ size_t strlen_cuda(const char* str)
-{
-	size_t count = 0;
-	while (*str != '\0')
-	{
-		count++;
-		++str;
-	}
-	return count;
-}
-
-__device__ char* strcat_cuda(char* dst, char const* src)
-{
-	if (dst == nullptr || src == nullptr)
-	{
-		return nullptr;
-	}
-
-	char* tmp = dst;
-
-	while (*dst != '\0') //这个循环结束之后，dst指向'\0'
-	{
-		dst++;
-	}
-
-	while (*src != '\0')
-	{
-		*dst++ = *src++; //把src指向的内容赋值给dst
-	}
-
-	*dst = '\0'; //这句一定要加，否则最后一个字符会乱码
-	return tmp;
-}
-
-__device__ void str_add_single(char* dst, const char c)
-{
-	while (*dst != '\0')
-	{
-		dst++;
-	}
-	*dst++ = c;
-	*dst = '\0';
-}
-
-__device__ void get_file_name(const char* path, char* output)
-{
-	const char* p = strrchr_cuda(path, '\\');
-	strcpy_cuda(output, p + 1);
-}
-
-__device__ void get_parent_path(const char* path, char* output)
-{
-	strcpy_cuda(output, path);
-	char* p = strrchr_cuda(output, '\\');
-	*p = '\0';
-}
-
 __device__ void convert_to_pinyin(const char* chinese_str, char* output_str)
 {
-	constexpr int spell_value[] = {
+	static constexpr int spell_value[] = {
 		-20319, -20317, -20304, -20295, -20292, -20283, -20265, -20257, -20242, -20230, -20051, -20036, -20032, -20026,
 		-20002, -19990, -19986, -19982, -19976, -19805, -19784, -19775, -19774, -19763, -19756, -19751, -19746, -19741,
 		-19739, -19728,
@@ -219,7 +86,7 @@ __device__ void convert_to_pinyin(const char* chinese_str, char* output_str)
 	};
 
 	// 395个字符串，每个字符串长度不超过6
-	constexpr char spell_dict[396][7] = {
+	static constexpr char spell_dict[396][7] = {
 		"a", "ai", "an", "ang", "ao", "ba", "bai", "ban", "bang", "bao", "bei", "ben", "beng", "bi", "bian", "biao",
 		"bie", "bin", "bing", "bo", "bu", "ca", "cai", "can", "cang", "cao", "ce", "ceng", "cha", "chai", "chan",
 		"chang", "chao", "che", "chen",
@@ -341,12 +208,18 @@ __device__ bool not_matched(const char* path,
 		}
 		if (!match_str[0] || strstr_cuda(match_str, each_keyword) == nullptr)
 		{
-			if (is_keyword_path_val)
+			if (is_keyword_path_val || !is_str_contains_chinese(match_str))
 			{
 				return true;
 			}
-			char converted_pinyin[MAX_PATH_LENGTH]{0};
-			convert_to_pinyin(match_str, converted_pinyin);
+			char gbk_buffer[MAX_PATH_LENGTH * 2];
+			char* gbk_buffer_ptr = gbk_buffer;
+			unsigned gbk_buffer_size = MAX_PATH_LENGTH * 2;
+			// utf-8编码转换gbk
+			str_normalize_init();
+			utf8_to_gbk(match_str, static_cast<unsigned>(strlen_cuda(match_str)), &gbk_buffer_ptr, &gbk_buffer_size);
+			char converted_pinyin[MAX_PATH_LENGTH * 6]{0};
+			convert_to_pinyin(gbk_buffer, converted_pinyin);
 			if (strstr_cuda(converted_pinyin, each_keyword) == nullptr)
 			{
 				return true;
@@ -424,6 +297,7 @@ void start_kernel(concurrency::concurrent_unordered_map<std::string, list_cache*
 	bool* dev_is_ignore_case = nullptr;
 
 	const auto keywords_num = keywords.size();
+
 	//初始化流
 	for (size_t i = 0; i < stream_count; ++i)
 	{

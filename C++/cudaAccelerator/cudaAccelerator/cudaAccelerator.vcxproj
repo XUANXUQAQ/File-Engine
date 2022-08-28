@@ -122,6 +122,9 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
     </Link>
+    <CudaCompile>
+      <GenerateRelocatableDeviceCode>true</GenerateRelocatableDeviceCode>
+    </CudaCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -147,6 +150,7 @@
     <CudaCompile>
       <TargetMachinePlatform>64</TargetMachinePlatform>
       <CodeGeneration>compute_60,sm_60;compute_61,sm_61;compute_62,sm_62;compute_75,sm_75;compute_80,sm_80;compute_86,sm_86;%(CodeGeneration)</CodeGeneration>
+      <GenerateRelocatableDeviceCode>true</GenerateRelocatableDeviceCode>
     </CudaCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -158,6 +162,8 @@
     <ClInclude Include="jni.h" />
     <ClInclude Include="jni_md.h" />
     <ClInclude Include="pch.h" />
+    <ClInclude Include="str_convert.cuh" />
+    <ClInclude Include="str_utils.cuh" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="cache.cpp" />
@@ -169,6 +175,8 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <CudaCompile Include="str_convert.cu" />
+    <CudaCompile Include="str_utils.cu" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="kernels.cu">
