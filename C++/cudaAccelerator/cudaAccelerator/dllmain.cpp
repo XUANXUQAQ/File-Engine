@@ -361,12 +361,10 @@ void collect_results(JNIEnv* env, jobject output)
 		for (const auto& [key, val] : cache_map)
 		{
 			if (is_stop())
-			{
 				break;
-			}
 			if (!val->is_match_done.load())
 			{
-				//发现仍然有结果为计算完，设置退出标志为false，跳到下一个计算结果
+				//发现仍然有结果未计算完，设置退出标志为false，跳到下一个计算结果
 				all_complete = false;
 				continue;
 			}
@@ -376,7 +374,8 @@ void collect_results(JNIEnv* env, jobject output)
 			//复制结果数组到host，dev_output下标对应dev_cache中的下标，若dev_output[i]中的值为1，则对应dev_cache[i]字符串匹配成功
 			const auto output_ptr = new char[val->str_data.record_num + val->str_data.remain_blank_num];
 			//将dev_output拷贝到output_ptr
-			cudaMemcpy(output_ptr, val->dev_output, val->str_data.record_num, cudaMemcpyDeviceToHost);
+			gpuErrchk(cudaMemcpy(output_ptr, val->dev_output, val->str_data.record_num, cudaMemcpyDeviceToHost), false,
+			          "collect results failed")
 			for (size_t i = 0; i < val->str_data.record_num.load(); ++i)
 			{
 				if (is_stop())
@@ -389,8 +388,8 @@ void collect_results(JNIEnv* env, jobject output)
 					char tmp_matched_record_str[MAX_PATH_LENGTH]{0};
 					const auto str_address = val->str_data.dev_cache_str + i;
 					//拷贝GPU中的字符串到host
-					cudaMemcpy(tmp_matched_record_str, str_address,
-					           MAX_PATH_LENGTH, cudaMemcpyDeviceToHost);
+					gpuErrchk(cudaMemcpy(tmp_matched_record_str, str_address,MAX_PATH_LENGTH, cudaMemcpyDeviceToHost),
+					          false, "collect results failed")
 					const auto matched_record = env->NewStringUTF(tmp_matched_record_str);
 					const auto key_jstring = env->NewStringUTF(key.c_str());
 					if (env->CallBooleanMethod(output, contains_key_func, key_jstring))

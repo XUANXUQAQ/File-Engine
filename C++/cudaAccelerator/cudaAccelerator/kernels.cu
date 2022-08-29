@@ -356,9 +356,11 @@ void start_kernel(concurrency::concurrent_unordered_map<std::string, list_cache*
 		// 复制is_ignore_case
 		gpuErrchk(cudaMalloc(reinterpret_cast<void**>(&dev_is_ignore_case), sizeof(bool)), true, nullptr)
 		gpuErrchk(cudaMemcpy(dev_is_ignore_case, &is_ignore_case, sizeof(bool), cudaMemcpyHostToDevice), true, nullptr)
-		int count = 0;
+		unsigned count = 0;
 		for (auto& each : cache_map)
 		{
+			if (count >= stream_count)
+				break;
 			const auto& cache = each.second;
 			if (!cache->is_cache_valid)
 			{
