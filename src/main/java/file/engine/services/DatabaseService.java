@@ -1887,23 +1887,43 @@ public class DatabaseService {
         startMonitorDisk();
     }
 
+    static class CudaThreadRecorder {
+        static AtomicBoolean isCudaThreadRunning = new AtomicBoolean(false);
+    }
+
+    @EventRegister(registerClass = PrepareCudaSearchEvent.class)
+    private static void prepareCudaSearch(Event event) {
+        if (AllConfigs.getInstance().isEnableCuda()) {
+            PrepareCudaSearchEvent prepareCudaSearchEvent = (PrepareCudaSearchEvent) event;
+            prepareSearchInfo(prepareCudaSearchEvent.searchText, prepareCudaSearchEvent.searchCase, prepareCudaSearchEvent.keywords);
+            CachedThreadPoolUtil.getInstance().executeTask(() -> {
+                // 退出上一次搜索
+                CudaAccelerator.INSTANCE.stopCollectResults();
+                while (CudaThreadRecorder.isCudaThreadRunning.get())
+                    Thread.onSpinWait();
+                // 开始进行搜索
+                CudaAccelerator.INSTANCE.resetAllResultStatus();
+                CudaThreadRecorder.isCudaThreadRunning.set(true);
+                DatabaseService databaseService = getInstance();
+                databaseService.cudaCache.clear();
+                CudaAccelerator.INSTANCE.match(databaseService.searchCase,
+                        databaseService.isIgnoreCase,
+                        databaseService.searchText,
+                        databaseService.keywords,
+                        databaseService.keywordsLowerCase,
+                        databaseService.isKeywordPath,
+                        databaseService.cudaCache);
+                CudaThreadRecorder.isCudaThreadRunning.set(false);
+            }, false);
+        }
+    }
+
     @EventRegister(registerClass = StartSearchEvent.class)
     private static void startSearchEvent(Event event) {
         StartSearchEvent startSearchEvent = (StartSearchEvent) event;
         DatabaseService databaseService = getInstance();
         databaseService.tempResults.clear();
         prepareSearchInfo(startSearchEvent.searchText, startSearchEvent.searchCase, startSearchEvent.keywords);
-        if (AllConfigs.getInstance().isEnableCuda()) {
-            databaseService.cudaCache.clear();
-            CudaAccelerator.INSTANCE.resetAllResultStatus();
-            CachedThreadPoolUtil.getInstance().executeTask(() -> CudaAccelerator.INSTANCE.match(databaseService.searchCase,
-                    databaseService.isIgnoreCase,
-                    databaseService.searchText,
-                    databaseService.keywords,
-                    databaseService.keywordsLowerCase,
-                    databaseService.isKeywordPath,
-                    databaseService.cudaCache), false);
-        }
         databaseService.shouldStopSearch.set(false);
         databaseService.startSearch();
         databaseService.startSearchTimeMills.set(System.currentTimeMillis());

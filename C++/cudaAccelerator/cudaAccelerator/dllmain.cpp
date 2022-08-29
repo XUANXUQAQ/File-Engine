@@ -1,8 +1,6 @@
 ﻿// dllmain.cpp : 定义 DLL 应用程序的入口点。
 #include "pch.h"
 #include <concurrent_unordered_map.h>
-#include <iostream>
-
 #include "kernels.cuh"
 #include "file_engine_dllInterface_CudaAccelerator.h"
 #include "cache.h"
@@ -131,12 +129,12 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_CudaAccelerator_match
 				const auto getEnvStat = jvm_ptr->GetEnv(reinterpret_cast<void**>(&new_env), JNI_VERSION_10);
 				if (getEnvStat == JNI_EDETACHED) {
 					if (jvm_ptr->AttachCurrentThread(reinterpret_cast<void**>(&new_env), nullptr) != 0) {
-						std::cout << "Failed to attach" << std::endl;
+						fprintf(stderr, "Failed to attach\n");
 						return;
 					}
 				}
 				else if (getEnvStat == JNI_EVERSION) {
-					std::cout << "GetEnv: version not supported" << std::endl;
+					fprintf(stderr, "GetEnv: version not supported\n");
 					return;
 				}
 				collect_results(new_env, output);
@@ -153,7 +151,6 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_CudaAccelerator_match
 	auto cudaStatus = cudaDeviceSynchronize();
 	if (cudaStatus != cudaSuccess)
 		fprintf(stderr, "cudaDeviceSynchronize returned error code %d after launch!\n", cudaStatus);
-	std::cout << "collect cuda results complete" << std::endl;
 	delete[] is_keyword_path_ptr;
 	delete[] streams;
 }
@@ -392,7 +389,9 @@ void collect_results(JNIEnv* env, jobject output)
 		for (const auto& [key, val] : cache_map)
 		{
 			if (is_stop())
+			{
 				break;
+			}
 			if (!val->is_match_done.load())
 			{
 				//发现仍然有结果未计算完，设置退出标志为false，跳到下一个计算结果
