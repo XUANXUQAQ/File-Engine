@@ -11,7 +11,25 @@
 void CUDART_CB set_match_done_flag_callback(cudaStream_t, cudaError_t, void* data);
 
 inline void gpuAssert(cudaError_t code, const char* file, int line, const char* function, bool is_exit,
-	const char* info);
+	const char* info)
+{
+	if (code != cudaSuccess)
+	{
+		if (info == nullptr)
+		{
+			fprintf(stderr, "GPU assert: %s %s %d %s\n", cudaGetErrorString(code), file, line, function);
+		}
+		else
+		{
+			fprintf(stderr, "GPU assert: %s %s %d %s %s\n", cudaGetErrorString(code), file, line, function, info);
+		}
+		if (is_exit)
+		{
+			std::quick_exit(code);
+		}
+	}
+}
+
 void start_kernel(concurrency::concurrent_unordered_map<std::string, list_cache*>& cache_map,
 	const std::vector<std::string>& search_case,
 	bool is_ignore_case,

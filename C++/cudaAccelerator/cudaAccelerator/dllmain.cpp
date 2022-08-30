@@ -6,6 +6,7 @@
 #include "cache.h"
 #include "constans.h"
 #include "cuda_copy_vector_util.h"
+#include "str_convert.cuh"
 
 #pragma comment(lib, "cudart.lib")
 
@@ -53,6 +54,7 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_CudaAccelerator_initialize
 {
 	init_stop_signal();
 	init_cuda_search_memory();
+	init_str_convert();
 }
 
 /*
