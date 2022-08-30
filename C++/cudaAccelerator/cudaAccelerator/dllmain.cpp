@@ -169,7 +169,6 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_CudaAccelerator_match
 JNIEXPORT jstring JNICALL Java_file_engine_dllInterface_CudaAccelerator_getOneResult
 (JNIEnv* env, jobject, jstring key_jstring)
 {
-	jstring ret = nullptr;
 	const auto key = env->GetStringUTFChars(key_jstring, nullptr);
 	if (search_result_map.find(key) != search_result_map.end())
 	{
@@ -177,11 +176,11 @@ JNIEXPORT jstring JNICALL Java_file_engine_dllInterface_CudaAccelerator_getOneRe
 		const auto result_queue = search_result_map.at(key);
 		if (result_queue->try_pop(result))
 		{
-			ret = env->NewStringUTF(result.c_str());
+			return env->NewStringUTF(result.c_str());
 		}
 	}
 	env->ReleaseStringUTFChars(key_jstring, key);
-	return ret;
+	return nullptr;
 }
 
 /*
