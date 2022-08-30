@@ -416,12 +416,12 @@ public class DatabaseService {
                     }
                     if (isStartSaveCache.get()) {
                         startCheckTime.startCheckTimeMills = System.currentTimeMillis();
-                        if (allConfigs.isEnableCuda()) {
-                            createCudaCache(isStopCreateCache);
-                        }
                         final double memoryUsage = SystemInfoUtil.getMemoryUsage();
                         if (memoryUsage < 0.7) {
                             createMemoryCache(isStopCreateCache);
+                        }
+                        if (allConfigs.isEnableCuda()) {
+                            createCudaCache(isStopCreateCache);
                         }
                     }
                     TimeUnit.SECONDS.sleep(1);
@@ -1896,11 +1896,11 @@ public class DatabaseService {
         if (AllConfigs.getInstance().isEnableCuda()) {
             PrepareCudaSearchEvent prepareCudaSearchEvent = (PrepareCudaSearchEvent) event;
             prepareSearchInfo(prepareCudaSearchEvent.searchText, prepareCudaSearchEvent.searchCase, prepareCudaSearchEvent.keywords);
+            // 退出上一次搜索
+            CudaAccelerator.INSTANCE.stopCollectResults();
+            while (CudaThreadRecorder.isCudaThreadRunning.get())
+                Thread.onSpinWait();
             CachedThreadPoolUtil.getInstance().executeTask(() -> {
-                // 退出上一次搜索
-                CudaAccelerator.INSTANCE.stopCollectResults();
-                while (CudaThreadRecorder.isCudaThreadRunning.get())
-                    Thread.onSpinWait();
                 // 开始进行搜索
                 CudaAccelerator.INSTANCE.resetAllResultStatus();
                 CudaThreadRecorder.isCudaThreadRunning.set(true);
@@ -1912,7 +1912,8 @@ public class DatabaseService {
                         databaseService.keywords,
                         databaseService.keywordsLowerCase,
                         databaseService.isKeywordPath,
-                        databaseService.cudaCache);
+                        databaseService.cudaCache,
+                        MAX_RESULTS);
                 CudaThreadRecorder.isCudaThreadRunning.set(false);
             }, false);
         }

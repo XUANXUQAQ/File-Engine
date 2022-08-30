@@ -27,7 +27,8 @@ public enum CudaAccelerator {
                              String[] keywords,
                              String[] keywordsLowerCase,
                              boolean[] isKeywordPath,
-                             ConcurrentHashMap<String, ConcurrentLinkedQueue<String>> output);
+                             ConcurrentHashMap<String, ConcurrentLinkedQueue<String>> output,
+                             int maxResultNumber);
 
     public boolean isCudaAvailableOnSystem() {
         if (isCudaLoaded) {
