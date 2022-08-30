@@ -1003,6 +1003,7 @@ public class DatabaseService {
                     matchedNum = strings.size();
                 }
             }
+            cudaCache.remove(key);
         } else {
             matchedNum = 0;
         }
@@ -1903,12 +1904,12 @@ public class DatabaseService {
             CudaAccelerator.INSTANCE.stopCollectResults();
             while (CudaThreadRecorder.isCudaThreadRunning.get())
                 Thread.onSpinWait();
+            DatabaseService databaseService = getInstance();
+            databaseService.cudaCache.clear();
             CachedThreadPoolUtil.getInstance().executeTask(() -> {
                 // 开始进行搜索
                 CudaAccelerator.INSTANCE.resetAllResultStatus();
                 CudaThreadRecorder.isCudaThreadRunning.set(true);
-                DatabaseService databaseService = getInstance();
-                databaseService.cudaCache.clear();
                 CudaAccelerator.INSTANCE.match(databaseService.searchCase,
                         databaseService.isIgnoreCase,
                         databaseService.searchText,

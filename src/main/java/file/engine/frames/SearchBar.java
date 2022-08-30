@@ -3574,7 +3574,7 @@ public class SearchBar {
             while (eventManagement.notMainExit()) {
                 try {
                     final long endTime = System.currentTimeMillis();
-                    if (isCudaSearchNotStarted.get() && startSearchSignal.get()) {
+                    if ((endTime - startTime > 100) &&isCudaSearchNotStarted.get() && startSearchSignal.get()) {
                         setSearchKeywordsAndSearchCase();
                         sendPrepareCudaSearchEvent();
                     }
