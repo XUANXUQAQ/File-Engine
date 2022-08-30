@@ -35,23 +35,26 @@ public class SQLiteUtil {
     private static String currentDatabaseDir = "data";
 
     static {
+        Consumer<ConnectionWrapper> checkConnectionAndClose = (conn) -> {
+            if (conn.isIdleTimeout()) {
+                try {
+                    conn.lock.lock();
+                    if (conn.isIdleTimeout() && !conn.connection.isClosed()) {
+                        System.out.println("长时间未使用 " + conn.url + "  已关闭连接");
+                        try (Statement stmt = conn.connection.createStatement()) {
+                            stmt.execute("PRAGMA shrink_memory");
+                        }
+                        conn.connection.close();
+                    }
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                } finally {
+                    conn.lock.unlock();
+                }
+            }
+        };
         CachedThreadPoolUtil cachedThreadPoolUtil = CachedThreadPoolUtil.getInstance();
         cachedThreadPoolUtil.executeTask(() -> {
-            Consumer<ConnectionWrapper> checkConnectionAndClose = (conn) -> {
-                if (conn.isIdleTimeout()) {
-                    try {
-                        conn.lock.lock();
-                        if (conn.isIdleTimeout() && !conn.connection.isClosed()) {
-                            System.out.println("长时间未使用 " + conn.url + "  已关闭连接");
-                            conn.connection.close();
-                        }
-                    } catch (SQLException e) {
-                        e.printStackTrace();
-                    } finally {
-                        conn.lock.unlock();
-                    }
-                }
-            };
             long checkTimeMills = 0;
             final long threshold = 10_000; // 10s
             try {
