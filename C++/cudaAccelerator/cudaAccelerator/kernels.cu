@@ -201,7 +201,7 @@ __device__ bool not_matched(const char* path,
 			{
 				return true;
 			}
-			char gbk_buffer[MAX_PATH_LENGTH * 2];
+			char gbk_buffer[MAX_PATH_LENGTH * 2]{ 0 };
 			char* gbk_buffer_ptr = gbk_buffer;
 			unsigned gbk_buffer_size = MAX_PATH_LENGTH * 2;
 			// utf-8编码转换gbk

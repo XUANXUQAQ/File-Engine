@@ -1,8 +1,6 @@
 package file.engine.dllInterface;
 
 import java.nio.file.Path;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 public enum CudaAccelerator {
     INSTANCE;
@@ -27,8 +25,9 @@ public enum CudaAccelerator {
                              String[] keywords,
                              String[] keywordsLowerCase,
                              boolean[] isKeywordPath,
-                             ConcurrentHashMap<String, ConcurrentLinkedQueue<String>> output,
                              int maxResultNumber);
+
+    public native String getOneResult(String key);
 
     public boolean isCudaAvailableOnSystem() {
         if (isCudaLoaded) {

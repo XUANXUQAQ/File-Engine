@@ -72,7 +72,6 @@ public class DatabaseService {
     private final ConcurrentLinkedQueue<Pair> priorityMap = new ConcurrentLinkedQueue<>();
     //tableCache 数据表缓存，在初始化时将会放入所有的key和一个空的cache，后续需要缓存直接放入空的cache中，不再创建新的cache实例
     private final ConcurrentHashMap<String, Cache> tableCache = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<String, ConcurrentLinkedQueue<String>> cudaCache = new ConcurrentHashMap<>();
     private final AtomicInteger cacheCount = new AtomicInteger();
     private volatile String[] searchCase;
     private volatile boolean isIgnoreCase;
@@ -982,30 +981,32 @@ public class DatabaseService {
     }
 
     private long searchFromCudaCache(ConcurrentSkipListSet<String> container, String key) {
-        long matchedNum;
+        long matchedNum = 0;
         if (IsDebug.isDebug()) {
             System.out.println("CUDA缓存命中" + key);
         }
-        if (cudaCache.containsKey(key)) {
-            ConcurrentLinkedQueue<String> strings = cudaCache.get(key);
-            // CUDA计算不支持判断文件和文件夹
+        String record;
+        while ((record = CudaAccelerator.INSTANCE.getOneResult(key)) != null) {
             if (searchCase == null || searchCase.length == 0) {
-                container.addAll(strings);
-                matchedNum = strings.size();
+                container.add(record);
+                ++matchedNum;
             } else {
                 List<String> searchCaseList = Arrays.asList(searchCase);
                 if (searchCaseList.contains(PathMatchUtil.SearchCase.D)) {
-                    matchedNum = strings.parallelStream().filter(e -> Files.isDirectory(Path.of(e))).filter(container::add).count();
+                    if (Files.isDirectory(Path.of(record))) {
+                        container.add(record);
+                        ++matchedNum;
+                    }
                 } else if (searchCaseList.contains(PathMatchUtil.SearchCase.F)) {
-                    matchedNum = strings.parallelStream().filter(FileUtil::isFile).filter(container::add).count();
+                    if (FileUtil.isFile(record)) {
+                        container.add(record);
+                        ++matchedNum;
+                    }
                 } else {
-                    container.addAll(strings);
-                    matchedNum = strings.size();
+                    container.add(record);
+                    ++matchedNum;
                 }
             }
-            cudaCache.remove(key);
-        } else {
-            matchedNum = 0;
         }
         return matchedNum;
     }
@@ -1905,7 +1906,6 @@ public class DatabaseService {
             while (CudaThreadRecorder.isCudaThreadRunning.get())
                 Thread.onSpinWait();
             DatabaseService databaseService = getInstance();
-            databaseService.cudaCache.clear();
             CachedThreadPoolUtil.getInstance().executeTask(() -> {
                 // 开始进行搜索
                 CudaAccelerator.INSTANCE.resetAllResultStatus();
@@ -1916,7 +1916,6 @@ public class DatabaseService {
                         databaseService.keywords,
                         databaseService.keywordsLowerCase,
                         databaseService.isKeywordPath,
-                        databaseService.cudaCache,
                         MAX_RESULTS);
                 CudaThreadRecorder.isCudaThreadRunning.set(false);
             }, false);

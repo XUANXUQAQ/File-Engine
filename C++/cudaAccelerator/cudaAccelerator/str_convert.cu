@@ -10388,12 +10388,12 @@ void init_str_convert()
 
 void init_gbk2_utf16_2()
 {
-	gbk2_utf16_2_size = sizeof(gbk2_utf16_2_host) / sizeof(short);
+	gbk2_utf16_2_size = sizeof gbk2_utf16_2_host / sizeof(short);
 }
 
 void init_gbk2_utf16_3()
 {
-	gbk2_utf16_3_size = sizeof(gbk2_utf16_3_host) / sizeof(short);
+	gbk2_utf16_3_size = sizeof gbk2_utf16_3_host / sizeof(short);
 }
 
 void init_gbk2_utf16()
@@ -10407,7 +10407,7 @@ void init_gbk2_utf16()
 		for (unsigned short d = gbk2_utf16_3_host[c]; d <= gbk2_utf16_3_host[c + 1]; d++)
 			gbk2utf16_host[d - 0x8000] = gbk2_utf16_3_host[c + 2] + d - gbk2_utf16_3_host[c];
 
-	gpuErrchk(cudaMemcpyToSymbol(gbk2utf16, &gbk2utf16_host, sizeof(unsigned short) * 0x8000), true, nullptr);
+	gpuErrchk(cudaMemcpyToSymbol(gbk2utf16, gbk2utf16_host, sizeof(unsigned short) * 0x8000), true, nullptr);
 }
 
 void init_utf162_gbk()
@@ -10421,7 +10421,7 @@ void init_utf162_gbk()
 		for (unsigned short d = gbk2_utf16_3_host[c]; d <= gbk2_utf16_3_host[c + 1]; d++)
 			utf162gbk_host[gbk2_utf16_3_host[c + 2] + d - gbk2_utf16_3_host[c]] = d;
 
-	gpuErrchk(cudaMemcpyToSymbol(utf162gbk, &utf162gbk_host, sizeof(unsigned short) * 0x10000), true, nullptr);
+	gpuErrchk(cudaMemcpyToSymbol(utf162gbk, utf162gbk_host, sizeof(unsigned short) * 0x10000), true, nullptr);
 }
 
 __device__ int gbk_to_utf8(const char* from, unsigned int from_len, char** to, unsigned int* to_len)
@@ -10447,14 +10447,14 @@ __device__ int gbk_to_utf8(const char* from, unsigned int from_len, char** to, u
 				continue;
 			if (tmp >= 0x800)
 			{
-				result[i_to++] = 0xE0 | (tmp >> 12);
-				result[i_to++] = 0x80 | ((tmp >> 6) & 0x3F);
-				result[i_to++] = 0x80 | (tmp & 0x3F);
+				result[i_to++] = 0xE0 | tmp >> 12;
+				result[i_to++] = 0x80 | tmp >> 6 & 0x3F;
+				result[i_to++] = 0x80 | tmp & 0x3F;
 			}
 			else if (tmp >= 0x80)
 			{
-				result[i_to++] = 0xC0 | (tmp >> 6);
-				result[i_to++] = 0x80 | (tmp & 0x3F);
+				result[i_to++] = 0xC0 | tmp >> 6;
+				result[i_to++] = 0x80 | tmp & 0x3F;
 			}
 			else
 			{
@@ -10497,8 +10497,7 @@ __device__ int utf8_to_gbk(const char* from, unsigned int from_len, char** to, u
 		{
 			if (i_from >= from_len - 1) break;
 
-			const unsigned short tmp = utf162gbk[
-				((from[i_from] & 0x1F) << 6) | (from[i_from + 1] & 0x3F)];
+			const unsigned short tmp = utf162gbk[(from[i_from] & 0x1F) << 6 | from[i_from + 1] & 0x3F];
 
 			if (tmp)
 			{
@@ -10512,8 +10511,8 @@ __device__ int utf8_to_gbk(const char* from, unsigned int from_len, char** to, u
 		{
 			if (i_from >= from_len - 2) break;
 
-			const unsigned short tmp = utf162gbk[((from[i_from] & 0x0F) << 12)
-				| ((from[i_from + 1] & 0x3F) << 6) | (from[i_from + 2] & 0x3F)];
+			const unsigned short tmp = utf162gbk[(from[i_from] & 0x0F) << 12
+				| (from[i_from + 1] & 0x3F) << 6 | from[i_from + 2] & 0x3F];
 
 			if (tmp)
 			{
