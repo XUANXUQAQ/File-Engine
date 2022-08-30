@@ -958,7 +958,7 @@ public class DatabaseService {
     private long searchFromDatabaseOrCache(ConcurrentSkipListSet<String> container, String diskStr, String sql, String key) {
         long matchedNum;
         Cache cache = tableCache.get(key);
-        if (cache.isCacheValid()) {
+        if (cache != null && cache.isCacheValid()) {
             if (IsDebug.isDebug()) {
                 System.out.println("从缓存中读取 " + key);
             }
@@ -1032,7 +1032,10 @@ public class DatabaseService {
                 asciiSum += Math.max(ascII, 0);
             }
         }
-        final int asciiGroup = asciiSum / 100;
+        int asciiGroup = asciiSum / 100;
+        if (asciiGroup > Constants.ALL_TABLE_NUM) {
+            asciiGroup = Constants.ALL_TABLE_NUM;
+        }
         String firstTableName = "list" + asciiGroup;
         if (searchCase != null && Arrays.asList(searchCase).contains("d")) {
             LinkedHashMap<String, String> _priorityMap = new LinkedHashMap<>();
