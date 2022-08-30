@@ -59,4 +59,6 @@ public enum CudaAccelerator {
     public native int getCudaMemUsage();
 
     public native void initialize();
+
+    public native void release();
 }

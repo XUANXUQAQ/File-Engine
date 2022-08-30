@@ -119,6 +119,14 @@ JNIEXPORT jint JNICALL Java_file_engine_dllInterface_CudaAccelerator_getCudaMemU
 JNIEXPORT void JNICALL Java_file_engine_dllInterface_CudaAccelerator_initialize
   (JNIEnv *, jobject);
 
+/*
+ * Class:     file_engine_dllInterface_CudaAccelerator
+ * Method:    release
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_file_engine_dllInterface_CudaAccelerator_release
+  (JNIEnv *, jobject);
+
 #ifdef __cplusplus
 }
 #endif

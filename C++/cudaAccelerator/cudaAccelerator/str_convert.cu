@@ -10400,7 +10400,7 @@ __device__ const unsigned short* init_gbk2_utf16_3()
 
 __device__ const unsigned short* init_gbk2_utf16()
 {
-	static unsigned short gbk2utf16[0x8000] = {0};
+	static unsigned short gbk2utf16[0x8000] = { 0 };
 	unsigned short c;
 
 	for (c = 0; c < gbk2_utf16_2_size; c += 2)
@@ -10415,7 +10415,7 @@ __device__ const unsigned short* init_gbk2_utf16()
 
 __device__ const unsigned short* init_utf162_gbk()
 {
-	static unsigned short utf162gbk[0x10000] = {0};
+	static unsigned short utf162gbk[0x10000] = { 0 };
 	unsigned short c;
 
 	for (c = 0; c < gbk2_utf16_2_size; c += 2)

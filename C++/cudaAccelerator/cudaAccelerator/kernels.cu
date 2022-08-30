@@ -12,8 +12,16 @@
 #include "str_utils.cuh"
 #include "str_convert.cuh"
 
+int* dev_search_case = nullptr;
+char* dev_search_text = nullptr;
+char* dev_keywords = nullptr;
+char* dev_keywords_lower_case = nullptr;
+size_t* dev_keywords_length = nullptr;
+bool* dev_is_keyword_path = nullptr;
+bool* dev_is_ignore_case = nullptr;
+
 inline void gpuAssert(cudaError_t code, const char* file, int line, const char* function, bool is_exit,
-                      const char* info)
+	const char* info)
 {
 	if (code != cudaSuccess)
 	{
@@ -174,16 +182,16 @@ __device__ void convert_to_pinyin(const char* chinese_str, char* output_str)
 }
 
 __device__ bool not_matched(const char* path,
-                            const bool is_ignore_case,
-                            char* keywords,
-                            char* keywords_lower_case,
-                            const int keywords_length,
-                            const bool* is_keyword_path)
+	const bool is_ignore_case,
+	char* keywords,
+	char* keywords_lower_case,
+	const int keywords_length,
+	const bool* is_keyword_path)
 {
 	for (int i = 0; i < keywords_length; ++i)
 	{
 		const bool is_keyword_path_val = is_keyword_path[i];
-		char match_str[MAX_PATH_LENGTH]{0};
+		char match_str[MAX_PATH_LENGTH]{ 0 };
 		if (is_keyword_path_val)
 		{
 			get_parent_path(path, match_str);
@@ -218,7 +226,7 @@ __device__ bool not_matched(const char* path,
 			// utf-8编码转换gbk
 			str_normalize_init();
 			utf8_to_gbk(match_str, static_cast<unsigned>(strlen_cuda(match_str)), &gbk_buffer_ptr, &gbk_buffer_size);
-			char converted_pinyin[MAX_PATH_LENGTH * 6]{0};
+			char converted_pinyin[MAX_PATH_LENGTH * 6]{ 0 };
 			convert_to_pinyin(gbk_buffer, converted_pinyin);
 			if (strstr_cuda(converted_pinyin, each_keyword) == nullptr)
 			{
@@ -229,16 +237,16 @@ __device__ bool not_matched(const char* path,
 	return false;
 }
 
-__global__ void check(const char (* str_address_ptr_array)[MAX_PATH_LENGTH],
-                      const int* search_case,
-                      const bool* is_ignore_case,
-                      char* search_text,
-                      char* keywords,
-                      char* keywords_lower_case,
-                      const size_t* keywords_length,
-                      const bool* is_keyword_path,
-                      char* output,
-                      const bool* is_stop_collect_var)
+__global__ void check(const char(*str_address_ptr_array)[MAX_PATH_LENGTH],
+	const int* search_case,
+	const bool* is_ignore_case,
+	char* search_text,
+	char* keywords,
+	char* keywords_lower_case,
+	const size_t* keywords_length,
+	const bool* is_keyword_path,
+	char* output,
+	const bool* is_stop_collect_var)
 {
 	const size_t thread_id = GET_TID();
 	const char* path = reinterpret_cast<const char*>(str_address_ptr_array + thread_id);
@@ -254,7 +262,7 @@ __global__ void check(const char (* str_address_ptr_array)[MAX_PATH_LENGTH],
 		return;
 	}
 	if (not_matched(path, *is_ignore_case, keywords, keywords_lower_case, static_cast<int>(*keywords_length),
-	                is_keyword_path))
+		is_keyword_path))
 	{
 		return;
 	}
@@ -278,131 +286,122 @@ __global__ void check(const char (* str_address_ptr_array)[MAX_PATH_LENGTH],
 	output[thread_id] = 1;
 }
 
-void start_kernel(concurrency::concurrent_unordered_map<std::string, list_cache*>& cache_map,
-                  const std::vector<std::string>& search_case,
-                  bool is_ignore_case,
-                  const char* search_text,
-                  const std::vector<std::string>& keywords,
-                  const std::vector<std::string>& keywords_lower_case,
-                  const bool* is_keyword_path,
-                  cudaStream_t* streams,
-                  const size_t stream_count)
+void init_cuda_search_memory()
 {
-	int* dev_search_case = nullptr;
-	char* dev_search_text = nullptr;
-	char* dev_keywords = nullptr;
-	char* dev_keywords_lower_case = nullptr;
-	size_t* dev_keywords_length = nullptr;
-	bool* dev_is_keyword_path = nullptr;
-	bool* dev_is_ignore_case = nullptr;
+	gpuErrchk(cudaMalloc(reinterpret_cast<void**>(&dev_search_case), sizeof(int)), true, nullptr);
+	gpuErrchk(cudaMalloc(reinterpret_cast<void**>(&dev_search_text), MAX_PATH_LENGTH * sizeof(char)), true, nullptr);
+	gpuErrchk(cudaMalloc(reinterpret_cast<void**>(&dev_keywords_length), sizeof(size_t)), true, nullptr);
+	gpuErrchk(cudaMalloc(reinterpret_cast<void**>(&dev_is_keyword_path), sizeof(bool) * MAX_KEYWORDS_NUMBER), true,
+		nullptr);
+	gpuErrchk(cudaMalloc(reinterpret_cast<void**>(&dev_is_ignore_case), sizeof(bool)), true, nullptr);
+	gpuErrchk(cudaMalloc(reinterpret_cast<void**>(&dev_keywords), static_cast<size_t>(MAX_PATH_LENGTH * MAX_KEYWORDS_NUMBER)), true, nullptr);
+	gpuErrchk(cudaMalloc(reinterpret_cast<void**>(&dev_keywords_lower_case), static_cast<size_t>(MAX_PATH_LENGTH * MAX_KEYWORDS_NUMBER)), true, nullptr);
+}
 
+void start_kernel(concurrency::concurrent_unordered_map<std::string, list_cache*>& cache_map,
+	const std::vector<std::string>& search_case,
+	bool is_ignore_case,
+	const char* search_text,
+	const std::vector<std::string>& keywords,
+	const std::vector<std::string>& keywords_lower_case,
+	const bool* is_keyword_path,
+	cudaStream_t* streams,
+	const size_t stream_count)
+{
 	const auto keywords_num = keywords.size();
 
-	//初始化流
-	for (size_t i = 0; i < stream_count; ++i)
+	// 选择第一个GPU
+	gpuErrchk(cudaSetDevice(0), true, nullptr);
+	// 复制search case
+	// 第一位为1表示有F，第二位为1表示有D，第三位为1表示有FULL，CASE由File-Engine主程序进行判断，传入参数is_ignore_case为false表示有CASE
+	int search_case_num = 0;
+	for (auto& each_case : search_case)
 	{
-		gpuErrchk(cudaStreamCreate(&streams[i]), true, nullptr)
+		// if (each_case == "f")
+		// {
+		// 	search_case_num |= 1;
+		// }
+		// if (each_case == "d")
+		// {
+		// 	search_case_num |= 2;
+		// }
+		if (each_case == "full")
+		{
+			search_case_num |= 4;
+		}
 	}
-	do
+	gpuErrchk(cudaMemcpy(dev_search_case, &search_case_num, sizeof(int), cudaMemcpyHostToDevice), true, nullptr);
+
+	// 复制search text
+	const auto search_text_len = strlen(search_text);
+
+	gpuErrchk(cudaMemset(dev_search_text, 0, search_text_len + 1), true, nullptr);
+	gpuErrchk(cudaMemcpy(dev_search_text, search_text, search_text_len, cudaMemcpyHostToDevice), true, nullptr);
+
+	// 复制keywords
+	gpuErrchk(vector_to_cuda_char_array(keywords, reinterpret_cast<void**>(&dev_keywords)), true, nullptr);
+
+	// 复制keywords_lower_case
+	gpuErrchk(vector_to_cuda_char_array(keywords_lower_case, reinterpret_cast<void**>(&dev_keywords_lower_case)),
+		true, nullptr);
+
+	//复制keywords_length
+	gpuErrchk(cudaMemcpy(dev_keywords_length, &keywords_num, sizeof(size_t), cudaMemcpyHostToDevice), true, nullptr);
+
+	// 复制is_keyword_path
+	gpuErrchk(cudaMemcpy(dev_is_keyword_path, is_keyword_path, sizeof(bool) * keywords_num, cudaMemcpyHostToDevice),
+		true, nullptr);
+
+	// 复制is_ignore_case
+	gpuErrchk(cudaMemcpy(dev_is_ignore_case, &is_ignore_case, sizeof(bool), cudaMemcpyHostToDevice), true, nullptr);
+	unsigned count = 0;
+	for (auto& each : cache_map)
 	{
-		// 选择第一个GPU
-		gpuErrchk(cudaSetDevice(0), true, nullptr)
-
-		// 复制search case
-		// 第一位为1表示有F，第二位为1表示有D，第三位为1表示有FULL，CASE由File-Engine主程序进行判断，传入参数is_ignore_case为false表示有CASE
-		gpuErrchk(cudaMalloc(reinterpret_cast<void**>(&dev_search_case), sizeof(int)), true, nullptr)
-		int search_case_num = 0;
-		for (auto& each_case : search_case)
-		{
-			// if (each_case == "f")
-			// {
-			// 	search_case_num |= 1;
-			// }
-			// if (each_case == "d")
-			// {
-			// 	search_case_num |= 2;
-			// }
-			if (each_case == "full")
-			{
-				search_case_num |= 4;
-			}
-		}
-		gpuErrchk(cudaMemcpy(dev_search_case, &search_case_num, sizeof(int), cudaMemcpyHostToDevice), true, nullptr)
-
-		// 复制search text
-		const auto search_text_len = strlen(search_text);
-		gpuErrchk(cudaMalloc(reinterpret_cast<void**>(&dev_search_text), (search_text_len + 1) * sizeof(char)), true,
-		          nullptr)
-		gpuErrchk(cudaMemset(dev_search_text, 0, search_text_len + 1), true, nullptr)
-		gpuErrchk(cudaMemcpy(dev_search_text, search_text, search_text_len, cudaMemcpyHostToDevice), true, nullptr)
-
-		// 复制keywords
-		gpuErrchk(vector_to_cuda_char_array(keywords, reinterpret_cast<void**>(&dev_keywords)), true, nullptr)
-
-		// 复制keywords_lower_case
-		gpuErrchk(vector_to_cuda_char_array(keywords_lower_case, reinterpret_cast<void**>(&dev_keywords_lower_case)),
-		          true, nullptr)
-
-		//复制keywords_length
-		gpuErrchk(cudaMalloc(reinterpret_cast<void**>(&dev_keywords_length), sizeof(size_t)), true, nullptr)
-		gpuErrchk(cudaMemcpy(dev_keywords_length, &keywords_num, sizeof(size_t), cudaMemcpyHostToDevice), true, nullptr)
-
-		// 复制is_keyword_path
-		gpuErrchk(cudaMalloc(reinterpret_cast<void**>(&dev_is_keyword_path), sizeof(bool) * keywords_num), true,
-		          nullptr)
-		gpuErrchk(cudaMemcpy(dev_is_keyword_path, is_keyword_path, sizeof(bool) * keywords_num, cudaMemcpyHostToDevice),
-		          true, nullptr)
-
-		// 复制is_ignore_case
-		gpuErrchk(cudaMalloc(reinterpret_cast<void**>(&dev_is_ignore_case), sizeof(bool)), true, nullptr)
-		gpuErrchk(cudaMemcpy(dev_is_ignore_case, &is_ignore_case, sizeof(bool), cudaMemcpyHostToDevice), true, nullptr)
-		unsigned count = 0;
-		for (auto& each : cache_map)
-		{
-			if (count >= stream_count)
-				break;
-			const auto& cache = each.second;
-			if (!cache->is_cache_valid)
-			{
-				continue;
-			}
-			int block_num, thread_num;
-			if (cache->str_data.record_num > MAX_THREAD_PER_BLOCK)
-			{
-				thread_num = MAX_THREAD_PER_BLOCK;
-				block_num = static_cast<int>(cache->str_data.record_num / thread_num);
-			}
-			else
-			{
-				thread_num = static_cast<int>(cache->str_data.record_num.load());
-				block_num = 1;
-			}
-			//注册回调
-			cudaStreamAddCallback(streams[count], set_match_done_flag_callback, cache, 0);
-
-			check<<<block_num, thread_num, 0, streams[count]>>>
-			(cache->str_data.dev_cache_str,
-			 dev_search_case,
-			 dev_is_ignore_case,
-			 dev_search_text,
-			 dev_keywords,
-			 dev_keywords_lower_case,
-			 dev_keywords_length,
-			 dev_is_keyword_path,
-			 cache->dev_output,
-			 get_dev_stop_signal());
-			++count;
-		}
-
-		// 检查启动错误
-		cudaError_t cudaStatus = cudaGetLastError();
-		if (cudaStatus != cudaSuccess)
-		{
-			fprintf(stderr, "check launch failed: %s\n", cudaGetErrorString(cudaStatus));
+		if (count >= stream_count)
 			break;
+		const auto& cache = each.second;
+		if (!cache->is_cache_valid)
+		{
+			continue;
 		}
+		int block_num, thread_num;
+		if (cache->str_data.record_num > MAX_THREAD_PER_BLOCK)
+		{
+			thread_num = MAX_THREAD_PER_BLOCK;
+			block_num = static_cast<int>(cache->str_data.record_num / thread_num);
+		}
+		else
+		{
+			thread_num = static_cast<int>(cache->str_data.record_num.load());
+			block_num = 1;
+		}
+		//注册回调
+		cudaStreamAddCallback(streams[count], set_match_done_flag_callback, cache, 0);
+
+		check << <block_num, thread_num, 0, streams[count] >> >
+			(cache->str_data.dev_cache_str,
+				dev_search_case,
+				dev_is_ignore_case,
+				dev_search_text,
+				dev_keywords,
+				dev_keywords_lower_case,
+				dev_keywords_length,
+				dev_is_keyword_path,
+				cache->dev_output,
+				get_dev_stop_signal());
+		++count;
 	}
-	while (false);
+
+	// 检查启动错误
+	cudaError_t cudaStatus = cudaGetLastError();
+	if (cudaStatus != cudaSuccess)
+	{
+		fprintf(stderr, "check launch failed: %s\n", cudaGetErrorString(cudaStatus));
+	}
+}
+
+void free_cuda_search_memory()
+{
 	cudaFree(dev_search_case);
 	cudaFree(dev_search_text);
 	cudaFree(dev_keywords);

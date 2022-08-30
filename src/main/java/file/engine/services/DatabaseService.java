@@ -2090,6 +2090,9 @@ public class DatabaseService {
         FileMonitor.INSTANCE.stop_monitor();
         getInstance().executeAllCommands();
         SQLiteUtil.closeAll();
+        if (AllConfigs.getInstance().isEnableCuda()) {
+            CudaAccelerator.INSTANCE.release();
+        }
     }
 
     @Data

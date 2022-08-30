@@ -13,7 +13,7 @@
  */
 typedef struct cache_data
 {
-	char (* dev_cache_str)[MAX_PATH_LENGTH] = nullptr;
+	char(*dev_cache_str)[MAX_PATH_LENGTH] = nullptr;
 	std::atomic_uint64_t remain_blank_num;
 	std::atomic_uint64_t record_num;
 	std::mutex lock;
@@ -50,3 +50,4 @@ bool is_stop();
 void set_stop(bool b);
 void init_stop_signal();
 bool* get_dev_stop_signal();
+void free_stop_signal();
