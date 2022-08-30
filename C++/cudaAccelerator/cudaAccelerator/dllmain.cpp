@@ -231,8 +231,7 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_CudaAccelerator_initCache
 	cache->str_data.record_num = length;
 	cache->str_data.remain_blank_num = MAX_RECORD_ADD_COUNT;
 	const size_t total_results_size = static_cast<size_t>(length) + MAX_RECORD_ADD_COUNT;
-	gpuErrchk(
-		cudaMalloc(reinterpret_cast<void**>(&cache->str_data.dev_cache_str),
+	gpuErrchk(cudaMalloc(reinterpret_cast<void**>(&cache->str_data.dev_cache_str),
 			total_results_size * MAX_PATH_LENGTH), true, get_cache_info(key, cache).c_str());
 	gpuErrchk(cudaMalloc(reinterpret_cast<void**>(&cache->dev_output), total_results_size), true,
 		get_cache_info(key, cache).c_str());
@@ -244,8 +243,7 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_CudaAccelerator_initCache
 	{
 		const auto jstring_val = reinterpret_cast<jstring>(env->GetObjectArrayElement(records, i));
 		const auto record = env->GetStringUTFChars(jstring_val, nullptr);
-		const auto record_len = strlen(record);
-		if (record_len < MAX_PATH_LENGTH)
+		if (const auto record_len = strlen(record); record_len < MAX_PATH_LENGTH)
 		{
 			const auto target_address = cache->str_data.dev_cache_str + i;
 			gpuErrchk(cudaMemset(target_address, 0, MAX_PATH_LENGTH), true, nullptr);
