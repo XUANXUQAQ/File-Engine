@@ -53,7 +53,7 @@ public class SQLiteUtil {
                 }
             };
             long checkTimeMills = 0;
-            final long threshold = 2 * 60 * 1000; // 2min
+            final long threshold = 10_000; // 10s
             try {
                 while (!cachedThreadPoolUtil.isShutdown()) {
                     if (System.currentTimeMillis() - checkTimeMills > threshold) {
