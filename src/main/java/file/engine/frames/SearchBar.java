@@ -1123,27 +1123,27 @@ public class SearchBar {
                         translateService.getTranslation("the file containing \"test\" in the path will be displayed below the search bar"));
         SwingUtilities.invokeLater(() -> textField.setText(""));
         JOptionPane.showMessageDialog(searchBar,
-                translateService.getTranslation("Add \"::\" + suffix after the keyword to achieve a more precise search") + "\n" +
+                translateService.getTranslation("Add \":\" + suffix after the keyword to achieve a more precise search") + "\n" +
                         translateService.getTranslation("The program has the following four suffixes") + "\n" +
-                        "::d     ::f     ::full     ::case" + "\n" +
+                        ":d     :f     :full     :case" + "\n" +
                         translateService.getTranslation("not case sensitive"));
-        SwingUtilities.invokeLater(() -> textField.setText("test::d"));
+        SwingUtilities.invokeLater(() -> textField.setText("test:d"));
         JOptionPane.showMessageDialog(searchBar,
-                translateService.getTranslation("\"::d\" is the suffix for searching only folders"));
-        SwingUtilities.invokeLater(() -> textField.setText("test::f"));
+                translateService.getTranslation("\":d\" is the suffix for searching only folders"));
+        SwingUtilities.invokeLater(() -> textField.setText("test:f"));
         JOptionPane.showMessageDialog(searchBar,
-                translateService.getTranslation("\"::f\" is the suffix to search only for files"));
-        SwingUtilities.invokeLater(() -> textField.setText("test::full"));
+                translateService.getTranslation("\":f\" is the suffix to search only for files"));
+        SwingUtilities.invokeLater(() -> textField.setText("test:full"));
         JOptionPane.showMessageDialog(searchBar,
-                translateService.getTranslation("\"::full\" means full word matching, but case insensitive"));
-        SwingUtilities.invokeLater(() -> textField.setText("test::case"));
+                translateService.getTranslation("\":full\" means full word matching, but case insensitive"));
+        SwingUtilities.invokeLater(() -> textField.setText("test:case"));
         JOptionPane.showMessageDialog(searchBar,
-                translateService.getTranslation("\"::case\" means case sensitive"));
-        SwingUtilities.invokeLater(() -> textField.setText("test::d;full"));
+                translateService.getTranslation("\":case\" means case sensitive"));
+        SwingUtilities.invokeLater(() -> textField.setText("test:d;full"));
         JOptionPane.showMessageDialog(searchBar,
                 translateService.getTranslation("You can also combine different suffixes to use") + "\n" +
                         translateService.getTranslation("you can separate them with \";\" (semicolon) to search together as keywords."));
-        SwingUtilities.invokeLater(() -> textField.setText("test;/file::d;case"));
+        SwingUtilities.invokeLater(() -> textField.setText("test;/file:d;case"));
         JOptionPane.showMessageDialog(searchBar,
                 translateService.getTranslation("Different keywords are separated by \";\" (semicolon), suffix and keywords are separated by \":\" (colon)"));
         JOptionPane.showMessageDialog(searchBar,
