@@ -224,35 +224,48 @@ JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_CudaAccelerator_hasCach
 JNIEXPORT void JNICALL Java_file_engine_dllInterface_CudaAccelerator_initCache
 (JNIEnv* env, jobject, jstring key_jstring, jobjectArray records)
 {
+	const jsize _length = env->GetArrayLength(records);
+	std::vector<std::string> records_vec;
+	unsigned record_count = 0;
+	for (jsize i = 0; i < _length; ++i)
+	{
+		const auto jstring_val = reinterpret_cast<jstring>(env->GetObjectArrayElement(records, i));
+		const auto record = env->GetStringUTFChars(jstring_val, nullptr);
+		if (const auto record_len = strlen(record); record_len < MAX_PATH_LENGTH)
+		{
+			records_vec.emplace_back(record);
+			++record_count;
+		}
+		env->ReleaseStringUTFChars(jstring_val, record);
+	}
 	const auto _key = env->GetStringUTFChars(key_jstring, nullptr);
 	std::string key(_key);
-	const jsize length = env->GetArrayLength(records);
 	auto cache = new list_cache;
-	cache->str_data.record_num = length;
+	cache->str_data.record_num = record_count;
 	cache->str_data.remain_blank_num = MAX_RECORD_ADD_COUNT;
-	const size_t total_results_size = static_cast<size_t>(length) + MAX_RECORD_ADD_COUNT;
+	const size_t total_results_size = static_cast<size_t>(record_count) + MAX_RECORD_ADD_COUNT;
 	gpuErrchk(cudaMalloc(reinterpret_cast<void**>(&cache->str_data.dev_cache_str),
-			total_results_size * MAX_PATH_LENGTH), true, get_cache_info(key, cache).c_str());
+		total_results_size * MAX_PATH_LENGTH), true, get_cache_info(key, cache).c_str());
 	gpuErrchk(cudaMalloc(reinterpret_cast<void**>(&cache->dev_output), total_results_size), true,
 		get_cache_info(key, cache).c_str());
 	cache->is_cache_valid = true;
 	cache->is_match_done = false;
 	cache->is_output_done = false;
 
-	for (jsize i = 0; i < length; ++i)
+	cudaStream_t stream;
+	gpuErrchk(cudaStreamCreate(&stream), true, nullptr);
+	unsigned address_offset = 0;
+	for (const std::string& record : records_vec)
 	{
-		const auto jstring_val = reinterpret_cast<jstring>(env->GetObjectArrayElement(records, i));
-		const auto record = env->GetStringUTFChars(jstring_val, nullptr);
-		if (const auto record_len = strlen(record); record_len < MAX_PATH_LENGTH)
-		{
-			const auto target_address = cache->str_data.dev_cache_str + i;
-			gpuErrchk(cudaMemset(target_address, 0, MAX_PATH_LENGTH), true, nullptr);
-			gpuErrchk(cudaMemcpy(target_address, record, record_len, cudaMemcpyHostToDevice),
-				true, nullptr);
-			cache->str_data.record_hash.insert(hasher(record));
-		}
-		env->ReleaseStringUTFChars(jstring_val, record);
+		const auto target_address = cache->str_data.dev_cache_str + address_offset;
+		gpuErrchk(cudaMemsetAsync(target_address, 0, MAX_PATH_LENGTH, stream), true, nullptr);
+		gpuErrchk(cudaMemcpyAsync(target_address, record.c_str(), record.length(), cudaMemcpyHostToDevice, stream),
+			true, nullptr);
+		cache->str_data.record_hash.insert(hasher(record));
+		++address_offset;
 	}
+	gpuErrchk(cudaStreamSynchronize(stream), true, nullptr);
+	gpuErrchk(cudaStreamDestroy(stream), true, nullptr);
 	cache_map.insert(std::make_pair(key, cache));
 	env->ReleaseStringUTFChars(key_jstring, _key);
 }
@@ -562,9 +575,8 @@ void add_one_record_to_cache(const std::string& key, const std::string& record)
 					//计算下一个空位的内存地址
 					const auto target_address = cache->str_data.dev_cache_str + index;
 					//记录到下一空位内存地址target_address
-					gpuErrchk(
-						cudaMemcpy(target_address, record.c_str(), record_len,
-							cudaMemcpyHostToDevice),
+					gpuErrchk(cudaMemcpy(target_address, record.c_str(), record_len,
+						cudaMemcpyHostToDevice),
 						true, get_cache_info(key, cache).c_str());
 					++cache->str_data.record_num;
 					--cache->str_data.remain_blank_num;
@@ -596,8 +608,7 @@ void add_one_record_to_cache(const std::string& key, const std::string& record)
  */
 void remove_one_record_from_cache(const std::string& key, const std::string& record)
 {
-	const auto record_len = record.length();
-	if (record_len >= MAX_PATH_LENGTH)
+	if (const auto record_len = record.length(); record_len >= MAX_PATH_LENGTH)
 	{
 		return;
 	}
