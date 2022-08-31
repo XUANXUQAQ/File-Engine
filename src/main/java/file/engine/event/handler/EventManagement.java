@@ -11,6 +11,7 @@ import file.engine.services.utils.DaemonUtil;
 import file.engine.utils.CachedThreadPoolUtil;
 import file.engine.utils.clazz.scan.ClassScannerUtil;
 import file.engine.utils.system.properties.IsDebug;
+import lombok.SneakyThrows;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -21,13 +22,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.TimeUnit;
+import java.util.*;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
@@ -36,8 +32,8 @@ import java.util.function.Consumer;
 public class EventManagement {
     private static volatile EventManagement instance = null;
     private final AtomicBoolean exit = new AtomicBoolean(false);
-    private final ConcurrentLinkedQueue<Event> blockEventQueue = new ConcurrentLinkedQueue<>();
-    private final ConcurrentLinkedQueue<Event> asyncEventQueue = new ConcurrentLinkedQueue<>();
+    private final SynchronousQueue<Event> blockEventQueue = new SynchronousQueue<>();
+    private final SynchronousQueue<Event> asyncEventQueue = new SynchronousQueue<>();
     private final ConcurrentHashMap<String, Method> EVENT_HANDLER_MAP = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, ConcurrentLinkedQueue<Method>> EVENT_LISTENER_MAP = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, BiConsumer<Class<?>, Object>> PLUGIN_EVENT_HANDLER_MAP = new ConcurrentHashMap<>();
@@ -293,6 +289,7 @@ public class EventManagement {
      *
      * @param event 任务
      */
+    @SneakyThrows
     public void putEvent(Event event) {
         final boolean isDebug = IsDebug.isDebug();
         if (isDebug) {
@@ -301,11 +298,11 @@ public class EventManagement {
         if (!exit.get()) {
             if (event.isBlock()) {
                 if (!blockEventQueue.contains(event)) {
-                    blockEventQueue.add(event);
+                    blockEventQueue.put(event);
                 }
             } else {
                 if (!asyncEventQueue.contains(event)) {
-                    asyncEventQueue.add(event);
+                    asyncEventQueue.put(event);
                 }
             }
         } else {
@@ -331,6 +328,7 @@ public class EventManagement {
 
     /**
      * 全局系统退出标志，用于常驻循环判断标志
+     *
      * @return true如果系统未退出
      */
     public boolean notMainExit() {
@@ -499,16 +497,12 @@ public class EventManagement {
         new Thread(() -> eventHandle(blockEventQueue)).start();
     }
 
-    private void eventHandle(ConcurrentLinkedQueue<Event> eventQueue) {
+    private void eventHandle(SynchronousQueue<Event> eventQueue) {
         final boolean isDebug = IsDebug.isDebug();
         try {
-            Event event;
             while (isEventHandlerNotExit()) {
                 //取出任务
-                if ((event = eventQueue.poll()) == null) {
-                    TimeUnit.MILLISECONDS.sleep(5);
-                    continue;
-                }
+                Event event = eventQueue.take();
                 //判断任务是否执行完成或者失败
                 if (event.isFinished() || event.isFailed()) {
                     continue;
