@@ -26,8 +26,8 @@ typedef struct cache_data
  * str_data：数据struct
  * dev_output：字符串匹配后输出位置，下标与cache_data中一一对应，dev_output中数据为1代表匹配成功
  * is_cache_valid：数据是否有效
- * is_match_done：是否匹配全部完成
- * is_output_done：是否已经存入java容器
+ * is_match_done：是否匹配全部完成 
+ * is_output_done：是否已经存入容器 0 代表没有开始  1 代表正在收集  2代表完成
  */
 typedef struct cache_struct
 {
@@ -35,7 +35,7 @@ typedef struct cache_struct
 	char* dev_output = nullptr;
 	bool is_cache_valid = false;
 	std::atomic_bool is_match_done;
-	std::atomic_bool is_output_done;
+	std::atomic_int is_output_done;
 } list_cache;
 
 

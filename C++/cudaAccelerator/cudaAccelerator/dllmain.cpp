@@ -8,6 +8,7 @@
 #include "cuda_copy_vector_util.h"
 #include "str_convert.cuh"
 #include <concurrent_queue.h>
+#include <thread>
 
 #pragma comment(lib, "cudart.lib")
 
@@ -34,6 +35,7 @@ std::atomic_uint remove_record_thread_count(0);
 std::mutex modify_cache_lock;
 std::hash<std::string> hasher;
 concurrency::concurrent_unordered_map<std::string, concurrency::concurrent_queue<std::string>*> search_result_map;
+
 /*
  * Class:     file_engine_dllInterface_CudaAccelerator
  * Method:    release
@@ -71,7 +73,7 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_CudaAccelerator_resetAllRes
 	for (const auto& [key, val] : cache_map)
 	{
 		val->is_match_done = false;
-		val->is_output_done = false;
+		val->is_output_done = 0;
 		cudaMemset(val->dev_output, 0,
 			val->str_data.record_num + val->str_data.remain_blank_num);
 	}
@@ -148,7 +150,20 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_CudaAccelerator_match
 	//GPU并行计算
 	start_kernel(cache_map, search_case_vec, is_ignore_case, search_text_chars, keywords_vec, keywords_lower_vec,
 		is_keyword_path_ptr, streams, stream_count);
-	collect_results(max_results);
+	std::vector<std::thread> collect_threads;
+	collect_threads.reserve(COLLECT_THREAD_NUMBER);
+	for (int i = 0; i < COLLECT_THREAD_NUMBER; ++i)
+	{
+		collect_threads.emplace_back(std::thread([max_results]
+			{
+				collect_results(max_results);
+			}));
+	}
+	for (std::thread& collect_thread : collect_threads)
+	{
+		if (collect_thread.joinable())
+			collect_thread.join();
+	}
 	env->ReleaseStringUTFChars(search_text, search_text_chars);
 	// 等待执行完成
 	auto cudaStatus = cudaDeviceSynchronize();
@@ -198,7 +213,7 @@ JNIEXPORT jboolean JNICALL Java_file_engine_dllInterface_CudaAccelerator_isMatch
 	{
 		return FALSE;
 	}
-	return iter->second->is_output_done.load();
+	return iter->second->is_output_done.load() == 2;
 }
 
 /*
@@ -250,7 +265,7 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_CudaAccelerator_initCache
 		get_cache_info(key, cache).c_str());
 	cache->is_cache_valid = true;
 	cache->is_match_done = false;
-	cache->is_output_done = false;
+	cache->is_output_done = 0;
 
 	cudaStream_t stream;
 	gpuErrchk(cudaStreamCreate(&stream), true, nullptr);
@@ -429,13 +444,15 @@ void collect_results(const unsigned max_results)
 				all_complete = false;
 				continue;
 			}
-			if (val->is_output_done.load())
+			if (int expected = 0; !val->is_output_done.compare_exchange_strong(expected, 1))
 			{
 				continue;
 			}
 #ifdef DEBUG_OUTPUT
-			printf("collecting key: %s\n", key.c_str());
+			const auto thread_id = std::hash<std::thread::id>{}(std::this_thread::get_id());
+			printf("thread_id: %llu, collecting key: %s\n", thread_id, key.c_str());
 #endif
+			std::lock_guard lock_guard(val->str_data.lock);
 			//复制结果数组到host，dev_output下标对应dev_cache中的下标，若dev_output[i]中的值为1，则对应dev_cache[i]字符串匹配成功
 			const auto output_ptr = new char[val->str_data.record_num + val->str_data.remain_blank_num];
 			//将dev_output拷贝到output_ptr
@@ -470,7 +487,7 @@ void collect_results(const unsigned max_results)
 					}
 				}
 			}
-			val->is_output_done = true;
+			val->is_output_done = 2;
 			delete[] output_ptr;
 		}
 	} while (!all_complete && !is_stop() && result_count < max_results);

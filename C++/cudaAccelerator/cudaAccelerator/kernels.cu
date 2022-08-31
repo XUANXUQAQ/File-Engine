@@ -234,9 +234,6 @@ __global__ void check(const char(*str_address_ptr_array)[MAX_PATH_LENGTH],
 	{
 		return;
 	}
-#ifdef DEBUG_OUTPUT
-	printf("%s\n", path);
-#endif
 	if (path == nullptr || !path[0])
 	{
 		return;
