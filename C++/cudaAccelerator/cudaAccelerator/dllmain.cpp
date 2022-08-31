@@ -17,7 +17,7 @@ bool has_cache(const std::string& key);
 void add_one_record_to_cache(const std::string& key, const std::string& record);
 void remove_one_record_from_cache(const std::string& key, const std::string& record);
 void generate_search_case(JNIEnv* env, std::vector<std::string>& search_case_vec, jobjectArray search_case);
-void collect_results(unsigned max_results);
+void collect_results(std::atomic_uint& result_counter, unsigned max_results);
 bool is_record_repeat(const std::string& record, const list_cache* cache);
 void release_all();
 
@@ -152,11 +152,12 @@ JNIEXPORT void JNICALL Java_file_engine_dllInterface_CudaAccelerator_match
 		is_keyword_path_ptr, streams, stream_count);
 	std::vector<std::thread> collect_threads;
 	collect_threads.reserve(COLLECT_THREAD_NUMBER);
+	std::atomic_uint result_counter = 0;
 	for (int i = 0; i < COLLECT_THREAD_NUMBER; ++i)
 	{
-		collect_threads.emplace_back(std::thread([max_results]
+		collect_threads.emplace_back(std::thread([&]
 			{
-				collect_results(max_results);
+				collect_results(result_counter, max_results);
 			}));
 	}
 	for (std::thread& collect_thread : collect_threads)
@@ -420,13 +421,12 @@ JNIEXPORT jint JNICALL Java_file_engine_dllInterface_CudaAccelerator_getCudaMemU
 /**
  * \brief 将显卡计算的结果保存到hashmap中
  */
-void collect_results(const unsigned max_results)
+void collect_results(std::atomic_uint& result_counter, const unsigned max_results)
 {
 	bool all_complete;
-	unsigned result_count = 0;
 	const auto stop_func = [&]
 	{
-		return is_stop() || result_count >= max_results;
+		return is_stop() || result_counter.load() >= max_results;
 	};
 	do
 	{
@@ -471,7 +471,7 @@ void collect_results(const unsigned max_results)
 					const auto str_address = val->str_data.dev_cache_str + i;
 					//拷贝GPU中的字符串到host
 					gpuErrchk(cudaMemcpy(matched_record_str, str_address, MAX_PATH_LENGTH, cudaMemcpyDeviceToHost), false, "collect results failed");
-					++result_count;
+					++result_counter;
 					if (search_result_map.find(key) != search_result_map.end())
 					{
 						//已经存在该key容器
@@ -489,8 +489,11 @@ void collect_results(const unsigned max_results)
 			}
 			val->is_output_done = 2;
 			delete[] output_ptr;
+#ifdef DEBUG_OUTPUT
+			printf("thread_id: %llu, collect complete, result number: %d\n", thread_id, result_counter.load());
+#endif
 		}
-	} while (!all_complete && !is_stop() && result_count < max_results);
+	} while (!all_complete && !is_stop() && result_counter.load() < max_results);
 }
 
 /**
